@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/livekit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
@@ -70,8 +71,13 @@ func run() error {
 		func(r *core.Room) { r.Stop(); metrics.Rooms.Dec() },
 	)
 
+	media := core.DefaultMedia(nil)
+	if cfg.LiveKitHost != "" && cfg.LiveKitAPIKey != "" && cfg.LiveKitAPISecret != "" {
+		media.LiveKit = livekit.New(cfg.LiveKitHost, cfg.LiveKitAPIKey, cfg.LiveKitAPISecret)
+	}
+	media.MaxUsersForWebRTC, media.SwitchOnCPULimit = cfg.MaxUsersForWebRTC, cfg.LiveKitSwitchOnCPULimitation
 	spaces := registry.NewRefs(
-		func(k core.SpaceKey) *core.Space { metrics.Spaces.Inc(); return core.NewSpace(k) },
+		func(k core.SpaceKey) *core.Space { metrics.Spaces.Inc(); return core.NewSpaceWithMedia(k, media) },
 		func(s *core.Space) { s.Stop(); metrics.Spaces.Dec() },
 	)
 

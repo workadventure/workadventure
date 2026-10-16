@@ -220,10 +220,12 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 	case *pb.ClientToServerMessage_BackEvent:
 		e := msg.BackEvent
 		restart := e.GetBackEvent().GetMeetingConnectionRestartMessage()
-		if restart == nil || restart.UserId == nil {
-			return true // a LiveKit restart: no LiveKit yet
-		}
-		if space := s.joinedSpace(e.GetSpaceName()); space != nil {
+		space := s.joinedSpace(e.GetSpaceName())
+		switch {
+		case restart == nil || space == nil:
+		case restart.UserId == nil: // the front lost LiveKit: a new token
+			_ = space.RestartLiveKit(s.ctx, s.spaceUserID())
+		default:
 			_ = space.RestartConnection(s.ctx, s.spaceUserID(), restart.GetUserId(), restart.ConnectionId)
 		}
 	default:
@@ -407,6 +409,12 @@ func privateSpaceEvent(ev any) *pb.PrivateSpaceEvent {
 		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_WebRtcDisconnectMessage{WebRtcDisconnectMessage: &pb.WebRtcDisconnectMessage{UserId: e.UserID}}}
 	case core.SwitchStrategy:
 		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_SwitchMessage{SwitchMessage: &pb.SwitchMessage{Strategy: e.Strategy}}}
+	case core.FinalizeSwitch:
+		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_FinalizeSwitchMessage{FinalizeSwitchMessage: &pb.FinalizeSwitchMessage{Strategy: e.Strategy}}}
+	case core.LiveKitInvitation:
+		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_LivekitInvitationMessage{LivekitInvitationMessage: &pb.LivekitInvitationMessage{Token: e.Token, ServerUrl: e.ServerURL}}}
+	case core.LiveKitDisconnect:
+		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_LivekitDisconnectMessage{LivekitDisconnectMessage: &pb.LivekitDisconnectMessage{}}}
 	case core.RelayedEvent:
 		var p pb.PrivateSpaceEvent
 		_ = proto.Unmarshal(e.Payload, &p)

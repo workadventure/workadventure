@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"sync"
+	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/actor"
 	"github.com/workadventure/workadventure/server-go/internal/spacestate"
@@ -121,16 +123,52 @@ type Space struct {
 	Key SpaceKey
 	a   *actor.Actor
 	s   *spaceState
+	// Timers and LiveKit answers come back through later, refused once the space stopped.
+	mu      sync.RWMutex
+	stopped bool
+	calls   chan func() // LiveKit calls, one at a time, off the actor
 }
 
-func NewSpace(k SpaceKey) *Space {
-	return &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize), s: &spaceState{
+// NewSpace is a space without LiveKit: its media go through WebRTC whatever its size.
+func NewSpace(k SpaceKey) *Space { return NewSpaceWithMedia(k, Media{}) }
+
+func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
+	sp := &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize), s: &spaceState{
 		local: k.Local, members: map[string]*spaceMember{}, conns: map[[2]string]string{},
 		state: spacestate.Empty(), metadata: map[string]json.RawMessage{},
+		mediaCfg: media, strategy: strategyWebRTC, roomName: k.World + "." + k.Local, lk: liveKitState{invited: map[string]bool{}},
 	}}
+	sp.s.later = sp.later
+	if media.LiveKit != nil {
+		sp.calls = make(chan func(), 64)
+		go func() {
+			for f := range sp.calls {
+				f()
+			}
+		}()
+		sp.s.call = func(f func()) { sp.calls <- f }
+	}
+	return sp
 }
 
-func (sp *Space) Stop()                 { sp.a.Stop() }
+// later runs f on the space's goroutine, unless the space stopped.
+func (sp *Space) later(f func()) {
+	sp.mu.RLock()
+	defer sp.mu.RUnlock()
+	if !sp.stopped {
+		_ = sp.a.Post(context.Background(), f)
+	}
+}
+
+func (sp *Space) Stop() {
+	sp.mu.Lock()
+	sp.stopped = true
+	sp.mu.Unlock()
+	sp.a.Stop()
+	if sp.calls != nil {
+		go func() { <-sp.a.Done(); close(sp.calls) }() // the last closures may still queue a call
+	}
+}
 func (sp *Space) Done() <-chan struct{} { return sp.a.Done() }
 
 type spaceState struct {
@@ -143,6 +181,19 @@ type spaceState struct {
 	conns     map[[2]string]string // WebRTC connections, (sender, receiver) -> connection id
 	state     spacestate.SpaceState
 	metadata  map[string]json.RawMessage // free key/values of the scripting API
+
+	// Media strategy (space_livekit.go).
+	mediaCfg      Media
+	strategy      string // WEBRTC or LIVEKIT
+	roomName      string // the LiveKit room: the space's name, prefixed by its world
+	lk            liveKitState
+	finalizing    string // the strategy left, until it is finalized
+	finalizeTimer *time.Timer
+	finalizeGen   int
+	backTimer     *time.Timer
+	backGen       int
+	later         func(func()) // run on the space's goroutine, from a timer or a LiveKit answer
+	call          func(func()) // run a LiveKit call off the space's goroutine
 }
 
 type spaceMember struct {
@@ -245,8 +296,8 @@ func (s *spaceState) join(p Peer, j SpaceJoin, reply func(error)) {
 	state, _ := json.Marshal(s.state)
 	p.Send(NewMsg(SpaceStatePatch{Space: s.local, Patch: `[{"op":"replace","path":"","value":` + string(state) + `}]`}, true))
 	if s.media {
-		// Without LiveKit (J2), a bubble always meets through WebRTC.
-		p.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: id, Sender: m.user, Event: SwitchStrategy{Strategy: "WEBRTC"}}, true))
+		p.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: id, Sender: m.user, Event: SwitchStrategy{Strategy: s.strategy}}, true))
+		s.evaluate()
 	}
 }
 
@@ -271,6 +322,7 @@ func (s *spaceState) watch(id string, notMember func()) {
 	m.peer.Send(NewMsg(SpaceUsersInit{Space: s.local, Users: users, Metadata: string(metadata)}, true))
 	m.watching = true
 	s.connect(id, s.inFilterMember)
+	s.evaluate()
 }
 
 // Roles of the LIVE_STREAMING_USERS_WITH_FEEDBACK filter: speakers broadcast, listeners show they follow.
@@ -319,7 +371,7 @@ func (s *spaceState) visible(observer, target *SpaceUser) bool {
 
 // connect establishes a connection from id to each other member that matches and has none with it yet.
 func (s *spaceState) connect(id string, match func(*spaceMember) bool) {
-	if !s.media {
+	if !s.media || s.strategy != strategyWebRTC {
 		return
 	}
 	for _, o := range s.order {
@@ -345,7 +397,7 @@ func anyMember(*spaceMember) bool                        { return true }
 
 func (s *spaceState) restart(senderID, receiverID string, connectionID *string) {
 	sender, receiver := s.members[senderID], s.members[receiverID]
-	if !s.media || sender == nil || receiver == nil {
+	if !s.media || s.strategy != strategyWebRTC || sender == nil || receiver == nil {
 		return
 	}
 	existing, ok := s.conns[[2]string{senderID, receiverID}]
@@ -375,6 +427,7 @@ func (s *spaceState) unwatch(id string) {
 	}
 	m.watching = false
 	s.drop(id, s.inFilterMember)
+	s.evaluate()
 }
 
 // closedBy records that closer's front closed its peer with other: a front does so when a user leaves its list
@@ -417,6 +470,7 @@ func (s *spaceState) leave(id string) {
 		st.FloorHolders = removeFloorHolder(st.FloorHolders, id)
 		return nil
 	})
+	s.evaluate()
 }
 
 // update merges the masked fields of from into the member and tells the watchers. onlyChanged drops the fields
@@ -497,12 +551,13 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 		s.drop(id, func(o *spaceMember) bool { return o.watching && !s.inFilter(&o.user) })
 	}
 	for _, o := range relisted {
-		if om := s.members[o]; o != id && s.media && ((s.inFilter(&m.user) && om.watching) || (s.inFilter(&om.user) && m.watching)) {
+		if om := s.members[o]; o != id && s.media && s.strategy == strategyWebRTC && ((s.inFilter(&m.user) && om.watching) || (s.inFilter(&om.user) && m.watching)) {
 			if _, ok := s.conns[[2]string{id, o}]; !ok {
 				s.establish(id, o)
 			}
 		}
 	}
+	s.evaluate()
 	if old.Megaphone && !m.user.Megaphone {
 		// A floor holder who stops streaming no longer holds the floor.
 		_ = s.updateState(func(st *spacestate.SpaceState) error {

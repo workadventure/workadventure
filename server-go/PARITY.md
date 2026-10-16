@@ -22,7 +22,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 ## Manques bloquants, par ordre
 
 1. **Client de l'admin distante absent.** Concerne `/api/capabilities`, `/api/room/access` (et ses variantes `ErrorApiData`), `/api/map` côté pusher et back, ban, report, tags, sameWorld, membres, refresh OAuth, analytics. Attend le contrat `dev/contracts/admin-api.md` de la session socle.
-2. **LiveKit absent.** Pas de bascule au-delà de `MAX_USERS_FOR_WEBRTC`, pas d'invitation, pas de jeton : grandes bulles, mégaphone et partage d'écran à plusieurs passent en P2P complet. L'enregistrement en dépend.
+2. **LiveKit** : la bascule, les jetons et les salles sont codés et testés en unitaire (17/10) ; les specs `livekit` et `map_editor_livekit` restent à jouer. L'enregistrement en dépend et manque encore.
 3. **Durabilité des variables** : les écritures ne se perdent plus pendant une coupure (corrigé le 17/10). Reste qu'une room démarrée pendant une coupure garde les valeurs par défaut (`varsOnce`).
 4. **Isolation des tenants** :
    - clé de stockage sans le domaine (`USE_DOMAIN_NAME_IN_PATH`) ;
@@ -115,14 +115,13 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| Stratégie initiale WebRTC / Void | AbstractCommunicationState.ts:45-106 | validé (WebRTC seulement) | `core/space_test.go:32,80` | toujours `WEBRTC` (`core/space.go:248`) | garder sans LiveKit configuré |
-| Bascule au-delà de `MAX_USERS_FOR_WEBRTC` (4), et sur saturation CPU | TransitionPolicy.ts:37-55 | absent | — | P2P maillé quelle que soit la taille | politique en fonction pure, testée en table |
-| Retour en WebRTC différé de 20 s, bloqué pendant un enregistrement | CommunicationManager.ts:286-396 | absent | — | — | minuteur annulable dans l'acteur |
-| `switchMessage`, puis `finalizeSwitchMessage` 5 s après | StateLifecycleManager.ts:52-84 | absent | — | — | — |
-| Twirp ListRooms, CreateRoom, DeleteRoom | LivekitService.ts:110-163 | absent | — | défaut TS : salle orpheline après un retour en WebRTC (`cleanup` jamais appelé) | appels hors acteur ; supprimer à la finalisation |
-| Jeton (HS256, grants, identité `spaceUserId`) et invitation `{token, serverUrl}` | LivekitService.ts:126-153 | absent | — | — | golang-jwt déjà présent |
-| Déconnexion, relance `meetingConnectionRestart` | LivekitCommunicationStrategy.ts:101-263 | absent | `ws/spaces.go:223` **ignore la relance en silence** | — | — |
-| Mégaphone et diffusion (filtres, `isPublishing`) | Space.ts:310-318 | partiel | `core/space_filter_test.go:18,55,229,268` | N auditeurs = N flux P2P | avec LiveKit |
+| Stratégie initiale WebRTC ; sans LiveKit configuré, WebRTC quelle que soit la taille | AbstractCommunicationState.ts:45-106 | validé | `core/space_test.go:32`, `space_livekit_test.go` (`TestWithoutLiveKitABubbleStaysOnWebRTCWhateverItsSize`) | — | — |
+| Bascule au-delà de `MAX_USERS_FOR_WEBRTC` ou sur CPU limité (bulle de 3+) | TransitionPolicy.ts:37-55 | validé (unitaire) | `space_livekit_test.go` (bascule à 5, CPU limité à 3) | — | `livekit.spec.ts` sur la stack |
+| Retour en WebRTC 20 s après, annulé si la condition revient | CommunicationManager.ts:286-396 | validé (unitaire) | `TestABubbleGoesBackToWebRTCOnlyOnceItStayedSmall`, `TestSomeoneComingBackKeepsTheBubbleOnLiveKit` | pas encore bloqué par un enregistrement (absent) | avec l'enregistrement |
+| `switchMessage`, puis `finalizeSwitchMessage` de l'ancienne stratégie 5 s après | StateLifecycleManager.ts:52-84 | validé (unitaire) | idem | — | — |
+| Twirp ListRooms, CreateRoom, DeleteRoom ; jeton HS256 (grants, identité `spaceUserId`, métadonnées) | LivekitService.ts:110-163 | validé (unitaire) | `livekit/livekit_test.go` (2 tests) | **écart volontaire** : la salle est supprimée à la finalisation du retour en WebRTC (le TS la laissait orpheline) | — |
+| Invitations (membres du filtre et observateurs), déconnexion, salle supprimée quand plus personne ne diffuse | LivekitCommunicationStrategy.ts:60-229 | validé (unitaire) | `TestABubblePastFourMovesToLiveKitAndEveryoneGetsAToken`, `TestAMegaphoneRoomLastsAsLongAsSomeoneSpeaks` | — | spec |
+| Relance `meetingConnectionRestart` sans pair : nouveau jeton | LivekitCommunicationStrategy.ts:250-263 | implémenté non vérifié | `core/space_livekit.go` (`restartLiveKit`), `ws/spaces.go` | — | test |
 | Identifiants LiveKit par monde (`api/livekit/credentials`) | StateFactory.ts:48-75 | absent | — | SaaS (LiveKit Cloud) | avec l'admin |
 
 ## Enregistrement

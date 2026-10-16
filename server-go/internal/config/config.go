@@ -29,6 +29,11 @@ type Config struct {
 	MapStoragePort int
 	// The Room API (gRPC): ROOM_API_PORT of the pusher (SERVER_ROOM_API_PORT when set), served when there is a
 	// ROOM_API_SECRET_KEY, on ROOM_API_BIND_HOST (all addresses by default).
+	// LiveKit (LIVEKIT_HOST, LIVEKIT_API_KEY, LIVEKIT_API_SECRET): spaces move to it past MaxUsersForWebRTC.
+	LiveKitHost, LiveKitAPIKey, LiveKitAPISecret string
+	MaxUsersForWebRTC                            int
+	LiveKitSwitchOnCPULimitation                 bool
+
 	RoomAPIPort      int
 	RoomAPISecretKey string
 	RoomAPIBindHost  string
@@ -212,18 +217,23 @@ func firstNonEmpty(values ...string) string {
 func parse(get func(string) string) (*Config, error) {
 	r := &reader{get: get}
 	c := &Config{
-		HTTPPort:                   r.integer("PUSHER_HTTP_PORT", 3000),
-		WSPort:                     r.integer("PUSHER_WS_PORT", 3001),
-		MapStoragePort:             r.integer("SERVER_MAP_STORAGE_PORT", 0),
-		RoomAPIPort:                r.integer("SERVER_ROOM_API_PORT", r.integer("ROOM_API_PORT", 50051)),
-		RoomAPISecretKey:           r.str("ROOM_API_SECRET_KEY"),
-		RoomAPIBindHost:            strings.Trim(r.str("ROOM_API_BIND_HOST"), "[]"),
-		StorageDirectory:           firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
-		EmbeddedDomainsWhitelist:   list(r.str("EMBEDDED_DOMAINS_WHITELIST")),
-		RedisHost:                  r.str("REDIS_HOST"),
-		RedisPassword:              r.str("REDIS_PASSWORD"),
-		RedisPort:                  r.integer("REDIS_PORT", 6379),
-		StoreVariablesForLocalMaps: r.boolean("STORE_VARIABLES_FOR_LOCAL_MAPS", false),
+		HTTPPort:                     r.integer("PUSHER_HTTP_PORT", 3000),
+		WSPort:                       r.integer("PUSHER_WS_PORT", 3001),
+		MapStoragePort:               r.integer("SERVER_MAP_STORAGE_PORT", 0),
+		RoomAPIPort:                  r.integer("SERVER_ROOM_API_PORT", r.integer("ROOM_API_PORT", 50051)),
+		RoomAPISecretKey:             r.str("ROOM_API_SECRET_KEY"),
+		LiveKitHost:                  r.str("LIVEKIT_HOST"),
+		LiveKitAPIKey:                r.str("LIVEKIT_API_KEY"),
+		LiveKitAPISecret:             r.str("LIVEKIT_API_SECRET"),
+		MaxUsersForWebRTC:            r.integer("MAX_USERS_FOR_WEBRTC", 4),
+		LiveKitSwitchOnCPULimitation: r.boolean("LIVEKIT_SWITCH_ON_CPU_LIMITATION", true),
+		RoomAPIBindHost:              strings.Trim(r.str("ROOM_API_BIND_HOST"), "[]"),
+		StorageDirectory:             firstNonEmpty(r.str("STORAGE_DIRECTORY"), "./public"),
+		EmbeddedDomainsWhitelist:     list(r.str("EMBEDDED_DOMAINS_WHITELIST")),
+		RedisHost:                    r.str("REDIS_HOST"),
+		RedisPassword:                r.str("REDIS_PASSWORD"),
+		RedisPort:                    r.integer("REDIS_PORT", 6379),
+		StoreVariablesForLocalMaps:   r.boolean("STORE_VARIABLES_FOR_LOCAL_MAPS", false),
 		MapStorage: mapstorage.Options{
 			Auth: mapstorage.Auth{
 				Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
