@@ -3,6 +3,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import CameraNoImageToast from "../Components/Toasts/CameraNoImageToast.svelte";
 import { effectiveCameraStateStore, requestedCameraState, restartCamera } from "../Stores/MediaStore";
 import { toastStore } from "../Stores/ToastStoreSingleton";
+import { visibilityStore } from "../Stores/VisibilityStore";
 import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderStats";
 
 /**
@@ -106,12 +107,17 @@ export const CAMERA_NO_IMAGE_TOAST_ID = "camera-no-image";
  *
  * Only while the camera is on: a camera the user turned off leaves its senders in place, with an active layer and
  * nothing to encode, which must not read as a frozen camera.
+ *
+ * Only while the page shows: a hidden page (minimized, behind the desktop companion) can starve what feeds the
+ * encoder, a virtual background first, without the camera being frozen. Restarting or turning the camera off
+ * there would cut the user's video in the very meeting they follow from elsewhere; a camera really frozen meanwhile
+ * is caught a few seconds after they come back.
  */
 export function startCameraStallDetector(): void {
     const detector = new CameraStallDetector();
     const cameraStatsStore = derived(
-        [localEncoderStatsStore.video, effectiveCameraStateStore],
-        ([$stats, $cameraOn]) => ($cameraOn ? $stats : undefined),
+        [localEncoderStatsStore.video, effectiveCameraStateStore, visibilityStore],
+        ([$stats, $cameraOn, $visible]) => ($cameraOn && $visible ? $stats : undefined),
     );
     // Module singletons: never unsubscribed
     // eslint-disable-next-line svelte/no-ignored-unsubscribe
