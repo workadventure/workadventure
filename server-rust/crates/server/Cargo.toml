@@ -36,6 +36,7 @@ tracing.workspace = true
 tracing-subscriber.workspace = true
 uuid = { version = "1", features = ["v4"] }
 zip = { version = "9", default-features = false, features = ["deflate"] }
+redis = { version = "1.7.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
 
 [dev-dependencies]
 wa-bot = { path = "../bot" }

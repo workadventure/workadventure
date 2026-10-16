@@ -190,6 +190,11 @@ impl Wam {
         serde_json::to_vec(&self.doc).unwrap_or_default()
     }
 
+    /// The map (TMJ) of this file, relative to it.
+    pub fn map_url(&self) -> Option<&str> {
+        self.doc.get("mapUrl").and_then(Value::as_str)
+    }
+
     pub fn last_command_id(&self) -> Option<&str> {
         self.doc.get("lastCommandId").and_then(Value::as_str)
     }
@@ -372,15 +377,14 @@ impl Wam {
 
     /// WAMFileFormat, structurally: the fields the server and the front rely on, with their types. Unknown
     /// fields pass, as zod strips them rather than refuses them.
-    // ponytail: structure only; the property schemas (AreaDataProperty union) are not checked yet.
+    /// Properties are checked against their schemas (wam_properties).
     pub fn check(&self) -> Result<(), String> {
         let d = &self.doc;
         let text = |v: &Value, what: &str| if v.is_string() { Ok(()) } else { Err(format!("{what} must be a string")) };
         let number = |v: &Value, what: &str| if v.is_number() { Ok(()) } else { Err(format!("{what} must be a number")) };
-        let property_list = |v: &Value, what: &str| -> Result<(), String> {
+        let property_list = |v: &Value, what: &str, entity: bool| -> Result<(), String> {
             for (i, p) in v.as_array().ok_or(format!("{what}.properties must be an array"))?.iter().enumerate() {
-                text(&p["id"], &format!("{what}.properties[{i}].id"))?;
-                text(&p["type"], &format!("{what}.properties[{i}].type"))?;
+                crate::wam_properties::check(p, entity, &format!("{what}.properties[{i}]"))?;
             }
             Ok(())
         };
@@ -393,7 +397,10 @@ impl Wam {
             for k in ["x", "y", "width", "height"] {
                 number(&a[k], &format!("{what}.{k}"))?;
             }
-            property_list(&a["properties"], &what)?;
+            if !a["visible"].is_boolean() {
+                return Err(format!("{what}.visible must be a boolean"));
+            }
+            property_list(&a["properties"], &what, false)?;
         }
         for (id, e) in d["entities"].as_object().ok_or("entities must be an object")? {
             let what = format!("entities.{id}");
@@ -402,7 +409,7 @@ impl Wam {
             number(&e["x"], &format!("{what}.x"))?;
             number(&e["y"], &format!("{what}.y"))?;
             if e.get("properties").is_some() {
-                property_list(&e["properties"], &what)?;
+                property_list(&e["properties"], &what, true)?;
             }
         }
         if let Some(c) = d.get("entityCollections") {

@@ -1,0 +1,139 @@
+# PARITY — candidat Rust, jalon 1 (parité production)
+
+Matrice de parité avec la production TypeScript (pusher + back + map-storage + uploader + Room API). Une ligne par
+fonction : contrat, état réel, preuve, écart, prochaine action. Mise à jour à chaque tranche ; l'état est celui du
+commit indiqué en tête du dernier passage.
+
+**États :** `validé` (preuve rejouable : spec Playwright sur la stack `rust` ou test de scénario qui échoue sans
+le code) · `implémenté non vérifié` (code présent, aucune preuve de bout en bout) · `partiel` (une partie du
+contrat seulement, écart nommé) · `absent` · `hors périmètre explicite` (décision écrite, avec sa raison).
+
+Un paramètre lu ou un test sans assertion ne vaut pas `validé`. « Spec » = Playwright Chromium, stack
+`dev/dev stack up rust --variant server`, comptes préchauffés (`dev/warm-auth.mjs`). « Réf. TS » = même spec sur la
+stack `ts` du socle.
+
+**Dernier passage :** branche `lang-rust`, état de travail sur `db129c02d` (2026-10-17). Inventaires TS du
+17/10 (routes HTTP, messages WebSocket, intégrations), faits par des sous-agents sur le code TS du dépôt.
+
+**Verrou :** remplacement de production interdit tant que les lignes Admin SaaS, white label, LiveKit,
+enregistrement, persistance Redis et Room API ne sont pas `validé`.
+
+---
+
+## 1. Specs Playwright (`tests/tests`, 66 fichiers, ~290 tests)
+
+| Spec(s) | Contrat | État | Preuve | Écart | Prochaine action |
+|---|---|---|---|---|---|
+| J1 + J2 : AvailabilityStatus, camera_order, error_pages, meeting, oidc, reconnect, say_bubbles, scripting_moveto, userlist, webrtc_reconnection, raise-hand, raise-hand-megaphone, map_editor_megaphone_speaker_zone, chat/proximityChatPoll, scripting_spaces | connexion, déplacements, bulles, P2P, spaces, état de space, megaphone | `validé` | non-régression J3a : 68 réussis, 2 sautés, 0 échec (`userlist` « Send Message » passe, échoue en TS) | — | rejouer à chaque tranche |
+| Schémas des propriétés WAM (AreaDataProperty, EntityDataProperty) | une propriété acceptée doit passer `WAMFileFormat` au prochain chargement TS | `implémenté non vérifié` | test `properties_follow_the_map_editor_schemas` | — | rejouer J3a |
+| J3a : areas, map_editor_* (12 fichiers hors livekit/megaphone), map_storage_upload, personal_area_claim, personal_desk_spawn_on_connect | éditeur de carte, map-storage | `validé` sauf une ligne | 70/72 (1 sauté Klaxoon), réf. TS 67/72 | `map_editor_open_website:29` échoue (échoue aussi en TS) : cause à établir | rejouer avec la réf. TS, classer (défaut de test / environnement / défaut TS / régression) |
+| J3b : variables, scripting_area, scripting_chat, scripting_enter_leave_layer, scripting_events, scripting_follow, scripting_open_cowebsite, scripting_playermessage, scripting_setStatus, scripting_startVideo, api_players, iframe_script, banner_script, buttonactionbar_script, modal_script, metadata, modules, moderation, report_issue, meeting_invitation | scripting, variables, joueurs distants, modération | `absent` (brouillon des variables de room, non branché) | réf. TS : 35 réussis, 7 échecs connus, 3 sautés mobile | tout le serveur côté variables, événements, suivi, modération, invitations | J3b (étape 2) |
+| J3c : livekit, map_editor_livekit, recording, screensharing, room-api, swagger_doc, scripting_audio_stream | LiveKit, enregistrement, Room API, OpenAPI | `absent` | — | voir §5, §6, §7 | J3c |
+| Médias côté front : adaptive_streaming, background_effects, media_devices, instant_unmute, noise_suppression, p2p_mute_keeps_sender, picture_in_picture, video_layout, webrtc_codecs, webrtc_cpu_limitation | P2P et réglages locaux | `implémenté non vérifié` | le relais P2P est validé par J1/J2 ; ces specs n'ont jamais été jouées sur Rust | `webrtc_cpu_limitation` dépend du passage LiveKit sur `cpuLimited` | jouer en lot après J3b |
+| Front seul : browser_not_supported, translate, pwa_install_menu, responsive_actionbar, cowebsite_resize, chat/chatIme | pages et UI | `implémenté non vérifié` | non jouées | `pwa_install_menu` lit `/manifest.json` (absent, §2) | jouer en lot |
+| Matrix : chat/matrixChat*, 7 fichiers | chat Matrix | `partiel` | jamais jouées sur Rust | login OIDC → Matrix présent ; salles des zones (`/roomArea`, `enterChatRoomAreaQuery`), `leaveChatRoomAreaMessage`, `chatMembersQuery` réel absents | après J3c |
+| mobile/* (3 fichiers) | parcours mobiles | `implémenté non vérifié` | projet mobile non joué | — | jouer avec le projet mobile |
+
+## 2. Routes HTTP
+
+| Route | Contrat | État | Preuve | Écart | Prochaine action |
+|---|---|---|---|---|---|
+| `GET /ping`, `GET /ready` | sondes | `validé` | image prod : `/ping` 200 ; `/ready` 503 jusqu'au gabarit | — | — |
+| `GET /metrics` (+ `PROMETHEUS_PORT`, jeton Bearer) | métriques | `partiel` | test unitaire des noms ; jauges `nb_rooms`, `nb_sockets`, `nb_spaces`, `nb_clients_per_room`, `nb_groups_per_room`, `counter_groups_per_room` | `nb_publishers_per_space`, `nb_watchers_per_world` absentes | ajouter avec J3c |
+| `GET /`, `/login`, `/_/*`, `/@/*`, `/~/*`, `/index.html` | page de jeu, méta-balises | `validé` | specs J1 | `/@/*` sans admin distante répond en local | — |
+| `GET /jwt`, `/manifest.json`, `/server.json` | page dépréciée, PWA, infos serveur | `absent` | — | manifest : `pwa_install_menu` | ajouter avec les specs front |
+| `GET /.well-known/cf-custom-hostname-challenge/*` | défi Cloudflare via l'admin | `absent` | — | white label SaaS | avec l'admin distante |
+| Statique local / proxy (`ASSETS_URL` + `ASSETS_INTERNAL_URL`) | assets du front | `validé` (mode proxy) | stacks du socle | mode fichiers locaux non testé | — |
+| `GET /map` | détails de carte | `partiel` | specs J1 (LocalAdmin) | `/api/map` de l'admin distante absent | admin distante |
+| `POST /anonymLogin`, `GET /me` | jetons | `validé` (local) | specs J1 | `/me` ne consulte pas `/api/room/access` | admin distante |
+| `GET /login-screen`, `/openid-callback`, `/matrix-callback`, `/logout`, `/logout-callback` | OIDC | `validé` | `oidc.spec`, comptes OIDC des specs J3a | vérification du domaine (`/api/domain/verify`) absente | white label |
+| `GET /profile`, `/profile-callback` | page profil OIDC | `absent` | — | — | avec l'admin distante |
+| `GET /woka/list`, `/companion/list` | listes locales | `validé` (local) | specs J1 | versions admin absentes | admin distante |
+| `POST /save-name`, `/save-textures`, `/save-companion-texture` | sauvegarde via l'admin | `absent` | — | sans admin : TS rejette aussi | admin distante |
+| `GET /local-script` | script localhost | `implémenté non vérifié` | — | — | — |
+| `GET /rooms` | utilisateurs par room (`ADMIN_API_TOKEN`, en-tête `admin-token` ou `Authorization`) | `implémenté non vérifié` | — | une room qui ne répond pas en 1 s est omise, comme un back muet | `variables.spec:192` |
+| `POST /room/refresh`, `POST /message`, `POST /global/event`, `POST /external-module/event` | appels entrants de l'admin | `absent` | — | `/global/event` : J3b | J3b puis admin |
+| `WS /ws/admin/rooms` (`ADMIN_SOCKETS_TOKEN`) | écoute admin | `absent` | — | — | admin distante |
+| `POST /roomArea`, `PATCH`, `DELETE` (`MAP_STORAGE_API_TOKEN`) | salles Matrix des zones | `absent` | — | Matrix | après J3c |
+| `POST /livekit/egress/webhook` | webhook egress | `absent` | — | enregistrement | J3c |
+| `GET /ping-backs`, `/dump`, `/debug/*` (back) | exploitation TS | `hors périmètre explicite` | — | un seul processus : pas de back à sonder ; outils de débogage propres au Node | — |
+| `GET /openapi/*`, `/swagger-ui/*` (`ENABLE_OPENAPI_ENDPOINT`) | documentation | `absent` | — | `swagger_doc.spec` | J3c |
+| map-storage : `GET *.wam`, `PUT`, `PATCH *.wam`, `DELETE`, `/move`, `/copy`, `/upload`, `/download`, `/upload-endpoint`, `/maps`, `/private/files/*`, fichiers servis | map-storage | `validé` | `map_storage_upload` 21/21 | `USE_DOMAIN_NAME_IN_PATH` absent (stockage plat) ; S3 absent ; `GET /validate`, `GET /` (UI), `/health/live`, auth Digest, `AUTHENTICATION_VALIDATOR_URL`, webhook sortant (`ENABLE_WEB_HOOK`) absents | white label (domaines), puis S3 |
+| uploader : `/upload-audio-message`, `/download-audio-message/:id`, `/upload-file`, `/upload-file/:id` | fichiers du chat | `absent` | — | messages vocaux et fichiers du chat de proximité | après J3b |
+
+## 3. Messages WebSocket client → serveur
+
+| Message | État | Preuve | Écart / prochaine action |
+|---|---|---|---|
+| `joinRoomFrontMessage`, `userMovesMessage`, `viewportMessage`, `pingMessage`, `askPositionMessage` | `validé` | specs J1, tests `room.rs` | — |
+| `setPlayerDetailsMessage` | `partiel` | disponibilité, statut (J1) | `setVariable` (variables de joueur) : J3b |
+| `addSpaceFilterMessage`, `removeSpaceFilterMessage`, `updateSpaceUserMessage`, `updateSpaceMetadataMessage`, `publicEvent`, `privateEvent`, `backEvent` | `validé` | specs J2, `space.rs` | contrôle admin de `muteAudioForEverybody` / `muteVideoForEverybody` / `kickOffUser` à vérifier (moderation.spec, J3b) |
+| `editMapCommandMessage`, `setAreaPropertyVariableMessage` | `validé` | specs J3a ; test « la salle continue pendant un upload lent » | — |
+| `queryMessage`, `abortQueryMessage` | `partiel` | voir §4 | — |
+| `variableMessage` | `partiel` | test « room_variables_follow_the_map_rights… » ; `variables.spec:192` à jouer | variables de la carte (TMJ du stockage ou URL de la carte, contrôle réseau privé, 10 s, 50 Mo), droits `readableBy`/`writableBy`, diffusion filtrée, refus → `errorMessage` puis fermeture, relecture de la carte au plus toutes les 10 s ; Redis non vérifié de bout en bout (`variables.spec:61`, joué par le socle) ; Room API absente |
+| `itemEventMessage`, `emotePromptMessage`, `followRequestMessage`, `followConfirmationMessage`, `followAbortMessage`, `lockGroupPromptMessage`, `meetingInvitationRequestMessage`, `meetingInvitationResponseMessage`, `entityMessage` | `absent` (ignorés) | — | J3b |
+| `banPlayerMessage`, `playGlobalMessage`, `reportPlayerMessage` | `absent` | — | J3b (kick local) puis admin (ban, report) |
+| `updateChatIdMessage`, `leaveChatRoomAreaMessage` | `absent` | — | Matrix / admin |
+| `videoQualityReportMessage`, `analyticsEventReportMessage` | `absent` (ignorés) | — | analytics admin (§8) |
+
+## 4. Queries
+
+| Query | État | Preuve | Écart / prochaine action |
+|---|---|---|---|
+| `joinSpaceQuery`, `leaveSpaceQuery`, `spaceStateQuery` (main levée, parole, sondages, Q&R, `setKind`) | `validé` | specs J2, `space.rs` | `startRecording`/`stopRecording` : J3c |
+| `iceServersQuery` | `validé` | specs J1 (TURN statique) | version admin absente |
+| `embeddableWebsiteQuery`, `roomsFromSameWorldQuery`, `mapStorageJwtQuery` | `validé` | specs J3a | `roomsFromSameWorld` depuis l'admin absent |
+| `roomTagsQuery`, `searchTagsQuery`, `chatMembersQuery`, `getRecordingsQuery` | `partiel` : réponse vide | — | vide comme LocalAdmin ; version admin et S3 absentes |
+| `getMemberQuery` | `partiel` : erreur | — | admin |
+| `sendEventQuery`, `jitsiJwtQuery`, `joinBBBMeetingQuery` | `absent` (erreur explicite) | — | `sendEventQuery` : J3b ; Jitsi/BBB : à inventorier en production avant décision |
+| `searchMemberQuery`, `oauthRefreshTokenQuery`, `enterChatRoomAreaQuery`, `banIpPreviewQuery` | `absent` (erreur explicite) | — | admin / Matrix |
+| `deleteRecordingQuery`, `getSignedUrlQuery`, `getRecordingThumbnailsQuery` | `absent` (erreur explicite) | — | J3c |
+
+## 5. Room API (gRPC, `ROOM_API_PORT`, `ROOM_API_SECRET_KEY` ou admin)
+
+| RPC | État | Écart / prochaine action |
+|---|---|---|
+| `readVariable`, `listenVariable`, `saveVariable`, `broadcastEvent`, `listenToEvent` | `absent` | serveur gRPC (tonic) + authentification `X-API-Key` ; J3c, après les variables de room (J3b) |
+
+## 6. Intégrations SaaS
+
+| Domaine | Contrat | État | Écart | Prochaine action |
+|---|---|---|---|---|
+| Admin distante (`ADMIN_API_URL`, `ADMIN_API_TOKEN`, `ADMIN_URL`) | `/api/capabilities` au démarrage (attente bloquante), `/api/map`, `/api/room/access` (tags, textures, `canEdit`, `canRecord`, `world`, `userRoomToken`, applications), `/api/room/sameWorld`, `/api/ban`, `/api/report`, `/api/room/tags`, membres, tags du monde, `chatId`, refresh OAuth, ICE, woka/compagnons, `/api/domain/verify`, `/api/livekit/credentials`, `/api/recordings/events`, `/api/analytics/events-batch` | `absent` (LocalAdmin seul) | tout le chemin SaaS | contrat `dev/contracts/admin-api.md` attendu du socle |
+| White label | domaine → monde via l'admin ; vérification du `playUri` (`/api/domain/verify`, sinon hôte de `PUSHER_URL`) ; méta-balises et manifest par domaine ; map-storage par domaine (`USE_DOMAIN_NAME_IN_PATH`, hôte de `X-Forwarded-Host` derrière proxy de confiance) ; IP cliente de `X-Forwarded-For` pour les bans | `absent` | isolation par domaine, chaîne de confiance des proxies à écrire | avec l'admin ; deux domaines, mêmes chemins, preuve d'isolation |
+| LiveKit (`LIVEKIT_HOST`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `MAX_USERS_FOR_WEBRTC`, `LIVEKIT_SWITCH_ON_CPU_LIMITATION`) | bascule WebRTC → LiveKit au-delà du seuil (immédiate), retour après 20 s, finalisation 5 s ; salle = nom du space (sha256 au-delà de 250) ; jeton (identité spaceUserId, métadonnées) ; `livekitInvitationMessage`, `switchMessage`, `finalizeSwitchMessage`, `livekitDisconnectMessage` ; suppression de la salle | `absent` (P2P seul) | toute la stratégie | J3c |
+| Enregistrement (`LIVEKIT_RECORDING_S3_*`) | `startRecording`/`stopRecording` (`canRecord`), egress composite vers S3, webhook signé, état `recording` du space, `recordingUnexpectedlyStoppedMessage`, liste/vignettes/URL signées/suppression, événement `/api/recordings/events` | `absent` | blocage de remplacement tant qu'absent | J3c (le socle a l'egress depuis `da07c8b78`) |
+| Matrix (`MATRIX_*`) | jeton admin (Redis), salles des zones, invitations/modérateurs, SSO | `partiel` | redirection SSO présente ; le reste absent | après J3c |
+| Jitsi / BBB | `jitsiJwtQuery`, `joinBBBMeetingQuery` | `absent` | usage production à établir | inventaire production (`inventaire-production-2026-10-16.json`) |
+| Analytics admin | file d'événements par lots, `meeting.ended`, `meeting.participation.ended` | `absent` | — | avec l'admin |
+| Télémétrie (`ENABLE_TELEMETRY`), Sentry | — | `absent` | Sentry : journaux `tracing` seulement | décider avec l'équipe |
+
+## 7. Persistance
+
+| Donnée | Contrat TS | État | Écart | Prochaine action |
+|---|---|---|---|---|
+| Fichiers de carte et WAM | disque (`STORAGE_DIRECTORY`) ou S3 | `partiel` | disque `validé` ; S3 absent ; écriture versionnée (une sauvegarde en retard n'écrase ni une plus récente ni un changement HTTP : test `a_save_that_finishes_late_never_overwrites…`) | S3 si la production l'utilise |
+| Variables de room `persist` | Redis `HSET <roomUrl>` (`HGETALL` au chargement) | `implémenté non vérifié` | écritures hors de l'acteur, dernière valeur par variable, reprises jusqu'au retour de Redis, visibles d'une room rechargée entre-temps | `variables.spec:61` (socle) |
+| Variables de joueur | Redis `pr_<uuid>_\|@\|_<roomUrl>`, `pw_<uuid>_\|@\|_<worldUrl>` | `absent` | — | J3b |
+| Variables de zone | mémoire | `validé` | — | — |
+| Bans | admin | `absent` | — | admin |
+| Sessions, reprise | mémoire (`CLIENT_DISCONNECTION_RETENTION_MS`) | `validé` | `reconnect.spec`, `webrtc_reconnection.spec` | — |
+
+## 8. Exploitation et déploiement
+
+| Sujet | État | Preuve | Écart / prochaine action |
+|---|---|---|---|
+| Image `--target prod` (contextes `protos`, `pusherdata` écrits en tête du Dockerfile) | `validé` | construite et démarrée avec 3 variables (J3a) | — |
+| Mêmes noms de variables que TS | `partiel` | `config.rs` | variables des fonctions absentes non lues |
+| OSS, label `deploy` | `absent` | — | le workflow construit et déploie TS ; à adapter quand la parité OSS est atteinte |
+| SaaS | `absent` | — | pipeline GitLab + charts à adapter avec l'admin |
+| Saturation (files bornées, budgets) | `partiel` | budgets outbox/reprise (J1) | politique d'admission à écrire (§5.4) |
+| I/O de carte hors de l'acteur de room (P0) | `validé` | test « la salle continue pendant un upload lent… » rouge sur l'ancien acteur, vert sur le nouveau | relecture extérieure (rapport Codex) |
+
+## 9. Écarts volontaires (gardés)
+
+- Droits des entités : un non-éditeur ne supprime une entité que là où il peut écrire (map-storage laisse tout
+  supprimer). Une création ou modification refusée est refusée à l'émetteur, non diffusée.
+- Une commande d'édition qui casse la structure de la WAM est refusée et ne change rien (map-storage la garde en
+  mémoire).
+- `/upload-endpoint` garde le port de l'en-tête `Host` (Express le perd : `map_storage_upload:185` échoue en TS).

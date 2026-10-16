@@ -35,6 +35,7 @@ pub struct CachedMap {
     pub wam: Option<Wam>,
     pub history: History<pb::EditMapCommandMessage>,
     pub generation: u64,
+    pub revision: u64,
 }
 
 /// One map, owned by at most one room at a time: a room holds its lock for its whole life.
@@ -46,6 +47,8 @@ pub struct Storage {
     write: tokio::sync::Mutex<()>,
     /// Per file, bumped by each change from HTTP: a room's save from before it must not overwrite what it wrote.
     generations: parking_lot::Mutex<HashMap<String, u64>>,
+    /// Per WAM file, the newest revision written: a save that finishes late never brings back an older one.
+    saved: parking_lot::Mutex<HashMap<String, u64>>,
     maps: DashMap<String, MapSlot>,
 }
 
@@ -55,6 +58,7 @@ impl Storage {
             root: root.into(),
             write: tokio::sync::Mutex::new(()),
             generations: parking_lot::Mutex::new(HashMap::new()),
+            saved: parking_lot::Mutex::new(HashMap::new()),
             maps: DashMap::new(),
         }
     }
@@ -76,16 +80,37 @@ impl Storage {
         tokio::fs::read(self.path(rel)?).await.ok()
     }
 
-    /// Writes a WAM a room changed, unless the files were changed over HTTP since the room loaded it.
-    pub async fn save(&self, rel: &str, generation: u64, bytes: &[u8]) {
+    /// The newest revision of a WAM written so far: a room's edits count up from there.
+    pub fn revision(&self, rel: &str) -> u64 {
+        self.saved.lock().get(rel.trim_start_matches('/')).copied().unwrap_or(0)
+    }
+
+    /// Writes revision `revision` of a WAM a room changed, unless the files were changed over HTTP since the room
+    /// loaded it (`generation`) or a newer revision is already written.
+    pub async fn save(&self, rel: &str, generation: u64, revision: u64, bytes: Vec<u8>) {
         let Some(path) = self.path(rel) else { return };
         let _guard = self.write.lock().await;
         if generation != self.generation(rel) {
             return;
         }
-        if let Err(e) = write_atomic(&path, bytes) {
+        {
+            let mut saved = self.saved.lock();
+            let newest = saved.entry(rel.trim_start_matches('/').to_owned()).or_insert(0);
+            if revision <= *newest {
+                return;
+            }
+            *newest = revision;
+        }
+        let written = tokio::task::spawn_blocking(move || write_atomic(&path, &bytes)).await;
+        if let Err(e) = written.map_err(std::io::Error::other).and_then(|r| r) {
             tracing::error!(%rel, error = %e, "could not save the WAM file");
         }
+    }
+
+    /// Holds every write, as a slow disk would (tests).
+    #[doc(hidden)]
+    pub async fn hold_writes(&self) -> tokio::sync::MutexGuard<'_, ()> {
+        self.write.lock().await
     }
 
     /// A file the map editor stores (custom entity images, private files), outside the WAM.
@@ -304,4 +329,29 @@ fn unauthorized(state: &AppState, headers: &HeaderMap) -> Option<Response> {
 /// map-storage's validation errors: `{"<file>": {"<category>": [{type, message, details}]}}`.
 fn validation_error(category: &str, message: &str, details: &str) -> serde_json::Value {
     serde_json::json!({ category: [{"type": "error", "message": message, "details": details}] })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_save_that_finishes_late_never_overwrites_a_newer_one_or_an_http_change() {
+        let dir = std::env::temp_dir().join(format!("wa-rust-save-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let storage = Storage::new(&dir);
+        let (rel, read) = ("maps/t.wam", || std::fs::read_to_string(dir.join("maps/t.wam")).unwrap());
+        let generation = storage.generation(rel);
+        storage.save(rel, generation, 11, b"v11".to_vec()).await;
+        storage.save(rel, generation, 10, b"v10".to_vec()).await;
+        assert_eq!(read(), "v11");
+        assert_eq!(storage.revision(rel), 11);
+        // Files replaced over HTTP: a save from before is dropped, whatever its revision.
+        storage.change(&["maps"], |_| ()).await;
+        storage.save(rel, generation, 12, b"v12".to_vec()).await;
+        assert_eq!(read(), "v11");
+        storage.save(rel, storage.generation(rel), 12, b"v12".to_vec()).await;
+        assert_eq!(read(), "v12");
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

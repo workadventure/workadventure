@@ -31,6 +31,8 @@ pub enum Incoming {
 pub struct Bot {
     pub user_id: i32,
     pub room_url: String,
+    /// What the server said when the bot entered the room.
+    pub joined: pb::RoomJoinedMessage,
     sink: SplitSink<Ws, Message>,
     nonce: u32,
     next_query: i32,
@@ -131,6 +133,7 @@ impl Bot {
         let mut bot = Bot {
             user_id: 0,
             room_url: o.room_url,
+            joined: pb::RoomJoinedMessage::default(),
             sink,
             nonce: 0,
             next_query: 0,
@@ -146,6 +149,7 @@ impl Bot {
         let joined = read_until(&mut stream, Duration::from_secs(10), |m| matches!(m, Incoming::Top(Top::RoomJoinedMessage(_)))).await?;
         if let Incoming::Top(Top::RoomJoinedMessage(j)) = joined {
             bot.user_id = j.current_user_id;
+            bot.joined = j;
         }
         Ok((bot, stream))
     }

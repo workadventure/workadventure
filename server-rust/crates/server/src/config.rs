@@ -37,6 +37,13 @@ pub struct Config {
     /// STORAGE_DIRECTORY: where the maps live.
     pub storage_directory: String,
 
+    // --- Variables (back) ---
+    pub redis_host: Option<String>,
+    pub redis_port: u16,
+    pub redis_password: Option<String>,
+    /// STORE_VARIABLES_FOR_LOCAL_MAPS: check and save the variables of maps on a private network too.
+    pub store_variables_for_local_maps: bool,
+
     // --- Front ---
     pub front_url: String,
     pub pusher_url: String,
@@ -125,6 +132,10 @@ impl Config {
             max_per_group: env.number("MAX_PER_GROUP", 4),
             map_storage_port: env.number("SERVER_MAP_STORAGE_PORT", 3002),
             storage_directory: env.str("STORAGE_DIRECTORY").unwrap_or_else(|| "./public".into()),
+            redis_host: env.str("REDIS_HOST"),
+            redis_port: env.number("REDIS_PORT", 6379),
+            redis_password: env.str("REDIS_PASSWORD"),
+            store_variables_for_local_maps: env.bool("STORE_VARIABLES_FOR_LOCAL_MAPS", false),
             front_url: env.str("FRONT_URL").unwrap_or_default(),
             assets_internal_url: env
                 .str("ASSETS_INTERNAL_URL")

@@ -8,7 +8,7 @@
 //! outside world what happened through the `Sink` port: an event plus the list of recipients, so the adapter
 //! can encode each event once and fan it out.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use crate::geometry::{Position, Viewport, ZoneKey, ZoneRect, distance, viewport_zones, zone_of};
 use crate::spatial::Grid;
@@ -101,6 +101,8 @@ pub enum Event<'a> {
     JoinGroupSpace(&'a Group),
     /// The recipient left a bubble and must leave its space.
     LeaveGroupSpace(&'a str),
+    /// An emote above a player's head.
+    Emote(UserId, &'a str),
 }
 
 /// Outbound port.
@@ -113,6 +115,8 @@ pub struct JoinRequest {
     pub position: Position,
     pub availability: Availability,
     pub viewport: Viewport,
+    /// The player's public variables, shown to everyone who sees them.
+    pub variables: BTreeMap<String, String>,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -194,6 +198,13 @@ impl Room {
         self.users.get(&id)
     }
 
+    /// Every connection of a player (tabs, devices), oldest first.
+    pub fn ids_of(&self, uuid: &str) -> Vec<UserId> {
+        let mut ids: Vec<UserId> = self.users_by_uuid.get(uuid).into_iter().flatten().copied().collect();
+        ids.sort_unstable();
+        ids
+    }
+
     pub fn user_count(&self) -> usize {
         self.users.len()
     }
@@ -229,6 +240,7 @@ impl Room {
             position: req.position,
             appearance: Appearance {
                 availability: req.availability,
+                variables: req.variables,
                 ..Appearance::default()
             },
             group: None,
@@ -398,6 +410,32 @@ impl Room {
             // Back from a silent status: join whoever is next to us without waiting for a move.
             self.update_user_group(id, sink);
         }
+    }
+
+    /// emotePromptMessage: the players who see the actor's zone, not the actor.
+    pub fn emote(&self, id: UserId, emote: &str, sink: &mut impl Sink) {
+        let Some(user) = self.users.get(&id) else { return };
+        let to: Vec<UserId> = self.watchers(user.zone).filter(|w| *w != id).collect();
+        emit(sink, &to, Event::Emote(id, emote));
+    }
+
+    /// lockGroupPromptMessage: a locked bubble takes nobody in; those who see its zone are told.
+    pub fn lock_group(&mut self, id: UserId, lock: bool, sink: &mut impl Sink) {
+        let Some(g) = self.users.get(&id).and_then(|u| u.group) else { return };
+        let Some(group) = self.groups.get_mut(&g) else { return };
+        group.locked = lock;
+        let zone = group.zone;
+        let to: Vec<UserId> = self.watchers(zone).collect();
+        emit(sink, &to, Event::GroupUpdated(&self.groups[&g]));
+    }
+
+    /// The members of the user's bubble, the user included.
+    pub fn group_members(&self, id: UserId) -> Vec<UserId> {
+        self.users
+            .get(&id)
+            .and_then(|u| u.group)
+            .and_then(|g| self.groups.get(&g))
+            .map_or_else(Vec::new, |g| g.users.clone())
     }
 
     // ---------------------------------------------------------------- zones
