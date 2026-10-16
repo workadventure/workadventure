@@ -56,6 +56,8 @@ const CONNECT_DEADLINE_MS = 20_000;
 // Without this, a peer whose ICE never reaches "failed" (Firefox, dead TURN allocation) stays muted forever.
 const ICE_RESTART_DELAY_MS = 3_000;
 const ICE_RECOVERY_TIMEOUT_MS = 15_000;
+// Same as LiveKit's AudioPresets.musicHighQuality (mono)
+const SCREEN_SHARE_AUDIO_MAX_BITRATE = 64_000;
 
 const debug = Debug("webrtc:RemotePeer");
 
@@ -234,6 +236,7 @@ export class RemotePeer extends Peer implements Streamable {
     private readonly negotiatedHandler = () => {
         if (this._connected) {
             this.applyVideoEncoding();
+            this.applyScreenShareAudioBitrate();
         }
     };
 
@@ -275,6 +278,7 @@ export class RemotePeer extends Peer implements Streamable {
 
         this._connected = true;
         this.applyVideoEncoding();
+        this.applyScreenShareAudioBitrate();
 
         /*const proximityRoomChat = gameManager.getCurrentGameScene().proximityChatRoom;
 
@@ -1274,6 +1278,28 @@ export class RemotePeer extends Peer implements Streamable {
                 }
                 console.error("Adaptive video: failed to set parameters", err);
             });
+    }
+
+    /**
+     * Shared audio is usually music or a video, which sounds thin at the browser's default Opus bitrate (32 kbps).
+     * It stays mono: stereo needs `stereo=1` in the viewer's SDP, which we do not munge.
+     */
+    private applyScreenShareAudioBitrate(): void {
+        if (this.type !== "screenSharing") {
+            return;
+        }
+        const audioSender = (this._pc as RTCPeerConnection | undefined)
+            ?.getSenders()
+            .find((s) => s.track?.kind === "audio");
+        const parameters = audioSender?.getParameters();
+        const encoding = parameters?.encodings?.[0];
+        if (!audioSender || !parameters || !encoding) {
+            return;
+        }
+        encoding.maxBitrate = SCREEN_SHARE_AUDIO_MAX_BITRATE;
+        audioSender.setParameters(parameters).catch((err: unknown) => {
+            console.warn("Could not raise the screen sharing audio bitrate", err);
+        });
     }
 
     /**
