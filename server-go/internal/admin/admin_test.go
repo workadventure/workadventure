@@ -60,12 +60,17 @@ func TestMapDetails(t *testing.T) {
 	}
 }
 
-func TestNoRecordingIsOfferedWhileThisServerCannotRecord(t *testing.T) {
+func TestTheRecordButtonFollowsTheRecordingSetup(t *testing.T) {
 	l := local(t)
-	l.cfg.RecordingConfigured = true // S3 is set, but there is no egress yet
 	d, _ := l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
-	m, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json", AccessToken: "t"})
-	if d["recording"].(map[string]any)["buttonState"] != "hidden" || m.CanRecord {
-		t.Fatalf("a button the server would always refuse: %v, canRecord %v", d["recording"], m.CanRecord)
+	if d["recording"].(map[string]any)["buttonState"] != "hidden" {
+		t.Fatal("no S3 or no LiveKit: no button")
+	}
+	l.cfg.RecordingConfigured = true
+	d, _ = l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
+	anonymous, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json"})
+	logged, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json", AccessToken: "t"})
+	if d["recording"].(map[string]any)["buttonState"] != "enabled" || anonymous.CanRecord || !logged.CanRecord {
+		t.Fatalf("a logged user records once S3 and LiveKit are set: %v %v %v", d["recording"], anonymous.CanRecord, logged.CanRecord)
 	}
 }

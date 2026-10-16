@@ -60,6 +60,10 @@ func (sp *Space) Query(ctx context.Context, userID string, q any, reply func(err
 			reply(fmt.Errorf("Could not find user %s in space %s", userID, sp.Key.Local))
 			return
 		}
+		if _, ok := q.(StartRecording); ok {
+			sp.s.startRecording(&sender.user, reply) // answered once the egress runs
+			return
+		}
 		reply(sp.s.query(&sender.user, q))
 	})
 }
@@ -225,8 +229,8 @@ func (s *spaceState) query(sender *SpaceUser, q any) error {
 			delete(st.Questions, q.QuestionID)
 			return nil
 		})
-	case StartRecording, StopRecording:
-		return ErrNoRecording // ponytail: recording needs LiveKit egress
+	case StopRecording:
+		return s.stopRecording(sender)
 	}
 	return fmt.Errorf("unknown space state query %T", q)
 }

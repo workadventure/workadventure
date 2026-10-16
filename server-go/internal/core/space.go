@@ -192,6 +192,8 @@ type spaceState struct {
 	finalizeGen   int
 	backTimer     *time.Timer
 	backGen       int
+	rec           *recording // space_recording.go
+	recGen        int
 	later         func(func()) // run on the space's goroutine, from a timer or a LiveKit answer
 	call          func(func()) // run a LiveKit call off the space's goroutine
 }
@@ -470,6 +472,9 @@ func (s *spaceState) leave(id string) {
 		return
 	}
 	s.drop(id, anyMember)
+	if s.rec != nil && s.rec.recorder.ID == id {
+		s.stopByServer() // the recorder left
+	}
 	delete(s.members, id)
 	s.order = slices.DeleteFunc(s.order, func(o string) bool { return o == id })
 	s.toMembers(func(o *spaceMember) bool { return o.watching && s.visible(&o.user, &m.user) }, NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true))

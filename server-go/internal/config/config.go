@@ -55,13 +55,14 @@ type Config struct {
 	StoreVariablesForLocalMaps bool
 	PlayerVariablesMaxTTL      int64 // seconds; -1: no maximum
 
-	SecretKey          string
-	AdminAPIURL        string
-	AdminURL           string        // ADMIN_URL: the admin's public URL (ICE servers, chat ids, OAuth refresh)
-	AdminAPIRetryDelay time.Duration // ADMIN_API_RETRY_DELAY: between two tries of /api/capabilities at start
-	AdminAPIToken      string        // ADMIN_API_TOKEN: the administration routes (POST /global/event)
-	DisableAnonymous   bool
-	OpenID             OpenID
+	SecretKey             string
+	AdminAPIURL           string
+	EnableOpenAPIEndpoint bool          // ENABLE_OPENAPI_ENDPOINT: /openapi/* and /swagger-ui/
+	AdminURL              string        // ADMIN_URL: the admin's public URL (ICE servers, chat ids, OAuth refresh)
+	AdminAPIRetryDelay    time.Duration // ADMIN_API_RETRY_DELAY: between two tries of /api/capabilities at start
+	AdminAPIToken         string        // ADMIN_API_TOKEN: the administration routes (POST /global/event)
+	DisableAnonymous      bool
+	OpenID                OpenID
 
 	SocketIdleTimer           time.Duration
 	ClientDisconnectRetention time.Duration
@@ -105,6 +106,7 @@ type Config struct {
 	MatrixEnabled                    bool
 	GoogleDrivePickerClientID        string
 	RecordingConfigured              bool
+	RecordingS3                      RecordingS3
 	AllowedCORSOrigin                string
 	MatrixPublicURI                  string
 	StunServer                       string
@@ -258,6 +260,7 @@ func parse(get func(string) string) (*Config, error) {
 		},
 		SecretKey:                 r.str("SECRET_KEY"),
 		AdminAPIURL:               r.str("ADMIN_API_URL"),
+		EnableOpenAPIEndpoint:     r.boolean("ENABLE_OPENAPI_ENDPOINT", false),
 		AdminURL:                  r.str("ADMIN_URL"),
 		AdminAPIRetryDelay:        time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
 		AdminAPIToken:             r.str("ADMIN_API_TOKEN"),
@@ -343,6 +346,11 @@ func parse(get func(string) string) (*Config, error) {
 	c.RecordingConfigured = r.str("LIVEKIT_RECORDING_S3_ENDPOINT") != "" && r.str("LIVEKIT_RECORDING_S3_BUCKET") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_ACCESS_KEY") != "" && r.str("LIVEKIT_RECORDING_S3_SECRET_KEY") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_REGION") != ""
+	c.RecordingS3 = RecordingS3{Endpoint: r.str("LIVEKIT_RECORDING_S3_ENDPOINT"), CDNEndpoint: r.str("LIVEKIT_RECORDING_S3_CDN_ENDPOINT"),
+		AccessKey: r.str("LIVEKIT_RECORDING_S3_ACCESS_KEY"), Secret: r.str("LIVEKIT_RECORDING_S3_SECRET_KEY"),
+		Region: r.str("LIVEKIT_RECORDING_S3_REGION"), Bucket: r.str("LIVEKIT_RECORDING_S3_BUCKET")}
+	// Recording needs the egress of a LiveKit server, besides the bucket.
+	c.RecordingConfigured = c.RecordingConfigured && c.LiveKitHost != "" && c.LiveKitAPIKey != "" && c.LiveKitAPISecret != ""
 	c.MatrixEnabled = r.str("MATRIX_PUBLIC_URI") != "" && r.str("MATRIX_API_URI") != "" &&
 		r.str("MATRIX_ADMIN_USER") != "" && r.str("MATRIX_ADMIN_PASSWORD") != "" && r.str("MATRIX_DOMAIN") != ""
 
@@ -466,3 +474,6 @@ func sentryDSN(r *reader) any {
 	}
 	return r.opt("SENTRY_DSN_FRONT")
 }
+
+// RecordingS3 is where the recordings go (LIVEKIT_RECORDING_S3_*).
+type RecordingS3 struct{ Endpoint, CDNEndpoint, AccessKey, Secret, Region, Bucket string }

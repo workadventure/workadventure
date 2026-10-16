@@ -562,6 +562,14 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_RoomTagsQuery:
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{
 			Tags: s.srv.admin.RoomTags(s.ctx, s.info.roomID)}}})
+	case *pb.QueryMessage_GetRecordingsQuery:
+		go s.getRecordings(q.GetId())
+	case *pb.QueryMessage_DeleteRecordingQuery:
+		go s.deleteRecording(q.GetId(), query.DeleteRecordingQuery.GetRecordingId())
+	case *pb.QueryMessage_GetRecordingThumbnailsQuery:
+		go s.recordingThumbnails(q.GetId(), query.GetRecordingThumbnailsQuery.GetBaseFilename())
+	case *pb.QueryMessage_GetSignedUrlQuery:
+		go s.signedURL(q.GetId(), query.GetSignedUrlQuery.GetKey())
 	case *pb.QueryMessage_IceServersQuery:
 		var servers []*pb.IceServer
 		list, err := s.srv.admin.IceServers(s.ctx, s.info.roomID, s.info.userUUID, s.userID.Load())

@@ -82,7 +82,12 @@ func run() error {
 
 	media := core.DefaultMedia(nil)
 	if cfg.LiveKitHost != "" && cfg.LiveKitAPIKey != "" && cfg.LiveKitAPISecret != "" {
-		media.LiveKit = livekit.New(cfg.LiveKitHost, cfg.LiveKitAPIKey, cfg.LiveKitAPISecret)
+		lk := livekit.New(cfg.LiveKitHost, cfg.LiveKitAPIKey, cfg.LiveKitAPISecret)
+		media.LiveKit = lk
+		if cfg.RecordingConfigured {
+			r := cfg.RecordingS3
+			media.Egress = lk.Egress(livekit.S3{Endpoint: r.Endpoint, AccessKey: r.AccessKey, Secret: r.Secret, Region: r.Region, Bucket: r.Bucket})
+		}
 	}
 	media.MaxUsersForWebRTC, media.SwitchOnCPULimit = cfg.MaxUsersForWebRTC, cfg.LiveKitSwitchOnCPULimitation
 	spaces := registry.NewRefs(
