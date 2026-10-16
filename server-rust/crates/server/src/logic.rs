@@ -12,7 +12,7 @@ use wa_proto::messages as pb;
 
 use crate::AppState;
 use crate::local_admin;
-use crate::room_actor::{self, RoomCmd, RoomHandle};
+use crate::room_actor::{self, RoomCmd, RoomHandle, Social};
 use crate::session::SessionParts;
 use crate::space_actor::{self, SpaceCmd, SpaceHandle};
 use crate::wire;
@@ -32,6 +32,8 @@ struct Logic {
     /// Joined spaces, by the name the front uses.
     spaces: HashMap<String, SpaceHandle>,
     recent_joins: HashMap<i32, (String, Instant)>,
+    /// A logged player's saved variables in this room.
+    saved: crate::player_variables::Mine,
 }
 
 pub async fn run(parts: SessionParts, app: AppState) {
@@ -44,7 +46,7 @@ pub async fn run(parts: SessionParts, app: AppState) {
         app.sessions.insert(cid.clone(), session.clone());
     }
     // Like the back on connect: the room (and its map) exists from now on, and says it is ready.
-    let room = room_actor::get_or_spawn(&app.rooms, &session.info.room_id, app.room_config, &app.storage);
+    let room = room_actor::get_or_spawn(&app, &session.info.room_id);
     let _ = room.send(RoomCmd::Connect { session: session.clone() }).await;
     let mut logic = Logic {
         chat_id: session.info.chat_id.clone(),
@@ -56,6 +58,7 @@ pub async fn run(parts: SessionParts, app: AppState) {
         availability: Availability::ONLINE,
         spaces: HashMap::new(),
         recent_joins: HashMap::new(),
+        saved: Default::default(),
     };
     loop {
         tokio::select! {
@@ -76,6 +79,10 @@ pub async fn run(parts: SessionParts, app: AppState) {
 impl Logic {
     fn world_key(&self, local: &str) -> String {
         format!("{}.{}", self.parts_session.info.world, local)
+    }
+
+    async fn social(&self, act: Social) {
+        self.to_room(RoomCmd::Social { session: self.parts_session.clone(), act }).await;
     }
 
     async fn to_room(&self, cmd: RoomCmd) {
@@ -126,6 +133,18 @@ impl Logic {
                 };
                 self.name = join.name;
                 self.availability = Availability(join.availability_status);
+                // The back loads them when the user is created, before roomJoinedMessage.
+                if session.info.is_logged {
+                    self.saved =
+                        crate::player_variables::Mine::load(&self.app.redis, &session.info.user_uuid, &session.info.room_id).await;
+                }
+                let player_variables: Vec<pb::VariableMessage> = self
+                    .saved
+                    .saved
+                    .iter()
+                    .map(|(name, s)| pb::VariableMessage { name: name.clone(), value: s.value.clone() })
+                    .collect();
+                let public = self.saved.saved.iter().filter(|(_, s)| s.public).map(|(n, s)| (n.clone(), s.value.clone())).collect();
                 let info = &session.info;
                 let request = JoinRequest {
                     profile: Profile {
@@ -143,17 +162,42 @@ impl Logic {
                     position: wire::position_from(&position),
                     availability: self.availability,
                     viewport: wire::viewport_from(&viewport),
+                    variables: public,
                 };
                 self.joined = true;
                 self.to_room(RoomCmd::Join {
                     session: session.clone(),
                     request,
+                    player_variables,
                 })
                 .await;
             }
             M::EditMapCommandMessage(command) => self.to_room(RoomCmd::Edit { session, command }).await,
             M::SetAreaPropertyVariableMessage(variable) => {
                 self.to_room(RoomCmd::SetAreaVariable { session, variable }).await;
+            }
+            M::VariableMessage(v) => {
+                self.to_room(RoomCmd::Variable {
+                    session,
+                    name: v.name,
+                    value: v.value,
+                })
+                .await
+            }
+            M::FollowRequestMessage(m) => self.social(Social::FollowRequest(m)).await,
+            M::FollowConfirmationMessage(m) => self.social(Social::FollowConfirmation(m)).await,
+            M::FollowAbortMessage(m) => self.social(Social::FollowAbort(m)).await,
+            M::LockGroupPromptMessage(m) => self.social(Social::LockGroup(m.lock)).await,
+            M::EmotePromptMessage(m) => self.social(Social::Emote(m.emote)).await,
+            M::ItemEventMessage(m) => self.social(Social::Item(m)).await,
+            M::MeetingInvitationRequestMessage(m) => self.social(Social::InvitationRequest(m)).await,
+            M::MeetingInvitationResponseMessage(m) => self.social(Social::InvitationResponse(m)).await,
+            // handleBanPlayerMessage: admins only, silently ignored otherwise. Without an admin API a ban
+            // cannot be stored: it falls back to a kick, as LocalAdmin's refusal does on the pusher.
+            M::BanPlayerMessage(m) => {
+                if session.info.tags.iter().any(|t| t == "admin") {
+                    self.social(Social::Kick { uuid: m.ban_user_uuid, reason: m.reason }).await;
+                }
             }
             M::UserMovesMessage(moves) => {
                 let (Some(user), Some(position)) = (user, moves.position) else { return };
@@ -177,6 +221,14 @@ impl Logic {
                 }
                 if let Some(chat_id) = &change.chat_id {
                     self.chat_id = Some(chat_id.clone());
+                }
+                if let Some(v) = &change.variable
+                    && v.persist
+                    && session.info.is_logged
+                {
+                    let max = self.app.config.raw.get("PLAYER_VARIABLES_MAX_TTL").and_then(|t| t.parse().ok()).unwrap_or(-1);
+                    let ttl = crate::player_variables::ttl(v.ttl, max);
+                    self.saved.save(&self.app.redis, &v.name, &v.value, v.public, ttl);
                 }
                 if let Some(id) = &space_user_id {
                     for space in self.spaces.values() {
@@ -373,6 +425,16 @@ impl Logic {
                 }
                 session.push(wire::answer_error(id, "You are not part of this space"));
                 return;
+            }
+            Q::SendEventQuery(e) => {
+                self.to_room(RoomCmd::Event {
+                    sender: session.user_id(),
+                    name: e.name,
+                    data: e.data,
+                    targets: e.target_user_ids,
+                })
+                .await;
+                A::SendEventAnswer(pb::SendEventAnswer {})
             }
             Q::RoomTagsQuery(_) => A::RoomTagsAnswer(pb::RoomTagsAnswer::default()),
             Q::SearchTagsQuery(_) => A::SearchTagsAnswer(pb::SearchTagsAnswer::default()),

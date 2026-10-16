@@ -28,6 +28,7 @@ impl Sink for Log {
             Event::DetailsUpdated(id, _) => format!("details {id}"),
             Event::JoinGroupSpace(g) => format!("joinSpace {}", g.space_name),
             Event::LeaveGroupSpace(name) => format!("leaveSpace {name}"),
+            Event::Emote(id, emote) => format!("emote {id} {emote}"),
         };
         let mut r = recipients.to_vec();
         r.sort_unstable();
@@ -80,6 +81,7 @@ fn join_with(room: &mut Room, log: &mut Log, uuid: &str, pos: Position, a: Avail
             position: pos,
             availability: a,
             viewport: v,
+            variables: Default::default(),
         },
         log,
     )
@@ -326,6 +328,7 @@ fn a_new_connection_from_the_same_tab_replaces_the_old_one() {
         position: at(0, 0),
         availability: Availability::ONLINE,
         viewport: screen(),
+        variables: Default::default(),
     };
     let first = room.join(req("t1"), &mut log);
     assert!(!first.duplicate);
@@ -370,4 +373,37 @@ fn hundreds_of_players_in_one_room_stay_consistent() {
     }
     assert!(room.is_empty());
     assert_eq!(room.group_count(), 0);
+}
+
+#[test]
+fn an_emote_reaches_who_sees_the_player_but_not_the_player() {
+    let mut room = room();
+    let mut log = Log::default();
+    let a = join(&mut room, &mut log, "a", at(100, 100));
+    let b = join(&mut room, &mut log, "b", at(400, 100));
+    log.take();
+    room.emote(a, "👋", &mut log);
+    assert_eq!(log.take(), [(vec![b], format!("emote {a} 👋"))]);
+}
+
+#[test]
+fn a_locked_bubble_lets_nobody_in_until_it_is_unlocked() {
+    let mut room = room();
+    let mut log = Log::default();
+    let a = join(&mut room, &mut log, "a", at(100, 100));
+    let b = join(&mut room, &mut log, "b", at(130, 100));
+    log.take();
+    room.lock_group(b, true, &mut log);
+    assert!(log.take().iter().any(|(to, t)| to.contains(&a) && to.contains(&b) && t.starts_with("groupUpdated")));
+    assert_eq!(room.group_members(a), room.group_members(b));
+    let c = join(&mut room, &mut log, "c", at(115, 120));
+    assert_eq!(room.user(c).unwrap().group, None);
+    room.lock_group(a, false, &mut log);
+    room.move_user(c, at(116, 120), &mut log);
+    assert!(room.user(c).unwrap().group.is_some());
+    // Outside a bubble, there is nothing to lock.
+    let d = join(&mut room, &mut log, "d", at(3000, 3000));
+    log.take();
+    room.lock_group(d, true, &mut log);
+    assert!(log.take().is_empty());
 }

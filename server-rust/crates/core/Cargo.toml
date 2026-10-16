@@ -11,6 +11,8 @@ publish.workspace = true
 serde.workspace = true
 # The WAM file stays JSON (wam.rs): the editor's fields this server does not know survive its edits.
 serde_json.workspace = true
+# EmoteValidator's Unicode properties (Extended_Pictographic, Emoji_Component).
+regex = { version = "1", default-features = false, features = ["std", "unicode-bool"] }
 
 [lints]
 workspace = true

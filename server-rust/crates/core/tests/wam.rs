@@ -47,7 +47,7 @@ fn areas_are_created_once_and_modified_in_place() {
     assert_eq!(w.areas()[0]["visible"], true);
 
     let props = vec![
-        json!({"id": "p", "type": "livekitRoomProperty", "serverData": {}}),
+        json!({"id": "p", "type": "livekitRoomProperty", "roomName": "r", "serverData": {}}),
         json!({"id": "q", "type": "highlight"}),
     ];
     let modify = |name: Option<&str>, properties: Option<Vec<Value>>| Edit::ModifyArea {
@@ -66,7 +66,7 @@ fn areas_are_created_once_and_modified_in_place() {
     let mut stored = doc(&w);
     stored["areas"][0]["properties"][0]["serverData"] = json!({"room": "r1"});
     let mut w = wam(stored);
-    w.apply("c5", modify(None, Some(vec![json!({"id": "p", "type": "livekitRoomProperty"})])), ADMIN)
+    w.apply("c5", modify(None, Some(vec![json!({"id": "p", "type": "livekitRoomProperty", "roomName": "r"})])), ADMIN)
         .unwrap();
     assert_eq!(w.areas()[0]["properties"][0]["serverData"], json!({"room": "r1"}));
 

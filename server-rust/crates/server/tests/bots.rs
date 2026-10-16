@@ -18,6 +18,11 @@ async fn start() -> String {
 
 /// The server and its map-storage listener.
 async fn start_with(vars: &[(&str, &str)]) -> (String, String) {
+    let (play, maps, _) = start_state(vars).await;
+    (play, maps)
+}
+
+async fn start_state(vars: &[(&str, &str)]) -> (String, String, AppState) {
     let config = Config::load(Env::new(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
     let state = AppState::new(config);
     let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -27,9 +32,10 @@ async fn start_with(vars: &[(&str, &str)]) -> (String, String) {
         format!("http://{}", maps.local_addr().unwrap()),
     );
     let map_storage = wa_server::map_storage::router(state.clone());
-    tokio::spawn(async move { axum::serve(play, router(state)).await });
+    let app = router(state.clone());
+    tokio::spawn(async move { axum::serve(play, app).await });
     tokio::spawn(async move { axum::serve(maps, map_storage).await });
-    urls
+    (urls.0, urls.1, state)
 }
 
 async fn bot(server: &str, room: &str, name: &str, x: i32, y: i32) -> (Bot, Inbox) {
@@ -435,4 +441,215 @@ async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
     let kept: serde_json::Value = serde_json::from_slice(&std::fs::read(dir.join("maps/t.wam")).unwrap()).unwrap();
     assert_eq!(kept["areas"][0]["id"], "area-1");
     let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
+async fn the_room_goes_on_during_a_slow_upload_and_the_edits_keep_their_order() {
+    use pb::edit_map_message::Message as E;
+    let dir = std::env::temp_dir().join(format!("wa-rust-slow-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    let wam = r#"{"version":"1.0.0","mapUrl":"./t.tmj","areas":[],"entities":{},"entityCollections":[]}"#;
+    std::fs::write(dir.join("maps/t.wam"), wam).unwrap();
+    let (server, _maps, state) = start_state(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("ENABLE_MAP_EDITOR", "true"),
+    ])
+    .await;
+    let room = "http://play.test/~/maps/t.wam";
+    let (mut alice, _ia) = bot(&server, room, "Alice", 100, 100).await;
+    let (_bob, mut ib) = bot(&server, room, "Bob", 200, 200).await;
+    let a = alice.user_id;
+
+    // The disk hangs: the custom entity cannot be written.
+    let disk = state.storage.hold_writes().await;
+    let upload = pb::UploadEntityMessage {
+        file: vec![1, 2, 3].into(),
+        id: "entity-1".into(),
+        name: "Lamp".into(),
+        image_path: "lamp.png".into(),
+        ..Default::default()
+    };
+    alice.send(edit("cmd-upload", E::UploadEntityMessage(upload))).await.unwrap();
+    let area = pb::CreateAreaMessage { id: "area-1".into(), x: 0, y: 0, width: 32, height: 32, ..Default::default() };
+    alice.send(edit("cmd-area", E::CreateAreaMessage(area))).await.unwrap();
+    // Meanwhile the room still delivers moves.
+    alice.move_to(130, 100, true, SCREEN).await.unwrap();
+    ib.expect(WAIT, |m| match m {
+        Incoming::Sub(Sub::UserMovedMessage(u)) if u.user_id == a && u.position.as_ref()?.x == 130 => Some(()),
+        _ => None,
+    })
+    .await
+    .unwrap();
+    assert!(ib.seen().iter().all(|m| edit_echo(m).is_none()), "no edit may pass the one waiting for the disk");
+
+    // The disk comes back: the upload, then the area, in that order, owner set by the server.
+    drop(disk);
+    let ids = ib
+        .expect(WAIT, {
+            let mut ids = Vec::new();
+            move |m| {
+                ids.extend(edit_echo(m).map(|c| c.id.clone()));
+                (ids.len() == 2).then(|| ids.clone())
+            }
+        })
+        .await
+        .unwrap();
+    assert_eq!(ids, ["cmd-upload", "cmd-area"]);
+    let owner = ib.seen().iter().find_map(|m| match edit_echo(m)?.edit_map_message.as_ref()?.message.as_ref()? {
+        E::UploadEntityMessage(u) => u.owner_id.clone(),
+        _ => None,
+    });
+    assert!(owner.is_some_and(|o| !o.is_empty()));
+    assert!(dir.join("assets/entities/lamp.png").exists());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
+async fn room_variables_follow_the_map_rights_and_reach_who_may_read_them() {
+    use pb::client_to_server_message::Message as M;
+    let dir = std::env::temp_dir().join(format!("wa-rust-vars-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    std::fs::write(
+        dir.join("maps/v.wam"),
+        r#"{"version":"1.0.0","mapUrl":"./v.tmj","areas":[],"entities":{},"entityCollections":[]}"#,
+    )
+    .unwrap();
+    let variable = |name: &str, props: serde_json::Value| serde_json::json!({"name": name, "class": "variable", "properties": props});
+    let tmj = serde_json::json!({"layers": [{"type": "objectgroup", "objects": [
+        variable("door", serde_json::json!([{"name": "default", "value": false}, {"name": "persist", "value": true}])),
+        variable("secret", serde_json::json!([{"name": "readableBy", "value": "vip"}])),
+        variable("locked", serde_json::json!([{"name": "writableBy", "value": "admin"}])),
+    ]}]});
+    std::fs::write(dir.join("maps/v.tmj"), tmj.to_string()).unwrap();
+    let (server, _maps) = start_with(&[("SECRET_KEY", "test"), ("STORAGE_DIRECTORY", dir.to_str().unwrap())]).await;
+    let room = "http://play.test/~/maps/v.wam";
+    let var = |name: &str, value: &str| M::VariableMessage(pb::VariableMessage { name: name.into(), value: value.into() });
+    let seen_var = |name: &'static str| move |m: &Incoming| match m {
+        Incoming::Sub(Sub::VariableMessage(v)) if v.name == name => Some(v.value.clone()),
+        _ => None,
+    };
+
+    // Defaults come with the room.
+    let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
+    assert_eq!(alice.joined.variable.iter().map(|v| (v.name.as_str(), v.value.as_str())).collect::<Vec<_>>(), [("door", "false")]);
+    let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
+
+    // A change reaches everyone, the writer included, however far.
+    alice.send(var("door", "true")).await.unwrap();
+    assert_eq!(ib.expect(WAIT, seen_var("door")).await.unwrap(), "true");
+    assert_eq!(ia.expect(WAIT, seen_var("door")).await.unwrap(), "true");
+    // One readable by a tag nobody here has goes to nobody, but is kept.
+    alice.send(var("secret", "\"s\"")).await.unwrap();
+    alice.send(var("door", "false")).await.unwrap();
+    ib.expect(WAIT, |m| (seen_var("door")(m).as_deref() == Some("false")).then_some(())).await.unwrap();
+    assert!(ib.seen().iter().all(|m| seen_var("secret")(m).is_none()));
+    let (carol, _ic) = bot(&server, room, "Carol", 200, 200).await;
+    assert_eq!(carol.joined.variable.iter().map(|v| v.name.as_str()).collect::<Vec<_>>(), ["door"]);
+
+    // Without the tag to write it: an error, then the connection ends (the map was read less than 10 s ago).
+    alice.send(var("locked", "1")).await.unwrap();
+    let error = ia
+        .expect(WAIT, |m| match m {
+            Incoming::Top(Top::ErrorMessage(e)) => Some(e.message.clone()),
+            _ => None,
+        })
+        .await
+        .unwrap();
+    assert!(error.contains("Required tag: \"admin\""), "{error}");
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
+async fn players_reach_each_other_by_events_follows_invitations_items_and_emotes() {
+    use pb::client_to_server_message::Message as M;
+    let server = start().await;
+    let room = "http://play.test/_/global/maps.test/social.json";
+    let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
+    let (mut bob, mut ib) = bot(&server, room, "Bob", 130, 100).await;
+    let (_carol, mut ic) = bot(&server, room, "Carol", 3000, 3000).await;
+    let (a, b) = (alice.user_id, bob.user_id);
+    // Alice and Bob form a bubble.
+    ia.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::GroupUpdateMessage(g)) if g.user_ids.contains(&b)).then_some(()))
+        .await
+        .unwrap();
+
+    // An event to the room reaches everyone, the sender included; a targeted one only its target.
+    let event = |name: &str, targets: Vec<i32>| {
+        pb::query_message::Query::SendEventQuery(pb::SendEventQuery { name: name.into(), data: None, target_user_ids: targets })
+    };
+    let got = |name: &'static str| move |m: &Incoming| match m {
+        Incoming::Sub(Sub::ReceivedEventMessage(e)) if e.name == name => Some(e.sender_id),
+        _ => None,
+    };
+    let q = alice.query(event("hello", vec![])).await.unwrap();
+    ia.expect(WAIT, answer_to(q)).await.unwrap();
+    for inbox in [&mut ia, &mut ib, &mut ic] {
+        assert_eq!(inbox.expect(WAIT, got("hello")).await.unwrap(), Some(a));
+    }
+    alice.query(event("psst", vec![b, 999])).await.unwrap();
+    assert_eq!(ib.expect(WAIT, got("psst")).await.unwrap(), Some(a));
+    alice.query(event("after", vec![])).await.unwrap();
+    ic.expect(WAIT, got("after")).await.unwrap();
+    assert!(ic.seen().iter().all(|m| got("psst")(m).is_none()));
+
+    // Follow: the request reaches the bubble, the confirmation the leader, the abort both.
+    alice.send(M::FollowRequestMessage(pb::FollowRequestMessage { leader: a, force_follow: true })).await.unwrap();
+    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowRequestMessage(r)) if r.leader == a).then_some(())).await.unwrap();
+    bob.send(M::FollowConfirmationMessage(pb::FollowConfirmationMessage { leader: a, follower: b })).await.unwrap();
+    ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowConfirmationMessage(c)) if c.follower == b).then_some(()))
+        .await
+        .unwrap();
+    alice.send(M::FollowAbortMessage(pb::FollowAbortMessage { leader: a, follower: 0 })).await.unwrap();
+    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowAbortMessage(c)) if c.follower == b).then_some(())).await.unwrap();
+
+    // Items: everyone, the sender included.
+    let item = pb::ItemEventMessage { item_id: 7, event: "toggle".into(), state_json: "true".into(), parameters_json: "{}".into() };
+    bob.send(M::ItemEventMessage(item)).await.unwrap();
+    for inbox in [&mut ib, &mut ic] {
+        inbox.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::ItemEventMessage(i)) if i.item_id == 7).then_some(())).await.unwrap();
+    }
+    let (dave, _id) = bot(&server, room, "Dave", 200, 200).await;
+    assert_eq!(dave.joined.item.iter().map(|i| (i.item_id, i.state_json.as_str())).collect::<Vec<_>>(), [(7, "true")]);
+
+    // Emotes: emoji only, to who sees the player, not the player.
+    bob.send(M::EmotePromptMessage(pb::EmotePromptMessage { emote: "not an emoji".into() })).await.unwrap();
+    bob.send(M::EmotePromptMessage(pb::EmotePromptMessage { emote: "👋".into() })).await.unwrap();
+    let emote = ia
+        .expect(WAIT, |m| match m {
+            Incoming::Sub(Sub::EmoteEventMessage(e)) => Some((e.actor_user_id, e.emote.clone())),
+            _ => None,
+        })
+        .await
+        .unwrap();
+    assert_eq!(emote, (b, "👋".to_owned()));
+
+    // Invitations: the fifth one to the same person within ten minutes is refused.
+    let bob_uuid = ia
+        .seen()
+        .iter()
+        .find_map(|m| match m {
+            Incoming::Sub(Sub::UserJoinedMessage(u)) if u.user_id == b => Some(u.user_uuid.clone()),
+            _ => None,
+        })
+        .unwrap();
+    for _ in 0..4 {
+        alice
+            .send(M::MeetingInvitationRequestMessage(pb::MeetingInvitationRequestMessage {
+                receiver_user_uuid: bob_uuid.clone(),
+                receiver_user_id: None,
+            }))
+            .await
+            .unwrap();
+    }
+    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::MeetingInvitationRequestReceivedMessage(r)) if r.sender_name == "Alice").then_some(()))
+        .await
+        .unwrap();
+    alice
+        .send(M::MeetingInvitationRequestMessage(pb::MeetingInvitationRequestMessage { receiver_user_uuid: bob_uuid.clone(), receiver_user_id: None }))
+        .await
+        .unwrap();
+    ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::MeetingInvitationRequestTooHighMessage(_))).then_some(())).await.unwrap();
 }

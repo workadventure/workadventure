@@ -281,6 +281,23 @@ pub fn json_from(v: &prost_types::Value) -> serde_json::Value {
 }
 
 /// The editor commands that change the WAM; None for those that change files (uploads, custom entities).
+/// The other way: JSON to a protobuf Value.
+pub fn json_to(v: &serde_json::Value) -> prost_types::Value {
+    use prost_types::value::Kind;
+    use serde_json::Value as J;
+    let kind = match v {
+        J::Null => Kind::NullValue(0),
+        J::Bool(b) => Kind::BoolValue(*b),
+        J::Number(n) => Kind::NumberValue(n.as_f64().unwrap_or(0.0)),
+        J::String(s) => Kind::StringValue(s.clone()),
+        J::Array(a) => Kind::ListValue(prost_types::ListValue { values: a.iter().map(json_to).collect() }),
+        J::Object(o) => Kind::StructValue(prost_types::Struct {
+            fields: o.iter().map(|(k, v)| (k.clone(), json_to(v))).collect(),
+        }),
+    };
+    prost_types::Value { kind: Some(kind) }
+}
+
 pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit> {
     use pb::edit_map_message::Message as M;
     use serde_json::{Map, Value};

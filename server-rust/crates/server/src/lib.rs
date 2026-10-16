@@ -1,6 +1,7 @@
 //! Adapters and runtime around `wa-core`: HTTP and WebSocket transport, protobuf encoding, actors.
 #![recursion_limit = "256"]
 
+pub mod admin;
 pub mod budget;
 pub mod config;
 pub mod custom_entities;
@@ -16,9 +17,12 @@ pub mod metrics;
 pub mod mustache;
 pub mod oidc;
 pub mod outbox;
+pub mod player_variables;
+pub mod redis_store;
 pub mod registry;
 pub mod resume;
 pub mod room_actor;
+pub mod room_map;
 pub mod session;
 pub mod space_actor;
 pub mod wire;
@@ -54,6 +58,7 @@ pub struct AppState {
     pub oidc_provider: Arc<parking_lot::Mutex<Option<oidc::Provider>>>,
     pub budgets: session::Budgets,
     pub storage: Arc<map_storage::Storage>,
+    pub redis: Arc<redis_store::RedisStore>,
 }
 
 impl AppState {
@@ -78,6 +83,7 @@ impl AppState {
                 resume: Arc::new(budget::Budget::new(config.resume_budget)),
             },
             storage: Arc::new(map_storage::Storage::new(&config.storage_directory)),
+            redis: redis_store::RedisStore::new(&config),
             config: Arc::new(config),
         }
     }
@@ -90,6 +96,7 @@ impl AppState {
 
 pub fn router(state: AppState) -> Router {
     http::routes()
+        .merge(admin::routes())
         .merge(front::routes())
         .merge(oidc::routes())
         .route("/ws/room", get(ws::ws_room))
