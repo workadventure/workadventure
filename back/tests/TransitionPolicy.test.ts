@@ -345,4 +345,27 @@ describe("TransitionPolicy", () => {
             expect(policy.shouldTransition(CommunicationType.LIVEKIT, Number.MAX_SAFE_INTEGER)).toBe(false);
         });
     });
+
+    describe("auto recording", () => {
+        const recorded = (livekitAvailable = true) =>
+            new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                createLivekitChecker(livekitAvailable),
+                createRecordingManager(),
+                true,
+                { isEnabled: true },
+            );
+
+        it("moves a recorded space to LiveKit with its first user", () => {
+            expect(recorded().shouldTransition(CommunicationType.WEBRTC, 1)).toBe(true);
+        });
+
+        it("never brings a recorded space back to WebRTC", () => {
+            expect(recorded().shouldTransition(CommunicationType.LIVEKIT, 1)).toBe(false);
+        });
+
+        it("leaves a recorded space on WebRTC when LiveKit is not available", () => {
+            expect(recorded(false).shouldTransition(CommunicationType.WEBRTC, 2)).toBe(false);
+        });
+    });
 });

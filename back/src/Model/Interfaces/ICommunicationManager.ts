@@ -1,4 +1,9 @@
-import type { HandleLivekitWebhookRequest, MeetingConnectionRestartMessage, SpaceUser } from "@workadventure/messages";
+import type {
+    HandleLivekitWebhookRequest,
+    MeetingConnectionRestartMessage,
+    SetMicrophoneTrackQuery,
+    SpaceUser,
+} from "@workadventure/messages";
 import type { ManagedRecordingState } from "../RecordingManager";
 import type { SessionEndReason } from "../SessionAnalytics";
 
@@ -16,6 +21,7 @@ export interface ICommunicationManager {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
     handleMemberActiveChanged(spaceUserId: string, active: boolean): void;
     handleSpaceKindChanged(): void;
+    handleMicrophoneTrackPublished(user: SpaceUser, query: SetMicrophoneTrackQuery): void;
     closeSession(endReason: SessionEndReason): boolean;
     handleMeetingConnectionRestartMessage(
         meetingConnectionRestartMessage: MeetingConnectionRestartMessage,

@@ -5,7 +5,7 @@ import { applyPatch } from "fast-json-patch";
 import type { Readable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import type { SpaceKind, SpaceStateQuery, SpaceUser } from "@workadventure/messages";
+import type { SetMicrophoneTrackQuery, SpaceKind, SpaceStateQuery, SpaceUser } from "@workadventure/messages";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import { LL } from "../../i18n/i18n-svelte";
 import type { FloorSpeaker, RaisedHand } from "./SpaceInterface";
@@ -127,6 +127,14 @@ export class SpaceStateManager {
     public setKind(kind: SpaceKind): void {
         this.alter({ $case: "setKind", setKind: { kind } }, {}).catch((error) => {
             console.error(`Could not set the kind of space ${this.spaceName}`, error);
+            Sentry.captureException(error);
+        });
+    }
+
+    /** Tells the back which LiveKit publication is our microphone (for the automatic recording of the space). */
+    public setMicrophoneTrack(microphoneTrack: SetMicrophoneTrackQuery): void {
+        this.alter({ $case: "setMicrophoneTrack", setMicrophoneTrack: microphoneTrack }, {}).catch((error) => {
+            console.error(`Could not name the microphone track in space ${this.spaceName}`, error);
             Sentry.captureException(error);
         });
     }
