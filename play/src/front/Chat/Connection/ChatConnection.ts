@@ -247,6 +247,10 @@ export interface ChatMessage {
     reactions: MapStore<string, ChatMessageReaction>;
     remove: () => void;
     edit: (newContent: string) => Promise<void>;
+    downloadAttachment?: () => Promise<void>;
+    refuseAttachment?: () => void;
+    // For a file sent peer to peer, how each recipient's copy is doing.
+    attachmentRecipients?: Readable<ChatAttachmentRecipient[]>;
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     canEdit: Readable<boolean>;
@@ -423,6 +427,15 @@ export type ChatTimelineItem =
       };
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
+export type ChatAttachmentRecipient = {
+    spaceUserId: string;
+    name: string;
+    pictureStore: PictureStore | undefined;
+    color: string | undefined;
+    state: "waiting" | "sending" | "received" | "declined" | "failed";
+    progress: number;
+};
+
 export type ChatMessageContent = {
     /**
      * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.
@@ -430,7 +443,9 @@ export type ChatMessageContent = {
     body: string;
     url: string | undefined;
     thumbnailUrl?: string;
-    mediaState?: "ready" | "loading" | "error";
+    mediaState?: "ready" | "pendingDownload" | "loading" | "error" | "refused";
+    mediaProgress?: number;
+    mediaEstimatedRemainingSeconds?: number;
     mediaErrorKind?: "download" | "decrypt";
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;

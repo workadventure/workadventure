@@ -196,6 +196,28 @@
       }
     },
     {
+      "title": "chat.proximity_file.received",
+      "properties": {
+        "eventName": {
+          "const": "chat.proximity_file.received"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.proximity_file.received"
+        }
+      }
+    },
+    {
+      "title": "chat.proximity_file.sent",
+      "properties": {
+        "eventName": {
+          "const": "chat.proximity_file.sent"
+        },
+        "properties": {
+          "$ref": "#/$defs/chat.proximity_file.sent"
+        }
+      }
+    },
+    {
       "title": "conversation.participant_added",
       "properties": {
         "eventName": {
@@ -1989,6 +2011,8 @@
               "chat.message_list_opened",
               "chat.message_sent",
               "chat.opened",
+              "chat.proximity_file.received",
+              "chat.proximity_file.sent",
               "conversation.participant_added",
               "cowebsite.closed",
               "cowebsite.fullscreen_opened",
@@ -2340,6 +2364,55 @@
       "additionalProperties": true,
       "description": "The user opened the chat.",
       "title": "chat.opened"
+    },
+    "chat.proximity_file.received": {
+      "type": "object",
+      "properties": {
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the file."
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "From the first byte received to the last. Leaves out the time the recipient took to accept and the connection setup, so sizeBytes / durationMs is the transfer speed."
+        },
+        "relay": {
+          "type": "boolean",
+          "description": "Whether the transfer went through a TURN relay. Absent when the browser did not report the connection path."
+        },
+        "relayProtocol": {
+          "type": "string",
+          "enum": [
+            "udp",
+            "tcp",
+            "tls"
+          ],
+          "description": "Transport to the TURN relay, only when relayed. TCP and TLS relays are much slower than UDP."
+        }
+      },
+      "additionalProperties": true,
+      "title": "chat.proximity_file.received",
+      "description": "The user accepted a file sent in the proximity chat and received all of it. Declined or interrupted transfers are not reported."
+    },
+    "chat.proximity_file.sent": {
+      "type": "object",
+      "properties": {
+        "sizeBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Size of the file."
+        },
+        "recipientCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "How many people in the proximity chat were offered the file. Each one who accepts gets a full copy from the sender's browser."
+        }
+      },
+      "additionalProperties": true,
+      "title": "chat.proximity_file.sent",
+      "description": "The user sent a file in the proximity chat, peer to peer. One event per file, so a send of several files reports several. The file name and content are never collected."
     },
     "conversation.participant_added": {
       "type": "object",

@@ -1,0 +1,745 @@
+import type { ProximityFileTransferOfferMessage } from "@workadventure/messages";
+import type { Observable } from "rxjs";
+import { Subject, Subscription } from "rxjs";
+import { v4 as uuidv4 } from "uuid";
+import type { SpaceInterface } from "../../../Space/SpaceInterface";
+import { sanitizeInlineMimeType } from "../../../Utils/InlineMimeType";
+import { getSelectedIceRoute, type SelectedIceRoute } from "../../../WebRtc/SelectedIceRoute";
+import { ProximityFileStorage, type ProximityFileSink } from "./ProximityFileStorage";
+import {
+    decodeProximityFileChunkFrame,
+    decodeProximityFileControlMessage,
+    encodeProximityFileChunkFrame,
+    type ProximityFileTransferControlMessage,
+} from "./ProximityFileTransferProtocol";
+
+// The data channel is DTLS-encrypted and authenticated end to end, so files travel as is: no
+// application-level encryption or hash would protect against anything DTLS does not already cover.
+
+export const PROXIMITY_FILE_TRANSFER_MAX_FILES = 3;
+// Maximum allowed size for a proximity file transfer: 1 GB. Bounds what a peer can make us
+// write to disk, and how long a transfer over a TURN relay takes.
+export const PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE = 1024 * 1024 * 1024;
+// Upper bound on undownloaded offers a single peer may have pending at once. Offers are
+// remote-controlled (each surfaces a chat message + notification), so this throttles a peer
+// from flooding the recipient with offers and growing the incomingTransfers map unbounded.
+export const PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER = 20;
+const PROXIMITY_FILE_TRANSFER_CHUNK_SIZE = 64 * 1024;
+const PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD = 256 * 1024;
+const PROXIMITY_FILE_TRANSFER_NEGOTIATION_TIMEOUT = 15_000;
+
+export type ProximityFileValidationResult = { tooManyFiles: boolean; tooLargeFiles: File[] };
+
+export function validateProximityFiles(files: File[]): ProximityFileValidationResult {
+    return {
+        tooManyFiles: files.length > PROXIMITY_FILE_TRANSFER_MAX_FILES,
+        tooLargeFiles: files.filter((file) => file.size > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE),
+    };
+}
+
+export type IncomingProximityFileTransferOffer = ProximityFileTransferOfferMessage & {
+    senderSpaceUserId: string;
+};
+
+export type ProximityFileTransferUpdate =
+    | {
+          transferId: string;
+          state: "pending" | "connecting" | "downloading";
+          progress: number;
+      }
+    | {
+          transferId: string;
+          state: "ready";
+          progress: 1;
+          url: string;
+          /** From the first byte to the last, so the recipient's decision and the connection setup are left out. */
+          durationMs: number;
+          /** Undefined when the browser does not report the connection path. */
+          route: SelectedIceRoute | undefined;
+      }
+    | {
+          transferId: string;
+          state: "error";
+          progress: number;
+          error: string;
+      };
+
+export type ProximityFileTransferOffer = {
+    transferId: string;
+    file: File;
+    recipients: string[];
+};
+
+/** How one recipient's copy of an outgoing file is doing. */
+export type OutgoingProximityFileTransferUpdate = {
+    transferId: string;
+    recipientSpaceUserId: string;
+    state: "sending" | "received" | "declined" | "failed";
+    progress: number;
+};
+
+type ProximityFileTransferSignalPayload =
+    | {
+          type: "description";
+          description: RTCSessionDescriptionInit;
+      }
+    | {
+          type: "candidate";
+          candidate: RTCIceCandidateInit;
+      };
+
+type ProximityFileTransferSignalMessage = { transferId: string; connectionId: string; signal: string };
+
+export type ProximityFileTransferSpace = Pick<SpaceInterface, "emitPrivateMessage" | "observePrivateEvent">;
+
+export type ProximityFileTransferServiceOptions = {
+    localSpaceUserId: string;
+    space: ProximityFileTransferSpace;
+    getIceServers: () => Promise<RTCIceServer[]>;
+    canExchangeWith: (spaceUserId: string) => boolean;
+};
+
+type PeerSession = {
+    remoteSpaceUserId: string;
+    connectionId: string;
+    peerConnection: RTCPeerConnection;
+    dataChannel: RTCDataChannel | undefined;
+    openPromise: Promise<RTCDataChannel>;
+    resolveOpen: (dataChannel: RTCDataChannel) => void;
+    rejectOpen: (error: Error) => void;
+    // Inbound messages are processed one at a time, so a transfer's start, chunks and completion are
+    // handled in order; outbound transfers to the same peer are sent one after the other.
+    inboundQueue: Promise<void>;
+    outboundQueue: Promise<void>;
+    negotiationTimeout: ReturnType<typeof setTimeout>;
+    // Outgoing transfers fully sent to this peer but not acknowledged yet: they fail if the session closes.
+    awaitingReceipt: Set<string>;
+    signalTransferId: string;
+    canEmitCandidates: boolean;
+    pendingCandidates: RTCIceCandidateInit[];
+};
+
+type ReceivingTransfer = {
+    offer: IncomingProximityFileTransferOffer;
+    receivedBytes: number;
+    sink: ProximityFileSink;
+    startedAt: number;
+};
+
+export class ProximityFileTransferService {
+    private readonly outgoingTransfers = new Map<string, ProximityFileTransferOffer>();
+    private readonly incomingTransfers = new Map<string, IncomingProximityFileTransferOffer>();
+    private readonly receivingTransfers = new Map<string, ReceivingTransfer>();
+    private readonly peerSessions = new Map<string, PeerSession>();
+    private readonly storage = new ProximityFileStorage();
+    private readonly subscriptions = new Subscription();
+    private readonly incomingOfferSubject = new Subject<IncomingProximityFileTransferOffer>();
+    public readonly incomingOffers: Observable<IncomingProximityFileTransferOffer> = this.incomingOfferSubject;
+    private readonly transferUpdateSubject = new Subject<ProximityFileTransferUpdate>();
+    public readonly transferUpdates: Observable<ProximityFileTransferUpdate> = this.transferUpdateSubject;
+    private readonly outgoingUpdateSubject = new Subject<OutgoingProximityFileTransferUpdate>();
+    public readonly outgoingUpdates: Observable<OutgoingProximityFileTransferUpdate> = this.outgoingUpdateSubject;
+
+    constructor(private readonly options: ProximityFileTransferServiceOptions) {
+        this.subscriptions.add(
+            this.options.space.observePrivateEvent("proximityFileTransferOffer").subscribe((event) => {
+                const senderSpaceUserId = event.sender.spaceUserId;
+                if (senderSpaceUserId === this.options.localSpaceUserId) {
+                    return;
+                }
+                const offer = {
+                    ...event.proximityFileTransferOffer,
+                    senderSpaceUserId,
+                };
+                // Could never be accepted, so not worth a card.
+                if (offer.size > PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE) {
+                    return;
+                }
+                // A transferId belongs to the peer that first offered it: another peer re-offering
+                // the same id must not be able to take over the card shown for the first sender.
+                const existing = this.incomingTransfers.get(offer.transferId);
+                if (existing && existing.senderSpaceUserId !== senderSpaceUserId) {
+                    return;
+                }
+                // Throttle a peer that floods us with offers. Re-offering a known transferId just
+                // refreshes it (the count is per distinct transferId), so legitimate retries are fine.
+                if (
+                    !this.incomingTransfers.has(offer.transferId) &&
+                    this.countIncomingOffersFromSender(senderSpaceUserId) >=
+                        PROXIMITY_FILE_TRANSFER_MAX_INCOMING_OFFERS_PER_PEER
+                ) {
+                    return;
+                }
+                this.incomingTransfers.set(offer.transferId, offer);
+                this.transferUpdateSubject.next({ transferId: offer.transferId, state: "pending", progress: 0 });
+                this.incomingOfferSubject.next(offer);
+            }),
+        );
+        // Free the per-peer offer slot once a download finishes, so completing transfers do not
+        // count against the cap.
+        this.subscriptions.add(
+            this.transferUpdateSubject.subscribe((update) => {
+                if (update.state === "ready") {
+                    this.incomingTransfers.delete(update.transferId);
+                }
+            }),
+        );
+        this.subscriptions.add(
+            this.options.space.observePrivateEvent("proximityFileTransferDecline").subscribe((event) => {
+                this.emitOutgoingUpdate(
+                    event.proximityFileTransferDecline.transferId,
+                    event.sender.spaceUserId,
+                    "declined",
+                    0,
+                );
+            }),
+        );
+        this.subscriptions.add(
+            this.options.space.observePrivateEvent("proximityFileTransferSignal").subscribe((event) => {
+                this.handleSignal(event.sender.spaceUserId, event.proximityFileTransferSignal).catch((error) => {
+                    console.error("Error while handling proximity file transfer signal", error);
+                });
+            }),
+        );
+    }
+
+    createOutgoingOffers(files: File[], recipients: string[]): ProximityFileTransferOffer[] {
+        const validation = validateProximityFiles(files);
+        if (validation.tooManyFiles) {
+            throw new Error("too-many-files");
+        }
+        if (validation.tooLargeFiles.length > 0) {
+            throw new Error("file-too-large");
+        }
+
+        const recipientIds = recipients.filter((spaceUserId) => spaceUserId !== this.options.localSpaceUserId);
+        // The file itself stays on disk (a File is not loaded in memory); it is streamed each time a
+        // recipient requests it.
+        const offers = files.map((file) => ({ transferId: uuidv4(), file, recipients: recipientIds }));
+
+        for (const offer of offers) {
+            this.outgoingTransfers.set(offer.transferId, offer);
+            for (const recipientId of recipientIds) {
+                this.options.space.emitPrivateMessage(
+                    {
+                        $case: "proximityFileTransferOffer",
+                        proximityFileTransferOffer: {
+                            transferId: offer.transferId,
+                            fileName: offer.file.name,
+                            mimeType: offer.file.type,
+                            size: offer.file.size,
+                            characterTextures: [],
+                            name: undefined,
+                        },
+                    },
+                    recipientId,
+                );
+            }
+        }
+        return offers;
+    }
+
+    async download(transferId: string): Promise<void> {
+        const offer = this.incomingTransfers.get(transferId);
+        if (!offer) {
+            throw new Error("Unknown proximity file transfer");
+        }
+
+        this.transferUpdateSubject.next({ transferId, state: "connecting", progress: 0 });
+        const session = await this.ensureInitiatorPeerSession(offer.senderSpaceUserId, transferId);
+        const dataChannel = await session.openPromise;
+        this.sendControlMessage(dataChannel, { type: "proximity_file_request", transferId });
+    }
+
+    /** Tells the sender this offer is declined, so they do not wait for it. */
+    decline(transferId: string): void {
+        const offer = this.incomingTransfers.get(transferId);
+        if (!offer) {
+            return;
+        }
+        // A declined offer no longer counts against the sender's pending-offer cap either.
+        this.incomingTransfers.delete(transferId);
+        this.options.space.emitPrivateMessage(
+            { $case: "proximityFileTransferDecline", proximityFileTransferDecline: { transferId } },
+            offer.senderSpaceUserId,
+        );
+    }
+
+    destroy(): void {
+        this.subscriptions.unsubscribe();
+        this.incomingOfferSubject.complete();
+        this.transferUpdateSubject.complete();
+        this.outgoingUpdateSubject.complete();
+        this.outgoingTransfers.clear();
+        this.incomingTransfers.clear();
+        this.receivingTransfers.clear();
+        this.storage.destroy().catch((error) => console.warn("Unable to clean up proximity file storage", error));
+        for (const session of this.peerSessions.values()) {
+            clearTimeout(session.negotiationTimeout);
+            session.dataChannel?.close();
+            session.peerConnection.close();
+        }
+        this.peerSessions.clear();
+    }
+
+    private async ensureInitiatorPeerSession(remoteSpaceUserId: string, transferId: string): Promise<PeerSession> {
+        const existingSession = this.peerSessions.get(remoteSpaceUserId);
+        if (existingSession) {
+            return existingSession;
+        }
+
+        const session = await this.createPeerSession(remoteSpaceUserId, uuidv4());
+        const dataChannel = session.peerConnection.createDataChannel("proximity-file-transfer");
+        this.bindDataChannel(session, dataChannel);
+        this.peerSessions.set(remoteSpaceUserId, session);
+
+        const offer = await session.peerConnection.createOffer();
+        await session.peerConnection.setLocalDescription(offer);
+        this.emitSignal(remoteSpaceUserId, transferId, session.connectionId, {
+            type: "description",
+            description: offer,
+        });
+        this.enableCandidateEmission(session, transferId);
+
+        return session;
+    }
+
+    private async createPeerSession(remoteSpaceUserId: string, connectionId: string): Promise<PeerSession> {
+        const peerConnection = new RTCPeerConnection({ iceServers: await this.options.getIceServers() });
+        let resolveOpen!: (dataChannel: RTCDataChannel) => void;
+        let rejectOpen!: (error: Error) => void;
+        const openPromise = new Promise<RTCDataChannel>((resolve, reject) => {
+            resolveOpen = resolve;
+            rejectOpen = reject;
+        });
+        const session: PeerSession = {
+            remoteSpaceUserId,
+            connectionId,
+            peerConnection,
+            dataChannel: undefined,
+            openPromise,
+            resolveOpen,
+            rejectOpen,
+            inboundQueue: Promise.resolve(),
+            outboundQueue: Promise.resolve(),
+            awaitingReceipt: new Set(),
+            signalTransferId: "",
+            canEmitCandidates: false,
+            pendingCandidates: [],
+            negotiationTimeout: setTimeout(() => {
+                rejectOpen(new Error("Proximity file transfer connection timeout"));
+                this.closePeerSession(remoteSpaceUserId);
+            }, PROXIMITY_FILE_TRANSFER_NEGOTIATION_TIMEOUT),
+        };
+
+        peerConnection.onicecandidate = (event) => {
+            if (!event.candidate) {
+                return;
+            }
+            const candidate = event.candidate.toJSON();
+            if (!session.canEmitCandidates) {
+                session.pendingCandidates.push(candidate);
+                return;
+            }
+            this.emitSignal(remoteSpaceUserId, session.signalTransferId, connectionId, {
+                type: "candidate",
+                candidate,
+            });
+        };
+        peerConnection.ondatachannel = (event) => {
+            this.bindDataChannel(session, event.channel);
+        };
+        peerConnection.onconnectionstatechange = () => {
+            if (peerConnection.connectionState === "failed" || peerConnection.connectionState === "closed") {
+                this.closePeerSession(remoteSpaceUserId);
+            }
+        };
+        return session;
+    }
+
+    private bindDataChannel(session: PeerSession, dataChannel: RTCDataChannel): void {
+        dataChannel.binaryType = "arraybuffer";
+        dataChannel.bufferedAmountLowThreshold = PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD;
+        session.dataChannel = dataChannel;
+        dataChannel.onopen = () => {
+            clearTimeout(session.negotiationTimeout);
+            session.resolveOpen(dataChannel);
+        };
+        dataChannel.onerror = () => {
+            session.rejectOpen(new Error("Proximity file transfer data channel error"));
+        };
+        dataChannel.onmessage = (event) => {
+            session.inboundQueue = session.inboundQueue
+                .then(() => this.handleDataChannelMessage(session, event.data))
+                .catch((error) => {
+                    console.error("Error while handling proximity file transfer data channel message", error);
+                });
+        };
+        dataChannel.onclose = () => {
+            this.closePeerSession(session.remoteSpaceUserId);
+        };
+    }
+
+    private async handleSignal(
+        senderSpaceUserId: string,
+        signalMessage: ProximityFileTransferSignalMessage,
+    ): Promise<void> {
+        if (!this.options.canExchangeWith(senderSpaceUserId)) {
+            return;
+        }
+
+        const signal = JSON.parse(signalMessage.signal) as ProximityFileTransferSignalPayload;
+        let session = this.peerSessions.get(senderSpaceUserId);
+
+        if (signal.type === "description" && signal.description.type === "offer") {
+            // A new negotiation supersedes any existing session for this peer. Close the
+            // previous one first so we don't leak its RTCPeerConnection and negotiation timer
+            // (a remote peer could otherwise force unbounded allocations by replaying offers).
+            this.closePeerSession(senderSpaceUserId);
+            session = await this.createPeerSession(senderSpaceUserId, signalMessage.connectionId);
+            this.peerSessions.set(senderSpaceUserId, session);
+            await session.peerConnection.setRemoteDescription(signal.description);
+            const answer = await session.peerConnection.createAnswer();
+            await session.peerConnection.setLocalDescription(answer);
+            this.emitSignal(senderSpaceUserId, signalMessage.transferId, session.connectionId, {
+                type: "description",
+                description: answer,
+            });
+            this.enableCandidateEmission(session, signalMessage.transferId);
+            return;
+        }
+
+        if (!session || session.connectionId !== signalMessage.connectionId) {
+            return;
+        }
+
+        if (signal.type === "description") {
+            await session.peerConnection.setRemoteDescription(signal.description);
+            return;
+        }
+
+        await session.peerConnection.addIceCandidate(signal.candidate);
+    }
+
+    private async handleDataChannelMessage(session: PeerSession, data: unknown): Promise<void> {
+        if (typeof data === "string") {
+            const message = decodeProximityFileControlMessage(data);
+            switch (message.type) {
+                case "proximity_file_request": {
+                    await this.enqueueOutgoingTransfer(session, message.transferId);
+                    break;
+                }
+                case "proximity_file_start": {
+                    const offer = this.incomingOfferFrom(session, message.transferId);
+                    if (!offer) {
+                        return;
+                    }
+                    this.receivingTransfers.set(message.transferId, {
+                        offer,
+                        receivedBytes: 0,
+                        sink: await this.storage.createSink(message.transferId),
+                        startedAt: performance.now(),
+                    });
+                    this.transferUpdateSubject.next({
+                        transferId: message.transferId,
+                        state: "downloading",
+                        progress: 0,
+                    });
+                    break;
+                }
+                case "proximity_file_complete": {
+                    if (this.receivingTransferFrom(session, message.transferId)) {
+                        await this.completeReceivingTransfer(session, message.transferId);
+                    }
+                    break;
+                }
+                case "proximity_file_received": {
+                    if (session.awaitingReceipt.delete(message.transferId)) {
+                        this.emitOutgoingUpdate(message.transferId, session.remoteSpaceUserId, "received", 1);
+                    }
+                    break;
+                }
+                case "proximity_file_error": {
+                    if (this.incomingOfferFrom(session, message.transferId)) {
+                        this.failReceivingTransfer(message.transferId, message.reason);
+                    }
+                    break;
+                }
+                default: {
+                    const _exhaustiveCheck: never = message;
+                }
+            }
+            return;
+        }
+
+        const frame = decodeProximityFileChunkFrame(data as ArrayBuffer | ArrayBufferView);
+        const receivingTransfer = this.receivingTransferFrom(session, frame.transferId);
+        if (!receivingTransfer) {
+            return;
+        }
+        const expectedBytes = receivingTransfer.offer.size;
+        const nextReceivedBytes = receivingTransfer.receivedBytes + frame.chunk.byteLength;
+        if (nextReceivedBytes > expectedBytes) {
+            this.failReceivingTransfer(frame.transferId, "file-too-large");
+            return;
+        }
+        try {
+            await receivingTransfer.sink.write(frame.chunk);
+        } catch {
+            this.failReceivingTransfer(frame.transferId, "write-failed");
+            return;
+        }
+        receivingTransfer.receivedBytes = nextReceivedBytes;
+        this.transferUpdateSubject.next({
+            transferId: frame.transferId,
+            state: "downloading",
+            progress: nextReceivedBytes / Math.max(expectedBytes, 1),
+        });
+    }
+
+    private enqueueOutgoingTransfer(session: PeerSession, transferId: string): Promise<void> {
+        session.outboundQueue = session.outboundQueue.then(() => this.sendOutgoingTransfer(session, transferId));
+        return session.outboundQueue;
+    }
+
+    private async sendOutgoingTransfer(session: PeerSession, transferId: string): Promise<void> {
+        const transfer = this.outgoingTransfers.get(transferId);
+        const dataChannel = session.dataChannel;
+        if (
+            !transfer ||
+            !dataChannel ||
+            !transfer.recipients.includes(session.remoteSpaceUserId) ||
+            !this.options.canExchangeWith(session.remoteSpaceUserId)
+        ) {
+            if (dataChannel) {
+                this.sendControlMessage(dataChannel, {
+                    type: "proximity_file_error",
+                    transferId,
+                    reason: "unavailable",
+                });
+            }
+            this.emitOutgoingUpdate(transferId, session.remoteSpaceUserId, "failed", 0);
+            return;
+        }
+
+        this.sendControlMessage(dataChannel, { type: "proximity_file_start", transferId });
+        this.emitOutgoingUpdate(transferId, session.remoteSpaceUserId, "sending", 0);
+
+        const size = transfer.file.size;
+        let sentBytes = 0;
+        try {
+            // The stream reads ahead from disk, and pausing write() on backpressure pauses the reads too. Its
+            // chunks have browser-chosen sizes (Chromium goes up to several hundred KB), so they are re-split
+            // to stay under the data channel's maximum message size.
+            await transfer.file.stream().pipeTo(
+                new WritableStream<Uint8Array>({
+                    write: async (chunk) => {
+                        for (let offset = 0; offset < chunk.byteLength; offset += PROXIMITY_FILE_TRANSFER_CHUNK_SIZE) {
+                            const frame = chunk.subarray(offset, offset + PROXIMITY_FILE_TRANSFER_CHUNK_SIZE);
+                            dataChannel.send(encodeProximityFileChunkFrame(transferId, frame));
+                            sentBytes += frame.byteLength;
+                            // Count what has left our buffer, not what was merely queued in it.
+                            this.emitOutgoingUpdate(
+                                transferId,
+                                session.remoteSpaceUserId,
+                                "sending",
+                                Math.max(0, sentBytes - dataChannel.bufferedAmount) / Math.max(size, 1),
+                            );
+                            // eslint-disable-next-line no-await-in-loop -- chunks must be sent in order
+                            await this.waitForBackpressure(dataChannel);
+                        }
+                    },
+                }),
+            );
+        } catch (error) {
+            // The file changed or vanished on disk since the offer was made, or the recipient left.
+            console.error("Error while sending proximity file transfer", error);
+            if (dataChannel.readyState === "open") {
+                this.sendControlMessage(dataChannel, {
+                    type: "proximity_file_error",
+                    transferId,
+                    reason: "unavailable",
+                });
+            }
+            this.emitOutgoingUpdate(transferId, session.remoteSpaceUserId, "failed", 0);
+            return;
+        }
+
+        session.awaitingReceipt.add(transferId);
+        this.sendControlMessage(dataChannel, { type: "proximity_file_complete", transferId });
+    }
+
+    private async completeReceivingTransfer(session: PeerSession, transferId: string): Promise<void> {
+        const receivingTransfer = this.receivingTransfers.get(transferId);
+        if (!receivingTransfer) {
+            return;
+        }
+        if (receivingTransfer.receivedBytes !== receivingTransfer.offer.size) {
+            this.failReceivingTransfer(transferId, "incomplete");
+            return;
+        }
+        let blob: Blob;
+        try {
+            blob = await receivingTransfer.sink.finish(sanitizeInlineMimeType(receivingTransfer.offer.mimeType));
+        } catch {
+            this.failReceivingTransfer(transferId, "write-failed");
+            return;
+        }
+        this.receivingTransfers.delete(transferId);
+        const durationMs = Math.round(performance.now() - receivingTransfer.startedAt);
+        // Read before the receipt: once the sender has it, it may close the connection.
+        let route: SelectedIceRoute | undefined;
+        try {
+            route = getSelectedIceRoute(await session.peerConnection.getStats());
+        } catch (error) {
+            console.warn("Unable to read how a proximity file transfer travelled", error);
+        }
+        if (session.dataChannel?.readyState === "open") {
+            this.sendControlMessage(session.dataChannel, { type: "proximity_file_received", transferId });
+        }
+        this.transferUpdateSubject.next({
+            transferId,
+            state: "ready",
+            progress: 1,
+            url: URL.createObjectURL(blob),
+            durationMs,
+            route,
+        });
+    }
+
+    private failReceivingTransfer(transferId: string, error: string): void {
+        this.receivingTransfers
+            .get(transferId)
+            ?.sink.discard()
+            .catch((discardError) => console.warn("Unable to discard proximity file transfer", discardError));
+        this.receivingTransfers.delete(transferId);
+        this.transferUpdateSubject.next({
+            transferId,
+            state: "error",
+            progress: 0,
+            error,
+        });
+    }
+
+    private waitForBackpressure(dataChannel: RTCDataChannel): Promise<void> {
+        if (dataChannel.bufferedAmount <= PROXIMITY_FILE_TRANSFER_BUFFERED_AMOUNT_LOW_THRESHOLD) {
+            return Promise.resolve();
+        }
+
+        // A channel that closes never drains: stop waiting then, or the transfer would hang forever.
+        return new Promise((resolve, reject) => {
+            const onDrained = () => {
+                stopListening();
+                resolve();
+            };
+            const onClosed = () => {
+                stopListening();
+                reject(new Error("Proximity file transfer data channel closed"));
+            };
+            const stopListening = () => {
+                dataChannel.removeEventListener("bufferedamountlow", onDrained);
+                dataChannel.removeEventListener("close", onClosed);
+            };
+            dataChannel.addEventListener("bufferedamountlow", onDrained);
+            dataChannel.addEventListener("close", onClosed);
+        });
+    }
+
+    private sendControlMessage(dataChannel: RTCDataChannel, message: ProximityFileTransferControlMessage): void {
+        dataChannel.send(JSON.stringify(message));
+    }
+
+    private emitSignal(
+        receiverSpaceUserId: string,
+        transferId: string,
+        connectionId: string,
+        signal: ProximityFileTransferSignalPayload,
+    ): void {
+        this.options.space.emitPrivateMessage(
+            {
+                $case: "proximityFileTransferSignal",
+                proximityFileTransferSignal: {
+                    transferId,
+                    connectionId,
+                    signal: JSON.stringify(signal),
+                },
+            },
+            receiverSpaceUserId,
+        );
+    }
+
+    private enableCandidateEmission(session: PeerSession, transferId: string): void {
+        session.signalTransferId = transferId;
+        session.canEmitCandidates = true;
+        for (const candidate of session.pendingCandidates.splice(0)) {
+            this.emitSignal(session.remoteSpaceUserId, transferId, session.connectionId, {
+                type: "candidate",
+                candidate,
+            });
+        }
+    }
+
+    private closePeerSession(remoteSpaceUserId: string): void {
+        const session = this.peerSessions.get(remoteSpaceUserId);
+        if (!session) {
+            return;
+        }
+        this.peerSessions.delete(remoteSpaceUserId);
+        clearTimeout(session.negotiationTimeout);
+        session.dataChannel?.close();
+        session.peerConnection.close();
+        for (const transferId of session.awaitingReceipt) {
+            this.emitOutgoingUpdate(transferId, remoteSpaceUserId, "failed", 0);
+        }
+    }
+
+    private emitOutgoingUpdate(
+        transferId: string,
+        recipientSpaceUserId: string,
+        state: OutgoingProximityFileTransferUpdate["state"],
+        progress: number,
+    ): void {
+        if (this.outgoingTransfers.get(transferId)?.recipients.includes(recipientSpaceUserId)) {
+            this.outgoingUpdateSubject.next({ transferId, recipientSpaceUserId, state, progress });
+        }
+    }
+
+    /** The incoming offer for `transferId`, only if it was made by the peer on the other end of `session`. */
+    private incomingOfferFrom(
+        session: PeerSession,
+        transferId: string,
+    ): IncomingProximityFileTransferOffer | undefined {
+        const offer = this.incomingTransfers.get(transferId);
+        return offer?.senderSpaceUserId === session.remoteSpaceUserId ? offer : undefined;
+    }
+
+    private receivingTransferFrom(session: PeerSession, transferId: string): ReceivingTransfer | undefined {
+        const receivingTransfer = this.receivingTransfers.get(transferId);
+        return receivingTransfer?.offer.senderSpaceUserId === session.remoteSpaceUserId ? receivingTransfer : undefined;
+    }
+
+    private countIncomingOffersFromSender(senderSpaceUserId: string): number {
+        let count = 0;
+        for (const offer of this.incomingTransfers.values()) {
+            if (offer.senderSpaceUserId === senderSpaceUserId) {
+                count++;
+            }
+        }
+        return count;
+    }
+}
+
+/** Which chat card renders a file: only allowlisted types get an inline image/audio/video card. */
+export function getMessageTypeFromMimeType(mimeType: string): "file" | "image" | "audio" | "video" {
+    const type = sanitizeInlineMimeType(mimeType);
+    if (type.startsWith("image/")) {
+        return "image";
+    }
+    if (type.startsWith("audio/")) {
+        return "audio";
+    }
+    if (type.startsWith("video/")) {
+        return "video";
+    }
+    return "file";
+}

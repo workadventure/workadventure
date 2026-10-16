@@ -86,6 +86,7 @@ Environment variables for the Play service (frontend and pusher).
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
 | `MAX_PER_GROUP` | No | Maximum number of users in a bubble/group. Defaults to 4 |
+| `PROXIMITY_FILE_TRANSFER_MAX_USERS` | No | Maximum number of users (sender included) in a proximity chat for files to be shared in it. Files travel peer to peer, so the sender uploads a copy to every recipient. Defaults to 10 |
 | `MAX_DISPLAYED_VIDEOS` | No | An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room. |
 | `NODE_ENV` | No | Node.js environment: 'development', 'production', or 'test' |
 | `CONTACT_URL` | No | URL for users to contact support or administrators |

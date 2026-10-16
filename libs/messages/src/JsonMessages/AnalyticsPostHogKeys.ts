@@ -95,6 +95,8 @@ export const POSTHOG_EVENT_KEYS: Partial<
   "chat.message_from_user_list_clicked": "wa_send_message_from_user_list",
   "chat.message_list_opened": "wa_open_message_list",
   "chat.opened": "wa-opened-chat",
+  "chat.proximity_file.received": "wa_proximity_file_received",
+  "chat.proximity_file.sent": "wa_proximity_file_sent",
 
   "conversation.participant_added": "wa_spontaneous_discussion",
 

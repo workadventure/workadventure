@@ -93,6 +93,7 @@ async function createUser(
     name:
         | "Alice"
         | "Bob"
+        | "Charlie"
         | "Eve"
         | "Mallory"
         | "Admin1"
@@ -195,6 +196,7 @@ export async function getPage(
     name:
         | "Alice"
         | "Bob"
+        | "Charlie"
         | "Eve"
         | "Mallory"
         | "Admin1"
