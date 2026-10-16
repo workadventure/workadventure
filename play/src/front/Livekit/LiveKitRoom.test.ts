@@ -461,6 +461,44 @@ describe("LiveKitRoom", () => {
 
         expect(queueScreenShareUpdate).toHaveBeenLastCalledWith(undefined);
     });
+
+    it("should remove a remote participant that left after a full reconnection", () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const spaceUser = {
+            spaceUserId: "alice-space-user",
+            reactiveUser: { cameraState: writable(true), microphoneState: writable(true) },
+        };
+        Object.assign(room["space"], {
+            mySpaceUserId: "me",
+            getSpaceUserBySpaceUserId: (id: string) => (id === spaceUser.spaceUserId ? spaceUser : undefined),
+        });
+        const participant = {
+            identity: "alice",
+            sid: "PA_before",
+            metadata: JSON.stringify({ userId: spaceUser.spaceUserId }),
+            isSpeaking: false,
+            name: "Alice",
+            on: vi.fn(),
+            off: vi.fn(),
+            getTrackPublications: () => [],
+        };
+        const removed: Streamable[] = [];
+        const subscription = room["_streamableSubjects"].videoPeerRemoved.subscribe((streamable) =>
+            removed.push(streamable),
+        );
+
+        room["handleParticipantConnected"](participant as never);
+        // livekit-client keeps the same RemoteParticipant across a full reconnection and updates its sid in place
+        participant.sid = "PA_after";
+        room["handleParticipantDisconnected"](participant as never);
+        subscription.unsubscribe();
+
+        expect(removed.map((streamable) => streamable.spaceUserId)).toEqual([spaceUser.spaceUserId]);
+        expect(participant.off).toHaveBeenCalled();
+    });
 });
 
 describe("codec demotion", () => {
