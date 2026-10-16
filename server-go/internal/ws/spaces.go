@@ -91,6 +91,7 @@ func (s *Session) joinSpace(id int32, q *pb.JoinSpaceQuery) {
 	}
 	s.mu.Lock()
 	s.spaces[local] = space
+	s.joinedBy[id] = local
 	s.mu.Unlock()
 }
 
@@ -98,9 +99,16 @@ func (s *Session) leaveSpace(id int32, local string) {
 	s.mu.Lock()
 	space := s.spaces[local]
 	delete(s.spaces, local)
+	for q, l := range s.joinedBy {
+		if l == local {
+			delete(s.joinedBy, q)
+		}
+	}
 	s.mu.Unlock()
 	reply := func() {
-		s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_LeaveSpaceAnswer{LeaveSpaceAnswer: &pb.LeaveSpaceAnswer{}}})
+		if id != 0 { // 0: left on an abort, nobody waits for an answer
+			s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_LeaveSpaceAnswer{LeaveSpaceAnswer: &pb.LeaveSpaceAnswer{}}})
+		}
 	}
 	if space == nil {
 		reply()

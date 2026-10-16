@@ -348,3 +348,23 @@ func TestABatchCarriesOnlyTheLastPositionOfEachPlayer(t *testing.T) {
 		t.Fatalf("the three moves fell in one batch window, alice should see only the last one: %v", seen)
 	}
 }
+
+func TestAnAbortedJoinLeavesTheSpace(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	bob := h.dial("bob", "c-bob", nil)
+	bob.send(join(500, 500))
+	bob.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	for _, c := range []*client{alice, bob} {
+		c.query(7, &pb.QueryMessage{Query: &pb.QueryMessage_JoinSpaceQuery{JoinSpaceQuery: &pb.JoinSpaceQuery{SpaceName: "meeting"}}})
+		c.waitFor("the join answer", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetAnswerMessage().GetJoinSpaceAnswer() != nil })
+	}
+	bob.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_AddSpaceFilterMessage{AddSpaceFilterMessage: &pb.AddSpaceFilterMessage{
+		SpaceFilterMessage: &pb.SpaceFilterMessage{SpaceName: "meeting"}}}})
+	bob.waitFor("alice in the space", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return len(s.GetInitSpaceUsersMessage().GetUsers()) == 2 })
+	// Alice walked out of the area before her front got the answer: it aborts the query instead of leaving.
+	alice.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_AbortQueryMessage{AbortQueryMessage: &pb.AbortQueryMessage{Id: 7}}})
+	bob.waitFor("alice out of the space", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return s.GetRemoveSpaceUserMessage() != nil })
+}

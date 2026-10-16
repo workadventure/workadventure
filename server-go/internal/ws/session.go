@@ -82,15 +82,16 @@ type Session struct {
 	userID atomic.Int32 // id in the room, once RoomJoined is on its way
 
 	// guarded by mu
-	name   string                  // from JoinRoomFrontMessage
-	status core.AvailabilityStatus // latest availability status
-	spaces map[string]*core.Space  // by the name the front uses
+	name     string                  // from JoinRoomFrontMessage
+	status   core.AvailabilityStatus // latest availability status
+	spaces   map[string]*core.Space  // by the name the front uses
+	joinedBy map[int32]string        // the joinSpaceQuery that joined each space, for its abortQueryMessage
 
 	readers sync.WaitGroup // readers post to the room: they must be done before the room is released
 }
 
 func newSession(srv *Server, info sessionInfo) *Session {
-	s := &Session{srv: srv, info: info, spaces: map[string]*core.Space{}}
+	s := &Session{srv: srv, info: info, spaces: map[string]*core.Space{}, joinedBy: map[int32]string{}}
 	s.ctx, s.cancel = context.WithCancel(context.Background())
 	s.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
 	s.out = newOutbox(outboxLimit, func() { go s.destroy(statusSessionDestroyed, "Too slow to receive messages") })
@@ -488,6 +489,15 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.query(msg.QueryMessage)
 	case *pb.ClientToServerMessage_EditMapCommandMessage:
 		s.editMap(msg.EditMapCommandMessage)
+	case *pb.ClientToServerMessage_AbortQueryMessage:
+		// The reader answers in order, so an abort always comes after its answer. The front aborted a join it
+		// had no answer for yet: it does not know it is in the space, so leave it (as the pusher's abort handler).
+		s.mu.Lock()
+		local, ok := s.joinedBy[msg.AbortQueryMessage.GetId()]
+		s.mu.Unlock()
+		if ok {
+			s.leaveSpace(0, local)
+		}
 	case *pb.ClientToServerMessage_BanPlayerMessage:
 		b := msg.BanPlayerMessage
 		if !s.isAdmin() {
