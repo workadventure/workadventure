@@ -43,9 +43,9 @@
     }
 </script>
 
-<div class="calendar p-1 @md/actions:p-2 max-h-screen select-text flex">
+<div class="calendar select-text flex">
     <div
-        class="sidebar p-3 max-h-full bg-contrast/80 rounded-lg backdrop-blur mobile:w-64 w-96"
+        class="sidebar p-3 h-full bg-contrast/80 backdrop-blur w-96 max-md:w-screen"
         in:fly={{ x: 100, duration: 250, delay: 200 }}
         out:fly={{ x: 100, duration: 200 }}
         {@attach blocker}
@@ -148,7 +148,8 @@
     .calendar {
         position: absolute !important;
         top: 0;
-        right: 0;
+        bottom: 0;
+        right: var(--side-panel-end, 0);
         width: fit-content !important;
         z-index: 425;
 

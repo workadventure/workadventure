@@ -44,6 +44,7 @@
     import { analyticsClient } from "../Administration/AnalyticsClient";
     import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
+    import { sidePanelWidthStore } from "../Stores/SidePanelStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
     import { calendarRemindersStore, startCalendarReminders } from "./Calendar/CalendarReminder";
     import ActionBar from "./ActionBar/ActionBar.svelte";
@@ -194,7 +195,7 @@
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor,
     );
     let mapEditorToolbarVisible = $derived($windowSize.width >= 768 || !$mapEditorVisibilityStore);
-    let marginRight = $derived(
+    let mapEditorReservedSpace = $derived(
         getMapEditorRightReservedSpace({
             isMapEditorActive: $mapEditorModeStore,
             isMapEditorPanelVisible: mapEditorPanelVisible,
@@ -202,6 +203,7 @@
             mapEditorPanelWidth: $mapEditorSideBarWidthStore,
         }),
     );
+    let marginRight = $derived(mapEditorReservedSpace + $sidePanelWidthStore);
 
     function onHighlightFullscreenSendMessage() {
         if (get(chatVisibilityStore) && get(navChat).key === "chat") {
@@ -250,7 +252,7 @@
     0
         ? 'not-cowebsite'
         : ''}"
-    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
+    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px; --side-panel-end: {mapEditorReservedSpace}px"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed start-0 end-0"></div>
@@ -334,7 +336,8 @@
     {/if}
 
     <!-- Rendered here rather than beside #main-layout: its notifications and toasts must show above these
-         panels, and they cannot leave its stacking context (z-10). -->
+         panels, and they cannot leave its stacking context (z-10). From md up, the panel sits in the room
+         marginRight makes for it (sidePanelWidthStore), left of the map editor's (--side-panel-end). -->
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
     {/if}
