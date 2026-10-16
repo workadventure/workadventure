@@ -1,6 +1,7 @@
 import {
     FrontToPusherWebSocketMessage,
     PusherToFrontWebSocketMessage,
+    type AnalyticsEventProperties,
     type ClientToServerMessage,
     type ServerToClientMessage,
 } from "@workadventure/messages";
@@ -13,6 +14,11 @@ import { CLIENT_DISCONNECTION_RETENTION_MS } from "../Enum/EnvironmentVariable";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 
 type WebSocketFactory = (url: string, protocols?: string[]) => WebSocket;
+
+/** Seconds elapsed since `since` (a Date.now() value), to one decimal. Never negative, whatever the clock did. */
+function secondsSince(since: number): number {
+    return Math.max(0, Math.round((Date.now() - since) / 100) / 10);
+}
 
 export class WorkAdventureWebSocket {
     private static readonly RECONNECT_BASE_DELAY_MS = 500;
@@ -40,6 +46,8 @@ export class WorkAdventureWebSocket {
     private reconnectAttempted = false;
     private reconnectAttempt = 0;
     private reconnectStartedAt: number | undefined;
+    // Last sign of life from the server: its last frame, or the socket opening. Undefined until a socket opens.
+    private lastServerMessageAt: number | undefined;
     private reconnectionTimeout: ReturnType<typeof setTimeout> | undefined;
     private nextOutgoingNonce = 1;
     private lastReceivedNonce = 0;
@@ -103,6 +111,9 @@ export class WorkAdventureWebSocket {
 
     private handleOpenEvent = (): void => {
         const isReconnection = this.reconnectAttempted;
+        const attempts = this.reconnectAttempt;
+        const downtimeSeconds = secondsSince(this.reconnectStartedAt ?? Date.now());
+        this.lastServerMessageAt = Date.now();
         this.clearReconnectionTimeout();
         this.reconnectAttempted = false;
         this.reconnectAttempt = 0;
@@ -112,7 +123,7 @@ export class WorkAdventureWebSocket {
                 this.socket.send(payload);
             }
             this._reconnectingStream.next(false);
-            analyticsClient.trackAdminEvent("websocket.reconnected");
+            analyticsClient.trackAdminEvent("websocket.reconnected", { attempts, downtimeSeconds });
         }
         const event = new Event("open");
         this.onopen?.call(this, event);
@@ -127,7 +138,7 @@ export class WorkAdventureWebSocket {
             this.reconnectAttempt += 1;
             this.reconnectStartedAt ??= Date.now();
             this._reconnectingStream.next(true);
-            this.scheduleReconnectAttempt();
+            this.scheduleReconnectAttempt(this.describeClose(event));
             return;
         }
 
@@ -146,6 +157,7 @@ export class WorkAdventureWebSocket {
     };
 
     private handleMessageEvent = (event: MessageEvent): void => {
+        this.lastServerMessageAt = Date.now();
         const bytes =
             event.data instanceof ArrayBuffer
                 ? new Uint8Array(event.data)
@@ -237,7 +249,28 @@ export class WorkAdventureWebSocket {
         window.removeEventListener("pagehide", this.closeForPageUnload);
     }
 
-    private scheduleReconnectAttempt(): void {
+    /**
+     * What the close that triggers a retry looked like, measured when it happens rather than after the retry delay.
+     * A close code, the server silence before it and the tab visibility are what tell a proxy idle timeout, a server
+     * restart and a throttled background tab apart.
+     */
+    private describeClose(event: CloseEvent): AnalyticsEventProperties<"websocket.reconnecting"> {
+        const properties: AnalyticsEventProperties<"websocket.reconnecting"> = {
+            attempt: this.reconnectAttempt,
+            closeCode: event.code,
+            wasClean: event.wasClean,
+            tabVisible: document.visibilityState === "visible",
+        };
+        if (event.reason) {
+            properties.closeReason = event.reason;
+        }
+        if (this.lastServerMessageAt !== undefined) {
+            properties.secondsSinceLastServerMessage = secondsSince(this.lastServerMessageAt);
+        }
+        return properties;
+    }
+
+    private scheduleReconnectAttempt(closeProperties: AnalyticsEventProperties<"websocket.reconnecting">): void {
         this.clearReconnectionTimeout();
         this.reconnectionTimeout = setTimeout(() => {
             if (this.manuallyClosed) {
@@ -245,7 +278,7 @@ export class WorkAdventureWebSocket {
             }
 
             this.socket = this.createSocket();
-            analyticsClient.trackAdminEvent("websocket.reconnecting");
+            analyticsClient.trackAdminEvent("websocket.reconnecting", closeProperties);
         }, this.getReconnectDelayMs());
     }
 
