@@ -49,6 +49,9 @@ joins `wa-socle`, where plain service names (`back`, `redis`) would resolve to a
 
 ## Playwright
 
+One campaign at a time on the machine: `dev/dev test <stack> <specs>` waits for the slot (a lock in the git dir all
+worktrees share), runs under `caffeinate` with one worker and the stack's variables, and frees the slot when done.
+
 ```bash
 cd tests
 eval "$(../dev/dev env ts)"         # PLAY_URL, MAPS_DOMAIN, MAP_STORAGE_ENDPOINT, MATRIX_*
