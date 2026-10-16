@@ -168,7 +168,6 @@ const actionbar: BaseTranslation = {
         },
         roomList: {
             title: "Lista de salas",
-            desc: "Explore e navegue entre diferentes salas disponíveis para encontrar o espaço perfeito para suas atividades.",
         },
         pictureInPicture: {
             title: "Picture in picture",

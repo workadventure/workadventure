@@ -163,7 +163,6 @@ const actionbar: BaseTranslation = {
         },
         roomList: {
             title: "Room list",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
         pictureInPicture: {
             title: "Picture in picture",

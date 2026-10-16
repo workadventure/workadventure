@@ -165,7 +165,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Lista delle stanze",
-            desc: "Esplora la lista delle stanze per vedere chi è presente e unirti a una conversazione con un clic.",
         },
         pictureInPicture: {
             title: "Picture in picture",

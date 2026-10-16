@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Khám phá phòng",
         closeMapEditor: "Đóng trình chỉnh sửa bản đồ",
         mapManagerActivated: "Đã bật trình quản lý bản đồ",
-        mapExplorerActivated: "Tổng quan bản đồ",
         exploreTheRoomActivated: "Đã bật khám phá phòng",
         areaEditorActivated: "Đã bật trình chỉnh sửa khu vực",
         entityEditorActivated: "Đã bật trình chỉnh sửa đối tượng",
@@ -29,7 +28,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "Yên lặng",
             description: "Không cho phép trò chuyện bên trong.",
-            actionButtonLabel: "Không làm phiền",
         },
         text: {
             label: "Chữ tiêu đề",
@@ -76,7 +74,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Hủy",
                 validate: "Xác nhận",
             },
-            actionButtonLabel: "Bắt đầu cuộc họp Jitsi",
         },
         playAudio: {
             label: "Phát tệp âm thanh",
@@ -86,7 +83,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Phát nhạc",
             error: "Không thể tải âm thanh",
-            actionButtonLabel: "Phát nhạc",
             playForAllUsersLabel: "Phát cho tất cả người dùng trên bản đồ",
             audibleRadiusLabel: "Bán kính nghe được (pixel)",
             audibleRadiusPlaceholder: "Nghe được ở mọi nơi nếu để trống",
@@ -117,7 +113,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "Buộc mở trong thẻ mới",
             openApplication: "Mở ứng dụng",
             hideUrlLabel: "Ẩn URL",
-            actionButtonLabel: "Mở liên kết",
         },
         speakerMegaphone: {
             label: "Bục phát biểu",
@@ -125,7 +120,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Người đứng trên bục phát biểu (sân khấu) có thể nói với toàn bộ người tham dự trong khu vực "Khán giả" tương ứng.',
             nameLabel: "Tên",
             namePlaceholder: "MainStage",
-            actionButtonLabel: "Lên bục phát biểu",
         },
         listenerMegaphone: {
             label: "Khán giả",
@@ -137,7 +131,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             waitingMedialLinkError: "Có vẻ liên kết bạn cung cấp gặp vấn đề. Bạn kiểm tra lại giúp nhé? 🙏",
             waitingMedialLinkHelp: "Liên kết đúng có dạng 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Đang chờ người phát biểu 🎤✨",
-            actionButtonLabel: "Vào khu khán giả",
         },
         seeAttendees: "Xem người tham dự",
         start: {
@@ -150,7 +143,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "Dùng nếu URL chứa #[tên-khu-vực]",
             infoAreaName:
                 "Tên khu vực sẽ được dùng trong bộ chọn khu vực ra. Tên phải duy nhất trên bản đồ và không được chứa dấu cách hoặc ký tự đặc biệt.",
-            actionButtonLabel: "Tới điểm xuất phát",
         },
         exit: {
             label: "Khu vực ra",
@@ -158,42 +150,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Bản đồ đích",
             exitMapStartAreaName: "Tên khu vực xuất phát",
             defaultStartArea: "Khu vực xuất phát mặc định",
-            actionButtonLabel: "Tới lối ra",
         },
         youtube: {
             label: "Mở video YouTube",
             description: "Mở video YouTube trong WorkAdventure hoặc trong thẻ mới.",
             error: "Vui lòng nhập URL YouTube hợp lệ",
             disabled: "Tích hợp YouTube đang tắt.",
-            actionButtonLabel: "Mở video YouTube",
         },
         googleDocs: {
             label: "Mở Google Docs",
             description: "Mở Google Docs trong WorkAdventure hoặc trong thẻ mới.",
             error: "Vui lòng nhập URL Google Docs hợp lệ",
             disabled: "Tích hợp Google Docs đang tắt.",
-            actionButtonLabel: "Mở Google Docs",
         },
         klaxoon: {
             label: "Mở Klaxoon",
             description: "Mở Klaxoon trong WorkAdventure hoặc trong thẻ mới.",
             error: "Vui lòng nhập URL Klaxoon hợp lệ",
             disabled: "Tích hợp Klaxoon đang tắt.",
-            actionButtonLabel: "Mở Klaxoon",
         },
         googleSheets: {
             label: "Mở Google Sheets",
             description: "Mở Google Sheets trong WorkAdventure hoặc trong thẻ mới.",
             error: "Vui lòng nhập URL Google Sheets hợp lệ",
             disabled: "Tích hợp Google Sheets đang tắt.",
-            actionButtonLabel: "Mở Google Sheets",
         },
         googleSlides: {
             label: "Mở Google Slides",
             description: "Mở Google Slides trong WorkAdventure hoặc trong thẻ mới.",
             error: "Vui lòng nhập URL Google Slides hợp lệ",
             disabled: "Tích hợp Google Slides đang tắt.",
-            actionButtonLabel: "Mở Google Slides",
         },
         eraser: {
             label: "Tẩy",
@@ -201,14 +187,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Xóa",
             error: "Vui lòng nhập URL Eraser hợp lệ",
             disabled: "Tích hợp Eraser đang tắt.",
-            actionButtonLabel: "Xóa hình vẽ",
         },
         googleDrive: {
             label: "Mở Google Drive",
             description: "Mở Google Drive trong WorkAdventure hoặc trong thẻ mới.",
             error: "Vui lòng nhập URL Google Drive hợp lệ",
             disabled: "Tích hợp Google Drive đang tắt.",
-            actionButtonLabel: "Mở Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "Thêm quyền",
@@ -221,7 +205,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Quyền truy cập",
             rightReadDescription:
                 "Quyền truy cập xác định ai có thể tương tác với khu vực. Người dùng khớp một trong các nhãn này có thể vào khu vực và dùng các đối tượng bên trong.",
-            actionButtonLabel: "Vào phòng riêng",
         },
         personalAreaPropertyData: {
             label: "Khu vực cá nhân",
@@ -236,14 +219,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Người dùng được phép",
             owner: "Chủ sở hữu",
             revokeAccess: "Thu hồi quyền",
-            actionButtonLabel: "Tới bàn làm việc cá nhân",
         },
         excalidraw: {
             label: "Mở Excalidraw",
             description: "Bảng trắng mã nguồn mở kiểu vẽ tay. Cộng tác và mã hóa đầu cuối.",
             error: "Vui lòng nhập URL Excalidraw hợp lệ",
             disabled: "Tích hợp Excalidraw đang tắt.",
-            actionButtonLabel: "Mở Excalidraw",
         },
         cards: {
             label: "Mở Cards",
@@ -251,14 +232,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Giải pháp nhanh và dễ nhất để chia sẻ kiến thức của bạn trong nháy mắt, trực tuyến, trên MS Teams và trên di động.",
             error: "Vui lòng nhập URL Cards hợp lệ",
             disabled: "Tích hợp Cards đang tắt.",
-            actionButtonLabel: "Mở Cards",
         },
         tldraw: {
             label: "Mở tldraw",
             description: "Bảng trắng trực tuyến / SDK canvas vô hạn.",
             error: "Vui lòng nhập URL tldraw hợp lệ",
             disabled: "Tích hợp tldraw đang tắt.",
-            actionButtonLabel: "Mở tldraw",
         },
         matrixRoomPropertyData: {
             label: "Liên kết phòng Matrix",
@@ -267,7 +246,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Tên hiển thị của phòng",
             roomNameLabelPlaceholder: "Phòng của tôi",
             defaultChatRoomAreaName: "Khu vực phòng",
-            actionButtonLabel: "Bắt đầu trò chuyện",
         },
         tooltipPropertyData: {
             label: "Bong bóng thông tin",
@@ -275,7 +253,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "Viết nội dung tại đây ✍️",
             duration: "Thời lượng (giây) ⏱️",
             infinityDuration: "Thời lượng vô hạn ⏱️",
-            actionButtonLabel: "Xem bong bóng thông tin",
         },
         openFile: {
             label: "Mở tệp",
@@ -293,7 +270,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "Tệp quá lớn, kích thước tối đa là {size} MB",
             },
             hideUrlLabel: "Ẩn URL",
-            actionButtonLabel: "Mở tệp",
         },
         livekitRoomProperty: {
             label: "Phòng họp",
@@ -312,7 +288,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Hủy",
                 validate: "Xác nhận",
             },
-            actionButtonLabel: "Bắt đầu cuộc họp",
         },
         maxUsersInAreaPropertyData: {
             label: "Số người tối đa",
@@ -517,12 +492,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Khám phá phòng",
-        description:
-            "Cho phép khám phá phòng. Bạn có thể di chuyển quanh phòng và tương tác với các đối tượng. Có 2 chế độ: 'Khám phá' và 'Tìm kiếm'. Chế độ 'Tìm kiếm' cho phép bạn tìm hoặc lọc các đối tượng và khu vực trong phòng. Chế độ 'Khám phá' cho phép bạn di chuyển tự do trong phòng.",
         noEntitiesFound: "Không tìm thấy đối tượng nào trong phòng 🙅‍♂️",
         entitiesFound: "đối tượng được tìm thấy",
         noAreasFound: "Không tìm thấy khu vực nào trong phòng 🙅‍♀️",
         areasFound: "khu vực được tìm thấy",
+        noName: "Không có tên",
         noDescriptionFound: "Không có mô tả 🫥",
         details: {
             close: "Đóng",
@@ -542,6 +516,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Đang chuyển tới phòng: {roomNameSelected}... Hẹn gặp lại... 🫡",
         searchLabel: "Tìm phòng",
         searchPlaceholder: "Nhập từ khóa...",
+        active: "Đang hoạt động",
     },
 };
 

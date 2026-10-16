@@ -162,7 +162,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "قائمة الغرف",
-            desc: "عرض قائمة الغرف المتاحة.",
         },
         pictureInPicture: {
             title: "صورة داخل صورة",
