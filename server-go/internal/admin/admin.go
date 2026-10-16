@@ -177,7 +177,7 @@ func (l *Local) MemberData(_ context.Context, q MemberQuery) (MemberData, error)
 		IsCompanionTextureValid: companionValid, CompanionTexture: companion,
 		ActivatedInviteUser: true, CanEdit: canEdit, World: roomURL.Scheme + "://" + roomURL.Host,
 		Applications: l.applications(),
-		CanRecord:    l.cfg.RecordingConfigured && q.AccessToken != "",
+		CanRecord:    recordingSupported && l.cfg.RecordingConfigured && q.AccessToken != "",
 		// No admin back office: nobody to report analytics to.
 		AnalyticsEventsEnabled: false,
 	}, nil
@@ -242,7 +242,7 @@ func (l *Local) MapDetails(_ context.Context, playURI string) (map[string]any, e
 	}
 	c := l.cfg
 	buttonState := "hidden"
-	if c.RecordingConfigured {
+	if recordingSupported && c.RecordingConfigured {
 		buttonState = "enabled"
 	}
 	for k, v := range map[string]any{
@@ -333,3 +333,7 @@ func (l *Local) IceServers(userID int32) []IceServer {
 	}
 	return servers
 }
+
+// recordingSupported stays false until this server records (LiveKit egress): the front must not offer a button the
+// server always refuses.
+const recordingSupported = false

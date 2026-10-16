@@ -59,3 +59,13 @@ func TestMapDetails(t *testing.T) {
 		t.Fatalf("got %v", d)
 	}
 }
+
+func TestNoRecordingIsOfferedWhileThisServerCannotRecord(t *testing.T) {
+	l := local(t)
+	l.cfg.RecordingConfigured = true // S3 is set, but there is no egress yet
+	d, _ := l.MapDetails(context.Background(), "http://play.test/_/global/maps.test/tests/E2E/empty.json")
+	m, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json", AccessToken: "t"})
+	if d["recording"].(map[string]any)["buttonState"] != "hidden" || m.CanRecord {
+		t.Fatalf("a button the server would always refuse: %v, canRecord %v", d["recording"], m.CanRecord)
+	}
+}

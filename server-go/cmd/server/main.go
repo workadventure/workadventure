@@ -102,11 +102,11 @@ func run() error {
 		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
 	}
 	if cfg.PrometheusPort != 0 {
-		// The dedicated metrics port is internal: it also serves the Go profiler.
+		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics.
 		mux := http.NewServeMux()
 		mux.Handle("GET /metrics", metrics.Handler(true, cfg.PrometheusToken))
-		mux.HandleFunc("/debug/pprof/", pprof.Index)
-		mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+		mux.HandleFunc("/debug/pprof/", metrics.Guard(cfg.PrometheusToken, pprof.Index))
+		mux.HandleFunc("/debug/pprof/profile", metrics.Guard(cfg.PrometheusToken, pprof.Profile))
 		servers = append(servers, newServer(cfg.PrometheusPort, mux))
 	}
 	errs := make(chan error, len(servers))

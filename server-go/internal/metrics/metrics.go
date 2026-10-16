@@ -3,7 +3,9 @@
 package metrics
 
 import (
+	"crypto/subtle"
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -54,20 +56,36 @@ func Handler(dedicatedPort bool, token string) http.Handler {
 			http.Error(w, "Prometheus endpoint is disabled.", http.StatusNotImplemented)
 			return
 		}
-		if token != "" {
-			h := r.Header.Get("Authorization")
-			switch {
-			case h == "":
-				http.Error(w, "Undefined authorization header", http.StatusUnauthorized)
-				return
-			case len(h) < 7 || h[:7] != "Bearer ":
-				http.Error(w, `Authorization header should start with "Bearer"`, http.StatusUnauthorized)
-				return
-			case h[7:] != token:
-				http.Error(w, "Incorrect authorization header sent.", http.StatusUnauthorized)
-				return
-			}
+		if authorized(w, r, token) {
+			metrics.ServeHTTP(w, r)
 		}
-		metrics.ServeHTTP(w, r)
 	})
+}
+
+// Guard requires the metrics token, when there is one, before h (the profiler of the metrics port).
+func Guard(token string, h http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if authorized(w, r, token) {
+			h(w, r)
+		}
+	}
+}
+
+// authorized checks the "Bearer" header against token, answering 401 when it does not match.
+func authorized(w http.ResponseWriter, r *http.Request, token string) bool {
+	if token == "" {
+		return true
+	}
+	h := r.Header.Get("Authorization")
+	switch {
+	case h == "":
+		http.Error(w, "Undefined authorization header", http.StatusUnauthorized)
+	case !strings.HasPrefix(h, "Bearer "):
+		http.Error(w, `Authorization header should start with "Bearer"`, http.StatusUnauthorized)
+	case subtle.ConstantTimeCompare([]byte(h[7:]), []byte(token)) != 1:
+		http.Error(w, "Incorrect authorization header sent.", http.StatusUnauthorized)
+	default:
+		return true
+	}
+	return false
 }
