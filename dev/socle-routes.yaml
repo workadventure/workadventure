@@ -9,6 +9,7 @@ http:
     oidc: { rule: "Host(`oidc.workadventure.localhost`)", service: oidc }
     matrix: { rule: "Host(`matrix.workadventure.localhost`)", service: matrix }
     livekit: { rule: "Host(`livekit.workadventure.localhost`)", service: livekit }
+    cdn-livekit: { rule: "Host(`cdn-livekit.workadventure.localhost`)", service: cdn-livekit }
     redisinsight: { rule: "Host(`redis.workadventure.localhost`)", service: redisinsight }
   services:
     front: { loadBalancer: { servers: [{ url: "http://front" }] } }
@@ -17,6 +18,7 @@ http:
     oidc: { loadBalancer: { servers: [{ url: "http://oidc-server-mock" }] } }
     matrix: { loadBalancer: { servers: [{ url: "http://synapse:8008" }] } }
     livekit: { loadBalancer: { servers: [{ url: "http://livekit:7880" }] } }
+    cdn-livekit: { loadBalancer: { servers: [{ url: "http://rustfs-livekit:9000" }] } }
     redisinsight: { loadBalancer: { servers: [{ url: "http://redisinsight:5540" }] } }
 
 tcp:
