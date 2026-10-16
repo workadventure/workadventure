@@ -10,6 +10,7 @@ declare global {
     interface Window {
         __holdCameraBack: () => void;
         __releaseCamera: () => void;
+        __freezeCamera: () => void;
     }
 }
 
@@ -78,6 +79,12 @@ async function holdCameraBackOnDemand(page: Page): Promise<void> {
         window.__releaseCamera = () => {
             heldBack = false;
         };
+        // A camera that freezes once: asking for it again gives a working one
+        window.__freezeCamera = () => {
+            for (const camera of cameras) {
+                camera.frozen = true;
+            }
+        };
     });
 }
 
@@ -91,6 +98,37 @@ test.describe("Camera held back @nomobile @nowebkit @nofirefox", () => {
         },
     );
 
+    test("a camera that freezes once comes back by itself, without warning anyone", async ({ browser }) => {
+        test.setTimeout(180_000);
+        const url = publicTestMapUrl("tests/E2E/empty.json", "camera-freezes-once");
+        await using alice = await getPage(browser, "Alice", url, { pageCreatedHook: holdCameraBackOnDemand });
+        await using bob = await getPage(browser, "Bob", url);
+        const stallWarnings: string[] = [];
+        alice.on("console", (message) => {
+            if (message.text().startsWith("The camera ")) {
+                stallWarnings.push(message.text());
+            }
+        });
+
+        const position = await evaluateScript(alice, async () => WA.player.getPosition());
+        await Map.teleportToPosition(bob, position.x, position.y);
+        await expect(bob.locator("#cameras-container").getByText("Alice")).toBeVisible({ timeout: 60_000 });
+        await expectWebRtcConnectionsCountToBe(alice, 1, 30_000);
+        await alice.waitForTimeout(10_000);
+
+        await alice.evaluate(() => window.__freezeCamera());
+
+        // Asked for again once, and the new camera works: nothing to tell anyone
+        await expect
+            .poll(() => stallWarnings, { timeout: 30_000 })
+            .toEqual(["The camera has delivered no frame for 3 seconds: asking for it again"]);
+        await alice.waitForTimeout(15_000);
+        expect(stallWarnings).toHaveLength(1);
+        await expect(alice.getByTestId("camera-button")).not.toHaveClass(/bg-warning|bg-danger/);
+        await expect(alice.getByTestId("camera-no-image-retry")).toBeHidden();
+        await expect(bob.locator("#cameras-container").getByTestId("camera-unavailable")).toBeHidden();
+    });
+
     test("a camera that stops delivering images is marked unavailable, not turned off", async ({ browser }) => {
         test.setTimeout(240_000);
         const url = publicTestMapUrl("tests/E2E/empty.json", "camera-unavailable");
@@ -98,7 +136,7 @@ test.describe("Camera held back @nomobile @nowebkit @nofirefox", () => {
         await using bob = await getPage(browser, "Bob", url);
         const stallWarnings: string[] = [];
         alice.on("console", (message) => {
-            if (message.text().startsWith("The camera has delivered no frame")) {
+            if (message.text().startsWith("The camera ")) {
                 stallWarnings.push(message.text());
             }
         });
@@ -125,9 +163,12 @@ test.describe("Camera held back @nomobile @nowebkit @nofirefox", () => {
         });
         await expect(bob.getByText("No video stream received.")).toBeHidden();
 
-        // A long absence: the camera is judged once, and stays wanted on
+        // A long absence: asked for again once (the system keeps it), marked unavailable once, and still wanted on
         await alice.waitForTimeout(40_000);
-        expect(stallWarnings).toHaveLength(1);
+        expect(stallWarnings).toEqual([
+            "The camera has delivered no frame for 3 seconds: asking for it again",
+            "The camera still delivers no frame: it is unavailable",
+        ]);
         await expect(cameraButton).toHaveClass(/bg-warning/);
         await expect(bob.getByText("No video stream received.")).toBeHidden();
 
