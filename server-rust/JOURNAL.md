@@ -542,3 +542,19 @@ message. Playwright : métadonnées des robots ajoutées après le premier passa
 **Écarts ouverts (détail dans `PARITY.md`) :** admin SaaS et white label (contrat attendu du socle), LiveKit,
 enregistrement, Room API, OpenAPI (J3c), Matrix, uploader, variables de monde (`pw_`), suiveur hors rayon,
 Redis non prouvé de bout en bout (`variables:61`).
+
+## Pause (2026-10-17, demandée par Yannis via le socle)
+
+Rust s'arrête jusqu'à ce que Go ait fini et validé le jalon 1.
+
+- **État exact :** `lang-rust` au commit de cette entrée, tout commité, rien en cours dans le worktree ni dans le
+  miroir de travail. Aucune spec en cours. Stack `rust` arrêtée sans `-v` (cartes gardées).
+- **Résultats J3b à ce jour** (stack rust, Chromium) : 38/39, `metadata` rejouée 2/2 ; seul échec
+  `report_issue:7` (environnement : `SENTRY_DSN_FRONT`). `api_players:16`, `:329` et `iframe_script:14`, que le
+  socle a reclassés le 17/10 comme devant passer, passent ici (api_players 9/9, iframe_script 6/6).
+- **Reçu du socle, pas encore traité** : `dev/contracts/admin-api.md` et la référence TS de J3c (19/20) dans
+  dev-socle 1b99c02f3 ; exigences de déploiement (WebSocket sur 3001, `PATH_PREFIX`, uploader 3003, Room API
+  50051, sous-commande `healthcheck`, `apiVersionHash`) recopiées dans `PARITY.md` §10. Aide extérieure : socle.
+- **Prochaine action à la reprise :** merger dev-socle (1b99c02f3 et b8b724e7a), lancer les specs avec
+  `dev/dev test rust <specs>`, puis J3c (LiveKit d'abord), les exigences de déploiement du §10, et l'admin SaaS
+  d'après le contrat.

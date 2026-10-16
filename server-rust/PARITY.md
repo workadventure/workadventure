@@ -144,3 +144,17 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 - Une commande d'édition qui casse la structure de la WAM est refusée et ne change rien (map-storage la garde en
   mémoire).
 - `/upload-endpoint` garde le port de l'en-tête `Host` (Express le perd : `map_storage_upload:185` échoue en TS).
+
+## 10. Exigences de déploiement du socle (dev-socle 1b99c02f3, aide extérieure : socle)
+
+| Exigence | État | Prochaine action |
+|---|---|---|
+| WebSocket aussi sur 3001 (`PUSHER_WS_PORT`) | `absent` (WebSocket sur le port HTTP seul) | second listener avec `/ws/room` |
+| map-storage sur 3002, actif par défaut | `implémenté non vérifié` (`SERVER_MAP_STORAGE_PORT`, défaut 3002) | vérifier dans le chart |
+| `PATH_PREFIX` de map-storage (`/map-storage` en single-domain) | `absent` | retirer le préfixe à l'entrée du routeur map-storage |
+| uploader sur 3003, Room API gRPC sur 50051 | `absent` | uploader après J3c ; Room API avec J3c |
+| `/ping` liveness, `/ready` readiness (503 avant le gabarit), `PROMETHEUS_PORT` | `validé` | — |
+| sous-commande `healthcheck` du binaire (GET 127.0.0.1:3000/ping, code 0/1) | `absent` | ajouter dans `main.rs` |
+| gabarit et fichiers du front depuis `ASSETS_INTERNAL_URL` | `validé` (stacks du socle) | — |
+| `apiVersionHash` exposé pour le contrôle du pipeline SaaS | `absent` | l'ajouter à `/ready` ou à un petit endpoint |
+| contextes `protos` et `pusherdata` passés par la CI | `validé` (en tête du Dockerfile) | — |
