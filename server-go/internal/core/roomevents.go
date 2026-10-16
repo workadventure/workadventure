@@ -91,3 +91,23 @@ func (r *Room) SendUserMessage(ctx context.Context, m UserMessage) error {
 		}
 	})
 }
+
+// ToUsers gives m to every player of the room (the admin's messages, its world-full warning).
+func (r *Room) ToUsers(ctx context.Context, m *Msg) error {
+	return r.a.Post(ctx, func() {
+		for _, u := range r.s.users {
+			u.peer.Send(m)
+		}
+	})
+}
+
+// ToUUID gives m to the players of the room with that uuid, every tab of theirs (an external module's message).
+func (r *Room) ToUUID(ctx context.Context, uuid string, m *Msg) error {
+	return r.a.Post(ctx, func() {
+		for _, u := range r.s.users {
+			if u.uuid == uuid {
+				u.peer.Send(m)
+			}
+		}
+	})
+}
