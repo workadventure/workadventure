@@ -178,6 +178,17 @@ livekit-egress:
       db: 2
 
 # #########################################################
+# single server (rewrite of play/pusher, back, map-storage and uploader)
+# #########################################################
+# With server.enabled, set play.image to the server image: it runs in the play Deployment and the map-storage and
+# uploader Services point at its pods. The back, map-storage and uploader workloads are not deployed; their ConfigMaps
+# and Secrets still are, and the play Deployment reads those of the back and map-storage.
+server:
+  enabled: false
+  mapStoragePort: 3002
+  uploaderPort: 3003
+
+# #########################################################
 # play service
 # #########################################################
 play:
