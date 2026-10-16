@@ -170,6 +170,7 @@ type state struct {
 	areas       []Area
 	counts      map[string]int       // players in each counted area
 	vars        map[[3]string]string // area variables: area, property, key
+	items       map[int32]string     // state of the interactive objects (roomevents.go)
 
 	invitations map[string][]invitation // meeting invitations sent, by sender uuid
 	roomVars    *RoomVariables          // nil until InitVariables
@@ -189,6 +190,7 @@ func newState(url string, cfg Config) *state {
 		groups:      map[int32]*group{},
 		listeners:   map[Peer]struct{}{},
 		watchers:    map[*watcher]struct{}{},
+		items:       map[int32]string{},
 		invitations: map[string][]invitation{},
 		counts:      map[string]int{},
 		vars:        map[[3]string]string{},
@@ -266,7 +268,7 @@ func (s *state) join(p Peer, req JoinRequest) {
 			u.vars[v.Name] = v.Value
 		}
 	}
-	p.Send(NewMsg(RoomJoined{UserID: u.id, Variables: s.variables(), RoomVariables: s.readableVariables(req.Tags), PlayerVariables: stored}, false))
+	p.Send(NewMsg(RoomJoined{UserID: u.id, Variables: s.variables(), RoomVariables: s.readableVariables(req.Tags), PlayerVariables: stored, Items: s.itemStates()}, false))
 
 	s.users[u.id] = u
 	s.byPeer[p] = u

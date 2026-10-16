@@ -96,6 +96,7 @@ func newSession(srv *Server, info sessionInfo) *Session {
 	s.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
 	s.out = newOutbox(outboxLimit, func() { go s.destroy(statusSessionDestroyed, "Too slow to receive messages") })
 	s.room = srv.rooms.Acquire(info.roomID)
+	srv.sessions.Store(s, struct{}{})
 	metrics.Sockets.Inc()
 	return s
 }
@@ -230,7 +231,7 @@ func (s *Session) roomJoined(j core.RoomJoined) *pb.ServerToClientMessage {
 	return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomJoinedMessage{RoomJoinedMessage: &pb.RoomJoinedMessage{
 		CurrentUserId: userID, UserRoomToken: mb.UserRoomToken, CharacterTextures: characterTextures(coreTextures(mb.CharacterTextures)),
 		CompanionTexture: companion, CanEdit: mb.CanEdit, ActivatedInviteUser: mb.ActivatedInviteUser, Applications: apps,
-		AreaPropertyVariable: vars, Variable: variables(j.RoomVariables), PlayerVariable: variables(j.PlayerVariables),
+		AreaPropertyVariable: vars, Variable: variables(j.RoomVariables), PlayerVariable: variables(j.PlayerVariables), Item: items(j.Items),
 	}}}
 }
 
@@ -420,6 +421,7 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 		metrics.ClientLeft(s.info.roomID)
 	}
 	s.srv.rooms.Release(s.info.roomID)
+	s.srv.sessions.Delete(s)
 	if id := s.info.connectionID; id != "" {
 		s.srv.retained.Compute(id, func(old *Session, ok bool) (*Session, bool) { return old, ok && old != s })
 	}
@@ -489,6 +491,20 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.query(msg.QueryMessage)
 	case *pb.ClientToServerMessage_EditMapCommandMessage:
 		s.editMap(msg.EditMapCommandMessage)
+	case *pb.ClientToServerMessage_PlayGlobalMessage:
+		if s.isAdmin() {
+			go s.playGlobalMessage(msg.PlayGlobalMessage)
+		}
+	case *pb.ClientToServerMessage_EmotePromptMessage:
+		_ = s.room.Emote(ctx, s, msg.EmotePromptMessage.GetEmote())
+	case *pb.ClientToServerMessage_ItemEventMessage:
+		e := msg.ItemEventMessage
+		_ = s.room.ItemEvent(ctx, core.ItemState{ItemID: e.GetItemId(), StateJSON: e.GetStateJson()},
+			core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_ItemEventMessage{ItemEventMessage: e}}, true))
+	case *pb.ClientToServerMessage_EntityMessage:
+		if e := msg.EntityMessage; e.GetEntityEvent() != nil { // to the whole room (dispatchEntityEvent)
+			_ = s.room.SendEvent(ctx, core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_EntityMessage{EntityMessage: e}}, true), nil)
+		}
 	case *pb.ClientToServerMessage_AbortQueryMessage:
 		// The reader answers in order, so an abort always comes after its answer. The front aborted a join it
 		// had no answer for yet: it does not know it is in the space, so leave it (as the pusher's abort handler).
@@ -510,8 +526,13 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 			if message == "" {
 				message = "User banned by admin " + s.info.userUUID
 			}
-			// ponytail: banned by account only; byIp needs the IP of a user of the whole world.
-			if s.srv.admin.Ban(ctx, admin.Ban{UUID: b.GetBanUserUuid(), PlayURI: s.info.roomID, Name: b.GetBanUserName(), Message: message, ByUUID: s.info.userUUID}) {
+			ban := admin.Ban{UUID: b.GetBanUserUuid(), PlayURI: s.info.roomID, Name: b.GetBanUserName(), Message: message, ByUUID: s.info.userUUID}
+			if b.GetByIp() { // the IP of the user in the world, unless it is the moderator's own
+				if ip := s.srv.worldIP(s.info.member.World, b.GetBanUserUuid()); ip != "" && ip != s.info.ipAddress {
+					ban.IPAddress = ip
+				}
+			}
+			if s.srv.admin.Ban(ctx, ban) {
 				kind = "banned"
 			}
 		}
@@ -572,6 +593,8 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_RoomTagsQuery:
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{
 			Tags: s.srv.admin.RoomTags(s.ctx, s.info.roomID)}}})
+	case *pb.QueryMessage_BanIpPreviewQuery:
+		s.banIPPreview(q.GetId(), query.BanIpPreviewQuery.GetBanUserUuid())
 	case *pb.QueryMessage_GetRecordingsQuery:
 		go s.getRecordings(q.GetId())
 	case *pb.QueryMessage_DeleteRecordingQuery:
@@ -614,4 +637,12 @@ func (s *Session) answerError(id int32, message string) {
 	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: &pb.AnswerMessage{
 		Id: id, Answer: &pb.AnswerMessage_Error{Error: &pb.ErrorMessage{Message: message}},
 	}}}, false))
+}
+
+func items(list []core.ItemState) []*pb.ItemStateMessage {
+	out := make([]*pb.ItemStateMessage, len(list))
+	for i, it := range list {
+		out[i] = &pb.ItemStateMessage{ItemId: it.ItemID, StateJson: it.StateJSON}
+	}
+	return out
 }
