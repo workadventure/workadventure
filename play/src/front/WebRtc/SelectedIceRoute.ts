@@ -4,7 +4,7 @@ export type SelectedIceRoute = {
     /** Transport to the TURN server when relayed, to the peer otherwise. */
     protocol: "udp" | "tcp" | "tls" | undefined;
     /** Current ICE round-trip time of the selected pair. */
-    roundTripTimeMs: number | undefined;
+    roundTripTimeMs?: number;
 };
 
 type CandidatePairStats = {
