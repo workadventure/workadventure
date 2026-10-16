@@ -47,7 +47,7 @@ async function isMediaAccessGranted(constraints: MediaStreamConstraints): Promis
         const statuses = await Promise.all(names.map((name) => navigator.permissions.query({ name })));
         return statuses.every((status) => status.state === "granted");
     } catch {
-        // The browser cannot tell: wait for as long as it takes, as before
+        // The browser cannot tell: wait for as long as it takes
         return false;
     }
 }

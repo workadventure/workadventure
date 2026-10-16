@@ -20,8 +20,7 @@ import { localEncoderStatsStore, type LocalEncoderStats } from "./LocalEncoderSt
  * The camera is then marked unavailable ("no_image", see cameraUnavailableStore): it stops being sent, so the others
  * get the avatar with "Camera unavailable" instead of a red tile, and the user is told. Nothing is turned off behind
  * the user's back: the camera stays wanted, and is asked for again when the user returns to the tab, a conversation
- * starts, or on "Try again". Restarting it on our own, then turning it off (#6742) left people with no camera for
- * hours when the new getUserMedia never answered, and read as a camera turned off on purpose.
+ * starts, or on "Try again".
  *
  * The limitation reason is no help: it stays set while the adaptation is in force, a LiveKit sender reports
  * "bandwidth" for minutes on end, and a frozen camera never moves it.
