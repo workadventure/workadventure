@@ -22,7 +22,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 ## Manques bloquants, par ordre
 
 1. **Admin distante** (contrat `dev/contracts/admin-api.md`) : capacités, `/api/map`, `/api/room/access` (avec ses refus), listes Woka et compagnon, ICE, vérification de domaine (17/10, tests contre un faux admin). Restent : la carte d'une salle tirée de `/api/map` (mondes `/@/`, `wamUrl` par domaine), ban, report, tags, sameWorld, membres, refresh OAuth, analytics, routes et socket appelés par l'admin, challenge Cloudflare, `/profile-callback`, `access_key`.
-2. **LiveKit** : la bascule, les jetons et les salles sont codés et testés en unitaire (17/10) ; les specs `livekit` et `map_editor_livekit` restent à jouer. L'enregistrement en dépend et manque encore.
+2. **LiveKit et enregistrement** : validés (`livekit`, `map_editor_livekit`, `recording`, 17/10). Reste : identifiants LiveKit par monde et `recordings/events` (admin).
 3. **Durabilité des variables** : les écritures ne se perdent plus pendant une coupure (corrigé le 17/10). Reste qu'une room démarrée pendant une coupure garde les valeurs par défaut (`varsOnce`).
 4. **Isolation des tenants** :
    - clé de stockage sans le domaine (`USE_DOMAIN_NAME_IN_PATH`) ;
@@ -58,7 +58,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | askPosition (MoveTo, Locate) | BSM:1313 | implémenté non vérifié | `core/room.go:93` | aucun test | test |
 | Emotes | BSM:1196 | absent (reporté depuis J1) | message jeté | les autres ne voient pas l'emote | porter |
 | itemEvent, entityMessage | BSM:279, 325 | absent | message jeté | objets interactifs et sons d'entité sans effet | porter |
-| abortQuery | IOC:1046 | absent | message jeté | un joinSpace abandonné laisse le joueur membre | gérer |
+| abortQuery | IOC:1046 | validé | `server_test.go` : `TestAnAbortedJoinLeavesTheSpace` ; `map_editor_livekit:111` | — | — |
 | Invitations à une réunion | BSM:1355-1391 | validé (cœur) | `core/roomvars_test.go:52` ; J3b à rejouer | — | — |
 
 ## Spaces, chat, Matrix
@@ -116,7 +116,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
 | `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |
 | `/room/refresh`, `/message`, `/external-module/event`, `/ws/admin/rooms` | AdminController.ts, IOC:86 | absent | — | SaaS | avec l'admin |
-| OpenAPI, swagger-ui | SwaggerController.ts | absent | — | J3c `swagger_doc` | J3c |
+| OpenAPI, swagger-ui (`ENABLE_OPENAPI_ENDPOINT`) | SwaggerController.ts | validé | `swagger_doc.spec.ts` | swagger-ui depuis un CDN (5.32.6) | — |
 | Front sans `ASSETS_URL` (mode local) | FrontAssets.ts:79 | absent | `httpapi/front.go:36` | toutes les pages répondent 503 | mode local, ou `ASSETS_URL` obligatoire |
 | Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` | aligner |
 | Dockerfile de prod | play/Dockerfile | partiel | `Dockerfile` | voir manque 7 | étape « Déploiement » |
@@ -139,11 +139,10 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| `canRecord` et `recording.buttonState` | LocalAdmin.ts:69-75,236,342 | validé (masqué) | `admin_test.go` : `TestNoRecordingIsOfferedWhileThisServerCannotRecord` | bouton masqué tant que ce serveur n'enregistre pas (`recordingSupported`) | à ouvrir avec l'egress |
-| start/stop, sessions, arrêts automatiques, webhook egress | RecordingManager.ts, LivekitWebhookController.ts | absent | `core/space_state.go:228` (`ErrNoRecording`) | — | après LiveKit ; le socle a maintenant l'egress (`--profile recording`) |
-| Liste, vignettes, URL signées, suppression S3 | RecordingService.ts | absent | « Query not supported » | — | client S3 SigV4 |
-| Réglages d'enregistrement du WAM | MSS:391 | implémenté non vérifié | `wam/wam.go:89` | pas de test de `SetRecording` | test |
-| Notification à l'admin `api/recordings/events` | back AdminApi.ts:35-65 | absent | — | webhook client `recording.completed` | avec l'admin |
+| start/stop, une session par space, arrêt par le seul recorder, arrêts automatiques, pas de retour WebRTC pendant l'enregistrement | RecordingManager.ts | validé | `recording.spec.ts` 5/5 (17/10) ; `core/space_recording_test.go` (3) | état de l'egress interrogé chaque seconde au lieu du webhook | — |
+| `canRecord`, `recording.buttonState` | LocalAdmin.ts:69-75,236,342 | validé | `admin_test.go` ; `recording.spec.ts:144,358` | — | — |
+| Liste, suppression, vignettes, URL signée S3 | RecordingService.ts | validé | `recording.spec.ts` ; `s3_test.go` (signature AWS) ; `recordings_test.go` | — | — |
+| Notification à l'admin `api/recordings/events` | back AdminApi.ts:35-65 | absent | — | webhook client `recording.completed` | avec l'admin (A23) |
 
 ## Room API
 

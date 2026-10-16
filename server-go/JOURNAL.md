@@ -515,3 +515,80 @@ Verdict : **remplacement SaaS interdit** tant que manquent :
 **Aide extérieure.**
 - Inventaires de parité par quatre agents en lecture seule (TS et Go), avec la consigne de ne rien lire côté Rust.
 - Pour LiveKit et l'enregistrement, les rapports de recherche du 14/10.
+
+## Jalon 1, tranche 3 — J3b et J3c sur la stack, admin SaaS, white label, enregistrement (2026-10-17)
+
+Toutes les campagnes ont tourné sur la stack `go` du socle, un seul worker, sous `caffeinate`, en `fichier:ligne` pour les rejeux.
+
+**J3b rejoué.** Sur 45 tests : 39 réussis, 3 échecs d'environnement, 3 sautés.
+- Rejeu des 17 échecs du 15/10 : 14 passent maintenant.
+  - Les pages blanches venaient de la veille du Mac.
+  - `api_players` et `iframe_script` venaient de `FRONT_URL` de maps, corrigé par le socle.
+- Les 3 restants sont aussi en échec en TS, et le socle les classe en environnement :
+  - `report_issue:7` : il faut `SENTRY_DSN_FRONT` ;
+  - `scripting_audio_stream:101` (`@scripting`) ;
+  - `variables:188` : le socle sert les cartes de son image, pas celles du worktree.
+
+**Non-régression J1, J2, `scripting_spaces` et J3a** : 136 réussis, 3 échecs, 3 sautés.
+- **Défaut trouvé et corrigé : mégaphone (`:174` et `:505`).**
+  - La stack fixe `MAX_USERS_FOR_WEBRTC=3`, donc la bulle passe sur LiveKit à la 4e arrivée. À ce moment, un seul membre observait.
+  - Le message de bascule ne partait qu'aux participants : les membres qui ont commencé à observer ensuite restaient en WebRTC.
+  - Comme `handleUserToNotifyAdded` du TS, un membre qui commence à observer, ou qui entre dans le filtre, reçoit maintenant la stratégie courante.
+  - Test de scénario ajouté. Les deux specs passent.
+- `scripting_spaces:401` : environnement. Il vise `api.workadventure.localhost:80` et une route de debug du back.
+
+**J3c** : 19 réussis sur 20, comme la référence TS.
+- `livekit` (5), `map_editor_livekit` `:28` et `:111`, `room-api` (5), `screensharing`, `recording` (5) et `swagger_doc` passent.
+- `map_editor_livekit:62` vise `api.workadventure.localhost:80` en dur : environnement, comme en TS.
+- **Défaut trouvé et corrigé : `:111`.** Le front annule un `joinSpaceQuery` dont il n'a pas encore la réponse quand il sort vite d'une zone. Le Go ignorait l'annulation, le joueur restait membre du space et l'autre joueur ne le voyait plus. Une annulation fait maintenant quitter le space.
+
+**Enregistrement.**
+- Automate idle → starting → recording → stopping → idle dans le space, avec l'egress LiveKit vers S3 (Twirp). Le passage à `idle` se fait quand le fichier est écrit : le serveur interroge l'egress toutes les secondes, sans webhook.
+- Une seule session à la fois, arrêt réservé à celui qui enregistre, arrêt automatique à son départ ou quand plus personne ne diffuse. Pas de retour en WebRTC pendant un enregistrement.
+- Liste, suppression, vignettes et URL de téléchargement par un client S3 SigV4 écrit à la main, vérifié sur l'exemple de la documentation AWS.
+
+**Admin SaaS** (contrat `dev/contracts/admin-api.md` du socle).
+- Le serveur démarre avec `ADMIN_API_URL` : il attend les capacités, avec une nouvelle tentative toutes les 500 ms.
+- Appels portés :
+  - A2 `/api/map` (sans `thirdParty` vers le front) ;
+  - A3 `/api/room/access` : refus `ErrorApiData` rendu tel quel par `/me`, écran d'erreur au WebSocket, erreurs locales `ROOM_ACCESS_*` et `MAP_VALIDATION` ;
+  - A5 report, A6 sameWorld, A7 ban (banni, ou éjecté en repli), A8 tags ;
+  - A18 ICE (sur `ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine.
+- Délai de 10 s par appel : le TS n'en avait aucun, c'est un écart volontaire.
+- La carte d'une salle vient désormais de `/api/map` (`wamUrl` ou `mapUrl`, avec un cache d'une minute). Les mondes `/@/` ont donc leur carte et leurs variables.
+
+**White label et stockage.**
+- `USE_DOMAIN_NAME_IN_PATH` range chaque monde sous son domaine.
+  - Côté HTTP, le domaine vient de `X-Map-Storage-Host`, puis `X-Forwarded-Host`, puis `Host`.
+  - Côté salle, de l'hôte du `wamUrl`.
+- `/maps` ne liste que le domaine demandé. `PATH_PREFIX` est respecté.
+
+**Déploiement.**
+- Ports : map-storage sur 3002 par défaut, uploader sur 3003, Room API sur 50051.
+- `server healthcheck` pour compose, `/api-version` pour le pipeline SaaS.
+- Image : `/maps` inscriptible, `API_VERSION` obligatoire.
+
+**Uploader.** Messages audio (60 s) et fichiers du chat, en mémoire (256 Mo au plus).
+
+**Swagger.** `/openapi/pusher` et `/openapi/admin` sont générés par le pusher TS, puis embarqués. `/swagger-ui/` charge swagger-ui-dist 5.32.6 depuis un CDN.
+
+**Tests** : 140 tests au total.
+
+| Paquet | Couverture |
+|---|---|
+| `core` | 83,6 % |
+| `mapedit` | 83,5 % |
+| `roomapi` | 82,6 % |
+| `store` | 82,6 % |
+| `uploader` | 75,9 % |
+| `mapstorage` | 74,6 % |
+| `admin` | 73,8 % |
+| `livekit` | 51,3 % |
+| `ws` | 44,9 % |
+
+`./verify.sh` est vert.
+
+**Aide extérieure.**
+- Socle : contrat admin, `dev/dev test`, la profil `recording`, la correction de `FRONT_URL` de maps, le classement de `report_issue:7` et `variables:188`.
+- Rapports de recherche du 14/10 sur l'enregistrement.
+- Un sous-agent Sonnet a joué et trié la non-régression.
