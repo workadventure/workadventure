@@ -65,6 +65,7 @@ const roomManager = {
         let user: User | null = null;
         let pongTimeoutId: NodeJS.Timeout | undefined;
         let messageProcessingPromise = Promise.resolve();
+        let closed = false;
         const setRoom = (gameRoom: GameRoom | null) => {
             room = gameRoom;
         };
@@ -73,6 +74,9 @@ const roomManager = {
         };
 
         const handleMessage = async (message: PusherToBackMessage) => {
+            if (closed) {
+                return;
+            }
             if (!message.message) {
                 console.error("Empty message received");
                 Sentry.captureException(`Empty message received ${JSON.stringify(room)}`);
@@ -251,17 +255,23 @@ const roomManager = {
                 });
         });
 
-        const closeConnection = (reason?: string) => {
-            if (user !== null && room !== null) {
-                socketManager.leaveRoom(room, user);
-            }
-            if (pingIntervalId) {
-                clearInterval(pingIntervalId);
-            }
+        const clearPing = () => {
+            clearInterval(pingIntervalId);
             if (pongTimeoutId) {
                 clearTimeout(pongTimeoutId);
                 pongTimeoutId = undefined;
             }
+        };
+
+        const closeConnection = (reason?: string) => {
+            if (closed) {
+                return;
+            }
+            closed = true;
+            if (user !== null && room !== null) {
+                socketManager.leaveRoom(room, user);
+            }
+            clearPing();
             if (reason !== undefined) {
                 endUserConnectionWithReason(call, reason);
             } else {
@@ -271,9 +281,22 @@ const roomManager = {
             setUser(null);
         };
 
+        // The stream can end while messages are still queued behind a slow async handler (e.g. the last variable
+        // write of a user navigating away). Close only once the queue is drained, or these messages would be dropped.
+        // ponytail: a handler that never settles now keeps the user in the room; add a drain timeout if that shows up.
+        const closeAfterPendingMessages = () => {
+            clearPing();
+            messageProcessingPromise = messageProcessingPromise
+                .then(() => closeConnection())
+                .catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
+        };
+
         call.on("end", () => {
             debug("joinRoom ended for user %s", user?.name);
-            closeConnection();
+            closeAfterPendingMessages();
         });
 
         call.on("error", (err: unknown) => {
@@ -282,7 +305,7 @@ const roomManager = {
             Sentry.captureException(err, {
                 user: user ?? undefined,
             });
-            closeConnection();
+            closeAfterPendingMessages();
         });
 
         // Let's set up a ping mechanism
@@ -495,6 +518,7 @@ const roomManager = {
     adminRoom(call: AdminSocket): void {
         const admin = new Admin(call);
         let room: GameRoom | null = null;
+        let joinPromise = Promise.resolve();
 
         call.on("data", (message: AdminPusherToBackMessage) => {
             try {
@@ -506,7 +530,7 @@ const roomManager = {
                 if (room === null) {
                     if (message.message.$case === "subscribeToRoom") {
                         const roomId = message.message.subscribeToRoom;
-                        socketManager
+                        joinPromise = socketManager
                             .handleJoinAdminRoom(admin, roomId)
                             .then((gameRoom: GameRoom) => {
                                 room = gameRoom;
@@ -527,11 +551,19 @@ const roomManager = {
 
         call.on("end", () => {
             debug("joinRoom ended");
-            if (room !== null) {
-                socketManager.leaveAdminRoom(room, admin);
-            }
             call.end();
-            room = null;
+            // Wait for a pending subscription, or the admin would be added to the room after having left it.
+            joinPromise
+                .then(() => {
+                    if (room !== null) {
+                        socketManager.leaveAdminRoom(room, admin);
+                    }
+                    room = null;
+                })
+                .catch((e) => {
+                    console.error(e);
+                    Sentry.captureException(e);
+                });
         });
 
         call.on("error", (err: Error) => {
