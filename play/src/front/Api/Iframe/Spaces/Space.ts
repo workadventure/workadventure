@@ -68,9 +68,9 @@ export class Space {
                             }
                         }
                     }
-
-                    // Notify the subscribers about the update
-                    this._userJoinedSubscriber?.next(user);
+                    // Changes reach scripts through reactiveUser only: userJoinedObservable announces new users, as
+                    // documented. Emitting it here made a script that counts joins (or subscribes to reactiveUser on
+                    // join) drift with every update.
                     break;
                 }
                 case "onSetMetadata": {
