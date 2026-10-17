@@ -3,6 +3,8 @@ package ws
 import (
 	"log/slog"
 
+	"google.golang.org/protobuf/proto"
+
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
@@ -132,13 +134,17 @@ func (s *Session) onSetPlayerDetails(m *pb.SetPlayerDetailsMessage) {
 // onItemEvent keeps the state of an item and relays the event to the room.
 func (s *Session) onItemEvent(e *pb.ItemEventMessage) {
 	_ = s.room.ItemEvent(s.ctx, core.ItemState{ItemID: e.GetItemId(), StateJSON: e.GetStateJson()},
-		core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_ItemEventMessage{ItemEventMessage: e}}, true))
+		core.NewMsg(core.ItemEvent{ItemID: e.GetItemId(), Event: e.GetEvent(), StateJSON: e.GetStateJson(), ParametersJSON: e.GetParametersJson()}, true))
 }
 
 // onEntity relays an entity event to the whole room (dispatchEntityEvent).
 func (s *Session) onEntity(e *pb.EntityMessage) {
-	if e.GetEntityEvent() != nil {
-		_ = s.room.SendEvent(s.ctx, core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_EntityMessage{EntityMessage: e}}, true), nil)
+	if e.GetEntityEvent() == nil {
+		return
+	}
+	event, err := proto.Marshal(e.GetEntityEvent())
+	if err == nil {
+		_ = s.room.SendEvent(s.ctx, core.NewMsg(core.EntityEvent{EntityID: e.GetEntityId(), Event: event}, true), nil)
 	}
 }
 

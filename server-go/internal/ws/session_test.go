@@ -187,7 +187,7 @@ func TestAClientThatDoesNotReadIsClosed(t *testing.T) {
 	h.srv.sessions.Range(func(k, _ any) bool { s = k.(*Session); return false })
 	big := strings.Repeat("x", 4096)
 	for range 20 * outboxLimit { // far more than the socket buffers and the queue hold
-		s.Send(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ErrorMessage{ErrorMessage: &pb.ErrorMessage{Message: big}}}, false))
+		s.Send(core.NewMsg(core.External{Value: &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ErrorMessage{ErrorMessage: &pb.ErrorMessage{Message: big}}}}, false))
 	}
 	for {
 		_, _, err := alice.recv(5 * time.Second)

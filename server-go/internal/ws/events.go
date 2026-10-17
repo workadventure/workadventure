@@ -23,8 +23,7 @@ func (s *Session) sendEvent(id int32, q *pb.SendEventQuery) {
 		s.answerError(id, "Cannot send an event before joining the room")
 		return
 	}
-	event := &pb.SubMessage{Message: &pb.SubMessage_ReceivedEventMessage{ReceivedEventMessage: &pb.ReceivedEventMessage{
-		Name: q.GetName(), Data: q.GetData(), SenderId: &uid}}}
+	event := core.ScriptingEvent{Name: q.GetName(), Data: jsonOf(q.GetData()), SenderID: &uid}
 	_ = s.room.SendEvent(s.ctx, core.NewMsg(event, true), q.GetTargetUserIds())
 	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_SendEventAnswer{SendEventAnswer: &pb.SendEventAnswer{}}})
 }
@@ -78,15 +77,15 @@ func (srv *Server) GlobalEvent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid body: name is required", http.StatusBadRequest)
 		return
 	}
-	data := structpb.NewNullValue()
+	data := json.RawMessage("null")
 	if len(body.Data) > 0 {
-		if err := protojson.Unmarshal(body.Data, data); err != nil {
+		if err := protojson.Unmarshal(body.Data, &structpb.Value{}); err != nil {
 			http.Error(w, "Invalid data", http.StatusBadRequest)
 			return
 		}
+		data = body.Data
 	}
-	event := core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_ReceivedEventMessage{ReceivedEventMessage: &pb.ReceivedEventMessage{
-		Name: *body.Name, Data: data}}}, true)
+	event := core.NewMsg(core.ScriptingEvent{Name: *body.Name, Data: data}, true)
 	for _, roomURL := range srv.rooms.Keys() {
 		room := srv.rooms.Acquire(roomURL)
 		_ = room.SendEvent(context.Background(), event, nil)
@@ -141,7 +140,7 @@ func (srv *Server) AdminMessage(w http.ResponseWriter, r *http.Request) {
 	if body.Type == "message" {
 		m = core.NewMsg(core.UserMessage{Type: "", Message: *body.Text}, false)
 	} else {
-		m = core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_WorldFullWarningMessage{WorldFullWarningMessage: &pb.WorldFullWarningMessage{}}}, false)
+		m = core.NewMsg(core.WorldFullWarning{}, false)
 	}
 	for _, url := range body.Targets {
 		_ = srv.liveRoom(url, func(room *core.Room) error { return room.ToUsers(context.Background(), m) })
@@ -169,11 +168,8 @@ func (srv *Server) ExternalModuleEvent(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, `{"cause":"Incorrect moduleId, recipientUuid or message parameter"}`)
 		return
 	}
-	message := &structpb.Value{}
-	_ = protojson.Unmarshal(body.Data.Message, message)
 	d := body.Data
-	m := core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ExternalModuleMessage{ExternalModuleMessage: &pb.ExternalModuleMessage{
-		ModuleId: *d.ModuleID, RecipientUuid: d.RecipientUUID, RoomId: &d.RoomID, Message: message}}}, false)
+	m := core.NewMsg(core.ModuleMessage{ModuleID: *d.ModuleID, RecipientUUID: d.RecipientUUID, RoomID: &d.RoomID, Message: d.Message}, false)
 	_ = srv.liveRoom(d.RoomID, func(room *core.Room) error { return room.ToUUID(context.Background(), *d.RecipientUUID, m) })
 	_, _ = io.WriteString(w, "ok")
 }

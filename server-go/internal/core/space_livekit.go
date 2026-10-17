@@ -2,7 +2,6 @@ package core
 
 import (
 	"context"
-	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"log/slog"
 	"time"
 )
@@ -35,7 +34,8 @@ type Media struct {
 	SwitchOnCPULimit  bool   // LIVEKIT_SWITCH_ON_CPU_LIMITATION
 	BackToWebRTCAfter time.Duration
 	FinalizeAfter     time.Duration
-	Analytics         func(analytics.Event) // the back's analytics queue (meetings); nil: none
+	// Meetings opens the analytics report of a space's meetings (internal/analytics.NewMeeting); nil: none.
+	Meetings func(id, world string, kind, transport func() string) MeetingReporter
 	// RecordingEnded tells the admin a recording ended (A23); it must not block.
 	RecordingEnded func(RecordingEnded)
 }

@@ -150,7 +150,7 @@ func (srv *Server) AdminRooms(w http.ResponseWriter, r *http.Request) {
 // watchMembers forwards the members of a room to an admin socket, holding the room meanwhile.
 func (srv *Server) watchMembers(ctx context.Context, id string, send func(kind string, data any)) (stop func()) {
 	room := srv.rooms.Acquire(id)
-	unwatch, err := room.Watch(ctx, func(e any) {
+	unwatch, err := room.Watch(ctx, func(e core.Event) {
 		switch e := e.(type) {
 		case core.MemberJoined:
 			send("MemberJoin", map[string]string{"uuid": e.UUID, "name": e.Name, "ipAddress": e.IPAddress, "roomId": id})

@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -208,7 +210,7 @@ func (p *peer) waitFor(t *testing.T, what string, match func(any) bool) {
 func enter(t *testing.T, room *core.Room, name string, x, y int32) *peer {
 	t.Helper()
 	p := &peer{}
-	_ = room.Connect(ctx, p, func() []core.Area { return nil }, func() any { return "connected" })
+	_ = room.Connect(ctx, p, func() []core.Area { return nil }, func() core.Event { return core.External{Value: "connected"} })
 	if err := room.Join(ctx, p, core.JoinRequest{UUID: name, TabID: "tab", Name: name, Position: core.Position{X: x, Y: y, Direction: core.DirectionDown},
 		Viewport: core.Viewport{Right: 2000, Bottom: 2000}, Status: core.StatusOnline}); err != nil {
 		t.Fatal(err)
@@ -222,7 +224,7 @@ func edit(q *Queue, maps Maps, room *core.Room, key string, ed Editor, cmd any, 
 	_ = q.Run(key, func() {
 		res, err := Apply(maps, key, ed, "cmd", cmd)
 		if err == nil {
-			err = room.MapEdited(ctx, cmd, res.Areas, nil)
+			err = room.MapEdited(ctx, core.MapEdit{Command: []byte(fmt.Sprintf("%#v", cmd))}, res.Areas, nil) // what the adapter would encode
 		}
 		done <- err
 	})
@@ -253,7 +255,10 @@ func TestARoomKeepsDeliveringMovesWhileItsMapIsBeingWritten(t *testing.T) {
 	if err := <-done; err != nil {
 		t.Fatal(err)
 	}
-	bob.waitFor(t, "the edit, once stored", func(e any) bool { m, ok := e.(core.MapEdit); return ok && m.Event.(wam.CreateArea).ID == "stage" })
+	bob.waitFor(t, "the edit, once stored", func(e any) bool {
+		m, ok := e.(core.MapEdit)
+		return ok && strings.Contains(string(m.Command), `ID:"stage"`)
+	})
 	if maps.area(t, office, "stage") == nil {
 		t.Fatal("the area is stored")
 	}

@@ -40,7 +40,7 @@ func (w *watched) take() []any {
 func watch(t *testing.T, r *Room) *watched {
 	t.Helper()
 	w := &watched{}
-	stop, err := r.Watch(ctx, func(e any) {
+	stop, err := r.Watch(ctx, func(e Event) {
 		switch e.(type) {
 		case MemberJoined, MemberLeft: // the admin socket's (TestAWatcherSeesWhoComesAndGoes)
 			return
@@ -113,13 +113,13 @@ func TestARoomAPIListenerHearsEventsToTheWholeRoomOnly(t *testing.T) {
 	connect(t, r, alice, nil) // every connection hears the room's events, as in the WebSocket layer
 	_ = r.Join(ctx, alice, JoinRequest{UUID: "alice", Name: "alice", Position: at(0, 0), Viewport: wholeMap})
 	listener := watch(t, r)
-	_ = r.SendEvent(ctx, NewMsg("to everyone", true), nil)
-	_ = r.SendEvent(ctx, NewMsg("to alice", true), []int32{2})
+	_ = r.SendEvent(ctx, NewMsg(External{Value: "to everyone"}, true), nil)
+	_ = r.SendEvent(ctx, NewMsg(External{Value: "to alice"}, true), []int32{2})
 	sync_(t, r)
-	if got := listener.take(); len(got) != 1 || got[0] != "to everyone" {
+	if got := listener.take(); len(got) != 1 || got[0] != (External{Value: "to everyone"}) {
 		t.Fatalf("a targeted event never reaches a listener: %v", got)
 	}
-	if ev := alice.take(); !has(ev, func(s string) bool { return s == "to alice" }) || !has(ev, func(s string) bool { return s == "to everyone" }) {
+	if ev := alice.take(); !has(ev, func(x External) bool { return x.Value == "to alice" }) || !has(ev, func(x External) bool { return x.Value == "to everyone" }) {
 		t.Fatalf("alice gets both: %v", ev)
 	}
 }
@@ -131,7 +131,7 @@ func TestAWatcherSeesWhoComesAndGoes(t *testing.T) {
 	sync_(t, r)
 	var mu sync.Mutex
 	var seen []any
-	stop, _ := r.Watch(ctx, func(e any) { mu.Lock(); seen = append(seen, e); mu.Unlock() })
+	stop, _ := r.Watch(ctx, func(e Event) { mu.Lock(); seen = append(seen, e); mu.Unlock() })
 	defer stop()
 	bob := &recorder{}
 	_ = r.Join(ctx, bob, JoinRequest{UUID: "bob", Name: "Bob", Position: at(900, 900), Viewport: wholeMap})

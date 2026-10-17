@@ -34,10 +34,10 @@ func TestEventsGoToEveryoneOrToTargets(t *testing.T) {
 	sync_(t, r)
 	a.take()
 	b.take()
-	_ = r.SendEvent(ctx, NewMsg("broadcast", true), nil)
-	_ = r.SendEvent(ctx, NewMsg("to b", true), []int32{3, 99}) // ids start at 2
+	_ = r.SendEvent(ctx, NewMsg(External{Value: "broadcast"}, true), nil)
+	_ = r.SendEvent(ctx, NewMsg(External{Value: "to b"}, true), []int32{3, 99}) // ids start at 2
 	sync_(t, r)
-	if ev := a.take(); len(ev) != 1 || ev[0] != "broadcast" {
+	if ev := a.take(); len(ev) != 1 || ev[0] != (External{Value: "broadcast"}) {
 		t.Fatalf("the sender gets its own broadcast: %#v", ev)
 	}
 	if ev := b.take(); len(ev) != 2 {

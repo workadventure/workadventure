@@ -4,7 +4,7 @@ import "testing"
 
 func connect(t *testing.T, r *Room, p *recorder, areas []Area) {
 	t.Helper()
-	if err := r.Connect(ctx, p, func() []Area { return areas }, func() any { return "connected" }); err != nil {
+	if err := r.Connect(ctx, p, func() []Area { return areas }, func() Event { return External{Value: "connected"} }); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -59,12 +59,12 @@ func TestEditsReachConnectionsBeforeTheyJoin(t *testing.T) {
 	connect(t, r, editor, nil)
 	connect(t, r, newcomer, nil)
 	logged := false
-	_ = r.MapEdited(ctx, "edit", []Area{}, func() { logged = true })
+	_ = r.MapEdited(ctx, MapEdit{Command: []byte("edit")}, []Area{}, func() { logged = true })
 	sync_(t, r)
-	if ev := newcomer.take(); len(ev) != 2 || ev[0] != "connected" || ev[1] != (MapEdit{Event: "edit"}) {
+	if ev := newcomer.take(); len(ev) != 2 || ev[0] != (External{Value: "connected"}) || string(ev[1].(MapEdit).Command) != "edit" {
 		t.Fatalf("a connection that has not joined yet gets the edits: %#v", ev)
 	}
-	if !has(editor.take(), func(e MapEdit) bool { return e.Event == "edit" }) || !logged {
+	if !has(editor.take(), func(e MapEdit) bool { return string(e.Command) == "edit" }) || !logged {
 		t.Fatal("the editor gets its own edit back, logged first for those who connect later")
 	}
 }
@@ -82,7 +82,7 @@ func TestALockedAreaMovedAwayFromEveryoneUnlocks(t *testing.T) {
 	_ = r.SetAreaVariable(ctx, host, AreaVariable{AreaID: "meeting", PropertyID: "lock", Key: "lock", Value: "true"}, nil)
 	sync_(t, r)
 	host.take()
-	_ = r.MapEdited(ctx, "moved", lockedMeeting(1000), nil) // an editor drags the area away from the host
+	_ = r.MapEdited(ctx, MapEdit{Command: []byte("moved")}, lockedMeeting(1000), nil) // an editor drags the area away from the host
 	sync_(t, r)
 	if !has(host.take(), func(v AreaVariableChanged) bool { return v.Variable.Key == "lock" && v.Variable.Value == "false" }) {
 		t.Fatal("nobody is left in the area: it unlocks")

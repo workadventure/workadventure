@@ -200,8 +200,8 @@ func (s *Session) notPartOf(local string) func() {
 }
 
 func (s *Session) sendError(message string) {
-	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ErrorMessage{
-		ErrorMessage: &pb.ErrorMessage{Message: "An error occurred in pusher: " + message}}}, false))
+	s.push(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ErrorMessage{
+		ErrorMessage: &pb.ErrorMessage{Message: "An error occurred in pusher: " + message}}})
 }
 
 // handleSpaceMessage routes the space messages of a client, one handler per message; it says whether m was one.
@@ -441,7 +441,7 @@ func fromSpaceUser(m *pb.SpaceUser) core.SpaceUser {
 	}
 }
 
-func spaceSubMessage(ev any) *pb.SubMessage {
+func spaceSubMessage(ev core.Event) *pb.SubMessage {
 	switch e := ev.(type) {
 	case core.SpaceUserAdded:
 		return &pb.SubMessage{Message: &pb.SubMessage_AddSpaceUserMessage{AddSpaceUserMessage: &pb.AddSpaceUserMessage{SpaceName: e.Space, User: spaceUser(e.User)}}}
@@ -478,7 +478,7 @@ func spaceSubMessage(ev any) *pb.SubMessage {
 	return nil
 }
 
-func privateSpaceEvent(ev any) *pb.PrivateSpaceEvent {
+func privateSpaceEvent(ev core.PrivateEvent) *pb.PrivateSpaceEvent {
 	switch e := ev.(type) {
 	case core.WebRTCStart:
 		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_WebRtcStartMessage{WebRtcStartMessage: &pb.WebRtcStartMessage{UserId: e.UserID, Initiator: e.Initiator, ConnectionId: e.ConnectionID}}}
