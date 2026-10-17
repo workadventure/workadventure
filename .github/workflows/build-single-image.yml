@@ -27,6 +27,19 @@ on:
         required: false
         type: string
         default: ""
+      # Optional, for images built from a stage, with build arguments or extra named contexts (the server rewrites).
+      target:
+        required: false
+        type: string
+        default: ""
+      build-args:
+        required: false
+        type: string
+        default: ""
+      build-contexts:
+        required: false
+        type: string
+        default: ""
       push-to-registry:
         required: true
         type: boolean
@@ -46,8 +59,9 @@ jobs:
           # Get at least the previous revision to be able to fetch the HEAD^1 SHA.
           fetch-depth: 2
 
+      # Always: the "docker" driver cannot export a registry cache, and the cache of the intermediate stages (npm ci…)
+      # is most of the build time.
       - name: Set up Docker Buildx
-        if: ${{ inputs.push-to-registry != true }}
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GHCR
@@ -81,17 +95,22 @@ jobs:
         with:
           context: ${{ inputs.context }}
           file: ${{ inputs.dockerfile }}
+          target: ${{ inputs.target }}
+          build-args: ${{ inputs.build-args }}
+          build-contexts: ${{ inputs.build-contexts }}
           push: ${{ inputs.push-to-registry }}
           tags: |
             ${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.sha }}
             ${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          # buildcache-<platform>: every stage (mode=max), so `npm ci` is reused until a package.json or lock file
+          # changes (Docker keys each layer on its instruction and on the files copied before it). The inline cache
+          # only holds the final stage, which does not contain the npm ci of the builder stages.
           cache-from: |
+            type=registry,ref=${{ inputs.image-name }}:buildcache-${{ inputs.platform }}
             type=registry,ref=${{ inputs.image-name }}:${{ inputs.platform }}-${{ env.PREV_SHA }}
             type=registry,ref=${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
 #           type=gha
-          cache-to: |
-            type=inline
-#           type=gha,mode=max
+          cache-to: ${{ inputs.push-to-registry && format('type=registry,ref={0}:buildcache-{1},mode=max', inputs.image-name, inputs.platform) || 'type=inline' }}
           labels: ${{ steps.meta.outputs.labels }}
           secrets: |
             "SENTRY_PROJECT=${{ inputs.sentry_project }}"

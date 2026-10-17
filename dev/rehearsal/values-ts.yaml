@@ -1,0 +1,8 @@
+# TypeScript servers: play (pusher), back, map-storage and uploader from the published images.
+server:
+  enabled: false
+play:
+  image:
+    repository: ghcr.io/workadventure/play
+    pullPolicy: IfNotPresent
+    tag: master-034dee80bbe3b29327de03b650b38e452ecf1293
