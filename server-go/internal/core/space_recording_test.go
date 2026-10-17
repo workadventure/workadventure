@@ -18,6 +18,13 @@ type fakeEgress struct {
 	ended     []RecordingEnded // what the admin was told
 }
 
+// RecordingEnded keeps what the admin was told (RecordingReporter).
+func (f *fakeEgress) RecordingEnded(e RecordingEnded) {
+	f.mu.Lock()
+	f.ended = append(f.ended, e)
+	f.mu.Unlock()
+}
+
 func (f *fakeEgress) Start(_ context.Context, room string, u SpaceUser) (string, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -53,8 +60,8 @@ func recordingSpace(t *testing.T) (*Space, *fakeEgress) {
 	recordingPoll = 10 * time.Millisecond
 	egress := &fakeEgress{status: map[string]string{}}
 	m := DefaultMedia(&fakeLiveKit{})
-	m.Egress = egress
-	m.RecordingEnded = func(e RecordingEnded) { egress.mu.Lock(); egress.ended = append(egress.ended, e); egress.mu.Unlock() }
+	m.Provider = ServerLiveKit{LiveKit: m.Provider.(ServerLiveKit).LiveKit, Egress: egress}
+	m.Recordings = egress
 	m.FinalizeAfter = 20 * time.Millisecond
 	sp := NewSpaceWithMedia(SpaceKey{"http://play.test", "room#1#0"}, m)
 	t.Cleanup(sp.Stop)
@@ -163,8 +170,8 @@ func TestARecordingUsesTheEgressOfTheWorldsLiveKit(t *testing.T) {
 	var askedFor LiveKit
 	m := DefaultMedia(nil)
 	m.FinalizeAfter = 20 * time.Millisecond
-	m.LiveKitFor = func(context.Context, string) (LiveKit, error) { return world, nil }
-	m.EgressFor = func(lk LiveKit) Egress { askedFor = lk; return egress }
+	m.Provider = worldLiveKit{liveKit: func(context.Context, string) (LiveKit, error) { return world, nil },
+		egress: func(lk LiveKit) Egress { askedFor = lk; return egress }}
 	sp := NewSpaceWithMedia(SpaceKey{"org/w", "room#1#0"}, m)
 	defer sp.Stop()
 	host, guest := enter(t, sp, "host"), enter(t, sp, "guest")

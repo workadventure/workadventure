@@ -73,7 +73,7 @@ func (s *spaceState) publishRecording(status spacestate.RecordingStatus, recorde
 
 // startRecording answers StartRecording once the egress runs, or why not.
 func (s *spaceState) startRecording(sender *SpaceUser, reply func(error)) {
-	if (s.mediaCfg.Egress == nil && s.mediaCfg.EgressFor == nil) || !s.hasLiveKit() || !s.media {
+	if !s.hasLiveKit() || !s.mediaCfg.Provider.CanRecord() || !s.media {
 		reply(ErrNoRecording)
 		return
 	}
@@ -109,10 +109,7 @@ func (s *spaceState) recordWhenReady() {
 	if r == nil || r.egressID != "" || r.status != spacestate.RecordingStatusStarting || s.lk.room != lkReady {
 		return
 	}
-	egress := s.mediaCfg.Egress
-	if s.mediaCfg.EgressFor != nil && s.lk.client != nil {
-		egress = s.mediaCfg.EgressFor(s.lk.client)
-	}
+	egress := s.mediaCfg.Provider.EgressFor(s.lk.client)
 	if egress == nil {
 		s.endRecording(errors.New("Failed to start recording"))
 		return
@@ -188,8 +185,8 @@ func (s *spaceState) watchEgress(gen int) {
 				if r.status != spacestate.RecordingStatusStopping {
 					slog.Warn("the recording ended by itself", "room", s.roomName, "status", status)
 				}
-				if s.mediaCfg.RecordingEnded != nil {
-					s.mediaCfg.RecordingEnded(RecordingEnded{SessionID: r.sessionID, EgressID: r.egressID, Recorder: r.recorder, Info: info})
+				if s.mediaCfg.Recordings != nil {
+					s.mediaCfg.Recordings.RecordingEnded(RecordingEnded{SessionID: r.sessionID, EgressID: r.egressID, Recorder: r.recorder, Info: info})
 				}
 				s.endRecording(nil)
 				return
