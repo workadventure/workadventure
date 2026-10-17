@@ -2,6 +2,8 @@ package httpapi
 
 import (
 	"context"
+	"crypto/aes"
+	"crypto/cipher"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
@@ -16,29 +18,38 @@ import (
 	"sync"
 	"time"
 
+	"github.com/coreos/go-oidc/v3/oidc"
+	"golang.org/x/oauth2"
+
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/config"
 )
 
 // openID is the OpenID Connect client of the pusher (AuthenticateController, OpenIDClient): authorization code
-// flow with PKCE. The identity comes from the userinfo endpoint, called with the access token the token endpoint
-// gave us directly. ponytail: the id_token is not checked (no JWKS): we read no claim from it.
+// flow with PKCE (x/oauth2), the id_token checked by go-oidc (signature against the issuer's JWKS, iss, aud, exp)
+// and its nonce. The identity's claims then come from the userinfo endpoint, as in the pusher.
 type openID struct {
 	cfg         config.OpenID
 	pusherURL   string
 	matrixURI   string
 	redirectURL string
+	cookieKey   [32]byte // seals the PKCE verifier and the nonce in their cookie (SHA-256 of SECRET_KEY)
 	http        *http.Client
 
-	mu   sync.Mutex
-	meta *oidcMetadata // cached once discovery succeeds
+	mu       sync.Mutex
+	meta     *oidcMetadata // cached once discovery succeeds, with:
+	oauth    *oauth2.Config
+	idTokens *oidc.IDTokenVerifier
 }
 
 type oidcMetadata struct {
-	AuthorizationEndpoint string `json:"authorization_endpoint"`
-	TokenEndpoint         string `json:"token_endpoint"`
-	UserinfoEndpoint      string `json:"userinfo_endpoint"`
-	RevocationEndpoint    string `json:"revocation_endpoint"`
+	Issuer                string   `json:"issuer"`
+	AuthorizationEndpoint string   `json:"authorization_endpoint"`
+	TokenEndpoint         string   `json:"token_endpoint"`
+	UserinfoEndpoint      string   `json:"userinfo_endpoint"`
+	RevocationEndpoint    string   `json:"revocation_endpoint"`
+	JWKSURI               string   `json:"jwks_uri"`
+	Algorithms            []string `json:"id_token_signing_alg_values_supported"`
 }
 
 func newOpenID(cfg *config.Config) *openID {
@@ -47,7 +58,7 @@ func newOpenID(cfg *config.Config) *openID {
 	}
 	pusher := strings.TrimRight(cfg.PusherURL, "/")
 	return &openID{cfg: cfg.OpenID, pusherURL: pusher, matrixURI: cfg.MatrixPublicURI, redirectURL: pusher + "/openid-callback",
-		http: &http.Client{Timeout: 50 * time.Second}}
+		cookieKey: sha256.Sum256([]byte(cfg.SecretKey)), http: &http.Client{Timeout: 50 * time.Second}}
 }
 
 func (o *openID) metadata(ctx context.Context) (*oidcMetadata, error) {
@@ -64,12 +75,53 @@ func (o *openID) metadata(ctx context.Context) (*oidcMetadata, error) {
 	if err := o.getJSON(ctx, u, "", &m); err != nil {
 		return nil, fmt.Errorf("OpenID discovery: %w", err)
 	}
-	if m.AuthorizationEndpoint == "" || m.TokenEndpoint == "" || m.UserinfoEndpoint == "" {
-		return nil, errors.New("OpenID discovery: missing endpoints")
+	if m.Issuer == "" || m.AuthorizationEndpoint == "" || m.TokenEndpoint == "" || m.UserinfoEndpoint == "" || m.JWKSURI == "" {
+		return nil, errors.New("OpenID discovery: missing issuer, endpoints or jwks_uri")
 	}
+	// The key set outlives the request: it is fetched (and refreshed) with a context of its own.
+	provider := (&oidc.ProviderConfig{IssuerURL: m.Issuer, AuthURL: m.AuthorizationEndpoint, TokenURL: m.TokenEndpoint,
+		UserInfoURL: m.UserinfoEndpoint, JWKSURL: m.JWKSURI, Algorithms: m.Algorithms}).NewProvider(oidc.ClientContext(context.Background(), o.http))
+	o.idTokens = provider.Verifier(&oidc.Config{ClientID: o.cfg.ClientID})
+	o.oauth = &oauth2.Config{ClientID: o.cfg.ClientID, ClientSecret: o.cfg.ClientSecret, RedirectURL: o.redirectURL,
+		Scopes: strings.Fields(o.cfg.Scope), Endpoint: oauth2.Endpoint{AuthURL: m.AuthorizationEndpoint, TokenURL: m.TokenEndpoint,
+			AuthStyle: oauth2.AuthStyleInHeader}} // client_secret_basic, the default of openid-client
 	o.meta = &m
 	return o.meta, nil
 }
+
+// pkce is what the login flow keeps in its sealed cookie between /login-screen and /openid-callback.
+type pkce struct {
+	Verifier string `json:"v"`
+	Nonce    string `json:"n"`
+}
+
+// seal encrypts and authenticates p (AES-256-GCM): the browser can neither read nor change it.
+func (o *openID) seal(p pkce) string {
+	plain, _ := json.Marshal(p)
+	block, _ := aes.NewCipher(o.cookieKey[:])
+	gcm, _ := cipher.NewGCM(block)
+	nonce := make([]byte, gcm.NonceSize())
+	_, _ = rand.Read(nonce)
+	return base64.RawURLEncoding.EncodeToString(gcm.Seal(nonce, nonce, plain, nil))
+}
+
+func (o *openID) open(sealed string) (pkce, error) {
+	var p pkce
+	b, err := base64.RawURLEncoding.DecodeString(sealed)
+	block, _ := aes.NewCipher(o.cookieKey[:])
+	gcm, _ := cipher.NewGCM(block)
+	if err != nil || len(b) < gcm.NonceSize() {
+		return p, errors.New("invalid code verifier cookie")
+	}
+	plain, err := gcm.Open(nil, b[:gcm.NonceSize()], b[gcm.NonceSize():], nil)
+	if err != nil || json.Unmarshal(plain, &p) != nil || p.Verifier == "" || p.Nonce == "" {
+		return p, errors.New("invalid code verifier cookie")
+	}
+	return p, nil
+}
+
+// client is ctx carrying the HTTP client of x/oauth2 and go-oidc.
+func (o *openID) client(ctx context.Context) context.Context { return oidc.ClientContext(ctx, o.http) }
 
 func (o *openID) getJSON(ctx context.Context, u, bearer string, v any) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u, nil)
@@ -187,41 +239,31 @@ func (api *API) loginScreen(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid scope, 'email' and 'openid' are required in OPID_SCOPE.", http.StatusInternalServerError)
 		return
 	}
-	meta, err := o.metadata(r.Context())
-	if err != nil {
+	if _, err := o.metadata(r.Context()); err != nil {
 		slog.Error("OpenID", "error", err)
 		http.Error(w, "An error occurred while connecting to OpenID Provider", http.StatusInternalServerError)
 		return
 	}
-	// ponytail: the verifier sits in clear in an HttpOnly cookie (the pusher encrypts it with SECRET_KEY): the
-	// browser that holds it is the one PKCE binds the code to anyway.
-	verifier, state := randomToken(32), newUUID()
-	challenge := sha256.Sum256([]byte(verifier))
-	setCookie(w, r, "code_verifier", verifier)
+	login := pkce{Verifier: oauth2.GenerateVerifier(), Nonce: randomToken(16)}
+	state := newUUID()
+	setCookie(w, r, "code_verifier", o.seal(login))
 	setCookie(w, r, "oidc_state", state)
 	setCookie(w, r, "playUri", playURI)
 
-	params := url.Values{
-		"client_id": {o.cfg.ClientID}, "response_type": {"code"}, "redirect_uri": {o.redirectURL}, "scope": {o.cfg.Scope},
-		"state": {state}, "playUri": {playURI}, "code_challenge": {base64.RawURLEncoding.EncodeToString(challenge[:])},
-		"code_challenge_method": {"S256"},
-	}
+	opts := []oauth2.AuthCodeOption{oauth2.S256ChallengeOption(login.Verifier), oidc.Nonce(login.Nonce),
+		oauth2.SetAuthURLParam("playUri", playURI)}
 	if o.cfg.Prompt != "" {
-		params.Set("prompt", o.cfg.Prompt)
+		opts = append(opts, oauth2.SetAuthURLParam("prompt", o.cfg.Prompt))
 	}
 	for _, k := range []string{"manuallyTriggered", "chatRoomId", "providerId"} {
 		if q.Has(k) {
-			params.Set(k, q.Get(k))
+			opts = append(opts, oauth2.SetAuthURLParam(k, q.Get(k)))
 		}
 	}
 	if scopes := q["providerScopes"]; len(scopes) > 0 {
-		params.Set("providerScopes", strings.Join(scopes, ","))
+		opts = append(opts, oauth2.SetAuthURLParam("providerScopes", strings.Join(scopes, ",")))
 	}
-	sep := "?"
-	if strings.Contains(meta.AuthorizationEndpoint, "?") {
-		sep = "&"
-	}
-	http.Redirect(w, r, meta.AuthorizationEndpoint+sep+params.Encode(), http.StatusFound)
+	http.Redirect(w, r, o.oauth.AuthCodeURL(state, opts...), http.StatusFound)
 }
 
 func (api *API) openIDCallback(w http.ResponseWriter, r *http.Request) {
@@ -287,9 +329,13 @@ func (o *openID) exchange(r *http.Request) (map[string]any, string, error) {
 	if e := q.Get("error"); e != "" {
 		return nil, "", fmt.Errorf("provider error %s: %s", e, q.Get("error_description"))
 	}
-	verifier := cookie(r, "code_verifier")
-	if verifier == "" {
+	sealed := cookie(r, "code_verifier")
+	if sealed == "" {
 		return nil, "", errors.New("code verifier doesn't exist")
+	}
+	login, err := o.open(sealed)
+	if err != nil {
+		return nil, "", err
 	}
 	// The state only matters to providers without PKCE; openid-client refuses a state it has nothing to compare to.
 	if state := q.Get("state"); state != "" {
@@ -299,21 +345,24 @@ func (o *openID) exchange(r *http.Request) (map[string]any, string, error) {
 			return nil, "", errors.New("checks.state argument is missing")
 		}
 	}
-	meta, err := o.metadata(r.Context())
+	if _, err := o.metadata(r.Context()); err != nil {
+		return nil, "", err
+	}
+	ctx := o.client(r.Context())
+	tokens, err := o.oauth.Exchange(ctx, q.Get("code"), oauth2.VerifierOption(login.Verifier))
 	if err != nil {
 		return nil, "", err
 	}
-	var tokens struct {
-		AccessToken string `json:"access_token"`
+	raw, _ := tokens.Extra("id_token").(string)
+	if raw == "" {
+		return nil, "", errors.New("no id_token in the token response")
 	}
-	err = o.postForm(r.Context(), meta.TokenEndpoint, url.Values{
-		"grant_type": {"authorization_code"}, "code": {q.Get("code")}, "redirect_uri": {o.redirectURL}, "code_verifier": {verifier},
-	}, &tokens)
+	idToken, err := o.idTokens.Verify(ctx, raw)
 	if err != nil {
-		return nil, "", err
+		return nil, "", fmt.Errorf("id_token: %w", err)
 	}
-	if tokens.AccessToken == "" {
-		return nil, "", errors.New("no access token in the token response")
+	if idToken.Nonce != login.Nonce {
+		return nil, "", errors.New("id_token: nonce mismatch")
 	}
 	claims, err := o.userinfo(r.Context(), tokens.AccessToken, url.Values{"playUri": {cookie(r, "playUri")}})
 	return claims, tokens.AccessToken, err

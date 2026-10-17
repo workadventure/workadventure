@@ -90,6 +90,9 @@ func (s *Session) jitsiJWT(id int32, room string) {
 	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_JitsiJwtAnswer{JitsiJwtAnswer: &pb.JitsiJwtAnswer{Jwt: signed, Url: j.URL}}})
 }
 
+// bbbClient calls the BBB of the configuration or of the admin, never a URL of a player.
+var bbbClient = &http.Client{Timeout: 5 * time.Second}
+
 func (s *Session) joinBBB(id int32, q *pb.JoinBBBMeetingQuery) {
 	b, ok := s.thirdParty("bbb")
 	if !ok {
@@ -123,7 +126,7 @@ func (s *Session) joinBBB(id int32, q *pb.JoinBBBMeetingQuery) {
 	defer cancel()
 	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, create, nil)
 	req.Header.Set("Accept", "text/xml, application/json, text/plain, */*")
-	resp, err := embedClient.Do(req)
+	resp, err := bbbClient.Do(req)
 	if err != nil {
 		s.answerError(id, err.Error())
 		return

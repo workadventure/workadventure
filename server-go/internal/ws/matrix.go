@@ -126,7 +126,14 @@ func (srv *Server) resource(method, target string, property map[string]any) (map
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", srv.cfg.MapStorageAPIToken)
-	resp, err := resourceClient.Do(req)
+	// No redirect away from the allowed origins: the token would follow it.
+	client := &http.Client{Timeout: 15 * time.Second, CheckRedirect: func(r *http.Request, via []*http.Request) error {
+		if len(via) >= 10 || !slices.Contains(srv.resourceOrigins(), r.URL.Scheme+"://"+r.URL.Host) {
+			return fmt.Errorf("redirect to %s://%s refused", r.URL.Scheme, r.URL.Host)
+		}
+		return nil
+	}}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -138,8 +145,6 @@ func (srv *Server) resource(method, target string, property map[string]any) (map
 	_ = json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&out)
 	return out, nil
 }
-
-var resourceClient = &http.Client{Timeout: 15 * time.Second}
 
 func (srv *Server) resourceOrigins() []string {
 	var out []string

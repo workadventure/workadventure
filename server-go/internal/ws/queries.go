@@ -10,6 +10,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/workadventure/workadventure/server-go/internal/netguard"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -31,10 +32,12 @@ func (s *Session) mapStorageJwt(id int32) {
 	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_MapStorageJwtAnswer{MapStorageJwtAnswer: &pb.MapStorageJwtAnswer{Jwt: token}}})
 }
 
-var embedClient = &http.Client{Timeout: 5 * time.Second}
+// embedClient only reaches public addresses: any player may ask for any URL (SSRF).
+var embedClient = netguard.Client(5 * time.Second)
 
 // embeddableWebsite answers EmbeddableWebsiteQuery: whether a page lets itself be shown in an iframe of the front.
-// It fetches the page, off the read loop. ponytail: like the pusher, any URL a player gives is fetched (headers only).
+// It fetches the page (headers only), off the read loop; an address of the server's own network is "not reachable"
+// unless its domain is in EMBEDDED_DOMAINS_WHITELIST.
 func (s *Session) embeddableWebsite(id int32, raw string) {
 	go func() {
 		state, ok, message := embeddable(s.ctx, raw, s.srv.cfg.FrontURL, s.srv.cfg.EmbeddedDomainsWhitelist)
