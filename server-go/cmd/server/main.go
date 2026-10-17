@@ -149,7 +149,7 @@ func healthcheck() int {
 		fmt.Fprintln(os.Stderr, err)
 		return 1
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		fmt.Fprintln(os.Stderr, "GET /ping:", resp.Status)
 		return 1
