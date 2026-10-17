@@ -4,7 +4,7 @@
 //! WebRTC strategy. LiveKit is not handled yet: a media space stays in peer-to-peer mode, which is also what
 //! the reference does when no LiveKit is configured.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeSet, BTreeMap, HashMap, HashSet};
 
 use crate::space_state::{self, Ctx, SpaceState, StateQuery};
 use crate::user::{Availability, Texture};
@@ -94,8 +94,15 @@ pub enum SpaceEvent<'a> {
     },
     /// A delta of metadata, values as raw JSON.
     Metadata(&'a [(String, String)]),
-    /// Use peer-to-peer for this space.
-    SwitchToWebRtc(&'a SpaceUser),
+    /// switchMessage: the recipient (`user`) now uses this strategy.
+    Switch(&'a SpaceUser, Comm),
+    /// finalizeSwitchMessage: the recipient drops what it kept of the previous strategy.
+    FinalizeSwitch(&'a SpaceUser, Comm),
+    /// livekitInvitationMessage: the adapter makes the recipient's token.
+    LivekitInvite(&'a SpaceUser),
+    LivekitDisconnect(&'a SpaceUser),
+    /// The LiveKit room of the space must exist (true) or may go (false).
+    LivekitRoom(bool),
     WebRtcStart {
         sender: &'a SpaceUser,
         initiator: bool,
@@ -111,6 +118,53 @@ pub trait SpaceSink {
 fn emit(sink: &mut impl SpaceSink, to: &[&str], event: SpaceEvent<'_>) {
     if !to.is_empty() {
         sink.emit(to, event);
+    }
+}
+
+/// How a media space carries audio and video (CommunicationType).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Comm {
+    None,
+    WebRtc,
+    Livekit,
+}
+
+impl Comm {
+    pub fn name(self) -> &'static str {
+        match self {
+            Comm::None => "NONE",
+            Comm::WebRtc => "WEBRTC",
+            Comm::Livekit => "LIVEKIT",
+        }
+    }
+}
+
+/// TransitionPolicy's inputs.
+#[derive(Debug, Clone, Copy)]
+pub struct MediaConfig {
+    /// MAX_USERS_FOR_WEBRTC: above, LiveKit.
+    pub max_webrtc: usize,
+    /// LiveKit credentials are configured.
+    pub livekit: bool,
+    /// LIVEKIT_SWITCH_ON_CPU_LIMITATION: a CPU-limited user in a bubble of 3 or more moves it to LiveKit.
+    pub switch_on_cpu: bool,
+}
+
+impl Default for MediaConfig {
+    fn default() -> Self {
+        Self { max_webrtc: 4, livekit: false, switch_on_cpu: true }
+    }
+}
+
+/// Back to peer-to-peer this long after the space became small enough (restarted by each change).
+pub const LIVEKIT_TO_WEBRTC_MS: u64 = 20_000;
+/// The previous strategy is dropped this long after a switch.
+pub const FINALIZE_SWITCH_MS: u64 = 5_000;
+
+struct NoClock;
+impl crate::room::Clock for NoClock {
+    fn now_ms(&self) -> u64 {
+        0
     }
 }
 
@@ -130,6 +184,18 @@ pub struct Space {
     /// Prefix of the connection ids, unique per space instance.
     id_prefix: String,
     next_connection: u64,
+    comm: Comm,
+    media: MediaConfig,
+    clock: Box<dyn crate::room::Clock>,
+    /// LiveKit: who holds an invitation, and whether the room is open (it opens with the first publisher).
+    invited: BTreeSet<SpaceUserId>,
+    room_open: bool,
+    /// When the space goes back to peer-to-peer, if nothing changes until then.
+    back_to_webrtc_at: Option<u64>,
+    /// The strategy left behind by the last switch, and when its users drop it.
+    finalize: Option<(Comm, u64)>,
+    /// A recording is under way: the space stays on LiveKit.
+    pub recording: bool,
 }
 
 const MEDIA_PROPERTIES: [&str; 3] = ["cameraState", "microphoneState", "screenSharingState"];
@@ -150,7 +216,25 @@ impl Space {
             dropped: HashSet::new(),
             id_prefix,
             next_connection: 0,
+            comm: if media { Comm::WebRtc } else { Comm::None },
+            media: MediaConfig::default(),
+            clock: Box::new(NoClock),
+            invited: BTreeSet::new(),
+            room_open: false,
+            back_to_webrtc_at: None,
+            finalize: None,
+            recording: false,
         }
+    }
+
+    /// The switch rules and the clock of the timers (the defaults never leave peer-to-peer).
+    pub fn configure_media(&mut self, media: MediaConfig, clock: Box<dyn crate::room::Clock>) {
+        self.media = media;
+        self.clock = clock;
+    }
+
+    pub fn comm(&self) -> Comm {
+        self.comm
     }
 
     pub fn is_empty(&self) -> bool {
@@ -212,12 +296,20 @@ impl Space {
     }
 
     /// What a joiner gets once its join was answered: the state, then the communication strategy.
-    pub fn after_join(&self, id: &str, sink: &mut impl SpaceSink) {
-        let Some(user) = self.member(id) else { return };
-        emit(sink, &[id], SpaceEvent::StateReplace(&self.state));
-        if self.connections.is_some() && !self.watchers.contains(id) {
-            emit(sink, &[id], SpaceEvent::SwitchToWebRtc(user));
+    pub fn after_join(&mut self, id: &str, sink: &mut impl SpaceSink) {
+        if !self.is_member(id) {
+            return;
         }
+        emit(sink, &[id], SpaceEvent::StateReplace(&self.state));
+        // The policy first: on a switch, everyone is told, the joiner included.
+        if self.evaluate(sink) {
+            return;
+        }
+        let Some(user) = self.member(id) else { return };
+        if self.comm != Comm::None && !self.watchers.contains(id) {
+            emit(sink, &[id], SpaceEvent::Switch(user, self.comm));
+        }
+        self.livekit_reconcile(sink);
     }
 
     /// The member starts watching the space (addSpaceFilterMessage). Returns false if it is not a member.
@@ -232,6 +324,8 @@ impl Space {
         let users: Vec<&SpaceUser> = self.members.iter().filter(|u| self.sees(me, u)).collect();
         emit(sink, &[id], SpaceEvent::InitUsers(users, &self.metadata));
         self.reconcile(id, sink);
+        self.livekit_reconcile(sink);
+        self.evaluate(sink);
         true
     }
 
@@ -239,6 +333,8 @@ impl Space {
         self.dropped.retain(|(a, b)| a != id && b != id);
         if self.watchers.remove(id) {
             self.disconnect_all(id, sink);
+            self.livekit_reconcile(sink);
+            self.evaluate(sink);
         }
     }
 
@@ -254,6 +350,9 @@ impl Space {
         if let Some(c) = &mut self.connections {
             c.retain(|(a, b), _| a != id && b != id);
         }
+        self.invited.remove(id);
+        self.livekit_reconcile(sink);
+        self.evaluate(sink);
         self.update_state(sink, |s| space_state::forget(s, id));
     }
 
@@ -268,6 +367,10 @@ impl Space {
         self.follow_lists(changes, sink);
         if self.member(id).is_some_and(|after| self.active(after) != self.active(&before)) {
             self.reconcile(id, sink);
+            self.livekit_reconcile(sink);
+        }
+        if applied.iter().any(|p| p == "cpuLimited") {
+            self.evaluate(sink);
         }
         if before.megaphone_state && !from.megaphone_state && applied.iter().any(|p| p == "megaphoneState") {
             self.update_state(sink, |s| space_state::stopped_streaming(s, id));
@@ -452,6 +555,13 @@ impl Space {
         connection_id: Option<&str>,
         sink: &mut impl SpaceSink,
     ) {
+        if self.comm == Comm::Livekit {
+            // A fresh invitation (new token) for the one whose connection broke.
+            if let Some(user) = self.member(requester).filter(|_| self.invited.contains(requester)) {
+                emit(sink, &[requester], SpaceEvent::LivekitInvite(user));
+            }
+            return;
+        }
         let Some(conns) = &self.connections else { return };
         if !self.is_member(requester) || !self.is_member(peer) {
             return;
@@ -487,7 +597,7 @@ impl Space {
     /// Opens and closes `id`'s connections after it started watching or changed role: a speaker who leaves the
     /// stage is disconnected from the audience, and connected again when back on it.
     fn reconcile(&mut self, id: &str, sink: &mut impl SpaceSink) {
-        let Some(me) = self.member(id).filter(|_| self.connections.is_some()) else { return };
+        let Some(me) = self.member(id).filter(|_| self.comm == Comm::WebRtc) else { return };
         let plan: Vec<(SpaceUserId, bool)> = self
             .members
             .iter()
@@ -540,7 +650,8 @@ impl Space {
     }
 
     fn disconnect_all(&mut self, id: &str, sink: &mut impl SpaceSink) {
-        if self.connections.is_none() {
+        // During a switch the old peer-to-peer links are left to the clients, which drop them on finalize.
+        if self.comm != Comm::WebRtc {
             return;
         }
         let others: Vec<SpaceUserId> = self.member_ids().filter(|m| *m != id).map(str::to_owned).collect();
@@ -561,6 +672,162 @@ impl Space {
         }
         if let Some(sender) = self.member(s) {
             emit(sink, &[r], SpaceEvent::WebRtcDisconnect(sender));
+        }
+    }
+
+    // ---------------------------------------------------------------- strategy (CommunicationManager)
+
+    /// TransitionPolicy: whether the space should leave its strategy, and for which.
+    fn wanted(&self) -> Option<Comm> {
+        let n = self.members.len();
+        let cpu = self.media.switch_on_cpu && self.members.iter().any(|m| m.cpu_limited);
+        match self.comm {
+            Comm::WebRtc if self.media.livekit && (n > self.media.max_webrtc || (cpu && n > 2)) => Some(Comm::Livekit),
+            Comm::Livekit if n <= self.media.max_webrtc && !self.recording && !cpu => Some(Comm::WebRtc),
+            _ => None,
+        }
+    }
+
+    /// After any change of who is there: to LiveKit at once, back to peer-to-peer after a quiet delay (each
+    /// change restarts it). Returns whether the space switched now.
+    pub fn evaluate(&mut self, sink: &mut impl SpaceSink) -> bool {
+        match self.wanted() {
+            Some(Comm::Livekit) => {
+                self.back_to_webrtc_at = None;
+                self.switch_to(Comm::Livekit, sink);
+                true
+            }
+            Some(Comm::WebRtc) => {
+                self.back_to_webrtc_at = Some(self.clock.now_ms() + LIVEKIT_TO_WEBRTC_MS);
+                false
+            }
+            _ => {
+                self.back_to_webrtc_at = None;
+                false
+            }
+        }
+    }
+
+    /// Forces LiveKit (a recording starts in a peer-to-peer space).
+    pub fn ensure_livekit(&mut self, sink: &mut impl SpaceSink) -> bool {
+        match self.comm {
+            Comm::Livekit => true,
+            Comm::WebRtc if self.media.livekit => {
+                self.back_to_webrtc_at = None;
+                self.switch_to(Comm::Livekit, sink);
+                true
+            }
+            _ => false,
+        }
+    }
+
+    /// StateLifecycleManager.transitionTo.
+    fn switch_to(&mut self, next: Comm, sink: &mut impl SpaceSink) {
+        self.finish_switch(sink);
+        let old = self.comm;
+        for m in &self.members {
+            emit(sink, &[m.space_user_id.as_str()], SpaceEvent::Switch(m, next));
+        }
+        self.comm = next;
+        match next {
+            Comm::Livekit => {
+                self.invited.clear();
+                self.room_open = false;
+                self.livekit_reconcile(sink);
+            }
+            Comm::WebRtc => {
+                if let Some(c) = &mut self.connections {
+                    c.clear();
+                }
+                self.dropped.clear();
+                let ids: Vec<SpaceUserId> = self.watchers.iter().cloned().collect();
+                for id in ids {
+                    self.reconcile(&id, sink);
+                }
+            }
+            Comm::None => {}
+        }
+        self.finalize = Some((old, self.clock.now_ms() + FINALIZE_SWITCH_MS));
+    }
+
+    /// finalizeSwitchMessage to everyone: the previous strategy is gone.
+    fn finish_switch(&mut self, sink: &mut impl SpaceSink) {
+        let Some((old, _)) = self.finalize.take() else { return };
+        for m in &self.members {
+            emit(sink, &[m.space_user_id.as_str()], SpaceEvent::FinalizeSwitch(m, old));
+        }
+        match old {
+            Comm::WebRtc => {
+                if let Some(c) = &mut self.connections {
+                    c.clear();
+                }
+            }
+            Comm::Livekit => {
+                self.invited.clear();
+                if std::mem::take(&mut self.room_open) {
+                    sink.emit(&[], SpaceEvent::LivekitRoom(false));
+                }
+            }
+            Comm::None => {}
+        }
+    }
+
+    /// The next time `tick` has something to do.
+    pub fn next_deadline(&self) -> Option<u64> {
+        [self.finalize.map(|(_, at)| at), self.back_to_webrtc_at].into_iter().flatten().min()
+    }
+
+    /// Runs the timers that are due.
+    pub fn tick(&mut self, sink: &mut impl SpaceSink) {
+        let now = self.clock.now_ms();
+        if self.finalize.is_some_and(|(_, at)| at <= now) {
+            self.finish_switch(sink);
+        }
+        if self.back_to_webrtc_at.is_some_and(|at| at <= now) {
+            self.back_to_webrtc_at = None;
+            if self.wanted() == Some(Comm::WebRtc) {
+                self.switch_to(Comm::WebRtc, sink);
+            }
+        }
+    }
+
+    /// LivekitCommunicationStrategy: once a publisher is there the room opens, and every publisher and watcher
+    /// holds an invitation; when the last publisher goes, everyone is disconnected and the room closes.
+    fn livekit_reconcile(&mut self, sink: &mut impl SpaceSink) {
+        if self.comm != Comm::Livekit {
+            return;
+        }
+        let publishing = self.members.iter().any(|m| self.active(m));
+        if publishing && !self.room_open {
+            self.room_open = true;
+            sink.emit(&[], SpaceEvent::LivekitRoom(true));
+        }
+        let should: BTreeSet<SpaceUserId> = if publishing {
+            self.members
+                .iter()
+                .filter(|m| self.active(m) || self.watchers.contains(&m.space_user_id))
+                .map(|m| m.space_user_id.clone())
+                .collect()
+        } else {
+            BTreeSet::new()
+        };
+        let gone: Vec<SpaceUserId> = self.invited.difference(&should).cloned().collect();
+        for id in gone {
+            self.invited.remove(&id);
+            if let Some(m) = self.member(&id) {
+                emit(sink, &[id.as_str()], SpaceEvent::LivekitDisconnect(m));
+            }
+        }
+        let new: Vec<SpaceUserId> = should.difference(&self.invited).cloned().collect();
+        for id in new {
+            if let Some(m) = self.member(&id) {
+                emit(sink, &[id.as_str()], SpaceEvent::LivekitInvite(m));
+            }
+            self.invited.insert(id);
+        }
+        if !publishing && self.room_open {
+            self.room_open = false;
+            sink.emit(&[], SpaceEvent::LivekitRoom(false));
         }
     }
 }

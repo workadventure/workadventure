@@ -130,6 +130,11 @@ impl RoomVariables {
         *self = fresh;
     }
 
+    /// A variable's JSON text, whoever may read it (the Room API).
+    pub fn get(&self, name: &str) -> Option<&str> {
+        self.values.get(name).map(String::as_str)
+    }
+
     /// Whether the map was read (persistence and checks are on).
     pub fn has_map(&self) -> bool {
         self.defs.is_some()

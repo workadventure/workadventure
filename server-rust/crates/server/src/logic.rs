@@ -381,7 +381,7 @@ impl Logic {
                         return;
                     }
                 };
-                let space = space_actor::get_or_spawn(&self.app.spaces, &self.world_key(&join.space_name), &join.space_name);
+                let space = space_actor::get_or_spawn(&self.app, &self.world_key(&join.space_name), &join.space_name);
                 let user = self.space_user(space_user_id);
                 // The space answers, then sends what follows the answer.
                 let _ = space

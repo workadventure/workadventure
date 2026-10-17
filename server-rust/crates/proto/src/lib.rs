@@ -6,7 +6,7 @@ pub mod messages {
     include!(concat!(env!("OUT_DIR"), "/_.rs"));
 }
 
-#[allow(clippy::all, clippy::pedantic, missing_docs)]
+#[allow(clippy::all, clippy::pedantic, missing_docs, non_camel_case_types)]
 pub mod room_api {
     include!(concat!(env!("OUT_DIR"), "/room_api.rs"));
 }

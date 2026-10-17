@@ -89,6 +89,8 @@ pub enum RoomCmd {
         session: Arc<Session>,
         act: Social,
     },
+    /// From the Room API.
+    Api(RoomApiCmd),
     /// For `GET /rooms`: the URL and the number of users.
     Describe {
         reply: tokio::sync::oneshot::Sender<(String, usize)>,
@@ -115,6 +117,17 @@ pub enum Social {
 }
 
 pub type RoomHandle = tokio::sync::mpsc::Sender<RoomCmd>;
+
+pub enum RoomApiCmd {
+    /// The JSON text of a variable, whoever may read it.
+    Read { name: String, reply: tokio::sync::oneshot::Sender<Option<String>> },
+    /// Set as the Room API: the map's tag rules do not apply.
+    Save { name: String, value: String, reply: tokio::sync::oneshot::Sender<Result<(), String>> },
+    /// The next values of a variable (JSON text); none is replayed.
+    ListenVariable { name: String, tx: tokio::sync::mpsc::Sender<String> },
+    /// The events of that name, with their sender.
+    ListenEvent { name: String, tx: tokio::sync::mpsc::Sender<(Option<prost_types::Value>, Option<UserId>)> },
+}
 
 struct SystemClock;
 impl Clock for SystemClock {
@@ -605,22 +618,50 @@ fn deliver(
 /// VariablesManager.setVariable, then the room gets it (each user who may read it, the writer included) and
 /// Redis too when it persists.
 #[allow(clippy::too_many_arguments)]
+/// The Room API's listeners in a room: variable name or event name -> streams.
+#[derive(Default)]
+struct Listeners<T> {
+    by_name: HashMap<String, Vec<tokio::sync::mpsc::Sender<T>>>,
+}
+
+impl<T: Clone> Listeners<T> {
+    fn add(&mut self, name: String, tx: tokio::sync::mpsc::Sender<T>) {
+        self.by_name.entry(name).or_default().push(tx);
+    }
+
+    /// To every live listener of `name`; a gone one is forgotten, a stuck one misses this value.
+    fn send(&mut self, name: &str, value: T) {
+        let Some(list) = self.by_name.get_mut(name) else { return };
+        list.retain(|tx| !matches!(tx.try_send(value.clone()), Err(tokio::sync::mpsc::error::TrySendError::Closed(_))));
+        if list.is_empty() {
+            self.by_name.remove(name);
+        }
+    }
+}
+
+type EventData = (Option<prost_types::Value>, Option<UserId>);
+
+/// The writer of a variable sent by a player.
+fn player<'a>(room: &'a Room, session: &'a Session) -> Writer<'a> {
+    Writer::User {
+        name: room.find(&session.info.user_uuid, session.user_id()).map_or("", |u| u.profile.name.as_str()),
+        tags: &session.info.tags,
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
 fn set_variable(
     vars: &mut RoomVariables,
     app: &AppState,
     url: &str,
-    room: &Room,
     sessions: &HashMap<UserId, Arc<Session>>,
-    session: &Session,
+    listeners: &mut Listeners<String>,
+    writer: Writer<'_>,
     name: &str,
     value: &str,
 ) -> Result<(), VariableError> {
-    let user = room.find(&session.info.user_uuid, session.user_id());
-    let writer = Writer::User {
-        name: user.map_or("", |u| u.profile.name.as_str()),
-        tags: &session.info.tags,
-    };
     let Some(changed) = vars.set(name, value, writer)? else { return Ok(()) };
+    listeners.send(name, value.to_owned());
     if changed.persist {
         app.redis.save_room_variable(url, name, value);
     }
@@ -682,6 +723,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
     // waiting for it are tried again.
     let mut map_reload: JoinSet<room_map::Defs> = JoinSet::new();
     let mut retries: Vec<(Arc<Session>, String, String)> = Vec::new();
+    let mut var_listeners: Listeners<String> = Listeners::default();
+    let mut event_listeners: Listeners<EventData> = Listeners::default();
     let mut variables = AreaVariables::default();
     let mut follows = Follows::default();
     let mut invitations = Invitations::default();
@@ -710,7 +753,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 map_warning = defs.as_ref().err().copied();
                 room_vars.reload(defs.ok());
                 for (session, name, value) in std::mem::take(&mut retries) {
-                    if let Err(e) = set_variable(&mut room_vars, &app, &url, &room, &sessions, &session, &name, &value) {
+                    if let Err(e) = set_variable(&mut room_vars, &app, &url, &sessions, &mut var_listeners, player(&room, &session), &name, &value) {
                         refuse(&session, &e);
                     }
                 }
@@ -755,6 +798,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 }
             }
             RoomCmd::Event { sender, name, data, targets } => {
+                event_listeners.send(&name, (data.clone(), sender));
                 let frame = wire::sub(pb::sub_message::Message::ReceivedEventMessage(pb::ReceivedEventMessage {
                     name,
                     data,
@@ -863,6 +907,17 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     }
                 }
             }
+            RoomCmd::Api(cmd) => match cmd {
+                RoomApiCmd::Read { name, reply } => {
+                    let _ = reply.send(room_vars.get(&name).map(str::to_owned));
+                }
+                RoomApiCmd::Save { name, value, reply } => {
+                    let saved = set_variable(&mut room_vars, &app, &url, &sessions, &mut var_listeners, Writer::RoomApi, &name, &value);
+                    let _ = reply.send(saved.map_err(|e| e.to_string()));
+                }
+                RoomApiCmd::ListenVariable { name, tx } => var_listeners.add(name, tx),
+                RoomApiCmd::ListenEvent { name, tx } => event_listeners.add(name, tx),
+            },
             RoomCmd::Describe { reply } => {
                 let _ = reply.send((url.clone(), sessions.len()));
             }
@@ -871,7 +926,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     retries.push((session, name, value));
                     continue;
                 }
-                let Err(e) = set_variable(&mut room_vars, &app, &url, &room, &sessions, &session, &name, &value) else {
+                let Err(e) = set_variable(&mut room_vars, &app, &url, &sessions, &mut var_listeners, player(&room, &session), &name, &value) else {
                     continue;
                 };
                 if vars_loaded.elapsed() < std::time::Duration::from_secs(10) {

@@ -10,7 +10,10 @@ publish.workspace = true
 bytes.workspace = true
 prost.workspace = true
 prost-types = "0.14"
+tonic = { version = "0.14.6", default-features = false, features = ["codegen"] }
+tonic-prost = "0.14.6"
 
 [build-dependencies]
 prost-build.workspace = true
 protox.workspace = true
+tonic-prost-build = { version = "0.14.6", default-features = false }
