@@ -36,9 +36,10 @@ type Config struct {
 	LiveKitSwitchOnCPULimitation                 bool
 
 	// The uploader (SERVER_UPLOADER_PORT; the chart's server mode points the uploader Service at 3003).
-	UploaderPort int
-	Uploader     uploader.Options
-	UploaderS3   UploaderS3 // AWS_*: the uploader's bucket
+	UploaderPort    int
+	Uploader        uploader.Options
+	UploaderS3      UploaderS3 // AWS_*: the uploader's bucket
+	UploaderRedisDB int        // REDIS_DB_NUMBER: only the uploader read it (files in Redis); the variables stay on 0
 
 	RoomAPIPort      int
 	RoomAPISecretKey string
@@ -253,6 +254,7 @@ func parse(get func(string) string) (*Config, error) {
 		RedisHost:                    r.str("REDIS_HOST"),
 		RedisPassword:                r.str("REDIS_PASSWORD"),
 		RedisPort:                    r.integer("REDIS_PORT", 6379),
+		UploaderRedisDB:              r.integer("REDIS_DB_NUMBER", 0),
 		StoreVariablesForLocalMaps:   r.boolean("STORE_VARIABLES_FOR_LOCAL_MAPS", false),
 		MapStorage: mapstorage.Options{
 			Auth: mapstorage.Auth{

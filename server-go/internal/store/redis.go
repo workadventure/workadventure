@@ -14,6 +14,7 @@ import (
 // read their variables side by side. A connection that fails is closed; the next command dials a new one.
 type Redis struct {
 	addr, password string
+	db             int           // SELECTed on each connection when not 0
 	slots          chan struct{} // one per connection in use; at most poolSize
 	idle           chan *redisConn
 }
@@ -69,7 +70,20 @@ func (c *Redis) dial(ctx context.Context) (*redisConn, error) {
 			return nil, err
 		}
 	}
+	if c.db != 0 {
+		if _, err := conn.roundTrip(ctx, []string{"SELECT", strconv.Itoa(c.db)}); err != nil {
+			conn.Close()
+			return nil, err
+		}
+	}
 	return conn, nil
+}
+
+// WithDB is a client of the same Redis on database db (REDIS_DB_NUMBER of the uploader).
+func (c *Redis) WithDB(db int) *Redis {
+	r := NewRedis(c.addr, c.password)
+	r.db = db
+	return r
 }
 
 func (c *redisConn) roundTrip(ctx context.Context, args []string) (any, error) {

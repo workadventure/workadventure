@@ -167,7 +167,7 @@ func run() error {
 			up.S3, up.S3URLTTL = s3.New(endpoint, b.Region, b.Bucket, b.AccessKey, b.Secret), b.URLTTL
 		}
 		if r, ok := vars.(*store.Redis); ok {
-			up.Redis = r
+			up.Redis = r.WithDB(cfg.UploaderRedisDB)
 		}
 		servers = append(servers, newServer(cfg.UploaderPort, uploader.New(up).Handler()))
 	}

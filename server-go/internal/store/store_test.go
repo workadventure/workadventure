@@ -146,3 +146,36 @@ func TestPlayersJoiningTogetherReadTheirVariablesSideBySide(t *testing.T) {
 		t.Fatalf("%d reads of 200 ms took %v: they waited for each other", poolSize, d)
 	}
 }
+
+func TestTheUploadersRedisSelectsItsDatabase(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer ln.Close()
+	got := make(chan string, 4)
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		r := bufio.NewReader(conn)
+		for {
+			v, err := readReply(r)
+			if err != nil {
+				return
+			}
+			args := v.([]any)
+			got <- args[0].(string) + " " + args[1].(string)
+			if args[0] == "GET" {
+				_, _ = conn.Write([]byte("$4\r\nfile\r\n"))
+			} else {
+				_, _ = conn.Write([]byte("+OK\r\n"))
+			}
+		}
+	}()
+	v, ok, err := NewRedis(ln.Addr().String(), "").WithDB(1).Get(context.Background(), "id.txt")
+	if err != nil || !ok || v != "file" || <-got != "SELECT 1" || <-got != "GET id.txt" {
+		t.Fatalf("%q %v %v", v, ok, err)
+	}
+}
