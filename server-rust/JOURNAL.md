@@ -722,4 +722,13 @@ back, que le pod play ne reçoit pas en mode serveur (`helm template` le confirm
 y est donc « locale » et non persistée, comme le back TS sans la variable. Correctif demandé au socle dans
 `values-rust.yaml`, puis rejeu.
 
+**Correction du diagnostic** : faux. Le pod play reçoit aussi, par `envFrom`, les ConfigMaps du back, de map-storage
+et de l'uploader (`kubectl exec … env` : `STORE_VARIABLES_FOR_LOCAL_MAPS=true`) ; je n'avais lu que `env-play`. La
+vraie cause est dans les journaux du pod : `CaUsedAsEndEntity`. Le certificat auto-signé de `up.sh` (`openssl req
+-x509`, donc `CA:TRUE`) sert à la fois d'autorité (`SSL_CERT_FILE`) et de certificat serveur ; rustls/webpki refuse
+une autorité utilisée comme certificat final (Go l'accepte, le TS coupe la vérification). Le serveur ne lit pas la
+carte en HTTPS, la room n'a pas de définitions de variables, d'où les 4 KO. Correctif proposé au socle : une
+autorité et un certificat serveur signé par elle (`CA:FALSE`). Le journal ajouté lors de l'audit des erreurs
+avalées (« could not fetch the map ») est ce qui l'a montré.
+
 Côté image : `api-version.sh` (même calcul que `tag-version`), cartes dans `/maps` en uid 1000, comme map-storage.
