@@ -15,7 +15,6 @@ import (
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/netguard"
-	"github.com/workadventure/workadventure/server-go/internal/store"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
 
@@ -115,7 +114,7 @@ func (srv *Server) roomVariables(roomURL string) core.RoomVariables {
 	for name, value := range defaults {
 		v.Values[name] = value
 	}
-	stored, err := store.LoadOrFail(srv.vars, roomURL)
+	stored, err := srv.varWriter.Read(roomURL)
 	for name, value := range stored {
 		if defs[name].Persist {
 			v.Values[name] = value
@@ -123,7 +122,7 @@ func (srv *Server) roomVariables(roomURL string) core.RoomVariables {
 	}
 	if err != nil {
 		v.Reload = func() (map[string]string, bool) {
-			m, err := store.LoadOrFail(srv.vars, roomURL)
+			m, err := srv.varWriter.Read(roomURL)
 			return m, err == nil
 		}
 	}
@@ -221,7 +220,8 @@ func (s *Session) storedPlayerVariables() []core.StoredVariable {
 	key := playerKey(s.info.userUUID, s.info.roomID)
 	var out []core.StoredVariable
 	now := time.Now().UnixMilli()
-	for name, raw := range store.Load(s.srv.vars, key) {
+	stored, _ := s.srv.varWriter.Read(key)
+	for name, raw := range stored {
 		expiry, rest, ok1 := strings.Cut(raw, ":")
 		public, value, ok2 := strings.Cut(rest, ":")
 		if !ok1 || !ok2 {
