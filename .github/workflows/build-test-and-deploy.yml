@@ -37,11 +37,14 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       hash: ${{ steps.hash.outputs.hash }}
+      version: ${{ steps.hash.outputs.version }}
     steps:
       - uses: actions/checkout@v4
-      - name: Compute the API version hash
+      - name: Compute the API version hash and the release version
         id: hash
-        run: echo "hash=$(server-go/api-version.sh)" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "hash=$(server-go/api-version.sh)" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./play/package.json').version")" >> "$GITHUB_OUTPUT"
 
   build-server:
     needs:
@@ -55,7 +58,9 @@ jobs:
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
       dockerfile: server-go/Dockerfile
       target: prod
-      build-args: API_VERSION=${{ needs.server-api-version.outputs.hash }}
+      build-args: |
+        API_VERSION=${{ needs.server-api-version.outputs.hash }}
+        VERSION=${{ needs.server-api-version.outputs.version }}
       short_name: server-go
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./server-go
