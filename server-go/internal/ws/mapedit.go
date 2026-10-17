@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/url"
 	"strings"
@@ -216,7 +217,11 @@ func echo(e *pb.EditMapMessage, res mapedit.Result, ed mapedit.Editor) *pb.EditM
 	switch v := e.GetMessage().(type) {
 	case *pb.EditMapMessage_ModifyAreaMessage:
 		if res.Area != nil {
-			return modifiedArea(res.Area)
+			m := modifiedArea(res.Area)
+			// The editor takes the area as stored only when a resource (Matrix) changed its serverData.
+			props, _ := res.Area["properties"].([]any)
+			m.GetModifyAreaMessage().ModifyServerData = proto.Bool(serverDataOf(values(v.ModifyAreaMessage.GetProperties())) != serverDataOf(props))
+			return m
 		}
 	case *pb.EditMapMessage_UploadEntityMessage:
 		// Everybody learns who owns it; nobody needs the image again.
@@ -270,6 +275,19 @@ func modifiedArea(area map[string]any) *pb.EditMapMessage {
 	}
 	return &pb.EditMapMessage{Message: &pb.EditMapMessage_ModifyAreaMessage{ModifyAreaMessage: &pb.ModifyAreaMessage{
 		Id: id, Name: &name, X: &x, Y: &y, Width: &w, Height: &h, Properties: pv, ModifyProperties: proto.Bool(true), ModifyServerData: proto.Bool(false)}}}
+}
+
+// serverDataOf is the serverData of each property, by id, as JSON: what tells MapStorageServer's modifyServerData.
+func serverDataOf(props []any) string {
+	out := map[string]any{}
+	for _, p := range props {
+		if m, _ := jsonNumbers(p).(map[string]any); m != nil && m["serverData"] != nil {
+			id, _ := m["id"].(string)
+			out[id] = m["serverData"]
+		}
+	}
+	b, _ := json.Marshal(out)
+	return string(b)
 }
 
 // jsonNumbers turns the json.Number of a document read from disk into float64, which structpb takes.
