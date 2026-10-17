@@ -57,6 +57,17 @@ async function join(browser, name: string): Promise<Tab> {
     page.setDefaultTimeout(60_000);
     const tab: Tab = { page, name, navigations: 0, sockets: [] };
     page.on("framenavigated", (f) => f === page.mainFrame() && tab.navigations++);
+    // What keeps "Connection to server lost" up: axiosWithRetry shows it on each retry (network error, 5xx, 429)
+    // and hides it on the next success. Every such failure goes into the timeline.
+    page.on("response", (r) => {
+        if (r.status() >= 500 || r.status() === 429) note(`${name}: HTTP ${r.status()} ${r.request().method()} ${new URL(r.url()).host}${new URL(r.url()).pathname}`);
+    });
+    page.on("requestfailed", (r) => {
+        if (!r.url().startsWith("data:")) note(`${name}: request failed ${r.method()} ${new URL(r.url()).host}${new URL(r.url()).pathname} (${r.failure()?.errorText})`);
+    });
+    page.on("console", (m) => {
+        if (m.text().startsWith("Retry attempt")) note(`${name}: ${m.text().slice(0, 160)}`);
+    });
     page.on("websocket", (ws) => {
         const opened = now();
         ws.on("close", () => tab.sockets.push(`${name}: socket ${new URL(ws.url()).host} open +${opened}s, closed +${now()}s`));
