@@ -41,11 +41,7 @@ struct Logic {
 }
 
 pub async fn run(parts: SessionParts, app: AppState) {
-    let SessionParts {
-        session,
-        mut inbox,
-        mut ended,
-    } = parts;
+    let SessionParts { session, mut inbox, mut ended } = parts;
     if let Some(cid) = &session.info.connection_id {
         app.sessions.insert(cid.clone(), session.clone());
     }
@@ -82,8 +78,7 @@ pub async fn run(parts: SessionParts, app: AppState) {
     logic.end_intervals("socket_closed");
     logic.cleanup().await;
     if let Some(cid) = &session.info.connection_id {
-        app.sessions
-            .remove_if(cid, |_, s| std::sync::Arc::ptr_eq(s, &session));
+        app.sessions.remove_if(cid, |_, s| std::sync::Arc::ptr_eq(s, &session));
     }
 }
 
@@ -190,8 +185,10 @@ impl Logic {
                     all.retain(|(n, _)| n != name);
                     all.push((name.clone(), s.clone()));
                 }
-                let player_variables: Vec<pb::VariableMessage> =
-                    all.iter().map(|(name, s)| pb::VariableMessage { name: name.clone(), value: s.value.clone() }).collect();
+                let player_variables: Vec<pb::VariableMessage> = all
+                    .iter()
+                    .map(|(name, s)| pb::VariableMessage { name: name.clone(), value: s.value.clone() })
+                    .collect();
                 let public = all.iter().filter(|(_, s)| s.public).map(|(n, s)| (n.clone(), s.value.clone())).collect();
                 let info = &session.info;
                 let request = JoinRequest {
@@ -213,25 +210,13 @@ impl Logic {
                     variables: public,
                 };
                 self.joined = true;
-                self.to_room(RoomCmd::Join {
-                    session: session.clone(),
-                    request,
-                    player_variables,
-                })
-                .await;
+                self.to_room(RoomCmd::Join { session: session.clone(), request, player_variables }).await;
             }
             M::EditMapCommandMessage(command) => self.to_room(RoomCmd::Edit { session, command }).await,
             M::SetAreaPropertyVariableMessage(variable) => {
                 self.to_room(RoomCmd::SetAreaVariable { session, variable }).await;
             }
-            M::VariableMessage(v) => {
-                self.to_room(RoomCmd::Variable {
-                    session,
-                    name: v.name,
-                    value: v.value,
-                })
-                .await
-            }
+            M::VariableMessage(v) => self.to_room(RoomCmd::Variable { session, name: v.name, value: v.value }).await,
             M::FollowRequestMessage(m) => self.social(Social::FollowRequest(m)).await,
             M::FollowConfirmationMessage(m) => self.social(Social::FollowConfirmation(m)).await,
             M::FollowAbortMessage(m) => self.social(Social::FollowAbort(m)).await,
@@ -257,13 +242,28 @@ impl Logic {
                     // byIp: the address the server sees for the user, unless the moderator shares it.
                     let ip = if m.by_ip {
                         let users = crate::room_actor::world_users(&app, &session.info.world).await.unwrap_or_default();
-                        users.into_iter().find(|u| u.uuid == m.ban_user_uuid).map(|u| u.ip).filter(|ip| !ip.is_empty() && *ip != session.info.ip_address)
+                        users
+                            .into_iter()
+                            .find(|u| u.uuid == m.ban_user_uuid)
+                            .map(|u| u.ip)
+                            .filter(|ip| !ip.is_empty() && *ip != session.info.ip_address)
                     } else {
                         None
                     };
-                    let message = if m.reason.is_empty() { format!("User banned by admin {}", session.info.user_uuid) } else { m.reason.clone() };
+                    let message = if m.reason.is_empty() {
+                        format!("User banned by admin {}", session.info.user_uuid)
+                    } else {
+                        m.reason.clone()
+                    };
                     let banned = admin
-                        .ban(&m.ban_user_uuid, &session.info.room_id, &m.ban_user_name, &message, &session.info.user_uuid, ip.as_deref())
+                        .ban(
+                            &m.ban_user_uuid,
+                            &session.info.room_id,
+                            &m.ban_user_name,
+                            &message,
+                            &session.info.user_uuid,
+                            ip.as_deref(),
+                        )
                         .await
                         .unwrap_or(false);
                     let act = Social::Kick { uuid: m.ban_user_uuid, reason: m.reason, banned };
@@ -278,25 +278,42 @@ impl Logic {
                 let app = self.app.clone();
                 tokio::spawn(async move {
                     let rooms = match (&app.admin, m.broadcast_to_world) {
-                        (Some(admin), true) => match admin.rooms_from_same_world(&session.info.room_id, &[], true).await {
-                            Ok(list) => list.as_array().into_iter().flatten().filter_map(|r| r["roomUrl"].as_str().map(str::to_owned)).collect(),
-                            Err(e) => {
-                                tracing::warn!(error = %e, "the admin did not list the rooms of the world");
-                                return;
+                        (Some(admin), true) => {
+                            match admin.rooms_from_same_world(&session.info.room_id, &[], true).await {
+                                Ok(list) => list
+                                    .as_array()
+                                    .into_iter()
+                                    .flatten()
+                                    .filter_map(|r| r["roomUrl"].as_str().map(str::to_owned))
+                                    .collect(),
+                                Err(e) => {
+                                    tracing::warn!(error = %e, "the admin did not list the rooms of the world");
+                                    return;
+                                }
                             }
-                        },
+                        }
                         _ => vec![session.info.room_id.clone()],
                     };
                     for url in rooms {
                         let room = room_actor::get_or_spawn(&app, &url);
-                        let _ = room.send(RoomCmd::AdminMessage { kind: m.r#type.clone(), message: m.content.clone() }).await;
+                        let _ = room
+                            .send(RoomCmd::AdminMessage { kind: m.r#type.clone(), message: m.content.clone() })
+                            .await;
                     }
                 });
             }
             M::ReportPlayerMessage(m) => {
                 if let Some(admin) = self.app.admin.clone() {
                     tokio::spawn(async move {
-                        if let Err(e) = admin.report(&m.reported_user_uuid, &m.report_comment, &session.info.user_uuid, &session.info.room_id).await {
+                        if let Err(e) = admin
+                            .report(
+                                &m.reported_user_uuid,
+                                &m.report_comment,
+                                &session.info.user_uuid,
+                                &session.info.room_id,
+                            )
+                            .await
+                        {
                             tracing::warn!(error = %e, "the admin did not take a report");
                         }
                     });
@@ -308,7 +325,9 @@ impl Logic {
                     tokio::spawn(async move {
                         if let Err(e) = admin.update_chat_id(&m.email, &m.chat_id, &session.info.room_id).await {
                             tracing::warn!(error = %e, "the admin did not take a chat id");
-                            session.push(wire::sub(pb::sub_message::Message::ErrorMessage(pb::ErrorMessage { message: e })));
+                            session.push(wire::sub(pb::sub_message::Message::ErrorMessage(pb::ErrorMessage {
+                                message: e,
+                            })));
                         }
                     });
                 }
@@ -340,7 +359,8 @@ impl Logic {
                     && v.persist
                     && session.info.is_logged
                 {
-                    let max = self.app.config.raw.get("PLAYER_VARIABLES_MAX_TTL").and_then(|t| t.parse().ok()).unwrap_or(-1);
+                    let max =
+                        self.app.config.raw.get("PLAYER_VARIABLES_MAX_TTL").and_then(|t| t.parse().ok()).unwrap_or(-1);
                     let ttl = crate::player_variables::ttl(v.ttl, max);
                     let world = pb::set_player_variable_message::Scope::World as i32;
                     let store = match &mut self.saved_world {
@@ -369,13 +389,7 @@ impl Logic {
                     && at.elapsed() < ABORT_WINDOW
                     && let (Some(space), Some(id)) = (self.spaces.remove(&local), space_user_id)
                 {
-                    let _ = space
-                        .send(SpaceCmd::Leave {
-                            session,
-                            id,
-                            query_id: None,
-                        })
-                        .await;
+                    let _ = space.send(SpaceCmd::Leave { session, id, query_id: None }).await;
                 }
             }
             M::AddSpaceFilterMessage(f) => {
@@ -400,11 +414,7 @@ impl Logic {
                 }
                 self.to_space(
                     &update.space_name,
-                    SpaceCmd::Update {
-                        id,
-                        from: wire::space_user_update_from(&from),
-                        paths,
-                    },
+                    SpaceCmd::Update { id, from: wire::space_user_update_from(&from), paths },
                 )
                 .await;
             }
@@ -422,30 +432,17 @@ impl Logic {
             }
             M::PrivateEvent(e) => {
                 let (Some(event), Some(id)) = (e.space_event, space_user_id) else { return };
-                self.to_space(
-                    &e.space_name,
-                    SpaceCmd::Private {
-                        id,
-                        receiver: e.receiver_user_id,
-                        event,
-                    },
-                )
-                .await;
+                self.to_space(&e.space_name, SpaceCmd::Private { id, receiver: e.receiver_user_id, event }).await;
             }
             M::BackEvent(e) => {
                 let Some(id) = space_user_id else { return };
-                if let Some(pb::BackEvent {
-                    event: Some(pb::back_event::Event::MeetingConnectionRestartMessage(r)),
-                }) = e.back_event
+                if let Some(pb::BackEvent { event: Some(pb::back_event::Event::MeetingConnectionRestartMessage(r)) }) =
+                    e.back_event
                 {
                     // LiveKit's restart carries no peer: the requester just gets a fresh invitation.
                     self.to_space(
                         &e.space_name,
-                        SpaceCmd::Restart {
-                            id,
-                            peer: r.user_id,
-                            connection_id: r.connection_id,
-                        },
+                        SpaceCmd::Restart { id, peer: r.user_id, connection_id: r.connection_id },
                     )
                     .await;
                 }
@@ -509,7 +506,11 @@ impl Logic {
                     session.push(wire::answer_error(id, "A room did not answer"));
                     return;
                 };
-                let ip = users.iter().find(|u| u.uuid == preview.ban_user_uuid).map(|u| u.ip.clone()).filter(|ip| !ip.is_empty());
+                let ip = users
+                    .iter()
+                    .find(|u| u.uuid == preview.ban_user_uuid)
+                    .map(|u| u.ip.clone())
+                    .filter(|ip| !ip.is_empty());
                 let answer = match ip {
                     None => pb::BanIpPreviewAnswer { ip_known: false, includes_moderator: false, users: vec![] },
                     Some(ip) => pb::BanIpPreviewAnswer {
@@ -569,13 +570,7 @@ impl Logic {
             }
             Q::LeaveSpaceQuery(leave) => {
                 if let (Some(space), Some(user)) = (self.spaces.remove(&leave.space_name), session.space_user_id()) {
-                    let _ = space
-                        .send(SpaceCmd::Leave {
-                            session,
-                            id: user,
-                            query_id: Some(id),
-                        })
-                        .await;
+                    let _ = space.send(SpaceCmd::Leave { session, id: user, query_id: Some(id) }).await;
                     return;
                 }
                 A::LeaveSpaceAnswer(pb::LeaveSpaceAnswer {})
@@ -629,9 +624,11 @@ impl Logic {
                         (Q::GetRecordingsQuery(_), Some(b)) => crate::recordings::list(&b, &app.http, &uuid)
                             .await
                             .map(|recordings| A::GetRecordingsAnswer(pb::GetRecordingsAnswer { recordings })),
-                        (Q::GetRecordingThumbnailsQuery(t), Some(b)) => crate::recordings::thumbnails(&b, &app.http, &uuid, &t.base_filename)
-                            .await
-                            .map(|urls| A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer { urls })),
+                        (Q::GetRecordingThumbnailsQuery(t), Some(b)) => {
+                            crate::recordings::thumbnails(&b, &app.http, &uuid, &t.base_filename)
+                                .await
+                                .map(|urls| A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer { urls }))
+                        }
                         (Q::DeleteRecordingQuery(d), Some(b)) => {
                             let success = crate::recordings::delete(&b, &app.http, &uuid, &d.recording_id).await;
                             Ok(A::DeleteRecordingAnswer(pb::DeleteRecordingAnswer { success, error_message: None }))
@@ -639,9 +636,16 @@ impl Logic {
                         (Q::GetSignedUrlQuery(g), Some(b)) => crate::recordings::signed_url(&b, &uuid, &g.key)
                             .map(|signed_url| A::GetSignedUrlAnswer(pb::GetSignedUrlAnswer { signed_url })),
                         // No bucket: empty lists, as the pusher answers.
-                        (Q::GetRecordingsQuery(_), None) => Ok(A::GetRecordingsAnswer(pb::GetRecordingsAnswer::default())),
-                        (Q::GetRecordingThumbnailsQuery(_), None) => Ok(A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer::default())),
-                        (Q::DeleteRecordingQuery(_), None) => Ok(A::DeleteRecordingAnswer(pb::DeleteRecordingAnswer { success: false, error_message: None })),
+                        (Q::GetRecordingsQuery(_), None) => {
+                            Ok(A::GetRecordingsAnswer(pb::GetRecordingsAnswer::default()))
+                        }
+                        (Q::GetRecordingThumbnailsQuery(_), None) => {
+                            Ok(A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer::default()))
+                        }
+                        (Q::DeleteRecordingQuery(_), None) => Ok(A::DeleteRecordingAnswer(pb::DeleteRecordingAnswer {
+                            success: false,
+                            error_message: None,
+                        })),
                         _ => Err("Recording storage is not configured".into()),
                     };
                     session.push(match answer {
@@ -656,10 +660,10 @@ impl Logic {
             }
             // Asking the site takes up to 5 s: not on this session's message loop.
             Q::EmbeddableWebsiteQuery(q) => {
-                let (http, config) = (self.app.http.clone(), self.app.config.clone());
+                let config = self.app.config.clone();
                 tokio::spawn(async move {
                     let whitelist = config.raw.get("EMBEDDED_DOMAINS_WHITELIST").cloned().unwrap_or_default();
-                    let answer = crate::embed::check(&http, q.url, &whitelist, &config.front_url).await;
+                    let answer = crate::embed::check(q.url, &whitelist, &config.front_url).await;
                     session.push(wire::answer(id, A::EmbeddableWebsiteAnswer(answer)));
                 });
                 return;
@@ -686,22 +690,25 @@ impl Logic {
                         entities_searchable: m["entitiesSearchable"].as_i64().map(|n| n as i32),
                     }
                 });
-                A::RoomsFromSameWorldAnswer(pb::RoomsFromSameWorldAnswer {
-                    room_descriptions: rooms.collect(),
-                })
+                A::RoomsFromSameWorldAnswer(pb::RoomsFromSameWorldAnswer { room_descriptions: rooms.collect() })
             }
             // The token map-storage asks for a private file (pusher handleMapStorageJwtQuery): valid 1 h.
             Q::MapStorageJwtQuery(_) => {
                 let info = &self.parts_session.info;
                 let wam_url = match &self.app.admin {
                     // The admin's map details (A2); empty for a redirection or an error.
-                    Some(admin) => admin.map_details(&info.room_id, None, None).await["wamUrl"].as_str().unwrap_or_default().to_owned(),
+                    Some(admin) => admin.map_details(&info.room_id, None, None).await["wamUrl"]
+                        .as_str()
+                        .unwrap_or_default()
+                        .to_owned(),
                     None => {
                         let base = self.app.config.raw.get("PUBLIC_MAP_STORAGE_URL").cloned().unwrap_or_default();
-                        crate::local_admin::wam_path(&info.room_id).map_or_else(String::new, |rest| format!("{base}/{rest}"))
+                        crate::local_admin::wam_path(&info.room_id)
+                            .map_or_else(String::new, |rest| format!("{base}/{rest}"))
                     }
                 };
-                let claims = serde_json::json!({"wamUrl": wam_url, "tags": info.tags, "exp": crate::jwt::now_secs() + 3600});
+                let claims =
+                    serde_json::json!({"wamUrl": wam_url, "tags": info.tags, "exp": crate::jwt::now_secs() + 3600});
                 A::MapStorageJwtAnswer(pb::MapStorageJwtAnswer {
                     jwt: crate::jwt::sign(&self.app.config.secret_key, &claims),
                 })
@@ -720,19 +727,10 @@ impl Logic {
 
     async fn cleanup(&mut self) {
         let session = self.parts_session.clone();
-        self.to_room(RoomCmd::Leave {
-            session: session.clone(),
-        })
-        .await;
+        self.to_room(RoomCmd::Leave { session: session.clone() }).await;
         if let Some(id) = session.space_user_id() {
             for (_, space) in self.spaces.drain() {
-                let _ = space
-                    .send(SpaceCmd::Leave {
-                        session: session.clone(),
-                        id: id.clone(),
-                        query_id: None,
-                    })
-                    .await;
+                let _ = space.send(SpaceCmd::Leave { session: session.clone(), id: id.clone(), query_id: None }).await;
             }
         }
         self.room = None;

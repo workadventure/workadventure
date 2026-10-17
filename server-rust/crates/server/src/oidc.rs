@@ -1,10 +1,10 @@
 //! OpenID Connect login (AuthenticateController + OpenIDClient): authorization code flow with PKCE, then the
 //! optional Matrix single sign-on hop, logout and token revocation.
 //!
-//! The ID token is not verified: the server never trusts it, it only uses the access token, obtained from the
-//! token endpoint directly, to call the userinfo endpoint (OIDC Core 3.1.3.7 allows TLS to stand in for the
-//! signature in that case). The PKCE verifier lives in an HttpOnly cookie, as the pusher did (it also
-//! encrypted it; the verifier is useless without the code, which only the provider and this server see).
+//! The ID token is verified as OIDC Core 3.1.3.7 asks: signature (the provider's JWKS, or the client secret for an
+//! HMAC one), `iss` (the discovered issuer), `aud` (this client), `exp`, and the `nonce` this server sent. The PKCE
+//! verifier and the nonce travel in one HttpOnly cookie sealed with AES-256-GCM under a key derived from
+//! SECRET_KEY: unreadable and unforgeable by the browser.
 
 use std::time::Duration;
 
@@ -38,7 +38,12 @@ impl OidcConfig {
     /// `None` when no OpenID provider is configured.
     pub fn from(config: &crate::config::Config) -> Option<Self> {
         let get = |new: &str, old: &str| {
-            config.raw.get(new).filter(|v| !v.is_empty()).or_else(|| config.raw.get(old).filter(|v| !v.is_empty())).cloned()
+            config
+                .raw
+                .get(new)
+                .filter(|v| !v.is_empty())
+                .or_else(|| config.raw.get(old).filter(|v| !v.is_empty()))
+                .cloned()
         };
         let client_id = get("OPENID_CLIENT_ID", "OPID_CLIENT_ID")?;
         let deprecated = config.raw.keys().any(|k| k.starts_with("OPID_"));
@@ -58,6 +63,8 @@ impl OidcConfig {
 
 #[derive(Clone)]
 pub struct Provider {
+    issuer: String,
+    jwks_uri: Option<String>,
     authorization_endpoint: String,
     token_endpoint: String,
     userinfo_endpoint: String,
@@ -82,6 +89,8 @@ async fn provider(state: &AppState) -> Result<Provider, String> {
         .map_err(|e| e.to_string())?;
     let field = |k: &str| meta[k].as_str().map(str::to_owned);
     let p = Provider {
+        issuer: field("issuer").ok_or("no issuer")?,
+        jwks_uri: field("jwks_uri"),
         authorization_endpoint: field("authorization_endpoint").ok_or("no authorization_endpoint")?,
         token_endpoint: field("token_endpoint").ok_or("no token_endpoint")?,
         userinfo_endpoint: field("userinfo_endpoint").ok_or("no userinfo_endpoint")?,
@@ -144,6 +153,66 @@ fn redirect(to: &str, cookies: &[String]) -> Response {
     r
 }
 
+fn cookie_key(secret: &str) -> aws_lc_rs::aead::LessSafeKey {
+    let key = Sha256::digest(format!("workadventure oidc cookie:{secret}").as_bytes());
+    let key = aws_lc_rs::aead::UnboundKey::new(&aws_lc_rs::aead::AES_256_GCM, &key).expect("a 32-byte key");
+    aws_lc_rs::aead::LessSafeKey::new(key)
+}
+
+/// `nonce || ciphertext || tag`, base64url.
+fn seal(secret: &str, plain: &str) -> String {
+    let mut nonce = [0u8; 12];
+    aws_lc_rs::rand::fill(&mut nonce).expect("system randomness");
+    let mut data = plain.as_bytes().to_vec();
+    cookie_key(secret)
+        .seal_in_place_append_tag(
+            aws_lc_rs::aead::Nonce::assume_unique_for_key(nonce),
+            aws_lc_rs::aead::Aad::empty(),
+            &mut data,
+        )
+        .expect("sealing");
+    URL_SAFE_NO_PAD.encode([nonce.as_slice(), &data].concat())
+}
+
+fn unseal(secret: &str, sealed: &str) -> Option<String> {
+    let raw = URL_SAFE_NO_PAD.decode(sealed).ok()?;
+    let (nonce, rest) = raw.split_at_checked(12)?;
+    let nonce = aws_lc_rs::aead::Nonce::try_assume_unique_for_key(nonce).ok()?;
+    let mut data = rest.to_vec();
+    let plain = cookie_key(secret).open_in_place(nonce, aws_lc_rs::aead::Aad::empty(), &mut data).ok()?;
+    String::from_utf8(plain.to_vec()).ok()
+}
+
+/// The id_token: signed by the provider, for this client, not expired, carrying the nonce of this login.
+async fn verify_id_token(state: &AppState, p: &Provider, id_token: &str, nonce: &str) -> Result<(), String> {
+    use jsonwebtoken::{Algorithm, DecodingKey, Validation, jwk::JwkSet};
+    let oidc = state.oidc.as_ref().ok_or("OpenID is not configured")?;
+    let header = jsonwebtoken::decode_header(id_token).map_err(|e| e.to_string())?;
+    let key = if matches!(header.alg, Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512) {
+        DecodingKey::from_secret(oidc.client_secret.as_bytes())
+    } else {
+        let uri = p.jwks_uri.as_deref().ok_or("no jwks_uri")?;
+        let r = state.http.get(uri).timeout(Duration::from_secs(50)).send().await.map_err(|e| e.to_string())?;
+        let keys: JwkSet = r.json().await.map_err(|e| e.to_string())?;
+        let jwk = match &header.kid {
+            Some(kid) => keys.find(kid),
+            None => keys.keys.first(),
+        }
+        .ok_or("no key of the JWKS matches the id_token")?;
+        DecodingKey::from_jwk(jwk).map_err(|e| e.to_string())?
+    };
+    let mut v = Validation::new(header.alg);
+    v.set_issuer(&[&p.issuer]);
+    v.set_audience(&[&oidc.client_id]);
+    v.set_required_spec_claims(&["exp", "iss", "aud"]);
+    v.leeway = 60;
+    let claims = jsonwebtoken::decode::<Value>(id_token, &key, &v).map_err(|e| e.to_string())?.claims;
+    if claims["nonce"].as_str() != Some(nonce) {
+        return Err("the id_token's nonce is not this login's".into());
+    }
+    Ok(())
+}
+
 fn random_token() -> String {
     URL_SAFE_NO_PAD.encode([uuid::Uuid::new_v4().as_bytes().as_slice(), uuid::Uuid::new_v4().as_bytes()].concat())
 }
@@ -152,7 +221,8 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
     let pairs = query_pairs(q.as_deref());
     let get = |k: &str| pairs.iter().find(|(key, _)| key == k).map(|(_, v)| v.clone());
     let Some(play_uri) = get("playUri") else {
-        return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter playUri: Required"]))).into_response();
+        return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter playUri: Required"])))
+            .into_response();
     };
     if !same_domain(&state, &play_uri).await {
         return (StatusCode::FORBIDDEN, "Unauthorized domain in playUri").into_response();
@@ -166,6 +236,7 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
     let verifier = random_token();
     let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
     let oidc_state = uuid::Uuid::new_v4().to_string();
+    let nonce = random_token();
     let mut params = form_urlencoded::Serializer::new(String::new());
     params
         .append_pair("client_id", &oidc.client_id)
@@ -173,6 +244,7 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
         .append_pair("response_type", "code")
         .append_pair("redirect_uri", &oidc.redirect_url)
         .append_pair("state", &oidc_state)
+        .append_pair("nonce", &nonce)
         .append_pair("playUri", &play_uri);
     if let Some(prompt) = &oidc.prompt {
         params.append_pair("prompt", prompt);
@@ -190,14 +262,15 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
     if !scopes.is_empty() {
         params.append_pair("providerScopes", &scopes.join(","));
     }
-    params
-        .append_pair("code_challenge", &challenge)
-        .append_pair("code_challenge_method", "S256");
+    params.append_pair("code_challenge", &challenge).append_pair("code_challenge_method", "S256");
     let sep = if p.authorization_endpoint.contains('?') { '&' } else { '?' };
     redirect(
         &format!("{}{sep}{}", p.authorization_endpoint, params.finish()),
         &[
-            set_cookie("code_verifier", &verifier),
+            set_cookie(
+                "code_verifier",
+                &seal(&state.config.secret_key, &serde_json::json!([verifier, nonce]).to_string()),
+            ),
             set_cookie("oidc_state", &oidc_state),
             set_cookie("playUri", &play_uri),
         ],
@@ -222,7 +295,8 @@ fn basic_auth(oidc: &OidcConfig) -> String {
     format!("Basic {}", STANDARD.encode(format!("{}:{}", enc(&oidc.client_id), enc(&oidc.client_secret))))
 }
 
-async fn exchange_code(state: &AppState, p: &Provider, code: &str, verifier: &str) -> Result<String, String> {
+/// The access token and the id_token.
+async fn exchange_code(state: &AppState, p: &Provider, code: &str, verifier: &str) -> Result<(String, String), String> {
     let oidc = state.oidc.as_ref().ok_or("OpenID is not configured")?;
     let body = form_urlencoded::Serializer::new(String::new())
         .append_pair("grant_type", "authorization_code")
@@ -241,10 +315,11 @@ async fn exchange_code(state: &AppState, p: &Provider, code: &str, verifier: &st
         .await
         .map_err(|e| e.to_string())?;
     let tokens: Value = r.json().await.map_err(|e| e.to_string())?;
-    tokens["access_token"]
-        .as_str()
-        .map(str::to_owned)
-        .ok_or_else(|| format!("no access token: {tokens}"))
+    let text = |k: &str| tokens[k].as_str().map(str::to_owned);
+    match (text("access_token"), text("id_token")) {
+        (Some(access), Some(id)) => Ok((access, id)),
+        _ => Err(format!("no access token or no id_token: {tokens}")),
+    }
 }
 
 fn escape_html(s: &str) -> String {
@@ -276,24 +351,33 @@ fn html(body: String, cookies: &[String]) -> Response {
 }
 
 async fn openid_callback(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
-    let fail = || (StatusCode::INTERNAL_SERVER_ERROR, "An error occurred while connecting to OpenID Provider").into_response();
+    let fail =
+        || (StatusCode::INTERNAL_SERVER_ERROR, "An error occurred while connecting to OpenID Provider").into_response();
     let Some(play_uri) = cookie(&headers, "playUri") else {
         return (StatusCode::INTERNAL_SERVER_ERROR, "Missing playUri in cookies").into_response();
     };
-    let (Some(oidc), Some(verifier)) = (state.oidc.as_ref(), cookie(&headers, "code_verifier")) else {
+    let sealed = cookie(&headers, "code_verifier").and_then(|c| unseal(&state.config.secret_key, &c));
+    let flow: Option<(String, String)> = sealed.and_then(|s| serde_json::from_str(&s).ok());
+    let (Some(oidc), Some((verifier, nonce))) = (state.oidc.as_ref(), flow) else {
         return fail();
     };
     let pairs = query_pairs(q.as_deref());
     let get = |k: &str| pairs.iter().find(|(key, _)| key == k).map(|(_, v)| v.clone());
-    if let (Some(expected), Some(got)) = (cookie(&headers, "oidc_state"), get("state"))
-        && expected != got
-    {
-        return fail();
+    // The state must come back, and be this browser's.
+    match (cookie(&headers, "oidc_state"), get("state")) {
+        (Some(expected), Some(got)) if expected == got => {}
+        _ => return fail(),
     }
     let Some(code) = get("code") else { return fail() };
     let Ok(p) = provider(&state).await else { return fail() };
     let access_token = match exchange_code(&state, &p, &code, &verifier).await {
-        Ok(t) => t,
+        Ok((access, id_token)) => match verify_id_token(&state, &p, &id_token, &nonce).await {
+            Ok(()) => access,
+            Err(e) => {
+                tracing::error!(error = %e, "OpenID id_token refused");
+                return fail();
+            }
+        },
         Err(e) => {
             tracing::error!(error = %e, "OpenID code exchange failed");
             return fail();
@@ -326,7 +410,8 @@ async fn openid_callback(State(state): State<AppState>, headers: HeaderMap, RawQ
         },
     );
     let consumed = [clear_cookie("code_verifier"), clear_cookie("oidc_state")];
-    let matrix = text("matrix_url").or_else(|| state.config.raw.get("MATRIX_PUBLIC_URI").filter(|v| !v.is_empty()).cloned());
+    let matrix =
+        text("matrix_url").or_else(|| state.config.raw.get("MATRIX_PUBLIC_URI").filter(|v| !v.is_empty()).cloned());
     if let Some(matrix) = matrix {
         // The token can be larger than a cookie: it goes through localStorage.
         let callback = format!("{}/matrix-callback", state.config.pusher_url.trim_end_matches('/'));
@@ -357,7 +442,8 @@ async fn matrix_callback(headers: HeaderMap, RawQuery(q): RawQuery) -> Response 
     let pairs = query_pairs(q.as_deref());
     let get = |k: &str| pairs.iter().find(|(key, _)| key == k).map(|(_, v)| v.clone());
     let Some(login_token) = get("loginToken") else {
-        return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter loginToken: Required"]))).into_response();
+        return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter loginToken: Required"])))
+            .into_response();
     };
     let mut extra = form_urlencoded::Serializer::new(String::new());
     extra.append_pair("matrixLoginToken", &login_token);
@@ -378,7 +464,8 @@ async fn logout(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respons
     let pairs = query_pairs(q.as_deref());
     let get = |k: &str| pairs.iter().find(|(key, _)| key == k).map(|(_, v)| v.clone());
     let (Some(play_uri), Some(token)) = (get("playUri"), get("token")) else {
-        return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter playUri or token: Required"]))).into_response();
+        return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter playUri or token: Required"])))
+            .into_response();
     };
     if !same_domain(&state, &play_uri).await {
         return (StatusCode::FORBIDDEN, "Unauthorized domain in playUri").into_response();
@@ -428,8 +515,11 @@ async fn profile_callback(State(state): State<AppState>, RawQuery(q): RawQuery) 
     let (Some(token), Some(play_uri)) = (get("token"), get("playUri")) else {
         return (StatusCode::BAD_REQUEST, "token and playUri are required").into_response();
     };
-    let failed = || (StatusCode::INTERNAL_SERVER_ERROR, "Token cannot be checked on OpenID connect provider").into_response();
-    let Some(access_token) = jwt::verify(&state.config.secret_key, &token).ok().and_then(|c| c.access_token) else { return failed() };
+    let failed =
+        || (StatusCode::INTERNAL_SERVER_ERROR, "Token cannot be checked on OpenID connect provider").into_response();
+    let Some(access_token) = jwt::verify(&state.config.secret_key, &token).ok().and_then(|c| c.access_token) else {
+        return failed();
+    };
     if check_access_token(&state, &access_token).await.is_none() {
         return failed();
     }
@@ -450,7 +540,8 @@ async fn profile(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respon
         return (StatusCode::BAD_REQUEST, "accessToken is required").into_response();
     };
     let Some(info) = check_access_token(&state, &access_token).await else {
-        return (StatusCode::INTERNAL_SERVER_ERROR, "Token cannot be checked on OpenID connect provider").into_response();
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Token cannot be checked on OpenID connect provider")
+            .into_response();
     };
     let field = |label: &str, v: Option<String>| {
         v.map(|v| format!(r#"<p style="margin: 0;font-size: 12px;">{label}</p><p style="margin: 0 0 5px 0;font-weight: bold;">{}</p>"#, escape_html(&v)))
@@ -464,7 +555,11 @@ async fn profile(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respon
     .into_iter()
     .flatten()
     .collect();
-    let body = if lines.is_empty() { r#"<p style="margin: 0;">No information about your profile provided 😱</p>"#.to_owned() } else { lines.concat() };
+    let body = if lines.is_empty() {
+        r#"<p style="margin: 0;">No information about your profile provided 😱</p>"#.to_owned()
+    } else {
+        lines.concat()
+    };
     let picture = escape_html(info["profile"].as_str().unwrap_or("/static/images/logo-WA-min.png"));
     let domain = escape_html(state.oidc.as_ref().map_or("", |o| o.issuer.as_str()));
     let html = format!(

@@ -27,10 +27,7 @@ async fn start_state(vars: &[(&str, &str)]) -> (String, String, AppState) {
     let state = AppState::new(config);
     let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let maps = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
-    let urls = (
-        format!("http://{}", play.local_addr().unwrap()),
-        format!("http://{}", maps.local_addr().unwrap()),
-    );
+    let urls = (format!("http://{}", play.local_addr().unwrap()), format!("http://{}", maps.local_addr().unwrap()));
     let map_storage = wa_server::map_storage::router(state.clone());
     let app = router(state.clone());
     tokio::spawn(async move { axum::serve(play, app).await });
@@ -71,9 +68,11 @@ async fn two_players_see_each_other_move_and_form_a_bubble() {
     // They see each other.
     let b = bob.user_id;
     let a = alice.user_id;
-    ia.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::UserJoinedMessage(u)) if u.user_id == b && u.name == "Bob").then_some(()))
-        .await
-        .unwrap();
+    ia.expect(WAIT, |m| {
+        matches!(m, Incoming::Sub(Sub::UserJoinedMessage(u)) if u.user_id == b && u.name == "Bob").then_some(())
+    })
+    .await
+    .unwrap();
     ib.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::UserJoinedMessage(u)) if u.user_id == a).then_some(()))
         .await
         .unwrap();
@@ -151,7 +150,9 @@ async fn two_players_see_each_other_move_and_form_a_bubble() {
         .unwrap();
     let bob_offers = ib
         .expect(WAIT, |m| match private_event(m) {
-            Some((sender, pb::private_space_event::Event::WebRtcStartMessage(s))) if sender.space_user_id == alice_id => {
+            Some((sender, pb::private_space_event::Event::WebRtcStartMessage(s)))
+                if sender.space_user_id == alice_id =>
+            {
                 Some(s.initiator)
             }
             _ => None,
@@ -166,9 +167,7 @@ async fn two_players_see_each_other_move_and_form_a_bubble() {
     ia.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::UserLeftMessage(u)) if u.user_id == b).then_some(()))
         .await
         .unwrap();
-    ia.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::GroupDeleteMessage(_))).then_some(()))
-        .await
-        .unwrap();
+    ia.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::GroupDeleteMessage(_))).then_some(())).await.unwrap();
 }
 
 /// Many rooms active at the same time: every player of every room sees the final position of the others,
@@ -198,7 +197,11 @@ async fn many_rooms_in_parallel() {
                 for &id in ids.iter().filter(|id| **id != b.user_id) {
                     inbox
                         .expect(WAIT, |m| match m {
-                            Incoming::Sub(Sub::UserMovedMessage(u)) if u.user_id == id && u.position.as_ref()?.y == 519 => Some(()),
+                            Incoming::Sub(Sub::UserMovedMessage(u))
+                                if u.user_id == id && u.position.as_ref()?.y == 519 =>
+                            {
+                                Some(())
+                            }
                             _ => None,
                         })
                         .await
@@ -251,7 +254,11 @@ async fn hundreds_of_players_in_one_room() {
                 .unwrap();
             inbox
                 .expect(Duration::from_secs(20), |m| match m {
-                    Incoming::Sub(Sub::UserMovedMessage(u)) if u.user_id == mover_id && u.position.as_ref()?.x == 999 => Some(()),
+                    Incoming::Sub(Sub::UserMovedMessage(u))
+                        if u.user_id == mover_id && u.position.as_ref()?.x == 999 =>
+                    {
+                        Some(())
+                    }
                     _ => None,
                 })
                 .await
@@ -309,18 +316,12 @@ async fn a_state_change_reaches_every_member_before_the_answer() {
     assert_eq!(patch[0]["op"], "add");
     assert_eq!(patch[0]["path"], "/raisedHands/0");
     assert_eq!(patch[0]["value"]["spaceUserId"], alice.space_user_id());
-    let seen_by_bob = ib
-        .expect(WAIT, |m| state_patch(m).filter(|p| p[0]["path"] == "/raisedHands/0"))
-        .await
-        .unwrap();
+    let seen_by_bob = ib.expect(WAIT, |m| state_patch(m).filter(|p| p[0]["path"] == "/raisedHands/0")).await.unwrap();
     assert_eq!(seen_by_bob, patch);
 
     // A refused query: an error, and nothing changes.
     ib.clear();
-    let vote = Q::VotePoll(pb::VotePollQuery {
-        poll_id: "nope".into(),
-        answer_ids: vec![],
-    });
+    let vote = Q::VotePoll(pb::VotePollQuery { poll_id: "nope".into(), answer_ids: vec![] });
     let q = bob.query(state_query("hall", vote)).await.unwrap();
     match ib.expect(WAIT, answer_to(q)).await.unwrap() {
         Answer::Error(e) => assert!(e.message.contains("Poll nope does not exist in this space"), "{}", e.message),
@@ -393,9 +394,11 @@ async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
     alice.send(edit("cmd-2", E::CreateAreaMessage(area))).await.unwrap();
     let error = ia
         .expect(WAIT, |m| {
-            edit_echo(m).filter(|c| c.id == "cmd-2").and_then(|c| match c.edit_map_message.as_ref()?.message.as_ref()? {
-                E::ErrorCommandMessage(e) => Some(e.reason.clone()),
-                _ => None,
+            edit_echo(m).filter(|c| c.id == "cmd-2").and_then(|c| {
+                match c.edit_map_message.as_ref()?.message.as_ref()? {
+                    E::ErrorCommandMessage(e) => Some(e.reason.clone()),
+                    _ => None,
+                }
             })
         })
         .await
@@ -422,7 +425,10 @@ async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
     assert_eq!(missing.status(), 404);
 
     // Upload: refused without credentials; with them, the directory is replaced and the room told to reload.
-    let zip = zip_of(&[("maps/t.tmj", r#"{"properties":[{"name":"mapName","type":"string","value":"T"}]}"#), ("maps/u.wam", wam)]);
+    let zip = zip_of(&[
+        ("maps/t.tmj", r#"{"properties":[{"name":"mapName","type":"string","value":"T"}]}"#),
+        ("maps/u.wam", wam),
+    ]);
     let mut body = b"--XyZ\r\nContent-Disposition: form-data; name=\"file\"; filename=\"a.zip\"\r\n\r\n".to_vec();
     body.extend_from_slice(&zip);
     body.extend_from_slice(b"\r\n--XyZ--\r\n");
@@ -528,15 +534,21 @@ async fn room_variables_follow_the_map_rights_and_reach_who_may_read_them() {
     std::fs::write(dir.join("maps/v.tmj"), tmj.to_string()).unwrap();
     let (server, _maps) = start_with(&[("SECRET_KEY", "test"), ("STORAGE_DIRECTORY", dir.to_str().unwrap())]).await;
     let room = "http://play.test/~/maps/v.wam";
-    let var = |name: &str, value: &str| M::VariableMessage(pb::VariableMessage { name: name.into(), value: value.into() });
-    let seen_var = |name: &'static str| move |m: &Incoming| match m {
-        Incoming::Sub(Sub::VariableMessage(v)) if v.name == name => Some(v.value.clone()),
-        _ => None,
+    let var =
+        |name: &str, value: &str| M::VariableMessage(pb::VariableMessage { name: name.into(), value: value.into() });
+    let seen_var = |name: &'static str| {
+        move |m: &Incoming| match m {
+            Incoming::Sub(Sub::VariableMessage(v)) if v.name == name => Some(v.value.clone()),
+            _ => None,
+        }
     };
 
     // Defaults come with the room.
     let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
-    assert_eq!(alice.joined.variable.iter().map(|v| (v.name.as_str(), v.value.as_str())).collect::<Vec<_>>(), [("door", "false")]);
+    assert_eq!(
+        alice.joined.variable.iter().map(|v| (v.name.as_str(), v.value.as_str())).collect::<Vec<_>>(),
+        [("door", "false")]
+    );
     let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
 
     // A change reaches everyone, the writer included, however far.
@@ -574,17 +586,25 @@ async fn players_reach_each_other_by_events_follows_invitations_items_and_emotes
     let (_carol, mut ic) = bot(&server, room, "Carol", 3000, 3000).await;
     let (a, b) = (alice.user_id, bob.user_id);
     // Alice and Bob form a bubble.
-    ia.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::GroupUpdateMessage(g)) if g.user_ids.contains(&b)).then_some(()))
-        .await
-        .unwrap();
+    ia.expect(WAIT, |m| {
+        matches!(m, Incoming::Sub(Sub::GroupUpdateMessage(g)) if g.user_ids.contains(&b)).then_some(())
+    })
+    .await
+    .unwrap();
 
     // An event to the room reaches everyone, the sender included; a targeted one only its target.
     let event = |name: &str, targets: Vec<i32>| {
-        pb::query_message::Query::SendEventQuery(pb::SendEventQuery { name: name.into(), data: None, target_user_ids: targets })
+        pb::query_message::Query::SendEventQuery(pb::SendEventQuery {
+            name: name.into(),
+            data: None,
+            target_user_ids: targets,
+        })
     };
-    let got = |name: &'static str| move |m: &Incoming| match m {
-        Incoming::Sub(Sub::ReceivedEventMessage(e)) if e.name == name => Some(e.sender_id),
-        _ => None,
+    let got = |name: &'static str| {
+        move |m: &Incoming| match m {
+            Incoming::Sub(Sub::ReceivedEventMessage(e)) if e.name == name => Some(e.sender_id),
+            _ => None,
+        }
     };
     let q = alice.query(event("hello", vec![])).await.unwrap();
     ia.expect(WAIT, answer_to(q)).await.unwrap();
@@ -599,19 +619,31 @@ async fn players_reach_each_other_by_events_follows_invitations_items_and_emotes
 
     // Follow: the request reaches the bubble, the confirmation the leader, the abort both.
     alice.send(M::FollowRequestMessage(pb::FollowRequestMessage { leader: a, force_follow: true })).await.unwrap();
-    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowRequestMessage(r)) if r.leader == a).then_some(())).await.unwrap();
+    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowRequestMessage(r)) if r.leader == a).then_some(()))
+        .await
+        .unwrap();
     bob.send(M::FollowConfirmationMessage(pb::FollowConfirmationMessage { leader: a, follower: b })).await.unwrap();
     ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowConfirmationMessage(c)) if c.follower == b).then_some(()))
         .await
         .unwrap();
     alice.send(M::FollowAbortMessage(pb::FollowAbortMessage { leader: a, follower: 0 })).await.unwrap();
-    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowAbortMessage(c)) if c.follower == b).then_some(())).await.unwrap();
+    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::FollowAbortMessage(c)) if c.follower == b).then_some(()))
+        .await
+        .unwrap();
 
     // Items: everyone, the sender included.
-    let item = pb::ItemEventMessage { item_id: 7, event: "toggle".into(), state_json: "true".into(), parameters_json: "{}".into() };
+    let item = pb::ItemEventMessage {
+        item_id: 7,
+        event: "toggle".into(),
+        state_json: "true".into(),
+        parameters_json: "{}".into(),
+    };
     bob.send(M::ItemEventMessage(item)).await.unwrap();
     for inbox in [&mut ib, &mut ic] {
-        inbox.expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::ItemEventMessage(i)) if i.item_id == 7).then_some(())).await.unwrap();
+        inbox
+            .expect(WAIT, |m| matches!(m, Incoming::Sub(Sub::ItemEventMessage(i)) if i.item_id == 7).then_some(()))
+            .await
+            .unwrap();
     }
     let (dave, _id) = bot(&server, room, "Dave", 200, 200).await;
     assert_eq!(dave.joined.item.iter().map(|i| (i.item_id, i.state_json.as_str())).collect::<Vec<_>>(), [(7, "true")]);
@@ -646,14 +678,22 @@ async fn players_reach_each_other_by_events_follows_invitations_items_and_emotes
             .await
             .unwrap();
     }
-    ib.expect(WAIT, |m| matches!(m, Incoming::Top(Top::MeetingInvitationRequestReceivedMessage(r)) if r.sender_name == "Alice").then_some(()))
-        .await
-        .unwrap();
+    ib.expect(WAIT, |m| {
+        matches!(m, Incoming::Top(Top::MeetingInvitationRequestReceivedMessage(r)) if r.sender_name == "Alice")
+            .then_some(())
+    })
+    .await
+    .unwrap();
     alice
-        .send(M::MeetingInvitationRequestMessage(pb::MeetingInvitationRequestMessage { receiver_user_uuid: bob_uuid.clone(), receiver_user_id: None }))
+        .send(M::MeetingInvitationRequestMessage(pb::MeetingInvitationRequestMessage {
+            receiver_user_uuid: bob_uuid.clone(),
+            receiver_user_id: None,
+        }))
         .await
         .unwrap();
-    ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::MeetingInvitationRequestTooHighMessage(_))).then_some(())).await.unwrap();
+    ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::MeetingInvitationRequestTooHighMessage(_))).then_some(()))
+        .await
+        .unwrap();
 }
 
 #[tokio::test]
@@ -681,8 +721,10 @@ async fn fake_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<String>>
                     let q = q.unwrap_or_default();
                     log.lock().push(q.clone());
                     if q.contains("banned") {
-                        return axum::Json(serde_json::json!({"status": "error", "type": "error", "code": "USER_BANNED",
-                            "title": "Banned", "subtitle": "", "details": "You were banned", "image": ""}));
+                        return axum::Json(
+                            serde_json::json!({"status": "error", "type": "error", "code": "USER_BANNED",
+                            "title": "Banned", "subtitle": "", "details": "You were banned", "image": ""}),
+                        );
                     }
                     axum::Json(serde_json::json!({
                         "status": "ok", "email": null, "userUuid": "admin-uuid-1", "tags": ["admin", "member"],
@@ -693,7 +735,12 @@ async fn fake_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<String>>
                 }
             }),
         )
-        .route("/api/map", axum::routing::get(|| async { axum::Json(serde_json::json!({"group": "acme", "mapUrl": "http://maps.test/m.json"})) }));
+        .route(
+            "/api/map",
+            axum::routing::get(|| async {
+                axum::Json(serde_json::json!({"group": "acme", "mapUrl": "http://maps.test/m.json"}))
+            }),
+        );
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
     tokio::spawn(async move { axum::serve(listener, app).await });
@@ -702,10 +749,13 @@ async fn fake_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<String>>
 
 #[tokio::test]
 async fn with_an_admin_the_room_access_decides_who_enters_and_as_whom() {
-    let config = Config::load(Env::new([("SECRET_KEY", "test")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let config =
+        Config::load(Env::new([("SECRET_KEY", "test")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()))
+            .unwrap();
     let mut state = AppState::new(config);
     let (admin_url, seen) = fake_admin().await;
-    state.admin = Some(wa_server::admin_api::AdminApi::with(&admin_url, "tok", serde_json::json!({}), reqwest::Client::new()));
+    state.admin =
+        Some(wa_server::admin_api::AdminApi::with(&admin_url, "tok", serde_json::json!({}), reqwest::Client::new()));
     let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let server = format!("http://{}", play.local_addr().unwrap());
     tokio::spawn(async move { axum::serve(play, router(state)).await });
@@ -748,9 +798,15 @@ async fn each_tenant_has_its_own_maps_under_the_same_paths() {
     ])
     .await;
     let http = reqwest::Client::new();
-    let wam = |name: &str| format!(r#"{{"version":"2.1.0","mapUrl":"./m.tmj","areas":[],"entities":{{}},"entityCollections":[],"metadata":{{"name":"{name}"}}}}"#);
+    let wam = |name: &str| {
+        format!(
+            r#"{{"version":"2.1.0","mapUrl":"./m.tmj","areas":[],"entities":{{}},"entityCollections":[],"metadata":{{"name":"{name}"}}}}"#
+        )
+    };
     // The admin writes for a tenant with X-Forwarded-Host (or X-Map-Storage-Host).
-    for (host, header, name) in [("acme.maps.test", "x-forwarded-host", "Acme"), ("globex.maps.test", "x-map-storage-host", "Globex")] {
+    for (host, header, name) in
+        [("acme.maps.test", "x-forwarded-host", "Acme"), ("globex.maps.test", "x-map-storage-host", "Globex")]
+    {
         let r = http
             .put(format!("{maps}/maps/m.wam"))
             .bearer_auth("admin-token")
@@ -765,25 +821,35 @@ async fn each_tenant_has_its_own_maps_under_the_same_paths() {
     assert!(dir.join("acme.maps.test/maps/m.wam").exists() && dir.join("globex.maps.test/maps/m.wam").exists());
     // Each one reads its own, by its host.
     for (host, name) in [("acme.maps.test", "Acme"), ("globex.maps.test:443", "Globex")] {
-        let got: serde_json::Value = http.get(format!("{maps}/maps/m.wam")).header("host", host).send().await.unwrap().json().await.unwrap();
+        let got: serde_json::Value =
+            http.get(format!("{maps}/maps/m.wam")).header("host", host).send().await.unwrap().json().await.unwrap();
         assert_eq!(got["metadata"]["name"], name, "{host}");
-        let list: serde_json::Value = http.get(format!("{maps}/maps")).header("host", host).send().await.unwrap().json().await.unwrap();
+        let list: serde_json::Value =
+            http.get(format!("{maps}/maps")).header("host", host).send().await.unwrap().json().await.unwrap();
         assert_eq!(list["maps"].as_object().unwrap().keys().collect::<Vec<_>>(), ["maps/m.wam"], "{host}");
         assert_eq!(list["maps"]["maps/m.wam"]["metadata"]["name"], name);
     }
     // Nothing of a tenant for a host without maps, and no way out of a tenant's folder.
     let other = http.get(format!("{maps}/maps/m.wam")).header("host", "initech.maps.test").send().await.unwrap();
     assert_eq!(other.status(), 404);
-    let escape = http.get(format!("{maps}/maps/m.wam")).header("x-forwarded-host", "acme.maps.test/..").send().await.unwrap();
+    let escape =
+        http.get(format!("{maps}/maps/m.wam")).header("x-forwarded-host", "acme.maps.test/..").send().await.unwrap();
     assert_eq!(escape.status(), 400);
     let _ = std::fs::remove_dir_all(&dir);
 }
 
-async fn next<S: futures_util::Stream<Item = Result<tokio_tungstenite::tungstenite::Message, tokio_tungstenite::tungstenite::Error>> + Unpin>(
+async fn next<
+    S: futures_util::Stream<
+            Item = Result<tokio_tungstenite::tungstenite::Message, tokio_tungstenite::tungstenite::Error>,
+        > + Unpin,
+>(
     admin: &mut S,
 ) -> serde_json::Value {
     use futures_util::StreamExt;
-    let Ok(Some(Ok(tokio_tungstenite::tungstenite::Message::Text(t)))) = tokio::time::timeout(WAIT, admin.next()).await else { panic!("no admin event") };
+    let Ok(Some(Ok(tokio_tungstenite::tungstenite::Message::Text(t)))) = tokio::time::timeout(WAIT, admin.next()).await
+    else {
+        panic!("no admin event")
+    };
     serde_json::from_str(&t).unwrap()
 }
 
@@ -802,7 +868,10 @@ async fn the_admin_socket_watches_rooms_and_bans_from_a_whole_world() {
     admin.send(Message::Text(listen.into())).await.unwrap();
     // Who is there already, then who comes.
     let first = next(&mut admin).await;
-    assert_eq!((first["type"].as_str(), first["data"]["name"].as_str(), first["data"]["roomId"].as_str()), (Some("MemberJoin"), Some("Alice"), Some(room)));
+    assert_eq!(
+        (first["type"].as_str(), first["data"]["name"].as_str(), first["data"]["roomId"].as_str()),
+        (Some("MemberJoin"), Some("Alice"), Some(room))
+    );
     let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
     let second = next(&mut admin).await;
     assert_eq!(second["data"]["name"], "Bob");
@@ -868,7 +937,8 @@ async fn analytics_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<ser
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
 async fn analytics_reach_the_admin_signed_checked_and_with_the_connection_session() {
     use pb::client_to_server_message::Message as M;
-    let vars = [("SECRET_KEY", "test"), ("ANALYTICS_FLUSH_INTERVAL_MS", "100"), ("CLIENT_DISCONNECTION_RETENTION_MS", "0")];
+    let vars =
+        [("SECRET_KEY", "test"), ("ANALYTICS_FLUSH_INTERVAL_MS", "100"), ("CLIENT_DISCONNECTION_RETENTION_MS", "0")];
     let config = Config::load(Env::new(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
     let mut state = AppState::new(config);
     let (admin_url, got) = analytics_admin().await;
@@ -895,40 +965,61 @@ async fn analytics_reach_the_admin_signed_checked_and_with_the_connection_sessio
         event("user.connected", "front", "e2", serde_json::json!({})),
         event("no.such.event", "front", "e3", serde_json::json!({})),
         event("onboarding.woka_validated", "front", "e4", serde_json::json!({"scene": "x", "bad": true})),
-        event("timed_event.open", "front", "o", serde_json::json!({"handle": "h1", "eventName": "cowebsite.closed", "properties": {"kind": "website"}})),
+        event(
+            "timed_event.open",
+            "front",
+            "o",
+            serde_json::json!({"handle": "h1", "eventName": "cowebsite.closed", "properties": {"kind": "website"}}),
+        ),
         event("timed_event.close", "front", "c", serde_json::json!({"handle": "h1", "endReason": "left_area"})),
     ];
     alice.send(M::AnalyticsEventReportMessage(pb::AnalyticsEventReportMessage { events })).await.unwrap();
     alice.close().await;
 
-    let names = || got.lock().iter().map(|e| e["eventName"].as_str().unwrap_or_default().to_owned()).collect::<Vec<_>>();
+    let names =
+        || got.lock().iter().map(|e| e["eventName"].as_str().unwrap_or_default().to_owned()).collect::<Vec<_>>();
     let deadline = std::time::Instant::now() + WAIT;
     while !names().contains(&"user.disconnected".to_owned()) && std::time::Instant::now() < deadline {
         tokio::time::sleep(Duration::from_millis(50)).await;
     }
     let mut seen = names();
     seen.sort();
-    assert_eq!(seen, ["cowebsite.closed", "cowebsite.opened", "onboarding.woka_validated", "user.connected", "user.disconnected"]);
+    assert_eq!(
+        seen,
+        ["cowebsite.closed", "cowebsite.opened", "onboarding.woka_validated", "user.connected", "user.disconnected"]
+    );
     let all = got.lock().clone();
     let by = |n: &str| all.iter().find(|e| e["eventName"] == n).unwrap().clone();
     let front = by("onboarding.woka_validated");
-    assert_eq!((front["source"].as_str(), front["userUuid"].as_str(), front["world"].as_str()), (Some("front"), Some("uuid-a"), Some("acme")));
+    assert_eq!(
+        (front["source"].as_str(), front["userUuid"].as_str(), front["world"].as_str()),
+        (Some("front"), Some("uuid-a"), Some("acme"))
+    );
     assert_eq!(front["clientEventTime"], "2025-10-09T08:53:20.000Z");
     assert_eq!(front["spaceUserId"], format!("{}_{}", front["roomId"].as_str().unwrap(), front["userId"]));
     let closed = by("cowebsite.closed");
-    assert_eq!((closed["source"].as_str(), closed["properties"]["endReason"].as_str()), (Some("pusher"), Some("closed_by_client")));
+    assert_eq!(
+        (closed["source"].as_str(), closed["properties"]["endReason"].as_str()),
+        (Some("pusher"), Some("closed_by_client"))
+    );
     assert_eq!(closed["properties"]["kind"], "website");
     let session = by("user.disconnected");
     assert_eq!(session["properties"]["disconnectReason"], "socket_closed");
-    assert!(session["properties"]["durationSeconds"].is_u64() && session["properties"]["connectedAt"].is_string(), "{session}");
+    assert!(
+        session["properties"]["durationSeconds"].is_u64() && session["properties"]["connectedAt"].is_string(),
+        "{session}"
+    );
 }
 
 #[tokio::test]
 async fn an_admin_speaks_to_the_room_and_previews_a_ban_by_ip() {
-    let config = Config::load(Env::new([("SECRET_KEY", "test")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let config =
+        Config::load(Env::new([("SECRET_KEY", "test")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect()))
+            .unwrap();
     let mut state = AppState::new(config);
     let (admin_url, _) = fake_admin().await;
-    state.admin = Some(wa_server::admin_api::AdminApi::with(&admin_url, "tok", serde_json::json!({}), reqwest::Client::new()));
+    state.admin =
+        Some(wa_server::admin_api::AdminApi::with(&admin_url, "tok", serde_json::json!({}), reqwest::Client::new()));
     let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let server = format!("http://{}", play.local_addr().unwrap());
     tokio::spawn(async move { axum::serve(play, router(state)).await });
@@ -937,7 +1028,8 @@ async fn an_admin_speaks_to_the_room_and_previews_a_ban_by_ip() {
     let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
     let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
 
-    let global = pb::PlayGlobalMessage { r#type: "message".into(), content: "{\"ops\":[]}".into(), broadcast_to_world: false };
+    let global =
+        pb::PlayGlobalMessage { r#type: "message".into(), content: "{\"ops\":[]}".into(), broadcast_to_world: false };
     alice.send(pb::client_to_server_message::Message::PlayGlobalMessage(global)).await.unwrap();
     let got = ib
         .expect(WAIT, |m| match m {
@@ -949,9 +1041,20 @@ async fn an_admin_speaks_to_the_room_and_previews_a_ban_by_ip() {
     assert_eq!(got, ("message".to_owned(), "{\"ops\":[]}".to_owned()));
 
     // Without a forwarded address the server does not know Bob's IP: nothing to ban by IP.
-    let q = alice.query(pb::query_message::Query::BanIpPreviewQuery(pb::BanIpPreviewQuery { ban_user_uuid: "admin-uuid-1".into() })).await.unwrap();
+    let q = alice
+        .query(pb::query_message::Query::BanIpPreviewQuery(pb::BanIpPreviewQuery {
+            ban_user_uuid: "admin-uuid-1".into(),
+        }))
+        .await
+        .unwrap();
     let answer = ia.expect(WAIT, answer_to(q)).await.unwrap();
-    assert!(matches!(answer, pb::answer_message::Answer::BanIpPreviewAnswer(pb::BanIpPreviewAnswer { ip_known: false, .. })), "{answer:?}");
+    assert!(
+        matches!(
+            answer,
+            pb::answer_message::Answer::BanIpPreviewAnswer(pb::BanIpPreviewAnswer { ip_known: false, .. })
+        ),
+        "{answer:?}"
+    );
 }
 
 #[tokio::test]
@@ -971,7 +1074,9 @@ async fn the_profile_pages_ask_the_provider_who_the_token_is() {
                 if headers["authorization"] != "Bearer good" {
                     return Err(axum::http::StatusCode::UNAUTHORIZED);
                 }
-                Ok(axum::Json(serde_json::json!({"sub": "s", "email": "a@b.c", "name": "<b>Al</b>", "tags": ["admin", "x"]})))
+                Ok(axum::Json(
+                    serde_json::json!({"sub": "s", "email": "a@b.c", "name": "<b>Al</b>", "tags": ["admin", "x"]}),
+                ))
             }),
         );
     tokio::spawn(async move { axum::serve(provider, app).await });
@@ -980,29 +1085,137 @@ async fn the_profile_pages_ask_the_provider_who_the_token_is() {
     let http = reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).build().unwrap();
 
     let page = http.get(format!("{server}/profile?accessToken=good")).send().await.unwrap().text().await.unwrap();
-    assert!(page.contains("a@b.c") && page.contains("admin, x") && page.contains("&lt;b&gt;Al&lt;") && page.contains(&issuer.replace('/', "&#x2F;")), "{page}");
+    assert!(
+        page.contains("a@b.c")
+            && page.contains("admin, x")
+            && page.contains("&lt;b&gt;Al&lt;")
+            && page.contains(&issuer.replace('/', "&#x2F;")),
+        "{page}"
+    );
     assert_eq!(http.get(format!("{server}/profile?accessToken=bad")).send().await.unwrap().status(), 500);
 
     // Without an admin, the callback leads to that page.
-    let claims = wa_server::jwt::Claims { identifier: "a@b.c".into(), access_token: Some("good".into()), username: None, locale: None, tags: None, matrix_user_id: None };
+    let claims = wa_server::jwt::Claims {
+        identifier: "a@b.c".into(),
+        access_token: Some("good".into()),
+        username: None,
+        locale: None,
+        tags: None,
+        matrix_user_id: None,
+    };
     let token = wa_server::jwt::create("test", claims);
-    let r = http.get(format!("{server}/profile-callback?token={token}&playUri=http://play.test/r")).send().await.unwrap();
-    assert_eq!((r.status().as_u16(), r.headers()["location"].to_str().unwrap()), (302, "/profile?accessToken=good&playUri=http://play.test/r"));
+    let r =
+        http.get(format!("{server}/profile-callback?token={token}&playUri=http://play.test/r")).send().await.unwrap();
+    assert_eq!(
+        (r.status().as_u16(), r.headers()["location"].to_str().unwrap()),
+        (302, "/profile?accessToken=good&playUri=http://play.test/r")
+    );
     let r = http.get(format!("{server}/profile-callback?token=nope&playUri=x")).send().await.unwrap();
     assert_eq!(r.status(), 500);
 }
 
 #[tokio::test]
 async fn the_manifest_and_the_server_card_describe_this_server() {
-    let server = start_with(&[("SECRET_KEY", "test"), ("PUSHER_URL", "http://play.test"), ("SERVER_NAME", "Ours")]).await.0;
+    let server =
+        start_with(&[("SECRET_KEY", "test"), ("PUSHER_URL", "http://play.test"), ("SERVER_NAME", "Ours")]).await.0;
     let http = reqwest::Client::new();
-    let r = http.get(format!("{server}/manifest.json?url=http://play.test/_/global/maps.test/m.json")).header("Host", "play.test").send().await.unwrap();
+    let r = http
+        .get(format!("{server}/manifest.json?url=http://play.test/_/global/maps.test/m.json"))
+        .header("Host", "play.test")
+        .send()
+        .await
+        .unwrap();
     assert_eq!(r.headers()["content-type"], "application/manifest+json; charset=utf-8");
     let m: serde_json::Value = r.json().await.unwrap();
-    assert_eq!((m["name"].as_str(), m["start_url"].as_str()), (Some("WorkAdventure"), Some("/_/global/maps.test/m.json")));
+    assert_eq!(
+        (m["name"].as_str(), m["start_url"].as_str()),
+        (Some("WorkAdventure"), Some("/_/global/maps.test/m.json"))
+    );
     assert_eq!(m["icons"][0]["src"], "/static/images/favicons/icon-512x512.png");
     assert_eq!(http.get(format!("{server}/manifest.json")).send().await.unwrap().status(), 400);
     let card: serde_json::Value = http.get(format!("{server}/server.json")).send().await.unwrap().json().await.unwrap();
     assert_eq!((card["name"].as_str(), card["domain"].as_str()), (Some("Ours"), Some("http://play.test")));
     assert_eq!(card["icon"], "http://play.test/static/images/favicons/icon-512x512.png");
+}
+
+#[tokio::test]
+async fn an_openid_login_needs_a_signed_id_token_with_this_logins_nonce() {
+    // The provider signs its id_tokens with the client secret (HS256); `wrong` makes it send another nonce.
+    let provider = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let issuer = format!("http://{}", provider.local_addr().unwrap());
+    let nonce = std::sync::Arc::new(parking_lot::Mutex::new((String::new(), false)));
+    let doc = serde_json::json!({
+        "issuer": issuer, "authorization_endpoint": format!("{issuer}/auth"), "token_endpoint": format!("{issuer}/token"),
+        "userinfo_endpoint": format!("{issuer}/userinfo"), "jwks_uri": format!("{issuer}/jwks"),
+    });
+    let (iss, n) = (issuer.clone(), nonce.clone());
+    let app = axum::Router::new()
+        .route("/.well-known/openid-configuration", axum::routing::get(move || async move { axum::Json(doc) }))
+        .route(
+            "/token",
+            axum::routing::post(move || {
+                let (iss, n) = (iss.clone(), n.clone());
+                async move {
+                    let (nonce, wrong) = n.lock().clone();
+                    let claims = serde_json::json!({"iss": iss, "aud": "c", "sub": "s", "exp": wa_server::jwt::now_secs() + 300,
+                        "nonce": if wrong { "other".to_owned() } else { nonce }});
+                    let id_token = jsonwebtoken::encode(&jsonwebtoken::Header::default(), &claims, &jsonwebtoken::EncodingKey::from_secret(b"sec")).unwrap();
+                    axum::Json(serde_json::json!({"access_token": "good", "id_token": id_token, "token_type": "Bearer"}))
+                }
+            }),
+        )
+        .route("/userinfo", axum::routing::get(|| async { axum::Json(serde_json::json!({"sub": "s", "email": "a@b.c"})) }));
+    tokio::spawn(async move { axum::serve(provider, app).await });
+
+    let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let server = format!("http://{}", play.local_addr().unwrap());
+    let vars = [
+        ("SECRET_KEY", "test"),
+        ("OPENID_CLIENT_ID", "c"),
+        ("OPENID_CLIENT_SECRET", "sec"),
+        ("OPENID_CLIENT_ISSUER", issuer.as_str()),
+        ("PUSHER_URL", server.as_str()),
+    ];
+    let config = Config::load(Env::new(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let state = AppState::new(config);
+    tokio::spawn(async move { axum::serve(play, router(state)).await });
+    let http = reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).build().unwrap();
+    let play_uri = format!("{server}/_/global/maps.test/m.json");
+
+    let login = || async {
+        let r = http.get(format!("{server}/login-screen")).query(&[("playUri", &play_uri)]).send().await.unwrap();
+        let location = reqwest::Url::parse(r.headers()["location"].to_str().unwrap()).unwrap();
+        let param = |k: &str| location.query_pairs().find(|(n, _)| n == k).map(|(_, v)| v.into_owned()).unwrap();
+        let cookies: Vec<String> = r
+            .headers()
+            .get_all("set-cookie")
+            .iter()
+            .map(|c| c.to_str().unwrap().split(';').next().unwrap().to_owned())
+            .collect();
+        (param("state"), param("nonce"), cookies.join("; "))
+    };
+    let callback = |state: String, cookies: String| {
+        let http = http.clone();
+        let url = format!("{server}/openid-callback?code=x&state={state}");
+        async move { http.get(url).header("Cookie", cookies).send().await.unwrap() }
+    };
+
+    let (st, n, cookies) = login().await;
+    *nonce.lock() = (n.clone(), false);
+    let ok = callback(st, cookies.clone()).await;
+    assert_eq!(ok.status(), 302, "{:?}", ok.text().await);
+    assert!(ok.headers()["location"].to_str().unwrap().starts_with(&format!("{play_uri}?token=")));
+    // The verifier is sealed: not in clear in the cookie.
+    assert!(!cookies.contains(&n), "{cookies}");
+
+    // Another nonce, or a cookie the browser changed: refused.
+    let (st, n, cookies) = login().await;
+    *nonce.lock() = (n, true);
+    assert_eq!(callback(st.clone(), cookies.clone()).await.status(), 500);
+    let tampered = cookies.replacen("code_verifier=", "code_verifier=A", 1);
+    nonce.lock().1 = false;
+    assert_eq!(callback(st.clone(), tampered).await.status(), 500);
+    // Without the state cookie: refused too.
+    let no_state: Vec<&str> = cookies.split("; ").filter(|c| !c.starts_with("oidc_state=")).collect();
+    assert_eq!(callback(st, no_state.join("; ")).await.status(), 500);
 }

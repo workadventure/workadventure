@@ -31,7 +31,9 @@ pub async fn details(app: &AppState, room_url: &str) -> serde_json::Value {
 /// The storage key of the room's WAM file, if its map lives in this map-storage.
 pub fn wam_key(app: &AppState, room_url: &str, details: &serde_json::Value) -> Option<String> {
     match details["wamUrl"].as_str() {
-        Some(url) if app.admin.is_some() || app.config.use_domain_name_in_path => crate::map_storage::wam_key_of_url(&app.config, url),
+        Some(url) if app.admin.is_some() || app.config.use_domain_name_in_path => {
+            crate::map_storage::wam_key_of_url(&app.config, url)
+        }
         // Without an admin: the path after `/~/`, as before.
         _ => local_admin::wam_path(room_url),
     }
@@ -95,7 +97,7 @@ fn normalize(dir: &str, rel: &str) -> String {
 }
 
 /// MapFetcher.isLocalUrl: `localhost`, `*.localhost`, or a name with an address that is not public unicast.
-async fn is_local(url: &str) -> bool {
+pub(crate) async fn is_local(url: &str) -> bool {
     let Ok(parsed) = reqwest::Url::parse(url) else { return true };
     let Some(host) = parsed.host_str() else { return true };
     if host == "localhost" || host.ends_with(".localhost") {
@@ -113,7 +115,7 @@ async fn is_local(url: &str) -> bool {
 }
 
 /// ipaddr.js's "unicast" range.
-fn is_public_unicast(ip: IpAddr) -> bool {
+pub(crate) fn is_public_unicast(ip: IpAddr) -> bool {
     match ip {
         IpAddr::V4(v4) => {
             let [a, b, ..] = v4.octets();
