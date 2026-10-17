@@ -30,6 +30,7 @@ use crate::wire;
 mod admin;
 mod fanout;
 mod map_file;
+pub(crate) mod resource_url;
 mod social;
 mod variables;
 
@@ -335,7 +336,7 @@ async fn run(room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, app:
     // Like GameRoom.create, the WAM is read before anybody joins.
     let details = room_map::details(&app, &url).await;
     let map = match room_map::wam_key(&app, &url, &details) {
-        Some(rel) => Some(MapFile::open(storage.clone(), rel).await),
+        Some(rel) => Some(MapFile::open(storage.clone(), rel, resource_url::ResourceUrl::new(app.clone())).await),
         None => None,
     };
     // Like getVariableManager: the map is read, then the saved values, before anybody joins.

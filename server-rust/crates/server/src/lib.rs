@@ -19,6 +19,7 @@ pub mod livekit;
 pub mod local_admin;
 pub mod logic;
 pub mod map_storage;
+pub mod matrix;
 pub mod metrics;
 pub mod mustache;
 pub mod oidc;
@@ -77,6 +78,8 @@ pub struct AppState {
     pub analytics: Option<Arc<analytics::Analytics>>,
     /// Turns true on SIGTERM: sessions and spaces end their intervals before the queue is drained.
     pub shutdown: Arc<tokio::sync::watch::Sender<bool>>,
+    /// Synapse, when MATRIX_* is set: the chat rooms of the areas.
+    pub matrix: Option<Arc<matrix::Matrix>>,
 }
 
 impl AppState {
@@ -93,6 +96,7 @@ impl AppState {
             sessions: Arc::new(DashMap::new()),
             front: Arc::new(FrontAssets::new(&config)),
             page_script: front::script(&config, None),
+            matrix: matrix::Matrix::from_config(&config, reqwest::Client::new()),
             http: reqwest::Client::new(),
             oidc: oidc::OidcConfig::from(&config).map(Arc::new),
             oidc_provider: Arc::new(parking_lot::Mutex::new(None)),
@@ -122,6 +126,7 @@ pub fn router(state: AppState) -> Router {
         .merge(openapi::routes(&state))
         .merge(front::routes())
         .merge(oidc::routes())
+        .merge(matrix::routes())
         .route("/ws/room", get(ws::ws_room))
         .route("/ws/admin/rooms", get(admin_socket::ws_admin_rooms))
         .with_state(state)
