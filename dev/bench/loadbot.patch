@@ -1,0 +1,589 @@
+--- a/server-go/cmd/loadbot/main.go
++++ b/server-go/cmd/loadbot/main.go
+@@ -1,19 +1,21 @@
+ // Command loadbot puts bots speaking the front's protocol into rooms and measures the server: moves sent,
+-// messages received, and the latency between a bot sending a move and another bot seeing it. It works against
+-// any implementation of the protocol (TS pusher, Go or Rust candidate).
++// messages received, the latency between a bot sending a move and another bot seeing it, and the freshness of
++// what each bot sees. It works against any implementation of the protocol (TS pusher, Go or Rust candidate).
+ //
+-//	loadbot -http http://server:3000 -rooms 50 -users 20 -rate 10 -duration 30s
++//	loadbot -http http://server:3000 -rooms 50 -users 20 -rate 5 -duration 30s
+ package main
+ 
+ import (
+ 	"context"
+ 	"encoding/json"
++	"errors"
+ 	"flag"
+ 	"fmt"
+ 	"math/rand/v2"
+ 	"net/http"
+ 	"net/url"
+ 	"os"
++	"strconv"
+ 	"strings"
+ 	"sync"
+ 	"sync/atomic"
+@@ -26,61 +28,124 @@
+ )
+ 
+ var (
+-	httpURL  = flag.String("http", "http://localhost:3000", "server base URL")
+-	rooms    = flag.Int("rooms", 10, "number of rooms")
+-	users    = flag.Int("users", 20, "bots per room")
+-	rate     = flag.Float64("rate", 10, "moves per second per bot")
+-	duration = flag.Duration("duration", 30*time.Second, "measurement window")
+-	warmup   = flag.Duration("warmup", 10*time.Second, "time to connect everybody before measuring")
+-	side     = flag.Int("side", 1600, "bots are spread on a side x side pixels square")
+-	version  = flag.String("version", "dev", "apiVersionHash of the server")
++	httpList  = flag.String("http", "http://localhost:3000", "server base URLs, comma-separated: bot k uses the (k mod n)-th")
++	wsList    = flag.String("ws", "", "WebSocket base URLs, comma-separated, when they differ from -http (TS pusher: port 3001)")
++	roomBase  = flag.String("room-base", "", "base of the room URLs, the same for every bot (default: the first -http URL)")
++	rooms     = flag.Int("rooms", 10, "number of rooms")
++	users     = flag.Int("users", 20, "bots per room")
++	rate      = flag.Float64("rate", 5, "moves per second of a walking bot (the front sends one every 200 ms)")
++	turnEvery = flag.Int("turn-every", 10, "every N moves, one more move in another direction, sent at once as the front does on a turn (0: never)")
++	duration  = flag.Duration("duration", 30*time.Second, "measurement window")
++	warmup    = flag.Duration("warmup", 10*time.Second, "time to connect everybody before measuring")
++	side      = flag.Int("side", 1600, "bots are spread on a side x side pixels square")
++	version   = flag.String("version", "dev", "apiVersionHash of the server")
++	mapFmt    = flag.String("map", "maps.example/load/%d.json", "map of each room after /_/global/, %d = room number")
++	profile   = flag.String("profile", "walk", "walk: every bot walks all the time; realistic: -idle of the bots never move, the others walk in bursts")
++	idleShare = flag.Float64("idle", 0.9, "realistic profile: share of bots that never move")
++	burst     = flag.String("burst", "3s,10s", "realistic profile: a walk lasts between these two durations")
++	pause     = flag.String("pause", "30s,60s", "realistic profile: a walker pauses between these two durations")
++	stormAt   = flag.Duration("storm-at", 0, "cut every connection abruptly this long after the measurement starts (0: no storm)")
++	stormDown = flag.Duration("storm-down", 5*time.Second, "time before reconnecting after the cut; beyond the server's retention, sessions cannot be resumed")
+ )
+ 
+ const histogramMax = 60_000
+ 
+ // A bot walks back and forth on a 256-pixel segment: its x tells which of its last 256 moves another bot sees.
+-// A move seen more than 256 moves late (25 s at 10 moves/s) cannot be told from a recent one: it is counted in the
+-// last bucket of the histogram.
++// A move seen more than 256 moves late cannot be told from a recent one: it is counted in the last bucket.
+ const track = 256
+ 
++// histogram of milliseconds, fixed size: storing millions of samples made the generator's own garbage
++// collection show up in the latencies it measures.
++type histogram [histogramMax + 1]atomic.Int64
++
++func (h *histogram) add(ms int64) { h[min(max(ms, 0), histogramMax)].Add(1) }
++
++func (h *histogram) quantiles() (total int64, q func(float64) float64) {
++	for i := range h {
++		total += h[i].Load()
++	}
++	return total, func(p float64) float64 {
++		rank, seen := int64(p*float64(total-1)), int64(0)
++		for ms := range h {
++			if seen += h[ms].Load(); seen > rank {
++				return float64(ms)
++			}
++		}
++		return 0
++	}
++}
++
++type seenPeer struct{ sentAt, at int64 }
++
+ type bot struct {
+-	room    int
+-	x0, y0  int32
+-	userID  atomic.Int32
+-	sentAt  [track]atomic.Int64 // unix nanoseconds of the last send of each position of the segment
+-	conn    *websocket.Conn
+-	nonce   uint32
+-	writeMu sync.Mutex
++	idx          int
++	room         int
++	x0, y0       int32
++	walker       bool
++	userID       atomic.Int32
++	sentAt       [track]atomic.Int64 // unix nanoseconds of the last send of each position of the segment
++	lastSent     atomic.Int64        // unix nanoseconds of the last move sent
++	connectionID string
++	lastNonce    atomic.Uint32 // last envelope nonce received, for a transport resume
++	firstFrame   chan uint32   // nonce of the first frame after a dial
++	conn         *websocket.Conn
++	nonce        uint32
++	writeMu      sync.Mutex
++	// Owned by the reader goroutine (one at a time).
++	seen       map[*bot]seenPeer
++	lastSample int64
+ }
+ 
+ type stats struct {
+-	measuring atomic.Bool
+-	moves     atomic.Int64
+-	frames    atomic.Int64
+-	subs      atomic.Int64
+-	userMoves atomic.Int64
+-	errors    atomic.Int64
+-	joined    atomic.Int64
+-	// Latency histogram in milliseconds (the last bucket holds everything above). Fixed size: storing millions of
+-	// samples made the generator's own garbage collection show up in the latencies it measures.
+-	latency    [histogramMax + 1]atomic.Int64
++	t0         time.Time // start of the measurement window
++	measuring  atomic.Bool
++	moves      atomic.Int64
++	frames     atomic.Int64
++	subs       atomic.Int64
++	userMoves  atomic.Int64
++	errors     atomic.Int64
++	joined     atomic.Int64
++	latency    histogram
++	freshness  histogram
+ 	byRoomMu   sync.RWMutex
+ 	byRoomUser map[[2]int32]*bot
++	// Storm outcomes.
++	resumed, refused, rejoined, lost atomic.Int64
++	returnTime                       histogram
+ }
+ 
+ func main() {
+ 	flag.Parse()
+-	st := &stats{byRoomUser: map[[2]int32]*bot{}}
++	https := strings.Split(*httpList, ",")
++	wss := https
++	if *wsList != "" {
++		wss = strings.Split(*wsList, ",")
++	}
++	base := *roomBase
++	if base == "" {
++		base = https[0]
++	}
++	burstMin, burstMax := durations(*burst)
++	pauseMin, pauseMax := durations(*pause)
++
++	start := time.Now()
++	st := &stats{byRoomUser: map[[2]int32]*bot{}, t0: start.Add(*warmup)}
+ 	ctx, cancel := context.WithCancel(context.Background())
+ 	var wg sync.WaitGroup
+-	start := time.Now()
++	walkers := 0
+ 	for r := 0; r < *rooms; r++ {
+ 		for u := 0; u < *users; u++ {
+-			b := &bot{room: r, x0: int32(rand.IntN(*side - track)), y0: int32(rand.IntN(*side))}
++			idx := r**users + u
++			b := &bot{idx: idx, room: r, x0: int32(rand.IntN(*side - track)), y0: int32(rand.IntN(*side)),
++				walker: *profile != "realistic" || rand.Float64() >= *idleShare, connectionID: fmt.Sprintf("loadbot-%d-%d", start.UnixNano(), idx)}
++			if b.walker {
++				walkers++
++			}
+ 			wg.Add(1)
+ 			go func() {
+ 				defer wg.Done()
+-				if err := b.run(ctx, st); err != nil && ctx.Err() == nil {
++				w := walk{always: *profile != "realistic", burstMin: burstMin, burstMax: burstMax, pauseMin: pauseMin, pauseMax: pauseMax}
++				if err := b.run(ctx, st, https[idx%len(https)], wss[idx%len(wss)], base, w); err != nil && ctx.Err() == nil {
+ 					st.errors.Add(1)
+ 					fmt.Fprintln(os.Stderr, "bot:", err)
+ 				}
+@@ -88,42 +153,86 @@
+ 			time.Sleep(*warmup / time.Duration(2*(*rooms)*(*users))) // spread the connections over half the warmup
+ 		}
+ 	}
+-	time.Sleep(*warmup - time.Since(start))
++	time.Sleep(time.Until(st.t0))
+ 	st.measuring.Store(true)
+-	t0 := time.Now()
+ 	time.Sleep(*duration)
+ 	st.measuring.Store(false)
+-	elapsed := time.Since(t0).Seconds()
++	elapsed := time.Since(st.t0).Seconds()
+ 	cancel()
+ 	wg.Wait()
+ 
+-	var total int64
+-	for i := range st.latency {
+-		total += st.latency[i].Load()
+-	}
+-	q := func(p float64) float64 {
+-		rank, seen := int64(p*float64(total-1)), int64(0) // 0-based rank of the sample
+-		for ms := range st.latency {
+-			if seen += st.latency[ms].Load(); seen > rank {
+-				return float64(ms)
+-			}
+-		}
+-		return 0
+-	}
+-	out, _ := json.Marshal(map[string]any{
+-		"bots": *rooms * *users, "joined": st.joined.Load(), "rooms": *rooms, "errors": st.errors.Load(),
++	latencies, lq := st.latency.quantiles()
++	fresh, fq := st.freshness.quantiles()
++	out := map[string]any{
++		"bots": *rooms * *users, "joined": st.joined.Load(), "rooms": *rooms, "users": *users, "errors": st.errors.Load(),
++		"rate": *rate, "profile": *profile, "walkers": walkers,
+ 		"moves_per_s":       float64(st.moves.Load()) / elapsed,
+ 		"frames_per_s":      float64(st.frames.Load()) / elapsed,
+ 		"submessages_per_s": float64(st.subs.Load()) / elapsed,
+ 		"seen_moves_per_s":  float64(st.userMoves.Load()) / elapsed,
+-		"latency_ms_p50":    q(0.50),
+-		"latency_ms_p99":    q(0.99),
+-		"latency_ms_max":    q(1),
+-		"latency_samples":   total,
+-	})
+-	fmt.Println(string(out))
++		"latency_ms_p50":    lq(0.50),
++		"latency_ms_p99":    lq(0.99),
++		"latency_ms_max":    lq(1),
++		"latency_samples":   latencies,
++		"freshness_ms_p50":  fq(0.50),
++		"freshness_ms_p99":  fq(0.99),
++		"freshness_samples": fresh,
++	}
++	if *stormAt > 0 {
++		returns, rq := st.returnTime.quantiles()
++		out["storm_resumed"], out["storm_refused"], out["storm_rejoined"], out["storm_lost"] = st.resumed.Load(), st.refused.Load(), st.rejoined.Load(), st.lost.Load()
++		out["storm_return_ms_p50"], out["storm_return_ms_p99"], out["storm_returns"] = rq(0.50), rq(0.99), returns
++	}
++	data, _ := json.Marshal(out)
++	fmt.Println(string(data))
+ }
+ 
++func durations(s string) (time.Duration, time.Duration) {
++	a, b, _ := strings.Cut(s, ",")
++	lo, err1 := time.ParseDuration(a)
++	hi, err2 := time.ParseDuration(b)
++	if err1 != nil || err2 != nil || hi < lo {
++		fmt.Fprintln(os.Stderr, "expected two durations, e.g. 3s,10s:", s)
++		os.Exit(2)
++	}
++	return lo, hi
++}
++
++// walk decides when a bot moves: always (walk profile), or in bursts separated by pauses (realistic profile).
++type walk struct {
++	always                                 bool
++	burstMin, burstMax, pauseMin, pauseMax time.Duration
++	walking                                bool
++	until                                  time.Time
++}
++
++func between(lo, hi time.Duration) time.Duration {
++	if hi <= lo {
++		return lo
++	}
++	return lo + rand.N(hi-lo)
++}
++
++// step returns whether to move now, and whether a walk just ended (the bot then sends a stop).
++func (w *walk) step(now time.Time) (move, stopped bool) {
++	if w.always {
++		return true, false
++	}
++	if w.until.IsZero() { // desynchronise the walkers: start in the middle of a pause
++		w.until = now.Add(between(0, w.pauseMax))
++	}
++	if now.Before(w.until) {
++		return w.walking, false
++	}
++	w.walking = !w.walking
++	if w.walking {
++		w.until = now.Add(between(w.burstMin, w.burstMax))
++		return true, false
++	}
++	w.until = now.Add(between(w.pauseMin, w.pauseMax))
++	return false, true
++}
++
+ func (b *bot) send(ctx context.Context, m *pb.ClientToServerMessage) error {
+ 	b.writeMu.Lock()
+ 	defer b.writeMu.Unlock()
+@@ -136,80 +245,222 @@
+ 	return &pb.ViewportMessage{Left: x - 640, Top: y - 360, Right: x + 640, Bottom: y + 360}
+ }
+ 
+-func (b *bot) run(ctx context.Context, st *stats) error {
+-	resp, err := http.Post(*httpURL+"/anonymLogin", "application/json", nil)
++func login(httpBase string) (string, error) {
++	resp, err := http.Post(httpBase+"/anonymLogin", "application/json", nil)
+ 	if err != nil {
+-		return err
++		return "", err
+ 	}
++	defer resp.Body.Close()
+ 	var login struct{ AuthToken string }
+ 	err = json.NewDecoder(resp.Body).Decode(&login)
+-	resp.Body.Close()
+-	if err != nil {
+-		return err
+-	}
+-	roomURL := fmt.Sprintf("%s/_/global/maps.example/load/%d.json", *httpURL, b.room)
++	return login.AuthToken, err
++}
++
++// dial opens the WebSocket and starts its reader. done receives the reader's error when the connection ends.
++// resumeNonce > 0 asks the server to resume the session of b.connectionID, replaying what came after that nonce.
++func (b *bot) dial(ctx context.Context, st *stats, token, wsBase, roomURL string, resumeNonce uint32) (chan error, error) {
+ 	q := url.Values{"roomId": {roomURL}, "version": {*version}, "chatID": {""}, "roomName": {"load"}, "cameraState": {"false"},
+-		"microphoneState": {"false"}, "tabId": {fmt.Sprintf("tab-%p", b)}, "characterTextureIds": {"male1"}}
+-	wsURL := strings.Replace(*httpURL, "http", "ws", 1) + "/ws/room?" + q.Encode()
+-	b.conn, _, err = websocket.Dial(ctx, wsURL, &websocket.DialOptions{Subprotocols: []string{login.AuthToken}})
++		"microphoneState": {"false"}, "tabId": {fmt.Sprintf("tab-%p", b)}, "characterTextureIds": {"male1"}, "connectionId": {b.connectionID}}
++	if resumeNonce > 0 {
++		q.Set("lastReceivedNonce", strconv.FormatUint(uint64(resumeNonce), 10))
++	}
++	conn, _, err := websocket.Dial(ctx, strings.Replace(wsBase, "http", "ws", 1)+"/ws/room?"+q.Encode(),
++		&websocket.DialOptions{Subprotocols: []string{token}})
+ 	if err != nil {
+-		return err
++		return nil, err
+ 	}
+-	defer b.conn.CloseNow()
+-	b.conn.SetReadLimit(16 << 20)
++	conn.SetReadLimit(16 << 20)
++	b.writeMu.Lock()
++	b.conn = conn
++	b.writeMu.Unlock()
++	b.firstFrame = make(chan uint32, 1)
++	done := make(chan error, 1)
++	go func() { done <- b.read(ctx, st, conn) }()
++	return done, nil
++}
+ 
+-	joined := make(chan struct{})
+-	go func() {
+-		defer close(joined)
+-		err = b.read(ctx, st, joined)
+-	}()
+-	if err := b.send(ctx, &pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_JoinRoomFrontMessage{JoinRoomFrontMessage: &pb.JoinRoomFrontMessage{
++func (b *bot) join(ctx context.Context) error {
++	return b.send(ctx, &pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_JoinRoomFrontMessage{JoinRoomFrontMessage: &pb.JoinRoomFrontMessage{
+ 		Name: "bot", AvailabilityStatus: pb.AvailabilityStatus_ONLINE,
+ 		PositionMessage: &pb.PositionMessage{X: b.x0, Y: b.y0}, ViewportMessage: b.viewport(b.x0, b.y0),
+-	}}}); err != nil {
++	}}})
++}
++
++// connect logs in, dials and joins the room from scratch, then waits for the server to give the bot its id.
++func (b *bot) connect(ctx context.Context, st *stats, httpBase, wsBase, roomURL string) (chan error, error) {
++	token, err := login(httpBase)
++	if err != nil {
++		return nil, err
++	}
++	b.userID.Store(0)
++	b.lastNonce.Store(0)
++	b.nonce = 0
++	done, err := b.dial(ctx, st, token, wsBase, roomURL, 0)
++	if err != nil {
++		return nil, err
++	}
++	if err := b.join(ctx); err != nil {
++		return nil, err
++	}
++	for b.userID.Load() == 0 {
++		select {
++		case <-ctx.Done():
++			return done, nil
++		case err := <-done:
++			return nil, fmt.Errorf("closed before joining: %w", err)
++		case <-time.After(10 * time.Millisecond):
++		}
++	}
++	return done, nil
++}
++
++// storm cuts the connection without a closing handshake, waits -storm-down, then tries to resume the session as
++// the front does. A refused resume is followed by a full reconnection. kick sends the bot's position again: every
++// bot comes back at the same time, and without moves nobody would receive anything to tell a resumed session.
++func (b *bot) storm(ctx context.Context, st *stats, done chan error, token, httpBase, wsBase, roomURL string, kick func() error) (chan error, error) {
++	b.conn.CloseNow()
++	<-done
++	select {
++	case <-ctx.Done():
++		return nil, ctx.Err()
++	case <-time.After(*stormDown):
++	}
++	t := time.Now()
++	last := b.lastNonce.Load()
++	done, err := b.dial(ctx, st, token, wsBase, roomURL, last)
++	if err == nil {
++		_ = kick() // on a session that is not resumed, the server closes it or ignores the move
++		closed := false
++		select {
++		case n := <-b.firstFrame:
++			if n > last { // the server replays where we left: same session
++				st.resumed.Add(1)
++				st.returnTime.add(time.Since(t).Milliseconds())
++				return done, nil
++			}
++		case <-done: // closed: 1008 (frames missing) or 4000 (session destroyed)
++			closed = true
++		case <-time.After(5 * time.Second): // a new, empty session waiting for a join
++		}
++		if !closed { // one reader at a time: it owns b.seen
++			b.conn.CloseNow()
++			<-done
++		}
++	}
++	st.refused.Add(1)
++	b.connectionID += "-new"
++	done, err = b.connect(ctx, st, httpBase, wsBase, roomURL)
++	if err != nil {
++		st.lost.Add(1)
++		return nil, err
++	}
++	st.rejoined.Add(1)
++	st.returnTime.add(time.Since(t).Milliseconds())
++	return done, nil
++}
++
++func (b *bot) run(ctx context.Context, st *stats, httpBase, wsBase, base string, w walk) error {
++	roomURL := fmt.Sprintf("%s/_/global/"+*mapFmt, base, b.room)
++	token, err := login(httpBase)
++	if err != nil {
+ 		return err
+ 	}
++	b.lastNonce.Store(0)
++	done, err := b.dial(ctx, st, token, wsBase, roomURL, 0)
++	if err != nil {
++		return err
++	}
++	if err := b.join(ctx); err != nil {
++		return err
++	}
+ 	for b.userID.Load() == 0 {
+ 		select {
+ 		case <-ctx.Done():
+ 			return nil
+-		case <-joined:
+-			return err
++		case err := <-done:
++			return fmt.Errorf("closed before joining: %w", err)
+ 		case <-time.After(10 * time.Millisecond):
+ 		}
+ 	}
+ 	st.joined.Add(1)
+ 
++	var stormC <-chan time.Time
++	if *stormAt > 0 {
++		stormC = time.After(time.Until(st.t0.Add(*stormAt)))
++	}
+ 	tick := time.NewTicker(time.Duration(float64(time.Second) / *rate))
+ 	defer tick.Stop()
+-	for seq := 0; ; seq++ {
++	seq := 0
++	for {
+ 		select {
+ 		case <-ctx.Done():
+-			<-joined
++			b.conn.CloseNow()
++			<-done
+ 			return nil
+-		case <-joined:
++		case err := <-done:
+ 			return err
++		case <-stormC:
++			stormC = nil
++			kick := func() error {
++				i := seq % track
++				return b.move(ctx, st, i, b.x0+int32(i), pb.PositionMessage_RIGHT, true)
++			}
++			if done, err = b.storm(ctx, st, done, token, httpBase, wsBase, roomURL, kick); err != nil {
++				if ctx.Err() != nil {
++					return nil
++				}
++				return err
++			}
++			continue
+ 		case <-tick.C:
+ 		}
++		if !b.walker {
++			continue
++		}
++		move, stopped := w.step(time.Now())
++		if !move && !stopped {
++			continue
++		}
+ 		i := seq % track
+ 		x := b.x0 + int32(i)
+-		b.sentAt[i].Store(time.Now().UnixNano())
+-		if err := b.send(ctx, &pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_UserMovesMessage{UserMovesMessage: &pb.UserMovesMessage{
+-			Position: &pb.PositionMessage{X: x, Y: b.y0, Direction: pb.PositionMessage_RIGHT, Moving: seq%50 != 49},
+-			Viewport: b.viewport(x, b.y0),
+-		}}}); err != nil {
++		if err := b.move(ctx, st, i, x, pb.PositionMessage_RIGHT, move && seq%50 != 49); err != nil {
+ 			return err
+ 		}
+-		if st.measuring.Load() {
+-			st.moves.Add(1)
++		if move && *turnEvery > 0 && seq%*turnEvery == *turnEvery-1 {
++			if err := b.move(ctx, st, i, x, pb.PositionMessage_DOWN, true); err != nil {
++				return err
++			}
+ 		}
++		seq++
+ 	}
+ }
+ 
+-func (b *bot) read(ctx context.Context, st *stats, joined chan struct{}) error {
++func (b *bot) move(ctx context.Context, st *stats, i int, x int32, dir pb.PositionMessage_Direction, moving bool) error {
++	now := time.Now().UnixNano()
++	b.sentAt[i].Store(now)
++	b.lastSent.Store(now)
++	if err := b.send(ctx, &pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_UserMovesMessage{UserMovesMessage: &pb.UserMovesMessage{
++		Position: &pb.PositionMessage{X: x, Y: b.y0, Direction: dir, Moving: moving},
++		Viewport: b.viewport(x, b.y0),
++	}}}); err != nil {
++		return err
++	}
++	if st.measuring.Load() {
++		st.moves.Add(1)
++	}
++	return nil
++}
++
++func (b *bot) read(ctx context.Context, st *stats, conn *websocket.Conn) error {
++	b.seen = map[*bot]seenPeer{}
++	first := true
+ 	for {
+-		_, data, err := b.conn.Read(ctx)
++		_, data, err := conn.Read(ctx)
+ 		if err != nil {
++			var ce websocket.CloseError
++			if errors.As(err, &ce) {
++				return fmt.Errorf("closed by the server: %d %s", ce.Code, ce.Reason)
++			}
+ 			return err
+ 		}
+ 		now := time.Now()
+@@ -217,6 +468,13 @@
+ 		if err := proto.Unmarshal(data, &env); err != nil {
+ 			return err
+ 		}
++		if first {
++			first = false
++			b.firstFrame <- env.Nonce
++		}
++		if env.Nonce > 0 {
++			b.lastNonce.Store(env.Nonce)
++		}
+ 		measuring := st.measuring.Load()
+ 		if measuring {
+ 			st.frames.Add(1)
+@@ -253,8 +511,21 @@
+ 				if ms < 0 { // the slot was reused by a newer move: this one is at least one lap late
+ 					ms = histogramMax
+ 				}
+-				st.latency[min(ms, histogramMax)].Add(1)
++				st.latency.add(ms)
++				b.seen[sender] = seenPeer{sentAt: sent, at: now.UnixNano()}
+ 			}
+ 		}
++		// Freshness, once a second: for each peer heard from in the last second, how much of its movement this
++		// bot has not seen yet (its last move sent minus the last move received). Fusing positions does not hurt
++		// it; a server that falls behind does.
++		if n := now.UnixNano(); n-b.lastSample >= int64(time.Second) {
++			b.lastSample = n
++			for peer, s := range b.seen {
++				if n-s.at > int64(time.Second) {
++					continue
++				}
++				st.freshness.add((peer.lastSent.Load() - s.sentAt) / int64(time.Millisecond))
++			}
++		}
+ 	}
+ }
