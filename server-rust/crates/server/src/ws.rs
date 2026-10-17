@@ -303,3 +303,104 @@ pub async fn ws_room(
         Upgrade::Refuse(code, reason) => ws.on_upgrade(move |socket| session::refuse(socket, code, reason)),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::{Config, Env};
+    use pb::server_to_client_message::Message as M;
+
+    fn state(vars: &[(&str, &str)]) -> AppState {
+        let mut all = vec![("SECRET_KEY", "s")];
+        all.extend_from_slice(vars);
+        AppState::new(
+            Config::load(Env::new(all.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap(),
+        )
+    }
+
+    const BASE: &str = "roomId=http%3A%2F%2Fplay.test%2F_%2Fglobal%2Fmaps.test%2Fm.json&version=v&chatID=&roomName=r&cameraState=true&microphoneState=true&tabId=t";
+
+    fn screen(u: Upgrade) -> pb::ErrorScreenMessage {
+        match u {
+            Upgrade::Reject(m) => match *m {
+                M::ErrorScreenMessage(e) => e,
+                other => panic!("not an error screen: {other:?}"),
+            },
+            _ => panic!("not a rejection"),
+        }
+    }
+
+    #[tokio::test]
+    async fn an_upgrade_is_refused_for_each_reason_the_pusher_has() {
+        let s = state(&[]);
+        let h = HeaderMap::new();
+        // Missing parameters, each named.
+        let e = screen(prepare(&s, Some("roomId=x"), "", &h).await);
+        assert_eq!(e.code.as_deref(), Some("WS_BAD_REQUEST"));
+        assert!(e.details.unwrap().contains("Parameter tabId: Required"));
+        // A resume: a bad nonce, then a session that is not retained.
+        let e = screen(prepare(&s, Some(&format!("{BASE}&lastReceivedNonce=abc")), "", &h).await);
+        assert!(e.details.unwrap().contains("lastReceivedNonce"));
+        let r = prepare(&s, Some(&format!("{BASE}&lastReceivedNonce=3&connectionId=gone")), "", &h).await;
+        assert!(matches!(r, Upgrade::Refuse(1008, _)));
+        // A token that does not verify.
+        let r = prepare(&s, Some(BASE), "not.a.jwt", &h).await;
+        assert!(matches!(r, Upgrade::Reject(m) if matches!(*m, M::TokenExpiredMessage(_))));
+        // Unknown textures and companions.
+        let r = prepare(&s, Some(&format!("{BASE}&characterTextureIds=nope")), "", &h).await;
+        assert!(matches!(r, Upgrade::Reject(m) if matches!(*m, M::InvalidCharacterTextureMessage(_))));
+        let r = prepare(&s, Some(&format!("{BASE}&companionTextureId=nope")), "", &h).await;
+        assert!(matches!(r, Upgrade::Reject(m) if matches!(*m, M::InvalidCompanionTextureMessage(_))));
+        // A room of no world.
+        let r = prepare(
+            &s,
+            Some(&BASE.replace("http%3A%2F%2Fplay.test%2F_%2Fglobal%2Fmaps.test%2Fm.json", "nowhere")),
+            "",
+            &h,
+        )
+        .await;
+        assert_eq!(screen(r).code.as_deref(), Some("internal_error"));
+        // Anonymous players, when they are not allowed.
+        let s = state(&[("DISABLE_ANONYMOUS", "true")]);
+        assert_eq!(screen(prepare(&s, Some(BASE), "", &h).await).details.as_deref(), Some("Expecting token"));
+        // And the fresh session otherwise, with the forwarded address.
+        let mut h = HeaderMap::new();
+        h.insert("x-forwarded-for", "203.0.113.7, 10.0.0.1".parse().unwrap());
+        let Upgrade::Fresh(info) = prepare(&state(&[]), Some(BASE), "", &h).await else { panic!("refused") };
+        assert_eq!(
+            (info.ip_address.as_str(), info.tab_id.as_str(), info.world.as_str()),
+            ("203.0.113.7", "t", "http://play.test")
+        );
+    }
+
+    #[test]
+    fn the_admins_errors_and_applications_reach_the_front_as_the_pusher_sends_them() {
+        let retry = serde_json::json!({"type": "retry", "code": "C", "title": "T", "subtitle": "S", "details": "D",
+            "image": "i", "imageLogo": "l", "buttonTitle": "B", "canRetryManual": true, "timeToRetry": 5});
+        let M::ErrorScreenMessage(e) = admin_error_screen(&retry) else { panic!() };
+        assert_eq!(
+            (e.code.as_deref(), e.button_title.as_deref(), e.time_to_retry, e.can_retry_manual),
+            (Some("C"), Some("B"), Some(5), Some(true))
+        );
+        let M::ErrorScreenMessage(e) =
+            admin_error_screen(&serde_json::json!({"type": "error", "buttonTitle": "B", "code": "X"}))
+        else {
+            panic!()
+        };
+        assert_eq!((e.code.as_deref(), e.button_title), (Some("X"), None));
+        let M::ErrorScreenMessage(e) =
+            admin_error_screen(&serde_json::json!({"type": "redirect", "urlToRedirect": "/u", "code": "X"}))
+        else {
+            panic!()
+        };
+        assert_eq!((e.url_to_redirect.as_deref(), e.code), (Some("/u"), None));
+        let app = application_of(
+            &serde_json::json!({"name": "Klaxoon", "allowAPI": true, "regexUrl": "k", "forceNewTab": false}),
+        );
+        assert_eq!(
+            (app.name.as_str(), app.allow_api, app.regex_url.as_deref(), app.force_new_tab),
+            ("Klaxoon", Some(true), Some("k"), Some(false))
+        );
+        assert!(texture_of(&serde_json::json!({"id": "a"})).is_none());
+    }
+}
