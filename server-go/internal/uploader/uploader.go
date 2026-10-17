@@ -8,7 +8,9 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"github.com/workadventure/workadventure/server-go/internal/s3"
 	"io"
+	"log/slog"
 	"mime"
 	"net/http"
 	"path"
@@ -26,6 +28,17 @@ type Options struct {
 	MaxFileSize   int64  // UPLOAD_MAX_FILESIZE (100 MiB by default)
 	// AdminAPIURL, when set, decides instead of EnableUpload and MaxFileSize, file by file (A29).
 	AdminAPIURL string
+	// Where the files go, like StorageProviderService: S3 (AWS_*) first, else Redis (REDIS_HOST), else memory. The
+	// audio messages go to Redis, else memory.
+	S3       *s3.Client
+	S3URLTTL time.Duration // UPLOADER_AWS_SIGNED_URL_EXPIRATION: the life of a download link
+	Redis    KV
+}
+
+// KV is the Redis the files may live in.
+type KV interface {
+	Get(ctx context.Context, key string) (string, bool, error)
+	Set(ctx context.Context, key, value string, ttl time.Duration) error
 }
 
 const (
@@ -141,7 +154,14 @@ func (u *Uploader) uploadAudio(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	id := newID()
-	u.store(id, data, audioTTL)
+	if u.o.Redis != nil {
+		if err := u.o.Redis.Set(r.Context(), id, string(data), audioTTL); err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+	} else {
+		u.store(id, data, audioTTL)
+	}
 	writeJSON(w, http.StatusOK, map[string]string{"id": id, "path": "/download-audio-message/" + id})
 }
 
@@ -191,7 +211,11 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 			if ext := strings.TrimPrefix(path.Ext(h.Filename), "."); ext != "" {
 				id += "." + strings.ToLower(ext)
 			}
-			u.store(id, data, 0)
+			if err := u.keep(r.Context(), id, data); err != nil {
+				slog.Error("upload not stored", "error", err)
+				http.Error(w, "Error upload file", http.StatusInternalServerError)
+				return
+			}
 			out = append(out, uploaded{Name: h.Filename, ID: id, Location: strings.TrimRight(u.o.PublicURL, "/") + "/upload-file/" + id,
 				Size: len(data), LastModified: time.Now(), Type: h.Header.Get("Content-Type")})
 		}
@@ -200,9 +224,43 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 }
 
 // download serves a file as a user uploaded it: never as active content on this origin.
+// keep stores an uploaded file where the files go.
+func (u *Uploader) keep(ctx context.Context, id string, data []byte) error {
+	switch {
+	case u.o.S3 != nil:
+		return u.o.S3.Put(ctx, id, data, safeType(id), "attachment")
+	case u.o.Redis != nil:
+		return u.o.Redis.Set(ctx, id, string(data), 0)
+	}
+	u.store(id, data, 0)
+	return nil
+}
+
 func (u *Uploader) download(w http.ResponseWriter, r *http.Request, attachment bool) {
 	id := r.PathValue("id")
-	data, ok := u.get(id)
+	if attachment && u.o.S3 != nil { // a file: a signed link to the bucket (copyFromLink)
+		link, err := u.o.S3.PresignAs("", id, u.o.S3URLTTL, true, safeType(id))
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
+		http.Redirect(w, r, link, http.StatusFound)
+		return
+	}
+	var data []byte
+	ok := false
+	if u.o.Redis != nil {
+		s, found, err := u.o.Redis.Get(r.Context(), id)
+		if err != nil {
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+			return
+		}
+		data, ok = []byte(s), found
+	} else {
+		data, ok = u.get(id)
+	}
 	if !ok {
 		http.Error(w, "Cannot find file", http.StatusNotFound)
 		return
