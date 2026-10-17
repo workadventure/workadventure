@@ -44,11 +44,10 @@ func (srv *Server) roomMap(roomURL string) roomMap {
 	if err != nil {
 		return rm
 	}
-	if w, _ := details["wamUrl"].(string); w != "" {
+	if w := details.WamURL; w != "" {
 		rm.key, rm.wamURL = srv.storageKey(w), w
 	}
-	rm.mapURL, _ = details["mapUrl"].(string)
-	rm.thirdParty, _ = details["thirdParty"].(map[string]any)
+	rm.mapURL, rm.thirdParty = details.MapURL, details.ThirdParty
 	srv.roomMaps.Store(roomURL, rm)
 	return rm
 }

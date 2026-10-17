@@ -96,7 +96,7 @@ type Admin interface {
 	// MemberData is /api/room/access. A refusal of the admin is a *Refusal.
 	MemberData(ctx context.Context, q MemberQuery) (MemberData, error)
 	// MapDetails is /api/map: MapDetailsData, RoomRedirect or ErrorApiData, thirdParty included (never send it on).
-	MapDetails(ctx context.Context, q MapQuery) (map[string]any, error)
+	MapDetails(ctx context.Context, q MapQuery) (MapDetails, error)
 	WokaList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)
 	CompanionList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)
 	IceServers(ctx context.Context, roomURL, uuid string, userID int32) ([]IceServer, error)
@@ -315,25 +315,26 @@ func (l *Local) MemberData(_ context.Context, q MemberQuery) (MemberData, error)
 }
 
 func (l *Local) applications() []Application {
+	env := l.cfg.FrontEnv
 	type app struct {
-		flag string
+		on bool
 		Application
 	}
 	all := []app{
-		{"KLAXOON_ENABLED", Application{Name: "Klaxoon", Doc: "https://klaxoon.com", Image: "https://static.klaxoon.com/favicon.ico", Description: "Klaxoon (Brainstorming, Quiz, Survey)"}},
-		{"YOUTUBE_ENABLED", Application{Name: "Youtube", Doc: "https://youtube.com", Image: "https://www.youtube.com/favicon.ico", Description: "Youtube (Video sharing)"}},
-		{"GOOGLE_DRIVE_ENABLED", Application{Name: "Google Drive", Doc: "https://drive.google.com", Description: "Google Drive (Docs, Sheets, Slides)"}},
-		{"GOOGLE_DOCS_ENABLED", Application{Name: "Google Docs", Doc: "https://docs.google.com", Description: "Google Docs (Word Processor)"}},
-		{"GOOGLE_SHEETS_ENABLED", Application{Name: "Google Sheets", Doc: "https://sheets.google.com", Description: "Google Sheets (Spreadsheet)"}},
-		{"GOOGLE_SLIDES_ENABLED", Application{Name: "Google Slides", Doc: "https://slides.google.com", Description: "Google Slides (Presentation)"}},
-		{"ERASER_ENABLED", Application{Name: "Eraser", Doc: "https://workadventu.re", Description: "Eraser (White board)"}},
-		{"EXCALIDRAW_ENABLED", Application{Name: "Excalidraw", Doc: "https://excalidraw.com", Description: "Excalidraw (White board)"}},
-		{"CARDS_ENABLED", Application{Name: "Cards", Doc: "https://workadventu.re", Description: "Cards (learning tool)"}},
-		{"TLDRAW_ENABLED", Application{Name: "tldraw", Doc: "https://tldraw.com", Description: "tldraw (White board)"}},
+		{env.KlaxoonEnabled, Application{Name: "Klaxoon", Doc: "https://klaxoon.com", Image: "https://static.klaxoon.com/favicon.ico", Description: "Klaxoon (Brainstorming, Quiz, Survey)"}},
+		{env.YoutubeEnabled, Application{Name: "Youtube", Doc: "https://youtube.com", Image: "https://www.youtube.com/favicon.ico", Description: "Youtube (Video sharing)"}},
+		{env.GoogleDriveEnabled, Application{Name: "Google Drive", Doc: "https://drive.google.com", Description: "Google Drive (Docs, Sheets, Slides)"}},
+		{env.GoogleDocsEnabled, Application{Name: "Google Docs", Doc: "https://docs.google.com", Description: "Google Docs (Word Processor)"}},
+		{env.GoogleSheetsEnabled, Application{Name: "Google Sheets", Doc: "https://sheets.google.com", Description: "Google Sheets (Spreadsheet)"}},
+		{env.GoogleSlidesEnabled, Application{Name: "Google Slides", Doc: "https://slides.google.com", Description: "Google Slides (Presentation)"}},
+		{env.EraserEnabled, Application{Name: "Eraser", Doc: "https://workadventu.re", Description: "Eraser (White board)"}},
+		{env.ExcalidrawEnabled, Application{Name: "Excalidraw", Doc: "https://excalidraw.com", Description: "Excalidraw (White board)"}},
+		{env.CardsEnabled, Application{Name: "Cards", Doc: "https://workadventu.re", Description: "Cards (learning tool)"}},
+		{env.TldrawEnabled, Application{Name: "tldraw", Doc: "https://tldraw.com", Description: "tldraw (White board)"}},
 	}
 	out := []Application{}
 	for _, a := range all {
-		if l.cfg.FrontEnv[a.flag] == true {
+		if a.on {
 			a.Enabled, a.Default = true, true
 			out = append(out, a.Application)
 		}
@@ -343,7 +344,42 @@ func (l *Local) applications() []Application {
 
 var publicMapPath = regexp.MustCompile(`/_/[^/]+/(.+)`)
 
-func (l *Local) MapDetails(_ context.Context, q MapQuery) (map[string]any, error) {
+// MapDetails is the admin's answer for a room (A2): its map, a redirect, or an error page for the front. The fields
+// the server itself reads are typed; Raw is the whole answer, which /map gives the front (without thirdParty).
+type MapDetails struct {
+	Raw                           map[string]any
+	MapURL, WamURL, RedirectURL   string
+	PrimaryColor, BackgroundColor string
+	Metatags                      map[string]any
+	ThirdParty                    map[string]any // Jitsi and BBB of the room, secrets included: never sent on
+}
+
+// Details types an answer of /api/map.
+func Details(raw map[string]any) MapDetails {
+	d := MapDetails{Raw: raw}
+	d.MapURL, _ = raw["mapUrl"].(string)
+	d.WamURL, _ = raw["wamUrl"].(string)
+	d.RedirectURL, _ = raw["redirectUrl"].(string)
+	d.PrimaryColor, _ = raw["primaryColor"].(string)
+	d.BackgroundColor, _ = raw["backgroundColor"].(string)
+	d.Metatags, _ = raw["metatags"].(map[string]any)
+	d.ThirdParty, _ = raw["thirdParty"].(map[string]any)
+	return d
+}
+
+// IsRoom says whether the answer describes a map (Tiled or WAM), rather than a redirect or an error.
+func (d MapDetails) IsRoom() bool {
+	_, isMap := d.Raw["mapUrl"]
+	_, isWam := d.Raw["wamUrl"]
+	return isMap || isWam
+}
+
+func (l *Local) MapDetails(_ context.Context, q MapQuery) (MapDetails, error) {
+	raw, err := l.mapDetails(q)
+	return Details(raw), err
+}
+
+func (l *Local) mapDetails(q MapQuery) (map[string]any, error) {
 	roomURL, err := url.Parse(q.PlayURI)
 	if err != nil {
 		return nil, err

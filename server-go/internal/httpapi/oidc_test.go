@@ -96,7 +96,7 @@ func fakeProvider(t *testing.T, revoked *atomic.Int32) *httptest.Server {
 
 func newOpenIDAPI(t *testing.T, issuer, matrix string) http.Handler {
 	cfg := &config.Config{PusherURL: "http://play.test/", MatrixPublicURI: matrix, OpidWokaNamePolicy: "user_input",
-		StartRoomURL: "/_/global/start.json", FrontEnv: map[string]any{},
+		StartRoomURL: "/_/global/start.json", FrontEnv: config.FrontEnv{},
 		OpenID: config.OpenID{ClientID: "client", ClientSecret: "s3cret", Issuer: issuer, Scope: "openid email profile tags-scope",
 			UsernameClaim: "username", LocaleClaim: "locale", TagsClaim: "tags"}}
 	adm, err := admin.NewLocal(cfg)

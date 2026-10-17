@@ -32,12 +32,12 @@ func TestTheWorldsColorsAreTheTSPalettes(t *testing.T) {
 // branded is an admin whose world has its own tags and colors, and one room that moved.
 type branded struct{ *admin.Local }
 
-func (branded) MapDetails(_ context.Context, q admin.MapQuery) (map[string]any, error) {
+func (branded) MapDetails(_ context.Context, q admin.MapQuery) (admin.MapDetails, error) {
 	if strings.Contains(q.PlayURI, "/old") {
-		return map[string]any{"redirectUrl": "http://brand.test/@/o/w/new"}, nil
+		return admin.Details(map[string]any{"redirectUrl": "http://brand.test/@/o/w/new"}), nil
 	}
-	return map[string]any{"wamUrl": "http://ms.test/a.wam", "primaryColor": "#ff6600", "backgroundColor": nil,
-		"metatags": map[string]any{"title": "Whitelabel world", "favIcons": []any{map[string]any{"rel": "icon", "src": "http://brand.test/i.png"}}}}, nil
+	return admin.Details(map[string]any{"wamUrl": "http://ms.test/a.wam", "primaryColor": "#ff6600", "backgroundColor": nil,
+		"metatags": map[string]any{"title": "Whitelabel world", "favIcons": []any{map[string]any{"rel": "icon", "src": "http://brand.test/i.png"}}}}), nil
 }
 
 func TestTheWorldBrandsItsPage(t *testing.T) {
@@ -45,7 +45,7 @@ func TestTheWorldBrandsItsPage(t *testing.T) {
 		_, _ = io.WriteString(w, `<meta name="wa-api-version" content="v1"><title>{{ title }}</title><meta name="msapplication-TileImage" content="{{ msApplicationTileImage }}">{{{ cssVariablesOverride }}}`)
 	}))
 	defer front.Close()
-	cfg := &config.Config{AdminAPIURL: "http://admin.test", StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: map[string]any{}}
+	cfg := &config.Config{AdminAPIURL: "http://admin.test", StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: config.FrontEnv{}}
 	local, _ := admin.NewLocal(cfg)
 	assets := NewFrontAssets(front.URL, "", "v1")
 	if err := assets.refresh(context.Background()); err != nil {

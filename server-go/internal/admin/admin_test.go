@@ -11,7 +11,7 @@ import (
 
 func local(t *testing.T) *Local {
 	t.Helper()
-	l, err := NewLocal(&config.Config{StartRoomURL: "/_/global/maps.workadventu.re/starter/map.json", OpidWokaNamePolicy: "user_input", FrontEnv: map[string]any{}})
+	l, err := NewLocal(&config.Config{StartRoomURL: "/_/global/maps.workadventu.re/starter/map.json", OpidWokaNamePolicy: "user_input", FrontEnv: config.FrontEnv{}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,15 +47,15 @@ func TestMemberTextures(t *testing.T) {
 func TestMapDetails(t *testing.T) {
 	l := local(t)
 	d, _ := l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
-	if d["mapUrl"] != "http://maps.test/tests/E2E/empty.json" {
+	if d.Raw["mapUrl"] != "http://maps.test/tests/E2E/empty.json" {
 		t.Fatalf("got %v", d)
 	}
 	d, _ = l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/"})
-	if d["redirectUrl"] != "http://play.test/_/global/maps.workadventu.re/starter/map.json" {
+	if d.Raw["redirectUrl"] != "http://play.test/_/global/maps.workadventu.re/starter/map.json" {
 		t.Fatalf("got %v", d)
 	}
 	d, _ = l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/nope"})
-	if d["code"] != "UNSUPPORTED_URL_FORMAT" {
+	if d.Raw["code"] != "UNSUPPORTED_URL_FORMAT" {
 		t.Fatalf("got %v", d)
 	}
 }
@@ -63,14 +63,14 @@ func TestMapDetails(t *testing.T) {
 func TestTheRecordButtonFollowsTheRecordingSetup(t *testing.T) {
 	l := local(t)
 	d, _ := l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
-	if d["recording"].(map[string]any)["buttonState"] != "hidden" {
+	if d.Raw["recording"].(map[string]any)["buttonState"] != "hidden" {
 		t.Fatal("no S3 or no LiveKit: no button")
 	}
 	l.cfg.RecordingConfigured = true
 	d, _ = l.MapDetails(context.Background(), MapQuery{PlayURI: "http://play.test/_/global/maps.test/tests/E2E/empty.json"})
 	anonymous, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json"})
 	logged, _ := l.MemberData(context.Background(), MemberQuery{Identifier: "u", PlayURI: "http://play.test/_/global/maps.test/a.json", AccessToken: "t"})
-	if d["recording"].(map[string]any)["buttonState"] != "enabled" || anonymous.CanRecord || !logged.CanRecord {
-		t.Fatalf("a logged user records once S3 and LiveKit are set: %v %v %v", d["recording"], anonymous.CanRecord, logged.CanRecord)
+	if d.Raw["recording"].(map[string]any)["buttonState"] != "enabled" || anonymous.CanRecord || !logged.CanRecord {
+		t.Fatalf("a logged user records once S3 and LiveKit are set: %v %v %v", d.Raw["recording"], anonymous.CanRecord, logged.CanRecord)
 	}
 }
