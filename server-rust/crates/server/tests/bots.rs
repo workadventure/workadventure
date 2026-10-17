@@ -910,7 +910,7 @@ async fn analytics_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<ser
             "/api/room/access",
             axum::routing::get(|| async {
                 axum::Json(serde_json::json!({
-                    "status": "ok", "email": null, "userUuid": "uuid-a", "tags": ["member"], "isCharacterTexturesValid": true,
+                    "status": "ok", "email": null, "visitCardUrl": null, "userUuid": "uuid-a", "tags": ["member"], "isCharacterTexturesValid": true,
                     "characterTextures": [], "isCompanionTextureValid": true, "world": "acme", "userRoomToken": "", "canEdit": false,
                 }))
             }),

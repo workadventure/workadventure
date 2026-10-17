@@ -5,6 +5,7 @@ pub mod admin;
 pub mod admin_api;
 pub mod admin_queries;
 pub mod admin_socket;
+pub mod admin_types;
 pub mod analytics;
 pub mod budget;
 pub mod config;
