@@ -7,6 +7,8 @@ import (
 
 type answered struct{ err error }
 
+func (answered) coreEvent() {} // the tests record the replies among the events
+
 // joinSpace joins and records the reply in the member's own stream, to check what comes before and after it.
 func joinSpace(t *testing.T, sp *Space, p *recorder, id string, props ...string) {
 	t.Helper()

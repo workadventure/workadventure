@@ -8,20 +8,20 @@ import "context"
 // already there, then every arrival and departure (MemberJoined, MemberLeft: the admin socket). A watcher keeps nothing
 // alive: the adapter holds the room for as long as it watches.
 
-type watcher struct{ f func(event any) }
+type watcher struct{ f func(event Event) }
 
 // MemberJoined and MemberLeft tell a watcher a connection entered or left the room (userJoinedRoom, userLeftRoom).
 type MemberJoined struct{ UUID, Name, IPAddress string }
 type MemberLeft struct{ UUID string }
 
-func (s *state) toWatchers(event any) {
+func (s *state) toWatchers(event Event) {
 	for w := range s.watchers {
 		w.f(event)
 	}
 }
 
 // Watch calls f, on the room's goroutine (f must not block), until stop.
-func (r *Room) Watch(ctx context.Context, f func(event any)) (stop func(), err error) {
+func (r *Room) Watch(ctx context.Context, f func(event Event)) (stop func(), err error) {
 	w := &watcher{f: f}
 	if err := r.a.Post(ctx, func() {
 		r.s.watchers[w] = struct{}{}

@@ -13,6 +13,13 @@ type rows struct {
 }
 
 func (r *rows) add(e analytics.Event) { r.mu.Lock(); r.list = append(r.list, e); r.mu.Unlock() }
+
+// meetingsTo reports the meetings with the analytics package, into got.
+func meetingsTo(got *rows) func(id, world string, kind, transport func() string) MeetingReporter {
+	return func(id, world string, kind, transport func() string) MeetingReporter {
+		return analytics.NewMeeting(id, world, kind, transport, got.add)
+	}
+}
 func (r *rows) names() []string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -25,7 +32,7 @@ func (r *rows) names() []string {
 
 func TestABubbleWritesItsMeetingWhenItEnds(t *testing.T) {
 	got := &rows{}
-	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble-1"}, Media{Analytics: got.add})
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble-1"}, Media{Meetings: meetingsTo(got)})
 	defer sp.Stop()
 	joinSpace(t, sp, &recorder{}, "alice")
 	joinSpace(t, sp, &recorder{}, "bob")
@@ -49,7 +56,7 @@ func TestABubbleWritesItsMeetingWhenItEnds(t *testing.T) {
 
 func TestABroadcastCountsItsSpeakersAndEndsWithTheSpace(t *testing.T) {
 	got := &rows{}
-	sp := NewSpaceWithMedia(SpaceKey{"org/w", "stage"}, Media{Analytics: got.add})
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "stage"}, Media{Meetings: meetingsTo(got)})
 	speaker, listener := &recorder{}, &recorder{}
 	joinFiltered(t, sp, speaker, SpaceUser{ID: "speaker"}, FilterLiveStreamingUsers)
 	joinFiltered(t, sp, listener, SpaceUser{ID: "listener"}, FilterLiveStreamingUsers)

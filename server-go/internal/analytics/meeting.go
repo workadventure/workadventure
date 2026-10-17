@@ -84,7 +84,9 @@ func (m *Meeting) TransportChanged() {
 }
 
 // Join counts a member present; active is whether it counts towards opening a session (a speaker, in a broadcast).
-func (m *Meeting) Join(mb MeetingMember, active bool) {
+// With the methods below, it makes Meeting the core.MeetingReporter of a space.
+func (m *Meeting) Join(uuid, spaceUserID, roomID string, tags []string, active bool) {
+	mb := MeetingMember{UUID: uuid, SpaceUserID: spaceUserID, RoomID: roomID, Tags: tags}
 	if m.members[mb.SpaceUserID] != nil {
 		return
 	}

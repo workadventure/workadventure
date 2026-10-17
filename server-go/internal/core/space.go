@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"slices"
 	"sync"
 	"time"
@@ -102,7 +101,7 @@ type (
 	SpacePrivateEvent struct {
 		Space, ReceiverID string
 		Sender            SpaceUser
-		Event             any
+		Event             PrivateEvent
 	}
 	WebRTCStart struct {
 		UserID       string
@@ -140,8 +139,8 @@ func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
 		mediaCfg: media, strategy: strategyWebRTC, present: map[string]bool{}, roomName: k.World + "." + k.Local, lk: liveKitState{invited: map[string]bool{}},
 	}}
 	sp.s.later = sp.later
-	if media.Analytics != nil {
-		sp.s.meeting = analytics.NewMeeting(sp.s.roomName, k.World, sp.s.kind, func() string { return sp.s.strategy }, media.Analytics)
+	if media.Meetings != nil {
+		sp.s.meeting = media.Meetings(sp.s.roomName, k.World, sp.s.kind, func() string { return sp.s.strategy })
 	}
 	if media.LiveKit != nil || media.LiveKitFor != nil {
 		sp.calls = make(chan func(), 64)
@@ -197,9 +196,9 @@ type spaceState struct {
 	finalizeGen   int
 	backTimer     *time.Timer
 	backGen       int
-	rec           *recording         // space_recording.go
-	meeting       *analytics.Meeting // nil without analytics (space_analytics.go)
-	present       map[string]bool    // the members the meeting counts
+	rec           *recording      // space_recording.go
+	meeting       MeetingReporter // nil without analytics (space_analytics.go)
+	present       map[string]bool // the members the meeting counts
 	recGen        int
 	later         func(func()) // run on the space's goroutine, from a timer or a LiveKit answer
 	call          func(func()) // run a LiveKit call off the space's goroutine

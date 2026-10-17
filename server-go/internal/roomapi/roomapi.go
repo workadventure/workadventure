@@ -19,7 +19,6 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
-	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 	rpb "github.com/workadventure/workadventure/server-go/internal/pb/roomapi"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
 )
@@ -146,8 +145,7 @@ func (s *Server) BroadcastEvent(ctx context.Context, req *rpb.DispatchEventReque
 	// Nobody to tell in a room that does not run: events are not kept for later.
 	if slices.Contains(s.rooms.Keys(), req.GetRoom()) {
 		room := s.rooms.Acquire(req.GetRoom())
-		event := &pb.SubMessage{Message: &pb.SubMessage_ReceivedEventMessage{ReceivedEventMessage: &pb.ReceivedEventMessage{
-			Name: req.GetName(), Data: req.GetData()}}}
+		event := core.ScriptingEvent{Name: req.GetName(), Data: dataJSON(req.GetData())}
 		err := room.SendEvent(ctx, core.NewMsg(event, true), req.GetTargetUserIds())
 		s.rooms.Release(req.GetRoom())
 		if err != nil {
@@ -158,7 +156,7 @@ func (s *Server) BroadcastEvent(ctx context.Context, req *rpb.DispatchEventReque
 }
 
 func (s *Server) ListenVariable(req *rpb.VariableRequest, stream grpc.ServerStreamingServer[structpb.Value]) error {
-	return listen(s, stream.Context(), req.GetRoom(), func(e any) *structpb.Value {
+	return listen(s, stream.Context(), req.GetRoom(), func(e core.Event) *structpb.Value {
 		if v, ok := e.(core.VariableChanged); ok && v.Name == req.GetName() {
 			return jsonValue(v.Value)
 		}
@@ -167,11 +165,13 @@ func (s *Server) ListenVariable(req *rpb.VariableRequest, stream grpc.ServerStre
 }
 
 func (s *Server) ListenToEvent(req *rpb.EventRequest, stream grpc.ServerStreamingServer[rpb.EventResponse]) error {
-	return listen(s, stream.Context(), req.GetRoom(), func(e any) *rpb.EventResponse {
-		if m, ok := e.(*pb.SubMessage); ok {
-			if ev := m.GetReceivedEventMessage(); ev != nil && ev.GetName() == req.GetName() {
-				return &rpb.EventResponse{Data: ev.GetData(), SenderId: ev.SenderId}
+	return listen(s, stream.Context(), req.GetRoom(), func(e core.Event) *rpb.EventResponse {
+		if ev, ok := e.(core.ScriptingEvent); ok && ev.Name == req.GetName() {
+			var data *structpb.Value
+			if ev.Data != nil {
+				data = jsonValue(string(ev.Data))
 			}
+			return &rpb.EventResponse{Data: data, SenderId: ev.SenderID}
 		}
 		return nil
 	}, stream.Send)
@@ -179,7 +179,7 @@ func (s *Server) ListenToEvent(req *rpb.EventRequest, stream grpc.ServerStreamin
 
 // listen streams what pick takes from the room's changes and events, until the caller hangs up. The room stays
 // alive meanwhile.
-func listen[M any](s *Server, ctx context.Context, url string, pick func(any) *M, send func(*M) error) error {
+func listen[M any](s *Server, ctx context.Context, url string, pick func(core.Event) *M, send func(*M) error) error {
 	if err := s.authorize(ctx, url); err != nil {
 		return err
 	}
@@ -187,7 +187,7 @@ func listen[M any](s *Server, ctx context.Context, url string, pick func(any) *M
 	defer release()
 	out := make(chan *M, listenerBuffer)
 	overflow := make(chan struct{})
-	stop, err := room.Watch(ctx, func(e any) {
+	stop, err := room.Watch(ctx, func(e core.Event) {
 		m := pick(e)
 		if m == nil {
 			return
@@ -218,6 +218,18 @@ func listen[M any](s *Server, ctx context.Context, url string, pick func(any) *M
 			}
 		}
 	}
+}
+
+// dataJSON is the data of an event as the core carries it, JSON; none is nil.
+func dataJSON(v *structpb.Value) json.RawMessage {
+	if v == nil {
+		return nil
+	}
+	b, err := protojson.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	return b
 }
 
 // jsonValue turns a stored JSON value into a protobuf Value.
