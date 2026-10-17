@@ -707,3 +707,36 @@ Toutes les campagnes ont tourné sur la stack `go` du socle, un seul worker, sou
 `./verify.sh` est vert.
 
 **Aide extérieure.** Sous-agent Sonnet pour l'inventaire Matrix du TS.
+
+### 17/10, campagne des 86 specs contre la référence TS
+
+Conditions : stack `go` du socle, Chromium, un worker, `dev/dev test go … --grep-invert "storage works"`, `auth.ts`
+b26d49374. La référence est `dev/references/ts-full-2026-10-17.md` (dev-socle dfc8c175d) : 239 réussis, 15 échecs,
+14 sautés.
+
+**Première campagne : 240 réussis, 14 échecs, 14 sautés.** Elle a révélé un défaut de ma part.
+- La copie vers le worktree (`rsync --exclude server`) excluait aussi `cmd/server/`.
+- Les paquets des tranches 4 et 5 étaient donc commités, mais jamais démarrés.
+- Corrigé dans 2033b862f. Le rsync exclut désormais `/server`.
+- `matrixChatArea` (5 tests) manquait aussi `modifyServerData` (MapStorageServer.ts:224) : le front n'apprenait pas l'id du salon. Corrigé dans 7891eb7bb.
+
+**Deuxième campagne, avec ces correctifs : 246 réussis, 8 échecs, 14 sautés.** Chaque échec du Go figure aussi parmi les échecs du TS.
+
+| Spec | Go | TS | Classement |
+|---|---|---|---|
+| map_editor_livekit:62 | échec | échec | environnement (`:80` en dur) |
+| report_issue:7 | échec | échec | environnement (`SENTRY_DSN_FRONT`) |
+| scripting_spaces:401 | échec | échec | environnement (`:80` en dur) |
+| variables:188 | échec | échec | environnement (`maps/` du worktree) |
+| spaces:18 | échec | échec | hors comparaison |
+| matrixChatModeration:28, :60 | échec | échec | environnement : User1 et UserMatrix ont le même e-mail dans le faux OIDC ; dans le Synapse partagé, User1 a pris `@john.doe` le 13/10, et UserMatrix est devenu `@john.doe1` le 17/10 ; la spec attend `@john.doe` |
+| p2p_mute_keeps_sender:82 | échec | échec | instable (Go : 2 sur 3 seul, et réussi à la première campagne) : à un instant donné, Alice a deux RTCPeerConnection ouvertes |
+| map_storage_upload:19, :85, :185 | réussi | échec | — |
+| metadata:11, api_players:16, userlist:37, map_editor_interacting_object:91 | réussi | échec | — |
+
+**Instables vus aux rejeux.**
+- `matrixChat:84` : le panneau des applications se referme en cours de test. Passe seule 3 fois sur 3.
+- `matrixChatPoll:145` : élément détaché du DOM. 1 sur 2 seul.
+- Les deux ont réussi à la deuxième campagne.
+
+**Aide extérieure.** Référence TS et classement des échecs d'environnement par le socle.
