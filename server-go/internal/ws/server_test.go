@@ -79,7 +79,7 @@ func (h *harness) dialWithToken(token, name, connectionID string, extra url.Valu
 	u := strings.Replace(h.http.URL, "http", "ws", 1) + "/ws/room?" + q.Encode()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	conn, resp, err := websocket.Dial(ctx, u, &websocket.DialOptions{Subprotocols: []string{token}})
+	conn, resp, err := websocket.Dial(ctx, u, &websocket.DialOptions{Subprotocols: []string{token}}) //nolint:bodyclose // coder/websocket closes the handshake's body
 	if err != nil {
 		h.t.Fatal(err)
 	}

@@ -60,33 +60,34 @@ func embeddable(ctx context.Context, raw, frontURL string, whitelist []string) (
 			return true, true, ""
 		}
 	}
-	resp, err := fetch(ctx, http.MethodHead, raw)
-	if err == nil && resp.StatusCode == http.StatusMethodNotAllowed {
-		resp, err = fetch(ctx, http.MethodGet, raw)
+	status, header, err := fetch(ctx, http.MethodHead, raw)
+	if err == nil && status == http.StatusMethodNotAllowed {
+		status, header, err = fetch(ctx, http.MethodGet, raw)
 	}
 	switch {
 	case err != nil:
 		return false, false, "URL is not reachable"
-	case resp.StatusCode == 999: // LinkedIn
+	case status == 999: // LinkedIn
 		return true, false, ""
-	case resp.StatusCode/100 == 2:
+	case status/100 == 2:
 		front, _ := url.Parse(frontURL)
-		return true, frameable(resp.Header, front.Hostname()), ""
+		return true, frameable(header, front.Hostname()), ""
 	}
 	return false, false, "URL is not reachable"
 }
 
-func fetch(ctx context.Context, method, raw string) (*http.Response, error) {
+// fetch asks for raw and returns its status and headers: they are all we read.
+func fetch(ctx context.Context, method, raw string) (int, http.Header, error) {
 	req, err := http.NewRequestWithContext(ctx, method, raw, nil)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	resp, err := embedClient.Do(req)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	resp.Body.Close() // the headers are all we read
-	return resp, nil
+	_ = resp.Body.Close()
+	return resp.StatusCode, resp.Header, nil
 }
 
 // frameable is isFrameable of the pusher: frame-ancestors of the CSP when there is one, X-Frame-Options otherwise.

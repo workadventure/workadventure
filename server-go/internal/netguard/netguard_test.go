@@ -21,10 +21,10 @@ func TestOnlyPublicAddressesAreFetched(t *testing.T) {
 	}
 	local := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {}))
 	defer local.Close()
-	if _, err := Client(time.Second).Get(local.URL); !errors.Is(err, ErrNotPublic) {
+	if err := get(local.URL); !errors.Is(err, ErrNotPublic) {
 		t.Fatalf("127.0.0.1 is refused: %v", err)
 	}
-	if _, err := Client(time.Second).Get("http://localhost:" + strconv.Itoa(local.Listener.Addr().(*net.TCPAddr).Port)); !errors.Is(err, ErrNotPublic) {
+	if err := get("http://localhost:" + strconv.Itoa(local.Listener.Addr().(*net.TCPAddr).Port)); !errors.Is(err, ErrNotPublic) {
 		t.Fatalf("a name resolving to 127.0.0.1 is refused: %v", err)
 	}
 }
@@ -37,7 +37,16 @@ func TestARedirectToAPrivateAddressIsRefused(t *testing.T) {
 	publicPort := uint16(public.Listener.Addr().(*net.TCPAddr).Port)
 	allowed = func(ap netip.AddrPort) bool { return ap.Port() == publicPort }
 	defer func() { allowed = func(ap netip.AddrPort) bool { return Public(ap.Addr()) } }()
-	if _, err := Client(time.Second).Get(public.URL); !errors.Is(err, ErrNotPublic) {
+	if err := get(public.URL); !errors.Is(err, ErrNotPublic) {
 		t.Fatalf("the redirect to a private address is refused: %v", err)
 	}
+}
+
+// get fetches u with the guarded client; only the error matters.
+func get(u string) error {
+	resp, err := Client(time.Second).Get(u)
+	if err == nil {
+		_ = resp.Body.Close()
+	}
+	return err
 }

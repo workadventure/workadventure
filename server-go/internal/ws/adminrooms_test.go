@@ -27,7 +27,7 @@ func TestTheAdminSocketFollowsTheMembersAndBans(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	dial := func() *websocket.Conn {
-		c, _, err := websocket.Dial(ctx, strings.Replace(adminHTTP.URL, "http", "ws", 1), nil)
+		c, _, err := websocket.Dial(ctx, strings.Replace(adminHTTP.URL, "http", "ws", 1), nil) //nolint:bodyclose // coder/websocket closes the handshake's body
 		if err != nil {
 			t.Fatal(err)
 		}

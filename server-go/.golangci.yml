@@ -4,6 +4,15 @@ run:
 linters:
   default: none
   enable: [errcheck, govet, staticcheck, unused, ineffassign, gosec, bodyclose, misspell]
+  settings:
+    errcheck:
+      # Closing what was only read (a response body, an uploaded file, a zip entry) and dropping a request's
+      # temporary files cannot lose data: their errors are ignored. A written file's Close is still checked.
+      exclude-functions:
+        - (io.ReadCloser).Close
+        - (io.Closer).Close
+        - (mime/multipart.File).Close
+        - (*mime/multipart.Form).RemoveAll
   exclusions:
     generated: strict
     paths: [internal/pb]
@@ -14,134 +23,6 @@ linters:
       - path: ^cmd/loadbot/
         linters: [gosec]
         text: 'G115|G404'
-      # TODO(lint): bodyclose internal/netguard/netguard_test.go:24,27,40
-      - path: ^internal/netguard/netguard_test\.go$
-        linters: [bodyclose]
-        text: 'response body must be closed'
-      # TODO(lint): bodyclose internal/ws/adminrooms_test.go:30
-      - path: ^internal/ws/adminrooms_test\.go$
-        linters: [bodyclose]
-        text: 'response body must be closed'
-      # TODO(lint): bodyclose internal/ws/queries.go:63,65
-      - path: ^internal/ws/queries\.go$
-        linters: [bodyclose]
-        text: 'response body must be closed'
-      # TODO(lint): bodyclose internal/ws/server_test.go:82
-      - path: ^internal/ws/server_test\.go$
-        linters: [bodyclose]
-        text: 'response body must be closed'
-      # TODO(lint): errcheck cmd/server/main.go:300
-      - path: ^cmd/server/main\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/admin/http.go:99,370,395,456
-      - path: ^internal/admin/http\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/analytics/queue.go:224
-      - path: ^internal/analytics/queue\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/httpapi/front.go:72
-      - path: ^internal/httpapi/front\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/httpapi/oidc.go:154
-      - path: ^internal/httpapi/oidc\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/httpapi/oidc_test.go:128
-      - path: ^internal/httpapi/oidc_test\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/livekit/livekit.go:92
-      - path: ^internal/livekit/livekit\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/admin.go:56,126
-      - path: ^internal/mapstorage/admin\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/files.go:64,200
-      - path: ^internal/mapstorage/files\.go$
-        linters: [errcheck]
-        text: 'Error return value of `file\.Close` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/files.go:175
-      - path: ^internal/mapstorage/files\.go$
-        linters: [errcheck]
-        text: 'Error return value of `in\.Close` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/files.go:58
-      - path: ^internal/mapstorage/files\.go$
-        linters: [errcheck]
-        text: 'Error return value of `r\.MultipartForm\.RemoveAll` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/files.go:530
-      - path: ^internal/mapstorage/files\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/mapstorage.go:442
-      - path: ^internal/mapstorage/mapstorage\.go$
-        linters: [errcheck]
-        text: 'Error return value of `file\.Close` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/mapstorage.go:249
-      - path: ^internal/mapstorage/mapstorage\.go$
-        linters: [errcheck]
-        text: 'Error return value of `os\.Remove` is not checked'
-      # TODO(lint): errcheck internal/mapstorage/mapstorage.go:251
-      - path: ^internal/mapstorage/mapstorage\.go$
-        linters: [errcheck]
-        text: 'Error return value of `tmp\.Close` is not checked'
-      # TODO(lint): errcheck internal/matrix/matrix.go:194
-      - path: ^internal/matrix/matrix\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/roomapi/admin.go:60
-      - path: ^internal/roomapi/admin\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/s3/s3.go:121
-      - path: ^internal/s3/s3\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/store/store_test.go:109
-      - path: ^internal/store/store_test\.go$
-        linters: [errcheck]
-        text: 'Error return value of `\(\*github\.com/alicebob/miniredis/v2\.RedisDB\)\.Set` is not checked'
-      # TODO(lint): errcheck internal/uploader/uploader.go:150,209
-      - path: ^internal/uploader/uploader\.go$
-        linters: [errcheck]
-        text: 'Error return value of `f\.Close` is not checked'
-      # TODO(lint): errcheck internal/uploader/uploader.go:173
-      - path: ^internal/uploader/uploader\.go$
-        linters: [errcheck]
-        text: 'Error return value of `r\.MultipartForm\.RemoveAll` is not checked'
-      # TODO(lint): errcheck internal/uploader/uploader.go:305
-      - path: ^internal/uploader/uploader\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/ws/conference.go:134
-      - path: ^internal/ws/conference\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/ws/matrix.go:140
-      - path: ^internal/ws/matrix\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/ws/queries.go:88
-      - path: ^internal/ws/queries\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
-      # TODO(lint): errcheck internal/ws/session.go:288,370
-      - path: ^internal/ws/session\.go$
-        linters: [errcheck]
-        text: 'Error return value of `conn\.Close` is not checked'
-      # TODO(lint): errcheck internal/ws/session.go:376
-      - path: ^internal/ws/session\.go$
-        linters: [errcheck]
-        text: 'Error return value of `prev\.CloseNow` is not checked'
-      # TODO(lint): errcheck internal/ws/variables.go:83
-      - path: ^internal/ws/variables\.go$
-        linters: [errcheck]
-        text: 'Error return value of `resp\.Body\.Close` is not checked'
       # TODO(lint): gosec cmd/server/main.go:300
       - path: ^cmd/server/main\.go$
         linters: [gosec]
@@ -326,10 +207,6 @@ linters:
       - path: ^internal/ws/variables\.go$
         linters: [gosec]
         text: 'G704: SSRF via taint analysis'
-      # TODO(lint): ineffassign internal/httpapi/whitelabel_test.go:27
-      - path: ^internal/httpapi/whitelabel_test\.go$
-        linters: [ineffassign]
-        text: 'ineffectual assignment to v'
       # TODO(lint): staticcheck internal/admin/admin.go:160
       - path: ^internal/admin/admin\.go$
         linters: [staticcheck]
