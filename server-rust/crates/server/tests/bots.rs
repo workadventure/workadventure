@@ -991,3 +991,18 @@ async fn the_profile_pages_ask_the_provider_who_the_token_is() {
     let r = http.get(format!("{server}/profile-callback?token=nope&playUri=x")).send().await.unwrap();
     assert_eq!(r.status(), 500);
 }
+
+#[tokio::test]
+async fn the_manifest_and_the_server_card_describe_this_server() {
+    let server = start_with(&[("SECRET_KEY", "test"), ("PUSHER_URL", "http://play.test"), ("SERVER_NAME", "Ours")]).await.0;
+    let http = reqwest::Client::new();
+    let r = http.get(format!("{server}/manifest.json?url=http://play.test/_/global/maps.test/m.json")).header("Host", "play.test").send().await.unwrap();
+    assert_eq!(r.headers()["content-type"], "application/manifest+json; charset=utf-8");
+    let m: serde_json::Value = r.json().await.unwrap();
+    assert_eq!((m["name"].as_str(), m["start_url"].as_str()), (Some("WorkAdventure"), Some("/_/global/maps.test/m.json")));
+    assert_eq!(m["icons"][0]["src"], "/static/images/favicons/icon-512x512.png");
+    assert_eq!(http.get(format!("{server}/manifest.json")).send().await.unwrap().status(), 400);
+    let card: serde_json::Value = http.get(format!("{server}/server.json")).send().await.unwrap().json().await.unwrap();
+    assert_eq!((card["name"].as_str(), card["domain"].as_str()), (Some("Ours"), Some("http://play.test")));
+    assert_eq!(card["icon"], "http://play.test/static/images/favicons/icon-512x512.png");
+}
