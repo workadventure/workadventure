@@ -720,6 +720,8 @@ jobs:
               repository: thecodingmachine/workadventure-server-go
             env:
               PROMETHEUS_PORT: "9090"
+              # Space updates in the logs (user, mask, changed or not): read them in server.log of a failed run.
+              DEBUG_MODE: "true"
             secretEnv:
               ROOM_API_SECRET_KEY: "password"
             podAnnotations:
@@ -967,6 +969,15 @@ jobs:
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
+      # The server's own logs, to read what happened on its side when a spec fails (they are not in the trace).
+      - name: Dump the server's logs
+        if: failure()
+        run: |
+          mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
+          kubectl logs -n "${NAMESPACE}" deployment/test-workadventure-play --all-containers --since=2h > tests/playwright-report/server.log 2>&1 || true
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
