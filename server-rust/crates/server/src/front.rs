@@ -299,6 +299,81 @@ fn full_url(headers: &HeaderMap, uri: &axum::http::Uri) -> String {
     format!("{proto}://{host}{path}")
 }
 
+/// MetaTagsBuilder.getMeta: the admin's metatags (white label), else for a link preview the map's name and
+/// description, else the defaults.
+async fn meta_tags(state: &AppState, url: &str, map_details: Option<&Value>, user_agent: &str) -> Value {
+    let mut meta = default_meta();
+    let admin_meta = map_details.and_then(|d| d["metatags"].as_object());
+    if let Some(tags) = admin_meta {
+        for (k, v) in tags {
+            if !v.is_null() {
+                meta[k] = v.clone();
+            }
+        }
+    }
+    let user_agent = user_agent.to_lowercase();
+    if admin_meta.is_none()
+        && ["bot", "facebook", "preview"].iter().any(|b| user_agent.contains(b))
+        && let Some(map) = crate::room_map::tmj_of_page(state, url).await
+    {
+        let property = |name: &str| {
+            map["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str().map(str::to_owned)
+        };
+        if let Some(name) = property("mapName") {
+            meta["title"] = format!("WorkAdventure - {name}").into();
+        }
+        if let Some(description) = property("mapDescription") {
+            meta["description"] = description.into();
+        }
+    }
+    meta
+}
+
+/// `/manifest.json?url=`: the PWA manifest of that room, dressed like its page.
+async fn manifest(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
+    let Some(url) = query_pairs(q.as_deref()).into_iter().find(|(k, _)| k == "url").map(|(_, v)| v) else {
+        return (StatusCode::BAD_REQUEST, "url is required").into_response();
+    };
+    let details = match &state.admin {
+        Some(admin) => Some(admin.map_details(&url, None, None).await).filter(|d| d.get("group").is_some()),
+        None => None,
+    };
+    let ua = headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default();
+    let meta = meta_tags(&state, &url, details.as_ref(), ua).await;
+    let origin = full_url(&headers, &axum::http::Uri::from_static("/"));
+    let manifest = json!({
+        "short_name": meta["title"], "name": meta["title"], "icons": meta["manifestIcons"],
+        "start_url": url.replace(origin.trim_end_matches('/'), ""),
+        "background_color": meta["themeColor"],
+        "display_override": ["window-control-overlay", "minimal-ui"],
+        "display": "standalone", "orientation": "portrait-primary", "scope": "/", "lang": "en",
+        "theme_color": meta["themeColor"],
+        "shortcuts": [{
+            "name": meta["title"], "short_name": meta["title"], "description": meta["description"], "url": "/",
+            "icons": [{"src": "/static/images/favicons/android-icon-192x192.png", "sizes": "192x192", "type": "image/png"}],
+        }],
+        "description": meta["description"], "screenshots": [],
+        "related_applications": [{"platform": "web", "url": "https://workadventu.re"}, {"platform": "play", "url": "https://play.workadventu.re"}],
+    });
+    ([(header::CONTENT_TYPE, "application/manifest+json; charset=utf-8")], manifest.to_string()).into_response()
+}
+
+/// `/server.json`: who this server is.
+async fn server_json(State(state): State<AppState>) -> Response {
+    let raw = |k: &str| state.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
+    let pusher = raw("PUSHER_URL");
+    let dev = raw("NODE_ENV").as_deref() != Some("production");
+    axum::Json(json!({
+        "domain": pusher,
+        "name": raw("SERVER_NAME").unwrap_or_else(|| "WorkAdventure Server".into()),
+        "motd": raw("SERVER_MOTD").unwrap_or_else(|| "A WorkAdventure Server".into()),
+        "icon": raw("SERVER_ICON").unwrap_or_else(|| format!("{}/static/images/favicons/icon-512x512.png", pusher.as_deref().unwrap_or("undefined"))),
+        // The pusher's package version.
+        "version": if dev { "1.0.0-dev" } else { "1.0.0" },
+    }))
+    .into_response()
+}
+
 async fn page(State(state): State<AppState>, request: Request) -> Response {
     let (parts, body) = request.into_parts();
     let url = full_url(&parts.headers, &parts.uri);
@@ -340,30 +415,8 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         return ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response();
     }
     let map_details = details.filter(|d| d.get("group").is_some());
-    let mut meta = default_meta();
-    let admin_meta = map_details.as_ref().and_then(|d| d["metatags"].as_object());
-    if let Some(tags) = admin_meta {
-        for (k, v) in tags {
-            if !v.is_null() {
-                meta[k] = v.clone();
-            }
-        }
-    }
-    let user_agent = parts.headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default().to_lowercase();
-    if admin_meta.is_none()
-        && ["bot", "facebook", "preview"].iter().any(|b| user_agent.contains(b))
-        && let Some(map) = crate::room_map::tmj_of_page(&state, &url).await
-    {
-        let property = |name: &str| {
-            map["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str().map(str::to_owned)
-        };
-        if let Some(name) = property("mapName") {
-            meta["title"] = format!("WorkAdventure - {name}").into();
-        }
-        if let Some(description) = property("mapDescription") {
-            meta["description"] = description.into();
-        }
-    }
+    let user_agent = parts.headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default();
+    let meta = meta_tags(&state, &url, map_details.as_ref(), user_agent).await;
     let mut ctx = Context::new();
     for key in ["title", "description", "author", "provider", "appName", "shortAppName", "themeColor", "cardImage"] {
         ctx.insert(key, V::Str(meta[key].as_str().unwrap_or_default().to_owned()));
@@ -693,6 +746,10 @@ pub fn routes() -> Router<AppState> {
     let mut router = Router::new()
         .route("/", get(page))
         .route("/login", get(page))
+        // Deprecated, still the page.
+        .route("/jwt", get(page))
+        .route("/manifest.json", get(manifest))
+        .route("/server.json", get(server_json))
         .route("/_/{*rest}", get(page).post(page))
         .route("/@/{*rest}", get(page).post(page))
         .route("/~/{*rest}", get(page).post(page))
