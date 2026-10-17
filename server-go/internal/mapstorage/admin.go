@@ -82,18 +82,33 @@ func maxAge(cacheControl string) time.Duration {
 // WebHook is WEB_HOOK_URL (with WEB_HOOK_API_TOKEN), off when its URL is empty or ENABLE_WEB_HOOK is false.
 type WebHook struct{ URL, Token string }
 
-// notify tells the webhook, off the caller, that the WAM file at key was updated or deleted. Without
+// notify tells the webhook, off the caller, that the WAM file at key was written (updateWAMFileInCache). Without
 // USE_DOMAIN_NAME_IN_PATH, the key has no domain: domain is then empty.
 func (s *Store) notify(key, action string) {
-	h := s.webHook
-	if h.URL == "" || !strings.HasSuffix(key, ".wam") {
+	if !strings.HasSuffix(key, ".wam") {
 		return
 	}
 	domain, mapPath := "", key
 	if s.useDomain {
 		domain, mapPath, _ = strings.Cut(key, "/")
 	}
-	body, _ := json.Marshal(map[string]string{"domain": domain, "mapPath": mapPath, "action": action})
+	s.hook(map[string]string{"domain": domain, "mapPath": mapPath, "action": action})
+}
+
+// notifyDomain tells the webhook that a domain's maps changed in bulk (generateCacheFile: an upload, a deletion, a
+// move or a copy), without a map path. Like map-storage, a deletion is an update of the domain: "delete" is never
+// sent (deleteWAMFileInCache has no caller).
+func (s *Store) notifyDomain(r *http.Request) {
+	s.hook(map[string]string{"domain": requestDomain(r), "action": "update"})
+}
+
+func (s *Store) hook(payload map[string]string) {
+	h := s.webHook
+	if h.URL == "" {
+		return
+	}
+	domain, mapPath, action := payload["domain"], payload["mapPath"], payload["action"]
+	body, _ := json.Marshal(payload)
 	go func() {
 		req, err := http.NewRequest(http.MethodPost, h.URL, bytes.NewReader(body))
 		if err != nil {

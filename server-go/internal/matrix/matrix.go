@@ -5,6 +5,8 @@ package matrix
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -24,6 +26,8 @@ type Client struct {
 	api, user, password, domain string
 	http                        *http.Client
 
+	shared Shared // Redis: the pods share one admin token (nil: each keeps its own)
+
 	mu        sync.Mutex
 	token     string
 	limited   bool   // the admin's rate limit is lifted
@@ -37,6 +41,23 @@ func New(api, user, password, domain string) *Client {
 		http: &http.Client{Timeout: 30 * time.Second}}
 }
 
+// Shared is the Redis the admin token is shared through, as MatrixProvider keeps it.
+type Shared interface {
+	Get(ctx context.Context, key string) (string, bool, error)
+	Set(ctx context.Context, key, value string, ttl time.Duration) error
+	SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error)
+	Del(ctx context.Context, key string) error
+}
+
+// ShareThrough makes the pods share one admin token, so that they do not each log in (a Synapse device each).
+func (c *Client) ShareThrough(s Shared) *Client { c.shared = s; return c }
+
+func (c *Client) tokenKey() string { return "matrix-admin-access-token:" + c.domain + ":" + c.user }
+func (c *Client) lockKey() string  { return "matrix-admin-access-token-lock:" + c.domain + ":" + c.user }
+
+// lockTTL, lockWait and lockTimeout are MatrixProvider's: a pod that died holding the lock frees it after 30 s.
+var lockTTL, lockWait, lockTimeout = 30 * time.Second, 500 * time.Millisecond, 35 * time.Second
+
 // ID is the admin's Matrix id.
 func (c *Client) ID() string { return "@" + c.user + ":" + c.domain }
 
@@ -49,7 +70,7 @@ type Error struct {
 
 func (e *Error) Error() string { return fmt.Sprintf("matrix: HTTP %d %s", e.Status, e.Code) }
 
-// ponytail: the admin token is kept in memory, one login per process; the TS shares it through Redis between pods.
+// accessToken is the admin's token: in memory, else the one the pods share, else a new login.
 func (c *Client) accessToken(ctx context.Context) (string, error) {
 	c.loginLock.Lock()
 	defer c.loginLock.Unlock()
@@ -59,6 +80,61 @@ func (c *Client) accessToken(ctx context.Context) (string, error) {
 	if t != "" {
 		return t, nil
 	}
+	login := c.login
+	if c.shared != nil {
+		login = c.sharedLogin
+	}
+	t, err := login(ctx)
+	if err != nil {
+		return "", err
+	}
+	c.mu.Lock()
+	c.token = t
+	c.mu.Unlock()
+	return t, nil
+}
+
+// sharedLogin is loginAndCacheAccessToken: one pod logs in under a lock, the others wait for its token.
+func (c *Client) sharedLogin(ctx context.Context) (string, error) {
+	lock := fmt.Sprintf("%d-%d", time.Now().UnixNano(), randSuffix())
+	for deadline := time.Now().Add(lockTimeout); time.Now().Before(deadline); {
+		if t, ok, err := c.shared.Get(ctx, c.tokenKey()); err != nil {
+			return "", err
+		} else if ok && t != "" {
+			return t, nil
+		}
+		got, err := c.shared.SetNX(ctx, c.lockKey(), lock, lockTTL)
+		if err != nil {
+			return "", err
+		}
+		if got {
+			t, err := func() (string, error) {
+				defer func() {
+					if v, ok, _ := c.shared.Get(context.Background(), c.lockKey()); ok && v == lock {
+						_ = c.shared.Del(context.Background(), c.lockKey())
+					}
+				}()
+				if t, ok, err := c.shared.Get(ctx, c.tokenKey()); err == nil && ok && t != "" {
+					return t, nil
+				}
+				t, err := c.login(ctx)
+				if err != nil {
+					return "", err
+				}
+				return t, c.shared.Set(ctx, c.tokenKey(), t, 0)
+			}()
+			return t, err
+		}
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-time.After(lockWait):
+		}
+	}
+	return "", errors.New("timed out while waiting for the Matrix admin access token lock")
+}
+
+func (c *Client) login(ctx context.Context) (string, error) {
 	var out struct {
 		AccessToken string `json:"access_token"`
 	}
@@ -66,9 +142,6 @@ func (c *Client) accessToken(ctx context.Context) (string, error) {
 		map[string]any{"type": "m.login.password", "user": c.user, "password": c.password}, &out); err != nil {
 		return "", err
 	}
-	c.mu.Lock()
-	c.token = out.AccessToken
-	c.mu.Unlock()
 	return out.AccessToken, nil
 }
 
@@ -89,6 +162,11 @@ func (c *Client) do(ctx context.Context, method, path string, body, out any) err
 			c.token = ""
 		}
 		c.mu.Unlock()
+		if c.shared != nil { // invalidateAccessToken: only if no pod stored a newer one meanwhile
+			if v, ok, _ := c.shared.Get(ctx, c.tokenKey()); ok && v == t {
+				_ = c.shared.Del(ctx, c.tokenKey())
+			}
+		}
 	}
 }
 
@@ -291,4 +369,10 @@ func (c *Client) DeleteRoom(ctx context.Context, roomID string) error {
 		}
 	}
 	return c.Kick(ctx, c.ID(), roomID)
+}
+
+func randSuffix() int64 {
+	var b [8]byte
+	_, _ = rand.Read(b[:])
+	return int64(binary.BigEndian.Uint64(b[:]) >> 1)
 }

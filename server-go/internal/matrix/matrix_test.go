@@ -8,6 +8,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 )
 
 // synapse is a fake Synapse that records the calls and their bodies.
@@ -106,5 +107,62 @@ func TestTheAreaRoomsOfSynapse(t *testing.T) {
 	}
 	if c.Invite(ctx, "@bob:d", "") != nil {
 		t.Fatal("no room, no invitation")
+	}
+}
+
+type memShared struct {
+	mu sync.Mutex
+	m  map[string]string
+}
+
+func (s *memShared) Get(_ context.Context, k string) (string, bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	v, ok := s.m[k]
+	return v, ok, nil
+}
+func (s *memShared) Set(_ context.Context, k, v string, _ time.Duration) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.m[k] = v
+	return nil
+}
+func (s *memShared) SetNX(_ context.Context, k, v string, _ time.Duration) (bool, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if _, ok := s.m[k]; ok {
+		return false, nil
+	}
+	s.m[k] = v
+	return true, nil
+}
+func (s *memShared) Del(_ context.Context, k string) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.m, k)
+	return nil
+}
+
+func TestThePodsShareOneAdminToken(t *testing.T) {
+	s := &synapse{}
+	first := s.start(t) // the fake counts the logins of every client pointed at it
+	shared := &memShared{m: map[string]string{}}
+	first.ShareThrough(shared)
+	second := New(first.api, "admin", "pw", "d").ShareThrough(shared)
+	var wg sync.WaitGroup
+	for _, c := range []*Client{first, second, first, second} {
+		wg.Add(1)
+		go func() { defer wg.Done(); _ = c.Invite(context.Background(), "@u:d", "!r:d") }()
+	}
+	wg.Wait()
+	if s.logins != 1 || shared.m[first.tokenKey()] != "tok1" {
+		t.Fatalf("one login for all the pods: %d logins, %v", s.logins, shared.m)
+	}
+	if _, locked := shared.m[first.lockKey()]; locked {
+		t.Fatal("the lock is released")
+	}
+	s.revoke = true
+	if err := second.Invite(context.Background(), "@u:d", "!r:d"); err != nil || s.logins != 2 || shared.m[first.tokenKey()] != "tok2" {
+		t.Fatalf("a revoked token is replaced for everyone: %v %d %v", err, s.logins, shared.m)
 	}
 }

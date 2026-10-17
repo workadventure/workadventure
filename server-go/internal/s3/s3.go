@@ -6,7 +6,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/hmac"
+	"crypto/md5"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/xml"
 	"fmt"
@@ -197,4 +199,16 @@ func (c *Client) PresignAs(endpoint, key string, ttl time.Duration, attachment b
 	q.Set("X-Amz-Signature", sig)
 	u.RawQuery = canonicalQuery(q)
 	return u.String(), nil
+}
+
+// PutCORS lets every origin read the objects (GET, HEAD) with an Authorization header, like S3StorageProvider does
+// on its first use: the browsers follow the signed links of the chat's files.
+func (c *Client) PutCORS(ctx context.Context) error {
+	body := []byte(`<CORSConfiguration><CORSRule><AllowedHeader>Authorization</AllowedHeader><AllowedMethod>GET</AllowedMethod>` +
+		`<AllowedMethod>HEAD</AllowedMethod><AllowedOrigin>*</AllowedOrigin><ExposeHeader>Access-Control-Allow-Origin</ExposeHeader>` +
+		`</CORSRule></CORSConfiguration>`)
+	sum := md5.Sum(body) //nolint:gosec // Content-MD5 is what S3 asks for
+	_, err := c.send(ctx, http.MethodPut, "", url.Values{"cors": {""}}, body,
+		map[string]string{"Content-MD5": base64.StdEncoding.EncodeToString(sum[:]), "Content-Type": "application/xml"})
+	return err
 }
