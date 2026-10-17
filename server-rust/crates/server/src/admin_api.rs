@@ -5,6 +5,10 @@
 //! Business errors come as HTTP 200 with an ErrorApiData body; transport errors and non-2xx answers become an
 //! ErrorApiData built here for A2 and A3, and errors for the others.
 
+use crate::admin_types::{
+    ErrorApiData, IceServer, LivekitCredentials, MapDetailsData, MemberData, OauthRefreshToken, RoomRedirect,
+    ShortMapDescriptionListItem, fits,
+};
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -105,6 +109,11 @@ impl AdminApi {
         r.json::<Value>().await.map_err(|e| e.to_string())
     }
 
+    /// An answer in the contract's type (`what` names it in the logs).
+    async fn typed<T: serde::de::DeserializeOwned>(builder: reqwest::RequestBuilder, what: &str) -> Result<T, String> {
+        crate::admin_types::parse(what, Self::json(builder).await?)
+    }
+
     /// A2: the map of a room (MapDetailsData), a redirection (RoomRedirect) or an error, never a failure.
     pub async fn map_details(&self, play_uri: &str, user: Option<(&str, Option<&str>)>, locale: Option<&str>) -> Value {
         let mut query = vec![("playUri", play_uri.to_owned())];
@@ -117,7 +126,8 @@ impl AdminApi {
         let builder =
             self.api(reqwest::Method::GET, "/api/map").query(&query).header("Accept-Language", locale.unwrap_or("en"));
         match Self::json(builder).await {
-            Ok(v) if v["redirectUrl"].is_string() || v["status"] == "error" || v.get("group").is_some() => v,
+            // As the pusher tries them: map details, then a redirection, then an error.
+            Ok(v) if fits::<MapDetailsData>(&v) || fits::<RoomRedirect>(&v) || fits::<ErrorApiData>(&v) => v,
             Ok(v) => {
                 tracing::error!(details = %v, "unexpected answer of the admin to /api/map");
                 error_data(
@@ -155,13 +165,7 @@ impl AdminApi {
             .query(&query)
             .header("Accept-Language", a.locale.unwrap_or("en"));
         match Self::json(builder).await {
-            Ok(v) if v["status"] == "ok" && v["userUuid"].is_string() && v["tags"].is_array() => v,
-            Ok(v)
-                if v["status"] == "error"
-                    || ["error", "retry", "redirect", "unauthorized"].iter().any(|t| v["type"] == *t) =>
-            {
-                v
-            }
+            Ok(v) if fits::<crate::admin_types::RoomAccess>(&v) => v,
             Ok(v) => {
                 tracing::error!(details = %v, "unexpected answer of the admin to /api/room/access");
                 error_data(
@@ -198,10 +202,16 @@ impl AdminApi {
     }
 
     /// A6: the maps of the world.
-    pub async fn rooms_from_same_world(&self, room: &str, tags: &[String], bypass: bool) -> Result<Value, String> {
+    pub async fn rooms_from_same_world(
+        &self,
+        room: &str,
+        tags: &[String],
+        bypass: bool,
+    ) -> Result<Vec<ShortMapDescriptionListItem>, String> {
         let query = [("roomUrl", room.to_owned()), ("bypassTagFilter", bypass.to_string()), ("tags", tags.join(","))];
-        Self::json(self.api(reqwest::Method::GET, "/api/room/sameWorld").query(&query).header("Accept-Language", "en"))
-            .await
+        let builder =
+            self.api(reqwest::Method::GET, "/api/room/sameWorld").query(&query).header("Accept-Language", "en");
+        Self::typed(builder, "/api/room/sameWorld").await
     }
 
     /// A7: true when the ban is stored, false when the admin refuses it.
@@ -252,13 +262,19 @@ impl AdminApi {
     }
 
     /// A12, A13, A14: lists of the world for a search.
-    pub async fn search(&self, path: &str, play_uri: &str, text: &str) -> Result<Value, String> {
-        Self::json(self.api(reqwest::Method::GET, path).query(&[("playUri", play_uri), ("searchText", text)])).await
+    pub async fn search<T: serde::de::DeserializeOwned>(
+        &self,
+        path: &str,
+        play_uri: &str,
+        text: &str,
+    ) -> Result<T, String> {
+        Self::typed(self.api(reqwest::Method::GET, path).query(&[("playUri", play_uri), ("searchText", text)]), path)
+            .await
     }
 
     /// A15: one member.
-    pub async fn member(&self, uuid: &str) -> Result<Value, String> {
-        Self::json(self.api(reqwest::Method::GET, &format!("/api/members/{uuid}"))).await
+    pub async fn member(&self, uuid: &str) -> Result<MemberData, String> {
+        Self::typed(self.api(reqwest::Method::GET, &format!("/api/members/{uuid}")), "/api/members/{uuid}").await
     }
 
     /// A16: the Matrix id of a member (on ADMIN_URL).
@@ -278,23 +294,18 @@ impl AdminApi {
         token: &str,
         provider: Option<&str>,
         user: Option<&str>,
-    ) -> Result<Value, String> {
+    ) -> Result<OauthRefreshToken, String> {
         let body = json!({"accessToken": token, "provider": provider, "userIdentifier": user});
-        let v = Self::json(
-            self.request(reqwest::Method::POST, format!("{}/api/oauth/refreshtoken", self.public)).json(&body),
-        )
-        .await?;
-        if v["message"].is_string() && v["token"].is_string() {
-            Ok(v)
-        } else {
-            Err("Invalid refresh token answer".into())
-        }
+        let builder =
+            self.request(reqwest::Method::POST, format!("{}/api/oauth/refreshtoken", self.public)).json(&body);
+        Self::typed(builder, "/api/oauth/refreshtoken").await
     }
 
     /// A18: the ICE servers of the user (on ADMIN_URL).
-    pub async fn ice_servers(&self, room: &str, user: &str) -> Result<Value, String> {
+    pub async fn ice_servers(&self, room: &str, user: &str) -> Result<Vec<IceServer>, String> {
         let url = format!("{}/api/ice-servers", self.public);
-        Self::json(self.request(reqwest::Method::GET, url).query(&[("roomUrl", room), ("userIdentifier", user)])).await
+        let builder = self.request(reqwest::Method::GET, url).query(&[("roomUrl", room), ("userIdentifier", user)]);
+        Self::typed(builder, "/api/ice-servers").await
     }
 
     /// A19, A20: the wokas or companions offered in a room.
@@ -309,13 +320,12 @@ impl AdminApi {
     }
 
     /// A24: the LiveKit credentials of a room (capability api/livekit/credentials).
-    pub async fn livekit_credentials(&self, play_uri: &str) -> Result<Value, String> {
-        Self::json(
-            self.api(reqwest::Method::GET, "/api/livekit/credentials")
-                .query(&[("playUri", play_uri)])
-                .header("Accept", "application/json"),
-        )
-        .await
+    pub async fn livekit_credentials(&self, play_uri: &str) -> Result<LivekitCredentials, String> {
+        let builder = self
+            .api(reqwest::Method::GET, "/api/livekit/credentials")
+            .query(&[("playUri", play_uri)])
+            .header("Accept", "application/json");
+        Self::typed(builder, "/api/livekit/credentials").await
     }
 
     /// A23: the end of a recording, retried after 250 ms, 1 s and 4 s on a network error, 5xx, 408 or 429.

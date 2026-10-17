@@ -62,12 +62,7 @@ impl Logic {
                     let rooms = match (&app.admin, m.broadcast_to_world) {
                         (Some(admin), true) => {
                             match admin.rooms_from_same_world(&session.info.room_id, &[], true).await {
-                                Ok(list) => list
-                                    .as_array()
-                                    .into_iter()
-                                    .flatten()
-                                    .filter_map(|r| r["roomUrl"].as_str().map(str::to_owned))
-                                    .collect(),
+                                Ok(list) => list.into_iter().map(|r| r.room_url).collect(),
                                 Err(e) => {
                                     tracing::warn!(error = %e, "the admin did not list the rooms of the world");
                                     return;

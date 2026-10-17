@@ -373,13 +373,11 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     // ponytail: awaited once, when the space starts (the back asks at each switch).
                     match admin.livekit_credentials(&user.play_uri).await {
                         Ok(c) => {
-                            let s = |k: &str| c[k].as_str().map(str::to_owned);
-                            if let (Some(host), Some(key), Some(secret)) =
-                                (s("livekitHost"), s("livekitApiKey"), s("livekitApiSecret"))
-                            {
-                                media.livekit =
-                                    Some(Livekit { host: host.trim_end_matches('/').to_owned(), key, secret });
-                            }
+                            media.livekit = Some(Livekit {
+                                host: c.livekit_host.trim_end_matches('/').to_owned(),
+                                key: c.livekit_api_key,
+                                secret: c.livekit_api_secret,
+                            });
                         }
                         Err(e) => tracing::error!(error = %e, "the admin did not give LiveKit credentials"),
                     }

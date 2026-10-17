@@ -592,11 +592,15 @@ jobs:
         run: npm run ts-proto
         working-directory: "messages"
 
+      - name: "Install cargo-typify"
+        run: cargo install --locked cargo-typify --version 0.8.0
+
       - name: "Generated files match their sources"
         run: |
           ./tools/gen-analytics-catalog.sh
           ./tools/gen-openapi.sh
-          git diff --exit-code -- crates/server/analytics-catalog.json crates/server/openapi
+          ./tools/gen-admin-types.sh
+          git diff --exit-code -- crates/server/analytics-catalog.json crates/server/openapi crates/server/src/admin_types
 
   continuous-integration-end-to-end-tests:
     name: "Continuous Integration checking End To End tests"
