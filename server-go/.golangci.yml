@@ -10,6 +10,10 @@ linters:
     # Baseline of the findings present when the linters were introduced: one rule = one file + one linter + one
     # message, so a NEW finding (another file or message) still fails the job. Fix them, then delete the rule.
     rules:
+      # The load generator: math/rand positions and int32 coordinates of a test map are what it wants.
+      - path: ^cmd/loadbot/
+        linters: [gosec]
+        text: 'G115|G404'
       # TODO(lint): bodyclose internal/netguard/netguard_test.go:24,27,40
       - path: ^internal/netguard/netguard_test\.go$
         linters: [bodyclose]

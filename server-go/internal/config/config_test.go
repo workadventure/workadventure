@@ -8,10 +8,8 @@ import (
 	"time"
 )
 
-func env(m map[string]string) func(string) string { return func(k string) string { return m[k] } }
-
 func TestDefaults(t *testing.T) {
-	c, err := parse(env(map[string]string{"SECRET_KEY": "s"}))
+	c, err := parse(map[string]string{"SECRET_KEY": "s"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,17 +28,17 @@ func TestDefaults(t *testing.T) {
 }
 
 func TestInvalidValuesAreFatal(t *testing.T) {
-	_, err := parse(env(map[string]string{"SECRET_KEY": "s", "ENABLE_CHAT": "yes", "MAX_PER_GROUP": "-1"}))
+	_, err := parse(map[string]string{"SECRET_KEY": "s", "ENABLE_CHAT": "yes", "MAX_PER_GROUP": "-1"})
 	if err == nil || !strings.Contains(err.Error(), "ENABLE_CHAT") || !strings.Contains(err.Error(), "MAX_PER_GROUP") {
 		t.Fatalf("expected both errors, got %v", err)
 	}
-	if _, err := parse(env(map[string]string{})); err == nil {
+	if _, err := parse(map[string]string{}); err == nil {
 		t.Fatal("SECRET_KEY is required")
 	}
 }
 
 func TestPrometheusPortEqualToHTTPPortMeansMainPort(t *testing.T) {
-	c, err := parse(env(map[string]string{"SECRET_KEY": "s", "PROMETHEUS_PORT": "3000"}))
+	c, err := parse(map[string]string{"SECRET_KEY": "s", "PROMETHEUS_PORT": "3000"})
 	if err != nil || c.PrometheusPort != 0 {
 		t.Fatalf("got %v %v", c, err)
 	}
@@ -53,7 +51,7 @@ func TestTheFrontEnvHasEveryRequiredKeyOfTheTSInterface(t *testing.T) {
 	if err != nil {
 		t.Skip("no TS interface next to this checkout")
 	}
-	c, err := parse(env(map[string]string{"SECRET_KEY": "s"}))
+	c, err := parse(map[string]string{"SECRET_KEY": "s"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -73,12 +71,12 @@ func TestTheFrontEnvHasEveryRequiredKeyOfTheTSInterface(t *testing.T) {
 
 func TestTheJSONBodyLimitReadsLikeTheBytesPackage(t *testing.T) {
 	for v, want := range map[string]int64{"": 100 << 20, "100mb": 100 << 20, "1.5GB": 3 << 29, "2048": 2048, "10 kb": 10 << 10} {
-		c, err := parse(env(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": v}))
+		c, err := parse(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": v})
 		if err != nil || c.MapStorage.JSONLimit != want {
 			t.Errorf("%q: %v %v", v, c, err)
 		}
 	}
-	if _, err := parse(env(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": "lots"})); err == nil {
+	if _, err := parse(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": "lots"}); err == nil {
 		t.Fatal("an unreadable size is refused")
 	}
 }

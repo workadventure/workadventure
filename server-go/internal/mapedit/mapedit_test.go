@@ -244,8 +244,8 @@ func TestARoomKeepsDeliveringMovesWhileItsMapIsBeingWritten(t *testing.T) {
 		return ok && m.Position.X == 800
 	})
 	select {
-	case <-done:
-		t.Fatal("the edit should still be waiting for the disk")
+	case err := <-done:
+		t.Fatal("the edit should still be waiting for the disk", err)
 	default:
 	}
 
@@ -303,7 +303,9 @@ func TestASlowMapHoldsUpNoOtherMap(t *testing.T) {
 		t.Fatal("the garden waited for the office")
 	}
 	close(gate)
-	<-slow
+	if err := <-slow; err != nil {
+		t.Fatal(err)
+	}
 }
 
 // --- Who may change what.

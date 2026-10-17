@@ -2,7 +2,6 @@ package livekit
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +10,9 @@ import (
 	"testing"
 
 	"github.com/golang-jwt/jwt/v5"
+	lkp "github.com/livekit/protocol/livekit"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
 )
@@ -56,18 +58,29 @@ func TestARoomIsCreatedOnceAndDeleted(t *testing.T) {
 			return
 		}
 		body, _ := io.ReadAll(r.Body)
-		mu.Lock()
-		calls = append(calls, strings.TrimPrefix(r.URL.Path, "/twirp/livekit.RoomService/")+" "+string(body))
-		mu.Unlock()
-		switch {
-		case strings.HasSuffix(r.URL.Path, "/ListRooms") && exists:
-			_ = json.NewEncoder(w).Encode(map[string]any{"rooms": []any{map[string]string{"name": "r"}}})
-		case strings.HasSuffix(r.URL.Path, "/CreateRoom"):
-			exists = true
-			_, _ = w.Write([]byte(`{"name":"r"}`))
-		default:
-			_, _ = w.Write([]byte(`{}`))
+		method := strings.TrimPrefix(r.URL.Path, "/twirp/livekit.RoomService/")
+		var req, resp proto.Message
+		switch method {
+		case "ListRooms":
+			req = &lkp.ListRoomsRequest{}
+			list := &lkp.ListRoomsResponse{}
+			if exists {
+				list.Rooms = []*lkp.Room{{Name: "r"}}
+			}
+			resp = list
+		case "CreateRoom":
+			req, resp, exists = &lkp.CreateRoomRequest{}, &lkp.Room{Name: "r"}, true
+		case "DeleteRoom":
+			req, resp = &lkp.DeleteRoomRequest{}, &lkp.DeleteRoomResponse{}
 		}
+		_ = proto.Unmarshal(body, req)
+		b, _ := protojson.Marshal(req)
+		mu.Lock()
+		calls = append(calls, method+" "+strings.ReplaceAll(string(b), " ", ""))
+		mu.Unlock()
+		out, _ := proto.Marshal(resp)
+		w.Header().Set("Content-Type", "application/protobuf")
+		_, _ = w.Write(out)
 	}))
 	defer srv.Close()
 	c := New(srv.URL, "key", "secret")

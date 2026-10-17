@@ -848,3 +848,45 @@ Décision de Yannis (via le socle) : les bibliothèques connues de l'écosystèm
   - room-api et api_players : 14 réussis sur 14 ;
   - uploader : envoi puis téléchargement 200, le fichier est bien dans la base 1 ; après un `docker restart` de Redis, les envois repassent sans redémarrer le serveur.
   - `variables.spec.ts` n'apporte rien : `:188` est un défaut d'environnement connu, et `storage works` a été lancé par erreur (règle : ne pas le jouer). Il a échoué en 22 ms sans rien toucher.
+
+### 17/10, débogage, sécurité, puis bibliothèques standard, tranche 3 : minio-go
+
+- 433f2edd1 : `/dump` et `/debug/close-space-connection` du back (seul échec CI restant de #6810).
+- e536b9abd + d980f91b5 (lot A) : `netguard`, contre la SSRF ; vérification de l'id_token OpenID (go-oidc, x/oauth2) et scellement du verifier PKCE.
+- 332a82e97 (lot B+C) : un Stop d'egress perdu est redemandé ; les corps de PATCH de map-storage sont lus comme par body-parser.
+- 78de12762 : IMPROVEMENTS.md.
+- Tranche 3, minio-go : `internal/s3` garde la même API (List, Delete, Put, Presign/PresignAs, PutCORS). Elle est désormais
+  sur minio-go, en style chemin, avec la région donnée : aucune requête pour la créer ni pour signer. La signature SigV4 faite main est supprimée,
+  ainsi que son test sur le vecteur AWS. Un envoi en HTTP clair part en aws-chunked, ce que S3 accepte ; le faux bucket du test de l'uploader le lit.
+  +80 / -161 lignes ; une dépendance directe (minio-go v7.4.1, avec 13 indirectes). Image prod de 42 Mo, qui cumule grpc,
+  go-redis, oidc et minio (31 Mo après la tranche 1).
+- `recording.spec.ts` contre Go : 5 sur 5 avant minio comme après. Un premier passage avec minio avait donné 3 échecs, qui ne se sont
+  pas reproduits sur le même code : c'est de l'instabilité, pas minio. Liste et signature contre le rustfs du socle : 75 objets, URL signée 200.
+
+### 17/10, bibliothèques standard, tranche 4 : caarlos0/env
+
+- `internal/config` lit ses 170 variables dans une struct `vars` (tags `env`/`envDefault`) par caarlos0/env, puis `parse` en
+  tire `Config` : repli de l'ancien nom vers le nouveau (OPID_ vers OPENID_, ROOM_API_PORT, ASSETS_URL), unités, `window.env`.
+- Les règles des helpers zod restent : un analyseur propre pour les booléens (true|false|0|1) et les entiers (chiffres
+  seulement), "" veut dire « défaut ». Chaque erreur nomme sa variable.
+- `SENTRY_DSN_FRONT` défini mais vide se lit désormais dans l'environnement donné à `parse`, et non plus par `os.LookupEnv` : même résultat
+  en production, et il devient testable.
+- Équivalence : la `Config` (en JSON) produite par l'ancien et le nouveau code est identique sur l'environnement de la stack go,
+  sur un environnement minimal et sur un jeu de cas limites (OPID_*, ROOM_API_PORT, PROMETHEUS_PORT = port HTTP,
+  ENABLE_WEB_HOOK=0, tailles). Sur des valeurs invalides, seul l'ordre des messages change (alphabétique).
+  Le `window.env` de la stack, avant et après, est identique (53 clés).
+- Bilan : +420 / -258. Plus de lignes, et pas moins : la liste des variables est désormais écrite en entier, à un seul endroit.
+  Une dépendance (caarlos0/env v11.4.1, sans indirecte).
+
+### 17/10, bibliothèques standard, tranche 5 : server-sdk-go de LiveKit
+
+- `internal/livekit` passe par le SDK : `lksdk.RoomServiceClient` (ListRooms, CreateRoom, DeleteRoom) et `lksdk.EgressClient`
+  (StartRoomCompositeEgress, StopEgress, ListEgress), avec des jetons `protocol/auth`. Même API pour le reste du serveur ;
+  chaque appel est borné à 10 s. Le Twirp JSON fait main, la signature JWT et le décodage tolérant des `EgressInfo`
+  (champs camelCase ou snake_case, int64 en chaîne) sont supprimés : les types protobuf du SDK les remplacent.
+- Coût mesuré : binaire de 41,0 → 56,6 Mo, 56 lignes de go.mod. Ce poids vient de `livekit/protocol`, pas du client WebRTC
+  du SDK : une variante qui n'utilise que les clients Twirp de `protocol` pèse 56,4 Mo. Le SDK est donc gardé.
+- Tests : le faux serveur Twirp décode désormais du protobuf ; la conversion des `EgressInfo` est testée sur les types du SDK.
+- `livekit.spec.ts` : 5 sur 5 ; `recording.spec.ts` : 4 sur 5, puis `:62` rejoué seul 2 sur 2. L'échec venait d'une egress lente à
+  démarrer (la modale attend 10 s), comme au premier passage avec minio : c'est de l'instabilité, pas le SDK.
+- +104 / -190 lignes.
