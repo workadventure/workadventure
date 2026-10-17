@@ -2,12 +2,17 @@
 //! `pr_<uuid>_|@|_<roomUrl>`, each value `"<expiry ms or empty>:<1|0 public>:<json>"`
 //! (RedisPlayersVariablesRepository). Anonymous players keep theirs in the browser.
 //!
-//! The world scope (`pw_…`) needs the admin's world: without it the back falls back to the room, as here.
+//! The world scope is `pw_<uuid>_|@|_<group>`, the group of the map details (the admin's world): without one,
+//! world variables fall back to the room, as in the back.
 
 use crate::redis_store::{RedisStore, now_ms};
 
 pub fn key(uuid: &str, room_url: &str) -> String {
     format!("pr_{uuid}_|@|_{room_url}")
+}
+
+pub fn world_key(uuid: &str, world: &str) -> String {
+    format!("pw_{uuid}_|@|_{world}")
 }
 
 /// A saved variable: value (JSON text), public, expiry (Unix ms).
@@ -57,8 +62,7 @@ pub struct Mine {
 }
 
 impl Mine {
-    pub async fn load(redis: &RedisStore, uuid: &str, room_url: &str) -> Self {
-        let key = key(uuid, room_url);
+    pub async fn load(redis: &RedisStore, key: String) -> Self {
         let now = now_ms();
         let mut saved: Vec<(String, Saved)> =
             redis.hash(&key).await.into_iter().filter_map(|(name, raw)| Some((name, decode(&raw, now)?))).collect();
@@ -101,5 +105,6 @@ mod tests {
         assert_eq!(ttl(None, 60), Some(60));
         assert_eq!(ttl(Some(3600), 60), Some(60));
         assert_eq!(key("u", "http://r"), "pr_u_|@|_http://r");
+        assert_eq!(world_key("u", "acme"), "pw_u_|@|_acme");
     }
 }

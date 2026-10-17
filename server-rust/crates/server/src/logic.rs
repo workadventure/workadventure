@@ -34,6 +34,8 @@ struct Logic {
     recent_joins: HashMap<i32, (String, Instant)>,
     /// A logged player's saved variables in this room.
     saved: crate::player_variables::Mine,
+    /// The same in the room's world, when the room has one.
+    saved_world: Option<crate::player_variables::Mine>,
     /// Open analytics intervals; None once the server stopped (they were ended then).
     timed: Option<crate::analytics::Timed>,
 }
@@ -61,6 +63,7 @@ pub async fn run(parts: SessionParts, app: AppState) {
         spaces: HashMap::new(),
         recent_joins: HashMap::new(),
         saved: Default::default(),
+        saved_world: None,
         timed: Some(Default::default()),
     };
     let mut shutdown = app.shutdown.subscribe();
@@ -172,16 +175,24 @@ impl Logic {
                 self.availability = Availability(join.availability_status);
                 // The back loads them when the user is created, before roomJoinedMessage.
                 if session.info.is_logged {
-                    self.saved =
-                        crate::player_variables::Mine::load(&self.app.redis, &session.info.user_uuid, &session.info.room_id).await;
+                    use crate::player_variables::{Mine, key, world_key};
+                    let uuid = &session.info.user_uuid;
+                    self.saved = Mine::load(&self.app.redis, key(uuid, &session.info.room_id)).await;
+                    let (tx, rx) = tokio::sync::oneshot::channel();
+                    self.to_room(RoomCmd::Group(tx)).await;
+                    if let Ok(Some(group)) = rx.await {
+                        self.saved_world = Some(Mine::load(&self.app.redis, world_key(uuid, &group)).await);
+                    }
                 }
-                let player_variables: Vec<pb::VariableMessage> = self
-                    .saved
-                    .saved
-                    .iter()
-                    .map(|(name, s)| pb::VariableMessage { name: name.clone(), value: s.value.clone() })
-                    .collect();
-                let public = self.saved.saved.iter().filter(|(_, s)| s.public).map(|(n, s)| (n.clone(), s.value.clone())).collect();
+                // The world's first, the room's over them (getVariables).
+                let mut all: Vec<(String, crate::player_variables::Saved)> = Vec::new();
+                for (name, s) in self.saved_world.iter().flat_map(|w| &w.saved).chain(&self.saved.saved) {
+                    all.retain(|(n, _)| n != name);
+                    all.push((name.clone(), s.clone()));
+                }
+                let player_variables: Vec<pb::VariableMessage> =
+                    all.iter().map(|(name, s)| pb::VariableMessage { name: name.clone(), value: s.value.clone() }).collect();
+                let public = all.iter().filter(|(_, s)| s.public).map(|(n, s)| (n.clone(), s.value.clone())).collect();
                 let info = &session.info;
                 let request = JoinRequest {
                     profile: Profile {
@@ -331,7 +342,12 @@ impl Logic {
                 {
                     let max = self.app.config.raw.get("PLAYER_VARIABLES_MAX_TTL").and_then(|t| t.parse().ok()).unwrap_or(-1);
                     let ttl = crate::player_variables::ttl(v.ttl, max);
-                    self.saved.save(&self.app.redis, &v.name, &v.value, v.public, ttl);
+                    let world = pb::set_player_variable_message::Scope::World as i32;
+                    let store = match &mut self.saved_world {
+                        Some(w) if v.scope == world => w,
+                        _ => &mut self.saved,
+                    };
+                    store.save(&self.app.redis, &v.name, &v.value, v.public, ttl);
                 }
                 if let Some(id) = &space_user_id {
                     for space in self.spaces.values() {
