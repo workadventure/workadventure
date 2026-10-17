@@ -69,6 +69,10 @@ services:
       - "traefik.http.routers.play.priority=1"
       - "traefik.http.routers.play.service=play"
       - "traefik.http.services.play.loadbalancer.server.port=3000"
+      # The back's HTTP host (api.workadventure.localhost: /dump, /debug/*) is the server too.
+      - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.service=play"
 
       - "traefik.http.routers.play-ws.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/ws/`)"
       - "traefik.http.routers.play-ws.entryPoints=web"
