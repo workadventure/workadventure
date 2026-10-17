@@ -42,6 +42,12 @@ services:
           - matrix.workadventure.localhost
           - livekit.workadventure.localhost
           - cdn-livekit.workadventure.localhost
+          # LiveKit posts the egress webhooks to PLAY_URL (play.<stack>...): without an alias this resolves to ::1
+          # inside its container ("connection refused"). Docker DNS has no wildcard: one line per stack name.
+          - play.ts.workadventure.localhost
+          - play.ts2.workadventure.localhost
+          - play.go.workadventure.localhost
+          - play.rust.workadventure.localhost
 
   # The compiled front, served like in production (play/Dockerfile, target "front"). The build output is copied from
   # the published play image of the same commit instead of being rebuilt: a Vite build needs more memory than the
@@ -63,6 +69,10 @@ services:
   # The test maps (maps.workadventure.localhost/tests/...), from the published image of the same commit.
   maps:
     image: ghcr.io/workadventure/maps:${WA_TAG}
+    environment:
+      # The test pages (e.g. Variables/shared_variables.php) load iframe_api.js from FRONT_URL; the socle's front
+      # serves it for every stack.
+      FRONT_URL: http://front.workadventure.localhost${SOCLE_URL_PORT:-}
 
   # Favicons of the co-websites (ICON_URL, required by the pusher).
   icon:
@@ -143,6 +153,19 @@ services:
     depends_on:
       - livekit
       - livekit-redis
+
+  # LiveKit advertises 127.0.0.1 (where the host's browsers reach Traefik); in the egress's network namespace that
+  # address is the egress itself, so its headless Chrome gets no media ("Start signal not received"). Relay those
+  # ports to LiveKit from inside that namespace.
+  egress-relay:
+    image: alpine/socat:1.8.0.3
+    profiles: [recording]
+    network_mode: service:egress
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        socat UDP-LISTEN:${SOCLE_LIVEKIT_UDP_PORT:-7882},bind=127.0.0.1,fork,reuseaddr UDP:livekit:${SOCLE_LIVEKIT_UDP_PORT:-7882} &
+        exec socat TCP-LISTEN:${SOCLE_LIVEKIT_TCP_PORT:-7881},bind=127.0.0.1,fork,reuseaddr TCP:livekit:${SOCLE_LIVEKIT_TCP_PORT:-7881}
 
   rustfs-livekit:
     image: rustfs/rustfs:1.0.0-alpha.83

@@ -1,3 +1,4 @@
+{{- if not .Values.server.enabled }}
 {{- $commonEnv := .Values.commonEnv | default dict -}}
 {{- $backEnv := .Values.back.env | default dict -}}
 {{- $commonSecretEnv := .Values.commonSecretEnv | default dict -}}
@@ -132,3 +133,4 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+{{- end }}

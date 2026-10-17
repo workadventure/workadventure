@@ -27,6 +27,19 @@ on:
         required: false
         type: string
         default: ""
+      # Optional, for images built from a stage, with build arguments or extra named contexts (the server rewrites).
+      target:
+        required: false
+        type: string
+        default: ""
+      build-args:
+        required: false
+        type: string
+        default: ""
+      build-contexts:
+        required: false
+        type: string
+        default: ""
       push-to-registry:
         required: true
         type: boolean
@@ -81,6 +94,9 @@ jobs:
         with:
           context: ${{ inputs.context }}
           file: ${{ inputs.dockerfile }}
+          target: ${{ inputs.target }}
+          build-args: ${{ inputs.build-args }}
+          build-contexts: ${{ inputs.build-contexts }}
           push: ${{ inputs.push-to-registry }}
           tags: |
             ${{ inputs.image-name }}:${{ inputs.platform }}-${{ github.sha }}

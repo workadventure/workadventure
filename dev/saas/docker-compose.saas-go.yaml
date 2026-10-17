@@ -1,0 +1,158 @@
+# Overlay of the SaaS docker-compose.yaml for project "wa-saas-go": the SaaS admin talks to the Go server
+# (server-go: pusher + play + back + map-storage + uploader in one process). Use it through up.sh / down.sh only.
+# No tracked file of the SaaS repository is modified. Variables come from dev/saas/.env (see .env.example).
+
+x-go-env: &go-env
+  # Tokens and keys shared with the admin.
+  SECRET_KEY: ${SECRET_KEY}
+  ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
+  ADMIN_SOCKETS_TOKEN: ${ADMIN_SOCKETS_TOKEN}
+  MAP_STORAGE_API_TOKEN: ${MAP_STORAGE_API_TOKEN}
+  # Admin
+  ADMIN_API_URL: http://admin
+  ADMIN_URL: http://admin.workadventure.localhost
+  ADMIN_API_RETRY_DELAY: "1000"
+  # Public URLs (the containers reach them through the Traefik aliases)
+  PUSHER_URL: http://pusher.workadventure.localhost
+  FRONT_URL: http://play.workadventure.localhost
+  PLAY_URL: http://play.workadventure.localhost
+  ALLOWED_CORS_ORIGIN: "*"
+  UPLOADER_URL: http://uploader.workadventure.localhost
+  ICON_URL: http://icon.workadventure.localhost
+  PUBLIC_MAP_STORAGE_URL: http://public.map-storage.workadventure.localhost
+  ASSETS_URL: http://front.workadventure.localhost
+  ASSETS_INTERNAL_URL: http://front
+  # OIDC: the admin's member is the provider
+  OPENID_CLIENT_ID: "1"
+  OPENID_CLIENT_SECRET: ${OPENID_CLIENT_SECRET}
+  OPENID_CLIENT_ISSUER: http://member.workadventure.localhost
+  OPENID_SCOPE: profile openid email
+  OPENID_PROMPT: login
+  OPENID_PROFILE_SCREEN_PROVIDER: http://member.workadventure.localhost/profile
+  AUTOLOGIN_URL: http://member.workadventure.localhost/workadventure/login
+  # Map-storage (Go, port 3002)
+  STORAGE_DIRECTORY: /maps
+  SERVER_MAP_STORAGE_PORT: "3002"
+  SERVER_UPLOADER_PORT: "3003"
+  SERVER_ROOM_API_PORT: "50051"
+  ENABLE_BEARER_AUTHENTICATION: "true"
+  AUTHENTICATION_TOKEN: ${MAP_STORAGE_AUTHENTICATION_TOKEN}
+  AUTHENTICATION_VALIDATOR_URL: http://admin/api/map-storage/authorization
+  WAM_TEMPLATE_URL: http://admin/api/map-storage/wam-template
+  USE_DOMAIN_NAME_IN_PATH: "true"
+  ENABLE_WEB_HOOK: "true"
+  WEB_HOOK_URL: http://admin/api/map-storage/webhook
+  WEB_HOOK_API_TOKEN: ${ADMIN_API_TOKEN}
+  ENABLE_MAP_EDITOR: "true"
+  REDIS_HOST: redis
+  NODE_ENV: production
+  ENABLE_OPENAPI_ENDPOINT: "true"
+
+services:
+  traefik:
+    command:
+      - --api.insecure=true
+      - --providers.docker
+      - --entryPoints.web.address=:80
+      - --providers.docker.exposedbydefault=false
+      # Only this project's containers: never pick up the labels of the other stacks on the same Docker.
+      - --providers.docker.constraints=Label(`com.docker.compose.project`,`wa-saas-go`)
+    networks:
+      default:
+        aliases:
+          - front.workadventure.localhost
+          - uploader.workadventure.localhost
+          - room-api.workadventure.localhost
+          - public.map-storage.workadventure.localhost
+          - icon.workadventure.localhost
+
+  # Unused here
+  nft-fetcher: { profiles: [off] }
+  docs: { profiles: [off] }
+  dbtest: { profiles: [off] }
+  phpmyadmin: { profiles: [off] }
+  uploaderredis: { profiles: [off] }
+  messages: { profiles: [off] }
+  map-storage-saas: { profiles: [off] }   # the Go server is the map-storage
+
+  admin:
+    # No map-storage-saas: the Go server is the map-storage.
+    depends_on: !override
+      db:
+        condition: service_started
+      rustfs-init:
+        condition: service_completed_successfully
+    environment:
+      FRONT_URL: http://${FRONT_URL}
+      PUSHER_URL: http://pusher.workadventure.localhost
+      PRIVATE_MAP_STORAGE_URL: http://server:3002
+      MAP_STORAGE_AUTHENTICATION_TOKEN: ${MAP_STORAGE_AUTHENTICATION_TOKEN}
+      PASSPORT_CLIENT_WORKADVENTURE_SECRET: ${OPENID_CLIENT_SECRET}
+      PASSPORT_CLIENT_WORKADVENTURE_REDIRECT: http://pusher.workadventure.localhost/openid-callback
+
+  front:
+    image: wa-socle-front:master-6f4d02319eddbf46a51cb99ffd38e2d75273593c
+    pull_policy: never
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.front.rule=Host(`front.workadventure.localhost`)
+      - traefik.http.routers.front.entryPoints=web
+      - traefik.http.services.front.loadbalancer.server.port=80
+      # The page (play., whitelabel.localhost) loads its modules from another origin
+      - traefik.http.routers.front.middlewares=front-cors
+      - traefik.http.middlewares.front-cors.headers.accesscontrolalloworiginlist=*
+
+  # Test maps the seed downloads (http://maps.workadventure.localhost/starter/map.json...)
+  maps:
+    image: ghcr.io/workadventure/maps:master-6f4d02319eddbf46a51cb99ffd38e2d75273593c
+    pull_policy: never
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.maps.rule=Host(`maps.workadventure.localhost`)
+      - traefik.http.routers.maps.entryPoints=web
+      - traefik.http.services.maps.loadbalancer.server.port=80
+
+  server:
+    image: wa-saas-go-server:local
+    pull_policy: never
+    environment:
+      <<: *go-env
+    volumes:
+      - gomaps:/maps
+    depends_on:
+      redis:
+        condition: service_started
+      front:
+        condition: service_started
+    labels:
+      - traefik.enable=true
+      # Play: catch-all (play., pusher., whitelabel.localhost, any custom domain)
+      - traefik.http.routers.go-play.rule=HostRegexp(`^.+$$`)
+      - traefik.http.routers.go-play.priority=1
+      - traefik.http.routers.go-play.entryPoints=web
+      - traefik.http.routers.go-play.service=go-play
+      - traefik.http.services.go-play.loadbalancer.server.port=3000
+      - traefik.http.routers.go-play-ws.rule=HostRegexp(`^.+$$`) && PathPrefix(`/ws/`)
+      - traefik.http.routers.go-play-ws.priority=2
+      - traefik.http.routers.go-play-ws.entryPoints=web
+      - traefik.http.routers.go-play-ws.service=go-play-ws
+      - traefik.http.services.go-play-ws.loadbalancer.server.port=3001
+      # Room API (gRPC over h2c)
+      - traefik.http.routers.go-room-api.rule=Host(`room-api.workadventure.localhost`)
+      - traefik.http.routers.go-room-api.entryPoints=web
+      - traefik.http.routers.go-room-api.service=go-room-api
+      - traefik.http.services.go-room-api.loadbalancer.server.port=50051
+      - traefik.http.services.go-room-api.loadbalancer.server.scheme=h2c
+      # Maps: <subdomain>.map-storage.workadventure.localhost
+      - traefik.http.routers.go-map-storage.rule=HostRegexp(`^[A-Za-z0-9-]+\.map-storage\.workadventure\.localhost$$`)
+      - traefik.http.routers.go-map-storage.entryPoints=web
+      - traefik.http.routers.go-map-storage.service=go-map-storage
+      - traefik.http.services.go-map-storage.loadbalancer.server.port=3002
+      # Uploader
+      - traefik.http.routers.go-uploader.rule=Host(`uploader.workadventure.localhost`)
+      - traefik.http.routers.go-uploader.entryPoints=web
+      - traefik.http.routers.go-uploader.service=go-uploader
+      - traefik.http.services.go-uploader.loadbalancer.server.port=3003
+
+volumes:
+  gomaps:

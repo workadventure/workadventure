@@ -16,12 +16,14 @@ const oidcAccount = {
     Admin2: "User1",
     Member1: "User2",
     UserMatrix: "UserMatrix",
-    UserMatrix2: "UserMatrix2",
     UserLogin1: "User1",
 };
 
 const browser = await chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] });
+// The OIDC mock only knows User1, User2 and UserMatrix (docker-compose.yaml): a spec that logs UserMatrix2 in fails
+// on every server. One name failing does not stop the others.
 for (const name of process.argv.slice(2)) {
+  try {
     const context = await browser.newContext({
         ...devices["Desktop Chrome"],
         permissions: ["microphone", "camera", "notifications"],
@@ -51,5 +53,9 @@ for (const name of process.argv.slice(2)) {
     console.log(name, micClass.includes("bg-danger") ? "microphone OFF" : "ok");
     await context.storageState({ path: `./.auth/${name}.json` });
     await context.close();
+  } catch (error) {
+    console.log(name, "FAILED:", String(error).split("\n")[0]);
+    process.exitCode = 1;
+  }
 }
 await browser.close();
