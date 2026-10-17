@@ -135,6 +135,12 @@ async function createUser(
 
     // selectMedia
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
+    // Save stores the selected devices only once both are chosen (same fix as PR #6776): clicking earlier leaves the
+    // user with camera and microphone off.
+    if (browser.browserType().name() !== "webkit") {
+        await expect(page.getByText("Turn off your camera")).toBeHidden();
+        await expect(page.getByText("Turn off your microphone")).toBeHidden();
+    }
     await page.click("text=Save");
 
     await dismissDuplicateUserConnectedModalIfShown(page);
