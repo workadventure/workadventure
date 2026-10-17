@@ -48,9 +48,8 @@ func (s *Session) thirdParty(name string) (confSettings, bool) {
 
 // name is the player's name, from its JoinRoomFrontMessage.
 func (s *Session) playerName() string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.name
+	name, _ := s.presence.get()
+	return name
 }
 
 func (s *Session) jitsiJWT(id int32, room string) {

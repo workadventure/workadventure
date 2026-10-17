@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"slices"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/matrix"
@@ -156,14 +157,53 @@ func (srv *Server) resourceOrigins() []string {
 	return out
 }
 
+// chat is the player's Matrix side: its chat id (it may arrive after the connection, updateChatId) and the rooms
+// of the chat areas it is in.
+type chat struct {
+	mu    sync.Mutex
+	id    string
+	areas []string
+}
+
+func (c *chat) get() string {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.id
+}
+
+func (c *chat) set(id string) {
+	c.mu.Lock()
+	c.id = id
+	c.mu.Unlock()
+}
+
+// enter records the area's room; without a chat id there is nothing to join.
+func (c *chat) enter(roomID string) (chatID string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.id != "" {
+		c.areas = append(c.areas, roomID)
+	}
+	return c.id
+}
+
+// leave forgets roomID ("": all of them) and returns the rooms left.
+func (c *chat) leave(roomID string) (left []string, chatID string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.areas = slices.DeleteFunc(c.areas, func(r string) bool {
+		if roomID == "" || r == roomID {
+			left = append(left, r)
+			return true
+		}
+		return false
+	})
+	return left, c.id
+}
+
 // enterChatArea is an enterChatRoomAreaQuery: the player joins the area's room, as a moderator if admin.
 func (s *Session) enterChatArea(id int32, roomID string) {
-	s.mu.Lock()
-	chatID := s.info.chatID
-	if chatID != "" {
-		s.chatAreas = append(s.chatAreas, roomID)
-	}
-	s.mu.Unlock()
+	chatID := s.chat.enter(roomID)
 	if chatID == "" {
 		s.answerError(id, "Chat ID not found")
 		return
@@ -188,17 +228,7 @@ func (s *Session) enterChatArea(id int32, roomID string) {
 
 // leaveChatArea is a leaveChatRoomAreaMessage; "" leaves them all (the socket closed).
 func (s *Session) leaveChatArea(roomID string) {
-	s.mu.Lock()
-	var left []string
-	s.chatAreas = slices.DeleteFunc(s.chatAreas, func(r string) bool {
-		if roomID == "" || r == roomID {
-			left = append(left, r)
-			return true
-		}
-		return false
-	})
-	chatID := s.info.chatID
-	s.mu.Unlock()
+	left, chatID := s.chat.leave(roomID)
 	if s.srv.matrix == nil || chatID == "" {
 		return
 	}

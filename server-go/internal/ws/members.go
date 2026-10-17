@@ -60,9 +60,7 @@ func (s *Session) getMember(id int32, uuid string) {
 
 // updateChatID is an updateChatIdMessage: the front got its Matrix id.
 func (s *Session) updateChatID(email, chatID string) {
-	s.mu.Lock()
-	s.info.chatID = chatID
-	s.mu.Unlock()
+	s.chat.set(chatID)
 	go func() {
 		if err := s.srv.admin.UpdateChatID(s.ctx, email, chatID, s.info.roomID); err != nil {
 			slog.Warn("chat id not saved by the admin", "error", err)

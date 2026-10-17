@@ -18,9 +18,7 @@ func (srv *Server) worldUsers(world string) []worldUser {
 	srv.sessions.Range(func(k, _ any) bool {
 		s := k.(*Session)
 		if s.info.member.World == world {
-			s.mu.Lock()
-			name := s.name
-			s.mu.Unlock()
+			name, _ := s.presence.get()
 			out = append(out, worldUser{uuid: s.info.userUUID, name: name, ip: s.info.ipAddress})
 		}
 		return true
