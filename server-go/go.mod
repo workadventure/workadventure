@@ -4,6 +4,7 @@ go 1.27
 
 require (
 	github.com/alicebob/miniredis/v2 v2.40.0
+	github.com/caarlos0/env/v11 v11.4.1
 	github.com/cbroglie/mustache v1.4.2
 	github.com/coder/websocket v1.8.15
 	github.com/coreos/go-oidc/v3 v3.21.0
