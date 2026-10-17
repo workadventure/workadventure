@@ -5,7 +5,7 @@ members = ["crates/proto", "crates/core", "crates/server", "crates/bot"]
 [workspace.package]
 edition = "2024"
 version = "0.1.0"
-license = "AGPL-3.0"
+license = "AGPL-3.0-only"
 publish = false
 
 [workspace.dependencies]

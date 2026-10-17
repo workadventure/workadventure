@@ -12,6 +12,9 @@ path = "src/main.rs"
 
 [dependencies]
 wa-core.workspace = true
+# OpenID: id_token signatures (JWKS) and the sealed PKCE cookie, on the crypto rustls already uses.
+jsonwebtoken = { version = "10", default-features = false, features = ["aws_lc_rs"] }
+aws-lc-rs = "1"
 wa-proto.workspace = true
 axum.workspace = true
 base64 = "0.22"
@@ -41,7 +44,7 @@ tonic = { version = "0.14.6", default-features = false, features = ["server", "r
 
 [dev-dependencies]
 wa-bot = { path = "../bot" }
-tokio-tungstenite = "*"
+tokio-tungstenite = "0.29"
 
 [lints]
 workspace = true
