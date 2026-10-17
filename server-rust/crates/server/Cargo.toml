@@ -15,6 +15,12 @@ wa-core.workspace = true
 # OpenID: id_token signatures (JWKS) and the sealed PKCE cookie, on the crypto rustls already uses.
 jsonwebtoken = { version = "10", default-features = false, features = ["aws_lc_rs"] }
 aws-lc-rs = "1"
+# The recordings bucket, with the SDK the team knows (path-style, any S3-compatible endpoint).
+aws-sdk-s3 = { version = "1", default-features = false, features = ["rt-tokio", "default-https-client", "sigv4a"] }
+# LiveKit: participant tokens, rooms, egress and webhooks, with the SDK LiveKit publishes.
+livekit-api = { version = "0.9", default-features = false, features = ["services", "access-token", "webhooks", "rustls-tls-native-roots"] }
+livekit-protocol = "0.8"
+aws-credential-types = { version = "1", features = ["hardcoded-credentials"] }
 wa-proto.workspace = true
 axum.workspace = true
 base64 = "0.22"

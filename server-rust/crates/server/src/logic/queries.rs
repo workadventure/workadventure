@@ -148,19 +148,20 @@ impl Logic {
                 tokio::spawn(async move {
                     let bucket = crate::s3::Bucket::from_config(&app.config);
                     let answer: Result<A, String> = match (q, bucket) {
-                        (Q::GetRecordingsQuery(_), Some(b)) => crate::recordings::list(&b, &app.http, &uuid)
+                        (Q::GetRecordingsQuery(_), Some(b)) => crate::recordings::list(&b, &uuid)
                             .await
                             .map(|recordings| A::GetRecordingsAnswer(pb::GetRecordingsAnswer { recordings })),
                         (Q::GetRecordingThumbnailsQuery(t), Some(b)) => {
-                            crate::recordings::thumbnails(&b, &app.http, &uuid, &t.base_filename)
+                            crate::recordings::thumbnails(&b, &uuid, &t.base_filename)
                                 .await
                                 .map(|urls| A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer { urls }))
                         }
                         (Q::DeleteRecordingQuery(d), Some(b)) => {
-                            let success = crate::recordings::delete(&b, &app.http, &uuid, &d.recording_id).await;
+                            let success = crate::recordings::delete(&b, &uuid, &d.recording_id).await;
                             Ok(A::DeleteRecordingAnswer(pb::DeleteRecordingAnswer { success, error_message: None }))
                         }
                         (Q::GetSignedUrlQuery(g), Some(b)) => crate::recordings::signed_url(&b, &uuid, &g.key)
+                            .await
                             .map(|signed_url| A::GetSignedUrlAnswer(pb::GetSignedUrlAnswer { signed_url })),
                         // No bucket: empty lists, as the pusher answers.
                         (Q::GetRecordingsQuery(_), None) => {
