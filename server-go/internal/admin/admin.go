@@ -119,6 +119,8 @@ type Admin interface {
 	SearchTags(ctx context.Context, roomURL, search string) ([]string, error)
 	// UpdateChatID is A16: the player got its Matrix id.
 	UpdateChatID(ctx context.Context, email, chatID, roomURL string) error
+	// RefreshOAuthToken is A17: a new token of a third party (Teams, Google...) for an external module.
+	RefreshOAuthToken(ctx context.Context, token, provider, userIdentifier string) (newToken, message string, err error)
 }
 
 // ChatMembers is WorldChatMembersData.
@@ -232,6 +234,9 @@ func (l *Local) SearchMembers(context.Context, string, string) ([]Member, error)
 func (l *Local) GetMember(context.Context, string) (Member, error)            { return Member{}, errNoAdmin }
 func (l *Local) SearchTags(context.Context, string, string) ([]string, error) { return []string{}, nil }
 func (l *Local) UpdateChatID(context.Context, string, string, string) error   { return nil }
+func (l *Local) RefreshOAuthToken(context.Context, string, string, string) (string, string, error) {
+	return "", "", errNoAdmin
+}
 func (l *Local) SameWorld(context.Context, string, []string, bool) ([]RoomDescription, bool, error) {
 	return nil, false, nil
 }
