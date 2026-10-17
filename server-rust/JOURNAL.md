@@ -558,3 +558,54 @@ Rust s'arrête jusqu'à ce que Go ait fini et validé le jalon 1.
 - **Prochaine action à la reprise :** merger dev-socle (1b99c02f3 et b8b724e7a), lancer les specs avec
   `dev/dev test rust <specs>`, puis J3c (LiveKit d'abord), les exigences de déploiement du §10, et l'admin SaaS
   d'après le contrat.
+
+## Jalon 7 — Jalon 1, tranche 2 : J3c et exigences de déploiement (2026-10-17)
+
+Reprise décidée par Yannis via le socle, depuis `7b763934c`. Fusionnés : dev-socle `3e0c5bf05`, master `034dee80b`
+(protos régénérés, `PROXIMITY_FILE_TRANSFER_MAX_USERS` ajouté à la configuration du front).
+
+**Durée murale :** ~3 h (déploiement 30 min, LiveKit 1 h, Room API 30 min, enregistrement et S3 1 h, OpenAPI 20 min ;
+les passages Playwright en parallèle, dont ~25 min d'attente du créneau partagé).
+
+**Itérations avant le vert :** ~10. Cœur : un ordre faux dans la réconciliation LiveKit (invitations calculées sur
+la salle ouverte plutôt que sur la présence d'un publieur), trouvé par le test de scénario. Adaptateur : l'egress
+démarrait avant que la salle existe (TS attend sa création), la reprise LiveKit sans pair était jetée (le front
+l'envoie vide), un nom de message proto. Outils : la génération OpenAPI (variables de configuration du pusher,
+avertissements de swagger-jsdoc sur la sortie standard).
+
+**Corrections humaines :** aucune.
+
+**Aide extérieure :**
+- Du socle : contrat de l'admin (`dev/contracts/admin-api.md`, pas encore utilisé dans cette tranche sauf A25 et
+  A29), référence TS de J3c (19/20), exigences de déploiement (ports, sondes, `healthcheck`, `/api-version`), le
+  créneau `dev/dev test`, le client Room API à compiler.
+- Inventaire du protocole média du back (CommunicationManager, états, stratégies, RecordingManager, LiveKitService)
+  par un sous-agent Sonnet de cette session, sur le TS seulement.
+- Lecture de `lang-go` : rien.
+
+**Ce qui est en place :**
+- **Déploiement** : WebSocket aussi sur `PUSHER_WS_PORT` (3001), uploader sur `SERVER_UPLOADER_PORT` (3003), Room
+  API sur `ROOM_API_PORT` (50051), `PATH_PREFIX` de map-storage, sous-commande `healthcheck`, `GET /api-version`.
+  Correction de donnée : les variables Redis repassent en base 0, comme le back (seul l'uploader lit
+  `REDIS_DB_NUMBER`) ; sinon un retour arrière vers TS les aurait perdues.
+- **Stratégie média** (cœur, horloge injectée) : WebRTC → LiveKit au-delà de `MAX_USERS_FOR_WEBRTC` ou avec un
+  utilisateur à CPU limité (3 et plus), retour après 20 s relancées à chaque changement, finalisation 5 s, jamais
+  de retour pendant un enregistrement. Salle LiveKit ouverte avec le premier publieur, fermée avec le dernier ;
+  jetons HS256 comme le SDK ; appels Twirp hors des acteurs.
+- **Room API** gRPC (tonic, généré des mêmes descripteurs) : lecture, écriture, écoute des variables et des
+  événements ; clé locale + `FRONT_URL`, ou autorisation par l'admin (A25).
+- **Enregistrement** : session, état du space (`starting` → `recording` sur le webhook → `stopping` → `idle`), egress
+  composite vers S3, webhook signé vérifié (`sha256` du corps), arrêt par le serveur quand l'enregistreur part ou
+  que le dernier publieur s'en va, avertissement à l'enregistreur d'un arrêt non demandé. Listes, vignettes, URL
+  signées et suppression des enregistrements : S3 SigV4 écrit ici (pas de SDK).
+- **Uploader** (Redis), **OpenAPI** (documents générés des sources TS et embarqués, interface Swagger d'un CDN).
+
+**Vérification :**
+- `./verify.sh` vert : **113 tests** (+8 depuis la pause).
+- Playwright Chromium (`dev/dev test rust … --project=chromium`) : livekit 5/5, map_editor_livekit 2/3,
+  screensharing 1/1, recording 6/6, room-api 5/5, swagger_doc 1/1, scripting_audio_stream 1/2 ; réf. TS 19/20.
+- Échecs classés : `map_editor_livekit:62` environnement (POST en dur sur le port 80) ; `scripting_audio_stream:101`
+  échec connu TS ; `recording:62` et `:186` ont échoué deux fois sous une charge de 13 à 15 (l'egress mettait 7 s
+  à démarrer et l'arrêt du test l'annulait : « Start signal not received »), puis passent 4 fois sur 4 seuls.
+- Un premier passage sans `--project=chromium` a joué les autres navigateurs, absents de la machine : 40 « échecs »
+  sans valeur, rejoué.
