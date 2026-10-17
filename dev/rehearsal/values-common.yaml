@@ -1,5 +1,5 @@
 # Shared by both modes. Domains are https://<service>-rehearsal.localhost (no port: the 443 is port-forwarded).
-appVersion: master-6f4d02319eddbf46a51cb99ffd38e2d75273593c
+appVersion: master-034dee80bbe3b29327de03b650b38e452ecf1293
 domainName: rehearsal.localhost
 # Fixed so that the TS -> Go -> TS upgrades keep the same signing key and map-storage token (browsers stay valid).
 secretKey: rehearsal-secret-key-0123456789
