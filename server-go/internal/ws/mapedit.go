@@ -124,11 +124,13 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 		return
 	}
 	err = s.srv.edits.Run(key, func() {
+		cmd, after := mapedit.Resources(s.srv.maps, key, ed, cmd, s.srv.resource)
 		res, err := mapedit.Apply(s.srv.maps, key, ed, m.GetId(), cmd)
 		if err != nil {
 			refuse(err)
 			return
 		}
+		after()
 		done := &pb.EditMapCommandMessage{Id: m.GetId(), EditMapMessage: echo(m.GetEditMapMessage(), res, ed)}
 		// The room is held for the announcement: the editor may have left meanwhile.
 		room := s.srv.rooms.Acquire(roomURL)

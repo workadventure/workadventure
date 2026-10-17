@@ -85,10 +85,11 @@ type Session struct {
 	tracker      *analytics.Tracker // guarded by mu; the analytics intervals of this connection (analytics.go)
 
 	// guarded by mu
-	name     string                  // from JoinRoomFrontMessage
-	status   core.AvailabilityStatus // latest availability status
-	spaces   map[string]*core.Space  // by the name the front uses
-	joinedBy map[int32]string        // the joinSpaceQuery that joined each space, for its abortQueryMessage
+	name      string                  // from JoinRoomFrontMessage
+	status    core.AvailabilityStatus // latest availability status
+	spaces    map[string]*core.Space  // by the name the front uses
+	joinedBy  map[int32]string        // the joinSpaceQuery that joined each space, for its abortQueryMessage
+	chatAreas []string                // the Matrix rooms of the chat areas the player is in (matrix.go)
 
 	readers sync.WaitGroup // readers post to the room: they must be done before the room is released
 }
@@ -418,6 +419,7 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 	s.readers.Wait()
 
 	s.closeTimed("socket_closed")
+	s.leaveChatArea("")
 	s.leaveAllSpaces()
 	s.mu.Lock()
 	joined := s.joined
@@ -544,6 +546,10 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		}
 		// Not recorded (no admin, or it refused): the user is ejected all the same, as a kick.
 		_ = s.room.Eject(ctx, b.GetBanUserUuid(), kind, reason)
+	case *pb.ClientToServerMessage_LeaveChatRoomAreaMessage:
+		s.leaveChatArea(msg.LeaveChatRoomAreaMessage.GetRoomID())
+	case *pb.ClientToServerMessage_UpdateChatIdMessage:
+		s.updateChatID(msg.UpdateChatIdMessage.GetEmail(), msg.UpdateChatIdMessage.GetChatId())
 	case *pb.ClientToServerMessage_AnalyticsEventReportMessage:
 		s.analyticsReport(msg.AnalyticsEventReportMessage)
 	case *pb.ClientToServerMessage_VideoQualityReportMessage:
@@ -590,8 +596,15 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_SpaceStateQuery:
 		s.spaceStateQuery(q.GetId(), query.SpaceStateQuery)
 	case *pb.QueryMessage_ChatMembersQuery:
-		// No admin: nobody to list (LocalAdmin.getWorldChatMembers).
-		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_ChatMembersAnswer{ChatMembersAnswer: &pb.ChatMembersAnswer{}}})
+		go s.chatMembers(q.GetId(), query.ChatMembersQuery.GetSearchText())
+	case *pb.QueryMessage_SearchMemberQuery:
+		go s.searchMembers(q.GetId(), query.SearchMemberQuery.GetSearchText())
+	case *pb.QueryMessage_SearchTagsQuery:
+		go s.searchTags(q.GetId(), query.SearchTagsQuery.GetSearchText())
+	case *pb.QueryMessage_GetMemberQuery:
+		go s.getMember(q.GetId(), query.GetMemberQuery.GetUuid())
+	case *pb.QueryMessage_EnterChatRoomAreaQuery:
+		s.enterChatArea(q.GetId(), query.EnterChatRoomAreaQuery.GetRoomID())
 	case *pb.QueryMessage_MapStorageJwtQuery:
 		s.mapStorageJwt(q.GetId())
 	case *pb.QueryMessage_EmbeddableWebsiteQuery:

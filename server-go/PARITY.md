@@ -43,7 +43,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
 | A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
-| A4 à A17, A23 à A31 (A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
+| A4, A9 à A11, A17, A23 à A31 (A5 à A8, A12 à A16, A18 à A21 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
 
 ## Connexion, salle, mouvements
 
@@ -68,10 +68,10 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | join/leave space, filtres, updateSpaceUser, metadata | PSM:497-1405 | validé | `core/space_test.go`, `space_filter_test.go` ; J2, `scripting_spaces` | rejoindre deux fois renvoie un succès | — |
 | SpaceState (main levée, parole, sondages, setKind) | BSp:693-725 | validé | `core/space_filter_test.go:116-166` | revokeFloor, deletePoll et questions non testés | tests |
 | Chat de bulle (spaceMessage, isTyping) | EventProcessorInit.ts:5-45 | implémenté non vérifié | `ws/spaces.go:172,387` ; E2E vert (J2) | signature (nom, woka) non testée | test |
-| chatMembersQuery, roomTagsQuery | PSM:1540, 1321 | partiel (réponse vide) | `ws/session.go:531,542` | conforme en OSS, vide en SaaS | client admin |
-| searchTags, getMember, searchMember, refresh OAuth | PSM:1487-1642 | absent | « Query not supported » | searchTags répond `[]` en OSS chez TS | répondre `[]` ; client admin |
+| chatMembersQuery (A12), roomTagsQuery (A8) | PSM:1540, 1321 | validé | `admin/http_test.go` : `TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin` | — | — |
+| searchMember (A13), getMember (A15), searchTags (A14) ; refresh OAuth (A17) | PSM:1487-1642 | partiel | `ws/members.go`, même test | A17 absent | A17 |
 | Matrix : `matrixUserId`, SSO, `/matrix-callback` | AuthenticateController.ts:322-405 | validé | `httpapi/oidc_test.go:101,132,142` | — | — |
-| Matrix : provider, salons des zones, enter/leaveChatRoomArea, updateChatId | MatrixProvider.ts, PSM:1703-1758 | absent | — | zones de chat sans salon | porter avec `/roomArea` |
+| Matrix : provider Synapse (connexion admin, levée du rate limit, salons privés des zones dans l'espace « current-visited-room », invitation, modérateur pour le tag admin, renommage, vidage), `/roomArea` (`MAP_STORAGE_API_TOKEN`), enter/leaveChatRoomArea, sortie à la fermeture, updateChatId (A16) | MatrixProvider.ts, MatrixRoomAreaController.ts, PSM:1552, 1703-1758 | validé (tests Go) | `matrix_test.go`, `ws/matrix_test.go` (2 tests) | jeton admin en mémoire, une connexion par processus (le TS le partage par Redis) ; E2E `matrixChatArea` à jouer | campagne |
 
 ## Éditeur de carte et map-storage
 
@@ -88,7 +88,8 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | `/private/files` (JWT) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` (avec et sans `PATH_PREFIX`) | — | — |
 | `USE_DOMAIN_NAME_IN_PATH` | PathMapper.ts:76 | absent | — | le domaine de la clé vient du `wamUrl` donné par l'admin, ou de l'hôte HTTP ; sans admin, toutes les salles ont l'hôte de `PUBLIC_MAP_STORAGE_URL` | tranche admin |
 | `WAM_TEMPLATE_URL` | UploadController.ts:604 | validé | `mapstorage_test.go` : `TestAMapUploadedAloneStartsFromTheWAMTemplate` | — | — |
-| `resourceUrl` (DELETE), webhooks, validateur d'API key, S3 | MS Services | absent | JOURNAL J3a | SaaS : toute écriture répond 401 | avec le contrat admin et Matrix |
+| `resourceUrl` des propriétés de zone (POST à l'ajout, PATCH au changement, DELETE au retrait et à la suppression de la zone ; seulement `PUSHER_URL` et `WHITELISTED_RESOURCE_URLS`) | ResourceUrlModule.ts, UpdateAreaMapStorageCommand.ts | validé | `mapedit/resource_test.go`, `ws/matrix_test.go` | un seul DELETE à la suppression d'une zone (le TS en envoie deux) | — |
+| webhooks, validateur d'API key, S3 de map-storage | MS Services | absent | JOURNAL J3a | SaaS : toute écriture répond 401 | avec le contrat admin |
 | embeddableWebsite, mapStorageJwt, roomsFromSameWorld | PSM:1420, 1760, 1346 | implémenté non vérifié | `ws/queries.go` ; J3a `start_exit:40` | roomsFromSameWorld liste tout map-storage | filtrer par domaine |
 
 ## Variables, scripts, modération
