@@ -1,0 +1,819 @@
+//! What the browser asks before the WebSocket: the HTML page (FrontController), its assets (proxied to the
+//! `front` container), the map details, the anonymous login and the woka lists.
+//!
+//! The page template is the front container's index.html (RemoteFrontAssets): polled with its ETag every 2 s
+//! until loaded, then every 30 s.
+
+use std::collections::HashMap;
+use std::sync::Arc;
+use std::time::Duration;
+
+use axum::Router;
+use axum::body::Body;
+use axum::extract::{RawQuery, Request, State};
+use axum::http::{HeaderMap, Method, StatusCode, header};
+use axum::response::{IntoResponse, Redirect, Response};
+use axum::routing::{any, get, post};
+use parking_lot::RwLock;
+use serde_json::{Value, json};
+
+use crate::AppState;
+use crate::config::Config;
+use crate::jwt::{self, Claims};
+use crate::local_admin;
+use crate::mustache::{Context, Template, Value as V};
+
+pub struct FrontAssets {
+    template: RwLock<Option<Template>>,
+    /// The front's apiVersionHash: API_VERSION_HASH, or else the one of the first template served.
+    api_version: RwLock<Option<String>>,
+}
+
+impl FrontAssets {
+    pub fn new(config: &Config) -> Self {
+        Self {
+            template: RwLock::new(None),
+            api_version: RwLock::new(config.raw.get("API_VERSION_HASH").filter(|v| !v.is_empty()).cloned()),
+        }
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.template.read().is_some()
+    }
+
+    pub fn api_version(&self) -> Option<String> {
+        self.api_version.read().clone()
+    }
+}
+
+pub fn query_pairs(raw: Option<&str>) -> Vec<(String, String)> {
+    form_urlencoded::parse(raw.unwrap_or("").as_bytes()).map(|(k, v)| (k.into_owned(), v.into_owned())).collect()
+}
+
+fn query_get<'a>(pairs: &'a [(String, String)], key: &str) -> Option<&'a str> {
+    pairs.iter().find(|(k, _)| k == key).map(|(_, v)| v.as_str())
+}
+
+/// `./assets/...` and the dev `/src/`, `/@vite/` paths point to the front's public URL.
+fn rewrite_asset_urls(html: &str, assets_url: &str) -> String {
+    let mut out = html.to_owned();
+    for ws in [' ', '\n', '\t', '\r'] {
+        for attr in ["src", "href"] {
+            out = out.replace(&format!("{ws}{attr}=\"./assets/"), &format!("{ws}{attr}=\"{assets_url}/assets/"));
+            for dev in ["src/", "@vite/"] {
+                out = out.replace(&format!("{ws}{attr}=\"/{dev}"), &format!("{ws}{attr}=\"{assets_url}/{dev}"));
+            }
+        }
+    }
+    out
+}
+
+fn api_version_of(html: &str) -> Option<&str> {
+    let i = html.find(r#"name="wa-api-version" content=""#)? + r#"name="wa-api-version" content=""#.len();
+    let end = html[i..].find('"')?;
+    Some(&html[i..i + end])
+}
+
+/// Keeps the template up to date. Runs for the life of the process.
+pub async fn poll_template(state: AppState) {
+    let (Some(internal), Some(public)) = (state.config.assets_internal_url.clone(), state.config.assets_url.clone())
+    else {
+        tracing::warn!("ASSETS_URL is not set: no front container to serve the page from");
+        return;
+    };
+    let client = reqwest::Client::new();
+    let mut etag: Option<String> = None;
+    loop {
+        let mut req = client.get(format!("{internal}/index.html")).timeout(Duration::from_secs(10));
+        if let Some(e) = &etag {
+            req = req.header(header::IF_NONE_MATCH, e);
+        }
+        match req.send().await {
+            Ok(r) if r.status() == StatusCode::NOT_MODIFIED => {}
+            Ok(r) if r.status().is_success() => {
+                let new_etag = r.headers().get(header::ETAG).and_then(|v| v.to_str().ok()).map(str::to_owned);
+                if let Ok(html) = r.text().await {
+                    let version = api_version_of(&html).map(str::to_owned);
+                    let expected = state.front.api_version();
+                    if expected.is_some() && version.is_some() && expected != version {
+                        tracing::error!(?expected, ?version, "ignoring a front template of another API version");
+                    } else {
+                        match Template::parse(&rewrite_asset_urls(&html, &public)) {
+                            Ok(t) => {
+                                *state.front.template.write() = Some(t);
+                                if expected.is_none() && version.is_some() {
+                                    *state.front.api_version.write() = version;
+                                }
+                                etag = new_etag;
+                            }
+                            Err(e) => tracing::error!(?e, "invalid front template"),
+                        }
+                    }
+                }
+            }
+            Ok(r) => tracing::warn!(status = %r.status(), "could not load the front template"),
+            Err(e) => tracing::warn!(error = %e, "could not reach the front container"),
+        }
+        let every = if state.front.is_ready() { 30 } else { 2 };
+        tokio::time::sleep(Duration::from_secs(every)).await;
+    }
+}
+
+pub fn default_meta() -> Value {
+    json!({
+        "title": "WorkAdventure",
+        "description": "Organize your online event in WorkAdventure to recreate spontaneous social interactions. Connect, collaborate and have fun with your teammates and attendees.",
+        "author": "WorkAdventure team",
+        "provider": "WorkAdventure",
+        "favIcons": [{"rel": "icon", "sizes": "512x512", "src": "/static/images/favicons/favicon-512x512.svg"}],
+        "manifestIcons": [{"src": "/static/images/favicons/icon-512x512.png", "sizes": "512x512", "type": "image/png"}],
+        "appName": "WorkAdventure",
+        "shortAppName": "WA",
+        "themeColor": "#1B2A41",
+        "cardImage": "https://workadventu.re/images/general/logo-og.png",
+    })
+}
+
+/// FRONT_ENVIRONMENT_VARIABLES: the `window.env` of the page.
+pub fn front_env(c: &Config) -> Value {
+    let raw = |k: &str| c.raw.get(k).cloned();
+    let s = |k: &str| c.raw.get(k).filter(|v| !v.is_empty()).cloned();
+    let b = |k: &str, d: bool| match c.raw.get(k).map(String::as_str) {
+        Some("true" | "1") => true,
+        Some("false" | "0") => false,
+        _ => d,
+    };
+    let n = |k: &str, d: f64| s(k).and_then(|v| v.parse::<f64>().ok()).unwrap_or(d);
+    let mut env = json!({
+        "DEBUG_MODE": b("DEBUG_MODE", false),
+        "PUSHER_URL": c.pusher_url,
+        "FRONT_URL": c.front_url,
+        "ADMIN_URL": raw("ADMIN_URL"),
+        "UPLOADER_URL": raw("UPLOADER_URL").unwrap_or_default(),
+        "ICON_URL": raw("ICON_URL").unwrap_or_default(),
+        "SKIP_RENDER_OPTIMIZATIONS": b("SKIP_RENDER_OPTIMIZATIONS", false),
+        "JITSI_URL": raw("JITSI_URL"),
+        "JITSI_PRIVATE_MODE": b("JITSI_PRIVATE_MODE", false),
+        "ENABLE_MAP_EDITOR": b("ENABLE_MAP_EDITOR", false),
+        "PUBLIC_MAP_STORAGE_PREFIX": s("PUBLIC_MAP_STORAGE_URL").map(|u| {
+            let rest = u.split_once("://").map_or(u.as_str(), |(_, r)| r);
+            rest.find('/').map_or("/".to_owned(), |i| rest[i..].to_owned())
+        }),
+        "MAX_USERNAME_LENGTH": n("MAX_USERNAME_LENGTH", 10.0),
+        "MAX_PER_GROUP": c.max_per_group,
+        "MAX_DISPLAYED_VIDEOS": n("MAX_DISPLAYED_VIDEOS", 16.0),
+        "LIVEKIT_PIXEL_DENSITY": n("LIVEKIT_PIXEL_DENSITY", 2.0 / 3.0),
+        "NODE_ENV": s("NODE_ENV").unwrap_or_else(|| "development".into()),
+        "CONTACT_URL": raw("CONTACT_URL"),
+        "POSTHOG_API_KEY": raw("POSTHOG_API_KEY"),
+        "POSTHOG_URL": raw("POSTHOG_URL"),
+        "DISABLE_ANONYMOUS": c.disable_anonymous,
+        "ENABLE_OPENID": s("OPENID_CLIENT_ID").is_some() || s("OPID_CLIENT_ID").is_some(),
+        "OPID_PROFILE_SCREEN_PROVIDER": s("OPENID_PROFILE_SCREEN_PROVIDER").or_else(|| s("OPID_PROFILE_SCREEN_PROVIDER")),
+        "OPID_WOKA_NAME_POLICY": s("OPENID_WOKA_NAME_POLICY").or_else(|| s("OPID_WOKA_NAME_POLICY")).unwrap_or_else(|| "user_input".into()),
+        "ENABLE_CHAT_UPLOAD": b("ENABLE_CHAT_UPLOAD", true),
+        "FALLBACK_LOCALE": raw("FALLBACK_LOCALE"),
+        "ENABLE_REPORT_ISSUES_MENU": b("ENABLE_REPORT_ISSUES_MENU", false),
+        "REPORT_ISSUES_URL": raw("REPORT_ISSUES_URL"),
+        "CLIENT_DISCONNECTION_RETENTION_MS": c.client_disconnection_retention.as_millis() as u64,
+        "SENTRY_DSN_FRONT": raw("SENTRY_DSN_FRONT"),
+        "SENTRY_DSN_PUSHER": raw("SENTRY_DSN_PUSHER"),
+        "SENTRY_ENVIRONMENT": raw("SENTRY_ENVIRONMENT"),
+        "SENTRY_RELEASE": raw("SENTRY_RELEASE"),
+        "SENTRY_TRACES_SAMPLE_RATE": n("SENTRY_TRACES_SAMPLE_RATE", 0.1),
+        "WOKA_SPEED": n("WOKA_SPEED", 9.0),
+        "KLAXOON_ENABLED": b("KLAXOON_ENABLED", false),
+        "KLAXOON_CLIENT_ID": raw("KLAXOON_CLIENT_ID"),
+        "YOUTUBE_ENABLED": b("YOUTUBE_ENABLED", false),
+        "GOOGLE_DRIVE_ENABLED": b("GOOGLE_DRIVE_ENABLED", false),
+        "GOOGLE_DOCS_ENABLED": b("GOOGLE_DOCS_ENABLED", false),
+        "GOOGLE_SHEETS_ENABLED": b("GOOGLE_SHEETS_ENABLED", false),
+        "GOOGLE_SLIDES_ENABLED": b("GOOGLE_SLIDES_ENABLED", false),
+        "ERASER_ENABLED": b("ERASER_ENABLED", false),
+        "EXCALIDRAW_ENABLED": b("EXCALIDRAW_ENABLED", false),
+        "EXCALIDRAW_DOMAINS": s("EXCALIDRAW_DOMAINS").map_or(vec![], |v| v.split(',').map(str::to_owned).collect::<Vec<_>>()),
+        "CARDS_ENABLED": b("CARDS_ENABLED", false),
+        "TLDRAW_ENABLED": b("TLDRAW_ENABLED", false),
+        "MINIMUM_DISTANCE": c.minimum_distance,
+        "GOOGLE_DRIVE_PICKER_CLIENT_ID": raw("GOOGLE_DRIVE_PICKER_CLIENT_ID"),
+        "GOOGLE_DRIVE_PICKER_APP_ID": raw("GOOGLE_DRIVE_PICKER_APP_ID"),
+        "EMBEDLY_KEY": raw("EMBEDLY_KEY"),
+        "MATRIX_PUBLIC_URI": raw("MATRIX_PUBLIC_URI"),
+        "ENABLE_CHAT": b("ENABLE_CHAT", true),
+        "ENABLE_CHAT_ONLINE_LIST": b("ENABLE_CHAT_ONLINE_LIST", true),
+        "ENABLE_CHAT_DISCONNECTED_LIST": b("ENABLE_CHAT_DISCONNECTED_LIST", true),
+        "MATRIX_ADMIN_USER": raw("MATRIX_ADMIN_USER"),
+        "MATRIX_DOMAIN": raw("MATRIX_DOMAIN"),
+        "ENABLE_SAY": b("ENABLE_SAY", true),
+        "ENABLE_ISSUE_REPORT": b("ENABLE_ISSUE_REPORT", true),
+        "PROXIMITY_FILE_TRANSFER_MAX_USERS": n("PROXIMITY_FILE_TRANSFER_MAX_USERS", 10.0),
+        "GRPC_MAX_MESSAGE_SIZE": n("GRPC_MAX_MESSAGE_SIZE", 20.0 * 1024.0 * 1024.0),
+        "TURN_CREDENTIALS_RENEWAL_TIME": n("TURN_CREDENTIALS_RENEWAL_TIME", 3_600_000.0),
+        "DEFAULT_WOKA_NAME": raw("DEFAULT_WOKA_NAME").unwrap_or_default(),
+        "DEFAULT_WOKA_TEXTURE": raw("DEFAULT_WOKA_TEXTURE").unwrap_or_default(),
+        "SKIP_CAMERA_PAGE": b("SKIP_CAMERA_PAGE", false),
+        "BYPASS_PWA": b("BYPASS_PWA", false),
+        "PROVIDE_DEFAULT_WOKA_NAME": s("PROVIDE_DEFAULT_WOKA_NAME"),
+        "PROVIDE_DEFAULT_WOKA_TEXTURE": s("PROVIDE_DEFAULT_WOKA_TEXTURE"),
+        "ENABLE_TUTORIAL": b("ENABLE_TUTORIAL", true),
+    });
+    // JSON.stringify leaves undefined keys out; integral numbers print without ".0".
+    let obj = env.as_object_mut().expect("object literal");
+    obj.retain(|_, v| !v.is_null());
+    for v in obj.values_mut() {
+        if let Some(f) = v.as_f64()
+            && f.fract() == 0.0
+            && f.abs() < 9e15
+        {
+            *v = json!(f as i64);
+        }
+    }
+    env
+}
+
+fn page_script(c: &Config, capabilities: Option<&Value>) -> String {
+    let local = json!({"api/woka/list": "v1", "api/companion/list": "v1"});
+    format!("window.env = {}\nwindow.capabilities = {}", front_env(c), capabilities.unwrap_or(&local))
+}
+
+/// GenerateCustomColors.getStringPalette: `chroma.scale(["white", color, "black"]).colors(12)` as HSL CSS
+/// variables, 50 and 100 to 900 (500 unsuffixed). Empty for no colour or an unreadable one.
+pub fn string_palette(hex: Option<&str>, prefix: &str) -> String {
+    let Some(rgb) = hex.and_then(parse_hex) else { return String::new() };
+    let lerp = |a: [f64; 3], b: [f64; 3], t: f64| [0, 1, 2].map(|i| a[i] + (b[i] - a[i]) * t);
+    let colors: Vec<[f64; 3]> = (0..12)
+        .map(|i| {
+            let t = f64::from(i) / 11.0;
+            let c = if t <= 0.5 { lerp([255.0; 3], rgb, t * 2.0) } else { lerp(rgb, [0.0; 3], (t - 0.5) * 2.0) };
+            // colors(12, "hex"): each channel rounded to a byte.
+            c.map(|v| v.round().clamp(0.0, 255.0))
+        })
+        .collect();
+    let mut out = format!("--{prefix}-50: {};\n", hsl(colors[1]));
+    // The pusher's float loop: 0.1, 0.2 … 0.8999…, 0.5 unsuffixed.
+    let mut i = 0.1f64;
+    while i < 0.9 {
+        let step = if i == 0.5 { String::new() } else { format!("-{}", (i * 1000.0).round()) };
+        out.push_str(&format!("--{prefix}{step}: {};\n", hsl(colors[(i * 10.0).round() as usize])));
+        i += 0.1;
+    }
+    out
+}
+
+fn parse_hex(s: &str) -> Option<[f64; 3]> {
+    let h = s.trim().trim_start_matches('#');
+    let h: String = match h.len() {
+        3 => h.chars().flat_map(|c| [c, c]).collect(),
+        6 => h.to_owned(),
+        _ => return None,
+    };
+    let byte = |i: usize| u8::from_str_radix(h.get(i..i + 2)?, 16).ok().map(f64::from);
+    Some([byte(0)?, byte(2)?, byte(4)?])
+}
+
+/// chroma's hsl(), as getHslColor prints it: `H S% L%`, a grey's hue 0.
+fn hsl([r, g, b]: [f64; 3]) -> String {
+    let (r, g, b) = (r / 255.0, g / 255.0, b / 255.0);
+    let (max, min) = (r.max(g).max(b), r.min(g).min(b));
+    let l = (max + min) / 2.0;
+    let (h, s) = if max == min {
+        (0.0, 0.0)
+    } else {
+        let d = max - min;
+        let s = if l < 0.5 { d / (max + min) } else { d / (2.0 - max - min) };
+        let h = if max == r {
+            (g - b) / d + if g < b { 6.0 } else { 0.0 }
+        } else if max == g {
+            (b - r) / d + 2.0
+        } else {
+            (r - g) / d + 4.0
+        };
+        (h * 60.0, s)
+    };
+    format!("{} {}% {}%", h.round(), (s * 100.0).round(), (l * 100.0).round())
+}
+
+fn full_url(headers: &HeaderMap, uri: &axum::http::Uri) -> String {
+    let proto = headers.get("x-forwarded-proto").and_then(|v| v.to_str().ok()).unwrap_or("http");
+    let host = headers.get(header::HOST).and_then(|v| v.to_str().ok()).unwrap_or("");
+    let path = uri.path_and_query().map_or("/", |p| p.as_str());
+    format!("{proto}://{host}{path}")
+}
+
+/// MetaTagsBuilder.getMeta: the admin's metatags (white label), else for a link preview the map's name and
+/// description, else the defaults.
+async fn meta_tags(state: &AppState, url: &str, map_details: Option<&Value>, user_agent: &str) -> Value {
+    let mut meta = default_meta();
+    let admin_meta = map_details.and_then(|d| d["metatags"].as_object());
+    if let Some(tags) = admin_meta {
+        for (k, v) in tags {
+            if !v.is_null() {
+                meta[k] = v.clone();
+            }
+        }
+    }
+    let user_agent = user_agent.to_lowercase();
+    if admin_meta.is_none()
+        && ["bot", "facebook", "preview"].iter().any(|b| user_agent.contains(b))
+        && let Some(map) = crate::room_map::tmj_of_page(state, url).await
+    {
+        let property = |name: &str| {
+            map["properties"].as_array()?.iter().find(|p| p["name"] == name)?["value"].as_str().map(str::to_owned)
+        };
+        if let Some(name) = property("mapName") {
+            meta["title"] = format!("WorkAdventure - {name}").into();
+        }
+        if let Some(description) = property("mapDescription") {
+            meta["description"] = description.into();
+        }
+    }
+    meta
+}
+
+/// `/manifest.json?url=`: the PWA manifest of that room, dressed like its page.
+async fn manifest(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
+    let Some(url) = query_pairs(q.as_deref()).into_iter().find(|(k, _)| k == "url").map(|(_, v)| v) else {
+        return (StatusCode::BAD_REQUEST, "url is required").into_response();
+    };
+    let details = match &state.admin {
+        Some(admin) => Some(admin.map_details(&url, None, None).await).filter(|d| d.get("group").is_some()),
+        None => None,
+    };
+    let ua = headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default();
+    let meta = meta_tags(&state, &url, details.as_ref(), ua).await;
+    let origin = full_url(&headers, &axum::http::Uri::from_static("/"));
+    let manifest = json!({
+        "short_name": meta["title"], "name": meta["title"], "icons": meta["manifestIcons"],
+        "start_url": url.replace(origin.trim_end_matches('/'), ""),
+        "background_color": meta["themeColor"],
+        "display_override": ["window-control-overlay", "minimal-ui"],
+        "display": "standalone", "orientation": "portrait-primary", "scope": "/", "lang": "en",
+        "theme_color": meta["themeColor"],
+        "shortcuts": [{
+            "name": meta["title"], "short_name": meta["title"], "description": meta["description"], "url": "/",
+            "icons": [{"src": "/static/images/favicons/android-icon-192x192.png", "sizes": "192x192", "type": "image/png"}],
+        }],
+        "description": meta["description"], "screenshots": [],
+        "related_applications": [{"platform": "web", "url": "https://workadventu.re"}, {"platform": "play", "url": "https://play.workadventu.re"}],
+    });
+    ([(header::CONTENT_TYPE, "application/manifest+json; charset=utf-8")], manifest.to_string()).into_response()
+}
+
+/// `/server.json`: who this server is.
+async fn server_json(State(state): State<AppState>) -> Response {
+    let raw = |k: &str| state.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
+    let pusher = raw("PUSHER_URL");
+    let dev = raw("NODE_ENV").as_deref() != Some("production");
+    axum::Json(json!({
+        "domain": pusher,
+        "name": raw("SERVER_NAME").unwrap_or_else(|| "WorkAdventure Server".into()),
+        "motd": raw("SERVER_MOTD").unwrap_or_else(|| "A WorkAdventure Server".into()),
+        "icon": raw("SERVER_ICON").unwrap_or_else(|| format!("{}/static/images/favicons/icon-512x512.png", pusher.as_deref().unwrap_or("undefined"))),
+        // The pusher's package version.
+        "version": if dev { "1.0.0-dev" } else { "1.0.0" },
+    }))
+    .into_response()
+}
+
+async fn page(State(state): State<AppState>, request: Request) -> Response {
+    let (parts, body) = request.into_parts();
+    let url = full_url(&parts.headers, &parts.uri);
+    let auth_token = if parts.method == Method::POST {
+        let bytes = axum::body::to_bytes(body, 64 * 1024).await.unwrap_or_default();
+        query_pairs(std::str::from_utf8(&bytes).ok()).into_iter().find(|(k, _)| k == "authToken").map(|(_, v)| v)
+    } else {
+        None
+    };
+    let template = state.front.template.read().clone();
+    let Some(template) = template else {
+        return (
+            StatusCode::SERVICE_UNAVAILABLE,
+            [(header::RETRY_AFTER, "2")],
+            "WorkAdventure is starting, please retry in a few seconds.",
+        )
+            .into_response();
+    };
+    // MetaTagsBuilder with the admin (A2): it may send the browser elsewhere, and dresses the page (white label).
+    let lang = parts.headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok());
+    let details = match &state.admin {
+        Some(admin) => Some(admin.map_details(&url, None, lang).await),
+        None => None,
+    };
+    if let Some(to) = details.as_ref().and_then(|d| d["redirectUrl"].as_str()) {
+        return (StatusCode::FOUND, [(header::LOCATION, to.to_owned())]).into_response();
+    }
+    if let Some(key) = query_pairs(parts.uri.query())
+        .into_iter()
+        .find(|(k, _)| k == "access_key")
+        .map(|(_, v)| v)
+        .filter(|k| !k.is_empty())
+    {
+        let Some(autologin) = state.config.raw.get("AUTOLOGIN_URL").filter(|v| !v.is_empty()) else {
+            return (StatusCode::BAD_REQUEST, "AUTOLOGIN_URL is not configured.").into_response();
+        };
+        let mut c = Context::new();
+        c.insert("accessKey", V::Str(key));
+        c.insert("AUTOLOGIN_URL", V::Str(autologin.clone()));
+        let html = Template::parse(include_str!("redirect_to_admin.html")).expect("valid template").render(&c);
+        return ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], html)
+            .into_response();
+    }
+    let map_details = details.filter(|d| d.get("group").is_some());
+    let user_agent = parts.headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default();
+    let meta = meta_tags(&state, &url, map_details.as_ref(), user_agent).await;
+    let mut ctx = Context::new();
+    for key in ["title", "description", "author", "provider", "appName", "shortAppName", "themeColor", "cardImage"] {
+        ctx.insert(key, V::Str(meta[key].as_str().unwrap_or_default().to_owned()));
+    }
+    let fav: Vec<HashMap<&'static str, String>> = meta["favIcons"]
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|f| {
+            ["rel", "sizes", "src"].into_iter().map(|k| (k, f[k].as_str().unwrap_or_default().to_owned())).collect()
+        })
+        .collect();
+    let tile = fav.last().and_then(|f| f.get("src").cloned()).unwrap_or_default();
+    ctx.insert("favIcons", V::List(fav));
+    ctx.insert("msApplicationTileImage", V::Str(tile));
+    ctx.insert("url", V::Str(url));
+    ctx.insert("script", V::Str(state.page_script.to_string()));
+    let env = |k: &str| state.config.raw.get(k).cloned().unwrap_or_default();
+    ctx.insert("posthogApiKey", V::Str(env("POSTHOG_API_KEY")));
+    ctx.insert("posthogUrl", V::Str(env("POSTHOG_URL")));
+    ctx.insert("googleDrivePickerClientId", V::Str(env("GOOGLE_DRIVE_PICKER_CLIENT_ID")));
+    ctx.insert("authToken", V::Str(auth_token.unwrap_or_default()));
+    ctx.insert(
+        "assetsOrigin",
+        V::Str(state.config.assets_url.as_deref().and_then(local_admin::world_of).unwrap_or_default()),
+    );
+    let palettes = [("primaryColor", "secondary"), ("backgroundColor", "contrast")]
+        .map(|(field, prefix)| string_palette(map_details.as_ref().and_then(|d| d[field].as_str()), prefix));
+    let css = if palettes.iter().any(|p| !p.is_empty()) {
+        format!(
+            "<style>\n\n        :root {{\n\n            {}\n{}\n            }}\n\n        </style>",
+            palettes[0], palettes[1]
+        )
+    } else {
+        String::new()
+    };
+    ctx.insert("cssVariablesOverride", V::Str(css));
+    ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], template.render(&ctx))
+        .into_response()
+}
+
+async fn map(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
+    let pairs = query_pairs(q.as_deref());
+    let Some(play_uri) = query_get(&pairs, "playUri") else {
+        return (StatusCode::BAD_REQUEST, axum::Json(json!(["Parameter playUri: Required"]))).into_response();
+    };
+    let Some(admin) = &state.admin else {
+        return axum::Json(local_admin::map_details(&state.config, play_uri)).into_response();
+    };
+    // MapController: the user, read from the token even when it expired; an invalid token stops here.
+    let claims = match query_get(&pairs, "authToken").filter(|t| !t.is_empty()) {
+        Some(token) => match jwt::verify_ignoring_expiry(&state.config.secret_key, token) {
+            Ok(c) => Some(c),
+            Err(_) => return (StatusCode::UNAUTHORIZED, "The Token is invalid").into_response(),
+        },
+        None => None,
+    };
+    let lang = headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok());
+    let user = claims.as_ref().map(|c| (c.identifier.as_str(), c.access_token.as_deref()));
+    let mut details = admin.map_details(play_uri, user, lang).await;
+    if let Some(d) = details.as_object_mut() {
+        // The Jitsi and BBB secrets never reach the browser.
+        d.remove("thirdParty");
+        if state.config.disable_anonymous && d.contains_key("group") {
+            d.insert("authenticationMandatory".into(), true.into());
+        }
+    }
+    axum::Json(details).into_response()
+}
+
+async fn anonym_login(State(state): State<AppState>) -> Response {
+    if state.config.disable_anonymous {
+        return StatusCode::FORBIDDEN.into_response();
+    }
+    let uuid = uuid::Uuid::new_v4().to_string();
+    let token = jwt::create(&state.config.secret_key, Claims { identifier: uuid.clone(), ..Claims::default() });
+    axum::Json(json!({ "authToken": token, "userUuid": uuid })).into_response()
+}
+
+/// `GET /me` without OpenID: who the token is, and whether the stored wokas are still valid.
+async fn me(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
+    let pairs = query_pairs(q.as_deref());
+    let (Some(token), Some(play_uri)) = (query_get(&pairs, "token"), query_get(&pairs, "playUri")) else {
+        return (StatusCode::BAD_REQUEST, axum::Json(json!(["Parameter token or playUri: Required"]))).into_response();
+    };
+    let Ok(claims) = jwt::verify(&state.config.secret_key, token) else {
+        return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
+    };
+    if let Some(admin) = &state.admin {
+        return me_from_admin(&state, admin, &headers, &pairs, token, play_uri, &claims).await;
+    }
+    let ids: Vec<String> = pairs
+        .iter()
+        .filter(|(k, _)| k == "localStorageCharacterTextureIds[]" || k == "localStorageCharacterTextureIds")
+        .map(|(_, v)| v.clone())
+        .collect();
+    let textures = local_admin::resolve_textures(&ids);
+    let companion_id = query_get(&pairs, "localStorageCompanionTextureId").filter(|c| !c.is_empty());
+    let companion = companion_id.map(local_admin::resolve_companion);
+    let tags = claims.tags.clone().unwrap_or_default();
+    let mut body = json!({
+        "authToken": token,
+        "username": claims.username,
+        "locale": claims.locale,
+        "status": "ok",
+        "email": claims.identifier,
+        "userUuid": claims.identifier,
+        "tags": tags,
+        "visitCardUrl": null,
+        "isCharacterTexturesValid": textures.is_some(),
+        "characterTextures": textures.unwrap_or_default().iter().map(|t| json!({"id": t.id, "url": t.url})).collect::<Vec<_>>(),
+        "isCompanionTextureValid": !matches!(companion, Some(None)),
+        "companionTexture": companion.flatten().map(|t| json!({"id": t.id, "url": t.url})),
+        "activatedInviteUser": true,
+        "canEdit": local_admin::can_edit(&state.config, play_uri, &claims.identifier, &tags),
+        "world": local_admin::world_of(play_uri),
+        "applications": [],
+        "canRecord": false,
+        "analyticsEventsEnabled": false,
+        "matrixUserId": claims.matrix_user_id,
+        "matrixServerUrl": state.config.raw.get("MATRIX_PUBLIC_URI"),
+    });
+    // A token from an OpenID login is only good while the provider still accepts its access token.
+    if let Some(access_token) = &claims.access_token {
+        let Some(info) = crate::oidc::check_access_token(&state, access_token).await else {
+            return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
+        };
+        if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
+            body["matrixServerUrl"] = url.clone();
+        }
+        if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
+            for (k, v) in i {
+                b.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    body.as_object_mut().expect("object").retain(|k, v| !v.is_null() || k == "visitCardUrl");
+    axum::Json(body).into_response()
+}
+
+/// `GET /me` with the admin (A3), the OpenID userinfo merged over it.
+async fn me_from_admin(
+    state: &AppState,
+    admin: &crate::admin_api::AdminApi,
+    headers: &HeaderMap,
+    pairs: &[(String, String)],
+    token: &str,
+    play_uri: &str,
+    claims: &Claims,
+) -> Response {
+    let ids: Vec<String> = pairs
+        .iter()
+        .filter(|(k, _)| k == "localStorageCharacterTextureIds[]" || k == "localStorageCharacterTextureIds")
+        .map(|(_, v)| v.clone())
+        .collect();
+    let ip = headers
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .map(|v| v.trim().to_owned())
+        .unwrap_or_default();
+    let mut body = admin
+        .room_access(crate::admin_api::RoomAccess {
+            user_identifier: &claims.identifier,
+            play_uri,
+            ip_address: &ip,
+            character_texture_ids: &ids,
+            companion_texture_id: query_get(pairs, "localStorageCompanionTextureId").filter(|c| !c.is_empty()),
+            access_token: claims.access_token.as_deref(),
+            chat_id: None,
+            locale: headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok()),
+        })
+        .await;
+    if body["status"] != "ok" {
+        return axum::Json(body).into_response();
+    }
+    for (k, v) in [
+        ("authToken", json!(token)),
+        ("username", json!(claims.username)),
+        ("locale", json!(claims.locale)),
+        ("matrixUserId", json!(claims.matrix_user_id)),
+        ("matrixServerUrl", json!(state.config.raw.get("MATRIX_PUBLIC_URI"))),
+    ] {
+        body[k] = v;
+    }
+    if let Some(access_token) = &claims.access_token {
+        let Some(info) = crate::oidc::check_access_token(state, access_token).await else {
+            return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
+        };
+        if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
+            body["matrixServerUrl"] = url.clone();
+        }
+        if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
+            for (k, v) in i {
+                b.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    axum::Json(body).into_response()
+}
+
+async fn data_list(state: &AppState, headers: &HeaderMap, q: Option<&str>, data: &'static str) -> Response {
+    let Some(token) = headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()) else {
+        return (StatusCode::UNAUTHORIZED, "Undefined authorization header").into_response();
+    };
+    if jwt::verify(&state.config.secret_key, token).is_err() {
+        return (StatusCode::UNAUTHORIZED, "Invalid token sent").into_response();
+    }
+    let pairs = query_pairs(q);
+    let Some(room) = query_get(&pairs, "roomUrl") else {
+        return (StatusCode::BAD_REQUEST, axum::Json(json!(["Parameter roomUrl: Required"]))).into_response();
+    };
+    // A19, A20: the admin's lists when it offers them.
+    let (capability, path) = if data == local_admin::WOKA_JSON {
+        ("api/woka/list", "/api/woka/list")
+    } else {
+        ("api/companion/list", "/api/companion/list")
+    };
+    if let Some(admin) = state.admin.as_ref().filter(|a| a.has(capability)) {
+        let uuid = jwt::verify(&state.config.secret_key, token).map(|c| c.identifier).unwrap_or_default();
+        return match admin.list(path, room, &uuid).await {
+            Ok(list) => axum::Json(list).into_response(),
+            Err(e) => {
+                tracing::error!(error = %e, path, "the admin did not give its list");
+                (StatusCode::INTERNAL_SERVER_ERROR, "Error on getting data").into_response()
+            }
+        };
+    }
+    ([(header::CONTENT_TYPE, "application/json; charset=utf-8")], data).into_response()
+}
+
+async fn woka_list(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
+    data_list(&state, &headers, q.as_deref(), local_admin::WOKA_JSON).await
+}
+
+async fn companion_list(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
+    data_list(&state, &headers, q.as_deref(), local_admin::COMPANIONS_JSON).await
+}
+
+/// The host name of an absolute URL, without user info or port.
+fn host_of(url: &str) -> Option<&str> {
+    let (scheme, rest) = url.split_once("://")?;
+    if scheme.is_empty() || !scheme.chars().all(|c| c.is_ascii_alphanumeric() || "+-.".contains(c)) {
+        return None;
+    }
+    let authority = rest.split(['/', '?', '#']).next()?;
+    let host = authority.rsplit_once('@').map_or(authority, |(_, h)| h);
+    let host = if host.starts_with('[') { host.split_inclusive(']').next()? } else { host.split(':').next()? };
+    (!host.is_empty()).then_some(host)
+}
+
+/// `GET /local-script?script=<url>`: the page that runs a map script served from a *.localhost host (an
+/// iframe needs a real origin for it, see IframeListener).
+async fn local_script(RawQuery(q): RawQuery) -> Response {
+    let pairs = query_pairs(q.as_deref());
+    let Some((script, host)) = query_get(&pairs, "script").and_then(|s| Some((s, host_of(s)?))) else {
+        return (StatusCode::BAD_REQUEST, "Invalid query parameters").into_response();
+    };
+    let host = host.to_ascii_lowercase();
+    if host != "localhost" && !host.ends_with(".localhost") {
+        return (
+            StatusCode::BAD_REQUEST,
+            "Script URL must be from localhost or *.localhost domain for security reasons",
+        )
+            .into_response();
+    }
+    let escaped = script
+        .replace('&', "&amp;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;");
+    let html = format!(
+        "<!DOCTYPE html>\n<html>\n  <head>\n    <script src=\"/iframe_api.js\"></script>\n    <script type=\"module\" src=\"{escaped}\"></script>\n  </head>\n  <body>\n  </body>\n</html>"
+    );
+    ([(header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response()
+}
+
+/// Static files of the front container (AssetsProxy).
+async fn proxy(State(state): State<AppState>, request: Request) -> Response {
+    if request.method() != Method::GET && request.method() != Method::HEAD {
+        return StatusCode::NOT_FOUND.into_response();
+    }
+    let Some(internal) = &state.config.assets_internal_url else {
+        return StatusCode::NOT_FOUND.into_response();
+    };
+    let path = request.uri().path_and_query().map_or("/", |p| p.as_str());
+    let mut upstream = state.http.request(request.method().clone(), format!("{internal}{path}"));
+    for h in [header::IF_NONE_MATCH, header::IF_MODIFIED_SINCE] {
+        if let Some(v) = request.headers().get(&h) {
+            upstream = upstream.header(h, v);
+        }
+    }
+    let Ok(response) = upstream.send().await else {
+        return StatusCode::INTERNAL_SERVER_ERROR.into_response();
+    };
+    let mut builder = Response::builder().status(response.status());
+    for h in [header::CONTENT_TYPE, header::CACHE_CONTROL, header::ETAG, header::LAST_MODIFIED, header::EXPIRES] {
+        if let Some(v) = response.headers().get(&h) {
+            builder = builder.header(h, v.clone());
+        }
+    }
+    builder
+        .body(Body::from_stream(response.bytes_stream()))
+        .unwrap_or_else(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())
+}
+
+pub fn routes() -> Router<AppState> {
+    let mut router = Router::new()
+        .route("/", get(page))
+        .route("/login", get(page))
+        // Deprecated, still the page.
+        .route("/jwt", get(page))
+        .route("/manifest.json", get(manifest))
+        .route("/server.json", get(server_json))
+        .route("/_/{*rest}", get(page).post(page))
+        .route("/@/{*rest}", get(page).post(page))
+        .route("/~/{*rest}", get(page).post(page))
+        .route("/index.html", get(|| async { Redirect::to("/") }))
+        .route("/map", get(map))
+        .route("/anonymLogin", post(anonym_login))
+        .route("/me", get(me))
+        .route("/woka/list", get(woka_list))
+        .route("/companion/list", get(companion_list))
+        .route("/local-script", get(local_script));
+    for prefix in ["/assets", "/static", "/resources", "/collections"] {
+        router = router.route(&format!("{prefix}/{{*rest}}"), any(proxy));
+    }
+    for file in [
+        "/iframe_api.js",
+        "/iframe_api.js.map",
+        "/service-worker-dev.js",
+        "/service-worker-prod.js",
+        "/notification-service-worker.js",
+    ] {
+        router = router.route(file, any(proxy));
+    }
+    router
+}
+
+pub fn script(config: &Config, capabilities: Option<&Value>) -> Arc<str> {
+    page_script(config, capabilities).into()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::config::Env;
+
+    #[test]
+    fn asset_urls_point_to_the_front_container() {
+        let html = r#"<script type="module" src="./assets/index-1.js"></script>
+<link href="./assets/a.css"><img src="./static/x.png"><script src="/@vite/client">"#;
+        let out = rewrite_asset_urls(html, "http://front");
+        assert!(out.contains(r#"src="http://front/assets/index-1.js""#));
+        assert!(out.contains(r#"href="http://front/assets/a.css""#));
+        assert!(out.contains(r#"src="./static/x.png""#), "static stays relative");
+        assert!(out.contains(r#"src="http://front/@vite/client""#));
+        assert_eq!(api_version_of(r#"<meta name="wa-api-version" content="ab12cd34">"#), Some("ab12cd34"));
+    }
+
+    #[test]
+    fn local_scripts_are_only_for_localhost() {
+        assert_eq!(host_of("http://maps.workadventure.localhost:8880/a.js"), Some("maps.workadventure.localhost"));
+        assert_eq!(host_of("http://u:p@localhost/a.js"), Some("localhost"));
+        assert_eq!(host_of("not a url"), None);
+    }
+
+    #[test]
+    fn window_env_has_real_types_and_no_undefined_keys() {
+        let c = Config::load(Env::new(
+            [("SECRET_KEY", "s"), ("UPLOADER_URL", "/uploader"), ("ICON_URL", "/icon")]
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect(),
+        ))
+        .unwrap();
+        let env = front_env(&c);
+        assert_eq!(env["MAX_PER_GROUP"], json!(4));
+        assert_eq!(env["MINIMUM_DISTANCE"], json!(64));
+        assert_eq!(env["ENABLE_CHAT"], json!(true));
+        assert_eq!(env["LIVEKIT_PIXEL_DENSITY"], json!(2.0 / 3.0));
+        assert!(env.get("JITSI_URL").is_none());
+        assert!(page_script(&c, None).starts_with("window.env = {"));
+        // White label colours as the pusher computes them (expected values printed by chroma-js).
+        let p = string_palette(Some("#ff0000"), "secondary");
+        assert!(p.starts_with("--secondary-50: 0 100% 91%;\n--secondary-100: 0 100% 91%;\n"), "{p}");
+        assert!(p.contains("--secondary: 0 100% 55%;\n"), "{p}");
+        assert!(p.ends_with("--secondary-900: 0 100% 18%;\n"), "{p}");
+        let expected = "--contrast-50: 220 8% 85%;\n--contrast-100: 220 8% 85%;\n--contrast-200: 214 9% 70%;\n\
+            --contrast-300: 216 9% 55%;\n--contrast-400: 216 14% 40%;\n--contrast: 217 26% 25%;\n--contrast-600: 217 40% 16%;\n\
+            --contrast-700: 216 40% 13%;\n--contrast-800: 216 40% 10%;\n--contrast-900: 219 41% 7%;\n";
+        assert_eq!(string_palette(Some("#1b2a41"), "contrast"), expected);
+        assert_eq!(string_palette(Some("not a colour"), "x"), "");
+    }
+}
