@@ -192,6 +192,7 @@ async fn main() {
                     y,
                     viewport: (0, 0, 1000, 1000),
                     availability: 1,
+                    token: None,
                 })
                 .await
                 .unwrap_or_else(|e| panic!("bot {r}/{u}: {}", e.0));

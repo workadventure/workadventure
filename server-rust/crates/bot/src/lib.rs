@@ -56,6 +56,8 @@ pub struct Options {
     pub y: i32,
     pub viewport: (i32, i32, i32, i32),
     pub availability: i32,
+    /// A token to present instead of an anonymous one (tests sign their own, with tags).
+    pub token: Option<String>,
 }
 
 /// `POST /anonymLogin`, without an HTTP client crate: one request on a raw socket.
@@ -117,7 +119,10 @@ impl Bot {
     /// Logs in anonymously, opens the WebSocket and enters the room. Returns the bot and the stream of what
     /// the server sends next.
     pub async fn connect(o: Options) -> Result<(Bot, SplitStream<Ws>), BotError> {
-        let token = anonymous_token(&o.server).await?;
+        let token = match &o.token {
+            Some(t) => t.clone(),
+            None => anonymous_token(&o.server).await?,
+        };
         let query = {
             let mut q = form_urlencoded::Serializer::new(String::new());
             q.append_pair("roomId", &o.room_url)

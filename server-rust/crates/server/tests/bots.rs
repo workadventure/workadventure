@@ -44,6 +44,7 @@ async fn bot(server: &str, room: &str, name: &str, x: i32, y: i32) -> (Bot, Inbo
         y,
         viewport: SCREEN,
         availability: 1,
+        token: None,
     })
     .await
     .unwrap();
@@ -779,6 +780,7 @@ async fn with_an_admin_the_room_access_decides_who_enters_and_as_whom() {
         y: 0,
         viewport: SCREEN,
         availability: 1,
+        token: None,
     })
     .await;
     let Err(e) = refused else { panic!("a refused user must not enter") };
@@ -1261,4 +1263,65 @@ async fn the_debug_routes_of_the_back_answer_with_its_token() {
     let close = |q: &str| http.post(format!("{server}/debug/close-space-connection?token=t{q}")).send();
     assert_eq!(close("").await.unwrap().status(), 400);
     assert_eq!(close("&spaceName=nowhere.none").await.unwrap().status(), 500);
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn only_an_admin_kicks_and_forces_a_mute_in_a_space() {
+    use pb::private_space_event::Event as P;
+    let server = start().await;
+    let room = "http://play.test/_/global/maps.test/e2e.json";
+    let admin_token = wa_server::jwt::create(
+        "test",
+        wa_server::jwt::Claims {
+            identifier: "admin@test".into(),
+            tags: Some(vec!["admin".into()]),
+            ..Default::default()
+        },
+    );
+    let connect = |name: &str, token: Option<String>, x: i32| {
+        Bot::connect(Options {
+            server: server.clone(),
+            room_url: room.into(),
+            name: name.into(),
+            x,
+            y: 100,
+            viewport: SCREEN,
+            availability: 1,
+            token,
+        })
+    };
+    let (mut alice, sa) = connect("Alice", Some(admin_token), 100).await.unwrap();
+    let (mut bob, sb) = connect("Bob", None, 3000).await.unwrap();
+    let (mut ia, mut ib) = (Inbox::spawn(sa), Inbox::spawn(sb));
+    for (bot, inbox) in [(&mut alice, &mut ia), (&mut bob, &mut ib)] {
+        let q = bot.join_space("s", &[]).await.unwrap();
+        inbox.expect(WAIT, answer_to(q)).await.unwrap();
+    }
+    let private = |to: String, e: P| {
+        pb::client_to_server_message::Message::PrivateEvent(pb::PrivateEventFrontToPusher {
+            space_name: "s".into(),
+            receiver_user_id: to,
+            space_event: Some(pb::PrivateSpaceEvent { event: Some(e) }),
+        })
+    };
+    // Bob is no admin: his kick goes nowhere, his mute is a request.
+    bob.send(private(alice.space_user_id(), P::KickOffUser(pb::KickOffUserPrivateMessage {}))).await.unwrap();
+    bob.send(private(alice.space_user_id(), P::MuteAudio(pb::MuteAudioPrivateMessage { force: true }))).await.unwrap();
+    let first = ia
+        .expect(WAIT, |m| match private_event(m) {
+            Some((_, P::KickOffUser(_))) => Some("kick"),
+            Some((_, P::MuteAudio(a))) => Some(if a.force { "forced" } else { "asked" }),
+            _ => None,
+        })
+        .await
+        .unwrap();
+    assert_eq!(first, "asked");
+    // Alice is: both reach Bob, the mute forced.
+    alice.send(private(bob.space_user_id(), P::MuteAudio(pb::MuteAudioPrivateMessage { force: false }))).await.unwrap();
+    alice.send(private(bob.space_user_id(), P::KickOffUser(pb::KickOffUserPrivateMessage {}))).await.unwrap();
+    let mute =
+        ib.expect(WAIT, |m| matches!(private_event(m), Some((_, P::MuteAudio(a))) if a.force).then_some(())).await;
+    assert!(mute.is_ok());
+    let kick = ib.expect(WAIT, |m| matches!(private_event(m), Some((_, P::KickOffUser(_)))).then_some(())).await;
+    assert!(kick.is_ok());
 }
