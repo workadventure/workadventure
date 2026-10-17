@@ -1,7 +1,7 @@
 import { devices, defineConfig } from "@playwright/test";
 
 // Run by rehearse.sh (never directly: it needs the cluster and the Playwright slot, see dev/dev test).
-// The hosts are https://*-rehearsal.localhost without a port; the port-forward listens on 127.0.0.1:8443 only,
+// The hosts are https://*-rehearsal.localhost without a port; the relay of up.sh listens on 127.0.0.1:8443 only,
 // so Chromium maps every *.localhost name there (the page keeps its real host names, hence the certificate and CORS).
 export default defineConfig({
     testDir: ".",
