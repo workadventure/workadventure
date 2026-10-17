@@ -698,3 +698,28 @@ sur 6f4d02319), 272 tests, Chromium, un worker, `--grep-invert "storage works"`,
   à la première assertion (bouton « AirPods » absent des réglages média, liste de périphériques simulés côté
   front). Master a touché ce code depuis la référence (d1dbb953d0, a9a3e12fc0) : non classé, en attente d'une
   passe TS au même commit par le socle.
+
+`media_devices:15` : le socle l'a rejoué sur la stack ts à 034dee80b, 1 réussi sur 3. Instable, commun au TS.
+
+## Jalon 11 — répétition minikube (17/10)
+
+Profil `wa-rehearsal` du socle (`dev/rehearsal`, dev-socle 63208d236). Image construite ici avec les contextes
+`protos` et `pusherdata` (le `build_candidate` du socle ne les passe pas encore), puis taguée
+`wa-server-rust:rehearsal`, comme le README le permet. Scénario : copie du `rehearsal.spec.ts` du socle avec Rust
+pour candidat (`dev/rehearsal-rust/`, non commité), qui appelle le `deploy.sh` du socle.
+
+| Mesure | → Rust | → TS |
+|---|---|---|
+| `helm upgrade --wait` | 5 s | 14 s |
+| `/ping` par l'ingress | 9 s | 19 s |
+| coupure (première sonde en échec → rétabli) | 1,2 s | 8,3 s |
+| les deux se revoient bouger | 11,3 s | 21,7 s |
+| bannière « Connection lost », rechargement, reconnexion à zéro | jamais | jamais |
+
+Bulle, vues croisées, cartes, carte partagée et fichiers : OK dans les deux sens. **4 KO sur les variables de
+room persistantes** : le chart met `STORE_VARIABLES_FOR_LOCAL_MAPS` et `PLAYER_VARIABLES_MAX_TTL` dans l'`env` du
+back, que le pod play ne reçoit pas en mode serveur (`helm template` le confirme). Une carte d'un hôte `.localhost`
+y est donc « locale » et non persistée, comme le back TS sans la variable. Correctif demandé au socle dans
+`values-rust.yaml`, puis rejeu.
+
+Côté image : `api-version.sh` (même calcul que `tag-version`), cartes dans `/maps` en uid 1000, comme map-storage.
