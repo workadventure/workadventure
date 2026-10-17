@@ -20,7 +20,13 @@ type RoomVariables struct {
 	Defs   map[string]VarDef
 	Values map[string]string        // JSON values
 	Save   func(name, value string) // keeps a persistent variable ("" removes it); must not block
+	// Reload is set when the stored values could not be read (Redis down): the room starts with the map's defaults
+	// and asks again until ok, then takes the stored value of each variable nobody changed meanwhile.
+	Reload func() (stored map[string]string, ok bool)
 }
+
+// varsRetry is how often a room whose stored variables could not be read asks again.
+var varsRetry = 2 * time.Second
 
 // Variable is a name and its JSON value, of the room or of a player.
 type Variable struct{ Name, Value string }
@@ -46,7 +52,41 @@ func (r *Room) InitVariables(ctx context.Context, load func() RoomVariables) {
 	r.varsOnce.Do(func() {
 		v := load()
 		_ = r.a.Post(ctx, func() { r.s.roomVars, r.s.varsAt = &v, time.Now() })
+		if v.Reload != nil {
+			go r.reloadVariables(v.Reload)
+		}
 	})
+}
+
+func (r *Room) reloadVariables(reload func() (map[string]string, bool)) {
+	t := time.NewTicker(varsRetry)
+	defer t.Stop()
+	for {
+		select {
+		case <-r.a.Done():
+			return
+		case <-t.C:
+		}
+		stored, ok := reload()
+		if !ok {
+			continue
+		}
+		_ = r.a.Post(context.Background(), func() { r.s.takeStored(stored) })
+		return
+	}
+}
+
+// takeStored applies the stored values that arrived late, except to the variables written since the room started.
+func (s *state) takeStored(stored map[string]string) {
+	vars := s.roomVars
+	for name, value := range stored {
+		def, declared := vars.Defs[name]
+		if !declared || !def.Persist || s.varsWritten[name] || vars.Values[name] == value {
+			continue
+		}
+		vars.Values[name] = value
+		s.announceVariable(def, VariableChanged{Name: name, Value: value})
+	}
 }
 
 // SetVariable is VariableMessage. A variable the map does not declare is refused; but if the map was read more than
@@ -106,10 +146,18 @@ func (s *state) writeVariable(v Variable, tags []string, mayRedeclare, byAPI boo
 		return false, nil
 	}
 	vars.Values[v.Name] = v.Value
+	if s.varsWritten == nil {
+		s.varsWritten = map[string]bool{}
+	}
+	s.varsWritten[v.Name] = true
 	if declared && def.Persist && vars.Save != nil {
 		vars.Save(v.Name, v.Value)
 	}
-	changed := VariableChanged{Name: v.Name, Value: v.Value}
+	s.announceVariable(def, VariableChanged{Name: v.Name, Value: v.Value})
+	return false, nil
+}
+
+func (s *state) announceVariable(def VarDef, changed VariableChanged) {
 	m := NewMsg(changed, true)
 	for _, o := range s.users {
 		if def.ReadableBy == "" || slices.Contains(o.tags, def.ReadableBy) {
@@ -117,7 +165,6 @@ func (s *state) writeVariable(v Variable, tags []string, mayRedeclare, byAPI boo
 		}
 	}
 	s.toWatchers(changed)
-	return false, nil
 }
 
 // readableVariables is the snapshot a joining player gets.

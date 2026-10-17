@@ -22,12 +22,10 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 ## Manques bloquants, par ordre
 
 1. **Admin distante** : les 31 appels du contrat sont faits et testés contre un faux admin ; aucun parcours SaaS joué de bout en bout.
-2. **Durabilité des variables** : une room démarrée pendant une coupure de Redis garde les valeurs par défaut (`varsOnce`).
-3. **Isolation des tenants** : clé de space faite de l'origine et non du `world` de l'admin ; `roomsFromSameWorld` sans admin liste tout map-storage.
-4. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
-5. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
-6. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
-7. **Campagne des 86 specs** contre la référence TS : pas encore jouée.
+2. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
+3. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
+4. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
+5. **Campagne des 86 specs** contre la référence TS : pas encore jouée.
 
 ## Admin distante (A1 à A31 de `dev/contracts/admin-api.md`)
 
@@ -109,7 +107,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | Sous-commande `healthcheck` (GET 127.0.0.1:`PUSHER_HTTP_PORT`/ping, code de sortie) pour les `service_healthy` de compose | — (exigence du socle) | implémenté non vérifié | `cmd/server/main.go` | — | essayer en compose |
 | Ports : WS 3001, map-storage 3002 et uploader 3003 actifs par défaut, Room API 50051 si `ROOM_API_SECRET_KEY` | chart `server.enabled` | implémenté non vérifié | `config.go`, `Dockerfile` (EXPOSE) | — | `deploy` OSS |
 | `PATH_PREFIX` de map-storage (fichiers privés derrière `/map-storage`) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` : `TestPrivateFilesBehindAPathPrefix` | — | — |
-| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` | uploader/src/Controller/FileController.ts | partiel | `uploader_test.go` (2 tests) | en mémoire (256 Mo au plus), sans S3 ni Redis : perdu au redémarrage ; pas de limite par l'admin (`api/limit/fileSize`) | S3/Redis si la prod sert des fichiers |
+| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` | uploader/src/Controller/FileController.ts | partiel | `uploader_test.go` (2 tests) | en mémoire (256 Mo au plus), sans S3 ni Redis : perdu au redémarrage | S3/Redis si la prod sert des fichiers |
 | `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` sans jeton | protéger pprof |
 | OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
 | `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |
@@ -158,7 +156,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | Variables de room : hash Redis à la clé de l'URL, `""` donne HDEL | RedisVariablesRepository.ts:15-30 | implémenté non vérifié (format) ; validé (règles) | `core/roomvars_test.go:8`, `store/store_test.go` | pas de test du format Redis réel | test contre le faux Redis |
 | Variables de joueur `pr_<uuid>_\|@\|_<room>` avec `"<expiry>:<0\|1>:<json>"` | PlayerVariables.ts:29-95 | implémenté non vérifié | `ws/variables.go:196-247` | portée monde `pw_` absente ; pas d'EXPIRE sur la clé | test aller-retour ; `pw_` avec `group` |
 | Écriture pendant une coupure Redis | node-redis : file hors ligne rejouée ; `variables.spec.ts:113-148` | validé (cœur) | `store_test.go` : `TestAVariableWrittenWhileRedisIsDownIsStoredWhenItComesBack`, `TestFlushTellsHowManyWritesAreLost` | dernière valeur par champ, réessai sans fin, vidage à l'arrêt (10 s) ; « storage works » à jouer par le socle | — |
-| Room démarrée pendant une coupure Redis | TS attend | partiel | `core/roomvars.go:44-49` (`varsOnce`) | garde les valeurs par défaut et peut écraser les valeurs persistées | recharger ou refuser l'écriture persistante |
+| Room démarrée pendant une coupure Redis | TS attend (la salle échoue) | validé (cœur) | `core/roomvars_test.go` : `TestARoomStartedWhileRedisWasDownTakesTheStoredValuesOnceItIsBack` | la salle démarre avec les valeurs de la carte, redemande toutes les 2 s, puis prend la valeur stockée de chaque variable que personne n'a écrite entre-temps (une écriture pendant la coupure l'emporte sur la valeur stockée) | — |
 | Variables de zone, état des spaces | en mémoire (TS aussi) | validé | `core/roommap_test.go` | ne survivent pas à un redémarrage, comme en TS | — |
 | Éditions de carte | MapsManager.ts : écho avant écriture, sauvegarde toutes les 15 s | validé | écriture avant l'écho, par fichier temporaire puis rename (`mapstorage.go`) | plus durable que le TS | — |
 | Cartes sur S3 ; fichiers de l'uploader | fileSystem.ts, uploader | absent | disque seulement | bloquant si la prod les utilise | décider avec l'équipe |
