@@ -100,6 +100,25 @@ pub fn verify(secret: &str, token: &str) -> Result<Claims, InvalidToken> {
     verify_at(secret, token, now())
 }
 
+/// The payload of a token signed with `secret`, which may carry no `exp` (the admin socket's).
+pub fn open_unexpiring(secret: &str, token: &str) -> Result<serde_json::Value, InvalidToken> {
+    let (signing_input, signature) = token.rsplit_once('.').ok_or(InvalidToken)?;
+    let (header, payload) = signing_input.split_once('.').ok_or(InvalidToken)?;
+    let decode = |part: &str| URL_SAFE_NO_PAD.decode(part).map_err(|_| InvalidToken);
+    let header: serde_json::Value = serde_json::from_slice(&decode(header)?).map_err(|_| InvalidToken)?;
+    if header["alg"] != "HS256" {
+        return Err(InvalidToken);
+    }
+    let mut m = mac(secret);
+    m.update(signing_input.as_bytes());
+    m.verify_slice(&decode(signature)?).map_err(|_| InvalidToken)?;
+    let payload: serde_json::Value = serde_json::from_slice(&decode(payload)?).map_err(|_| InvalidToken)?;
+    if payload["exp"].as_u64().is_some_and(|exp| exp <= now()) {
+        return Err(InvalidToken);
+    }
+    Ok(payload)
+}
+
 /// The claims of a token signed with `secret`, expired or not (GET /map reads the user from it either way).
 pub fn verify_ignoring_expiry(secret: &str, token: &str) -> Result<Claims, InvalidToken> {
     verify_at(secret, token, 0)

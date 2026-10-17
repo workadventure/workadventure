@@ -4,6 +4,7 @@
 pub mod admin;
 pub mod admin_api;
 pub mod admin_queries;
+pub mod admin_socket;
 pub mod budget;
 pub mod config;
 pub mod custom_entities;
@@ -114,5 +115,6 @@ pub fn router(state: AppState) -> Router {
         .merge(front::routes())
         .merge(oidc::routes())
         .route("/ws/room", get(ws::ws_room))
+        .route("/ws/admin/rooms", get(admin_socket::ws_admin_rooms))
         .with_state(state)
 }

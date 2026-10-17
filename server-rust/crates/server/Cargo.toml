@@ -41,6 +41,7 @@ tonic = { version = "0.14.6", default-features = false, features = ["server", "r
 
 [dev-dependencies]
 wa-bot = { path = "../bot" }
+tokio-tungstenite = "*"
 
 [lints]
 workspace = true
