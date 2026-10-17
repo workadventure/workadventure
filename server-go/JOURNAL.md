@@ -764,3 +764,26 @@ b26d49374. La référence est `dev/references/ts-full-2026-10-17.md` (dev-socle 
 
 - Variables, cartes, carte partagée et fichiers passent d'un serveur à l'autre, dans les deux sens.
 - Le bandeau n'était pas apparu au passage précédent (20261017-0902) : son apparition à la bascule vers Go dépend du moment de la coupure. C'est un écart à suivre.
+
+### 17/10, tranche 7 : les écarts de la tranche 5
+
+1. **Propriétés analytics validées contre le catalogue.**
+   - `gen.sh` convertit les schémas zod d'`AnalyticsEventCatalog.ts` en JSON Schema (zod-to-json-schema, déjà installé), dans `catalog.json` (52 Ko).
+   - Le Go valide avec santhosh-tekuri/jsonschema : les propriétés des événements du front et les `openProperties` de `timed_event.open`.
+   - `TestTheSchemasMatchTheTSCatalog` régénère le fichier et échoue s'il est périmé. Il est sauté sans `node_modules`.
+2. **Jeton admin Synapse partagé par Redis**, comme MatrixProvider :
+   - clé `matrix-admin-access-token:<domaine>:<user>` ;
+   - verrou `SET NX EX 30`, attente de 500 ms, abandon au bout de 35 s ;
+   - un jeton révoqué n'est effacé que si aucun pod n'en a stocké un plus récent.
+   - Test : deux clients, quatre appels, une seule connexion à Synapse.
+3. **`putBucketCors` au démarrage de l'uploader S3** : GET et HEAD pour toute origine, en-tête `Authorization`, avec `Content-MD5`. Comme le TS, le démarrage ne l'attend pas.
+4. **Enregistrement avec le LiveKit du monde (A24)** :
+   - `Media.EgressFor` donne l'egress du client LiveKit de la salle ;
+   - l'enregistrement est disponible dès que le bucket est configuré et que l'admin offre `api/livekit/credentials`.
+5. **A27 comme `generateCacheFile`** :
+   - un upload, une suppression, un déplacement ou une copie : un seul appel, sans `mapPath` ;
+   - un PUT, un PATCH ou une édition : un appel avec `mapPath` ;
+   - jamais `delete` : `deleteWAMFileInCache` n'a pas d'appelant en TS.
+   - Défaut trouvé en chemin : `POST /copy` refusait un fichier seul (`os.CopyFS`). Il copie désormais un fichier comme un dossier, comme `fs.copy`.
+
+**Tests** : 182 au total, `./verify.sh` vert.
