@@ -5,4 +5,4 @@ play:
   image:
     repository: ghcr.io/workadventure/play
     pullPolicy: IfNotPresent
-    tag: master-6f4d02319eddbf46a51cb99ffd38e2d75273593c
+    tag: master-034dee80bbe3b29327de03b650b38e452ecf1293

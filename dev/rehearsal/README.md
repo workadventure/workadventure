@@ -6,7 +6,7 @@ avec la même release Helm (la bascule est un vrai `helm upgrade`). Profil minik
 ## Prérequis
 
 - Docker (VM avec au moins 6 Go libres : minikube est plafonné à 4 Go, ~2,7 Go utilisés une fois déployé), `minikube`, `kubectl`, `helm`, `openssl`, `python3`.
-- Images locales : les cinq images ghcr.io `play, back, map-storage, uploader, maps` au tag `master-6f4d023...` (tirées si absentes) et `wa-socle-front:master-6f4d023...` (construite par le socle).
+- Images locales : les cinq images ghcr.io `play, back, map-storage, uploader, maps` au tag `master-034dee80...` (tirées si absentes) et `wa-socle-front:master-034dee80...` (construite par le socle).
 - Candidats : `wa-server-go:rehearsal` est construit depuis le worktree `lang-go` (`server-go/`), `wa-server-rust:rehearsal` depuis `lang-rust` (`server-rust/`).
   Contrat d'image commun : un `Dockerfile` avec une cible `prod`, un `api-version.sh` dont la sortie (`API_VERSION`) doit égaler le hash de l'API du front,
   un serveur qui écoute comme `play` dans le chart, `SSL_CERT_FILE`, `REDIS_DB_NUMBER` et les cartes dans `/maps` (voir `values-go.yaml` / `values-rust.yaml`).

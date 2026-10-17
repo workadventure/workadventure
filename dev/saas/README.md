@@ -9,7 +9,7 @@ the containers of this project (`providers.docker.constraints`).
 
 - Docker with about 3 GB free in the VM (the project uses ~2.6 GB: admin 1.5, db 0.5, clickhouse 0.4).
 - Port **80 free** (the SaaS Traefik binds it): do not run another SaaS stack at the same time.
-- Images already local: `wa-socle-front:master-6f4d02319eddbf46a51cb99ffd38e2d75273593c`,
+- Images already local: `wa-socle-front:master-034dee80bbe3b29327de03b650b38e452ecf1293`,
   `ghcr.io/workadventure/maps:master-6f4d...` (test maps of the seed) and the SaaS images (php, mysql, clickhouse,
   rustfs, traefik). The Go image `wa-saas-go-server:local` is built by `up.sh` from the `lang-go` worktree (read-only),
   with `API_VERSION` from `server-go/api-version.sh` (it must match the front's hash).
