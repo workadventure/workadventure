@@ -14,6 +14,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
@@ -348,23 +349,44 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 		text(w, http.StatusServiceUnavailable, "WorkAdventure is starting, please retry in a few seconds.")
 		return
 	}
+	// MetaTagsBuilder: with an admin, the room may redirect, and the world gives its tags and colors.
+	var details map[string]any
+	if api.cfg.AdminAPIURL != "" {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		details, _ = api.admin.MapDetails(ctx, admin.MapQuery{PlayURI: fullURL(r)})
+		cancel()
+		if to, _ := details["redirectUrl"].(string); to != "" {
+			http.Redirect(w, r, to, http.StatusFound)
+			return
+		}
+	}
 	if api.accessKey(w, r) {
 		return
 	}
 	meta := admin.DefaultMetaTags()
-	api.mapMetaTags(r, meta)
+	if tags, _ := details["metatags"].(map[string]any); tags != nil {
+		for k, v := range tags {
+			if v != nil {
+				meta[k] = v
+			}
+		}
+	} else {
+		api.mapMetaTags(r, meta)
+	}
+	primary, _ := details["primaryColor"].(string)
+	background, _ := details["backgroundColor"].(string)
 	capabilities, _ := json.Marshal(api.admin.Capabilities())
 	env, _ := json.Marshal(api.cfg.FrontEnv)
 	data := map[string]any{
 		"url":                       fullURL(r),
 		"script":                    "window.env = " + string(env) + "\nwindow.capabilities = " + string(capabilities),
-		"msApplicationTileImage":    "/static/images/favicons/favicon-512x512.svg",
+		"msApplicationTileImage":    lastFavIcon(meta["favIcons"]),
 		"posthogApiKey":             api.cfg.FrontEnv["POSTHOG_API_KEY"],
 		"posthogUrl":                api.cfg.FrontEnv["POSTHOG_URL"],
 		"authToken":                 r.PostFormValue("authToken"),
 		"googleDrivePickerClientId": api.cfg.GoogleDrivePickerClientID,
 		"assetsOrigin":              origin(api.cfg.AssetsURL),
-		"cssVariablesOverride":      "",
+		"cssVariablesOverride":      cssOverride(primary, background),
 	}
 	for k, v := range meta {
 		data[k] = v
@@ -417,4 +439,22 @@ func assetsProxy(internalURL string) http.Handler {
 		pr.SetURL(target)
 		pr.Out.Header.Del("Cookie") // the front container needs none of the user's cookies
 	}}
+}
+
+// lastFavIcon is the src of the last favicon (msApplicationTileImage).
+func lastFavIcon(icons any) string {
+	switch list := icons.(type) {
+	case []map[string]string:
+		if len(list) > 0 {
+			return list[len(list)-1]["src"]
+		}
+	case []any:
+		if len(list) > 0 {
+			if m, _ := list[len(list)-1].(map[string]any); m != nil {
+				src, _ := m["src"].(string)
+				return src
+			}
+		}
+	}
+	return "/static/images/favicons/favicon-512x512.svg"
 }
