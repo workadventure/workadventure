@@ -162,17 +162,69 @@ func (s *Session) videoQuality(r *pb.VideoQualityReportMessage) {
 		if v.SampleSeq != nil {
 			seq, seqOrTime = *v.SampleSeq, *v.SampleSeq
 		}
+		props := map[string]any{
+			"streamId": v.StreamId, "connectionId": orNil(v.ConnectionId), "sessionId": orNil(v.SessionId),
+			"remoteUserUuid": orNil(v.RemoteUserUuid), "remoteSpaceUserId": remoteSpaceUserID, "spaceName": v.SpaceName,
+			"streamCategory": category, "transportType": transport, "direction": direction, "relay": orNil(v.Relay),
+			"relayProtocol": relayProtocol, "livekitServerUrl": orNil(v.LivekitServerUrl), "fps": v.Fps, "fpsStdDev": fpsStdDev,
+			"jitter": v.Jitter, "bandwidthBytesPerSecond": v.BandwidthBytesPerSecond, "frameWidth": v.FrameWidth,
+			"frameHeight": v.FrameHeight, "mimeType": orNil(v.MimeType), "qualityLimitationReason": limitation,
+			"encoderImplementation": encoder, "sampleSeq": seq, "livekitRegion": orNil(nonEmpty(v.LivekitRegion)),
+		}
+		counterProps(v, direction, props)
 		s.track("media.video_quality.sample", "pusher", s.info.userUUID+":"+v.StreamId+":"+strconv.FormatUint(seqOrTime, 10),
-			time.UnixMilli(int64(v.ClientEventTimeMs)), map[string]any{
-				"streamId": v.StreamId, "connectionId": orNil(v.ConnectionId), "sessionId": orNil(v.SessionId),
-				"remoteUserUuid": orNil(v.RemoteUserUuid), "remoteSpaceUserId": remoteSpaceUserID, "spaceName": v.SpaceName,
-				"streamCategory": category, "transportType": transport, "direction": direction, "relay": orNil(v.Relay),
-				"relayProtocol": relayProtocol, "livekitServerUrl": orNil(v.LivekitServerUrl), "fps": v.Fps, "fpsStdDev": fpsStdDev,
-				"jitter": v.Jitter, "bandwidthBytesPerSecond": v.BandwidthBytesPerSecond, "frameWidth": v.FrameWidth,
-				"frameHeight": v.FrameHeight, "mimeType": orNil(v.MimeType), "qualityLimitationReason": limitation,
-				"encoderImplementation": encoder, "sampleSeq": seq,
-			})
+			time.UnixMilli(int64(v.ClientEventTimeMs)), props)
 	}
+}
+
+// counterProps adds the playback (inbound) and sender (outbound) measures of a sample, as the TS pusher does: a
+// value outside what a browser can report is dropped on its own.
+func counterProps(v *pb.VideoQualitySampleMessage, direction string, props map[string]any) {
+	inbound, outbound := direction == "inbound", direction == "outbound"
+	props["roundTripTimeMs"] = plausible(inbound, v.RoundTripTimeMs, 60_000)
+	for k, x := range map[string]struct {
+		v   *float64
+		max float64
+	}{
+		"captureFps": {v.CaptureFps, 240}, "captureTargetFps": {v.CaptureTargetFps, 240},
+		"encodeMsPerFrame": {v.EncodeMsPerFrame, 10_000}, "cpuLimitedRatio": {v.CpuLimitedRatio, 1},
+		"bandwidthLimitedRatio": {v.BandwidthLimitedRatio, 1}, "uploadRoundTripTimeMs": {v.UploadRoundTripTimeMs, 60_000},
+		"uploadLossRatio": {v.UploadLossRatio, 1}, "availableOutgoingBitrate": {v.AvailableOutgoingBitrate, 10_000_000_000},
+	} {
+		props[k] = plausible(outbound, x.v, x.max)
+	}
+	// Inbound playback counters: worthless without their window, so an implausible window drops them all.
+	measurable := inbound && v.WindowSeconds != nil && finite(*v.WindowSeconds) && *v.WindowSeconds > 0 && *v.WindowSeconds <= 300
+	props["windowSeconds"] = plausible(measurable, v.WindowSeconds, 300)
+	for k, x := range map[string]*float64{
+		"freezeSeconds": v.FreezeSeconds, "pauseSeconds": v.PauseSeconds, "decodeSeconds": v.DecodeSeconds,
+		"interFrameDelaySumSeconds": v.InterFrameDelaySumSeconds, "interFrameDelaySquaredSumSeconds": v.InterFrameDelaySquaredSumSeconds,
+	} {
+		props[k] = plausible(measurable, x, math.MaxFloat64)
+	}
+	for k, x := range map[string]*uint32{
+		"framesDecoded": v.FramesDecoded, "framesDropped": v.FramesDropped, "freezeCount": v.FreezeCount,
+		"pauseCount": v.PauseCount, "packetsReceived": v.PacketsReceived, "packetsLost": v.PacketsLost,
+	} {
+		if props[k] = nil; measurable && x != nil {
+			props[k] = *x
+		}
+	}
+}
+
+// plausible is the value when wanted, finite and in [0, max], else nil (as the TS pusher's plausible()).
+func plausible(wanted bool, v *float64, max float64) any {
+	if !wanted || v == nil || !finite(*v) || *v < 0 || *v > max {
+		return nil
+	}
+	return *v
+}
+
+func nonEmpty(s *string) *string {
+	if s == nil || *s == "" {
+		return nil
+	}
+	return s
 }
 
 func finite(xs ...float64) bool {
