@@ -49,6 +49,9 @@ joins `wa-socle`, where plain service names (`back`, `redis`) would resolve to a
 
 ## Playwright
 
+Before the `@matrix` specs, run `dev/dev synapse reset` **after** `warm-auth.mjs`: warm-auth logs Admin1, Admin2 and
+UserLogin1 in as User1, whose e-mail UserMatrix shares, so the first of them to reach Synapse takes `@john.doe`.
+
 One campaign at a time on the machine: `dev/dev test <stack> <specs>` waits for the slot (a lock in the git dir all
 worktrees share), runs under `caffeinate` with one worker and the stack's variables, and frees the slot when done.
 
