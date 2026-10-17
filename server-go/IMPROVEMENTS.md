@@ -1,7 +1,22 @@
-# Améliorations notées, non faites
+# Améliorations notées
 
-Points relevés par la revue « biais de migration » du 17/10 et en chemin. Rien n'est codé : chaque ligne donne le
-constat, l'endroit, le risque et la proposition. Les emplacements sont ceux de la branche `lang-go` au 17/10.
+Points relevés par la revue « biais de migration » du 17/10 et en chemin. Chaque ligne donne le constat, l'endroit,
+le risque et la proposition. Les emplacements sont ceux de la branche `lang-go` au 17/10.
+
+## En cours (lots D)
+
+| Point | État |
+|---|---|
+| Découper `ws.Session` (D1) | fait (9be46b880) : transport, presence, memberships, chat, stats ; couverture de `ws` 70 % |
+| Tests des commandes admin `mute`/`kickOff` et de la signature de `spaceMessage` | fait (2088a02d5) |
+| Chemins de reprise du cœur à 0 % | faits (4e75d69d4) ; `core` 88 % |
+| `wam` : `apply`, assertions de type, WAM malformé | fait : un fichier hors schéma est refusé par `Edit` (il était écrasé) ; `wam` 77 % |
+| `core` importe `analytics` : port `MeetingReporter` | à faire (D3/D4) |
+| `Msg.Event any` et `*pb.*` dans `core` : `core.Event` scellé | à faire (D3) |
+| `core.Media`, 7 fermetures : interfaces nommées (`MediaProvider`) | à faire (D4) |
+| Horloge : port `Clock` (`Now`, `AfterFunc`) avec `actor.After` | à faire |
+
+## Notés
 
 | Constat | Emplacement | Risque | Proposition |
 |---|---|---|---|
@@ -19,4 +34,5 @@ constat, l'endroit, le risque et la proposition. Les emplacements sont ceux de l
 | Erreurs avalées « comme le TS » | divers (`_ =` sur des appels réseau) | panne silencieuse | journaliser au niveau Warn, avec une métrique |
 | `waitStatus` des tests d'enregistrement regarde un statut déjà vu ; « idle » est donc toujours vrai | `core/space_recording_test.go` | un test d'arrêt qui ne vérifie rien | attendre le statut courant, ou la fin signalée à l'admin |
 | `/debug/close-space-connection` répond sans effet (pas de flux back↔pusher) | `ws/debug.go` | la reprise d'un space n'est pas éprouvée par `map_editor_livekit:62` | vraie simulation : vider le space et faire rejoindre ses membres, comme après un redémarrage du back |
+| JSON Patch (RFC 6902) écrit à la main | `wam/patch.go` | code de protocole à maintenir soi-même | `evanphx/json-patch` (celui de Kubernetes), dans l'esprit de la décision « bibliothèques standard » ; les exemples de la RFC sont testés (`edit_test.go`) et le resteront |
 | Autres optimisations Codex non faites | — | — | patchs de SpaceState au lieu d'états complets ; cache des variables au join ; métriques Redis ; profil du fanout ; reconstruction d'un acteur après un panic ; contrôle d'admission ; tests d'endurance et de pics |
