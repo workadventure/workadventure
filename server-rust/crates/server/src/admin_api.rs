@@ -222,13 +222,27 @@ impl AdminApi {
         let v = Self::json(self.api(reqwest::Method::POST, "/api/ban").json(&body))
             .await
             .unwrap_or_else(|e| json!({"status": "error", "message": e}));
-        Ok(v["status"] != "error")
+        if v["status"] == "error" {
+            tracing::error!(answer = %v, user = %uuid, "the admin refused or did not receive a ban");
+            return Ok(false);
+        }
+        Ok(true)
     }
 
     /// A8: the tags used in the room ([] on any failure).
     pub async fn room_tags(&self, room: &str) -> Vec<String> {
         let v = Self::json(self.api(reqwest::Method::GET, "/api/room/tags").query(&[("roomUrl", room)])).await;
-        v.ok().and_then(|v| serde_json::from_value(v).ok()).unwrap_or_default()
+        match v.map(serde_json::from_value) {
+            Ok(Ok(tags)) => tags,
+            Ok(Err(e)) => {
+                tracing::warn!(%room, error = %e, "the admin's room tags are not a list of strings");
+                Vec::new()
+            }
+            Err(e) => {
+                tracing::warn!(%room, error = %e, "could not fetch the room tags from the admin");
+                Vec::new()
+            }
+        }
     }
 
     /// A9, A10, A11: saves of a logged user's choices; exactly 204 is a success.

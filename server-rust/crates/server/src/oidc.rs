@@ -477,7 +477,7 @@ async fn logout(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respons
         && let Some(revocation) = &p.revocation_endpoint
     {
         let body = form_urlencoded::Serializer::new(String::new()).append_pair("token", &access_token).finish();
-        let _ = state
+        let revoked = state
             .http
             .post(revocation)
             .header(header::AUTHORIZATION, basic_auth(oidc))
@@ -486,6 +486,9 @@ async fn logout(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respons
             .timeout(Duration::from_secs(10))
             .send()
             .await;
+        if let Err(e) = revoked {
+            tracing::warn!(error = %e, "OpenID token revocation failed");
+        }
     }
     match get("redirect") {
         None => redirect(&play_uri, &[]),

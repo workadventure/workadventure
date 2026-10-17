@@ -1219,3 +1219,46 @@ async fn an_openid_login_needs_a_signed_id_token_with_this_logins_nonce() {
     let no_state: Vec<&str> = cookies.split("; ").filter(|c| !c.starts_with("oidc_state=")).collect();
     assert_eq!(callback(st, no_state.join("; ")).await.status(), 500);
 }
+
+#[tokio::test]
+async fn a_wam_patch_is_read_like_body_parser_reads_json() {
+    let dir = std::env::temp_dir().join(format!("wa-rust-patch-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let (_server, maps) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("ENABLE_BEARER_AUTHENTICATION", "true"),
+        ("AUTHENTICATION_TOKEN", "t"),
+        ("BODY_PARSER_JSON_SIZE_LIMIT", "1kb"),
+    ])
+    .await;
+    let http = reqwest::Client::new();
+    let wam = r#"{"version":"2.1.0","mapUrl":"./m.tmj","areas":[],"entities":{},"entityCollections":[],"metadata":{"name":"a"}}"#;
+    let put =
+        http.put(format!("{maps}/m.wam")).bearer_auth("t").header("content-type", "application/octet-stream").body(wam);
+    assert!(put.send().await.unwrap().status().is_success());
+    let patch = |ty: &'static str, body: String| {
+        http.patch(format!("{maps}/m.wam")).bearer_auth("t").header("content-type", ty).body(body).send()
+    };
+    let ops = r#"[{"op":"replace","path":"/metadata/name","value":"b"}]"#.to_owned();
+    assert_eq!(patch("application/json-patch+json", ops.clone()).await.unwrap().status(), 200);
+    assert_eq!(patch("application/json; charset=utf-8", ops.clone()).await.unwrap().status(), 200);
+    // Another type is not read: no patch.
+    assert_eq!(patch("text/plain", ops).await.unwrap().status(), 400);
+    let big = format!(r#"[{{"op":"replace","path":"/metadata/name","value":"{}"}}]"#, "x".repeat(2048));
+    assert_eq!(patch("application/json", big).await.unwrap().status(), 413);
+    assert_eq!(patch("application/json", "\"a string\"".into()).await.unwrap().status(), 400);
+}
+
+#[tokio::test]
+async fn the_debug_routes_of_the_back_answer_with_its_token() {
+    let server = start_with(&[("SECRET_KEY", "test"), ("ADMIN_API_TOKEN", "t")]).await.0;
+    let (_alice, _ia) = bot(&server, "http://play.test/_/global/maps.test/e2e.json", "Alice", 100, 100).await;
+    let http = reqwest::Client::new();
+    let dump = http.get(format!("{server}/dump?token=t")).send().await.unwrap().text().await.unwrap();
+    assert!(dump.contains("\"name\":\"Alice\"") && dump.contains("\"roomUrl\""), "{dump}");
+    assert_eq!(http.get(format!("{server}/dump?token=no")).send().await.unwrap().status(), 401);
+    let close = |q: &str| http.post(format!("{server}/debug/close-space-connection?token=t{q}")).send();
+    assert_eq!(close("").await.unwrap().status(), 400);
+    assert_eq!(close("&spaceName=nowhere.none").await.unwrap().status(), 500);
+}

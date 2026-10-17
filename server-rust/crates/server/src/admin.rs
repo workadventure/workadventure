@@ -19,6 +19,64 @@ pub fn routes() -> Router<AppState> {
         .route("/room/refresh", post(room_refresh))
         .route("/message", post(message))
         .route("/external-module/event", post(external_module_event))
+        .route("/dump", get(dump))
+        .route("/debug/close-space-connection", post(close_space_connection))
+}
+
+/// The back's DebugController token: `?token=` must be ADMIN_API_TOKEN.
+fn refused_query(state: &AppState, query: &Option<String>) -> Option<Response> {
+    let Some(expected) = state.config.raw.get("ADMIN_API_TOKEN").filter(|t| !t.is_empty()) else {
+        return Some((StatusCode::UNAUTHORIZED, "No token configured!").into_response());
+    };
+    let pairs = crate::front::query_pairs(query.as_deref());
+    if !pairs.iter().any(|(k, v)| k == "token" && v == expected) {
+        return Some((StatusCode::UNAUTHORIZED, "Invalid token sent!").into_response());
+    }
+    None
+}
+
+/// `GET /dump?token=`: the rooms and who is in them, `[{roomUrl, users: [{uuid, name}]}]` (the back dumps its
+/// whole memory; the specs only look for names in it).
+async fn dump(State(state): State<AppState>, axum::extract::RawQuery(q): axum::extract::RawQuery) -> Response {
+    if let Some(r) = refused_query(&state, &q) {
+        return r;
+    }
+    let asks = state.rooms.live().into_iter().map(|room| async move {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        room.send(RoomCmd::Users(tx)).await.ok()?;
+        tokio::time::timeout(Duration::from_secs(1), rx).await.ok()?.ok()
+    });
+    let rooms: Vec<serde_json::Value> = futures_util::future::join_all(asks)
+        .await
+        .into_iter()
+        .flatten()
+        .map(|(url, users)| {
+            let users: Vec<_> =
+                users.into_iter().map(|u| serde_json::json!({"uuid": u.uuid, "name": u.name})).collect();
+            serde_json::json!({"roomUrl": url, "users": users})
+        })
+        .collect();
+    ([(header::CONTENT_TYPE, "text/plain; charset=utf-8")], serde_json::Value::from(rooms).to_string()).into_response()
+}
+
+/// `POST /debug/close-space-connection?spaceName=&token=`: on the back, cuts the pusher's link to that space,
+/// which the pusher then rebuilds. This server has no such link: the space must exist, and nothing is cut.
+async fn close_space_connection(
+    State(state): State<AppState>,
+    axum::extract::RawQuery(q): axum::extract::RawQuery,
+) -> Response {
+    if let Some(r) = refused_query(&state, &q) {
+        return r;
+    }
+    let pairs = crate::front::query_pairs(q.as_deref());
+    let Some(name) = pairs.iter().find(|(k, _)| k == "spaceName").map(|(_, v)| v.clone()).filter(|n| !n.is_empty())
+    else {
+        return (StatusCode::BAD_REQUEST, "Space name is required!").into_response();
+    };
+    if state.spaces.get(&name).is_none() {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Error closing space connection").into_response();
+    }
+    "Space connection closed".into_response()
 }
 
 /// The adminToken middleware: `admin-token` (deprecated) or `Authorization` must be ADMIN_API_TOKEN.

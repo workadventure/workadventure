@@ -17,3 +17,7 @@ tonic-prost = "0.14.6"
 prost-build.workspace = true
 protox.workspace = true
 tonic-prost-build = { version = "0.14.6", default-features = false }
+
+# Used by the code generated from messages.proto (include!), which cargo-machete does not read.
+[package.metadata.cargo-machete]
+ignored = ["bytes", "prost-types", "tonic", "tonic-prost"]

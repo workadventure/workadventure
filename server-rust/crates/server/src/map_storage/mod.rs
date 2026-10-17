@@ -76,8 +76,17 @@ impl Storage {
         resolve(&self.root, rel)
     }
 
+    /// None when the file is absent, or cannot be read (logged: a disk error is not an absent file).
     pub async fn read(&self, rel: &str) -> Option<Vec<u8>> {
-        tokio::fs::read(self.path(rel)?).await.ok()
+        match tokio::fs::read(self.path(rel)?).await {
+            Ok(b) => Some(b),
+            Err(e) => {
+                if e.kind() != std::io::ErrorKind::NotFound {
+                    tracing::warn!(%rel, error = %e, "could not read a storage file");
+                }
+                None
+            }
+        }
     }
 
     /// The newest revision of a WAM written so far: a room's edits count up from there.
@@ -120,7 +129,8 @@ impl Storage {
         tokio::task::spawn_blocking(move || write_atomic(&path, &bytes)).await.map_err(std::io::Error::other)?
     }
 
-    /// Read, change and write back a JSON file under the write lock (`default` when it does not exist yet).
+    /// Read, change and write back a JSON file under the write lock (`default` when it does not exist yet). A file
+    /// that exists but cannot be read or parsed refuses the change: writing over it would lose it.
     pub async fn update_json<T: Send + 'static>(
         &self,
         rel: &str,
@@ -130,7 +140,17 @@ impl Storage {
         let path = self.path(rel).ok_or("Invalid path")?;
         let _guard = self.write.lock().await;
         tokio::task::spawn_blocking(move || {
-            let mut doc = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(default);
+            let mut doc = match std::fs::read(&path) {
+                Ok(b) => serde_json::from_slice(&b).map_err(|e| {
+                    tracing::error!(path = %path.display(), error = %e, "stored JSON is corrupt: left as it is");
+                    "The stored file is corrupt".to_owned()
+                })?,
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => default,
+                Err(e) => {
+                    tracing::error!(path = %path.display(), error = %e, "could not read a stored JSON file");
+                    return Err("The stored file cannot be read".into());
+                }
+            };
             let result = f(&mut doc)?;
             write_atomic(&path, doc.to_string().as_bytes()).map_err(|e| e.to_string())?;
             Ok(result)
@@ -142,7 +162,11 @@ impl Storage {
     pub async fn remove_asset(&self, rel: &str) {
         if let Some(path) = self.path(rel) {
             let _guard = self.write.lock().await;
-            let _ = tokio::fs::remove_file(path).await;
+            if let Err(e) = tokio::fs::remove_file(path).await
+                && e.kind() != std::io::ErrorKind::NotFound
+            {
+                tracing::warn!(%rel, error = %e, "could not remove an asset");
+            }
         }
     }
 
@@ -159,7 +183,13 @@ impl Storage {
             let mut maps = Vec::new();
             let mut stack = vec![root.clone()];
             while let Some(d) = stack.pop() {
-                let Ok(read) = std::fs::read_dir(&d) else { continue };
+                let read = match std::fs::read_dir(&d) {
+                    Ok(r) => r,
+                    Err(e) => {
+                        tracing::warn!(dir = %d.display(), error = %e, "cannot read a map directory");
+                        continue;
+                    }
+                };
                 for e in read.flatten() {
                     let path = e.path();
                     if path.is_dir() {
@@ -173,6 +203,7 @@ impl Storage {
                     let Ok(wam) =
                         serde_json::from_slice::<serde_json::Value>(&std::fs::read(&path).unwrap_or_default())
                     else {
+                        tracing::warn!(path = %path.display(), "skipping an unreadable or invalid WAM file");
                         continue;
                     };
                     if !wam["mapUrl"].is_string() {
@@ -441,6 +472,33 @@ fn validation_error(category: &str, message: &str, details: &str) -> serde_json:
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_corrupt_json_file_is_never_written_over() {
+        let dir = std::env::temp_dir().join(format!("wa-rust-corrupt-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        std::fs::write(dir.join("c.json"), b"{not json").unwrap();
+        let storage = Storage::new(dir.to_str().unwrap());
+        let r = storage
+            .update_json("c.json", serde_json::json!({}), |d| {
+                d["x"] = 1.into();
+                Ok(())
+            })
+            .await;
+        assert!(r.is_err());
+        assert_eq!(std::fs::read(dir.join("c.json")).unwrap(), b"{not json");
+        // Absent: the default, then written.
+        storage
+            .update_json("n.json", serde_json::json!({}), |d| {
+                d["x"] = 1.into();
+                Ok(())
+            })
+            .await
+            .unwrap();
+        assert_eq!(std::fs::read_to_string(dir.join("n.json")).unwrap(), r#"{"x":1}"#);
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 
     #[tokio::test]
     async fn a_save_that_finishes_late_never_overwrites_a_newer_one_or_an_http_change() {

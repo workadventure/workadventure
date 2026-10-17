@@ -74,11 +74,24 @@ pub async fn tmj_of_page(app: &AppState, room_url: &str) -> Option<serde_json::V
 }
 
 async fn fetch(app: &AppState, url: &str) -> Option<Vec<u8>> {
-    let response = app.http.get(url).timeout(Duration::from_secs(10)).send().await.ok()?;
+    let response = match app.http.get(url).timeout(Duration::from_secs(10)).send().await {
+        Ok(r) => r,
+        Err(e) => {
+            tracing::warn!(%url, error = %e, "could not fetch the map");
+            return None;
+        }
+    };
     if !response.status().is_success() || response.content_length().is_some_and(|l| l as usize > MAX_MAP) {
+        tracing::warn!(%url, status = %response.status(), "the map was refused or is too big");
         return None;
     }
-    let bytes = response.bytes().await.ok()?;
+    let bytes = match response.bytes().await {
+        Ok(b) => b,
+        Err(e) => {
+            tracing::warn!(%url, error = %e, "the map could not be read to the end");
+            return None;
+        }
+    };
     (bytes.len() <= MAX_MAP).then(|| bytes.to_vec())
 }
 

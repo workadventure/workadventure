@@ -146,7 +146,10 @@ async fn download_audio(State(u): State<Uploader>, Path(id): Path<String>) -> Re
     let Some(mut conn) = u.conn.clone() else { return unavailable() };
     match conn.get::<_, Option<Vec<u8>>>(&id).await {
         Ok(bytes) => serve(&id, bytes, false),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response(),
+        Err(e) => {
+            tracing::error!(error = %e, %id, "could not read an upload from Redis");
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response()
+        }
     }
 }
 
@@ -154,7 +157,10 @@ async fn download_file(State(u): State<Uploader>, Path(id): Path<String>) -> Res
     let Some(mut conn) = u.conn.clone() else { return unavailable() };
     match conn.get::<_, Option<Vec<u8>>>(&id).await {
         Ok(bytes) => serve(&id, bytes, true),
-        Err(_) => (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response(),
+        Err(e) => {
+            tracing::error!(error = %e, %id, "could not read an upload from Redis");
+            (StatusCode::INTERNAL_SERVER_ERROR, "Internal server error").into_response()
+        }
     }
 }
 
