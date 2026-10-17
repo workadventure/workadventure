@@ -66,7 +66,11 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 		ExternalModuleEvent(http.ResponseWriter, *http.Request)
 		AdminRooms(http.ResponseWriter, *http.Request)
 		RoomArea(http.ResponseWriter, *http.Request)
+		Dump(http.ResponseWriter, *http.Request)
+		CloseSpaceConnection(http.ResponseWriter, *http.Request)
 	}); ok {
+		mux.HandleFunc("GET /dump", admin.Dump)
+		mux.HandleFunc("POST /debug/close-space-connection", admin.CloseSpaceConnection)
 		mux.HandleFunc("/ws/admin/rooms", admin.AdminRooms)
 		mux.HandleFunc("/roomArea", admin.RoomArea)
 		mux.HandleFunc("POST /global/event", admin.GlobalEvent)
