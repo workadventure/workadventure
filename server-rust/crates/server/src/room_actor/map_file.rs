@@ -20,6 +20,8 @@ pub(super) struct MapFile {
     pub(super) queue: VecDeque<Pending>,
     /// At most one task: the I/O in flight.
     pub(super) io: JoinSet<Done>,
+    /// The `resourceUrl`s of the area properties, told of their changes before the edit applies.
+    pub(super) hooks: resource_url::ResourceUrl,
     /// The map's lock, held for the room's life; the map goes back into it when the room ends.
     pub(super) slot: tokio::sync::OwnedMutexGuard<Option<CachedMap>>,
 }
@@ -68,7 +70,7 @@ impl Drop for MapFile {
 }
 
 impl MapFile {
-    pub(super) async fn open(storage: Arc<Storage>, rel: String) -> Self {
+    pub(super) async fn open(storage: Arc<Storage>, rel: String, hooks: resource_url::ResourceUrl) -> Self {
         let (saves, mut pending) = tokio::sync::watch::channel(None::<(u64, u64, Vec<u8>)>);
         let (store, path) = (storage.clone(), rel.clone());
         // Writes the newest version only; ends after the last one once the room is gone.
@@ -92,6 +94,7 @@ impl MapFile {
             saves,
             queue: VecDeque::new(),
             io: JoinSet::new(),
+            hooks,
             slot,
         };
         match cached {
@@ -190,6 +193,45 @@ impl MapFile {
                     | M::UploadFileMessage(_)
             )
         );
+        // UpdateAreaMapStorageCommand and DeleteAreaMapStorageCommand: the property hooks first.
+        let old_properties = |wam: &Option<Wam>, id: &str| -> Vec<serde_json::Value> {
+            let area = wam.as_ref().and_then(|w| w.areas().iter().find(|a| a["id"] == id).cloned());
+            area.and_then(|a| a["properties"].as_array().cloned()).unwrap_or_default()
+        };
+        let hooks = match command.edit_map_message.as_ref().and_then(|m| m.message.as_ref()) {
+            Some(M::ModifyAreaMessage(m)) if m.modify_properties == Some(true) => {
+                let new: Vec<serde_json::Value> = m.properties.iter().map(wire::json_from).collect();
+                let (added, changed, removed) = resource_url::diff(&old_properties(&self.wam, &m.id), &new);
+                (!(added.is_empty() && changed.is_empty() && removed.is_empty()))
+                    .then_some((new, added, changed, removed))
+            }
+            Some(M::DeleteAreaMessage(m)) => {
+                let removed = resource_url::diff(&old_properties(&self.wam, &m.id), &[]).2;
+                (!removed.is_empty()).then_some((Vec::new(), Vec::new(), Vec::new(), removed))
+            }
+            _ => None,
+        };
+        if let Some((mut new, added, changed, removed)) = hooks {
+            let hooks = self.hooks.clone();
+            self.io.spawn(async move {
+                for i in added {
+                    new[i] = hooks.added(new[i].clone()).await;
+                }
+                for i in changed {
+                    new[i] = hooks.changed(new[i].clone()).await;
+                }
+                for p in &removed {
+                    hooks.removed(p).await;
+                }
+                if let Some(M::ModifyAreaMessage(m)) =
+                    command.edit_map_message.as_mut().and_then(|m| m.message.as_mut())
+                {
+                    m.properties = new.iter().map(wire::json_to).collect();
+                }
+                Done::Edit { session, command, result: Ok(()) }
+            });
+            return None;
+        }
         if !io || self.wam.is_none() {
             return Some(self.complete(session, command, Ok(())));
         }

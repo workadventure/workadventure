@@ -1325,3 +1325,139 @@ async fn only_an_admin_kicks_and_forces_a_mute_in_a_space() {
     let kick = ib.expect(WAIT, |m| matches!(private_event(m), Some((_, P::KickOffUser(_)))).then_some(())).await;
     assert!(kick.is_ok());
 }
+
+/// A Synapse that answers the admin's calls and keeps them, as "METHOD path [body]".
+async fn fake_synapse() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<String>>>) {
+    use axum::extract::{OriginalUri, Request};
+    let calls = std::sync::Arc::new(parking_lot::Mutex::new(Vec::new()));
+    let log = calls.clone();
+    let app = axum::Router::new().fallback(move |OriginalUri(uri): OriginalUri, req: Request| {
+        let log = log.clone();
+        async move {
+            let method = req.method().clone();
+            let body = axum::body::to_bytes(req.into_body(), 1 << 20).await.unwrap_or_default();
+            let path = uri.path().to_owned();
+            log.lock().push(format!("{method} {path} {}", String::from_utf8_lossy(&body)));
+            let (status, answer) = match (method.as_str(), path.as_str()) {
+                ("POST", "/_matrix/client/r0/login") => (200, serde_json::json!({"access_token": "admin-token"})),
+                (_, p) if p.starts_with("/_matrix/client/r0/directory/room/") => {
+                    (404, serde_json::json!({"errcode": "M_NOT_FOUND"}))
+                }
+                ("POST", "/_matrix/client/r0/createRoom") if body.windows(16).any(|w| w == b"creation_content") => {
+                    (200, serde_json::json!({"room_id": "!folder:d"}))
+                }
+                ("POST", "/_matrix/client/r0/createRoom") => (200, serde_json::json!({"room_id": "!area:d"})),
+                ("GET", p) if p.ends_with("/m.room.power_levels") => {
+                    (200, serde_json::json!({"users": {"@admin:d": 100}}))
+                }
+                ("GET", p) if p.ends_with("/members") => (
+                    200,
+                    serde_json::json!({"chunk": [
+                    {"state_key": "@admin:d", "content": {"membership": "join"}},
+                    {"state_key": "@gone:d", "content": {"membership": "invite"}}]}),
+                ),
+                _ => (200, serde_json::json!({})),
+            };
+            (axum::http::StatusCode::from_u16(status).unwrap(), axum::Json(answer))
+        }
+    });
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(listener, app).await });
+    (url, calls)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn area_chat_rooms_are_made_in_synapse_and_players_go_in_and_out() {
+    use pb::client_to_server_message::Message as M;
+    let (synapse, calls) = fake_synapse().await;
+    let vars = [
+        ("SECRET_KEY", "test"),
+        ("MATRIX_API_URI", synapse.as_str()),
+        ("MATRIX_ADMIN_USER", "admin"),
+        ("MATRIX_ADMIN_PASSWORD", "p"),
+        ("MATRIX_DOMAIN", "d"),
+        ("MAP_STORAGE_API_TOKEN", "ms"),
+    ];
+    let server = start_with(&vars).await.0;
+    let http = reqwest::Client::new();
+    let property = serde_json::json!({"id": "p1", "type": "matrixRoomPropertyData", "shouldOpenAutomatically": true,
+        "displayName": "Lobby", "resourceUrl": format!("{server}/roomArea"), "serverData": {}});
+
+    // map-storage creates the room, with its token only.
+    assert_eq!(http.post(format!("{server}/roomArea")).json(&property).send().await.unwrap().status(), 401);
+    let r = http.post(format!("{server}/roomArea")).header("authorization", "ms").json(&property).send().await.unwrap();
+    assert_eq!(r.status(), 201);
+    let created: serde_json::Value = r.json().await.unwrap();
+    assert_eq!(created["serverData"]["matrixRoomId"], "!area:d");
+    let mut renamed = created.clone();
+    renamed["displayName"] = "Hall".into();
+    let r = http.patch(format!("{server}/roomArea")).header("authorization", "ms").json(&renamed).send().await.unwrap();
+    assert_eq!(r.status(), 200);
+    let seen = calls.lock().join("\n");
+    assert!(seen.contains("POST /_synapse/admin/v1/users/@admin:d/override_ratelimit"), "{seen}");
+    assert!(seen.contains("PUT /_matrix/client/r0/rooms/!folder:d/state/m.space.child/!area:d"), "{seen}");
+    assert!(seen.contains("PUT /_matrix/client/r0/rooms/!area:d/state/m.room.name {\"name\":\"Hall\"}"), "{seen}");
+    assert_eq!(seen.matches("/login").count(), 1, "one login for every call: {seen}");
+
+    // An admin of the world walks in: invited and moderator; leaving and closing kick them.
+    let admin_token = wa_server::jwt::create(
+        "test",
+        wa_server::jwt::Claims { identifier: "a@test".into(), tags: Some(vec!["admin".into()]), ..Default::default() },
+    );
+    let (mut alice, stream) = Bot::connect(Options {
+        server: server.clone(),
+        room_url: "http://play.test/_/global/maps.test/e2e.json".into(),
+        name: "Alice".into(),
+        x: 100,
+        y: 100,
+        viewport: SCREEN,
+        availability: 1,
+        token: Some(admin_token),
+    })
+    .await
+    .unwrap();
+    let mut ia = Inbox::spawn(stream);
+    let q = alice
+        .query(pb::query_message::Query::EnterChatRoomAreaQuery(pb::EnterChatRoomAreaQuery {
+            room_id: "!area:d".into(),
+        }))
+        .await
+        .unwrap();
+    // Without a chat id yet: refused.
+    let refused = ia.expect(WAIT, answer_to(q)).await.unwrap();
+    assert!(
+        matches!(refused, pb::answer_message::Answer::Error(ref e) if e.message.contains("try again later")),
+        "{refused:?}"
+    );
+    alice
+        .send(M::UpdateChatIdMessage(pb::UpdateChatIdMessage { email: "a@test".into(), chat_id: "@a:d".into() }))
+        .await
+        .unwrap();
+    let q = alice
+        .query(pb::query_message::Query::EnterChatRoomAreaQuery(pb::EnterChatRoomAreaQuery {
+            room_id: "!area:d".into(),
+        }))
+        .await
+        .unwrap();
+    let answer = ia.expect(WAIT, answer_to(q)).await.unwrap();
+    assert!(matches!(answer, pb::answer_message::Answer::EnterChatRoomAreaAnswer(_)));
+    let seen = calls.lock().join("\n");
+    assert!(seen.contains("POST /_matrix/client/r0/rooms/!area:d/invite {\"user_id\":\"@a:d\"}"), "{seen}");
+    assert!(seen.contains("\"@a:d\":50"), "{seen}");
+    alice.send(M::LeaveChatRoomAreaMessage(pb::LeaveChatRoomAreaMessage { room_id: "!area:d".into() })).await.unwrap();
+    let kicked = || calls.lock().iter().filter(|c| c.contains("/kick") && c.contains("@a:d")).count();
+    let deadline = std::time::Instant::now() + WAIT;
+    while kicked() == 0 && std::time::Instant::now() < deadline {
+        tokio::time::sleep(Duration::from_millis(20)).await;
+    }
+    assert_eq!(kicked(), 1);
+
+    // Deleting the property: the room emptied of those not joined, then of the admin.
+    let r =
+        http.delete(format!("{server}/roomArea")).header("authorization", "ms").json(&renamed).send().await.unwrap();
+    assert_eq!(r.status(), 204);
+    let seen = calls.lock().join("\n");
+    assert!(seen.contains("\"user_id\":\"@gone:d\""), "{seen}");
+    assert!(seen.contains("kick {\"reason\":\"kick\",\"user_id\":\"@admin:d\"}"), "{seen}");
+}

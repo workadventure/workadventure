@@ -18,6 +18,7 @@ use crate::space_actor::{self, SpaceCmd, SpaceHandle};
 use crate::wire;
 
 mod analytics;
+mod chat;
 mod moderation;
 mod queries;
 mod spaces;
@@ -34,6 +35,8 @@ struct Logic {
     name: String,
     availability: Availability,
     chat_id: Option<String>,
+    /// The area chat rooms the player was invited into (currentChatRoomArea).
+    chat_rooms: Vec<String>,
     /// Joined spaces, by the name the front uses.
     spaces: HashMap<String, SpaceHandle>,
     recent_joins: HashMap<i32, (String, Instant)>,
@@ -55,6 +58,7 @@ pub async fn run(parts: SessionParts, app: AppState) {
     let _ = room.send(RoomCmd::Connect { session: session.clone() }).await;
     let mut logic = Logic {
         chat_id: session.info.chat_id.clone(),
+        chat_rooms: Vec::new(),
         parts_session: session.clone(),
         app: app.clone(),
         room: Some(room),
@@ -261,6 +265,7 @@ impl Logic {
                 self.to_room(RoomCmd::Details { user, change }).await;
             }
             M::QueryMessage(query) => self.query(query).await,
+            M::LeaveChatRoomAreaMessage(m) => self.leave_chat_room_area(m.room_id),
             M::AbortQueryMessage(abort) => {
                 if let Some((local, at)) = self.recent_joins.remove(&abort.id)
                     && at.elapsed() < ABORT_WINDOW
@@ -295,6 +300,7 @@ impl Logic {
     }
 
     async fn cleanup(&mut self) {
+        self.leave_all_chat_rooms();
         let session = self.parts_session.clone();
         self.to_room(RoomCmd::Leave { session: session.clone() }).await;
         if let Some(id) = session.space_user_id() {

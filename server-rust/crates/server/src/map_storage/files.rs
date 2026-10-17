@@ -268,9 +268,21 @@ async fn delete(state: AppState, path: String, headers: &HeaderMap) -> Response 
         return (StatusCode::BAD_REQUEST, "Invalid path").into_response();
     }
     let wam = path.ends_with(".wam");
-    if wam && state.storage.read(&path).await.is_none() {
+    let stored = if wam { state.storage.read(&path).await } else { None };
+    if wam && stored.is_none() {
         return (StatusCode::INTERNAL_SERVER_ERROR, "File not found").into_response();
     }
+    // The resourceUrls of its area properties are told the properties are gone (UploadController).
+    let told: Vec<Value> = stored
+        .and_then(|b| Wam::parse(&b))
+        .map(|w| {
+            w.areas()
+                .iter()
+                .flat_map(|a| a["properties"].as_array().cloned().unwrap_or_default())
+                .filter(|p| p["resourceUrl"].as_str().is_some_and(|u| !u.is_empty()))
+                .collect()
+        })
+        .unwrap_or_default();
     let rel = path.clone();
     let removed = state
         .storage
@@ -296,6 +308,14 @@ async fn delete(state: AppState, path: String, headers: &HeaderMap) -> Response 
     }
     if wam {
         notify(&state, MapChange::Deleted(path)).await;
+    }
+    if !told.is_empty() {
+        let hooks = crate::room_actor::resource_url::ResourceUrl::new(state.clone());
+        tokio::spawn(async move {
+            for p in &told {
+                hooks.removed(p).await;
+            }
+        });
     }
     StatusCode::NO_CONTENT.into_response()
 }

@@ -241,6 +241,10 @@ impl Logic {
                     jwt: crate::jwt::sign(&self.app.config.secret_key, &claims),
                 })
             }
+            Q::EnterChatRoomAreaQuery(q) => {
+                self.enter_chat_room_area(id, q.room_id);
+                return;
+            }
             Q::GetMemberQuery(_) => {
                 session.push(wire::answer_error(id, "User not found, probably left"));
                 return;
