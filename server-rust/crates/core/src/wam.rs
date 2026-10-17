@@ -152,6 +152,18 @@ impl Wam {
         Some(wam)
     }
 
+    /// getFreshWAMFileContent from WAM_TEMPLATE_URL's file: the template, migrated, with the map's URL and
+    /// metadata. None if the template is not a WAM file.
+    pub fn fresh_from_template(template: &[u8], map_url: &str, tmj: &[u8]) -> Option<Wam> {
+        let mut wam = Wam::parse(template)?;
+        wam.check().ok()?;
+        let fresh = Wam::fresh(map_url, tmj);
+        for key in ["mapUrl", "metadata"] {
+            wam.doc.insert(key.into(), fresh.doc[key].clone());
+        }
+        Some(wam)
+    }
+
     /// The file map-storage creates for an uploaded map that has none (getFreshWAMFileContent).
     pub fn fresh(map_url: &str, tmj: &[u8]) -> Wam {
         let tmj: Value = serde_json::from_slice(tmj).unwrap_or(Value::Null);

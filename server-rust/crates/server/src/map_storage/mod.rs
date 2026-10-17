@@ -285,9 +285,41 @@ impl MapChange {
 }
 
 async fn notify(state: &AppState, change: MapChange) {
+    web_hook(state, &change);
     for room in state.rooms.live() {
         let _ = room.send(RoomCmd::MapFiles(change.clone())).await;
     }
+}
+
+/// A27 (WebHookService): `{domain, mapPath?, action}` to WEB_HOOK_URL, fire and forget (ENABLE_WEB_HOOK, on by
+/// default). The domain is the tenant's folder, or the public map-storage host.
+fn web_hook(state: &AppState, change: &MapChange) {
+    let env = |k: &str| state.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
+    let Some(url) = env("WEB_HOOK_URL") else { return };
+    if matches!(env("ENABLE_WEB_HOOK").as_deref(), Some("false" | "0")) {
+        return;
+    }
+    let (MapChange::Replaced(path) | MapChange::Deleted(path)) = change;
+    let (domain, path) = if state.config.use_domain_name_in_path {
+        let (d, p) = path.split_once('/').unwrap_or((path.as_str(), ""));
+        (d.to_owned(), p.to_owned())
+    } else {
+        let public = env("PUBLIC_MAP_STORAGE_URL").and_then(|u| reqwest::Url::parse(&u).ok()?.host_str().map(str::to_owned));
+        (public.unwrap_or_default(), path.clone())
+    };
+    let mut body = serde_json::json!({"domain": domain, "action": if matches!(change, MapChange::Deleted(_)) { "delete" } else { "update" }});
+    if path.ends_with(".wam") {
+        body["mapPath"] = path.into();
+    }
+    let mut request = state.http.post(url).json(&body).timeout(std::time::Duration::from_secs(10));
+    if let Some(token) = env("WEB_HOOK_API_TOKEN") {
+        request = request.header(header::AUTHORIZATION, token);
+    }
+    tokio::spawn(async move {
+        if let Err(e) = request.send().await.and_then(reqwest::Response::error_for_status) {
+            tracing::error!(error = %e, "the map-storage web hook failed");
+        }
+    });
 }
 
 pub fn router(state: AppState) -> Router {
@@ -340,7 +372,7 @@ async fn cors(request: Request, next: Next) -> Response {
 
 /// The refusal unless the request has basic (AUTHENTICATION_USER / AUTHENTICATION_PASSWORD) or bearer
 /// (AUTHENTICATION_TOKEN) credentials, each when enabled; with none enabled, nothing gets in.
-fn unauthorized(state: &AppState, headers: &HeaderMap) -> Option<Response> {
+async fn unauthorized(state: &AppState, headers: &HeaderMap) -> Option<Response> {
     let env = |k: &str| state.config.raw.get(k).filter(|v| !v.is_empty());
     let on = |k: &str| env(k).is_some_and(|v| v == "true" || v == "1");
     let auth = headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()).unwrap_or("");
@@ -354,8 +386,26 @@ fn unauthorized(state: &AppState, headers: &HeaderMap) -> Option<Response> {
                 };
                 decoded == format!("{user}:{password}").into_bytes()
             });
-    let bearer = on("ENABLE_BEARER_AUTHENTICATION")
-        && auth.strip_prefix("Bearer ").is_some_and(|t| env("AUTHENTICATION_TOKEN").is_some_and(|e| e == t.trim()));
+    let token = auth.strip_prefix("Bearer ").map(str::trim).filter(|t| !t.is_empty());
+    let mut bearer = on("ENABLE_BEARER_AUTHENTICATION") && token.is_some_and(|t| env("AUTHENTICATION_TOKEN").is_some_and(|e| e == t));
+    // A26: another bearer may be one the admin knows, for this domain.
+    if on("ENABLE_BEARER_AUTHENTICATION")
+        && !bearer
+        && let (Some(t), Some(validator)) = (token, env("AUTHENTICATION_VALIDATOR_URL"))
+    {
+        let get = |k: &str| headers.get(k).and_then(|v| v.to_str().ok()).map(|v| v.split(',').next().unwrap_or(v).trim()).filter(|v| !v.is_empty());
+        let domain = get("x-map-storage-host").or_else(|| get("x-forwarded-host")).or_else(|| get("host")).unwrap_or_default();
+        let domain = domain.rsplit_once(':').map_or(domain, |(h, _)| h);
+        let asked = state
+            .http
+            .get(validator)
+            .query(&[("domain", domain)])
+            .header("X-API-Key", t)
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await;
+        bearer = asked.is_ok_and(|r| r.status().is_success());
+    }
     if basic || bearer {
         return None;
     }

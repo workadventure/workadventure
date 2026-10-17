@@ -569,8 +569,14 @@ impl Logic {
             // The token map-storage asks for a private file (pusher handleMapStorageJwtQuery): valid 1 h.
             Q::MapStorageJwtQuery(_) => {
                 let info = &self.parts_session.info;
-                let base = self.app.config.raw.get("PUBLIC_MAP_STORAGE_URL").cloned().unwrap_or_default();
-                let wam_url = crate::local_admin::wam_path(&info.room_id).map_or_else(String::new, |rest| format!("{base}/{rest}"));
+                let wam_url = match &self.app.admin {
+                    // The admin's map details (A2); empty for a redirection or an error.
+                    Some(admin) => admin.map_details(&info.room_id, None, None).await["wamUrl"].as_str().unwrap_or_default().to_owned(),
+                    None => {
+                        let base = self.app.config.raw.get("PUBLIC_MAP_STORAGE_URL").cloned().unwrap_or_default();
+                        crate::local_admin::wam_path(&info.room_id).map_or_else(String::new, |rest| format!("{base}/{rest}"))
+                    }
+                };
                 let claims = serde_json::json!({"wamUrl": wam_url, "tags": info.tags, "exp": crate::jwt::now_secs() + 3600});
                 A::MapStorageJwtAnswer(pb::MapStorageJwtAnswer {
                     jwt: crate::jwt::sign(&self.app.config.secret_key, &claims),

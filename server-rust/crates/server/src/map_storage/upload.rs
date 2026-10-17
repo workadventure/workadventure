@@ -13,7 +13,7 @@ use super::{MAX_UPLOAD, MapChange, Refusal, notify, unauthorized, validation_err
 use crate::AppState;
 
 pub(super) async fn upload(State(state): State<AppState>, headers: HeaderMap, mut form: Multipart) -> Response {
-    if let Some(refused) = unauthorized(&state, &headers) {
+    if let Some(refused) = unauthorized(&state, &headers).await {
         return refused;
     }
     let (mut zip, mut directory) = (None, String::new());
@@ -38,12 +38,23 @@ pub(super) async fn upload(State(state): State<AppState>, headers: HeaderMap, mu
         Some(dir) => format!("{dir}{}", directory.trim_start_matches('/')),
         None => return super::invalid_domain(),
     };
+    // A28: the WAM a map uploaded without one starts from, if the admin gives one.
+    let template = match state.config.raw.get("WAM_TEMPLATE_URL").filter(|v| !v.is_empty()) {
+        Some(url) => match state.http.get(url).timeout(std::time::Duration::from_secs(10)).send().await.and_then(reqwest::Response::error_for_status) {
+            Ok(r) => match r.bytes().await {
+                Ok(b) => Some(b.to_vec()),
+                Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
+            },
+            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("Could not get the WAM template: {e}")).into_response(),
+        },
+        None => None,
+    };
     let dir = directory.clone();
     let result = state
         .storage
         .change(&[directory.as_str()], move |root| {
             let target = super::resolve(root, &dir).ok_or((StatusCode::BAD_REQUEST, "Invalid directory".to_owned()))?;
-            unpack(&target, &zip)
+            unpack(&target, &zip, template.as_deref())
         })
         .await;
     match result {
@@ -152,7 +163,7 @@ fn normalize(dir: &str, rel: &str) -> String {
 
 /// Clears the directory and unpacks the zip into it, unless validation fails: then the errors, and nothing
 /// changes.
-fn unpack(dir: &Path, zip: &[u8]) -> Result<Option<Map<String, Value>>, Refusal> {
+fn unpack(dir: &Path, zip: &[u8], template: Option<&[u8]>) -> Result<Option<Map<String, Value>>, Refusal> {
     let files = entries(zip)?;
     let errors = validate(&files);
     if !errors.is_empty() {
@@ -186,7 +197,12 @@ fn unpack(dir: &Path, zip: &[u8]) -> Result<Option<Map<String, Value>>, Refusal>
         let wam = dir.join(name.replace(".tmj", ".wam"));
         if !wam.exists() {
             let map_url = format!("./{}", name.rsplit('/').next().unwrap_or(name));
-            std::fs::write(&wam, Wam::fresh(&map_url, tmj).to_json()).map_err(io)?;
+            let fresh = match template {
+                Some(t) => Wam::fresh_from_template(t, &map_url, tmj)
+                    .ok_or((StatusCode::INTERNAL_SERVER_ERROR, "Invalid WAM template".to_owned()))?,
+                None => Wam::fresh(&map_url, tmj),
+            };
+            std::fs::write(&wam, fresh.to_json()).map_err(io)?;
         }
     }
     Ok(None)
@@ -203,7 +219,7 @@ pub(super) async fn download(
     headers: HeaderMap,
     Query(q): Query<DownloadQuery>,
 ) -> Response {
-    if let Some(refused) = unauthorized(&state, &headers) {
+    if let Some(refused) = unauthorized(&state, &headers).await {
         return refused;
     }
     let directory = q.directory.unwrap_or_default();

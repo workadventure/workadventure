@@ -208,6 +208,9 @@ pub struct Space {
 pub struct Recording {
     pub session_id: String,
     pub recorder: SpaceUserId,
+    /// Kept for the end of the recording, which may come after the recorder left.
+    pub recorder_uuid: String,
+    pub play_uri: String,
     pub status: RecordingStatus,
     pub egress_id: Option<String>,
     /// A stop asked while it was starting: done once it has started.
@@ -889,7 +892,8 @@ impl Space {
         session_id: String,
         sink: &mut impl SpaceSink,
     ) -> Result<Option<StartEgress>, String> {
-        let uuid = self.member(sender).ok_or("Unknown user")?.uuid.clone();
+        let recorder = self.member(sender).ok_or("Unknown user")?;
+        let (uuid, play_uri) = (recorder.uuid.clone(), recorder.play_uri.clone());
         if let Some(r) = &self.session {
             if r.recorder != sender {
                 return Err(match r.status {
@@ -904,6 +908,8 @@ impl Space {
         self.session = Some(Recording {
             session_id: session_id.clone(),
             recorder: sender.to_owned(),
+            recorder_uuid: uuid.clone(),
+            play_uri,
             status: RecordingStatus::Starting,
             egress_id: None,
             stop_after_start: false,
@@ -982,8 +988,8 @@ impl Space {
     }
 
     /// The egress_ended webhook: the session is over; its recorder is told if nobody asked for it. Returns the
-    /// recorder, for the admin's event.
-    pub fn webhook_ended(&mut self, session_id: &str, sink: &mut impl SpaceSink) -> Option<SpaceUserId> {
+    /// session, for the admin's event.
+    pub fn webhook_ended(&mut self, session_id: &str, sink: &mut impl SpaceSink) -> Option<Recording> {
         let r = self.session.take_if(|r| r.session_id == session_id)?;
         self.publish_recording(sink);
         if r.status != RecordingStatus::Stopping
@@ -992,6 +998,6 @@ impl Space {
             emit(sink, &[r.recorder.as_str()], SpaceEvent::RecordingUnexpectedlyStopped(m));
         }
         self.evaluate(sink);
-        Some(r.recorder)
+        Some(r)
     }
 }

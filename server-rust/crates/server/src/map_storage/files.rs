@@ -126,7 +126,7 @@ fn invalid_wam(details: &str) -> Response {
 
 /// `PUT /<path>`: a multipart `file`, or the raw body. A WAM must be valid; its rooms reload.
 async fn put(state: AppState, path: String, request: Request) -> Response {
-    if let Some(refused) = unauthorized(&state, request.headers()) {
+    if let Some(refused) = unauthorized(&state, request.headers()).await {
         return refused;
     }
     if path.contains("..") {
@@ -181,7 +181,7 @@ async fn put(state: AppState, path: String, request: Request) -> Response {
 
 /// `PATCH <path>.wam`: a JSON Patch applied to the (migrated) WAM, which must stay valid.
 async fn patch(state: AppState, path: String, request: Request) -> Response {
-    if let Some(refused) = unauthorized(&state, request.headers()) {
+    if let Some(refused) = unauthorized(&state, request.headers()).await {
         return refused;
     }
     if !path.ends_with(".wam") || path.contains("..") {
@@ -225,7 +225,7 @@ async fn patch(state: AppState, path: String, request: Request) -> Response {
 
 /// `DELETE /<path>`: a file or a directory; the root is emptied, not removed. A deleted WAM's users are told.
 async fn delete(state: AppState, path: String, headers: &HeaderMap) -> Response {
-    if let Some(refused) = unauthorized(&state, headers) {
+    if let Some(refused) = unauthorized(&state, headers).await {
         return refused;
     }
     if path.contains("..") {
@@ -271,7 +271,7 @@ pub(super) struct SourceDestination {
 }
 
 async fn relocate(state: AppState, headers: HeaderMap, body: axum::body::Bytes, copy: bool) -> Response {
-    if let Some(refused) = unauthorized(&state, &headers) {
+    if let Some(refused) = unauthorized(&state, &headers).await {
         return refused;
     }
     let Ok(SourceDestination { source, destination }) = serde_json::from_slice(&body) else {

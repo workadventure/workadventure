@@ -90,6 +90,12 @@ pub enum RoomCmd {
     },
     /// From the Room API.
     Api(RoomApiCmd),
+    /// From the admin: reload the room (dispatchRoomRefresh), a message to everyone, the world is full, a
+    /// message of an external module to one user.
+    Refresh,
+    AdminMessage(String),
+    WorldFull,
+    ExternalModule(pb::ExternalModuleMessage),
     /// For `GET /rooms`: the URL and the number of users.
     Describe {
         reply: tokio::sync::oneshot::Sender<(String, usize)>,
@@ -727,6 +733,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
     let mut event_listeners: Listeners<EventData> = Listeners::default();
     let mut variables = AreaVariables::default();
     let mut follows = Follows::default();
+    // incrementVersion: each admin refresh of the room.
+    let mut version = 0i32;
     let mut invitations = Invitations::default();
     // itemEventMessage: the last state of each item, for those who join later.
     let mut items: std::collections::BTreeMap<i32, String> = std::collections::BTreeMap::new();
@@ -918,6 +926,32 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 RoomApiCmd::ListenVariable { name, tx } => var_listeners.add(name, tx),
                 RoomApiCmd::ListenEvent { name, tx } => event_listeners.add(name, tx),
             },
+            RoomCmd::Refresh => {
+                version += 1;
+                let frame = wire::direct(Top::RefreshRoomMessage(pb::RefreshRoomMessage {
+                    room_id: url.clone(),
+                    version_number: version,
+                    time_to_refresh: None,
+                }));
+                Fanout::new(&mut sessions).each_all(&frame);
+            }
+            RoomCmd::AdminMessage(message) => {
+                // sendAdminMessageToRoom: the pusher leaves the type empty.
+                let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: String::new(), message }));
+                Fanout::new(&mut sessions).each_all(&frame);
+            }
+            RoomCmd::WorldFull => {
+                Fanout::new(&mut sessions).each_all(&wire::direct(Top::WorldFullWarningMessage(pb::WorldFullWarningMessage {})));
+            }
+            RoomCmd::ExternalModule(m) => {
+                let Some(uuid) = m.recipient_uuid.clone() else { continue };
+                let frame = wire::direct(Top::ExternalModuleMessage(m));
+                for id in room.ids_of(&uuid) {
+                    if let Some(s) = sessions.get(&id) {
+                        s.push(frame.clone());
+                    }
+                }
+            }
             RoomCmd::Describe { reply } => {
                 let _ = reply.send((url.clone(), sessions.len()));
             }
