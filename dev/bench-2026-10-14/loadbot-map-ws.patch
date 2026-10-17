@@ -1,0 +1,28 @@
+--- a/server-go/cmd/loadbot/main.go
++++ b/server-go/cmd/loadbot/main.go
+@@ -34,6 +34,8 @@
+ 	warmup   = flag.Duration("warmup", 10*time.Second, "time to connect everybody before measuring")
+ 	side     = flag.Int("side", 1600, "bots are spread on a side x side pixels square")
+ 	version  = flag.String("version", "dev", "apiVersionHash of the server")
++	wsBase   = flag.String("ws", "", "WebSocket base URL when it differs from -http (TS pusher: port 3001)")
++	mapFmt   = flag.String("map", "maps.example/load/%d.json", "map of each room after /_/global/, %d = room number")
+ )
+ 
+ const histogramMax = 60_000
+@@ -147,10 +149,14 @@
+ 	if err != nil {
+ 		return err
+ 	}
+-	roomURL := fmt.Sprintf("%s/_/global/maps.example/load/%d.json", *httpURL, b.room)
++	roomURL := fmt.Sprintf("%s/_/global/"+*mapFmt, *httpURL, b.room)
+ 	q := url.Values{"roomId": {roomURL}, "version": {*version}, "chatID": {""}, "roomName": {"load"}, "cameraState": {"false"},
+ 		"microphoneState": {"false"}, "tabId": {fmt.Sprintf("tab-%p", b)}, "characterTextureIds": {"male1"}}
+-	wsURL := strings.Replace(*httpURL, "http", "ws", 1) + "/ws/room?" + q.Encode()
++	base := *httpURL
++	if *wsBase != "" {
++		base = *wsBase
++	}
++	wsURL := strings.Replace(base, "http", "ws", 1) + "/ws/room?" + q.Encode()
+ 	b.conn, _, err = websocket.Dial(ctx, wsURL, &websocket.DialOptions{Subprotocols: []string{login.AuthToken}})
+ 	if err != nil {
+ 		return err
