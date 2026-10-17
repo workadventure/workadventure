@@ -186,7 +186,10 @@ mod tests {
         assert!(v.moved(None, Some((50.0, 50.0))).is_empty());
         let mut moved = areas[0].clone();
         moved["x"] = 1000.into();
-        assert_eq!(v.track(&[moved], [(50.0, 50.0)].into_iter()), vec![(("a".into(), "l".into(), "lock".into()), "false".into())]);
+        assert_eq!(
+            v.track(&[moved], [(50.0, 50.0)].into_iter()),
+            vec![(("a".into(), "l".into(), "lock".into()), "false".into())]
+        );
         assert!(may_set(&areas, "a", "l", &["admin".into()]));
         assert!(!may_set(&areas, "a", "l", &["member".into()]));
         assert!(may_set(&areas, "a", "m", &[]));

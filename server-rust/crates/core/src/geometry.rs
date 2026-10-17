@@ -39,10 +39,7 @@ pub struct ZoneKey {
 }
 
 pub fn zone_of(x: f64, y: f64) -> ZoneKey {
-    ZoneKey {
-        i: (x / f64::from(ZONE_SIZE)).floor() as i32,
-        j: (y / f64::from(ZONE_SIZE)).floor() as i32,
-    }
+    ZoneKey { i: (x / f64::from(ZONE_SIZE)).floor() as i32, j: (y / f64::from(ZONE_SIZE)).floor() as i32 }
 }
 
 pub fn distance(a: (f64, f64), b: (f64, f64)) -> f64 {
@@ -97,14 +94,8 @@ pub fn viewport_zones(v: &Viewport) -> Option<(ZoneRect, bool)> {
     let left = center_i - (w - 1).div_euclid(2);
     let top = center_j - (h - 1).div_euclid(2);
     // The center of an i32 range stays in i32, and so do these.
-    let top_left = ZoneKey {
-        i: left as i32,
-        j: top as i32,
-    };
-    let bottom_right = ZoneKey {
-        i: (left + w - 1) as i32,
-        j: (top + h - 1) as i32,
-    };
+    let top_left = ZoneKey { i: left as i32, j: top as i32 };
+    let bottom_right = ZoneKey { i: (left + w - 1) as i32, j: (top + h - 1) as i32 };
     Some((ZoneRect { top_left, bottom_right }, true))
 }
 
@@ -119,48 +110,23 @@ mod tests {
 
     #[test]
     fn a_normal_viewport_is_kept() {
-        let (rect, cropped) = viewport_zones(&Viewport {
-            left: 0,
-            top: 0,
-            right: 1919,
-            bottom: 1079,
-        })
-        .unwrap();
+        let (rect, cropped) = viewport_zones(&Viewport { left: 0, top: 0, right: 1919, bottom: 1079 }).unwrap();
         assert!(!cropped);
         assert_eq!(rect.zones().count(), 6 * 4);
     }
 
     #[test]
     fn a_huge_viewport_is_cropped_under_the_limit() {
-        let (rect, cropped) = viewport_zones(&Viewport {
-            left: i32::MIN,
-            top: i32::MIN,
-            right: i32::MAX,
-            bottom: i32::MAX,
-        })
-        .unwrap();
+        let (rect, cropped) =
+            viewport_zones(&Viewport { left: i32::MIN, top: i32::MIN, right: i32::MAX, bottom: i32::MAX }).unwrap();
         assert!(cropped);
         assert!(rect.zones().count() as i64 <= MAX_ZONES_PER_VIEWPORT);
-        let (thin, _) = viewport_zones(&Viewport {
-            left: i32::MIN,
-            top: 0,
-            right: i32::MAX,
-            bottom: 0,
-        })
-        .unwrap();
+        let (thin, _) = viewport_zones(&Viewport { left: i32::MIN, top: 0, right: i32::MAX, bottom: 0 }).unwrap();
         assert!(thin.zones().count() as i64 <= MAX_ZONES_PER_VIEWPORT);
     }
 
     #[test]
     fn an_inverted_viewport_is_rejected() {
-        assert!(
-            viewport_zones(&Viewport {
-                left: 10,
-                top: 0,
-                right: 0,
-                bottom: 0
-            })
-            .is_none()
-        );
+        assert!(viewport_zones(&Viewport { left: 10, top: 0, right: 0, bottom: 0 }).is_none());
     }
 }

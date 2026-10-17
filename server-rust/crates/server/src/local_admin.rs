@@ -22,10 +22,7 @@ static COMPANIONS: LazyLock<Value> =
 const WOKA_PARTS: [&str; 7] = ["woka", "body", "eyes", "hair", "clothes", "hat", "accessory"];
 
 fn texture(t: &Value) -> Option<Texture> {
-    Some(Texture {
-        id: t["id"].as_str()?.to_owned(),
-        url: t["url"].as_str()?.to_owned(),
-    })
+    Some(Texture { id: t["id"].as_str()?.to_owned(), url: t["url"].as_str()?.to_owned() })
 }
 
 /// LocalWokaService.fetchWokaDetails: `None` if an id is unknown or repeated. The order follows the parts
@@ -181,7 +178,12 @@ pub fn map_details(config: &Config, play_uri: &str) -> Value {
     });
     for (k, v) in rest.as_object().expect("object literal") {
         // JSON.stringify drops undefined values.
-        if !(v.is_null() && matches!(k.as_str(), "defaultWokaName" | "defaultWokaTexture" | "provideDefaultWokaName" | "provideDefaultWokaTexture")) {
+        if !(v.is_null()
+            && matches!(
+                k.as_str(),
+                "defaultWokaName" | "defaultWokaTexture" | "provideDefaultWokaName" | "provideDefaultWokaTexture"
+            ))
+        {
             details.insert(k.clone(), v.clone());
         }
     }
@@ -193,9 +195,27 @@ pub fn map_details(config: &Config, play_uri: &str) -> Value {
 pub fn applications(config: &Config) -> Vec<pb::ApplicationMessage> {
     let on = |k: &str| matches!(config.raw.get(k).map(String::as_str), Some("true" | "1"));
     [
-        ("KLAXOON_ENABLED", "Klaxoon", "https://klaxoon.com", Some("https://static.klaxoon.com/favicon.ico"), "Klaxoon (Brainstorming, Quiz, Survey)"),
-        ("YOUTUBE_ENABLED", "Youtube", "https://youtube.com", Some("https://www.youtube.com/favicon.ico"), "Youtube (Video sharing)"),
-        ("GOOGLE_DRIVE_ENABLED", "Google Drive", "https://drive.google.com", None, "Google Drive (Docs, Sheets, Slides)"),
+        (
+            "KLAXOON_ENABLED",
+            "Klaxoon",
+            "https://klaxoon.com",
+            Some("https://static.klaxoon.com/favicon.ico"),
+            "Klaxoon (Brainstorming, Quiz, Survey)",
+        ),
+        (
+            "YOUTUBE_ENABLED",
+            "Youtube",
+            "https://youtube.com",
+            Some("https://www.youtube.com/favicon.ico"),
+            "Youtube (Video sharing)",
+        ),
+        (
+            "GOOGLE_DRIVE_ENABLED",
+            "Google Drive",
+            "https://drive.google.com",
+            None,
+            "Google Drive (Docs, Sheets, Slides)",
+        ),
         ("GOOGLE_DOCS_ENABLED", "Google Docs", "https://docs.google.com", None, "Google Docs (Word Processor)"),
         ("GOOGLE_SHEETS_ENABLED", "Google Sheets", "https://sheets.google.com", None, "Google Sheets (Spreadsheet)"),
         ("GOOGLE_SLIDES_ENABLED", "Google Slides", "https://slides.google.com", None, "Google Slides (Presentation)"),
@@ -226,18 +246,14 @@ pub fn ice_servers(config: &Config, user_id: i32) -> Vec<pb::IceServer> {
     let urls = |v: String| v.split(',').map(|u| u.trim().to_owned()).collect();
     let mut servers = Vec::new();
     if let Some(stun) = env("STUN_SERVER") {
-        servers.push(pb::IceServer {
-            urls: urls(stun),
-            ..pb::IceServer::default()
-        });
+        servers.push(pb::IceServer { urls: urls(stun), ..pb::IceServer::default() });
     }
     if let Some(turn) = env("TURN_SERVER") {
         let (username, credential) = match env("TURN_STATIC_AUTH_SECRET") {
             Some(secret) => {
-                let expiry = std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .map_or(0, |d| d.as_secs())
-                    + 24 * 3600;
+                let expiry =
+                    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs())
+                        + 24 * 3600;
                 let username = format!("{expiry}:{user_id}");
                 let mut mac = Hmac::<Sha1>::new_from_slice(secret.as_bytes()).expect("any key length");
                 mac.update(username.as_bytes());
@@ -284,7 +300,10 @@ mod tests {
         let d = map_details(&c, "http://play.localhost/_/global/maps.localhost/tests/E2E/empty.json?x=1");
         assert_eq!(d["mapUrl"], "http://maps.localhost/tests/E2E/empty.json");
         assert!(d.get("wamUrl").is_none());
-        assert_eq!(map_details(&c, "http://play.localhost/~/maps/a.wam")["wamUrl"], "http://map-storage.localhost/maps/a.wam");
+        assert_eq!(
+            map_details(&c, "http://play.localhost/~/maps/a.wam")["wamUrl"],
+            "http://map-storage.localhost/maps/a.wam"
+        );
         assert_eq!(
             map_details(&c, "http://play.localhost/")["redirectUrl"],
             "http://play.localhost/_/global/maps.workadventu.re/starter/map.json"

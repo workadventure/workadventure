@@ -114,12 +114,17 @@ impl AdminApi {
                 query.push(("accessToken", t.to_owned()));
             }
         }
-        let builder = self.api(reqwest::Method::GET, "/api/map").query(&query).header("Accept-Language", locale.unwrap_or("en"));
+        let builder =
+            self.api(reqwest::Method::GET, "/api/map").query(&query).header("Accept-Language", locale.unwrap_or("en"));
         match Self::json(builder).await {
             Ok(v) if v["redirectUrl"].is_string() || v["status"] == "error" || v.get("group").is_some() => v,
             Ok(v) => {
                 tracing::error!(details = %v, "unexpected answer of the admin to /api/map");
-                error_data("MAP_VALIDATION", "Invalid answer from the admin", "The map details sent by the admin are not valid")
+                error_data(
+                    "MAP_VALIDATION",
+                    "Invalid answer from the admin",
+                    "The map details sent by the admin are not valid",
+                )
             }
             Err(e) => error_data("ROOM_ACCESS_ERROR", "Cannot access the room", &e),
         }
@@ -151,10 +156,19 @@ impl AdminApi {
             .header("Accept-Language", a.locale.unwrap_or("en"));
         match Self::json(builder).await {
             Ok(v) if v["status"] == "ok" && v["userUuid"].is_string() && v["tags"].is_array() => v,
-            Ok(v) if v["status"] == "error" || ["error", "retry", "redirect", "unauthorized"].iter().any(|t| v["type"] == *t) => v,
+            Ok(v)
+                if v["status"] == "error"
+                    || ["error", "retry", "redirect", "unauthorized"].iter().any(|t| v["type"] == *t) =>
+            {
+                v
+            }
             Ok(v) => {
                 tracing::error!(details = %v, "unexpected answer of the admin to /api/room/access");
-                error_data("ROOM_ACCESS_VALIDATION", "Invalid answer from the admin", "The room access sent by the admin is not valid")
+                error_data(
+                    "ROOM_ACCESS_VALIDATION",
+                    "Invalid answer from the admin",
+                    "The room access sent by the admin is not valid",
+                )
             }
             Err(e) => error_data("ROOM_ACCESS_ERROR", "Cannot access the room", &e),
         }
@@ -162,7 +176,13 @@ impl AdminApi {
 
     /// A4: the Cloudflare challenge of a custom host name (no token).
     pub async fn cf_challenge(&self, host: &str) -> Result<String, String> {
-        let r = self.http.get(format!("{}/white-label/cf-challenge", self.base)).query(&[("host", host)]).timeout(TIMEOUT).send().await;
+        let r = self
+            .http
+            .get(format!("{}/white-label/cf-challenge", self.base))
+            .query(&[("host", host)])
+            .timeout(TIMEOUT)
+            .send()
+            .await;
         match r {
             Ok(r) if r.status().is_success() => r.text().await.map_err(|e| e.to_string()),
             Ok(r) => Err(r.status().to_string()),
@@ -180,16 +200,28 @@ impl AdminApi {
     /// A6: the maps of the world.
     pub async fn rooms_from_same_world(&self, room: &str, tags: &[String], bypass: bool) -> Result<Value, String> {
         let query = [("roomUrl", room.to_owned()), ("bypassTagFilter", bypass.to_string()), ("tags", tags.join(","))];
-        Self::json(self.api(reqwest::Method::GET, "/api/room/sameWorld").query(&query).header("Accept-Language", "en")).await
+        Self::json(self.api(reqwest::Method::GET, "/api/room/sameWorld").query(&query).header("Accept-Language", "en"))
+            .await
     }
 
     /// A7: true when the ban is stored, false when the admin refuses it.
-    pub async fn ban(&self, uuid: &str, play_uri: &str, name: &str, message: &str, by: &str, ip: Option<&str>) -> Result<bool, String> {
-        let mut body = json!({"uuidToBan": uuid, "playUri": play_uri, "name": name, "message": message, "byUserUuid": by});
+    pub async fn ban(
+        &self,
+        uuid: &str,
+        play_uri: &str,
+        name: &str,
+        message: &str,
+        by: &str,
+        ip: Option<&str>,
+    ) -> Result<bool, String> {
+        let mut body =
+            json!({"uuidToBan": uuid, "playUri": play_uri, "name": name, "message": message, "byUserUuid": by});
         if let Some(ip) = ip {
             body["ipAddress"] = ip.into();
         }
-        let v = Self::json(self.api(reqwest::Method::POST, "/api/ban").json(&body)).await.unwrap_or_else(|e| json!({"status": "error", "message": e}));
+        let v = Self::json(self.api(reqwest::Method::POST, "/api/ban").json(&body))
+            .await
+            .unwrap_or_else(|e| json!({"status": "error", "message": e}));
         Ok(v["status"] != "error")
     }
 
@@ -218,15 +250,31 @@ impl AdminApi {
     /// A16: the Matrix id of a member (on ADMIN_URL).
     pub async fn update_chat_id(&self, email: &str, chat_id: &str, room: &str) -> Result<(), String> {
         let body = json!({"chatId": chat_id, "userIdentifier": email, "roomUrl": room});
-        let r = self.request(reqwest::Method::PUT, format!("{}/api/members/{email}/chatId", self.public)).json(&body).send().await;
+        let r = self
+            .request(reqwest::Method::PUT, format!("{}/api/members/{email}/chatId", self.public))
+            .json(&body)
+            .send()
+            .await;
         r.map_err(|e| e.to_string())?.error_for_status().map(drop).map_err(|e| e.to_string())
     }
 
     /// A17: a third-party token refreshed (on ADMIN_URL).
-    pub async fn refresh_oauth_token(&self, token: &str, provider: Option<&str>, user: Option<&str>) -> Result<Value, String> {
+    pub async fn refresh_oauth_token(
+        &self,
+        token: &str,
+        provider: Option<&str>,
+        user: Option<&str>,
+    ) -> Result<Value, String> {
         let body = json!({"accessToken": token, "provider": provider, "userIdentifier": user});
-        let v = Self::json(self.request(reqwest::Method::POST, format!("{}/api/oauth/refreshtoken", self.public)).json(&body)).await?;
-        if v["message"].is_string() && v["token"].is_string() { Ok(v) } else { Err("Invalid refresh token answer".into()) }
+        let v = Self::json(
+            self.request(reqwest::Method::POST, format!("{}/api/oauth/refreshtoken", self.public)).json(&body),
+        )
+        .await?;
+        if v["message"].is_string() && v["token"].is_string() {
+            Ok(v)
+        } else {
+            Err("Invalid refresh token answer".into())
+        }
     }
 
     /// A18: the ICE servers of the user (on ADMIN_URL).
@@ -248,7 +296,12 @@ impl AdminApi {
 
     /// A24: the LiveKit credentials of a room (capability api/livekit/credentials).
     pub async fn livekit_credentials(&self, play_uri: &str) -> Result<Value, String> {
-        Self::json(self.api(reqwest::Method::GET, "/api/livekit/credentials").query(&[("playUri", play_uri)]).header("Accept", "application/json")).await
+        Self::json(
+            self.api(reqwest::Method::GET, "/api/livekit/credentials")
+                .query(&[("playUri", play_uri)])
+                .header("Accept", "application/json"),
+        )
+        .await
     }
 
     /// A23: the end of a recording, retried after 250 ms, 1 s and 4 s on a network error, 5xx, 408 or 429.

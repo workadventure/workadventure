@@ -20,3 +20,5 @@ cargo typify --no-builder --additional-derive PartialEq --map-type ::std::collec
     cat "$out.tmp"
 } > "$out"
 rm "$out.tmp"
+# The repository's style (rustfmt.toml), so that a regeneration leaves no diff.
+(cd "$here/.." && cargo fmt --all)

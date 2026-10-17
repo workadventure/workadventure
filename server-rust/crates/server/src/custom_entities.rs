@@ -37,10 +37,7 @@ pub async fn upload(storage: &Storage, m: &pb::UploadEntityMessage) -> Result<()
     if !extension_in(&image, &["jpg", "jpeg", "png", "webp"]) {
         return Err(format!("Invalid image extension for {image}"));
     }
-    storage
-        .put_asset(format!("assets/entities/{image}"), m.file.to_vec())
-        .await
-        .map_err(|e| e.to_string())?;
+    storage.put_asset(format!("assets/entities/{image}"), m.file.to_vec()).await.map_err(|e| e.to_string())?;
     let direction = ["Up", "Right", "Down", "Left"].get(m.direction as usize).copied().unwrap_or("Down");
     let mut entry = json!({
         "id": m.id, "name": m.name, "tags": m.tags, "imagePath": m.image_path,

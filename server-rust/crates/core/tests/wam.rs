@@ -87,7 +87,8 @@ fn editing_needs_the_right_and_a_refusal_changes_nothing() {
 #[test]
 fn megaphone_settings_are_set_and_cleared() {
     let mut w = wam(json!({"version": "2.1.0", "mapUrl": "./a.tmj", "areas": [], "entities": {}}));
-    let on = Edit::Settings { key: "megaphone", value: Some(json!({"enabled": true, "title": "Live", "scope": "WORLD"})) };
+    let on =
+        Edit::Settings { key: "megaphone", value: Some(json!({"enabled": true, "title": "Live", "scope": "WORLD"})) };
     w.apply("c1", on, ADMIN).unwrap();
     assert_eq!(w.settings().unwrap()["megaphone"]["title"], "Live");
     assert!(w.apply("c2", Edit::Settings { key: "megaphone", value: Some(json!("x")) }, ADMIN).is_err());

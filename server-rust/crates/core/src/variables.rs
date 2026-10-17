@@ -31,7 +31,9 @@ pub fn from_tmj(map: &Value) -> Vec<VariableDef> {
                         let prop = |name: &str| {
                             o["properties"].as_array()?.iter().find(|p| p["name"] == name).map(|p| p["value"].clone())
                         };
-                        let text = |name: &str| prop(name).and_then(|v| v.as_str().filter(|s| !s.is_empty()).map(str::to_owned));
+                        let text = |name: &str| {
+                            prop(name).and_then(|v| v.as_str().filter(|s| !s.is_empty()).map(str::to_owned))
+                        };
                         out.push(VariableDef {
                             name: o["name"].as_str().unwrap_or_default().to_owned(),
                             default: prop("default").map(|v| v.to_string()),
@@ -83,15 +85,8 @@ pub struct RoomVariables {
 
 impl RoomVariables {
     pub fn new(defs: Option<Vec<VariableDef>>) -> Self {
-        let values = defs
-            .iter()
-            .flatten()
-            .filter_map(|d| Some((d.name.clone(), d.default.clone()?)))
-            .collect();
-        Self {
-            defs: defs.map(|d| d.into_iter().map(|d| (d.name.clone(), d)).collect()),
-            values,
-        }
+        let values = defs.iter().flatten().filter_map(|d| Some((d.name.clone(), d.default.clone()?))).collect();
+        Self { defs: defs.map(|d| d.into_iter().map(|d| (d.name.clone(), d)).collect()), values }
     }
 
     /// Saved values, kept when the variable still exists and persists.
@@ -159,10 +154,8 @@ impl RoomVariables {
                 tags.join(", ")
             )));
         }
-        let changed = Changed {
-            readable_by: def.and_then(|d| d.readable_by.clone()),
-            persist: def.is_some_and(|d| d.persist),
-        };
+        let changed =
+            Changed { readable_by: def.and_then(|d| d.readable_by.clone()), persist: def.is_some_and(|d| d.persist) };
         if self.values.get(name).map(String::as_str) == Some(value) {
             return Ok(None);
         }

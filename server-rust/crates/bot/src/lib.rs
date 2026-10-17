@@ -63,8 +63,11 @@ async fn anonymous_token(server: &str) -> Result<String, BotError> {
     use tokio::io::{AsyncReadExt, AsyncWriteExt};
     let host = server.trim_start_matches("http://").trim_end_matches('/');
     let mut s = TcpStream::connect(host).await?;
-    s.write_all(format!("POST /anonymLogin HTTP/1.1\r\nHost: {host}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").as_bytes())
-        .await?;
+    s.write_all(
+        format!("POST /anonymLogin HTTP/1.1\r\nHost: {host}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            .as_bytes(),
+    )
+    .await?;
     let mut response = String::new();
     s.read_to_string(&mut response).await?;
     let body = response.split("\r\n\r\n").nth(1).ok_or_else(|| BotError("no body".into()))?;
@@ -85,7 +88,11 @@ fn decode(bytes: &[u8]) -> Vec<Incoming> {
 }
 
 /// Reads until `pred` matches, or fails after `within`.
-async fn read_until(stream: &mut SplitStream<Ws>, within: Duration, mut pred: impl FnMut(&Incoming) -> bool) -> Result<Incoming, BotError> {
+async fn read_until(
+    stream: &mut SplitStream<Ws>,
+    within: Duration,
+    mut pred: impl FnMut(&Incoming) -> bool,
+) -> Result<Incoming, BotError> {
     let deadline = Instant::now() + within;
     loop {
         let left = deadline.saturating_duration_since(Instant::now());
@@ -129,7 +136,8 @@ impl Bot {
         request.headers_mut().insert("Sec-WebSocket-Protocol", HeaderValue::from_str(&token)?);
         let (ws, _) = tokio_tungstenite::connect_async(request).await?;
         let (sink, mut stream) = ws.split();
-        read_until(&mut stream, Duration::from_secs(10), |m| matches!(m, Incoming::Top(Top::RoomConnectedMessage(_)))).await?;
+        read_until(&mut stream, Duration::from_secs(10), |m| matches!(m, Incoming::Top(Top::RoomConnectedMessage(_))))
+            .await?;
         let mut bot = Bot {
             user_id: 0,
             room_url: o.room_url,
@@ -146,7 +154,9 @@ impl Bot {
             availability_status: o.availability,
         }))
         .await?;
-        let joined = read_until(&mut stream, Duration::from_secs(10), |m| matches!(m, Incoming::Top(Top::RoomJoinedMessage(_)))).await?;
+        let joined =
+            read_until(&mut stream, Duration::from_secs(10), |m| matches!(m, Incoming::Top(Top::RoomJoinedMessage(_))))
+                .await?;
         if let Incoming::Top(Top::RoomJoinedMessage(j)) = joined {
             bot.user_id = j.current_user_id;
             bot.joined = j;
@@ -168,7 +178,13 @@ impl Bot {
         Ok(())
     }
 
-    pub async fn move_to(&mut self, x: i32, y: i32, moving: bool, viewport: (i32, i32, i32, i32)) -> Result<(), BotError> {
+    pub async fn move_to(
+        &mut self,
+        x: i32,
+        y: i32,
+        moving: bool,
+        viewport: (i32, i32, i32, i32),
+    ) -> Result<(), BotError> {
         let (left, top, right, bottom) = viewport;
         self.send(pb::client_to_server_message::Message::UserMovesMessage(pb::UserMovesMessage {
             position: Some(position(x, y, moving)),
@@ -180,8 +196,7 @@ impl Bot {
     pub async fn query(&mut self, q: pb::query_message::Query) -> Result<i32, BotError> {
         let id = self.next_query;
         self.next_query += 1;
-        self.send(pb::client_to_server_message::Message::QueryMessage(pb::QueryMessage { id, query: Some(q) }))
-            .await?;
+        self.send(pb::client_to_server_message::Message::QueryMessage(pb::QueryMessage { id, query: Some(q) })).await?;
         Ok(id)
     }
 
@@ -202,21 +217,18 @@ impl Bot {
     }
 
     pub async fn close(mut self) {
-        let _ = self.sink.send(Message::Close(Some(tungstenite::protocol::CloseFrame {
-            code: tungstenite::protocol::frame::coding::CloseCode::Normal,
-            reason: "bye".into(),
-        })))
-        .await;
+        let _ = self
+            .sink
+            .send(Message::Close(Some(tungstenite::protocol::CloseFrame {
+                code: tungstenite::protocol::frame::coding::CloseCode::Normal,
+                reason: "bye".into(),
+            })))
+            .await;
     }
 }
 
 pub fn position(x: i32, y: i32, moving: bool) -> pb::PositionMessage {
-    pb::PositionMessage {
-        x,
-        y,
-        direction: pb::position_message::Direction::Down as i32,
-        moving,
-    }
+    pb::PositionMessage { x, y, direction: pb::position_message::Direction::Down as i32, moving }
 }
 
 fn uuid() -> String {
@@ -250,7 +262,11 @@ impl Inbox {
     }
 
     /// The first message (already seen or still to come within `within`) matching `pred`.
-    pub async fn expect<T>(&mut self, within: Duration, mut pred: impl FnMut(&Incoming) -> Option<T>) -> Result<T, BotError> {
+    pub async fn expect<T>(
+        &mut self,
+        within: Duration,
+        mut pred: impl FnMut(&Incoming) -> Option<T>,
+    ) -> Result<T, BotError> {
         if let Some(t) = self.seen.iter().find_map(&mut pred) {
             return Ok(t);
         }

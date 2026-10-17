@@ -10,7 +10,13 @@ impl SpaceSink for Nothing {
 }
 
 fn user(id: &str) -> SpaceUser {
-    SpaceUser { space_user_id: id.into(), uuid: format!("uuid-{id}"), play_uri: format!("room-{id}"), tags: vec!["t".into()], ..SpaceUser::default() }
+    SpaceUser {
+        space_user_id: id.into(),
+        uuid: format!("uuid-{id}"),
+        play_uri: format!("room-{id}"),
+        tags: vec!["t".into()],
+        ..SpaceUser::default()
+    }
 }
 
 fn kind(space: &mut Space, by: &str, kind: &str) {
@@ -48,7 +54,10 @@ fn a_bubble_opens_with_two_and_writes_each_participation_then_the_meeting() {
     assert_eq!(c.properties["role"], "speaker");
     assert_eq!(c.properties["endReason"], "closed");
     let ended = &rows[3];
-    assert_eq!((ended.member.is_none(), ended.room_id.as_str(), ended.id_parts.as_str()), (true, "room-a", "w.bubble-1:3000"));
+    assert_eq!(
+        (ended.member.is_none(), ended.room_id.as_str(), ended.id_parts.as_str()),
+        (true, "room-a", "w.bubble-1:3000")
+    );
     assert_eq!(ended.properties["meetingId"], "bubble-1");
     assert_eq!(ended.properties["participantCount"], 3);
     assert_eq!(ended.properties["peakParticipantCount"], 3);
@@ -63,12 +72,17 @@ fn a_megaphone_counts_speakers_and_their_airtime() {
     space.join(FilterType::LiveStreamingUsers, user("listener"), &mut Nothing).unwrap();
     kind(&mut space, "listener", "megaphone");
     m.observe(&space, 0);
-    space.join(FilterType::LiveStreamingUsers, SpaceUser { megaphone_state: true, ..user("speaker") }, &mut Nothing).unwrap();
+    space
+        .join(FilterType::LiveStreamingUsers, SpaceUser { megaphone_state: true, ..user("speaker") }, &mut Nothing)
+        .unwrap();
     m.observe(&space, 1_000);
     m.close("back_shutdown", 4_500);
     let rows = m.take_rows();
     assert_eq!(rows.len(), 3);
-    assert_eq!((rows[0].properties["role"].as_str(), rows[1].properties["role"].as_str()), (Some("listener"), Some("speaker")));
+    assert_eq!(
+        (rows[0].properties["role"].as_str(), rows[1].properties["role"].as_str()),
+        (Some("listener"), Some("speaker"))
+    );
     assert_eq!(rows[1].properties["airtimeSeconds"], 3.5);
     assert_eq!(rows[2].properties["speakerCount"], 1);
     assert_eq!(rows[2].properties["endReason"], "back_shutdown");

@@ -51,12 +51,26 @@ pub static METRICS: LazyLock<Metrics> = LazyLock::new(|| {
     registry.register(Box::new(counter_groups_per_room.clone())).expect("unique metric");
     Metrics {
         nb_sockets: gauge(&registry, "workadventure_nb_sockets", "Number of connected sockets"),
-        nb_clients_per_room: gauge_vec(&registry, "workadventure_nb_clients_per_room", "Number of clients per room", "room"),
+        nb_clients_per_room: gauge_vec(
+            &registry,
+            "workadventure_nb_clients_per_room",
+            "Number of clients per room",
+            "room",
+        ),
         counter_groups_per_room,
-        nb_groups_per_room: gauge_vec(&registry, "workadventure_nb_groups_per_room", "Number of groups per room", "room"),
+        nb_groups_per_room: gauge_vec(
+            &registry,
+            "workadventure_nb_groups_per_room",
+            "Number of groups per room",
+            "room",
+        ),
         nb_spaces: gauge(&registry, "workadventure_nb_spaces", "Number of active spaces"),
         nb_rooms: gauge(&registry, "workadventure_nb_rooms", "Number of active rooms"),
-        worker_threads: gauge(&registry, "workadventure_server_worker_threads", "Number of async runtime worker threads"),
+        worker_threads: gauge(
+            &registry,
+            "workadventure_server_worker_threads",
+            "Number of async runtime worker threads",
+        ),
         slow_consumers: counter(
             &registry,
             "workadventure_server_slow_consumers_total",
@@ -67,7 +81,11 @@ pub static METRICS: LazyLock<Metrics> = LazyLock::new(|| {
             "workadventure_server_ws_messages_received_total",
             "WebSocket messages received from clients",
         ),
-        ws_frames_sent: counter(&registry, "workadventure_server_ws_frames_sent_total", "WebSocket frames sent to clients"),
+        ws_frames_sent: counter(
+            &registry,
+            "workadventure_server_ws_frames_sent_total",
+            "WebSocket frames sent to clients",
+        ),
         registry,
     }
 });

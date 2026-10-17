@@ -4,7 +4,7 @@
 //! WebRTC strategy. LiveKit is not handled yet: a media space stays in peer-to-peer mode, which is also what
 //! the reference does when no LiveKit is configured.
 
-use std::collections::{BTreeSet, BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 
 use crate::space_state::{self, Ctx, RecordingStatus, SpaceState, StateQuery};
 use crate::user::{Availability, Texture};
@@ -19,14 +19,8 @@ pub enum FilterType {
 }
 
 /// The fields of a space member that a client may change itself (CLIENT_UPDATABLE_SPACE_USER_FIELDS).
-pub const CLIENT_UPDATABLE: [&str; 6] = [
-    "microphoneState",
-    "cameraState",
-    "screenSharingState",
-    "megaphoneState",
-    "attendeesState",
-    "cpuLimited",
-];
+pub const CLIENT_UPDATABLE: [&str; 6] =
+    ["microphoneState", "cameraState", "screenSharingState", "megaphoneState", "attendeesState", "cpuLimited"];
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SpaceUser {
@@ -540,13 +534,7 @@ impl Space {
         let mut next = self.state.clone();
         space_state::apply(
             &mut next,
-            &mut Ctx {
-                sender: user,
-                filter: self.filter,
-                members: &self.members,
-                now,
-                new_id,
-            },
+            &mut Ctx { sender: user, filter: self.filter, members: &self.members, now, new_id },
             query,
         )?;
         self.set_state(next, sink);
@@ -567,14 +555,7 @@ impl Space {
         }
         let before = std::mem::replace(&mut self.state, next);
         let to: Vec<&str> = self.member_ids().collect();
-        emit(
-            sink,
-            &to,
-            SpaceEvent::StatePatch {
-                before: &before,
-                after: &self.state,
-            },
-        );
+        emit(sink, &to, SpaceEvent::StatePatch { before: &before, after: &self.state });
     }
 
     /// meetingConnectionRestartMessage: the requester becomes the initiator of a new connection.
@@ -648,9 +629,7 @@ impl Space {
     }
 
     fn connected(&self, a: &str, b: &str) -> bool {
-        self.connections
-            .as_ref()
-            .is_some_and(|c| c.contains_key(&(a.to_owned(), b.to_owned())))
+        self.connections.as_ref().is_some_and(|c| c.contains_key(&(a.to_owned(), b.to_owned())))
     }
 
     /// `u1` is the initiator side's peer: `u2` receives `initiator: true` with sender `u1`.
@@ -661,24 +640,8 @@ impl Space {
         conns.insert((u1.to_owned(), u2.to_owned()), cid.clone());
         conns.insert((u2.to_owned(), u1.to_owned()), cid.clone());
         let (Some(a), Some(b)) = (self.member(u1), self.member(u2)) else { return };
-        emit(
-            sink,
-            &[u2],
-            SpaceEvent::WebRtcStart {
-                sender: a,
-                initiator: true,
-                connection_id: &cid,
-            },
-        );
-        emit(
-            sink,
-            &[u1],
-            SpaceEvent::WebRtcStart {
-                sender: b,
-                initiator: false,
-                connection_id: &cid,
-            },
-        );
+        emit(sink, &[u2], SpaceEvent::WebRtcStart { sender: a, initiator: true, connection_id: &cid });
+        emit(sink, &[u1], SpaceEvent::WebRtcStart { sender: b, initiator: false, connection_id: &cid });
     }
 
     fn disconnect_all(&mut self, id: &str, sink: &mut impl SpaceSink) {

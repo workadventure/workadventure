@@ -76,7 +76,8 @@ impl Mine {
         if value.is_empty() {
             redis.delete(&self.key, name);
         } else {
-            let saved = Saved { value: value.to_owned(), public, expires: ttl.map(|t| now_ms() + t.max(0) as u64 * 1000) };
+            let saved =
+                Saved { value: value.to_owned(), public, expires: ttl.map(|t| now_ms() + t.max(0) as u64 * 1000) };
             redis.set(&self.key, name, &encode(&saved));
             self.saved.push((name.to_owned(), saved));
         }

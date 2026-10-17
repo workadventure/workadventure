@@ -62,10 +62,7 @@ pub struct Limits {
 
 impl Default for Limits {
     fn default() -> Self {
-        Self {
-            max_frames: 4096,
-            max_bytes: 2 * 1024 * 1024,
-        }
+        Self { max_frames: 4096, max_bytes: 2 * 1024 * 1024 }
     }
 }
 
@@ -99,12 +96,7 @@ pub struct Drained {
 
 impl Outbox {
     pub fn new(limits: Limits, budget: Arc<Budget>) -> Self {
-        Self {
-            state: Mutex::new(State::default()),
-            notify: Notify::new(),
-            limits,
-            budget,
-        }
+        Self { state: Mutex::new(State::default()), notify: Notify::new(), limits, budget }
     }
 
     pub fn push(&self, frame: Frame) -> Result<(), Closed> {
@@ -217,10 +209,7 @@ impl Outbox {
         st.bytes = 0;
         st.moves.clear();
         st.has_direct = false;
-        Drained {
-            frames: std::mem::take(&mut st.frames),
-            closed: st.closed,
-        }
+        Drained { frames: std::mem::take(&mut st.frames), closed: st.closed }
     }
 
     pub fn queued(&self) -> usize {
@@ -257,10 +246,7 @@ mod tests {
         o.push(Frame::Sub(b("u1 left"))).unwrap();
         o.push_move(1, b("u1@b")).unwrap();
         let d = o.drain();
-        assert_eq!(
-            d.frames,
-            vec![Frame::Sub(b("u1@a")), Frame::Sub(b("u1 left")), Frame::Sub(b("u1@b"))]
-        );
+        assert_eq!(d.frames, vec![Frame::Sub(b("u1@a")), Frame::Sub(b("u1 left")), Frame::Sub(b("u1@b"))]);
     }
 
     #[test]
@@ -275,10 +261,7 @@ mod tests {
 
     #[test]
     fn a_slow_consumer_is_closed_and_its_queue_freed() {
-        let o = outbox(Limits {
-            max_frames: 3,
-            max_bytes: 1 << 20,
-        });
+        let o = outbox(Limits { max_frames: 3, max_bytes: 1 << 20 });
         for _ in 0..3 {
             o.push(Frame::Sub(b("x"))).unwrap();
         }
@@ -294,10 +277,7 @@ mod tests {
 
     #[test]
     fn coalesced_moves_do_not_count_against_the_budget() {
-        let o = outbox(Limits {
-            max_frames: 2,
-            max_bytes: 1 << 20,
-        });
+        let o = outbox(Limits { max_frames: 2, max_bytes: 1 << 20 });
         o.push(Frame::Sub(b("x"))).unwrap();
         for _ in 0..1000 {
             o.push_move(7, b("m")).unwrap();
@@ -308,10 +288,7 @@ mod tests {
 
     #[test]
     fn the_byte_budget_is_enforced_but_one_big_frame_fits() {
-        let o = outbox(Limits {
-            max_frames: 100,
-            max_bytes: 10,
-        });
+        let o = outbox(Limits { max_frames: 100, max_bytes: 10 });
         o.push(Frame::Direct(Bytes::from(vec![0; 50]))).unwrap();
         assert_eq!(o.push(Frame::Sub(Bytes::from(vec![0; 8]))), Err(Closed));
         assert!(o.is_closed());
@@ -320,10 +297,7 @@ mod tests {
     #[test]
     fn the_shared_budget_closes_lagging_consumers_only() {
         let budget = Arc::new(Budget::new(LAGGING_BYTES * 2));
-        let limits = Limits {
-            max_frames: 1 << 20,
-            max_bytes: 1 << 30,
-        };
+        let limits = Limits { max_frames: 1 << 20, max_bytes: 1 << 30 };
         let lagging = Outbox::new(limits, budget.clone());
         let fresh = Outbox::new(limits, budget.clone());
         let chunk = || Frame::Sub(Bytes::from(vec![0; 1024]));

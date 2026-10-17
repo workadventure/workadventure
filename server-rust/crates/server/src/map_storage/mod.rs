@@ -130,10 +130,7 @@ impl Storage {
         let path = self.path(rel).ok_or("Invalid path")?;
         let _guard = self.write.lock().await;
         tokio::task::spawn_blocking(move || {
-            let mut doc = std::fs::read(&path)
-                .ok()
-                .and_then(|b| serde_json::from_slice(&b).ok())
-                .unwrap_or(default);
+            let mut doc = std::fs::read(&path).ok().and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or(default);
             let result = f(&mut doc)?;
             write_atomic(&path, doc.to_string().as_bytes()).map_err(|e| e.to_string())?;
             Ok(result)
@@ -173,14 +170,19 @@ impl Storage {
                     if !rel.ends_with(".wam") {
                         continue;
                     }
-                    let Ok(wam) = serde_json::from_slice::<serde_json::Value>(&std::fs::read(&path).unwrap_or_default()) else {
+                    let Ok(wam) =
+                        serde_json::from_slice::<serde_json::Value>(&std::fs::read(&path).unwrap_or_default())
+                    else {
                         continue;
                     };
                     if !wam["mapUrl"].is_string() {
                         continue;
                     }
                     let mut metadata = wam["metadata"].as_object().cloned().unwrap_or_default();
-                    metadata.insert("areasSearchable".into(), searchable(&mut wam["areas"].as_array().into_iter().flatten()).into());
+                    metadata.insert(
+                        "areasSearchable".into(),
+                        searchable(&mut wam["areas"].as_array().into_iter().flatten()).into(),
+                    );
                     metadata.insert(
                         "entitiesSearchable".into(),
                         searchable(&mut wam["entities"].as_object().into_iter().flatten().map(|(_, e)| e)).into(),
@@ -219,8 +221,19 @@ pub(crate) fn domain_dir(state: &AppState, headers: &HeaderMap, rest: bool) -> O
     if !state.config.use_domain_name_in_path {
         return Some(String::new());
     }
-    let get = |k: &str| headers.get(k).and_then(|v| v.to_str().ok()).map(|v| v.split(',').next().unwrap_or(v).trim()).filter(|v| !v.is_empty());
-    let host = rest.then(|| get("x-map-storage-host")).flatten().or_else(|| get("x-forwarded-host")).or_else(|| get("host")).unwrap_or_default();
+    let get = |k: &str| {
+        headers
+            .get(k)
+            .and_then(|v| v.to_str().ok())
+            .map(|v| v.split(',').next().unwrap_or(v).trim())
+            .filter(|v| !v.is_empty())
+    };
+    let host = rest
+        .then(|| get("x-map-storage-host"))
+        .flatten()
+        .or_else(|| get("x-forwarded-host"))
+        .or_else(|| get("host"))
+        .unwrap_or_default();
     domain_folder(host)
 }
 
@@ -230,8 +243,13 @@ pub(crate) fn invalid_domain() -> Response {
 
 /// The folder of a domain (the port dropped), refused if it could climb out.
 pub fn domain_folder(host: &str) -> Option<String> {
-    let domain = host.rsplit_once(':').filter(|(_, p)| p.chars().all(|c| c.is_ascii_digit())).map_or(host, |(h, _)| h).to_ascii_lowercase();
-    (!domain.is_empty() && !domain.contains("..") && !domain.contains('/') && !domain.contains('\\')).then(|| format!("{domain}/"))
+    let domain = host
+        .rsplit_once(':')
+        .filter(|(_, p)| p.chars().all(|c| c.is_ascii_digit()))
+        .map_or(host, |(h, _)| h)
+        .to_ascii_lowercase();
+    (!domain.is_empty() && !domain.contains("..") && !domain.contains('/') && !domain.contains('\\'))
+        .then(|| format!("{domain}/"))
 }
 
 /// The storage key of a WAM URL, as the rooms and the private files find it (mapPathUsingUrl): its path
@@ -246,9 +264,7 @@ pub fn wam_key_of_url(config: &crate::config::Config, url: &str) -> Option<Strin
 
 pub(crate) fn resolve(root: &Path, rel: &str) -> Option<PathBuf> {
     let rel = Path::new(rel.trim_start_matches('/'));
-    rel.components()
-        .all(|c| matches!(c, Component::Normal(_)))
-        .then(|| root.join(rel))
+    rel.components().all(|c| matches!(c, Component::Normal(_))).then(|| root.join(rel))
 }
 
 /// Through a temporary file, so a reader never sees half a file.
@@ -304,7 +320,8 @@ fn web_hook(state: &AppState, change: &MapChange) {
         let (d, p) = path.split_once('/').unwrap_or((path.as_str(), ""));
         (d.to_owned(), p.to_owned())
     } else {
-        let public = env("PUBLIC_MAP_STORAGE_URL").and_then(|u| reqwest::Url::parse(&u).ok()?.host_str().map(str::to_owned));
+        let public =
+            env("PUBLIC_MAP_STORAGE_URL").and_then(|u| reqwest::Url::parse(&u).ok()?.host_str().map(str::to_owned));
         (public.unwrap_or_default(), path.clone())
     };
     let mut body = serde_json::json!({"domain": domain, "action": if matches!(change, MapChange::Deleted(_)) { "delete" } else { "update" }});
@@ -343,20 +360,13 @@ pub fn router(state: AppState) -> Router {
 
 /// `cors()` with its defaults, and `nosniff` everywhere.
 async fn cors(request: Request, next: Next) -> Response {
-    let preflight = (request.method() == Method::OPTIONS).then(|| {
-        request
-            .headers()
-            .get(header::ACCESS_CONTROL_REQUEST_HEADERS)
-            .cloned()
-    });
+    let preflight = (request.method() == Method::OPTIONS)
+        .then(|| request.headers().get(header::ACCESS_CONTROL_REQUEST_HEADERS).cloned());
     let mut response = match preflight {
         Some(asked) => {
             let mut r = StatusCode::NO_CONTENT.into_response();
             let h = r.headers_mut();
-            h.insert(
-                header::ACCESS_CONTROL_ALLOW_METHODS,
-                HeaderValue::from_static("GET,HEAD,PUT,PATCH,POST,DELETE"),
-            );
+            h.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET,HEAD,PUT,PATCH,POST,DELETE"));
             if let Some(asked) = asked {
                 h.insert(header::ACCESS_CONTROL_ALLOW_HEADERS, asked);
             }
@@ -387,14 +397,22 @@ async fn unauthorized(state: &AppState, headers: &HeaderMap) -> Option<Response>
                 decoded == format!("{user}:{password}").into_bytes()
             });
     let token = auth.strip_prefix("Bearer ").map(str::trim).filter(|t| !t.is_empty());
-    let mut bearer = on("ENABLE_BEARER_AUTHENTICATION") && token.is_some_and(|t| env("AUTHENTICATION_TOKEN").is_some_and(|e| e == t));
+    let mut bearer = on("ENABLE_BEARER_AUTHENTICATION")
+        && token.is_some_and(|t| env("AUTHENTICATION_TOKEN").is_some_and(|e| e == t));
     // A26: another bearer may be one the admin knows, for this domain.
     if on("ENABLE_BEARER_AUTHENTICATION")
         && !bearer
         && let (Some(t), Some(validator)) = (token, env("AUTHENTICATION_VALIDATOR_URL"))
     {
-        let get = |k: &str| headers.get(k).and_then(|v| v.to_str().ok()).map(|v| v.split(',').next().unwrap_or(v).trim()).filter(|v| !v.is_empty());
-        let domain = get("x-map-storage-host").or_else(|| get("x-forwarded-host")).or_else(|| get("host")).unwrap_or_default();
+        let get = |k: &str| {
+            headers
+                .get(k)
+                .and_then(|v| v.to_str().ok())
+                .map(|v| v.split(',').next().unwrap_or(v).trim())
+                .filter(|v| !v.is_empty())
+        };
+        let domain =
+            get("x-map-storage-host").or_else(|| get("x-forwarded-host")).or_else(|| get("host")).unwrap_or_default();
         let domain = domain.rsplit_once(':').map_or(domain, |(h, _)| h);
         let asked = state
             .http
@@ -409,7 +427,10 @@ async fn unauthorized(state: &AppState, headers: &HeaderMap) -> Option<Response>
     if basic || bearer {
         return None;
     }
-    Some((StatusCode::UNAUTHORIZED, [(header::WWW_AUTHENTICATE, "Basic realm=\"Users\"")], "Unauthorized").into_response())
+    Some(
+        (StatusCode::UNAUTHORIZED, [(header::WWW_AUTHENTICATE, "Basic realm=\"Users\"")], "Unauthorized")
+            .into_response(),
+    )
 }
 
 /// map-storage's validation errors: `{"<file>": {"<category>": [{type, message, details}]}}`.

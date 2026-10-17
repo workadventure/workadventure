@@ -161,11 +161,7 @@ impl Config {
                 .unwrap_or_else(|| "/_/global/maps.workadventu.re/starter/map.json".to_owned()),
             raw: env.vars.clone(),
         };
-        if env.errors.is_empty() {
-            Ok(config)
-        } else {
-            Err(env.errors)
-        }
+        if env.errors.is_empty() { Ok(config) } else { Err(env.errors) }
     }
 }
 

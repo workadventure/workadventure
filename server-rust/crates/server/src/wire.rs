@@ -33,10 +33,7 @@ pub fn direct(message: pb::server_to_client_message::Message) -> Frame {
 }
 
 pub fn answer(id: i32, answer: pb::answer_message::Answer) -> Frame {
-    direct(pb::server_to_client_message::Message::AnswerMessage(pb::AnswerMessage {
-        id,
-        answer: Some(answer),
-    }))
+    direct(pb::server_to_client_message::Message::AnswerMessage(pb::AnswerMessage { id, answer: Some(answer) }))
 }
 
 pub fn answer_error(id: i32, message: impl Into<String>) -> Frame {
@@ -106,29 +103,15 @@ pub fn position_to(p: &Position) -> pb::PositionMessage {
 }
 
 pub fn viewport_from(v: &pb::ViewportMessage) -> Viewport {
-    Viewport {
-        left: v.left,
-        top: v.top,
-        right: v.right,
-        bottom: v.bottom,
-    }
+    Viewport { left: v.left, top: v.top, right: v.right, bottom: v.bottom }
 }
 
 pub fn textures_to(textures: &[Texture]) -> Vec<pb::CharacterTextureMessage> {
-    textures
-        .iter()
-        .map(|t| pb::CharacterTextureMessage {
-            url: t.url.clone(),
-            id: t.id.clone(),
-        })
-        .collect()
+    textures.iter().map(|t| pb::CharacterTextureMessage { url: t.url.clone(), id: t.id.clone() }).collect()
 }
 
 fn say_to(s: &Say) -> pb::SayMessage {
-    pb::SayMessage {
-        message: s.message.clone(),
-        r#type: s.kind,
-    }
+    pb::SayMessage { message: s.message.clone(), r#type: s.kind }
 }
 
 pub fn user_joined(u: &User) -> pb::sub_message::Message {
@@ -137,10 +120,11 @@ pub fn user_joined(u: &User) -> pb::sub_message::Message {
         name: u.profile.name.clone(),
         character_textures: textures_to(&u.profile.textures),
         position: Some(position_to(&u.position)),
-        companion_texture: u.profile.companion.as_ref().map(|c| pb::CompanionTextureMessage {
-            url: c.url.clone(),
-            id: c.id.clone(),
-        }),
+        companion_texture: u
+            .profile
+            .companion
+            .as_ref()
+            .map(|c| pb::CompanionTextureMessage { url: c.url.clone(), id: c.id.clone() }),
         visit_card_url: u.profile.visit_card_url.clone().unwrap_or_default(),
         user_uuid: u.profile.uuid.clone(),
         outline_color: u.appearance.outline_color.unwrap_or(0),
@@ -162,10 +146,7 @@ pub fn user_moved(u: &User) -> pb::sub_message::Message {
 pub fn group_update(g: &Group) -> pb::sub_message::Message {
     pb::sub_message::Message::GroupUpdateMessage(pb::GroupUpdateMessage {
         group_id: g.id,
-        position: Some(pb::PointMessage {
-            x: g.x.floor() as i32,
-            y: g.y.floor() as i32,
-        }),
+        position: Some(pb::PointMessage { x: g.x.floor() as i32, y: g.y.floor() as i32 }),
         group_size: Some(g.users.len() as u32),
         locked: Some(g.locked),
         user_ids: g.users.clone(),
@@ -187,10 +168,7 @@ pub fn details_from(d: &pb::SetPlayerDetailsMessage) -> DetailsChange {
             scope: v.scope,
         }),
         chat_id: d.chat_id.clone(),
-        say: d.say_message.as_ref().map(|s| Say {
-            message: s.message.clone(),
-            kind: s.r#type,
-        }),
+        say: d.say_message.as_ref().map(|s| Say { message: s.message.clone(), kind: s.r#type }),
     }
 }
 
@@ -291,9 +269,9 @@ pub fn json_to(v: &serde_json::Value) -> prost_types::Value {
         J::Number(n) => Kind::NumberValue(n.as_f64().unwrap_or(0.0)),
         J::String(s) => Kind::StringValue(s.clone()),
         J::Array(a) => Kind::ListValue(prost_types::ListValue { values: a.iter().map(json_to).collect() }),
-        J::Object(o) => Kind::StructValue(prost_types::Struct {
-            fields: o.iter().map(|(k, v)| (k.clone(), json_to(v))).collect(),
-        }),
+        J::Object(o) => {
+            Kind::StructValue(prost_types::Struct { fields: o.iter().map(|(k, v)| (k.clone(), json_to(v))).collect() })
+        }
     };
     prost_types::Value { kind: Some(kind) }
 }
@@ -339,19 +317,17 @@ pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit
         M::DeleteAreaMessage(a) => Edit::DeleteArea(a.id.clone()),
         M::CreateEntityMessage(e) => {
             let mut entity = Map::new();
-            entity.insert("prefabRef".into(), serde_json::json!({"id": e.prefab_id, "collectionName": e.collection_name}));
+            entity.insert(
+                "prefabRef".into(),
+                serde_json::json!({"id": e.prefab_id, "collectionName": e.collection_name}),
+            );
             entity.insert("x".into(), e.x.into());
             entity.insert("y".into(), e.y.into());
             entity.insert("properties".into(), properties(&e.properties));
             if let Some(name) = &e.name {
                 entity.insert("name".into(), name.clone().into());
             }
-            Edit::CreateEntity {
-                id: e.id.clone(),
-                entity,
-                width: f64::from(e.width),
-                height: f64::from(e.height),
-            }
+            Edit::CreateEntity { id: e.id.clone(), entity, width: f64::from(e.width), height: f64::from(e.height) }
         }
         M::ModifyEntityMessage(e) => {
             let mut fields = Map::new();
@@ -382,14 +358,12 @@ pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit
         M::UpdateWamSettingsMessage(s) => {
             use pb::update_wam_settings_message::Message as S;
             match s.message.as_ref()? {
-                S::UpdateMegaphoneSettingMessage(m) => Edit::Settings {
-                    key: "megaphone",
-                    value: m.settings.as_ref().map(json_from),
-                },
-                S::UpdateRecordingSettingMessage(m) => Edit::Settings {
-                    key: "recording",
-                    value: m.settings.as_ref().map(json_from),
-                },
+                S::UpdateMegaphoneSettingMessage(m) => {
+                    Edit::Settings { key: "megaphone", value: m.settings.as_ref().map(json_from) }
+                }
+                S::UpdateRecordingSettingMessage(m) => {
+                    Edit::Settings { key: "recording", value: m.settings.as_ref().map(json_from) }
+                }
             }
         }
         _ => return None,

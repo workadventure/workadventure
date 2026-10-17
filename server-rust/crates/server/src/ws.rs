@@ -25,7 +25,13 @@ enum Upgrade {
     Refuse(u16, &'static str),
 }
 
-fn error_screen(r#type: &str, code: &str, title: &str, subtitle: &str, details: String) -> pb::server_to_client_message::Message {
+fn error_screen(
+    r#type: &str,
+    code: &str,
+    title: &str,
+    subtitle: &str,
+    details: String,
+) -> pb::server_to_client_message::Message {
     pb::server_to_client_message::Message::ErrorScreenMessage(pb::ErrorScreenMessage {
         r#type: r#type.into(),
         code: Some(code.into()),
@@ -119,7 +125,9 @@ async fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &H
     // A transport resume: only onto a session that is still there, for the same token and room.
     if let Some(raw) = get("lastReceivedNonce").filter(|v| !v.is_empty()) {
         let Ok(last) = raw.parse::<u32>() else {
-            return internal_error(&format!("Parameter lastReceivedNonce: Expected nonnegative integer, received {raw}"));
+            return internal_error(&format!(
+                "Parameter lastReceivedNonce: Expected nonnegative integer, received {raw}"
+            ));
         };
         let retained = connection_id.as_ref().and_then(|c| state.sessions.get(c).map(|s| s.clone()));
         return match retained {
@@ -159,11 +167,8 @@ async fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &H
         }
     };
 
-    let texture_ids: Vec<String> = pairs
-        .iter()
-        .filter(|(k, _)| k == "characterTextureIds")
-        .map(|(_, v)| v.clone())
-        .collect();
+    let texture_ids: Vec<String> =
+        pairs.iter().filter(|(k, _)| k == "characterTextureIds").map(|(_, v)| v.clone()).collect();
     let ip_address = headers
         .get("x-forwarded-for")
         .and_then(|v| v.to_str().ok())
@@ -237,9 +242,9 @@ async fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &H
         Some(id) => match local_admin::resolve_companion(&id) {
             Some(t) => Some(t),
             None => {
-                return Upgrade::Reject(Box::new(M::InvalidCompanionTextureMessage(pb::InvalidCompanionTextureMessage {
-                    message: "Invalid companion texture".into(),
-                })));
+                return Upgrade::Reject(Box::new(M::InvalidCompanionTextureMessage(
+                    pb::InvalidCompanionTextureMessage { message: "Invalid companion texture".into() },
+                )));
             }
         },
     };
@@ -279,11 +284,7 @@ pub async fn ws_room(
     RawQuery(query): RawQuery,
 ) -> Response {
     // The token travels as the sub-protocol and must be echoed, or the browser fails the handshake.
-    let token = headers
-        .get(header::SEC_WEBSOCKET_PROTOCOL)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("")
-        .to_owned();
+    let token = headers.get(header::SEC_WEBSOCKET_PROTOCOL).and_then(|v| v.to_str().ok()).unwrap_or("").to_owned();
     let mut ws = ws.max_message_size(MAX_MESSAGE).max_frame_size(MAX_MESSAGE);
     if !token.is_empty() {
         ws = ws.protocols([token.clone()]);

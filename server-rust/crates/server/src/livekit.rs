@@ -83,7 +83,8 @@ impl Livekit {
 
     /// createRoom: the room, unless it is already there (no options: the server's defaults apply).
     pub async fn create_room(&self, http: &reqwest::Client, room: &str) -> Result<(), String> {
-        let listed = self.twirp(http, "RoomService/ListRooms", json!({"roomList": true}), json!({"names": [room]})).await?;
+        let listed =
+            self.twirp(http, "RoomService/ListRooms", json!({"roomList": true}), json!({"names": [room]})).await?;
         if listed["rooms"].as_array().is_some_and(|r| !r.is_empty()) {
             return Ok(());
         }
@@ -111,7 +112,14 @@ pub fn s3_upload(config: &Config) -> Value {
 
 /// LiveKitService.startRecording: a grid of the room to `<uuid>/recording-<UTC time>.mp4`, a thumbnail every
 /// 10 s, and the egress events sent to PLAY_URL for this recording session.
-pub fn composite_egress(room: &str, folder: &str, timestamp: &str, webhook: &str, signing_key: &str, s3: Value) -> Value {
+pub fn composite_egress(
+    room: &str,
+    folder: &str,
+    timestamp: &str,
+    webhook: &str,
+    signing_key: &str,
+    s3: Value,
+) -> Value {
     json!({
         "room_name": room,
         "layout": "grid",

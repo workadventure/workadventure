@@ -103,11 +103,8 @@ async fn serve(state: &AppState, path: &str, raw: &str) -> Response {
     } else {
         state.config.raw.get("CACHE_CONTROL").cloned().unwrap_or_else(|| "public, s-max-age=10".into())
     };
-    let modified = meta
-        .modified()
-        .ok()
-        .and_then(|m| m.duration_since(std::time::UNIX_EPOCH).ok())
-        .map_or(0, |d| d.as_millis());
+    let modified =
+        meta.modified().ok().and_then(|m| m.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_millis());
     let mut response = Response::new(Body::from(bytes));
     let h = response.headers_mut();
     h.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type(path)));
@@ -284,7 +281,8 @@ async fn relocate(state: AppState, headers: HeaderMap, body: axum::body::Bytes, 
         Some(dir) => dir,
         None => return super::invalid_domain(),
     };
-    let (source, destination) = (format!("{dir}{}", source.trim_start_matches('/')), format!("{dir}{}", destination.trim_start_matches('/')));
+    let (source, destination) =
+        (format!("{dir}{}", source.trim_start_matches('/')), format!("{dir}{}", destination.trim_start_matches('/')));
     let prefixes = [source.clone(), destination.clone()];
     let done = state
         .storage
@@ -364,7 +362,9 @@ pub(super) struct TokenQuery {
 }
 
 fn refused(status: StatusCode, message: &str) -> Response {
-    let page = format!("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Error</title></head><body><p>{message}</p></body></html>");
+    let page = format!(
+        "<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>Error</title></head><body><p>{message}</p></body></html>"
+    );
     (status, Html(page)).into_response()
 }
 
@@ -383,9 +383,11 @@ fn find_file(wam: &Value, path: &str) -> Option<Vec<String>> {
             return Some(tags);
         }
     }
-    let in_entity = wam["entities"].as_object().into_iter().flatten().any(|(_, e)| {
-        e["properties"].as_array().into_iter().flatten().any(points_here)
-    });
+    let in_entity = wam["entities"]
+        .as_object()
+        .into_iter()
+        .flatten()
+        .any(|(_, e)| e["properties"].as_array().into_iter().flatten().any(points_here));
     in_entity.then(Vec::new)
 }
 
@@ -417,12 +419,8 @@ pub(super) async fn private_file(
     let raw = request.uri().path().to_owned();
     let path = decode(&raw, false);
     for _ in 0..32 {
-        let wam: Value = state
-            .storage
-            .read(&wam_rel)
-            .await
-            .and_then(|b| serde_json::from_slice(&b).ok())
-            .unwrap_or_default();
+        let wam: Value =
+            state.storage.read(&wam_rel).await.and_then(|b| serde_json::from_slice(&b).ok()).unwrap_or_default();
         if let Some(read_tags) = find_file(&wam, &path) {
             if !read_tags.is_empty() && !read_tags.iter().any(|t| tags.contains(&t.as_str())) {
                 return refused(StatusCode::FORBIDDEN, "You are not allowed to access this file");

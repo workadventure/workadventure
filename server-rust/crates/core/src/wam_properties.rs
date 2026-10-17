@@ -131,11 +131,9 @@ fn fields(kind: &str, entity: bool) -> Option<Fields> {
         ],
         "areaDescriptionProperties" => DESCRIPTION,
         "restrictedRightsPropertyData" => &[("writeTags", Strs, false), ("readTags", Strs, false)],
-        "personalAreaPropertyData" => &[
-            ("accessClaimMode", ClaimMode, true),
-            ("allowedTags", Strs, false),
-            ("ownerId", StrOrNull, true),
-        ],
+        "personalAreaPropertyData" => {
+            &[("accessClaimMode", ClaimMode, true), ("allowedTags", Strs, false), ("ownerId", StrOrNull, true)]
+        }
         "extensionModule" => &[("subtype", Str, true), ("data", Any, false)],
         "matrixRoomPropertyData" => &[
             ("shouldOpenAutomatically", Bool, true),
@@ -181,8 +179,9 @@ pub fn check(p: &Value, entity: bool, what: &str) -> Result<(), String> {
     if !p["id"].is_string() {
         return Err(format!("{what}.id must be a string"));
     }
-    let fields = fields(kind, entity)
-        .ok_or_else(|| format!("{what}: \"{kind}\" is not a property of an {}", if entity { "entity" } else { "area" }))?;
+    let fields = fields(kind, entity).ok_or_else(|| {
+        format!("{what}: \"{kind}\" is not a property of an {}", if entity { "entity" } else { "area" })
+    })?;
     let base: Fields = &[("buttonLabel", Str, false), ("hideButtonLabel", Bool, false), ("resourceUrl", Str, false)];
     for (name, kind, required) in base.iter().chain(fields) {
         match p.get(*name) {
@@ -213,7 +212,11 @@ mod tests {
         ok(json!({"id": "a", "type": "silent"}), false).unwrap();
         ok(json!({"id": "a", "type": "highlight", "opacity": 0.6, "color": "#fff"}), false).unwrap();
         ok(json!({"id": "a", "type": "openFile", "link": null, "name": null, "extra": 1}), true).unwrap();
-        ok(json!({"id": "a", "type": "personalAreaPropertyData", "accessClaimMode": "dynamic", "ownerId": null}), false).unwrap();
+        ok(
+            json!({"id": "a", "type": "personalAreaPropertyData", "accessClaimMode": "dynamic", "ownerId": null}),
+            false,
+        )
+        .unwrap();
         ok(json!({"id": "a", "type": "livekitRoomProperty", "roomName": "r", "livekitRoomConfig": {"startWithAudioMuted": true, "startWithVideoMuted": false}}), true).unwrap();
         ok(json!({"id": "a", "type": "maxUsersInAreaPropertyData", "maxUsers": null}), false).unwrap();
         ok(json!({"id": "a", "type": "jitsiRoomProperty", "roomName": "r", "jitsiRoomConfig": {}}), false).unwrap();
@@ -226,7 +229,10 @@ mod tests {
             (json!({"id": "a", "type": "openFile"}), false),
             (json!({"id": "a", "type": "exit", "url": "/x"}), false),
             (json!({"id": "a", "type": "openWebsite", "trigger": "never"}), false),
-            (json!({"id": "a", "type": "personalAreaPropertyData", "accessClaimMode": "sometimes", "ownerId": null}), false),
+            (
+                json!({"id": "a", "type": "personalAreaPropertyData", "accessClaimMode": "sometimes", "ownerId": null}),
+                false,
+            ),
             (json!({"id": "a", "type": "jitsiRoomProperty", "roomName": "r"}), false),
             (json!({"id": "a", "type": "silent", "buttonLabel": null}), false),
             (json!({"id": 3, "type": "silent"}), false),

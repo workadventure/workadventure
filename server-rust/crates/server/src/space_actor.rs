@@ -116,20 +116,11 @@ fn state_query(query: Option<pb::space_state_query::Query>) -> Result<StateQuery
             answers: q.answers,
             max_selections: q.max_selections,
         },
-        Q::VotePoll(q) => StateQuery::VotePoll {
-            poll_id: q.poll_id,
-            answer_ids: q.answer_ids,
-        },
-        Q::ClosePoll(q) => StateQuery::ClosePoll {
-            poll_id: q.poll_id,
-            closing_message: q.closing_message,
-        },
+        Q::VotePoll(q) => StateQuery::VotePoll { poll_id: q.poll_id, answer_ids: q.answer_ids },
+        Q::ClosePoll(q) => StateQuery::ClosePoll { poll_id: q.poll_id, closing_message: q.closing_message },
         Q::DeletePoll(q) => StateQuery::DeletePoll(q.poll_id),
         Q::AskQuestion(q) => StateQuery::AskQuestion(q.body),
-        Q::UpvoteQuestion(q) => StateQuery::UpvoteQuestion {
-            question_id: q.question_id,
-            upvoted: q.upvoted,
-        },
+        Q::UpvoteQuestion(q) => StateQuery::UpvoteQuestion { question_id: q.question_id, upvoted: q.upvoted },
         Q::AnswerQuestion(q) => StateQuery::AnswerQuestion(q.question_id),
         Q::DeleteQuestion(q) => StateQuery::DeleteQuestion(q.question_id),
         Q::SetKind(q) => StateQuery::SetKind(q.kind),
@@ -137,16 +128,11 @@ fn state_query(query: Option<pb::space_state_query::Query>) -> Result<StateQuery
 }
 
 fn state_patch(name: String, patch: String) -> Frame {
-    wire::sub(pb::sub_message::Message::SpaceStatePatchMessage(pb::SpaceStatePatchMessage {
-        space_name: name,
-        patch,
-    }))
+    wire::sub(pb::sub_message::Message::SpaceStatePatchMessage(pb::SpaceStatePatchMessage { space_name: name, patch }))
 }
 
 fn metadata_json(entries: impl Iterator<Item = (String, String)>) -> String {
-    let fields: Vec<String> = entries
-        .map(|(k, raw)| format!("{}:{}", serde_json::Value::String(k), raw))
-        .collect();
+    let fields: Vec<String> = entries.map(|(k, raw)| format!("{}:{}", serde_json::Value::String(k), raw)).collect();
     format!("{{{}}}", fields.join(","))
 }
 
@@ -170,7 +156,9 @@ impl Media {
         let (http, egress_id) = (self.http.clone(), egress_id.to_owned());
         tokio::spawn(async move {
             if let Err(e) = lk.egress(&http, "StopEgress", serde_json::json!({"egress_id": egress_id})).await
-                && !["EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"].iter().any(|s| e.contains(s))
+                && !["EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"]
+                    .iter()
+                    .any(|s| e.contains(s))
             {
                 tracing::warn!(%egress_id, error = %e, "could not stop a recording");
             }
@@ -236,10 +224,9 @@ impl SpaceSink for Out<'_> {
                     state: String::new(),
                 }))
             }
-            SpaceEvent::StateReplace(state) => state_patch(
-                name,
-                serde_json::json!([{"op": "replace", "path": "", "value": state}]).to_string(),
-            ),
+            SpaceEvent::StateReplace(state) => {
+                state_patch(name, serde_json::json!([{"op": "replace", "path": "", "value": state}]).to_string())
+            }
             SpaceEvent::StatePatch { before, after } => {
                 let (Ok(before), Ok(after)) = (serde_json::to_value(before), serde_json::to_value(after)) else {
                     return;
@@ -250,12 +237,10 @@ impl SpaceSink for Out<'_> {
                 }
                 state_patch(name, serde_json::Value::Array(patch).to_string())
             }
-            SpaceEvent::Metadata(delta) => {
-                wire::sub(Sub::UpdateSpaceMetadataMessage(pb::UpdateSpaceMetadataMessage {
-                    space_name: name,
-                    metadata: metadata_json(delta.iter().cloned()),
-                }))
-            }
+            SpaceEvent::Metadata(delta) => wire::sub(Sub::UpdateSpaceMetadataMessage(pb::UpdateSpaceMetadataMessage {
+                space_name: name,
+                metadata: metadata_json(delta.iter().cloned()),
+            })),
             SpaceEvent::Switch(user, comm) => {
                 let strategy = comm.name().to_owned();
                 self.private(&user.space_user_id, user, P::SwitchMessage(pb::SwitchMessage { strategy }));
@@ -263,7 +248,11 @@ impl SpaceSink for Out<'_> {
             }
             SpaceEvent::FinalizeSwitch(user, comm) => {
                 let strategy = comm.name().to_owned();
-                self.private(&user.space_user_id, user, P::FinalizeSwitchMessage(pb::FinalizeSwitchMessage { strategy }));
+                self.private(
+                    &user.space_user_id,
+                    user,
+                    P::FinalizeSwitchMessage(pb::FinalizeSwitchMessage { strategy }),
+                );
                 return;
             }
             SpaceEvent::LivekitInvite(user) => {
@@ -291,18 +280,15 @@ impl SpaceSink for Out<'_> {
                 let Some(lk) = self.media.livekit.clone() else { return };
                 let (http, room) = (self.media.http.clone(), self.media.room.clone());
                 tokio::spawn(async move {
-                    let done = if open { lk.create_room(&http, &room).await } else { lk.delete_room(&http, &room).await };
+                    let done =
+                        if open { lk.create_room(&http, &room).await } else { lk.delete_room(&http, &room).await };
                     if let Err(e) = done {
                         tracing::warn!(%room, open, error = %e, "LiveKit room call failed");
                     }
                 });
                 return;
             }
-            SpaceEvent::WebRtcStart {
-                sender,
-                initiator,
-                connection_id,
-            } => {
+            SpaceEvent::WebRtcStart { sender, initiator, connection_id } => {
                 for r in to {
                     self.private(
                         r,
@@ -336,11 +322,8 @@ impl SpaceSink for Out<'_> {
 async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Receiver<SpaceCmd>, app: AppState) {
     let registry = app.spaces.clone();
     METRICS.nb_spaces.inc();
-    let mut media = Media {
-        livekit: Livekit::from_config(&app.config),
-        room: livekit::room_name(&key),
-        http: app.http.clone(),
-    };
+    let mut media =
+        Media { livekit: Livekit::from_config(&app.config), room: livekit::room_name(&key), http: app.http.clone() };
     let raw = |k: &str| app.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
     // A24: the admin may give the LiveKit credentials (per world); they are asked when the space starts.
     let admin_livekit = app.admin.clone().filter(|a| a.has("api/livekit/credentials"));
@@ -354,7 +337,8 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
     let instance = format!("{:x}", rand_u64());
     // The back's SessionAnalytics: the space is looked at after every change.
     let world = key.strip_suffix(&format!(".{local_name}")).unwrap_or_default().to_owned();
-    let mut meetings = app.analytics.clone().map(|a| (a, wa_core::meetings::Meetings::new(key.clone(), local_name.clone())));
+    let mut meetings =
+        app.analytics.clone().map(|a| (a, wa_core::meetings::Meetings::new(key.clone(), local_name.clone())));
     let mut shutdown = app.shutdown.subscribe();
 
     loop {
@@ -385,22 +369,17 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
         };
         let space = match (&mut space, &cmd) {
             (Some(s), _) => s,
-            (
-                None,
-                SpaceCmd::Join {
-                    filter,
-                    properties_to_sync,
-                    user,
-                    ..
-                },
-            ) => {
+            (None, SpaceCmd::Join { filter, properties_to_sync, user, .. }) => {
                 if let Some(admin) = &admin_livekit {
                     // ponytail: awaited once, when the space starts (the back asks at each switch).
                     match admin.livekit_credentials(&user.play_uri).await {
                         Ok(c) => {
                             let s = |k: &str| c[k].as_str().map(str::to_owned);
-                            if let (Some(host), Some(key), Some(secret)) = (s("livekitHost"), s("livekitApiKey"), s("livekitApiSecret")) {
-                                media.livekit = Some(Livekit { host: host.trim_end_matches('/').to_owned(), key, secret });
+                            if let (Some(host), Some(key), Some(secret)) =
+                                (s("livekitHost"), s("livekitApiKey"), s("livekitApiSecret"))
+                            {
+                                media.livekit =
+                                    Some(Livekit { host: host.trim_end_matches('/').to_owned(), key, secret });
                             }
                         }
                         Err(e) => tracing::error!(error = %e, "the admin did not give LiveKit credentials"),
@@ -419,40 +398,18 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
             (None, _) => continue,
         };
         match cmd {
-            SpaceCmd::Join {
-                session,
-                user,
-                filter,
-                query_id,
-                ..
-            } => {
+            SpaceCmd::Join { session, user, filter, query_id, .. } => {
                 let id = user.space_user_id.clone();
-                let joined = space.join(
-                    filter,
-                    user,
-                    &mut Out {
-                        name: &local_name,
-                        sessions: &sessions,
-                        media: &media,
-                    },
-                );
+                let joined =
+                    space.join(filter, user, &mut Out { name: &local_name, sessions: &sessions, media: &media });
                 match joined {
                     Ok(()) => {
                         sessions.insert(id.clone(), session.clone());
                         session.push(wire::answer(
                             query_id,
-                            Answer::JoinSpaceAnswer(pb::JoinSpaceAnswer {
-                                space_user_id: id.clone(),
-                            }),
+                            Answer::JoinSpaceAnswer(pb::JoinSpaceAnswer { space_user_id: id.clone() }),
                         ));
-                        space.after_join(
-                            &id,
-                            &mut Out {
-                                name: &local_name,
-                                sessions: &sessions,
-                                media: &media,
-                            },
-                        );
+                        space.after_join(&id, &mut Out { name: &local_name, sessions: &sessions, media: &media });
                     }
                     Err(e) => {
                         let message = match e {
@@ -464,81 +421,40 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                 }
             }
             SpaceCmd::Leave { session, id, query_id } => {
-                space.leave(
-                    &id,
-                    &mut Out {
-                        name: &local_name,
-                        sessions: &sessions,
-                        media: &media,
-                    },
-                );
+                space.leave(&id, &mut Out { name: &local_name, sessions: &sessions, media: &media });
                 sessions.remove(&id);
                 if let Some(q) = query_id {
                     session.push(wire::answer(q, Answer::LeaveSpaceAnswer(pb::LeaveSpaceAnswer {})));
                 }
             }
             SpaceCmd::Watch { id } => {
-                space.watch(
-                    &id,
-                    &mut Out {
-                        name: &local_name,
-                        sessions: &sessions,
-                        media: &media,
-                    },
-                );
+                space.watch(&id, &mut Out { name: &local_name, sessions: &sessions, media: &media });
             }
-            SpaceCmd::Unwatch { id } => space.unwatch(
-                &id,
-                &mut Out {
-                    name: &local_name,
-                    sessions: &sessions,
-                    media: &media,
-                },
-            ),
+            SpaceCmd::Unwatch { id } => {
+                space.unwatch(&id, &mut Out { name: &local_name, sessions: &sessions, media: &media })
+            }
             SpaceCmd::Update { id, from, paths } => space.update_from_client(
                 &id,
                 &from,
                 &paths,
-                &mut Out {
-                    name: &local_name,
-                    sessions: &sessions,
-                    media: &media,
-                },
+                &mut Out { name: &local_name, sessions: &sessions, media: &media },
             ),
-            SpaceCmd::Details {
-                id,
-                availability,
-                chat_id,
-                show_voice_indicator,
-            } => space.update_from_details(
+            SpaceCmd::Details { id, availability, chat_id, show_voice_indicator } => space.update_from_details(
                 &id,
                 availability,
                 chat_id.as_deref(),
                 show_voice_indicator,
-                &mut Out {
-                    name: &local_name,
-                    sessions: &sessions,
-                    media: &media,
-                },
+                &mut Out { name: &local_name, sessions: &sessions, media: &media },
             ),
-            SpaceCmd::Metadata { id, delta } => space.update_metadata(
-                &id,
-                delta,
-                &mut Out {
-                    name: &local_name,
-                    sessions: &sessions,
-                    media: &media,
-                },
-            ),
-            SpaceCmd::StateQuery {
-                session,
-                id,
-                query_id,
-                query,
-            } => {
+            SpaceCmd::Metadata { id, delta } => {
+                space.update_metadata(&id, delta, &mut Out { name: &local_name, sessions: &sessions, media: &media })
+            }
+            SpaceCmd::StateQuery { session, id, query_id, query } => {
                 use pb::space_state_query::Query as Q;
                 let out = &mut Out { name: &local_name, sessions: &sessions, media: &media };
-                let ok = |session: &Session| session.push(wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {})));
+                let ok = |session: &Session| {
+                    session.push(wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {})))
+                };
                 let refuse = |session: &Session, e: &str| {
                     session.push(wire::answer_error(
                         query_id,
@@ -560,9 +476,18 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                                     let result = match (lk, reqwest::Url::parse(&play_url)) {
                                         (Some(lk), Ok(base)) => {
                                             let mut hook = base.join("/livekit/egress/webhook").expect("absolute path");
-                                            hook.query_pairs_mut().append_pair("space", &key).append_pair("recordingSessionId", &plan.session_id);
+                                            hook.query_pairs_mut()
+                                                .append_pair("space", &key)
+                                                .append_pair("recordingSessionId", &plan.session_id);
                                             let stamp = crate::uploader::iso_now()[..19].to_owned();
-                                            let body = livekit::composite_egress(&room, &plan.recorder_uuid, &stamp, hook.as_str(), &lk.key, s3);
+                                            let body = livekit::composite_egress(
+                                                &room,
+                                                &plan.recorder_uuid,
+                                                &stamp,
+                                                hook.as_str(),
+                                                &lk.key,
+                                                s3,
+                                            );
                                             // As startRecording awaits createRoomPromise: the egress needs the room.
                                             let created = lk.create_room(&http, &room).await;
                                             let started = match created {
@@ -570,13 +495,23 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                                                 Err(e) => Err(e),
                                             };
                                             started.and_then(|info| {
-                                                livekit::field(&info, "egressId", "egress_id").as_str().map(str::to_owned).ok_or("no egress id".into())
+                                                livekit::field(&info, "egressId", "egress_id")
+                                                    .as_str()
+                                                    .map(str::to_owned)
+                                                    .ok_or("no egress id".into())
                                             })
                                         }
                                         _ => Err("PLAY_URL and LiveKit are needed to record".to_owned()),
                                     };
                                     if let Some(me) = me {
-                                        let _ = me.send(SpaceCmd::EgressAnswer { session, query_id, session_id: plan.session_id, result }).await;
+                                        let _ = me
+                                            .send(SpaceCmd::EgressAnswer {
+                                                session,
+                                                query_id,
+                                                session_id: plan.session_id,
+                                                result,
+                                            })
+                                            .await;
                                     }
                                 });
                             }
@@ -606,11 +541,7 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                         q,
                         now,
                         &mut || uuid::Uuid::new_v4().to_string(),
-                        &mut Out {
-                            name: &local_name,
-                            sessions: &sessions,
-                            media: &media,
-                        },
+                        &mut Out { name: &local_name, sessions: &sessions, media: &media },
                     )
                 });
                 // The patch was queued first, on the same queue: the sender's copy is up to date with the answer.
@@ -631,7 +562,10 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                 let failed = result.is_err();
                 space.egress_started(&session_id, result.map_err(drop), out);
                 session.push(if failed {
-                    wire::answer_error(query_id, "Error received from the back: Error while handling query : Failed to start recording}")
+                    wire::answer_error(
+                        query_id,
+                        "Error received from the back: Error while handling query : Failed to start recording}",
+                    )
                 } else {
                     wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {}))
                 });
@@ -646,7 +580,11 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     Ok(event) => event,
                     Err(e) => {
                         tracing::warn!(error = e, "egress webhook refused");
-                        let _ = reply.send(if e == "invalid body" { StatusCode::BAD_REQUEST } else { StatusCode::UNAUTHORIZED });
+                        let _ = reply.send(if e == "invalid body" {
+                            StatusCode::BAD_REQUEST
+                        } else {
+                            StatusCode::UNAUTHORIZED
+                        });
                         continue;
                     }
                 };
@@ -670,7 +608,9 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     if let (Some(r), Some(admin)) = (space.webhook_ended(&session_id, out), app.admin.clone())
                         && admin.has("api/recordings/events")
                     {
-                        tokio::spawn(async move { admin.recording_ended(recording_event(&r, &egress_id, &info)).await });
+                        tokio::spawn(
+                            async move { admin.recording_ended(recording_event(&r, &egress_id, &info)).await },
+                        );
                     }
                 } else if let Some(stop) = space.webhook_started(&session_id, &egress_id, out) {
                     media.stop_egress(&stop);
@@ -706,11 +646,7 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     }
                 }
             }
-            SpaceCmd::Private {
-                id,
-                receiver,
-                mut event,
-            } => {
+            SpaceCmd::Private { id, receiver, mut event } => {
                 use pb::private_space_event::Event as P;
                 let Some(sender) = space.member(&id) else { continue };
                 let admin = sender.tags.iter().any(|t| t == "admin");
@@ -725,26 +661,13 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     continue;
                 }
                 let Some(event) = event.event else { continue };
-                Out {
-                    name: &local_name,
-                    sessions: &sessions,
-                    media: &media,
-                }
-                .private(&receiver, sender, event);
+                Out { name: &local_name, sessions: &sessions, media: &media }.private(&receiver, sender, event);
             }
-            SpaceCmd::Restart {
-                id,
-                peer,
-                connection_id,
-            } => space.restart_connection(
+            SpaceCmd::Restart { id, peer, connection_id } => space.restart_connection(
                 &id,
                 peer.as_deref(),
                 connection_id.as_deref(),
-                &mut Out {
-                    name: &local_name,
-                    sessions: &sessions,
-                    media: &media,
-                },
+                &mut Out { name: &local_name, sessions: &sessions, media: &media },
             ),
         }
     }

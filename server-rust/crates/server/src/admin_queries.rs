@@ -74,12 +74,19 @@ pub async fn answer(admin: &AdminApi, info: &SessionInfo, q: Q) -> Result<A, Str
                 chat_id: text(&m["chatId"]),
                 tags: strings(&m["tags"]),
             });
-            A::ChatMembersAnswer(pb::ChatMembersAnswer { total: data["total"].as_i64().unwrap_or(0), members: members.collect() })
+            A::ChatMembersAnswer(pb::ChatMembersAnswer {
+                total: data["total"].as_i64().unwrap_or(0),
+                members: members.collect(),
+            })
         }
         Q::SearchMemberQuery(s) => {
             let list = admin.search("/api/members", room, &s.search_text).await?;
             // Only id, name and email go back to the client.
-            let members = list.as_array().into_iter().flatten().map(|m| pb::Member { visit_card_url: None, chat_id: None, ..member(m) });
+            let members = list.as_array().into_iter().flatten().map(|m| pb::Member {
+                visit_card_url: None,
+                chat_id: None,
+                ..member(m)
+            });
             A::SearchMemberAnswer(pb::SearchMemberAnswer { members: members.collect() })
         }
         Q::GetMemberQuery(g) => {
@@ -87,7 +94,8 @@ pub async fn answer(admin: &AdminApi, info: &SessionInfo, q: Q) -> Result<A, Str
             A::GetMemberAnswer(pb::GetMemberAnswer { member: Some(member(&m)) })
         }
         Q::OauthRefreshTokenQuery(o) => {
-            let failed = "The token refresh failed. Please try to login again or contact your administrator.".to_owned();
+            let failed =
+                "The token refresh failed. Please try to login again or contact your administrator.".to_owned();
             let r = admin
                 .refresh_oauth_token(&o.token_to_refresh, o.provider.as_deref(), o.user_identifier.as_deref())
                 .await
@@ -100,7 +108,11 @@ pub async fn answer(admin: &AdminApi, info: &SessionInfo, q: Q) -> Result<A, Str
         Q::IceServersQuery(_) => {
             let list = admin.ice_servers(room, &info.user_uuid).await?;
             let servers = list.as_array().into_iter().flatten().map(|s| pb::IceServer {
-                urls: if s["urls"].is_string() { vec![text(&s["urls"]).unwrap_or_default()] } else { strings(&s["urls"]) },
+                urls: if s["urls"].is_string() {
+                    vec![text(&s["urls"]).unwrap_or_default()]
+                } else {
+                    strings(&s["urls"])
+                },
                 username: text(&s["username"]),
                 credential: text(&s["credential"]),
                 credential_type: text(&s["credentialType"]),
