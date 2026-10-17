@@ -163,6 +163,85 @@ jobs:
         run: npm test
         working-directory: "uploader"
 
+  continuous-integration-server-go:
+    name: "Continuous Integration server-go"
+
+    runs-on: "ubuntu-latest"
+
+    defaults:
+      run:
+        working-directory: server-go
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      - name: "Setup Go"
+        uses: actions/setup-go@v7
+        with:
+          go-version-file: server-go/go.mod
+          cache-dependency-path: server-go/go.sum
+
+      - name: "gofmt"
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "gofmt needed on:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: "go vet"
+        run: go vet ./...
+
+      - name: "golangci-lint"
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14.0
+          working-directory: server-go
+
+      # Same protoc and plugin versions as the headers of internal/pb: regenerating must not change a file.
+      - name: "Install Protoc"
+        uses: arduino/setup-protoc@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          version: '33.1'
+
+      - name: "Check the generated protobuf code is up to date"
+        run: |
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+          PATH="$(go env GOPATH)/bin:$PATH"
+          export PATH
+          go generate ./internal/pb
+          git diff --exit-code -- internal/pb
+
+      # internal/analytics checks catalog.json against the TS catalog and skips itself without these node_modules.
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: "Install the messages library dependencies (analytics catalog test)"
+        run: npm ci --workspace=@workadventure/messages --ignore-scripts
+        working-directory: "."
+
+      - name: "Test"
+        run: go test -race -count=1 -coverprofile=cover.out ./...
+
+      - name: "Coverage"
+        run: |
+          grep -v '/internal/pb/' cover.out > cover.filtered.out
+          {
+            echo "### server-go coverage (without internal/pb)"
+            echo
+            go tool cover -func=cover.filtered.out | tail -n 1
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "govulncheck"
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
+
   continuous-integration-lib-map-editor:
     name: "Continuous Integration Map Editor Library"
 
