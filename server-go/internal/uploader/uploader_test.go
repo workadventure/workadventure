@@ -2,12 +2,18 @@ package uploader
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"github.com/workadventure/workadventure/server-go/internal/s3"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
+	"sync/atomic"
 	"testing"
+	"time"
 )
 
 func form(t *testing.T, field, name string, data []byte) (*bytes.Buffer, string) {
@@ -109,5 +115,68 @@ func TestTheAdminDecidesWhatSizeAPlayerMayUpload(t *testing.T) {
 	}
 	if w := send("other", []byte("hello")); w.Code != http.StatusUnauthorized {
 		t.Fatalf("any other refusal is a 401: %d", w.Code)
+	}
+}
+
+type memKV struct {
+	mu sync.Mutex
+	m  map[string]string
+}
+
+func (k *memKV) Get(_ context.Context, key string) (string, bool, error) {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	v, ok := k.m[key]
+	return v, ok, nil
+}
+
+func (k *memKV) Set(_ context.Context, key, value string, _ time.Duration) error {
+	k.mu.Lock()
+	defer k.mu.Unlock()
+	k.m[key] = value
+	return nil
+}
+
+func TestFilesGoToTheBucketOrToRedis(t *testing.T) {
+	var put atomic.Value
+	bucket := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut && strings.HasPrefix(r.Header.Get("Authorization"), "AWS4-HMAC-SHA256") {
+			b, _ := io.ReadAll(r.Body)
+			put.Store(r.URL.Path + " " + r.Header.Get("Content-Disposition") + " " + string(b))
+		}
+	}))
+	defer bucket.Close()
+	kv := &memKV{m: map[string]string{}}
+	upload := func(h http.Handler) string {
+		body, ct := form(t, "file", "photo.png", []byte("png!"))
+		w := do(h, "POST", "/upload-file", body, ct)
+		var out []struct{ ID string }
+		_ = json.Unmarshal(w.Body.Bytes(), &out)
+		if w.Code != http.StatusOK || len(out) != 1 {
+			t.Fatalf("%d %s", w.Code, w.Body)
+		}
+		return out[0].ID
+	}
+	h := New(Options{EnableUpload: true, S3: s3.New(bucket.URL, "eu", "chat", "key", "secret"), S3URLTTL: time.Minute, Redis: kv}).Handler()
+	id := upload(h)
+	if got, _ := put.Load().(string); got != "/chat/"+id+" attachment png!" {
+		t.Fatalf("the file goes to the bucket: %q", got)
+	}
+	w := do(h, "GET", "/upload-file/"+id, nil, "")
+	if loc := w.Header().Get("Location"); w.Code != http.StatusFound || !strings.Contains(loc, "/chat/"+id+"?") ||
+		!strings.Contains(loc, "response-content-type=image%2Fpng") || !strings.Contains(loc, "X-Amz-Signature=") {
+		t.Fatalf("a download is a signed link to the bucket: %d %s", w.Code, loc)
+	}
+	audio, ct := form(t, "file", "a.mp3", []byte("mp3"))
+	var a struct{ ID string }
+	_ = json.Unmarshal(do(h, "POST", "/upload-audio-message", audio, ct).Body.Bytes(), &a)
+	if v, _, _ := kv.Get(context.Background(), a.ID); v != "mp3" {
+		t.Fatal("audio messages go to Redis, even with a bucket")
+	}
+
+	h = New(Options{EnableUpload: true, Redis: kv}).Handler()
+	id = upload(h)
+	if w := do(h, "GET", "/upload-file/"+id, nil, ""); w.Code != http.StatusOK || w.Body.String() != "png!" {
+		t.Fatalf("without a bucket, Redis keeps the files: %d %s", w.Code, w.Body)
 	}
 }

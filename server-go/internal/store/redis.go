@@ -179,3 +179,23 @@ func (c *Redis) Expire(ctx context.Context, key string, d time.Duration) error {
 	_, err := c.do(ctx, "EXPIRE", key, strconv.Itoa(int(d.Seconds())))
 	return err
 }
+
+// Get reads a string key; ok is false when there is none.
+func (c *Redis) Get(ctx context.Context, key string) (value string, ok bool, err error) {
+	reply, err := c.do(ctx, "GET", key)
+	if err != nil || reply == nil {
+		return "", false, err
+	}
+	s, ok := reply.(string)
+	return s, ok, nil
+}
+
+// Set writes a string key, expiring after ttl unless it is 0.
+func (c *Redis) Set(ctx context.Context, key, value string, ttl time.Duration) error {
+	args := []string{"SET", key, value}
+	if ttl > 0 {
+		args = append(args, "EX", strconv.Itoa(max(1, int(ttl.Seconds()))))
+	}
+	_, err := c.do(ctx, args...)
+	return err
+}

@@ -24,8 +24,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 1. **Admin distante** : les 31 appels du contrat sont faits et testés contre un faux admin ; aucun parcours SaaS joué de bout en bout.
 2. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
 3. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
-4. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
-5. **Campagne des 86 specs** contre la référence TS : pas encore jouée.
+4. **Campagne des 86 specs** contre la référence TS : pas encore jouée.
 
 ## Admin distante (A1 à A31 de `dev/contracts/admin-api.md`)
 
@@ -107,7 +106,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | Sous-commande `healthcheck` (GET 127.0.0.1:`PUSHER_HTTP_PORT`/ping, code de sortie) pour les `service_healthy` de compose | — (exigence du socle) | implémenté non vérifié | `cmd/server/main.go` | — | essayer en compose |
 | Ports : WS 3001, map-storage 3002 et uploader 3003 actifs par défaut, Room API 50051 si `ROOM_API_SECRET_KEY` | chart `server.enabled` | implémenté non vérifié | `config.go`, `Dockerfile` (EXPOSE) | — | `deploy` OSS |
 | `PATH_PREFIX` de map-storage (fichiers privés derrière `/map-storage`) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` : `TestPrivateFilesBehindAPathPrefix` | — | — |
-| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` | uploader/src/Controller/FileController.ts | partiel | `uploader_test.go` (2 tests) | en mémoire (256 Mo au plus), sans S3 ni Redis : perdu au redémarrage | S3/Redis si la prod sert des fichiers |
+| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` ; stockage S3 (`AWS_*`, téléchargement par lien signé, `UPLOADER_AWS_SIGNED_URL_EXPIRATION`), sinon Redis, sinon mémoire ; audio dans Redis, sinon mémoire | uploader/src/Controller/FileController.ts, Service/*StorageProvider.ts | validé (tests Go) | `uploader_test.go` (4 tests) | pas de `putBucketCors` au démarrage (à régler sur le bucket) ; Redis partagé avec les variables (`REDIS_DB_NUMBER` ignoré) ; mémoire limitée à 256 Mo | — |
 | `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` sans jeton | protéger pprof |
 | OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
 | `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |

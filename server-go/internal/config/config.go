@@ -38,6 +38,7 @@ type Config struct {
 	// The uploader (SERVER_UPLOADER_PORT; the chart's server mode points the uploader Service at 3003).
 	UploaderPort int
 	Uploader     uploader.Options
+	UploaderS3   UploaderS3 // AWS_*: the uploader's bucket
 
 	RoomAPIPort      int
 	RoomAPISecretKey string
@@ -366,6 +367,9 @@ func parse(get func(string) string) (*Config, error) {
 	)
 	c.Uploader = uploader.Options{AdminAPIURL: c.AdminAPIURL, PublicURL: r.str("UPLOADER_URL"), AllowedOrigin: firstNonEmpty(r.str("ALLOWED_CORS_ORIGIN"), r.str("PLAY_URL"), "*"),
 		EnableUpload: c.EnableChatUpload, MaxFileSize: int64(r.integer("UPLOAD_MAX_FILESIZE", 0))}
+	c.UploaderS3 = UploaderS3{Endpoint: r.str("AWS_ENDPOINT"), Region: r.str("AWS_DEFAULT_REGION"), Bucket: r.str("AWS_BUCKET"),
+		AccessKey: r.str("AWS_ACCESS_KEY_ID"), Secret: r.str("AWS_SECRET_ACCESS_KEY"),
+		URLTTL: time.Duration(r.integer("UPLOADER_AWS_SIGNED_URL_EXPIRATION", 60)) * time.Second}
 	c.RecordingConfigured = r.str("LIVEKIT_RECORDING_S3_ENDPOINT") != "" && r.str("LIVEKIT_RECORDING_S3_BUCKET") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_ACCESS_KEY") != "" && r.str("LIVEKIT_RECORDING_S3_SECRET_KEY") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_REGION") != ""
@@ -524,4 +528,14 @@ func webHook(r *reader) mapstorage.WebHook {
 		return mapstorage.WebHook{}
 	}
 	return mapstorage.WebHook{URL: r.str("WEB_HOOK_URL"), Token: r.str("WEB_HOOK_API_TOKEN")}
+}
+
+// UploaderS3 is the bucket of the uploader (S3StorageProvider), used when bucket, keys and region are all set.
+type UploaderS3 struct {
+	Endpoint, Region, Bucket, AccessKey, Secret string
+	URLTTL                                      time.Duration
+}
+
+func (u UploaderS3) Enabled() bool {
+	return u.Bucket != "" && u.AccessKey != "" && u.Secret != "" && u.Region != ""
 }
