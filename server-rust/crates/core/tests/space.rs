@@ -483,3 +483,54 @@ fn a_livekit_room_opens_with_its_first_publisher_and_closes_with_its_last() {
     assert_eq!(events.iter().filter(|(_, e)| e == "LivekitDisconnect").count(), 2);
     assert!(events.iter().any(|(_, e)| e == "room close"));
 }
+
+#[test]
+fn a_recording_moves_to_livekit_follows_its_egress_and_only_its_recorder_stops_it() {
+    let (mut s, mut r, _clock) = bubble(&["a", "b"]);
+    let status = |s: &Space| s.state().recording.status;
+    use wa_core::space_state::RecordingStatus as St;
+
+    // Starting: LiveKit at once (the room opens with the publishers), state "starting".
+    let plan = s.start_recording("a", "rec-1".into(), &mut r).unwrap().unwrap();
+    assert_eq!(plan.recorder_uuid, "uuid-a");
+    assert_eq!(s.comm(), Comm::Livekit);
+    assert_eq!(status(&s), St::Starting);
+    assert_eq!(s.start_recording("b", "rec-2".into(), &mut r).unwrap_err(), "Recording is already starting");
+    s.egress_started("rec-1", Ok("EG_1".into()), &mut r);
+    // LiveKit says it started: "recording".
+    assert_eq!(s.webhook_started("rec-1", "EG_1", &mut r), None);
+    assert_eq!(status(&s), St::Recording);
+    assert!(s.state().recording.recording);
+    // Only the recorder stops it; the end comes with the webhook.
+    assert_eq!(s.stop_recording("b", &mut r).unwrap_err(), "User is not the one recording");
+    assert_eq!(s.stop_recording("a", &mut r).unwrap(), Some("EG_1".to_owned()));
+    assert_eq!(status(&s), St::Stopping);
+    r.take();
+    s.webhook_ended("rec-1", &mut r);
+    assert_eq!(status(&s), St::Idle);
+    assert!(r.take().iter().all(|(_, e)| e != "RecordingUnexpectedlyStopped"), "it was asked");
+
+    // A recording that ends by itself warns its recorder; one whose recorder leaves is stopped by the server.
+    s.start_recording("a", "rec-3".into(), &mut r).unwrap();
+    s.webhook_started("rec-3", "EG_3", &mut r);
+    r.take();
+    s.webhook_ended("rec-3", &mut r);
+    assert!(r.take().contains(&(vec!["a".to_owned()], "RecordingUnexpectedlyStopped".to_owned())));
+    s.start_recording("b", "rec-4".into(), &mut r).unwrap();
+    s.webhook_started("rec-4", "EG_4", &mut r);
+    r.take();
+    s.leave("b", &mut r);
+    assert!(r.take().iter().any(|(_, e)| e == "StopEgress"));
+    assert_eq!(status(&s), St::Stopping);
+}
+
+#[test]
+fn a_recording_cannot_start_where_nobody_publishes() {
+    let f = FilterType::LiveStreamingUsers;
+    let mut s = Space::new("s".into(), f, vec!["cameraState".into()], "i".into());
+    s.configure_media(MediaConfig { max_webrtc: 4, livekit: true, switch_on_cpu: true }, Box::new(TestClock::default()));
+    let mut r = Rec::default();
+    s.join(f, user("l"), &mut r).unwrap();
+    assert_eq!(s.start_recording("l", "x".into(), &mut r).unwrap_err(), "Failed to start recording");
+    assert_eq!(s.state().recording.status, wa_core::space_state::RecordingStatus::Idle);
+}

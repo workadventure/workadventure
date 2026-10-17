@@ -318,13 +318,13 @@ impl Logic {
                 if let Some(pb::BackEvent {
                     event: Some(pb::back_event::Event::MeetingConnectionRestartMessage(r)),
                 }) = e.back_event
-                    && let Some(peer) = r.user_id
                 {
+                    // LiveKit's restart carries no peer: the requester just gets a fresh invitation.
                     self.to_space(
                         &e.space_name,
                         SpaceCmd::Restart {
                             id,
-                            peer,
+                            peer: r.user_id,
                             connection_id: r.connection_id,
                         },
                     )
@@ -412,6 +412,15 @@ impl Logic {
                 A::LeaveSpaceAnswer(pb::LeaveSpaceAnswer {})
             }
             Q::SpaceStateQuery(state) => {
+                use pb::space_state_query::Query as S;
+                let recording = matches!(
+                    state.query.as_ref().and_then(|q| q.query.as_ref()),
+                    Some(S::StartRecording(_) | S::StopRecording(_))
+                );
+                if recording && !local_admin::can_record(&self.app.config, session.info.is_logged) {
+                    session.push(wire::answer_error(id, "You are not allowed to record"));
+                    return;
+                }
                 if let (Some(space), Some(user)) = (self.spaces.get(&state.space_name), session.space_user_id()) {
                     let _ = space
                         .send(SpaceCmd::StateQuery {
@@ -439,7 +448,43 @@ impl Logic {
             Q::RoomTagsQuery(_) => A::RoomTagsAnswer(pb::RoomTagsAnswer::default()),
             Q::SearchTagsQuery(_) => A::SearchTagsAnswer(pb::SearchTagsAnswer::default()),
             Q::ChatMembersQuery(_) => A::ChatMembersAnswer(pb::ChatMembersAnswer::default()),
-            Q::GetRecordingsQuery(_) => A::GetRecordingsAnswer(pb::GetRecordingsAnswer::default()),
+            Q::GetRecordingsQuery(_)
+            | Q::GetRecordingThumbnailsQuery(_)
+            | Q::DeleteRecordingQuery(_)
+            | Q::GetSignedUrlQuery(_) => {
+                // S3 calls: off the message loop, the answer pushed when it comes.
+                let (app, session, uuid) = (self.app.clone(), session.clone(), session.info.user_uuid.clone());
+                tokio::spawn(async move {
+                    let bucket = crate::s3::Bucket::from_config(&app.config);
+                    let answer: Result<A, String> = match (q, bucket) {
+                        (Q::GetRecordingsQuery(_), Some(b)) => crate::recordings::list(&b, &app.http, &uuid)
+                            .await
+                            .map(|recordings| A::GetRecordingsAnswer(pb::GetRecordingsAnswer { recordings })),
+                        (Q::GetRecordingThumbnailsQuery(t), Some(b)) => crate::recordings::thumbnails(&b, &app.http, &uuid, &t.base_filename)
+                            .await
+                            .map(|urls| A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer { urls })),
+                        (Q::DeleteRecordingQuery(d), Some(b)) => {
+                            let success = crate::recordings::delete(&b, &app.http, &uuid, &d.recording_id).await;
+                            Ok(A::DeleteRecordingAnswer(pb::DeleteRecordingAnswer { success, error_message: None }))
+                        }
+                        (Q::GetSignedUrlQuery(g), Some(b)) => crate::recordings::signed_url(&b, &uuid, &g.key)
+                            .map(|signed_url| A::GetSignedUrlAnswer(pb::GetSignedUrlAnswer { signed_url })),
+                        // No bucket: empty lists, as the pusher answers.
+                        (Q::GetRecordingsQuery(_), None) => Ok(A::GetRecordingsAnswer(pb::GetRecordingsAnswer::default())),
+                        (Q::GetRecordingThumbnailsQuery(_), None) => Ok(A::GetRecordingThumbnailsAnswer(pb::GetRecordingThumbnailsAnswer::default())),
+                        (Q::DeleteRecordingQuery(_), None) => Ok(A::DeleteRecordingAnswer(pb::DeleteRecordingAnswer { success: false, error_message: None })),
+                        _ => Err("Recording storage is not configured".into()),
+                    };
+                    session.push(match answer {
+                        Ok(a) => wire::answer(id, a),
+                        Err(e) => {
+                            tracing::warn!(error = %e, "recording query failed");
+                            wire::answer_error(id, e)
+                        }
+                    });
+                });
+                return;
+            }
             // Asking the site takes up to 5 s: not on this session's message loop.
             Q::EmbeddableWebsiteQuery(q) => {
                 let (http, config) = (self.app.http.clone(), self.app.config.clone());

@@ -70,8 +70,21 @@ pub enum SpaceCmd {
     },
     Restart {
         id: String,
-        peer: String,
+        peer: Option<String>,
         connection_id: Option<String>,
+    },
+    /// LiveKit answered a startRoomCompositeEgress: the egress id, or why not.
+    EgressAnswer {
+        session: Arc<Session>,
+        query_id: i32,
+        session_id: String,
+        result: Result<String, String>,
+    },
+    /// An egress webhook for one of this space's recordings: started (false) or ended (true).
+    Egress {
+        session_id: String,
+        egress_id: String,
+        ended: bool,
     },
 }
 
@@ -146,6 +159,21 @@ struct Media {
     livekit: Option<Livekit>,
     room: String,
     http: reqwest::Client,
+}
+
+impl Media {
+    /// stopEgress, off the actor; a recording that already ended is not an error.
+    fn stop_egress(&self, egress_id: &str) {
+        let Some(lk) = self.livekit.clone() else { return };
+        let (http, egress_id) = (self.http.clone(), egress_id.to_owned());
+        tokio::spawn(async move {
+            if let Err(e) = lk.egress(&http, "StopEgress", serde_json::json!({"egress_id": egress_id})).await
+                && !["EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"].iter().any(|s| e.contains(s))
+            {
+                tracing::warn!(%egress_id, error = %e, "could not stop a recording");
+            }
+        });
+    }
 }
 
 struct SystemClock;
@@ -245,6 +273,15 @@ impl SpaceSink for Out<'_> {
             }
             SpaceEvent::LivekitDisconnect(user) => {
                 self.private(&user.space_user_id, user, P::LivekitDisconnectMessage(pb::LivekitDisconnectMessage {}));
+                return;
+            }
+            SpaceEvent::StopEgress(egress_id) => {
+                self.media.stop_egress(egress_id);
+                return;
+            }
+            SpaceEvent::RecordingUnexpectedlyStopped(user) => {
+                let stopped = P::RecordingUnexpectedlyStoppedMessage(pb::RecordingUnexpectedlyStoppedPrivateMessage {});
+                self.private(&user.space_user_id, user, stopped);
                 return;
             }
             SpaceEvent::LivekitRoom(open) => {
@@ -466,6 +503,67 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                 query_id,
                 query,
             } => {
+                use pb::space_state_query::Query as Q;
+                let out = &mut Out { name: &local_name, sessions: &sessions, media: &media };
+                let ok = |session: &Session| session.push(wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {})));
+                let refuse = |session: &Session, e: &str| {
+                    session.push(wire::answer_error(
+                        query_id,
+                        format!("Error received from the back: Error while handling query : {e}}}"),
+                    ))
+                };
+                match &query {
+                    // The caller checked canRecord. The answer waits for LiveKit to take the egress.
+                    Some(Q::StartRecording(_)) => {
+                        match space.start_recording(&id, uuid::Uuid::new_v4().to_string(), out) {
+                            Err(e) => refuse(&session, &e),
+                            Ok(None) => ok(&session),
+                            Ok(Some(plan)) => {
+                                let (lk, me) = (media.livekit.clone(), app.spaces.get(&key));
+                                let (http, room, key) = (media.http.clone(), media.room.clone(), key.clone());
+                                let s3 = livekit::s3_upload(&app.config);
+                                let play_url = app.config.raw.get("PLAY_URL").cloned().unwrap_or_default();
+                                tokio::spawn(async move {
+                                    let result = match (lk, reqwest::Url::parse(&play_url)) {
+                                        (Some(lk), Ok(base)) => {
+                                            let mut hook = base.join("/livekit/egress/webhook").expect("absolute path");
+                                            hook.query_pairs_mut().append_pair("space", &key).append_pair("recordingSessionId", &plan.session_id);
+                                            let stamp = crate::uploader::iso_now()[..19].to_owned();
+                                            let body = livekit::composite_egress(&room, &plan.recorder_uuid, &stamp, hook.as_str(), &lk.key, s3);
+                                            // As startRecording awaits createRoomPromise: the egress needs the room.
+                                            let created = lk.create_room(&http, &room).await;
+                                            let started = match created {
+                                                Ok(()) => lk.egress(&http, "StartRoomCompositeEgress", body).await,
+                                                Err(e) => Err(e),
+                                            };
+                                            started.and_then(|info| {
+                                                livekit::field(&info, "egressId", "egress_id").as_str().map(str::to_owned).ok_or("no egress id".into())
+                                            })
+                                        }
+                                        _ => Err("PLAY_URL and LiveKit are needed to record".to_owned()),
+                                    };
+                                    if let Some(me) = me {
+                                        let _ = me.send(SpaceCmd::EgressAnswer { session, query_id, session_id: plan.session_id, result }).await;
+                                    }
+                                });
+                            }
+                        }
+                        continue;
+                    }
+                    Some(Q::StopRecording(_)) => {
+                        match space.stop_recording(&id, out) {
+                            Err(e) => refuse(&session, &e),
+                            Ok(egress) => {
+                                if let Some(egress) = egress {
+                                    media.stop_egress(&egress);
+                                }
+                                ok(&session);
+                            }
+                        }
+                        continue;
+                    }
+                    _ => {}
+                }
                 let result = state_query(query).map_err(str::to_owned).and_then(|q| {
                     let now = std::time::SystemTime::now()
                         .duration_since(std::time::UNIX_EPOCH)
@@ -491,6 +589,27 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                         format!("Error received from the back: Error while handling query : {e}}}"),
                     ),
                 });
+            }
+            SpaceCmd::EgressAnswer { session, query_id, session_id, result } => {
+                let out = &mut Out { name: &local_name, sessions: &sessions, media: &media };
+                if let Err(e) = &result {
+                    tracing::error!(error = %e, "could not start a recording");
+                }
+                let failed = result.is_err();
+                space.egress_started(&session_id, result.map_err(drop), out);
+                session.push(if failed {
+                    wire::answer_error(query_id, "Error received from the back: Error while handling query : Failed to start recording}")
+                } else {
+                    wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {}))
+                });
+            }
+            SpaceCmd::Egress { session_id, egress_id, ended } => {
+                let out = &mut Out { name: &local_name, sessions: &sessions, media: &media };
+                if ended {
+                    space.webhook_ended(&session_id, out);
+                } else if let Some(stop) = space.webhook_started(&session_id, &egress_id, out) {
+                    media.stop_egress(&stop);
+                }
             }
             SpaceCmd::Public { id, mut event } => {
                 use pb::space_event::Event as E;
@@ -554,7 +673,7 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                 connection_id,
             } => space.restart_connection(
                 &id,
-                &peer,
+                peer.as_deref(),
                 connection_id.as_deref(),
                 &mut Out {
                     name: &local_name,

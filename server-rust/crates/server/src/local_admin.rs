@@ -95,6 +95,18 @@ pub fn can_edit(config: &Config, room_url: &str, identifier: &str, tags: &[Strin
 }
 
 /// `GET /map` in OSS mode (LocalAdmin.fetchMapDetails).
+/// isRecordingConfigured: the five LIVEKIT_RECORDING_S3_* variables are set.
+pub fn recording_configured(config: &Config) -> bool {
+    ["ENDPOINT", "BUCKET", "ACCESS_KEY", "SECRET_KEY", "REGION"]
+        .iter()
+        .all(|k| config.raw.get(&format!("LIVEKIT_RECORDING_S3_{k}")).is_some_and(|v| !v.is_empty()))
+}
+
+/// canRecord without an admin: recording is configured and the user is logged in.
+pub fn can_record(config: &Config, is_logged: bool) -> bool {
+    is_logged && recording_configured(config)
+}
+
 pub fn map_details(config: &Config, play_uri: &str) -> Value {
     let env = |k: &str| config.raw.get(k).filter(|v| !v.is_empty()).cloned();
     let flag = |k: &str, default: bool| match env(k).as_deref() {
@@ -123,9 +135,7 @@ pub fn map_details(config: &Config, play_uri: &str) -> Value {
             "title": "Unsupported URL format", "details": format!("Unsupported path: {path}"), "subtitle": "",
         });
     };
-    let s3 = ["ENDPOINT", "BUCKET", "ACCESS_KEY", "SECRET_KEY", "REGION"]
-        .iter()
-        .all(|k| env(&format!("LIVEKIT_RECORDING_S3_{k}")).is_some());
+    let s3 = recording_configured(config);
     let matrix = ["MATRIX_PUBLIC_URI", "MATRIX_API_URI", "MATRIX_ADMIN_USER", "MATRIX_ADMIN_PASSWORD", "MATRIX_DOMAIN"]
         .iter()
         .all(|k| env(k).is_some());

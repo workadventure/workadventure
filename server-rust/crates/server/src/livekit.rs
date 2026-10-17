@@ -100,6 +100,53 @@ impl Livekit {
     }
 }
 
+/// LIVEKIT_RECORDING_S3_*: where the egress writes (path-style, as for rustfs or MinIO).
+pub fn s3_upload(config: &Config) -> Value {
+    let get = |k: &str| config.raw.get(&format!("LIVEKIT_RECORDING_S3_{k}")).cloned().unwrap_or_default();
+    json!({
+        "access_key": get("ACCESS_KEY"), "secret": get("SECRET_KEY"), "region": get("REGION"),
+        "endpoint": get("ENDPOINT"), "bucket": get("BUCKET"), "force_path_style": true,
+    })
+}
+
+/// LiveKitService.startRecording: a grid of the room to `<uuid>/recording-<UTC time>.mp4`, a thumbnail every
+/// 10 s, and the egress events sent to PLAY_URL for this recording session.
+pub fn composite_egress(room: &str, folder: &str, timestamp: &str, webhook: &str, signing_key: &str, s3: Value) -> Value {
+    json!({
+        "room_name": room,
+        "layout": "grid",
+        "file_outputs": [{
+            "file_type": "MP4", "filepath": format!("{folder}/recording-{timestamp}"), "disable_manifest": true, "s3": s3,
+        }],
+        "image_outputs": [{
+            "capture_interval": 10, "width": 320, "height": 180,
+            "filename_prefix": format!("{folder}/thumbnail-{timestamp}"), "s3": s3,
+        }],
+        "webhooks": [{"url": webhook, "signing_key": signing_key}],
+    })
+}
+
+/// A field of a LiveKit JSON answer, in either of protojson's spellings.
+pub fn field<'a>(v: &'a Value, camel: &str, snake: &str) -> &'a Value {
+    if v.get(camel).is_some() { &v[camel] } else { &v[snake] }
+}
+
+/// WebhookReceiver.receive: the Authorization header is a token of our key, signed with our secret, whose
+/// `sha256` claim is the base64 SHA-256 of the exact body.
+pub fn verify_webhook(lk: &Livekit, authorization: &str, body: &[u8]) -> Result<Value, &'static str> {
+    use base64::Engine;
+    let token = authorization.trim_start_matches("Bearer ").trim();
+    let claims = jwt::open(&lk.secret, token).map_err(|_| "could not verify the authorization header")?;
+    if claims["iss"] != lk.key.as_str() {
+        return Err("could not verify the authorization header");
+    }
+    let digest = base64::engine::general_purpose::STANDARD.encode(Sha256::digest(body));
+    if claims["sha256"].as_str() != Some(digest.as_str()) {
+        return Err("sha256 checksum of body does not match");
+    }
+    serde_json::from_slice(body).map_err(|_| "invalid body")
+}
+
 /// getLivekitRoomName: the space name, or its SHA-256 when it is longer than LiveKit allows.
 pub fn room_name(space: &str) -> String {
     if space.len() <= 250 {
@@ -126,6 +173,15 @@ mod tests {
         let metadata: Value = serde_json::from_str(claims["metadata"].as_str().unwrap()).unwrap();
         assert_eq!(metadata, json!({"userId": "room_7", "uuid": "u-1"}));
         assert_eq!(room_name("short"), "short");
+        // A webhook: signed with our secret, over the exact body.
+        use base64::Engine;
+        let body = br#"{"event":"egress_started","egressInfo":{"egressId":"EG_1","roomName":"world.space"}}"#;
+        let sha = base64::engine::general_purpose::STANDARD.encode(Sha256::digest(body));
+        let auth = jwt::sign(&lk.secret, &json!({"iss": "devkey", "sha256": sha, "exp": jwt::now_secs() + 60}));
+        assert_eq!(verify_webhook(&lk, &auth, body).unwrap()["egressInfo"]["egressId"], "EG_1");
+        assert!(verify_webhook(&lk, &auth, b"{}").is_err());
+        let foreign = jwt::sign("other", &json!({"iss": "devkey", "sha256": sha, "exp": jwt::now_secs() + 60}));
+        assert!(verify_webhook(&lk, &foreign, body).is_err());
         assert_eq!(room_name(&"x".repeat(300)).len(), 64);
     }
 }
