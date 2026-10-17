@@ -90,7 +90,8 @@ const seen = (t: Tab) =>
             await WA.players.configureTracking({ players: true, movement: true });
             window.__tracked = true; // a new script frame (page reload) tracks again
         }
-        return WA.players.list().map((p) => ({ name: p.name, x: p.position?.x, y: p.position?.y }));
+        // list() is an iterator: its .map (iterator helpers) is another iterator, which serializes as {}
+        return Array.from(WA.players.list(), (p) => ({ name: p.name, x: p.position?.x, y: p.position?.y }));
     });
 const readVar = (t: Tab) =>
     withTimeout(evaluateScript(t.page, async () => { await WA.onInit(); return WA.state.textField; }));
@@ -197,7 +198,8 @@ async function verify(browser, mode: "ts" | "go" | "ts2", tabs, readBack: { tag:
     // the document is the same (no reload)
     for (const tab of [a, b]) {
         const alive = await tab.page.evaluate(() => window.__rehearsal === true).catch(() => false);
-        check(`${mode}: ${tab.name}'s document never reloaded`, alive && tab.navigations <= 1, `navigations: ${tab.navigations}, marker ${alive ? "kept" : "lost"}`);
+        // framenavigated also counts the same-document URL changes the front makes (pushState): the marker alone tells a reload.
+        check(`${mode}: ${tab.name}'s document never reloaded`, alive, `marker ${alive ? "kept" : "lost"}, main-frame navigations (pushState included): ${tab.navigations}`);
     }
     // variables written earlier, read by the tab and by a fresh user
     for (const { tag, value } of readBack) {

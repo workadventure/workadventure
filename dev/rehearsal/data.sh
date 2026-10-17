@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Data written to / read back from whichever servers are deployed (through the local port-forward).
+# Data written to / read back from whichever servers are deployed (through the local relay of up.sh).
 #   ./data.sh write <tag>         a new map rehearsal-<run>-<tag>.wam, an edit of the shared map, a file for the uploader
 #   ./data.sh check <tag>         reads back what write <tag> stored: "CHECK <what> <tag> OK|MISSING|DIFFERENT (detail)"
 #   ./data.sh check-shared <tag>  the shared map must hold the content written last by <tag>

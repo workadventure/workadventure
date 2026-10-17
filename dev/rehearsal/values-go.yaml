@@ -10,6 +10,10 @@ play:
   extraEnvVars:
     - name: SSL_CERT_FILE
       value: /etc/rehearsal-tls/tls.crt
+    # The TS uploader keeps its files in Redis database 1 (uploader-env.yaml): the Go uploader must read the same.
+    # The chart does not give it to the play pod in server mode yet.
+    - name: REDIS_DB_NUMBER
+      value: "1"
   extraVolumes:
     - name: rehearsal-tls
       secret:
