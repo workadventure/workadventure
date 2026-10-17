@@ -848,3 +848,17 @@ Décision de Yannis (via le socle) : les bibliothèques connues de l'écosystèm
   - room-api et api_players : 14 réussis sur 14 ;
   - uploader : envoi puis téléchargement 200, le fichier est bien dans la base 1 ; après un `docker restart` de Redis, les envois repassent sans redémarrer le serveur.
   - `variables.spec.ts` n'apporte rien : `:188` est un défaut d'environnement connu, et `storage works` a été lancé par erreur (règle : ne pas le jouer). Il a échoué en 22 ms sans rien toucher.
+
+### 17/10, débogage, sécurité, puis bibliothèques standard, tranche 3 : minio-go
+
+- 433f2edd1 : `/dump` et `/debug/close-space-connection` du back (seul échec CI restant de #6810).
+- e536b9abd + d980f91b5 (lot A) : `netguard`, contre la SSRF ; vérification de l'id_token OpenID (go-oidc, x/oauth2) et scellement du verifier PKCE.
+- 332a82e97 (lot B+C) : un Stop d'egress perdu est redemandé ; les corps de PATCH de map-storage sont lus comme par body-parser.
+- 78de12762 : IMPROVEMENTS.md.
+- Tranche 3, minio-go : `internal/s3` garde la même API (List, Delete, Put, Presign/PresignAs, PutCORS). Elle est désormais
+  sur minio-go, en style chemin, avec la région donnée : aucune requête pour la créer ni pour signer. La signature SigV4 faite main est supprimée,
+  ainsi que son test sur le vecteur AWS. Un envoi en HTTP clair part en aws-chunked, ce que S3 accepte ; le faux bucket du test de l'uploader le lit.
+  +80 / -161 lignes ; une dépendance directe (minio-go v7.4.1, avec 13 indirectes). Image prod de 42 Mo, qui cumule grpc,
+  go-redis, oidc et minio (31 Mo après la tranche 1).
+- `recording.spec.ts` contre Go : 5 sur 5 avant minio comme après. Un premier passage avec minio avait donné 3 échecs, qui ne se sont
+  pas reproduits sur le même code : c'est de l'instabilité, pas minio. Liste et signature contre le rustfs du socle : 75 objets, URL signée 200.
