@@ -12,16 +12,16 @@ prochaine action. Les numéros de ligne TS renvoient au checkout de la branche `
 
 Un paramètre lu ou un test sans assertion ne suffit pas à « valider ».
 
-Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre agents en lecture seule (TS et Go), puis relu. Les résultats Playwright cités viennent de `JOURNAL.md` (J1 à J3a) ; J3b reste à rejouer (voir le journal).
+Mise à jour : 2026-10-17, sur `626a4978a` (master fusionné, API `d2d82672`). L'inventaire a été fait par quatre agents en lecture seule (TS et Go), puis relu. Les résultats Playwright cités viennent de `JOURNAL.md` (J1 à J3a) ; J3b reste à rejouer (voir le journal).
 
 ## Verdict
 
 - **OSS (LocalAdmin)** : J1, J2 et J3a sont validés par Playwright. J3b est codé mais pas encore validé. LiveKit, l'enregistrement et la Room API sont absents.
-- **SaaS** : **remplacement interdit.** Le client de l'admin distante couvre A1, A2, A3, A18 à A21 (17/10), sans parcours SaaS joué. Le white label n'isole pas encore les cartes par domaine, ni les spaces par monde.
+- **SaaS** : les 31 appels du contrat sont faits ; **le parcours SaaS est joué de bout en bout le 17/10 sur `dev/saas`** (OIDC, deux mondes dont un white label sans fuite, A27, `/ws/admin/rooms`, ban en cours de session, Room API, uploader ; voir JOURNAL). Il reste à le jouer contre une vraie admin de préproduction et à rejouer `proximityChatFileTransfer` avec un front au niveau de master.
 
 ## Manques bloquants, par ordre
 
-1. **Admin distante** : les 31 appels du contrat sont faits et testés contre un faux admin ; aucun parcours SaaS joué de bout en bout.
+1. **Admin distante** : les 31 appels sont faits, testés contre un faux admin et joués contre l'admin locale (`dev/saas`) ; pas encore contre une préproduction.
 2. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
 3. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
 4. **Campagne des 86 specs** : jouée le 17/10 (246 réussis, 8 échecs, tous communs avec le TS ; voir JOURNAL). Restent les rejeux Matrix sur une base Synapse vierge.
@@ -32,7 +32,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 |---|---|---|---|---|
 | A1 capacités : au démarrage, nouvelle tentative toutes les `ADMIN_API_RETRY_DELAY` (404 compris), puis `window.capabilities` | validé (unitaire) | `admin/http_test.go` : `TestTheServerWaitsForTheAdminsCapabilities` | — | parcours SaaS |
 | A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
-| A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
+| A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; redirection, `metatags`, couleurs et favicon faits (b6ff43589) | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
 | A4 challenge Cloudflare (404 sur `workadventu.re`, 526 en échec), A9 à A11 `/save-*` (joueur connecté, capacité, 204 exigé), A29 limite de l'uploader (413 et 423 relayés, sinon 401), A31 `?access_key=` (page vers `AUTOLOGIN_URL`) et `/profile-callback` | validé (tests Go) | `httpapi/whitelabel_test.go` (2 tests), `uploader_test.go` : `TestTheAdminDecidesWhatSizeAPlayerMayUpload`, `admin/http_test.go` | — | — |
 | A23 fin d'enregistrement (capacité `api/recordings/events`, 3 réessais, `recordingSessionId`, fichiers et durées tirés de `ListEgress`), A25 Room API autorisée par l'admin (`X-API-Key`, codes gRPC, cache en production selon `Cache-Control`), A26 validateur de map-storage (bearer autre que `AUTHENTICATION_TOKEN`, par domaine, même cache), A27 webhook de map-storage (`update` à chaque écriture d'un WAM, `delete`) | validé (tests Go) | `admin/http_test.go`, `core/space_recording_test.go`, `livekit/egressinfo_test.go`, `roomapi/admin_test.go`, `mapstorage/admin_test.go` | A27 comme generateCacheFile : un appel sans `mapPath` pour un upload, une suppression, un déplacement ou une copie, et jamais `delete` (comme le TS) ; domaine vide pour une édition sans `USE_DOMAIN_NAME_IN_PATH` | — |

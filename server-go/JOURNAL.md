@@ -787,3 +787,32 @@ b26d49374. La référence est `dev/references/ts-full-2026-10-17.md` (dev-socle 
    - Défaut trouvé en chemin : `POST /copy` refusait un fichier seul (`os.CopyFS`). Il copie désormais un fichier comme un dossier, comme `fs.copy`.
 
 **Tests** : 182 au total, `./verify.sh` vert.
+
+### 17/10, parcours SaaS de bout en bout (`dev/saas`, projet `wa-saas-go`)
+
+Admin locale du SaaS + serveur Go, spec Playwright à moi (la suite E2E du SaaS pilote surtout l'interface de l'admin ; elle
+manquait aussi de dépendances et du navigateur Playwright 1.50). Tout est prouvé :
+
+1. **OIDC** : `/me` 200, tags `[admin, speaker, member]`, `canEdit` vrai.
+2. **Isolation** : Alice1 et Bob1 (monde 1) se voient ; Carol7 (monde 7, white label) ne voit que son monde, spaces compris.
+3. **A27** : l'admin journalise « Purged maps cache for world '1' » (204), à l'écriture puis à la suppression.
+4. **`/ws/admin/rooms`** avec le JWT du back-office : `MemberJoin` (avec l'IP) puis `MemberLeave`.
+5. **Droits en cours de session** : un ban envoyé par le socket éjecte Eve1 avec le message.
+6. **Room API** par l'admin : 0 avec la clé de l'équipe, 16 « Unknown API token » avec une clé inconnue, 7 avec la clé
+   d'une autre équipe. Les variables ne sont pas gardées : carte en `.localhost` sans `STORE_VARIABLES_FOR_LOCAL_MAPS`,
+   comme en TS. **Uploader** : envoi avec `userRoomToken`, téléchargement 200, 401 sans jeton.
+
+- `/map` : la clé `mapUrl` est absente en Go comme en TS (le zod du TS retire `null`).
+- Écart trouvé et corrigé (b6ff43589) : le titre white label venait des `metatags` de l'admin ; s'y ajoutent la redirection
+  `redirectUrl`, les palettes CSS (étape `-900` comprise, la boucle JS tourne neuf fois) et `lastFavIcon`.
+- Environnement, pas Go : la barre de debug Laravel ajoute du HTML aux réponses texte de l'admin locale (`/api/sockets/jwt`).
+
+### 17/10, fusion de master (626a4978a)
+
+- 21 commits de master, aucun conflit. Le test du catalogue a vu les 5 nouveaux événements (`chat.proximity_file.*`,
+  `media.livekit.connected/reconnected/disconnected`) : ajoutés, `catalog.json` régénéré.
+- `messages.proto` a changé (API `b82fc568` → `d2d82672`) : code pb régénéré ; `media.video_quality.sample` porte les 22
+  nouvelles mesures (valeurs implausibles écartées comme le pusher) ; une offre de fichier en proximité porte le nom et le
+  woka réels de l'émetteur (`eventProcessorInit.ts`).
+- `proximityChatFileTransfer.spec.ts` pas encore jouée : le front du socle est encore à 6f4d02319.
+- Couverture Go (hors code généré) : 71 % ; `internal/ws` est le plus faible (52 %).

@@ -430,6 +430,7 @@ func frontEnv(r *reader, c *Config) map[string]any {
 		"PUBLIC_MAP_STORAGE_PREFIX":         publicMapStoragePrefix,
 		"MAX_USERNAME_LENGTH":               r.integer("MAX_USERNAME_LENGTH", 10),
 		"MAX_PER_GROUP":                     c.MaxPerGroup,
+		"PROXIMITY_FILE_TRANSFER_MAX_USERS": r.integer("PROXIMITY_FILE_TRANSFER_MAX_USERS", 10),
 		"MAX_DISPLAYED_VIDEOS":              r.integer("MAX_DISPLAYED_VIDEOS", 16),
 		"LIVEKIT_PIXEL_DENSITY":             r.float("LIVEKIT_PIXEL_DENSITY", 2.0/3.0),
 		"NODE_ENV":                          firstNonEmpty(c.NodeEnv, "development"),
