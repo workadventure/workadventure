@@ -1,6 +1,9 @@
 package ws
 
 import (
+	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -117,5 +120,20 @@ func TestAPlayerEntersAndLeavesTheRoomOfAChatArea(t *testing.T) {
 		"POST /_matrix/client/r0/rooms/%21area:d/kick", "POST /_matrix/client/r0/rooms/%21area:d/invite", "POST /_matrix/client/r0/rooms/%21area:d/kick"}
 	if got := calls(); strings.Join(got, "\n") != strings.Join(want, "\n") {
 		t.Fatalf("invited, kicked on leaving, then on closing:\n%s", strings.Join(got, "\n"))
+	}
+}
+
+func TestTheEditorTakesTheAreaBackOnlyWhenARoomWasCreated(t *testing.T) {
+	sent, _ := structpb.NewValue(map[string]any{"id": "p1", "type": "matrixRoomPropertyData", "displayName": "Hall"})
+	req := &pb.EditMapMessage{Message: &pb.EditMapMessage_ModifyAreaMessage{ModifyAreaMessage: &pb.ModifyAreaMessage{Id: "a1", Properties: []*structpb.Value{sent}}}}
+	stored := func(props ...any) mapedit.Result {
+		return mapedit.Result{Area: map[string]any{"id": "a1", "name": "", "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0, "properties": props}}
+	}
+	withRoom := map[string]any{"id": "p1", "type": "matrixRoomPropertyData", "displayName": "Hall", "serverData": map[string]any{"matrixRoomId": "!r"}}
+	if !echo(req, stored(withRoom), mapedit.Editor{}).GetModifyAreaMessage().GetModifyServerData() {
+		t.Fatal("a new room id: the editor must take the stored area")
+	}
+	if echo(req, stored(sent.AsInterface()), mapedit.Editor{}).GetModifyAreaMessage().GetModifyServerData() {
+		t.Fatal("nothing changed on the server side")
 	}
 }
