@@ -404,3 +404,55 @@ func (a *HTTP) Challenge(ctx context.Context, host string) (string, error) {
 	}
 	return string(data), nil
 }
+
+// RecordingEvent is A23: an egress ended (RecordingEventPayload). Sent when the admin offers api/recordings/events
+// v1, tried again 3 times (250 ms, 1 s, 4 s) on a network error, a 5xx, a 408 or a 429.
+func (a *HTTP) RecordingEvent(ctx context.Context, payload any) error {
+	if a.Capabilities()["api/recordings/events"] != "v1" {
+		return nil
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	for attempt, wait := range []time.Duration{0, 250 * time.Millisecond, time.Second, 4 * time.Second} {
+		if wait > 0 {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(wait):
+			}
+		}
+		status, err := a.postStatus(ctx, strings.TrimRight(a.cfg.AdminAPIURL, "/")+"/api/recordings/events", body, 5*time.Second)
+		switch {
+		case err == nil && status/100 == 2:
+			return nil
+		case err == nil && status/100 == 4 && status != http.StatusRequestTimeout && status != http.StatusTooManyRequests:
+			return fmt.Errorf("recordings/events: HTTP %d", status)
+		case attempt == 3:
+			if err == nil {
+				err = fmt.Errorf("recordings/events: HTTP %d", status)
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *HTTP) postStatus(ctx context.Context, target string, body []byte, timeout time.Duration) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target, bytes.NewReader(body))
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", a.cfg.AdminAPIToken)
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	resp.Body.Close()
+	return resp.StatusCode, nil
+}

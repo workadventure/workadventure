@@ -13,6 +13,7 @@ type fakeEgress struct {
 	mu      sync.Mutex
 	status  map[string]string
 	started int
+	ended   []RecordingEnded // what the admin was told
 }
 
 func (f *fakeEgress) Start(_ context.Context, room string, u SpaceUser) (string, error) {
@@ -31,10 +32,14 @@ func (f *fakeEgress) Stop(_ context.Context, id string) error {
 	return nil
 }
 
-func (f *fakeEgress) Status(_ context.Context, id string) (string, error) {
+func (f *fakeEgress) Status(_ context.Context, id string) (EgressInfo, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	return f.status[id], nil
+	info := EgressInfo{Status: f.status[id]}
+	if info.Status == "EGRESS_COMPLETE" {
+		info.Files = []EgressFile{{Filename: id + ".mp4", SizeBytes: 1000, Duration: 61500 * time.Millisecond}}
+	}
+	return info, nil
 }
 
 func recordingSpace(t *testing.T) (*Space, *fakeEgress) {
@@ -43,6 +48,7 @@ func recordingSpace(t *testing.T) (*Space, *fakeEgress) {
 	egress := &fakeEgress{status: map[string]string{}}
 	m := DefaultMedia(&fakeLiveKit{})
 	m.Egress = egress
+	m.RecordingEnded = func(e RecordingEnded) { egress.mu.Lock(); egress.ended = append(egress.ended, e); egress.mu.Unlock() }
 	m.FinalizeAfter = 20 * time.Millisecond
 	sp := NewSpaceWithMedia(SpaceKey{"http://play.test", "room#1#0"}, m)
 	t.Cleanup(sp.Stop)
@@ -105,8 +111,22 @@ func TestARecordingStartsOnLiveKitAndEndsOnceItsFileIsWritten(t *testing.T) {
 	}
 	waitStatus(t, sp, host, "stopping")
 	waitStatus(t, sp, host, "idle")
+	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
+		egress.mu.Lock()
+		n := len(egress.ended)
+		egress.mu.Unlock()
+		if n > 0 {
+			break
+		}
+	}
+	egress.mu.Lock()
+	defer egress.mu.Unlock()
 	if egress.started != 1 {
 		t.Fatal(egress.started)
+	}
+	if len(egress.ended) != 1 || egress.ended[0].Recorder.ID != "host" || egress.ended[0].EgressID != "EG_host" ||
+		len(egress.ended[0].SessionID) != 36 || egress.ended[0].Info.Status != "EGRESS_COMPLETE" || len(egress.ended[0].Info.Files) != 1 {
+		t.Fatalf("the admin learns the recording ended, with its file: %+v", egress.ended)
 	}
 }
 

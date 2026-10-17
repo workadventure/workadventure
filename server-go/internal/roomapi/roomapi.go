@@ -32,6 +32,7 @@ const (
 	codeOK               = 0
 	codeUnknown          = 2
 	codeInvalidArgument  = 3
+	codeNotFound         = 5
 	codePermissionDenied = 7
 	codeResourceExhaust  = 8
 	codeUnimplemented    = 12
@@ -55,7 +56,11 @@ type Server struct {
 	key, frontURL string
 	rooms         *registry.Refs[string, *core.Room]
 	variables     func(roomURL string) core.RoomVariables // what a room starts with (map declarations, stored values)
+	admin         *AdminAuthorizer                        // with an admin, it decides instead of key and frontURL
 }
+
+// WithAdmin lets the admin authorize the calls (A25).
+func (s *Server) WithAdmin(a *AdminAuthorizer) *Server { s.admin = a; return s }
 
 // New serves the Room API with key (ROOM_API_SECRET_KEY) for the rooms under frontURL (FRONT_URL).
 func New(key, frontURL string, rooms *registry.Refs[string, *core.Room], variables func(string) core.RoomVariables) *Server {
@@ -138,6 +143,9 @@ func (s *Server) decode(body []byte, m proto.Message, key string, room func() st
 	}
 	if key == "" {
 		return fail(codeUnauthenticated, "X-API-Key metadata not defined!")
+	}
+	if s.admin != nil {
+		return s.admin.authorize(key, room())
 	}
 	if s.key == "" || subtle.ConstantTimeCompare([]byte(key), []byte(s.key)) != 1 {
 		return fail(codeUnauthenticated, "Wrong API key")
