@@ -28,14 +28,19 @@ browser ──WebSocket──▶ internal/ws (adapter: protobuf in, protobuf out
 The front already sends `EmotePromptMessage` and understands `EmoteEventMessage`. The protocol is shared with the
 TypeScript front: a feature that needs a new message changes the `.proto`, the front, and `API_VERSION`.
 
-### 2. The adapter decodes and calls the core: `internal/ws/session.go`
+### 2. The adapter decodes and calls the core: `internal/ws/handlers.go`
+
+`handle` routes each client message to its handler, one line per message:
 
 ```go
 case *pb.ClientToServerMessage_EmotePromptMessage:
     _ = s.room.Emote(ctx, s, msg.EmotePromptMessage.GetEmote())
 ```
 
-The session itself is the `core.Peer` (`s`). The adapter turns protobuf into plain Go values; it holds no rule.
+A message that needs more than a call gets its own method next to `handle` (`onJoinRoom`, `onSetPlayerDetails`…), or
+in the file of its subject (`moderation.go` for bans and reports, `spaces.go` for space messages, `query` in
+`session.go` for queries). The session itself is the `core.Peer` (`s`). The adapter turns protobuf into plain Go
+values; it holds no rule.
 
 ### 3. The rule lives in the core: `internal/core/roomevents.go`
 
@@ -100,12 +105,14 @@ No WebSocket, no browser: fake peers (`join`) record what they receive. The name
      the result back, with the version it was computed on if the state may have changed meanwhile.
 3. **Scenario test in `core`**, named as a sentence, with fake peers: the nominal case, who must *not* receive it,
    rights, invalid input.
-4. **Adapter.** One `case` in `internal/ws/session.go` (decode, call the core) and one in `internal/ws/codec.go`
-   (event → protobuf).
+4. **Adapter.** One line in `handle` (`internal/ws/handlers.go`) that decodes and calls the core, or calls an
+   `onX` method when there is more to do; and one `case` in `internal/ws/codec.go` (event → protobuf).
+   - The session's state is in parts, each with its own lock (see `Session`): use the part's methods
+     (`s.presence.get()`, `s.memberships.get(local)`, `s.chat.get()`), never hold two of their locks at once.
 5. **HTTP instead of WebSocket?** A handler in `internal/httpapi` (or the package of that API) that calls the core
    the same way.
 6. **Check.**
-   - `./verify.sh`: gofmt, build, vet, `go test -race`.
+   - `./verify.sh`: gofmt, build, vet, golangci-lint (when installed, as in the CI), `go test -race`.
    - The Playwright spec of the feature against the Go stack: `dev/dev test go tests/<spec>.spec.ts`.
    - `PARITY.md`: update the line of the feature, with its proof.
 
@@ -117,5 +124,5 @@ No WebSocket, no browser: fake peers (`join`) record what they receive. The name
 - When the TypeScript behaviour is a bug invisible to the client, fix it and write it down in `PARITY.md` rather than
   copying it.
 
-> Planned refactors will change steps 4 and 2 (one method per message instead of the `switch` in
-> `session.go`, a sealed `core.Event` interface instead of `any`): this guide is updated with them.
+> Planned refactors will change step 4 (a sealed `core.Event` interface instead of `any`) and the wiring in
+> `cmd/server/main.go`: this guide is updated with them.
