@@ -200,3 +200,30 @@ func TestAClientThatDoesNotReadIsClosed(t *testing.T) {
 		}
 	}
 }
+
+func (c *client) stateQuery(id int32, space string, q *pb.SpaceStateQuery) *pb.AnswerMessage {
+	c.t.Helper()
+	c.query(id, &pb.QueryMessage{Query: &pb.QueryMessage_SpaceStateQuery{SpaceStateQuery: &pb.SpaceStateQueryFrontToPusher{SpaceName: space, Query: q}}})
+	var got *pb.AnswerMessage
+	c.waitFor("the answer", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		got = d.GetAnswerMessage()
+		return got.GetId() == id
+	})
+	return got
+}
+
+// The space state queries reach the space; recording is refused to whoever may not record, before the space.
+func TestSpaceStateQueriesAndTheRecordingRight(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dialAs(auth.Token{Identifier: "alice"}, "")
+	alice.joinSpace(1, "meeting")
+	if a := alice.stateQuery(2, "meeting", &pb.SpaceStateQuery{Query: &pb.SpaceStateQuery_RaiseHand{RaiseHand: &pb.RaiseHandQuery{Raised: true}}}); a.GetSpaceStateAnswer() == nil {
+		t.Fatalf("raise hand: %v", a)
+	}
+	if a := alice.stateQuery(3, "meeting", &pb.SpaceStateQuery{Query: &pb.SpaceStateQuery_StartRecording{StartRecording: &pb.StartRecordingQuery{}}}); a.GetError().GetMessage() != "You are not allowed to record" {
+		t.Fatalf("recording without the right: %v", a)
+	}
+	if a := alice.stateQuery(4, "elsewhere", &pb.SpaceStateQuery{Query: &pb.SpaceStateQuery_RaiseHand{RaiseHand: &pb.RaiseHandQuery{Raised: true}}}); a.GetError().GetMessage() != "Space elsewhere not found" {
+		t.Fatalf("a space not joined: %v", a)
+	}
+}

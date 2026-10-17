@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"encoding/json"
+	"math"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
@@ -10,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/workadventure/workadventure/server-go/internal/admin"
@@ -106,5 +108,62 @@ func TestTheFrontsEventsReachTheAdminSignedByTheServer(t *testing.T) {
 	}
 	if got[4].Properties["disconnectReason"] != "pusher_shutdown" || got[4].Properties["connectionId"] != "tab-alice" {
 		t.Fatalf("a shutdown closes the session: %+v", got[4])
+	}
+}
+
+// A video sample of a space the player is in reaches the admin as media.video_quality.sample, signed by the server,
+// with the enums named as the catalog says; a sample with a non-finite measure is dropped.
+func TestAVideoSampleOfAJoinedSpaceIsReported(t *testing.T) {
+	h := newHarness(t)
+	h.srv.admin = analyticsWorld{h.srv.admin}
+	var mu sync.Mutex
+	var got []analytics.Event
+	fake := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var b struct{ Events []analytics.Event }
+		_ = json.NewDecoder(r.Body).Decode(&b)
+		mu.Lock()
+		got = append(got, b.Events...)
+		mu.Unlock()
+		w.WriteHeader(http.StatusAccepted)
+	}))
+	defer fake.Close()
+	q := analytics.New(analytics.Config{AdminURL: fake.URL, Token: "t", InstanceID: "pusher", Timeout: time.Second, MaxQueue: 100, MaxBatch: 100})
+	q.SetEnabled(true)
+	h.srv.SetAnalytics(q)
+
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	alice.joinSpace(1, "meeting")
+	relay := pb.VideoQualityRelayProtocol(1)
+	seq := uint64(7)
+	alice.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_VideoQualityReportMessage{VideoQualityReportMessage: &pb.VideoQualityReportMessage{
+		Samples: []*pb.VideoQualitySampleMessage{
+			{StreamId: "s1", SpaceName: "meeting", Fps: 24, ClientEventTimeMs: 1_700_000_000_000, StreamCategory: 1, TransportType: 1,
+				Direction: pb.VideoQualityStreamDirection_VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND, RelayProtocol: &relay, SampleSeq: &seq,
+				CaptureFps: proto.Float64(25)},
+			{StreamId: "s2", SpaceName: "meeting", Fps: math.NaN(), ClientEventTimeMs: 1_700_000_000_000},
+		}}}})
+	var sample *analytics.Event
+	for deadline := time.Now().Add(3 * time.Second); sample == nil && time.Now().Before(deadline); time.Sleep(20 * time.Millisecond) {
+		q.Flush(context.Background())
+		mu.Lock()
+		for i := range got {
+			if got[i].EventName == "media.video_quality.sample" {
+				if got[i].Properties["streamId"] == "s2" {
+					t.Fatal("a sample with a NaN fps is reported")
+				}
+				sample = &got[i]
+			}
+		}
+		mu.Unlock()
+	}
+	if sample == nil {
+		t.Fatal("no sample reported")
+	}
+	p := sample.Properties
+	if sample.Source != "pusher" || sample.EventID != "alice:s1:7" || p["streamCategory"] != "screenSharing" || p["transportType"] != "SFU" ||
+		p["direction"] != "outbound" || p["relayProtocol"] != "tcp" || p["captureFps"] != 25.0 || p["spaceName"] != "meeting" {
+		t.Fatalf("%+v", sample)
 	}
 }
