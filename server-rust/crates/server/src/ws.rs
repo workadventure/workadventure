@@ -47,7 +47,54 @@ fn internal_error(details: &str) -> Upgrade {
     )))
 }
 
-fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &HeaderMap) -> Upgrade {
+/// toErrorScreenMessage: an ErrorApiData of the admin as the front's error screen.
+fn admin_error_screen(e: &serde_json::Value) -> pb::server_to_client_message::Message {
+    let s = |k: &str| e[k].as_str().map(str::to_owned);
+    let kind = s("type").unwrap_or_else(|| "error".into());
+    let mut m = pb::ErrorScreenMessage { r#type: kind.clone(), ..pb::ErrorScreenMessage::default() };
+    if ["retry", "error", "unauthorized"].contains(&kind.as_str()) {
+        (m.code, m.title, m.subtitle, m.details) = (s("code"), s("title"), s("subtitle"), s("details"));
+        (m.image, m.image_logo) = (s("image"), s("imageLogo"));
+        if kind != "error" {
+            m.button_title = s("buttonTitle");
+        }
+    }
+    if kind == "retry" {
+        m.can_retry_manual = e["canRetryManual"].as_bool();
+        m.time_to_retry = e["timeToRetry"].as_i64().map(|t| t as i32);
+    }
+    if kind == "redirect" {
+        m.url_to_redirect = s("urlToRedirect");
+    }
+    pb::server_to_client_message::Message::ErrorScreenMessage(m)
+}
+
+fn texture_of(v: &serde_json::Value) -> Option<wa_core::user::Texture> {
+    Some(wa_core::user::Texture { id: v["id"].as_str()?.to_owned(), url: v["url"].as_str()?.to_owned() })
+}
+
+/// ApplicationDefinitionInterface as the front's ApplicationMessage.
+pub fn application_of(a: &serde_json::Value) -> pb::ApplicationMessage {
+    let s = |k: &str| a[k].as_str().map(str::to_owned);
+    let b = |k: &str| a[k].as_bool();
+    pb::ApplicationMessage {
+        name: s("name").unwrap_or_default(),
+        script: s("script"),
+        doc: s("doc"),
+        description: s("description"),
+        image: s("image"),
+        enabled: b("enabled"),
+        regex_url: s("regexUrl"),
+        target_url: s("targetUrl"),
+        default: b("default"),
+        force_new_tab: b("forceNewTab"),
+        allow_api: b("allowAPI"),
+        policy: s("policy"),
+        image_logo: s("imageLogo"),
+    }
+}
+
+async fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &HeaderMap) -> Upgrade {
     use pb::server_to_client_message::Message as M;
     let pairs = query_pairs(query);
     let get = |k: &str| pairs.iter().find(|(key, _)| key == k).map(|(_, v)| v.clone());
@@ -117,6 +164,68 @@ fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &HeaderM
         .filter(|(k, _)| k == "characterTextureIds")
         .map(|(_, v)| v.clone())
         .collect();
+    let ip_address = headers
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .map(|v| v.trim().to_owned())
+        .unwrap_or_default();
+    if let Some(admin) = &state.admin {
+        // A3: the admin says who this is, what they wear and what they may do (bans and full worlds included).
+        let companion_id = get("companionTextureId").filter(|c| !c.is_empty());
+        let chat_id = get("chatID").filter(|c| !c.is_empty());
+        let locale = headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok());
+        let access = admin
+            .room_access(crate::admin_api::RoomAccess {
+                user_identifier: &claims.identifier,
+                play_uri: &room_id,
+                ip_address: &ip_address,
+                character_texture_ids: &texture_ids,
+                companion_texture_id: companion_id.as_deref(),
+                access_token: claims.access_token.as_deref(),
+                chat_id: chat_id.as_deref(),
+                locale,
+            })
+            .await;
+        if access["status"] != "ok" {
+            return Upgrade::Reject(Box::new(admin_error_screen(&access)));
+        }
+        if access["isCharacterTexturesValid"] == false {
+            return Upgrade::Reject(Box::new(M::InvalidCharacterTextureMessage(pb::InvalidCharacterTextureMessage {
+                message: "Invalid character textures".into(),
+            })));
+        }
+        if access["isCompanionTextureValid"] == false {
+            return Upgrade::Reject(Box::new(M::InvalidCompanionTextureMessage(pb::InvalidCompanionTextureMessage {
+                message: "Invalid companion texture".into(),
+            })));
+        }
+        let strs = |k: &str| -> Vec<String> {
+            access[k].as_array().into_iter().flatten().filter_map(|v| v.as_str().map(str::to_owned)).collect()
+        };
+        return Upgrade::Fresh(Box::new(SessionInfo {
+            world: access["world"].as_str().unwrap_or_default().to_owned(),
+            can_edit: access["canEdit"].as_bool().unwrap_or(false),
+            can_record: access["canRecord"].as_bool().unwrap_or(false),
+            room_id,
+            token: token.to_owned(),
+            user_uuid: access["userUuid"].as_str().unwrap_or_default().to_owned(),
+            is_logged: claims.access_token.is_some(),
+            ip_address,
+            tags: strs("tags"),
+            textures: access["characterTextures"].as_array().into_iter().flatten().filter_map(texture_of).collect(),
+            companion: texture_of(&access["companionTexture"]),
+            visit_card_url: access["visitCardUrl"].as_str().map(str::to_owned),
+            chat_id: access["chatID"].as_str().map(str::to_owned).or(chat_id),
+            room_name: get("roomName").filter(|r| !r.is_empty()),
+            tab_id: get("tabId").unwrap_or_default(),
+            connection_id,
+            last_command_id: get("lastCommandId").filter(|c| !c.is_empty()),
+            applications: access["applications"].as_array().into_iter().flatten().map(application_of).collect(),
+            user_room_token: access["userRoomToken"].as_str().unwrap_or_default().to_owned(),
+            activated_invite_user: access["activatedInviteUser"].as_bool().unwrap_or(true),
+        }));
+    }
     let Some(textures) = local_admin::resolve_textures(&texture_ids) else {
         return Upgrade::Reject(Box::new(M::InvalidCharacterTextureMessage(pb::InvalidCharacterTextureMessage {
             message: "Invalid character textures".into(),
@@ -137,13 +246,10 @@ fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &HeaderM
         return internal_error("User cannot access this world");
     };
     let tags = claims.tags.clone().unwrap_or_default();
-    let ip_address = headers
-        .get("x-forwarded-for")
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.split(',').next())
-        .map(|v| v.trim().to_owned())
-        .unwrap_or_default();
     Upgrade::Fresh(Box::new(SessionInfo {
+        can_record: local_admin::can_record(&state.config, claims.access_token.is_some()),
+        activated_invite_user: true,
+        user_room_token: String::new(),
         can_edit: local_admin::can_edit(&state.config, &room_id, &claims.identifier, &tags),
         room_id,
         world,
@@ -180,7 +286,7 @@ pub async fn ws_room(
     if !token.is_empty() {
         ws = ws.protocols([token.clone()]);
     }
-    match prepare(&state, query.as_deref(), &token, &headers) {
+    match prepare(&state, query.as_deref(), &token, &headers).await {
         Upgrade::Fresh(info) => ws.on_upgrade(move |socket| async move {
             let parts = Session::start(*info, socket, state.config.client_disconnection_retention, &state.budgets);
             logic::run(parts, state).await;

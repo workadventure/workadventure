@@ -664,3 +664,71 @@ async fn map_storage_lives_under_path_prefix_and_the_protocol_hash_is_exposed() 
     let version = http.get(format!("{server}/api-version")).send().await.unwrap();
     assert_eq!(version.text().await.unwrap(), "d2d82672");
 }
+
+/// A fake admin: who may enter (A3), the maps (A2), and the queries it was sent.
+async fn fake_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<String>>>) {
+    use axum::extract::RawQuery;
+    let seen = std::sync::Arc::new(parking_lot::Mutex::new(Vec::new()));
+    let log = seen.clone();
+    let app = axum::Router::new()
+        .route(
+            "/api/room/access",
+            axum::routing::get(move |RawQuery(q): RawQuery| {
+                let log = log.clone();
+                async move {
+                    let q = q.unwrap_or_default();
+                    log.lock().push(q.clone());
+                    if q.contains("banned") {
+                        return axum::Json(serde_json::json!({"status": "error", "type": "error", "code": "USER_BANNED",
+                            "title": "Banned", "subtitle": "", "details": "You were banned", "image": ""}));
+                    }
+                    axum::Json(serde_json::json!({
+                        "status": "ok", "email": null, "userUuid": "admin-uuid-1", "tags": ["admin", "member"],
+                        "visitCardUrl": "https://cards/1", "isCharacterTexturesValid": true,
+                        "characterTextures": [{"id": "w1", "url": "https://wokas/w1.png"}],
+                        "isCompanionTextureValid": true, "world": "acme", "userRoomToken": "urt-1", "canEdit": true,
+                    }))
+                }
+            }),
+        )
+        .route("/api/map", axum::routing::get(|| async { axum::Json(serde_json::json!({"group": "acme", "mapUrl": "http://maps.test/m.json"})) }));
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(listener, app).await });
+    (url, seen)
+}
+
+#[tokio::test]
+async fn with_an_admin_the_room_access_decides_who_enters_and_as_whom() {
+    let config = Config::load(Env::new([("SECRET_KEY", "test")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let mut state = AppState::new(config);
+    let (admin_url, seen) = fake_admin().await;
+    state.admin = Some(wa_server::admin_api::AdminApi::with(&admin_url, "tok", serde_json::json!({}), reqwest::Client::new()));
+    let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let server = format!("http://{}", play.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(play, router(state)).await });
+
+    // The admin's identity, textures, token and rights are those the room gets.
+    let room = "http://play.test/@/acme/world/lobby";
+    let (alice, _ia) = bot(&server, room, "Alice", 100, 100).await;
+    assert_eq!(alice.joined.user_room_token, "urt-1");
+    assert!(alice.joined.can_edit);
+    assert_eq!(alice.joined.character_textures[0].url, "https://wokas/w1.png");
+    let asked = seen.lock().last().cloned().unwrap();
+    assert!(asked.contains("playUri=http%3A%2F%2Fplay.test%2F%40%2Facme%2Fworld%2Flobby"), "{asked}");
+    assert!(asked.contains("characterTextureIds%5B%5D=male1"), "{asked}");
+
+    // An error of the admin (a ban, a full world) is the error screen the user sees.
+    let refused = Bot::connect(Options {
+        server: server.clone(),
+        room_url: "http://play.test/@/acme/world/banned".into(),
+        name: "Eve".into(),
+        x: 0,
+        y: 0,
+        viewport: SCREEN,
+        availability: 1,
+    })
+    .await;
+    let Err(e) = refused else { panic!("a refused user must not enter") };
+    assert!(format!("{e:?}").contains("You were banned") || format!("{e:?}").contains("closed"), "{e:?}");
+}

@@ -233,12 +233,60 @@ pub fn front_env(c: &Config) -> Value {
     env
 }
 
-fn page_script(c: &Config) -> String {
-    format!(
-        "window.env = {}\nwindow.capabilities = {}",
-        front_env(c),
-        r#"{"api/woka/list":"v1","api/companion/list":"v1"}"#
-    )
+fn page_script(c: &Config, capabilities: Option<&Value>) -> String {
+    let local = json!({"api/woka/list": "v1", "api/companion/list": "v1"});
+    format!("window.env = {}\nwindow.capabilities = {}", front_env(c), capabilities.unwrap_or(&local))
+}
+
+/// GenerateCustomColors.getStringPalette: `chroma.scale(["white", color, "black"]).colors(12)` as HSL CSS
+/// variables, 50 and 100 to 900 (500 unsuffixed). Empty for no colour or an unreadable one.
+pub fn string_palette(hex: Option<&str>, prefix: &str) -> String {
+    let Some(rgb) = hex.and_then(parse_hex) else { return String::new() };
+    let lerp = |a: [f64; 3], b: [f64; 3], t: f64| [0, 1, 2].map(|i| a[i] + (b[i] - a[i]) * t);
+    let colors: Vec<[f64; 3]> = (0..12)
+        .map(|i| {
+            let t = f64::from(i) / 11.0;
+            let c = if t <= 0.5 { lerp([255.0; 3], rgb, t * 2.0) } else { lerp(rgb, [0.0; 3], (t - 0.5) * 2.0) };
+            // colors(12, "hex"): each channel rounded to a byte.
+            c.map(|v| v.round().clamp(0.0, 255.0))
+        })
+        .collect();
+    let mut out = format!("--{prefix}-50: {};\n", hsl(colors[1]));
+    // The pusher's float loop: 0.1, 0.2 … 0.8999…, 0.5 unsuffixed.
+    let mut i = 0.1f64;
+    while i < 0.9 {
+        let step = if i == 0.5 { String::new() } else { format!("-{}", (i * 1000.0).round()) };
+        out.push_str(&format!("--{prefix}{step}: {};\n", hsl(colors[(i * 10.0).round() as usize])));
+        i += 0.1;
+    }
+    out
+}
+
+fn parse_hex(s: &str) -> Option<[f64; 3]> {
+    let h = s.trim().trim_start_matches('#');
+    let h: String = match h.len() {
+        3 => h.chars().flat_map(|c| [c, c]).collect(),
+        6 => h.to_owned(),
+        _ => return None,
+    };
+    let byte = |i: usize| u8::from_str_radix(h.get(i..i + 2)?, 16).ok().map(f64::from);
+    Some([byte(0)?, byte(2)?, byte(4)?])
+}
+
+/// chroma's hsl(), as getHslColor prints it: `H S% L%`, a grey's hue 0.
+fn hsl([r, g, b]: [f64; 3]) -> String {
+    let (r, g, b) = (r / 255.0, g / 255.0, b / 255.0);
+    let (max, min) = (r.max(g).max(b), r.min(g).min(b));
+    let l = (max + min) / 2.0;
+    let (h, s) = if max == min {
+        (0.0, 0.0)
+    } else {
+        let d = max - min;
+        let s = if l < 0.5 { d / (max + min) } else { d / (2.0 - max - min) };
+        let h = if max == r { (g - b) / d + if g < b { 6.0 } else { 0.0 } } else if max == g { (b - r) / d + 2.0 } else { (r - g) / d + 4.0 };
+        (h * 60.0, s)
+    };
+    format!("{} {}% {}%", h.round(), (s * 100.0).round(), (l * 100.0).round())
 }
 
 fn full_url(headers: &HeaderMap, uri: &axum::http::Uri) -> String {
@@ -272,9 +320,38 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         )
             .into_response();
     };
+    // MetaTagsBuilder with the admin (A2): it may send the browser elsewhere, and dresses the page (white label).
+    let lang = parts.headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok());
+    let details = match &state.admin {
+        Some(admin) => Some(admin.map_details(&url, None, lang).await),
+        None => None,
+    };
+    if let Some(to) = details.as_ref().and_then(|d| d["redirectUrl"].as_str()) {
+        return (StatusCode::FOUND, [(header::LOCATION, to.to_owned())]).into_response();
+    }
+    if let Some(key) = query_pairs(parts.uri.query()).into_iter().find(|(k, _)| k == "access_key").map(|(_, v)| v).filter(|k| !k.is_empty()) {
+        let Some(autologin) = state.config.raw.get("AUTOLOGIN_URL").filter(|v| !v.is_empty()) else {
+            return (StatusCode::BAD_REQUEST, "AUTOLOGIN_URL is not configured.").into_response();
+        };
+        let mut c = Context::new();
+        c.insert("accessKey", V::Str(key));
+        c.insert("AUTOLOGIN_URL", V::Str(autologin.clone()));
+        let html = Template::parse(include_str!("redirect_to_admin.html")).expect("valid template").render(&c);
+        return ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response();
+    }
+    let map_details = details.filter(|d| d.get("group").is_some());
     let mut meta = default_meta();
+    let admin_meta = map_details.as_ref().and_then(|d| d["metatags"].as_object());
+    if let Some(tags) = admin_meta {
+        for (k, v) in tags {
+            if !v.is_null() {
+                meta[k] = v.clone();
+            }
+        }
+    }
     let user_agent = parts.headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default().to_lowercase();
-    if ["bot", "facebook", "preview"].iter().any(|b| user_agent.contains(b))
+    if admin_meta.is_none()
+        && ["bot", "facebook", "preview"].iter().any(|b| user_agent.contains(b))
         && let Some(map) = crate::room_map::tmj_of_page(&state, &url).await
     {
         let property = |name: &str| {
@@ -316,7 +393,14 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         "assetsOrigin",
         V::Str(state.config.assets_url.as_deref().and_then(local_admin::world_of).unwrap_or_default()),
     );
-    ctx.insert("cssVariablesOverride", V::Str(String::new()));
+    let palettes = [("primaryColor", "secondary"), ("backgroundColor", "contrast")]
+        .map(|(field, prefix)| string_palette(map_details.as_ref().and_then(|d| d[field].as_str()), prefix));
+    let css = if palettes.iter().any(|p| !p.is_empty()) {
+        format!("<style>\n\n        :root {{\n\n            {}\n{}\n            }}\n\n        </style>", palettes[0], palettes[1])
+    } else {
+        String::new()
+    };
+    ctx.insert("cssVariablesOverride", V::Str(css));
     (
         [
             (header::CACHE_CONTROL, "no-cache"),
@@ -327,12 +411,33 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         .into_response()
 }
 
-async fn map(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
+async fn map(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
     let pairs = query_pairs(q.as_deref());
     let Some(play_uri) = query_get(&pairs, "playUri") else {
         return (StatusCode::BAD_REQUEST, axum::Json(json!(["Parameter playUri: Required"]))).into_response();
     };
-    axum::Json(local_admin::map_details(&state.config, play_uri)).into_response()
+    let Some(admin) = &state.admin else {
+        return axum::Json(local_admin::map_details(&state.config, play_uri)).into_response();
+    };
+    // MapController: the user, read from the token even when it expired; an invalid token stops here.
+    let claims = match query_get(&pairs, "authToken").filter(|t| !t.is_empty()) {
+        Some(token) => match jwt::verify_ignoring_expiry(&state.config.secret_key, token) {
+            Ok(c) => Some(c),
+            Err(_) => return (StatusCode::UNAUTHORIZED, "The Token is invalid").into_response(),
+        },
+        None => None,
+    };
+    let lang = headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok());
+    let user = claims.as_ref().map(|c| (c.identifier.as_str(), c.access_token.as_deref()));
+    let mut details = admin.map_details(play_uri, user, lang).await;
+    if let Some(d) = details.as_object_mut() {
+        // The Jitsi and BBB secrets never reach the browser.
+        d.remove("thirdParty");
+        if state.config.disable_anonymous && d.contains_key("group") {
+            d.insert("authenticationMandatory".into(), true.into());
+        }
+    }
+    axum::Json(details).into_response()
 }
 
 async fn anonym_login(State(state): State<AppState>) -> Response {
@@ -351,7 +456,7 @@ async fn anonym_login(State(state): State<AppState>) -> Response {
 }
 
 /// `GET /me` without OpenID: who the token is, and whether the stored wokas are still valid.
-async fn me(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
+async fn me(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQuery) -> Response {
     let pairs = query_pairs(q.as_deref());
     let (Some(token), Some(play_uri)) = (query_get(&pairs, "token"), query_get(&pairs, "playUri")) else {
         return (StatusCode::BAD_REQUEST, axum::Json(json!(["Parameter token or playUri: Required"]))).into_response();
@@ -359,6 +464,9 @@ async fn me(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
     let Ok(claims) = jwt::verify(&state.config.secret_key, token) else {
         return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
     };
+    if let Some(admin) = &state.admin {
+        return me_from_admin(&state, admin, &headers, &pairs, token, play_uri, &claims).await;
+    }
     let ids: Vec<String> = pairs
         .iter()
         .filter(|(k, _)| k == "localStorageCharacterTextureIds[]" || k == "localStorageCharacterTextureIds")
@@ -408,6 +516,67 @@ async fn me(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
     axum::Json(body).into_response()
 }
 
+/// `GET /me` with the admin (A3), the OpenID userinfo merged over it.
+async fn me_from_admin(
+    state: &AppState,
+    admin: &crate::admin_api::AdminApi,
+    headers: &HeaderMap,
+    pairs: &[(String, String)],
+    token: &str,
+    play_uri: &str,
+    claims: &Claims,
+) -> Response {
+    let ids: Vec<String> = pairs
+        .iter()
+        .filter(|(k, _)| k == "localStorageCharacterTextureIds[]" || k == "localStorageCharacterTextureIds")
+        .map(|(_, v)| v.clone())
+        .collect();
+    let ip = headers
+        .get("x-forwarded-for")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.split(',').next())
+        .map(|v| v.trim().to_owned())
+        .unwrap_or_default();
+    let mut body = admin
+        .room_access(crate::admin_api::RoomAccess {
+            user_identifier: &claims.identifier,
+            play_uri,
+            ip_address: &ip,
+            character_texture_ids: &ids,
+            companion_texture_id: query_get(pairs, "localStorageCompanionTextureId").filter(|c| !c.is_empty()),
+            access_token: claims.access_token.as_deref(),
+            chat_id: None,
+            locale: headers.get(header::ACCEPT_LANGUAGE).and_then(|v| v.to_str().ok()),
+        })
+        .await;
+    if body["status"] != "ok" {
+        return axum::Json(body).into_response();
+    }
+    for (k, v) in [
+        ("authToken", json!(token)),
+        ("username", json!(claims.username)),
+        ("locale", json!(claims.locale)),
+        ("matrixUserId", json!(claims.matrix_user_id)),
+        ("matrixServerUrl", json!(state.config.raw.get("MATRIX_PUBLIC_URI"))),
+    ] {
+        body[k] = v;
+    }
+    if let Some(access_token) = &claims.access_token {
+        let Some(info) = crate::oidc::check_access_token(state, access_token).await else {
+            return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
+        };
+        if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
+            body["matrixServerUrl"] = url.clone();
+        }
+        if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
+            for (k, v) in i {
+                b.insert(k.clone(), v.clone());
+            }
+        }
+    }
+    axum::Json(body).into_response()
+}
+
 async fn data_list(state: &AppState, headers: &HeaderMap, q: Option<&str>, data: &'static str) -> Response {
     let Some(token) = headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()) else {
         return (StatusCode::UNAUTHORIZED, "Undefined authorization header").into_response();
@@ -415,8 +584,25 @@ async fn data_list(state: &AppState, headers: &HeaderMap, q: Option<&str>, data:
     if jwt::verify(&state.config.secret_key, token).is_err() {
         return (StatusCode::UNAUTHORIZED, "Invalid token sent").into_response();
     }
-    if query_get(&query_pairs(q), "roomUrl").is_none() {
+    let pairs = query_pairs(q);
+    let Some(room) = query_get(&pairs, "roomUrl") else {
         return (StatusCode::BAD_REQUEST, axum::Json(json!(["Parameter roomUrl: Required"]))).into_response();
+    };
+    // A19, A20: the admin's lists when it offers them.
+    let (capability, path) = if data == local_admin::WOKA_JSON {
+        ("api/woka/list", "/api/woka/list")
+    } else {
+        ("api/companion/list", "/api/companion/list")
+    };
+    if let Some(admin) = state.admin.as_ref().filter(|a| a.has(capability)) {
+        let uuid = jwt::verify(&state.config.secret_key, token).map(|c| c.identifier).unwrap_or_default();
+        return match admin.list(path, room, &uuid).await {
+            Ok(list) => axum::Json(list).into_response(),
+            Err(e) => {
+                tracing::error!(error = %e, path, "the admin did not give its list");
+                (StatusCode::INTERNAL_SERVER_ERROR, "Error on getting data").into_response()
+            }
+        };
     }
     ([(header::CONTENT_TYPE, "application/json; charset=utf-8")], data).into_response()
 }
@@ -532,8 +718,8 @@ pub fn routes() -> Router<AppState> {
     router
 }
 
-pub fn script(config: &Config) -> Arc<str> {
-    page_script(config).into()
+pub fn script(config: &Config, capabilities: Option<&Value>) -> Arc<str> {
+    page_script(config, capabilities).into()
 }
 
 #[cfg(test)]
@@ -575,6 +761,16 @@ mod tests {
         assert_eq!(env["ENABLE_CHAT"], json!(true));
         assert_eq!(env["LIVEKIT_PIXEL_DENSITY"], json!(2.0 / 3.0));
         assert!(env.get("JITSI_URL").is_none());
-        assert!(page_script(&c).starts_with("window.env = {"));
+        assert!(page_script(&c, None).starts_with("window.env = {"));
+        // White label colours as the pusher computes them (expected values printed by chroma-js).
+        let p = string_palette(Some("#ff0000"), "secondary");
+        assert!(p.starts_with("--secondary-50: 0 100% 91%;\n--secondary-100: 0 100% 91%;\n"), "{p}");
+        assert!(p.contains("--secondary: 0 100% 55%;\n"), "{p}");
+        assert!(p.ends_with("--secondary-900: 0 100% 18%;\n"), "{p}");
+        let expected = "--contrast-50: 220 8% 85%;\n--contrast-100: 220 8% 85%;\n--contrast-200: 214 9% 70%;\n\
+            --contrast-300: 216 9% 55%;\n--contrast-400: 216 14% 40%;\n--contrast: 217 26% 25%;\n--contrast-600: 217 40% 16%;\n\
+            --contrast-700: 216 40% 13%;\n--contrast-800: 216 40% 10%;\n--contrast-900: 219 41% 7%;\n";
+        assert_eq!(string_palette(Some("#1b2a41"), "contrast"), expected);
+        assert_eq!(string_palette(Some("not a colour"), "x"), "");
     }
 }

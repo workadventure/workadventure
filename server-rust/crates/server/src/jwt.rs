@@ -100,6 +100,11 @@ pub fn verify(secret: &str, token: &str) -> Result<Claims, InvalidToken> {
     verify_at(secret, token, now())
 }
 
+/// The claims of a token signed with `secret`, expired or not (GET /map reads the user from it either way).
+pub fn verify_ignoring_expiry(secret: &str, token: &str) -> Result<Claims, InvalidToken> {
+    verify_at(secret, token, 0)
+}
+
 fn verify_at(secret: &str, token: &str, now: u64) -> Result<Claims, InvalidToken> {
     serde_json::from_value::<Payload>(open_at(secret, token, now)?)
         .map(|p| p.claims)

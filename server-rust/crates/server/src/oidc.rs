@@ -125,8 +125,12 @@ fn host_of(url: &str) -> Option<String> {
     Some(host.split(':').next()?.to_ascii_lowercase())
 }
 
-/// LocalVerifyDomainService: only redirect back to this server's own host.
-fn same_domain(state: &AppState, play_uri: &str) -> bool {
+/// Where the browser may be sent back after a login or a logout: the admin decides (A21, white label hosts),
+/// else LocalVerifyDomainService: only this server's own host.
+async fn same_domain(state: &AppState, play_uri: &str) -> bool {
+    if let Some(admin) = state.admin.as_ref().filter(|a| a.has("api/domain/verify")) {
+        return admin.verify_domain(play_uri).await;
+    }
     host_of(play_uri).is_some() && host_of(play_uri) == host_of(&state.config.pusher_url)
 }
 
@@ -150,7 +154,7 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
     let Some(play_uri) = get("playUri") else {
         return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter playUri: Required"]))).into_response();
     };
-    if !same_domain(&state, &play_uri) {
+    if !same_domain(&state, &play_uri).await {
         return (StatusCode::FORBIDDEN, "Unauthorized domain in playUri").into_response();
     }
     let (Some(oidc), Ok(p)) = (state.oidc.as_ref(), provider(&state).await) else {
@@ -376,7 +380,7 @@ async fn logout(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respons
     let (Some(play_uri), Some(token)) = (get("playUri"), get("token")) else {
         return (StatusCode::BAD_REQUEST, axum::Json(serde_json::json!(["Parameter playUri or token: Required"]))).into_response();
     };
-    if !same_domain(&state, &play_uri) {
+    if !same_domain(&state, &play_uri).await {
         return (StatusCode::FORBIDDEN, "Unauthorized domain in playUri").into_response();
     }
     let Some(access_token) = jwt::verify(&state.config.secret_key, &token).ok().and_then(|c| c.access_token) else {

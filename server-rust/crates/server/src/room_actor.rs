@@ -113,7 +113,7 @@ pub enum Social {
     InvitationRequest(pb::MeetingInvitationRequestMessage),
     InvitationResponse(pb::MeetingInvitationResponseMessage),
     /// banPlayerMessage with kick, from an admin (checked by the caller): every connection of that player.
-    Kick { uuid: String, reason: String },
+    Kick { uuid: String, reason: String, banned: bool },
 }
 
 pub type RoomHandle = tokio::sync::mpsc::Sender<RoomCmd>;
@@ -510,13 +510,13 @@ impl Sink for Fanout<'_> {
                             id: c.id.clone(),
                         }),
                         can_edit: user.profile.can_edit,
-                        activated_invite_user: true,
+                        activated_invite_user: session.info.activated_invite_user,
+                        user_room_token: session.info.user_room_token.clone(),
                         area_property_variable: std::mem::take(&mut self.variables),
                         variable: std::mem::take(&mut self.room_variables),
                         item: std::mem::take(&mut self.items),
                         player_variable: std::mem::take(&mut self.player_variables),
                         applications: session.info.applications.clone(),
-                        ..pb::RoomJoinedMessage::default()
                     })));
                     self.sessions.insert(user.id, session);
                 }
@@ -888,7 +888,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                             direct(to, &sessions, Top::MeetingInvitationRequestClosedMessage(pb::MeetingInvitationRequestClosedMessage {}));
                         }
                     }
-                    Social::Kick { uuid, reason } => {
+                    Social::Kick { uuid, reason, banned } => {
                         // SocketManager.banUser: out of the room, told why, then the connection ends (4000).
                         for id in room.ids_of(&uuid) {
                             let changes = variables.moved(room.position_of(id), None);
@@ -898,7 +898,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                             if let Some(s) = sessions.remove(&id) {
                                 dec_room_gauge(&METRICS.nb_clients_per_room, &url);
                                 s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage {
-                                    r#type: "kicked".into(),
+                                    r#type: if banned { "banned" } else { "kicked" }.into(),
                                     message: reason.clone(),
                                 })));
                                 s.end_after_queued();
