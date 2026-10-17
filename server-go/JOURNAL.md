@@ -862,3 +862,18 @@ Décision de Yannis (via le socle) : les bibliothèques connues de l'écosystèm
   go-redis, oidc et minio (31 Mo après la tranche 1).
 - `recording.spec.ts` contre Go : 5 sur 5 avant minio comme après. Un premier passage avec minio avait donné 3 échecs, qui ne se sont
   pas reproduits sur le même code : c'est de l'instabilité, pas minio. Liste et signature contre le rustfs du socle : 75 objets, URL signée 200.
+
+### 17/10, bibliothèques standard, tranche 4 : caarlos0/env
+
+- `internal/config` lit ses 170 variables dans une struct `vars` (tags `env`/`envDefault`) par caarlos0/env, puis `parse` en
+  tire `Config` : repli de l'ancien nom vers le nouveau (OPID_ vers OPENID_, ROOM_API_PORT, ASSETS_URL), unités, `window.env`.
+- Les règles des helpers zod restent : un analyseur propre pour les booléens (true|false|0|1) et les entiers (chiffres
+  seulement), "" veut dire « défaut ». Chaque erreur nomme sa variable.
+- `SENTRY_DSN_FRONT` défini mais vide se lit désormais dans l'environnement donné à `parse`, et non plus par `os.LookupEnv` : même résultat
+  en production, et il devient testable.
+- Équivalence : la `Config` (en JSON) produite par l'ancien et le nouveau code est identique sur l'environnement de la stack go,
+  sur un environnement minimal et sur un jeu de cas limites (OPID_*, ROOM_API_PORT, PROMETHEUS_PORT = port HTTP,
+  ENABLE_WEB_HOOK=0, tailles). Sur des valeurs invalides, seul l'ordre des messages change (alphabétique).
+  Le `window.env` de la stack, avant et après, est identique (53 clés).
+- Bilan : +420 / -258. Plus de lignes, et pas moins : la liste des variables est désormais écrite en entier, à un seul endroit.
+  Une dépendance (caarlos0/env v11.4.1, sans indirecte).
