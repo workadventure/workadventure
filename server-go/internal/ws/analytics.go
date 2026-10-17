@@ -2,6 +2,7 @@ package ws
 
 import (
 	"encoding/json"
+	"log/slog"
 	"math"
 	"strconv"
 	"time"
@@ -75,9 +76,14 @@ func (s *Session) analyticsReport(r *pb.AnalyticsEventReportMessage) {
 			s.timed().Close(handle, analytics.EndReason(reason), time.Now())
 			continue
 		}
-		// ponytail: the properties are not checked against the catalog's schemas; the admin refuses an invalid
-		// row, alone. Port the schemas if those 422 cost too much.
 		if !analytics.FromClient(e.GetEventName(), e.GetSource(), e.GetEventId(), e.GetClientEventTimeMs()) {
+			continue
+		}
+		if properties == nil {
+			properties = map[string]any{}
+		}
+		if err := analytics.ValidProperties(e.GetEventName(), properties); err != nil {
+			slog.Debug("analytics event dropped: payload does not match the catalog", "event", e.GetEventName(), "error", err)
 			continue
 		}
 		s.track(e.GetEventName(), e.GetSource(), e.GetEventId(), time.UnixMilli(int64(e.GetClientEventTimeMs())), properties)
@@ -101,6 +107,10 @@ func (s *Session) openTimed(p map[string]any) {
 		}
 	}
 	if b, err := json.Marshal(properties); err != nil || len(b) > analytics.MaxPropertiesBytes {
+		return
+	}
+	if err := analytics.ValidOpenProperties(name, properties); err != nil {
+		slog.Debug("timed event open dropped: payload does not match the catalog", "event", name, "error", err)
 		return
 	}
 	s.timed().Open(handle, name, properties, time.Now())

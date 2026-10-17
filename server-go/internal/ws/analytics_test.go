@@ -53,7 +53,10 @@ func TestTheFrontsEventsReachTheAdminSignedByTheServer(t *testing.T) {
 			AnalyticsEventReportMessage: &pb.AnalyticsEventReportMessage{Events: events}}})
 	}
 	report(
-		&pb.AnalyticsEventMessage{EventName: "room.visited", Source: "front", ClientEventTimeMs: 1_700_000_000_000, EventId: "v1", Properties: props(map[string]any{"x": 1})},
+		&pb.AnalyticsEventMessage{EventName: "room.visited", Source: "front", ClientEventTimeMs: 1_700_000_000_000, EventId: "v1", Properties: props(map[string]any{"roomId": "r", "roomGroup": nil, "x": 1})},
+		&pb.AnalyticsEventMessage{EventName: "room.visited", Source: "front", EventId: "no-room", Properties: props(map[string]any{"x": 1})}, // roomId is required
+		&pb.AnalyticsEventMessage{EventName: "timed_event.open", Source: "front", EventId: "o3",
+			Properties: props(map[string]any{"handle": "bad", "eventName": "meeting.ended", "properties": map[string]any{"meetingKind": "stadium"}})}, // not a kind
 		&pb.AnalyticsEventMessage{EventName: "user.connected", Source: "front", EventId: "forged"},
 		&pb.AnalyticsEventMessage{EventName: "made.up", Source: "front", EventId: "unknown"},
 		&pb.AnalyticsEventMessage{EventName: "timed_event.open", Source: "front", EventId: "o",

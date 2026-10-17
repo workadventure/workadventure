@@ -27,7 +27,9 @@ type Media struct {
 	LiveKit LiveKit // nil: WebRTC only
 	// LiveKitFor, when set, gives the LiveKit of a world for a play URI of it (A24, api/livekit/credentials),
 	// asked each time a space moves to LiveKit; it is called off the space's goroutine.
-	LiveKitFor        func(ctx context.Context, playURI string) (LiveKit, error)
+	LiveKitFor func(ctx context.Context, playURI string) (LiveKit, error)
+	// EgressFor is the egress of a LiveKit given by LiveKitFor, to record on the world's LiveKit.
+	EgressFor         func(LiveKit) Egress
 	Egress            Egress // nil: no recording
 	MaxUsersForWebRTC int    // MAX_USERS_FOR_WEBRTC
 	SwitchOnCPULimit  bool   // LIVEKIT_SWITCH_ON_CPU_LIMITATION

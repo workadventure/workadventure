@@ -51,6 +51,7 @@ var recordingPoll = time.Second
 type recording struct {
 	recorder  SpaceUser
 	sessionID string // recordingSessionId, for the admin
+	egress    Egress // of the LiveKit the room is on (the world's, with A24)
 	egressID  string
 	status    spacestate.RecordingStatus
 	stopAsked bool // stop asked while starting
@@ -72,8 +73,7 @@ func (s *spaceState) publishRecording(status spacestate.RecordingStatus, recorde
 
 // startRecording answers StartRecording once the egress runs, or why not.
 func (s *spaceState) startRecording(sender *SpaceUser, reply func(error)) {
-	egress := s.mediaCfg.Egress
-	if egress == nil || s.mediaCfg.LiveKit == nil || !s.media {
+	if (s.mediaCfg.Egress == nil && s.mediaCfg.EgressFor == nil) || !s.hasLiveKit() || !s.media {
 		reply(ErrNoRecording)
 		return
 	}
@@ -109,8 +109,16 @@ func (s *spaceState) recordWhenReady() {
 	if r == nil || r.egressID != "" || r.status != spacestate.RecordingStatusStarting || s.lk.room != lkReady {
 		return
 	}
-	r.egressID = "pending"
-	gen, room, recorder, egress := r.gen, s.roomName, r.recorder, s.mediaCfg.Egress
+	egress := s.mediaCfg.Egress
+	if s.mediaCfg.EgressFor != nil && s.lk.client != nil {
+		egress = s.mediaCfg.EgressFor(s.lk.client)
+	}
+	if egress == nil {
+		s.endRecording(errors.New("Failed to start recording"))
+		return
+	}
+	r.egressID, r.egress = "pending", egress
+	gen, room, recorder := r.gen, s.roomName, r.recorder
 	go func() {
 		id, err := egress.Start(context.Background(), room, recorder)
 		s.later(func() {
@@ -140,7 +148,7 @@ func (s *spaceState) watchEgress(gen int) {
 		ok := make(chan bool, 1)
 		s.later(func() {
 			if r := s.rec; r != nil && r.gen == gen {
-				id, egress = r.egressID, s.mediaCfg.Egress
+				id, egress = r.egressID, r.egress
 				ok <- true
 				return
 			}
@@ -239,7 +247,7 @@ func (s *spaceState) stopEgress() {
 	r := s.rec
 	r.status = spacestate.RecordingStatusStopping
 	s.publishRecording(r.status, r.recorder.ID)
-	id, gen, egress := r.egressID, r.gen, s.mediaCfg.Egress
+	id, gen, egress := r.egressID, r.gen, r.egress
 	go func() {
 		if err := egress.Stop(context.Background(), id); err != nil {
 			slog.Warn("cannot stop the recording, it will end by itself", "error", err)

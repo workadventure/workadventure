@@ -149,3 +149,28 @@ func TestWithoutEgressThereIsNoRecording(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestARecordingUsesTheEgressOfTheWorldsLiveKit(t *testing.T) {
+	recordingPoll = 10 * time.Millisecond
+	world := &fakeLiveKit{}
+	egress := &fakeEgress{status: map[string]string{}}
+	var askedFor LiveKit
+	m := DefaultMedia(nil)
+	m.FinalizeAfter = 20 * time.Millisecond
+	m.LiveKitFor = func(context.Context, string) (LiveKit, error) { return world, nil }
+	m.EgressFor = func(lk LiveKit) Egress { askedFor = lk; return egress }
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "room#1#0"}, m)
+	defer sp.Stop()
+	host, guest := enter(t, sp, "host"), enter(t, sp, "guest")
+	if err := ask(t, sp, "host", StartRecording{}); err != nil {
+		t.Fatal(err)
+	}
+	waitStatus(t, sp, guest, "recording")
+	if askedFor != LiveKit(world) || egress.started != 1 {
+		t.Fatalf("the egress of the room's LiveKit records: %v, %d", askedFor, egress.started)
+	}
+	if err := ask(t, sp, "host", StopRecording{}); err != nil {
+		t.Fatal(err)
+	}
+	waitStatus(t, sp, host, "stopping")
+}

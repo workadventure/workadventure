@@ -541,3 +541,8 @@ type UploaderS3 struct {
 func (u UploaderS3) Enabled() bool {
 	return u.Bucket != "" && u.AccessKey != "" && u.Secret != "" && u.Region != ""
 }
+
+// Complete says whether the recording bucket is set (LIVEKIT_RECORDING_S3_*).
+func (r RecordingS3) Complete() bool {
+	return r.Endpoint != "" && r.Bucket != "" && r.AccessKey != "" && r.Secret != "" && r.Region != ""
+}
