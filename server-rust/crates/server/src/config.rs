@@ -34,6 +34,13 @@ pub struct Config {
     // --- map-storage ---
     /// SERVER_MAP_STORAGE_PORT: the socle sends the map-storage host there.
     pub map_storage_port: u16,
+    /// PATH_PREFIX: where map-storage is mounted (`/map-storage` in single-domain).
+    pub map_storage_prefix: String,
+    /// PUSHER_WS_PORT: the WebSocket port of the pusher, which the chart routes `/ws/` to; 0 or the HTTP port
+    /// to serve WebSockets on the HTTP port only.
+    pub ws_port: u16,
+    /// SERVER_UPLOADER_PORT: the uploader (the chart's uploader Service), 0 to disable.
+    pub uploader_port: u16,
     /// STORAGE_DIRECTORY: where the maps live.
     pub storage_directory: String,
 
@@ -131,6 +138,9 @@ impl Config {
             group_radius: env.number("GROUP_RADIUS", 48.0),
             max_per_group: env.number("MAX_PER_GROUP", 4),
             map_storage_port: env.number("SERVER_MAP_STORAGE_PORT", 3002),
+            map_storage_prefix: env.str("PATH_PREFIX").map(|p| p.trim_end_matches('/').to_owned()).unwrap_or_default(),
+            ws_port: env.number("PUSHER_WS_PORT", 3001),
+            uploader_port: env.number("SERVER_UPLOADER_PORT", 3003),
             storage_directory: env.str("STORAGE_DIRECTORY").unwrap_or_else(|| "./public".into()),
             redis_host: env.str("REDIS_HOST"),
             redis_port: env.number("REDIS_PORT", 6379),

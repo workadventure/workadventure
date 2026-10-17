@@ -653,3 +653,14 @@ async fn players_reach_each_other_by_events_follows_invitations_items_and_emotes
         .unwrap();
     ia.expect(WAIT, |m| matches!(m, Incoming::Top(Top::MeetingInvitationRequestTooHighMessage(_))).then_some(())).await.unwrap();
 }
+
+#[tokio::test]
+async fn map_storage_lives_under_path_prefix_and_the_protocol_hash_is_exposed() {
+    let (server, maps) =
+        start_with(&[("SECRET_KEY", "test"), ("PATH_PREFIX", "/map-storage/"), ("API_VERSION_HASH", "d2d82672")]).await;
+    let http = reqwest::Client::new();
+    assert_eq!(http.get(format!("{maps}/map-storage/ping")).send().await.unwrap().status(), 200);
+    assert_eq!(http.get(format!("{maps}/ping")).send().await.unwrap().status(), 404);
+    let version = http.get(format!("{server}/api-version")).send().await.unwrap();
+    assert_eq!(version.text().await.unwrap(), "d2d82672");
+}

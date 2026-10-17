@@ -26,6 +26,7 @@ pub mod room_map;
 pub mod session;
 pub mod space_actor;
 pub mod wire;
+pub mod uploader;
 pub mod ws;
 
 use std::sync::Arc;
