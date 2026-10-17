@@ -24,7 +24,6 @@ type keeper struct {
 
 func (k *keeper) SaveUser(_ context.Context, what admin.SaveWhat, user, room string, v any) error {
 	if s, ok := v.(*string); ok {
-		v = s
 		if s == nil {
 			v = "null"
 		} else {

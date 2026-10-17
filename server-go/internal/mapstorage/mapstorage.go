@@ -246,9 +246,9 @@ func writeFile(f string, data []byte) error {
 	if err != nil {
 		return err
 	}
-	defer os.Remove(tmp.Name())
+	defer func() { _ = os.Remove(tmp.Name()) }() // gone after the rename; left by a failure otherwise
 	if _, err := tmp.Write(data); err != nil {
-		tmp.Close()
+		_ = tmp.Close() // the write's error is the one that matters
 		return err
 	}
 	if err := tmp.Close(); err != nil {
@@ -439,7 +439,7 @@ func (s *Store) serve(w http.ResponseWriter, r *http.Request, cacheControl strin
 		http.NotFound(w, r)
 		return
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }() // read only
 	info, err := file.Stat()
 	if err != nil || !info.Mode().IsRegular() {
 		http.NotFound(w, r)

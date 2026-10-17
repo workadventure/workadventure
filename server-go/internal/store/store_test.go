@@ -106,7 +106,9 @@ func TestFlushTellsHowManyWritesAreLost(t *testing.T) {
 
 func TestTheUploadersRedisSelectsItsDatabase(t *testing.T) {
 	srv := miniredis.RunT(t)
-	srv.DB(1).Set("id.txt", "file")
+	if err := srv.DB(1).Set("id.txt", "file"); err != nil {
+		t.Fatal(err)
+	}
 	c := NewRedis(srv.Addr(), "")
 	if _, ok, _ := c.Get(context.Background(), "id.txt"); ok {
 		t.Fatal("the variables' database 0 does not have the uploader's files")
