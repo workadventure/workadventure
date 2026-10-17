@@ -206,6 +206,7 @@ type user struct {
 	peer         Peer
 	uuid, tabID  string
 	name         string
+	ip           string
 	textures     []Texture
 	companion    *Texture
 	visitCardURL string
@@ -253,7 +254,7 @@ func (s *state) join(p Peer, req JoinRequest) {
 
 	s.nextUserID++
 	u := &user{
-		id: s.nextUserID, peer: p, uuid: req.UUID, tabID: req.TabID, name: req.Name, textures: req.Textures,
+		id: s.nextUserID, peer: p, uuid: req.UUID, tabID: req.TabID, name: req.Name, ip: req.IPAddress, textures: req.Textures,
 		companion: req.Companion, visitCardURL: req.VisitCardURL, chatID: req.ChatID, status: req.Status,
 		pos: req.Position, listened: map[zoneKey]*zone{},
 	}
@@ -282,6 +283,7 @@ func (s *state) join(p Peer, req JoinRequest) {
 	s.userIndex.set(u, float64(u.pos.X), float64(u.pos.Y))
 	s.userEnters(u, s.zone(userZoneKey(u.pos)), nil)
 	s.updateUserGroup(u)
+	s.toWatchers(MemberJoined{UUID: u.uuid, Name: u.name, IPAddress: u.ip})
 	if duplicate {
 		p.Send(NewMsg(DuplicateUserConnected{}, false))
 	}
@@ -321,6 +323,7 @@ func (s *state) leave(u *user) {
 	}
 	u.listened = nil
 	s.untrack(u)
+	s.toWatchers(MemberLeft{UUID: u.uuid})
 }
 
 func (s *state) move(u *user, pos Position) {

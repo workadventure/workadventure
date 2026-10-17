@@ -63,7 +63,9 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 		RoomRefresh(http.ResponseWriter, *http.Request)
 		AdminMessage(http.ResponseWriter, *http.Request)
 		ExternalModuleEvent(http.ResponseWriter, *http.Request)
+		AdminRooms(http.ResponseWriter, *http.Request)
 	}); ok {
+		mux.HandleFunc("/ws/admin/rooms", admin.AdminRooms)
 		mux.HandleFunc("POST /global/event", admin.GlobalEvent)
 		mux.HandleFunc("GET /rooms", admin.Rooms)
 		mux.HandleFunc("POST /room/refresh", admin.RoomRefresh)

@@ -61,6 +61,7 @@ type Config struct {
 	AdminURL              string        // ADMIN_URL: the admin's public URL (ICE servers, chat ids, OAuth refresh)
 	AdminAPIRetryDelay    time.Duration // ADMIN_API_RETRY_DELAY: between two tries of /api/capabilities at start
 	AdminAPIToken         string        // ADMIN_API_TOKEN: the administration routes (POST /global/event)
+	AdminSocketsToken     string        // ADMIN_SOCKETS_TOKEN: signs the JWTs of /ws/admin/rooms
 	DisableAnonymous      bool
 	OpenID                OpenID
 
@@ -264,6 +265,7 @@ func parse(get func(string) string) (*Config, error) {
 		AdminURL:                  r.str("ADMIN_URL"),
 		AdminAPIRetryDelay:        time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
 		AdminAPIToken:             r.str("ADMIN_API_TOKEN"),
+		AdminSocketsToken:         r.str("ADMIN_SOCKETS_TOKEN"),
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),
 		SocketIdleTimer:           time.Duration(r.integer("SOCKET_IDLE_TIMER", 120)) * time.Second,
 		ClientDisconnectRetention: time.Duration(r.integer("CLIENT_DISCONNECTION_RETENTION_MS", 30_000)) * time.Millisecond,

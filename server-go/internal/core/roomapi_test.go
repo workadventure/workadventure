@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 )
@@ -39,7 +40,15 @@ func (w *watched) take() []any {
 func watch(t *testing.T, r *Room) *watched {
 	t.Helper()
 	w := &watched{}
-	stop, err := r.Watch(ctx, func(e any) { w.mu.Lock(); w.events = append(w.events, e); w.mu.Unlock() })
+	stop, err := r.Watch(ctx, func(e any) {
+		switch e.(type) {
+		case MemberJoined, MemberLeft: // the admin socket's (TestAWatcherSeesWhoComesAndGoes)
+			return
+		}
+		w.mu.Lock()
+		w.events = append(w.events, e)
+		w.mu.Unlock()
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -110,5 +119,26 @@ func TestARoomAPIListenerHearsEventsToTheWholeRoomOnly(t *testing.T) {
 	}
 	if ev := alice.take(); !has(ev, func(s string) bool { return s == "to alice" }) || !has(ev, func(s string) bool { return s == "to everyone" }) {
 		t.Fatalf("alice gets both: %v", ev)
+	}
+}
+
+func TestAWatcherSeesWhoComesAndGoes(t *testing.T) {
+	r := NewRoom("http://play/_/global/maps/m.json", cfg)
+	defer r.Stop()
+	_ = r.Join(ctx, &recorder{}, JoinRequest{UUID: "alice", Name: "Alice", IPAddress: "10.0.0.1", Position: at(0, 0), Viewport: wholeMap})
+	sync_(t, r)
+	var mu sync.Mutex
+	var seen []any
+	stop, _ := r.Watch(ctx, func(e any) { mu.Lock(); seen = append(seen, e); mu.Unlock() })
+	defer stop()
+	bob := &recorder{}
+	_ = r.Join(ctx, bob, JoinRequest{UUID: "bob", Name: "Bob", Position: at(900, 900), Viewport: wholeMap})
+	_ = r.Leave(ctx, bob)
+	sync_(t, r)
+	mu.Lock()
+	defer mu.Unlock()
+	want := []any{MemberJoined{"alice", "Alice", "10.0.0.1"}, MemberJoined{"bob", "Bob", ""}, MemberLeft{"bob"}}
+	if fmt.Sprint(seen) != fmt.Sprint(want) {
+		t.Fatalf("those already there, then each arrival and departure: %v", seen)
 	}
 }
