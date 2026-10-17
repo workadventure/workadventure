@@ -70,3 +70,15 @@ func TestTheFrontEnvHasEveryRequiredKeyOfTheTSInterface(t *testing.T) {
 		}
 	}
 }
+
+func TestTheJSONBodyLimitReadsLikeTheBytesPackage(t *testing.T) {
+	for v, want := range map[string]int64{"": 100 << 20, "100mb": 100 << 20, "1.5GB": 3 << 29, "2048": 2048, "10 kb": 10 << 10} {
+		c, err := parse(env(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": v}))
+		if err != nil || c.MapStorage.JSONLimit != want {
+			t.Errorf("%q: %v %v", v, c, err)
+		}
+	}
+	if _, err := parse(env(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": "lots"})); err == nil {
+		t.Fatal("an unreadable size is refused")
+	}
+}

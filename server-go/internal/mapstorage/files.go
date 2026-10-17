@@ -3,6 +3,7 @@ package mapstorage
 import (
 	"archive/zip"
 	"bytes"
+	"cmp"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,6 +11,7 @@ import (
 	"io"
 	"io/fs"
 	"log/slog"
+	"mime"
 	"net/http"
 	"os"
 	"path"
@@ -236,7 +238,7 @@ func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
 }
 
 // patch applies a JSON Patch to a WAM file (PATCH /<path>.wam).
-func (s *Store) patch(w http.ResponseWriter, r *http.Request) {
+func (s *Store) patch(w http.ResponseWriter, r *http.Request, o Options) {
 	key, err := s.keyIn(r, false)
 	if err != nil {
 		http.Error(w, "Invalid path", http.StatusBadRequest)
@@ -246,11 +248,22 @@ func (s *Store) patch(w http.ResponseWriter, r *http.Request) {
 		http.NotFound(w, r)
 		return
 	}
+	// As body-parser's json() of map-storage: only these types are read (another leaves the body empty), past
+	// BODY_PARSER_JSON_SIZE_LIMIT it is 413, and anything but a JSON object or array is 400.
 	var ops any
-	dec := json.NewDecoder(r.Body)
-	dec.UseNumber()
-	if dec.Decode(&ops) != nil {
-		ops = nil
+	if mt, _, _ := mime.ParseMediaType(r.Header.Get("Content-Type")); mt == "application/json" || mt == "application/json-patch+json" {
+		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, cmp.Or(o.JSONLimit, 100<<20)))
+		var tooLarge *http.MaxBytesError
+		if errors.As(err, &tooLarge) {
+			http.Error(w, "request entity too large", http.StatusRequestEntityTooLarge)
+			return
+		}
+		dec := json.NewDecoder(bytes.NewReader(body))
+		dec.UseNumber()
+		if t := bytes.TrimLeft(body, " \t\r\n"); err != nil || len(t) == 0 || (t[0] != '[' && t[0] != '{') || dec.Decode(&ops) != nil {
+			http.Error(w, "Bad Request", http.StatusBadRequest)
+			return
+		}
 	}
 	list, isList := ops.([]any)
 	if !isList {

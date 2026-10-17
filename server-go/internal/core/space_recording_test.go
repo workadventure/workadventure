@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 	"testing"
@@ -10,10 +11,11 @@ import (
 
 // fakeEgress records as LiveKit's egress does: starting, then active, then complete once stopped.
 type fakeEgress struct {
-	mu      sync.Mutex
-	status  map[string]string
-	started int
-	ended   []RecordingEnded // what the admin was told
+	mu        sync.Mutex
+	status    map[string]string
+	failStops int // the next Stop calls that fail, as when LiveKit cannot be reached
+	started   int
+	ended     []RecordingEnded // what the admin was told
 }
 
 func (f *fakeEgress) Start(_ context.Context, room string, u SpaceUser) (string, error) {
@@ -28,6 +30,10 @@ func (f *fakeEgress) Start(_ context.Context, room string, u SpaceUser) (string,
 func (f *fakeEgress) Stop(_ context.Context, id string) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
+	if f.failStops > 0 {
+		f.failStops--
+		return errors.New("connection refused")
+	}
 	f.status[id] = "EGRESS_COMPLETE"
 	return nil
 }
@@ -173,4 +179,29 @@ func TestARecordingUsesTheEgressOfTheWorldsLiveKit(t *testing.T) {
 		t.Fatal(err)
 	}
 	waitStatus(t, sp, host, "stopping")
+}
+
+// A stop that did not reach the egress is asked again: the recording does not stay "stopping" forever.
+func TestALostStopIsAskedAgain(t *testing.T) {
+	sp, egress := recordingSpace(t)
+	host := enter(t, sp, "host")
+	if err := ask(t, sp, "host", StartRecording{}); err != nil {
+		t.Fatal(err)
+	}
+	waitStatus(t, sp, host, "recording")
+	egress.mu.Lock()
+	egress.failStops = 2
+	egress.mu.Unlock()
+	if err := ask(t, sp, "host", StopRecording{}); err != nil {
+		t.Fatal(err)
+	}
+	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
+		egress.mu.Lock()
+		ended := len(egress.ended)
+		egress.mu.Unlock()
+		if ended == 1 {
+			return
+		}
+	}
+	t.Fatal("the recording stayed stopping")
 }

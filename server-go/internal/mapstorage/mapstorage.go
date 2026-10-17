@@ -29,6 +29,7 @@ type Options struct {
 	Auth              Auth
 	CacheControl      string   // CACHE_CONTROL
 	MaxUncompressed   int64    // MAX_UNCOMPRESSED_SIZE
+	JSONLimit         int64    // BODY_PARSER_JSON_SIZE_LIMIT: the largest JSON body (a JSON Patch), 100 MiB by default
 	DirectUploadURL   string   // DIRECT_UPLOAD_URL
 	EntityCollections []string // ENTITY_COLLECTION_URLS, written into generated WAM files
 	WAMTemplateURL    string   // WAM_TEMPLATE_URL: the WAM file a Tiled map uploaded alone starts from
@@ -308,7 +309,7 @@ func (s *Store) Handler(o Options) http.Handler {
 	mux.HandleFunc("POST /move", auth(func(w http.ResponseWriter, r *http.Request) { s.moveOrCopy(w, r, true) }))
 	mux.HandleFunc("POST /copy", auth(func(w http.ResponseWriter, r *http.Request) { s.moveOrCopy(w, r, false) }))
 	mux.HandleFunc("PUT /", auth(func(w http.ResponseWriter, r *http.Request) { s.put(w, r, o) }))
-	mux.HandleFunc("PATCH /", auth(s.patch))
+	mux.HandleFunc("PATCH /", auth(func(w http.ResponseWriter, r *http.Request) { s.patch(w, r, o) }))
 	mux.HandleFunc("DELETE /", auth(s.remove))
 	mux.HandleFunc("GET /private/files/", func(w http.ResponseWriter, r *http.Request) { s.privateFile(w, r, o.SecretKey) })
 	// Any other method reaches the plain file route of map-storage, without a token.
