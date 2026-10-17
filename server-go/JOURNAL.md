@@ -877,3 +877,16 @@ Décision de Yannis (via le socle) : les bibliothèques connues de l'écosystèm
   Le `window.env` de la stack, avant et après, est identique (53 clés).
 - Bilan : +420 / -258. Plus de lignes, et pas moins : la liste des variables est désormais écrite en entier, à un seul endroit.
   Une dépendance (caarlos0/env v11.4.1, sans indirecte).
+
+### 17/10, bibliothèques standard, tranche 5 : server-sdk-go de LiveKit
+
+- `internal/livekit` passe par le SDK : `lksdk.RoomServiceClient` (ListRooms, CreateRoom, DeleteRoom) et `lksdk.EgressClient`
+  (StartRoomCompositeEgress, StopEgress, ListEgress), avec des jetons `protocol/auth`. Même API pour le reste du serveur ;
+  chaque appel est borné à 10 s. Le Twirp JSON fait main, la signature JWT et le décodage tolérant des `EgressInfo`
+  (champs camelCase ou snake_case, int64 en chaîne) sont supprimés : les types protobuf du SDK les remplacent.
+- Coût mesuré : binaire de 41,0 → 56,6 Mo, 56 lignes de go.mod. Ce poids vient de `livekit/protocol`, pas du client WebRTC
+  du SDK : une variante qui n'utilise que les clients Twirp de `protocol` pèse 56,4 Mo. Le SDK est donc gardé.
+- Tests : le faux serveur Twirp décode désormais du protobuf ; la conversion des `EgressInfo` est testée sur les types du SDK.
+- `livekit.spec.ts` : 5 sur 5 ; `recording.spec.ts` : 4 sur 5, puis `:62` rejoué seul 2 sur 2. L'échec venait d'une egress lente à
+  démarrer (la modale attend 10 s), comme au premier passage avec minio : c'est de l'instabilité, pas le SDK.
+- +104 / -190 lignes.

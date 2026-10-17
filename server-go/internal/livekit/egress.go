@@ -3,9 +3,10 @@ package livekit
 import (
 	"context"
 	"errors"
-	"strconv"
 	"strings"
 	"time"
+
+	lkp "github.com/livekit/protocol/livekit"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
 )
@@ -22,103 +23,37 @@ type Egress struct {
 
 func (c *Client) Egress(s3 S3) *Egress { return &Egress{c: c, s3: s3} }
 
-func (e *Egress) twirp(ctx context.Context, method string, body, out any) error {
-	return e.c.call(ctx, "livekit.Egress/"+method, video{"roomRecord": true}, body, out)
-}
-
-type egressInfo struct {
-	EgressID    string     `json:"egressId"`
-	EgressID2   string     `json:"egress_id"`
-	Status      any        `json:"status"`
-	StartedAt   int64Str   `json:"startedAt"`
-	StartedAt2  int64Str   `json:"started_at"`
-	EndedAt     int64Str   `json:"endedAt"`
-	EndedAt2    int64Str   `json:"ended_at"`
-	Error       string     `json:"error"`
-	FileResults []fileInfo `json:"fileResults"`
-	FileResult2 []fileInfo `json:"file_results"`
-}
-
-type fileInfo struct {
-	Filename string   `json:"filename"`
-	Size     int64Str `json:"size"`
-	Duration int64Str `json:"duration"` // nanoseconds
-}
-
-// int64Str is an int64 of protojson: a string, or a number from older servers.
-type int64Str int64
-
-func (n *int64Str) UnmarshalJSON(b []byte) error {
-	s := strings.Trim(string(b), `"`)
-	if s == "" || s == "null" {
-		return nil
-	}
-	v, err := strconv.ParseInt(s, 10, 64)
-	*n = int64Str(v)
-	return err
-}
-
-func (i egressInfo) info() core.EgressInfo {
-	at := func(a, b int64Str) time.Time {
-		if a == 0 {
-			a = b
-		}
-		if a == 0 {
-			return time.Time{}
-		}
-		return time.Unix(0, int64(a))
-	}
-	out := core.EgressInfo{Status: i.status(), StartedAt: at(i.StartedAt, i.StartedAt2), EndedAt: at(i.EndedAt, i.EndedAt2), Error: i.Error}
-	for _, f := range append(i.FileResults, i.FileResult2...) {
-		out.Files = append(out.Files, core.EgressFile{Filename: f.Filename, SizeBytes: int64(f.Size), Duration: time.Duration(f.Duration)})
-	}
-	return out
-}
-
-func (i egressInfo) id() string {
-	if i.EgressID != "" {
-		return i.EgressID
-	}
-	return i.EgressID2
-}
-
-// status reads the status, a name or the enum's number (EgressStatus of livekit_egress.proto).
-func (i egressInfo) status() string {
-	switch v := i.Status.(type) {
-	case string:
-		return v
-	case float64:
-		names := []string{"EGRESS_STARTING", "EGRESS_ACTIVE", "EGRESS_ENDING", "EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"}
-		if n := int(v); n >= 0 && n < len(names) {
-			return names[n]
-		}
-	}
-	return "EGRESS_STARTING"
+func (e *Egress) upload() *lkp.S3Upload {
+	return &lkp.S3Upload{Endpoint: e.s3.Endpoint, AccessKey: e.s3.AccessKey, Secret: e.s3.Secret, Region: e.s3.Region,
+		Bucket: e.s3.Bucket, ForcePathStyle: true}
 }
 
 func (e *Egress) Start(ctx context.Context, room string, recorder core.SpaceUser) (string, error) {
-	s3 := map[string]any{"endpoint": e.s3.Endpoint, "accessKey": e.s3.AccessKey, "secret": e.s3.Secret, "region": e.s3.Region,
-		"bucket": e.s3.Bucket, "forcePathStyle": true}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
 	ts := time.Now().UTC().Format("2006-01-02T15:04:05")
 	folder := recorder.UUID
-	body := map[string]any{
-		"roomName": RoomName(room), "layout": "grid",
-		"fileOutputs":  []any{map[string]any{"fileType": "MP4", "filepath": folder + "/recording-" + ts, "disableManifest": true, "s3": s3}},
-		"imageOutputs": []any{map[string]any{"captureInterval": 10, "width": 320, "height": 180, "filenamePrefix": folder + "/thumbnail-" + ts, "s3": s3}},
-	}
-	var info egressInfo
-	if err := e.twirp(ctx, "StartRoomCompositeEgress", body, &info); err != nil {
+	info, err := e.c.egress.StartRoomCompositeEgress(ctx, &lkp.RoomCompositeEgressRequest{
+		RoomName: RoomName(room), Layout: "grid",
+		FileOutputs: []*lkp.EncodedFileOutput{{FileType: lkp.EncodedFileType_MP4, Filepath: folder + "/recording-" + ts,
+			DisableManifest: true, Output: &lkp.EncodedFileOutput_S3{S3: e.upload()}}},
+		ImageOutputs: []*lkp.ImageOutput{{CaptureInterval: 10, Width: 320, Height: 180, FilenamePrefix: folder + "/thumbnail-" + ts,
+			Output: &lkp.ImageOutput_S3{S3: e.upload()}}},
+	})
+	if err != nil {
 		return "", err
 	}
-	if info.id() == "" {
+	if info.GetEgressId() == "" {
 		return "", errors.New("the egress gave no id")
 	}
-	return info.id(), nil
+	return info.GetEgressId(), nil
 }
 
 // Stop stops an egress; one that already ended is not an error.
 func (e *Egress) Stop(ctx context.Context, id string) error {
-	err := e.twirp(ctx, "StopEgress", map[string]string{"egressId": id}, nil)
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	_, err := e.c.egress.StopEgress(ctx, &lkp.StopEgressRequest{EgressId: id})
 	if err != nil {
 		for _, ended := range []string{"EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"} {
 			if strings.Contains(err.Error(), ended) {
@@ -130,14 +65,28 @@ func (e *Egress) Stop(ctx context.Context, id string) error {
 }
 
 func (e *Egress) Status(ctx context.Context, id string) (core.EgressInfo, error) {
-	var list struct {
-		Items []egressInfo `json:"items"`
-	}
-	if err := e.twirp(ctx, "ListEgress", map[string]string{"egressId": id}, &list); err != nil {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	list, err := e.c.egress.ListEgress(ctx, &lkp.ListEgressRequest{EgressId: id})
+	if err != nil {
 		return core.EgressInfo{}, err
 	}
-	if len(list.Items) == 0 {
+	if len(list.GetItems()) == 0 {
 		return core.EgressInfo{Status: "EGRESS_ABORTED"}, nil // LiveKit forgot it
 	}
-	return list.Items[0].info(), nil
+	return info(list.GetItems()[0]), nil
+}
+
+func info(i *lkp.EgressInfo) core.EgressInfo {
+	at := func(ns int64) time.Time {
+		if ns == 0 {
+			return time.Time{}
+		}
+		return time.Unix(0, ns)
+	}
+	out := core.EgressInfo{Status: i.GetStatus().String(), StartedAt: at(i.GetStartedAt()), EndedAt: at(i.GetEndedAt()), Error: i.GetError()}
+	for _, f := range i.GetFileResults() {
+		out.Files = append(out.Files, core.EgressFile{Filename: f.GetFilename(), SizeBytes: f.GetSize(), Duration: time.Duration(f.GetDuration())})
+	}
+	return out
 }

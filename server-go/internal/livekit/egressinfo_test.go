@@ -1,25 +1,21 @@
 package livekit
 
 import (
-	"encoding/json"
 	"testing"
 	"time"
+
+	lkp "github.com/livekit/protocol/livekit"
 )
 
 func TestAnEndedEgressTellsItsTimesAndFiles(t *testing.T) {
-	var i egressInfo
-	if err := json.Unmarshal([]byte(`{"egressId":"EG_1","status":"EGRESS_COMPLETE","startedAt":"1700000000000000000",
-		"endedAt":"1700000061500000000","fileResults":[{"filename":"r/a.mp4","size":"12345","duration":"61500000000"}]}`), &i); err != nil {
-		t.Fatal(err)
+	got := info(&lkp.EgressInfo{EgressId: "EG_1", Status: lkp.EgressStatus_EGRESS_COMPLETE, StartedAt: 1700000000000000000,
+		EndedAt: 1700000061500000000, FileResults: []*lkp.FileInfo{{Filename: "r/a.mp4", Size: 12345, Duration: 61500000000}}})
+	if got.Status != "EGRESS_COMPLETE" || got.EndedAt.Sub(got.StartedAt) != 61500*time.Millisecond ||
+		len(got.Files) != 1 || got.Files[0].SizeBytes != 12345 || got.Files[0].Duration != 61500*time.Millisecond {
+		t.Fatalf("%+v", got)
 	}
-	info := i.info()
-	if info.Status != "EGRESS_COMPLETE" || info.EndedAt.Sub(info.StartedAt) != 61500*time.Millisecond ||
-		len(info.Files) != 1 || info.Files[0].SizeBytes != 12345 || info.Files[0].Duration != 61500*time.Millisecond {
-		t.Fatalf("%+v", info)
-	}
-	var failed egressInfo
-	if err := json.Unmarshal([]byte(`{"egress_id":"EG_2","status":4,"error":"boom"}`), &failed); err != nil || failed.info().Status != "EGRESS_FAILED" ||
-		!failed.info().StartedAt.IsZero() || failed.info().Error != "boom" {
-		t.Fatalf("%v %+v", err, failed.info())
+	failed := info(&lkp.EgressInfo{EgressId: "EG_2", Status: lkp.EgressStatus_EGRESS_FAILED, Error: "boom"})
+	if failed.Status != "EGRESS_FAILED" || !failed.StartedAt.IsZero() || failed.Error != "boom" {
+		t.Fatalf("%+v", failed)
 	}
 }
