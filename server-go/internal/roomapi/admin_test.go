@@ -1,11 +1,13 @@
 package roomapi
 
 import (
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"sync/atomic"
 	"testing"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 func TestTheAdminDecidesWhoUsesTheRoomAPI(t *testing.T) {
@@ -33,21 +35,17 @@ func TestTheAdminDecidesWhoUsesTheRoomAPI(t *testing.T) {
 	}))
 	defer admin.Close()
 	a := NewAdminAuthorizer(admin.URL, true)
-	code := func(key string) (int, string) {
-		err := a.authorize(key, "http://play.test/@/o/w/r oom")
-		var st *status
-		if !errors.As(err, &st) {
-			return codeOK, ""
-		}
-		return st.code, st.msg
+	code := func(key string) (codes.Code, string) {
+		st := status.Convert(a.authorize(key, "http://play.test/@/o/w/r oom"))
+		return st.Code(), st.Message()
 	}
-	for key, want := range map[string]int{"good": codeOK, "elsewhere": codePermissionDenied, "garbled": codeInternal, "missing": codeNotFound, "x": codeUnauthenticated} {
+	for key, want := range map[string]codes.Code{"good": codes.OK, "elsewhere": codes.PermissionDenied, "garbled": codes.Internal, "missing": codes.NotFound, "x": codes.Unauthenticated} {
 		if got, msg := code(key); got != want {
 			t.Errorf("%s: %d %q, want %d", key, got, msg, want)
 		}
 	}
 	before := calls.Load()
-	if c, _ := code("good"); c != codeOK || calls.Load() != before {
+	if c, _ := code("good"); c != codes.OK || calls.Load() != before {
 		t.Fatal("in production the admin's yes is kept as long as it says")
 	}
 }
