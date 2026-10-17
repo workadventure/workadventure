@@ -36,6 +36,23 @@ pub struct RedisStore {
     wake: tokio::sync::Notify,
 }
 
+/// A connection to REDIS_HOST, on database `db` (0 when None); None without REDIS_HOST.
+pub fn connect(config: &Config, db: Option<&str>) -> Option<ConnectionManager> {
+    let host = config.redis_host.as_ref()?;
+    let password = config.redis_password.as_deref().map_or(String::new(), |p| format!(":{p}@"));
+    let db = db.filter(|d| !d.is_empty()).map_or(String::new(), |d| format!("/{d}"));
+    let client = redis::Client::open(format!("redis://{password}{host}:{}{db}", config.redis_port))
+        .inspect_err(|e| tracing::error!(error = %e, "invalid Redis address"))
+        .ok()?;
+    let settings = ConnectionManagerConfig::new()
+        .set_connection_timeout(Some(Duration::from_secs(2)))
+        .set_response_timeout(Some(Duration::from_secs(2)))
+        .set_max_delay(Duration::from_secs(5));
+    ConnectionManager::new_lazy_with_config(client, settings)
+        .inspect_err(|e| tracing::error!(error = %e, "could not set up Redis"))
+        .ok()
+}
+
 pub fn now_ms() -> u64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
 }
@@ -43,20 +60,8 @@ pub fn now_ms() -> u64 {
 impl RedisStore {
     /// Must run inside the runtime: the connection is made on first use, and remade after a failure.
     pub fn new(config: &Config) -> Arc<Self> {
-        let conn = config.redis_host.as_ref().and_then(|host| {
-            let password = config.redis_password.as_deref().map_or(String::new(), |p| format!(":{p}@"));
-            let db = config.raw.get("REDIS_DB_NUMBER").filter(|d| !d.is_empty()).map_or(String::new(), |d| format!("/{d}"));
-            let client = redis::Client::open(format!("redis://{password}{host}:{}{db}", config.redis_port))
-                .inspect_err(|e| tracing::error!(error = %e, "invalid Redis address"))
-                .ok()?;
-            let settings = ConnectionManagerConfig::new()
-                .set_connection_timeout(Some(Duration::from_secs(2)))
-                .set_response_timeout(Some(Duration::from_secs(2)))
-                .set_max_delay(Duration::from_secs(5));
-            ConnectionManager::new_lazy_with_config(client, settings)
-                .inspect_err(|e| tracing::error!(error = %e, "could not set up Redis"))
-                .ok()
-        });
+        // DB 0: the back and the pusher never read REDIS_DB_NUMBER (only the uploader does).
+        let conn = connect(config, None);
         if conn.is_none() {
             tracing::warn!("REDIS_HOST is not set: no variables will be persisted");
         }

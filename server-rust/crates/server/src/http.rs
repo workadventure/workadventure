@@ -13,6 +13,7 @@ pub fn routes() -> Router<AppState> {
     Router::new()
         .route("/ping", get(|| async { "pong" }))
         .route("/ready", get(ready))
+        .route("/api-version", get(api_version))
         .route("/metrics", get(main_port_metrics))
 }
 
@@ -26,6 +27,14 @@ async fn ready(State(state): State<AppState>) -> Response {
         "ready".into_response()
     } else {
         (StatusCode::SERVICE_UNAVAILABLE, "not ready").into_response()
+    }
+}
+
+/// The protocol hash (apiVersionHash) the front must match: the SaaS pipeline checks it against the front.
+async fn api_version(State(state): State<AppState>) -> Response {
+    match state.front.api_version() {
+        Some(v) => v.into_response(),
+        None => (StatusCode::SERVICE_UNAVAILABLE, "unknown until the front template is loaded").into_response(),
     }
 }
 

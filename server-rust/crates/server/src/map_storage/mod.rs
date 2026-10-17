@@ -258,7 +258,7 @@ async fn notify(state: &AppState, change: MapChange) {
 }
 
 pub fn router(state: AppState) -> Router {
-    Router::new()
+    let router = Router::new()
         .route("/ping", get(|| async { "pong" }))
         .route("/upload", post(upload::upload))
         .route("/download", get(upload::download))
@@ -269,8 +269,11 @@ pub fn router(state: AppState) -> Router {
         .route("/private/files/{*path}", get(files::private_file).fallback(files::any))
         .fallback(files::any)
         .layer(DefaultBodyLimit::max(MAX_UPLOAD))
-        .layer(middleware::from_fn(cors))
-        .with_state(state)
+        .layer(middleware::from_fn(cors));
+    // PATH_PREFIX: mounted under it; the routes themselves stay the same.
+    let prefix = state.config.map_storage_prefix.clone();
+    let router = if prefix.is_empty() || prefix == "/" { router } else { Router::new().nest(&prefix, router) };
+    router.with_state(state)
 }
 
 /// `cors()` with its defaults, and `nosniff` everywhere.
