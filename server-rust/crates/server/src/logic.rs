@@ -66,6 +66,8 @@ pub async fn run(parts: SessionParts, app: AppState) {
     let mut shutdown = app.shutdown.subscribe();
     loop {
         tokio::select! {
+            // What the client sent before it went away is handled first, in order, as the pusher does.
+            biased;
             message = inbox.recv() => match message {
                 Some(m) => logic.handle(m).await,
                 None => break,
