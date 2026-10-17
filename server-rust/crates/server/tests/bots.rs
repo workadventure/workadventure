@@ -140,24 +140,26 @@ async fn two_players_see_each_other_move_and_form_a_bubble() {
         .unwrap();
     assert_eq!(init, 2);
     let (bob_id, alice_id) = (bob.space_user_id(), alice.space_user_id());
-    ia.expect(WAIT, |m| match private_event(m) {
-        Some((sender, pb::private_space_event::Event::WebRtcStartMessage(s))) if sender.space_user_id == bob_id => {
-            Some(s.initiator)
-        }
-        _ => None,
-    })
-    .await
-    .map(|initiator| assert!(initiator, "the watcher's peer offers"))
-    .unwrap();
-    ib.expect(WAIT, |m| match private_event(m) {
-        Some((sender, pb::private_space_event::Event::WebRtcStartMessage(s))) if sender.space_user_id == alice_id => {
-            Some(s.initiator)
-        }
-        _ => None,
-    })
-    .await
-    .map(|initiator| assert!(!initiator))
-    .unwrap();
+    let alice_offers = ia
+        .expect(WAIT, |m| match private_event(m) {
+            Some((sender, pb::private_space_event::Event::WebRtcStartMessage(s))) if sender.space_user_id == bob_id => {
+                Some(s.initiator)
+            }
+            _ => None,
+        })
+        .await
+        .unwrap();
+    let bob_offers = ib
+        .expect(WAIT, |m| match private_event(m) {
+            Some((sender, pb::private_space_event::Event::WebRtcStartMessage(s))) if sender.space_user_id == alice_id => {
+                Some(s.initiator)
+            }
+            _ => None,
+        })
+        .await
+        .unwrap();
+    // One end offers, the other answers (which one depends on whose watch came first).
+    assert_ne!(alice_offers, bob_offers);
 
     // Bob leaves: Alice sees him go and the bubble disappear.
     bob.close().await;
