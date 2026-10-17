@@ -592,3 +592,56 @@ Toutes les campagnes ont tourné sur la stack `go` du socle, un seul worker, sou
 - Socle : contrat admin, `dev/dev test`, la profil `recording`, la correction de `FRONT_URL` de maps, le classement de `report_issue:7` et `variables:188`.
 - Rapports de recherche du 14/10 sur l'enregistrement.
 - Un sous-agent Sonnet a joué et trié la non-régression.
+
+### 17/10, tranche 4 : socket admin, A22 analytics
+
+**Socket `/ws/admin/rooms`** (`ADMIN_SOCKETS_TOKEN`).
+- Requête `listen` : le serveur envoie les membres déjà présents, puis chaque `MemberJoin` et `MemberLeave`.
+- Requête `banned` : le joueur est éjecté de chaque salle du monde (`split("/")[5]`) que le JWT autorise.
+- Fermetures : 1007 sur un message invalide, 1008 sur un refus.
+- La file d'envoi garde 1000 messages au plus. Au-delà, les messages sont perdus.
+- Côté cœur, un observateur de salle reçoit maintenant `MemberJoined` et `MemberLeft`. La Room API les ignore.
+
+**A22, côté pusher.**
+- File d'envoi :
+  - lots ;
+  - 4 essais, sur erreur réseau, 5xx, 408 et 429 ;
+  - un 422 découpe le lot, et seuls les événements invalides sont perdus ;
+  - quand la file est pleine, les plus anciens sont jetés ;
+  - drain à l'arrêt.
+- Événements du front :
+  - liste blanche des 175 noms du catalogue, avec leur source ;
+  - un test compare cette liste au fichier TS ;
+  - les propriétés ne sont pas validées : l'admin refuse alors l'événement seul.
+- Intervalles mesurés par le serveur : `timed_event.open` et `timed_event.close`, `user.connected` et `user.disconnected`, au plus 32 ouverts par connexion.
+- Échantillons vidéo.
+- Envoi soumis à `analyticsEventsEnabled` et à la capacité `api/analytics/events-batch`.
+
+**A22, côté back.**
+- Les réunions des spaces : `meeting.participation.ended`, puis `meeting.ended`.
+- Port de `SessionAnalytics` :
+  - présence quand le filtre montre le membre ou qu'il observe la liste ;
+  - en diffusion, seuls les orateurs sont actifs ;
+  - rang d'arrivée, temps de parole, secondes en WebRTC et en LiveKit ;
+  - à l'arrêt, les réunions ouvertes sont fermées avec la raison `back_shutdown`.
+- Deuxième file, à l'identifiant `back:<hôte>`, qui envoie sans attendre de capacité.
+
+**Points ouverts du socle.**
+- (a) Un certificat auto-signé se donne par `SSL_CERT_FILE` ou `SSL_CERT_DIR` : Go les lit seul.
+  - J'ai voulu aussi lire `NODE_TLS_REJECT_UNAUTHORIZED=0` pour couper la vérification.
+  - Le classifieur de sécurité l'a refusé. C'est à Yannis de décider.
+- (b) Le Dockerfile accepte déjà `--build-arg VERSION`. C'est à la CI de `deploy-go` de la passer.
+
+**Tests** : 155 au total.
+
+| Paquet | Couverture |
+|---|---|
+| `analytics` | 87,0 % |
+| `core` | 83,2 % |
+| `mapedit` | 83,5 % |
+| `roomapi` | 82,6 % |
+| `ws` | 48,5 % |
+
+`./verify.sh` est vert.
+
+**Aide extérieure.** Deux sous-agents Sonnet ont fait l'inventaire du TS : les analytics, puis Matrix.
