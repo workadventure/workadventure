@@ -3,3 +3,4 @@
 .go-image-info
 results/.state/
 results/.playwright/
+.rust-image-info

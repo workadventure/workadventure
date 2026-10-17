@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# ./deploy.sh ts|go : same Helm release, so switching is a real `helm upgrade`.
+# ./deploy.sh ts|go|rust : same Helm release, so switching is a real `helm upgrade`.
 set -euo pipefail
 source "$(dirname "$0")/common.sh"
-mode="${1:?usage: deploy.sh ts|go}"
-[ "$mode" = ts ] || [ "$mode" = go ] || { echo "usage: deploy.sh ts|go" >&2; exit 2; }
+mode="${1:?usage: deploy.sh ts|go|rust}"
+case "$mode" in ts|go|rust) ;; *) echo "usage: deploy.sh ts|go|rust" >&2; exit 2 ;; esac
+[ "$mode" = ts ] || minikube image ls -p "$PROFILE" | grep -q "$(candidate_image "$mode")" \
+  || { echo "$(candidate_image "$mode") is not in minikube: ./up.sh (or ./update.sh $mode) first" >&2; exit 1; }
 cd "$HERE"
 
 k create namespace "$NS" --dry-run=client -o yaml | k apply -f - >/dev/null
-# Certificate for the Go server's SSL_CERT_FILE (harmless in TS mode).
+# Certificate for the candidates' SSL_CERT_FILE (harmless in TS mode).
 k -n "$NS" create secret generic rehearsal-tls --from-file=tls.crt=.certs/tls.crt \
   --dry-run=client -o yaml | k apply -f - >/dev/null
 
