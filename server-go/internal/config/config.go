@@ -204,6 +204,22 @@ func (r *reader) float(name string, def float64) float64 {
 	return f
 }
 
+var byteSizes = regexp.MustCompile(`(?i)^\+?(\d+(?:\.\d+)?) *(b|kb|mb|gb|tb|pb)?$`)
+
+// byteSize reads a size as the npm "bytes" package does for body-parser's limit: "100mb", "1.5gb", "2048"
+// (powers of 1024).
+func (r *reader) byteSize(name, def string) int64 {
+	v := firstNonEmpty(r.get(name), def)
+	m := byteSizes.FindStringSubmatch(v)
+	if m == nil {
+		r.errs = append(r.errs, fmt.Sprintf("%s: expected a size such as 100mb, got %q", name, v))
+		return 0
+	}
+	n, _ := strconv.ParseFloat(m[1], 64)
+	shift := map[string]uint{"": 0, "b": 0, "kb": 10, "mb": 20, "gb": 30, "tb": 40, "pb": 50}[strings.ToLower(m[2])]
+	return int64(n * float64(uint64(1)<<shift))
+}
+
 func (r *reader) oneOf(name string, allowed ...string) string {
 	v := r.get(name)
 	if v == "" {
@@ -264,6 +280,7 @@ func parse(get func(string) string) (*Config, error) {
 			},
 			CacheControl:        firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
 			MaxUncompressed:     int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
+			JSONLimit:           r.byteSize("BODY_PARSER_JSON_SIZE_LIMIT", "100mb"),
 			DirectUploadURL:     r.str("DIRECT_UPLOAD_URL"),
 			WebHook:             webHook(r),
 			EntityCollections:   list(r.str("ENTITY_COLLECTION_URLS")),

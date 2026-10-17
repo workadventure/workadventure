@@ -182,6 +182,8 @@ func (s *spaceState) watchEgress(gen int) {
 				if r.stopAsked {
 					s.stopEgress()
 				}
+			case status == "EGRESS_ACTIVE" && r.status == spacestate.RecordingStatusStopping: // the stop was lost
+				sendStop(r.egress, r.egressID)
 			case status == "EGRESS_COMPLETE" || status == "EGRESS_FAILED" || status == "EGRESS_ABORTED" || status == "EGRESS_LIMIT_REACHED":
 				if r.status != spacestate.RecordingStatusStopping {
 					slog.Warn("the recording ended by itself", "room", s.roomName, "status", status)
@@ -247,11 +249,14 @@ func (s *spaceState) stopEgress() {
 	r := s.rec
 	r.status = spacestate.RecordingStatusStopping
 	s.publishRecording(r.status, r.recorder.ID)
-	id, gen, egress := r.egressID, r.gen, r.egress
+	sendStop(r.egress, r.egressID)
+}
+
+// sendStop asks the egress to stop. On failure watchEgress asks again while the egress says it is active.
+func sendStop(egress Egress, id string) {
 	go func() {
 		if err := egress.Stop(context.Background(), id); err != nil {
-			slog.Warn("cannot stop the recording, it will end by itself", "error", err)
-			_ = gen
+			slog.Warn("cannot stop the recording, will ask again", "error", err)
 		}
 	}()
 }

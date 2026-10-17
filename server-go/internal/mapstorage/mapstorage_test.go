@@ -293,3 +293,28 @@ func TestTwoWorldsWithTheSamePathsNeverShareAMap(t *testing.T) {
 		t.Fatal("each world in its folder, as map-storage stores them:", err)
 	}
 }
+
+// A PATCH body is read as body-parser's json() of map-storage reads it.
+func TestAPatchBodyIsReadAsTheBodyParserDoes(t *testing.T) {
+	hs := newHarness(t)
+	hs.h = hs.s.Handler(Options{Auth: Auth{Basic: true, User: "john.doe", Password: "password"}, JSONLimit: 64})
+	if w := hs.do("PUT", "/m.wam", []byte(wamFile), "application/json"); w.Code != 200 {
+		t.Fatalf("put: %d %s", w.Code, w.Body)
+	}
+	ops := []byte(`[{"op":"replace","path":"/mapUrl","value":"x.tmj"}]`)
+	for _, c := range []struct {
+		body        []byte
+		contentType string
+		code        int
+	}{
+		{ops, "text/plain", 400}, // another type leaves the body empty: not a patch
+		{append(ops[:len(ops)-1:len(ops)-1], []byte(`,{"op":"test","path":"/mapUrl","value":"x.tmj"}]`)...), "application/json", 413},
+		{[]byte(`[{"op":`), "application/json", 400}, // not JSON
+		{[]byte(`"text"`), "application/json", 400},  // strict: an object or an array
+		{ops, "application/json; charset=utf-8", 200},
+	} {
+		if w := hs.do("PATCH", "/m.wam", c.body, c.contentType); w.Code != c.code {
+			t.Errorf("%s %q: %d %s", c.contentType, c.body, w.Code, w.Body)
+		}
+	}
+}
