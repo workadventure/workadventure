@@ -268,13 +268,12 @@ func (api *API) mapDetails(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	delete(details, "thirdParty") // Jitsi and BBB secrets stay on the server
-	_, isMap := details["mapUrl"]
-	_, isWam := details["wamUrl"]
-	if api.cfg.DisableAnonymous && (isMap || isWam) {
-		details["authenticationMandatory"] = true
+	front := details.Raw
+	delete(front, "thirdParty") // Jitsi and BBB secrets stay on the server
+	if api.cfg.DisableAnonymous && details.IsRoom() {
+		front["authenticationMandatory"] = true
 	}
-	writeJSON(w, details)
+	writeJSON(w, front)
 }
 
 func (api *API) authenticatedList(list func(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)) http.HandlerFunc {
@@ -354,12 +353,12 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// MetaTagsBuilder: with an admin, the room may redirect, and the world gives its tags and colors.
-	var details map[string]any
+	var details admin.MapDetails
 	if api.cfg.AdminAPIURL != "" {
 		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 		details, _ = api.admin.MapDetails(ctx, admin.MapQuery{PlayURI: fullURL(r)})
 		cancel()
-		if to, _ := details["redirectUrl"].(string); to != "" {
+		if to := details.RedirectURL; to != "" {
 			http.Redirect(w, r, to, http.StatusFound)
 			return
 		}
@@ -368,7 +367,7 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	meta := admin.DefaultMetaTags()
-	if tags, _ := details["metatags"].(map[string]any); tags != nil {
+	if tags := details.Metatags; tags != nil {
 		for k, v := range tags {
 			if v != nil {
 				meta[k] = v
@@ -377,16 +376,16 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 	} else {
 		api.mapMetaTags(r, meta)
 	}
-	primary, _ := details["primaryColor"].(string)
-	background, _ := details["backgroundColor"].(string)
+	primary := details.PrimaryColor
+	background := details.BackgroundColor
 	capabilities, _ := json.Marshal(api.admin.Capabilities())
 	env, _ := json.Marshal(api.cfg.FrontEnv)
 	data := map[string]any{
 		"url":                       fullURL(r),
 		"script":                    "window.env = " + string(env) + "\nwindow.capabilities = " + string(capabilities),
 		"msApplicationTileImage":    lastFavIcon(meta["favIcons"]),
-		"posthogApiKey":             api.cfg.FrontEnv["POSTHOG_API_KEY"],
-		"posthogUrl":                api.cfg.FrontEnv["POSTHOG_URL"],
+		"posthogApiKey":             api.cfg.FrontEnv.PosthogAPIKey,
+		"posthogUrl":                api.cfg.FrontEnv.PosthogURL,
 		"authToken":                 r.PostFormValue("authToken"),
 		"googleDrivePickerClientId": api.cfg.GoogleDrivePickerClientID,
 		"assetsOrigin":              origin(api.cfg.AssetsURL),

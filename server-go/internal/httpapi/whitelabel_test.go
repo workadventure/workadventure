@@ -43,7 +43,7 @@ func (k *keeper) Challenge(_ context.Context, host string) (string, error) {
 }
 
 func TestThePlayersChoicesAndTheAdminsBrowserRoutes(t *testing.T) {
-	cfg := &config.Config{StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: map[string]any{},
+	cfg := &config.Config{StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: config.FrontEnv{},
 		AutologinURL: "https://admin.test/workadventure/login"}
 	local, _ := admin.NewLocal(cfg)
 	k := &keeper{Local: local}
@@ -94,7 +94,7 @@ func TestAccessKeyAndProfileGoToTheAdmin(t *testing.T) {
 	front := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, template) }))
 	defer front.Close()
 	cfg := &config.Config{PusherURL: "http://play.test/", OpidWokaNamePolicy: "user_input", StartRoomURL: "/_/global/start.json",
-		FrontEnv: map[string]any{}, AdminAPIURL: "http://admin.internal", AutologinURL: "https://admin.test/workadventure/login",
+		FrontEnv: config.FrontEnv{}, AdminAPIURL: "http://admin.internal", AutologinURL: "https://admin.test/workadventure/login",
 		ProfileScreenProvider: "https://admin.test/profile",
 		OpenID:                config.OpenID{ClientID: "client", ClientSecret: "s3cret", Issuer: provider.URL, Scope: "openid"}}
 	local, _ := admin.NewLocal(cfg)

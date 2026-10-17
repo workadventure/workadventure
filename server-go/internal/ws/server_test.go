@@ -34,7 +34,7 @@ type harness struct {
 }
 
 func newHarness(t *testing.T) *harness {
-	cfg := &config.Config{ClientDisconnectRetention: 5 * time.Second, SocketIdleTimer: 120 * time.Second, FrontEnv: map[string]any{}}
+	cfg := &config.Config{ClientDisconnectRetention: 5 * time.Second, SocketIdleTimer: 120 * time.Second, FrontEnv: config.FrontEnv{}}
 	adm, err := admin.NewLocal(cfg)
 	if err != nil {
 		t.Fatal(err)
