@@ -21,28 +21,54 @@ type LiveKit interface {
 	URL() string // where the fronts connect (ws://, wss://)
 }
 
-// Media is how the spaces meet.
+// Media is how the spaces meet, and what they report.
 type Media struct {
-	LiveKit LiveKit // nil: WebRTC only
-	// LiveKitFor, when set, gives the LiveKit of a world for a play URI of it (A24, api/livekit/credentials),
-	// asked each time a space moves to LiveKit; it is called off the space's goroutine.
-	LiveKitFor func(ctx context.Context, playURI string) (LiveKit, error)
-	// EgressFor is the egress of a LiveKit given by LiveKitFor, to record on the world's LiveKit.
-	EgressFor         func(LiveKit) Egress
-	Egress            Egress // nil: no recording
-	MaxUsersForWebRTC int    // MAX_USERS_FOR_WEBRTC
-	SwitchOnCPULimit  bool   // LIVEKIT_SWITCH_ON_CPU_LIMITATION
+	Provider          MediaProvider // nil: WebRTC only
+	MaxUsersForWebRTC int           // MAX_USERS_FOR_WEBRTC
+	SwitchOnCPULimit  bool          // LIVEKIT_SWITCH_ON_CPU_LIMITATION
 	BackToWebRTCAfter time.Duration
 	FinalizeAfter     time.Duration
-	// Meetings opens the analytics report of a space's meetings (internal/analytics.NewMeeting); nil: none.
-	Meetings func(id, world string, kind, transport func() string) MeetingReporter
-	// RecordingEnded tells the admin a recording ended (A23); it must not block.
-	RecordingEnded func(RecordingEnded)
+	Meetings          Meetings          // nil: no meeting analytics
+	Recordings        RecordingReporter // nil: nobody told when a recording ends
 }
 
-// DefaultMedia is the back's: 4 users, 20 s back, 5 s to finalize.
+// MediaProvider gives a space the LiveKit server where it meets past WebRTC, and the egress that records on it.
+type MediaProvider interface {
+	// LiveKitFor is the LiveKit of the world of playURI. It may ask the admin: the space calls it off its goroutine.
+	LiveKitFor(ctx context.Context, playURI string) (LiveKit, error)
+	// EgressFor records the rooms of lk; nil when recording is not available.
+	EgressFor(lk LiveKit) Egress
+	// CanRecord says whether recording is available at all.
+	CanRecord() bool
+}
+
+// ServerLiveKit is one LiveKit server for every world (LIVEKIT_HOST…), recording with Egress when it is set.
+type ServerLiveKit struct {
+	LiveKit LiveKit
+	Egress  Egress
+}
+
+func (p ServerLiveKit) LiveKitFor(context.Context, string) (LiveKit, error) { return p.LiveKit, nil }
+func (p ServerLiveKit) EgressFor(LiveKit) Egress                            { return p.Egress }
+func (p ServerLiveKit) CanRecord() bool                                     { return p.Egress != nil }
+
+// Meetings opens the analytics report of a space's meetings (internal/analytics.NewMeeting behind it).
+type Meetings interface {
+	Open(id, world string, kind, transport func() string) MeetingReporter
+}
+
+// RecordingReporter is told that a recording ended (A23, the admin); it must not block.
+type RecordingReporter interface {
+	RecordingEnded(RecordingEnded)
+}
+
+// DefaultMedia is the back's: 4 users, 20 s back, 5 s to finalize; lk, when not nil, for every world.
 func DefaultMedia(lk LiveKit) Media {
-	return Media{LiveKit: lk, MaxUsersForWebRTC: 4, SwitchOnCPULimit: true, BackToWebRTCAfter: 20 * time.Second, FinalizeAfter: 5 * time.Second}
+	m := Media{MaxUsersForWebRTC: 4, SwitchOnCPULimit: true, BackToWebRTCAfter: 20 * time.Second, FinalizeAfter: 5 * time.Second}
+	if lk != nil {
+		m.Provider = ServerLiveKit{LiveKit: lk}
+	}
+	return m
 }
 
 const (
@@ -74,7 +100,7 @@ type liveKitState struct {
 
 // hasLiveKit says whether the space may move to LiveKit.
 func (s *spaceState) hasLiveKit() bool {
-	return s.mediaCfg.LiveKit != nil || s.mediaCfg.LiveKitFor != nil
+	return s.mediaCfg.Provider != nil
 }
 
 // takesPart: a member in the filter streams; a watcher receives.
@@ -225,16 +251,13 @@ func (s *spaceState) lkSync() {
 	switch s.lk.room {
 	case lkNone:
 		s.lk.room, s.lk.gen = lkCreating, s.lk.gen+1
-		gen, room, lk, lkFor := s.lk.gen, s.roomName, s.mediaCfg.LiveKit, s.mediaCfg.LiveKitFor
+		gen, room, provider := s.lk.gen, s.roomName, s.mediaCfg.Provider
 		var playURI string
 		if len(s.order) > 0 {
 			playURI = s.members[s.order[0]].user.PlayURI
 		}
 		s.call(func() {
-			var err error
-			if lkFor != nil {
-				lk, err = lkFor(context.Background(), playURI)
-			}
+			lk, err := provider.LiveKitFor(context.Background(), playURI)
 			if err == nil {
 				err = lk.CreateRoom(context.Background(), room)
 			}
@@ -294,8 +317,8 @@ func (s *spaceState) lkDelete() {
 	clear(s.lk.invited)
 	room, lk := s.roomName, s.lk.client
 	s.lk.client = nil
-	if lk == nil { // still being created: the late answer is ignored, and the room
-		lk = s.mediaCfg.LiveKit
+	if p, ok := s.mediaCfg.Provider.(ServerLiveKit); ok && lk == nil { // still being created: the late answer is ignored, and the room
+		lk = p.LiveKit
 	}
 	if lk == nil {
 		return // ponytail: a per-world room created while it was being deleted stays until LiveKit empties it

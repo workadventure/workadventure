@@ -45,7 +45,7 @@ func newHarness(t *testing.T) *harness {
 	},
 		func(r *core.Room) { r.Stop() })
 	spaces := registry.NewRefs(core.NewSpace, func(sp *core.Space) { sp.Stop() })
-	h.srv = NewServer(cfg, h.auth, adm, h.rooms, spaces, mapstorage.New(t.TempDir()), store.NewMemory(), "test-version")
+	h.srv = NewServer(cfg, Deps{Auth: h.auth, Admin: adm, Rooms: h.rooms, Spaces: spaces, Maps: mapstorage.New(t.TempDir()), Vars: store.NewMemory(), APIVersion: "test-version"})
 	h.http = httptest.NewServer(h.srv)
 	t.Cleanup(h.http.Close)
 	return h

@@ -4,12 +4,9 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
-	"net/http/pprof"
 	"os"
 	"os/signal"
 	"runtime"
@@ -19,23 +16,15 @@ import (
 	"syscall"
 	"time"
 
-	"google.golang.org/grpc"
-
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/config"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/httpapi"
-	"github.com/workadventure/workadventure/server-go/internal/livekit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
-	"github.com/workadventure/workadventure/server-go/internal/matrix"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
-	"github.com/workadventure/workadventure/server-go/internal/roomapi"
-	"github.com/workadventure/workadventure/server-go/internal/s3"
-	"github.com/workadventure/workadventure/server-go/internal/store"
-	"github.com/workadventure/workadventure/server-go/internal/uploader"
 	"github.com/workadventure/workadventure/server-go/internal/ws"
 )
 
@@ -85,58 +74,13 @@ func run() error {
 		func(url string) *core.Room { metrics.Rooms.Inc(); return core.NewRoom(url, proximity) },
 		func(r *core.Room) { r.Stop(); metrics.Rooms.Dec() },
 	)
-
-	media := core.DefaultMedia(nil)
-	if cfg.LiveKitHost != "" && cfg.LiveKitAPIKey != "" && cfg.LiveKitAPISecret != "" {
-		lk := livekit.New(cfg.LiveKitHost, cfg.LiveKitAPIKey, cfg.LiveKitAPISecret)
-		media.LiveKit = lk
-		if cfg.RecordingConfigured {
-			r := cfg.RecordingS3
-			media.Egress = lk.Egress(livekit.S3{Endpoint: r.Endpoint, AccessKey: r.AccessKey, Secret: r.Secret, Region: r.Region, Bucket: r.Bucket})
-		}
-	}
-	media.MaxUsersForWebRTC, media.SwitchOnCPULimit = cfg.MaxUsersForWebRTC, cfg.LiveKitSwitchOnCPULimitation
 	// Two queues, as two processes had: the pusher's waits for the capability, the back's sends the meetings once
 	// configured, under its own instance id.
 	events := analyticsQueue(cfg, adm, false)
 	meetings := analyticsQueue(cfg, adm, true)
-	if meetings != nil {
-		media.Meetings = func(id, world string, kind, transport func() string) core.MeetingReporter {
-			return analytics.NewMeeting(id, world, kind, transport, meetings.Enqueue)
-		}
-	}
-	if h, ok := adm.(*admin.HTTP); ok && h.Capabilities()["api/livekit/credentials"] == "v1" {
-		media.LiveKitFor = func(ctx context.Context, playURI string) (core.LiveKit, error) {
-			if playURI == "" {
-				return nil, errors.New("playUri is required when using AdminAPI for Livekit credentials")
-			}
-			host, key, secret, err := h.LiveKitCredentials(ctx, playURI)
-			if err != nil {
-				return nil, err
-			}
-			return livekit.New(host, key, secret), nil
-		}
-		if r := cfg.RecordingS3; r.Complete() { // record on the world's LiveKit, into the same bucket
-			media.EgressFor = func(lk core.LiveKit) core.Egress {
-				if c, ok := lk.(*livekit.Client); ok {
-					return c.Egress(livekit.S3{Endpoint: r.Endpoint, AccessKey: r.AccessKey, Secret: r.Secret, Region: r.Region, Bucket: r.Bucket})
-				}
-				return nil
-			}
-			cfg.RecordingConfigured = true
-		}
-	}
-	if h, ok := adm.(*admin.HTTP); ok {
-		media.RecordingEnded = func(e core.RecordingEnded) {
-			go func() {
-				if err := h.RecordingEvent(context.Background(), recordingPayload(e)); err != nil {
-					slog.Error("the admin was not told a recording ended", "egress", e.EgressID, "error", err)
-				}
-			}()
-		}
-	}
 	go events.Run(ctx)
 	go meetings.Run(ctx)
+	media, recordings := buildMedia(cfg, adm, meetings)
 	spaces := registry.NewRefs(
 		func(k core.SpaceKey) *core.Space { metrics.Spaces.Inc(); return core.NewSpaceWithMedia(k, media) },
 		func(s *core.Space) { s.Stop(); metrics.Spaces.Dec() },
@@ -145,113 +89,19 @@ func run() error {
 	front := httpapi.NewFrontAssets(cfg.AssetsInternalURL, cfg.AssetsURL, apiVersion)
 	go front.Poll(ctx)
 	maps := mapstorage.New(cfg.StorageDirectory)
-	var vars store.Hash = store.NewMemory()
-	if cfg.RedisHost != "" {
-		vars = store.NewRedis(net.JoinHostPort(cfg.RedisHost, strconv.Itoa(cfg.RedisPort)), cfg.RedisPassword)
-	} else {
-		slog.Warn("REDIS_HOST is not set: variables are kept in memory, a restart loses them")
-	}
-	wsServer := ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, vars, apiVersion)
-	maps.Changed = wsServer.MapChanged
-	wsServer.SetAnalytics(events)
-	if cfg.MatrixEnabled {
-		m := matrix.New(cfg.Matrix.APIURI, cfg.Matrix.AdminUser, cfg.Matrix.AdminPassword, cfg.Matrix.Domain)
-		if r, ok := vars.(*store.Redis); ok {
-			m.ShareThrough(r)
-		}
-		wsServer.SetMatrix(m)
-	}
-	handler := httpapi.New(cfg, tokens, adm, front, wsServer, version)
-
-	// ReadHeaderTimeout: a client that never finishes its headers must not hold a connection forever.
-	newServer := func(port int, h http.Handler) *http.Server {
-		return &http.Server{Addr: ":" + strconv.Itoa(port), Handler: h, ReadHeaderTimeout: 10 * time.Second}
-	}
-	servers := []*http.Server{newServer(cfg.HTTPPort, handler)}
-	if cfg.WSPort != cfg.HTTPPort {
-		servers = append(servers, newServer(cfg.WSPort, handler))
-	}
-	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
-		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
-	}
-	if cfg.UploaderPort != 0 && cfg.UploaderPort != cfg.HTTPPort && cfg.UploaderPort != cfg.WSPort && cfg.UploaderPort != cfg.MapStoragePort {
-		up := cfg.Uploader
-		if b := cfg.UploaderS3; b.Enabled() {
-			endpoint := b.Endpoint
-			if endpoint == "" {
-				endpoint = "https://s3." + b.Region + ".amazonaws.com"
-			}
-			up.S3, up.S3URLTTL = s3.New(endpoint, b.Region, b.Bucket, b.AccessKey, b.Secret), b.URLTTL
-			go func() { // like S3StorageProvider, once, without waiting: a bucket that refuses keeps its rules
-				if err := up.S3.PutCORS(context.Background()); err != nil {
-					slog.Warn("cannot set the CORS rules of the uploader's bucket", "error", err)
-				}
-			}()
-		}
-		if r, ok := vars.(*store.Redis); ok {
-			up.Redis = r.WithDB(cfg.UploaderRedisDB)
-		}
-		servers = append(servers, newServer(cfg.UploaderPort, uploader.New(up).Handler()))
-	}
-	var roomAPI *grpc.Server
-	var roomAPIAddr string
-	if cfg.RoomAPISecretKey != "" || cfg.AdminAPIURL != "" {
-		api := roomapi.New(cfg.RoomAPISecretKey, cfg.FrontURL, rooms, wsServer.RoomVariables)
-		if cfg.AdminAPIURL != "" {
-			api.WithAdmin(roomapi.NewAdminAuthorizer(cfg.AdminAPIURL, cfg.NodeEnv == "production"))
-		}
-		roomAPI = api.GRPC()
-		roomAPIAddr = net.JoinHostPort(cfg.RoomAPIBindHost, strconv.Itoa(cfg.RoomAPIPort))
-	}
-	if cfg.PrometheusPort != 0 {
-		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics.
-		mux := http.NewServeMux()
-		mux.Handle("GET /metrics", metrics.Handler(true, cfg.PrometheusToken))
-		mux.HandleFunc("/debug/pprof/", metrics.Guard(cfg.PrometheusToken, pprof.Index))
-		mux.HandleFunc("/debug/pprof/profile", metrics.Guard(cfg.PrometheusToken, pprof.Profile))
-		servers = append(servers, newServer(cfg.PrometheusPort, mux))
-	}
-	errs := make(chan error, len(servers)+1) // +1: the Room API
-	for _, s := range servers {
-		ln, err := net.Listen("tcp", s.Addr)
-		if err != nil {
-			return err
-		}
-		slog.Info("listening", "addr", s.Addr)
-		go func() { errs <- s.Serve(ln) }()
-	}
-	if roomAPI != nil {
-		ln, err := net.Listen("tcp", roomAPIAddr)
-		if err != nil {
-			return err
-		}
-		slog.Info("listening", "addr", roomAPIAddr)
-		go func() { errs <- roomAPI.Serve(ln) }()
-	}
-
-	select {
-	case err := <-errs:
+	vars := variableStore(cfg)
+	wsServer := ws.NewServer(cfg, ws.Deps{Auth: tokens, Admin: adm, Rooms: rooms, Spaces: spaces, Maps: maps, Vars: vars,
+		APIVersion: apiVersion, Analytics: events, Matrix: matrixClient(cfg, vars), Recordings: recordings})
+	srv := buildServers(cfg, httpapi.New(cfg, tokens, adm, front, wsServer, version), maps, buildUploader(cfg, vars),
+		buildRoomAPI(cfg, rooms, wsServer))
+	if err := srv.serve(ctx); err != nil {
 		return err
-	case <-ctx.Done():
 	}
+
 	slog.Info("shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	stopped := make(chan struct{})
-	go func() {
-		if roomAPI != nil {
-			roomAPI.GracefulStop()
-		}
-		close(stopped)
-	}()
-	for _, s := range servers {
-		_ = s.Shutdown(shutdownCtx)
-	}
-	select { // the Room API listeners never end by themselves: cut at the HTTP servers' deadline, before the flush
-	case <-stopped:
-	case <-shutdownCtx.Done():
-		roomAPI.Stop()
-	}
+	srv.shutdown(shutdownCtx) // no client may change anything after this
 	if err := wsServer.FlushVariables(shutdownCtx); err != nil {
 		slog.Error("variables lost on shutdown", "error", err)
 	}
@@ -335,25 +185,4 @@ func firstSet(values ...string) string {
 func deadline(ctx context.Context) time.Time {
 	d, _ := ctx.Deadline()
 	return d
-}
-
-// recordingPayload is the back's RecordingEventPayload.
-func recordingPayload(e core.RecordingEnded) map[string]any {
-	iso := func(t time.Time) any {
-		if t.IsZero() {
-			return nil
-		}
-		return t.UTC().Format("2006-01-02T15:04:05.000Z")
-	}
-	var errMessage any
-	if e.Info.Error != "" {
-		errMessage = e.Info.Error
-	}
-	files := make([]map[string]any, 0, len(e.Info.Files))
-	for _, f := range e.Info.Files {
-		files = append(files, map[string]any{"filename": f.Filename, "sizeBytes": f.SizeBytes, "durationSeconds": int64(f.Duration.Round(time.Second) / time.Second)})
-	}
-	return map[string]any{"phase": "ended", "status": e.Info.Status, "egressId": e.EgressID, "recordingSessionId": e.SessionID,
-		"playUri": e.Recorder.PlayURI, "recorder": map[string]string{"uuid": e.Recorder.UUID, "spaceUserId": e.Recorder.ID},
-		"startedAt": iso(e.Info.StartedAt), "endedAt": iso(e.Info.EndedAt), "error": errMessage, "files": files}
 }

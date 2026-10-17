@@ -15,16 +15,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/workadventure/workadventure/server-go/internal/matrix"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
 // The Matrix side of the chat areas: /roomArea (MatrixRoomAreaController), the resourceUrl map-storage calls for a
 // matrixRoomPropertyData; entering an area invites the player in its room, leaving it kicks it out
 // (handleEnterChatRoomAreaQuery, handleLeaveChatRoomArea).
-
-// SetMatrix gives the server the Synapse admin (nil: Matrix off).
-func (srv *Server) SetMatrix(m *matrix.Client) { srv.matrix = m }
 
 // mapStorageToken is the middleware of /roomArea.
 func (srv *Server) mapStorageToken(w http.ResponseWriter, r *http.Request) bool {

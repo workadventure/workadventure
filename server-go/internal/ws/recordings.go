@@ -17,13 +17,7 @@ import (
 
 var recordingFile = regexp.MustCompile(`^(recording|thumbnail)-(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})`)
 
-func (srv *Server) recordingBucket() *s3.Client {
-	if !srv.cfg.RecordingConfigured {
-		return nil
-	}
-	r := srv.cfg.RecordingS3
-	return s3.New(r.Endpoint, r.Region, r.Bucket, r.AccessKey, r.Secret)
-}
+func (srv *Server) recordingBucket() *s3.Client { return srv.recordings }
 
 // recordingsOf groups the objects of a user's folder by recording, newest first; a group without its video is left out.
 func recordingsOf(objects []s3.Object) (recordings []*pb.Recording, thumbnails map[string][]string) {

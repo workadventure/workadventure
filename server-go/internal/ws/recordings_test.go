@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/workadventure/workadventure/server-go/internal/auth"
-	"github.com/workadventure/workadventure/server-go/internal/config"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 
 	"github.com/workadventure/workadventure/server-go/internal/s3"
@@ -70,8 +69,7 @@ func fakeBucket(t *testing.T) (*httptest.Server, func() []string) {
 func TestAPlayerOnlyReachesItsOwnRecordings(t *testing.T) {
 	h := newHarness(t)
 	bucket, calls := fakeBucket(t)
-	h.srv.cfg.RecordingConfigured = true
-	h.srv.cfg.RecordingS3 = config.RecordingS3{Endpoint: bucket.URL, Region: "eu", Bucket: "rec", AccessKey: "k", Secret: "s"}
+	h.srv.recordings = s3.New(bucket.URL, "eu", "rec", "k", "s")
 	alice := h.dialAs(auth.Token{Identifier: "alice"}, "")
 	ask := func(id int32, q *pb.QueryMessage) *pb.AnswerMessage {
 		alice.query(id, q)
