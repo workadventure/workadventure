@@ -32,6 +32,9 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 FROM debian:bookworm-slim AS prod
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
 COPY --from=build /usr/local/bin/workadventure-server /usr/local/bin/wa-load /usr/local/bin/
-USER nobody
+# As the map-storage image: the maps in /maps, owned by uid 1000 (the chart chowns its volume to 1000:1000).
+ENV STORAGE_DIRECTORY=/maps
+RUN useradd --uid 1000 --create-home wa && mkdir /maps && chown wa:wa /maps
+USER 1000
 EXPOSE 3000
 CMD ["workadventure-server"]
