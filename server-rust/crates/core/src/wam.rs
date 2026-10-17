@@ -43,9 +43,15 @@ pub enum Edit {
     /// deleteCustomEntityMessage: the entities made from that prefab go (the caller checks the owner).
     DeleteCustomEntity(String),
     /// updateWAMSettingsMessage: the block to store under `settings`, or None to clear it.
-    Settings { key: &'static str, value: Option<Value> },
+    Settings {
+        key: &'static str,
+        value: Option<Value>,
+    },
     /// modifiyWAMMetadataMessage: `metadata` fields (Null removes one) and the vendor tags.
-    Metadata { fields: Map<String, Value>, tags: Vec<String> },
+    Metadata {
+        fields: Map<String, Value>,
+        tags: Vec<String>,
+    },
 }
 
 /// Who sends a command, with the rights map-storage receives along with it.
@@ -76,9 +82,9 @@ fn dropped(old: &[Value], new: &[Value]) -> Vec<String> {
     file_links(old)
         .into_iter()
         .filter(|(id, _)| {
-            new.iter()
-                .find(|p| p["id"] == *id)
-                .is_none_or(|p| p["link"].as_str().is_none_or(str::is_empty) && p["name"].as_str().is_none_or(str::is_empty))
+            new.iter().find(|p| p["id"] == *id).is_none_or(|p| {
+                p["link"].as_str().is_none_or(str::is_empty) && p["name"].as_str().is_none_or(str::is_empty)
+            })
         })
         .map(|(_, link)| link.to_owned())
         .collect()
@@ -363,7 +369,11 @@ impl Wam {
                         }
                         None => {
                             for (k, v) in &fields {
-                                if v.is_null() { block.remove(k) } else { block.insert(k.clone(), v.clone()) };
+                                if v.is_null() {
+                                    block.remove(k)
+                                } else {
+                                    block.insert(k.clone(), v.clone())
+                                };
                             }
                         }
                     }
@@ -393,7 +403,8 @@ impl Wam {
     pub fn check(&self) -> Result<(), String> {
         let d = &self.doc;
         let text = |v: &Value, what: &str| if v.is_string() { Ok(()) } else { Err(format!("{what} must be a string")) };
-        let number = |v: &Value, what: &str| if v.is_number() { Ok(()) } else { Err(format!("{what} must be a number")) };
+        let number =
+            |v: &Value, what: &str| if v.is_number() { Ok(()) } else { Err(format!("{what} must be a number")) };
         let property_list = |v: &Value, what: &str, entity: bool| -> Result<(), String> {
             for (i, p) in v.as_array().ok_or(format!("{what}.properties must be an array"))?.iter().enumerate() {
                 crate::wam_properties::check(p, entity, &format!("{what}.properties[{i}]"))?;
@@ -459,7 +470,8 @@ impl Wam {
             for area in self.areas_mut() {
                 for p in area["properties"].as_array_mut().into_iter().flatten() {
                     if p["type"] == "jitsiRoomProperty"
-                        && let Some(tag) = p["jitsiRoomConfig"].as_object_mut().and_then(|c| c.remove("jitsiRoomAdminTag"))
+                        && let Some(tag) =
+                            p["jitsiRoomConfig"].as_object_mut().and_then(|c| c.remove("jitsiRoomAdminTag"))
                     {
                         p["jitsiRoomAdminTag"] = tag;
                     }
@@ -513,9 +525,7 @@ impl<T> History<T> {
         if known.is_some() && known == latest {
             return Vec::new();
         }
-        let start = known
-            .and_then(|k| self.items.iter().position(|(_, id, _)| id == k))
-            .map_or(0, |i| i + 1);
+        let start = known.and_then(|k| self.items.iter().position(|(_, id, _)| id == k)).map_or(0, |i| i + 1);
         self.items.iter().skip(start).map(|(_, _, t)| t).collect()
     }
 }

@@ -41,7 +41,9 @@ fn claim(area: &str, prop: &str, owner: Option<&str>, x: f64) -> Edit {
     Edit::ModifyArea {
         id: area.into(),
         fields: obj(json!({"x": x})),
-        properties: Some(vec![json!({"id": prop, "type": "personalAreaPropertyData", "accessClaimMode": "dynamic", "allowedTags": [], "ownerId": owner})]),
+        properties: Some(vec![
+            json!({"id": prop, "type": "personalAreaPropertyData", "accessClaimMode": "dynamic", "allowedTags": [], "ownerId": owner}),
+        ]),
     }
 }
 
@@ -65,7 +67,13 @@ fn a_member_with_the_write_tag_builds_inside_the_restricted_area_only() {
     assert_eq!(w.last_command_id(), Some("c5"));
 
     // Moving it out of the area is refused; within, it moves.
-    let moved = |x: f64| Edit::ModifyEntity { id: "in".into(), fields: obj(json!({"x": x})), properties: None, width: 32.0, height: 32.0 };
+    let moved = |x: f64| Edit::ModifyEntity {
+        id: "in".into(),
+        fields: obj(json!({"x": x})),
+        properties: None,
+        width: 32.0,
+        height: 32.0,
+    };
     assert!(w.apply("c6", moved(400.0), builder).is_err());
     w.apply("c7", moved(80.0), builder).unwrap();
     assert_eq!(doc(&w)["entities"]["in"]["x"], 80.0);
@@ -107,17 +115,32 @@ fn a_free_personal_desk_is_claimed_given_back_and_built_on_by_its_owner_only() {
 fn deleting_an_area_or_unlinking_a_file_names_the_private_files_to_remove() {
     let mut w = office();
     let file = |link: &str| json!({"id": "f", "type": "openFile", "link": link, "name": "doc.pdf", "newTab": false});
-    let area = obj(json!({"id": "library", "x": 0, "y": 300, "width": 50, "height": 50, "name": "", "properties": [file("http://maps/private/files/doc-f.pdf")]}));
+    let area = obj(
+        json!({"id": "library", "x": 0, "y": 300, "width": 50, "height": 50, "name": "", "properties": [file("http://maps/private/files/doc-f.pdf")]}),
+    );
     w.apply("c1", Edit::CreateArea(area), ADMIN).unwrap();
     // The link goes (upload closed): the file is to remove.
     let unlinked = json!({"id": "f", "type": "openFile", "link": "", "name": "", "newTab": false});
     let applied = w
-        .apply("c2", Edit::ModifyArea { id: "library".into(), fields: Map::new(), properties: Some(vec![unlinked]) }, ADMIN)
+        .apply(
+            "c2",
+            Edit::ModifyArea { id: "library".into(), fields: Map::new(), properties: Some(vec![unlinked]) },
+            ADMIN,
+        )
         .unwrap();
     assert_eq!(applied.dropped_files, ["http://maps/private/files/doc-f.pdf"]);
 
     // Deleting the area: the non-editor is refused, the editor's command names its files.
-    w.apply("c3", Edit::ModifyArea { id: "library".into(), fields: Map::new(), properties: Some(vec![file("http://maps/private/files/b-f.pdf")]) }, ADMIN).unwrap();
+    w.apply(
+        "c3",
+        Edit::ModifyArea {
+            id: "library".into(),
+            fields: Map::new(),
+            properties: Some(vec![file("http://maps/private/files/b-f.pdf")]),
+        },
+        ADMIN,
+    )
+    .unwrap();
     let alice = Editor { uuid: "alice", tags: &[], can_edit: false };
     assert!(w.apply("c4", Edit::DeleteArea("library".into()), alice).is_err());
     let applied = w.apply("c5", Edit::DeleteArea("library".into()), ADMIN).unwrap();
@@ -130,7 +153,9 @@ fn a_deleted_custom_entity_takes_its_placed_copies_with_it() {
     let mut w = office();
     let custom = |id: &str, prefab: &str| Edit::CreateEntity {
         id: id.into(),
-        entity: obj(json!({"prefabRef": {"id": prefab, "collectionName": "custom entities"}, "x": 300, "y": 300, "properties": []})),
+        entity: obj(
+            json!({"prefabRef": {"id": prefab, "collectionName": "custom entities"}, "x": 300, "y": 300, "properties": []}),
+        ),
         width: 32.0,
         height: 32.0,
     };

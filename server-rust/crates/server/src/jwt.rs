@@ -51,9 +51,7 @@ struct Payload {
 pub struct InvalidToken;
 
 fn now() -> u64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .map_or(0, |d| d.as_secs())
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_secs())
 }
 
 fn mac(secret: &str) -> Hmac<Sha256> {
@@ -66,10 +64,7 @@ pub fn create(secret: &str, claims: Claims) -> String {
 
 fn create_at(secret: &str, claims: Claims, now: u64) -> String {
     // Serialized from the struct, not a Value: the field order is the pusher's, byte for byte.
-    let payload = Payload {
-        claims,
-        exp: now + VALIDITY_SECS,
-    };
+    let payload = Payload { claims, exp: now + VALIDITY_SECS };
     sign_raw(secret, &serde_json::to_vec(&payload).expect("claims serialize"))
 }
 
@@ -125,9 +120,7 @@ pub fn verify_ignoring_expiry(secret: &str, token: &str) -> Result<Claims, Inval
 }
 
 fn verify_at(secret: &str, token: &str, now: u64) -> Result<Claims, InvalidToken> {
-    serde_json::from_value::<Payload>(open_at(secret, token, now)?)
-        .map(|p| p.claims)
-        .map_err(|_| InvalidToken)
+    serde_json::from_value::<Payload>(open_at(secret, token, now)?).map(|p| p.claims).map_err(|_| InvalidToken)
 }
 
 fn open_at(secret: &str, token: &str, now: u64) -> Result<serde_json::Value, InvalidToken> {
@@ -153,10 +146,7 @@ mod tests {
     use super::*;
 
     fn anonymous() -> Claims {
-        Claims {
-            identifier: "9b1d".into(),
-            ..Claims::default()
-        }
+        Claims { identifier: "9b1d".into(), ..Claims::default() }
     }
 
     #[test]
@@ -184,11 +174,7 @@ mod tests {
         // jose: new SignJWT({identifier: "abc", tags: ["admin"]}).setExpirationTime(4102444800)
         //   .setProtectedHeader({alg: "HS256"}).sign("s3cr3t")
         let from_jose = "eyJhbGciOiJIUzI1NiJ9.eyJpZGVudGlmaWVyIjoiYWJjIiwidGFncyI6WyJhZG1pbiJdLCJleHAiOjQxMDI0NDQ4MDB9.tX8v_cx2RIL1GtfwonC0K5PYC0e5wtnVoRygZ5M5kB0";
-        let claims = Claims {
-            identifier: "abc".into(),
-            tags: Some(vec!["admin".into()]),
-            ..Claims::default()
-        };
+        let claims = Claims { identifier: "abc".into(), tags: Some(vec!["admin".into()]), ..Claims::default() };
         assert_eq!(create_at("s3cr3t", claims.clone(), 4102444800 - VALIDITY_SECS), from_jose);
         assert_eq!(verify_at("s3cr3t", from_jose, 0), Ok(claims));
     }

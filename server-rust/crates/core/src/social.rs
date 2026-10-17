@@ -81,7 +81,8 @@ impl Follows {
 /// EmoteValidator.isValidEmote: 1 to 32 UTF-16 units, emoji only.
 pub fn is_valid_emote(emote: &str) -> bool {
     static EMOJI_ONLY: std::sync::OnceLock<regex::Regex> = std::sync::OnceLock::new();
-    let re = EMOJI_ONLY.get_or_init(|| regex::Regex::new(r"^(?:\p{Extended_Pictographic}|\p{Emoji_Component})+$").expect("valid"));
+    let re = EMOJI_ONLY
+        .get_or_init(|| regex::Regex::new(r"^(?:\p{Extended_Pictographic}|\p{Emoji_Component})+$").expect("valid"));
     let len = emote.encode_utf16().count();
     (1..=32).contains(&len) && re.is_match(emote)
 }

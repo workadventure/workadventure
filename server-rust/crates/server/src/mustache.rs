@@ -41,10 +41,7 @@ impl Template {
             let tag = after[if raw { 3 } else { 2 }..end].trim();
             rest = &after[end + close_len..];
             if raw {
-                stack.last_mut().expect("root").1.push(Token::Var {
-                    name: tag.to_owned(),
-                    escape: false,
-                });
+                stack.last_mut().expect("root").1.push(Token::Var { name: tag.to_owned(), escape: false });
             } else if let Some(name) = tag.strip_prefix('#') {
                 stack.push((name.trim().to_owned(), Vec::new()));
             } else if let Some(name) = tag.strip_prefix('/') {
@@ -54,15 +51,9 @@ impl Template {
                 }
                 stack.last_mut().expect("parent").1.push(Token::Section { name: open, inner });
             } else if let Some(name) = tag.strip_prefix('&') {
-                stack.last_mut().expect("root").1.push(Token::Var {
-                    name: name.trim().to_owned(),
-                    escape: false,
-                });
+                stack.last_mut().expect("root").1.push(Token::Var { name: name.trim().to_owned(), escape: false });
             } else if !tag.starts_with('!') {
-                stack.last_mut().expect("root").1.push(Token::Var {
-                    name: tag.to_owned(),
-                    escape: true,
-                });
+                stack.last_mut().expect("root").1.push(Token::Var { name: tag.to_owned(), escape: true });
             }
         }
         stack.last_mut().expect("root").1.push(Token::Text(rest.to_owned()));

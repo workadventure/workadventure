@@ -14,11 +14,7 @@ pub struct Grid<K> {
 
 impl<K: Copy + Eq + Hash + Ord> Grid<K> {
     pub fn new(cell: f64) -> Self {
-        Self {
-            cell: cell.max(1.0),
-            cells: HashMap::new(),
-            items: HashMap::new(),
-        }
+        Self { cell: cell.max(1.0), cells: HashMap::new(), items: HashMap::new() }
     }
 
     fn cell_of(&self, x: f64, y: f64) -> (i64, i64) {

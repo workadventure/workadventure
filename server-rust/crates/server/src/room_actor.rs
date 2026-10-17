@@ -7,23 +7,23 @@ use std::sync::Arc;
 
 use tokio::task::JoinSet;
 
+use wa_core::areas::{self, AreaVariables, VarKey};
 use wa_core::geometry::{Position, Viewport};
 use wa_core::room::{Clock, Event, JoinRequest, Room, Sink, UserId};
-use wa_core::user::DetailsChange;
-use wa_core::areas::{self, AreaVariables, VarKey};
 use wa_core::social::{FollowMsg, Follows, Invitations};
+use wa_core::user::DetailsChange;
 use wa_core::variables::{RoomVariables, VariableError, Writer};
 use wa_core::wam::{Edit, Editor, History, Wam};
 use wa_proto::messages as pb;
 
 use crate::AppState;
 use crate::custom_entities;
-use crate::room_map;
 use crate::map_storage::{CachedMap, MapChange, MapSlot, Storage};
-use crate::session::SessionInfo;
 use crate::metrics::{METRICS, dec_room_gauge};
 use crate::outbox::Frame;
+use crate::room_map;
 use crate::session::Session;
+use crate::session::SessionInfo;
 use crate::wire;
 
 pub const MAILBOX: usize = 1024;
@@ -91,14 +91,22 @@ pub enum RoomCmd {
     /// From the Room API.
     Api(RoomApiCmd),
     /// The admin socket watches this room: who is here now, then who comes and goes.
-    AdminListen { tx: tokio::sync::mpsc::Sender<String> },
+    AdminListen {
+        tx: tokio::sync::mpsc::Sender<String>,
+    },
     /// A ban from the admin socket: everyone of that player is sent away, as banned.
-    AdminBan { uuid: String, reason: String },
+    AdminBan {
+        uuid: String,
+        reason: String,
+    },
     /// From the admin: reload the room (dispatchRoomRefresh), a message to everyone, the world is full, a
     /// message of an external module to one user.
     Refresh,
     /// sendAdminMessageToRoom: the admin's /message leaves the type empty, a global message has one.
-    AdminMessage { kind: String, message: String },
+    AdminMessage {
+        kind: String,
+        message: String,
+    },
     /// The room's group (map details): the world of the world-scoped player variables.
     Group(tokio::sync::oneshot::Sender<Option<String>>),
     /// Who is in the room (getWorldUsers), with the room's URL.
@@ -127,7 +135,11 @@ pub enum Social {
     InvitationRequest(pb::MeetingInvitationRequestMessage),
     InvitationResponse(pb::MeetingInvitationResponseMessage),
     /// banPlayerMessage with kick, from an admin (checked by the caller): every connection of that player.
-    Kick { uuid: String, reason: String, banned: bool },
+    Kick {
+        uuid: String,
+        reason: String,
+        banned: bool,
+    },
 }
 
 pub type RoomHandle = tokio::sync::mpsc::Sender<RoomCmd>;
@@ -146,9 +158,7 @@ pub enum RoomApiCmd {
 struct SystemClock;
 impl Clock for SystemClock {
     fn now_ms(&self) -> u64 {
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |d| d.as_millis() as u64)
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
     }
 }
 
@@ -198,16 +208,9 @@ enum Pending {
 
 #[allow(clippy::large_enum_variant)]
 enum Done {
-    Edit {
-        session: Arc<Session>,
-        command: pb::EditMapCommandMessage,
-        result: Result<(), String>,
-    },
+    Edit { session: Arc<Session>, command: pb::EditMapCommandMessage, result: Result<(), String> },
     Removed,
-    Loaded {
-        generation: u64,
-        wam: Option<Wam>,
-    },
+    Loaded { generation: u64, wam: Option<Wam> },
 }
 
 /// What the room tells its users.
@@ -349,18 +352,19 @@ impl MapFile {
         use pb::edit_map_message::Message as M;
         let io = matches!(
             command.edit_map_message.as_ref().and_then(|m| m.message.as_ref()),
-            Some(M::UploadEntityMessage(_) | M::ModifyCustomEntityMessage(_) | M::DeleteCustomEntityMessage(_) | M::UploadFileMessage(_))
+            Some(
+                M::UploadEntityMessage(_)
+                    | M::ModifyCustomEntityMessage(_)
+                    | M::DeleteCustomEntityMessage(_)
+                    | M::UploadFileMessage(_)
+            )
         );
         if !io || self.wam.is_none() {
             return Some(self.complete(session, command, Ok(())));
         }
         self.io.spawn(async move {
             let info = &session.info;
-            let editor = Editor {
-                uuid: &info.user_uuid,
-                tags: &info.tags,
-                can_edit: info.can_edit,
-            };
+            let editor = Editor { uuid: &info.user_uuid, tags: &info.tags, can_edit: info.can_edit };
             let result = match command.edit_map_message.as_mut().and_then(|m| m.message.as_mut()) {
                 Some(M::UploadEntityMessage(m)) => {
                     m.owner_id = Some(info.user_uuid.clone());
@@ -381,19 +385,24 @@ impl MapFile {
     }
 
     /// The WAM side of a command whose I/O, if any, went through: the command as the room gets it back.
-    fn complete(&mut self, session: Arc<Session>, command: pb::EditMapCommandMessage, io: Result<(), String>) -> Outcome {
+    fn complete(
+        &mut self,
+        session: Arc<Session>,
+        command: pb::EditMapCommandMessage,
+        io: Result<(), String>,
+    ) -> Outcome {
         let id = command.id.clone();
         let result = io.and_then(|()| self.apply(command, &session.info));
         Outcome::Edited { session, id, result }
     }
 
-    fn apply(&mut self, command: pb::EditMapCommandMessage, info: &SessionInfo) -> Result<pb::EditMapCommandMessage, String> {
+    fn apply(
+        &mut self,
+        command: pb::EditMapCommandMessage,
+        info: &SessionInfo,
+    ) -> Result<pb::EditMapCommandMessage, String> {
         use pb::edit_map_message::Message as M;
-        let editor = Editor {
-            uuid: &info.user_uuid,
-            tags: &info.tags,
-            can_edit: info.can_edit,
-        };
+        let editor = Editor { uuid: &info.user_uuid, tags: &info.tags, can_edit: info.can_edit };
         let wam = self.wam.as_mut().ok_or("This map cannot be edited")?;
         let wam_changed = match command.edit_map_message.as_ref().and_then(|m| m.message.as_ref()) {
             // Done by the I/O: the custom entity collection and the private files are not in the WAM.
@@ -519,10 +528,11 @@ impl Sink for Fanout<'_> {
                     session.push(wire::direct(Top::RoomJoinedMessage(pb::RoomJoinedMessage {
                         current_user_id: user.id,
                         character_textures: wire::textures_to(&user.profile.textures),
-                        companion_texture: user.profile.companion.as_ref().map(|c| pb::CompanionTextureMessage {
-                            url: c.url.clone(),
-                            id: c.id.clone(),
-                        }),
+                        companion_texture: user
+                            .profile
+                            .companion
+                            .as_ref()
+                            .map(|c| pb::CompanionTextureMessage { url: c.url.clone(), id: c.id.clone() }),
                         can_edit: user.profile.can_edit,
                         activated_invite_user: session.info.activated_invite_user,
                         user_room_token: session.info.user_room_token.clone(),
@@ -562,19 +572,15 @@ impl Sink for Fanout<'_> {
             }
             Event::JoinGroupSpace(g) => wire::direct(Top::JoinSpaceRequestMessage(pb::JoinSpaceRequestMessage {
                 space_name: g.space_name.clone(),
-                properties_to_sync: ["cameraState", "microphoneState", "screenSharingState"]
-                    .map(String::from)
-                    .to_vec(),
+                properties_to_sync: ["cameraState", "microphoneState", "screenSharingState"].map(String::from).to_vec(),
             })),
             Event::Emote(actor, emote) => wire::sub(Sub::EmoteEventMessage(pb::EmoteEventMessage {
                 actor_user_id: actor,
                 emote: emote.to_owned(),
             })),
-            Event::LeaveGroupSpace(name) => {
-                wire::direct(Top::LeaveSpaceRequestMessage(pb::LeaveSpaceRequestMessage {
-                    space_name: name.to_owned(),
-                }))
-            }
+            Event::LeaveGroupSpace(name) => wire::direct(Top::LeaveSpaceRequestMessage(pb::LeaveSpaceRequestMessage {
+                space_name: name.to_owned(),
+            })),
         };
         self.each(to, &frame);
     }
@@ -616,13 +622,12 @@ fn deliver(
             }
             // The users are asked to reload: the file they have is not the one the room now uses.
             Outcome::Reloaded => {
-                let frame = wire::direct(pb::server_to_client_message::Message::RefreshRoomMessage(
-                    pb::RefreshRoomMessage {
+                let frame =
+                    wire::direct(pb::server_to_client_message::Message::RefreshRoomMessage(pb::RefreshRoomMessage {
                         room_id: url.to_owned(),
                         version_number: 0,
                         time_to_refresh: Some(30),
-                    },
-                ));
+                    }));
                 Fanout::new(sessions).each_all(&frame);
             }
         }
@@ -697,7 +702,8 @@ fn member_join(info: &SessionInfo, name: &str, room: &str) -> String {
 
 /// To every admin socket still there (one that cannot keep up misses the event).
 fn tell_admins(admins: &mut Vec<tokio::sync::mpsc::Sender<String>>, event: &str) {
-    admins.retain(|tx| !matches!(tx.try_send(event.to_owned()), Err(tokio::sync::mpsc::error::TrySendError::Closed(_))));
+    admins
+        .retain(|tx| !matches!(tx.try_send(event.to_owned()), Err(tokio::sync::mpsc::error::TrySendError::Closed(_))));
 }
 
 fn send_follow(messages: Vec<FollowMsg>, sessions: &HashMap<UserId, Arc<Session>>) {
@@ -760,7 +766,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
         None => None,
     };
     // Like getVariableManager: the map is read, then the saved values, before anybody joins.
-    let defs = room_map::variable_defs(&app, &url, map.as_ref().and_then(|m| Some((m.rel.as_str(), m.wam.as_ref()?)))).await;
+    let defs =
+        room_map::variable_defs(&app, &url, map.as_ref().and_then(|m| Some((m.rel.as_str(), m.wam.as_ref()?)))).await;
     let mut room_vars = RoomVariables::new(defs.as_ref().ok().cloned());
     if room_vars.has_map() {
         room_vars.restore(app.redis.room_variables(&url).await);
@@ -816,11 +823,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
             RoomCmd::Connect { session } => {
                 let commands = map.as_ref().map_or_else(Vec::new, |m| {
                     let latest = m.wam.as_ref().and_then(Wam::last_command_id);
-                    m.history
-                        .after(session.info.last_command_id.as_deref(), latest)
-                        .into_iter()
-                        .cloned()
-                        .collect()
+                    m.history.after(session.info.last_command_id.as_deref(), latest).into_iter().cloned().collect()
                 });
                 session.push(wire::direct(Top::RoomConnectedMessage(pb::RoomConnectedMessage {
                     edit_map_commands_array_message: Some(pb::EditMapCommandsArrayMessage {
@@ -870,9 +873,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                         s.push(wire::direct(m));
                     }
                 };
-                let others_in_group = |room: &Room| -> Vec<UserId> {
-                    room.group_members(me).into_iter().filter(|u| *u != me).collect()
-                };
+                let others_in_group =
+                    |room: &Room| -> Vec<UserId> { room.group_members(me).into_iter().filter(|u| *u != me).collect() };
                 match act {
                     Social::FollowRequest(m) => {
                         for to in others_in_group(&room) {
@@ -901,12 +903,19 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     }
                     Social::Item(m) => {
                         let state = m.state_json.clone();
-                        Fanout::new(&mut sessions).each_all(&wire::sub(pb::sub_message::Message::ItemEventMessage(m.clone())));
+                        Fanout::new(&mut sessions)
+                            .each_all(&wire::sub(pb::sub_message::Message::ItemEventMessage(m.clone())));
                         items.insert(m.item_id, state);
                     }
                     Social::InvitationRequest(m) => {
                         let admin = session.info.tags.iter().any(|t| t == "admin");
-                        if !admin && !invitations.try_send(SystemClock.now_ms(), &session.info.user_uuid, &m.receiver_user_uuid) {
+                        if !admin
+                            && !invitations.try_send(
+                                SystemClock.now_ms(),
+                                &session.info.user_uuid,
+                                &m.receiver_user_uuid,
+                            )
+                        {
                             session.push(wire::direct(Top::MeetingInvitationRequestTooHighMessage(
                                 pb::MeetingInvitationRequestTooHighMessage {},
                             )));
@@ -937,7 +946,13 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                         }
                         // The responder's other tabs close their popup.
                         for to in room.ids_of(&session.info.user_uuid).into_iter().filter(|u| *u != me) {
-                            direct(to, &sessions, Top::MeetingInvitationRequestClosedMessage(pb::MeetingInvitationRequestClosedMessage {}));
+                            direct(
+                                to,
+                                &sessions,
+                                Top::MeetingInvitationRequestClosedMessage(
+                                    pb::MeetingInvitationRequestClosedMessage {},
+                                ),
+                            );
                         }
                     }
                     Social::Kick { uuid, reason, banned } => {
@@ -949,7 +964,11 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                             Fanout::new(&mut sessions).variables(changes);
                             if let Some(s) = sessions.remove(&id) {
                                 dec_room_gauge(&METRICS.nb_clients_per_room, &url);
-                                tell_admins(&mut admins, &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}}).to_string());
+                                tell_admins(
+                                    &mut admins,
+                                    &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}})
+                                        .to_string(),
+                                );
                                 s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage {
                                     r#type: if banned { "banned" } else { "kicked" }.into(),
                                     message: reason.clone(),
@@ -965,7 +984,16 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     let _ = reply.send(room_vars.get(&name).map(str::to_owned));
                 }
                 RoomApiCmd::Save { name, value, reply } => {
-                    let saved = set_variable(&mut room_vars, &app, &url, &sessions, &mut var_listeners, Writer::RoomApi, &name, &value);
+                    let saved = set_variable(
+                        &mut room_vars,
+                        &app,
+                        &url,
+                        &sessions,
+                        &mut var_listeners,
+                        Writer::RoomApi,
+                        &name,
+                        &value,
+                    );
                     let _ = reply.send(saved.map_err(|e| e.to_string()));
                 }
                 RoomApiCmd::ListenVariable { name, tx } => var_listeners.add(name, tx),
@@ -973,7 +1001,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
             },
             RoomCmd::AdminListen { tx } => {
                 for s in sessions.values() {
-                    let name = s.user_id().and_then(|id| room.user(id)).map(|u| u.profile.name.clone()).unwrap_or_default();
+                    let name =
+                        s.user_id().and_then(|id| room.user(id)).map(|u| u.profile.name.clone()).unwrap_or_default();
                     let _ = tx.try_send(member_join(&s.info, &name, &url));
                 }
                 admins.push(tx);
@@ -986,8 +1015,14 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     Fanout::new(&mut sessions).variables(changes);
                     if let Some(s) = sessions.remove(&id) {
                         dec_room_gauge(&METRICS.nb_clients_per_room, &url);
-                        tell_admins(&mut admins, &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}}).to_string());
-                        s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage { r#type: "banned".into(), message: reason.clone() })));
+                        tell_admins(
+                            &mut admins,
+                            &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}}).to_string(),
+                        );
+                        s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage {
+                            r#type: "banned".into(),
+                            message: reason.clone(),
+                        })));
                         s.end_after_queued();
                     }
                 }
@@ -1020,7 +1055,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 let _ = reply.send((url.clone(), users));
             }
             RoomCmd::WorldFull => {
-                Fanout::new(&mut sessions).each_all(&wire::direct(Top::WorldFullWarningMessage(pb::WorldFullWarningMessage {})));
+                Fanout::new(&mut sessions)
+                    .each_all(&wire::direct(Top::WorldFullWarningMessage(pb::WorldFullWarningMessage {})));
             }
             RoomCmd::ExternalModule(m) => {
                 let Some(uuid) = m.recipient_uuid.clone() else { continue };
@@ -1039,7 +1075,16 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     retries.push((session, name, value));
                     continue;
                 }
-                let Err(e) = set_variable(&mut room_vars, &app, &url, &sessions, &mut var_listeners, player(&room, &session), &name, &value) else {
+                let Err(e) = set_variable(
+                    &mut room_vars,
+                    &app,
+                    &url,
+                    &sessions,
+                    &mut var_listeners,
+                    player(&room, &session),
+                    &name,
+                    &value,
+                ) else {
                     continue;
                 };
                 if vars_loaded.elapsed() < std::time::Duration::from_secs(10) {
@@ -1118,11 +1163,9 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 }
                 Fanout::new(&mut sessions).variables(changes);
                 if joined.duplicate {
-                    session.push(wire::direct(
-                        pb::server_to_client_message::Message::DuplicateUserConnectedMessage(
-                            pb::DuplicateUserConnectedMessage {},
-                        ),
-                    ));
+                    session.push(wire::direct(pb::server_to_client_message::Message::DuplicateUserConnectedMessage(
+                        pb::DuplicateUserConnectedMessage {},
+                    )));
                 }
                 if let Some(old) = joined.replaced.and_then(|id| sessions.remove(&id)) {
                     old.end();
@@ -1142,14 +1185,14 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 Fanout::new(&mut sessions).variables(changes);
                 if sessions.remove(&user).is_some() {
                     dec_room_gauge(&METRICS.nb_clients_per_room, &url);
-                    tell_admins(&mut admins, &serde_json::json!({"type": "MemberLeave", "data": {"uuid": session.info.user_uuid}}).to_string());
+                    tell_admins(
+                        &mut admins,
+                        &serde_json::json!({"type": "MemberLeave", "data": {"uuid": session.info.user_uuid}})
+                            .to_string(),
+                    );
                 }
             }
-            RoomCmd::Move {
-                user,
-                position,
-                viewport,
-            } => {
+            RoomCmd::Move { user, position, viewport } => {
                 let from = room.position_of(user);
                 let mut out = Fanout::new(&mut sessions);
                 room.move_user(user, position, &mut out);
@@ -1182,12 +1225,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 }
                 room.update_details(user, change, &mut Fanout::new(&mut sessions));
             }
-            RoomCmd::AskPosition {
-                user,
-                target_uuid,
-                target_id,
-                locate,
-            } => {
+            RoomCmd::AskPosition { user, target_uuid, target_id, locate } => {
                 let (Some(target), Some(session)) = (room.find(&target_uuid, target_id), sessions.get(&user)) else {
                     continue;
                 };

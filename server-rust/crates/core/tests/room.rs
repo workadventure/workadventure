@@ -50,20 +50,11 @@ fn room() -> Room {
 }
 
 fn at(x: i32, y: i32) -> Position {
-    Position {
-        x,
-        y,
-        ..Position::default()
-    }
+    Position { x, y, ..Position::default() }
 }
 
 fn screen() -> Viewport {
-    Viewport {
-        left: 0,
-        top: 0,
-        right: 1000,
-        bottom: 1000,
-    }
+    Viewport { left: 0, top: 0, right: 1000, bottom: 1000 }
 }
 
 fn join(room: &mut Room, log: &mut Log, uuid: &str, pos: Position) -> UserId {
@@ -73,11 +64,7 @@ fn join(room: &mut Room, log: &mut Log, uuid: &str, pos: Position) -> UserId {
 fn join_with(room: &mut Room, log: &mut Log, uuid: &str, pos: Position, a: Availability, v: Viewport) -> UserId {
     room.join(
         JoinRequest {
-            profile: Profile {
-                uuid: uuid.into(),
-                name: uuid.into(),
-                ..Profile::default()
-            },
+            profile: Profile { uuid: uuid.into(), name: uuid.into(), ..Profile::default() },
             position: pos,
             availability: a,
             viewport: v,
@@ -157,14 +144,7 @@ fn a_third_player_joins_the_existing_bubble() {
 
 #[test]
 fn a_full_bubble_lets_nobody_in() {
-    let mut room = Room::new(
-        "r",
-        RoomConfig {
-            max_per_group: 2,
-            ..RoomConfig::default()
-        },
-        Box::new(FixedClock),
-    );
+    let mut room = Room::new("r", RoomConfig { max_per_group: 2, ..RoomConfig::default() }, Box::new(FixedClock));
     let mut log = Log::default();
     join(&mut room, &mut log, "a", at(100, 100));
     join(&mut room, &mut log, "b", at(130, 100));
@@ -181,31 +161,14 @@ fn a_silent_player_stays_out_and_leaves_when_going_silent() {
     assert_eq!(room.group_count(), 0);
 
     // Back online: joins without moving.
-    room.update_details(
-        b,
-        DetailsChange {
-            availability: Availability::ONLINE,
-            ..DetailsChange::default()
-        },
-        &mut log,
-    );
+    room.update_details(b, DetailsChange { availability: Availability::ONLINE, ..DetailsChange::default() }, &mut log);
     assert_eq!(room.group_count(), 1);
 
-    room.update_details(
-        b,
-        DetailsChange {
-            availability: Availability::BUSY,
-            ..DetailsChange::default()
-        },
-        &mut log,
-    );
+    room.update_details(b, DetailsChange { availability: Availability::BUSY, ..DetailsChange::default() }, &mut log);
     assert_eq!(room.group_count(), 1, "busy is not silent");
     room.update_details(
         b,
-        DetailsChange {
-            availability: Availability::BACK_IN_A_MOMENT,
-            ..DetailsChange::default()
-        },
+        DetailsChange { availability: Availability::BACK_IN_A_MOMENT, ..DetailsChange::default() },
         &mut log,
     );
     assert_eq!(room.group_count(), 0);
@@ -217,16 +180,7 @@ fn crossing_a_zone_border_is_a_move_for_who_sees_both_zones() {
     let mut log = Log::default();
     // Watches zones (0,0) and (1,0).
     let both = join(&mut room, &mut log, "both", at(5000, 5000));
-    room.set_viewport(
-        both,
-        Viewport {
-            left: 0,
-            top: 0,
-            right: 639,
-            bottom: 10,
-        },
-        &mut log,
-    );
+    room.set_viewport(both, Viewport { left: 0, top: 0, right: 639, bottom: 10 }, &mut log);
     // Watches zone (0,0) only.
     let left_only = join_with(
         &mut room,
@@ -234,12 +188,7 @@ fn crossing_a_zone_border_is_a_move_for_who_sees_both_zones() {
         "left",
         at(6000, 6000),
         Availability::ONLINE,
-        Viewport {
-            left: 0,
-            top: 0,
-            right: 10,
-            bottom: 10,
-        },
+        Viewport { left: 0, top: 0, right: 10, bottom: 10 },
     );
     // Watches zone (1,0) only.
     let right_only = join_with(
@@ -248,12 +197,7 @@ fn crossing_a_zone_border_is_a_move_for_who_sees_both_zones() {
         "right",
         at(7000, 7000),
         Availability::ONLINE,
-        Viewport {
-            left: 330,
-            top: 0,
-            right: 340,
-            bottom: 10,
-        },
+        Viewport { left: 330, top: 0, right: 340, bottom: 10 },
     );
     let mover = join_with(
         &mut room,
@@ -261,12 +205,7 @@ fn crossing_a_zone_border_is_a_move_for_who_sees_both_zones() {
         "mover",
         at(300, 5),
         Availability::ONLINE,
-        Viewport {
-            left: 9000,
-            top: 9000,
-            right: 9001,
-            bottom: 9001,
-        },
+        Viewport { left: 9000, top: 9000, right: 9001, bottom: 9001 },
     );
     log.take();
     room.move_user(mover, at(330, 5), &mut log);
@@ -283,16 +222,7 @@ fn a_viewport_change_sends_what_appears_and_what_disappears() {
     let a = join(&mut room, &mut log, "a", at(100, 100));
     let far = join(&mut room, &mut log, "far", at(2000, 2000));
     log.take();
-    room.set_viewport(
-        a,
-        Viewport {
-            left: 1900,
-            top: 1900,
-            right: 2100,
-            bottom: 2100,
-        },
-        &mut log,
-    );
+    room.set_viewport(a, Viewport { left: 1900, top: 1900, right: 2100, bottom: 2100 }, &mut log);
     assert_eq!(log.for_user(a), vec![format!("userJoined {far}")]);
     log.take();
     room.set_viewport(a, screen(), &mut log);
@@ -320,11 +250,7 @@ fn a_new_connection_from_the_same_tab_replaces_the_old_one() {
     let mut room = room();
     let mut log = Log::default();
     let req = |tab: &str| JoinRequest {
-        profile: Profile {
-            uuid: "same".into(),
-            tab_id: Some(tab.into()),
-            ..Profile::default()
-        },
+        profile: Profile { uuid: "same".into(), tab_id: Some(tab.into()), ..Profile::default() },
         position: at(0, 0),
         availability: Availability::ONLINE,
         viewport: screen(),
@@ -353,9 +279,8 @@ fn a_player_is_found_by_uuid_and_by_connection() {
 fn hundreds_of_players_in_one_room_stay_consistent() {
     let mut room = room();
     let mut log = Log::default();
-    let ids: Vec<UserId> = (0..500)
-        .map(|n| join(&mut room, &mut log, &format!("u{n}"), at((n % 25) * 40, (n / 25) * 40)))
-        .collect();
+    let ids: Vec<UserId> =
+        (0..500).map(|n| join(&mut room, &mut log, &format!("u{n}"), at((n % 25) * 40, (n / 25) * 40))).collect();
     for (step, id) in ids.iter().enumerate().cycle().take(5000) {
         let n = step as i32;
         room.move_user(*id, at((n * 37) % 1000, (n * 53) % 1000), &mut log);

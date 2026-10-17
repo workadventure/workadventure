@@ -96,7 +96,16 @@ fn min_active(kind: &str) -> usize {
 impl Meetings {
     /// `id` is the space's name with its world (`<world>.<name>`), `meeting_id` the name the front uses.
     pub fn new(id: String, meeting_id: String) -> Self {
-        Self { id, meeting_id, members: Vec::new(), session: None, room_id: String::new(), kind: None, comm: Comm::None, rows: Vec::new() }
+        Self {
+            id,
+            meeting_id,
+            members: Vec::new(),
+            session: None,
+            room_id: String::new(),
+            kind: None,
+            comm: Comm::None,
+            rows: Vec::new(),
+        }
     }
 
     /// The rows written since the last call.
@@ -107,7 +116,12 @@ impl Meetings {
     /// Catches up with the space: who left, who came, who went on or off air, its kind, its transport.
     pub fn observe(&mut self, space: &Space, now: u64) {
         let ids: Vec<&str> = space.member_ids().collect();
-        let gone: Vec<String> = self.members.iter().filter(|(m, _)| !ids.contains(&m.space_user_id.as_str())).map(|(m, _)| m.space_user_id.clone()).collect();
+        let gone: Vec<String> = self
+            .members
+            .iter()
+            .filter(|(m, _)| !ids.contains(&m.space_user_id.as_str()))
+            .map(|(m, _)| m.space_user_id.clone())
+            .collect();
         for id in gone {
             self.leave(&id, now);
         }
@@ -117,7 +131,12 @@ impl Meetings {
             let active = space.filter == FilterType::AllUsers || u.megaphone_state;
             match self.members.iter().position(|(m, _)| m.space_user_id == id) {
                 None => {
-                    let member = Member { uuid: u.uuid.clone(), space_user_id: id.to_owned(), room_id: u.play_uri.clone(), tags: u.tags.clone() };
+                    let member = Member {
+                        uuid: u.uuid.clone(),
+                        space_user_id: id.to_owned(),
+                        room_id: u.play_uri.clone(),
+                        tags: u.tags.clone(),
+                    };
                     self.join(member, active, now);
                 }
                 Some(i) if self.members[i].1 != active => self.set_active(i, active, now),
@@ -182,7 +201,14 @@ impl Meetings {
         let wanted = self.kind.as_deref().filter(|k| self.active_count() >= min_active(k)).map(str::to_owned);
         match (wanted, self.session.is_some()) {
             (Some(kind), false) => {
-                self.session = Some(Session { kind, opened_ms: now, transports: vec![(self.comm, now)], participations: Vec::new(), present: 0, peak: 0 });
+                self.session = Some(Session {
+                    kind,
+                    opened_ms: now,
+                    transports: vec![(self.comm, now)],
+                    participations: Vec::new(),
+                    present: 0,
+                    peak: 0,
+                });
                 let ids: Vec<String> = self.members.iter().map(|(m, _)| m.space_user_id.clone()).collect();
                 for id in ids {
                     self.add_participation(&id, now);
@@ -194,10 +220,22 @@ impl Meetings {
     }
 
     fn add_participation(&mut self, id: &str, now: u64) {
-        let (Some(s), Some((member, active))) = (&mut self.session, self.members.iter().find(|(m, _)| m.space_user_id == id)) else { return };
+        let (Some(s), Some((member, active))) =
+            (&mut self.session, self.members.iter().find(|(m, _)| m.space_user_id == id))
+        else {
+            return;
+        };
         s.present += 1;
         s.peak = s.peak.max(s.present);
-        let mut p = Participation { member: member.clone(), join_rank: s.participations.len() + 1, started_ms: now, ended_ms: None, on_air_since: None, airtime_ms: 0, spoke: false };
+        let mut p = Participation {
+            member: member.clone(),
+            join_rank: s.participations.len() + 1,
+            started_ms: now,
+            ended_ms: None,
+            on_air_since: None,
+            airtime_ms: 0,
+            spoke: false,
+        };
         if *active {
             p.on_air(now);
         }
@@ -210,9 +248,7 @@ impl Meetings {
     /// Ends the open session, if any: "closed", or "back_shutdown" when the server stops.
     pub fn close(&mut self, reason: &str, now: u64) {
         let Some(mut s) = self.session.take() else { return };
-        let interval = |from: u64, to: u64| {
-            json!({ "startedAt": iso_at(from), "endedAt": iso_at(to), "durationSeconds": to.saturating_sub(from) as f64 / 1000.0, "endReason": reason })
-        };
+        let interval = |from: u64, to: u64| json!({ "startedAt": iso_at(from), "endedAt": iso_at(to), "durationSeconds": to.saturating_sub(from) as f64 / 1000.0, "endReason": reason });
         let transport = |s: &Session, from: u64, to: u64| {
             let (mut webrtc, mut livekit) = (0.0, 0.0);
             for (i, (comm, start)) in s.transports.iter().enumerate() {

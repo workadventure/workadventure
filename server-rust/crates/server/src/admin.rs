@@ -26,10 +26,7 @@ fn refused(state: &AppState, headers: &HeaderMap) -> Option<Response> {
     let Some(expected) = state.config.raw.get("ADMIN_API_TOKEN").filter(|t| !t.is_empty()) else {
         return Some((StatusCode::UNAUTHORIZED, "No token configured!").into_response());
     };
-    let token = headers
-        .get("admin-token")
-        .or_else(|| headers.get(header::AUTHORIZATION))
-        .and_then(|v| v.to_str().ok());
+    let token = headers.get("admin-token").or_else(|| headers.get(header::AUTHORIZATION)).and_then(|v| v.to_str().ok());
     if token != Some(expected.as_str()) {
         tracing::error!("admin access refused");
         return Some((StatusCode::UNAUTHORIZED, "Incorrect token").into_response());
@@ -93,14 +90,20 @@ async fn message(State(state): State<AppState>, headers: HeaderMap, body: axum::
     let Some(body) = json_body(&body) else {
         return (StatusCode::BAD_REQUEST, "Invalid JSON body").into_response();
     };
-    let (Some(text), Some(kind), Some(targets)) = (body["text"].as_str(), body["type"].as_str(), body["targets"].as_array()) else {
+    let (Some(text), Some(kind), Some(targets)) =
+        (body["text"].as_str(), body["type"].as_str(), body["targets"].as_array())
+    else {
         return (StatusCode::INTERNAL_SERVER_ERROR, "Incorrect text, type or targets parameter").into_response();
     };
     if kind != "message" && kind != "capacity" {
         return (StatusCode::INTERNAL_SERVER_ERROR, "Incorrect type parameter").into_response();
     }
     for room in targets.iter().filter_map(|t| t.as_str()) {
-        let cmd = if kind == "message" { RoomCmd::AdminMessage { kind: String::new(), message: text.to_owned() } } else { RoomCmd::WorldFull };
+        let cmd = if kind == "message" {
+            RoomCmd::AdminMessage { kind: String::new(), message: text.to_owned() }
+        } else {
+            RoomCmd::WorldFull
+        };
         to_room(&state, room, cmd).await;
     }
     "ok".into_response()
@@ -115,11 +118,18 @@ async fn external_module_event(State(state): State<AppState>, headers: HeaderMap
         return (StatusCode::BAD_REQUEST, "Invalid JSON body").into_response();
     };
     let d = &body["data"];
-    let (Some(room), Some(module), Some(recipient)) = (d["roomId"].as_str(), d["moduleId"].as_str(), d["recipientUuid"].as_str()) else {
-        return (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"cause": "Incorrect parameters"}))).into_response();
+    let (Some(room), Some(module), Some(recipient)) =
+        (d["roomId"].as_str(), d["moduleId"].as_str(), d["recipientUuid"].as_str())
+    else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"cause": "Incorrect parameters"})))
+            .into_response();
     };
     if !d["message"].is_object() {
-        return (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"cause": "Incorrect message parameter"}))).into_response();
+        return (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            axum::Json(serde_json::json!({"cause": "Incorrect message parameter"})),
+        )
+            .into_response();
     }
     let message = wa_proto::messages::ExternalModuleMessage {
         module_id: module.to_owned(),
@@ -147,7 +157,9 @@ async fn egress_webhook(
     axum::extract::Query(q): axum::extract::Query<EgressQuery>,
     body: axum::body::Bytes,
 ) -> Response {
-    let (Some(space), Some(session_id)) = (q.space.filter(|s| !s.is_empty()), q.recording_session_id.filter(|s| !s.is_empty())) else {
+    let (Some(space), Some(session_id)) =
+        (q.space.filter(|s| !s.is_empty()), q.recording_session_id.filter(|s| !s.is_empty()))
+    else {
         return (StatusCode::BAD_REQUEST, "space and recordingSessionId are required").into_response();
     };
     if body.is_empty() {

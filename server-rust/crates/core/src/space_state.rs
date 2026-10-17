@@ -25,11 +25,7 @@ pub fn empty() -> SpaceState {
         kind: None,
         raised_hands: Vec::new(),
         floor_holders: Vec::new(),
-        recording: RecordingState {
-            recording: false,
-            recorder: None,
-            status: RecordingStatus::Idle,
-        },
+        recording: RecordingState { recording: false, recorder: None, status: RecordingStatus::Idle },
         polls: Default::default(),
         questions: Default::default(),
     }
@@ -42,26 +38,12 @@ pub enum StateQuery {
     LowerHand(String),
     GiveFloor(String),
     RevokeFloor(String),
-    CreatePoll {
-        question: String,
-        kind: String,
-        answers: Vec<String>,
-        max_selections: i32,
-    },
-    VotePoll {
-        poll_id: String,
-        answer_ids: Vec<String>,
-    },
-    ClosePoll {
-        poll_id: String,
-        closing_message: Option<String>,
-    },
+    CreatePoll { question: String, kind: String, answers: Vec<String>, max_selections: i32 },
+    VotePoll { poll_id: String, answer_ids: Vec<String> },
+    ClosePoll { poll_id: String, closing_message: Option<String> },
     DeletePoll(String),
     AskQuestion(String),
-    UpvoteQuestion {
-        question_id: String,
-        upvoted: bool,
-    },
+    UpvoteQuestion { question_id: String, upvoted: bool },
     AnswerQuestion(String),
     DeleteQuestion(String),
     SetKind(String),
@@ -121,10 +103,9 @@ pub(crate) fn apply(state: &mut SpaceState, ctx: &mut Ctx<'_>, query: StateQuery
             state.raised_hands.retain(|e| *e.space_user_id != target);
             // In a proximity (ALL_USERS) space everyone already speaks: there is no floor to hold.
             if ctx.filter != FilterType::AllUsers && !state.floor_holders.iter().any(|e| *e.space_user_id == target) {
-                state.floor_holders.push(FloorHolderEntry {
-                    space_user_id: checked("spaceUserId", target)?,
-                    name: user.name.clone(),
-                });
+                state
+                    .floor_holders
+                    .push(FloorHolderEntry { space_user_id: checked("spaceUserId", target)?, name: user.name.clone() });
             }
         }
         StateQuery::RevokeFloor(target) => {
@@ -136,12 +117,7 @@ pub(crate) fn apply(state: &mut SpaceState, ctx: &mut Ctx<'_>, query: StateQuery
         }
 
         // ------------------------------------------------------------ polls
-        StateQuery::CreatePoll {
-            question,
-            kind,
-            answers,
-            max_selections,
-        } => {
+        StateQuery::CreatePoll { question, kind, answers, max_selections } => {
             if !(2..=POLL_MAX_ANSWERS).contains(&answers.len()) {
                 return Err(format!("A poll needs 2 to {POLL_MAX_ANSWERS} answers"));
             }
@@ -190,17 +166,8 @@ pub(crate) fn apply(state: &mut SpaceState, ctx: &mut Ctx<'_>, query: StateQuery
             if answer_ids.is_empty() {
                 poll.votes.remove(&voter);
             } else {
-                let answer_ids = answer_ids
-                    .into_iter()
-                    .map(|a| checked("answer id", a))
-                    .collect::<Result<_, _>>()?;
-                poll.votes.insert(
-                    voter,
-                    ProximityPollVote {
-                        answer_ids,
-                        updated_at: ctx.now,
-                    },
-                );
+                let answer_ids = answer_ids.into_iter().map(|a| checked("answer id", a)).collect::<Result<_, _>>()?;
+                poll.votes.insert(voter, ProximityPollVote { answer_ids, updated_at: ctx.now });
             }
         }
         StateQuery::ClosePoll { poll_id, closing_message } => {
@@ -215,10 +182,7 @@ pub(crate) fn apply(state: &mut SpaceState, ctx: &mut Ctx<'_>, query: StateQuery
                 .map(ProximityPollEndClosingMessage::try_from)
                 .transpose()
                 .map_err(|_| "The closing message is too long")?;
-            poll.end = Some(ProximityPollEnd {
-                closing_message,
-                closed_at: ctx.now,
-            });
+            poll.end = Some(ProximityPollEnd { closing_message, closed_at: ctx.now });
         }
         StateQuery::DeletePoll(poll_id) => {
             if *poll(state, &poll_id)?.sender_id != voter_id(sender) {
@@ -296,17 +260,11 @@ fn can_moderate(state: &SpaceState, ctx: &Ctx<'_>) -> Result<(), String> {
 }
 
 fn poll<'a>(state: &'a mut SpaceState, id: &str) -> Result<&'a mut ProximityPoll, String> {
-    state
-        .polls
-        .get_mut(id)
-        .ok_or_else(|| format!("Poll {id} does not exist in this space"))
+    state.polls.get_mut(id).ok_or_else(|| format!("Poll {id} does not exist in this space"))
 }
 
 fn question<'a>(state: &'a mut SpaceState, id: &str) -> Result<&'a mut ProximityQuestion, String> {
-    state
-        .questions
-        .get_mut(id)
-        .ok_or_else(|| format!("Question {id} does not exist in this space"))
+    state.questions.get_mut(id).ok_or_else(|| format!("Question {id} does not exist in this space"))
 }
 
 /// A member left: no ghost entry in the queue, nor in the host's "take back" panel.

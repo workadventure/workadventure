@@ -162,10 +162,7 @@ fn polls_belong_to_their_creator_and_close_once() {
     assert_eq!(p.sender_id.as_str(), "uuid-a");
     let (id, yes) = (p.id.to_string(), p.answers[0].id.to_string());
 
-    let vote = |ids: Vec<String>| StateQuery::VotePoll {
-        poll_id: id.clone(),
-        answer_ids: ids,
-    };
+    let vote = |ids: Vec<String>| StateQuery::VotePoll { poll_id: id.clone(), answer_ids: ids };
     assert!(query(&mut s, &mut r, "b", vote(vec!["nope".into()])).is_err());
     assert!(query(&mut s, &mut r, "b", vote(vec![yes.clone(), yes.clone()])).is_err());
     query(&mut s, &mut r, "b", vote(vec![yes.clone()])).unwrap();
@@ -174,10 +171,7 @@ fn polls_belong_to_their_creator_and_close_once() {
     assert!(s.state().polls[&id].votes.is_empty());
 
     let close = |who: &str, s: &mut Space, r: &mut Rec| {
-        let q = StateQuery::ClosePoll {
-            poll_id: id.clone(),
-            closing_message: Some("thanks".into()),
-        };
+        let q = StateQuery::ClosePoll { poll_id: id.clone(), closing_message: Some("thanks".into()) };
         query(s, r, who, q)
     };
     assert_eq!(close("b", &mut s, &mut r).unwrap_err(), "Only poll creators can close a poll");
@@ -207,10 +201,7 @@ fn questions_are_upvoted_by_others_and_answered_by_moderators() {
     assert!(query(&mut s, &mut r, "a", StateQuery::AskQuestion("x".repeat(501))).is_err());
     query(&mut s, &mut r, "a", StateQuery::AskQuestion("Why?".into())).unwrap();
     let id = s.state().questions.keys().next().unwrap().clone();
-    let upvote = |up| StateQuery::UpvoteQuestion {
-        question_id: id.clone(),
-        upvoted: up,
-    };
+    let upvote = |up| StateQuery::UpvoteQuestion { question_id: id.clone(), upvoted: up };
     assert!(query(&mut s, &mut r, "a", upvote(true)).is_err());
     query(&mut s, &mut r, "b", upvote(true)).unwrap();
     assert_eq!(s.state().questions[&id].upvotes["uuid-b"], 1_000);
@@ -460,7 +451,10 @@ fn a_recording_or_a_slow_computer_keeps_livekit() {
 fn a_livekit_room_opens_with_its_first_publisher_and_closes_with_its_last() {
     let f = FilterType::LiveStreamingUsers;
     let mut s = Space::new("s".into(), f, vec!["cameraState".into()], "i".into());
-    s.configure_media(MediaConfig { max_webrtc: 1, livekit: true, switch_on_cpu: true }, Box::new(TestClock::default()));
+    s.configure_media(
+        MediaConfig { max_webrtc: 1, livekit: true, switch_on_cpu: true },
+        Box::new(TestClock::default()),
+    );
     let mut r = Rec::default();
     for id in ["l1", "l2"] {
         s.join(f, user(id), &mut r).unwrap();
@@ -528,7 +522,10 @@ fn a_recording_moves_to_livekit_follows_its_egress_and_only_its_recorder_stops_i
 fn a_recording_cannot_start_where_nobody_publishes() {
     let f = FilterType::LiveStreamingUsers;
     let mut s = Space::new("s".into(), f, vec!["cameraState".into()], "i".into());
-    s.configure_media(MediaConfig { max_webrtc: 4, livekit: true, switch_on_cpu: true }, Box::new(TestClock::default()));
+    s.configure_media(
+        MediaConfig { max_webrtc: 4, livekit: true, switch_on_cpu: true },
+        Box::new(TestClock::default()),
+    );
     let mut r = Rec::default();
     s.join(f, user("l"), &mut r).unwrap();
     assert_eq!(s.start_recording("l", "x".into(), &mut r).unwrap_err(), "Failed to start recording");

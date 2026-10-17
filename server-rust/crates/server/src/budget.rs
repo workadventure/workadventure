@@ -12,10 +12,7 @@ pub struct Budget {
 
 impl Budget {
     pub fn new(max: usize) -> Self {
-        Self {
-            used: AtomicUsize::new(0),
-            max,
-        }
+        Self { used: AtomicUsize::new(0), max }
     }
 
     pub fn add(&self, n: usize) {

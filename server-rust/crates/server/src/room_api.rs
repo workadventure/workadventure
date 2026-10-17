@@ -32,7 +32,8 @@ pub struct Api {
 impl Api {
     /// AuthenticationGuard.
     async fn authorize<T>(&self, request: &Request<T>, room: &str) -> Result<(), Status> {
-        let Some(key) = request.metadata().get("x-api-key").and_then(|v| v.to_str().ok()).filter(|k| !k.is_empty()) else {
+        let Some(key) = request.metadata().get("x-api-key").and_then(|v| v.to_str().ok()).filter(|k| !k.is_empty())
+        else {
             return Err(Status::unauthenticated("X-API-Key metadata not defined!"));
         };
         let config = &self.state.config;
@@ -63,7 +64,8 @@ impl Api {
                 tracing::error!(error = %e, "the admin did not answer the Room API authorization");
                 Status::internal("Internal error, please contact us!")
             })?;
-        let body: serde_json::Value = response.json().await.map_err(|_| Status::internal("Unexpected error! Please contact us!"))?;
+        let body: serde_json::Value =
+            response.json().await.map_err(|_| Status::internal("Unexpected error! Please contact us!"))?;
         if body["success"] == true {
             return Ok(());
         }
@@ -78,7 +80,11 @@ impl Api {
         })
     }
 
-    async fn ask<T>(&self, room: &str, cmd: impl FnOnce(tokio::sync::oneshot::Sender<T>) -> RoomApiCmd) -> Result<T, Status> {
+    async fn ask<T>(
+        &self,
+        room: &str,
+        cmd: impl FnOnce(tokio::sync::oneshot::Sender<T>) -> RoomApiCmd,
+    ) -> Result<T, Status> {
         let handle = room_actor::get_or_spawn(&self.state, room);
         let (reply, answer) = tokio::sync::oneshot::channel();
         handle.send(RoomCmd::Api(cmd(reply))).await.map_err(|_| Status::unavailable("The room is closing"))?;
@@ -90,7 +96,10 @@ type Streamed<T> = Pin<Box<dyn Stream<Item = Result<T, Status>> + Send>>;
 
 #[tonic::async_trait]
 impl RoomApi for Api {
-    async fn read_variable(&self, request: Request<api::VariableRequest>) -> Result<Response<prost_types::Value>, Status> {
+    async fn read_variable(
+        &self,
+        request: Request<api::VariableRequest>,
+    ) -> Result<Response<prost_types::Value>, Status> {
         self.authorize(&request, &request.get_ref().room).await?;
         let r = request.into_inner();
         let value = self.ask(&r.room, |reply| RoomApiCmd::Read { name: r.name.clone(), reply }).await?;
@@ -101,7 +110,10 @@ impl RoomApi for Api {
 
     type listenVariableStream = Streamed<prost_types::Value>;
 
-    async fn listen_variable(&self, request: Request<api::VariableRequest>) -> Result<Response<Self::listenVariableStream>, Status> {
+    async fn listen_variable(
+        &self,
+        request: Request<api::VariableRequest>,
+    ) -> Result<Response<Self::listenVariableStream>, Status> {
         self.authorize(&request, &request.get_ref().room).await?;
         let r = request.into_inner();
         let handle = room_actor::get_or_spawn(&self.state, &r.room);
@@ -144,7 +156,10 @@ impl RoomApi for Api {
 
     type listenToEventStream = Streamed<api::EventResponse>;
 
-    async fn listen_to_event(&self, request: Request<api::EventRequest>) -> Result<Response<Self::listenToEventStream>, Status> {
+    async fn listen_to_event(
+        &self,
+        request: Request<api::EventRequest>,
+    ) -> Result<Response<Self::listenToEventStream>, Status> {
         self.authorize(&request, &request.get_ref().room).await?;
         let r = request.into_inner();
         let handle = room_actor::get_or_spawn(&self.state, &r.room);

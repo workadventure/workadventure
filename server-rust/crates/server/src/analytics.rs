@@ -25,7 +25,8 @@ const MAX_EVENTS_PER_REPORT: usize = 100;
 const MAX_PROPERTIES_BYTES: usize = 8 * 1024;
 const MAX_OPEN_HANDLES: usize = 32;
 const MAX_TIMESTAMP_MS: f64 = 8.64e15;
-const END_REASONS: [&str; 5] = ["closed_by_client", "socket_closed", "join_failed", "pusher_shutdown", "pusher_crashed"];
+const END_REASONS: [&str; 5] =
+    ["closed_by_client", "socket_closed", "join_failed", "pusher_shutdown", "pusher_crashed"];
 
 #[derive(serde::Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -94,7 +95,12 @@ impl Analytics {
 
     /// Flushes every ANALYTICS_FLUSH_INTERVAL_MS.
     pub fn spawn(self: &Arc<Self>, config: &Config) {
-        let every = config.raw.get("ANALYTICS_FLUSH_INTERVAL_MS").and_then(|v| v.parse().ok()).filter(|n| *n > 0).unwrap_or(10_000);
+        let every = config
+            .raw
+            .get("ANALYTICS_FLUSH_INTERVAL_MS")
+            .and_then(|v| v.parse().ok())
+            .filter(|n| *n > 0)
+            .unwrap_or(10_000);
         let me = self.clone();
         tokio::spawn(async move {
             let mut tick = tokio::time::interval(Duration::from_millis(every));
@@ -153,7 +159,9 @@ impl Analytics {
             }
             match self.send(sent_at, std::slice::from_ref(&e), deadline).await {
                 Ok(()) => {}
-                Err(Failure::Invalid) => tracing::warn!(event = %e["eventName"], "analytics event refused by the admin"),
+                Err(Failure::Invalid) => {
+                    tracing::warn!(event = %e["eventName"], "analytics event refused by the admin")
+                }
                 Err(Failure::Other) => {
                     tracing::warn!(events = total - i, "analytics events dropped after failed sends");
                     return;
@@ -163,7 +171,8 @@ impl Analytics {
     }
 
     async fn send(&self, sent_at: &str, events: &[Value], deadline: Option<Instant>) -> Result<(), Failure> {
-        let body = json!({ "schemaVersion": 1, "sentAt": sent_at, "pusherInstanceId": self.instance, "events": events });
+        let body =
+            json!({ "schemaVersion": 1, "sentAt": sent_at, "pusherInstanceId": self.instance, "events": events });
         let mut last = Failure::Other;
         for attempt in 0..MAX_ATTEMPTS {
             let mut timeout = self.timeout;
@@ -174,7 +183,14 @@ impl Analytics {
                 }
                 timeout = timeout.min(left).max(Duration::from_millis(1));
             }
-            let sent = self.http.post(&self.url).header("Authorization", &self.authorization).json(&body).timeout(timeout).send().await;
+            let sent = self
+                .http
+                .post(&self.url)
+                .header("Authorization", &self.authorization)
+                .json(&body)
+                .timeout(timeout)
+                .send()
+                .await;
             match sent.map(|r| r.status().as_u16()) {
                 Ok(s) if (200..300).contains(&s) => return Ok(()),
                 Ok(422) => return Err(Failure::Invalid),
@@ -219,7 +235,11 @@ impl Context<'_> {
         if !info.analytics_enabled {
             return None;
         }
-        if info.user_uuid.is_empty() || self.space_user_id.is_empty() || info.world.is_empty() || info.room_id.is_empty() {
+        if info.user_uuid.is_empty()
+            || self.space_user_id.is_empty()
+            || info.world.is_empty()
+            || info.room_id.is_empty()
+        {
             tracing::warn!(event = name, "analytics event without its context dropped");
             return None;
         }
@@ -257,7 +277,15 @@ pub struct Timed {
 }
 
 impl Timed {
-    fn open(&mut self, a: &Analytics, ctx: &Context, handle: &str, event_name: &str, properties: Map<String, Value>, started_ms: u64) -> bool {
+    fn open(
+        &mut self,
+        a: &Analytics,
+        ctx: &Context,
+        handle: &str,
+        event_name: &str,
+        properties: Map<String, Value>,
+        started_ms: u64,
+    ) -> bool {
         let Some(def) = CATALOG.get(event_name) else { return false };
         if self.open.iter().any(|o| o.handle == handle) || self.open.len() >= MAX_OPEN_HANDLES {
             return false;
@@ -291,9 +319,15 @@ impl Timed {
         if elapsed < def.min_duration_ms.unwrap_or(1_000) {
             return;
         }
-        let (start, end, why) =
-            def.interval_fields.as_ref().map_or(("startedAt", "endedAt", "endReason"), |f| (f.start.as_str(), f.end.as_str(), f.reason.as_str()));
-        let duration = if o.event_name == "user.disconnected" { json!((elapsed as f64 / 1000.0).round() as u64) } else { json!(elapsed as f64 / 1000.0) };
+        let (start, end, why) = def
+            .interval_fields
+            .as_ref()
+            .map_or(("startedAt", "endedAt", "endReason"), |f| (f.start.as_str(), f.end.as_str(), f.reason.as_str()));
+        let duration = if o.event_name == "user.disconnected" {
+            json!((elapsed as f64 / 1000.0).round() as u64)
+        } else {
+            json!(elapsed as f64 / 1000.0)
+        };
         let mut p = o.properties;
         p.insert(start.into(), iso_at(o.started_ms).into());
         p.insert(end.into(), iso_at(ended_ms).into());
@@ -324,17 +358,25 @@ impl Timed {
             let properties = e.properties.as_ref().map_or(Value::Object(Map::new()), crate::wire::json_from);
             match e.event_name.as_str() {
                 "timed_event.open" => {
-                    let (Some(handle), Some(name)) = (properties["handle"].as_str(), properties["eventName"].as_str()) else { continue };
+                    let (Some(handle), Some(name)) = (properties["handle"].as_str(), properties["eventName"].as_str())
+                    else {
+                        continue;
+                    };
                     let client_openable = CATALOG.get(name).is_some_and(|d| d.openable_by.as_deref() == Some("client"));
                     let inner = properties.get("properties").cloned().unwrap_or(Value::Object(Map::new()));
                     let fits = serde_json::to_string(&inner).is_ok_and(|s| s.len() <= MAX_PROPERTIES_BYTES);
-                    if let (true, true, true, Value::Object(inner)) = (client_openable, fits, (1..=255).contains(&handle.len()), inner) {
+                    if let (true, true, true, Value::Object(inner)) =
+                        (client_openable, fits, (1..=255).contains(&handle.len()), inner)
+                    {
                         self.open(a, ctx, handle, name, inner, now_ms());
                     }
                 }
                 "timed_event.close" => {
                     let Some(handle) = properties["handle"].as_str() else { continue };
-                    let reason = properties["endReason"].as_str().filter(|r| END_REASONS.contains(r)).unwrap_or("closed_by_client");
+                    let reason = properties["endReason"]
+                        .as_str()
+                        .filter(|r| END_REASONS.contains(r))
+                        .unwrap_or("closed_by_client");
                     self.close(a, ctx, handle, reason);
                 }
                 name => {
@@ -363,7 +405,12 @@ impl Analytics {
     pub fn video_quality(&self, ctx: &Context, report: pb::VideoQualityReportMessage, in_space: impl Fn(&str) -> bool) {
         for s in report.samples {
             if let Some(p) = video_sample(&s).filter(|_| in_space(&s.space_name)) {
-                let id = format!("{}:{}:{}", ctx.info.user_uuid, s.stream_id, s.sample_seq.unwrap_or(s.client_event_time_ms));
+                let id = format!(
+                    "{}:{}:{}",
+                    ctx.info.user_uuid,
+                    s.stream_id,
+                    s.sample_seq.unwrap_or(s.client_event_time_ms)
+                );
                 self.enqueue_opt(ctx.envelope("media.video_quality.sample", "pusher", s.client_event_time_ms, id, p));
             }
         }
@@ -395,7 +442,10 @@ fn counter<T: Into<f64> + Copy>(v: Option<T>) -> Value {
 
 /// The sample's properties, None when it cannot be one (toVideoQualityProperties).
 fn video_sample(s: &pb::VideoQualitySampleMessage) -> Option<Value> {
-    use pb::{VideoQualityLimitationReason as L, VideoQualityRelayProtocol as R, VideoQualityStreamCategory as C, VideoQualityStreamDirection as D, VideoQualityTransportType as T};
+    use pb::{
+        VideoQualityLimitationReason as L, VideoQualityRelayProtocol as R, VideoQualityStreamCategory as C,
+        VideoQualityStreamDirection as D, VideoQualityTransportType as T,
+    };
     if s.stream_id.is_empty() || s.space_name.is_empty() || client_time(s.client_event_time_ms).is_none() {
         return None;
     }
@@ -407,7 +457,10 @@ fn video_sample(s: &pb::VideoQualitySampleMessage) -> Option<Value> {
         T::P2p => "P2P",
         T::Livekit => "SFU",
     };
-    if ![s.fps, s.jitter, s.bandwidth_bytes_per_second, f64::from(s.frame_width), f64::from(s.frame_height)].iter().all(|v| v.is_finite()) {
+    if ![s.fps, s.jitter, s.bandwidth_bytes_per_second, f64::from(s.frame_width), f64::from(s.frame_height)]
+        .iter()
+        .all(|v| v.is_finite())
+    {
         return None;
     }
     let outbound = s.direction == D::Outbound as i32;

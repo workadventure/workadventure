@@ -39,7 +39,9 @@ fn generate(old: &Value, new: &Value, path: &mut String, ops: &mut Vec<Value>) {
         path.push_str(&key.replace('~', "~0").replace('/', "~1"));
         match get(new, key) {
             Some(new_value)
-                if is_container(old_value) && is_container(new_value) && old_value.is_array() == new_value.is_array() =>
+                if is_container(old_value)
+                    && is_container(new_value)
+                    && old_value.is_array() == new_value.is_array() =>
             {
                 generate(old_value, new_value, path, ops);
             }
@@ -77,7 +79,11 @@ fn split(path: &str) -> Result<(&str, String), String> {
 }
 
 fn index(token: &str, len: usize, insert: bool) -> Result<usize, String> {
-    let i = if insert && token == "-" { len } else { token.parse().map_err(|_| format!("Invalid array index {token:?}"))? };
+    let i = if insert && token == "-" {
+        len
+    } else {
+        token.parse().map_err(|_| format!("Invalid array index {token:?}"))?
+    };
     if i > len || (!insert && i == len) {
         return Err(format!("Array index {i} out of bounds"));
     }
@@ -149,7 +155,6 @@ pub fn apply(doc: &mut Value, ops: &[Value]) -> Result<(), String> {
     }
     Ok(())
 }
-
 
 #[cfg(test)]
 mod tests {

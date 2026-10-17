@@ -208,9 +208,7 @@ async fn main() {
     let rooms: Vec<Arc<Room>> = (0..a.rooms)
         .map(|_| {
             Arc::new(Room {
-                rings: (0..=max_id)
-                    .map(|_| Arc::new(Ring((0..LANE).map(|_| AtomicU64::new(0)).collect())))
-                    .collect(),
+                rings: (0..=max_id).map(|_| Arc::new(Ring((0..LANE).map(|_| AtomicU64::new(0)).collect()))).collect(),
             })
         })
         .collect();
@@ -230,7 +228,9 @@ async fn main() {
         tasks.push(tokio::spawn(async move {
             let offset = (u as i32 * 97) % LANE;
             // Players do not move in step: spread the bots over the period.
-            let phase = Duration::from_micros(((r * 104_729 + u * 7_919) as u64 * 1_000) % move_every.as_micros().max(1) as u64);
+            let phase = Duration::from_micros(
+                ((r * 104_729 + u * 7_919) as u64 * 1_000) % move_every.as_micros().max(1) as u64,
+            );
             let mut tick = tokio::time::interval_at(tokio::time::Instant::now() + phase, move_every);
             let mut seq: i32 = 0;
             while Instant::now() < end {
@@ -292,7 +292,10 @@ async fn main() {
     let after = server_metrics(&a.server, a.metrics_token.as_deref()).await;
     let own_after = own_cpu_seconds();
     all.sort_unstable();
-    let pct = |p: f64| all.get(((all.len() as f64 * p) as usize).min(all.len().saturating_sub(1))).map_or(0.0, |v| f64::from(*v) / 1000.0);
+    let pct = |p: f64| {
+        all.get(((all.len() as f64 * p) as usize).min(all.len().saturating_sub(1)))
+            .map_or(0.0, |v| f64::from(*v) / 1000.0)
+    };
     let rate = |b: Option<f64>, a: Option<f64>| match (b, a) {
         (Some(b), Some(a)) => format!("{:.2}", (a - b) / elapsed),
         _ => "null".into(),

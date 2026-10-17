@@ -34,11 +34,7 @@ pub struct RoomConfig {
 
 impl Default for RoomConfig {
     fn default() -> Self {
-        Self {
-            minimum_distance: 64.0,
-            group_radius: 48.0,
-            max_per_group: 4,
-        }
+        Self { minimum_distance: 64.0, group_radius: 48.0, max_per_group: 4 }
     }
 }
 
@@ -259,11 +255,7 @@ impl Room {
         self.notify_user_entered(id, None, sink);
         self.set_viewport(id, req.viewport, sink);
         self.update_user_group(id, sink);
-        Joined {
-            user_id: id,
-            replaced,
-            duplicate,
-        }
+        Joined { user_id: id, replaced, duplicate }
     }
 
     pub fn leave(&mut self, id: UserId, sink: &mut impl Sink) {
@@ -458,10 +450,8 @@ impl Room {
     /// others a newcomer.
     fn notify_user_entered(&self, id: UserId, from: Option<ZoneKey>, sink: &mut impl Sink) {
         let user = &self.users[&id];
-        let (moved, joined): (Vec<UserId>, Vec<UserId>) = self
-            .watchers(user.zone)
-            .filter(|w| *w != id)
-            .partition(|w| from.is_some_and(|f| self.is_watching(*w, f)));
+        let (moved, joined): (Vec<UserId>, Vec<UserId>) =
+            self.watchers(user.zone).filter(|w| *w != id).partition(|w| from.is_some_and(|f| self.is_watching(*w, f)));
         emit(sink, &moved, Event::UserMoved(user));
         emit(sink, &joined, Event::UserJoined(user));
     }
@@ -496,10 +486,8 @@ impl Room {
             Some(g) => {
                 let center = self.group_center(g);
                 let radius = self.config.group_radius;
-                let kicked_out_someone = self.groups[&g]
-                    .users
-                    .iter()
-                    .any(|u| distance(self.users[u].xy(), center) > radius);
+                let kicked_out_someone =
+                    self.groups[&g].users.iter().any(|u| distance(self.users[u].xy(), center) > radius);
                 if kicked_out_someone && distance(self.users[&id].xy(), center) > radius {
                     self.leave_group(id, sink);
                 }
@@ -557,15 +545,7 @@ impl Room {
         let space_name = format!("{}#{}#{}", self.url, id, self.clock.now_ms());
         self.groups.insert(
             id,
-            Group {
-                id,
-                users: Vec::new(),
-                x: 0.0,
-                y: 0.0,
-                locked: false,
-                space_name,
-                zone: ZoneKey { i: 0, j: 0 },
-            },
+            Group { id, users: Vec::new(), x: 0.0, y: 0.0, locked: false, space_name, zone: ZoneKey { i: 0, j: 0 } },
         );
         // The group has no position yet: unlike a later join, nobody is told about its members now (the back's
         // groupUsersUpdate went to a NaN zone). GroupUpdated below carries them.

@@ -28,10 +28,7 @@ fn stamp(name: &str) -> Option<(&'static str, &str)> {
 
 /// `_<n>.` in a thumbnail's name.
 fn sequence(name: &str) -> u64 {
-    name.rsplit_once('_')
-        .and_then(|(_, rest)| rest.split_once('.'))
-        .and_then(|(n, _)| n.parse().ok())
-        .unwrap_or(0)
+    name.rsplit_once('_').and_then(|(_, rest)| rest.split_once('.')).and_then(|(n, _)| n.parse().ok()).unwrap_or(0)
 }
 
 fn by_sequence(mut thumbs: Vec<&Object>) -> Vec<&Object> {
@@ -60,7 +57,8 @@ pub async fn list(bucket: &Bucket, http: &reqwest::Client, uuid: &str) -> Result
         .filter_map(|(ts, (video, thumbs))| {
             let video = video?;
             let thumbs = by_sequence(thumbs);
-            let poster = thumbs.get(1).or(thumbs.first()).map(|t| bucket.presigned_get(&t.key, 3600, None)).unwrap_or_default();
+            let poster =
+                thumbs.get(1).or(thumbs.first()).map(|t| bucket.presigned_get(&t.key, 3600, None)).unwrap_or_default();
             Some(pb::Recording {
                 base_filename: format!("recording-{ts}"),
                 timestamp: ts,
@@ -76,7 +74,12 @@ pub async fn list(bucket: &Bucket, http: &reqwest::Client, uuid: &str) -> Result
 }
 
 /// getRecordingThumbnailsQuery: at most 15, evenly spaced, the first one left out when there are others.
-pub async fn thumbnails(bucket: &Bucket, http: &reqwest::Client, uuid: &str, base: &str) -> Result<Vec<String>, String> {
+pub async fn thumbnails(
+    bucket: &Bucket,
+    http: &reqwest::Client,
+    uuid: &str,
+    base: &str,
+) -> Result<Vec<String>, String> {
     let ts = base.strip_prefix("recording-").filter(|ts| stamp(base).is_some_and(|(_, s)| s == *ts && ts.len() == 19));
     let Some(ts) = ts else { return Err("Invalid recording name".into()) };
     let objects = bucket.list(http, &format!("{uuid}/thumbnail-{ts}_")).await?;
@@ -84,11 +87,8 @@ pub async fn thumbnails(bucket: &Bucket, http: &reqwest::Client, uuid: &str, bas
     if thumbs.len() > 1 {
         thumbs.remove(0);
     }
-    let picked: Vec<&Object> = if thumbs.len() <= 15 {
-        thumbs
-    } else {
-        (0..15).map(|i| thumbs[i * (thumbs.len() - 1) / 14]).collect()
-    };
+    let picked: Vec<&Object> =
+        if thumbs.len() <= 15 { thumbs } else { (0..15).map(|i| thumbs[i * (thumbs.len() - 1) / 14]).collect() };
     Ok(picked.into_iter().map(|t| bucket.presigned_get(&t.key, 3600, None)).collect())
 }
 

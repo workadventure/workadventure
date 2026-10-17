@@ -47,7 +47,10 @@ pub fn router(state: AppState) -> Router {
                     h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, o);
                 }
                 if preflight {
-                    h.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET,HEAD,PUT,PATCH,POST,DELETE"));
+                    h.insert(
+                        header::ACCESS_CONTROL_ALLOW_METHODS,
+                        HeaderValue::from_static("GET,HEAD,PUT,PATCH,POST,DELETE"),
+                    );
                     h.insert(header::ACCESS_CONTROL_ALLOW_HEADERS, HeaderValue::from_static("*"));
                 }
                 response
@@ -171,7 +174,10 @@ async fn upload_file(State(u): State<Uploader>, mut form: Multipart) -> Response
                         Ok(bytes) => files.push((name, mime, bytes)),
                         Err(_) => {
                             let max = max_size(&u.app).to_string();
-                            return (StatusCode::PAYLOAD_TOO_LARGE, axum::Json(json!({"message": "file-too-big", "maxFileSize": max})))
+                            return (
+                                StatusCode::PAYLOAD_TOO_LARGE,
+                                axum::Json(json!({"message": "file-too-big", "maxFileSize": max})),
+                            )
                                 .into_response();
                         }
                     }
@@ -187,7 +193,8 @@ async fn upload_file(State(u): State<Uploader>, mut form: Multipart) -> Response
     let refuse = |status: StatusCode, body: serde_json::Value| (status, axum::Json(body)).into_response();
     let admin = config.raw.get("ADMIN_API_URL").filter(|v| !v.is_empty());
     let limit = config.raw.get("UPLOAD_MAX_FILESIZE").cloned();
-    let enabled = !matches!(config.raw.get("ENABLE_CHAT_UPLOAD").map(|v| v.to_lowercase()).as_deref(), Some("false" | "0"));
+    let enabled =
+        !matches!(config.raw.get("ENABLE_CHAT_UPLOAD").map(|v| v.to_lowercase()).as_deref(), Some("false" | "0"));
     for (_, _, bytes) in &files {
         match admin {
             Some(admin) => {
@@ -225,7 +232,10 @@ async fn upload_file(State(u): State<Uploader>, mut form: Multipart) -> Response
                 if let Some(max) = limit.as_deref().and_then(|l| l.parse::<usize>().ok())
                     && bytes.len() > max
                 {
-                    return refuse(StatusCode::PAYLOAD_TOO_LARGE, json!({"message": "file-too-big", "maxFileSize": limit}));
+                    return refuse(
+                        StatusCode::PAYLOAD_TOO_LARGE,
+                        json!({"message": "file-too-big", "maxFileSize": limit}),
+                    );
                 }
             }
         }

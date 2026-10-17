@@ -53,7 +53,8 @@ impl Bucket {
         let get = |k: &str| config.raw.get(&format!("LIVEKIT_RECORDING_S3_{k}")).filter(|v| !v.is_empty()).cloned();
         let endpoint = get("ENDPOINT")?.trim_end_matches('/').to_owned();
         Some(Self {
-            public_endpoint: get("CDN_ENDPOINT").map_or_else(|| endpoint.clone(), |c| c.trim_end_matches('/').to_owned()),
+            public_endpoint: get("CDN_ENDPOINT")
+                .map_or_else(|| endpoint.clone(), |c| c.trim_end_matches('/').to_owned()),
             endpoint,
             bucket: get("BUCKET")?,
             region: get("REGION")?,
@@ -67,7 +68,15 @@ impl Bucket {
     }
 
     /// The signature of a request (SigV4). `query` is already canonical (sorted, encoded).
-    fn sign(&self, method: &str, path: &str, query: &str, amz_date: &str, payload_hash: &str, headers: &[(&str, String)]) -> String {
+    fn sign(
+        &self,
+        method: &str,
+        path: &str,
+        query: &str,
+        amz_date: &str,
+        payload_hash: &str,
+        headers: &[(&str, String)],
+    ) -> String {
         let date = &amz_date[..8];
         let scope = format!("{date}/{}/s3/aws4_request", self.region);
         let canonical_headers: String = headers.iter().map(|(k, v)| format!("{k}:{v}\n")).collect();
@@ -88,14 +97,24 @@ impl Bucket {
     }
 
     /// A signed request on the private endpoint.
-    async fn send(&self, http: &reqwest::Client, method: reqwest::Method, key: &str, params: &[(&str, String)]) -> Result<String, String> {
+    async fn send(
+        &self,
+        http: &reqwest::Client,
+        method: reqwest::Method,
+        key: &str,
+        params: &[(&str, String)],
+    ) -> Result<String, String> {
         let amz_date = Self::now();
         let path = format!("/{}/{}", self.bucket, enc_path(key));
         let mut sorted: Vec<(String, String)> = params.iter().map(|(k, v)| (enc(k), enc(v))).collect();
         sorted.sort();
         let query = sorted.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join("&");
         let empty = hex(&Sha256::digest(b""));
-        let headers = [("host", Self::host(&self.endpoint)), ("x-amz-content-sha256", empty.clone()), ("x-amz-date", amz_date.clone())];
+        let headers = [
+            ("host", Self::host(&self.endpoint)),
+            ("x-amz-content-sha256", empty.clone()),
+            ("x-amz-date", amz_date.clone()),
+        ];
         let signature = self.sign(method.as_str(), &path, &query, &amz_date, &empty, &headers);
         let authorization = format!(
             "AWS4-HMAC-SHA256 Credential={}/{}/{}/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature={signature}",
@@ -103,7 +122,11 @@ impl Bucket {
             &amz_date[..8],
             self.region
         );
-        let url = if query.is_empty() { format!("{}{path}", self.endpoint) } else { format!("{}{path}?{query}", self.endpoint) };
+        let url = if query.is_empty() {
+            format!("{}{path}", self.endpoint)
+        } else {
+            format!("{}{path}?{query}", self.endpoint)
+        };
         let response = http
             .request(method, url)
             .header("x-amz-content-sha256", empty)
@@ -184,7 +207,13 @@ fn tags(xml: &str, tag: &str) -> Vec<String> {
         .skip(1)
         .filter_map(|rest| {
             let text = rest.split_once(close.as_str())?.0;
-            Some(text.replace("&lt;", "<").replace("&gt;", ">").replace("&quot;", "\"").replace("&apos;", "'").replace("&amp;", "&"))
+            Some(
+                text.replace("&lt;", "<")
+                    .replace("&gt;", ">")
+                    .replace("&quot;", "\"")
+                    .replace("&apos;", "'")
+                    .replace("&amp;", "&"),
+            )
         })
         .collect()
 }

@@ -40,12 +40,22 @@ pub(super) async fn upload(State(state): State<AppState>, headers: HeaderMap, mu
     };
     // A28: the WAM a map uploaded without one starts from, if the admin gives one.
     let template = match state.config.raw.get("WAM_TEMPLATE_URL").filter(|v| !v.is_empty()) {
-        Some(url) => match state.http.get(url).timeout(std::time::Duration::from_secs(10)).send().await.and_then(reqwest::Response::error_for_status) {
+        Some(url) => match state
+            .http
+            .get(url)
+            .timeout(std::time::Duration::from_secs(10))
+            .send()
+            .await
+            .and_then(reqwest::Response::error_for_status)
+        {
             Ok(r) => match r.bytes().await {
                 Ok(b) => Some(b.to_vec()),
                 Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into_response(),
             },
-            Err(e) => return (StatusCode::INTERNAL_SERVER_ERROR, format!("Could not get the WAM template: {e}")).into_response(),
+            Err(e) => {
+                return (StatusCode::INTERNAL_SERVER_ERROR, format!("Could not get the WAM template: {e}"))
+                    .into_response();
+            }
         },
         None => None,
     };
@@ -128,7 +138,9 @@ fn validate(files: &[(String, Vec<u8>)]) -> Map<String, Value> {
                     continue;
                 }
                 let Some(image) = t["image"].as_str() else {
-                    let message = format!(r#"The tileset "{tname}" is a collection of images. Collection of images are not supported."#);
+                    let message = format!(
+                        r#"The tileset "{tname}" is a collection of images. Collection of images are not supported."#
+                    );
                     tilesets.push(serde_json::json!({"type": "error", "message": message, "details": ""}));
                     continue;
                 };
@@ -182,9 +194,7 @@ fn unpack(dir: &Path, zip: &[u8], template: Option<&[u8]>) -> Result<Option<Map<
                 continue;
             }
             let rel = path.strip_prefix(dir).unwrap_or(&path).to_string_lossy().replace('\\', "/");
-            let kept = rel
-                .strip_suffix(".wam")
-                .is_some_and(|base| has(&format!("{base}.tmj")) && !has(&rel));
+            let kept = rel.strip_suffix(".wam").is_some_and(|base| has(&format!("{base}.tmj")) && !has(&rel));
             if !kept {
                 std::fs::remove_file(&path).map_err(io)?;
             }

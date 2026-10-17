@@ -32,13 +32,7 @@ pub struct ResumeStore {
 
 impl ResumeStore {
     pub fn new(limits: ResumeLimits, budget: Arc<Budget>) -> Self {
-        Self {
-            frames: VecDeque::new(),
-            bytes: 0,
-            limits,
-            budget,
-            last: 0,
-        }
+        Self { frames: VecDeque::new(), bytes: 0, limits, budget, last: 0 }
     }
 
     pub fn add(&mut self, nonce: u32, frame: Bytes, now: Instant) {
@@ -94,11 +88,7 @@ mod tests {
     use super::*;
 
     fn limits() -> ResumeLimits {
-        ResumeLimits {
-            retention: Duration::from_secs(30),
-            max_frames: 3,
-            max_bytes: 100,
-        }
+        ResumeLimits { retention: Duration::from_secs(30), max_frames: 3, max_bytes: 100 }
     }
 
     fn store() -> ResumeStore {
@@ -109,11 +99,7 @@ mod tests {
     fn the_shared_budget_evicts_the_busy_store_and_is_given_back() {
         let now = Instant::now();
         let budget = Arc::new(Budget::new(50));
-        let big = ResumeLimits {
-            max_bytes: 1000,
-            max_frames: 1000,
-            ..limits()
-        };
+        let big = ResumeLimits { max_bytes: 1000, max_frames: 1000, ..limits() };
         let mut quiet = ResumeStore::new(big, budget.clone());
         quiet.add(1, Bytes::from(vec![0; 20]), now);
         let mut busy = ResumeStore::new(big, budget.clone());

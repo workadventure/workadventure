@@ -22,13 +22,21 @@ pub fn routes() -> Router<AppState> {
 
 /// The `authenticated` middleware: the pusher's JWT in `Authorization`. Returns (identifier, logged).
 fn authenticated(state: &AppState, headers: &HeaderMap) -> Result<(String, bool), &'static str> {
-    let token = headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()).ok_or("Missing authorization header")?;
+    let token =
+        headers.get(header::AUTHORIZATION).and_then(|v| v.to_str().ok()).ok_or("Missing authorization header")?;
     let claims = jwt::verify(&state.config.secret_key, token).map_err(|_| "Invalid token sent")?;
     Ok((claims.identifier, claims.access_token.is_some()))
 }
 
 /// Saved by the admin when it has the capability and the user is logged in; 204 otherwise too.
-async fn save(state: &AppState, headers: &HeaderMap, body: &[u8], capability: &str, path: &str, field: (&str, &str)) -> Response {
+async fn save(
+    state: &AppState,
+    headers: &HeaderMap,
+    body: &[u8],
+    capability: &str,
+    path: &str,
+    field: (&str, &str),
+) -> Response {
     let (identifier, logged) = match authenticated(state, headers) {
         Ok(who) => who,
         Err(refused) => return (StatusCode::UNAUTHORIZED, refused).into_response(),
@@ -37,7 +45,8 @@ async fn save(state: &AppState, headers: &HeaderMap, body: &[u8], capability: &s
         return (StatusCode::BAD_REQUEST, "Invalid body").into_response();
     };
     let (Some(room), Some(value)) = (body["roomUrl"].as_str(), body.get(field.0)) else {
-        return (StatusCode::BAD_REQUEST, axum::Json(json!([format!("Parameter {} or roomUrl: Required", field.0)]))).into_response();
+        return (StatusCode::BAD_REQUEST, axum::Json(json!([format!("Parameter {} or roomUrl: Required", field.0)])))
+            .into_response();
     };
     if let Some(admin) = state.admin.as_ref().filter(|a| a.capabilities.get(capability).is_some())
         && logged

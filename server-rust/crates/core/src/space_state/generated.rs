@@ -45,9 +45,7 @@ impl ::std::convert::TryFrom<&str> for FloorHolderEntrySpaceUserId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for FloorHolderEntrySpaceUserId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -58,9 +56,7 @@ impl<'de> ::serde::Deserialize<'de> for FloorHolderEntrySpaceUserId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPoll`"]
@@ -79,10 +75,7 @@ pub struct ProximityPoll {
     pub question: ProximityPollQuestion,
     #[serde(rename = "senderId")]
     pub sender_id: ProximityPollSenderId,
-    #[serde(
-        rename = "senderName",
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
+    #[serde(rename = "senderName", skip_serializing_if = "::std::option::Option::is_none")]
     pub sender_name: ::std::option::Option<ProximityPollSenderName>,
     pub votes: ::std::collections::BTreeMap<::std::string::String, ProximityPollVote>,
 }
@@ -128,9 +121,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollAnswerId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollAnswerId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -141,9 +132,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollAnswerId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollAnswerText`"]
@@ -181,9 +170,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollAnswerText {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollAnswerText {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -194,9 +181,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollAnswerText {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollEnd`"]
@@ -205,10 +190,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollAnswerText {
 pub struct ProximityPollEnd {
     #[serde(rename = "closedAt")]
     pub closed_at: i64,
-    #[serde(
-        rename = "closingMessage",
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
+    #[serde(rename = "closingMessage", skip_serializing_if = "::std::option::Option::is_none")]
     pub closing_message: ::std::option::Option<ProximityPollEndClosingMessage>,
 }
 #[doc = "`ProximityPollEndClosingMessage`"]
@@ -243,9 +225,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollEndClosingMessage {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollEndClosingMessage {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -256,9 +236,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollEndClosingMessage {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollId`"]
@@ -296,9 +274,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -309,24 +285,11 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollKind`"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum ProximityPollKind {
     #[serde(rename = "open")]
     Open,
@@ -359,9 +322,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollKind {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollKind {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -400,9 +361,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollQuestion {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollQuestion {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -413,9 +372,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollQuestion {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollSenderId`"]
@@ -450,9 +407,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollSenderId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollSenderId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -463,9 +418,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollSenderId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollSenderName`"]
@@ -500,9 +453,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollSenderName {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollSenderName {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -513,9 +464,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollSenderName {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityPollVote`"]
@@ -562,9 +511,7 @@ impl ::std::convert::TryFrom<&str> for ProximityPollVoteAnswerIdsItem {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityPollVoteAnswerIdsItem {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -575,9 +522,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityPollVoteAnswerIdsItem {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityQuestion`"]
@@ -592,10 +537,7 @@ pub struct ProximityQuestion {
     pub id: ProximityQuestionId,
     #[serde(rename = "senderId")]
     pub sender_id: ProximityQuestionSenderId,
-    #[serde(
-        rename = "senderName",
-        skip_serializing_if = "::std::option::Option::is_none"
-    )]
+    #[serde(rename = "senderName", skip_serializing_if = "::std::option::Option::is_none")]
     pub sender_name: ::std::option::Option<ProximityQuestionSenderName>,
     pub upvotes: ::std::collections::BTreeMap<::std::string::String, i64>,
 }
@@ -640,9 +582,7 @@ impl ::std::convert::TryFrom<&str> for ProximityQuestionAnswerModeratorId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityQuestionAnswerModeratorId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -653,9 +593,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityQuestionAnswerModeratorId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityQuestionBody`"]
@@ -693,9 +631,7 @@ impl ::std::convert::TryFrom<&str> for ProximityQuestionBody {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityQuestionBody {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -706,9 +642,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityQuestionBody {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityQuestionId`"]
@@ -746,9 +680,7 @@ impl ::std::convert::TryFrom<&str> for ProximityQuestionId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityQuestionId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -759,9 +691,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityQuestionId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityQuestionSenderId`"]
@@ -796,9 +726,7 @@ impl ::std::convert::TryFrom<&str> for ProximityQuestionSenderId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityQuestionSenderId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -809,9 +737,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityQuestionSenderId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`ProximityQuestionSenderName`"]
@@ -846,9 +772,7 @@ impl ::std::convert::TryFrom<&str> for ProximityQuestionSenderName {
 }
 impl ::std::convert::TryFrom<::std::string::String> for ProximityQuestionSenderName {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -859,9 +783,7 @@ impl<'de> ::serde::Deserialize<'de> for ProximityQuestionSenderName {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`RaisedHandEntry`"]
@@ -905,9 +827,7 @@ impl ::std::convert::TryFrom<&str> for RaisedHandEntrySpaceUserId {
 }
 impl ::std::convert::TryFrom<::std::string::String> for RaisedHandEntrySpaceUserId {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -918,9 +838,7 @@ impl<'de> ::serde::Deserialize<'de> for RaisedHandEntrySpaceUserId {
     {
         ::std::string::String::deserialize(deserializer)?
             .parse()
-            .map_err(|e: self::error::ConversionError| {
-                <D::Error as ::serde::de::Error>::custom(e.to_string())
-            })
+            .map_err(|e: self::error::ConversionError| <D::Error as ::serde::de::Error>::custom(e.to_string()))
     }
 }
 #[doc = "`RecordingState`"]
@@ -933,18 +851,7 @@ pub struct RecordingState {
     pub status: RecordingStatus,
 }
 #[doc = "`RecordingStatus`"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum RecordingStatus {
     #[serde(rename = "idle")]
     Idle,
@@ -985,9 +892,7 @@ impl ::std::convert::TryFrom<&str> for RecordingStatus {
 }
 impl ::std::convert::TryFrom<::std::string::String> for RecordingStatus {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }
@@ -1006,18 +911,7 @@ pub struct SpaceState {
     pub recording: RecordingState,
 }
 #[doc = "`SpaceStateKind`"]
-#[derive(
-    :: serde :: Deserialize,
-    :: serde :: Serialize,
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    Hash,
-    Ord,
-    PartialEq,
-    PartialOrd,
-)]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub enum SpaceStateKind {
     #[serde(rename = "bubble")]
     Bubble,
@@ -1058,9 +952,7 @@ impl ::std::convert::TryFrom<&str> for SpaceStateKind {
 }
 impl ::std::convert::TryFrom<::std::string::String> for SpaceStateKind {
     type Error = self::error::ConversionError;
-    fn try_from(
-        value: ::std::string::String,
-    ) -> ::std::result::Result<Self, self::error::ConversionError> {
+    fn try_from(value: ::std::string::String) -> ::std::result::Result<Self, self::error::ConversionError> {
         value.parse()
     }
 }

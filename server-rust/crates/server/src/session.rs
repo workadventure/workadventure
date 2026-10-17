@@ -72,14 +72,8 @@ pub struct SessionInfo {
 }
 
 enum WriterCmd {
-    Attach {
-        sink: WsSink,
-        last_received: u32,
-        reply: oneshot::Sender<bool>,
-    },
-    Detach {
-        generation: u64,
-    },
+    Attach { sink: WsSink, last_received: u32, reply: oneshot::Sender<bool> },
+    Detach { generation: u64 },
 }
 
 pub struct Session {
@@ -134,11 +128,7 @@ impl Session {
         METRICS.nb_sockets.inc();
         tokio::spawn(writer(session.clone(), sink, writer_rx));
         tokio::spawn(reader(session.clone(), stream, 0));
-        SessionParts {
-            session,
-            inbox: inbox_rx,
-            ended: ended_rx,
-        }
+        SessionParts { session, inbox: inbox_rx, ended: ended_rx }
     }
 
     pub fn user_id(&self) -> Option<UserId> {
@@ -189,16 +179,7 @@ impl Session {
         let (sink, stream) = socket.split();
         let (reply, answer) = oneshot::channel();
         let generation = self.generation.fetch_add(1, Ordering::SeqCst) + 1;
-        if self
-            .writer
-            .send(WriterCmd::Attach {
-                sink,
-                last_received,
-                reply,
-            })
-            .await
-            .is_err()
-        {
+        if self.writer.send(WriterCmd::Attach { sink, last_received, reply }).await.is_err() {
             return false;
         }
         if answer.await != Ok(true) {
@@ -241,11 +222,7 @@ async fn writer(session: Arc<Session>, first: WsSink, mut commands: mpsc::Receiv
     let mut sink = Some(first);
     let mut nonce: u32 = 0;
     let mut store = ResumeStore::new(
-        ResumeLimits {
-            retention: session.retention,
-            max_frames: 2000,
-            max_bytes: 4 * 1024 * 1024,
-        },
+        ResumeLimits { retention: session.retention, max_frames: 2000, max_bytes: 4 * 1024 * 1024 },
         session.resume_budget.clone(),
     );
     let mut ws_ping = tokio::time::interval_at(Instant::now() + WS_PING_EVERY, WS_PING_EVERY);
@@ -349,10 +326,7 @@ async fn writer(session: Arc<Session>, first: WsSink, mut commands: mpsc::Receiv
 }
 
 fn close(code: u16, reason: &'static str) -> Message {
-    Message::Close(Some(CloseFrame {
-        code,
-        reason: reason.into(),
-    }))
+    Message::Close(Some(CloseFrame { code, reason: reason.into() }))
 }
 
 async fn reader(session: Arc<Session>, mut stream: WsStream, generation: u64) {

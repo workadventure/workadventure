@@ -47,9 +47,7 @@ impl FrontAssets {
 }
 
 pub fn query_pairs(raw: Option<&str>) -> Vec<(String, String)> {
-    form_urlencoded::parse(raw.unwrap_or("").as_bytes())
-        .map(|(k, v)| (k.into_owned(), v.into_owned()))
-        .collect()
+    form_urlencoded::parse(raw.unwrap_or("").as_bytes()).map(|(k, v)| (k.into_owned(), v.into_owned())).collect()
 }
 
 fn query_get<'a>(pairs: &'a [(String, String)], key: &str) -> Option<&'a str> {
@@ -283,17 +281,20 @@ fn hsl([r, g, b]: [f64; 3]) -> String {
     } else {
         let d = max - min;
         let s = if l < 0.5 { d / (max + min) } else { d / (2.0 - max - min) };
-        let h = if max == r { (g - b) / d + if g < b { 6.0 } else { 0.0 } } else if max == g { (b - r) / d + 2.0 } else { (r - g) / d + 4.0 };
+        let h = if max == r {
+            (g - b) / d + if g < b { 6.0 } else { 0.0 }
+        } else if max == g {
+            (b - r) / d + 2.0
+        } else {
+            (r - g) / d + 4.0
+        };
         (h * 60.0, s)
     };
     format!("{} {}% {}%", h.round(), (s * 100.0).round(), (l * 100.0).round())
 }
 
 fn full_url(headers: &HeaderMap, uri: &axum::http::Uri) -> String {
-    let proto = headers
-        .get("x-forwarded-proto")
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("http");
+    let proto = headers.get("x-forwarded-proto").and_then(|v| v.to_str().ok()).unwrap_or("http");
     let host = headers.get(header::HOST).and_then(|v| v.to_str().ok()).unwrap_or("");
     let path = uri.path_and_query().map_or("/", |p| p.as_str());
     format!("{proto}://{host}{path}")
@@ -379,10 +380,7 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
     let url = full_url(&parts.headers, &parts.uri);
     let auth_token = if parts.method == Method::POST {
         let bytes = axum::body::to_bytes(body, 64 * 1024).await.unwrap_or_default();
-        query_pairs(std::str::from_utf8(&bytes).ok())
-            .into_iter()
-            .find(|(k, _)| k == "authToken")
-            .map(|(_, v)| v)
+        query_pairs(std::str::from_utf8(&bytes).ok()).into_iter().find(|(k, _)| k == "authToken").map(|(_, v)| v)
     } else {
         None
     };
@@ -404,7 +402,12 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
     if let Some(to) = details.as_ref().and_then(|d| d["redirectUrl"].as_str()) {
         return (StatusCode::FOUND, [(header::LOCATION, to.to_owned())]).into_response();
     }
-    if let Some(key) = query_pairs(parts.uri.query()).into_iter().find(|(k, _)| k == "access_key").map(|(_, v)| v).filter(|k| !k.is_empty()) {
+    if let Some(key) = query_pairs(parts.uri.query())
+        .into_iter()
+        .find(|(k, _)| k == "access_key")
+        .map(|(_, v)| v)
+        .filter(|k| !k.is_empty())
+    {
         let Some(autologin) = state.config.raw.get("AUTOLOGIN_URL").filter(|v| !v.is_empty()) else {
             return (StatusCode::BAD_REQUEST, "AUTOLOGIN_URL is not configured.").into_response();
         };
@@ -412,7 +415,8 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         c.insert("accessKey", V::Str(key));
         c.insert("AUTOLOGIN_URL", V::Str(autologin.clone()));
         let html = Template::parse(include_str!("redirect_to_admin.html")).expect("valid template").render(&c);
-        return ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], html).into_response();
+        return ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], html)
+            .into_response();
     }
     let map_details = details.filter(|d| d.get("group").is_some());
     let user_agent = parts.headers.get(header::USER_AGENT).and_then(|v| v.to_str().ok()).unwrap_or_default();
@@ -426,10 +430,7 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
         .into_iter()
         .flatten()
         .map(|f| {
-            ["rel", "sizes", "src"]
-                .into_iter()
-                .map(|k| (k, f[k].as_str().unwrap_or_default().to_owned()))
-                .collect()
+            ["rel", "sizes", "src"].into_iter().map(|k| (k, f[k].as_str().unwrap_or_default().to_owned())).collect()
         })
         .collect();
     let tile = fav.last().and_then(|f| f.get("src").cloned()).unwrap_or_default();
@@ -449,18 +450,15 @@ async fn page(State(state): State<AppState>, request: Request) -> Response {
     let palettes = [("primaryColor", "secondary"), ("backgroundColor", "contrast")]
         .map(|(field, prefix)| string_palette(map_details.as_ref().and_then(|d| d[field].as_str()), prefix));
     let css = if palettes.iter().any(|p| !p.is_empty()) {
-        format!("<style>\n\n        :root {{\n\n            {}\n{}\n            }}\n\n        </style>", palettes[0], palettes[1])
+        format!(
+            "<style>\n\n        :root {{\n\n            {}\n{}\n            }}\n\n        </style>",
+            palettes[0], palettes[1]
+        )
     } else {
         String::new()
     };
     ctx.insert("cssVariablesOverride", V::Str(css));
-    (
-        [
-            (header::CACHE_CONTROL, "no-cache"),
-            (header::CONTENT_TYPE, "text/html; charset=utf-8"),
-        ],
-        template.render(&ctx),
-    )
+    ([(header::CACHE_CONTROL, "no-cache"), (header::CONTENT_TYPE, "text/html; charset=utf-8")], template.render(&ctx))
         .into_response()
 }
 
@@ -498,13 +496,7 @@ async fn anonym_login(State(state): State<AppState>) -> Response {
         return StatusCode::FORBIDDEN.into_response();
     }
     let uuid = uuid::Uuid::new_v4().to_string();
-    let token = jwt::create(
-        &state.config.secret_key,
-        Claims {
-            identifier: uuid.clone(),
-            ..Claims::default()
-        },
-    );
+    let token = jwt::create(&state.config.secret_key, Claims { identifier: uuid.clone(), ..Claims::default() });
     axum::Json(json!({ "authToken": token, "userUuid": uuid })).into_response()
 }
 
@@ -726,13 +718,7 @@ async fn proxy(State(state): State<AppState>, request: Request) -> Response {
         return StatusCode::INTERNAL_SERVER_ERROR.into_response();
     };
     let mut builder = Response::builder().status(response.status());
-    for h in [
-        header::CONTENT_TYPE,
-        header::CACHE_CONTROL,
-        header::ETAG,
-        header::LAST_MODIFIED,
-        header::EXPIRES,
-    ] {
+    for h in [header::CONTENT_TYPE, header::CACHE_CONTROL, header::ETAG, header::LAST_MODIFIED, header::EXPIRES] {
         if let Some(v) = response.headers().get(&h) {
             builder = builder.header(h, v.clone());
         }
