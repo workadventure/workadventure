@@ -48,7 +48,7 @@ The "See attendees" option is useful when speakers want to interact with their a
 ![](../../images/editor/megaphone_listener_2.png)
 
 10. Select the podium that you already created in the **Podium Name** selector.
-11. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the audience. It is also needed for [polls and questions](/user/polls-and-questions) in this zone.
+11. (Optional) You can also create a chat channel for this zone. This channel will be used to chat with the people in the audience. It is also needed for [polls and questions](/user/chat/polls-and-questions) in this zone.
 
 :::note
 If you enable "associate a dedicated chat channel" in both areas, both chats will be merged and can be used by users in the podium and in the audience.

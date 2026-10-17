@@ -377,6 +377,11 @@ export const EnvironmentVariables = z.object({
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 4))
         .describe("Maximum number of users in a bubble/group. Defaults to 4"),
+    PROXIMITY_FILE_TRANSFER_MAX_USERS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10))
+        .describe(
+            "Maximum number of users (sender included) in a proximity chat for files to be shared in it. Files travel peer to peer, so the sender uploads a copy to every recipient. Defaults to 10",
+        ),
     MAX_DISPLAYED_VIDEOS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 16))
         .describe(

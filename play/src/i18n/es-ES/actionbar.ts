@@ -30,9 +30,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Tu cámara está desactivada",
         activate: "Activar tu cámara",
-        noImageWarning: "Tu cámara ha dejado de enviar imágenes. Puede que otra aplicación la esté usando.",
-        retry: "Reintentar",
-        changeCamera: "Cambiar de cámara",
     },
     microphone: {
         disabled: "Tu micrófono está desactivado",
@@ -40,6 +37,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "No se detecta sonido de tu micrófono. Puede haber un problema; prueba a cambiar de micrófono en la configuración.",
         advancedNoiseReduction: "Reducción de ruido avanzada",
+        loudEnvironmentWarning: "Se ha detectado ruido de fondo continuo en tu micrófono.",
+        enableNoiseSuppression: "Activar la supresión de ruido",
         noiseSuppressionInitializing: "Inicializando la supresión de ruido personalizada...",
         noiseSuppressionUnsupported: "Este navegador no puede ejecutar la supresión de ruido personalizada.",
         noiseSuppressionError:

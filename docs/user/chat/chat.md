@@ -10,7 +10,7 @@ Global settings for the chat are available in the admin panel. See the [admin do
 
 The chat system can be accessed by clicking on the chat icon in the action bar.
 
-![Chat icon](./images/chat-button.png)
+![Chat icon](../images/chat-button.png)
 
 2 types of chat rooms are available in WorkAdventure:
 
@@ -29,6 +29,9 @@ When a user moves in a conversation bubble, they cannot see the chat messages th
 
 Messages in the Proximity Chat are **not stored**. If you refresh the page, the proximity chat room will be empty.
 
+Files sent in the Proximity Chat are not stored either: they go directly from your browser to the people in the bubble.
+See [Sharing files](file-sharing.md).
+
 ## "Matrix" chat rooms
 
 Matrix chat rooms take their name from the Matrix protocol, which is used to provide chat features in WorkAdventure.
@@ -39,11 +42,11 @@ Matrix chat rooms are **persistent chat rooms**.
 
 Anyone logged can create a chat room. 
 
-![](images/create-room-button.png)
+![](../images/create-room-button.png)
 
 A click on the "+" icon next to the "Rooms" section will prompt a form to create a new chat room.
 
-![](images/create-room-popup.png)
+![](../images/create-room-popup.png)
 
 **Room visibility** can be set to "Public" or "Private". Public rooms are visible to **everyone**, while private rooms are 
 only visible to users that have been invited to the room.
@@ -84,10 +87,15 @@ If you are creating a private room, you will also need to invite users.
 
 Invited users will receive a notification in the chat room list and they can accept or decline the invitation.
 
+## Sharing files
+
+You can send files in any chat room, and in the proximity chat. In chat rooms, files stay in the room history. In the
+proximity chat, they go directly to the people around you and are not stored. See [Sharing files](file-sharing.md).
+
 ## User list
 
 The user list shows everyone in your world, grouped by map, and lets you walk up to them, locate them or send them a
-message. See [Finding people: the user list](user-list.md).
+message. See [Finding people: the user list](../user-list.md).
 
 ## Meeting invitations
 WorkAdventure allows users to invite other users to join their meeting directly from the chat interface.

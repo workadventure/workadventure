@@ -30,9 +30,6 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
-        noImageWarning: "Your camera stopped sending images. Another application may be using it.",
-        retry: "Try again",
-        changeCamera: "Change camera",
     },
     microphone: {
         disabled: "Your microphone is disabled",
@@ -40,6 +37,8 @@ const actionbar: BaseTranslation = {
         noSoundWarning:
             "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
         advancedNoiseReduction: "Advanced noise reduction",
+        loudEnvironmentWarning: "Sustained background noise was detected on your microphone.",
+        enableNoiseSuppression: "Enable noise suppression",
         noiseSuppressionInitializing: "Initializing custom noise suppression...",
         noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
         noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",

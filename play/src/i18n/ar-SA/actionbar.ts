@@ -30,15 +30,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
-        noImageWarning: "توقفت الكاميرا عن إرسال الصور. ربما يستخدمها تطبيق آخر.",
-        retry: "إعادة المحاولة",
-        changeCamera: "تغيير الكاميرا",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
         noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
         advancedNoiseReduction: "تقليل الضوضاء المتقدم",
+        loudEnvironmentWarning: "تم اكتشاف ضوضاء خلفية مستمرة في الميكروفون.",
+        enableNoiseSuppression: "تفعيل تقليل الضوضاء",
         noiseSuppressionInitializing: "جارٍ تهيئة تقليل الضوضاء المخصص...",
         noiseSuppressionUnsupported: "لا يمكن لهذا المتصفح تشغيل تقليل الضوضاء المخصص.",
         noiseSuppressionError: "فشل تقليل الضوضاء المخصص. يتم الرجوع إلى تقليل الضوضاء الأصلي في المتصفح.",

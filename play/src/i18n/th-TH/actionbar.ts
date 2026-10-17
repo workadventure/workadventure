@@ -31,15 +31,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "กล้องของคุณถูกปิดอยู่",
         activate: "เปิดกล้องของคุณ",
-        noImageWarning: "กล้องของคุณหยุดส่งภาพแล้ว แอปอื่นอาจกำลังใช้งานกล้องอยู่",
-        retry: "ลองอีกครั้ง",
-        changeCamera: "เปลี่ยนกล้อง",
     },
     microphone: {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",
         activate: "เปิดไมโครโฟนของคุณ",
         noSoundWarning: "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
         advancedNoiseReduction: "การลดเสียงรบกวนขั้นสูง",
+        loudEnvironmentWarning: "ตรวจพบเสียงรบกวนพื้นหลังต่อเนื่องจากไมโครโฟนของคุณ",
+        enableNoiseSuppression: "เปิดการลดเสียงรบกวน",
         noiseSuppressionInitializing: "กำลังเริ่มต้นระบบตัดเสียงรบกวนแบบกำหนดเอง...",
         noiseSuppressionUnsupported: "เบราว์เซอร์นี้ไม่สามารถใช้ระบบตัดเสียงรบกวนแบบกำหนดเองได้",
         noiseSuppressionError: "ระบบตัดเสียงรบกวนแบบกำหนดเองล้มเหลว กำลังกลับไปใช้ระบบตัดเสียงรบกวนของเบราว์เซอร์",

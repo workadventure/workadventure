@@ -8,6 +8,18 @@ class ChatUtils {
         await page.getByTestId("chat-btn").click();
     }
 
+    public async openProximityRoom(page: Page) {
+        await this.openChat(page);
+
+        const roomName = page.getByTestId("roomName");
+        if ((await roomName.count()) > 0 && (await roomName.textContent())?.trim() === "Proximity Chat") {
+            return;
+        }
+
+        await page.getByTestId("toggleDisplayProximityChat").click();
+        await expect(roomName).toHaveText("Proximity Chat", { timeout: 60_000 });
+    }
+
     public async openCreateRoomDialog(page: Page, folderName = "") {
         await page.getByTestId(`openOptionToCreateRoomOrFolder${folderName}`).click();
         await page.getByTestId(`openCreateRoomModalButton${folderName}`).click();
