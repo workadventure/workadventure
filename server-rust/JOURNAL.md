@@ -648,3 +648,31 @@ avertissements de swagger-jsdoc sur la sortie standard).
 **Erreur de méthode :** un commit (ea4cb594d) est parti alors que `verify.sh` échouait, la commande étant
 enchaînée par `;`. Le commit suivant (d8ae1fc04) corrige la cause ; depuis, le commit n'est lancé qu'après un
 `verify.sh` réussi (`&&`).
+
+## Jalon 9 — demandes qualité, refonte, bibliothèques, Matrix (17/10)
+
+**Aide extérieure :**
+- Du socle : la liste du §5.3 du rapport Codex, la décision « bibliothèques de référence » (prise pour Go, appliquée
+  ici), deux vidages de Synapse.
+- Sous-agents Sonnet de cette session : inventaire Matrix (TS seul), audit des erreurs avalées.
+- Lecture de `lang-go` : rien.
+
+**Ce qui est en place :**
+- CI (`continuous_integration.yml`, job server-rust) et CodeQL Rust ; formatage à 120 colonnes ; cargo deny
+  (rustls mis à jour, 4 avis) ; SSRF fermée ; `id_token` vérifié, cookie PKCE scellé ; un JSON stocké corrompu
+  n'est plus écrasé ; corps des PATCH comme body-parser ; routes de debug du back. Voir `IMPROVEMENTS.md`.
+- Refonte : `logic/` et `room_actor/` découpés par famille, l'état de la room en struct.
+- S3 sur `aws-sdk-s3`, LiveKit sur `livekit-api` ; réponses de l'admin typées, générées des schémas zod.
+- Matrix : session admin Synapse partagée par Redis, `/roomArea`, salles des zones entrées et quittées, hooks
+  `resourceUrl` de map-storage.
+
+**Correctif trouvé par les specs :** l'écho d'une édition de zone dont un hook a changé le `serverData` doit porter
+`modifyServerData` (et la zone entière) : sans lui, l'éditeur ne réapplique pas sa propre commande et n'apprend
+jamais l'id de la salle créée. Les 5 tests de `matrixChatArea` échouaient tous pour cette raison, puis passent.
+
+**Vérification :**
+- 131 tests (`verify.sh`), couverture des lignes : core 85 %, `ws.rs` 80,8 %.
+- Playwright Chromium : non-régression après refonte 22/25 (2 environnement connus, `scripting_follow` 2/2 seul) ;
+  LiveKit, enregistrement, partage d'écran 10/11 (`recording:62` lent en lot, 2/2 seul) ; Matrix : `matrixChatArea`
+  5/5, les 6 autres fichiers 26 réussis et 2 sautés, `matrixChatModeration:28` et `:60` échouent sur
+  `@john.doe` pris par la spec jouée avant (cas classé environnement dans la réf. TS), rejeu seul demandé.
