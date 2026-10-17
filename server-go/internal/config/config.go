@@ -62,6 +62,7 @@ type Config struct {
 	AdminAPIRetryDelay    time.Duration // ADMIN_API_RETRY_DELAY: between two tries of /api/capabilities at start
 	AdminAPIToken         string        // ADMIN_API_TOKEN: the administration routes (POST /global/event)
 	AdminSocketsToken     string        // ADMIN_SOCKETS_TOKEN: signs the JWTs of /ws/admin/rooms
+	Analytics             Analytics
 	DisableAnonymous      bool
 	OpenID                OpenID
 
@@ -259,13 +260,19 @@ func parse(get func(string) string) (*Config, error) {
 			UseDomainNameInPath: r.boolean("USE_DOMAIN_NAME_IN_PATH", false),
 			SecretKey:           r.str("SECRET_KEY"),
 		},
-		SecretKey:                 r.str("SECRET_KEY"),
-		AdminAPIURL:               r.str("ADMIN_API_URL"),
-		EnableOpenAPIEndpoint:     r.boolean("ENABLE_OPENAPI_ENDPOINT", false),
-		AdminURL:                  r.str("ADMIN_URL"),
-		AdminAPIRetryDelay:        time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
-		AdminAPIToken:             r.str("ADMIN_API_TOKEN"),
-		AdminSocketsToken:         r.str("ADMIN_SOCKETS_TOKEN"),
+		SecretKey:             r.str("SECRET_KEY"),
+		AdminAPIURL:           r.str("ADMIN_API_URL"),
+		EnableOpenAPIEndpoint: r.boolean("ENABLE_OPENAPI_ENDPOINT", false),
+		AdminURL:              r.str("ADMIN_URL"),
+		AdminAPIRetryDelay:    time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
+		AdminAPIToken:         r.str("ADMIN_API_TOKEN"),
+		AdminSocketsToken:     r.str("ADMIN_SOCKETS_TOKEN"),
+		Analytics: Analytics{
+			FlushInterval: time.Duration(r.integer("ANALYTICS_FLUSH_INTERVAL_MS", 10000)) * time.Millisecond,
+			Timeout:       time.Duration(r.integer("ANALYTICS_TIMEOUT_MS", 2000)) * time.Millisecond,
+			MaxQueue:      r.integer("ANALYTICS_MAX_QUEUE_SIZE", 10000),
+			MaxBatch:      r.integer("ANALYTICS_MAX_BATCH_SIZE", 1000),
+		},
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),
 		SocketIdleTimer:           time.Duration(r.integer("SOCKET_IDLE_TIMER", 120)) * time.Second,
 		ClientDisconnectRetention: time.Duration(r.integer("CLIENT_DISCONNECTION_RETENTION_MS", 30_000)) * time.Millisecond,
@@ -479,3 +486,9 @@ func sentryDSN(r *reader) any {
 
 // RecordingS3 is where the recordings go (LIVEKIT_RECORDING_S3_*).
 type RecordingS3 struct{ Endpoint, CDNEndpoint, AccessKey, Secret, Region, Bucket string }
+
+// Analytics is the batching of the events sent to the admin (A22).
+type Analytics struct {
+	FlushInterval, Timeout time.Duration
+	MaxQueue, MaxBatch     int
+}

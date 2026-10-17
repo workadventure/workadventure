@@ -43,7 +43,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
 | A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
-| A4 à A17, A22 à A31 | absent | — | voir les manques bloquants | suivant le contrat |
+| A4 à A17, A23 à A31 (A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
 
 ## Connexion, salle, mouvements
 
@@ -119,7 +119,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | `/ws/admin/rooms` (`ADMIN_SOCKETS_TOKEN` : `listen` → `MemberJoin`/`MemberLeave`, `banned` sur les salles du monde, fermetures 1007/1008) | IoSocketController.ts:86, SocketManager.ts:113 | validé | `adminrooms_test.go` : `TestTheAdminSocketFollowsTheMembersAndBans` ; `roomapi_test.go` : `TestAWatcherSeesWhoComesAndGoes` | file de 1000 messages, les suivants perdus (pas de limite en octets ni de délai de vidage) ; pas de fermeture 1011 (pas de back séparé à perdre) | — |
 | OpenAPI, swagger-ui (`ENABLE_OPENAPI_ENDPOINT`) | SwaggerController.ts | validé | `swagger_doc.spec.ts` | swagger-ui depuis un CDN (5.32.6) | — |
 | Front sans `ASSETS_URL` (mode local) | FrontAssets.ts:79 | absent | `httpapi/front.go:36` | toutes les pages répondent 503 | mode local, ou `ASSETS_URL` obligatoire |
-| Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` | aligner |
+| Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` ; `NODE_TLS_REJECT_UNAUTHORIZED=0` sans effet : un certificat auto-signé (LiveKit, S3, admin de test) se donne par `SSL_CERT_FILE`/`SSL_CERT_DIR`, que Go lit seul | aligner ; décision de Yannis s'il faut aussi un interrupteur sans vérification |
 | Dockerfile de prod | play/Dockerfile | partiel | `Dockerfile` | voir manque 7 | étape « Déploiement » |
 | Sentry serveur, télémétrie, drain (`DRAIN_TIMEOUT_MS`) | — | absent | — | — | — |
 
@@ -173,4 +173,6 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | `nb_sockets`, `nb_clients_per_room`, `nb_rooms`, `nb_spaces` | GaugeManager.ts | implémenté non vérifié | `metrics.go` | une série au lieu de deux jobs (pusher, back) | revoir les tableaux de bord |
 | `nb_publishers_per_space`, `nb_watchers_per_world` | back GaugeManager.ts:38-69 | absent | — | bug TS (`world` contre `name`) | définir la sémantique |
 | `nodejs_*` | collectDefaultMetrics | remplacé par `go_*` | — | alertes à revoir | — |
-| Analytics (back et pusher), télémétrie d'installation | AnalyticsEventsQueue.ts, TelemetryService.ts | absent | message jeté en silence | SaaS ; installations OSS plus comptées | avec l'admin ; requête quotidienne |
+| Analytics du pusher (A22) : file (lots, 4 essais, 422 découpé un par un, débordement des plus anciens, drain à l'arrêt), événements du front (liste blanche du catalogue, source, `eventId`, au plus 100 par message), intervalles mesurés par le serveur (`timed_event.open/close`, `user.connected`/`user.disconnected`, plafond de 32), échantillons vidéo, `analyticsEventsEnabled`, capacité `api/analytics/events-batch` | AnalyticsEventsQueue.ts, AnalyticsReportMessageHandler.ts, AnalyticsTimedEventTracker.ts | validé | `analytics_test.go` (5 tests, dont la comparaison au catalogue TS) ; `ws/analytics_test.go` : `TestTheFrontsEventsReachTheAdminSignedByTheServer` | les propriétés ne sont pas validées contre les schémas du catalogue (l'admin refuse alors la ligne seule, par un 422) ; une session reprise garde son `user.connected` (le TS en ouvre un par socket) ; pas de compteurs de la file dans `/metrics` | — |
+| Analytics du back : `meeting.participation.ended`, `meeting.ended` (SessionAnalytics) | back/src/Model/SessionAnalytics.ts | absent | — | SaaS : réunions non comptées | tranche suivante |
+| Télémétrie d'installation | TelemetryService.ts | absent | — | installations OSS plus comptées | requête quotidienne |
