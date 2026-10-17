@@ -1,6 +1,10 @@
 //! Space state rules (raise hand, floor, polls, questions) and who sees whom in a space with feedback.
 
-use wa_core::space::{FilterType, Space, SpaceEvent, SpaceSink, SpaceUser};
+use std::sync::Arc;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+use wa_core::room::Clock;
+use wa_core::space::{Comm, FilterType, MediaConfig, Space, SpaceEvent, SpaceSink, SpaceUser};
 use wa_core::space_state::{SpaceState, StateQuery};
 
 #[derive(Default)]
@@ -27,6 +31,9 @@ impl SpaceSink for Rec {
                 self.state = Some(after.clone());
                 "patch".to_owned()
             }
+            SpaceEvent::Switch(_, c) => format!("switch {}", c.name()),
+            SpaceEvent::FinalizeSwitch(_, c) => format!("finalize {}", c.name()),
+            SpaceEvent::LivekitRoom(open) => format!("room {}", if open { "open" } else { "close" }),
             other => format!("{other:?}").split(['(', ' ']).next().unwrap_or_default().to_owned(),
         };
         self.events.push((to, what));
@@ -357,4 +364,122 @@ fn a_member_back_in_a_list_gets_a_new_link_since_the_front_closed_the_old_one() 
             (to(&["bob"]), "WebRtcStart".to_owned()),
         ]
     );
+}
+
+#[derive(Clone, Default)]
+struct TestClock(Arc<AtomicU64>);
+impl Clock for TestClock {
+    fn now_ms(&self) -> u64 {
+        self.0.load(Ordering::SeqCst)
+    }
+}
+
+/// A bubble with LiveKit available above 4 users, its clock, and its members joined and watching.
+fn bubble(ids: &[&str]) -> (Space, Rec, TestClock) {
+    let f = FilterType::AllUsers;
+    let mut s = Space::new("s".into(), f, vec!["cameraState".into(), "microphoneState".into()], "i".into());
+    let clock = TestClock::default();
+    s.configure_media(MediaConfig { max_webrtc: 4, livekit: true, switch_on_cpu: true }, Box::new(clock.clone()));
+    let mut r = Rec::default();
+    for id in ids {
+        enter(&mut s, &mut r, id);
+    }
+    (s, r, clock)
+}
+
+fn enter(s: &mut Space, r: &mut Rec, id: &str) {
+    s.join(FilterType::AllUsers, user(id), r).unwrap();
+    s.after_join(id, r);
+    s.watch(id, r);
+}
+
+fn kinds(r: &mut Rec, prefix: &str) -> Vec<(Vec<String>, String)> {
+    r.take().into_iter().filter(|(_, e)| e.starts_with(prefix)).collect()
+}
+
+#[test]
+fn a_fifth_user_moves_the_bubble_to_livekit_and_it_comes_back_after_a_quiet_delay() {
+    let (mut s, mut r, clock) = bubble(&["a", "b", "c", "d"]);
+    assert_eq!(s.comm(), Comm::WebRtc);
+    r.take();
+
+    // The fifth: everyone is told, the room opens, everyone is invited.
+    enter(&mut s, &mut r, "e");
+    let events = r.take();
+    let switches: Vec<_> = events.iter().filter(|(_, e)| e == "switch LIVEKIT").collect();
+    assert_eq!(switches.len(), 5);
+    assert!(events.iter().any(|(_, e)| e == "room open"));
+    assert_eq!(events.iter().filter(|(_, e)| e == "LivekitInvite").count(), 5);
+    assert!(events.iter().all(|(_, e)| e != "switch WEBRTC"), "the joiner is told once");
+    // 5 s later the clients drop their peer-to-peer links.
+    clock.0.store(5_000, Ordering::SeqCst);
+    s.tick(&mut r);
+    assert_eq!(kinds(&mut r, "finalize").len(), 5);
+
+    // Two leave: still LiveKit for 20 s, and each change restarts the delay.
+    s.leave("e", &mut r);
+    clock.0.store(15_000, Ordering::SeqCst);
+    s.leave("d", &mut r);
+    assert_eq!(s.next_deadline(), Some(35_000));
+    clock.0.store(34_999, Ordering::SeqCst);
+    s.tick(&mut r);
+    assert_eq!(s.comm(), Comm::Livekit);
+    clock.0.store(35_000, Ordering::SeqCst);
+    s.tick(&mut r);
+    assert_eq!(s.comm(), Comm::WebRtc);
+    let events = r.take();
+    assert_eq!(events.iter().filter(|(_, e)| e == "switch WEBRTC").count(), 3);
+    // a-b, a-c, b-c, each announced to both ends.
+    assert_eq!(events.iter().filter(|(_, e)| e == "WebRtcStart").count(), 6);
+    clock.0.store(40_000, Ordering::SeqCst);
+    s.tick(&mut r);
+    let events = r.take();
+    assert_eq!(events.iter().filter(|(_, e)| e == "finalize LIVEKIT").count(), 3);
+    assert!(events.iter().any(|(_, e)| e == "room close"));
+}
+
+#[test]
+fn a_recording_or_a_slow_computer_keeps_livekit() {
+    let (mut s, mut r, clock) = bubble(&["a", "b", "c"]);
+    // A CPU-limited member in a bubble of 3: LiveKit.
+    let mut a = user("a");
+    a.cpu_limited = true;
+    s.update_from_client("a", &a, &["cpuLimited".into()], &mut r);
+    assert_eq!(s.comm(), Comm::Livekit);
+    // Recording: the space stays on LiveKit whatever happens.
+    s.recording = true;
+    a.cpu_limited = false;
+    s.update_from_client("a", &a, &["cpuLimited".into()], &mut r);
+    assert_eq!(s.next_deadline(), Some(5_000), "only the finalize timer");
+    clock.0.store(60_000, Ordering::SeqCst);
+    s.tick(&mut r);
+    assert_eq!(s.comm(), Comm::Livekit);
+}
+
+#[test]
+fn a_livekit_room_opens_with_its_first_publisher_and_closes_with_its_last() {
+    let f = FilterType::LiveStreamingUsers;
+    let mut s = Space::new("s".into(), f, vec!["cameraState".into()], "i".into());
+    s.configure_media(MediaConfig { max_webrtc: 1, livekit: true, switch_on_cpu: true }, Box::new(TestClock::default()));
+    let mut r = Rec::default();
+    for id in ["l1", "l2"] {
+        s.join(f, user(id), &mut r).unwrap();
+        s.after_join(id, &mut r);
+        s.watch(id, &mut r);
+    }
+    assert_eq!(s.comm(), Comm::Livekit);
+    // Only listeners: no room, nobody invited.
+    assert!(r.take().iter().all(|(_, e)| e != "room open" && e != "LivekitInvite"));
+    let mut speaker = user("sp");
+    speaker.megaphone_state = true;
+    s.join(f, speaker, &mut r).unwrap();
+    s.after_join("sp", &mut r);
+    let events = r.take();
+    assert!(events.iter().any(|(_, e)| e == "room open"));
+    assert_eq!(events.iter().filter(|(_, e)| e == "LivekitInvite").count(), 3);
+    // The speaker leaves: the listeners are disconnected and the room closes.
+    s.leave("sp", &mut r);
+    let events = r.take();
+    assert_eq!(events.iter().filter(|(_, e)| e == "LivekitDisconnect").count(), 2);
+    assert!(events.iter().any(|(_, e)| e == "room close"));
 }

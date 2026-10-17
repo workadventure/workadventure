@@ -4,15 +4,16 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use wa_core::space::{FilterType, JoinError, Space, SpaceEvent, SpaceSink, SpaceUser};
+use wa_core::space::{FilterType, JoinError, MediaConfig, Space, SpaceEvent, SpaceSink, SpaceUser};
 use wa_core::space_state::StateQuery;
 use wa_core::user::Availability;
 use wa_proto::messages as pb;
 
+use crate::AppState;
 use crate::json_patch;
+use crate::livekit::{self, Livekit};
 use crate::metrics::METRICS;
 use crate::outbox::Frame;
-use crate::registry::ActorRegistry;
 use crate::session::Session;
 use crate::wire;
 
@@ -76,10 +77,10 @@ pub enum SpaceCmd {
 
 pub type SpaceHandle = tokio::sync::mpsc::Sender<SpaceCmd>;
 
-pub fn get_or_spawn(registry: &Arc<ActorRegistry<SpaceCmd>>, key: &str, local_name: &str) -> SpaceHandle {
-    registry.get_or_spawn(key, || {
+pub fn get_or_spawn(app: &AppState, key: &str, local_name: &str) -> SpaceHandle {
+    app.spaces.get_or_spawn(key, || {
         let (tx, rx) = tokio::sync::mpsc::channel(MAILBOX);
-        tokio::spawn(run(key.to_owned(), local_name.to_owned(), rx, registry.clone()));
+        tokio::spawn(run(key.to_owned(), local_name.to_owned(), rx, app.clone()));
         tx
     })
 }
@@ -137,6 +138,21 @@ fn metadata_json(entries: impl Iterator<Item = (String, String)>) -> String {
 struct Out<'a> {
     name: &'a str,
     sessions: &'a HashMap<String, Arc<Session>>,
+    media: &'a Media,
+}
+
+/// What the media events of a space need: LiveKit, the name of the space's room there, an HTTP client.
+struct Media {
+    livekit: Option<Livekit>,
+    room: String,
+    http: reqwest::Client,
+}
+
+struct SystemClock;
+impl wa_core::room::Clock for SystemClock {
+    fn now_ms(&self) -> u64 {
+        std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64)
+    }
 }
 
 impl Out<'_> {
@@ -210,16 +226,37 @@ impl SpaceSink for Out<'_> {
                     metadata: metadata_json(delta.iter().cloned()),
                 }))
             }
-            SpaceEvent::SwitchToWebRtc(user) => {
-                for r in to {
-                    self.private(
-                        r,
-                        user,
-                        P::SwitchMessage(pb::SwitchMessage {
-                            strategy: "WEBRTC".into(),
-                        }),
-                    );
-                }
+            SpaceEvent::Switch(user, comm) => {
+                let strategy = comm.name().to_owned();
+                self.private(&user.space_user_id, user, P::SwitchMessage(pb::SwitchMessage { strategy }));
+                return;
+            }
+            SpaceEvent::FinalizeSwitch(user, comm) => {
+                let strategy = comm.name().to_owned();
+                self.private(&user.space_user_id, user, P::FinalizeSwitchMessage(pb::FinalizeSwitchMessage { strategy }));
+                return;
+            }
+            SpaceEvent::LivekitInvite(user) => {
+                let Some(lk) = &self.media.livekit else { return };
+                let token = lk.participant_token(&self.media.room, &user.space_user_id, &user.name, &user.uuid);
+                let invitation = pb::LivekitInvitationMessage { token, server_url: lk.server_url() };
+                self.private(&user.space_user_id, user, P::LivekitInvitationMessage(invitation));
+                return;
+            }
+            SpaceEvent::LivekitDisconnect(user) => {
+                self.private(&user.space_user_id, user, P::LivekitDisconnectMessage(pb::LivekitDisconnectMessage {}));
+                return;
+            }
+            SpaceEvent::LivekitRoom(open) => {
+                // Off the actor: invitations do not wait for it (the server creates a room on first join too).
+                let Some(lk) = self.media.livekit.clone() else { return };
+                let (http, room) = (self.media.http.clone(), self.media.room.clone());
+                tokio::spawn(async move {
+                    let done = if open { lk.create_room(&http, &room).await } else { lk.delete_room(&http, &room).await };
+                    if let Err(e) = done {
+                        tracing::warn!(%room, open, error = %e, "LiveKit room call failed");
+                    }
+                });
                 return;
             }
             SpaceEvent::WebRtcStart {
@@ -257,19 +294,39 @@ impl SpaceSink for Out<'_> {
     }
 }
 
-async fn run(
-    key: String,
-    local_name: String,
-    mut mailbox: tokio::sync::mpsc::Receiver<SpaceCmd>,
-    registry: Arc<ActorRegistry<SpaceCmd>>,
-) {
+async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Receiver<SpaceCmd>, app: AppState) {
+    let registry = app.spaces.clone();
     METRICS.nb_spaces.inc();
+    let media = Media {
+        livekit: Livekit::from_config(&app.config),
+        room: livekit::room_name(&key),
+        http: app.http.clone(),
+    };
+    let raw = |k: &str| app.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
+    let media_config = MediaConfig {
+        max_webrtc: raw("MAX_USERS_FOR_WEBRTC").and_then(|v| v.parse().ok()).unwrap_or(4),
+        livekit: media.livekit.is_some(),
+        switch_on_cpu: !matches!(raw("LIVEKIT_SWITCH_ON_CPU_LIMITATION").as_deref(), Some("false" | "0")),
+    };
     let mut space: Option<Space> = None;
     let mut sessions: HashMap<String, Arc<Session>> = HashMap::new();
     let instance = format!("{:x}", rand_u64());
 
-    while let Some(cmd) = mailbox.recv().await {
+    loop {
         use pb::answer_message::Answer;
+        let deadline = space.as_ref().and_then(Space::next_deadline);
+        let cmd = tokio::select! {
+            cmd = mailbox.recv() => match cmd {
+                Some(cmd) => cmd,
+                None => break,
+            },
+            () = sleep_until_ms(deadline) => {
+                if let Some(s) = &mut space {
+                    s.tick(&mut Out { name: &local_name, sessions: &sessions, media: &media });
+                }
+                continue;
+            }
+        };
         let space = match (&mut space, &cmd) {
             (Some(s), _) => s,
             (
@@ -279,12 +336,11 @@ async fn run(
                     properties_to_sync,
                     ..
                 },
-            ) => space.insert(Space::new(
-                local_name.clone(),
-                *filter,
-                properties_to_sync.clone(),
-                instance.clone(),
-            )),
+            ) => {
+                let mut s = Space::new(local_name.clone(), *filter, properties_to_sync.clone(), instance.clone());
+                s.configure_media(media_config, Box::new(SystemClock));
+                space.insert(s)
+            }
             // Nothing but a join can create the space.
             (None, SpaceCmd::Leave { session, query_id: Some(q), .. }) => {
                 session.push(wire::answer(*q, Answer::LeaveSpaceAnswer(pb::LeaveSpaceAnswer {})));
@@ -307,6 +363,7 @@ async fn run(
                     &mut Out {
                         name: &local_name,
                         sessions: &sessions,
+                        media: &media,
                     },
                 );
                 match joined {
@@ -323,6 +380,7 @@ async fn run(
                             &mut Out {
                                 name: &local_name,
                                 sessions: &sessions,
+                                media: &media,
                             },
                         );
                     }
@@ -341,6 +399,7 @@ async fn run(
                     &mut Out {
                         name: &local_name,
                         sessions: &sessions,
+                        media: &media,
                     },
                 );
                 sessions.remove(&id);
@@ -354,6 +413,7 @@ async fn run(
                     &mut Out {
                         name: &local_name,
                         sessions: &sessions,
+                        media: &media,
                     },
                 );
             }
@@ -362,6 +422,7 @@ async fn run(
                 &mut Out {
                     name: &local_name,
                     sessions: &sessions,
+                    media: &media,
                 },
             ),
             SpaceCmd::Update { id, from, paths } => space.update_from_client(
@@ -371,6 +432,7 @@ async fn run(
                 &mut Out {
                     name: &local_name,
                     sessions: &sessions,
+                    media: &media,
                 },
             ),
             SpaceCmd::Details {
@@ -386,6 +448,7 @@ async fn run(
                 &mut Out {
                     name: &local_name,
                     sessions: &sessions,
+                    media: &media,
                 },
             ),
             SpaceCmd::Metadata { id, delta } => space.update_metadata(
@@ -394,6 +457,7 @@ async fn run(
                 &mut Out {
                     name: &local_name,
                     sessions: &sessions,
+                    media: &media,
                 },
             ),
             SpaceCmd::StateQuery {
@@ -414,6 +478,7 @@ async fn run(
                         &mut Out {
                             name: &local_name,
                             sessions: &sessions,
+                            media: &media,
                         },
                     )
                 });
@@ -479,6 +544,7 @@ async fn run(
                 Out {
                     name: &local_name,
                     sessions: &sessions,
+                    media: &media,
                 }
                 .private(&receiver, sender, event);
             }
@@ -493,12 +559,20 @@ async fn run(
                 &mut Out {
                     name: &local_name,
                     sessions: &sessions,
+                    media: &media,
                 },
             ),
         }
     }
     registry.forget_dead(&key);
     METRICS.nb_spaces.dec();
+}
+
+/// Never, without a deadline.
+async fn sleep_until_ms(deadline: Option<u64>) {
+    let Some(at) = deadline else { return std::future::pending().await };
+    let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |d| d.as_millis() as u64);
+    tokio::time::sleep(std::time::Duration::from_millis(at.saturating_sub(now))).await;
 }
 
 /// Unique enough to tell two instances of the same space apart in connection ids.

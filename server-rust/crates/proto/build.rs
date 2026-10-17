@@ -7,9 +7,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo:rerun-if-changed={protos_dir}");
 
     let descriptors = protox::compile(["messages.proto", "room-api.proto"], [protos_dir])?;
-    prost_build::Config::new()
-        // Binary fields stay reference-counted: an uploaded file is fanned out without copies.
-        .bytes(["."])
-        .compile_fds(descriptors)?;
+    let mut config = prost_build::Config::new();
+    // Binary fields stay reference-counted: an uploaded file is fanned out without copies.
+    config.bytes(["."]);
+    // The Room API's gRPC service (server side only) comes with the types.
+    tonic_prost_build::configure().build_client(false).compile_fds_with_config(descriptors, config)?;
     Ok(())
 }

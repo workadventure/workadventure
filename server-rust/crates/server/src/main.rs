@@ -90,6 +90,15 @@ async fn serve(config: Config) {
     let app = wa_server::map_storage::router(state.clone());
     tokio::spawn(async move { axum::serve(maps, app).await });
 
+    if wa_server::room_api::enabled(&state) {
+        let port = state.config.raw.get("ROOM_API_PORT").and_then(|p| p.parse().ok()).unwrap_or(50051u16);
+        let addr = SocketAddr::from(([0, 0, 0, 0], port));
+        let grpc = tokio::net::TcpListener::bind(addr).await.expect("bind ROOM_API_PORT");
+        tracing::info!(%addr, "Room API listening");
+        let app = tonic::service::Routes::new(wa_server::room_api::service(state.clone())).into_axum_router();
+        tokio::spawn(async move { axum::serve(grpc, app).await });
+    }
+
     if state.config.uploader_port != 0 {
         let addr = SocketAddr::from(([0, 0, 0, 0], state.config.uploader_port));
         let uploads = tokio::net::TcpListener::bind(addr).await.expect("bind SERVER_UPLOADER_PORT");
