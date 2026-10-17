@@ -833,3 +833,18 @@ Décision de Yannis (via le socle) : les bibliothèques connues de l'écosystèm
   (`google.golang.org/grpc`, plus `x/net` et `genproto/rpc` indirectes). Binaire : 24,1 → 27,4 Mo.
 - `./verify.sh` vert, `CGO_ENABLED=0` vert, image prod (31 Mo) qui démarre et s'arrête proprement.
   `room-api.spec.ts` contre Go : 5 réussis sur 5.
+
+### 17/10, bibliothèques standard, tranche 2 : go-redis v9
+
+- `internal/store/redis.go` délègue à go-redis : même type `Redis`, mêmes méthodes, pool de 8 connexions, délais de 2 s,
+  `WithDB` pour l'uploader. Le RESP2 et le pool faits main sont supprimés.
+- Garanties inchangées, car elles sont dans `Writer`, que cette tranche ne touche pas : dernière valeur par champ, réessai pendant une coupure, vidage à l'arrêt.
+  Le verrou SET NX du jeton Synapse passe par `SetNX` de go-redis.
+- Tests : miniredis remplace les faux serveurs RESP. Il couvre l'authentification, une clé absente, le verrou SET NX et son expiration, et la base 1 de l'uploader.
+  Le test de lectures concurrentes est retiré : il éprouvait mon pool, que go-redis remplace.
+- Bilan : +57 / -274 lignes. Une dépendance directe ajoutée (go-redis), avec miniredis en dépendance de test ; gopher-lua et
+  `go.uber.org/atomic` viennent en indirect avec miniredis.
+- Contre la stack go :
+  - room-api et api_players : 14 réussis sur 14 ;
+  - uploader : envoi puis téléchargement 200, le fichier est bien dans la base 1 ; après un `docker restart` de Redis, les envois repassent sans redémarrer le serveur.
+  - `variables.spec.ts` n'apporte rien : `:188` est un défaut d'environnement connu, et `storage works` a été lancé par erreur (règle : ne pas le jouer). Il a échoué en 22 ms sans rien toucher.
