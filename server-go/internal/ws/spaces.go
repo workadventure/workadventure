@@ -204,15 +204,11 @@ func (s *Session) sendError(message string) {
 		ErrorMessage: &pb.ErrorMessage{Message: "An error occurred in pusher: " + message}}}, false))
 }
 
+// handleSpaceMessage routes the space messages of a client, one handler per message; it says whether m was one.
 func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 	switch msg := m.Message.(type) {
 	case *pb.ClientToServerMessage_AddSpaceFilterMessage:
-		local := msg.AddSpaceFilterMessage.GetSpaceFilterMessage().GetSpaceName()
-		if space := s.joinedSpace(local); space != nil {
-			_ = space.Watch(s.ctx, s.spaceUserID(), s.notPartOf(local))
-		} else {
-			s.notPartOf(local)()
-		}
+		s.onWatch(msg.AddSpaceFilterMessage.GetSpaceFilterMessage().GetSpaceName())
 	case *pb.ClientToServerMessage_RemoveSpaceFilterMessage:
 		if space := s.joinedSpace(msg.RemoveSpaceFilterMessage.GetSpaceFilterMessage().GetSpaceName()); space != nil {
 			_ = space.Unwatch(s.ctx, s.spaceUserID())
@@ -223,72 +219,95 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 			_ = space.UpdateUser(s.ctx, s.spaceUserID(), fromSpaceUser(u.GetUser()), u.GetUpdateMask().GetPaths())
 		}
 	case *pb.ClientToServerMessage_PublicEvent:
-		e := msg.PublicEvent
-		space := s.joinedSpace(e.GetSpaceName())
-		if space == nil {
-			s.sendError("Trying to send a public event to a space that does not exist: " + e.GetSpaceName())
-			return true
-		}
-		switch e.GetSpaceEvent().GetEvent().(type) {
-		case *pb.SpaceEvent_MuteAudioForEverybody, *pb.SpaceEvent_MuteVideoForEverybody:
-			if !s.isAdmin() {
-				s.sendError("Only admins can mute everyone")
-				return true
-			}
-		}
-		payload, _ := proto.Marshal(e.GetSpaceEvent())
-		_ = space.PublicEvent(s.ctx, s.spaceUserID(), payload, s.notPartOf(e.GetSpaceName()))
+		s.onPublicEvent(msg.PublicEvent)
 	case *pb.ClientToServerMessage_PrivateEvent:
-		e := msg.PrivateEvent
-		space := s.joinedSpace(e.GetSpaceName())
-		if space == nil {
-			s.sendError("Trying to send a private event to a space that does not exist: " + e.GetSpaceName())
-			return true
-		}
-		ev := e.GetSpaceEvent()
-		switch v := ev.GetEvent().(type) {
-		case *pb.PrivateSpaceEvent_KickOffUser:
-			if !s.isAdmin() {
-				s.sendError("Only admins can kick off a user")
-				return true
-			}
-		case *pb.PrivateSpaceEvent_MuteAudio:
-			v.MuteAudio.Force = s.isAdmin()
-		case *pb.PrivateSpaceEvent_MuteVideo:
-			v.MuteVideo.Force = s.isAdmin()
-		case *pb.PrivateSpaceEvent_ProximityFileTransferOffer:
-			// The receiver is shown who offers the file: the sender's own woka and name, never what it claims.
-			u := s.spaceUser()
-			v.ProximityFileTransferOffer.CharacterTextures, v.ProximityFileTransferOffer.Name = characterTextures(u.Textures), proto.String(u.Name)
-		}
-		payload, _ := proto.Marshal(ev)
-		_ = space.PrivateEvent(s.ctx, s.spaceUserID(), e.GetReceiverUserId(), payload, s.notPartOf(e.GetSpaceName()))
+		s.onPrivateEvent(msg.PrivateEvent)
 	case *pb.ClientToServerMessage_UpdateSpaceMetadataMessage:
-		u := msg.UpdateSpaceMetadataMessage
-		// A JSON object, like the z.record of the pusher; anything else is dropped.
-		var delta map[string]json.RawMessage
-		if json.Unmarshal([]byte(u.GetMetadata()), &delta) != nil || delta == nil {
-			slog.Warn("invalid space metadata", "space", u.GetSpaceName())
-			return true
-		}
-		if space := s.joinedSpace(u.GetSpaceName()); space != nil {
-			_ = space.SetMetadata(s.ctx, s.spaceUserID(), delta)
-		}
+		s.onSpaceMetadata(msg.UpdateSpaceMetadataMessage)
 	case *pb.ClientToServerMessage_BackEvent:
-		e := msg.BackEvent
-		restart := e.GetBackEvent().GetMeetingConnectionRestartMessage()
-		space := s.joinedSpace(e.GetSpaceName())
-		switch {
-		case restart == nil || space == nil:
-		case restart.UserId == nil: // the front lost LiveKit: a new token
-			_ = space.RestartLiveKit(s.ctx, s.spaceUserID())
-		default:
-			_ = space.RestartConnection(s.ctx, s.spaceUserID(), restart.GetUserId(), restart.ConnectionId)
-		}
+		s.onBackEvent(msg.BackEvent)
 	default:
 		return false
 	}
 	return true
+}
+
+func (s *Session) onWatch(local string) {
+	if space := s.joinedSpace(local); space != nil {
+		_ = space.Watch(s.ctx, s.spaceUserID(), s.notPartOf(local))
+	} else {
+		s.notPartOf(local)()
+	}
+}
+
+// onPublicEvent relays an event to the space; muting everybody is the admin's.
+func (s *Session) onPublicEvent(e *pb.PublicEventFrontToPusher) {
+	space := s.joinedSpace(e.GetSpaceName())
+	if space == nil {
+		s.sendError("Trying to send a public event to a space that does not exist: " + e.GetSpaceName())
+		return
+	}
+	switch e.GetSpaceEvent().GetEvent().(type) {
+	case *pb.SpaceEvent_MuteAudioForEverybody, *pb.SpaceEvent_MuteVideoForEverybody:
+		if !s.isAdmin() {
+			s.sendError("Only admins can mute everyone")
+			return
+		}
+	}
+	payload, _ := proto.Marshal(e.GetSpaceEvent())
+	_ = space.PublicEvent(s.ctx, s.spaceUserID(), payload, s.notPartOf(e.GetSpaceName()))
+}
+
+// onPrivateEvent relays an event to one member, after the server's own rules: kicking off is the admin's, a mute is
+// forced only by an admin, a file offer carries the sender's real name and woka.
+func (s *Session) onPrivateEvent(e *pb.PrivateEventFrontToPusher) {
+	space := s.joinedSpace(e.GetSpaceName())
+	if space == nil {
+		s.sendError("Trying to send a private event to a space that does not exist: " + e.GetSpaceName())
+		return
+	}
+	ev := e.GetSpaceEvent()
+	switch v := ev.GetEvent().(type) {
+	case *pb.PrivateSpaceEvent_KickOffUser:
+		if !s.isAdmin() {
+			s.sendError("Only admins can kick off a user")
+			return
+		}
+	case *pb.PrivateSpaceEvent_MuteAudio:
+		v.MuteAudio.Force = s.isAdmin()
+	case *pb.PrivateSpaceEvent_MuteVideo:
+		v.MuteVideo.Force = s.isAdmin()
+	case *pb.PrivateSpaceEvent_ProximityFileTransferOffer:
+		u := s.spaceUser()
+		v.ProximityFileTransferOffer.CharacterTextures, v.ProximityFileTransferOffer.Name = characterTextures(u.Textures), proto.String(u.Name)
+	}
+	payload, _ := proto.Marshal(ev)
+	_ = space.PrivateEvent(s.ctx, s.spaceUserID(), e.GetReceiverUserId(), payload, s.notPartOf(e.GetSpaceName()))
+}
+
+// onSpaceMetadata merges a JSON object into the space's metadata (the z.record of the pusher); anything else is dropped.
+func (s *Session) onSpaceMetadata(u *pb.UpdateSpaceMetadataMessage) {
+	var delta map[string]json.RawMessage
+	if json.Unmarshal([]byte(u.GetMetadata()), &delta) != nil || delta == nil {
+		slog.Warn("invalid space metadata", "space", u.GetSpaceName())
+		return
+	}
+	if space := s.joinedSpace(u.GetSpaceName()); space != nil {
+		_ = space.SetMetadata(s.ctx, s.spaceUserID(), delta)
+	}
+}
+
+// onBackEvent is the front asking for a media connection again: a new LiveKit token, or a WebRTC pair restarted.
+func (s *Session) onBackEvent(e *pb.BackEventFrontToPusherMessage) {
+	restart := e.GetBackEvent().GetMeetingConnectionRestartMessage()
+	space := s.joinedSpace(e.GetSpaceName())
+	switch {
+	case restart == nil || space == nil:
+	case restart.UserId == nil: // the front lost LiveKit: a new token
+		_ = space.RestartLiveKit(s.ctx, s.spaceUserID())
+	default:
+		_ = space.RestartConnection(s.ctx, s.spaceUserID(), restart.GetUserId(), restart.ConnectionId)
+	}
 }
 
 // spaceStateQuery runs a SpaceStateQuery (raised hands, floor, polls, questions, kind).

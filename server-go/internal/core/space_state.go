@@ -68,177 +68,230 @@ func (sp *Space) Query(ctx context.Context, userID string, q any, reply func(err
 	})
 }
 
+// query runs a space state query of sender (raised hands, floor, polls, questions, kind, recording): one method each.
 func (s *spaceState) query(sender *SpaceUser, q any) error {
 	switch q := q.(type) {
 	case SetKind:
-		kind := spacestate.SpaceKind(q.Kind)
-		if err := kind.Validate(); err != nil {
-			return err
-		}
-		if err := s.updateState(func(st *spacestate.SpaceState) error { st.Kind = &kind; return nil }); err != nil {
-			return err
-		}
-		if s.meeting != nil {
-			s.meeting.KindChanged()
-		}
-		return nil
+		return s.setKind(sender, q)
 	case RaiseHand:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			if !q.Raised {
-				st.RaisedHands = removeHand(st.RaisedHands, sender.ID)
-			} else if !slices.ContainsFunc(st.RaisedHands, func(e spacestate.RaisedHandEntry) bool { return e.SpaceUserID == sender.ID }) {
-				st.RaisedHands = append(st.RaisedHands, spacestate.RaisedHandEntry{SpaceUserID: sender.ID, Name: sender.Name, At: now()})
-			}
-			return nil
-		})
+		return s.raiseHand(sender, q)
 	case LowerHand:
-		if err := s.canModerate(sender); err != nil {
-			return err
-		}
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			st.RaisedHands = removeHand(st.RaisedHands, q.Target)
-			return nil
-		})
+		return s.lowerHand(sender, q)
 	case GiveFloor:
-		if err := s.canModerate(sender); err != nil {
-			return err
-		}
-		target := s.members[q.Target]
-		if target == nil {
-			return fmt.Errorf("User %s is not in the space", q.Target)
-		}
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			st.RaisedHands = removeHand(st.RaisedHands, q.Target)
-			// In a proximity (ALL_USERS) space everyone already speaks: there is no floor to hold.
-			if s.filter != FilterAllUsers && !slices.ContainsFunc(st.FloorHolders, func(e spacestate.FloorHolderEntry) bool { return e.SpaceUserID == q.Target }) {
-				st.FloorHolders = append(st.FloorHolders, spacestate.FloorHolderEntry{SpaceUserID: q.Target, Name: target.user.Name})
-			}
-			return nil
-		})
+		return s.giveFloor(sender, q)
 	case RevokeFloor:
-		if q.Target != sender.ID {
-			if err := s.canModerate(sender); err != nil {
-				return err
-			}
-		}
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			st.FloorHolders = removeFloorHolder(st.FloorHolders, q.Target)
-			return nil
-		})
+		return s.revokeFloor(sender, q)
 	case CreatePoll:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			if int(q.MaxSelections) > len(q.Answers) {
-				return errors.New("A poll cannot allow more selections than it has answers")
-			}
-			answers := make([]spacestate.ProximityPollAnswer, len(q.Answers))
-			for i, text := range q.Answers {
-				answers[i] = spacestate.ProximityPollAnswer{ID: newUUID(), Text: text}
-			}
-			name := truncateJS(sender.Name, senderNameMaxLength)
-			poll := spacestate.ProximityPoll{ID: newUUID(), Question: q.Question, Kind: spacestate.ProximityPollKind(q.Kind), Answers: answers,
-				MaxSelections: int64(q.MaxSelections), SenderID: voterID(sender), SenderName: &name, CreatedAt: now(),
-				Votes: map[string]spacestate.ProximityPollVote{}}
-			st.Polls[poll.ID] = poll
-			return nil
-		})
+		return s.createPoll(sender, q)
 	case VotePoll:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			poll, ok := st.Polls[q.PollID]
-			switch {
-			case !ok:
-				return fmt.Errorf("Poll %s does not exist in this space", q.PollID)
-			case poll.End != nil:
-				return errors.New("This poll is closed")
-			case int64(len(q.AnswerIDs)) > poll.MaxSelections:
-				return errors.New("Poll vote selects more answers than the poll allows")
-			}
-			for _, id := range q.AnswerIDs {
-				if !slices.ContainsFunc(poll.Answers, func(a spacestate.ProximityPollAnswer) bool { return a.ID == id }) {
-					return errors.New("Poll vote references answers that do not belong to the poll")
-				}
-			}
-			if len(q.AnswerIDs) == 0 {
-				delete(poll.Votes, voterID(sender))
-			} else {
-				poll.Votes[voterID(sender)] = spacestate.ProximityPollVote{AnswerIDs: slices.Clone(q.AnswerIDs), UpdatedAt: now()}
-			}
-			return nil
-		})
+		return s.votePoll(sender, q)
 	case ClosePoll:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			poll, err := ownPoll(st, q.PollID, sender, "Only poll creators can close a poll")
-			if err != nil || poll.End != nil {
-				return err
-			}
-			poll.End = &spacestate.ProximityPollEnd{ClosingMessage: q.ClosingMessage, ClosedAt: now()}
-			st.Polls[q.PollID] = poll
-			return nil
-		})
+		return s.closePoll(sender, q)
 	case DeletePoll:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			if _, err := ownPoll(st, q.PollID, sender, "Only poll creators can delete a poll"); err != nil {
-				return err
-			}
-			delete(st.Polls, q.PollID)
-			return nil
-		})
+		return s.deletePoll(sender, q)
 	case AskQuestion:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			name := truncateJS(sender.Name, senderNameMaxLength)
-			question := spacestate.ProximityQuestion{ID: newUUID(), Body: q.Body, SenderID: voterID(sender), SenderName: &name,
-				CreatedAt: now(), Upvotes: map[string]int64{}}
-			st.Questions[question.ID] = question
-			return nil
-		})
+		return s.askQuestion(sender, q)
 	case UpvoteQuestion:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			question, ok := st.Questions[q.QuestionID]
-			switch {
-			case !ok:
-				return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
-			case question.SenderID == voterID(sender):
-				return errors.New("Question authors cannot upvote their own question")
-			case question.Answer != nil:
-				return errors.New("This question has already been answered")
-			}
-			if _, already := question.Upvotes[voterID(sender)]; q.Upvoted && !already {
-				question.Upvotes[voterID(sender)] = now()
-			} else if !q.Upvoted {
-				delete(question.Upvotes, voterID(sender))
-			}
-			return nil
-		})
+		return s.upvoteQuestion(sender, q)
 	case AnswerQuestion:
-		if !isAdmin(sender) && !sender.Megaphone {
-			return errors.New("Only moderators can mark a question as answered")
-		}
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			question, ok := st.Questions[q.QuestionID]
-			if !ok {
-				return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
-			}
-			if question.Answer == nil {
-				question.Answer = &spacestate.ProximityQuestionAnswer{ModeratorID: voterID(sender), AnsweredAt: now()}
-				st.Questions[q.QuestionID] = question
-			}
-			return nil
-		})
+		return s.answerQuestion(sender, q)
 	case DeleteQuestion:
-		return s.updateState(func(st *spacestate.SpaceState) error {
-			question, ok := st.Questions[q.QuestionID]
-			if !ok {
-				return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
-			}
-			if question.SenderID != voterID(sender) && !isAdmin(sender) {
-				return errors.New("Only question authors or admins can delete a question")
-			}
-			delete(st.Questions, q.QuestionID)
-			return nil
-		})
+		return s.deleteQuestion(sender, q)
 	case StopRecording:
 		return s.stopRecording(sender)
 	}
 	return fmt.Errorf("unknown space state query %T", q)
+}
+
+func (s *spaceState) setKind(_ *SpaceUser, q SetKind) error {
+	kind := spacestate.SpaceKind(q.Kind)
+	if err := kind.Validate(); err != nil {
+		return err
+	}
+	if err := s.updateState(func(st *spacestate.SpaceState) error { st.Kind = &kind; return nil }); err != nil {
+		return err
+	}
+	if s.meeting != nil {
+		s.meeting.KindChanged()
+	}
+	return nil
+}
+
+func (s *spaceState) raiseHand(sender *SpaceUser, q RaiseHand) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		if !q.Raised {
+			st.RaisedHands = removeHand(st.RaisedHands, sender.ID)
+		} else if !slices.ContainsFunc(st.RaisedHands, func(e spacestate.RaisedHandEntry) bool { return e.SpaceUserID == sender.ID }) {
+			st.RaisedHands = append(st.RaisedHands, spacestate.RaisedHandEntry{SpaceUserID: sender.ID, Name: sender.Name, At: now()})
+		}
+		return nil
+	})
+}
+
+func (s *spaceState) lowerHand(sender *SpaceUser, q LowerHand) error {
+	if err := s.canModerate(sender); err != nil {
+		return err
+	}
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		st.RaisedHands = removeHand(st.RaisedHands, q.Target)
+		return nil
+	})
+}
+
+func (s *spaceState) giveFloor(sender *SpaceUser, q GiveFloor) error {
+	if err := s.canModerate(sender); err != nil {
+		return err
+	}
+	target := s.members[q.Target]
+	if target == nil {
+		return fmt.Errorf("User %s is not in the space", q.Target)
+	}
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		st.RaisedHands = removeHand(st.RaisedHands, q.Target)
+		// In a proximity (ALL_USERS) space everyone already speaks: there is no floor to hold.
+		if s.filter != FilterAllUsers && !slices.ContainsFunc(st.FloorHolders, func(e spacestate.FloorHolderEntry) bool { return e.SpaceUserID == q.Target }) {
+			st.FloorHolders = append(st.FloorHolders, spacestate.FloorHolderEntry{SpaceUserID: q.Target, Name: target.user.Name})
+		}
+		return nil
+	})
+}
+
+func (s *spaceState) revokeFloor(sender *SpaceUser, q RevokeFloor) error {
+	if q.Target != sender.ID {
+		if err := s.canModerate(sender); err != nil {
+			return err
+		}
+	}
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		st.FloorHolders = removeFloorHolder(st.FloorHolders, q.Target)
+		return nil
+	})
+}
+
+func (s *spaceState) createPoll(sender *SpaceUser, q CreatePoll) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		if int(q.MaxSelections) > len(q.Answers) {
+			return errors.New("A poll cannot allow more selections than it has answers")
+		}
+		answers := make([]spacestate.ProximityPollAnswer, len(q.Answers))
+		for i, text := range q.Answers {
+			answers[i] = spacestate.ProximityPollAnswer{ID: newUUID(), Text: text}
+		}
+		name := truncateJS(sender.Name, senderNameMaxLength)
+		poll := spacestate.ProximityPoll{ID: newUUID(), Question: q.Question, Kind: spacestate.ProximityPollKind(q.Kind), Answers: answers,
+			MaxSelections: int64(q.MaxSelections), SenderID: voterID(sender), SenderName: &name, CreatedAt: now(),
+			Votes: map[string]spacestate.ProximityPollVote{}}
+		st.Polls[poll.ID] = poll
+		return nil
+	})
+}
+
+func (s *spaceState) votePoll(sender *SpaceUser, q VotePoll) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		poll, ok := st.Polls[q.PollID]
+		switch {
+		case !ok:
+			return fmt.Errorf("Poll %s does not exist in this space", q.PollID)
+		case poll.End != nil:
+			return errors.New("This poll is closed")
+		case int64(len(q.AnswerIDs)) > poll.MaxSelections:
+			return errors.New("Poll vote selects more answers than the poll allows")
+		}
+		for _, id := range q.AnswerIDs {
+			if !slices.ContainsFunc(poll.Answers, func(a spacestate.ProximityPollAnswer) bool { return a.ID == id }) {
+				return errors.New("Poll vote references answers that do not belong to the poll")
+			}
+		}
+		if len(q.AnswerIDs) == 0 {
+			delete(poll.Votes, voterID(sender))
+		} else {
+			poll.Votes[voterID(sender)] = spacestate.ProximityPollVote{AnswerIDs: slices.Clone(q.AnswerIDs), UpdatedAt: now()}
+		}
+		return nil
+	})
+}
+
+func (s *spaceState) closePoll(sender *SpaceUser, q ClosePoll) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		poll, err := ownPoll(st, q.PollID, sender, "Only poll creators can close a poll")
+		if err != nil || poll.End != nil {
+			return err
+		}
+		poll.End = &spacestate.ProximityPollEnd{ClosingMessage: q.ClosingMessage, ClosedAt: now()}
+		st.Polls[q.PollID] = poll
+		return nil
+	})
+}
+
+func (s *spaceState) deletePoll(sender *SpaceUser, q DeletePoll) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		if _, err := ownPoll(st, q.PollID, sender, "Only poll creators can delete a poll"); err != nil {
+			return err
+		}
+		delete(st.Polls, q.PollID)
+		return nil
+	})
+}
+
+func (s *spaceState) askQuestion(sender *SpaceUser, q AskQuestion) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		name := truncateJS(sender.Name, senderNameMaxLength)
+		question := spacestate.ProximityQuestion{ID: newUUID(), Body: q.Body, SenderID: voterID(sender), SenderName: &name,
+			CreatedAt: now(), Upvotes: map[string]int64{}}
+		st.Questions[question.ID] = question
+		return nil
+	})
+}
+
+func (s *spaceState) upvoteQuestion(sender *SpaceUser, q UpvoteQuestion) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		question, ok := st.Questions[q.QuestionID]
+		switch {
+		case !ok:
+			return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
+		case question.SenderID == voterID(sender):
+			return errors.New("Question authors cannot upvote their own question")
+		case question.Answer != nil:
+			return errors.New("This question has already been answered")
+		}
+		if _, already := question.Upvotes[voterID(sender)]; q.Upvoted && !already {
+			question.Upvotes[voterID(sender)] = now()
+		} else if !q.Upvoted {
+			delete(question.Upvotes, voterID(sender))
+		}
+		return nil
+	})
+}
+
+func (s *spaceState) answerQuestion(sender *SpaceUser, q AnswerQuestion) error {
+	if !isAdmin(sender) && !sender.Megaphone {
+		return errors.New("Only moderators can mark a question as answered")
+	}
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		question, ok := st.Questions[q.QuestionID]
+		if !ok {
+			return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
+		}
+		if question.Answer == nil {
+			question.Answer = &spacestate.ProximityQuestionAnswer{ModeratorID: voterID(sender), AnsweredAt: now()}
+			st.Questions[q.QuestionID] = question
+		}
+		return nil
+	})
+}
+
+func (s *spaceState) deleteQuestion(sender *SpaceUser, q DeleteQuestion) error {
+	return s.updateState(func(st *spacestate.SpaceState) error {
+		question, ok := st.Questions[q.QuestionID]
+		if !ok {
+			return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
+		}
+		if question.SenderID != voterID(sender) && !isAdmin(sender) {
+			return errors.New("Only question authors or admins can delete a question")
+		}
+		delete(st.Questions, q.QuestionID)
+		return nil
+	})
 }
 
 // canModerate is RaiseHandManager.assertCanModerate: admins always; anyone in a proximity (ALL_USERS) space; in a
