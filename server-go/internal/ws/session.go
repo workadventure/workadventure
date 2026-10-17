@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/workadventure/workadventure/server-go/internal/admin"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
@@ -79,7 +80,9 @@ type Session struct {
 	retention *time.Timer
 	joined    bool
 
-	userID atomic.Int32 // id in the room, once RoomJoined is on its way
+	userID       atomic.Int32       // id in the room, once RoomJoined is on its way
+	lastActivity atomic.Int64       // unix ms of the last frame received: a socket that went away left then
+	tracker      *analytics.Tracker // guarded by mu; the analytics intervals of this connection (analytics.go)
 
 	// guarded by mu
 	name     string                  // from JoinRoomFrontMessage
@@ -118,6 +121,7 @@ func (s *Session) start(conn *websocket.Conn) {
 func (s *Session) Send(m *core.Msg) {
 	if j, ok := m.Event.(core.RoomJoined); ok {
 		s.userID.Store(j.UserID)
+		s.timed().Open(analytics.ConnectionHandle, "user.disconnected", map[string]any{"connectionId": s.info.tabID}, time.Now())
 	}
 	s.out.push(m)
 }
@@ -277,6 +281,7 @@ func (s *Session) read(conn *websocket.Conn) {
 			s.transportClosed(conn, err)
 			return
 		}
+		s.lastActivity.Store(time.Now().UnixMilli()) // even a malformed frame proves the tab was there
 		var frame pb.FrontToPusherWebSocketMessage
 		if err := proto.Unmarshal(data, &frame); err != nil || frame.Message == nil {
 			go conn.Close(websocket.StatusUnsupportedData, "Invalid message format")
@@ -412,6 +417,7 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 	s.cancel()
 	s.readers.Wait()
 
+	s.closeTimed("socket_closed")
 	s.leaveAllSpaces()
 	s.mu.Lock()
 	joined := s.joined
@@ -538,6 +544,10 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		}
 		// Not recorded (no admin, or it refused): the user is ejected all the same, as a kick.
 		_ = s.room.Eject(ctx, b.GetBanUserUuid(), kind, reason)
+	case *pb.ClientToServerMessage_AnalyticsEventReportMessage:
+		s.analyticsReport(msg.AnalyticsEventReportMessage)
+	case *pb.ClientToServerMessage_VideoQualityReportMessage:
+		s.videoQuality(msg.VideoQualityReportMessage)
 	case *pb.ClientToServerMessage_ReportPlayerMessage:
 		rep := msg.ReportPlayerMessage
 		go func() { // the answer is ignored, an error swallowed (handleReportMessage)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/store"
@@ -40,6 +41,7 @@ type Server struct {
 	vars       store.Hash     // room and player variables
 	varWriter  *store.Writer  // writes to vars, in order, off the rooms
 	apiVersion string
+	analytics  *analytics.Queue // nil without an admin
 }
 
 func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], maps *mapstorage.Store, vars store.Hash, apiVersion string) *Server {
