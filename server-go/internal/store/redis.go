@@ -40,7 +40,9 @@ func (c *Redis) HSet(ctx context.Context, key, field, value string) error {
 	return c.c.HSet(ctx, key, field, value).Err()
 }
 
-func (c *Redis) HDel(ctx context.Context, key, field string) error { return c.c.HDel(ctx, key, field).Err() }
+func (c *Redis) HDel(ctx context.Context, key, field string) error {
+	return c.c.HDel(ctx, key, field).Err()
+}
 
 func (c *Redis) Expire(ctx context.Context, key string, d time.Duration) error {
 	return c.c.Expire(ctx, key, d).Err()
