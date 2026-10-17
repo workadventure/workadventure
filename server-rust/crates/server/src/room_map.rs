@@ -19,6 +19,24 @@ const UNREACHABLE_MAP: &str = "Your map does not seem accessible from the WorkAd
 /// The variable definitions, or None with the warning the users get (VariablesManager with a null map).
 pub type Defs = Result<Vec<VariableDef>, &'static str>;
 
+/// GameRoom.getMapDetails: the admin's MapDetailsData (A2, from the back: no user, no language), or the
+/// LocalAdmin derivation of the URL.
+pub async fn details(app: &AppState, room_url: &str) -> serde_json::Value {
+    match &app.admin {
+        Some(admin) => admin.map_details(room_url, None, None).await,
+        None => local_admin::map_details(&app.config, room_url),
+    }
+}
+
+/// The storage key of the room's WAM file, if its map lives in this map-storage.
+pub fn wam_key(app: &AppState, room_url: &str, details: &serde_json::Value) -> Option<String> {
+    match details["wamUrl"].as_str() {
+        Some(url) if app.admin.is_some() || app.config.use_domain_name_in_path => crate::map_storage::wam_key_of_url(&app.config, url),
+        // Without an admin: the path after `/~/`, as before.
+        _ => local_admin::wam_path(room_url),
+    }
+}
+
 pub async fn variable_defs(app: &AppState, room_url: &str, wam: Option<(&str, &Wam)>) -> Defs {
     Ok(variables::from_tmj(&tmj(app, room_url, wam).await?))
 }
@@ -32,7 +50,7 @@ pub async fn tmj(app: &AppState, room_url: &str, wam: Option<(&str, &Wam)>) -> R
             app.storage.read(&path).await.ok_or(UNREACHABLE_MAP)?
         }
         None => {
-            let details = local_admin::map_details(&app.config, room_url);
+            let details = details(app, room_url).await;
             let url = details["mapUrl"].as_str().ok_or(UNREACHABLE_MAP)?;
             if !app.config.store_variables_for_local_maps && is_local(url).await {
                 return Err(LOCAL_MAP);

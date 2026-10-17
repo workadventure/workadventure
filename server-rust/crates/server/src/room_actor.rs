@@ -19,7 +19,6 @@ use wa_proto::messages as pb;
 use crate::AppState;
 use crate::custom_entities;
 use crate::room_map;
-use crate::local_admin;
 use crate::map_storage::{CachedMap, MapChange, MapSlot, Storage};
 use crate::session::SessionInfo;
 use crate::metrics::{METRICS, dec_room_gauge};
@@ -707,7 +706,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
     let url = room.url().to_owned();
     METRICS.nb_rooms.inc();
     // Like GameRoom.create, the WAM is read before anybody joins.
-    let mut map = match local_admin::wam_path(&url) {
+    let details = room_map::details(&app, &url).await;
+    let mut map = match room_map::wam_key(&app, &url, &details) {
         Some(rel) => Some(MapFile::open(storage.clone(), rel).await),
         None => None,
     };

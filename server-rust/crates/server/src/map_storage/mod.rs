@@ -211,6 +211,39 @@ impl Storage {
     }
 }
 
+/// USE_DOMAIN_NAME_IN_PATH (PathMapper): each tenant's files under the folder of its domain. The domain of a
+/// request: for the authenticated REST calls `X-Map-Storage-Host`, then `X-Forwarded-Host`, then `Host`; for reads
+/// `X-Forwarded-Host`, then `Host` (Express's `req.hostname` behind a trusted proxy). Without the option: "".
+// The ingress sets X-Forwarded-Host; X-Map-Storage-Host only matters to the authenticated calls (the admin's).
+pub(crate) fn domain_dir(state: &AppState, headers: &HeaderMap, rest: bool) -> Option<String> {
+    if !state.config.use_domain_name_in_path {
+        return Some(String::new());
+    }
+    let get = |k: &str| headers.get(k).and_then(|v| v.to_str().ok()).map(|v| v.split(',').next().unwrap_or(v).trim()).filter(|v| !v.is_empty());
+    let host = rest.then(|| get("x-map-storage-host")).flatten().or_else(|| get("x-forwarded-host")).or_else(|| get("host")).unwrap_or_default();
+    domain_folder(host)
+}
+
+pub(crate) fn invalid_domain() -> Response {
+    (StatusCode::BAD_REQUEST, "Invalid domain").into_response()
+}
+
+/// The folder of a domain (the port dropped), refused if it could climb out.
+pub fn domain_folder(host: &str) -> Option<String> {
+    let domain = host.rsplit_once(':').filter(|(_, p)| p.chars().all(|c| c.is_ascii_digit())).map_or(host, |(h, _)| h).to_ascii_lowercase();
+    (!domain.is_empty() && !domain.contains("..") && !domain.contains('/') && !domain.contains('\\')).then(|| format!("{domain}/"))
+}
+
+/// The storage key of a WAM URL, as the rooms and the private files find it (mapPathUsingUrl): its path
+/// without PATH_PREFIX, under the folder of its host with USE_DOMAIN_NAME_IN_PATH.
+pub fn wam_key_of_url(config: &crate::config::Config, url: &str) -> Option<String> {
+    let parsed = reqwest::Url::parse(url).ok()?;
+    let path = percent_encoding::percent_decode_str(parsed.path()).decode_utf8().ok()?;
+    let path = path.strip_prefix(config.map_storage_prefix.as_str()).unwrap_or(&path).trim_start_matches('/');
+    let dir = if config.use_domain_name_in_path { domain_folder(parsed.host_str()?)? } else { String::new() };
+    Some(format!("{dir}{path}"))
+}
+
 pub(crate) fn resolve(root: &Path, rel: &str) -> Option<PathBuf> {
     let rel = Path::new(rel.trim_start_matches('/'));
     rel.components()

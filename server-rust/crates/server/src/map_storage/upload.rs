@@ -34,6 +34,10 @@ pub(super) async fn upload(State(state): State<AppState>, headers: HeaderMap, mu
     if directory.contains("..") {
         return (StatusCode::BAD_REQUEST, "Invalid directory").into_response();
     }
+    let directory = match super::domain_dir(&state, &headers, true) {
+        Some(dir) => format!("{dir}{}", directory.trim_start_matches('/')),
+        None => return super::invalid_domain(),
+    };
     let dir = directory.clone();
     let result = state
         .storage
@@ -203,7 +207,11 @@ pub(super) async fn download(
         return refused;
     }
     let directory = q.directory.unwrap_or_default();
-    let Some(dir) = state.storage.path(&directory) else {
+    let scoped = match super::domain_dir(&state, &headers, true) {
+        Some(dir) => format!("{dir}{}", directory.trim_start_matches('/')),
+        None => return super::invalid_domain(),
+    };
+    let Some(dir) = state.storage.path(&scoped) else {
         return (StatusCode::BAD_REQUEST, "Invalid directory").into_response();
     };
     let zipped = tokio::task::spawn_blocking(move || zip_dir(&dir)).await;

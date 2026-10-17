@@ -36,6 +36,8 @@ pub struct Config {
     pub map_storage_port: u16,
     /// PATH_PREFIX: where map-storage is mounted (`/map-storage` in single-domain).
     pub map_storage_prefix: String,
+    /// USE_DOMAIN_NAME_IN_PATH: each tenant's maps under the folder of its domain (SaaS).
+    pub use_domain_name_in_path: bool,
     /// PUSHER_WS_PORT: the WebSocket port of the pusher, which the chart routes `/ws/` to; 0 or the HTTP port
     /// to serve WebSockets on the HTTP port only.
     pub ws_port: u16,
@@ -139,6 +141,7 @@ impl Config {
             max_per_group: env.number("MAX_PER_GROUP", 4),
             map_storage_port: env.number("SERVER_MAP_STORAGE_PORT", 3002),
             map_storage_prefix: env.str("PATH_PREFIX").map(|p| p.trim_end_matches('/').to_owned()).unwrap_or_default(),
+            use_domain_name_in_path: env.bool("USE_DOMAIN_NAME_IN_PATH", false),
             ws_port: env.number("PUSHER_WS_PORT", 3001),
             uploader_port: env.number("SERVER_UPLOADER_PORT", 3003),
             storage_directory: env.str("STORAGE_DIRECTORY").unwrap_or_else(|| "./public".into()),

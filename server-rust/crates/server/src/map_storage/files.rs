@@ -28,12 +28,18 @@ fn decode(raw: &str, plus_is_space: bool) -> String {
 /// static files), writes by method.
 pub(super) async fn any(State(state): State<AppState>, request: Request) -> Response {
     let raw = request.uri().path().to_owned();
-    match request.method().clone() {
-        Method::PUT => put(state, decode(&raw, false), request).await,
-        Method::PATCH => patch(state, decode(&raw, false), request).await,
-        Method::DELETE => delete(state, decode(&raw, false), request.headers()).await,
+    let method = request.method().clone();
+    let rest = !matches!(method, Method::GET | Method::HEAD | Method::POST);
+    let dir = match super::domain_dir(&state, request.headers(), rest) {
+        Some(dir) => dir,
+        None => return super::invalid_domain(),
+    };
+    match method {
+        Method::PUT => put(state, format!("{dir}{}", decode(&raw, false)), request).await,
+        Method::PATCH => patch(state, format!("{dir}{}", decode(&raw, false)), request).await,
+        Method::DELETE => delete(state, format!("{dir}{}", decode(&raw, false)), request.headers()).await,
         // `GET *.wam` has its own route, which keeps `+` (proxyFiles turns it into a space).
-        _ => serve(&state, &decode(&raw, !raw.ends_with(".wam")), &raw).await,
+        _ => serve(&state, &format!("{dir}{}", decode(&raw, !raw.ends_with(".wam"))), &raw).await,
     }
 }
 
@@ -274,6 +280,11 @@ async fn relocate(state: AppState, headers: HeaderMap, body: axum::body::Bytes, 
     if source.contains("..") || destination.contains("..") {
         return (StatusCode::BAD_REQUEST, "Invalid directory").into_response();
     }
+    let dir = match super::domain_dir(&state, &headers, true) {
+        Some(dir) => dir,
+        None => return super::invalid_domain(),
+    };
+    let (source, destination) = (format!("{dir}{}", source.trim_start_matches('/')), format!("{dir}{}", destination.trim_start_matches('/')));
     let prefixes = [source.clone(), destination.clone()];
     let done = state
         .storage
@@ -331,8 +342,19 @@ pub(super) async fn upload_endpoint(State(state): State<AppState>, headers: Head
 }
 
 /// `GET /maps`, public: every WAM file with its map URL, metadata and vendor block.
-pub(super) async fn maps(State(state): State<AppState>) -> Response {
-    let list: serde_json::Map<String, Value> = state.storage.wam_list().await.into_iter().collect();
+pub(super) async fn maps(State(state): State<AppState>, headers: HeaderMap) -> Response {
+    let dir = match super::domain_dir(&state, &headers, false) {
+        Some(dir) => dir,
+        None => return super::invalid_domain(),
+    };
+    // The tenant's maps only, named as it sees them.
+    let list: serde_json::Map<String, Value> = state
+        .storage
+        .wam_list()
+        .await
+        .into_iter()
+        .filter_map(|(rel, entry)| Some((rel.strip_prefix(dir.as_str())?.to_owned(), entry)))
+        .collect();
     axum::Json(json!({ "version": WAM_VERSION_HASH, "maps": list })).into_response()
 }
 
@@ -384,7 +406,14 @@ pub(super) async fn private_file(
         return refused(StatusCode::BAD_REQUEST, "Invalid token content");
     };
     let tags: Vec<&str> = tags.iter().filter_map(Value::as_str).collect();
-    let wam_rel = link_path(wam_url);
+    // The map the token was made for decides the tenant folder.
+    let Some(wam_rel) = super::wam_key_of_url(&state.config, wam_url) else {
+        return refused(StatusCode::BAD_REQUEST, "Invalid token content");
+    };
+    let dir = match reqwest::Url::parse(wam_url).ok().and_then(|u| u.host_str().map(str::to_owned)) {
+        Some(host) if state.config.use_domain_name_in_path => super::domain_folder(&host).unwrap_or_default(),
+        _ => String::new(),
+    };
     let raw = request.uri().path().to_owned();
     let path = decode(&raw, false);
     for _ in 0..32 {
@@ -398,7 +427,7 @@ pub(super) async fn private_file(
             if !read_tags.is_empty() && !read_tags.iter().any(|t| tags.contains(&t.as_str())) {
                 return refused(StatusCode::FORBIDDEN, "You are not allowed to access this file");
             }
-            return serve(&state, &path, &raw).await;
+            return serve(&state, &format!("{dir}{path}"), &raw).await;
         }
         tokio::time::sleep(Duration::from_millis(500)).await;
     }
