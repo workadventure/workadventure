@@ -81,7 +81,9 @@ func TestTheRoomAPIWritesWhatPlayersMayNotAndEveryoneSeesIt(t *testing.T) {
 	if err := <-errs; err != nil {
 		t.Fatal("writableBy does not bind the Room API:", err)
 	}
-	<-errs
+	if err := <-errs; err != nil {
+		t.Fatal(err)
+	}
 	sync_(t, r)
 	if !has(admin.take(), func(v VariableChanged) bool { return v.Name == "secret" }) || has(guest.take(), func(v VariableChanged) bool { return v.Name == "secret" }) {
 		t.Fatal("players see the change only if they may read it")
