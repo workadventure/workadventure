@@ -153,9 +153,9 @@ impl Media {
     /// stopEgress, off the actor; a recording that already ended is not an error.
     fn stop_egress(&self, egress_id: &str) {
         let Some(lk) = self.livekit.clone() else { return };
-        let (http, egress_id) = (self.http.clone(), egress_id.to_owned());
+        let egress_id = egress_id.to_owned();
         tokio::spawn(async move {
-            if let Err(e) = lk.egress(&http, "StopEgress", serde_json::json!({"egress_id": egress_id})).await
+            if let Err(e) = lk.stop_egress(&egress_id).await
                 && !["EGRESS_COMPLETE", "EGRESS_FAILED", "EGRESS_ABORTED", "EGRESS_LIMIT_REACHED"]
                     .iter()
                     .any(|s| e.contains(s))
@@ -278,10 +278,9 @@ impl SpaceSink for Out<'_> {
             SpaceEvent::LivekitRoom(open) => {
                 // Off the actor: invitations do not wait for it (the server creates a room on first join too).
                 let Some(lk) = self.media.livekit.clone() else { return };
-                let (http, room) = (self.media.http.clone(), self.media.room.clone());
+                let room = self.media.room.clone();
                 tokio::spawn(async move {
-                    let done =
-                        if open { lk.create_room(&http, &room).await } else { lk.delete_room(&http, &room).await };
+                    let done = if open { lk.create_room(&room).await } else { lk.delete_room(&room).await };
                     if let Err(e) = done {
                         tracing::warn!(%room, open, error = %e, "LiveKit room call failed");
                     }
@@ -489,17 +488,10 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                                                 s3,
                                             );
                                             // As startRecording awaits createRoomPromise: the egress needs the room.
-                                            let created = lk.create_room(&http, &room).await;
-                                            let started = match created {
-                                                Ok(()) => lk.egress(&http, "StartRoomCompositeEgress", body).await,
+                                            match lk.create_room(&room).await {
+                                                Ok(()) => lk.start_composite_egress(&http, body).await,
                                                 Err(e) => Err(e),
-                                            };
-                                            started.and_then(|info| {
-                                                livekit::field(&info, "egressId", "egress_id")
-                                                    .as_str()
-                                                    .map(str::to_owned)
-                                                    .ok_or("no egress id".into())
-                                            })
+                                            }
                                         }
                                         _ => Err("PLAY_URL and LiveKit are needed to record".to_owned()),
                                     };

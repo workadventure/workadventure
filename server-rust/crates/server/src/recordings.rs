@@ -37,9 +37,9 @@ fn by_sequence(mut thumbs: Vec<&Object>) -> Vec<&Object> {
 }
 
 /// getRecordingsQuery: newest first, each with the second thumbnail as its poster (the first is often black).
-pub async fn list(bucket: &Bucket, http: &reqwest::Client, uuid: &str) -> Result<Vec<pb::Recording>, String> {
+pub async fn list(bucket: &Bucket, uuid: &str) -> Result<Vec<pb::Recording>, String> {
     let prefix = format!("{uuid}/");
-    let objects = bucket.list(http, &prefix).await?;
+    let objects = bucket.list(&prefix).await?;
     tracing::debug!(%prefix, objects = objects.len(), "recordings listed");
     let mut sessions: BTreeMap<String, (Option<&Object>, Vec<&Object>)> = BTreeMap::new();
     for o in &objects {
@@ -51,68 +51,63 @@ pub async fn list(bucket: &Bucket, http: &reqwest::Client, uuid: &str) -> Result
             entry.1.push(o);
         }
     }
-    Ok(sessions
-        .into_iter()
-        .rev()
-        .filter_map(|(ts, (video, thumbs))| {
-            let video = video?;
-            let thumbs = by_sequence(thumbs);
-            let poster =
-                thumbs.get(1).or(thumbs.first()).map(|t| bucket.presigned_get(&t.key, 3600, None)).unwrap_or_default();
-            Some(pb::Recording {
-                base_filename: format!("recording-{ts}"),
-                timestamp: ts,
-                video_file: Some(pb::VideoFile {
-                    filename: video.key.strip_prefix(&prefix).unwrap_or(&video.key).to_owned(),
-                    key: video.key.clone(),
-                    size: video.size,
-                }),
-                poster_url: poster,
-            })
-        })
-        .collect())
+    let mut out = Vec::new();
+    for (ts, (video, thumbs)) in sessions.into_iter().rev() {
+        let Some(video) = video else { continue };
+        let thumbs = by_sequence(thumbs);
+        let poster = match thumbs.get(1).or(thumbs.first()) {
+            Some(t) => bucket.presigned_get(&t.key, 3600, None).await,
+            None => String::new(),
+        };
+        out.push(pb::Recording {
+            base_filename: format!("recording-{ts}"),
+            timestamp: ts,
+            video_file: Some(pb::VideoFile {
+                filename: video.key.strip_prefix(&prefix).unwrap_or(&video.key).to_owned(),
+                key: video.key.clone(),
+                size: video.size,
+            }),
+            poster_url: poster,
+        });
+    }
+    Ok(out)
 }
 
 /// getRecordingThumbnailsQuery: at most 15, evenly spaced, the first one left out when there are others.
-pub async fn thumbnails(
-    bucket: &Bucket,
-    http: &reqwest::Client,
-    uuid: &str,
-    base: &str,
-) -> Result<Vec<String>, String> {
+pub async fn thumbnails(bucket: &Bucket, uuid: &str, base: &str) -> Result<Vec<String>, String> {
     let ts = base.strip_prefix("recording-").filter(|ts| stamp(base).is_some_and(|(_, s)| s == *ts && ts.len() == 19));
     let Some(ts) = ts else { return Err("Invalid recording name".into()) };
-    let objects = bucket.list(http, &format!("{uuid}/thumbnail-{ts}_")).await?;
+    let objects = bucket.list(&format!("{uuid}/thumbnail-{ts}_")).await?;
     let mut thumbs = by_sequence(objects.iter().collect());
     if thumbs.len() > 1 {
         thumbs.remove(0);
     }
     let picked: Vec<&Object> =
         if thumbs.len() <= 15 { thumbs } else { (0..15).map(|i| thumbs[i * (thumbs.len() - 1) / 14]).collect() };
-    Ok(picked.into_iter().map(|t| bucket.presigned_get(&t.key, 3600, None)).collect())
+    Ok(futures_util::future::join_all(picked.into_iter().map(|t| bucket.presigned_get(&t.key, 3600, None))).await)
 }
 
 /// deleteRecordingQuery: the video and its thumbnails; false when there was nothing or something failed.
-pub async fn delete(bucket: &Bucket, http: &reqwest::Client, uuid: &str, recording_id: &str) -> bool {
+pub async fn delete(bucket: &Bucket, uuid: &str, recording_id: &str) -> bool {
     let ts = recording_id.trim_start_matches("recording-").trim_end_matches(".mp4");
-    let Ok(objects) = bucket.list(http, &format!("{uuid}/")).await else { return false };
+    let Ok(objects) = bucket.list(&format!("{uuid}/")).await else { return false };
     let video = format!("{uuid}/{recording_id}");
     let thumbs = format!("{uuid}/thumbnail-{ts}_");
     let doomed: Vec<&Object> = objects.iter().filter(|o| o.key == video || o.key.starts_with(&thumbs)).collect();
     if doomed.is_empty() {
         return false;
     }
-    let results = futures_util::future::join_all(doomed.iter().map(|o| bucket.delete(http, &o.key))).await;
+    let results = futures_util::future::join_all(doomed.iter().map(|o| bucket.delete(&o.key))).await;
     results.iter().all(Result::is_ok)
 }
 
 /// getSignedUrlQuery: a download link to one of the user's own files, for two hours.
-pub fn signed_url(bucket: &Bucket, uuid: &str, key: &str) -> Result<String, String> {
+pub async fn signed_url(bucket: &Bucket, uuid: &str, key: &str) -> Result<String, String> {
     if !key.starts_with(&format!("{uuid}/")) {
         return Err("Unauthorized access to recording".into());
     }
     let name = key.rsplit('/').next().unwrap_or(key);
-    Ok(bucket.presigned_get(key, 7200, Some(name)))
+    Ok(bucket.presigned_get(key, 7200, Some(name)).await)
 }
 
 #[cfg(test)]
