@@ -5,6 +5,7 @@ pub mod admin;
 pub mod admin_api;
 pub mod admin_queries;
 pub mod admin_socket;
+pub mod analytics;
 pub mod budget;
 pub mod config;
 pub mod custom_entities;
@@ -71,6 +72,10 @@ pub struct AppState {
     pub redis: Arc<redis_store::RedisStore>,
     /// The remote admin (ADMIN_API_URL), set at startup once it answered; None: LocalAdmin.
     pub admin: Option<Arc<admin_api::AdminApi>>,
+    /// A22, when the admin takes analytics.
+    pub analytics: Option<Arc<analytics::Analytics>>,
+    /// Turns true on SIGTERM: sessions and spaces end their intervals before the queue is drained.
+    pub shutdown: Arc<tokio::sync::watch::Sender<bool>>,
 }
 
 impl AppState {
@@ -97,6 +102,8 @@ impl AppState {
             storage: Arc::new(map_storage::Storage::new(&config.storage_directory)),
             redis: redis_store::RedisStore::new(&config),
             admin: None,
+            analytics: None,
+            shutdown: Arc::new(tokio::sync::watch::Sender::new(false)),
             config: Arc::new(config),
         }
     }

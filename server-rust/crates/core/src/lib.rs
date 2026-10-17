@@ -2,6 +2,7 @@
 
 pub mod areas;
 pub mod geometry;
+pub mod meetings;
 pub mod room;
 pub mod social;
 pub mod space;

@@ -16,10 +16,10 @@ use crate::config::Config;
 const TIMEOUT: Duration = Duration::from_secs(30);
 
 pub struct AdminApi {
-    base: String,
+    pub(crate) base: String,
     /// ADMIN_URL: the admin's public address.
     public: String,
-    token: String,
+    pub(crate) token: String,
     http: reqwest::Client,
     /// A1, read once at startup.
     pub capabilities: Value,

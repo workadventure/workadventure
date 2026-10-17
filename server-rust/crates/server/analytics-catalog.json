@@ -1,0 +1,606 @@
+{
+ "user.connected": {
+  "source": "pusher"
+ },
+ "user.disconnected": {
+  "source": "pusher",
+  "openableBy": "pusher",
+  "opensWith": "user.connected",
+  "minDurationMs": 0,
+  "intervalFields": {
+   "start": "connectedAt",
+   "end": "disconnectedAt",
+   "reason": "disconnectReason"
+  }
+ },
+ "media.video_quality.sample": {
+  "source": "pusher"
+ },
+ "auth.user_identified": {
+  "source": "front"
+ },
+ "room.visited": {
+  "source": "front"
+ },
+ "room.changed": {
+  "source": "front"
+ },
+ "room_list.room_clicked": {
+  "source": "front"
+ },
+ "session.started": {
+  "source": "front"
+ },
+ "session.ended": {
+  "source": "front"
+ },
+ "meeting.area_entered": {
+  "source": "front"
+ },
+ "meeting.started": {
+  "source": "pusher"
+ },
+ "meeting.ended": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": "meeting.started",
+  "minDurationMs": 0,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "meeting.screenshare.ended": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": null,
+  "minDurationMs": 1000,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "meeting.layout_changed": {
+  "source": "front"
+ },
+ "meeting.picture_in_picture.toggled": {
+  "source": "front"
+ },
+ "chat.message_sent": {
+  "source": "front"
+ },
+ "chat.proximity_file.sent": {
+  "source": "front"
+ },
+ "chat.proximity_file.received": {
+  "source": "front"
+ },
+ "invite.sent": {
+  "source": "front"
+ },
+ "invite.accepted": {
+  "source": "front"
+ },
+ "invite.walk_link_option_changed": {
+  "source": "front"
+ },
+ "area.dwell": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": null,
+  "minDurationMs": 1000,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "status.dwell": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": null,
+  "minDurationMs": 1000,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "map_editor.area.lock.toggled": {
+  "source": "front"
+ },
+ "map_editor.property.added": {
+  "source": "front"
+ },
+ "map_editor.property.removed": {
+  "source": "front"
+ },
+ "map_editor.property.clicked": {
+  "source": "front"
+ },
+ "map_editor.tool.opened": {
+  "source": "front"
+ },
+ "map_editor.application_picker.opened": {
+  "source": "front"
+ },
+ "map_editor.application.opened": {
+  "source": "front"
+ },
+ "map_editor.save.failed": {
+  "source": "front"
+ },
+ "map_editor.entity.added": {
+  "source": "front"
+ },
+ "map_editor.entity.removed": {
+  "source": "front"
+ },
+ "map_editor.entity.updated": {
+  "source": "front"
+ },
+ "map_editor.area.created": {
+  "source": "front"
+ },
+ "map_editor.area.updated": {
+  "source": "front"
+ },
+ "map_editor.area.removed": {
+  "source": "front"
+ },
+ "map_loading.started": {
+  "source": "front"
+ },
+ "map_loading.succeeded": {
+  "source": "front"
+ },
+ "map_loading.failed": {
+  "source": "front"
+ },
+ "media.connection_retry": {
+  "source": "front"
+ },
+ "media.turn_test.succeeded": {
+  "source": "front"
+ },
+ "media.codec.degraded": {
+  "source": "front"
+ },
+ "media.livekit.connected": {
+  "source": "front"
+ },
+ "media.livekit.reconnected": {
+  "source": "front"
+ },
+ "media.livekit.disconnected": {
+  "source": "front"
+ },
+ "media.livekit_switch.requested": {
+  "source": "front"
+ },
+ "media.permission_denied": {
+  "source": "front"
+ },
+ "media.device_error": {
+  "source": "front"
+ },
+ "settings.microphone.changed": {
+  "source": "front"
+ },
+ "settings.camera.changed": {
+  "source": "front"
+ },
+ "settings.notification.changed": {
+  "source": "front"
+ },
+ "settings.picture_in_picture.changed": {
+  "source": "front"
+ },
+ "settings.fullscreen.changed": {
+  "source": "front"
+ },
+ "scripting.website_opened": {
+  "source": "front"
+ },
+ "settings.ask_website.changed": {
+  "source": "front"
+ },
+ "settings.request_follow.changed": {
+  "source": "front"
+ },
+ "settings.decrease_audio_volume.changed": {
+  "source": "front"
+ },
+ "media.background_effect.sample": {
+  "source": "front"
+ },
+ "settings.background.changed": {
+  "source": "front"
+ },
+ "settings.noise_suppression.changed": {
+  "source": "front"
+ },
+ "media.noise_suppression.started": {
+  "source": "front"
+ },
+ "media.noise_suppression.load": {
+  "source": "front"
+ },
+ "media.audio_quality.sample": {
+  "source": "front"
+ },
+ "media.noise_suppression.failed": {
+  "source": "front"
+ },
+ "cowebsite.opened": {
+  "source": "pusher"
+ },
+ "onboarding.woka_validated": {
+  "source": "front"
+ },
+ "feedback.opened": {
+  "source": "front"
+ },
+ "feedback.submitted": {
+  "source": "front"
+ },
+ "external_module.chat_band.clicked": {
+  "source": "front"
+ },
+ "menu.custom.opened": {
+  "source": "front"
+ },
+ "emote.launched": {
+  "source": "front"
+ },
+ "custom_button.clicked": {
+  "source": "front"
+ },
+ "popup.opened": {
+  "source": "front"
+ },
+ "world.entered": {
+  "source": "front"
+ },
+ "asset.error": {
+  "source": "front"
+ },
+ "websocket.connection_lost": {
+  "source": "front"
+ },
+ "pwa.install_prompt_shown": {
+  "source": "front"
+ },
+ "pwa.install_outcome": {
+  "source": "front"
+ },
+ "auth.logged_sso": {
+  "source": "front"
+ },
+ "auth.logged_token": {
+  "source": "front"
+ },
+ "auth.login_clicked": {
+  "source": "front"
+ },
+ "auth.logout_clicked": {
+  "source": "front"
+ },
+ "bubble.lock.toggled": {
+  "source": "front"
+ },
+ "bubble.say.opened": {
+  "source": "front"
+ },
+ "bubble.think.opened": {
+  "source": "front"
+ },
+ "chat.matrix_encryption_configuration.started": {
+  "source": "front"
+ },
+ "chat.matrix_folder.created": {
+  "source": "front"
+ },
+ "chat.matrix_room.created": {
+  "source": "front"
+ },
+ "chat.message_from_user_list_clicked": {
+  "source": "front"
+ },
+ "chat.message_list_opened": {
+  "source": "front"
+ },
+ "chat.opened": {
+  "source": "front"
+ },
+ "conversation.participant_added": {
+  "source": "front"
+ },
+ "cowebsite.closed": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": "cowebsite.opened",
+  "minDurationMs": 0,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "cowebsite.fullscreen_opened": {
+  "source": "front"
+ },
+ "cowebsite.link_copied": {
+  "source": "front"
+ },
+ "cowebsite.opened_in_new_tab": {
+  "source": "front"
+ },
+ "cowebsite.switched": {
+  "source": "front"
+ },
+ "emote.edit_opened": {
+  "source": "front"
+ },
+ "external_module.calendar_opened": {
+  "source": "front"
+ },
+ "external_module.opened": {
+  "source": "front"
+ },
+ "external_module.todo_list_opened": {
+  "source": "front"
+ },
+ "file.drag_dropped": {
+  "source": "front"
+ },
+ "global_audio.opened": {
+  "source": "front"
+ },
+ "global_message.opened": {
+  "source": "front"
+ },
+ "global_message.sound_sent": {
+  "source": "front"
+ },
+ "global_message.text_sent": {
+  "source": "front"
+ },
+ "invite.opened": {
+  "source": "front"
+ },
+ "map_editor.closed": {
+  "source": "front"
+ },
+ "map_editor.opened": {
+  "source": "front"
+ },
+ "map_explorer.center_to_user_clicked": {
+  "source": "front"
+ },
+ "map_explorer.closed": {
+  "source": "front"
+ },
+ "map_explorer.filtered": {
+  "source": "front"
+ },
+ "map_explorer.opened": {
+  "source": "front"
+ },
+ "map_explorer.top_button_clicked": {
+  "source": "front"
+ },
+ "map_explorer.zoom_in_clicked": {
+  "source": "front"
+ },
+ "map_explorer.zoom_out_clicked": {
+  "source": "front"
+ },
+ "media.camera.toggled": {
+  "source": "front"
+ },
+ "media.microphone.dwell": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": null,
+  "minDurationMs": 1000,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "media.microphone.toggled": {
+  "source": "front"
+ },
+ "media.speech.dwell": {
+  "source": "pusher",
+  "openableBy": "client",
+  "opensWith": null,
+  "minDurationMs": 1000,
+  "intervalFields": {
+   "start": "startedAt",
+   "end": "endedAt",
+   "reason": "endReason"
+  }
+ },
+ "media.turn_test.failed": {
+  "source": "front"
+ },
+ "media.turn_test.timeout": {
+  "source": "front"
+ },
+ "media.video_stream_missing": {
+  "source": "front"
+ },
+ "meeting.actions.opened": {
+  "source": "front"
+ },
+ "meeting.camera_layout_resized": {
+  "source": "front"
+ },
+ "meeting.floor.given": {
+  "source": "front"
+ },
+ "meeting.floor.given_back": {
+  "source": "front"
+ },
+ "meeting.floor.revoked": {
+  "source": "front"
+ },
+ "meeting.hand.lowered_for_participant": {
+  "source": "front"
+ },
+ "meeting.hand.toggled": {
+  "source": "front"
+ },
+ "meeting.microphone.muted": {
+  "source": "front"
+ },
+ "meeting.microphone.muted_for_everybody": {
+  "source": "front"
+ },
+ "meeting.participation.ended": {
+  "source": "pusher"
+ },
+ "meeting.participant.kicked": {
+  "source": "front"
+ },
+ "meeting.participant.pinned": {
+  "source": "front"
+ },
+ "meeting.private_message.clicked": {
+  "source": "front"
+ },
+ "meeting.report.clicked": {
+  "source": "front"
+ },
+ "meeting.screenshare.toggled": {
+  "source": "front"
+ },
+ "meeting.video.muted": {
+  "source": "front"
+ },
+ "meeting.video.muted_for_everybody": {
+  "source": "front"
+ },
+ "megaphone.opened": {
+  "source": "front"
+ },
+ "menu.chat.opened": {
+  "source": "front"
+ },
+ "menu.contact.opened": {
+  "source": "front"
+ },
+ "menu.credit.opened": {
+  "source": "front"
+ },
+ "menu.opened": {
+  "source": "front"
+ },
+ "menu.shortcuts.opened": {
+  "source": "front"
+ },
+ "onboarding.companion_selected": {
+  "source": "front"
+ },
+ "onboarding.custom_woka_selected": {
+  "source": "front"
+ },
+ "onboarding.name_validated": {
+  "source": "front"
+ },
+ "onboarding.video_validated": {
+  "source": "front"
+ },
+ "onboarding.woka_selected": {
+  "source": "front"
+ },
+ "personal_desk.entered": {
+  "source": "front"
+ },
+ "personal_desk.unclaimed": {
+  "source": "front"
+ },
+ "profile.camera_edit_opened": {
+  "source": "front"
+ },
+ "profile.companion_edit_opened": {
+  "source": "front"
+ },
+ "profile.name_edit_opened": {
+  "source": "front"
+ },
+ "profile.opened": {
+  "source": "front"
+ },
+ "profile.woka_edit_opened": {
+  "source": "front"
+ },
+ "pwa.continue_in_browser_clicked": {
+  "source": "front"
+ },
+ "pwa.install_clicked": {
+  "source": "front"
+ },
+ "pwa.install_from_profile_menu_clicked": {
+  "source": "front"
+ },
+ "recording.list_opened": {
+  "source": "front"
+ },
+ "recording.started": {
+  "source": "front"
+ },
+ "recording.stopped": {
+  "source": "front"
+ },
+ "room_list.opened": {
+  "source": "front"
+ },
+ "settings.audio_volume.opened": {
+  "source": "front"
+ },
+ "settings.background.opened": {
+  "source": "front"
+ },
+ "settings.camera.selected": {
+  "source": "front"
+ },
+ "settings.microphone.selected": {
+  "source": "front"
+ },
+ "settings.opened": {
+  "source": "front"
+ },
+ "settings.speaker.selected": {
+  "source": "front"
+ },
+ "user.business_card.opened": {
+  "source": "front"
+ },
+ "user.follow_requested": {
+  "source": "front"
+ },
+ "user.go_to_clicked": {
+  "source": "front"
+ },
+ "user.report.clicked": {
+  "source": "front"
+ },
+ "user.woka_menu.opened": {
+  "source": "front"
+ },
+ "user_list.opened": {
+  "source": "front"
+ },
+ "websocket.reconnected": {
+  "source": "front"
+ },
+ "websocket.reconnecting": {
+  "source": "front"
+ }
+}

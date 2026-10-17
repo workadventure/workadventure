@@ -828,3 +828,97 @@ async fn the_admin_socket_watches_rooms_and_bans_from_a_whole_world() {
     let closed = tokio::time::timeout(WAIT, admin.next()).await.unwrap();
     assert!(matches!(closed, Some(Ok(Message::Close(Some(ref f)))) if u16::from(f.code) == 1008), "{closed:?}");
 }
+
+/// An admin that takes analytics: each batch's events are kept, and a batch with an event marked "bad" is
+/// refused (422), as the admin's validation would.
+async fn analytics_admin() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<serde_json::Value>>>) {
+    let got = std::sync::Arc::new(parking_lot::Mutex::new(Vec::new()));
+    let log = got.clone();
+    let app = axum::Router::new()
+        .route(
+            "/api/room/access",
+            axum::routing::get(|| async {
+                axum::Json(serde_json::json!({
+                    "status": "ok", "email": null, "userUuid": "uuid-a", "tags": ["member"], "isCharacterTexturesValid": true,
+                    "characterTextures": [], "isCompanionTextureValid": true, "world": "acme", "userRoomToken": "", "canEdit": false,
+                }))
+            }),
+        )
+        .route(
+            "/api/analytics/events-batch",
+            axum::routing::post(move |headers: axum::http::HeaderMap, axum::Json(batch): axum::Json<serde_json::Value>| {
+                let log = log.clone();
+                async move {
+                    assert_eq!(headers["authorization"], "Bearer tok");
+                    let events = batch["events"].as_array().cloned().unwrap_or_default();
+                    if events.iter().any(|e| e["properties"]["bad"] == true) {
+                        return axum::http::StatusCode::UNPROCESSABLE_ENTITY;
+                    }
+                    log.lock().extend(events);
+                    axum::http::StatusCode::ACCEPTED
+                }
+            }),
+        );
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let url = format!("http://{}", listener.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(listener, app).await });
+    (url, got)
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn analytics_reach_the_admin_signed_checked_and_with_the_connection_session() {
+    use pb::client_to_server_message::Message as M;
+    let vars = [("SECRET_KEY", "test"), ("ANALYTICS_FLUSH_INTERVAL_MS", "100"), ("CLIENT_DISCONNECTION_RETENTION_MS", "0")];
+    let config = Config::load(Env::new(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let mut state = AppState::new(config);
+    let (admin_url, got) = analytics_admin().await;
+    let caps = serde_json::json!({"api/analytics/events-batch": "v1"});
+    let admin = wa_server::admin_api::AdminApi::with(&admin_url, "tok", caps, reqwest::Client::new());
+    state.analytics = wa_server::analytics::Analytics::new(&state.config, &admin, reqwest::Client::new());
+    state.analytics.as_ref().unwrap().spawn(&state.config);
+    state.admin = Some(admin);
+    let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let server = format!("http://{}", play.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(play, router(state)).await });
+
+    let (mut alice, _ia) = bot(&server, "http://play.test/@/acme/world/lobby", "Alice", 100, 100).await;
+    let event = |name: &str, source: &str, id: &str, props: serde_json::Value| pb::AnalyticsEventMessage {
+        event_name: name.into(),
+        source: source.into(),
+        client_event_time_ms: 1_760_000_000_000,
+        event_id: id.into(),
+        properties: Some(wa_server::wire::json_to(&props)),
+    };
+    let events = vec![
+        event("onboarding.woka_validated", "front", "e1", serde_json::json!({"scene": "woka"})),
+        // Signed by the server only, unknown, refused by the admin: none of them is stored.
+        event("user.connected", "front", "e2", serde_json::json!({})),
+        event("no.such.event", "front", "e3", serde_json::json!({})),
+        event("onboarding.woka_validated", "front", "e4", serde_json::json!({"scene": "x", "bad": true})),
+        event("timed_event.open", "front", "o", serde_json::json!({"handle": "h1", "eventName": "cowebsite.closed", "properties": {"kind": "website"}})),
+        event("timed_event.close", "front", "c", serde_json::json!({"handle": "h1", "endReason": "left_area"})),
+    ];
+    alice.send(M::AnalyticsEventReportMessage(pb::AnalyticsEventReportMessage { events })).await.unwrap();
+    alice.close().await;
+
+    let names = || got.lock().iter().map(|e| e["eventName"].as_str().unwrap_or_default().to_owned()).collect::<Vec<_>>();
+    let deadline = std::time::Instant::now() + WAIT;
+    while !names().contains(&"user.disconnected".to_owned()) && std::time::Instant::now() < deadline {
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+    let mut seen = names();
+    seen.sort();
+    assert_eq!(seen, ["cowebsite.closed", "cowebsite.opened", "onboarding.woka_validated", "user.connected", "user.disconnected"]);
+    let all = got.lock().clone();
+    let by = |n: &str| all.iter().find(|e| e["eventName"] == n).unwrap().clone();
+    let front = by("onboarding.woka_validated");
+    assert_eq!((front["source"].as_str(), front["userUuid"].as_str(), front["world"].as_str()), (Some("front"), Some("uuid-a"), Some("acme")));
+    assert_eq!(front["clientEventTime"], "2025-10-09T08:53:20.000Z");
+    assert_eq!(front["spaceUserId"], format!("{}_{}", front["roomId"].as_str().unwrap(), front["userId"]));
+    let closed = by("cowebsite.closed");
+    assert_eq!((closed["source"].as_str(), closed["properties"]["endReason"].as_str()), (Some("pusher"), Some("closed_by_client")));
+    assert_eq!(closed["properties"]["kind"], "website");
+    let session = by("user.disconnected");
+    assert_eq!(session["properties"]["disconnectReason"], "socket_closed");
+    assert!(session["properties"]["durationSeconds"].is_u64() && session["properties"]["connectedAt"].is_string(), "{session}");
+}

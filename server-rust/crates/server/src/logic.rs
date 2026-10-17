@@ -34,6 +34,8 @@ struct Logic {
     recent_joins: HashMap<i32, (String, Instant)>,
     /// A logged player's saved variables in this room.
     saved: crate::player_variables::Mine,
+    /// Open analytics intervals; None once the server stopped (they were ended then).
+    timed: Option<crate::analytics::Timed>,
 }
 
 pub async fn run(parts: SessionParts, app: AppState) {
@@ -59,7 +61,9 @@ pub async fn run(parts: SessionParts, app: AppState) {
         spaces: HashMap::new(),
         recent_joins: HashMap::new(),
         saved: Default::default(),
+        timed: Some(Default::default()),
     };
+    let mut shutdown = app.shutdown.subscribe();
     loop {
         tokio::select! {
             message = inbox.recv() => match message {
@@ -67,8 +71,10 @@ pub async fn run(parts: SessionParts, app: AppState) {
                 None => break,
             },
             _ = ended.changed() => break,
+            Ok(()) = shutdown.changed(), if logic.timed.is_some() => logic.end_intervals("pusher_shutdown"),
         }
     }
+    logic.end_intervals("socket_closed");
     logic.cleanup().await;
     if let Some(cid) = &session.info.connection_id {
         app.sessions
@@ -116,8 +122,37 @@ impl Logic {
         }
     }
 
+    /// The connection's analytics context, once the room has given the user an id.
+    fn analytics(&self) -> Option<(std::sync::Arc<crate::analytics::Analytics>, crate::analytics::Context<'_>)> {
+        let session = &self.parts_session;
+        let a = self.app.analytics.clone()?;
+        let space_user_id = session.space_user_id()?;
+        Some((a, crate::analytics::Context { info: &session.info, user_id: session.user_id(), space_user_id }))
+    }
+
+    /// Opens the connection's session as soon as the user joined (the pusher does on roomJoined).
+    fn analytics_connected(&mut self) {
+        let Some(at) = self.parts_session.joined_at() else { return };
+        let mut timed = self.timed.take();
+        if let (Some(t), Some((a, ctx))) = (&mut timed, self.analytics()) {
+            t.connected(&a, &ctx, at);
+        }
+        self.timed = timed;
+    }
+
+    fn end_intervals(&mut self, reason: &str) {
+        self.analytics_connected();
+        if let (Some(mut t), Some((a, ctx))) = (self.timed.take(), self.analytics()) {
+            t.close_all(&a, &ctx, reason);
+        }
+    }
+
     async fn handle(&mut self, message: pb::ClientToServerMessage) {
         use pb::client_to_server_message::Message as M;
+        if let Some(t) = &mut self.timed {
+            t.last_activity_ms = crate::redis_store::now_ms();
+        }
+        self.analytics_connected();
         let session = self.parts_session.clone();
         let user = session.user_id();
         let space_user_id = session.space_user_id();
@@ -379,6 +414,18 @@ impl Logic {
             }
             // Any client frame is a pong.
             M::PingMessage(_) => {}
+            M::AnalyticsEventReportMessage(report) => {
+                let mut timed = self.timed.take();
+                if let (Some(t), Some((a, ctx))) = (&mut timed, self.analytics()) {
+                    t.report(&a, &ctx, report);
+                }
+                self.timed = timed;
+            }
+            M::VideoQualityReportMessage(report) => {
+                if let Some((a, ctx)) = self.analytics() {
+                    a.video_quality(&ctx, report, |space| self.spaces.contains_key(space));
+                }
+            }
             // J2 and later: emotes, variables, follow, lock, map editor, moderation, chat, analytics...
             _ => {}
         }

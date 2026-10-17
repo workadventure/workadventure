@@ -76,6 +76,10 @@ async fn serve(config: Config) {
     state.admin = wa_server::admin_api::AdminApi::connect(&state.config, state.http.clone()).await;
     if let Some(admin) = &state.admin {
         state.page_script = wa_server::front::script(&state.config, Some(&admin.capabilities));
+        state.analytics = wa_server::analytics::Analytics::new(&state.config, admin, state.http.clone());
+        if let Some(a) = &state.analytics {
+            a.spawn(&state.config);
+        }
     }
     tokio::spawn(wa_server::front::poll_template(state.clone()));
     let addr = SocketAddr::from(([0, 0, 0, 0], state.config.http_port));
@@ -120,10 +124,18 @@ async fn serve(config: Config) {
         tokio::spawn(async move { axum::serve(ws, app).await });
     }
 
+    let stopping = state.clone();
     axum::serve(listener, router(state).into_make_service_with_connect_info::<SocketAddr>())
         .with_graceful_shutdown(shutdown_signal())
         .await
         .expect("HTTP server");
+    // Like the pusher and the back on SIGTERM: open intervals end, then what is queued goes out.
+    stopping.shutdown.send_replace(true);
+    if let Some(a) = &stopping.analytics {
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        let drain = stopping.config.raw.get("DRAIN_TIMEOUT_MS").and_then(|v| v.parse().ok()).unwrap_or(20_000);
+        a.drain(std::time::Duration::from_millis(drain)).await;
+    }
 }
 
 async fn shutdown_signal() {
