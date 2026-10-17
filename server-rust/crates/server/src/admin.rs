@@ -100,7 +100,7 @@ async fn message(State(state): State<AppState>, headers: HeaderMap, body: axum::
         return (StatusCode::INTERNAL_SERVER_ERROR, "Incorrect type parameter").into_response();
     }
     for room in targets.iter().filter_map(|t| t.as_str()) {
-        let cmd = if kind == "message" { RoomCmd::AdminMessage(text.to_owned()) } else { RoomCmd::WorldFull };
+        let cmd = if kind == "message" { RoomCmd::AdminMessage { kind: String::new(), message: text.to_owned() } } else { RoomCmd::WorldFull };
         to_room(&state, room, cmd).await;
     }
     "ok".into_response()
