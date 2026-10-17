@@ -216,18 +216,37 @@ func TestWithoutLiveKitABubbleStaysOnWebRTCWhateverItsSize(t *testing.T) {
 	}
 }
 
+// worldLiveKit is a MediaProvider that asks for the LiveKit of each world, as the admin's credentials do.
+type worldLiveKit struct {
+	liveKit func(ctx context.Context, playURI string) (LiveKit, error)
+	egress  func(LiveKit) Egress
+}
+
+func (w worldLiveKit) LiveKitFor(ctx context.Context, playURI string) (LiveKit, error) {
+	return w.liveKit(ctx, playURI)
+}
+
+func (w worldLiveKit) EgressFor(lk LiveKit) Egress {
+	if w.egress == nil {
+		return nil
+	}
+	return w.egress(lk)
+}
+
+func (w worldLiveKit) CanRecord() bool { return w.egress != nil }
+
 func TestAWorldsOwnLiveKitIsAskedForEachMove(t *testing.T) {
 	lk := &fakeLiveKit{}
 	var asked []string
 	var mu sync.Mutex
 	m := DefaultMedia(nil)
 	m.FinalizeAfter = 30 * time.Millisecond
-	m.LiveKitFor = func(_ context.Context, playURI string) (LiveKit, error) {
+	m.Provider = worldLiveKit{liveKit: func(_ context.Context, playURI string) (LiveKit, error) {
 		mu.Lock()
 		asked = append(asked, playURI)
 		mu.Unlock()
 		return lk, nil
-	}
+	}}
 	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble"}, m)
 	defer sp.Stop()
 	var first *recorder

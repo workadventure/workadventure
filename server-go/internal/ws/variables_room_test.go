@@ -2,10 +2,15 @@ package ws
 
 import (
 	"context"
+	"errors"
 	"testing"
+	"time"
+
+	"github.com/coder/websocket"
 
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
+	"github.com/workadventure/workadventure/server-go/internal/store"
 )
 
 // office.tmj declares "door" (persisted, written by admins only) and "note" (anybody, not persisted), and
@@ -69,6 +74,53 @@ func TestTheMapDecidesWhoWritesAndReadsItsVariables(t *testing.T) {
 		}
 		if _, seen := got["secret"]; seen {
 			t.Fatal("a guest reads an admin-only variable")
+		}
+		return true
+	})
+}
+
+// downRedis refuses every write, as a Redis that is stopped.
+type downRedis struct{ *store.Memory }
+
+func (downRedis) HSet(context.Context, string, string, string) error {
+	return errors.New("connection refused")
+}
+
+// The CI's "storage works": a variable set while Redis is down, then everybody leaves and the room stops. The next
+// player still finds the value set during the outage, not the one stored before it.
+func TestAVariableSetWhileRedisIsDownSurvivesTheRoom(t *testing.T) {
+	h := editorHarness(t)
+	if err := h.srv.maps.Put("maps/office.tmj", []byte(officeTiled)); err != nil {
+		t.Fatal(err)
+	}
+	redis := downRedis{store.NewMemory()}
+	_ = redis.Memory.HSet(context.Background(), wamRoom, "door", `"closed before"`)
+	h.srv.vars, h.srv.varWriter = redis, store.NewWriter(redis)
+
+	admin := h.dialWAM(auth.Token{Identifier: "admin", Tags: []string{"admin"}})
+	admin.send(setVariable("door", `"set while Redis is down"`))
+	admin.waitFor("the change", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		return s.GetVariableMessage().GetName() == "door"
+	})
+	_ = admin.conn.Close(websocket.StatusNormalClosure, "Page unloading")
+	for deadline := time.Now().Add(3 * time.Second); len(h.rooms.Keys()) > 0; time.Sleep(20 * time.Millisecond) {
+		if time.Now().After(deadline) {
+			t.Fatal("the room did not stop")
+		}
+	}
+
+	token, _ := h.auth.Create(auth.Token{Identifier: "next"})
+	next := h.dialWithToken(token, "next", "", map[string][]string{"roomId": {wamRoom}})
+	next.send(join(100, 100))
+	next.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		j := d.GetRoomJoinedMessage()
+		if j == nil {
+			return false
+		}
+		for _, v := range j.GetVariable() {
+			if v.GetName() == "door" && v.GetValue() != `"set while Redis is down"` {
+				t.Fatalf("the room started again with %s", v.GetValue())
+			}
 		}
 		return true
 	})

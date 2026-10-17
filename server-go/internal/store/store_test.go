@@ -116,3 +116,31 @@ func TestTheUploadersRedisSelectsItsDatabase(t *testing.T) {
 		t.Fatalf("%q %v %v", v, ok, err)
 	}
 }
+
+// What a reader gets is the last value written, even while the write still waits for Redis: a room that starts
+// again after its players left reads the value set during the outage, not the one stored before it.
+func TestAReadSeesTheWritesRedisDidNotStoreYet(t *testing.T) {
+	redis := &flaky{Memory: NewMemory()}
+	_ = redis.Memory.HSet(context.Background(), "room", "door", `"closed"`)
+	_ = redis.Memory.HSet(context.Background(), "room", "light", `"on"`)
+	redis.down = true
+	w := NewWriter(redis)
+	w.Set("room", "door", `"open"`, 0)
+	w.Set("room", "light", "", 0) // deleted
+	w.Set("other", "x", "1", 0)
+	got, _ := w.Read("room")
+	if got["door"] != `"open"` || got["light"] != "" || len(got) != 1 {
+		t.Fatalf("the pending writes on top of what Redis has: %v", got)
+	}
+	redis.mu.Lock()
+	redis.down = false
+	redis.mu.Unlock()
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	if err := w.Flush(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := w.Read("room"); got["door"] != `"open"` || len(got) != 1 {
+		t.Fatalf("once stored, the same: %v", got)
+	}
+}

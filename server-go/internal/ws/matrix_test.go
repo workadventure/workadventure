@@ -45,7 +45,7 @@ func fakeSynapse(t *testing.T) (*matrix.Client, func() []string) {
 func TestRoomAreaIsTheResourceOfAChatArea(t *testing.T) {
 	h := newHarness(t)
 	m, calls := fakeSynapse(t)
-	h.srv.SetMatrix(m)
+	h.srv.matrix = m
 	h.srv.cfg.MapStorageAPIToken = "ms-token"
 	do := func(method, token, body string) *httptest.ResponseRecorder {
 		r := httptest.NewRequest(method, "/roomArea", strings.NewReader(body))
@@ -88,7 +88,7 @@ func TestRoomAreaIsTheResourceOfAChatArea(t *testing.T) {
 func TestAPlayerEntersAndLeavesTheRoomOfAChatArea(t *testing.T) {
 	h := newHarness(t)
 	m, calls := fakeSynapse(t)
-	h.srv.SetMatrix(m)
+	h.srv.matrix = m
 	invited := func(n int) {
 		t.Helper()
 		deadline := time.Now().Add(3 * time.Second)

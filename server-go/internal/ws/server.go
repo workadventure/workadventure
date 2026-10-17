@@ -26,6 +26,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
+	"github.com/workadventure/workadventure/server-go/internal/s3"
 )
 
 // Server handles /ws/room (IoSocketController + PusherRoomSocketController).
@@ -46,11 +47,29 @@ type Server struct {
 	apiVersion   string
 	analytics    *analytics.Queue // nil without an admin
 	matrix       *matrix.Client   // nil without Matrix (matrix.go)
+	recordings   *s3.Client       // the recordings' bucket; nil: recording is not available (recordings.go)
 }
 
-func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], maps *mapstorage.Store, vars store.Hash, apiVersion string) *Server {
-	return &Server{pingInterval: transportPingInterval, cfg: cfg, auth: a, admin: adm, rooms: rooms, spaces: spaces, retained: registry.New[string, *Session](), maps: maps, edits: mapedit.NewQueue(),
-		vars: vars, varWriter: store.NewWriter(vars), apiVersion: apiVersion}
+// Deps is what the WebSocket server works with.
+type Deps struct {
+	Auth       *auth.Manager
+	Admin      admin.Admin
+	Rooms      *registry.Refs[string, *core.Room]
+	Spaces     *registry.Refs[core.SpaceKey, *core.Space]
+	Maps       *mapstorage.Store
+	Vars       store.Hash // room and player variables: Redis, or memory
+	APIVersion string     // the protocol hash the front must carry
+	Analytics  *analytics.Queue
+	Matrix     *matrix.Client
+	Recordings *s3.Client
+}
+
+func NewServer(cfg *config.Config, d Deps) *Server {
+	srv := &Server{pingInterval: transportPingInterval, cfg: cfg, auth: d.Auth, admin: d.Admin, rooms: d.Rooms, spaces: d.Spaces,
+		retained: registry.New[string, *Session](), maps: d.Maps, edits: mapedit.NewQueue(), vars: d.Vars, varWriter: store.NewWriter(d.Vars),
+		apiVersion: d.APIVersion, analytics: d.Analytics, matrix: d.Matrix, recordings: d.Recordings}
+	d.Maps.Changed = srv.MapChanged // the files replaced from map-storage's HTTP API reach their rooms
+	return srv
 }
 
 func acceptOptions(protocol string) *websocket.AcceptOptions {

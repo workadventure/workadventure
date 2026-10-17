@@ -169,7 +169,7 @@ func TestPlayerDetailsReachTheSpace(t *testing.T) {
 // A shutdown closes the open meeting rather than losing it.
 func TestAShutdownClosesTheOpenMeeting(t *testing.T) {
 	got := &rows{}
-	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble-1"}, Media{Meetings: meetingsTo(got)})
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble-1"}, Media{Meetings: meetingsTo{got}})
 	defer sp.Stop()
 	joinSpace(t, sp, &recorder{}, "alice")
 	joinSpace(t, sp, &recorder{}, "bob")

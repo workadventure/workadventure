@@ -258,9 +258,6 @@ func (s *Session) closeTimed(reason string) {
 	}
 }
 
-// SetAnalytics gives the server the queue its connections report to (nil: none).
-func (srv *Server) SetAnalytics(q *analytics.Queue) { srv.analytics = q }
-
 // CloseAnalytics ends the intervals of every connection, before a shutdown drains the queue.
 func (srv *Server) CloseAnalytics() {
 	srv.sessions.Range(func(k, _ any) bool {

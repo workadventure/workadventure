@@ -44,7 +44,7 @@ func TestTheFrontsEventsReachTheAdminSignedByTheServer(t *testing.T) {
 	defer fake.Close()
 	q := analytics.New(analytics.Config{AdminURL: fake.URL, Token: "t", InstanceID: "pusher", Timeout: time.Second, MaxQueue: 100, MaxBatch: 100})
 	q.SetEnabled(true)
-	h.srv.SetAnalytics(q)
+	h.srv.analytics = q
 
 	alice := h.dial("alice", "c-alice", nil)
 	alice.send(join(100, 100))
@@ -129,7 +129,7 @@ func TestAVideoSampleOfAJoinedSpaceIsReported(t *testing.T) {
 	defer fake.Close()
 	q := analytics.New(analytics.Config{AdminURL: fake.URL, Token: "t", InstanceID: "pusher", Timeout: time.Second, MaxQueue: 100, MaxBatch: 100})
 	q.SetEnabled(true)
-	h.srv.SetAnalytics(q)
+	h.srv.analytics = q
 
 	alice := h.dial("alice", "c-alice", nil)
 	alice.send(join(100, 100))

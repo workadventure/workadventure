@@ -107,9 +107,11 @@ No WebSocket, no browser: fake peers (`join`) record what they receive. The name
 2. **Core.**
    - An event type (plain struct) for what the room sends back.
    - A method on `Room` or `Space`. It validates what it can without shared state, then `r.a.Post` the rest.
-   - Need something from outside (storage, an API, LiveKit)? Declare a small interface in `core`, implement it in
-     its own package under `internal/`, and wire it in `cmd/server/main.go`. Do the I/O outside the actor and post
-     the result back, with the version it was computed on if the state may have changed meanwhile.
+   - Need something from outside (storage, an API, LiveKit)? Declare a small interface in `core` (as `MediaProvider`,
+     `Meetings`, `RecordingReporter`), implement it in its own package under `internal/`, and wire it in
+     `cmd/server/wiring.go` (`buildMedia` for what the spaces use, `ws.Deps` for the WebSocket server). Do the I/O
+     outside the actor and post the result back, with the version it was computed on if the state may have changed
+     meanwhile.
 3. **Scenario test in `core`**, named as a sentence, with fake peers: the nominal case, who must *not* receive it,
    rights, invalid input.
 4. **Adapter.** One line in `handle` (`internal/ws/handlers.go`) that decodes and calls the core, or calls an
@@ -131,4 +133,10 @@ No WebSocket, no browser: fake peers (`join`) record what they receive. The name
 - When the TypeScript behaviour is a bug invisible to the client, fix it and write it down in `PARITY.md` rather than
   copying it.
 
-> A planned refactor will change the wiring in `cmd/server/main.go` (D4): this guide is updated with it.
+## Wiring
+
+`cmd/server/main.go` `run()` reads the configuration, builds the admin, the registries, the media
+(`buildMedia`), the WebSocket server (`ws.NewServer(cfg, ws.Deps{...})`), the listeners (`buildServers`), then serves
+until a signal and shuts down in order (servers, variables flushed, meetings closed, analytics drained). Nothing
+changes the configuration after it is loaded: what depends on the admin (a world's LiveKit, recording) is a
+dependency given to who needs it.

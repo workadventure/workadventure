@@ -8,13 +8,14 @@ le risque et la proposition. Les emplacements sont ceux de la branche `lang-go` 
 | Point | État |
 |---|---|
 | Découper `ws.Session` (D1) | fait (9be46b880) : transport, presence, memberships, chat, stats ; couverture de `ws` 70 % |
+| Gros `switch` (D2) | fait (3e9b6caee) : une méthode par message, modération à part |
 | Tests des commandes admin `mute`/`kickOff` et de la signature de `spaceMessage` | fait (2088a02d5) |
 | Chemins de reprise du cœur à 0 % | faits (4e75d69d4) ; `core` 88 % |
 | `wam` : `apply`, assertions de type, WAM malformé | fait : un fichier hors schéma est refusé par `Edit` (il était écrasé) ; `wam` 77 % |
-| `core` importe `analytics` : port `MeetingReporter` | à faire (D3/D4) |
-| `Msg.Event any` et `*pb.*` dans `core` : `core.Event` scellé | à faire (D3) |
-| `core.Media`, 7 fermetures : interfaces nommées (`MediaProvider`) | à faire (D4) |
-| Horloge : port `Clock` (`Now`, `AfterFunc`) avec `actor.After` | à faire |
+| `core` importe `analytics` : port `MeetingReporter` | fait (da1c29527) ; `core` n'importe plus qu'`actor` et `spacestate` |
+| `Msg.Event any` et `*pb.*` dans `core` : `core.Event` scellé | fait (da1c29527) ; structs `FrontEnv` et `MapDetails` (bef6ca294) |
+| `core.Media`, 7 fermetures : interfaces nommées (`MediaProvider`) | fait (D4) : `MediaProvider` (`core.ServerLiveKit`, `livekit.Worlds`), `Meetings`, `RecordingReporter` ; `main.go` découpé, `ws.Deps`, plus de mutation de la config |
+| Horloge : port `Clock` (`Now`, `AfterFunc`) avec `actor.After` | reporté : les tests des délais tournent déjà sur des durées raccourcies (80 ms, 30 ms) ; à faire avec `actor.After` quand un délai devra être testé à l'instant près |
 
 ## Notés
 
