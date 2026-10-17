@@ -183,3 +183,51 @@ func TestModerationAndTheMapEditorAskTheAdmin(t *testing.T) {
 		t.Fatalf("%v %v %v", rooms, ok, err)
 	}
 }
+
+func TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin(t *testing.T) {
+	var saved map[string]string
+	a, _ := fakeAdmin(t, func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		switch r.Method + " " + r.URL.Path {
+		case "GET /api/chat/members":
+			if q.Get("playUri") != "http://play.test/@/o/w/r" || q.Get("searchText") != "jo" {
+				t.Errorf("A12 query: %v", q)
+			}
+			_, _ = w.Write([]byte(`{"total":1,"members":[{"uuid":"u1","email":null,"chatId":"@jo:d","tags":["admin"]}]}`))
+		case "GET /api/members":
+			_, _ = w.Write([]byte(`[{"id":"u1","name":"Jo","email":"jo@x.test"}]`))
+		case "GET /api/members/u1":
+			_, _ = w.Write([]byte(`{"id":"u1","name":"Jo","visitCardUrl":"http://card"}`))
+		case "GET /api/world/tags":
+			_, _ = w.Write([]byte(`["admin","member"]`))
+		case "PUT /api/members/jo@x.test/chatId":
+			_ = json.NewDecoder(r.Body).Decode(&saved)
+		default:
+			http.NotFound(w, r)
+		}
+	})
+	ctx := context.Background()
+	m, err := a.ChatMembers(ctx, "http://play.test/@/o/w/r", "jo")
+	if err != nil || m.Total != 1 || m.Members[0].Email != nil || *m.Members[0].ChatID != "@jo:d" {
+		t.Fatalf("A12: %+v %v", m, err)
+	}
+	if l, err := a.SearchMembers(ctx, "r", "jo"); err != nil || len(l) != 1 || *l[0].Name != "Jo" {
+		t.Fatalf("A13: %v %v", l, err)
+	}
+	if tags, err := a.SearchTags(ctx, "r", ""); err != nil || len(tags) != 2 {
+		t.Fatalf("A14: %v %v", tags, err)
+	}
+	if mb, err := a.GetMember(ctx, "u1"); err != nil || *mb.VisitCardURL != "http://card" {
+		t.Fatalf("A15: %v %v", mb, err)
+	}
+	if _, err := a.GetMember(ctx, "gone"); err == nil {
+		t.Fatal("A15: a member the admin does not know is an error")
+	}
+	if err := a.UpdateChatID(ctx, "jo@x.test", "@jo:d", "r"); err != nil || saved["chatId"] != "@jo:d" || saved["userIdentifier"] != "jo@x.test" || saved["roomUrl"] != "r" {
+		t.Fatalf("A16: %v %v", saved, err)
+	}
+	local, _ := NewLocal(&config.Config{FrontEnv: map[string]any{}})
+	if _, err := local.SearchMembers(ctx, "r", ""); err == nil {
+		t.Fatal("without an admin, searching members is an error, as in LocalAdmin")
+	}
+}

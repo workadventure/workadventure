@@ -110,7 +110,39 @@ type Admin interface {
 	RoomTags(ctx context.Context, roomURL string) []string
 	// SameWorld is A6: the rooms of the world of roomURL. ok is false without an admin: the server lists its maps.
 	SameWorld(ctx context.Context, roomURL string, tags []string, bypassTagFilter bool) (rooms []RoomDescription, ok bool, err error)
+	// ChatMembers is A12, the members of the world in the chat, offline ones included.
+	ChatMembers(ctx context.Context, roomURL, search string) (ChatMembers, error)
+	// SearchMembers is A13 and GetMember A15, for the map editor (owners, rights) and a personal desk's owner.
+	SearchMembers(ctx context.Context, roomURL, search string) ([]Member, error)
+	GetMember(ctx context.Context, uuid string) (Member, error)
+	// SearchTags is A14.
+	SearchTags(ctx context.Context, roomURL, search string) ([]string, error)
+	// UpdateChatID is A16: the player got its Matrix id.
+	UpdateChatID(ctx context.Context, email, chatID, roomURL string) error
 }
+
+// ChatMembers is WorldChatMembersData.
+type ChatMembers struct {
+	Total   int64 `json:"total"`
+	Members []struct {
+		UUID     string   `json:"uuid"`
+		WokaName *string  `json:"wokaName"`
+		Email    *string  `json:"email"`
+		ChatID   *string  `json:"chatId"`
+		Tags     []string `json:"tags"`
+	} `json:"members"`
+}
+
+// Member is a MemberData of the admin's search.
+type Member struct {
+	ID           string  `json:"id"`
+	Name         *string `json:"name"`
+	Email        *string `json:"email"`
+	VisitCardURL *string `json:"visitCardUrl"`
+	ChatID       *string `json:"chatID"`
+}
+
+var errNoAdmin = errors.New("No admin backoffice set!")
 
 type Report struct{ ReportedUUID, Comment, ReporterUUID, RoomURL string }
 
@@ -190,6 +222,16 @@ func (l *Local) Report(context.Context, Report) error {
 }
 func (l *Local) Ban(context.Context, Ban) bool             { return false }
 func (l *Local) RoomTags(context.Context, string) []string { return []string{} }
+
+func (l *Local) ChatMembers(context.Context, string, string) (ChatMembers, error) {
+	return ChatMembers{}, nil
+}
+func (l *Local) SearchMembers(context.Context, string, string) ([]Member, error) {
+	return nil, errNoAdmin
+}
+func (l *Local) GetMember(context.Context, string) (Member, error)            { return Member{}, errNoAdmin }
+func (l *Local) SearchTags(context.Context, string, string) ([]string, error) { return []string{}, nil }
+func (l *Local) UpdateChatID(context.Context, string, string, string) error   { return nil }
 func (l *Local) SameWorld(context.Context, string, []string, bool) ([]RoomDescription, bool, error) {
 	return nil, false, nil
 }

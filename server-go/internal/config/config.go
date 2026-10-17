@@ -111,6 +111,9 @@ type Config struct {
 	RecordingS3                      RecordingS3
 	AllowedCORSOrigin                string
 	MatrixPublicURI                  string
+	Matrix                           Matrix   // the Synapse admin, when MatrixEnabled
+	MapStorageAPIToken               string   // MAP_STORAGE_API_TOKEN: map-storage's calls to /roomArea and the resourceUrls
+	WhitelistedResourceURLs          []string // WHITELISTED_RESOURCE_URLS: the origins a resourceUrl may point to, PUSHER_URL's besides
 	StunServer                       string
 	TurnServer                       string
 	TurnUser                         string
@@ -311,11 +314,14 @@ func parse(get func(string) string) (*Config, error) {
 		NodeEnv:                          r.str("NODE_ENV"),
 		AllowedCORSOrigin:                r.str("ALLOWED_CORS_ORIGIN"),
 		MatrixPublicURI:                  r.str("MATRIX_PUBLIC_URI"),
-		StunServer:                       r.str("STUN_SERVER"),
-		TurnServer:                       r.str("TURN_SERVER"),
-		TurnUser:                         r.str("TURN_USER"),
-		TurnPassword:                     r.str("TURN_PASSWORD"),
-		TurnStaticAuthSecret:             r.str("TURN_STATIC_AUTH_SECRET"),
+		Matrix: Matrix{APIURI: r.str("MATRIX_API_URI"), AdminUser: r.str("MATRIX_ADMIN_USER"), AdminPassword: r.str("MATRIX_ADMIN_PASSWORD"),
+			Domain: r.str("MATRIX_DOMAIN")},
+		MapStorageAPIToken:   r.str("MAP_STORAGE_API_TOKEN"),
+		StunServer:           r.str("STUN_SERVER"),
+		TurnServer:           r.str("TURN_SERVER"),
+		TurnUser:             r.str("TURN_USER"),
+		TurnPassword:         r.str("TURN_PASSWORD"),
+		TurnStaticAuthSecret: r.str("TURN_STATIC_AUTH_SECRET"),
 	}
 	opid := func(name, def string) string { return firstNonEmpty(r.str("OPENID_"+name), r.str("OPID_"+name), def) }
 	c.OpenID = OpenID{
@@ -492,3 +498,6 @@ type Analytics struct {
 	FlushInterval, Timeout time.Duration
 	MaxQueue, MaxBatch     int
 }
+
+// Matrix is the Synapse admin of the pusher (MATRIX_API_URI, MATRIX_ADMIN_USER, MATRIX_ADMIN_PASSWORD, MATRIX_DOMAIN).
+type Matrix struct{ APIURI, AdminUser, AdminPassword, Domain string }

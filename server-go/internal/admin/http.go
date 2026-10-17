@@ -288,3 +288,36 @@ func (a *HTTP) SameWorld(ctx context.Context, roomURL string, tags []string, byp
 	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/sameWorld", q, true, "en", nil, &rooms)
 	return rooms, true, err
 }
+
+// ChatMembers is A12 (playUri, though the OpenAPI says roomUrl).
+func (a *HTTP) ChatMembers(ctx context.Context, roomURL, search string) (ChatMembers, error) {
+	var m ChatMembers
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/chat/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &m)
+	return m, err
+}
+
+func (a *HTTP) SearchMembers(ctx context.Context, roomURL, search string) ([]Member, error) {
+	var m []Member
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &m)
+	return m, err
+}
+
+// GetMember is A15; like the pusher, the uuid goes into the path as it is.
+func (a *HTTP) GetMember(ctx context.Context, uuid string) (Member, error) {
+	var m Member
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members/"+uuid, nil, true, "", nil, &m)
+	return m, err
+}
+
+// SearchTags is A14: /api/world/tags, whatever the OpenAPI says.
+func (a *HTTP) SearchTags(ctx context.Context, roomURL, search string) ([]string, error) {
+	var t []string
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/world/tags", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &t)
+	return t, err
+}
+
+// UpdateChatID is A16, on ADMIN_URL (not ADMIN_API_URL); the email of the message goes into the path as it is.
+func (a *HTTP) UpdateChatID(ctx context.Context, email, chatID, roomURL string) error {
+	return a.call(ctx, http.MethodPut, a.cfg.AdminURL, "/api/members/"+email+"/chatId", nil, true, "",
+		map[string]string{"chatId": chatID, "userIdentifier": email, "roomUrl": roomURL}, nil)
+}
