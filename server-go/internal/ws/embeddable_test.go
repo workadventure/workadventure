@@ -20,3 +20,35 @@ func TestAPlayerCannotMakeTheServerFetchAPrivateAddress(t *testing.T) {
 		t.Fatal("a domain of EMBEDDED_DOMAINS_WHITELIST is not fetched at all")
 	}
 }
+
+// Whether a browser will show a site in the front's iframe (isFrameable of the pusher): CSP frame-ancestors wins
+// over X-Frame-Options.
+func TestASiteIsFrameableAsTheBrowserDecides(t *testing.T) {
+	for _, c := range []struct {
+		csp, xfo string
+		want     bool
+	}{
+		{"", "", true},
+		{"", "DENY", false},
+		{"", "sameorigin", false},
+		{"default-src 'self'; frame-ancestors 'none'", "", false},
+		{"frame-ancestors 'self'", "", false},
+		{"frame-ancestors *", "DENY", true}, // CSP wins
+		{"frame-ancestors https:", "", true},
+		{"frame-ancestors https://play.test", "", true},
+		{"frame-ancestors https://*.test", "", true},
+		{"frame-ancestors https://other.test", "", false},
+		{"script-src 'self'", "DENY", false}, // no frame-ancestors: X-Frame-Options decides
+	} {
+		h := http.Header{}
+		if c.csp != "" {
+			h.Set("Content-Security-Policy", c.csp)
+		}
+		if c.xfo != "" {
+			h.Set("X-Frame-Options", c.xfo)
+		}
+		if got := frameable(h, "play.test"); got != c.want {
+			t.Errorf("CSP %q, XFO %q: %v", c.csp, c.xfo, got)
+		}
+	}
+}

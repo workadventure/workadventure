@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"slices"
 	"strconv"
+	"sync"
 	"unicode/utf16"
 
 	"google.golang.org/protobuf/proto"
@@ -27,12 +28,76 @@ func (s *Session) spaceKey(local string) core.SpaceKey {
 	return core.SpaceKey{World: s.info.member.World, Local: local}
 }
 
-// joinedSpace returns the space if the session is a member (it then holds a reference on it in the registry).
-func (s *Session) joinedSpace(local string) *core.Space {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	return s.spaces[local]
+// memberships are the spaces a session joined, by the name the front uses, each holding a reference in the registry.
+type memberships struct {
+	mu       sync.Mutex
+	spaces   map[string]*core.Space
+	joinedBy map[int32]string // the joinSpaceQuery that joined each space, for its abortQueryMessage
 }
+
+func (m *memberships) get(local string) *core.Space {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	return m.spaces[local]
+}
+
+// room says whether local is already joined, and whether there is room for another space.
+func (m *memberships) room(local string) (already, full bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	_, already = m.spaces[local]
+	return already, len(m.spaces) >= maxSpacesPerSession
+}
+
+func (m *memberships) add(query int32, local string, space *core.Space) {
+	m.mu.Lock()
+	m.spaces[local] = space
+	m.joinedBy[query] = local
+	m.mu.Unlock()
+}
+
+// remove forgets local and the queries that joined it; it returns the space, nil if it was not joined.
+func (m *memberships) remove(local string) *core.Space {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	space := m.spaces[local]
+	delete(m.spaces, local)
+	for q, l := range m.joinedBy {
+		if l == local {
+			delete(m.joinedBy, q)
+		}
+	}
+	return space
+}
+
+// takeAll forgets every space and returns them.
+func (m *memberships) takeAll() map[string]*core.Space {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	spaces := m.spaces
+	m.spaces = map[string]*core.Space{}
+	return spaces
+}
+
+func (m *memberships) all() []*core.Space {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	out := make([]*core.Space, 0, len(m.spaces))
+	for _, space := range m.spaces {
+		out = append(out, space)
+	}
+	return out
+}
+
+func (m *memberships) joinedByQuery(id int32) (string, bool) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	local, ok := m.joinedBy[id]
+	return local, ok
+}
+
+// joinedSpace returns the space if the session is a member (it then holds a reference on it in the registry).
+func (s *Session) joinedSpace(local string) *core.Space { return s.memberships.get(local) }
 
 // Each space is an actor: one client must not be able to create them without limit. The front joins a handful.
 const (
@@ -50,10 +115,7 @@ func (s *Session) joinSpace(id int32, q *pb.JoinSpaceQuery) {
 		s.answerError(id, "Space name too long")
 		return
 	}
-	s.mu.Lock()
-	_, already := s.spaces[local]
-	full := len(s.spaces) >= maxSpacesPerSession
-	s.mu.Unlock()
+	already, full := s.memberships.room(local)
 	if full && !already {
 		s.answerError(id, "Too many spaces joined")
 		return
@@ -89,22 +151,11 @@ func (s *Session) joinSpace(id int32, q *pb.JoinSpaceQuery) {
 			return
 		}
 	}
-	s.mu.Lock()
-	s.spaces[local] = space
-	s.joinedBy[id] = local
-	s.mu.Unlock()
+	s.memberships.add(id, local, space)
 }
 
 func (s *Session) leaveSpace(id int32, local string) {
-	s.mu.Lock()
-	space := s.spaces[local]
-	delete(s.spaces, local)
-	for q, l := range s.joinedBy {
-		if l == local {
-			delete(s.joinedBy, q)
-		}
-	}
-	s.mu.Unlock()
+	space := s.memberships.remove(local)
 	reply := func() {
 		if id != 0 { // 0: left on an abort, nobody waits for an answer
 			s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_LeaveSpaceAnswer{LeaveSpaceAnswer: &pb.LeaveSpaceAnswer{}}})
@@ -120,20 +171,14 @@ func (s *Session) leaveSpace(id int32, local string) {
 
 // leaveAllSpaces runs when the session ends, after its readers stopped.
 func (s *Session) leaveAllSpaces() {
-	s.mu.Lock()
-	spaces := s.spaces
-	s.spaces = map[string]*core.Space{}
-	s.mu.Unlock()
-	for local, space := range spaces {
+	for local, space := range s.memberships.takeAll() {
 		_ = space.Leave(context.Background(), s.spaceUserID(), nil)
 		s.srv.spaces.Release(s.spaceKey(local))
 	}
 }
 
 func (s *Session) spaceUser() core.SpaceUser {
-	s.mu.Lock()
-	name, status := s.name, s.status
-	s.mu.Unlock()
+	name, status := s.presence.get()
 	u := core.SpaceUser{
 		ID: s.spaceUserID(), Name: name, PlayURI: s.info.roomID, Color: colorByString(name),
 		Textures: coreTextures(s.info.member.CharacterTextures), IsLogged: s.info.isLogged, AvailabilityStatus: status,
@@ -142,8 +187,8 @@ func (s *Session) spaceUser() core.SpaceUser {
 	if s.info.roomName != "" {
 		u.RoomName = &s.info.roomName
 	}
-	if s.info.chatID != "" {
-		u.ChatID = &s.info.chatID
+	if id := s.chat.get(); id != "" {
+		u.ChatID = &id
 	}
 	return u
 }
@@ -327,13 +372,7 @@ func (s *Session) updateSpacesWithPlayerDetails(d core.PlayerDetails) {
 	if len(mask) == 0 {
 		return
 	}
-	s.mu.Lock()
-	spaces := make([]*core.Space, 0, len(s.spaces))
-	for _, space := range s.spaces {
-		spaces = append(spaces, space)
-	}
-	s.mu.Unlock()
-	for _, sp := range spaces {
+	for _, sp := range s.memberships.all() {
 		_ = sp.UpdatePlayerDetails(s.ctx, s.spaceUserID(), u, mask)
 	}
 }
