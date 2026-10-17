@@ -310,7 +310,7 @@ jobs:
           # with these same files (tests/tests/utils/containers.ts).
           OVERRIDE_DOCKER_COMPOSE: docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml
           # The "back" no longer exists on its own: restarting it means restarting the server (the play service).
-          DEV_REBOOT_BACK: cd .. && docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up --force-recreate -d play
+          DEV_REBOOT_BACK: cd .. && docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up --force-recreate -d --wait play
           RENDERER_MODE: ${{ matrix.renderer }}
           # Playwright's --shard balances by TEST COUNT, which left shards 3.5x apart in wall time
           # (1249s vs 362s on chromium 4-way). PWTEST_SHARD_WEIGHTS sets each shard's test count
