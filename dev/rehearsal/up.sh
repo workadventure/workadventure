@@ -16,11 +16,13 @@ minikube addons list -p "$PROFILE" | grep -E "^\| ingress +\|" | grep -q enabled
 mkdir -p .certs
 # A small CA that signs the server certificate: rustls (webpki) refuses a CA certificate used as the end entity, which
 # a single `req -x509` certificate is (CA:TRUE). The candidates trust ca.crt (SSL_CERT_FILE); the ingress serves tls.crt.
-if [ ! -f .certs/ca.crt ]; then
+if [ ! -f .certs/ca.crt ] || ! grep -q maps-rehearsal .certs/ext.cnf 2>/dev/null; then
   rm -f .certs/tls.*
   openssl req -x509 -newkey rsa:2048 -nodes -days 90 -keyout .certs/ca.key -out .certs/ca.crt -subj "/CN=wa-rehearsal CA" 2>/dev/null
   openssl req -newkey rsa:2048 -nodes -keyout .certs/tls.key -out .certs/tls.csr -subj "/CN=*.localhost" 2>/dev/null
-  printf 'basicConstraints=critical,CA:FALSE\nsubjectAltName=DNS:*.localhost,DNS:localhost\nextendedKeyUsage=serverAuth\n' > .certs/ext.cnf
+  # Every host by name: rustls (webpki) does not let *.localhost cover a name right under localhost.
+  sans=$(for h in play pusher map-storage uploader icon assets maps room-api; do printf 'DNS:%s-rehearsal.localhost,' "$h"; done)
+  printf 'basicConstraints=critical,CA:FALSE\nsubjectAltName=%sDNS:*.localhost,DNS:localhost\nextendedKeyUsage=serverAuth\n' "$sans" > .certs/ext.cnf
   openssl x509 -req -in .certs/tls.csr -CA .certs/ca.crt -CAkey .certs/ca.key -CAcreateserial -days 90 \
     -extfile .certs/ext.cnf -out .certs/tls.crt 2>/dev/null
 fi
