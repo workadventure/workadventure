@@ -9,3 +9,7 @@ tmp_dir = "/tmp/air"
   include_ext = ["go"]
   exclude_regex = ["_test\\.go$"]
   delay = 200
+  # Stop the old server before starting the new one: SIGINT (its graceful shutdown), then SIGKILL after kill_delay.
+  # Without it, the old one kept the ports and the new one died on "address already in use".
+  send_interrupt = true
+  kill_delay = "3s"

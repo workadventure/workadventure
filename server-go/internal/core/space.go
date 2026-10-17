@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"slices"
 	"sync"
 	"time"
@@ -518,6 +519,7 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 		}
 		kept = append(kept, path)
 	}
+	s.logUpdate(m, from, mask, kept, onlyChanged)
 	if len(kept) == 0 {
 		return
 	}
@@ -596,6 +598,61 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 			return nil
 		})
 	}
+}
+
+// logUpdate traces, in debug, each update a member sends: what it asked, what changes, what it already had.
+func (s *spaceState) logUpdate(m *spaceMember, from SpaceUser, mask, kept []string, playerDetails bool) {
+	if !slog.Default().Enabled(context.Background(), slog.LevelDebug) {
+		return
+	}
+	origin := "updateSpaceUser"
+	if playerDetails {
+		origin = "setPlayerDetails"
+	}
+	values := make([]any, 0, 2*len(mask))
+	for _, path := range mask {
+		after := m.user
+		after.apply(from, path)
+		values = append(values, slog.Group(path, "sent", fieldValue(after, path), "had", fieldValue(m.user, path)))
+	}
+	slog.Debug("space user update", "space", s.local, "spaceUserId", m.user.ID, "user", m.user.UUID, "name", m.user.Name,
+		"origin", origin, "mask", mask, "kept", kept, "changed", !spaceUserEqual(m.user, applied(m.user, from, kept)),
+		slog.Group("fields", values...))
+}
+
+func applied(u, from SpaceUser, paths []string) SpaceUser {
+	for _, path := range paths {
+		u.apply(from, path)
+	}
+	return u
+}
+
+// fieldValue is the value at path of u, as apply reads it.
+func fieldValue(u SpaceUser, path string) any {
+	switch path {
+	case "microphoneState":
+		return u.MicrophoneState
+	case "cameraState":
+		return u.CameraState
+	case "screenSharingState":
+		return u.ScreenSharingState
+	case "megaphoneState":
+		return u.Megaphone
+	case "attendeesState":
+		return u.AttendeesState
+	case "cpuLimited":
+		return u.CPULimited
+	case "availabilityStatus":
+		return u.AvailabilityStatus
+	case "chatID":
+		if u.ChatID == nil {
+			return nil
+		}
+		return *u.ChatID
+	case "showVoiceIndicator":
+		return u.ShowVoiceIndicator
+	}
+	return "(not updatable)"
 }
 
 func (s *spaceState) setMetadata(senderID string, delta map[string]json.RawMessage) {

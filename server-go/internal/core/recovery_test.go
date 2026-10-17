@@ -1,6 +1,9 @@
 package core
 
 import (
+	"bytes"
+	"log/slog"
+	"strings"
 	"testing"
 )
 
@@ -211,5 +214,30 @@ func TestPlayerDetailsThatChangeNothingAreNotSent(t *testing.T) {
 	syncSpace(t, sp)
 	if got := alice.take(); len(got) != 0 {
 		t.Fatalf("unchanged player details reach no one: %v", got)
+	}
+}
+
+// In debug, each update a member sends is traced with what it sent and what it had, changed or not.
+func TestSpaceUserUpdatesAreTracedInDebug(t *testing.T) {
+	var out bytes.Buffer
+	prev := slog.Default()
+	slog.SetDefault(slog.New(slog.NewTextHandler(&out, &slog.HandlerOptions{Level: slog.LevelDebug})))
+	defer slog.SetDefault(prev)
+	sp := NewSpace(SpaceKey{"http://play.test", "live"})
+	defer sp.Stop()
+	_ = enter(t, sp, "bob")
+	_ = sp.UpdateUser(ctx, "bob", SpaceUser{Megaphone: true}, []string{"megaphoneState"})
+	_ = sp.UpdateUser(ctx, "bob", SpaceUser{Megaphone: true}, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	lines := strings.Split(strings.TrimSpace(out.String()), "\n")
+	var traced []string
+	for _, l := range lines {
+		if strings.Contains(l, "space user update") {
+			traced = append(traced, l)
+		}
+	}
+	if len(traced) != 2 || !strings.Contains(traced[0], "changed=true") || !strings.Contains(traced[1], "changed=false") ||
+		!strings.Contains(traced[1], "fields.megaphoneState.sent=true fields.megaphoneState.had=true") || !strings.Contains(traced[1], "origin=updateSpaceUser") {
+		t.Fatalf("both updates traced, the second as a no-op: %q", traced)
 	}
 }
