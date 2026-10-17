@@ -679,3 +679,22 @@ jamais l'id de la salle créée. Les 5 tests de `matrixChatArea` échouaient tou
   Synapse vierge : encore 2 échecs, cette fois par ma faute (warm-auth, lancé juste avant, connecte User1 par le SSO
   Matrix, qui prend `@john.doe`) ; sans warm-auth, après un nouveau vidage : **2/2**. Le socle en a tiré
   `dev/dev synapse reset`, à lancer après warm-auth.
+
+## Jalon 10 — campagne complète (17/10)
+
+Stack rust, branche contenant master 034dee80b, 88 fichiers (la référence `ts-full-2026-10-17` en comptait 86, jouée
+sur 6f4d02319), 272 tests, Chromium, un worker, `--grep-invert "storage works"`, après warm-auth puis
+`dev/dev synapse reset` (outil du socle).
+
+**247 réussis, 11 échecs, 14 sautés** (47,7 min) ; référence TS : 239, 15, 14.
+
+- 8 échecs communs à la référence, mêmes causes : `map_editor_livekit:62`, `scripting_spaces:401` (port 80 en dur),
+  `report_issue:7` (Sentry), `variables:188` (carte du worktree), `spaces:18` (hors comparaison),
+  `matrixChatModeration:28`, `:60` et `userlist:37` (`@john.doe` : Playwright joue les fichiers dans l'ordre
+  alphabétique, des specs OIDC passent avant celles de Matrix ; `matrixChatModeration` passe 2/2 seul).
+- 7 échecs de la référence qui passent ici : `map_storage_upload:19`, `:85`, `:185`, `metadata:11`,
+  `api_players:16`, `p2p_mute_keeps_sender:82`, `map_editor_interacting_object:91`.
+- 3 nouveaux : `chat/matrixChat:84` et `recording:62` passent seuls ; `media_devices:15` échoue 4 fois sur 5 seul,
+  à la première assertion (bouton « AirPods » absent des réglages média, liste de périphériques simulés côté
+  front). Master a touché ce code depuis la référence (d1dbb953d0, a9a3e12fc0) : non classé, en attente d'une
+  passe TS au même commit par le socle.
