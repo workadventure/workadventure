@@ -740,3 +740,27 @@ b26d49374. La référence est `dev/references/ts-full-2026-10-17.md` (dev-socle 
 - Les deux ont réussi à la deuxième campagne.
 
 **Aide extérieure.** Référence TS et classement des échecs d'environnement par le socle.
+
+### 17/10, rejeux Matrix et répétition de la bascule
+
+**Rejeux Matrix sur un Synapse vierge**, remis à zéro par le socle : `matrixChatModeration:28`, `:60` et `userlist:37` passent en Go, comme en TS. La cause est confirmée (dev-socle 0ad17f2b6).
+
+**Répétition TS → Go → TS** (minikube `wa-rehearsal`, chart du socle, un réplica, Alice et Bob restent sur la carte).
+- Branche à relire `rehearsal-fix` :
+  - relais `alpine/socat:1.8.0.3` sur 127.0.0.1:8443 à la place de `kubectl port-forward` ;
+  - la spec lit `WA.players.list()` comme un tableau (c'est un itérateur) ;
+  - le contrôle « jamais rechargé » s'appuie sur le marqueur de la page, car `framenavigated` compte aussi les `pushState`.
+- Défaut Go trouvé : l'uploader TS range ses fichiers dans la base Redis 1 (`REDIS_DB_NUMBER`, chart `uploader-env.yaml`), alors que le Go lisait la base 0.
+  - Corrigé dans 04713cbdc : l'uploader Go sélectionne `REDIS_DB_NUMBER`. Les variables restent en base 0, et seul l'uploader TS lit ce nom.
+  - Le chart ne passe pas encore cette variable au pod play en mode server : à faire par le socle. La répétition la fixe dans `values-go.yaml`.
+- Résultat final, rapport `dev/rehearsal/results/20261017-0906.md` (image construite depuis 04713cbdc) : **51 contrôles OK, 0 KO**.
+
+| | TS → Go | Go → TS |
+|---|---|---|
+| `helm upgrade --wait` | 4 s | 14 s |
+| Coupure | 2,4 s | 8,4 s |
+| Rechargement de page ou reconnexion manuelle | aucun | aucun |
+| Bandeau « Connection to server lost » | vu de +3,1 s à +9,6 s | jamais vu |
+
+- Variables, cartes, carte partagée et fichiers passent d'un serveur à l'autre, dans les deux sens.
+- Le bandeau n'était pas apparu au passage précédent (20261017-0902) : son apparition à la bascule vers Go dépend du moment de la coupure. C'est un écart à suivre.
