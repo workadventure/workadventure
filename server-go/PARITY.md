@@ -21,6 +21,11 @@ Mise à jour : 2026-10-17, sur `626a4978a` (master fusionné, API `d2d82672`). L
 
 Améliorations relevées mais non faites : [IMPROVEMENTS.md](IMPROVEMENTS.md).
 
+**Hors périmètre par construction** : `POST /debug/close-space-connection`. Il n'y a pas de flux back↔pusher en
+serveur unique : la route répond comme le back (400, 500 pour un space inconnu, 200), mais sans effet. Elle accepte le
+nom du back (`<monde>.<nom local>`) et le nom local. Conséquence : `map_editor_livekit.spec.ts:62` n'éprouve pas la
+reconnexion côté Go.
+
 ## Manques bloquants, par ordre
 
 1. **Admin distante** : les 31 appels sont faits, testés contre un faux admin et joués contre l'admin locale (`dev/saas`) ; pas encore contre une préproduction.

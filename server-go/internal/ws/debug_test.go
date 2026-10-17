@@ -3,6 +3,7 @@ package ws
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 	"time"
@@ -40,8 +41,10 @@ func TestTheBacksDebugRoutes(t *testing.T) {
 	alice.waitFor("the join answer", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
 		return d.GetAnswerMessage().GetJoinSpaceAnswer() != nil
 	})
-	if w := call(h.srv.CloseSpaceConnection, "POST", "token=123&spaceName=meeting"); w.Code != http.StatusOK || w.Body.String() != "Space connection closed" {
-		t.Fatal(w.Code, w.Body)
+	for _, name := range []string{"meeting", url.QueryEscape("http://play.test.meeting")} { // local, and as the back names it
+		if w := call(h.srv.CloseSpaceConnection, "POST", "token=123&spaceName="+name); w.Code != http.StatusOK || w.Body.String() != "Space connection closed" {
+			t.Fatal(name, w.Code, w.Body)
+		}
 	}
 
 	_ = alice.conn.Close(websocket.StatusNormalClosure, "Page unloading")
