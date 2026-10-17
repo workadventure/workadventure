@@ -50,6 +50,9 @@ services:
       - map-storage-data:/maps
       - ./tests/certs/cert.pem:/certs/cert.pem:ro
     environment:
+      # rustfs serves plain http on the docker network; the workflow's https:// works for the TS back only because it
+      # skips TLS checks. The server checks TLS.
+      LIVEKIT_RECORDING_S3_ENDPOINT: http://rustfs-livekit:9000
       # Test only: SSL_CERT_FILE replaces the system CA bundle, so play trusts nothing but this certificate.
       SSL_CERT_FILE: /certs/cert.pem
       # The server reads index.html from the front container, and proxies the assets that must stay same-origin
