@@ -1,14 +1,10 @@
 [package]
 name = "wa-bot"
-description = "Headless WorkAdventure clients, for tests and load measurements."
+description = "Headless WorkAdventure clients, for tests."
 edition.workspace = true
 version.workspace = true
 license.workspace = true
 publish.workspace = true
-
-[[bin]]
-name = "wa-load"
-path = "src/main.rs"
 
 [dependencies]
 wa-proto.workspace = true
