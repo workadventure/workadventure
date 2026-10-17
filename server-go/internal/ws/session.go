@@ -49,12 +49,22 @@ type sessionInfo struct {
 	userUUID, ipAddress                string
 	isLogged                           bool
 	member                             admin.MemberData
-	chatID, roomName                   string
+	chatID, roomName                   string // chatID: the one known at the upgrade; Session.chat holds the current one
 	lastCommandID                      string // the last map edit the client's copy of the map has
 }
 
 // Session is a logical connection. It survives a transport drop for CLIENT_DISCONNECTION_RETENTION_MS: if the
 // client reconnects with the same connectionId, the new transport takes over and missed frames are replayed.
+//
+// It is made of parts that each keep their own state behind their own lock:
+//   - t: the WebSocket transport (connection, frame numbering, replay, retention, keepalive) — transport.go;
+//   - presence: in the room or not, the name and status the player shows;
+//   - memberships: the spaces joined — spaces.go;
+//   - chat: the Matrix chat id and chat areas — matrix.go;
+//   - stats: the analytics intervals — analytics.go.
+//
+// Locks: every lock of a part is a leaf: no other lock is taken while holding it, except inside the transport
+// (wmu, then mu). So there is no order between the parts to respect.
 //
 // Goroutines: one writer for the whole session; one reader and one pinger per transport.
 type Session struct {
@@ -65,39 +75,40 @@ type Session struct {
 	cancel context.CancelFunc
 	out    *outbox
 
-	wmu   sync.Mutex // serializes writes to the transport: the writer goroutine, and a resume's replay
-	nonce uint32     // guarded by wmu
+	t           transport
+	presence    presence
+	memberships memberships
+	chat        chat
+	stats       stats
 
-	// hmu serializes the handling of client messages: after a resume, the reader of the replaced transport may
-	// still be handling a message while the new one starts.
-	hmu          sync.Mutex
-	lastReceived uint32 // guarded by hmu
+	userID atomic.Int32 // id in the room, once RoomJoined is on its way
+}
 
-	mu        sync.Mutex
-	cur       *websocket.Conn // nil while the client is away
-	store     resumeStore
-	destroyed bool
-	retention *time.Timer
-	joined    bool
+// presence is the player in the room: joined or not yet, and what it shows to the others.
+type presence struct {
+	mu     sync.Mutex
+	joined bool
+	name   string                  // from JoinRoomFrontMessage
+	status core.AvailabilityStatus // latest availability status
+}
 
-	userID       atomic.Int32       // id in the room, once RoomJoined is on its way
-	lastActivity atomic.Int64       // unix ms of the last frame received: a socket that went away left then
-	tracker      *analytics.Tracker // guarded by mu; the analytics intervals of this connection (analytics.go)
+func (p *presence) get() (name string, status core.AvailabilityStatus) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.name, p.status
+}
 
-	// guarded by mu
-	name      string                  // from JoinRoomFrontMessage
-	status    core.AvailabilityStatus // latest availability status
-	spaces    map[string]*core.Space  // by the name the front uses
-	joinedBy  map[int32]string        // the joinSpaceQuery that joined each space, for its abortQueryMessage
-	chatAreas []string                // the Matrix rooms of the chat areas the player is in (matrix.go)
-
-	readers sync.WaitGroup // readers post to the room: they must be done before the room is released
+func (p *presence) setStatus(status core.AvailabilityStatus) {
+	p.mu.Lock()
+	p.status = status
+	p.mu.Unlock()
 }
 
 func newSession(srv *Server, info sessionInfo) *Session {
-	s := &Session{srv: srv, info: info, spaces: map[string]*core.Space{}, joinedBy: map[int32]string{}}
+	s := &Session{srv: srv, info: info, memberships: memberships{spaces: map[string]*core.Space{}, joinedBy: map[int32]string{}}}
+	s.chat.id = info.chatID
 	s.ctx, s.cancel = context.WithCancel(context.Background())
-	s.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
+	s.t.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
 	s.out = newOutbox(outboxLimit, func() { go s.destroy(statusSessionDestroyed, "Too slow to receive messages") })
 	s.room = srv.rooms.Acquire(info.roomID)
 	srv.sessions.Store(s, struct{}{})
@@ -109,13 +120,18 @@ func newSession(srv *Server, info sessionInfo) *Session {
 func (s *Session) start(conn *websocket.Conn) {
 	// The back answered ConnectToRoomMessage with RoomConnectedMessage; the front waits for it before joining.
 	s.connectToRoom()
-	s.mu.Lock()
-	s.cur = conn
-	s.readers.Add(1)
-	s.mu.Unlock()
+	s.t.attach(conn)
 	go s.writeLoop()
-	go s.read(conn)
-	go s.keepAlive(conn)
+	s.serve(conn)
+}
+
+// serve reads and keeps conn alive until it ends.
+func (s *Session) serve(conn *websocket.Conn) {
+	go func() {
+		defer s.recoverPanic()
+		s.t.read(s.ctx, conn, s.handle, func(err error) { s.transportClosed(conn, err) })
+	}()
+	go keepAlive(s.ctx, conn, s.srv.cfg.SocketIdleTimer)
 }
 
 // Send and Kick implement core.Peer. They never block.
@@ -155,7 +171,7 @@ func (s *Session) writeLoop() {
 		for _, m := range pending.items {
 			entries = append(entries, m.Bytes(encodeShared))
 		}
-		s.emit(func(n uint32) []byte { return batchFrame(n, entries) })
+		s.t.emit(s.ctx, func(n uint32) []byte { return batchFrame(n, entries) })
 		clear(entries)
 		entries = entries[:0]
 		pending.reset()
@@ -193,7 +209,7 @@ func (s *Session) writeLoop() {
 				return
 			}
 			payload := s.encodeDirect(m)
-			s.emit(func(n uint32) []byte { return directFrame(n, payload) })
+			s.t.emit(s.ctx, func(n uint32) []byte { return directFrame(n, payload) })
 		}
 		clear(items)
 	}
@@ -247,56 +263,6 @@ func opt(s string) *string {
 	return &s
 }
 
-// emit numbers a frame, keeps it for a resume and writes it to the current transport, if any.
-func (s *Session) emit(build func(nonce uint32) []byte) {
-	s.wmu.Lock()
-	defer s.wmu.Unlock()
-	s.nonce++
-	frame := build(s.nonce)
-	s.mu.Lock()
-	frame = s.store.add(s.nonce, frame, time.Now()) // write the stored copy: the built one is garbage at once
-	conn := s.cur
-	s.mu.Unlock()
-	if conn != nil {
-		_ = s.write(conn, frame)
-	}
-}
-
-func (s *Session) write(conn *websocket.Conn, frame []byte) error {
-	ctx, cancel := context.WithTimeout(s.ctx, writeTimeout)
-	defer cancel()
-	err := conn.Write(ctx, websocket.MessageBinary, frame)
-	if err != nil {
-		_ = conn.CloseNow() // the reader sees it and detaches the transport
-	}
-	return err
-}
-
-func (s *Session) read(conn *websocket.Conn) {
-	defer s.readers.Done()
-	defer s.recoverPanic()
-	conn.SetReadLimit(maxMessageSize)
-	for {
-		_, data, err := conn.Read(s.ctx)
-		if err != nil {
-			s.transportClosed(conn, err)
-			return
-		}
-		s.lastActivity.Store(time.Now().UnixMilli()) // even a malformed frame proves the tab was there
-		var frame pb.FrontToPusherWebSocketMessage
-		if err := proto.Unmarshal(data, &frame); err != nil || frame.Message == nil {
-			go conn.Close(websocket.StatusUnsupportedData, "Invalid message format")
-			continue
-		}
-		s.hmu.Lock()
-		if frame.Nonce > s.lastReceived { // a resumed client sends again what it is not sure we got
-			s.lastReceived = frame.Nonce
-			s.handle(frame.Message)
-		}
-		s.hmu.Unlock()
-	}
-}
-
 // recoverPanic ends the session instead of the whole process when handling one client goes wrong.
 func (s *Session) recoverPanic() {
 	if r := recover(); r != nil {
@@ -305,105 +271,30 @@ func (s *Session) recoverPanic() {
 	}
 }
 
-// keepAlive pings the transport; a client that does not answer within SOCKET_IDLE_TIMER is cut.
-func (s *Session) keepAlive(conn *websocket.Conn) {
-	t := time.NewTicker(transportPingInterval)
-	defer t.Stop()
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case <-t.C:
-			ctx, cancel := context.WithTimeout(s.ctx, s.srv.cfg.SocketIdleTimer)
-			err := conn.Ping(ctx)
-			cancel()
-			if err != nil {
-				_ = conn.CloseNow()
-				return
-			}
-		}
-	}
-}
-
 func (s *Session) transportClosed(conn *websocket.Conn, err error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.cur != conn || s.destroyed {
-		return // replaced by a resumed transport, or closed by destroy
-	}
-	switch websocket.CloseStatus(err) {
-	case websocket.StatusNormalClosure, websocket.StatusGoingAway, statusSessionDestroyed:
+	expire := func() { s.destroy(statusSessionDestroyed, "Reconnection window expired") }
+	if s.t.dropped(conn, err, s.info.connectionID != "", s.srv.cfg.ClientDisconnectRetention, expire) {
 		go s.destroy(websocket.StatusNormalClosure, "")
-		return
 	}
-	if s.info.connectionID == "" {
-		go s.destroy(websocket.StatusNormalClosure, "")
-		return
-	}
-	// The transport dropped: keep the session for the client to come back.
-	s.cur = nil
-	s.retention = time.AfterFunc(s.srv.cfg.ClientDisconnectRetention, func() {
-		s.destroy(statusSessionDestroyed, "Reconnection window expired")
-	})
 }
 
 // resume replaces the transport of a retained session (PusherWebSocket.replaceSocket).
 func (s *Session) resume(conn *websocket.Conn, last uint32) {
-	s.mu.Lock()
-	old, destroyed := s.cur, s.destroyed
-	s.mu.Unlock()
-	if destroyed {
-		_ = conn.Close(websocket.StatusPolicyViolation, "Cannot replace socket: previous connection not retained")
+	replayed, ok := s.t.resume(s.ctx, conn, last)
+	if !ok {
 		return
 	}
-	if old != nil {
-		_ = old.CloseNow() // also unblocks a writer stuck on the dead transport
-	}
-
-	s.wmu.Lock()
-	defer s.wmu.Unlock()
-	s.mu.Lock()
-	// A retention timer that already fired means destroy is on its way.
-	expired := s.retention != nil && !s.retention.Stop()
-	if s.destroyed || expired || !s.store.canResumeAfter(last, time.Now()) {
-		s.mu.Unlock()
-		go conn.Close(websocket.StatusPolicyViolation, "Cannot replace socket: server is missing messages to replay")
-		return
-	}
-	s.retention = nil
-	replay := s.store.after(last)
-	if prev := s.cur; prev != nil && prev != old {
-		go prev.CloseNow() // a concurrent resume won the race in between: this one replaces it
-	}
-	s.cur = conn
-	s.readers.Add(1)
-	s.mu.Unlock()
-	slog.Info("websocket transport resumed", "user", s.info.userUUID, "tab", s.info.tabID, "replayed", len(replay))
-	for _, f := range replay {
-		if s.write(conn, f) != nil {
-			break
-		}
-	}
-	go s.read(conn)
-	go s.keepAlive(conn)
+	slog.Info("websocket transport resumed", "user", s.info.userUUID, "tab", s.info.tabID, "replayed", replayed)
+	s.serve(conn)
 }
 
 // destroy ends the logical session: leaves the room and releases it. Never call it from a reader goroutine
 // directly (it waits for the readers): use go s.destroy(...).
 func (s *Session) destroy(code websocket.StatusCode, reason string) {
-	s.mu.Lock()
-	if s.destroyed {
-		s.mu.Unlock()
+	conn, first := s.t.shutdown()
+	if !first {
 		return
 	}
-	s.destroyed = true
-	conn := s.cur
-	s.cur = nil
-	if s.retention != nil {
-		s.retention.Stop()
-	}
-	s.mu.Unlock()
-
 	s.out.close()
 	if conn != nil {
 		// Give the close frame a moment, not the whole handshake: until the readers stop, the player is still in
@@ -416,14 +307,14 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 		}
 	}
 	s.cancel()
-	s.readers.Wait()
+	s.t.readers.Wait()
 
 	s.closeTimed("socket_closed")
 	s.leaveChatArea("")
 	s.leaveAllSpaces()
-	s.mu.Lock()
-	joined := s.joined
-	s.mu.Unlock()
+	s.presence.mu.Lock()
+	joined := s.presence.joined
+	s.presence.mu.Unlock()
 	if joined {
 		_ = s.room.Leave(context.Background(), s)
 		metrics.ClientLeft(s.info.roomID)
@@ -441,17 +332,17 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	switch msg := m.Message.(type) {
 	case *pb.ClientToServerMessage_JoinRoomFrontMessage:
 		j := msg.JoinRoomFrontMessage
-		s.mu.Lock()
-		first := !s.joined
-		s.joined = true
-		s.name, s.status = j.GetName(), core.AvailabilityStatus(j.GetAvailabilityStatus())
-		s.mu.Unlock()
+		s.presence.mu.Lock()
+		first := !s.presence.joined
+		s.presence.joined = true
+		s.presence.name, s.presence.status = j.GetName(), core.AvailabilityStatus(j.GetAvailabilityStatus())
+		s.presence.mu.Unlock()
 		if first {
 			metrics.ClientJoined(s.info.roomID)
 		}
 		var chatID *string
-		if s.info.chatID != "" {
-			chatID = &s.info.chatID
+		if id := s.chat.get(); id != "" {
+			chatID = &id
 		}
 		var companion *core.Texture
 		if c := s.info.member.CompanionTexture; c != nil {
@@ -479,9 +370,7 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	case *pb.ClientToServerMessage_SetPlayerDetailsMessage:
 		d := toPlayerDetails(msg.SetPlayerDetailsMessage)
 		if d.AvailabilityStatus != core.StatusUnchanged {
-			s.mu.Lock()
-			s.status = d.AvailabilityStatus
-			s.mu.Unlock()
+			s.presence.setStatus(d.AvailabilityStatus)
 		}
 		if d.SetVariable != nil {
 			s.storePlayerVariable(d.SetVariable)
@@ -516,10 +405,7 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	case *pb.ClientToServerMessage_AbortQueryMessage:
 		// The reader answers in order, so an abort always comes after its answer. The front aborted a join it
 		// had no answer for yet: it does not know it is in the space, so leave it (as the pusher's abort handler).
-		s.mu.Lock()
-		local, ok := s.joinedBy[msg.AbortQueryMessage.GetId()]
-		s.mu.Unlock()
-		if ok {
+		if local, ok := s.memberships.joinedByQuery(msg.AbortQueryMessage.GetId()); ok {
 			s.leaveSpace(0, local)
 		}
 	case *pb.ClientToServerMessage_BanPlayerMessage:

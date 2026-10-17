@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"math"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/analytics"
@@ -42,15 +43,21 @@ func (s *Session) track(name, source, eventID string, at time.Time, properties m
 	})
 }
 
+// stats holds the analytics intervals of a connection, created on first use.
+type stats struct {
+	mu      sync.Mutex
+	tracker *analytics.Tracker
+}
+
 func (s *Session) timed() *analytics.Tracker {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.tracker == nil {
-		s.tracker = analytics.NewTracker(s.info.tabID, func(name, id string, at time.Time, p map[string]any) {
+	s.stats.mu.Lock()
+	defer s.stats.mu.Unlock()
+	if s.stats.tracker == nil {
+		s.stats.tracker = analytics.NewTracker(s.info.tabID, func(name, id string, at time.Time, p map[string]any) {
 			s.track(name, "pusher", id, at, p)
 		})
 	}
-	return s.tracker
+	return s.stats.tracker
 }
 
 // analyticsReport is an analyticsEventReportMessage.
@@ -125,10 +132,7 @@ func (s *Session) videoQuality(r *pb.VideoQualityReportMessage) {
 			!finite(v.Fps, v.Jitter, v.BandwidthBytesPerSecond) {
 			continue
 		}
-		s.mu.Lock()
-		_, joined := s.spaces[v.SpaceName]
-		s.mu.Unlock()
-		if !joined {
+		if s.memberships.get(v.SpaceName) == nil {
 			continue
 		}
 		direction := "inbound"
@@ -246,11 +250,11 @@ func orNil[T any](p *T) any {
 
 // closeTimed ends the intervals of the connection, the session last.
 func (s *Session) closeTimed(reason string) {
-	s.mu.Lock()
-	t := s.tracker
-	s.mu.Unlock()
+	s.stats.mu.Lock()
+	t := s.stats.tracker
+	s.stats.mu.Unlock()
 	if t != nil {
-		t.CloseAll(reason, time.Now(), time.UnixMilli(s.lastActivity.Load()))
+		t.CloseAll(reason, time.Now(), time.UnixMilli(s.t.lastActivity.Load()))
 	}
 }
 
