@@ -10,4 +10,9 @@ GO_IMAGE=wa-server-go:rehearsal
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CHART="$HERE/../../contrib/helm"
 GO_SRC="${GO_SRC:-$HERE/../../../lang-go/server-go}"   # read-only: only used as docker build context
+LOCAL_PORT=8443          # relay to the ingress, 127.0.0.1 only (up.sh)
+RELAY=wa-rehearsal-relay
+RELAY_IMAGE=alpine/socat:1.8.0.3
+# curl to a rehearsal host through the local relay: rcurl https://play-$DOMAIN/ping
+rcurl() { curl -sk --connect-to "::127.0.0.1:$LOCAL_PORT" "$@"; }
 k() { kubectl --context "$CTX" "$@"; }

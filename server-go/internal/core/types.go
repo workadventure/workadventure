@@ -141,6 +141,7 @@ type (
 		Variables       []AreaVariable // the area variables when the player joined
 		RoomVariables   []Variable     // the room variables it may read
 		PlayerVariables []Variable     // its own stored variables
+		Items           []ItemState    // the state of the interactive objects
 	}
 	UserJoined struct{ User UserView }
 	UserMoved  struct {

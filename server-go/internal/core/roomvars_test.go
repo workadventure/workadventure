@@ -1,6 +1,7 @@
 package core
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -71,5 +72,40 @@ func TestMeetingInvitations(t *testing.T) {
 	sync_(t, r)
 	if !has(alice.take(), func(a InvitationAnswered) bool { return a.Accepted && a.ResponderName == "bob" }) {
 		t.Fatal("the inviter learns the answer")
+	}
+}
+
+func TestARoomStartedWhileRedisWasDownTakesTheStoredValuesOnceItIsBack(t *testing.T) {
+	varsRetry = 10 * time.Millisecond
+	r := NewRoom("http://play/_/global/maps/m.json", cfg)
+	defer r.Stop()
+	var tries atomic.Int32
+	r.InitVariables(ctx, func() RoomVariables {
+		return RoomVariables{
+			Defs:   map[string]VarDef{"door": {Persist: true}, "score": {Persist: true}},
+			Values: map[string]string{"door": `"closed"`, "score": "0"}, // the map's defaults
+			Save:   func(string, string) {},
+			Reload: func() (map[string]string, bool) {
+				if tries.Add(1) < 3 {
+					return nil, false // still down
+				}
+				return map[string]string{"door": `"open"`, "score": "41"}, true
+			},
+		}
+	})
+	p := &recorder{}
+	_ = r.Join(ctx, p, JoinRequest{UUID: "u", Name: "u", Position: at(0, 0), Viewport: wholeMap})
+	_ = r.SetVariable(ctx, p, Variable{Name: "score", Value: "42"}, nil, true, func(bool) {})
+	for deadline := time.Now().Add(2 * time.Second); tries.Load() < 3 && time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
+	}
+	sync_(t, r)
+	got := map[string]string{}
+	for _, e := range p.take() {
+		if v, ok := e.(VariableChanged); ok {
+			got[v.Name] = v.Value
+		}
+	}
+	if got["door"] != `"open"` || got["score"] != "42" {
+		t.Fatalf("the stored door, and the score written meanwhile: %v", got)
 	}
 }

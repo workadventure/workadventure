@@ -21,19 +21,10 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 ## Manques bloquants, par ordre
 
-1. **Admin distante** (contrat `dev/contracts/admin-api.md`) : capacités, `/api/map`, `/api/room/access` (avec ses refus), listes Woka et compagnon, ICE, vérification de domaine (17/10, tests contre un faux admin). Restent : la carte d'une salle tirée de `/api/map` (mondes `/@/`, `wamUrl` par domaine), ban, report, tags, sameWorld, membres, refresh OAuth, analytics, routes et socket appelés par l'admin, challenge Cloudflare, `/profile-callback`, `access_key`.
-2. **LiveKit et enregistrement** : validés (`livekit`, `map_editor_livekit`, `recording`, 17/10). Reste : identifiants LiveKit par monde et `recordings/events` (admin).
-3. **Durabilité des variables** : les écritures ne se perdent plus pendant une coupure (corrigé le 17/10). Reste qu'une room démarrée pendant une coupure garde les valeurs par défaut (`varsOnce`).
-4. **Isolation des tenants** :
-   - clé de stockage sans le domaine (`USE_DOMAIN_NAME_IN_PATH`) ;
-   - clé de space faite de l'origine et non du `world` de l'admin ;
-   - `roomsFromSameWorld` qui liste tout map-storage.
-5. **Modération** : le ban n'est ni persistant ni par IP ; `banIpPreview` est absent ; `reportPlayer` et `playGlobalMessage` sont jetés.
-6. **Front** : servi depuis `ASSETS_INTERNAL_URL` (un conteneur front nginx est toujours à côté, décision du socle du 17/10) ; pas de mode local.
-7. **Image de production** : `/maps` inscriptible, ports 3000 à 3003 et 50051, `healthcheck`, `API_VERSION` obligatoire (la CI le calcule) ; reste à construire en CI et à déployer par `deploy`.
-8. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
-9. **Matrix** : provisionnement Synapse, salons des zones (`/roomArea`, `resourceUrl`), entrée et sortie de zone, `updateChatId`.
-10. Jitsi JWT et BBB, emotes, `itemEvent`, `entityMessage`, analytics.
+1. **Admin distante** : les 31 appels du contrat sont faits et testés contre un faux admin ; aucun parcours SaaS joué de bout en bout.
+2. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
+3. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
+4. **Campagne des 86 specs** : jouée le 17/10 (246 réussis, 8 échecs, tous communs avec le TS ; voir JOURNAL). Restent les rejeux Matrix sur une base Synapse vierge.
 
 ## Admin distante (A1 à A31 de `dev/contracts/admin-api.md`)
 
@@ -43,7 +34,9 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
 | A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
-| A4 à A17, A22 à A31 | absent | — | voir les manques bloquants | suivant le contrat |
+| A4 challenge Cloudflare (404 sur `workadventu.re`, 526 en échec), A9 à A11 `/save-*` (joueur connecté, capacité, 204 exigé), A29 limite de l'uploader (413 et 423 relayés, sinon 401), A31 `?access_key=` (page vers `AUTOLOGIN_URL`) et `/profile-callback` | validé (tests Go) | `httpapi/whitelabel_test.go` (2 tests), `uploader_test.go` : `TestTheAdminDecidesWhatSizeAPlayerMayUpload`, `admin/http_test.go` | — | — |
+| A23 fin d'enregistrement (capacité `api/recordings/events`, 3 réessais, `recordingSessionId`, fichiers et durées tirés de `ListEgress`), A25 Room API autorisée par l'admin (`X-API-Key`, codes gRPC, cache en production selon `Cache-Control`), A26 validateur de map-storage (bearer autre que `AUTHENTICATION_TOKEN`, par domaine, même cache), A27 webhook de map-storage (`update` à chaque écriture d'un WAM, `delete`) | validé (tests Go) | `admin/http_test.go`, `core/space_recording_test.go`, `livekit/egressinfo_test.go`, `roomapi/admin_test.go`, `mapstorage/admin_test.go` | A27 comme generateCacheFile : un appel sans `mapPath` pour un upload, une suppression, un déplacement ou une copie, et jamais `delete` (comme le TS) ; domaine vide pour une édition sans `USE_DOMAIN_NAME_IN_PATH` | — |
+| A24 identifiants LiveKit par monde (capacité `api/livekit/credentials` : demandés avec le `playUri` d'un membre à chaque passage en LiveKit, sans cache ; en échec, le space reste en WebRTC) | validé (tests Go) | `core/space_livekit_test.go` : `TestAWorldsOwnLiveKitIsAskedForEachMove`, `admin/http_test.go` | l'enregistrement passe par l'egress du LiveKit du monde | — |
 
 ## Connexion, salle, mouvements
 
@@ -68,10 +61,11 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | join/leave space, filtres, updateSpaceUser, metadata | PSM:497-1405 | validé | `core/space_test.go`, `space_filter_test.go` ; J2, `scripting_spaces` | rejoindre deux fois renvoie un succès | — |
 | SpaceState (main levée, parole, sondages, setKind) | BSp:693-725 | validé | `core/space_filter_test.go:116-166` | revokeFloor, deletePoll et questions non testés | tests |
 | Chat de bulle (spaceMessage, isTyping) | EventProcessorInit.ts:5-45 | implémenté non vérifié | `ws/spaces.go:172,387` ; E2E vert (J2) | signature (nom, woka) non testée | test |
-| chatMembersQuery, roomTagsQuery | PSM:1540, 1321 | partiel (réponse vide) | `ws/session.go:531,542` | conforme en OSS, vide en SaaS | client admin |
-| searchTags, getMember, searchMember, refresh OAuth | PSM:1487-1642 | absent | « Query not supported » | searchTags répond `[]` en OSS chez TS | répondre `[]` ; client admin |
+| chatMembersQuery (A12), roomTagsQuery (A8) | PSM:1540, 1321 | validé | `admin/http_test.go` : `TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin` | — | — |
+| searchMember (A13), getMember (A15), searchTags (A14), refresh OAuth (A17) | PSM:1487-1642 | validé | `admin/http_test.go`, `ws/conference_test.go` : `TestConferencesAndTheOAuthRefresh` | — | — |
+| Jitsi JWT (rôle de modérateur par `jitsiRoomAdminTag` de la carte Tiled et du WAM), BBB (création de la réunion, URL de connexion, mots de passe HMAC), réglages de l'admin (`thirdParty`) ou de l'environnement (`JITSI_URL`, `JITSI_ISS`, `SECRET_JITSI_KEY`, `BBB_URL`, `BBB_SECRET`) | back SocketManager.ts:770-904, ModeratorTagFinder.ts | validé (tests Go ; slug, hash et URL BBB identiques à ceux du TS) | `ws/conference_test.go` (2 tests) | la carte est relue à chaque requête (le TS la garde en cache par salle) | E2E Jitsi/BBB si la stack en a |
 | Matrix : `matrixUserId`, SSO, `/matrix-callback` | AuthenticateController.ts:322-405 | validé | `httpapi/oidc_test.go:101,132,142` | — | — |
-| Matrix : provider, salons des zones, enter/leaveChatRoomArea, updateChatId | MatrixProvider.ts, PSM:1703-1758 | absent | — | zones de chat sans salon | porter avec `/roomArea` |
+| Matrix : provider Synapse (connexion admin, levée du rate limit, salons privés des zones dans l'espace « current-visited-room », invitation, modérateur pour le tag admin, renommage, vidage), `/roomArea` (`MAP_STORAGE_API_TOKEN`), enter/leaveChatRoomArea, sortie à la fermeture, updateChatId (A16) | MatrixProvider.ts, MatrixRoomAreaController.ts, PSM:1552, 1703-1758 | validé (tests Go) | `matrix_test.go`, `ws/matrix_test.go` (2 tests) | jeton admin partagé entre pods par Redis (`matrix-admin-access-token:*`, verrou de 30 s) ; E2E `matrixChatArea` à jouer | campagne |
 
 ## Éditeur de carte et map-storage
 
@@ -88,7 +82,8 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | `/private/files` (JWT) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` (avec et sans `PATH_PREFIX`) | — | — |
 | `USE_DOMAIN_NAME_IN_PATH` | PathMapper.ts:76 | absent | — | le domaine de la clé vient du `wamUrl` donné par l'admin, ou de l'hôte HTTP ; sans admin, toutes les salles ont l'hôte de `PUBLIC_MAP_STORAGE_URL` | tranche admin |
 | `WAM_TEMPLATE_URL` | UploadController.ts:604 | validé | `mapstorage_test.go` : `TestAMapUploadedAloneStartsFromTheWAMTemplate` | — | — |
-| `resourceUrl` (DELETE), webhooks, validateur d'API key, S3 | MS Services | absent | JOURNAL J3a | SaaS : toute écriture répond 401 | avec le contrat admin et Matrix |
+| `resourceUrl` des propriétés de zone (POST à l'ajout, PATCH au changement, DELETE au retrait et à la suppression de la zone ; seulement `PUSHER_URL` et `WHITELISTED_RESOURCE_URLS`) | ResourceUrlModule.ts, UpdateAreaMapStorageCommand.ts | validé | `mapedit/resource_test.go`, `ws/matrix_test.go` | un seul DELETE à la suppression d'une zone (le TS en envoie deux) | — |
+| webhooks, validateur d'API key, S3 de map-storage | MS Services | absent | JOURNAL J3a | SaaS : toute écriture répond 401 | avec le contrat admin |
 | embeddableWebsite, mapStorageJwt, roomsFromSameWorld | PSM:1420, 1760, 1346 | implémenté non vérifié | `ws/queries.go` ; J3a `start_exit:40` | roomsFromSameWorld liste tout map-storage | filtrer par domaine |
 
 ## Variables, scripts, modération
@@ -111,14 +106,15 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | Sous-commande `healthcheck` (GET 127.0.0.1:`PUSHER_HTTP_PORT`/ping, code de sortie) pour les `service_healthy` de compose | — (exigence du socle) | implémenté non vérifié | `cmd/server/main.go` | — | essayer en compose |
 | Ports : WS 3001, map-storage 3002 et uploader 3003 actifs par défaut, Room API 50051 si `ROOM_API_SECRET_KEY` | chart `server.enabled` | implémenté non vérifié | `config.go`, `Dockerfile` (EXPOSE) | — | `deploy` OSS |
 | `PATH_PREFIX` de map-storage (fichiers privés derrière `/map-storage`) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` : `TestPrivateFilesBehindAPathPrefix` | — | — |
-| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` | uploader/src/Controller/FileController.ts | partiel | `uploader_test.go` (2 tests) | en mémoire (256 Mo au plus), sans S3 ni Redis : perdu au redémarrage ; pas de limite par l'admin (`api/limit/fileSize`) | S3/Redis si la prod sert des fichiers |
+| Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` ; stockage S3 (`AWS_*`, téléchargement par lien signé, `UPLOADER_AWS_SIGNED_URL_EXPIRATION`), sinon Redis, sinon mémoire ; audio dans Redis, sinon mémoire | uploader/src/Controller/FileController.ts, Service/*StorageProvider.ts | validé (tests Go) | `uploader_test.go` (4 tests) | règles CORS posées sur le bucket au démarrage ; Redis partagé avec les variables (`REDIS_DB_NUMBER` ignoré) ; mémoire limitée à 256 Mo | — |
 | `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` sans jeton | protéger pprof |
 | OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
 | `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |
-| `/room/refresh`, `/message`, `/external-module/event`, `/ws/admin/rooms` | AdminController.ts, IOC:86 | absent | — | SaaS | avec l'admin |
+| `/room/refresh`, `/message`, `/external-module/event` (`ADMIN_API_TOKEN`) | AdminController.ts | validé | `server_test.go` : `TestTheAdminTalksToThePlayersOfARoom` | — | — |
+| `/ws/admin/rooms` (`ADMIN_SOCKETS_TOKEN` : `listen` → `MemberJoin`/`MemberLeave`, `banned` sur les salles du monde, fermetures 1007/1008) | IoSocketController.ts:86, SocketManager.ts:113 | validé | `adminrooms_test.go` : `TestTheAdminSocketFollowsTheMembersAndBans` ; `roomapi_test.go` : `TestAWatcherSeesWhoComesAndGoes` | file de 1000 messages, les suivants perdus (pas de limite en octets ni de délai de vidage) ; pas de fermeture 1011 (pas de back séparé à perdre) | — |
 | OpenAPI, swagger-ui (`ENABLE_OPENAPI_ENDPOINT`) | SwaggerController.ts | validé | `swagger_doc.spec.ts` | swagger-ui depuis un CDN (5.32.6) | — |
 | Front sans `ASSETS_URL` (mode local) | FrontAssets.ts:79 | absent | `httpapi/front.go:36` | toutes les pages répondent 503 | mode local, ou `ASSETS_URL` obligatoire |
-| Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` | aligner |
+| Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` ; `NODE_TLS_REJECT_UNAUTHORIZED=0` sans effet : un certificat auto-signé (LiveKit, S3, admin de test) se donne par `SSL_CERT_FILE`/`SSL_CERT_DIR`, que Go lit seul | aligner ; décision de Yannis s'il faut aussi un interrupteur sans vérification |
 | Dockerfile de prod | play/Dockerfile | partiel | `Dockerfile` | voir manque 7 | étape « Déploiement » |
 | Sentry serveur, télémétrie, drain (`DRAIN_TIMEOUT_MS`) | — | absent | — | — | — |
 
@@ -159,7 +155,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | Variables de room : hash Redis à la clé de l'URL, `""` donne HDEL | RedisVariablesRepository.ts:15-30 | implémenté non vérifié (format) ; validé (règles) | `core/roomvars_test.go:8`, `store/store_test.go` | pas de test du format Redis réel | test contre le faux Redis |
 | Variables de joueur `pr_<uuid>_\|@\|_<room>` avec `"<expiry>:<0\|1>:<json>"` | PlayerVariables.ts:29-95 | implémenté non vérifié | `ws/variables.go:196-247` | portée monde `pw_` absente ; pas d'EXPIRE sur la clé | test aller-retour ; `pw_` avec `group` |
 | Écriture pendant une coupure Redis | node-redis : file hors ligne rejouée ; `variables.spec.ts:113-148` | validé (cœur) | `store_test.go` : `TestAVariableWrittenWhileRedisIsDownIsStoredWhenItComesBack`, `TestFlushTellsHowManyWritesAreLost` | dernière valeur par champ, réessai sans fin, vidage à l'arrêt (10 s) ; « storage works » à jouer par le socle | — |
-| Room démarrée pendant une coupure Redis | TS attend | partiel | `core/roomvars.go:44-49` (`varsOnce`) | garde les valeurs par défaut et peut écraser les valeurs persistées | recharger ou refuser l'écriture persistante |
+| Room démarrée pendant une coupure Redis | TS attend (la salle échoue) | validé (cœur) | `core/roomvars_test.go` : `TestARoomStartedWhileRedisWasDownTakesTheStoredValuesOnceItIsBack` | la salle démarre avec les valeurs de la carte, redemande toutes les 2 s, puis prend la valeur stockée de chaque variable que personne n'a écrite entre-temps (une écriture pendant la coupure l'emporte sur la valeur stockée) | — |
 | Variables de zone, état des spaces | en mémoire (TS aussi) | validé | `core/roommap_test.go` | ne survivent pas à un redémarrage, comme en TS | — |
 | Éditions de carte | MapsManager.ts : écho avant écriture, sauvegarde toutes les 15 s | validé | écriture avant l'écho, par fichier temporaire puis rename (`mapstorage.go`) | plus durable que le TS | — |
 | Cartes sur S3 ; fichiers de l'uploader | fileSystem.ts, uploader | absent | disque seulement | bloquant si la prod les utilise | décider avec l'équipe |
@@ -172,4 +168,6 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | `nb_sockets`, `nb_clients_per_room`, `nb_rooms`, `nb_spaces` | GaugeManager.ts | implémenté non vérifié | `metrics.go` | une série au lieu de deux jobs (pusher, back) | revoir les tableaux de bord |
 | `nb_publishers_per_space`, `nb_watchers_per_world` | back GaugeManager.ts:38-69 | absent | — | bug TS (`world` contre `name`) | définir la sémantique |
 | `nodejs_*` | collectDefaultMetrics | remplacé par `go_*` | — | alertes à revoir | — |
-| Analytics (back et pusher), télémétrie d'installation | AnalyticsEventsQueue.ts, TelemetryService.ts | absent | message jeté en silence | SaaS ; installations OSS plus comptées | avec l'admin ; requête quotidienne |
+| Analytics du pusher (A22) : file (lots, 4 essais, 422 découpé un par un, débordement des plus anciens, drain à l'arrêt), événements du front (liste blanche du catalogue, source, `eventId`, au plus 100 par message), intervalles mesurés par le serveur (`timed_event.open/close`, `user.connected`/`user.disconnected`, plafond de 32), échantillons vidéo, `analyticsEventsEnabled`, capacité `api/analytics/events-batch` | AnalyticsEventsQueue.ts, AnalyticsReportMessageHandler.ts, AnalyticsTimedEventTracker.ts | validé | `analytics_test.go` (5 tests, dont la comparaison au catalogue TS) ; `ws/analytics_test.go` : `TestTheFrontsEventsReachTheAdminSignedByTheServer` | propriétés validées contre les schémas du catalogue (JSON Schema généré depuis zod, `catalog.json`, fraîcheur testée) ; une session reprise garde son `user.connected` (le TS en ouvre un par socket) ; pas de compteurs de la file dans `/metrics` | — |
+| Analytics du back : `meeting.participation.ended`, `meeting.ended` (SessionAnalytics : présence par filtre ou observation, actifs, rangs, temps de parole, secondes WebRTC/LiveKit, fermeture `back_shutdown` à l'arrêt), file `back:<hôte>` sans capacité | back/src/Model/SessionAnalytics.ts, CommunicationManager.ts:595 | validé | `meeting_test.go` (2 tests), `space_analytics_test.go` (2 tests) | le transport n'est jamais `NONE` (le Go n'a que WEBRTC et LIVEKIT) | — |
+| Télémétrie d'installation | TelemetryService.ts | absent | — | installations OSS plus comptées | requête quotidienne |

@@ -15,6 +15,7 @@ import (
 	"google.golang.org/protobuf/proto"
 
 	"github.com/workadventure/workadventure/server-go/internal/admin"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
@@ -79,13 +80,16 @@ type Session struct {
 	retention *time.Timer
 	joined    bool
 
-	userID atomic.Int32 // id in the room, once RoomJoined is on its way
+	userID       atomic.Int32       // id in the room, once RoomJoined is on its way
+	lastActivity atomic.Int64       // unix ms of the last frame received: a socket that went away left then
+	tracker      *analytics.Tracker // guarded by mu; the analytics intervals of this connection (analytics.go)
 
 	// guarded by mu
-	name     string                  // from JoinRoomFrontMessage
-	status   core.AvailabilityStatus // latest availability status
-	spaces   map[string]*core.Space  // by the name the front uses
-	joinedBy map[int32]string        // the joinSpaceQuery that joined each space, for its abortQueryMessage
+	name      string                  // from JoinRoomFrontMessage
+	status    core.AvailabilityStatus // latest availability status
+	spaces    map[string]*core.Space  // by the name the front uses
+	joinedBy  map[int32]string        // the joinSpaceQuery that joined each space, for its abortQueryMessage
+	chatAreas []string                // the Matrix rooms of the chat areas the player is in (matrix.go)
 
 	readers sync.WaitGroup // readers post to the room: they must be done before the room is released
 }
@@ -96,6 +100,7 @@ func newSession(srv *Server, info sessionInfo) *Session {
 	s.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
 	s.out = newOutbox(outboxLimit, func() { go s.destroy(statusSessionDestroyed, "Too slow to receive messages") })
 	s.room = srv.rooms.Acquire(info.roomID)
+	srv.sessions.Store(s, struct{}{})
 	metrics.Sockets.Inc()
 	return s
 }
@@ -117,6 +122,7 @@ func (s *Session) start(conn *websocket.Conn) {
 func (s *Session) Send(m *core.Msg) {
 	if j, ok := m.Event.(core.RoomJoined); ok {
 		s.userID.Store(j.UserID)
+		s.timed().Open(analytics.ConnectionHandle, "user.disconnected", map[string]any{"connectionId": s.info.tabID}, time.Now())
 	}
 	s.out.push(m)
 }
@@ -230,7 +236,7 @@ func (s *Session) roomJoined(j core.RoomJoined) *pb.ServerToClientMessage {
 	return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomJoinedMessage{RoomJoinedMessage: &pb.RoomJoinedMessage{
 		CurrentUserId: userID, UserRoomToken: mb.UserRoomToken, CharacterTextures: characterTextures(coreTextures(mb.CharacterTextures)),
 		CompanionTexture: companion, CanEdit: mb.CanEdit, ActivatedInviteUser: mb.ActivatedInviteUser, Applications: apps,
-		AreaPropertyVariable: vars, Variable: variables(j.RoomVariables), PlayerVariable: variables(j.PlayerVariables),
+		AreaPropertyVariable: vars, Variable: variables(j.RoomVariables), PlayerVariable: variables(j.PlayerVariables), Item: items(j.Items),
 	}}}
 }
 
@@ -276,6 +282,7 @@ func (s *Session) read(conn *websocket.Conn) {
 			s.transportClosed(conn, err)
 			return
 		}
+		s.lastActivity.Store(time.Now().UnixMilli()) // even a malformed frame proves the tab was there
 		var frame pb.FrontToPusherWebSocketMessage
 		if err := proto.Unmarshal(data, &frame); err != nil || frame.Message == nil {
 			go conn.Close(websocket.StatusUnsupportedData, "Invalid message format")
@@ -411,6 +418,8 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 	s.cancel()
 	s.readers.Wait()
 
+	s.closeTimed("socket_closed")
+	s.leaveChatArea("")
 	s.leaveAllSpaces()
 	s.mu.Lock()
 	joined := s.joined
@@ -420,6 +429,7 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 		metrics.ClientLeft(s.info.roomID)
 	}
 	s.srv.rooms.Release(s.info.roomID)
+	s.srv.sessions.Delete(s)
 	if id := s.info.connectionID; id != "" {
 		s.srv.retained.Compute(id, func(old *Session, ok bool) (*Session, bool) { return old, ok && old != s })
 	}
@@ -489,6 +499,20 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.query(msg.QueryMessage)
 	case *pb.ClientToServerMessage_EditMapCommandMessage:
 		s.editMap(msg.EditMapCommandMessage)
+	case *pb.ClientToServerMessage_PlayGlobalMessage:
+		if s.isAdmin() {
+			go s.playGlobalMessage(msg.PlayGlobalMessage)
+		}
+	case *pb.ClientToServerMessage_EmotePromptMessage:
+		_ = s.room.Emote(ctx, s, msg.EmotePromptMessage.GetEmote())
+	case *pb.ClientToServerMessage_ItemEventMessage:
+		e := msg.ItemEventMessage
+		_ = s.room.ItemEvent(ctx, core.ItemState{ItemID: e.GetItemId(), StateJSON: e.GetStateJson()},
+			core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_ItemEventMessage{ItemEventMessage: e}}, true))
+	case *pb.ClientToServerMessage_EntityMessage:
+		if e := msg.EntityMessage; e.GetEntityEvent() != nil { // to the whole room (dispatchEntityEvent)
+			_ = s.room.SendEvent(ctx, core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_EntityMessage{EntityMessage: e}}, true), nil)
+		}
 	case *pb.ClientToServerMessage_AbortQueryMessage:
 		// The reader answers in order, so an abort always comes after its answer. The front aborted a join it
 		// had no answer for yet: it does not know it is in the space, so leave it (as the pusher's abort handler).
@@ -510,13 +534,26 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 			if message == "" {
 				message = "User banned by admin " + s.info.userUUID
 			}
-			// ponytail: banned by account only; byIp needs the IP of a user of the whole world.
-			if s.srv.admin.Ban(ctx, admin.Ban{UUID: b.GetBanUserUuid(), PlayURI: s.info.roomID, Name: b.GetBanUserName(), Message: message, ByUUID: s.info.userUUID}) {
+			ban := admin.Ban{UUID: b.GetBanUserUuid(), PlayURI: s.info.roomID, Name: b.GetBanUserName(), Message: message, ByUUID: s.info.userUUID}
+			if b.GetByIp() { // the IP of the user in the world, unless it is the moderator's own
+				if ip := s.srv.worldIP(s.info.member.World, b.GetBanUserUuid()); ip != "" && ip != s.info.ipAddress {
+					ban.IPAddress = ip
+				}
+			}
+			if s.srv.admin.Ban(ctx, ban) {
 				kind = "banned"
 			}
 		}
 		// Not recorded (no admin, or it refused): the user is ejected all the same, as a kick.
 		_ = s.room.Eject(ctx, b.GetBanUserUuid(), kind, reason)
+	case *pb.ClientToServerMessage_LeaveChatRoomAreaMessage:
+		s.leaveChatArea(msg.LeaveChatRoomAreaMessage.GetRoomID())
+	case *pb.ClientToServerMessage_UpdateChatIdMessage:
+		s.updateChatID(msg.UpdateChatIdMessage.GetEmail(), msg.UpdateChatIdMessage.GetChatId())
+	case *pb.ClientToServerMessage_AnalyticsEventReportMessage:
+		s.analyticsReport(msg.AnalyticsEventReportMessage)
+	case *pb.ClientToServerMessage_VideoQualityReportMessage:
+		s.videoQuality(msg.VideoQualityReportMessage)
 	case *pb.ClientToServerMessage_ReportPlayerMessage:
 		rep := msg.ReportPlayerMessage
 		go func() { // the answer is ignored, an error swallowed (handleReportMessage)
@@ -559,8 +596,21 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_SpaceStateQuery:
 		s.spaceStateQuery(q.GetId(), query.SpaceStateQuery)
 	case *pb.QueryMessage_ChatMembersQuery:
-		// No admin: nobody to list (LocalAdmin.getWorldChatMembers).
-		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_ChatMembersAnswer{ChatMembersAnswer: &pb.ChatMembersAnswer{}}})
+		go s.chatMembers(q.GetId(), query.ChatMembersQuery.GetSearchText())
+	case *pb.QueryMessage_SearchMemberQuery:
+		go s.searchMembers(q.GetId(), query.SearchMemberQuery.GetSearchText())
+	case *pb.QueryMessage_SearchTagsQuery:
+		go s.searchTags(q.GetId(), query.SearchTagsQuery.GetSearchText())
+	case *pb.QueryMessage_GetMemberQuery:
+		go s.getMember(q.GetId(), query.GetMemberQuery.GetUuid())
+	case *pb.QueryMessage_JitsiJwtQuery:
+		go s.jitsiJWT(q.GetId(), query.JitsiJwtQuery.GetJitsiRoom())
+	case *pb.QueryMessage_JoinBBBMeetingQuery:
+		go s.joinBBB(q.GetId(), query.JoinBBBMeetingQuery)
+	case *pb.QueryMessage_OauthRefreshTokenQuery:
+		go s.refreshOAuth(q.GetId(), query.OauthRefreshTokenQuery)
+	case *pb.QueryMessage_EnterChatRoomAreaQuery:
+		s.enterChatArea(q.GetId(), query.EnterChatRoomAreaQuery.GetRoomID())
 	case *pb.QueryMessage_MapStorageJwtQuery:
 		s.mapStorageJwt(q.GetId())
 	case *pb.QueryMessage_EmbeddableWebsiteQuery:
@@ -572,6 +622,8 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_RoomTagsQuery:
 		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomTagsAnswer{RoomTagsAnswer: &pb.RoomTagsAnswer{
 			Tags: s.srv.admin.RoomTags(s.ctx, s.info.roomID)}}})
+	case *pb.QueryMessage_BanIpPreviewQuery:
+		s.banIPPreview(q.GetId(), query.BanIpPreviewQuery.GetBanUserUuid())
 	case *pb.QueryMessage_GetRecordingsQuery:
 		go s.getRecordings(q.GetId())
 	case *pb.QueryMessage_DeleteRecordingQuery:
@@ -614,4 +666,12 @@ func (s *Session) answerError(id int32, message string) {
 	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: &pb.AnswerMessage{
 		Id: id, Answer: &pb.AnswerMessage_Error{Error: &pb.ErrorMessage{Message: message}},
 	}}}, false))
+}
+
+func items(list []core.ItemState) []*pb.ItemStateMessage {
+	out := make([]*pb.ItemStateMessage, len(list))
+	for i, it := range list {
+		out[i] = &pb.ItemStateMessage{ItemId: it.ItemID, StateJson: it.StateJSON}
+	}
+	return out
 }

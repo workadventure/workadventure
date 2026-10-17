@@ -19,9 +19,30 @@ import (
 type Egress interface {
 	Start(ctx context.Context, room string, recorder SpaceUser) (egressID string, err error)
 	Stop(ctx context.Context, egressID string) error
-	// Status is the egress status of LiveKit: EGRESS_STARTING, EGRESS_ACTIVE, EGRESS_ENDING, EGRESS_COMPLETE,
-	// EGRESS_FAILED, EGRESS_ABORTED or EGRESS_LIMIT_REACHED.
-	Status(ctx context.Context, egressID string) (string, error)
+	// Status is what LiveKit says of the egress; its Status is EGRESS_STARTING, EGRESS_ACTIVE, EGRESS_ENDING,
+	// EGRESS_COMPLETE, EGRESS_FAILED, EGRESS_ABORTED or EGRESS_LIMIT_REACHED.
+	Status(ctx context.Context, egressID string) (EgressInfo, error)
+}
+
+// EgressInfo is an egress as LiveKit lists it; the times and files are known once it ended.
+type EgressInfo struct {
+	Status             string
+	StartedAt, EndedAt time.Time // zero when unknown
+	Error              string
+	Files              []EgressFile
+}
+
+type EgressFile struct {
+	Filename  string
+	SizeBytes int64
+	Duration  time.Duration
+}
+
+// RecordingEnded is what the admin is told when an egress ends (RecordingEventPayload, A23).
+type RecordingEnded struct {
+	SessionID, EgressID string
+	Recorder            SpaceUser
+	Info                EgressInfo
 }
 
 // recordingPoll is how often a running egress is asked for its status.
@@ -29,6 +50,8 @@ var recordingPoll = time.Second
 
 type recording struct {
 	recorder  SpaceUser
+	sessionID string // recordingSessionId, for the admin
+	egress    Egress // of the LiveKit the room is on (the world's, with A24)
 	egressID  string
 	status    spacestate.RecordingStatus
 	stopAsked bool // stop asked while starting
@@ -50,8 +73,7 @@ func (s *spaceState) publishRecording(status spacestate.RecordingStatus, recorde
 
 // startRecording answers StartRecording once the egress runs, or why not.
 func (s *spaceState) startRecording(sender *SpaceUser, reply func(error)) {
-	egress := s.mediaCfg.Egress
-	if egress == nil || s.mediaCfg.LiveKit == nil || !s.media {
+	if (s.mediaCfg.Egress == nil && s.mediaCfg.EgressFor == nil) || !s.hasLiveKit() || !s.media {
 		reply(ErrNoRecording)
 		return
 	}
@@ -72,7 +94,7 @@ func (s *spaceState) startRecording(sender *SpaceUser, reply func(error)) {
 		return
 	}
 	s.recGen++
-	s.rec = &recording{recorder: *sender, status: spacestate.RecordingStatusStarting, starting: []func(error){reply}, gen: s.recGen}
+	s.rec = &recording{recorder: *sender, sessionID: newUUID(), status: spacestate.RecordingStatusStarting, starting: []func(error){reply}, gen: s.recGen}
 	s.publishRecording(spacestate.RecordingStatusStarting, sender.ID)
 	if s.strategy != strategyLiveKit {
 		s.switchTo(strategyLiveKit) // a recording is a LiveKit room
@@ -87,8 +109,16 @@ func (s *spaceState) recordWhenReady() {
 	if r == nil || r.egressID != "" || r.status != spacestate.RecordingStatusStarting || s.lk.room != lkReady {
 		return
 	}
-	r.egressID = "pending"
-	gen, room, recorder, egress := r.gen, s.roomName, r.recorder, s.mediaCfg.Egress
+	egress := s.mediaCfg.Egress
+	if s.mediaCfg.EgressFor != nil && s.lk.client != nil {
+		egress = s.mediaCfg.EgressFor(s.lk.client)
+	}
+	if egress == nil {
+		s.endRecording(errors.New("Failed to start recording"))
+		return
+	}
+	r.egressID, r.egress = "pending", egress
+	gen, room, recorder := r.gen, s.roomName, r.recorder
 	go func() {
 		id, err := egress.Start(context.Background(), room, recorder)
 		s.later(func() {
@@ -118,7 +148,7 @@ func (s *spaceState) watchEgress(gen int) {
 		ok := make(chan bool, 1)
 		s.later(func() {
 			if r := s.rec; r != nil && r.gen == gen {
-				id, egress = r.egressID, s.mediaCfg.Egress
+				id, egress = r.egressID, r.egress
 				ok <- true
 				return
 			}
@@ -132,7 +162,8 @@ func (s *spaceState) watchEgress(gen int) {
 		case <-time.After(10 * time.Second): // the space stopped
 			return
 		}
-		status, err := egress.Status(context.Background(), id)
+		info, err := egress.Status(context.Background(), id)
+		status := info.Status
 		s.later(func() {
 			r := s.rec
 			if r == nil || r.gen != gen {
@@ -154,6 +185,9 @@ func (s *spaceState) watchEgress(gen int) {
 			case status == "EGRESS_COMPLETE" || status == "EGRESS_FAILED" || status == "EGRESS_ABORTED" || status == "EGRESS_LIMIT_REACHED":
 				if r.status != spacestate.RecordingStatusStopping {
 					slog.Warn("the recording ended by itself", "room", s.roomName, "status", status)
+				}
+				if s.mediaCfg.RecordingEnded != nil {
+					s.mediaCfg.RecordingEnded(RecordingEnded{SessionID: r.sessionID, EgressID: r.egressID, Recorder: r.recorder, Info: info})
 				}
 				s.endRecording(nil)
 				return
@@ -213,7 +247,7 @@ func (s *spaceState) stopEgress() {
 	r := s.rec
 	r.status = spacestate.RecordingStatusStopping
 	s.publishRecording(r.status, r.recorder.ID)
-	id, gen, egress := r.egressID, r.gen, s.mediaCfg.Egress
+	id, gen, egress := r.egressID, r.gen, r.egress
 	go func() {
 		if err := egress.Stop(context.Background(), id); err != nil {
 			slog.Warn("cannot stop the recording, it will end by itself", "error", err)

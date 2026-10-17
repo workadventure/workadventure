@@ -592,3 +592,198 @@ Toutes les campagnes ont tourné sur la stack `go` du socle, un seul worker, sou
 - Socle : contrat admin, `dev/dev test`, la profil `recording`, la correction de `FRONT_URL` de maps, le classement de `report_issue:7` et `variables:188`.
 - Rapports de recherche du 14/10 sur l'enregistrement.
 - Un sous-agent Sonnet a joué et trié la non-régression.
+
+### 17/10, tranche 4 : socket admin, A22 analytics
+
+**Socket `/ws/admin/rooms`** (`ADMIN_SOCKETS_TOKEN`).
+- Requête `listen` : le serveur envoie les membres déjà présents, puis chaque `MemberJoin` et `MemberLeave`.
+- Requête `banned` : le joueur est éjecté de chaque salle du monde (`split("/")[5]`) que le JWT autorise.
+- Fermetures : 1007 sur un message invalide, 1008 sur un refus.
+- La file d'envoi garde 1000 messages au plus. Au-delà, les messages sont perdus.
+- Côté cœur, un observateur de salle reçoit maintenant `MemberJoined` et `MemberLeft`. La Room API les ignore.
+
+**A22, côté pusher.**
+- File d'envoi :
+  - lots ;
+  - 4 essais, sur erreur réseau, 5xx, 408 et 429 ;
+  - un 422 découpe le lot, et seuls les événements invalides sont perdus ;
+  - quand la file est pleine, les plus anciens sont jetés ;
+  - drain à l'arrêt.
+- Événements du front :
+  - liste blanche des 175 noms du catalogue, avec leur source ;
+  - un test compare cette liste au fichier TS ;
+  - les propriétés ne sont pas validées : l'admin refuse alors l'événement seul.
+- Intervalles mesurés par le serveur : `timed_event.open` et `timed_event.close`, `user.connected` et `user.disconnected`, au plus 32 ouverts par connexion.
+- Échantillons vidéo.
+- Envoi soumis à `analyticsEventsEnabled` et à la capacité `api/analytics/events-batch`.
+
+**A22, côté back.**
+- Les réunions des spaces : `meeting.participation.ended`, puis `meeting.ended`.
+- Port de `SessionAnalytics` :
+  - présence quand le filtre montre le membre ou qu'il observe la liste ;
+  - en diffusion, seuls les orateurs sont actifs ;
+  - rang d'arrivée, temps de parole, secondes en WebRTC et en LiveKit ;
+  - à l'arrêt, les réunions ouvertes sont fermées avec la raison `back_shutdown`.
+- Deuxième file, à l'identifiant `back:<hôte>`, qui envoie sans attendre de capacité.
+
+**Points ouverts du socle.**
+- (a) Un certificat auto-signé se donne par `SSL_CERT_FILE` ou `SSL_CERT_DIR` : Go les lit seul.
+  - J'ai voulu aussi lire `NODE_TLS_REJECT_UNAUTHORIZED=0` pour couper la vérification.
+  - Le classifieur de sécurité l'a refusé. C'est à Yannis de décider.
+- (b) Le Dockerfile accepte déjà `--build-arg VERSION`. C'est à la CI de `deploy-go` de la passer.
+
+**Tests** : 155 au total.
+
+| Paquet | Couverture |
+|---|---|
+| `analytics` | 87,0 % |
+| `core` | 83,2 % |
+| `mapedit` | 83,5 % |
+| `roomapi` | 82,6 % |
+| `ws` | 48,5 % |
+
+`./verify.sh` est vert.
+
+**Aide extérieure.** Deux sous-agents Sonnet ont fait l'inventaire du TS : les analytics, puis Matrix.
+
+### 17/10, tranche 5 : Matrix, le reste de l'admin, les messages manquants
+
+**Matrix.**
+- Client admin de Synapse :
+  - connexion, puis nouvelle connexion si le jeton est révoqué ;
+  - levée du rate limit (10 essais) ;
+  - salon privé de chaque zone de chat, rangé dans l'espace `current-visited-room` ;
+  - invitation, droits de modérateur pour le tag `admin`, renommage ;
+  - vidage du salon, comme le TS : il expulse les invités, puis l'admin le quitte.
+- `/roomArea` (POST, PATCH, DELETE), protégé par `MAP_STORAGE_API_TOKEN`.
+- Hooks `resourceUrl` de map-storage :
+  - POST à l'ajout d'une propriété, PATCH quand elle change, DELETE quand on la retire ou qu'on supprime la zone ;
+  - ils tournent avant la transaction optimiste, pour qu'un POST ne soit jamais rejoué ;
+  - seulement vers `PUSHER_URL` et `WHITELISTED_RESOURCE_URLS`. Sans cette liste, un éditeur ferait partir `MAP_STORAGE_API_TOKEN` vers n'importe quelle URL.
+- Entrée et sortie des zones de chat ; expulsion de tous les salons à la fermeture ; `updateChatId`.
+- Vérifié : le conteneur Go joint sa propre URL publique (`PUSHER_URL`). `curl` ne le peut pas, car il envoie `*.localhost` vers 127.0.0.1.
+
+**Admin.** Les 31 appels du contrat sont faits.
+- A4 : challenge Cloudflare.
+- A9 à A11 : `/save-*`.
+- A12 à A16 : membres, tags, `chatId`.
+- A17 : refresh OAuth.
+- A23 : fin d'enregistrement, avec les fichiers et durées lus dans `ListEgress`.
+- A24 : LiveKit par monde, demandé avec le `playUri` d'un membre à chaque passage en LiveKit.
+- A25 : Room API autorisée par l'admin.
+- A26 et A27 : validateur et webhook de map-storage.
+- A29 : limite de taille de l'uploader.
+- A31 : `?access_key=` et `/profile-callback`.
+
+**Messages manquants.** Le Go répond désormais à toutes les requêtes du front.
+- JWT Jitsi : modérateur selon `jitsiRoomAdminTag` de la carte Tiled et du WAM.
+- BBB : création de la réunion, URL de connexion.
+- `slugify`, `shortHash` et les URL BBB sont identiques à ceux du TS. Le test compare à des valeurs calculées avec le code JS.
+
+**Durabilité.**
+- Une salle démarrée pendant une coupure de Redis redemande les valeurs toutes les 2 s.
+- Au retour de Redis, elle prend la valeur stockée de chaque variable que personne n'a écrite entre-temps.
+
+**Uploader.** Fichiers dans S3 (téléchargement par lien signé), sinon Redis, sinon mémoire. Les messages audio vont dans Redis, sinon en mémoire.
+
+**Environnement (pas un défaut du Go).**
+- UserMatrix2 n'existe pas dans le faux fournisseur OIDC (docker-compose.yaml, y compris sur origin/master). Signalé au socle.
+- Le warm-auth de la campagne passe maintenant compte par compte, pour qu'un échec ne bloque pas les suivants.
+
+**Tests** : 174 au total.
+
+| Paquet | Couverture |
+|---|---|
+| `analytics` | 87,0 % |
+| `mapedit` | 84,9 % |
+| `core` | 84,1 % |
+| `roomapi` | 82,2 % |
+| `uploader` | 77,6 % |
+| `matrix` | 75,9 % |
+| `mapstorage` | 75,7 % |
+| `admin` | 64,2 % |
+| `ws` | 49,8 % |
+
+`./verify.sh` est vert.
+
+**Aide extérieure.** Sous-agent Sonnet pour l'inventaire Matrix du TS.
+
+### 17/10, campagne des 86 specs contre la référence TS
+
+Conditions : stack `go` du socle, Chromium, un worker, `dev/dev test go … --grep-invert "storage works"`, `auth.ts`
+b26d49374. La référence est `dev/references/ts-full-2026-10-17.md` (dev-socle dfc8c175d) : 239 réussis, 15 échecs,
+14 sautés.
+
+**Première campagne : 240 réussis, 14 échecs, 14 sautés.** Elle a révélé un défaut de ma part.
+- La copie vers le worktree (`rsync --exclude server`) excluait aussi `cmd/server/`.
+- Les paquets des tranches 4 et 5 étaient donc commités, mais jamais démarrés.
+- Corrigé dans 2033b862f. Le rsync exclut désormais `/server`.
+- `matrixChatArea` (5 tests) manquait aussi `modifyServerData` (MapStorageServer.ts:224) : le front n'apprenait pas l'id du salon. Corrigé dans 7891eb7bb.
+
+**Deuxième campagne, avec ces correctifs : 246 réussis, 8 échecs, 14 sautés.** Chaque échec du Go figure aussi parmi les échecs du TS.
+
+| Spec | Go | TS | Classement |
+|---|---|---|---|
+| map_editor_livekit:62 | échec | échec | environnement (`:80` en dur) |
+| report_issue:7 | échec | échec | environnement (`SENTRY_DSN_FRONT`) |
+| scripting_spaces:401 | échec | échec | environnement (`:80` en dur) |
+| variables:188 | échec | échec | environnement (`maps/` du worktree) |
+| spaces:18 | échec | échec | hors comparaison |
+| matrixChatModeration:28, :60 | échec | échec | environnement : User1 et UserMatrix ont le même e-mail dans le faux OIDC ; dans le Synapse partagé, User1 a pris `@john.doe` le 13/10, et UserMatrix est devenu `@john.doe1` le 17/10 ; la spec attend `@john.doe` |
+| p2p_mute_keeps_sender:82 | échec | échec | instable (Go : 2 sur 3 seul, et réussi à la première campagne) : à un instant donné, Alice a deux RTCPeerConnection ouvertes |
+| map_storage_upload:19, :85, :185 | réussi | échec | — |
+| metadata:11, api_players:16, userlist:37, map_editor_interacting_object:91 | réussi | échec | — |
+
+**Instables vus aux rejeux.**
+- `matrixChat:84` : le panneau des applications se referme en cours de test. Passe seule 3 fois sur 3.
+- `matrixChatPoll:145` : élément détaché du DOM. 1 sur 2 seul.
+- Les deux ont réussi à la deuxième campagne.
+
+**Aide extérieure.** Référence TS et classement des échecs d'environnement par le socle.
+
+### 17/10, rejeux Matrix et répétition de la bascule
+
+**Rejeux Matrix sur un Synapse vierge**, remis à zéro par le socle : `matrixChatModeration:28`, `:60` et `userlist:37` passent en Go, comme en TS. La cause est confirmée (dev-socle 0ad17f2b6).
+
+**Répétition TS → Go → TS** (minikube `wa-rehearsal`, chart du socle, un réplica, Alice et Bob restent sur la carte).
+- Branche à relire `rehearsal-fix` :
+  - relais `alpine/socat:1.8.0.3` sur 127.0.0.1:8443 à la place de `kubectl port-forward` ;
+  - la spec lit `WA.players.list()` comme un tableau (c'est un itérateur) ;
+  - le contrôle « jamais rechargé » s'appuie sur le marqueur de la page, car `framenavigated` compte aussi les `pushState`.
+- Défaut Go trouvé : l'uploader TS range ses fichiers dans la base Redis 1 (`REDIS_DB_NUMBER`, chart `uploader-env.yaml`), alors que le Go lisait la base 0.
+  - Corrigé dans 04713cbdc : l'uploader Go sélectionne `REDIS_DB_NUMBER`. Les variables restent en base 0, et seul l'uploader TS lit ce nom.
+  - Le chart ne passe pas encore cette variable au pod play en mode server : à faire par le socle. La répétition la fixe dans `values-go.yaml`.
+- Résultat final, rapport `dev/rehearsal/results/20261017-0906.md` (image construite depuis 04713cbdc) : **51 contrôles OK, 0 KO**.
+
+| | TS → Go | Go → TS |
+|---|---|---|
+| `helm upgrade --wait` | 4 s | 14 s |
+| Coupure | 2,4 s | 8,4 s |
+| Rechargement de page ou reconnexion manuelle | aucun | aucun |
+| Bandeau « Connection to server lost » | vu de +3,1 s à +9,6 s | jamais vu |
+
+- Variables, cartes, carte partagée et fichiers passent d'un serveur à l'autre, dans les deux sens.
+- Le bandeau n'était pas apparu au passage précédent (20261017-0902) : son apparition à la bascule vers Go dépend du moment de la coupure. C'est un écart à suivre.
+
+### 17/10, tranche 7 : les écarts de la tranche 5
+
+1. **Propriétés analytics validées contre le catalogue.**
+   - `gen.sh` convertit les schémas zod d'`AnalyticsEventCatalog.ts` en JSON Schema (zod-to-json-schema, déjà installé), dans `catalog.json` (52 Ko).
+   - Le Go valide avec santhosh-tekuri/jsonschema : les propriétés des événements du front et les `openProperties` de `timed_event.open`.
+   - `TestTheSchemasMatchTheTSCatalog` régénère le fichier et échoue s'il est périmé. Il est sauté sans `node_modules`.
+2. **Jeton admin Synapse partagé par Redis**, comme MatrixProvider :
+   - clé `matrix-admin-access-token:<domaine>:<user>` ;
+   - verrou `SET NX EX 30`, attente de 500 ms, abandon au bout de 35 s ;
+   - un jeton révoqué n'est effacé que si aucun pod n'en a stocké un plus récent.
+   - Test : deux clients, quatre appels, une seule connexion à Synapse.
+3. **`putBucketCors` au démarrage de l'uploader S3** : GET et HEAD pour toute origine, en-tête `Authorization`, avec `Content-MD5`. Comme le TS, le démarrage ne l'attend pas.
+4. **Enregistrement avec le LiveKit du monde (A24)** :
+   - `Media.EgressFor` donne l'egress du client LiveKit de la salle ;
+   - l'enregistrement est disponible dès que le bucket est configuré et que l'admin offre `api/livekit/credentials`.
+5. **A27 comme `generateCacheFile`** :
+   - un upload, une suppression, un déplacement ou une copie : un seul appel, sans `mapPath` ;
+   - un PUT, un PATCH ou une édition : un appel avec `mapPath` ;
+   - jamais `delete` : `deleteWAMFileInCache` n'a pas d'appelant en TS.
+   - Défaut trouvé en chemin : `POST /copy` refusait un fichier seul (`os.CopyFS`). Il copie désormais un fichier comme un dossier, comme `fs.copy`.
+
+**Tests** : 182 au total, `./verify.sh` vert.

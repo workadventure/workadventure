@@ -4,8 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
+	"github.com/workadventure/workadventure/server-go/internal/matrix"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
 	"net/http"
@@ -36,9 +38,12 @@ type Server struct {
 	maps       *mapstorage.Store
 	edits      *mapedit.Queue // the map editor's commands, one map at a time, off the rooms
 	roomMaps   sync.Map       // room URL -> roomMap
+	sessions   sync.Map       // the open sessions (*Session), for what concerns a whole world
 	vars       store.Hash     // room and player variables
 	varWriter  *store.Writer  // writes to vars, in order, off the rooms
 	apiVersion string
+	analytics  *analytics.Queue // nil without an admin
+	matrix     *matrix.Client   // nil without Matrix (matrix.go)
 }
 
 func NewServer(cfg *config.Config, a *auth.Manager, adm admin.Admin, rooms *registry.Refs[string, *core.Room], spaces *registry.Refs[core.SpaceKey, *core.Space], maps *mapstorage.Store, vars store.Hash, apiVersion string) *Server {

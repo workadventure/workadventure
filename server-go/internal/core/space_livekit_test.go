@@ -215,3 +215,37 @@ func TestWithoutLiveKitABubbleStaysOnWebRTCWhateverItsSize(t *testing.T) {
 		t.Fatal("no LiveKit configured")
 	}
 }
+
+func TestAWorldsOwnLiveKitIsAskedForEachMove(t *testing.T) {
+	lk := &fakeLiveKit{}
+	var asked []string
+	var mu sync.Mutex
+	m := DefaultMedia(nil)
+	m.FinalizeAfter = 30 * time.Millisecond
+	m.LiveKitFor = func(_ context.Context, playURI string) (LiveKit, error) {
+		mu.Lock()
+		asked = append(asked, playURI)
+		mu.Unlock()
+		return lk, nil
+	}
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble"}, m)
+	defer sp.Stop()
+	var first *recorder
+	for _, id := range []string{"a", "b", "c", "d", "e"} {
+		p := &recorder{}
+		if first == nil {
+			first = p
+		}
+		if err := sp.Join(ctx, p, SpaceJoin{User: SpaceUser{ID: id, PlayURI: "http://play.test/@/org/w/r"}, Filter: FilterAllUsers, PropertiesToSync: media},
+			func(error) {}); err != nil {
+			t.Fatal(err)
+		}
+		_ = sp.Watch(ctx, id, nil)
+	}
+	eventually(t, sp, first, "a token from the world's LiveKit", strategy(nil, "invitation"))
+	mu.Lock()
+	defer mu.Unlock()
+	if len(asked) != 1 || asked[0] != "http://play.test/@/org/w/r" {
+		t.Fatalf("the admin is asked with a member's play URI: %v", asked)
+	}
+}

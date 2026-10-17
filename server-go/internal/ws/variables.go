@@ -108,9 +108,16 @@ func (srv *Server) roomVariables(roomURL string) core.RoomVariables {
 	for name, value := range defaults {
 		v.Values[name] = value
 	}
-	for name, value := range store.Load(srv.vars, roomURL) {
+	stored, err := store.LoadOrFail(srv.vars, roomURL)
+	for name, value := range stored {
 		if defs[name].Persist {
 			v.Values[name] = value
+		}
+	}
+	if err != nil {
+		v.Reload = func() (map[string]string, bool) {
+			m, err := store.LoadOrFail(srv.vars, roomURL)
+			return m, err == nil
 		}
 	}
 	return v

@@ -54,6 +54,8 @@ func subMessage(ev any) *pb.SubMessage {
 			AreaId: v.AreaID, PropertyId: v.PropertyID, Key: v.Key, Value: v.Value}}}
 	case core.UserJoined:
 		return &pb.SubMessage{Message: &pb.SubMessage_UserJoinedMessage{UserJoinedMessage: userJoined(e.User)}}
+	case core.EmoteEvent:
+		return &pb.SubMessage{Message: &pb.SubMessage_EmoteEventMessage{EmoteEventMessage: &pb.EmoteEventMessage{ActorUserId: e.ActorUserID, Emote: e.Emote}}}
 	case core.UserMoved:
 		return &pb.SubMessage{Message: &pb.SubMessage_UserMovedMessage{UserMovedMessage: &pb.UserMovedMessage{UserId: e.UserID, Position: position(e.Position)}}}
 	case core.UserLeft:
@@ -118,6 +120,8 @@ func serverMessage(ev any) *pb.ServerToClientMessage {
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_FollowConfirmationMessage{FollowConfirmationMessage: &pb.FollowConfirmationMessage{Leader: e.Leader, Follower: e.Follower}}}
 	case core.FollowAborted:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_FollowAbortMessage{FollowAbortMessage: &pb.FollowAbortMessage{Leader: e.Leader, Follower: e.Follower}}}
+	case core.UserMessage:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_SendUserMessage{SendUserMessage: &pb.SendUserMessage{Type: e.Type, Message: e.Message}}}
 	case core.MapDeleted:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_DeleteMapMessage{DeleteMapMessage: &pb.DeleteMapMessage{}}}
 	case *pb.ServerToClientMessage: // built by the adapter itself (connection, answers, errors)

@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"log/slog"
 	"time"
 )
@@ -23,12 +24,20 @@ type LiveKit interface {
 
 // Media is how the spaces meet.
 type Media struct {
-	LiveKit           LiveKit // nil: WebRTC only
-	Egress            Egress  // nil: no recording
-	MaxUsersForWebRTC int     // MAX_USERS_FOR_WEBRTC
-	SwitchOnCPULimit  bool    // LIVEKIT_SWITCH_ON_CPU_LIMITATION
+	LiveKit LiveKit // nil: WebRTC only
+	// LiveKitFor, when set, gives the LiveKit of a world for a play URI of it (A24, api/livekit/credentials),
+	// asked each time a space moves to LiveKit; it is called off the space's goroutine.
+	LiveKitFor func(ctx context.Context, playURI string) (LiveKit, error)
+	// EgressFor is the egress of a LiveKit given by LiveKitFor, to record on the world's LiveKit.
+	EgressFor         func(LiveKit) Egress
+	Egress            Egress // nil: no recording
+	MaxUsersForWebRTC int    // MAX_USERS_FOR_WEBRTC
+	SwitchOnCPULimit  bool   // LIVEKIT_SWITCH_ON_CPU_LIMITATION
 	BackToWebRTCAfter time.Duration
 	FinalizeAfter     time.Duration
+	Analytics         func(analytics.Event) // the back's analytics queue (meetings); nil: none
+	// RecordingEnded tells the admin a recording ended (A23); it must not block.
+	RecordingEnded func(RecordingEnded)
 }
 
 // DefaultMedia is the back's: 4 users, 20 s back, 5 s to finalize.
@@ -60,6 +69,12 @@ type liveKitState struct {
 	room    lkRoomState
 	gen     int             // bumped when the room is created or deleted: a late answer about an older one is ignored
 	invited map[string]bool // members who got a token for the current room
+	client  LiveKit         // the LiveKit of the current room
+}
+
+// hasLiveKit says whether the space may move to LiveKit.
+func (s *spaceState) hasLiveKit() bool {
+	return s.mediaCfg.LiveKit != nil || s.mediaCfg.LiveKitFor != nil
 }
 
 // takesPart: a member in the filter streams; a watcher receives.
@@ -90,7 +105,7 @@ func (s *spaceState) mayGoBack() bool {
 
 // evaluate applies the policy after any change of the members.
 func (s *spaceState) evaluate() {
-	if !s.media || s.mediaCfg.LiveKit == nil {
+	if !s.media || !s.hasLiveKit() {
 		return
 	}
 	switch s.strategy {
@@ -135,6 +150,9 @@ func (s *spaceState) switchTo(target string) {
 	s.cancelBack()
 	old := s.strategy
 	s.strategy = target
+	if s.meeting != nil {
+		s.meeting.TransportChanged()
+	}
 	slog.Info("space switches", "space", s.roomName, "from", old, "to", target, "members", len(s.members))
 	for _, id := range s.order {
 		if m := s.members[id]; s.takesPart(m) {
@@ -207,9 +225,19 @@ func (s *spaceState) lkSync() {
 	switch s.lk.room {
 	case lkNone:
 		s.lk.room, s.lk.gen = lkCreating, s.lk.gen+1
-		gen, room, lk := s.lk.gen, s.roomName, s.mediaCfg.LiveKit
+		gen, room, lk, lkFor := s.lk.gen, s.roomName, s.mediaCfg.LiveKit, s.mediaCfg.LiveKitFor
+		var playURI string
+		if len(s.order) > 0 {
+			playURI = s.members[s.order[0]].user.PlayURI
+		}
 		s.call(func() {
-			err := lk.CreateRoom(context.Background(), room)
+			var err error
+			if lkFor != nil {
+				lk, err = lkFor(context.Background(), playURI)
+			}
+			if err == nil {
+				err = lk.CreateRoom(context.Background(), room)
+			}
 			s.later(func() {
 				if gen != s.lk.gen || s.lk.room != lkCreating {
 					return
@@ -219,7 +247,7 @@ func (s *spaceState) lkSync() {
 					s.lk.room = lkNone // tried again at the next change
 					return
 				}
-				s.lk.room = lkReady
+				s.lk.room, s.lk.client = lkReady, lk
 				slog.Info("LiveKit room ready", "room", room)
 				s.lkSync()
 				s.recordWhenReady()
@@ -247,7 +275,7 @@ func (s *spaceState) lkSync() {
 }
 
 func (s *spaceState) lkInvite(m *spaceMember) {
-	token, err := s.mediaCfg.LiveKit.Token(s.roomName, m.user)
+	token, err := s.lk.client.Token(s.roomName, m.user)
 	if err != nil {
 		slog.Error("cannot sign a LiveKit token", "error", err)
 		return
@@ -255,7 +283,7 @@ func (s *spaceState) lkInvite(m *spaceMember) {
 	s.lk.invited[m.user.ID] = true
 	slog.Debug("LiveKit invitation", "room", s.roomName, "member", m.user.ID)
 	m.peer.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: m.user.ID, Sender: m.user,
-		Event: LiveKitInvitation{Token: token, ServerURL: s.mediaCfg.LiveKit.URL()}}, true))
+		Event: LiveKitInvitation{Token: token, ServerURL: s.lk.client.URL()}}, true))
 }
 
 func (s *spaceState) lkDelete() {
@@ -264,7 +292,14 @@ func (s *spaceState) lkDelete() {
 	}
 	s.lk.room, s.lk.gen = lkNone, s.lk.gen+1
 	clear(s.lk.invited)
-	room, lk := s.roomName, s.mediaCfg.LiveKit
+	room, lk := s.roomName, s.lk.client
+	s.lk.client = nil
+	if lk == nil { // still being created: the late answer is ignored, and the room
+		lk = s.mediaCfg.LiveKit
+	}
+	if lk == nil {
+		return // ponytail: a per-world room created while it was being deleted stays until LiveKit empties it
+	}
 	s.call(func() {
 		if err := lk.DeleteRoom(context.Background(), room); err != nil {
 			slog.Warn("cannot delete the LiveKit room", "room", room, "error", err)

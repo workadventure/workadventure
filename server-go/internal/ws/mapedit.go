@@ -2,6 +2,7 @@ package ws
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/url"
 	"strings"
@@ -22,7 +23,9 @@ type roomMap struct {
 	key    string // the WAM file in the map storage, "" for a room without one
 	wamURL string
 	mapURL string // a Tiled map served elsewhere
-	at     time.Time
+	// thirdParty is what the admin gives of the room's Jitsi and BBB (MapThirdPartyData), never sent on.
+	thirdParty map[string]any
+	at         time.Time
 }
 
 // roomMapKept is how long the server trusts what the admin said of a room's map.
@@ -45,6 +48,7 @@ func (srv *Server) roomMap(roomURL string) roomMap {
 		rm.key, rm.wamURL = srv.storageKey(w), w
 	}
 	rm.mapURL, _ = details["mapUrl"].(string)
+	rm.thirdParty, _ = details["thirdParty"].(map[string]any)
 	srv.roomMaps.Store(roomURL, rm)
 	return rm
 }
@@ -124,11 +128,13 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 		return
 	}
 	err = s.srv.edits.Run(key, func() {
+		cmd, after := mapedit.Resources(s.srv.maps, key, ed, cmd, s.srv.resource)
 		res, err := mapedit.Apply(s.srv.maps, key, ed, m.GetId(), cmd)
 		if err != nil {
 			refuse(err)
 			return
 		}
+		after()
 		done := &pb.EditMapCommandMessage{Id: m.GetId(), EditMapMessage: echo(m.GetEditMapMessage(), res, ed)}
 		// The room is held for the announcement: the editor may have left meanwhile.
 		room := s.srv.rooms.Acquire(roomURL)
@@ -211,7 +217,11 @@ func echo(e *pb.EditMapMessage, res mapedit.Result, ed mapedit.Editor) *pb.EditM
 	switch v := e.GetMessage().(type) {
 	case *pb.EditMapMessage_ModifyAreaMessage:
 		if res.Area != nil {
-			return modifiedArea(res.Area)
+			m := modifiedArea(res.Area)
+			// The editor takes the area as stored only when a resource (Matrix) changed its serverData.
+			props, _ := res.Area["properties"].([]any)
+			m.GetModifyAreaMessage().ModifyServerData = proto.Bool(serverDataOf(values(v.ModifyAreaMessage.GetProperties())) != serverDataOf(props))
+			return m
 		}
 	case *pb.EditMapMessage_UploadEntityMessage:
 		// Everybody learns who owns it; nobody needs the image again.
@@ -265,6 +275,19 @@ func modifiedArea(area map[string]any) *pb.EditMapMessage {
 	}
 	return &pb.EditMapMessage{Message: &pb.EditMapMessage_ModifyAreaMessage{ModifyAreaMessage: &pb.ModifyAreaMessage{
 		Id: id, Name: &name, X: &x, Y: &y, Width: &w, Height: &h, Properties: pv, ModifyProperties: proto.Bool(true), ModifyServerData: proto.Bool(false)}}}
+}
+
+// serverDataOf is the serverData of each property, by id, as JSON: what tells MapStorageServer's modifyServerData.
+func serverDataOf(props []any) string {
+	out := map[string]any{}
+	for _, p := range props {
+		if m, _ := jsonNumbers(p).(map[string]any); m != nil && m["serverData"] != nil {
+			id, _ := m["id"].(string)
+			out[id] = m["serverData"]
+		}
+	}
+	b, _ := json.Marshal(out)
+	return string(b)
 }
 
 // jsonNumbers turns the json.Number of a document read from disk into float64, which structpb takes.

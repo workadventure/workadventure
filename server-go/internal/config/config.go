@@ -36,8 +36,10 @@ type Config struct {
 	LiveKitSwitchOnCPULimitation                 bool
 
 	// The uploader (SERVER_UPLOADER_PORT; the chart's server mode points the uploader Service at 3003).
-	UploaderPort int
-	Uploader     uploader.Options
+	UploaderPort    int
+	Uploader        uploader.Options
+	UploaderS3      UploaderS3 // AWS_*: the uploader's bucket
+	UploaderRedisDB int        // REDIS_DB_NUMBER: only the uploader read it (files in Redis); the variables stay on 0
 
 	RoomAPIPort      int
 	RoomAPISecretKey string
@@ -61,6 +63,8 @@ type Config struct {
 	AdminURL              string        // ADMIN_URL: the admin's public URL (ICE servers, chat ids, OAuth refresh)
 	AdminAPIRetryDelay    time.Duration // ADMIN_API_RETRY_DELAY: between two tries of /api/capabilities at start
 	AdminAPIToken         string        // ADMIN_API_TOKEN: the administration routes (POST /global/event)
+	AdminSocketsToken     string        // ADMIN_SOCKETS_TOKEN: signs the JWTs of /ws/admin/rooms
+	Analytics             Analytics
 	DisableAnonymous      bool
 	OpenID                OpenID
 
@@ -109,6 +113,13 @@ type Config struct {
 	RecordingS3                      RecordingS3
 	AllowedCORSOrigin                string
 	MatrixPublicURI                  string
+	Matrix                           Matrix   // the Synapse admin, when MatrixEnabled
+	Jitsi                            Jitsi    // JITSI_URL, JITSI_ISS, SECRET_JITSI_KEY: the server-wide Jitsi, unless the admin gives one
+	BBB                              BBB      // BBB_URL, BBB_SECRET
+	MapStorageAPIToken               string   // MAP_STORAGE_API_TOKEN: map-storage's calls to /roomArea and the resourceUrls
+	WhitelistedResourceURLs          []string // WHITELISTED_RESOURCE_URLS: the origins a resourceUrl may point to, PUSHER_URL's besides
+	ProfileScreenProvider            string   // OPENID_PROFILE_SCREEN_PROVIDER, else ADMIN_URL/profile: where /profile-callback sends the browser
+	AutologinURL                     string   // AUTOLOGIN_URL, else ADMIN_URL/workadventure/login: where ?access_key= goes
 	StunServer                       string
 	TurnServer                       string
 	TurnUser                         string
@@ -243,27 +254,37 @@ func parse(get func(string) string) (*Config, error) {
 		RedisHost:                    r.str("REDIS_HOST"),
 		RedisPassword:                r.str("REDIS_PASSWORD"),
 		RedisPort:                    r.integer("REDIS_PORT", 6379),
+		UploaderRedisDB:              r.integer("REDIS_DB_NUMBER", 0),
 		StoreVariablesForLocalMaps:   r.boolean("STORE_VARIABLES_FOR_LOCAL_MAPS", false),
 		MapStorage: mapstorage.Options{
 			Auth: mapstorage.Auth{
 				Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
 				Bearer: r.boolean("ENABLE_BEARER_AUTHENTICATION", false), Token: r.str("AUTHENTICATION_TOKEN"),
+				Validator: &mapstorage.Validator{URL: r.str("AUTHENTICATION_VALIDATOR_URL"), Production: r.str("NODE_ENV") == "production"},
 			},
 			CacheControl:        firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
 			MaxUncompressed:     int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
 			DirectUploadURL:     r.str("DIRECT_UPLOAD_URL"),
+			WebHook:             webHook(r),
 			EntityCollections:   list(r.str("ENTITY_COLLECTION_URLS")),
 			WAMTemplateURL:      r.str("WAM_TEMPLATE_URL"),
 			PathPrefix:          r.str("PATH_PREFIX"),
 			UseDomainNameInPath: r.boolean("USE_DOMAIN_NAME_IN_PATH", false),
 			SecretKey:           r.str("SECRET_KEY"),
 		},
-		SecretKey:                 r.str("SECRET_KEY"),
-		AdminAPIURL:               r.str("ADMIN_API_URL"),
-		EnableOpenAPIEndpoint:     r.boolean("ENABLE_OPENAPI_ENDPOINT", false),
-		AdminURL:                  r.str("ADMIN_URL"),
-		AdminAPIRetryDelay:        time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
-		AdminAPIToken:             r.str("ADMIN_API_TOKEN"),
+		SecretKey:             r.str("SECRET_KEY"),
+		AdminAPIURL:           r.str("ADMIN_API_URL"),
+		EnableOpenAPIEndpoint: r.boolean("ENABLE_OPENAPI_ENDPOINT", false),
+		AdminURL:              r.str("ADMIN_URL"),
+		AdminAPIRetryDelay:    time.Duration(r.integer("ADMIN_API_RETRY_DELAY", 500)) * time.Millisecond,
+		AdminAPIToken:         r.str("ADMIN_API_TOKEN"),
+		AdminSocketsToken:     r.str("ADMIN_SOCKETS_TOKEN"),
+		Analytics: Analytics{
+			FlushInterval: time.Duration(r.integer("ANALYTICS_FLUSH_INTERVAL_MS", 10000)) * time.Millisecond,
+			Timeout:       time.Duration(r.integer("ANALYTICS_TIMEOUT_MS", 2000)) * time.Millisecond,
+			MaxQueue:      r.integer("ANALYTICS_MAX_QUEUE_SIZE", 10000),
+			MaxBatch:      r.integer("ANALYTICS_MAX_BATCH_SIZE", 1000),
+		},
 		DisableAnonymous:          r.boolean("DISABLE_ANONYMOUS", false),
 		SocketIdleTimer:           time.Duration(r.integer("SOCKET_IDLE_TIMER", 120)) * time.Second,
 		ClientDisconnectRetention: time.Duration(r.integer("CLIENT_DISCONNECTION_RETENTION_MS", 30_000)) * time.Millisecond,
@@ -302,11 +323,16 @@ func parse(get func(string) string) (*Config, error) {
 		NodeEnv:                          r.str("NODE_ENV"),
 		AllowedCORSOrigin:                r.str("ALLOWED_CORS_ORIGIN"),
 		MatrixPublicURI:                  r.str("MATRIX_PUBLIC_URI"),
-		StunServer:                       r.str("STUN_SERVER"),
-		TurnServer:                       r.str("TURN_SERVER"),
-		TurnUser:                         r.str("TURN_USER"),
-		TurnPassword:                     r.str("TURN_PASSWORD"),
-		TurnStaticAuthSecret:             r.str("TURN_STATIC_AUTH_SECRET"),
+		Matrix: Matrix{APIURI: r.str("MATRIX_API_URI"), AdminUser: r.str("MATRIX_ADMIN_USER"), AdminPassword: r.str("MATRIX_ADMIN_PASSWORD"),
+			Domain: r.str("MATRIX_DOMAIN")},
+		MapStorageAPIToken:   r.str("MAP_STORAGE_API_TOKEN"),
+		Jitsi:                Jitsi{URL: r.str("JITSI_URL"), ISS: r.str("JITSI_ISS"), Secret: r.str("SECRET_JITSI_KEY")},
+		BBB:                  BBB{URL: r.str("BBB_URL"), Secret: r.str("BBB_SECRET")},
+		StunServer:           r.str("STUN_SERVER"),
+		TurnServer:           r.str("TURN_SERVER"),
+		TurnUser:             r.str("TURN_USER"),
+		TurnPassword:         r.str("TURN_PASSWORD"),
+		TurnStaticAuthSecret: r.str("TURN_STATIC_AUTH_SECRET"),
 	}
 	opid := func(name, def string) string { return firstNonEmpty(r.str("OPENID_"+name), r.str("OPID_"+name), def) }
 	c.OpenID = OpenID{
@@ -341,8 +367,11 @@ func parse(get func(string) string) (*Config, error) {
 		r.oneOf("OPID_WOKA_NAME_POLICY", policies...),
 		"user_input",
 	)
-	c.Uploader = uploader.Options{PublicURL: r.str("UPLOADER_URL"), AllowedOrigin: firstNonEmpty(r.str("ALLOWED_CORS_ORIGIN"), r.str("PLAY_URL"), "*"),
+	c.Uploader = uploader.Options{AdminAPIURL: c.AdminAPIURL, PublicURL: r.str("UPLOADER_URL"), AllowedOrigin: firstNonEmpty(r.str("ALLOWED_CORS_ORIGIN"), r.str("PLAY_URL"), "*"),
 		EnableUpload: c.EnableChatUpload, MaxFileSize: int64(r.integer("UPLOAD_MAX_FILESIZE", 0))}
+	c.UploaderS3 = UploaderS3{Endpoint: r.str("AWS_ENDPOINT"), Region: r.str("AWS_DEFAULT_REGION"), Bucket: r.str("AWS_BUCKET"),
+		AccessKey: r.str("AWS_ACCESS_KEY_ID"), Secret: r.str("AWS_SECRET_ACCESS_KEY"),
+		URLTTL: time.Duration(r.integer("UPLOADER_AWS_SIGNED_URL_EXPIRATION", 60)) * time.Second}
 	c.RecordingConfigured = r.str("LIVEKIT_RECORDING_S3_ENDPOINT") != "" && r.str("LIVEKIT_RECORDING_S3_BUCKET") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_ACCESS_KEY") != "" && r.str("LIVEKIT_RECORDING_S3_SECRET_KEY") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_REGION") != ""
@@ -380,6 +409,11 @@ func frontEnv(r *reader, c *Config) map[string]any {
 	profileProvider := firstNonEmpty(r.str("OPENID_PROFILE_SCREEN_PROVIDER"), r.str("OPID_PROFILE_SCREEN_PROVIDER"))
 	if adminURL := r.str("ADMIN_URL"); profileProvider == "" && adminURL != "" {
 		profileProvider = adminURL + "/profile"
+	}
+	c.ProfileScreenProvider = profileProvider
+	c.AutologinURL = r.str("AUTOLOGIN_URL")
+	if c.AutologinURL == "" && c.AdminURL != "" {
+		c.AutologinURL = c.AdminURL + "/workadventure/login"
 	}
 
 	env := map[string]any{
@@ -477,3 +511,38 @@ func sentryDSN(r *reader) any {
 
 // RecordingS3 is where the recordings go (LIVEKIT_RECORDING_S3_*).
 type RecordingS3 struct{ Endpoint, CDNEndpoint, AccessKey, Secret, Region, Bucket string }
+
+// Analytics is the batching of the events sent to the admin (A22).
+type Analytics struct {
+	FlushInterval, Timeout time.Duration
+	MaxQueue, MaxBatch     int
+}
+
+// Matrix is the Synapse admin of the pusher (MATRIX_API_URI, MATRIX_ADMIN_USER, MATRIX_ADMIN_PASSWORD, MATRIX_DOMAIN).
+type Matrix struct{ APIURI, AdminUser, AdminPassword, Domain string }
+
+type Jitsi struct{ URL, ISS, Secret string }
+type BBB struct{ URL, Secret string }
+
+// webHook is map-storage's WEB_HOOK_URL, unless ENABLE_WEB_HOOK is false.
+func webHook(r *reader) mapstorage.WebHook {
+	if !r.boolean("ENABLE_WEB_HOOK", true) {
+		return mapstorage.WebHook{}
+	}
+	return mapstorage.WebHook{URL: r.str("WEB_HOOK_URL"), Token: r.str("WEB_HOOK_API_TOKEN")}
+}
+
+// UploaderS3 is the bucket of the uploader (S3StorageProvider), used when bucket, keys and region are all set.
+type UploaderS3 struct {
+	Endpoint, Region, Bucket, AccessKey, Secret string
+	URLTTL                                      time.Duration
+}
+
+func (u UploaderS3) Enabled() bool {
+	return u.Bucket != "" && u.AccessKey != "" && u.Secret != "" && u.Region != ""
+}
+
+// Complete says whether the recording bucket is set (LIVEKIT_RECORDING_S3_*).
+func (r RecordingS3) Complete() bool {
+	return r.Endpoint != "" && r.Bucket != "" && r.AccessKey != "" && r.Secret != "" && r.Region != ""
+}

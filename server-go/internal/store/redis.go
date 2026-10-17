@@ -14,6 +14,7 @@ import (
 // read their variables side by side. A connection that fails is closed; the next command dials a new one.
 type Redis struct {
 	addr, password string
+	db             int           // SELECTed on each connection when not 0
 	slots          chan struct{} // one per connection in use; at most poolSize
 	idle           chan *redisConn
 }
@@ -69,7 +70,20 @@ func (c *Redis) dial(ctx context.Context) (*redisConn, error) {
 			return nil, err
 		}
 	}
+	if c.db != 0 {
+		if _, err := conn.roundTrip(ctx, []string{"SELECT", strconv.Itoa(c.db)}); err != nil {
+			conn.Close()
+			return nil, err
+		}
+	}
 	return conn, nil
+}
+
+// WithDB is a client of the same Redis on database db (REDIS_DB_NUMBER of the uploader).
+func (c *Redis) WithDB(db int) *Redis {
+	r := NewRedis(c.addr, c.password)
+	r.db = db
+	return r
 }
 
 func (c *redisConn) roundTrip(ctx context.Context, args []string) (any, error) {
@@ -177,5 +191,36 @@ func (c *Redis) HDel(ctx context.Context, key, field string) error {
 
 func (c *Redis) Expire(ctx context.Context, key string, d time.Duration) error {
 	_, err := c.do(ctx, "EXPIRE", key, strconv.Itoa(int(d.Seconds())))
+	return err
+}
+
+// Get reads a string key; ok is false when there is none.
+func (c *Redis) Get(ctx context.Context, key string) (value string, ok bool, err error) {
+	reply, err := c.do(ctx, "GET", key)
+	if err != nil || reply == nil {
+		return "", false, err
+	}
+	s, ok := reply.(string)
+	return s, ok, nil
+}
+
+// Set writes a string key, expiring after ttl unless it is 0.
+func (c *Redis) Set(ctx context.Context, key, value string, ttl time.Duration) error {
+	args := []string{"SET", key, value}
+	if ttl > 0 {
+		args = append(args, "EX", strconv.Itoa(max(1, int(ttl.Seconds()))))
+	}
+	_, err := c.do(ctx, args...)
+	return err
+}
+
+// SetNX writes a key only if it does not exist, expiring after ttl; ok tells whether it was written.
+func (c *Redis) SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
+	reply, err := c.do(ctx, "SET", key, value, "NX", "EX", strconv.Itoa(max(1, int(ttl.Seconds()))))
+	return reply != nil && err == nil, err
+}
+
+func (c *Redis) Del(ctx context.Context, key string) error {
+	_, err := c.do(ctx, "DEL", key)
 	return err
 }

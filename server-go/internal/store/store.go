@@ -168,11 +168,17 @@ func (w *Writer) Flush(ctx context.Context) error {
 
 // Load reads a key, giving up after 2 s: a join must not wait for an unreachable Redis.
 func Load(h Hash, key string) map[string]string {
+	m, _ := LoadOrFail(h, key)
+	return m
+}
+
+// LoadOrFail is Load that tells a failure from no value.
+func LoadOrFail(h Hash, key string) (map[string]string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 	m, err := h.HGetAll(ctx, key)
 	if err != nil {
 		slog.Warn("cannot read stored variables", "key", key, "error", err)
 	}
-	return m
+	return m, err
 }

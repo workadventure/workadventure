@@ -75,7 +75,13 @@ func (s *spaceState) query(sender *SpaceUser, q any) error {
 		if err := kind.Validate(); err != nil {
 			return err
 		}
-		return s.updateState(func(st *spacestate.SpaceState) error { st.Kind = &kind; return nil })
+		if err := s.updateState(func(st *spacestate.SpaceState) error { st.Kind = &kind; return nil }); err != nil {
+			return err
+		}
+		if s.meeting != nil {
+			s.meeting.KindChanged()
+		}
+		return nil
 	case RaiseHand:
 		return s.updateState(func(st *spacestate.SpaceState) error {
 			if !q.Raised {

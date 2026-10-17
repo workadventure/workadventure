@@ -288,3 +288,187 @@ func (a *HTTP) SameWorld(ctx context.Context, roomURL string, tags []string, byp
 	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/sameWorld", q, true, "en", nil, &rooms)
 	return rooms, true, err
 }
+
+// ChatMembers is A12 (playUri, though the OpenAPI says roomUrl).
+func (a *HTTP) ChatMembers(ctx context.Context, roomURL, search string) (ChatMembers, error) {
+	var m ChatMembers
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/chat/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &m)
+	return m, err
+}
+
+func (a *HTTP) SearchMembers(ctx context.Context, roomURL, search string) ([]Member, error) {
+	var m []Member
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &m)
+	return m, err
+}
+
+// GetMember is A15; like the pusher, the uuid goes into the path as it is.
+func (a *HTTP) GetMember(ctx context.Context, uuid string) (Member, error) {
+	var m Member
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members/"+uuid, nil, true, "", nil, &m)
+	return m, err
+}
+
+// SearchTags is A14: /api/world/tags, whatever the OpenAPI says.
+func (a *HTTP) SearchTags(ctx context.Context, roomURL, search string) ([]string, error) {
+	var t []string
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/world/tags", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &t)
+	return t, err
+}
+
+// UpdateChatID is A16, on ADMIN_URL (not ADMIN_API_URL); the email of the message goes into the path as it is.
+func (a *HTTP) UpdateChatID(ctx context.Context, email, chatID, roomURL string) error {
+	return a.call(ctx, http.MethodPut, a.cfg.AdminURL, "/api/members/"+email+"/chatId", nil, true, "",
+		map[string]string{"chatId": chatID, "userIdentifier": email, "roomUrl": roomURL}, nil)
+}
+
+// RefreshOAuthToken is A17, on ADMIN_URL; an answer without its message and token is an error.
+func (a *HTTP) RefreshOAuthToken(ctx context.Context, token, provider, userIdentifier string) (string, string, error) {
+	body := map[string]string{"accessToken": token}
+	if provider != "" {
+		body["provider"] = provider
+	}
+	if userIdentifier != "" {
+		body["userIdentifier"] = userIdentifier
+	}
+	var out struct {
+		Message *string `json:"message"`
+		Token   *string `json:"token"`
+	}
+	if err := a.call(ctx, http.MethodPost, a.cfg.AdminURL, "/api/oauth/refreshtoken", nil, true, "", body, &out); err != nil {
+		return "", "", err
+	}
+	if out.Message == nil || out.Token == nil {
+		return "", "", errors.New("Unable to parse refreshTokenResponse")
+	}
+	return *out.Token, *out.Message, nil
+}
+
+// SaveUser is A9 (save-name), A10 (save-textures) and A11 (save-companion-texture): sent only when the admin
+// offers the capability (api/save-textures covers the companion), and only a 204 is a success.
+func (a *HTTP) SaveUser(ctx context.Context, what SaveWhat, userIdentifier, roomURL string, value any) error {
+	s := saves[what]
+	if _, ok := a.Capabilities()[s.capability]; !ok {
+		return nil
+	}
+	b, err := json.Marshal(map[string]any{"playUri": roomURL, "userIdentifier": userIdentifier, s.field: value})
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(a.cfg.AdminAPIURL, "/")+s.path, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", a.cfg.AdminAPIToken)
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("%s: got %d, expected 204", s.path, resp.StatusCode)
+	}
+	return nil
+}
+
+var saves = map[SaveWhat]struct{ path, capability, field string }{
+	SaveName:      {"/api/save-name", "api/save-name", "name"},
+	SaveTextures:  {"/api/save-textures", "api/save-textures", "textures"},
+	SaveCompanion: {"/api/save-companion-texture", "api/save-textures", "texture"},
+}
+
+// Challenge is A4: a web route of the admin, out of /api, without the token.
+func (a *HTTP) Challenge(ctx context.Context, host string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(a.cfg.AdminAPIURL, "/")+"/white-label/cf-challenge?"+url.Values{"host": {host}}.Encode(), nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil || resp.StatusCode/100 != 2 {
+		return "", fmt.Errorf("cf-challenge: %s %v", resp.Status, err)
+	}
+	// axios parses a JSON string; the admin answers the text
+	var s string
+	if json.Unmarshal(data, &s) == nil {
+		return s, nil
+	}
+	return string(data), nil
+}
+
+// RecordingEvent is A23: an egress ended (RecordingEventPayload). Sent when the admin offers api/recordings/events
+// v1, tried again 3 times (250 ms, 1 s, 4 s) on a network error, a 5xx, a 408 or a 429.
+func (a *HTTP) RecordingEvent(ctx context.Context, payload any) error {
+	if a.Capabilities()["api/recordings/events"] != "v1" {
+		return nil
+	}
+	body, err := json.Marshal(payload)
+	if err != nil {
+		return err
+	}
+	for attempt, wait := range []time.Duration{0, 250 * time.Millisecond, time.Second, 4 * time.Second} {
+		if wait > 0 {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(wait):
+			}
+		}
+		status, err := a.postStatus(ctx, strings.TrimRight(a.cfg.AdminAPIURL, "/")+"/api/recordings/events", body, 5*time.Second)
+		switch {
+		case err == nil && status/100 == 2:
+			return nil
+		case err == nil && status/100 == 4 && status != http.StatusRequestTimeout && status != http.StatusTooManyRequests:
+			return fmt.Errorf("recordings/events: HTTP %d", status)
+		case attempt == 3:
+			if err == nil {
+				err = fmt.Errorf("recordings/events: HTTP %d", status)
+			}
+			return err
+		}
+	}
+	return nil
+}
+
+func (a *HTTP) postStatus(ctx context.Context, target string, body []byte, timeout time.Duration) (int, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, target, bytes.NewReader(body))
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Authorization", a.cfg.AdminAPIToken)
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	resp.Body.Close()
+	return resp.StatusCode, nil
+}
+
+// LiveKitCredentials is A24: the LiveKit of the world a play URI belongs to, asked at each move to LiveKit.
+func (a *HTTP) LiveKitCredentials(ctx context.Context, playURI string) (host, key, secret string, err error) {
+	var c struct {
+		Host   *string `json:"livekitHost"`
+		Key    *string `json:"livekitApiKey"`
+		Secret *string `json:"livekitApiSecret"`
+	}
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/livekit/credentials", url.Values{"playUri": {playURI}}, true, "", nil, &c); err != nil {
+		return "", "", "", err
+	}
+	if c.Host == nil || c.Key == nil || c.Secret == nil {
+		return "", "", "", errors.New("the admin's LiveKit credentials are incomplete")
+	}
+	return *c.Host, *c.Key, *c.Secret, nil
+}

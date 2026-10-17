@@ -12,7 +12,7 @@ release Helm (la bascule est un vrai `helm upgrade`). Profil minikube dédié `w
 ## Commandes
 
 ```bash
-./up.sh          # cluster, ingress, certificat, CoreDNS, images, port-forward 443 (idempotent)
+./up.sh          # cluster, ingress, certificat, CoreDNS, images, relais 127.0.0.1:8443 vers le 443 du nœud (idempotent)
 ./deploy.sh ts   # chart + values-common.yaml + values-ts.yaml
 ./deploy.sh go   # idem avec values-go.yaml (server.enabled: true)
 ./down.sh        # supprime uniquement le profil wa-rehearsal
@@ -29,7 +29,7 @@ Toutes les commandes kubectl utilisent `--context wa-rehearsal` (up.sh démarre 
 
 ## Choix et pièges
 
-- 443 : `kubectl port-forward` refuse 127.0.0.1:443 (permission denied sans sudo) mais accepte `0.0.0.0` : le 443 est donc joignable depuis le réseau local tant que le cluster tourne.
+- 8443 : un conteneur `alpine/socat` sur le réseau docker du profil (`wa-rehearsal-relay`) relaie 127.0.0.1:8443 vers le 443 du nœud (hostPort de l'ingress). `kubectl port-forward` lâchait sous charge. Publié sur 127.0.0.1 seulement : le cluster n'est pas joignable depuis le réseau local.
 - CoreDNS : règle `rewrite name regex (.*)rehearsal\.localhost ... answer auto` vers le service de l'ingress (les hôtes ont un tiret : `play-rehearsal.localhost`).
 - TLS dans les pods : TS : `NODE_TLS_REJECT_UNAUTHORIZED=0` (commonEnv). Go : pas de variable pour couper la vérification, le certificat est monté et `SSL_CERT_FILE` le désigne (il remplace donc le bundle système : pas d'accès https externe valide depuis le pod Go).
 - Les images ghcr `maps` ne se chargent pas par `minikube image load` ("not found in tar") : up.sh les tire dans le noeud.

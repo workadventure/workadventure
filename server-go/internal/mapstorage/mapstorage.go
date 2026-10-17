@@ -36,7 +36,8 @@ type Options struct {
 	// UseDomainNameInPath (USE_DOMAIN_NAME_IN_PATH, the SaaS): each domain has its own folder, so that two worlds
 	// with the same paths never share a map.
 	UseDomainNameInPath bool
-	SecretKey           string // signs the tokens of /private/files
+	SecretKey           string  // signs the tokens of /private/files
+	WebHook             WebHook // A27
 }
 
 type Store struct {
@@ -46,8 +47,9 @@ type Store struct {
 	tree       sync.RWMutex
 	files      [64]sync.Mutex // the lock of a file is files[hash of its key]
 	seed       maphash.Seed
-	pathPrefix string // Options.PathPrefix, set by Handler
-	useDomain  bool   // Options.UseDomainNameInPath, set by Handler
+	pathPrefix string  // Options.PathPrefix, set by Handler
+	useDomain  bool    // Options.UseDomainNameInPath, set by Handler
+	webHook    WebHook // Options.WebHook, set by Handler
 	// recentMu guards recent.
 	recentMu sync.Mutex
 	// Changed is told when a WAM file is replaced (or deleted) from the outside, so that the players of that map
@@ -120,6 +122,9 @@ func (s *Store) Edit(key string, change func([]byte) ([]byte, error)) error {
 		if err == nil && (now == nil) == (before == nil) && bytes.Equal(now, before) {
 			err = writeFile(f, after)
 			unlock()
+			if err == nil {
+				s.notify(key, "update")
+			}
 			return err
 		}
 		unlock()
@@ -257,9 +262,14 @@ type Auth struct {
 	User, Password string
 	Bearer         bool
 	Token          string
+	Validator      *Validator // AUTHENTICATION_VALIDATOR_URL: another bearer is asked to the admin (A26)
 }
 
 func (a Auth) allows(r *http.Request) bool {
+	if token, ok := strings.CutPrefix(r.Header.Get("Authorization"), "Bearer "); ok && a.Bearer && token != "" && token != a.Token &&
+		a.Validator.allows(token, requestDomain(r)) {
+		return true
+	}
 	same := func(x, y string) bool { return y != "" && subtle.ConstantTimeCompare([]byte(x), []byte(y)) == 1 }
 	if user, password, ok := r.BasicAuth(); ok && a.Basic {
 		return same(user, a.User) && same(password, a.Password)
@@ -281,7 +291,7 @@ func (a Auth) wrap(h http.HandlerFunc) http.HandlerFunc {
 
 // Handler serves the map-storage host.
 func (s *Store) Handler(o Options) http.Handler {
-	s.pathPrefix, s.useDomain = o.PathPrefix, o.UseDomainNameInPath
+	s.pathPrefix, s.useDomain, s.webHook = o.PathPrefix, o.UseDomainNameInPath, o.WebHook
 	if o.MaxUncompressed == 0 {
 		o.MaxUncompressed = 1 << 30
 	}

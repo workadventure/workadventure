@@ -4,10 +4,15 @@ import "context"
 
 // The Room API's side of a room: reading and writing its variables without being a player, and watching it. A
 // watcher gets every change of a room variable (VariableChanged) and every event sent to the whole room, whoever
-// sent it (the event as the adapter encoded it); a targeted event reaches its players only. A watcher keeps nothing
+// sent it (the event as the adapter encoded it); a targeted event reaches its players only. It also gets the players
+// already there, then every arrival and departure (MemberJoined, MemberLeft: the admin socket). A watcher keeps nothing
 // alive: the adapter holds the room for as long as it watches.
 
 type watcher struct{ f func(event any) }
+
+// MemberJoined and MemberLeft tell a watcher a connection entered or left the room (userJoinedRoom, userLeftRoom).
+type MemberJoined struct{ UUID, Name, IPAddress string }
+type MemberLeft struct{ UUID string }
 
 func (s *state) toWatchers(event any) {
 	for w := range s.watchers {
@@ -18,7 +23,12 @@ func (s *state) toWatchers(event any) {
 // Watch calls f, on the room's goroutine (f must not block), until stop.
 func (r *Room) Watch(ctx context.Context, f func(event any)) (stop func(), err error) {
 	w := &watcher{f: f}
-	if err := r.a.Post(ctx, func() { r.s.watchers[w] = struct{}{} }); err != nil {
+	if err := r.a.Post(ctx, func() {
+		r.s.watchers[w] = struct{}{}
+		for _, u := range r.s.users {
+			f(MemberJoined{UUID: u.uuid, Name: u.name, IPAddress: u.ip})
+		}
+	}); err != nil {
 		return nil, err
 	}
 	return func() { _ = r.a.Post(context.Background(), func() { delete(r.s.watchers, w) }) }, nil

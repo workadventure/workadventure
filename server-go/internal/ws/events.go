@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"slices"
 
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -92,5 +93,87 @@ func (srv *Server) GlobalEvent(w http.ResponseWriter, r *http.Request) {
 		srv.rooms.Release(roomURL)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	_, _ = io.WriteString(w, "ok")
+}
+
+// liveRoom runs f on a room that has players; a room nobody is in is not created for it.
+func (srv *Server) liveRoom(url string, f func(*core.Room) error) error {
+	if !slices.Contains(srv.rooms.Keys(), url) {
+		return nil
+	}
+	room := srv.rooms.Acquire(url)
+	defer srv.rooms.Release(url)
+	return f(room)
+}
+
+// RoomRefresh is POST /room/refresh of the pusher: the admin changed a room; read its map again, tell its players.
+func (srv *Server) RoomRefresh(w http.ResponseWriter, r *http.Request) {
+	if !srv.adminToken(w, r) {
+		return
+	}
+	var body struct {
+		RoomID *string `json:"roomId"`
+	}
+	if json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body) != nil || body.RoomID == nil {
+		http.Error(w, "Incorrect roomId parameter", http.StatusInternalServerError)
+		return
+	}
+	srv.roomMaps.Delete(*body.RoomID)
+	_ = srv.liveRoom(*body.RoomID, func(room *core.Room) error { return room.MapChanged(context.Background(), false) })
+	_, _ = io.WriteString(w, "ok")
+}
+
+// AdminMessage is POST /message of the pusher: a text of the admin to rooms, or the warning that the world is full.
+func (srv *Server) AdminMessage(w http.ResponseWriter, r *http.Request) {
+	if !srv.adminToken(w, r) {
+		return
+	}
+	var body struct {
+		Text    *string  `json:"text"`
+		Type    string   `json:"type"`
+		Targets []string `json:"targets"`
+	}
+	if json.NewDecoder(io.LimitReader(r.Body, 1<<20)).Decode(&body) != nil || body.Text == nil || (body.Type != "message" && body.Type != "capacity") || body.Targets == nil {
+		http.Error(w, "Incorrect text, type or targets parameter", http.StatusInternalServerError)
+		return
+	}
+	var m *core.Msg
+	if body.Type == "message" {
+		m = core.NewMsg(core.UserMessage{Type: "", Message: *body.Text}, false)
+	} else {
+		m = core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_WorldFullWarningMessage{WorldFullWarningMessage: &pb.WorldFullWarningMessage{}}}, false)
+	}
+	for _, url := range body.Targets {
+		_ = srv.liveRoom(url, func(room *core.Room) error { return room.ToUsers(context.Background(), m) })
+	}
+	_, _ = io.WriteString(w, "ok")
+}
+
+// ExternalModuleEvent is POST /external-module/event of the pusher: a module's message to one user of a room.
+func (srv *Server) ExternalModuleEvent(w http.ResponseWriter, r *http.Request) {
+	if !srv.adminToken(w, r) {
+		return
+	}
+	var body struct {
+		Data struct {
+			RoomID        string          `json:"roomId"`
+			ModuleID      *string         `json:"moduleId"`
+			RecipientUUID *string         `json:"recipientUuid"`
+			Message       json.RawMessage `json:"message"`
+		} `json:"data"`
+	}
+	raw, _ := io.ReadAll(io.LimitReader(r.Body, 1<<20))
+	if json.Unmarshal(raw, &body) != nil || body.Data.ModuleID == nil || body.Data.RecipientUUID == nil || len(body.Data.Message) == 0 || body.Data.Message[0] != '{' {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		_, _ = io.WriteString(w, `{"cause":"Incorrect moduleId, recipientUuid or message parameter"}`)
+		return
+	}
+	message := &structpb.Value{}
+	_ = protojson.Unmarshal(body.Data.Message, message)
+	d := body.Data
+	m := core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ExternalModuleMessage{ExternalModuleMessage: &pb.ExternalModuleMessage{
+		ModuleId: *d.ModuleID, RecipientUuid: d.RecipientUUID, RoomId: &d.RoomID, Message: message}}}, false)
+	_ = srv.liveRoom(d.RoomID, func(room *core.Room) error { return room.ToUUID(context.Background(), *d.RecipientUUID, m) })
 	_, _ = io.WriteString(w, "ok")
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"slices"
 	"sync"
 	"time"
@@ -136,10 +137,13 @@ func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
 	sp := &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize), s: &spaceState{
 		local: k.Local, members: map[string]*spaceMember{}, conns: map[[2]string]string{},
 		state: spacestate.Empty(), metadata: map[string]json.RawMessage{},
-		mediaCfg: media, strategy: strategyWebRTC, roomName: k.World + "." + k.Local, lk: liveKitState{invited: map[string]bool{}},
+		mediaCfg: media, strategy: strategyWebRTC, present: map[string]bool{}, roomName: k.World + "." + k.Local, lk: liveKitState{invited: map[string]bool{}},
 	}}
 	sp.s.later = sp.later
-	if media.LiveKit != nil {
+	if media.Analytics != nil {
+		sp.s.meeting = analytics.NewMeeting(sp.s.roomName, k.World, sp.s.kind, func() string { return sp.s.strategy }, media.Analytics)
+	}
+	if media.LiveKit != nil || media.LiveKitFor != nil {
 		sp.calls = make(chan func(), 64)
 		go func() {
 			for f := range sp.calls {
@@ -161,6 +165,7 @@ func (sp *Space) later(f func()) {
 }
 
 func (sp *Space) Stop() {
+	_ = sp.a.Post(context.Background(), func() { sp.s.closeMeeting("closed") }) // the last closure before the actor ends
 	sp.mu.Lock()
 	sp.stopped = true
 	sp.mu.Unlock()
@@ -192,7 +197,9 @@ type spaceState struct {
 	finalizeGen   int
 	backTimer     *time.Timer
 	backGen       int
-	rec           *recording // space_recording.go
+	rec           *recording         // space_recording.go
+	meeting       *analytics.Meeting // nil without analytics (space_analytics.go)
+	present       map[string]bool    // the members the meeting counts
 	recGen        int
 	later         func(func()) // run on the space's goroutine, from a timer or a LiveKit answer
 	call          func(func()) // run a LiveKit call off the space's goroutine
@@ -301,6 +308,7 @@ func (s *spaceState) join(p Peer, j SpaceJoin, reply func(error)) {
 		p.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: id, Sender: m.user, Event: SwitchStrategy{Strategy: s.strategy}}, true))
 		s.evaluate()
 	}
+	s.syncPresence(id)
 }
 
 func (s *spaceState) watch(id string, notMember func()) {
@@ -330,6 +338,7 @@ func (s *spaceState) watch(id string, notMember func()) {
 	}
 	s.connect(id, s.inFilterMember)
 	s.evaluate()
+	s.syncPresence(id)
 }
 
 func (s *spaceState) tellStrategy(m *spaceMember) {
@@ -439,6 +448,7 @@ func (s *spaceState) unwatch(id string) {
 	m.watching = false
 	s.drop(id, s.inFilterMember)
 	s.evaluate()
+	s.syncPresence(id)
 }
 
 // closedBy records that closer's front closed its peer with other: a front does so when a user leaves its list
@@ -485,6 +495,7 @@ func (s *spaceState) leave(id string) {
 		return nil
 	})
 	s.evaluate()
+	s.syncPresence(id)
 }
 
 // update merges the masked fields of from into the member and tells the watchers. onlyChanged drops the fields
@@ -575,6 +586,10 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 		}
 	}
 	s.evaluate()
+	s.syncPresence(id)
+	if s.filter != FilterAllUsers && old.Megaphone != m.user.Megaphone && s.meeting != nil {
+		s.meeting.SetActive(id, m.user.Megaphone) // a speaker went on or off air
+	}
 	if old.Megaphone && !m.user.Megaphone {
 		// A floor holder who stops streaming no longer holds the floor.
 		_ = s.updateState(func(st *spacestate.SpaceState) error {
