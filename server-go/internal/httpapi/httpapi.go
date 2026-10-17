@@ -435,10 +435,28 @@ func assetsProxy(internalURL string) http.Handler {
 	if err != nil {
 		panic(fmt.Sprintf("ASSETS_INTERNAL_URL: %v", err))
 	}
-	return &httputil.ReverseProxy{Rewrite: func(pr *httputil.ProxyRequest) {
-		pr.SetURL(target)
-		pr.Out.Header.Del("Cookie") // the front container needs none of the user's cookies
-	}}
+	// Only these headers cross, both ways, as the pusher's AssetsProxy.ts: no cookie goes to the front container, and
+	// its CORS headers (nginx-front.conf adds "ACAO: *") never sit next to ours, which browsers reject.
+	// Accept-Encoding is not forwarded: the transport asks for gzip itself and hands over the decompressed body.
+	keep := func(h http.Header, names ...string) http.Header {
+		out := http.Header{}
+		for _, n := range names {
+			if v := h.Values(n); len(v) > 0 {
+				out[http.CanonicalHeaderKey(n)] = v
+			}
+		}
+		return out
+	}
+	return &httputil.ReverseProxy{
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(target)
+			pr.Out.Header = keep(pr.In.Header, "If-None-Match", "If-Modified-Since")
+		},
+		ModifyResponse: func(r *http.Response) error {
+			r.Header = keep(r.Header, "Content-Type", "Content-Length", "Cache-Control", "ETag", "Last-Modified", "Expires")
+			return nil
+		},
+	}
 }
 
 // lastFavIcon is the src of the last favicon (msApplicationTileImage).

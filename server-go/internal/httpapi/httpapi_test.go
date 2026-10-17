@@ -25,7 +25,11 @@ func newAPI(t *testing.T) (http.Handler, *FrontAssets) {
 			_, _ = io.WriteString(w, template)
 			return
 		}
-		_, _ = io.WriteString(w, "asset "+r.URL.Path)
+		// As nginx-front.conf: its own CORS header on every file.
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Set-Cookie", "front=1")
+		w.Header().Set("ETag", `"e1"`)
+		_, _ = io.WriteString(w, "asset "+r.URL.Path+r.Header.Get("Cookie"))
 	}))
 	t.Cleanup(front.Close)
 	cfg := &config.Config{AssetsURL: "http://front.test", AssetsInternalURL: front.URL, StartRoomURL: "/_/global/start.json",
@@ -153,5 +157,22 @@ func TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes(t *testing.T) {
 	}
 	if w := get(h, "GET", "/map?playUri=https://w.test/r&authToken=forged", nil, nil); w.Code != 401 {
 		t.Fatalf("an invalid token is refused before the admin is asked: %d", w.Code)
+	}
+}
+
+// The front container's CORS header must not come out next to ours: two Access-Control-Allow-Origin values make the
+// browser refuse the woka textures (PR #6810 deploy).
+func TestAProxiedAssetHasOnlyTheServersCORSPolicy(t *testing.T) {
+	h, _ := newAPI(t)
+	r := httptest.NewRequest("GET", "/resources/characters/pipoya/Female%2005-3.png", nil)
+	r.Header.Set("Origin", "https://play.test")
+	r.Header.Set("Cookie", "session=secret")
+	w := httptest.NewRecorder()
+	h.ServeHTTP(w, r)
+	if v := w.Header().Values("Access-Control-Allow-Origin"); len(v) != 1 {
+		t.Fatalf("Access-Control-Allow-Origin: %q", v)
+	}
+	if w.Header().Get("Set-Cookie") != "" || w.Header().Get("ETag") != `"e1"` || strings.Contains(w.Body.String(), "secret") {
+		t.Fatalf("headers %v, body %q", w.Header(), w.Body.String())
 	}
 }
