@@ -6,6 +6,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 )
 
@@ -67,5 +68,46 @@ func TestUploadedFilesAreServedAsDownloadsAndRespectTheRules(t *testing.T) {
 	body, ct = form(t, "file", "a.png", []byte("png"))
 	if w := do(off, "POST", "/upload-file", body, ct); w.Code != 401 {
 		t.Fatalf("ENABLE_CHAT_UPLOAD=false: %d", w.Code)
+	}
+}
+
+func TestTheAdminDecidesWhatSizeAPlayerMayUpload(t *testing.T) {
+	admin := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/limit/fileSize" || r.Header.Get("userRoomToken") != "room-token" {
+			w.WriteHeader(http.StatusForbidden)
+			_, _ = w.Write([]byte(`{"message":"who are you"}`))
+			return
+		}
+		if r.URL.Query().Get("fileSize") != "5" {
+			w.WriteHeader(http.StatusRequestEntityTooLarge)
+			_, _ = w.Write([]byte(`{"message":"file-too-big","maxFileSize":4}`))
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer admin.Close()
+	h := New(Options{PublicURL: "http://up.test", AdminAPIURL: admin.URL}).Handler() // EnableUpload false: the admin decides
+	send := func(token string, data []byte) *httptest.ResponseRecorder {
+		var b bytes.Buffer
+		m := multipart.NewWriter(&b)
+		if token != "" {
+			_ = m.WriteField("userRoomToken", token)
+		}
+		f, _ := m.CreateFormFile("file", "a.txt")
+		_, _ = f.Write(data)
+		_ = m.Close()
+		return do(h, "POST", "/upload-file", &b, m.FormDataContentType())
+	}
+	if w := send("", []byte("hello")); w.Code != http.StatusUnauthorized || !strings.Contains(w.Body.String(), "not-logged") {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if w := send("room-token", []byte("hello")); w.Code != http.StatusOK {
+		t.Fatalf("%d %s", w.Code, w.Body)
+	}
+	if w := send("room-token", []byte("too long")); w.Code != http.StatusRequestEntityTooLarge || !strings.Contains(w.Body.String(), `"maxFileSize":4`) {
+		t.Fatalf("the admin's limit and message are relayed: %d %s", w.Code, w.Body)
+	}
+	if w := send("other", []byte("hello")); w.Code != http.StatusUnauthorized {
+		t.Fatalf("any other refusal is a 401: %d", w.Code)
 	}
 }

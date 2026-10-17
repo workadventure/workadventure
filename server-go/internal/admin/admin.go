@@ -121,7 +121,20 @@ type Admin interface {
 	UpdateChatID(ctx context.Context, email, chatID, roomURL string) error
 	// RefreshOAuthToken is A17: a new token of a third party (Teams, Google...) for an external module.
 	RefreshOAuthToken(ctx context.Context, token, provider, userIdentifier string) (newToken, message string, err error)
+	// SaveUser is A9 to A11: what a logged player chose (name, textures, companion), when the admin keeps it.
+	SaveUser(ctx context.Context, what SaveWhat, userIdentifier, roomURL string, value any) error
+	// Challenge is A4, Cloudflare's challenge for a world's custom hostname.
+	Challenge(ctx context.Context, host string) (string, error)
 }
+
+// SaveWhat is one of A9, A10, A11.
+type SaveWhat int
+
+const (
+	SaveName SaveWhat = iota
+	SaveTextures
+	SaveCompanion
+)
 
 // ChatMembers is WorldChatMembersData.
 type ChatMembers struct {
@@ -237,6 +250,8 @@ func (l *Local) UpdateChatID(context.Context, string, string, string) error   { 
 func (l *Local) RefreshOAuthToken(context.Context, string, string, string) (string, string, error) {
 	return "", "", errNoAdmin
 }
+func (l *Local) SaveUser(context.Context, SaveWhat, string, string, any) error { return nil }
+func (l *Local) Challenge(context.Context, string) (string, error)             { return "", errNoAdmin }
 func (l *Local) SameWorld(context.Context, string, []string, bool) ([]RoomDescription, bool, error) {
 	return nil, false, nil
 }

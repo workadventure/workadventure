@@ -77,6 +77,13 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 	api.maps, _ = ws.(mapReader)
 	api.registerOpenID(mux)
 	mux.HandleFunc("GET /me", api.me)
+	mux.HandleFunc("GET /.well-known/cf-custom-hostname-challenge/", api.cfChallenge)
+	mux.HandleFunc("GET /profile-callback", api.profileCallback)
+	for p, what := range map[string]admin.SaveWhat{"/save-name": admin.SaveName, "/save-textures": admin.SaveTextures,
+		"/save-companion-texture": admin.SaveCompanion} {
+		mux.HandleFunc("POST "+p, api.save(what))
+		mux.HandleFunc("OPTIONS "+p, func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, "") })
+	}
 	mux.HandleFunc("GET /map", api.mapDetails)
 	mux.HandleFunc("GET /woka/list", api.authenticatedList(adm.WokaList))
 	mux.HandleFunc("GET /companion/list", api.authenticatedList(adm.CompanionList))
@@ -341,7 +348,9 @@ func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
 		text(w, http.StatusServiceUnavailable, "WorkAdventure is starting, please retry in a few seconds.")
 		return
 	}
-	// ponytail: no access_key autologin (needs the admin).
+	if api.accessKey(w, r) {
+		return
+	}
 	meta := admin.DefaultMetaTags()
 	api.mapMetaTags(r, meta)
 	capabilities, _ := json.Marshal(api.admin.Capabilities())

@@ -116,6 +116,8 @@ type Config struct {
 	BBB                              BBB      // BBB_URL, BBB_SECRET
 	MapStorageAPIToken               string   // MAP_STORAGE_API_TOKEN: map-storage's calls to /roomArea and the resourceUrls
 	WhitelistedResourceURLs          []string // WHITELISTED_RESOURCE_URLS: the origins a resourceUrl may point to, PUSHER_URL's besides
+	ProfileScreenProvider            string   // OPENID_PROFILE_SCREEN_PROVIDER, else ADMIN_URL/profile: where /profile-callback sends the browser
+	AutologinURL                     string   // AUTOLOGIN_URL, else ADMIN_URL/workadventure/login: where ?access_key= goes
 	StunServer                       string
 	TurnServer                       string
 	TurnUser                         string
@@ -360,7 +362,7 @@ func parse(get func(string) string) (*Config, error) {
 		r.oneOf("OPID_WOKA_NAME_POLICY", policies...),
 		"user_input",
 	)
-	c.Uploader = uploader.Options{PublicURL: r.str("UPLOADER_URL"), AllowedOrigin: firstNonEmpty(r.str("ALLOWED_CORS_ORIGIN"), r.str("PLAY_URL"), "*"),
+	c.Uploader = uploader.Options{AdminAPIURL: c.AdminAPIURL, PublicURL: r.str("UPLOADER_URL"), AllowedOrigin: firstNonEmpty(r.str("ALLOWED_CORS_ORIGIN"), r.str("PLAY_URL"), "*"),
 		EnableUpload: c.EnableChatUpload, MaxFileSize: int64(r.integer("UPLOAD_MAX_FILESIZE", 0))}
 	c.RecordingConfigured = r.str("LIVEKIT_RECORDING_S3_ENDPOINT") != "" && r.str("LIVEKIT_RECORDING_S3_BUCKET") != "" &&
 		r.str("LIVEKIT_RECORDING_S3_ACCESS_KEY") != "" && r.str("LIVEKIT_RECORDING_S3_SECRET_KEY") != "" &&
@@ -399,6 +401,11 @@ func frontEnv(r *reader, c *Config) map[string]any {
 	profileProvider := firstNonEmpty(r.str("OPENID_PROFILE_SCREEN_PROVIDER"), r.str("OPID_PROFILE_SCREEN_PROVIDER"))
 	if adminURL := r.str("ADMIN_URL"); profileProvider == "" && adminURL != "" {
 		profileProvider = adminURL + "/profile"
+	}
+	c.ProfileScreenProvider = profileProvider
+	c.AutologinURL = r.str("AUTOLOGIN_URL")
+	if c.AutologinURL == "" && c.AdminURL != "" {
+		c.AutologinURL = c.AdminURL + "/workadventure/login"
 	}
 
 	env := map[string]any{
