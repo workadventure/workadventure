@@ -79,3 +79,29 @@ func TestTheAdminsGlobalEventAndRoomCount(t *testing.T) {
 		t.Fatalf("rooms: %s", w.Body)
 	}
 }
+
+// A global message (the admin's announcement) is the admin's alone; broadcast to the world, it reaches the other
+// rooms of the world that have players.
+func TestOnlyAnAdminAnnouncesToTheWorld(t *testing.T) {
+	h := editorHarness(t)
+	admin := h.dialAs(auth.Token{Identifier: "admin", Tags: []string{"admin"}}, "")
+	guest := h.dialAs(auth.Token{Identifier: "guest"}, "")
+	elsewhere := h.dialWAM(auth.Token{Identifier: "far"}) // another room of the same world
+	announce := func(c *client, text string) {
+		c.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_PlayGlobalMessage{PlayGlobalMessage: &pb.PlayGlobalMessage{
+			Type: "message", Content: text, BroadcastToWorld: true}}})
+	}
+	announce(guest, "fake")
+	announce(admin, "closing")
+	for _, c := range []*client{admin, guest, elsewhere} {
+		c.waitFor("the announcement", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+			switch d.GetSendUserMessage().GetMessage() {
+			case "fake":
+				t.Fatal("a guest's announcement went out")
+			case "closing":
+				return true
+			}
+			return false
+		})
+	}
+}
