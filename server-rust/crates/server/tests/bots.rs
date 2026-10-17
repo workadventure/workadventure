@@ -953,3 +953,41 @@ async fn an_admin_speaks_to_the_room_and_previews_a_ban_by_ip() {
     let answer = ia.expect(WAIT, answer_to(q)).await.unwrap();
     assert!(matches!(answer, pb::answer_message::Answer::BanIpPreviewAnswer(pb::BanIpPreviewAnswer { ip_known: false, .. })), "{answer:?}");
 }
+
+#[tokio::test]
+async fn the_profile_pages_ask_the_provider_who_the_token_is() {
+    // A provider that knows one access token.
+    let provider = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let issuer = format!("http://{}", provider.local_addr().unwrap());
+    let doc = serde_json::json!({
+        "issuer": issuer, "authorization_endpoint": format!("{issuer}/auth"), "token_endpoint": format!("{issuer}/token"),
+        "userinfo_endpoint": format!("{issuer}/userinfo"),
+    });
+    let app = axum::Router::new()
+        .route("/.well-known/openid-configuration", axum::routing::get(move || async move { axum::Json(doc) }))
+        .route(
+            "/userinfo",
+            axum::routing::get(|headers: axum::http::HeaderMap| async move {
+                if headers["authorization"] != "Bearer good" {
+                    return Err(axum::http::StatusCode::UNAUTHORIZED);
+                }
+                Ok(axum::Json(serde_json::json!({"sub": "s", "email": "a@b.c", "name": "<b>Al</b>", "tags": ["admin", "x"]})))
+            }),
+        );
+    tokio::spawn(async move { axum::serve(provider, app).await });
+    let vars = [("SECRET_KEY", "test"), ("OPENID_CLIENT_ID", "c"), ("OPENID_CLIENT_ISSUER", issuer.as_str())];
+    let server = start_with(&vars).await.0;
+    let http = reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).build().unwrap();
+
+    let page = http.get(format!("{server}/profile?accessToken=good")).send().await.unwrap().text().await.unwrap();
+    assert!(page.contains("a@b.c") && page.contains("admin, x") && page.contains("&lt;b&gt;Al&lt;") && page.contains(&issuer.replace('/', "&#x2F;")), "{page}");
+    assert_eq!(http.get(format!("{server}/profile?accessToken=bad")).send().await.unwrap().status(), 500);
+
+    // Without an admin, the callback leads to that page.
+    let claims = wa_server::jwt::Claims { identifier: "a@b.c".into(), access_token: Some("good".into()), username: None, locale: None, tags: None, matrix_user_id: None };
+    let token = wa_server::jwt::create("test", claims);
+    let r = http.get(format!("{server}/profile-callback?token={token}&playUri=http://play.test/r")).send().await.unwrap();
+    assert_eq!((r.status().as_u16(), r.headers()["location"].to_str().unwrap()), (302, "/profile?accessToken=good&playUri=http://play.test/r"));
+    let r = http.get(format!("{server}/profile-callback?token=nope&playUri=x")).send().await.unwrap();
+    assert_eq!(r.status(), 500);
+}
