@@ -19,7 +19,7 @@ Polls work in the proximity chat (a bubble, a meeting room or a podium) and in c
    - **Results hidden**: the results stay hidden until you close the poll.
 4. Click **Create poll**.
 
-![The "Create poll" window](images/polls-create.png)
+![The "Create poll" window](../images/polls-create.png)
 
 Each person can choose one answer.
 
@@ -29,15 +29,15 @@ Click an answer to vote. Click another answer to change your vote, or the same a
 
 The number of votes is always shown. If the results are visible, you see them after voting:
 
-![A poll with visible results after voting: 2 votes for "Sushi bar"](images/polls-results.png)
+![A poll with visible results after voting: 2 votes for "Sushi bar"](../images/polls-results.png)
 
 ### Closing a poll
 
 Only the person who created the poll can close it: click **Close poll** at the bottom of the poll. Everyone then sees the results, with the leading answer first. The creator can also **Delete** the poll.
 
-![A closed poll with its results](images/polls-closed.png)
+![A closed poll with its results](../images/polls-closed.png)
 
-In a chat room, a moderator with a higher role than the creator can also delete a poll (see [Moderating chat rooms](chat-moderation.md)).
+In a chat room, a moderator with a higher role than the creator can also delete a poll (see [Moderating chat rooms](../chat-moderation.md)).
 
 ### Finding the polls of a room
 
@@ -55,7 +55,7 @@ During a meeting, **Questions** collects the questions of the participants, so t
 On a podium, polls and questions only work if the map creator ticked **Associate a dedicated chat channel** (see [Podium and audience](/map-building/inline-editor/area-editor/broadcast)). A meeting room can also have its chat turned off.
 :::
 
-![The Questions panel as an administrator sees it: two questions, the first one with one vote](images/questions-panel.png)
+![The Questions panel as an administrator sees it: two questions, the first one with one vote](../images/questions-panel.png)
 
 ### Asking a question
 

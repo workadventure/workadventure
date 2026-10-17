@@ -58,7 +58,7 @@ import {
     type LocalTrackStoreValue,
 } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
-import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
+import { buildMicrophoneAudioConstraints, isVoiceIsolationSupported } from "./MicrophoneSettings";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
 
@@ -950,11 +950,11 @@ async function runRawStreamUpdate(
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
             }
             if (currentStream.getAudioTracks().length > 0) {
-                const audioTrackSettings = currentStream.getAudioTracks()[0]?.getSettings();
+                const audioTrack = currentStream.getAudioTracks()[0];
+                const audioTrackSettings = audioTrack?.getSettings();
                 usedMicrophoneDeviceIdStore.set(audioTrackSettings?.deviceId);
                 voiceIsolationSupportedStore.setSupported(
-                    navigator.mediaDevices?.getSupportedConstraints().voiceIsolation === true &&
-                        audioTrackSettings?.voiceIsolation !== undefined,
+                    isVoiceIsolationSupported(audioTrackSettings, audioTrack?.getCapabilities?.()),
                 );
             } else {
                 voiceIsolationSupportedStore.setSupported(false);
@@ -985,12 +985,11 @@ async function runRawStreamUpdate(
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
                 trackMediaAccessIssue(mustRequestNewAudio ? "camera_microphone" : "camera", classified);
+                // Only the camera: turning it off asks for the microphone alone, which turns the microphone off in
+                // its own turn if it fails too. A camera taken by another application (NotReadableError on Windows)
+                // must not cost the microphone.
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
-                if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classified);
-                }
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
                 setIfCurrent({
@@ -1029,13 +1028,6 @@ function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
         oldConstraints.audio = false;
     }
     userMediaRetryCountStore.update((count) => count + 1);
-}
-
-/**
- * Asks for the camera again: the current one stopped delivering frames (see CameraStallDetector).
- */
-export function restartCamera(): void {
-    retryGetUserMedia(true, false);
 }
 
 /**

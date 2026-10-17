@@ -34,9 +34,6 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
-        noImageWarning: "Sua câmera parou de enviar imagens. Outro aplicativo pode estar usando a câmera.",
-        retry: "Tentar novamente",
-        changeCamera: "Trocar de câmera",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
@@ -44,6 +41,8 @@ const actionbar: BaseTranslation = {
         noSoundWarning:
             "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
         advancedNoiseReduction: "Redução de ruído avançada",
+        loudEnvironmentWarning: "Foi detectado ruído de fundo contínuo no seu microfone.",
+        enableNoiseSuppression: "Ativar supressão de ruído",
         noiseSuppressionInitializing: "Inicializando a supressão de ruído personalizada...",
         noiseSuppressionUnsupported: "Este navegador não pode executar a supressão de ruído personalizada.",
         noiseSuppressionError:

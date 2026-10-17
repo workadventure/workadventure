@@ -269,6 +269,7 @@ export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
                 relay: sample.relay ?? null,
                 relayProtocol: toRelayProtocol(sample.relayProtocol),
                 livekitServerUrl: sample.livekitServerUrl ?? null,
+                livekitRegion: sample.livekitRegion || null,
                 fps: sample.fps,
                 fpsStdDev: Number.isFinite(sample.fpsStdDev) ? (sample.fpsStdDev ?? null) : null,
                 jitter: sample.jitter,
@@ -281,10 +282,69 @@ export class AnalyticsEventsQueue extends SharedAnalyticsEventsQueue {
                 qualityLimitationReason:
                     direction === "outbound" ? toLimitationReason(sample.qualityLimitationReason) : null,
                 encoderImplementation: direction === "outbound" ? (sample.encoderImplementation ?? null) : null,
+                ...toPlaybackProperties(sample, direction),
+                roundTripTimeMs: direction === "inbound" ? plausible(sample.roundTripTimeMs, 60_000) : null,
+                ...toSenderProperties(sample, direction),
                 sampleSeq: sample.sampleSeq ?? null,
             },
         };
     }
+}
+
+/**
+ * Outbound only: how the capture, the encoder and the network of our own stream kept up. A value outside what a
+ * browser can report is dropped on its own, the others stay.
+ */
+function toSenderProperties(sample: VideoQualitySampleMessage, direction: "inbound" | "outbound") {
+    const outbound = (value: number | undefined, max: number): number | null =>
+        direction === "outbound" ? plausible(value, max) : null;
+    return {
+        captureFps: outbound(sample.captureFps, 240),
+        captureTargetFps: outbound(sample.captureTargetFps, 240),
+        encodeMsPerFrame: outbound(sample.encodeMsPerFrame, 10_000),
+        cpuLimitedRatio: outbound(sample.cpuLimitedRatio, 1),
+        bandwidthLimitedRatio: outbound(sample.bandwidthLimitedRatio, 1),
+        uploadRoundTripTimeMs: outbound(sample.uploadRoundTripTimeMs, 60_000),
+        uploadLossRatio: outbound(sample.uploadLossRatio, 1),
+        // 10 Gbit/s: far above any estimate a browser makes
+        availableOutgoingBitrate: outbound(sample.availableOutgoingBitrate, 10_000_000_000),
+    };
+}
+
+function plausible(value: number | undefined, max: number): number | null {
+    return value !== undefined && Number.isFinite(value) && value >= 0 && value <= max ? value : null;
+}
+
+// A sample normally covers ~5 s; a throttled background tab can stretch it, a bogus client could claim anything.
+const MAX_PLAYBACK_WINDOW_SECONDS = 300;
+
+/**
+ * Inbound only: what the browser counted during the sample window. A counter is worthless without its window (it
+ * cannot become a rate), so an implausible window drops them all.
+ */
+function toPlaybackProperties(sample: VideoQualitySampleMessage, direction: "inbound" | "outbound") {
+    const windowSeconds = direction === "inbound" ? sample.windowSeconds : undefined;
+    const measurable =
+        windowSeconds !== undefined &&
+        Number.isFinite(windowSeconds) &&
+        windowSeconds > 0 &&
+        windowSeconds <= MAX_PLAYBACK_WINDOW_SECONDS;
+    const counter = (value: number | undefined): number | null =>
+        measurable && value !== undefined && Number.isFinite(value) && value >= 0 ? value : null;
+    return {
+        windowSeconds: measurable ? windowSeconds : null,
+        framesDecoded: counter(sample.framesDecoded),
+        framesDropped: counter(sample.framesDropped),
+        freezeCount: counter(sample.freezeCount),
+        freezeSeconds: counter(sample.freezeSeconds),
+        pauseCount: counter(sample.pauseCount),
+        pauseSeconds: counter(sample.pauseSeconds),
+        interFrameDelaySumSeconds: counter(sample.interFrameDelaySumSeconds),
+        interFrameDelaySquaredSumSeconds: counter(sample.interFrameDelaySquaredSumSeconds),
+        decodeSeconds: counter(sample.decodeSeconds),
+        packetsReceived: counter(sample.packetsReceived),
+        packetsLost: counter(sample.packetsLost),
+    };
 }
 
 function isRequiredString(value: string | undefined): value is string {

@@ -44,8 +44,9 @@
     import { analyticsClient } from "../Administration/AnalyticsClient";
     import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
+    import { sidePanelWidthStore } from "../Stores/SidePanelStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
-    import { startCalendarReminders } from "./Calendar/CalendarReminder";
+    import { calendarRemindersStore, startCalendarReminders } from "./Calendar/CalendarReminder";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import ActionBarButton from "./ActionBar/ActionBarButton.svelte";
 
@@ -194,7 +195,7 @@
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor,
     );
     let mapEditorToolbarVisible = $derived($windowSize.width >= 768 || !$mapEditorVisibilityStore);
-    let marginRight = $derived(
+    let mapEditorReservedSpace = $derived(
         getMapEditorRightReservedSpace({
             isMapEditorActive: $mapEditorModeStore,
             isMapEditorPanelVisible: mapEditorPanelVisible,
@@ -202,6 +203,7 @@
             mapEditorPanelWidth: $mapEditorSideBarWidthStore,
         }),
     );
+    let marginRight = $derived(mapEditorReservedSpace + $sidePanelWidthStore);
 
     function onHighlightFullscreenSendMessage() {
         if (get(chatVisibilityStore) && get(navChat).key === "chat") {
@@ -250,7 +252,7 @@
     0
         ? 'not-cowebsite'
         : ''}"
-    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
+    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px; --side-panel-end: {mapEditorReservedSpace}px"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed start-0 end-0"></div>
@@ -334,12 +336,10 @@
     {/if}
 
     <!-- Rendered here rather than beside #main-layout: its notifications and toasts must show above these
-         panels, and they cannot leave its stacking context (z-10). The reminder cards sit in the agenda's corner;
-         opening the agenda settles them, so the two never overlap. -->
+         panels, and they cannot leave its stacking context (z-10). From md up, the panel sits in the room
+         marginRight makes for it (sidePanelWidthStore), left of the map editor's (--side-panel-end). -->
     {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
         <Calendar />
-    {:else if $calendarIsActivatedStore}
-        <CalendarReminders />
     {/if}
     {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
         <TodoList />
@@ -405,14 +405,19 @@
                 <LimitRoomModal />
             {/if}
 
-            <!-- Toast stack, with the host-side raised-hands dock stacked below it so a toast never covers the
-                 dock's buttons (the dock self-gates on visibleRaisedHandSectionsStore). -->
+            <!-- Toast stack, below the action bar, with the meeting reminders and the host-side raised-hands dock
+                 stacked under it so nothing covers anything else's buttons (the dock self-gates on
+                 visibleRaisedHandSectionsStore). Opening the agenda settles the reminders: it lists the same meetings. -->
             <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
                 {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
                     {@const toast = toastEntry[1]}
                     {@const ToastComponent = toast.component}
                     <ToastComponent {...toast.props} />
                 {/each}
+                <!-- Only with a reminder: an empty block would still push the dock down. -->
+                {#if $calendarIsActivatedStore && !$isCalendarVisibleStore && $calendarRemindersStore.length > 0}
+                    <CalendarReminders />
+                {/if}
                 <RaisedHandsDock />
             </div>
 
