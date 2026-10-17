@@ -6,11 +6,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/workadventure/workadventure/server-go/internal/livekit"
-	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
-	"github.com/workadventure/workadventure/server-go/internal/matrix"
-	"github.com/workadventure/workadventure/server-go/internal/s3"
-	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
 	"net"
 	"net/http"
@@ -24,15 +19,22 @@ import (
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/config"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/httpapi"
+	"github.com/workadventure/workadventure/server-go/internal/livekit"
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
+	"github.com/workadventure/workadventure/server-go/internal/matrix"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
 	"github.com/workadventure/workadventure/server-go/internal/roomapi"
+	"github.com/workadventure/workadventure/server-go/internal/s3"
+	"github.com/workadventure/workadventure/server-go/internal/store"
 	"github.com/workadventure/workadventure/server-go/internal/uploader"
 	"github.com/workadventure/workadventure/server-go/internal/ws"
 )
@@ -189,16 +191,15 @@ func run() error {
 		}
 		servers = append(servers, newServer(cfg.UploaderPort, uploader.New(up).Handler()))
 	}
+	var roomAPI *grpc.Server
+	var roomAPIAddr string
 	if cfg.RoomAPISecretKey != "" || cfg.AdminAPIURL != "" {
 		api := roomapi.New(cfg.RoomAPISecretKey, cfg.FrontURL, rooms, wsServer.RoomVariables)
 		if cfg.AdminAPIURL != "" {
 			api.WithAdmin(roomapi.NewAdminAuthorizer(cfg.AdminAPIURL, cfg.NodeEnv == "production"))
 		}
-		roomAPI := newServer(cfg.RoomAPIPort, api)
-		roomAPI.Addr = net.JoinHostPort(cfg.RoomAPIBindHost, strconv.Itoa(cfg.RoomAPIPort))
-		roomAPI.Protocols = new(http.Protocols)
-		roomAPI.Protocols.SetUnencryptedHTTP2(true) // gRPC without TLS (h2c with prior knowledge)
-		servers = append(servers, roomAPI)
+		roomAPI = api.GRPC()
+		roomAPIAddr = net.JoinHostPort(cfg.RoomAPIBindHost, strconv.Itoa(cfg.RoomAPIPort))
 	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics.
@@ -208,7 +209,7 @@ func run() error {
 		mux.HandleFunc("/debug/pprof/profile", metrics.Guard(cfg.PrometheusToken, pprof.Profile))
 		servers = append(servers, newServer(cfg.PrometheusPort, mux))
 	}
-	errs := make(chan error, len(servers))
+	errs := make(chan error, len(servers)+1) // +1: the Room API
 	for _, s := range servers {
 		ln, err := net.Listen("tcp", s.Addr)
 		if err != nil {
@@ -216,6 +217,14 @@ func run() error {
 		}
 		slog.Info("listening", "addr", s.Addr)
 		go func() { errs <- s.Serve(ln) }()
+	}
+	if roomAPI != nil {
+		ln, err := net.Listen("tcp", roomAPIAddr)
+		if err != nil {
+			return err
+		}
+		slog.Info("listening", "addr", roomAPIAddr)
+		go func() { errs <- roomAPI.Serve(ln) }()
 	}
 
 	select {
@@ -226,8 +235,20 @@ func run() error {
 	slog.Info("shutting down")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
+	stopped := make(chan struct{})
+	go func() {
+		if roomAPI != nil {
+			roomAPI.GracefulStop()
+		}
+		close(stopped)
+	}()
 	for _, s := range servers {
 		_ = s.Shutdown(shutdownCtx)
+	}
+	select { // the Room API listeners never end by themselves: cut at the HTTP servers' deadline, before the flush
+	case <-stopped:
+	case <-shutdownCtx.Done():
+		roomAPI.Stop()
 	}
 	if err := wsServer.FlushVariables(shutdownCtx); err != nil {
 		slog.Error("variables lost on shutdown", "error", err)
