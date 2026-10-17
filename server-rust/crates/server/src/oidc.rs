@@ -419,8 +419,66 @@ pub async fn check_access_token(state: &AppState, access_token: &str) -> Option<
     userinfo(state, &p, access_token, None).await.ok()
 }
 
+/// `/profile-callback?token&playUri`: on to the admin's profile screen (OPID_PROFILE_SCREEN_PROVIDER), or to
+/// `/profile` without an admin, once the provider still accepts the token. The values go unencoded, as the pusher
+/// sends them.
+async fn profile_callback(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
+    let pairs = query_pairs(q.as_deref());
+    let get = |k: &str| pairs.iter().find(|(n, _)| n == k).map(|(_, v)| v.clone());
+    let (Some(token), Some(play_uri)) = (get("token"), get("playUri")) else {
+        return (StatusCode::BAD_REQUEST, "token and playUri are required").into_response();
+    };
+    let failed = || (StatusCode::INTERNAL_SERVER_ERROR, "Token cannot be checked on OpenID connect provider").into_response();
+    let Some(access_token) = jwt::verify(&state.config.secret_key, &token).ok().and_then(|c| c.access_token) else { return failed() };
+    if check_access_token(&state, &access_token).await.is_none() {
+        return failed();
+    }
+    let screen = match &state.admin {
+        Some(_) => match state.config.raw.get("OPID_PROFILE_SCREEN_PROVIDER").filter(|p| !p.is_empty()) {
+            Some(p) => p.clone(),
+            None => return (StatusCode::INTERNAL_SERVER_ERROR, "No admin backoffice set!").into_response(),
+        },
+        None => "/profile".to_owned(),
+    };
+    redirect(&format!("{screen}?accessToken={access_token}&playUri={play_uri}"), &[])
+}
+
+/// `/profile?accessToken`: what the provider says of the user (OpenIdProfileController), escaped here.
+async fn profile(State(state): State<AppState>, RawQuery(q): RawQuery) -> Response {
+    let pairs = query_pairs(q.as_deref());
+    let Some(access_token) = pairs.iter().find(|(n, _)| n == "accessToken").map(|(_, v)| v.clone()) else {
+        return (StatusCode::BAD_REQUEST, "accessToken is required").into_response();
+    };
+    let Some(info) = check_access_token(&state, &access_token).await else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Token cannot be checked on OpenID connect provider").into_response();
+    };
+    let field = |label: &str, v: Option<String>| {
+        v.map(|v| format!(r#"<p style="margin: 0;font-size: 12px;">{label}</p><p style="margin: 0 0 5px 0;font-weight: bold;">{}</p>"#, escape_html(&v)))
+    };
+    let tags = info["tags"].as_array().map(|t| t.iter().filter_map(Value::as_str).collect::<Vec<_>>().join(", "));
+    let lines: Vec<String> = [
+        field("Your email or application id:", info["email"].as_str().map(str::to_owned)),
+        field("Your name:", info["name"].as_str().map(str::to_owned)),
+        field("Your access right:", tags),
+    ]
+    .into_iter()
+    .flatten()
+    .collect();
+    let body = if lines.is_empty() { r#"<p style="margin: 0;">No information about your profile provided 😱</p>"#.to_owned() } else { lines.concat() };
+    let picture = escape_html(info["profile"].as_str().unwrap_or("/static/images/logo-WA-min.png"));
+    let domain = escape_html(state.oidc.as_ref().map_or("", |o| o.issuer.as_str()));
+    let html = format!(
+        r#"<!DOCTYPE html><html><head><style>*{{font-family: Roboto, monospace;}} body{{text-align: center;}} section{{margin: 20px;}}</style></head>
+<body><div class="container"><section><img src="{picture}"></section>
+<section>Profile validated by domain: <span style="font-weight: bold">{domain}</span></section><section>{body}</section></div></body></html>"#
+    );
+    ([(header::CONTENT_TYPE, "text/html")], html).into_response()
+}
+
 pub fn routes() -> Router<AppState> {
     Router::new()
+        .route("/profile", get(profile))
+        .route("/profile-callback", get(profile_callback))
         .route("/login-screen", get(login_screen))
         .route("/openid-callback", get(openid_callback))
         .route("/matrix-callback", get(matrix_callback))
