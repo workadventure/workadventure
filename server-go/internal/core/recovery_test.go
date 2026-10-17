@@ -186,3 +186,30 @@ func TestAShutdownClosesTheOpenMeeting(t *testing.T) {
 		t.Fatalf("with its reason: %+v", got.list[len(got.list)-1].Properties)
 	}
 }
+
+// Player details that change nothing reach no one, in a live-streaming space too (the pusher computes the mask
+// from the fields that really changed): an update the watcher receives would count as a join in the scripting API.
+func TestPlayerDetailsThatChangeNothingAreNotSent(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "live"})
+	defer sp.Stop()
+	alice, bob := &recorder{}, &recorder{}
+	chat := "@bob:matrix"
+	for id, p := range map[string]*recorder{"alice": alice, "bob": bob} {
+		if err := sp.Join(ctx, p, SpaceJoin{User: SpaceUser{ID: id, Name: id, AvailabilityStatus: StatusOnline, ChatID: &chat}, Filter: FilterLiveStreamingUsers}, func(error) {}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	_ = sp.Watch(ctx, "alice", nil)
+	_ = sp.UpdateUser(ctx, "bob", SpaceUser{Megaphone: true}, []string{"megaphoneState"})
+	syncSpace(t, sp)
+	if !has(alice.take(), func(u SpaceUserAdded) bool { return u.User.ID == "bob" }) {
+		t.Fatal("bob streaming joins alice's list")
+	}
+	same := chat
+	_ = sp.UpdatePlayerDetails(ctx, "bob", SpaceUser{AvailabilityStatus: StatusOnline, ChatID: &same, ShowVoiceIndicator: false},
+		[]string{"availabilityStatus", "chatID", "showVoiceIndicator"})
+	syncSpace(t, sp)
+	if got := alice.take(); len(got) != 0 {
+		t.Fatalf("unchanged player details reach no one: %v", got)
+	}
+}
