@@ -25,6 +25,7 @@ Usage:
   dev/dev env <name>      Playwright variables for a stack: eval "\$(dev/dev env ts)"
   dev/dev assets <name>   map-storage/tests/assets.zip for that stack (resetWamMaps uploads it)
   dev/dev test <name> <playwright args>   Playwright against that stack, one campaign at a time on the machine
+  dev/dev synapse reset   Empty the socle's Synapse (before the @matrix specs, after warm-auth)
 USAGE
     exit 1
 }
@@ -130,6 +131,13 @@ ENV
     rm -rf "$tmp"
     echo "map-storage/tests/assets.zip: collections from play.$name.workadventure.localhost$SOCLE_URL_PORT"
     ;;
+"synapse reset")
+    # Matrix ids come from the OIDC e-mail, and User1 and UserMatrix share one: whoever logs in first gets @john.doe.
+    # The @matrix specs expect a Synapse where UserMatrix comes first.
+    docker rm -f wa-socle-synapse-1 >/dev/null
+    docker volume rm wa-socle_synapse-data >/dev/null
+    socle up -d --wait synapse
+    ;;
 "test "*)
     name=${2:-}
     [ -n "$name" ] || usage
@@ -151,7 +159,10 @@ ENV
     eval "$("$0" env "$name")"
     cd "$REPO/tests"
     # caffeinate: a sleeping Mac turns specs into 15-minute blank pages.
-    caffeinate -i npx playwright test "${@:3}" --workers=1
+    # Chromium unless a project is given: the other browsers are not installed on the dev machines.
+    project=(--project=chromium)
+    for a in "${@:3}"; do case "$a" in --project*) project=() ;; esac; done
+    caffeinate -i npx playwright test "${@:3}" ${project[@]+"${project[@]}"} --workers=1
     ;;
 *)
     usage
