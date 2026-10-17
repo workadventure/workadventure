@@ -93,7 +93,7 @@ func (s *Session) analyticsReport(r *pb.AnalyticsEventReportMessage) {
 			slog.Debug("analytics event dropped: payload does not match the catalog", "event", e.GetEventName(), "error", err)
 			continue
 		}
-		s.track(e.GetEventName(), e.GetSource(), e.GetEventId(), time.UnixMilli(int64(e.GetClientEventTimeMs())), properties)
+		s.track(e.GetEventName(), e.GetSource(), e.GetEventId(), time.UnixMilli(int64(e.GetClientEventTimeMs())), properties) //nolint:gosec // FromClient bounds the time to 8.64e15 ms
 	}
 }
 

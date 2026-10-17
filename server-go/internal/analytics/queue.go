@@ -196,7 +196,7 @@ func (q *Queue) send(ctx context.Context, events []Event) error {
 		if attempt == maxAttempts-1 {
 			return err
 		}
-		wait := min(250*time.Millisecond<<attempt, 5*time.Second) + time.Duration(50+rand.IntN(201))*time.Millisecond
+		wait := min(250*time.Millisecond<<attempt, 5*time.Second) + time.Duration(50+rand.IntN(201))*time.Millisecond //nolint:gosec // jitter of a retry, not a secret
 		if d, ok := ctx.Deadline(); ok && time.Until(d) < wait {
 			return err // the drain's deadline comes first
 		}
@@ -221,6 +221,6 @@ func (q *Queue) post(ctx context.Context, url string, body []byte) (int, error) 
 	if err != nil {
 		return 0, err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return resp.StatusCode, nil
 }

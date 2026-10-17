@@ -153,7 +153,7 @@ func (s *state) writeVariable(v Variable, tags []string, mayRedeclare, byAPI boo
 	if declared && def.Persist && vars.Save != nil {
 		vars.Save(v.Name, v.Value)
 	}
-	s.announceVariable(def, VariableChanged{Name: v.Name, Value: v.Value})
+	s.announceVariable(def, VariableChanged(v))
 	return false, nil
 }
 

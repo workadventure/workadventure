@@ -5,7 +5,7 @@ package admin
 import (
 	"context"
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha1" //nolint:gosec // HMAC-SHA1 is what TURN REST credentials (coturn use-auth-secret) are made of
 	_ "embed"
 	"encoding/base64"
 	"encoding/json"

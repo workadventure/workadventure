@@ -194,11 +194,12 @@ func (api *API) registerOpenID(mux *http.ServeMux) {
 
 // Cookies of the login flow. Values are query-escaped: a play URI may hold characters a cookie cannot.
 func setCookie(w http.ResponseWriter, r *http.Request, name, value string) {
-	http.SetCookie(w, &http.Cookie{Name: name, Value: url.QueryEscape(value), Path: "/", HttpOnly: true, Secure: isHTTPS(r)})
+	http.SetCookie(w, &http.Cookie{Name: name, Value: url.QueryEscape(value), Path: "/", HttpOnly: true, Secure: isHTTPS(r), //nolint:gosec // Secure on HTTPS only: a local HTTP setup must get the cookie back
+		SameSite: http.SameSiteLaxMode}) // Lax: sent back on the provider's redirect, a top-level navigation
 }
 
 func clearCookie(w http.ResponseWriter, name string) {
-	http.SetCookie(w, &http.Cookie{Name: name, Value: "", Path: "/", MaxAge: -1})
+	http.SetCookie(w, &http.Cookie{Name: name, Value: "", Path: "/", MaxAge: -1, HttpOnly: true, SameSite: http.SameSiteLaxMode}) //nolint:gosec // Secure on HTTPS only, as the cookie it clears
 }
 
 func cookie(r *http.Request, name string) string {
@@ -263,7 +264,7 @@ func (api *API) loginScreen(w http.ResponseWriter, r *http.Request) {
 	if scopes := q["providerScopes"]; len(scopes) > 0 {
 		opts = append(opts, oauth2.SetAuthURLParam("providerScopes", strings.Join(scopes, ",")))
 	}
-	http.Redirect(w, r, o.oauth.AuthCodeURL(state, opts...), http.StatusFound)
+	http.Redirect(w, r, o.oauth.AuthCodeURL(state, opts...), http.StatusFound) //nolint:gosec // the provider's authorization endpoint, from its discovery
 }
 
 func (api *API) openIDCallback(w http.ResponseWriter, r *http.Request) {
@@ -305,7 +306,7 @@ func (api *API) openIDCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	if matrixURI == "" {
 		clearCookie(w, "playUri")
-		http.Redirect(w, r, playURI+"?token="+url.QueryEscape(token), http.StatusFound)
+		http.Redirect(w, r, playURI+"?token="+url.QueryEscape(token), http.StatusFound) //nolint:gosec // playUri passed VerifyDomain at /login-screen before it went in the cookie
 		return
 	}
 	// Synapse logs the user in through the same provider, then comes back to /matrix-callback (playUri stays in
@@ -439,7 +440,7 @@ func (api *API) logout(w http.ResponseWriter, r *http.Request) {
 			slog.Warn("cannot revoke the OpenID access token", "error", err)
 		}
 	}
-	http.Redirect(w, r, playURI, http.StatusFound)
+	http.Redirect(w, r, playURI, http.StatusFound) //nolint:gosec // playUri passed VerifyDomain above
 }
 
 func claimString(claims map[string]any, name string) string {
