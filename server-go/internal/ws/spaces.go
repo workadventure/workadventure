@@ -211,6 +211,10 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 			v.MuteAudio.Force = s.isAdmin()
 		case *pb.PrivateSpaceEvent_MuteVideo:
 			v.MuteVideo.Force = s.isAdmin()
+		case *pb.PrivateSpaceEvent_ProximityFileTransferOffer:
+			// The receiver is shown who offers the file: the sender's own woka and name, never what it claims.
+			u := s.spaceUser()
+			v.ProximityFileTransferOffer.CharacterTextures, v.ProximityFileTransferOffer.Name = characterTextures(u.Textures), proto.String(u.Name)
 		}
 		payload, _ := proto.Marshal(ev)
 		_ = space.PrivateEvent(s.ctx, s.spaceUserID(), e.GetReceiverUserId(), payload, s.notPartOf(e.GetSpaceName()))

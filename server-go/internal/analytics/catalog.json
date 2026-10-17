@@ -155,6 +155,17 @@
       "null"
      ]
     },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "fps": {
      "type": "number"
     },
@@ -204,6 +215,156 @@
       "null"
      ]
     },
+    "windowSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "framesDecoded": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "framesDropped": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "freezeCount": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "freezeSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "pauseCount": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "pauseSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "interFrameDelaySumSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "interFrameDelaySquaredSumSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "decodeSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "captureFps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "captureTargetFps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "encodeMsPerFrame": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "cpuLimitedRatio": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "bandwidthLimitedRatio": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "packetsReceived": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "packetsLost": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "roundTripTimeMs": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "uploadRoundTripTimeMs": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "uploadLossRatio": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "availableOutgoingBitrate": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
     "sampleSeq": {
      "type": [
       "number",
@@ -224,6 +385,7 @@
     "relay",
     "relayProtocol",
     "livekitServerUrl",
+    "livekitRegion",
     "fps",
     "fpsStdDev",
     "jitter",
@@ -233,6 +395,27 @@
     "mimeType",
     "qualityLimitationReason",
     "encoderImplementation",
+    "windowSeconds",
+    "framesDecoded",
+    "framesDropped",
+    "freezeCount",
+    "freezeSeconds",
+    "pauseCount",
+    "pauseSeconds",
+    "interFrameDelaySumSeconds",
+    "interFrameDelaySquaredSumSeconds",
+    "decodeSeconds",
+    "captureFps",
+    "captureTargetFps",
+    "encodeMsPerFrame",
+    "cpuLimitedRatio",
+    "bandwidthLimitedRatio",
+    "packetsReceived",
+    "packetsLost",
+    "roundTripTimeMs",
+    "uploadRoundTripTimeMs",
+    "uploadLossRatio",
+    "availableOutgoingBitrate",
     "sampleSeq"
    ],
    "additionalProperties": true
@@ -636,6 +819,59 @@
      ]
     }
    },
+   "additionalProperties": true
+  }
+ },
+ "chat.proximity_file.sent": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "sizeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "recipientCount": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "sizeBytes",
+    "recipientCount"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "chat.proximity_file.received": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "sizeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "durationMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "relay": {
+     "type": "boolean"
+    },
+    "relayProtocol": {
+     "type": "string",
+     "enum": [
+      "udp",
+      "tcp",
+      "tls"
+     ]
+    }
+   },
+   "required": [
+    "sizeBytes",
+    "durationMs"
+   ],
    "additionalProperties": true
   }
  },
@@ -1112,6 +1348,145 @@
    "additionalProperties": true
   }
  },
+ "media.livekit.connected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "livekitServerUrl": {
+     "type": "string",
+     "maxLength": 2048
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "connectMs": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "livekitServerUrl",
+    "livekitRegion",
+    "connectMs"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.livekit.reconnected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "livekitServerUrl": {
+     "type": "string",
+     "maxLength": 2048
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "previousLivekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reconnectKind": {
+     "type": "string",
+     "enum": [
+      "resume",
+      "full"
+     ]
+    },
+    "durationMs": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "livekitServerUrl",
+    "livekitRegion",
+    "previousLivekitRegion",
+    "reconnectKind",
+    "durationMs"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.livekit.disconnected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "livekitServerUrl": {
+     "type": "string",
+     "maxLength": 2048
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "disconnectReason": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "connectedSeconds": {
+     "anyOf": [
+      {
+       "type": "number",
+       "minimum": 0
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "whileReconnecting": {
+     "type": "boolean"
+    },
+    "restart": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "livekitServerUrl",
+    "livekitRegion",
+    "disconnectReason",
+    "connectedSeconds",
+    "whileReconnecting",
+    "restart"
+   ],
+   "additionalProperties": true
+  }
+ },
  "media.livekit_switch.requested": {
   "source": "front",
   "properties": {
@@ -1533,6 +1908,16 @@
     "concealmentEvents": {
      "type": "integer",
      "minimum": 0
+    },
+    "deceleratedRatio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "acceleratedRatio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
     },
     "packetLossRatio": {
      "type": "number",
