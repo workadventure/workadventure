@@ -213,6 +213,11 @@ impl MapFile {
         };
         if let Some((mut new, added, changed, removed)) = hooks {
             let hooks = self.hooks.clone();
+            let area_id = match command.edit_map_message.as_ref().and_then(|m| m.message.as_ref()) {
+                Some(M::ModifyAreaMessage(m)) => m.id.clone(),
+                _ => String::new(),
+            };
+            let area = self.wam.as_ref().and_then(|w| w.areas().iter().find(|a| a["id"] == area_id.as_str()).cloned());
             self.io.spawn(async move {
                 for i in added {
                     new[i] = hooks.added(new[i].clone()).await;
@@ -226,6 +231,26 @@ impl MapFile {
                 if let Some(M::ModifyAreaMessage(m)) =
                     command.edit_map_message.as_mut().and_then(|m| m.message.as_mut())
                 {
+                    // The sender's editor applies the echo of its own command only with modifyServerData: that
+                    // is how it learns the id of the room just made (MapStorageServer).
+                    let server_data = |props: &[serde_json::Value]| -> Vec<(serde_json::Value, serde_json::Value)> {
+                        props
+                            .iter()
+                            .filter(|p| !p["serverData"].is_null())
+                            .map(|p| (p["id"].clone(), p["serverData"].clone()))
+                            .collect()
+                    };
+                    let before: Vec<serde_json::Value> = m.properties.iter().map(wire::json_from).collect();
+                    m.modify_server_data = Some(server_data(&before) != server_data(&new));
+                    // The whole area, as map-storage sends it back.
+                    if let Some(a) = &area {
+                        let int = |k: &str| a[k].as_i64();
+                        m.name = m.name.take().or_else(|| a["name"].as_str().map(str::to_owned));
+                        m.x = m.x.or(int("x").map(|v| v as i32));
+                        m.y = m.y.or(int("y").map(|v| v as i32));
+                        m.width = m.width.or(int("width").map(|v| v as u32));
+                        m.height = m.height.or(int("height").map(|v| v as u32));
+                    }
                     m.properties = new.iter().map(wire::json_to).collect();
                 }
                 Done::Edit { session, command, result: Ok(()) }
