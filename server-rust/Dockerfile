@@ -26,12 +26,12 @@ COPY --from=pusherdata . /usr/src/workadventure/play/src/pusher/data
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/src/workadventure/server-rust/target \
-    cargo build --release --locked --bin workadventure-server --bin wa-load \
-    && cp target/release/workadventure-server target/release/wa-load /usr/local/bin/
+    cargo build --release --locked --bin workadventure-server \
+    && cp target/release/workadventure-server /usr/local/bin/
 
 FROM debian:bookworm-slim AS prod
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
-COPY --from=build /usr/local/bin/workadventure-server /usr/local/bin/wa-load /usr/local/bin/
+COPY --from=build /usr/local/bin/workadventure-server /usr/local/bin/
 # As the map-storage image: the maps in /maps, owned by uid 1000 (the chart chowns its volume to 1000:1000).
 ENV STORAGE_DIRECTORY=/maps
 RUN useradd --uid 1000 --create-home wa && mkdir /maps && chown wa:wa /maps
