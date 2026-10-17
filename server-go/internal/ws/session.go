@@ -6,7 +6,6 @@ import (
 	"context"
 	"log/slog"
 	"runtime/debug"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -328,152 +327,6 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 	metrics.Sockets.Dec()
 }
 
-func (s *Session) handle(m *pb.ClientToServerMessage) {
-	ctx := s.ctx
-	switch msg := m.Message.(type) {
-	case *pb.ClientToServerMessage_JoinRoomFrontMessage:
-		j := msg.JoinRoomFrontMessage
-		s.presence.mu.Lock()
-		first := !s.presence.joined
-		s.presence.joined = true
-		s.presence.name, s.presence.status = j.GetName(), core.AvailabilityStatus(j.GetAvailabilityStatus())
-		s.presence.mu.Unlock()
-		if first {
-			metrics.ClientJoined(s.info.roomID)
-		}
-		var chatID *string
-		if id := s.chat.get(); id != "" {
-			chatID = &id
-		}
-		var companion *core.Texture
-		if c := s.info.member.CompanionTexture; c != nil {
-			companion = &core.Texture{ID: c.ID, URL: c.URL}
-		}
-		visitCard := ""
-		if s.info.member.VisitCardURL != nil {
-			visitCard = *s.info.member.VisitCardURL
-		}
-		// The variables are read here, on this reader, before the join is posted: the join sees them.
-		s.room.InitVariables(ctx, func() core.RoomVariables { return s.srv.roomVariables(s.info.roomID) })
-		_ = s.room.Join(ctx, s, core.JoinRequest{
-			UUID: s.info.userUUID, TabID: s.info.tabID, Name: j.GetName(), Textures: coreTextures(s.info.member.CharacterTextures),
-			Companion: companion, VisitCardURL: visitCard, ChatID: chatID, Status: core.AvailabilityStatus(j.GetAvailabilityStatus()),
-			Position: toPosition(j.GetPositionMessage()), Viewport: toViewport(j.GetViewportMessage()),
-			Tags: s.info.member.Tags, IsLogged: s.info.isLogged, IPAddress: s.info.ipAddress, PlayerVariables: s.storedPlayerVariables(),
-		})
-	case *pb.ClientToServerMessage_VariableMessage:
-		s.setVariable(ctx, core.Variable{Name: msg.VariableMessage.GetName(), Value: msg.VariableMessage.GetValue()})
-	case *pb.ClientToServerMessage_UserMovesMessage:
-		vp := toViewport(msg.UserMovesMessage.GetViewport())
-		_ = s.room.Move(ctx, s, toPosition(msg.UserMovesMessage.GetPosition()), &vp)
-	case *pb.ClientToServerMessage_ViewportMessage:
-		_ = s.room.SetViewport(ctx, s, toViewport(msg.ViewportMessage))
-	case *pb.ClientToServerMessage_SetPlayerDetailsMessage:
-		d := toPlayerDetails(msg.SetPlayerDetailsMessage)
-		if d.AvailabilityStatus != core.StatusUnchanged {
-			s.presence.setStatus(d.AvailabilityStatus)
-		}
-		if d.SetVariable != nil {
-			s.storePlayerVariable(d.SetVariable)
-		}
-		_ = s.room.SetPlayerDetails(ctx, s, d)
-		s.updateSpacesWithPlayerDetails(d)
-	case *pb.ClientToServerMessage_AskPositionMessage:
-		a := msg.AskPositionMessage
-		_ = s.room.AskPosition(ctx, s, a.GetUserIdentifier(), a.UserId, a.GetAskType() == pb.AskPositionMessage_LOCATE)
-	case *pb.ClientToServerMessage_LockGroupPromptMessage:
-		_ = s.room.LockGroup(ctx, s, msg.LockGroupPromptMessage.GetLock())
-	case *pb.ClientToServerMessage_PingMessage:
-		// The pong of the application-level ping: liveness is checked by the transport pings.
-	case *pb.ClientToServerMessage_QueryMessage:
-		s.query(msg.QueryMessage)
-	case *pb.ClientToServerMessage_EditMapCommandMessage:
-		s.editMap(msg.EditMapCommandMessage)
-	case *pb.ClientToServerMessage_PlayGlobalMessage:
-		if s.isAdmin() {
-			go s.playGlobalMessage(msg.PlayGlobalMessage)
-		}
-	case *pb.ClientToServerMessage_EmotePromptMessage:
-		_ = s.room.Emote(ctx, s, msg.EmotePromptMessage.GetEmote())
-	case *pb.ClientToServerMessage_ItemEventMessage:
-		e := msg.ItemEventMessage
-		_ = s.room.ItemEvent(ctx, core.ItemState{ItemID: e.GetItemId(), StateJSON: e.GetStateJson()},
-			core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_ItemEventMessage{ItemEventMessage: e}}, true))
-	case *pb.ClientToServerMessage_EntityMessage:
-		if e := msg.EntityMessage; e.GetEntityEvent() != nil { // to the whole room (dispatchEntityEvent)
-			_ = s.room.SendEvent(ctx, core.NewMsg(&pb.SubMessage{Message: &pb.SubMessage_EntityMessage{EntityMessage: e}}, true), nil)
-		}
-	case *pb.ClientToServerMessage_AbortQueryMessage:
-		// The reader answers in order, so an abort always comes after its answer. The front aborted a join it
-		// had no answer for yet: it does not know it is in the space, so leave it (as the pusher's abort handler).
-		if local, ok := s.memberships.joinedByQuery(msg.AbortQueryMessage.GetId()); ok {
-			s.leaveSpace(0, local)
-		}
-	case *pb.ClientToServerMessage_BanPlayerMessage:
-		b := msg.BanPlayerMessage
-		if !s.isAdmin() {
-			return // like the pusher, silently
-		}
-		reason := strings.TrimSpace(b.GetReason())
-		kind := "kicked"
-		if !b.GetKick() {
-			message := reason
-			if message == "" {
-				message = "User banned by admin " + s.info.userUUID
-			}
-			ban := admin.Ban{UUID: b.GetBanUserUuid(), PlayURI: s.info.roomID, Name: b.GetBanUserName(), Message: message, ByUUID: s.info.userUUID}
-			if b.GetByIp() { // the IP of the user in the world, unless it is the moderator's own
-				if ip := s.srv.worldIP(s.info.member.World, b.GetBanUserUuid()); ip != "" && ip != s.info.ipAddress {
-					ban.IPAddress = ip
-				}
-			}
-			if s.srv.admin.Ban(ctx, ban) {
-				kind = "banned"
-			}
-		}
-		// Not recorded (no admin, or it refused): the user is ejected all the same, as a kick.
-		_ = s.room.Eject(ctx, b.GetBanUserUuid(), kind, reason)
-	case *pb.ClientToServerMessage_LeaveChatRoomAreaMessage:
-		s.leaveChatArea(msg.LeaveChatRoomAreaMessage.GetRoomID())
-	case *pb.ClientToServerMessage_UpdateChatIdMessage:
-		s.updateChatID(msg.UpdateChatIdMessage.GetEmail(), msg.UpdateChatIdMessage.GetChatId())
-	case *pb.ClientToServerMessage_AnalyticsEventReportMessage:
-		s.analyticsReport(msg.AnalyticsEventReportMessage)
-	case *pb.ClientToServerMessage_VideoQualityReportMessage:
-		s.videoQuality(msg.VideoQualityReportMessage)
-	case *pb.ClientToServerMessage_ReportPlayerMessage:
-		rep := msg.ReportPlayerMessage
-		go func() { // the answer is ignored, an error swallowed (handleReportMessage)
-			if err := s.srv.admin.Report(context.Background(), admin.Report{ReportedUUID: rep.GetReportedUserUuid(), Comment: rep.GetReportComment(),
-				ReporterUUID: s.info.userUUID, RoomURL: s.info.roomID}); err != nil {
-				slog.Info("report not sent", "error", err)
-			}
-		}()
-	case *pb.ClientToServerMessage_MeetingInvitationRequestMessage:
-		_ = s.room.InviteToMeeting(ctx, s, msg.MeetingInvitationRequestMessage.GetReceiverUserUuid(), s.isAdmin())
-	case *pb.ClientToServerMessage_MeetingInvitationResponseMessage:
-		r := msg.MeetingInvitationResponseMessage
-		_ = s.room.AnswerMeetingInvitation(ctx, s, r.GetAccept(), r.GetRequestSenderUserUuid())
-	case *pb.ClientToServerMessage_FollowRequestMessage:
-		_ = s.room.FollowRequest(ctx, s, msg.FollowRequestMessage.GetForceFollow())
-	case *pb.ClientToServerMessage_FollowConfirmationMessage:
-		_ = s.room.FollowConfirm(ctx, s, msg.FollowConfirmationMessage.GetLeader())
-	case *pb.ClientToServerMessage_FollowAbortMessage:
-		_ = s.room.FollowAbort(ctx, s, msg.FollowAbortMessage.GetLeader(), msg.FollowAbortMessage.GetFollower())
-	case *pb.ClientToServerMessage_SetAreaPropertyVariableMessage:
-		v := msg.SetAreaPropertyVariableMessage
-		_ = s.room.SetAreaVariable(ctx, s, core.AreaVariable{AreaID: v.GetAreaId(), PropertyID: v.GetPropertyId(), Key: v.GetKey(), Value: v.GetValue()},
-			s.info.member.Tags)
-	default:
-		if s.handleSpaceMessage(m) {
-			return
-		}
-		if f := m.ProtoReflect().WhichOneof(m.ProtoReflect().Descriptor().Oneofs().Get(0)); f != nil {
-			slog.Debug("message not handled yet", "type", f.Name())
-		}
-	}
-}
-
 func (s *Session) query(q *pb.QueryMessage) {
 	switch query := q.Query.(type) {
 	case *pb.QueryMessage_JoinSpaceQuery:
@@ -520,20 +373,7 @@ func (s *Session) query(q *pb.QueryMessage) {
 	case *pb.QueryMessage_GetSignedUrlQuery:
 		go s.signedURL(q.GetId(), query.GetSignedUrlQuery.GetKey())
 	case *pb.QueryMessage_IceServersQuery:
-		var servers []*pb.IceServer
-		list, err := s.srv.admin.IceServers(s.ctx, s.info.roomID, s.info.userUUID, s.userID.Load())
-		if err != nil {
-			s.answerError(q.GetId(), err.Error())
-			return
-		}
-		for _, ice := range list {
-			server := &pb.IceServer{Urls: ice.URLs}
-			if ice.Username != "" || ice.Credential != "" {
-				server.Username, server.Credential, server.CredentialType = &ice.Username, &ice.Credential, proto.String("password")
-			}
-			servers = append(servers, server)
-		}
-		s.answer(q.GetId(), &pb.AnswerMessage{Answer: &pb.AnswerMessage_IceServersAnswer{IceServersAnswer: &pb.IceServersAnswer{IceServers: servers}}})
+		s.iceServers(q.GetId())
 	default:
 		name := "unknown"
 		if f := q.ProtoReflect().WhichOneof(q.ProtoReflect().Descriptor().Oneofs().ByName("query")); f != nil {
@@ -542,6 +382,24 @@ func (s *Session) query(q *pb.QueryMessage) {
 		slog.Info("query not supported yet", "query", name)
 		s.answerError(q.GetId(), "Query not supported by this server yet: "+name)
 	}
+}
+
+// iceServers answers IceServersQuery: the STUN and TURN servers of the admin, TURN credentials included.
+func (s *Session) iceServers(id int32) {
+	list, err := s.srv.admin.IceServers(s.ctx, s.info.roomID, s.info.userUUID, s.userID.Load())
+	if err != nil {
+		s.answerError(id, err.Error())
+		return
+	}
+	var servers []*pb.IceServer
+	for _, ice := range list {
+		server := &pb.IceServer{Urls: ice.URLs}
+		if ice.Username != "" || ice.Credential != "" {
+			server.Username, server.Credential, server.CredentialType = &ice.Username, &ice.Credential, proto.String("password")
+		}
+		servers = append(servers, server)
+	}
+	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_IceServersAnswer{IceServersAnswer: &pb.IceServersAnswer{IceServers: servers}}})
 }
 
 func (s *Session) answer(id int32, a *pb.AnswerMessage) {

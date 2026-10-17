@@ -102,13 +102,18 @@ type Result struct {
 	Removed []string       // private files no property links to anymore
 }
 
-// Edit applies a command to a WAM file and returns the new file.
+// Edit applies a command to a WAM file and returns the new file. A file that does not follow the schema is refused,
+// as WAMFileFormat.parse refuses it on load: an edit must not paper over it (an "areas" that is not a list would be
+// read as empty and overwritten).
 func Edit(file []byte, commandID string, cmd any) ([]byte, Result, error) {
 	doc, err := Parse(file)
 	if err != nil {
 		return nil, Result{}, err
 	}
 	Migrate(doc)
+	if err := Validate(doc); err != nil {
+		return nil, Result{}, fmt.Errorf("invalid WAM file: %w", err)
+	}
 	r, err := apply(doc, cmd)
 	if err != nil {
 		return nil, Result{}, err
