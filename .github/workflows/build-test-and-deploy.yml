@@ -552,6 +552,15 @@ jobs:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
+      - name: Generate the self-signed certificate
+        # Served by Traefik as its default certificate, and trusted by the Go server (SSL_CERT_FILE).
+        run: |
+          mkdir -p tests/certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=workadventure.localhost" \
+            -addext "subjectAltName=DNS:workadventure.localhost,DNS:*.workadventure.localhost" \
+            -keyout tests/certs/key.pem -out tests/certs/cert.pem
+          chmod a+r tests/certs/key.pem
+        working-directory: contrib/docker
       - name: Start WorkAdventure
         run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml up -d --scale egress=2
         env:
