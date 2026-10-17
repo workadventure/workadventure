@@ -108,7 +108,7 @@ services:
   front:
     image: thecodingmachine/workadventure-front:${VERSION}
     healthcheck:
-      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/index.html"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/index.html"]
       interval: 5s
       timeout: 5s
       start_period: 3s
