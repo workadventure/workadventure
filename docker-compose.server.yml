@@ -36,6 +36,9 @@ services:
       rustfs-livekit-init:
         condition: service_completed_successfully
     environment:
+      # The server checks the sites it is asked to embed and refuses private addresses (SSRF guard); the test maps are
+      # served on the docker network. A whitelisted domain is embedded without that check, as with the TS pusher.
+      EMBEDDED_DOMAINS_WHITELIST: "maps.workadventure.localhost"
       # Pusher: the server reads index.html from the front container, and proxies the assets that must stay same-origin
       # with the page (ASSETS_URL is empty, see docker-compose.e2e.yml).
       ASSETS_URL: ""
