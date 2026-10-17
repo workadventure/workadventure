@@ -244,14 +244,14 @@ async fn upload_file(State(u): State<Uploader>, mut form: Multipart) -> Response
         }
         uploaded.push(json!({
             "name": name, "id": id, "location": format!("{base}/upload-file/{id}"), "size": bytes.len(),
-            "lastModified": chrono_now(), "type": mime,
+            "lastModified": iso_now(), "type": mime,
         }));
     }
     axum::Json(uploaded).into_response()
 }
 
 /// `new Date()` as JSON writes it.
-fn chrono_now() -> String {
+pub fn iso_now() -> String {
     let ms = crate::redis_store::now_ms();
     let (secs, millis) = (ms / 1000, ms % 1000);
     let (days, rem) = (secs / 86_400, secs % 86_400);
@@ -281,6 +281,6 @@ mod tests {
         assert_eq!(safe_type("a.png"), "image/png");
         assert_eq!(safe_type("a.svg"), "application/octet-stream");
         assert_eq!(safe_type("a.html"), "application/octet-stream");
-        assert!(chrono_now().ends_with('Z') && chrono_now().len() == 24);
+        assert!(iso_now().ends_with('Z') && iso_now().len() == 24);
     }
 }

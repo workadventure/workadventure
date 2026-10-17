@@ -17,14 +17,17 @@ pub mod map_storage;
 pub mod metrics;
 pub mod mustache;
 pub mod oidc;
+pub mod openapi;
 pub mod outbox;
 pub mod player_variables;
 pub mod redis_store;
 pub mod registry;
+pub mod recordings;
 pub mod resume;
 pub mod room_actor;
 pub mod room_api;
 pub mod room_map;
+pub mod s3;
 pub mod session;
 pub mod space_actor;
 pub mod wire;
@@ -100,6 +103,7 @@ impl AppState {
 pub fn router(state: AppState) -> Router {
     http::routes()
         .merge(admin::routes())
+        .merge(openapi::routes(&state))
         .merge(front::routes())
         .merge(oidc::routes())
         .route("/ws/room", get(ws::ws_room))

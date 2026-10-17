@@ -6,7 +6,7 @@
 
 use std::collections::{BTreeSet, BTreeMap, HashMap, HashSet};
 
-use crate::space_state::{self, Ctx, SpaceState, StateQuery};
+use crate::space_state::{self, Ctx, RecordingStatus, SpaceState, StateQuery};
 use crate::user::{Availability, Texture};
 
 pub type SpaceUserId = String;
@@ -103,6 +103,10 @@ pub enum SpaceEvent<'a> {
     LivekitDisconnect(&'a SpaceUser),
     /// The LiveKit room of the space must exist (true) or may go (false).
     LivekitRoom(bool),
+    /// The adapter stops this egress (a recording the server ends: its recorder left, or the last publisher).
+    StopEgress(&'a str),
+    /// recordingUnexpectedlyStoppedMessage, to the recorder.
+    RecordingUnexpectedlyStopped(&'a SpaceUser),
     WebRtcStart {
         sender: &'a SpaceUser,
         initiator: bool,
@@ -196,6 +200,25 @@ pub struct Space {
     finalize: Option<(Comm, u64)>,
     /// A recording is under way: the space stays on LiveKit.
     pub recording: bool,
+    session: Option<Recording>,
+}
+
+/// One recording (RecordingManager's session): an egress of the LiveKit room to S3.
+#[derive(Debug, Clone)]
+pub struct Recording {
+    pub session_id: String,
+    pub recorder: SpaceUserId,
+    pub status: RecordingStatus,
+    pub egress_id: Option<String>,
+    /// A stop asked while it was starting: done once it has started.
+    stop_after_start: bool,
+}
+
+/// What to start: the egress of this space's room, into the recorder's folder.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StartEgress {
+    pub session_id: String,
+    pub recorder_uuid: String,
 }
 
 const MEDIA_PROPERTIES: [&str; 3] = ["cameraState", "microphoneState", "screenSharingState"];
@@ -224,6 +247,7 @@ impl Space {
             back_to_webrtc_at: None,
             finalize: None,
             recording: false,
+            session: None,
         }
     }
 
@@ -351,6 +375,9 @@ impl Space {
             c.retain(|(a, b), _| a != id && b != id);
         }
         self.invited.remove(id);
+        if self.session.as_ref().is_some_and(|r| r.recorder == id) {
+            self.server_stops_recording(sink);
+        }
         self.livekit_reconcile(sink);
         self.evaluate(sink);
         self.update_state(sink, |s| space_state::forget(s, id));
@@ -548,10 +575,12 @@ impl Space {
     }
 
     /// meetingConnectionRestartMessage: the requester becomes the initiator of a new connection.
+    /// meetingConnectionRestartMessage. Peer-to-peer: the requester becomes the initiator of a new connection
+    /// with `peer`. LiveKit (no peer needed): a fresh invitation.
     pub fn restart_connection(
         &mut self,
         requester: &str,
-        peer: &str,
+        peer: Option<&str>,
         connection_id: Option<&str>,
         sink: &mut impl SpaceSink,
     ) {
@@ -562,7 +591,7 @@ impl Space {
             }
             return;
         }
-        let Some(conns) = &self.connections else { return };
+        let (Some(conns), Some(peer)) = (&self.connections, peer) else { return };
         if !self.is_member(requester) || !self.is_member(peer) {
             return;
         }
@@ -826,8 +855,143 @@ impl Space {
             self.invited.insert(id);
         }
         if !publishing && self.room_open {
+            self.server_stops_recording(sink);
             self.room_open = false;
             sink.emit(&[], SpaceEvent::LivekitRoom(false));
         }
+    }
+
+    // ---------------------------------------------------------------- recording (RecordingManager)
+
+    pub fn recording_session(&self) -> Option<&Recording> {
+        self.session.as_ref()
+    }
+
+    /// SpaceState.recording follows the session.
+    fn publish_recording(&mut self, sink: &mut impl SpaceSink) {
+        let (recorder, status) = match &self.session {
+            Some(r) => (Some(r.recorder.clone()), r.status),
+            None => (None, RecordingStatus::Idle),
+        };
+        self.recording = self.session.is_some();
+        self.update_state(sink, |s| {
+            s.recording.recorder = recorder;
+            s.recording.status = status;
+            s.recording.recording = matches!(status, RecordingStatus::Recording | RecordingStatus::Stopping);
+        });
+    }
+
+    /// startRecording: the space moves to LiveKit if needed, then the adapter starts the egress (Some). None:
+    /// already started by that recorder. A room needs a publisher: without one, it fails.
+    pub fn start_recording(
+        &mut self,
+        sender: &str,
+        session_id: String,
+        sink: &mut impl SpaceSink,
+    ) -> Result<Option<StartEgress>, String> {
+        let uuid = self.member(sender).ok_or("Unknown user")?.uuid.clone();
+        if let Some(r) = &self.session {
+            if r.recorder != sender {
+                return Err(match r.status {
+                    RecordingStatus::Starting => "Recording is already starting",
+                    RecordingStatus::Stopping => "Recording is already stopping",
+                    _ => "Recording already started",
+                }
+                .into());
+            }
+            return Ok(None);
+        }
+        self.session = Some(Recording {
+            session_id: session_id.clone(),
+            recorder: sender.to_owned(),
+            status: RecordingStatus::Starting,
+            egress_id: None,
+            stop_after_start: false,
+        });
+        self.publish_recording(sink);
+        if !self.ensure_livekit(sink) || !self.room_open {
+            self.session = None;
+            self.publish_recording(sink);
+            return Err("Failed to start recording".into());
+        }
+        Ok(Some(StartEgress { session_id, recorder_uuid: uuid }))
+    }
+
+    /// The egress call answered: its id, or the failure.
+    pub fn egress_started(&mut self, session_id: &str, egress_id: Result<String, ()>, sink: &mut impl SpaceSink) {
+        let Some(r) = self.session.as_mut().filter(|r| r.session_id == session_id) else { return };
+        match egress_id {
+            Ok(id) => {
+                r.egress_id.get_or_insert(id);
+            }
+            Err(()) => {
+                self.session = None;
+                self.publish_recording(sink);
+                self.evaluate(sink);
+            }
+        }
+    }
+
+    /// stopRecording by a user: only its recorder. Returns the egress to stop now, if any.
+    pub fn stop_recording(&mut self, sender: &str, sink: &mut impl SpaceSink) -> Result<Option<String>, String> {
+        let Some(r) = &mut self.session else { return Ok(None) };
+        if r.recorder != sender {
+            return Err("User is not the one recording".into());
+        }
+        Ok(self.stop_session(sink))
+    }
+
+    fn stop_session(&mut self, sink: &mut impl SpaceSink) -> Option<String> {
+        let r = self.session.as_mut()?;
+        match r.status {
+            RecordingStatus::Starting => {
+                r.stop_after_start = true;
+                None
+            }
+            RecordingStatus::Recording => {
+                r.status = RecordingStatus::Stopping;
+                let egress = r.egress_id.clone();
+                self.publish_recording(sink);
+                egress
+            }
+            _ => None,
+        }
+    }
+
+    /// A stop the server decides (the recorder is gone, or the last publisher): the egress stops too.
+    fn server_stops_recording(&mut self, sink: &mut impl SpaceSink) {
+        if let Some(egress) = self.stop_session(sink) {
+            sink.emit(&[], SpaceEvent::StopEgress(&egress));
+        }
+    }
+
+    /// The egress_started webhook. Returns the egress to stop if a stop was asked meanwhile.
+    pub fn webhook_started(&mut self, session_id: &str, egress_id: &str, sink: &mut impl SpaceSink) -> Option<String> {
+        let r = self.session.as_mut().filter(|r| r.session_id == session_id)?;
+        if r.egress_id.as_deref().is_some_and(|e| e != egress_id) {
+            return None;
+        }
+        r.egress_id = Some(egress_id.to_owned());
+        if r.status != RecordingStatus::Starting {
+            return None;
+        }
+        r.status = RecordingStatus::Recording;
+        let stop = r.stop_after_start;
+        self.publish_recording(sink);
+        if stop { self.stop_session(sink) } else { None }
+    }
+
+    /// The egress_ended webhook: the session is over; its recorder is told if nobody asked for it. Returns the
+    /// recorder, for the admin's event.
+    pub fn webhook_ended(&mut self, session_id: &str, sink: &mut impl SpaceSink) -> Option<SpaceUserId> {
+        let r = self.session.take_if(|r| r.session_id == session_id)?;
+        self.publish_recording(sink);
+        if r.status != RecordingStatus::Stopping
+            && let Some(m) = self.member(&r.recorder)
+        {
+            emit(sink, &[r.recorder.as_str()], SpaceEvent::RecordingUnexpectedlyStopped(m));
+        }
+        self.evaluate(sink);
+        Some(r.recorder)
     }
 }
