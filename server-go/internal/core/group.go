@@ -45,7 +45,7 @@ func (g *group) barycenter() (float64, float64) {
 
 func (g *group) updated() GroupUpdated {
 	return GroupUpdated{
-		GroupID: g.id, X: int32(math.Floor(g.x)), Y: int32(math.Floor(g.y)), Size: int32(len(g.users)),
+		GroupID: g.id, X: int32(math.Floor(g.x)), Y: int32(math.Floor(g.y)), Size: int32(len(g.users)), //nolint:gosec // a position on the map and a group of a few players fit in int32
 		Locked: g.locked, UserIDs: g.userIDs(),
 	}
 }

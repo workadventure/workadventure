@@ -130,7 +130,7 @@ func (s *Session) joinBBB(id int32, q *pb.JoinBBBMeetingQuery) {
 		s.answerError(id, err.Error())
 		return
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	pw := attendee
 	if moderator {
 		pw = mod
@@ -297,9 +297,9 @@ func utf16Units(s string) []uint16 {
 	for _, r := range s {
 		if r >= 0x10000 {
 			r -= 0x10000
-			out = append(out, uint16(0xD800+(r>>10)), uint16(0xDC00+(r&0x3FF)))
+			out = append(out, uint16(0xD800+(r>>10)), uint16(0xDC00+(r&0x3FF))) //nolint:gosec // r > 0xFFFF and at most 0x10FFFF: two surrogates
 		} else {
-			out = append(out, uint16(r))
+			out = append(out, uint16(r)) //nolint:gosec // r <= 0xFFFF on this branch
 		}
 	}
 	return out

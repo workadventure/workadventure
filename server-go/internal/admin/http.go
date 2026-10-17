@@ -372,7 +372,7 @@ func (a *HTTP) SaveUser(ctx context.Context, what SaveWhat, userIdentifier, room
 	if err != nil {
 		return err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%s: got %d, expected 204", s.path, resp.StatusCode)
 	}
@@ -458,7 +458,7 @@ func (a *HTTP) postStatus(ctx context.Context, target string, body []byte, timeo
 	if err != nil {
 		return 0, err
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	return resp.StatusCode, nil
 }
 

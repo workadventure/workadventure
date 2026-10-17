@@ -132,7 +132,7 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 func text(w http.ResponseWriter, status int, body string) {
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(status)
-	_, _ = w.Write([]byte(body))
+	_, _ = w.Write([]byte(body)) //nolint:gosec // text/plain, never HTML
 }
 
 func writeJSON(w http.ResponseWriter, v any) {
