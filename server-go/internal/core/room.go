@@ -175,6 +175,7 @@ type state struct {
 	invitations map[string][]invitation // meeting invitations sent, by sender uuid
 	roomVars    *RoomVariables          // nil until InitVariables
 	varsAt      time.Time               // when the map's declarations were read
+	varsWritten map[string]bool         // the room variables written since the room started (roomvars.go)
 }
 
 func newState(url string, cfg Config) *state {
