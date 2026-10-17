@@ -185,7 +185,7 @@ type (
 // Msg is one event on its way to one or many clients. Adapters encode it once, on the first connection that
 // needs the bytes, and every recipient shares them: a move seen by 300 players is marshalled once, not 300 times.
 type Msg struct {
-	Event any
+	Event Event
 	// Batched messages wait up to 100 ms to be sent together (zone traffic, like the TS emitInBatch); the
 	// others go out right away, after what is already batched.
 	Batched bool
@@ -194,7 +194,7 @@ type Msg struct {
 	bytes []byte
 }
 
-func NewMsg(event any, batched bool) *Msg { return &Msg{Event: event, Batched: batched} }
+func NewMsg(event Event, batched bool) *Msg { return &Msg{Event: event, Batched: batched} }
 
 // Bytes returns the encoded message, encoding it on the first call. encode must give the same result for
 // every recipient of a shared message.

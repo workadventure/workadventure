@@ -136,10 +136,7 @@ type Config struct {
 	ServerIcon                       string
 	NodeEnv                          string
 
-	// FrontEnv is window.env in the HTML page: the FRONT_ENVIRONMENT_VARIABLES object of
-	// play/src/pusher/enums/EnvironmentVariable.ts. Unset optional values are left out, like JSON.stringify
-	// drops undefined.
-	FrontEnv map[string]any
+	FrontEnv FrontEnv
 }
 
 // OpenID is the OpenID Connect client (OPENID_* variables, or the deprecated OPID_* ones). Login is enabled when
@@ -580,11 +577,11 @@ func parse(environ map[string]string) (*Config, error) {
 	return c, nil
 }
 
-func frontEnv(v *vars, c *Config, environ map[string]string) map[string]any {
-	var publicMapStoragePrefix any
+func frontEnv(v *vars, c *Config, environ map[string]string) FrontEnv {
+	var publicMapStoragePrefix *string
 	if c.PublicMapStorageURL != "" {
 		if u, err := url.Parse(c.PublicMapStorageURL); err == nil {
-			publicMapStoragePrefix = u.Path
+			publicMapStoragePrefix = &u.Path
 		}
 	}
 	profileProvider := firstNonEmpty(v.OpenidProfileScreenProvider, v.OPIDProfileScreenProvider)
@@ -597,98 +594,168 @@ func frontEnv(v *vars, c *Config, environ map[string]string) map[string]any {
 		c.AutologinURL = c.AdminURL + "/workadventure/login"
 	}
 
-	env := map[string]any{
-		"DEBUG_MODE":                        v.DebugMode,
-		"PUSHER_URL":                        c.PusherURL,
-		"FRONT_URL":                         c.FrontURL,
-		"ADMIN_URL":                         nilIfEmpty(v.AdminURL),
-		"UPLOADER_URL":                      v.UploaderURL,
-		"ICON_URL":                          v.IconURL,
-		"SKIP_RENDER_OPTIMIZATIONS":         v.SkipRenderOptimizations,
-		"JITSI_URL":                         nilIfEmpty(v.JitsiURL),
-		"JITSI_PRIVATE_MODE":                v.JitsiPrivateMode,
-		"ENABLE_MAP_EDITOR":                 c.EnableMapEditor,
-		"PUBLIC_MAP_STORAGE_PREFIX":         publicMapStoragePrefix,
-		"MAX_USERNAME_LENGTH":               v.MaxUsernameLength,
-		"MAX_PER_GROUP":                     c.MaxPerGroup,
-		"PROXIMITY_FILE_TRANSFER_MAX_USERS": v.ProximityFileTransferMaxUsers,
-		"MAX_DISPLAYED_VIDEOS":              v.MaxDisplayedVideos,
-		"LIVEKIT_PIXEL_DENSITY":             v.LivekitPixelDensity,
-		"NODE_ENV":                          firstNonEmpty(c.NodeEnv, "development"),
-		"CONTACT_URL":                       nilIfEmpty(v.ContactURL),
-		"POSTHOG_API_KEY":                   nilIfEmpty(v.PosthogAPIKey),
-		"POSTHOG_URL":                       nilIfEmpty(v.PosthogURL),
-		"DISABLE_ANONYMOUS":                 c.DisableAnonymous,
-		"ENABLE_OPENID":                     v.OpenidClientID != "" || v.OPIDClientID != "",
-		"OPID_PROFILE_SCREEN_PROVIDER":      nilIfEmpty(profileProvider),
-		"OPID_WOKA_NAME_POLICY":             c.OpidWokaNamePolicy,
-		"ENABLE_CHAT_UPLOAD":                c.EnableChatUpload,
-		"FALLBACK_LOCALE":                   nilIfEmpty(v.FallbackLocale),
-		"ENABLE_REPORT_ISSUES_MENU":         v.EnableReportIssuesMenu,
-		"REPORT_ISSUES_URL":                 nilIfEmpty(v.ReportIssuesURL),
-		"CLIENT_DISCONNECTION_RETENTION_MS": int(c.ClientDisconnectRetention / time.Millisecond),
-		"SENTRY_DSN_FRONT":                  sentryDSN(v, environ),
-		"SENTRY_DSN_PUSHER":                 nilIfEmpty(v.SentryDSNPusher),
-		"SENTRY_ENVIRONMENT":                nilIfEmpty(v.SentryEnvironment),
-		"SENTRY_RELEASE":                    nilIfEmpty(v.SentryRelease),
-		"SENTRY_TRACES_SAMPLE_RATE":         v.SentryTracesSampleRate,
-		"WOKA_SPEED":                        v.WokaSpeed,
-		"KLAXOON_ENABLED":                   v.KlaxoonEnabled,
-		"KLAXOON_CLIENT_ID":                 nilIfEmpty(v.KlaxoonClientID),
-		"YOUTUBE_ENABLED":                   v.YoutubeEnabled,
-		"GOOGLE_DRIVE_ENABLED":              v.GoogleDriveEnabled,
-		"GOOGLE_DOCS_ENABLED":               v.GoogleDocsEnabled,
-		"GOOGLE_SHEETS_ENABLED":             v.GoogleSheetsEnabled,
-		"GOOGLE_SLIDES_ENABLED":             v.GoogleSlidesEnabled,
-		"ERASER_ENABLED":                    v.EraserEnabled,
-		"EXCALIDRAW_ENABLED":                v.ExcalidrawEnabled,
-		"EXCALIDRAW_DOMAINS":                list(v.ExcalidrawDomains),
-		"CARDS_ENABLED":                     v.CardsEnabled,
-		"TLDRAW_ENABLED":                    v.TldrawEnabled,
-		"MINIMUM_DISTANCE":                  c.MinimumDistance,
-		"GOOGLE_DRIVE_PICKER_CLIENT_ID":     nilIfEmpty(v.GoogleDrivePickerClientID),
-		"GOOGLE_DRIVE_PICKER_APP_ID":        nilIfEmpty(v.GoogleDrivePickerAppID),
-		"EMBEDLY_KEY":                       nilIfEmpty(v.EmbedlyKey),
-		"MATRIX_PUBLIC_URI":                 nilIfEmpty(v.MatrixPublicURI),
-		"ENABLE_CHAT":                       c.EnableChat,
-		"ENABLE_CHAT_ONLINE_LIST":           c.EnableChatOnlineList,
-		"ENABLE_CHAT_DISCONNECTED_LIST":     c.EnableChatDisconnectedList,
-		"MATRIX_ADMIN_USER":                 nilIfEmpty(v.MatrixAdminUser),
-		"MATRIX_DOMAIN":                     nilIfEmpty(v.MatrixDomain),
-		"ENABLE_SAY":                        c.EnableSay,
-		"ENABLE_ISSUE_REPORT":               c.EnableIssueReport,
-		"GRPC_MAX_MESSAGE_SIZE":             v.GRPCMaxMessageSize,
-		"TURN_CREDENTIALS_RENEWAL_TIME":     v.TurnCredentialsRenewalTime,
-		"DEFAULT_WOKA_NAME":                 c.DefaultWokaName,
-		"DEFAULT_WOKA_TEXTURE":              c.DefaultWokaTexture,
-		"SKIP_CAMERA_PAGE":                  c.SkipCameraPage,
-		"BYPASS_PWA":                        c.BypassPWA,
-		"PROVIDE_DEFAULT_WOKA_NAME":         nilIfEmpty(c.ProvideDefaultWokaName),
-		"PROVIDE_DEFAULT_WOKA_TEXTURE":      nilIfEmpty(c.ProvideDefaultWokaTexture),
-		"ENABLE_TUTORIAL":                   c.EnableTutorial,
-	}
-	for k, v := range env {
-		if v == nil {
-			delete(env, k)
-		}
+	env := FrontEnv{
+		DebugMode:                      v.DebugMode,
+		PusherURL:                      c.PusherURL,
+		FrontURL:                       c.FrontURL,
+		AdminURL:                       optional(v.AdminURL),
+		UploaderURL:                    v.UploaderURL,
+		IconURL:                        v.IconURL,
+		SkipRenderOptimizations:        v.SkipRenderOptimizations,
+		JitsiURL:                       optional(v.JitsiURL),
+		JitsiPrivateMode:               v.JitsiPrivateMode,
+		EnableMapEditor:                c.EnableMapEditor,
+		PublicMapStoragePrefix:         publicMapStoragePrefix,
+		MaxUsernameLength:              v.MaxUsernameLength,
+		MaxPerGroup:                    c.MaxPerGroup,
+		ProximityFileTransferMaxUsers:  v.ProximityFileTransferMaxUsers,
+		MaxDisplayedVideos:             v.MaxDisplayedVideos,
+		LivekitPixelDensity:            v.LivekitPixelDensity,
+		NodeEnv:                        firstNonEmpty(c.NodeEnv, "development"),
+		ContactURL:                     optional(v.ContactURL),
+		PosthogAPIKey:                  optional(v.PosthogAPIKey),
+		PosthogURL:                     optional(v.PosthogURL),
+		DisableAnonymous:               c.DisableAnonymous,
+		EnableOpenID:                   v.OpenidClientID != "" || v.OPIDClientID != "",
+		OPIDProfileScreenProvider:      optional(profileProvider),
+		OPIDWokaNamePolicy:             c.OpidWokaNamePolicy,
+		EnableChatUpload:               c.EnableChatUpload,
+		FallbackLocale:                 optional(v.FallbackLocale),
+		EnableReportIssuesMenu:         v.EnableReportIssuesMenu,
+		ReportIssuesURL:                optional(v.ReportIssuesURL),
+		ClientDisconnectionRetentionMS: int(c.ClientDisconnectRetention / time.Millisecond),
+		SentryDSNFront:                 sentryDSN(v, environ),
+		SentryDSNPusher:                optional(v.SentryDSNPusher),
+		SentryEnvironment:              optional(v.SentryEnvironment),
+		SentryRelease:                  optional(v.SentryRelease),
+		SentryTracesSampleRate:         v.SentryTracesSampleRate,
+		WokaSpeed:                      v.WokaSpeed,
+		KlaxoonEnabled:                 v.KlaxoonEnabled,
+		KlaxoonClientID:                optional(v.KlaxoonClientID),
+		YoutubeEnabled:                 v.YoutubeEnabled,
+		GoogleDriveEnabled:             v.GoogleDriveEnabled,
+		GoogleDocsEnabled:              v.GoogleDocsEnabled,
+		GoogleSheetsEnabled:            v.GoogleSheetsEnabled,
+		GoogleSlidesEnabled:            v.GoogleSlidesEnabled,
+		EraserEnabled:                  v.EraserEnabled,
+		ExcalidrawEnabled:              v.ExcalidrawEnabled,
+		ExcalidrawDomains:              list(v.ExcalidrawDomains),
+		CardsEnabled:                   v.CardsEnabled,
+		TldrawEnabled:                  v.TldrawEnabled,
+		MinimumDistance:                c.MinimumDistance,
+		GoogleDrivePickerClientID:      optional(v.GoogleDrivePickerClientID),
+		GoogleDrivePickerAppID:         optional(v.GoogleDrivePickerAppID),
+		EmbedlyKey:                     optional(v.EmbedlyKey),
+		MatrixPublicURI:                optional(v.MatrixPublicURI),
+		EnableChat:                     c.EnableChat,
+		EnableChatOnlineList:           c.EnableChatOnlineList,
+		EnableChatDisconnectedList:     c.EnableChatDisconnectedList,
+		MatrixAdminUser:                optional(v.MatrixAdminUser),
+		MatrixDomain:                   optional(v.MatrixDomain),
+		EnableSay:                      c.EnableSay,
+		EnableIssueReport:              c.EnableIssueReport,
+		GRPCMaxMessageSize:             v.GRPCMaxMessageSize,
+		TurnCredentialsRenewalTime:     v.TurnCredentialsRenewalTime,
+		DefaultWokaName:                c.DefaultWokaName,
+		DefaultWokaTexture:             c.DefaultWokaTexture,
+		SkipCameraPage:                 c.SkipCameraPage,
+		BypassPWA:                      c.BypassPWA,
+		ProvideDefaultWokaName:         optional(c.ProvideDefaultWokaName),
+		ProvideDefaultWokaTexture:      optional(c.ProvideDefaultWokaTexture),
+		EnableTutorial:                 c.EnableTutorial,
 	}
 	return env
 }
 
-func nilIfEmpty(s string) any {
+// optional is s, or nil (left out of the JSON) when empty.
+func optional(s string) *string {
 	if s == "" {
 		return nil
 	}
-	return s
+	return &s
+}
+
+// FrontEnv is window.env in the HTML page: the FRONT_ENVIRONMENT_VARIABLES object of
+// play/src/pusher/enums/EnvironmentVariable.ts. An optional value left unset is left out, like JSON.stringify drops
+// undefined.
+type FrontEnv struct {
+	DebugMode                      bool     `json:"DEBUG_MODE"`
+	PusherURL                      string   `json:"PUSHER_URL"`
+	FrontURL                       string   `json:"FRONT_URL"`
+	AdminURL                       *string  `json:"ADMIN_URL,omitempty"`
+	UploaderURL                    string   `json:"UPLOADER_URL"`
+	IconURL                        string   `json:"ICON_URL"`
+	SkipRenderOptimizations        bool     `json:"SKIP_RENDER_OPTIMIZATIONS"`
+	JitsiURL                       *string  `json:"JITSI_URL,omitempty"`
+	JitsiPrivateMode               bool     `json:"JITSI_PRIVATE_MODE"`
+	EnableMapEditor                bool     `json:"ENABLE_MAP_EDITOR"`
+	PublicMapStoragePrefix         *string  `json:"PUBLIC_MAP_STORAGE_PREFIX,omitempty"`
+	MaxUsernameLength              int      `json:"MAX_USERNAME_LENGTH"`
+	MaxPerGroup                    int      `json:"MAX_PER_GROUP"`
+	ProximityFileTransferMaxUsers  int      `json:"PROXIMITY_FILE_TRANSFER_MAX_USERS"`
+	MaxDisplayedVideos             int      `json:"MAX_DISPLAYED_VIDEOS"`
+	LivekitPixelDensity            float64  `json:"LIVEKIT_PIXEL_DENSITY"`
+	NodeEnv                        string   `json:"NODE_ENV"`
+	ContactURL                     *string  `json:"CONTACT_URL,omitempty"`
+	PosthogAPIKey                  *string  `json:"POSTHOG_API_KEY,omitempty"`
+	PosthogURL                     *string  `json:"POSTHOG_URL,omitempty"`
+	DisableAnonymous               bool     `json:"DISABLE_ANONYMOUS"`
+	EnableOpenID                   bool     `json:"ENABLE_OPENID"`
+	OPIDProfileScreenProvider      *string  `json:"OPID_PROFILE_SCREEN_PROVIDER,omitempty"`
+	OPIDWokaNamePolicy             string   `json:"OPID_WOKA_NAME_POLICY"`
+	EnableChatUpload               bool     `json:"ENABLE_CHAT_UPLOAD"`
+	FallbackLocale                 *string  `json:"FALLBACK_LOCALE,omitempty"`
+	EnableReportIssuesMenu         bool     `json:"ENABLE_REPORT_ISSUES_MENU"`
+	ReportIssuesURL                *string  `json:"REPORT_ISSUES_URL,omitempty"`
+	ClientDisconnectionRetentionMS int      `json:"CLIENT_DISCONNECTION_RETENTION_MS"`
+	SentryDSNFront                 *string  `json:"SENTRY_DSN_FRONT,omitempty"`
+	SentryDSNPusher                *string  `json:"SENTRY_DSN_PUSHER,omitempty"`
+	SentryEnvironment              *string  `json:"SENTRY_ENVIRONMENT,omitempty"`
+	SentryRelease                  *string  `json:"SENTRY_RELEASE,omitempty"`
+	SentryTracesSampleRate         float64  `json:"SENTRY_TRACES_SAMPLE_RATE"`
+	WokaSpeed                      int      `json:"WOKA_SPEED"`
+	KlaxoonEnabled                 bool     `json:"KLAXOON_ENABLED"`
+	KlaxoonClientID                *string  `json:"KLAXOON_CLIENT_ID,omitempty"`
+	YoutubeEnabled                 bool     `json:"YOUTUBE_ENABLED"`
+	GoogleDriveEnabled             bool     `json:"GOOGLE_DRIVE_ENABLED"`
+	GoogleDocsEnabled              bool     `json:"GOOGLE_DOCS_ENABLED"`
+	GoogleSheetsEnabled            bool     `json:"GOOGLE_SHEETS_ENABLED"`
+	GoogleSlidesEnabled            bool     `json:"GOOGLE_SLIDES_ENABLED"`
+	EraserEnabled                  bool     `json:"ERASER_ENABLED"`
+	ExcalidrawEnabled              bool     `json:"EXCALIDRAW_ENABLED"`
+	ExcalidrawDomains              []string `json:"EXCALIDRAW_DOMAINS"`
+	CardsEnabled                   bool     `json:"CARDS_ENABLED"`
+	TldrawEnabled                  bool     `json:"TLDRAW_ENABLED"`
+	MinimumDistance                int      `json:"MINIMUM_DISTANCE"`
+	GoogleDrivePickerClientID      *string  `json:"GOOGLE_DRIVE_PICKER_CLIENT_ID,omitempty"`
+	GoogleDrivePickerAppID         *string  `json:"GOOGLE_DRIVE_PICKER_APP_ID,omitempty"`
+	EmbedlyKey                     *string  `json:"EMBEDLY_KEY,omitempty"`
+	MatrixPublicURI                *string  `json:"MATRIX_PUBLIC_URI,omitempty"`
+	EnableChat                     bool     `json:"ENABLE_CHAT"`
+	EnableChatOnlineList           bool     `json:"ENABLE_CHAT_ONLINE_LIST"`
+	EnableChatDisconnectedList     bool     `json:"ENABLE_CHAT_DISCONNECTED_LIST"`
+	MatrixAdminUser                *string  `json:"MATRIX_ADMIN_USER,omitempty"`
+	MatrixDomain                   *string  `json:"MATRIX_DOMAIN,omitempty"`
+	EnableSay                      bool     `json:"ENABLE_SAY"`
+	EnableIssueReport              bool     `json:"ENABLE_ISSUE_REPORT"`
+	GRPCMaxMessageSize             int      `json:"GRPC_MAX_MESSAGE_SIZE"`
+	TurnCredentialsRenewalTime     int      `json:"TURN_CREDENTIALS_RENEWAL_TIME"`
+	DefaultWokaName                string   `json:"DEFAULT_WOKA_NAME"`
+	DefaultWokaTexture             string   `json:"DEFAULT_WOKA_TEXTURE"`
+	SkipCameraPage                 bool     `json:"SKIP_CAMERA_PAGE"`
+	BypassPWA                      bool     `json:"BYPASS_PWA"`
+	ProvideDefaultWokaName         *string  `json:"PROVIDE_DEFAULT_WOKA_NAME,omitempty"`
+	ProvideDefaultWokaTexture      *string  `json:"PROVIDE_DEFAULT_WOKA_TEXTURE,omitempty"`
+	EnableTutorial                 bool     `json:"ENABLE_TUTORIAL"`
 }
 
 // sentryDSN is SENTRY_DSN_FRONT as the pusher gives it: set but empty is "", which the front tells apart from unset
 // (the issue report button).
-func sentryDSN(v *vars, environ map[string]string) any {
+func sentryDSN(v *vars, environ map[string]string) *string {
 	if dsn, set := environ["SENTRY_DSN_FRONT"]; set {
-		return dsn
+		return &dsn
 	}
-	return nilIfEmpty(v.SentryDSNFront)
+	return optional(v.SentryDSNFront)
 }
 
 // RecordingS3 is where the recordings go (LIVEKIT_RECORDING_S3_*).

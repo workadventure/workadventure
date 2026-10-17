@@ -14,6 +14,11 @@ func newTestMeeting(kind string) (m *Meeting, rows *[]Event, clock *time.Time, t
 	return m, &out, &t0, &tr
 }
 
+func join(m *Meeting, id string, active bool) {
+	mb := member(id)
+	m.Join(mb.UUID, mb.SpaceUserID, mb.RoomID, mb.Tags, active)
+}
+
 func member(id string) MeetingMember {
 	return MeetingMember{UUID: "u-" + id, SpaceUserID: id, RoomID: "http://play/@/org/w/r", Tags: []string{"t"}}
 }
@@ -22,16 +27,16 @@ func TestABubbleIsMeasuredFromItsSecondMemberToItsLastButOne(t *testing.T) {
 	m, rows, clock, transport := newTestMeeting("bubble")
 	t0 := *clock
 	at := func(s int) { *clock = t0.Add(time.Duration(s) * time.Second) }
-	m.Join(member("alice"), true)
+	join(m, "alice", true)
 	if len(*rows) != 0 || m.session != nil {
 		t.Fatal("alone is not a meeting")
 	}
-	m.Join(member("bob"), true)
+	join(m, "bob", true)
 	at(10)
 	*transport = "LIVEKIT"
 	m.TransportChanged()
 	at(20)
-	m.Join(member("carol"), true)
+	join(m, "carol", true)
 	at(30)
 	m.Leave("bob")
 	at(40)
@@ -64,8 +69,8 @@ func TestABubbleIsMeasuredFromItsSecondMemberToItsLastButOne(t *testing.T) {
 func TestABroadcastLastsWhileSomeoneSpeaks(t *testing.T) {
 	m, rows, clock, _ := newTestMeeting("")
 	t0 := *clock
-	m.Join(member("speaker"), false)
-	m.Join(member("listener"), false)
+	join(m, "speaker", false)
+	join(m, "listener", false)
 	m.SetActive("speaker", true)
 	if m.session != nil {
 		t.Fatal("no kind yet: nothing opens")

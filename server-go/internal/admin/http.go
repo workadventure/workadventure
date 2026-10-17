@@ -179,7 +179,12 @@ func (a *HTTP) MemberData(ctx context.Context, q MemberQuery) (MemberData, error
 }
 
 // MapDetails is A2 (GET /api/map): MapDetailsData, RoomRedirect or ErrorApiErrorData, or a local error.
-func (a *HTTP) MapDetails(ctx context.Context, q MapQuery) (map[string]any, error) {
+func (a *HTTP) MapDetails(ctx context.Context, q MapQuery) (MapDetails, error) {
+	raw, err := a.mapDetails(ctx, q)
+	return Details(raw), err
+}
+
+func (a *HTTP) mapDetails(ctx context.Context, q MapQuery) (map[string]any, error) {
 	query := url.Values{"playUri": {q.PlayURI}}
 	if q.UserID != "" {
 		query.Set("userId", q.UserID)

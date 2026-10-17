@@ -38,7 +38,7 @@ func fakeAdmin(t *testing.T, handle func(w http.ResponseWriter, r *http.Request)
 	}))
 	t.Cleanup(srv.Close)
 	cfg := &config.Config{AdminAPIURL: srv.URL, AdminURL: srv.URL, AdminAPIToken: "admin-token", AdminAPIRetryDelay: 10 * time.Millisecond,
-		PusherURL: "http://play.test", FrontEnv: map[string]any{}}
+		PusherURL: "http://play.test", FrontEnv: config.FrontEnv{}}
 	local, err := NewLocal(cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -98,7 +98,7 @@ func TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash(t *testing.T) {
 	if !errors.As(err, &refused) || refused.Data["code"] != "ROOM_ACCESS_ERROR" {
 		t.Fatalf("transport error: %v", err)
 	}
-	if d, _ := a.MapDetails(context.Background(), MapQuery{PlayURI: "https://world.test/@/org/w/r"}); d["code"] != "MAP_VALIDATION" {
+	if d, _ := a.MapDetails(context.Background(), MapQuery{PlayURI: "https://world.test/@/org/w/r"}); d.Raw["code"] != "MAP_VALIDATION" {
 		t.Fatalf("an answer that is neither a map, a redirection nor an error: %v", d)
 	}
 }
@@ -111,7 +111,7 @@ func TestTheAdminDescribesTheMap(t *testing.T) {
 		_, _ = w.Write([]byte(`{"group":"org/w","wamUrl":"https://w-1.ms.test/office.wam","thirdParty":{"jitsi":{"secret":"s"}}}`))
 	})
 	d, _ := a.MapDetails(context.Background(), MapQuery{PlayURI: "https://world.test/@/org/w/r", UserID: "a@b.c"})
-	if d["wamUrl"] != "https://w-1.ms.test/office.wam" || d["thirdParty"] == nil {
+	if d.Raw["wamUrl"] != "https://w-1.ms.test/office.wam" || d.Raw["thirdParty"] == nil {
 		t.Fatalf("thirdParty stays for the server (the /map route drops it): %v", d)
 	}
 }
@@ -227,7 +227,7 @@ func TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin(t *testing.T) {
 	if err := a.UpdateChatID(ctx, "jo@x.test", "@jo:d", "r"); err != nil || saved["chatId"] != "@jo:d" || saved["userIdentifier"] != "jo@x.test" || saved["roomUrl"] != "r" {
 		t.Fatalf("A16: %v %v", saved, err)
 	}
-	local, _ := NewLocal(&config.Config{FrontEnv: map[string]any{}})
+	local, _ := NewLocal(&config.Config{FrontEnv: config.FrontEnv{}})
 	if _, err := local.SearchMembers(ctx, "r", ""); err == nil {
 		t.Fatal("without an admin, searching members is an error, as in LocalAdmin")
 	}

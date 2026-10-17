@@ -33,7 +33,7 @@ func newAPI(t *testing.T) (http.Handler, *FrontAssets) {
 	}))
 	t.Cleanup(front.Close)
 	cfg := &config.Config{AssetsURL: "http://front.test", AssetsInternalURL: front.URL, StartRoomURL: "/_/global/start.json",
-		OpidWokaNamePolicy: "user_input", FrontEnv: map[string]any{"PUSHER_URL": "http://play.test"}}
+		OpidWokaNamePolicy: "user_input", FrontEnv: config.FrontEnv{PusherURL: "http://play.test"}}
 	adm, err := admin.NewLocal(cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -66,7 +66,7 @@ func TestFrontPage(t *testing.T) {
 		`src="http://front.test/assets/index-abc.js"`, // built files go to the assets domain
 		`href="./static/favicon.png"`,                 // public files stay on the page's origin
 		`<title>WorkAdventure</title>`,
-		`window.env = {"PUSHER_URL":"http://play.test"}`,
+		`window.env = {"DEBUG_MODE":false,"PUSHER_URL":"http://play.test",`,
 		`value="tok&#34;en"`, // escaped
 		`href="/static/images/favicons/favicon-512x512.svg"`,
 	} {
@@ -137,12 +137,12 @@ func (saas) MemberData(context.Context, admin.MemberQuery) (admin.MemberData, er
 	return admin.MemberData{}, &admin.Refusal{Data: map[string]any{"status": "error", "type": "error", "code": "BANNED"}}
 }
 
-func (saas) MapDetails(context.Context, admin.MapQuery) (map[string]any, error) {
-	return map[string]any{"group": "g", "wamUrl": "https://w.test/a.wam", "thirdParty": map[string]any{"jitsi": map[string]any{"secret": "s"}}}, nil
+func (saas) MapDetails(context.Context, admin.MapQuery) (admin.MapDetails, error) {
+	return admin.Details(map[string]any{"group": "g", "wamUrl": "https://w.test/a.wam", "thirdParty": map[string]any{"jitsi": map[string]any{"secret": "s"}}}), nil
 }
 
 func TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes(t *testing.T) {
-	cfg := &config.Config{StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: map[string]any{}}
+	cfg := &config.Config{StartRoomURL: "/_/global/start.json", OpidWokaNamePolicy: "user_input", FrontEnv: config.FrontEnv{}}
 	local, _ := admin.NewLocal(cfg)
 	tokens := auth.New("secret")
 	h := New(cfg, tokens, saas{local}, NewFrontAssets("", "", "v1"), http.NotFoundHandler(), "1.0.0")

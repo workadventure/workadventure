@@ -33,9 +33,9 @@ func TestANewcomerGetsTheStateOfTheInteractiveObjects(t *testing.T) {
 	r := NewRoom("http://play/_/global/maps/m.json", cfg)
 	defer r.Stop()
 	alice := join(t, r, "alice", at(100, 100), wholeMap)
-	_ = r.ItemEvent(ctx, ItemState{ItemID: 7, StateJSON: `{"on":true}`}, NewMsg("switched", true))
+	_ = r.ItemEvent(ctx, ItemState{ItemID: 7, StateJSON: `{"on":true}`}, NewMsg(External{Value: "switched"}, true))
 	sync_(t, r)
-	if !has(alice.take(), func(s string) bool { return s == "switched" }) {
+	if !has(alice.take(), func(x External) bool { return x.Value == "switched" }) {
 		t.Fatal("the room hears the event")
 	}
 	late := join(t, r, "late", at(100, 100), wholeMap)

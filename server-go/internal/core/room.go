@@ -109,20 +109,21 @@ func (r *Room) AskPosition(ctx context.Context, p Peer, uuid string, userID *int
 	})
 }
 
-// MapEdit is a change of the room's map, or its refusal, as the adapter encoded it: the core orders and routes it.
-type MapEdit struct{ Event any }
+// MapEdit is a change of the room's map, or its refusal, as the adapter encoded it (Command): the core orders and
+// routes it without reading it.
+type MapEdit struct{ Command []byte }
 
 // MapEdited tells every connection to the room, joined or not yet, about an edit of its map, the editor included
 // (its front waits for its own edit to come back), and takes the map's new areas when they changed. The edit itself
 // was stored off the room's goroutine (mapedit), so that a slow disk never stops the room. log runs first, on the
 // room's goroutine: what it keeps for the connections that join later (see Connect) is then exactly what the
 // connected ones got, neither missed nor twice.
-func (r *Room) MapEdited(ctx context.Context, announce any, areas []Area, log func()) error {
+func (r *Room) MapEdited(ctx context.Context, announce MapEdit, areas []Area, log func()) error {
 	return r.a.Post(ctx, func() {
 		if log != nil {
 			log()
 		}
-		r.s.toListeners(NewMsg(MapEdit{Event: announce}, true))
+		r.s.toListeners(NewMsg(announce, true))
 		if areas != nil {
 			r.s.setAreas(areas)
 		}

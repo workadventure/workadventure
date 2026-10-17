@@ -16,8 +16,12 @@ browser ──WebSocket──▶ internal/ws (adapter: protobuf in, protobuf out
                        internal/ws/codec.go (core event → protobuf, encoded once for every recipient)
 ```
 
-- `internal/core` imports no transport: no `net/http`, no WebSocket, no protobuf, no Redis. What it needs from outside
-  is a **port**: an interface declared in `core` (`Peer`, `LiveKit`, `Egress`), implemented in an adapter package.
+- `internal/core` imports no transport: no `net/http`, no WebSocket, no protobuf, no Redis, no analytics. What it needs
+  from outside is a **port**: an interface declared in `core` (`Peer`, `LiveKit`, `Egress`, `MeetingReporter`),
+  implemented in an adapter package and given to the core by `cmd/server/main.go`.
+- What the core sends is a `core.Event` (sealed). A message the core relays without understanding it still gets a
+  core type (`ScriptingEvent` with JSON data, `MapEdit` with the adapter's encoded command). The adapter's own
+  messages (answers, errors) ride in `core.External` and never go through a room or a space.
 - The room's state is only touched inside its actor (`r.a.Post(ctx, func() {...})`). No mutex in the core.
 - Nothing slow runs inside the actor: no network, no disk. Do the I/O outside, then post the result back.
 
@@ -67,10 +71,13 @@ func (r *Room) Emote(ctx context.Context, p Peer, emote string) error {
 }
 ```
 
-- The event is a plain struct of the core, not a protobuf type.
+- The event is a plain struct of the core, not a protobuf type. It implements the sealed `core.Event` interface:
+  add `func (EmoteEvent) coreEvent() {}` to `internal/core/event.go`, or the compiler refuses `NewMsg` with it.
 - `NewMsg(..., true)` builds a message encoded **once**, then shared by every recipient.
 
 ### 4. The core event becomes protobuf: `internal/ws/codec.go`
+
+`subMessage` (batched, zone traffic) or `serverMessage` (sent at once) switch on `core.Event`:
 
 ```go
 case core.EmoteEvent:
@@ -124,5 +131,4 @@ No WebSocket, no browser: fake peers (`join`) record what they receive. The name
 - When the TypeScript behaviour is a bug invisible to the client, fix it and write it down in `PARITY.md` rather than
   copying it.
 
-> Planned refactors will change step 4 (a sealed `core.Event` interface instead of `any`) and the wiring in
-> `cmd/server/main.go`: this guide is updated with them.
+> A planned refactor will change the wiring in `cmd/server/main.go` (D4): this guide is updated with it.

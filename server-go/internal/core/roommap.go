@@ -38,7 +38,7 @@ type (
 // Connect registers a connection to the room before it joins: from then on it gets the edits of the map and the
 // area variables. connected runs on the room's goroutine and returns its first message (the edits it missed), so
 // that no edit falls between the two. load reads the areas of the map, once per room.
-func (r *Room) Connect(ctx context.Context, p Peer, load func() []Area, connected func() any) error {
+func (r *Room) Connect(ctx context.Context, p Peer, load func() []Area, connected func() Event) error {
 	return r.a.Post(ctx, func() {
 		if !r.s.areasLoaded {
 			r.s.areasLoaded = true

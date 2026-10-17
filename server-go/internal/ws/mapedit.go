@@ -44,11 +44,10 @@ func (srv *Server) roomMap(roomURL string) roomMap {
 	if err != nil {
 		return rm
 	}
-	if w, _ := details["wamUrl"].(string); w != "" {
+	if w := details.WamURL; w != "" {
 		rm.key, rm.wamURL = srv.storageKey(w), w
 	}
-	rm.mapURL, _ = details["mapUrl"].(string)
-	rm.thirdParty, _ = details["thirdParty"].(map[string]any)
+	rm.mapURL, rm.thirdParty = details.MapURL, details.ThirdParty
 	srv.roomMaps.Store(roomURL, rm)
 	return rm
 }
@@ -98,15 +97,15 @@ func (s *Session) connectToRoom() {
 		}
 		return mapedit.RoomAreas(doc)
 	}
-	connected := func() any {
+	connected := func() core.Event {
 		var missed []*pb.EditMapCommandMessage
 		if key != "" {
 			for _, e := range s.srv.maps.Since(key, s.info.lastCommandID) {
 				missed = append(missed, e.(*pb.EditMapCommandMessage))
 			}
 		}
-		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomConnectedMessage{RoomConnectedMessage: &pb.RoomConnectedMessage{
-			EditMapCommandsArrayMessage: &pb.EditMapCommandsArrayMessage{EditMapCommands: missed}, Tag: s.info.member.Tags}}}
+		return core.External{Value: &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomConnectedMessage{RoomConnectedMessage: &pb.RoomConnectedMessage{
+			EditMapCommandsArrayMessage: &pb.EditMapCommandsArrayMessage{EditMapCommands: missed}, Tag: s.info.member.Tags}}}}
 	}
 	_ = s.room.Connect(s.ctx, s, load, connected)
 }
@@ -119,8 +118,8 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 	key, roomURL := s.srv.mapKey(s.info.roomID), s.info.roomID
 	ed := mapedit.Editor{UUID: s.info.userUUID, Tags: s.info.member.Tags, CanEdit: s.info.member.CanEdit}
 	refuse := func(err error) {
-		s.Send(core.NewMsg(core.MapEdit{Event: editMapSubMessage(m.GetId(), &pb.EditMapMessage{Message: &pb.EditMapMessage_ErrorCommandMessage{
-			ErrorCommandMessage: &pb.ErrorCommandMessage{Reason: err.Error()}}})}, true))
+		s.Send(core.NewMsg(mapEdit(&pb.EditMapCommandMessage{Id: m.GetId(), EditMapMessage: &pb.EditMapMessage{Message: &pb.EditMapMessage_ErrorCommandMessage{
+			ErrorCommandMessage: &pb.ErrorCommandMessage{Reason: err.Error()}}}}), true))
 	}
 	cmd, err := command(m.GetEditMapMessage())
 	if err != nil {
@@ -139,7 +138,7 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 		// The room is held for the announcement: the editor may have left meanwhile.
 		room := s.srv.rooms.Acquire(roomURL)
 		defer s.srv.rooms.Release(roomURL)
-		_ = room.MapEdited(context.Background(), &pb.SubMessage{Message: &pb.SubMessage_EditMapCommandMessage{EditMapCommandMessage: done}},
+		_ = room.MapEdited(context.Background(), mapEdit(done),
 			res.Areas, func() { s.srv.maps.Record(key, m.GetId(), done) })
 	})
 	if err != nil {
@@ -147,8 +146,13 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 	}
 }
 
-func editMapSubMessage(id string, e *pb.EditMapMessage) *pb.SubMessage {
-	return &pb.SubMessage{Message: &pb.SubMessage_EditMapCommandMessage{EditMapCommandMessage: &pb.EditMapCommandMessage{Id: id, EditMapMessage: e}}}
+// mapEdit is an edit of the map as the core carries it, encoded once.
+func mapEdit(cmd *pb.EditMapCommandMessage) core.MapEdit {
+	b, err := proto.Marshal(cmd)
+	if err != nil {
+		panic(err)
+	}
+	return core.MapEdit{Command: b}
 }
 
 // command turns a message of the map editor into the command it asks for.

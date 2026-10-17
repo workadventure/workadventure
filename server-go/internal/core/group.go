@@ -146,7 +146,7 @@ func (s *state) groupUsersChanged(g *group) {
 	}
 	var m *Msg
 	for l := range g.zone.listeners {
-		l.peer.Send(lazy(&m, func() any { return GroupUsersUpdated{GroupID: g.id, UserIDs: g.userIDs()} }))
+		l.peer.Send(lazy(&m, func() Event { return GroupUsersUpdated{GroupID: g.id, UserIDs: g.userIDs()} }))
 	}
 }
 

@@ -1,7 +1,11 @@
 package ws
 
 import (
+	"encoding/json"
 	"fmt"
+
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"google.golang.org/protobuf/encoding/protowire"
 	"google.golang.org/protobuf/proto"
@@ -40,12 +44,33 @@ func encodeShared(m *core.Msg) []byte {
 	return b
 }
 
-func subMessage(ev any) *pb.SubMessage {
+func subMessage(ev core.Event) *pb.SubMessage {
 	switch e := ev.(type) {
 	case core.MapEdit:
-		return e.Event.(*pb.SubMessage)
-	case *pb.SubMessage: // built by the adapter itself (scripting events)
-		return e
+		var cmd pb.EditMapCommandMessage
+		if err := proto.Unmarshal(e.Command, &cmd); err != nil {
+			panic(err) // the adapter encoded it
+		}
+		return &pb.SubMessage{Message: &pb.SubMessage_EditMapCommandMessage{EditMapCommandMessage: &cmd}}
+	case core.ScriptingEvent:
+		return &pb.SubMessage{Message: &pb.SubMessage_ReceivedEventMessage{ReceivedEventMessage: &pb.ReceivedEventMessage{
+			Name: e.Name, Data: valueOf(e.Data), SenderId: e.SenderID}}}
+	case core.ItemEvent:
+		return &pb.SubMessage{Message: &pb.SubMessage_ItemEventMessage{ItemEventMessage: &pb.ItemEventMessage{
+			ItemId: e.ItemID, Event: e.Event, StateJson: e.StateJSON, ParametersJson: e.ParametersJSON}}}
+	case core.EntityEvent:
+		var ee pb.EntityEvent
+		if err := proto.Unmarshal(e.Event, &ee); err != nil {
+			panic(err) // the adapter encoded it
+		}
+		return &pb.SubMessage{Message: &pb.SubMessage_EntityMessage{EntityMessage: &pb.EntityMessage{EntityId: e.EntityID, EntityEvent: &ee}}}
+	case core.External:
+		switch v := e.Value.(type) {
+		case *pb.SubMessage:
+			return v
+		case ping:
+			return &pb.SubMessage{Message: &pb.SubMessage_PingMessage{PingMessage: &pb.PingMessage{}}}
+		}
 	case core.VariableChanged:
 		return &pb.SubMessage{Message: &pb.SubMessage_VariableMessage{VariableMessage: &pb.VariableMessage{Name: e.Name, Value: e.Value}}}
 	case core.AreaVariableChanged:
@@ -74,8 +99,6 @@ func subMessage(ev any) *pb.SubMessage {
 		return &pb.SubMessage{Message: &pb.SubMessage_GroupUsersUpdateMessage{GroupUsersUpdateMessage: &pb.GroupUsersUpdateMessage{GroupId: e.GroupID, UserIds: e.UserIDs}}}
 	case core.PlayerDetailsUpdated:
 		return &pb.SubMessage{Message: &pb.SubMessage_PlayerDetailsUpdatedMessage{PlayerDetailsUpdatedMessage: &pb.PlayerDetailsUpdatedMessage{UserId: e.UserID, Details: playerDetails(e.Details)}}}
-	case ping:
-		return &pb.SubMessage{Message: &pb.SubMessage_PingMessage{PingMessage: &pb.PingMessage{}}}
 	}
 	if sub := spaceSubMessage(ev); sub != nil {
 		return sub
@@ -83,7 +106,7 @@ func subMessage(ev any) *pb.SubMessage {
 	panic(fmt.Sprintf("ws: no SubMessage for %T", ev))
 }
 
-func serverMessage(ev any) *pb.ServerToClientMessage {
+func serverMessage(ev core.Event) *pb.ServerToClientMessage {
 	switch e := ev.(type) {
 	case core.JoinSpaceRequest:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_JoinSpaceRequestMessage{JoinSpaceRequestMessage: &pb.JoinSpaceRequestMessage{SpaceName: e.SpaceName, PropertiesToSync: e.PropertiesToSync}}}
@@ -124,10 +147,41 @@ func serverMessage(ev any) *pb.ServerToClientMessage {
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_SendUserMessage{SendUserMessage: &pb.SendUserMessage{Type: e.Type, Message: e.Message}}}
 	case core.MapDeleted:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_DeleteMapMessage{DeleteMapMessage: &pb.DeleteMapMessage{}}}
-	case *pb.ServerToClientMessage: // built by the adapter itself (connection, answers, errors)
-		return e
+	case core.WorldFullWarning:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_WorldFullWarningMessage{WorldFullWarningMessage: &pb.WorldFullWarningMessage{}}}
+	case core.ModuleMessage:
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_ExternalModuleMessage{ExternalModuleMessage: &pb.ExternalModuleMessage{
+			ModuleId: e.ModuleID, RecipientUuid: e.RecipientUUID, RoomId: e.RoomID, Message: valueOf(e.Message)}}}
+	case core.External:
+		if m, ok := e.Value.(*pb.ServerToClientMessage); ok { // built by the adapter itself (connection, answers, errors)
+			return m
+		}
 	}
 	panic(fmt.Sprintf("ws: no ServerToClientMessage for %T", ev))
+}
+
+// jsonOf is a protobuf Value as the core keeps it, JSON; nil stays nil.
+func jsonOf(v *structpb.Value) json.RawMessage {
+	if v == nil {
+		return nil
+	}
+	b, err := protojson.Marshal(v)
+	if err != nil {
+		return nil
+	}
+	return b
+}
+
+// valueOf is JSON of the core as a protobuf Value; nil stays nil.
+func valueOf(raw json.RawMessage) *structpb.Value {
+	if raw == nil {
+		return nil
+	}
+	v := &structpb.Value{}
+	if protojson.Unmarshal(raw, v) != nil {
+		return nil
+	}
+	return v
 }
 
 // ping is the application-level ping of the back: the front closes the connection after 100 s without one.

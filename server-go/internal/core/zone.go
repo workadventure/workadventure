@@ -56,7 +56,7 @@ func (s *state) gcZone(z *zone) {
 }
 
 // lazy creates the shared message the first time a listener needs it.
-func lazy(m **Msg, event func() any) *Msg {
+func lazy(m **Msg, event func() Event) *Msg {
 	if *m == nil {
 		*m = NewMsg(event(), true)
 	}
@@ -73,9 +73,9 @@ func (s *state) userEnters(u *user, z, from *zone) {
 			continue
 		}
 		if from == nil || !l.listens(from.key) {
-			l.peer.Send(lazy(&joined, func() any { return UserJoined{User: u.view()} }))
+			l.peer.Send(lazy(&joined, func() Event { return UserJoined{User: u.view()} }))
 		} else {
-			l.peer.Send(lazy(&moved, func() any { return UserMoved{UserID: u.id, Position: u.pos} }))
+			l.peer.Send(lazy(&moved, func() Event { return UserMoved{UserID: u.id, Position: u.pos} }))
 		}
 	}
 }
@@ -86,7 +86,7 @@ func (s *state) userLeaves(u *user, z, to *zone) {
 	var left *Msg
 	for l := range z.listeners {
 		if l != u && (to == nil || !l.listens(to.key)) {
-			l.peer.Send(lazy(&left, func() any { return UserLeft{UserID: u.id} }))
+			l.peer.Send(lazy(&left, func() Event { return UserLeft{UserID: u.id} }))
 		}
 	}
 }
@@ -95,7 +95,7 @@ func (s *state) userMovesInZone(u *user) {
 	var moved *Msg
 	for l := range u.zone.listeners {
 		if l != u {
-			l.peer.Send(lazy(&moved, func() any { return UserMoved{UserID: u.id, Position: u.pos} }))
+			l.peer.Send(lazy(&moved, func() Event { return UserMoved{UserID: u.id, Position: u.pos} }))
 		}
 	}
 }
@@ -105,7 +105,7 @@ func (s *state) groupEnters(g *group, z, from *zone) {
 	g.zone = z
 	var m *Msg
 	for l := range z.listeners {
-		l.peer.Send(lazy(&m, func() any { return g.updated() }))
+		l.peer.Send(lazy(&m, func() Event { return g.updated() }))
 	}
 }
 
@@ -115,7 +115,7 @@ func (s *state) groupLeaves(g *group, z, to *zone) {
 	var m *Msg
 	for l := range z.listeners {
 		if to == nil || !l.listens(to.key) {
-			l.peer.Send(lazy(&m, func() any { return GroupDeleted{GroupID: g.id} }))
+			l.peer.Send(lazy(&m, func() Event { return GroupDeleted{GroupID: g.id} }))
 		}
 	}
 }
@@ -127,7 +127,7 @@ func (s *state) groupChanged(g *group) {
 	}
 	var m *Msg
 	for l := range g.zone.listeners {
-		l.peer.Send(lazy(&m, func() any { return g.updated() }))
+		l.peer.Send(lazy(&m, func() Event { return g.updated() }))
 	}
 }
 

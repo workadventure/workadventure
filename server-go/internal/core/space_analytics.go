@@ -2,8 +2,6 @@ package core
 
 import (
 	"context"
-
-	"github.com/workadventure/workadventure/server-go/internal/analytics"
 )
 
 // The meetings of a space, for the analytics (SessionAnalytics, through CommunicationManager.syncPresence). A member
@@ -31,8 +29,7 @@ func (s *spaceState) syncPresence(id string) {
 	}
 	s.present[id] = true
 	u := s.members[id].user
-	s.meeting.Join(analytics.MeetingMember{UUID: u.UUID, SpaceUserID: id, RoomID: u.PlayURI, Tags: u.Tags},
-		s.filter == FilterAllUsers || u.Megaphone)
+	s.meeting.Join(u.UUID, id, u.PlayURI, u.Tags, s.filter == FilterAllUsers || u.Megaphone)
 }
 
 // kind is the space's kind, as its front said (SetKind).
@@ -41,6 +38,17 @@ func (s *spaceState) kind() string {
 		return ""
 	}
 	return string(*s.state.Kind)
+}
+
+// MeetingReporter writes the meetings of a space for the analytics: who was there, when, on which transport
+// (internal/analytics.Meeting implements it). The space calls it on its own goroutine.
+type MeetingReporter interface {
+	Join(uuid, spaceUserID, roomID string, tags []string, active bool)
+	SetActive(spaceUserID string, active bool)
+	Leave(spaceUserID string)
+	KindChanged()
+	TransportChanged()
+	Close(reason string) bool
 }
 
 func (s *spaceState) closeMeeting(reason string) {

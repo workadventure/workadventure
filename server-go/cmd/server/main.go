@@ -101,7 +101,9 @@ func run() error {
 	events := analyticsQueue(cfg, adm, false)
 	meetings := analyticsQueue(cfg, adm, true)
 	if meetings != nil {
-		media.Analytics = meetings.Enqueue
+		media.Meetings = func(id, world string, kind, transport func() string) core.MeetingReporter {
+			return analytics.NewMeeting(id, world, kind, transport, meetings.Enqueue)
+		}
 	}
 	if h, ok := adm.(*admin.HTTP); ok && h.Capabilities()["api/livekit/credentials"] == "v1" {
 		media.LiveKitFor = func(ctx context.Context, playURI string) (core.LiveKit, error) {

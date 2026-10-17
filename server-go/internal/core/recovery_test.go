@@ -41,14 +41,14 @@ func TestTheAdminsMessagesReachThePlayersTheyAreFor(t *testing.T) {
 		p.take()
 	}
 	_ = r.SendUserMessage(ctx, UserMessage{Type: "message", Message: "closing"})
-	_ = r.ToUUID(ctx, "bob", NewMsg("for bob", false))
+	_ = r.ToUUID(ctx, "bob", NewMsg(External{Value: "for bob"}, false))
 	sync_(t, r)
 	for _, p := range []*recorder{alice, bob1, bob2} {
 		if !has(p.events, func(m UserMessage) bool { return m.Message == "closing" }) {
 			t.Fatal("the admin's message reaches every player")
 		}
 	}
-	if has(alice.events, func(s string) bool { return s == "for bob" }) || !has(bob1.events, any_[string]) || !has(bob2.events, any_[string]) {
+	if has(alice.events, any_[External]) || !has(bob1.events, any_[External]) || !has(bob2.events, any_[External]) {
 		t.Fatal("a message for a player reaches every tab of that player, and no one else")
 	}
 }
@@ -57,7 +57,7 @@ func TestAMapReplacedOrDeletedReachesItsPlayers(t *testing.T) {
 	r := NewRoom("http://play/~/maps/m.wam", cfg)
 	defer r.Stop()
 	alice := &recorder{} // connected to the room (it gets the map's edits), as every session is before joining
-	_ = r.Connect(ctx, alice, func() []Area { return nil }, func() any { return "connected" })
+	_ = r.Connect(ctx, alice, func() []Area { return nil }, func() Event { return External{Value: "connected"} })
 	sync_(t, r)
 	alice.take()
 	_ = r.MapChanged(ctx, false)
@@ -169,7 +169,7 @@ func TestPlayerDetailsReachTheSpace(t *testing.T) {
 // A shutdown closes the open meeting rather than losing it.
 func TestAShutdownClosesTheOpenMeeting(t *testing.T) {
 	got := &rows{}
-	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble-1"}, Media{Analytics: got.add})
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble-1"}, Media{Meetings: meetingsTo(got)})
 	defer sp.Stop()
 	joinSpace(t, sp, &recorder{}, "alice")
 	joinSpace(t, sp, &recorder{}, "bob")

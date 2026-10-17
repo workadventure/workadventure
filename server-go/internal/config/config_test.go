@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 	"regexp"
 	"strings"
@@ -19,10 +20,11 @@ func TestDefaults(t *testing.T) {
 	if c.ClientDisconnectRetention != 30*time.Second || c.SocketIdleTimer != 120*time.Second {
 		t.Fatalf("unexpected durations: %v %v", c.ClientDisconnectRetention, c.SocketIdleTimer)
 	}
-	if _, ok := c.FrontEnv["ADMIN_URL"]; ok {
+	env := envMap(t, c.FrontEnv)
+	if _, ok := env["ADMIN_URL"]; ok {
 		t.Fatal("unset optional variables must be left out of window.env")
 	}
-	if c.FrontEnv["NODE_ENV"] != "development" || c.FrontEnv["ENABLE_CHAT"] != true {
+	if env["NODE_ENV"] != "development" || env["ENABLE_CHAT"] != true {
 		t.Fatalf("unexpected front env: %v", c.FrontEnv)
 	}
 }
@@ -63,7 +65,7 @@ func TestTheFrontEnvHasEveryRequiredKeyOfTheTSInterface(t *testing.T) {
 		if strings.Contains(string(k[2]), "undefined") {
 			continue // may be left out, as the pusher does when unset
 		}
-		if _, ok := c.FrontEnv[string(k[1])]; !ok {
+		if _, ok := envMap(t, c.FrontEnv)[string(k[1])]; !ok {
 			t.Errorf("%s is missing from window.env", k[1])
 		}
 	}
@@ -79,4 +81,16 @@ func TestTheJSONBodyLimitReadsLikeTheBytesPackage(t *testing.T) {
 	if _, err := parse(map[string]string{"SECRET_KEY": "s", "BODY_PARSER_JSON_SIZE_LIMIT": "lots"}); err == nil {
 		t.Fatal("an unreadable size is refused")
 	}
+}
+
+// envMap is window.env as the page holds it.
+func envMap(t *testing.T, env FrontEnv) map[string]any {
+	t.Helper()
+	b, err := json.Marshal(env)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var m map[string]any
+	_ = json.Unmarshal(b, &m)
+	return m
 }

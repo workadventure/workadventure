@@ -41,7 +41,7 @@ const (
 	statusSessionDestroyed websocket.StatusCode = 4000
 )
 
-var pingMsg = core.NewMsg(ping{}, true)
+var pingMsg = core.NewMsg(core.External{Value: ping{}}, true)
 
 // sessionInfo is what the upgrade learnt about the client. It never changes afterwards.
 type sessionInfo struct {
@@ -145,7 +145,9 @@ func (s *Session) Send(m *core.Msg) {
 
 // Kick ends the session once what was queued before it is delivered: the message saying why (map deleted, kicked)
 // must reach the front before the close, which the front does not recover from.
-func (s *Session) Kick(reason string) { s.out.push(core.NewMsg(closeAfter{reason}, false)) }
+func (s *Session) Kick(reason string) {
+	s.out.push(core.NewMsg(core.External{Value: closeAfter{reason}}, false))
+}
 
 // closeAfter is queued by Kick.
 type closeAfter struct{ reason string }
@@ -204,7 +206,7 @@ func (s *Session) writeLoop() {
 			}
 			// A direct message never overtakes what was batched before it.
 			flush()
-			if c, ok := m.Event.(closeAfter); ok {
+			if c, ok := closing(m); ok {
 				go s.destroy(statusSessionDestroyed, "Back lost: "+c.reason)
 				return
 			}
@@ -404,13 +406,25 @@ func (s *Session) iceServers(id int32) {
 
 func (s *Session) answer(id int32, a *pb.AnswerMessage) {
 	a.Id = id
-	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: a}}, false))
+	s.push(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: a}})
 }
 
 func (s *Session) answerError(id int32, message string) {
-	s.out.push(core.NewMsg(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: &pb.AnswerMessage{
+	s.push(&pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_AnswerMessage{AnswerMessage: &pb.AnswerMessage{
 		Id: id, Answer: &pb.AnswerMessage_Error{Error: &pb.ErrorMessage{Message: message}},
-	}}}, false))
+	}}})
+}
+
+// push sends the client a message the adapter built itself: it goes through no room nor space.
+func (s *Session) push(m *pb.ServerToClientMessage) {
+	s.out.push(core.NewMsg(core.External{Value: m}, false))
+}
+
+// closing says whether m is the close queued by Kick.
+func closing(m *core.Msg) (closeAfter, bool) {
+	e, _ := m.Event.(core.External)
+	c, ok := e.Value.(closeAfter)
+	return c, ok
 }
 
 func items(list []core.ItemState) []*pb.ItemStateMessage {
