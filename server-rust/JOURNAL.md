@@ -609,3 +609,42 @@ avertissements de swagger-jsdoc sur la sortie standard).
   à démarrer et l'arrêt du test l'annulait : « Start signal not received »), puis passent 4 fois sur 4 seuls.
 - Un premier passage sans `--project=chromium` a joué les autres navigateurs, absents de la machine : 40 « échecs »
   sans valeur, rejoué.
+
+## Jalon 8 — admin SaaS (les 31 appels) et white label (17/10)
+
+**Aide extérieure :**
+- Contrat `dev/contracts/admin-api.md` (socle) : la liste A1-A31 et les appels entrants ont servi de plan.
+- Deux inventaires TS par des sous-agents Sonnet de cette session : la chaîne analytics (file, catalogue,
+  intervalles, échantillons vidéo, réunions du back), puis Matrix (pour le jalon suivant).
+- Lecture de `lang-go` : rien.
+
+**Ce qui est en place :**
+- **Socket admin** `/ws/admin/rooms` (`ADMIN_SOCKETS_TOKEN`) : `listen` (présents, puis arrivées et départs),
+  `banned` par monde, refus 1007/1008.
+- **Analytics (A22)** : une file bornée (la plus ancienne part quand elle est pleine), un lot par vidage, quatre
+  essais avec attente croissante, un 422 rejoué événement par événement pour ne perdre que l'invalide, vidage au
+  SIGTERM (`DRAIN_TIMEOUT_MS`). Événements du front contrôlés sur le catalogue (180 noms générés des sources TS,
+  `tools/gen-analytics-catalog.sh`) et sur leur source ; intervalles (`timed_event.open/close`, session de connexion
+  `user.connected`/`user.disconnected` fermée en dernier) ; `media.video_quality.sample`. Les réunions du back
+  (`meeting.participation.ended`, `meeting.ended`) sont calculées dans le cœur (`meetings.rs`, horloge passée en
+  paramètre) en observant le space après chaque changement, au lieu d'accrocher chaque méthode.
+- **Admin** : message global (room ou monde, A6 sans filtre de tags), ban par IP et son aperçu (utilisateurs du
+  monde demandés aux acteurs des rooms, comme `getWorldUsers` aux backs), variables de joueur du monde (`pw_`, groupe
+  des détails de carte), `/profile` et `/profile-callback` (A30, A31).
+- **White label** : `/manifest.json` habillé comme la page (méta-balises de l'admin), `/server.json`, `/jwt`.
+- **Correctif trouvé par un test** : une session pouvait finir avant d'avoir traité les messages reçus juste avant
+  la fermeture (le `select!` tirait au hasard entre la boîte de réception et la fin). Le TS les traite dans
+  l'ordre ; la sélection est désormais prioritaire sur la boîte.
+
+**Vérification :**
+- `./verify.sh` vert ; nouveaux tests de scénario avec un faux admin (socket admin, analytics avec 422, message
+  global et aperçu de ban, profil avec faux fournisseur OIDC, manifest) et deux tests du cœur des réunions.
+- Playwright Chromium, non-régression : api_players, moderation, pwa_install_menu, map_editor_global_message,
+  meeting, spaces, raise-hand, scripting_spaces, reconnect : **29/31**. Les deux échecs sont de l'environnement,
+  classés ainsi dans la référence TS : `scripting_spaces:401` (POST de debug en dur sur le port 80),
+  `spaces.spec:18` (redémarre un back TS).
+- Rien n'est encore prouvé contre la vraie admin : c'est le parcours SaaS (`dev/saas`), étape 7.
+
+**Erreur de méthode :** un commit (ea4cb594d) est parti alors que `verify.sh` échouait, la commande étant
+enchaînée par `;`. Le commit suivant (d8ae1fc04) corrige la cause ; depuis, le commit n'est lancé qu'après un
+`verify.sh` réussi (`&&`).
