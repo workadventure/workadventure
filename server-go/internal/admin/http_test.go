@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -229,5 +230,18 @@ func TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin(t *testing.T) {
 	local, _ := NewLocal(&config.Config{FrontEnv: map[string]any{}})
 	if _, err := local.SearchMembers(ctx, "r", ""); err == nil {
 		t.Fatal("without an admin, searching members is an error, as in LocalAdmin")
+	}
+}
+
+func TestTheAdminsChallengeAndChoicesWithoutCapability(t *testing.T) {
+	var saved int32
+	a, _ := fakeAdmin(t, func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/api/save") {
+			atomic.AddInt32(&saved, 1)
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+	if err := a.SaveUser(context.Background(), SaveName, "jo@x.test", "r", "Jo"); err != nil || saved != 0 {
+		t.Fatal("without api/save-name, nothing is sent and the player gets its 204")
 	}
 }

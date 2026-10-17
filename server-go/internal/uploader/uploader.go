@@ -4,6 +4,7 @@
 package uploader
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -23,6 +24,8 @@ type Options struct {
 	AllowedOrigin string // ALLOWED_CORS_ORIGIN, or PLAY_URL, or *
 	EnableUpload  bool   // ENABLE_CHAT_UPLOAD
 	MaxFileSize   int64  // UPLOAD_MAX_FILESIZE (100 MiB by default)
+	// AdminAPIURL, when set, decides instead of EnableUpload and MaxFileSize, file by file (A29).
+	AdminAPIURL string
 }
 
 const (
@@ -148,8 +151,13 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer r.MultipartForm.RemoveAll()
-	if !u.o.EnableUpload {
+	if u.o.AdminAPIURL == "" && !u.o.EnableUpload {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"message": "disabled"})
+		return
+	}
+	roomToken := r.FormValue("userRoomToken")
+	if u.o.AdminAPIURL != "" && roomToken == "" {
+		writeJSON(w, http.StatusUnauthorized, map[string]string{"message": "not-logged"})
 		return
 	}
 	type uploaded struct {
@@ -163,7 +171,12 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 	var out []uploaded
 	for _, headers := range r.MultipartForm.File {
 		for _, h := range headers {
-			if h.Size > u.o.MaxFileSize {
+			if u.o.AdminAPIURL != "" {
+				if code, body := u.adminLimit(r.Context(), roomToken, h.Size); code != 0 {
+					writeJSON(w, code, body)
+					return
+				}
+			} else if h.Size > u.o.MaxFileSize {
 				writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"message": "file-too-big", "maxFileSize": strconv.FormatInt(u.o.MaxFileSize, 10)})
 				return
 			}
@@ -218,3 +231,33 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(v)
 }
+
+// adminLimit asks the admin whether the player may send a file of size bytes (A29, /api/limit/fileSize): 0 when
+// it may, else the status and body to answer (413 and 423 kept, anything else 401, with the admin's message).
+func (u *Uploader) adminLimit(ctx context.Context, roomToken string, size int64) (int, map[string]any) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(u.o.AdminAPIURL, "/")+"/api/limit/fileSize?fileSize="+strconv.FormatInt(size, 10), nil)
+	if err != nil {
+		return http.StatusInternalServerError, map[string]any{"message": err.Error()}
+	}
+	req.Header.Set("userRoomToken", roomToken)
+	resp, err := limitClient.Do(req)
+	if err != nil {
+		return http.StatusInternalServerError, map[string]any{"message": "Error upload file"}
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode/100 == 2 {
+		return 0, nil
+	}
+	var answer struct {
+		Message     any `json:"message"`
+		MaxFileSize any `json:"maxFileSize"`
+	}
+	_ = json.NewDecoder(io.LimitReader(resp.Body, 1<<16)).Decode(&answer)
+	code := http.StatusUnauthorized
+	if resp.StatusCode == http.StatusRequestEntityTooLarge || resp.StatusCode == http.StatusLocked {
+		code = resp.StatusCode
+	}
+	return code, map[string]any{"message": answer.Message, "maxFileSize": answer.MaxFileSize}
+}
+
+var limitClient = &http.Client{Timeout: 10 * time.Second}

@@ -343,3 +343,64 @@ func (a *HTTP) RefreshOAuthToken(ctx context.Context, token, provider, userIdent
 	}
 	return *out.Token, *out.Message, nil
 }
+
+// SaveUser is A9 (save-name), A10 (save-textures) and A11 (save-companion-texture): sent only when the admin
+// offers the capability (api/save-textures covers the companion), and only a 204 is a success.
+func (a *HTTP) SaveUser(ctx context.Context, what SaveWhat, userIdentifier, roomURL string, value any) error {
+	s := saves[what]
+	if _, ok := a.Capabilities()[s.capability]; !ok {
+		return nil
+	}
+	b, err := json.Marshal(map[string]any{"playUri": roomURL, "userIdentifier": userIdentifier, s.field: value})
+	if err != nil {
+		return err
+	}
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimRight(a.cfg.AdminAPIURL, "/")+s.path, bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", a.cfg.AdminAPIToken)
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent {
+		return fmt.Errorf("%s: got %d, expected 204", s.path, resp.StatusCode)
+	}
+	return nil
+}
+
+var saves = map[SaveWhat]struct{ path, capability, field string }{
+	SaveName:      {"/api/save-name", "api/save-name", "name"},
+	SaveTextures:  {"/api/save-textures", "api/save-textures", "textures"},
+	SaveCompanion: {"/api/save-companion-texture", "api/save-textures", "texture"},
+}
+
+// Challenge is A4: a web route of the admin, out of /api, without the token.
+func (a *HTTP) Challenge(ctx context.Context, host string) (string, error) {
+	ctx, cancel := context.WithTimeout(ctx, requestTimeout)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, strings.TrimRight(a.cfg.AdminAPIURL, "/")+"/white-label/cf-challenge?"+url.Values{"host": {host}}.Encode(), nil)
+	if err != nil {
+		return "", err
+	}
+	resp, err := a.client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(resp.Body, 1<<20))
+	if err != nil || resp.StatusCode/100 != 2 {
+		return "", fmt.Errorf("cf-challenge: %s %v", resp.Status, err)
+	}
+	// axios parses a JSON string; the admin answers the text
+	var s string
+	if json.Unmarshal(data, &s) == nil {
+		return s, nil
+	}
+	return string(data), nil
+}

@@ -21,7 +21,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 ## Manques bloquants, par ordre
 
-1. **Admin distante** : restent A4 (challenge Cloudflare), A9 à A11 (`save-name`, `save-textures`), A23 (`recordings/events`), A24 (identifiants LiveKit par monde), A25 (Room API autorisée par l'admin), A26 et A27 (validateur et webhook de map-storage), A29 (limite de taille de l'uploader), A31 (`access_key`, `/profile-callback`). Aucun parcours SaaS joué de bout en bout.
+1. **Admin distante** : restent A23 (`recordings/events`), A24 (identifiants LiveKit par monde), A25 (Room API autorisée par l'admin), A26 et A27 (validateur et webhook de map-storage). Aucun parcours SaaS joué de bout en bout.
 2. **Durabilité des variables** : une room démarrée pendant une coupure de Redis garde les valeurs par défaut (`varsOnce`).
 3. **Isolation des tenants** : clé de space faite de l'origine et non du `world` de l'admin ; `roomsFromSameWorld` sans admin liste tout map-storage.
 4. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
@@ -37,7 +37,8 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
 | A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
-| A4, A9 à A11, A23 à A27, A29, A31 (A5 à A8, A12 à A21, A28, A30 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
+| A4 challenge Cloudflare (404 sur `workadventu.re`, 526 en échec), A9 à A11 `/save-*` (joueur connecté, capacité, 204 exigé), A29 limite de l'uploader (413 et 423 relayés, sinon 401), A31 `?access_key=` (page vers `AUTOLOGIN_URL`) et `/profile-callback` | validé (tests Go) | `httpapi/whitelabel_test.go` (2 tests), `uploader_test.go` : `TestTheAdminDecidesWhatSizeAPlayerMayUpload`, `admin/http_test.go` | — | — |
+| A23 à A27 (A5 à A21, A28 à A31 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
 
 ## Connexion, salle, mouvements
 
