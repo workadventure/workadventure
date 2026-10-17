@@ -90,6 +90,10 @@ pub enum RoomCmd {
     },
     /// From the Room API.
     Api(RoomApiCmd),
+    /// The admin socket watches this room: who is here now, then who comes and goes.
+    AdminListen { tx: tokio::sync::mpsc::Sender<String> },
+    /// A ban from the admin socket: everyone of that player is sent away, as banned.
+    AdminBan { uuid: String, reason: String },
     /// From the admin: reload the room (dispatchRoomRefresh), a message to everyone, the world is full, a
     /// message of an external module to one user.
     Refresh,
@@ -682,6 +686,15 @@ fn set_variable(
     Ok(())
 }
 
+fn member_join(info: &SessionInfo, name: &str, room: &str) -> String {
+    serde_json::json!({"type": "MemberJoin", "data": {"uuid": info.user_uuid, "name": name, "ipAddress": info.ip_address, "roomId": room}}).to_string()
+}
+
+/// To every admin socket still there (one that cannot keep up misses the event).
+fn tell_admins(admins: &mut Vec<tokio::sync::mpsc::Sender<String>>, event: &str) {
+    admins.retain(|tx| !matches!(tx.try_send(event.to_owned()), Err(tokio::sync::mpsc::error::TrySendError::Closed(_))));
+}
+
 fn send_follow(messages: Vec<FollowMsg>, sessions: &HashMap<UserId, Arc<Session>>) {
     use pb::server_to_client_message::Message as Top;
     for m in messages {
@@ -733,6 +746,8 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
     let mut event_listeners: Listeners<EventData> = Listeners::default();
     let mut variables = AreaVariables::default();
     let mut follows = Follows::default();
+    // The admin sockets watching this room.
+    let mut admins: Vec<tokio::sync::mpsc::Sender<String>> = Vec::new();
     // incrementVersion: each admin refresh of the room.
     let mut version = 0i32;
     let mut invitations = Invitations::default();
@@ -905,6 +920,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                             Fanout::new(&mut sessions).variables(changes);
                             if let Some(s) = sessions.remove(&id) {
                                 dec_room_gauge(&METRICS.nb_clients_per_room, &url);
+                                tell_admins(&mut admins, &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}}).to_string());
                                 s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage {
                                     r#type: if banned { "banned" } else { "kicked" }.into(),
                                     message: reason.clone(),
@@ -926,6 +942,27 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 RoomApiCmd::ListenVariable { name, tx } => var_listeners.add(name, tx),
                 RoomApiCmd::ListenEvent { name, tx } => event_listeners.add(name, tx),
             },
+            RoomCmd::AdminListen { tx } => {
+                for s in sessions.values() {
+                    let name = s.user_id().and_then(|id| room.user(id)).map(|u| u.profile.name.clone()).unwrap_or_default();
+                    let _ = tx.try_send(member_join(&s.info, &name, &url));
+                }
+                admins.push(tx);
+            }
+            RoomCmd::AdminBan { uuid, reason } => {
+                for id in room.ids_of(&uuid) {
+                    let changes = variables.moved(room.position_of(id), None);
+                    send_follow(follows.left(id), &sessions);
+                    room.leave(id, &mut Fanout::new(&mut sessions));
+                    Fanout::new(&mut sessions).variables(changes);
+                    if let Some(s) = sessions.remove(&id) {
+                        dec_room_gauge(&METRICS.nb_clients_per_room, &url);
+                        tell_admins(&mut admins, &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}}).to_string());
+                        s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage { r#type: "banned".into(), message: reason.clone() })));
+                        s.end_after_queued();
+                    }
+                }
+            }
             RoomCmd::Refresh => {
                 version += 1;
                 let frame = wire::direct(Top::RefreshRoomMessage(pb::RefreshRoomMessage {
@@ -1050,6 +1087,10 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                     dec_room_gauge(&METRICS.nb_clients_per_room, &url);
                 }
                 METRICS.nb_clients_per_room.with_label_values(&[&url]).inc();
+                if !admins.is_empty() {
+                    let name = room.user(joined.user_id).map(|u| u.profile.name.clone()).unwrap_or_default();
+                    tell_admins(&mut admins, &member_join(&session.info, &name, &url));
+                }
             }
             RoomCmd::Leave { session } => {
                 let Some(user) = session.user_id() else { continue };
@@ -1059,6 +1100,7 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 Fanout::new(&mut sessions).variables(changes);
                 if sessions.remove(&user).is_some() {
                     dec_room_gauge(&METRICS.nb_clients_per_room, &url);
+                    tell_admins(&mut admins, &serde_json::json!({"type": "MemberLeave", "data": {"uuid": session.info.user_uuid}}).to_string());
                 }
             }
             RoomCmd::Move {

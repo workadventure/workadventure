@@ -778,3 +778,53 @@ async fn each_tenant_has_its_own_maps_under_the_same_paths() {
     assert_eq!(escape.status(), 400);
     let _ = std::fs::remove_dir_all(&dir);
 }
+
+async fn next<S: futures_util::Stream<Item = Result<tokio_tungstenite::tungstenite::Message, tokio_tungstenite::tungstenite::Error>> + Unpin>(
+    admin: &mut S,
+) -> serde_json::Value {
+    use futures_util::StreamExt;
+    let Ok(Some(Ok(tokio_tungstenite::tungstenite::Message::Text(t)))) = tokio::time::timeout(WAIT, admin.next()).await else { panic!("no admin event") };
+    serde_json::from_str(&t).unwrap()
+}
+
+#[tokio::test]
+async fn the_admin_socket_watches_rooms_and_bans_from_a_whole_world() {
+    use futures_util::{SinkExt, StreamExt};
+    use tokio_tungstenite::tungstenite::Message;
+    let server = start_with(&[("SECRET_KEY", "test"), ("ADMIN_SOCKETS_TOKEN", "sockets-secret")]).await.0;
+    let room = "http://play.test/@/acme/world/lobby";
+    let (_alice, _ia) = bot(&server, room, "Alice", 100, 100).await;
+
+    let ws = format!("{}/ws/admin/rooms", server.replacen("http", "ws", 1));
+    let (mut admin, _) = tokio_tungstenite::connect_async(&ws).await.unwrap();
+    let jwt = wa_server::jwt::sign("sockets-secret", &serde_json::json!({"authorizedRoomIds": [room]}));
+    let listen = serde_json::json!({"event": "listen", "roomIds": [room], "jwt": jwt}).to_string();
+    admin.send(Message::Text(listen.into())).await.unwrap();
+    // Who is there already, then who comes.
+    let first = next(&mut admin).await;
+    assert_eq!((first["type"].as_str(), first["data"]["name"].as_str(), first["data"]["roomId"].as_str()), (Some("MemberJoin"), Some("Alice"), Some(room)));
+    let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
+    let second = next(&mut admin).await;
+    assert_eq!(second["data"]["name"], "Bob");
+    let bob_uuid = second["data"]["uuid"].as_str().unwrap().to_owned();
+
+    // A ban for the world reaches the rooms of that world the token covers.
+    let ban = serde_json::json!({"event": "banned", "world": "world", "message": {"userUuid": bob_uuid, "message": "Spam"}, "jwt": jwt});
+    admin.send(Message::Text(ban.to_string().into())).await.unwrap();
+    let banned = ib
+        .expect(WAIT, |m| match m {
+            Incoming::Top(Top::BanUserMessage(b)) => Some((b.r#type.clone(), b.message.clone())),
+            _ => None,
+        })
+        .await
+        .unwrap();
+    assert_eq!(banned, ("banned".to_owned(), "Spam".to_owned()));
+    assert_eq!(next(&mut admin).await["type"], "MemberLeave");
+
+    // A room the token does not cover: refused, the socket closed (1008).
+    let other = serde_json::json!({"event": "listen", "roomIds": ["http://play.test/@/other/w/r"], "jwt": jwt});
+    admin.send(Message::Text(other.to_string().into())).await.unwrap();
+    assert_eq!(next(&mut admin).await["type"], "Error");
+    let closed = tokio::time::timeout(WAIT, admin.next()).await.unwrap();
+    assert!(matches!(closed, Some(Ok(Message::Close(Some(ref f)))) if u16::from(f.code) == 1008), "{closed:?}");
+}
