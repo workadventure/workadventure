@@ -24,7 +24,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 1. **Admin distante** : les 31 appels du contrat sont faits et testés contre un faux admin ; aucun parcours SaaS joué de bout en bout.
 2. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
 3. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
-4. **Campagne des 86 specs** contre la référence TS : pas encore jouée.
+4. **Campagne des 86 specs** : jouée le 17/10 (246 réussis, 8 échecs, tous communs avec le TS ; voir JOURNAL). Restent les rejeux Matrix sur une base Synapse vierge.
 
 ## Admin distante (A1 à A31 de `dev/contracts/admin-api.md`)
 
