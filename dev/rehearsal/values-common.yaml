@@ -5,6 +5,11 @@ domainName: rehearsal.localhost
 secretKey: rehearsal-secret-key-0123456789
 ingress:
   className: nginx
+  # The page (play-...) loads module scripts from assets-...: cross-origin, so the front needs CORS (a real deployment
+  # gets it from its own ingress/CDN configuration; the chart does not set it).
+  annotationsRoot:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://play-rehearsal.localhost"
 front:
   # Needed by the Go server (it renders the template of the front); kept on in TS mode so that only the play image changes.
   enabled: true
@@ -19,6 +24,9 @@ back:
   image:
     repository: ghcr.io/workadventure/back
 mapstorage:
+  # As in production: the maps are on a volume (PVC kept by helm). Without it they live in an emptyDir and vanish with the pod.
+  persistence:
+    enabled: true
   image:
     repository: ghcr.io/workadventure/map-storage
   env:
