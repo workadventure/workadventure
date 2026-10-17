@@ -90,7 +90,8 @@ const seen = (t: Tab) =>
             await WA.players.configureTracking({ players: true, movement: true });
             window.__tracked = true; // a new script frame (page reload) tracks again
         }
-        return WA.players.list().map((p) => ({ name: p.name, x: p.position?.x, y: p.position?.y }));
+        // list() is an iterator: its .map (iterator helpers) is another iterator, which serializes as {}
+        return Array.from(WA.players.list(), (p) => ({ name: p.name, x: p.position?.x, y: p.position?.y }));
     });
 const readVar = (t: Tab) =>
     withTimeout(evaluateScript(t.page, async () => { await WA.onInit(); return WA.state.textField; }));
