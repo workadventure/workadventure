@@ -3,6 +3,7 @@ package livekit
 import (
 	"context"
 	"errors"
+	"strconv"
 	"strings"
 	"time"
 
@@ -26,9 +27,52 @@ func (e *Egress) twirp(ctx context.Context, method string, body, out any) error 
 }
 
 type egressInfo struct {
-	EgressID  string `json:"egressId"`
-	EgressID2 string `json:"egress_id"`
-	Status    any    `json:"status"`
+	EgressID    string     `json:"egressId"`
+	EgressID2   string     `json:"egress_id"`
+	Status      any        `json:"status"`
+	StartedAt   int64Str   `json:"startedAt"`
+	StartedAt2  int64Str   `json:"started_at"`
+	EndedAt     int64Str   `json:"endedAt"`
+	EndedAt2    int64Str   `json:"ended_at"`
+	Error       string     `json:"error"`
+	FileResults []fileInfo `json:"fileResults"`
+	FileResult2 []fileInfo `json:"file_results"`
+}
+
+type fileInfo struct {
+	Filename string   `json:"filename"`
+	Size     int64Str `json:"size"`
+	Duration int64Str `json:"duration"` // nanoseconds
+}
+
+// int64Str is an int64 of protojson: a string, or a number from older servers.
+type int64Str int64
+
+func (n *int64Str) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	if s == "" || s == "null" {
+		return nil
+	}
+	v, err := strconv.ParseInt(s, 10, 64)
+	*n = int64Str(v)
+	return err
+}
+
+func (i egressInfo) info() core.EgressInfo {
+	at := func(a, b int64Str) time.Time {
+		if a == 0 {
+			a = b
+		}
+		if a == 0 {
+			return time.Time{}
+		}
+		return time.Unix(0, int64(a))
+	}
+	out := core.EgressInfo{Status: i.status(), StartedAt: at(i.StartedAt, i.StartedAt2), EndedAt: at(i.EndedAt, i.EndedAt2), Error: i.Error}
+	for _, f := range append(i.FileResults, i.FileResult2...) {
+		out.Files = append(out.Files, core.EgressFile{Filename: f.Filename, SizeBytes: int64(f.Size), Duration: time.Duration(f.Duration)})
+	}
+	return out
 }
 
 func (i egressInfo) id() string {
@@ -85,15 +129,15 @@ func (e *Egress) Stop(ctx context.Context, id string) error {
 	return err
 }
 
-func (e *Egress) Status(ctx context.Context, id string) (string, error) {
+func (e *Egress) Status(ctx context.Context, id string) (core.EgressInfo, error) {
 	var list struct {
 		Items []egressInfo `json:"items"`
 	}
 	if err := e.twirp(ctx, "ListEgress", map[string]string{"egressId": id}, &list); err != nil {
-		return "", err
+		return core.EgressInfo{}, err
 	}
 	if len(list.Items) == 0 {
-		return "EGRESS_ABORTED", nil // LiveKit forgot it
+		return core.EgressInfo{Status: "EGRESS_ABORTED"}, nil // LiveKit forgot it
 	}
-	return list.Items[0].status(), nil
+	return list.Items[0].info(), nil
 }

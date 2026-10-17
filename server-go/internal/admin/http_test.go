@@ -245,3 +245,22 @@ func TestTheAdminsChallengeAndChoicesWithoutCapability(t *testing.T) {
 		t.Fatal("without api/save-name, nothing is sent and the player gets its 204")
 	}
 }
+
+func TestTheEndOfARecordingIsToldAgainUntilTheAdminHearsIt(t *testing.T) {
+	var calls atomic.Int32
+	a, _ := fakeAdmin(t, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/recordings/events" || r.Header.Get("Accept") != "application/json" {
+			http.NotFound(w, r)
+			return
+		}
+		if calls.Add(1) == 1 {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
+	})
+	a.caps["api/recordings/events"] = "v1"
+	if err := a.RecordingEvent(context.Background(), map[string]string{"phase": "ended"}); err != nil || calls.Load() != 2 {
+		t.Fatalf("a 502 is tried again: %v, %d calls", err, calls.Load())
+	}
+}

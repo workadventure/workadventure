@@ -257,10 +257,12 @@ func parse(get func(string) string) (*Config, error) {
 			Auth: mapstorage.Auth{
 				Basic: r.boolean("ENABLE_BASIC_AUTHENTICATION", false), User: r.str("AUTHENTICATION_USER"), Password: r.str("AUTHENTICATION_PASSWORD"),
 				Bearer: r.boolean("ENABLE_BEARER_AUTHENTICATION", false), Token: r.str("AUTHENTICATION_TOKEN"),
+				Validator: &mapstorage.Validator{URL: r.str("AUTHENTICATION_VALIDATOR_URL"), Production: r.str("NODE_ENV") == "production"},
 			},
 			CacheControl:        firstNonEmpty(r.str("CACHE_CONTROL"), "public, s-max-age=10"),
 			MaxUncompressed:     int64(r.integer("MAX_UNCOMPRESSED_SIZE", 1<<30)),
 			DirectUploadURL:     r.str("DIRECT_UPLOAD_URL"),
+			WebHook:             webHook(r),
 			EntityCollections:   list(r.str("ENTITY_COLLECTION_URLS")),
 			WAMTemplateURL:      r.str("WAM_TEMPLATE_URL"),
 			PathPrefix:          r.str("PATH_PREFIX"),
@@ -515,3 +517,11 @@ type Matrix struct{ APIURI, AdminUser, AdminPassword, Domain string }
 
 type Jitsi struct{ URL, ISS, Secret string }
 type BBB struct{ URL, Secret string }
+
+// webHook is map-storage's WEB_HOOK_URL, unless ENABLE_WEB_HOOK is false.
+func webHook(r *reader) mapstorage.WebHook {
+	if !r.boolean("ENABLE_WEB_HOOK", true) {
+		return mapstorage.WebHook{}
+	}
+	return mapstorage.WebHook{URL: r.str("WEB_HOOK_URL"), Token: r.str("WEB_HOOK_API_TOKEN")}
+}

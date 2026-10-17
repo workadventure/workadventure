@@ -31,6 +31,8 @@ type Media struct {
 	BackToWebRTCAfter time.Duration
 	FinalizeAfter     time.Duration
 	Analytics         func(analytics.Event) // the back's analytics queue (meetings); nil: none
+	// RecordingEnded tells the admin a recording ended (A23); it must not block.
+	RecordingEnded func(RecordingEnded)
 }
 
 // DefaultMedia is the back's: 4 users, 20 s back, 5 s to finalize.

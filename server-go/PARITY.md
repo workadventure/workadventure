@@ -21,7 +21,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 ## Manques bloquants, par ordre
 
-1. **Admin distante** : restent A23 (`recordings/events`), A24 (identifiants LiveKit par monde), A25 (Room API autorisée par l'admin), A26 et A27 (validateur et webhook de map-storage). Aucun parcours SaaS joué de bout en bout.
+1. **Admin distante** : reste A24 (identifiants LiveKit par monde : sans lui, un monde SaaS n'a pas de LiveKit si `LIVEKIT_*` n'est pas défini). Aucun parcours SaaS joué de bout en bout.
 2. **Durabilité des variables** : une room démarrée pendant une coupure de Redis garde les valeurs par défaut (`varsOnce`).
 3. **Isolation des tenants** : clé de space faite de l'origine et non du `world` de l'admin ; `roomsFromSameWorld` sans admin liste tout map-storage.
 4. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
@@ -38,7 +38,8 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
 | A4 challenge Cloudflare (404 sur `workadventu.re`, 526 en échec), A9 à A11 `/save-*` (joueur connecté, capacité, 204 exigé), A29 limite de l'uploader (413 et 423 relayés, sinon 401), A31 `?access_key=` (page vers `AUTOLOGIN_URL`) et `/profile-callback` | validé (tests Go) | `httpapi/whitelabel_test.go` (2 tests), `uploader_test.go` : `TestTheAdminDecidesWhatSizeAPlayerMayUpload`, `admin/http_test.go` | — | — |
-| A23 à A27 (A5 à A21, A28 à A31 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
+| A23 fin d'enregistrement (capacité `api/recordings/events`, 3 réessais, `recordingSessionId`, fichiers et durées tirés de `ListEgress`), A25 Room API autorisée par l'admin (`X-API-Key`, codes gRPC, cache en production selon `Cache-Control`), A26 validateur de map-storage (bearer autre que `AUTHENTICATION_TOKEN`, par domaine, même cache), A27 webhook de map-storage (`update` à chaque écriture d'un WAM, `delete`) | validé (tests Go) | `admin/http_test.go`, `core/space_recording_test.go`, `livekit/egressinfo_test.go`, `roomapi/admin_test.go`, `mapstorage/admin_test.go` | A27 : pas d'appel « cache régénéré » sans `mapPath` ; domaine vide sans `USE_DOMAIN_NAME_IN_PATH` | — |
+| A24 identifiants LiveKit par monde (A1 à A23, A25 à A31 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
 
 ## Connexion, salle, mouvements
 
