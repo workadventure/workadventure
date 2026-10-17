@@ -43,26 +43,26 @@ json.dump(cm, sys.stdout)' "$DOMAIN" | k apply -f - >/dev/null
 fi
 
 # 4. Images. TS: copied from the local docker daemon (pull them first if missing). Front: built locally by the socle.
-#    Go: built from the lang-go worktree (read-only), API_VERSION = hash of the front's API (must match the front image).
+#    Candidates: built from their worktree (read-only) if the image is missing or REBUILD_GO=1 / REBUILD_RUST=1.
+#    A candidate without a worktree (RUST_SRC absent) is skipped: build or `docker tag` the image yourself.
 for img in play back map-storage uploader maps; do
   docker image inspect "ghcr.io/workadventure/$img:$TS_TAG" >/dev/null 2>&1 || docker pull "ghcr.io/workadventure/$img:$TS_TAG"
 done
-if ! docker image inspect "$GO_IMAGE" >/dev/null 2>&1 || [ "${REBUILD_GO:-}" = 1 ]; then
-  docker build --target prod --build-arg "API_VERSION=$(sh "$GO_SRC/api-version.sh")" --build-arg VERSION=1.0.0 -t "$GO_IMAGE" "$GO_SRC"
-  # What went into the image (read by rehearse.sh for the report); the worktree may carry uncommitted work.
-  { echo "commit=$(git -C "$GO_SRC" rev-parse HEAD)"; echo "dirty_files=$(git -C "$GO_SRC" status --porcelain . | wc -l | tr -d ' ')"
-    echo "api_version=$(sh "$GO_SRC/api-version.sh")"; echo "built_at=$(date -u +%FT%TZ)"; } > .go-image-info
-fi
-loaded=$(minikube image ls -p "$PROFILE" 2>/dev/null || true)
-for img in "$FRONT_IMAGE" "$GO_IMAGE" matthiasluedtke/iconserver:v3.21.0 \
-  $(for i in play back map-storage uploader maps; do echo "ghcr.io/workadventure/$i:$TS_TAG"; done); do
-  # minikube lists docker.io/ prefixed names
-  if [ "${REBUILD_GO:-}" != 1 ] || [ "$img" != "$GO_IMAGE" ]; then
-    echo "$loaded" | grep -q "${img#docker.io/}" && continue
+rebuilt=()
+for mode in go rust; do
+  var="REBUILD_$(echo "$mode" | tr a-z A-Z)"
+  if ! docker image inspect "$(candidate_image "$mode")" >/dev/null 2>&1 || [ "${!var:-}" = 1 ]; then
+    if [ -d "$(candidate_src "$mode")" ]; then build_candidate "$mode"; rebuilt+=("$(candidate_image "$mode")")
+    else echo "skip $mode: $(candidate_src "$mode") not found (set $(echo "$mode" | tr a-z A-Z)_SRC or provide $(candidate_image "$mode"))"; fi
   fi
-  echo "load $img"
-  # Some multi-arch ghcr images cannot be exported from the local daemon ("not found in tar"): pull them in the node.
-  minikube image load "$img" -p "$PROFILE" 2>/dev/null || { echo "  load failed, pulling in the node"; minikube ssh -p "$PROFILE" -- docker pull -q "$img" >/dev/null; }
+done
+loaded=$(minikube image ls -p "$PROFILE" 2>/dev/null || true)
+for img in "$FRONT_IMAGE" "$GO_IMAGE" "$RUST_IMAGE" matthiasluedtke/iconserver:v3.21.0 \
+  $(for i in play back map-storage uploader maps; do echo "ghcr.io/workadventure/$i:$TS_TAG"; done); do
+  docker image inspect "$img" >/dev/null 2>&1 || continue   # e.g. no Rust image
+  # minikube lists docker.io/ prefixed names; a rebuilt image is always reloaded
+  if [[ ! " ${rebuilt[*]-} " == *" $img "* ]]; then echo "$loaded" | grep -q "${img#docker.io/}" && continue; fi
+  load_image "$img"
 done
 
 # 5. 127.0.0.1:8443 -> port 443 of the node (the ingress controller's hostPort), by a socat container on the
