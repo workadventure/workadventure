@@ -645,3 +645,65 @@ Toutes les campagnes ont tourné sur la stack `go` du socle, un seul worker, sou
 `./verify.sh` est vert.
 
 **Aide extérieure.** Deux sous-agents Sonnet ont fait l'inventaire du TS : les analytics, puis Matrix.
+
+### 17/10, tranche 5 : Matrix, le reste de l'admin, les messages manquants
+
+**Matrix.**
+- Client admin de Synapse :
+  - connexion, puis nouvelle connexion si le jeton est révoqué ;
+  - levée du rate limit (10 essais) ;
+  - salon privé de chaque zone de chat, rangé dans l'espace `current-visited-room` ;
+  - invitation, droits de modérateur pour le tag `admin`, renommage ;
+  - vidage du salon, comme le TS : il expulse les invités, puis l'admin le quitte.
+- `/roomArea` (POST, PATCH, DELETE), protégé par `MAP_STORAGE_API_TOKEN`.
+- Hooks `resourceUrl` de map-storage :
+  - POST à l'ajout d'une propriété, PATCH quand elle change, DELETE quand on la retire ou qu'on supprime la zone ;
+  - ils tournent avant la transaction optimiste, pour qu'un POST ne soit jamais rejoué ;
+  - seulement vers `PUSHER_URL` et `WHITELISTED_RESOURCE_URLS`. Sans cette liste, un éditeur ferait partir `MAP_STORAGE_API_TOKEN` vers n'importe quelle URL.
+- Entrée et sortie des zones de chat ; expulsion de tous les salons à la fermeture ; `updateChatId`.
+- Vérifié : le conteneur Go joint sa propre URL publique (`PUSHER_URL`). `curl` ne le peut pas, car il envoie `*.localhost` vers 127.0.0.1.
+
+**Admin.** Les 31 appels du contrat sont faits.
+- A4 : challenge Cloudflare.
+- A9 à A11 : `/save-*`.
+- A12 à A16 : membres, tags, `chatId`.
+- A17 : refresh OAuth.
+- A23 : fin d'enregistrement, avec les fichiers et durées lus dans `ListEgress`.
+- A24 : LiveKit par monde, demandé avec le `playUri` d'un membre à chaque passage en LiveKit.
+- A25 : Room API autorisée par l'admin.
+- A26 et A27 : validateur et webhook de map-storage.
+- A29 : limite de taille de l'uploader.
+- A31 : `?access_key=` et `/profile-callback`.
+
+**Messages manquants.** Le Go répond désormais à toutes les requêtes du front.
+- JWT Jitsi : modérateur selon `jitsiRoomAdminTag` de la carte Tiled et du WAM.
+- BBB : création de la réunion, URL de connexion.
+- `slugify`, `shortHash` et les URL BBB sont identiques à ceux du TS. Le test compare à des valeurs calculées avec le code JS.
+
+**Durabilité.**
+- Une salle démarrée pendant une coupure de Redis redemande les valeurs toutes les 2 s.
+- Au retour de Redis, elle prend la valeur stockée de chaque variable que personne n'a écrite entre-temps.
+
+**Uploader.** Fichiers dans S3 (téléchargement par lien signé), sinon Redis, sinon mémoire. Les messages audio vont dans Redis, sinon en mémoire.
+
+**Environnement (pas un défaut du Go).**
+- UserMatrix2 n'existe pas dans le faux fournisseur OIDC (docker-compose.yaml, y compris sur origin/master). Signalé au socle.
+- Le warm-auth de la campagne passe maintenant compte par compte, pour qu'un échec ne bloque pas les suivants.
+
+**Tests** : 174 au total.
+
+| Paquet | Couverture |
+|---|---|
+| `analytics` | 87,0 % |
+| `mapedit` | 84,9 % |
+| `core` | 84,1 % |
+| `roomapi` | 82,2 % |
+| `uploader` | 77,6 % |
+| `matrix` | 75,9 % |
+| `mapstorage` | 75,7 % |
+| `admin` | 64,2 % |
+| `ws` | 49,8 % |
+
+`./verify.sh` est vert.
+
+**Aide extérieure.** Sous-agent Sonnet pour l'inventaire Matrix du TS.
