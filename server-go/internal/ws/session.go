@@ -22,6 +22,9 @@ import (
 )
 
 const (
+	// transportPingInterval keeps the connection alive across proxies (PusherWebSocket.KEEP_ALIVE_INTERVAL_MS);
+	// Server.pingInterval, so that a test can shorten it.
+	transportPingInterval = 25 * time.Second
 	// outboxLimit bounds the messages waiting for one client (see outbox).
 	outboxLimit = 1024
 	// resumeMaxBytes bounds the frames kept per client for a transport resume (see resumeStore).
@@ -30,11 +33,9 @@ const (
 	batchDelay = 100 * time.Millisecond
 	// appPingInterval is the back's PING_INTERVAL: the front closes the connection after 100 s without a ping.
 	appPingInterval = 80 * time.Second
-	// transportPingInterval keeps the connection alive across proxies (PusherWebSocket.KEEP_ALIVE_INTERVAL_MS).
-	transportPingInterval = 25 * time.Second
-	writeTimeout          = 10 * time.Second
-	closeGrace            = time.Second
-	maxMessageSize        = 16 << 20
+	writeTimeout    = 10 * time.Second
+	closeGrace      = time.Second
+	maxMessageSize  = 16 << 20
 
 	// statusSessionDestroyed tells the front the logical session is gone: no resume, reconnect from scratch
 	// (WS_CLOSE_CODE_SESSION_DESTROYED).
@@ -131,7 +132,7 @@ func (s *Session) serve(conn *websocket.Conn) {
 		defer s.recoverPanic()
 		s.t.read(s.ctx, conn, s.handle, func(err error) { s.transportClosed(conn, err) })
 	}()
-	go keepAlive(s.ctx, conn, s.srv.cfg.SocketIdleTimer)
+	go keepAlive(s.ctx, conn, s.srv.pingInterval, s.srv.cfg.SocketIdleTimer)
 }
 
 // Send and Kick implement core.Peer. They never block.

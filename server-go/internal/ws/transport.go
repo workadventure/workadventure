@@ -95,9 +95,9 @@ func (t *transport) read(ctx context.Context, conn *websocket.Conn, handle func(
 	}
 }
 
-// keepAlive pings conn; a client that does not answer within idle is cut.
-func keepAlive(ctx context.Context, conn *websocket.Conn, idle time.Duration) {
-	tick := time.NewTicker(transportPingInterval)
+// keepAlive pings conn every interval; a client that does not answer within idle is cut.
+func keepAlive(ctx context.Context, conn *websocket.Conn, interval, idle time.Duration) {
+	tick := time.NewTicker(interval)
 	defer tick.Stop()
 	for {
 		select {
