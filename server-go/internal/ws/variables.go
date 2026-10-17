@@ -14,11 +14,14 @@ import (
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/netguard"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
 
-var mapClient = &http.Client{Timeout: 10 * time.Second}
+// mapClient reads the maps of the rooms; a room URL names any domain, so without STORE_VARIABLES_FOR_LOCAL_MAPS
+// only public addresses are reached (a name resolving to a private one included).
+var mapClient, localMapClient = netguard.Client(10 * time.Second), &http.Client{Timeout: 10 * time.Second}
 
 // errLocalMap: a map on the local network is not read unless STORE_VARIABLES_FOR_LOCAL_MAPS (MapFetcher).
 var errLocalMap = errors.New("the map is on a local address")
@@ -69,7 +72,11 @@ func (srv *Server) TiledMap(ctx context.Context, roomURL string) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := mapClient.Do(req)
+	client := mapClient
+	if srv.cfg.StoreVariablesForLocalMaps {
+		client = localMapClient
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
