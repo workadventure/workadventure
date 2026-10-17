@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"log/slog"
 	"time"
 )
@@ -29,6 +30,7 @@ type Media struct {
 	SwitchOnCPULimit  bool    // LIVEKIT_SWITCH_ON_CPU_LIMITATION
 	BackToWebRTCAfter time.Duration
 	FinalizeAfter     time.Duration
+	Analytics         func(analytics.Event) // the back's analytics queue (meetings); nil: none
 }
 
 // DefaultMedia is the back's: 4 users, 20 s back, 5 s to finalize.
@@ -135,6 +137,9 @@ func (s *spaceState) switchTo(target string) {
 	s.cancelBack()
 	old := s.strategy
 	s.strategy = target
+	if s.meeting != nil {
+		s.meeting.TransportChanged()
+	}
 	slog.Info("space switches", "space", s.roomName, "from", old, "to", target, "members", len(s.members))
 	for _, id := range s.order {
 		if m := s.members[id]; s.takesPart(m) {
