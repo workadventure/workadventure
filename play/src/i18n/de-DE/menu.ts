@@ -67,13 +67,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Stimmisolation",
             voiceIsolationDescription:
                 "Nutze die Stimmisolation von Browser und Betriebssystem, wenn sie verfügbar ist.",
+            noiseSuppressionEngine: "Rauschunterdrückungs-Engine",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (neu, Vollband-Stimme)",
+            noiseSuppressionEngineDtln: "DTLN (bisherige Engine)",
         },
         language: {
             title: "Sprache",
         },
         privacySettings: {
             title: "Abwesenheitsmodus",
-            explanation: "Falls der WorkAdventure-Tab nicht aktiv ist, wird in den „Abwesenheitsmodus“ umgeschaltet.",
+            explanation:
+                "Wenn Sie zu einem anderen Fenster oder Tab wechseln, schaltet WorkAdventure in den „Abwesenheitsmodus“, außer während eines Gesprächs oder einer Übertragung.",
             cameraToggle: "Kamera im „Abwesenheitsmodus“ aktiviert lassen.",
             microphoneToggle: "Mikrofon im „Abwesenheitsmodus“ aktiviert lassen.",
         },

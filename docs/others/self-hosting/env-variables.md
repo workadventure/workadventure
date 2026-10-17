@@ -62,7 +62,7 @@ Environment variables for the Play service (frontend and pusher).
 | `BYPASS_PWA` | No | When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false. |
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
-| `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. |
+| `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. Defaults to true. |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
@@ -78,7 +78,6 @@ Environment variables for the Play service (frontend and pusher).
 | `STUN_SERVER` | No | Comma separated list of STUN server URLs for WebRTC NAT traversal (format: 'stun:hostname:port') |
 | `TURN_SERVER` | No | Comma separated list of TURN server URLs for WebRTC relay (format: 'turn:hostname:port') |
 | `SKIP_RENDER_OPTIMIZATIONS` | No | Skip rendering optimizations (useful for debugging). Defaults to false |
-| `DISABLE_NOTIFICATIONS` | No | Disable browser notifications. Defaults to false |
 | `TURN_USER` | No | Username for TURN server authentication |
 | `TURN_PASSWORD` | No | Password for TURN server authentication |
 | `TURN_STATIC_AUTH_SECRET` | No | The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). |
@@ -87,6 +86,7 @@ Environment variables for the Play service (frontend and pusher).
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
 | `MAX_PER_GROUP` | No | Maximum number of users in a bubble/group. Defaults to 4 |
+| `PROXIMITY_FILE_TRANSFER_MAX_USERS` | No | Maximum number of users (sender included) in a proximity chat for files to be shared in it. Files travel peer to peer, so the sender uploads a copy to every recipient. Defaults to 10 |
 | `MAX_DISPLAYED_VIDEOS` | No | An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room. |
 | `NODE_ENV` | No | Node.js environment: 'development', 'production', or 'test' |
 | `CONTACT_URL` | No | URL for users to contact support or administrators |
@@ -160,6 +160,7 @@ Environment variables for the Back service (backend API).
 | `ENABLE_MAP_EDITOR` | No | Enable the built-in map editor. Defaults to false |
 | `HTTP_PORT` | No | HTTP port for the back service. Defaults to 8080 |
 | `GRPC_PORT` | No | gRPC port for the back service. Defaults to 50051 |
+| `GRPC_BIND_HOST` | No | Bind host for the back gRPC server. Defaults to `[::]` (all IPv6 and IPv4 addresses). Set to `0.0.0.0` on hosts without IPv6 support. |
 | `MAX_PER_GROUP` | Yes | Maximum number of users in a bubble/group. Defaults to 4 |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
@@ -211,6 +212,7 @@ Environment variables for the Map Storage service.
 | `MAX_UNCOMPRESSED_SIZE` | No | The maximum size of an uploaded file. This the total size of the uncompressed file (not the ZIP file). Defaults to 1GB |
 | `USE_DOMAIN_NAME_IN_PATH` | No | If true, the domain name will be used as a top level directory when fetching/storing files |
 | `PATH_PREFIX` | No | The prefix to strip if a reverse proxy is proxying calls to the map-storage from a path, e.g. /map-storage |
+| `GRPC_BIND_HOST` | No | Bind host for the map-storage gRPC server. Defaults to `[::]` (all IPv6 and IPv4 addresses). Set to `0.0.0.0` on hosts without IPv6 support. |
 | `STORAGE_DIRECTORY` | No | Storage directory for the maps on physical disk. Used if S3 storage is not configured. |
 | `CACHE_CONTROL` | No | The cache-control HTTP header to be used for "normal" resources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is. |
 | `ENABLE_WEB_HOOK` | No | If true, the webhook will be called when a WAM file is created |

@@ -9,6 +9,7 @@ import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { demotedCodecStore } from "../WebRtc/CodecPerformance";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LiveKitRoom } from "./LiveKitRoom";
 
 const audioPlaybackStoreMock = vi.hoisted(() => {
@@ -82,6 +83,8 @@ vi.mock("livekit-client", async (importOriginal) => {
     const actual = await importOriginal<typeof LivekitClient>();
     class FakeLocalTrack {
         public isUpstreamPaused = false;
+        public isMuted = false;
+        public unmute = vi.fn().mockResolvedValue(undefined);
         public resumeUpstream = vi.fn().mockResolvedValue(undefined);
         public pauseUpstream = vi.fn().mockResolvedValue(undefined);
         public replaceTrack = vi.fn().mockResolvedValue(undefined);
@@ -203,6 +206,100 @@ describe("LiveKitRoom", () => {
         expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("camera-track");
     });
 
+    it("should report a reconnection once, with the region it moved from", () => {
+        const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const serverInfo = { region: "ojohannesburg1a" };
+        room["room"] = { state: ConnectionState.Connected, engine: { latestJoinResponse: { serverInfo } } } as never;
+
+        room["handleReconnecting"]("resume");
+        // The resume failed: livekit-client rebuilds the connection, on a server of another region
+        room["handleReconnecting"]("full");
+        serverInfo.region = "osaudiarabia1a";
+        room["handleReconnected"]();
+        room["handleReconnected"]();
+
+        expect(trackAdminEvent).toHaveBeenCalledOnce();
+        expect(trackAdminEvent).toHaveBeenCalledWith("media.livekit.reconnected", {
+            livekitServerUrl: "wss://livekit.example.com",
+            livekitRegion: "osaudiarabia1a",
+            previousLivekitRegion: "ojohannesburg1a",
+            reconnectKind: "full",
+            durationMs: expect.any(Number),
+        });
+    });
+
+    // A camera that stops delivering frames (taken by another app, laptop waking up) stays "live" but muted.
+    // livekit-client then pauses the upstream, which the room sees as a muted camera: the others get the avatar.
+    // Resuming that upstream tells the room the camera is on again, so every tile mounted afterwards waits for
+    // frames that never come and shows "No video stream received", while the user's own preview stays frozen.
+    describe("with a camera that stopped delivering frames", () => {
+        async function publishFrozenCamera(room: LiveKitRoom, cameraStream: LocalStreamStoreValue) {
+            room["room"] = { state: ConnectionState.Connected } as never;
+            room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+            await room["handleCameraTrack"](cameraStream);
+            const cameraTrack = room["localCameraTrack"];
+            if (!cameraTrack) {
+                throw new Error("The camera was not published");
+            }
+            Object.assign(cameraTrack.mediaStreamTrack, { muted: true });
+            Object.assign(cameraTrack, { isUpstreamPaused: true });
+            return vi.spyOn(cameraTrack, "resumeUpstream");
+        }
+
+        it("should keep the upstream paused when the local stream is emitted again, e.g. on a microphone toggle", async () => {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            const cameraStream = createCameraStream();
+            const resumeUpstream = await publishFrozenCamera(room, cameraStream);
+
+            await room["handleCameraTrack"](cameraStream);
+
+            expect(resumeUpstream).not.toHaveBeenCalled();
+        });
+
+        it("should keep the upstream paused when LiveKit reconnects", async () => {
+            const room = createLiveKitRoom({
+                screenSharingLocalStreamStore: writable(undefined),
+                shouldPublishScreenShareStore: writable(false),
+            });
+            const cameraStream = createCameraStream();
+            room["cameraStreamStore"] = writable(cameraStream);
+            const resumeUpstream = await publishFrozenCamera(room, cameraStream);
+
+            room["handleReconnected"]();
+            await room["mediaTrackUpdateQueue"];
+
+            expect(resumeUpstream).not.toHaveBeenCalled();
+        });
+    });
+
+    it("should unmute the camera livekit-client muted when its track ended, once a new camera replaces it", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        await room["handleCameraTrack"](createCameraStream());
+        const cameraTrack = room["localCameraTrack"];
+        if (!cameraTrack) {
+            throw new Error("The camera was not published");
+        }
+        // The camera was unplugged: livekit-client muted it, which disables whatever track replaces it
+        Object.assign(cameraTrack, { isMuted: true });
+        const unmute = vi.spyOn(cameraTrack, "unmute");
+
+        await room["handleCameraTrack"](createCameraStream("new-camera-track"));
+
+        expect(unmute).toHaveBeenCalledOnce();
+    });
+
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
         const room = createLiveKitRoom({
             screenSharingLocalStreamStore: writable(undefined),
@@ -264,21 +361,64 @@ describe("LiveKitRoom", () => {
         });
 
         it("should tear the room down without restarting on a duplicate identity", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
             const { room, decrement, emitBackEvent } = createDisconnectedRoom();
 
             room["handleDisconnected"](DisconnectReason.DUPLICATE_IDENTITY);
 
             expect(decrement).toHaveBeenCalledOnce();
             expect(emitBackEvent).not.toHaveBeenCalled();
+            expect(trackAdminEvent).toHaveBeenCalledWith(
+                "media.livekit.disconnected",
+                expect.objectContaining({ disconnectReason: "DUPLICATE_IDENTITY", restart: false }),
+            );
+        });
+
+        it("should report why and where the room was lost", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+            const { room } = createDisconnectedRoom();
+            room["room"] = {
+                off: vi.fn(),
+                disconnect: vi.fn().mockResolvedValue(undefined),
+                engine: { latestJoinResponse: { serverInfo: { region: "ojohannesburg1a" } } },
+            } as never;
+            room["connectedAt"] = Date.now() - 90_000;
+            room["handleReconnecting"]("resume");
+
+            room["handleDisconnected"](DisconnectReason.SIGNAL_CLOSE);
+
+            expect(trackAdminEvent).toHaveBeenCalledWith("media.livekit.disconnected", {
+                livekitServerUrl: "wss://livekit.example.com",
+                livekitRegion: "ojohannesburg1a",
+                disconnectReason: "SIGNAL_CLOSE",
+                connectedSeconds: 90,
+                whileReconnecting: true,
+                restart: true,
+            });
+        });
+
+        it("should report a room that never connected", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+            const { room } = createDisconnectedRoom();
+            room["everConnected"] = false;
+
+            room["handleDisconnected"](undefined);
+
+            expect(trackAdminEvent).toHaveBeenCalledWith(
+                "media.livekit.disconnected",
+                expect.objectContaining({ disconnectReason: "UNKNOWN", livekitRegion: null, connectedSeconds: null }),
+            );
         });
 
         it("should do nothing when the client initiated the disconnection", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
             const { room, decrement, emitBackEvent } = createDisconnectedRoom();
 
             room["handleDisconnected"](DisconnectReason.CLIENT_INITIATED);
 
             expect(decrement).not.toHaveBeenCalled();
             expect(emitBackEvent).not.toHaveBeenCalled();
+            expect(trackAdminEvent).not.toHaveBeenCalled();
         });
 
         it("should only destroy the room once", () => {
@@ -434,9 +574,9 @@ function createSpace(
     } as unknown as SpaceInterface;
 }
 
-function createCameraStream(): LocalStreamStoreValue {
+function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
     const track = {
-        id: "camera-track",
+        id,
         kind: "video",
         getSettings: () => ({ width: 1280, height: 720 }),
     } as unknown as MediaStreamTrack;

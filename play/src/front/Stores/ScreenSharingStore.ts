@@ -13,11 +13,12 @@ import type { Streamable, WebRtcStreamable } from "../Space/Streamable";
 import { VideoBox } from "../Space/VideoBox";
 import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
 import { isSpeakerStore, type LocalStreamStoreValue } from "./MediaStore";
+import { isScreenSharingPickerCancelled } from "./ScreenSharingErrors";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore } from "./MyMediaStore";
 import type {} from "../Api/Desktop";
 import { screenShareStreamElementsStore } from "./PeerStore";
 import { muteMediaStreamStore } from "./MuteMediaStreamStore";
-import { isLiveStreamingStore } from "./IsStreamingStore";
+import { isScreenSharingAvailableStore } from "./IsStreamingStore";
 
 declare const navigator: any; // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -76,7 +77,7 @@ export const screenShareQualityStore = createScreenShareQualityStore();
 /**
  * A store containing whether the screen sharing button should be displayed or hidden.
  */
-export const screenSharingAvailableStore = isLiveStreamingStore;
+export const screenSharingAvailableStore = isScreenSharingAvailableStore;
 
 /**
  * A store containing the media constraints we want to apply.
@@ -288,6 +289,14 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 currentStream = undefined;
                 requestedScreenSharingState.disableScreenSharing();
                 const error = asError(e);
+                if (isScreenSharingPickerCancelled(error)) {
+                    // Not an error: nothing is shared, and no "Cannot start screen sharing" message.
+                    set({
+                        type: "success",
+                        stream: undefined,
+                    });
+                    return;
+                }
                 console.info(`Error. Unable to share screen. ${error.message}`, e);
                 set({
                     type: "error",
@@ -339,7 +348,6 @@ const screenSharingLocalMedia = readable<Streamable | undefined>(undefined, func
         flipX: false,
         muteAudio: writable(true),
         displayMode: "fit" as const,
-        displayInPictureInPictureMode: true,
         usePresentationMode: true,
         closeStreamable: () => {},
         canCloseStreamable: () => false,

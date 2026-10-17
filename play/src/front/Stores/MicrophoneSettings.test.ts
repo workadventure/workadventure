@@ -1,6 +1,29 @@
 import { describe, expect, it } from "vitest";
 
-import { buildMicrophoneAudioConstraints, getEffectiveNoiseSuppressionProvider } from "./MicrophoneSettings";
+import {
+    buildMicrophoneAudioConstraints,
+    getEffectiveNoiseSuppressionProvider,
+    isVoiceIsolationSupported,
+} from "./MicrophoneSettings";
+
+describe("isVoiceIsolationSupported", () => {
+    it("rejects a track that only reports voice isolation as off (desktop Chrome without the denoiser)", () => {
+        expect(isVoiceIsolationSupported({ voiceIsolation: false }, { voiceIsolation: [false] })).toBe(false);
+    });
+
+    it("rejects a browser that does not know voice isolation", () => {
+        expect(isVoiceIsolationSupported({}, undefined)).toBe(false);
+        expect(isVoiceIsolationSupported(undefined, undefined)).toBe(false);
+    });
+
+    it("accepts a track that has voice isolation on", () => {
+        expect(isVoiceIsolationSupported({ voiceIsolation: true }, { voiceIsolation: [false] })).toBe(true);
+    });
+
+    it("accepts a track that can turn voice isolation on (ChromeOS)", () => {
+        expect(isVoiceIsolationSupported({ voiceIsolation: false }, { voiceIsolation: [true, false] })).toBe(true);
+    });
+});
 
 describe("getEffectiveNoiseSuppressionProvider", () => {
     it("keeps WorkAdventure as the default provider", () => {
@@ -36,6 +59,7 @@ describe("buildMicrophoneAudioConstraints", () => {
         noiseSuppressionEnabled: false,
         browserNoiseSuppressionEnabled: true,
         effectiveNoiseSuppressionProvider: "workadventure" as const,
+        noiseSuppressionEngine: "deepfilternet" as const,
         browserNoiseSuppressionSupported: true,
         workAdventureNoiseSuppressionFailed: false,
         customNoiseSuppressionActive: false,
@@ -106,12 +130,27 @@ describe("buildMicrophoneAudioConstraints", () => {
         });
     });
 
-    it("disables native processing and requests 16 kHz for active WorkAdventure noise suppression", () => {
+    it("disables native processing without a sample rate for active DeepFilterNet3 noise suppression", () => {
+        const constraints = buildMicrophoneAudioConstraints({
+            ...defaultOptions,
+            noiseSuppressionEnabled: true,
+            customNoiseSuppressionActive: true,
+        });
+
+        expect(constraints).toMatchObject({
+            noiseSuppression: false,
+            voiceIsolation: false,
+        });
+        expect(constraints).not.toHaveProperty("sampleRate");
+    });
+
+    it("disables native processing and requests 16 kHz for active DTLN noise suppression", () => {
         expect(
             buildMicrophoneAudioConstraints({
                 ...defaultOptions,
                 microphoneDeviceId: "mic-1",
                 noiseSuppressionEnabled: true,
+                noiseSuppressionEngine: "dtln",
                 customNoiseSuppressionActive: true,
             }),
         ).toMatchObject({

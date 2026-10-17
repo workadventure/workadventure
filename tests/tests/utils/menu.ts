@@ -232,14 +232,27 @@ class Menu {
         }
     }
 
-    async expectStatus(page: Page, status: string) {
-        await expect(page.getByText(status).first()).toBeVisible();
+    // Needs the profile menu open. Every status row has a check icon, transparent on all rows but the
+    // selected one, so asserting that an icon is visible says nothing.
+    async expectSelectedStatus(page: Page, status: string) {
+        const checkIcon = page.locator(".status-button", { hasText: status }).locator("svg");
+        await expect(checkIcon).toBeVisible();
+        await expect(checkIcon).not.toHaveClass(/\bopacity-0\b/);
     }
 
     async closeNotificationPopUp(page: Page) {
         if (await page.getByRole("button", { name: "Continue without notification" }).isHidden()) return;
         await page.getByRole("button", { name: "Continue without notification" }).click();
         await expect(page.getByRole("button", { name: "Continue without notification" })).toBeVisible();
+    }
+    // Choosing Busy asks "Allow notifications?" unless the browser already allows them: the chromium
+    // project grants the permission, the other projects do not.
+    async closeAllowNotificationsPopUpIfAsked(page: Page) {
+        if (await page.evaluate(() => !("Notification" in window) || Notification.permission === "granted")) return;
+        await page
+            .locator(".popup-container", { has: page.locator("#notificationPermission") })
+            .getByRole("button", { name: "Close" })
+            .click();
     }
     async closeCameraPopUp(page: Page) {
         if (await page.getByRole("button", { name: "Continue without webcam" }).isHidden()) return;

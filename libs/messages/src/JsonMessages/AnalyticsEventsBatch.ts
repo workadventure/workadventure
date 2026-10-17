@@ -14,7 +14,7 @@ import {
  * describes the envelope columns the pusher adds and the batch it ships them in.
  */
 
-/** The current envelope version. Any change to the batch shape bumps this. */
+/** The current envelope version. Any change an older admin cannot ignore bumps this. */
 export const ANALYTICS_BATCH_SCHEMA_VERSION = 1;
 
 /**
@@ -72,6 +72,11 @@ export const analyticsStoredEvent = extendApi(
     }),
     tabId: extendApi(z.string().nullable(), {
       description: "Browser tab the socket belongs to.",
+    }),
+    tags: extendApi(z.array(z.string()).optional(), {
+      description:
+        "The reporter's tags in this world, as the admin returned them at connection. Optional, so an admin that predates the field ignores it rather than rejecting the batch: no schemaVersion bump. Empty on a row that names nobody.",
+      example: ["admin", "member"],
     }),
     properties: extendApi(z.record(z.unknown()), {
       description:

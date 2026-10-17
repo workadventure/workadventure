@@ -152,6 +152,7 @@
                     ? 'w-10'
                     : 'w-0'} p-0 aspect-square bg-secondary rounded flex items-center justify-center cursor-pointer transition-all"
                 onclick={sendMessageOrEscapeLine}
+                aria-label={$LL.say.button()}
             >
                 <IconSend />
             </button>

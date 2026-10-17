@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Modifier la caméra",
-    editMic: "Modifier le micro",
     editSpeaker: "Modifier la sortie audio",
     active: "Actif",
     disabled: "Désactivé",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Accès à la caméra / au microphone nécessaire",
         cameraTitle: "Accès à la caméra nécessaire",
         microphoneTitle: "Accès au microphone nécessaire",
-        permissionDenied: "Permission refusée",
         cameraPermissionDenied: "Permission caméra refusée",
         microphonePermissionDenied: "Permission microphone refusée",
         cameraMicrophonePermissionDenied: "Permissions caméra et microphone refusées",
@@ -104,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Demander à couper la vidéo",
         muteVideoEveryBody: "Couper la vidéo pour tout le monde",
         blockOrReportUser: "Modération",
-    },
-    backgroundEffects: {
-        imageTitle: "Images de fond",
-        blurTitle: "Flou",
-        resetTitle: "Désactiver les effets de fond",
-        title: "Effets de fond",
-        close: "Fermer",
-        blurAmount: "Intensité du flou",
     },
 };
 

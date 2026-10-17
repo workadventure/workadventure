@@ -2,7 +2,7 @@
     import { fade } from "svelte/transition";
     import { loaderProgressStore } from "../../Stores/LoaderStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import bgMap from "../images/map-exemple.png";
+    import bgMap from "../images/map-exemple.webp";
     import defaultLoader from "../images/Workadventure.gif";
 
     const logo = gameManager.currentStartedRoom.loadingLogo ?? defaultLoader;

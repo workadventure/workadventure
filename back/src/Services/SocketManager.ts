@@ -78,6 +78,7 @@ import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
 import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
+import { findRecording } from "../Model/CommunicationManager";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
 import type { SessionEndReason } from "../Model/SessionAnalytics";
@@ -1255,7 +1256,7 @@ export class SocketManager {
             return;
         }
         group.lock(message.lock);
-        room.emitLockGroupEvent(user, group.getId());
+        room.emitLockGroupEvent(group);
     }
 
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
@@ -1748,14 +1749,16 @@ export class SocketManager {
     }
 
     async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
-        const space = this.spaces.get(request.spaceName);
-        if (!space) {
-            // Retrying cannot recreate a space that is already gone, so the pusher should acknowledge this as ignored.
-            console.warn(`Received LiveKit webhook for missing space ${request.spaceName}. Ignoring.`);
+        const recording = findRecording(request.recordingSessionId);
+        if (!recording) {
+            // Retrying cannot recreate a recording session that is already gone, so the pusher should acknowledge this as ignored.
+            console.warn(
+                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`,
+            );
             return;
         }
 
-        await space.handleLivekitWebhook(request);
+        await recording.handleLivekitWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

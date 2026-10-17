@@ -82,6 +82,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
     private destroyed = false;
     private everConnected = false;
+    private connectedAt: number | undefined;
+    // Set while livekit-client is reconnecting by itself, reported as media.livekit.reconnected once it is back
+    private reconnecting:
+        | { startedAt: number; kind: "resume" | "full"; previousRegion: string | undefined }
+        | undefined;
     // Kept so that publications skipped while the room was reconnecting can be replayed on RoomEvent.Reconnected
     private cameraStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
     private microphoneStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
@@ -93,6 +98,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
     private readonly boundHandleReconnected = this.handleReconnected.bind(this);
+    private readonly boundHandleSignalReconnecting = () => this.handleReconnecting("resume");
+    private readonly boundHandleReconnecting = () => this.handleReconnecting("full");
     private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
 
     constructor(
@@ -162,15 +169,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const room = this.room ?? (await this.prepareConnection());
 
         this.handleRoomEvents();
+        const connectStartedAt = performance.now();
         await room.connect(this.serverUrl, this.token, {
             autoSubscribe: false,
         });
         this.everConnected = true;
+        this.connectedAt = Date.now();
         this.handleAudioPlaybackStatusChanged();
         if (this.abortSignal.aborted) {
             await room.disconnect();
             return;
         }
+        analyticsClient.trackAdminEvent("media.livekit.connected", {
+            ...this.connectionProperties(),
+            connectMs: Math.round(performance.now() - connectStartedAt),
+        });
 
         this.synchronizeMediaState();
         this.flushPendingScriptingStream();
@@ -268,11 +281,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        // Are we trying to publish the same track again?
-        // Note: in practice, we never reach this point with the same track, because we get a new track
-        // each time we stop and restart the camera.
+        // Are we trying to publish the same track again? It happens on every emission of the local stream
+        // (a microphone toggle, handleReconnected()...), not only when the camera restarts.
+        // A muted track is a camera that delivers no frames: livekit-client paused its upstream so that the
+        // room sees a muted camera. Resuming it would announce a camera that sends nothing, and every tile
+        // mounted afterwards would show "No video stream received". livekit-client resumes it on "unmute".
         if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
-            if (this.localCameraTrack.isUpstreamPaused) {
+            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }
             return;
@@ -313,7 +328,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 userProvidedTrack: true,
             });
 
-            if (this.localCameraTrack.isUpstreamPaused) {
+            // livekit-client mutes a camera track that ended (unplugged, killed by the system), and replaceTrack()
+            // keeps the new one disabled while muted: we never mute the camera ourselves, the new track is the cure.
+            if (this.localCameraTrack.isMuted) {
+                await this.localCameraTrack.unmute();
+            }
+
+            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }
         }
@@ -387,7 +408,39 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return this.room?.state === ConnectionState.Connected;
     }
 
+    /**
+     * Region of the LiveKit server we are connected to (LiveKit Cloud sets it). From the latest join response: the
+     * room's serverInfo keeps the region of the first join, while a full reconnection can land on another server.
+     */
+    public getRegion(): string | undefined {
+        return this.room?.engine?.latestJoinResponse?.serverInfo?.region || undefined;
+    }
+
+    private connectionProperties(): { livekitServerUrl: string; livekitRegion: string | null } {
+        return { livekitServerUrl: this.serverUrl, livekitRegion: this.getRegion() ?? null };
+    }
+
+    private handleReconnecting(kind: "resume" | "full") {
+        if (this.reconnecting) {
+            // A resume that fails goes on with a full reconnection: one episode, counted as full
+            if (kind === "full") {
+                this.reconnecting.kind = "full";
+            }
+            return;
+        }
+        this.reconnecting = { startedAt: performance.now(), kind, previousRegion: this.getRegion() };
+    }
+
     private handleReconnected() {
+        if (this.reconnecting) {
+            analyticsClient.trackAdminEvent("media.livekit.reconnected", {
+                ...this.connectionProperties(),
+                previousLivekitRegion: this.reconnecting.previousRegion ?? null,
+                reconnectKind: this.reconnecting.kind,
+                durationMs: Math.round(performance.now() - this.reconnecting.startedAt),
+            });
+            this.reconnecting = undefined;
+        }
         // Handlers are no-ops for tracks that are already published, so replaying the whole media state is safe.
         if (this.cameraStreamStore) {
             this.queueCameraTrackUpdate(get(this.cameraStreamStore));
@@ -704,6 +757,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
         this.room.on(RoomEvent.Reconnected, this.boundHandleReconnected);
+        this.room.on(RoomEvent.SignalReconnecting, this.boundHandleSignalReconnecting);
+        this.room.on(RoomEvent.Reconnecting, this.boundHandleReconnecting);
         this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
     }
 
@@ -739,6 +794,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
+        // Another connection took our place, or the back removed us on purpose: restarting would fight it
+        const restart =
+            reason !== DisconnectReason.DUPLICATE_IDENTITY && reason !== DisconnectReason.PARTICIPANT_REMOVED;
+        analyticsClient.trackAdminEvent("media.livekit.disconnected", {
+            ...this.connectionProperties(),
+            disconnectReason: disconnectReasonLabel,
+            connectedSeconds:
+                this.connectedAt === undefined ? null : Math.round((Date.now() - this.connectedAt) / 1000),
+            whileReconnecting: this.reconnecting !== undefined,
+            restart,
+        });
         Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
             level: "warning",
             tags: {
@@ -750,8 +816,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // media stores stop feeding a dead engine (each publish would otherwise hang 15s and stop the user's track).
         this.destroy();
 
-        if (reason === DisconnectReason.DUPLICATE_IDENTITY || reason === DisconnectReason.PARTICIPANT_REMOVED) {
-            // Another connection took our place, or the back removed us on purpose: restarting would fight it.
+        if (!restart) {
             return;
         }
 
@@ -900,6 +965,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this._streamableSubjects,
                 this._blockedUsersStore,
                 this.abortSignal,
+                () => this.getRegion(),
             ),
         );
     }
@@ -968,6 +1034,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 remoteSpaceUserId: "",
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.serverUrl,
+                getLivekitRegion: () => this.getRegion(),
             },
             (message) => this.space.emitVideoQualityReport(message),
         );
@@ -993,6 +1060,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.room?.off(RoomEvent.Reconnected, this.boundHandleReconnected);
+            this.room?.off(RoomEvent.SignalReconnecting, this.boundHandleSignalReconnecting);
+            this.room?.off(RoomEvent.Reconnecting, this.boundHandleReconnecting);
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
             this.unregisterAudioPlaybackRetry?.();
             this.unregisterAudioPlaybackRetry = undefined;

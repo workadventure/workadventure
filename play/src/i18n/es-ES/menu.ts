@@ -66,6 +66,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Aislamiento de voz",
             voiceIsolationDescription:
                 "Usa el aislamiento de voz del navegador y del sistema operativo cuando esté disponible.",
+            noiseSuppressionEngine: "Motor de supresión de ruido",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nuevo, voz de banda completa)",
+            noiseSuppressionEngineDtln: "DTLN (motor anterior)",
         },
         language: {
             title: "Idioma",
@@ -73,12 +76,12 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Modo no presente",
             explanation:
-                'Cuando la pestaña de WorkAdventure en su navegador no es visible, WorkAdventure cambia a "modo no presente"',
+                'Al cambiar a otra ventana o pestaña, WorkAdventure pasa a "modo no presente", salvo durante una conversación o una transmisión.',
             cameraToggle: 'Mantener la cámara activa en "modo no presente"',
             microphoneToggle: 'Mantener el micrófono activa en "modo no presente"',
         },
         save: "Guardar",
-        otherSettings: "Todas las configuraciones",
+        otherSettings: "Otras configuraciones",
         fullscreen: "Pantalla completa",
         notifications: "Notificaciones",
         enablePictureInPicture: "Activar picture-in-picture",

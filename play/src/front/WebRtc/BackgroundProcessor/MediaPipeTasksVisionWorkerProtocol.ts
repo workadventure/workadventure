@@ -42,5 +42,7 @@ export type TasksVisionWorkerResponse =
     /** The answer to "process-frame". The bitmap is the input frame itself when nothing could be rendered. */
     | { type: "frame"; frameId: number; bitmap: ImageBitmap }
     | TasksVisionWorkerStats
-    /** MediaPipe recovery failed (or the stream pipe broke); the worker is no longer usable. */
+    /** An insertable-streams pipe broke. Only that pipe is gone: the worker itself is still usable. */
+    | { type: "stream-failed"; streamId: number; error: SerializedWorkerError }
+    /** MediaPipe recovery failed; the worker is no longer usable. */
     | { type: "fatal"; error: SerializedWorkerError };

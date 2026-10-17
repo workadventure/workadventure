@@ -27,14 +27,21 @@
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
+    import { PROXIMITY_FILE_TRANSFER_MAX_USERS } from "../../../Enum/EnvironmentVariable";
     import LL from "../../../../i18n/i18n-svelte";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
+    import {
+        PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE,
+        PROXIMITY_FILE_TRANSFER_MAX_FILES,
+        validateProximityFiles,
+    } from "../../Connection/Proximity/ProximityFileTransferService";
     import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../Connection/Proximity/ProximityChatRoomManager";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { draftMessageService } from "../../Services/DraftMessageService";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import { formatFileSize } from "../../../Utils/FileSize";
     import PollCreateDialog from "../PollCreateDialog.svelte";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
     import youtubeSvg from "../../../Components/images/applications/icon_youtube.svg";
@@ -51,7 +58,16 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
-    import { IconHelpCircle, IconList, IconMoodSmile, IconPaperclip, IconSend, IconX } from "@wa-icons";
+    import {
+        IconAlertTriangle,
+        IconHelpCircle,
+        IconList,
+        IconLoader,
+        IconMoodSmile,
+        IconPaperclip,
+        IconSend,
+        IconX,
+    } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -69,9 +85,14 @@
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = $state([]);
-    let filesPreview: { id: string; size: number; name: string; type: string; url: FileReader["result"] }[] = $state(
-        [],
-    );
+    let sendingFiles = $state(false);
+    let filesPreview: {
+        id: string;
+        size: number;
+        name: string;
+        type: string;
+        url: string | undefined;
+    }[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
     const inactiveProximityState = readable(false);
 
@@ -86,6 +107,7 @@
     const isDefaultProximityRoom = room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
     const proximityChatDisabled = room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState;
     const proximityRoomJoined = room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState;
+    const proximityFilesAllowed = room instanceof ProximityChatRoom ? room.canSendFiles : readable(true);
     const cannotCreatePoll = readable(false);
     const canSendMessages = room.canSendMessages ?? readable(true);
 
@@ -107,6 +129,49 @@
             isProximityChatDisabled: $proximityChatDisabled,
             isProximityRoomJoined: $proximityRoomJoined,
         }) || !$canSendMessages,
+    );
+    // Proximity files travel peer to peer, so there is nobody to send them to before the space is joined,
+    // and too many recipients to upload to in a crowded one.
+    let tooManyUsersForFiles = $derived(!$proximityFilesAllowed);
+    // Proximity files have fixed caps: say so as soon as a file lands in the preview, not on send.
+    let fileValidation = $derived(
+        isProximityChatRoom
+            ? validateProximityFiles(files.map(({ file }) => file))
+            : { tooManyFiles: false, tooLargeFiles: [] },
+    );
+    let tooLargeFileIds = $derived(
+        new Set(files.filter(({ file }) => fileValidation.tooLargeFiles.includes(file)).map(({ id }) => id)),
+    );
+    let fileErrors: { title: string; hint?: string }[] = $derived([
+        // The chat can grow past the limit after the files were picked.
+        ...(tooManyUsersForFiles
+            ? [{ title: $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS }) }]
+            : []),
+        ...(fileValidation.tooLargeFiles.length > 0
+            ? [
+                  {
+                      title: $LL.chat.file.tooBig({ count: fileValidation.tooLargeFiles.length }),
+                      hint: $LL.chat.file.tooBigHint({
+                          count: fileValidation.tooLargeFiles.length,
+                          max: formatFileSize(PROXIMITY_FILE_TRANSFER_MAX_FILE_SIZE),
+                      }),
+                  },
+              ]
+            : []),
+        ...(fileValidation.tooManyFiles
+            ? [
+                  {
+                      title: $LL.chat.file.tooMany(),
+                      hint: $LL.chat.file.tooManyHint({ max: PROXIMITY_FILE_TRANSFER_MAX_FILES }),
+                  },
+              ]
+            : []),
+    ]);
+    let canAttachFiles = $derived(
+        fileAttachementEnabled &&
+            $canSendMessages &&
+            (!isProximityChatRoom || $proximityRoomJoined) &&
+            !tooManyUsersForFiles,
     );
     const canOpenQuestions = canOpenQuestionsPanel(room);
     let replyMessageId: string | null = null;
@@ -157,7 +222,9 @@
     }
 
     async function sendMessage(messageToSend: string) {
-        if (!$canSendMessages) {
+        // The files are only removed from the preview once uploaded: a second Enter or click during the
+        // upload would send them again.
+        if (!$canSendMessages || sendingFiles || fileErrors.length > 0) {
             return;
         }
         if (applicationProperty && applicationProperty.link.length !== 0) {
@@ -169,23 +236,24 @@
 
         // send files
         if (files && files.length > 0) {
-            if (!(room instanceof ProximityChatRoom)) {
-                const idsToSend = files.map((f) => f.id);
-                const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                    fileListAcc.items.add(currentFile.file);
-                    return fileListAcc;
-                }, new DataTransfer()).files;
+            const idsToSend = files.map((f) => f.id);
+            const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
+                fileListAcc.items.add(currentFile.file);
+                return fileListAcc;
+            }, new DataTransfer()).files;
 
-                try {
-                    await room.sendFiles(fileList);
-                    files = files.filter((f) => !idsToSend.includes(f.id));
-                    filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-                } catch (error) {
-                    console.error(error);
-                    warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), {
-                        closable: true,
-                    });
-                }
+            sendingFiles = true;
+            try {
+                await room.sendFiles(fileList);
+                files = files.filter((f) => !idsToSend.includes(f.id));
+                filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
+            } catch (error) {
+                console.error(error);
+                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), { closable: true });
+            } finally {
+                // A second send cannot start while this guarded upload is in progress.
+                // eslint-disable-next-line require-atomic-updates
+                sendingFiles = false;
             }
         }
 
@@ -279,41 +347,49 @@
     }
 
     export function handleFiles(filesToAdd: FileList) {
+        if (tooManyUsersForFiles) {
+            warningMessageStore.addWarningMessage(
+                $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS }),
+                { closable: true },
+            );
+            return;
+        }
+        if (!canAttachFiles) {
+            return;
+        }
         const newFiles = [...filesToAdd].map((file) => ({ id: uuid(), file }));
         files = [...files, ...newFiles];
         addToPreviews(newFiles);
     }
 
     function addToPreviews(files: { id: string; file: File }[]) {
-        Array.from(files).forEach((file) => {
-            const reader = new FileReader();
+        filesPreview = [
+            ...filesPreview,
+            ...files.map(({ id, file }) => ({
+                id,
+                name: file.name,
+                type: file.type,
+                size: file.size,
+                url: undefined,
+            })),
+        ];
 
-            reader.onload = () => {
-                filesPreview = [
-                    ...filesPreview,
-                    {
-                        id: file.id,
-                        name: file.file.name,
-                        type: file.file.type,
-                        size: file.file.size,
-                        url: reader.result,
-                    },
-                ];
+        for (const { id, file } of files) {
+            if (!file.type.includes("image")) {
+                continue;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const url = typeof reader.result === "string" ? reader.result : undefined;
+                filesPreview = filesPreview.map((p) => (p.id === id ? { ...p, url } : p));
             };
-            reader.readAsDataURL(file.file);
-        });
+            reader.readAsDataURL(file);
+        }
     }
 
     function deleteFile(id: string) {
         files = files.filter((file) => file.id !== id);
         filesPreview = filesPreview.filter((filePreview) => filePreview.id !== id);
-    }
-
-    function formatBytes(bytes: number) {
-        if (bytes === 0) return "0 Bytes";
-        const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return (bytes / Math.pow(1024, i)).toFixed(2) + " " + sizes[i];
     }
 
     function focusin(event: FocusEvent) {
@@ -515,43 +591,64 @@
         "text-xs p-0 m-0 min-h-12 w-full leading-tight whitespace-normal break-words text-gray-400";
 </script>
 
-{#if files.length > 0 && !(room instanceof ProximityChatRoom)}
+{#if files.length > 0}
     <div class="w-full min-w-0 p-1">
-        <div
-            class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar rounded-lg p-2 bg-contrast/80"
-        >
-            {#each filesPreview as preview (preview.id)}
-                <div
-                    class="relative shrink-0 content-center {preview.type.includes('image')
-                        ? 'w-20'
-                        : 'w-28'} h-20 rounded-md backdrop-opacity-10 bg-white p-0.5"
-                >
-                    <button
-                        class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
-                        onclick={() => deleteFile(preview.id)}
+        <div class="rounded-lg bg-contrast/80">
+            <div class="flex flex-row flex-nowrap gap-2 w-full min-w-[200px] overflow-x-auto no-scroll-bar p-2">
+                {#each filesPreview as preview (preview.id)}
+                    <div
+                        class="relative shrink-0 content-center {preview.type.includes('image')
+                            ? 'w-20'
+                            : 'w-28'} h-20 rounded-md backdrop-opacity-10 p-0.5 {tooLargeFileIds.has(preview.id)
+                            ? 'bg-danger'
+                            : 'bg-white'}"
+                        data-testid="filePreview"
                     >
-                        <IconX font-size="12" />
-                    </button>
-                    {#if preview.type.includes("image") && typeof preview.url === "string"}
-                        <img
-                            draggable="false"
-                            class="w-full h-full object-cover rounded-[10px]"
-                            src={preview.url}
-                            alt={preview.name}
-                        />
-                    {:else}
-                        <div
-                            title={preview.name}
-                            class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px]"
+                        <button
+                            class="border-2 border-white border-solid absolute flex items-center justify-center rounded-full bg-secondary hover:bg-secondary-600 p-0.5 -start-2 -top-2"
+                            onclick={() => deleteFile(preview.id)}
                         >
-                            <span class="line-clamp-2 indent-3 text-xs">
-                                {preview.name}
-                            </span>
-                            <div class="rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
-                                {formatBytes(preview.size)}
+                            <IconX font-size="12" />
+                        </button>
+                        {#if preview.type.includes("image") && preview.url !== undefined}
+                            <img
+                                draggable="false"
+                                class="w-full h-full object-cover rounded-[10px]"
+                                src={preview.url}
+                                alt={preview.name}
+                            />
+                        {:else}
+                            <div
+                                title={preview.name}
+                                class="flex flex-col items-start overflow-hidden text-ellipsis justify-between p-0.5 bg-contrast/90 h-full w-full text-xs rounded-[10px]"
+                            >
+                                <span class="line-clamp-2 indent-3 text-xs">
+                                    {preview.name}
+                                </span>
+                                <div class="flex items-center gap-1 rounded-[6px] bg-white/10 p-0.5 text-xxs m-0.5">
+                                    {#if preview.type.includes("image") && preview.url === undefined}
+                                        <IconLoader class="animate-spin shrink-0" font-size={12} />
+                                    {/if}
+                                    <span>{formatFileSize(preview.size)}</span>
+                                </div>
                             </div>
-                        </div>
-                    {/if}
+                        {/if}
+                    </div>
+                {/each}
+            </div>
+            {#each fileErrors as fileError (fileError.title)}
+                <div
+                    class="mx-2 mb-2 flex items-start gap-2 rounded-lg border border-solid border-danger bg-danger/15 px-2.5 py-1.5 text-sm text-white"
+                    role="alert"
+                    data-testid="fileError"
+                >
+                    <IconAlertTriangle class="mt-0.5 shrink-0 text-danger-200" font-size={16} />
+                    <div class="leading-snug">
+                        <div class="font-bold">{fileError.title}</div>
+                        {#if fileError.hint}
+                            <div class="text-white/85">{fileError.hint}</div>
+                        {/if}
+                    </div>
                 </div>
             {/each}
         </div>
@@ -742,14 +839,22 @@
                 class={applicationButtonClass}
                 onclick={() => openFileAttachmentComponent()}
                 class:bg-secondary-800={fileAttachmentComponentOpened}
-                disabled={!fileAttachementEnabled || isProximityChatRoom || !$canSendMessages}
+                disabled={!canAttachFiles}
             >
                 <IconPaperclip font-size={32} />
-                <h2 class={applicationTitleClass}>{$LL.chat.fileAttachment.title()}</h2>
+                <h2 class={applicationTitleClass}>
+                    {isProximityChatRoom ? $LL.chat.fileAttachment.proximityTitle() : $LL.chat.fileAttachment.title()}
+                </h2>
                 <p class={applicationDescriptionClass}>
-                    {fileAttachementEnabled && !isProximityChatRoom
-                        ? $LL.chat.fileAttachment.description()
-                        : $LL.chat.fileAttachment.featureComingSoon()}
+                    {#if !fileAttachementEnabled}
+                        {$LL.chat.fileAttachment.featureComingSoon()}
+                    {:else if tooManyUsersForFiles}
+                        {$LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS })}
+                    {:else if isProximityChatRoom}
+                        {$LL.chat.fileAttachment.proximityDescription()}
+                    {:else}
+                        {$LL.chat.fileAttachment.description()}
+                    {/if}
                 </p>
             </button>
 
@@ -775,7 +880,7 @@
                 <IconHelpCircle font-size={32} />
                 <h2 class={applicationTitleClass}>{$LL.chat.question.title()}</h2>
                 <p class={applicationDescriptionClass}>
-                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.disabled()}
+                    {canOpenQuestions ? $LL.chat.question.description() : $LL.chat.question.proximityOnly()}
                 </p>
             </button>
         </div>
@@ -795,7 +900,6 @@
 {/if}
 {#if fileAttachmentComponentOpened}
     <MessageFileInput
-        {room}
         filesSelected={(files) => {
             handleFiles(files);
             closeFileAttachmentComponent();
@@ -866,11 +970,13 @@
     {#if message.trim().length !== 0 || files.length !== 0 || (applicationProperty && applicationProperty.link.length !== 0)}
         <button
             data-testid="sendMessageButton"
-            class="disabled:opacity-30 disabled:!cursor-none disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
-            disabled={shouldDisableSendButton({
-                applicationPropertyInProcessing,
-                isMessageInputDisabled: messageInputDisabled,
-            })}
+            class="disabled:opacity-30 disabled:!cursor-not-allowed disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
+            disabled={sendingFiles ||
+                shouldDisableSendButton({
+                    applicationPropertyInProcessing,
+                    isMessageInputDisabled: messageInputDisabled,
+                }) ||
+                fileErrors.length > 0}
             onclick={() => sendMessage(message).catch((error) => console.error(error))}
         >
             <IconSend />

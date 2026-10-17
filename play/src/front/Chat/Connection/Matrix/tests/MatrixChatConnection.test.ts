@@ -1,5 +1,15 @@
 import type { MatrixClient, Room } from "matrix-js-sdk";
-import { ClientEvent, EventType, MatrixError, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
+import {
+    ClientEvent,
+    ConnectionError,
+    HttpApiEvent,
+    EventType,
+    MatrixError,
+    PendingEventOrdering,
+    RoomEvent,
+    SyncState,
+} from "matrix-js-sdk";
+import * as Sentry from "@sentry/svelte";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import type { Readable } from "svelte/store";
@@ -13,6 +23,8 @@ import { MatrixChatRoom as MatrixChatRoomClass } from "../MatrixChatRoom";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { MatrixSecurity } from "../MatrixSecurity";
 import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+
+vi.mock("@sentry/svelte", () => ({ captureException: vi.fn() }));
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {
@@ -239,6 +251,55 @@ describe("MatrixChatConnection", () => {
 
             await expect(clientPromise).rejects.toThrow();
             expect(startMatrixClientSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("init", () => {
+        it("should not put the chat on error when the profile sync with the Woka fails", async () => {
+            const getProfileInfo = vi.fn().mockRejectedValue(new Error("profile sync failed"));
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo,
+                on: vi.fn(),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
+            } as unknown as MatrixClient;
+
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(getProfileInfo).toHaveBeenCalled();
+            expect(get(matrixChatConnection.connectionStatus)).not.toBe("ON_ERROR");
+        });
+
+        it("should not wait for the initial sync once the session is logged out", async () => {
+            const handlers = new Map<string, (error: MatrixError) => void>();
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo: vi.fn().mockResolvedValue({}),
+                on: vi.fn((event: string, handler: (error: MatrixError) => void) => handlers.set(event, handler)),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                // The homeserver rejects the access token as soon as the client starts: the sync never completes.
+                startClient: vi.fn(() => {
+                    handlers.get(HttpApiEvent.SessionLoggedOut)?.(
+                        new MatrixError({ errcode: "M_UNKNOWN_TOKEN", error: "Invalid access token passed." }, 401),
+                    );
+                }),
+                isInitialSyncComplete: vi.fn().mockReturnValue(false),
+            } as unknown as MatrixClient;
+
+            // Without the early exit, init() would poll for the 30s initial sync timeout, far past this test's.
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(get(matrixChatConnection.connectionStatus)).toBe("ON_ERROR");
         });
     });
 
@@ -1892,6 +1953,22 @@ describe("MatrixChatConnection", () => {
 
             expect(existingChildFolder.refreshRooms).not.toHaveBeenCalled();
             expect(existingChildFolder.init).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("onSyncStateChange", () => {
+        it("should report sync errors to Sentry, except when the homeserver cannot be reached", async () => {
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve({} as unknown as MatrixClient));
+            vi.mocked(Sentry.captureException).mockClear();
+
+            matrixChatConnection["onSyncStateChange"](SyncState.Error, SyncState.Reconnecting, {
+                error: new ConnectionError("fetch failed", new TypeError("Failed to fetch")),
+            });
+            expect(Sentry.captureException).not.toHaveBeenCalled();
+
+            const error = new MatrixError({ errcode: "M_UNKNOWN" }, 500);
+            matrixChatConnection["onSyncStateChange"](SyncState.Error, SyncState.Syncing, { error });
+            expect(Sentry.captureException).toHaveBeenCalledWith(error);
         });
     });
 });

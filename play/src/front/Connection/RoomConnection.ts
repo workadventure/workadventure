@@ -830,14 +830,15 @@ export class RoomConnection implements RoomConnection {
             analyticsClient.trackAdminEvent("websocket.connection_lost", {
                 reason: event.reason || String(event.code),
             });
-            Sentry.captureMessage(
-                "WebSocket closed by remote side. Code: " +
-                    event.code +
-                    ", reason: " +
-                    event.reason +
-                    "wasClean: " +
-                    event.wasClean,
-            );
+            // Like the ping timeout below, a lost socket is a network condition handled by the reconnection flow,
+            // and analytics already counts it. As a Sentry event it cost ~60k events a month (mostly failed resumes,
+            // code 1008). A breadcrumb keeps it in the timeline of a real error.
+            Sentry.addBreadcrumb({
+                category: "room-connection",
+                level: "info",
+                message: "WebSocket closed by remote side",
+                data: { code: event.code, reason: event.reason, wasClean: event.wasClean },
+            });
         }
         this.cleanupConnection(event.code === 1000);
     };

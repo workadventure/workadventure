@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Invia messaggio",
     participantInviteUser: "Invita utente",
     participantExitFullscreen: "Esci da schermo intero",
+    participantShowList: "Mostra la lista partecipanti",
+    participantHideList: "Nascondi la lista partecipanti",
     profil: "Modifica il tuo nome",
-    startScreenSharing: "Inizia condivisione schermo",
-    stopScreenSharing: "Ferma condivisione schermo",
-    screenSharingMode: "Modalità condivisione schermo",
     calendar: "Calendario",
     todoList: "Lista delle cose da fare",
     woka: "Personalizza il tuo avatar",
     companion: "Aggiungi compagno",
-    test: "Testa le mie impostazioni",
     editCamMic: "Modifica camera / microfono",
     allSettings: "Tutte le impostazioni",
     installPwa: "Installa app web",
@@ -32,33 +30,28 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "La tua fotocamera è disabilitata",
         activate: "Attiva la tua fotocamera",
-        noDevices: "Nessun dispositivo fotocamera trovato",
-        setBackground: "Imposta sfondo",
-        blurEffects: "Effetti sfocatura",
-        disableBackgroundEffects: "Disabilita effetti di sfondo",
-        close: "Chiudi",
     },
     microphone: {
         disabled: "Il tuo microfono è disabilitato",
         activate: "Attiva il tuo microfono",
-        noDevices: "Nessun dispositivo microfono trovato",
         noSoundWarning:
             "Nessun suono rilevato dal microfono. Potrebbe esserci un problema; prova a cambiare microfono nelle impostazioni.",
-        noSoundWarningPressEnter: "Nessun suono rilevato dal microfono. Premi Invio per aprire le impostazioni.",
         advancedNoiseReduction: "Riduzione avanzata del rumore",
+        loudEnvironmentWarning: "È stato rilevato un rumore di fondo continuo sul microfono.",
+        enableNoiseSuppression: "Attiva la soppressione del rumore",
         noiseSuppressionInitializing: "Inizializzazione della soppressione del rumore personalizzata...",
         noiseSuppressionUnsupported: "Questo browser non può eseguire la soppressione del rumore personalizzata.",
         noiseSuppressionError:
             "Soppressione del rumore personalizzata non riuscita. Ripiego sulla soppressione del rumore nativa del browser.",
+        noiseSuppressionActive: "Attiva",
         openSettings: "Apri impostazioni",
         ignore: "Ignora",
     },
     speaker: {
         disabled: "Il tuo altoparlante è disabilitato",
-        activate: "Attiva il tuo altoparlante",
         noDevices: "Nessun dispositivo altoparlante trovato",
         noDevicesDesc:
-            "Il browser non elenca alcuna uscita audio selezionabile. Alcuni browser limitano questa scelta (ad esempio Safari). Prova un altro browser, ricollega cuffie o altoparlanti, controlla le impostazioni audio di sistema e le impostazioni del computer (privacy, dispositivi).",
+            "Il browser non elenca alcuna uscita audio selezionabile. Alcuni browser limitano questa scelta. Prova un altro browser, ricollega cuffie o altoparlanti, controlla le impostazioni audio di sistema e le impostazioni del computer (privacy, dispositivi).",
     },
     status: {
         ONLINE: "Online",
@@ -160,7 +153,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Condividi il tuo schermo",
-            desc: "Vuoi condividere il tuo schermo con altri utenti? Puoi farlo! Puoi mostrare il tuo schermo a tutti nella chat, e puoi scegliere di condividere l'intero schermo o solo una finestra specifica.",
+            desc: "Vuoi condividere il tuo schermo con altri utenti? Puoi farlo! Puoi mostrare il tuo schermo alle persone nella tua bolla o sala riunioni, e puoi scegliere di condividere l'intero schermo o solo una finestra specifica.",
         },
         apps: {
             title: "Applicazioni di terze parti",
@@ -170,19 +163,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Lista delle stanze",
             desc: "Esplora la lista delle stanze per vedere chi è presente e unirti a una conversazione con un clic.",
         },
-        calendar: {
-            title: "Calendario",
-            desc: "Consulta le tue riunioni imminenti e unisciti direttamente da WorkAdventure.",
-        },
-        todolist: {
-            title: "Lista delle cose da fare",
-            desc: "Gestisci le tue attività del giorno senza lasciare il tuo spazio di lavoro.",
-        },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled:
-                "Sfortunatamente, questa funzionalità non è disponibile sul tuo dispositivo ❌. Prova a utilizzare un altro dispositivo o browser, come Chrome o Edge, per accedere a questa funzionalità.",
-            desc: "Puoi utilizzare la funzionalità picture in picture per guardare un video o una presentazione mentre sei in una conversazione. Basta cliccare sull'icona picture in picture e goderti il tuo contenuto.",
+            desc: "Mostra i video della tua conversazione in una piccola finestra mobile, così continui a vedere le persone con cui parli mentre lavori in un'altra scheda o applicazione.",
         },
         videoNotSupported: "Il tuo browser non supporta il tag video.",
     },

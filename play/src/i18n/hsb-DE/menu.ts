@@ -65,18 +65,22 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Izolacija hłosa",
             voiceIsolationDescription:
                 "Wužiwajće izolaciju hłosa wobhladowaka a dźěłoweho systema, jeli je k dispoziciji.",
+            noiseSuppressionEngine: "Mašina za potłóčowanje šuma",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nowy, hłós połneho pasma)",
+            noiseSuppressionEngineDtln: "DTLN (předchadna mašina)",
         },
         language: {
             title: "rěč",
         },
         privacySettings: {
             title: "modus njepřitomnosće",
-            explanation: 'Jeli Work Adventure Tab aktiwny njeje, so do „modusa njepřitomnosće" přešaltuje.',
+            explanation:
+                'Hdyž do druheho wokna abo taba přeńdźeće, so do „modusa njepřitomnosće" přešaltuje, nic pak w rozmołwje abo při wusyłanju.',
             cameraToggle: 'Kameru w „modusu njepřitomnosće" aktiwěrowanu wostajić.',
             microphoneToggle: 'Mikrofon w „modusu njepřitomnosće" aktiwěrowany wostajić.',
         },
         save: "składować",
-        otherSettings: "wšě nastajenja",
+        otherSettings: "Druhe nastajenja",
         fullscreen: "połny wobraz",
         notifications: "powěsće",
         enablePictureInPicture: "wobraz-we-wobrazu aktiwěrować",

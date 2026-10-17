@@ -1,0 +1,88 @@
+<script lang="ts">
+    import type { CalendarEventInterface } from "@workadventure/shared-utils";
+    import Button from "../UI/Button.svelte";
+    import LL from "../../../i18n/i18n-svelte";
+    import { scriptUtils } from "../../Api/ScriptUtils";
+    import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { IconDoorIn, IconVideo } from "@wa-icons";
+
+    interface Props {
+        event: CalendarEventInterface;
+        /** The next meeting's full-width button rather than a row's compact one. */
+        prominent?: boolean;
+        /** A compact button that still spells out "Join", not just a camera icon. */
+        labelled?: boolean;
+        class?: string;
+        /** Called when the user joins. */
+        onjoin?: () => void;
+    }
+
+    let { event, prominent = false, labelled = false, class: className = "", onjoin }: Props = $props();
+
+    let meeting = $derived(event.resource?.onlineMeeting);
+
+    // The way a website set to open in a new tab opens (map areas, chat links, WA.nav.openTab).
+    function join() {
+        if (meeting?.joinUrl) scriptUtils.openTab(meeting.joinUrl);
+        onjoin?.();
+    }
+
+    // A meeting in this WorkAdventure: walk to its area, or travel to its map, without reloading the page.
+    function goThere(clickEvent: MouseEvent) {
+        onjoin?.();
+        if (!meeting?.joinUrl) return;
+        const url = new URL(meeting.joinUrl);
+        // Another WorkAdventure, or a link the module could not resolve (the admin's redirect): follow it.
+        if (url.origin !== window.location.origin) return;
+        clickEvent.preventDefault();
+        const scene = gameManager.getCurrentGameScene();
+        if (url.pathname === window.location.pathname) {
+            const target = new URLSearchParams(url.hash.slice(1)).get("moveTo");
+            if (target) scene.walkToMoveTarget(target);
+            // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
+            else isCalendarVisibleStore.set(false);
+        } else {
+            scene.onMapExit(url).catch((e) => console.error(e));
+        }
+    }
+</script>
+
+{#if meeting?.joinUrl}
+    {#if meeting.isWorkAdventure}
+        <!-- The meeting takes place in a room of this WorkAdventure: go there in place, not in a new tab. -->
+        <Button
+            href={meeting.joinUrl}
+            variant={prominent ? "secondary" : "light"}
+            appearance={prominent ? "filled" : "border"}
+            size={prominent ? undefined : "sm"}
+            class={className}
+            onclick={goThere}
+        >
+            {#snippet icon()}<IconDoorIn class="h-4 w-4" />{/snippet}
+            {$LL.externalModule.calendar.goThere()}
+        </Button>
+    {:else if prominent}
+        <Button variant="secondary" class={className} onclick={join}>
+            {#snippet icon()}<IconVideo class="h-5 w-5" />{/snippet}
+            {$LL.externalModule.calendar.join()}
+        </Button>
+    {:else if labelled}
+        <Button variant="light" appearance="border" size="sm" class={className} onclick={join}>
+            {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
+            {$LL.externalModule.calendar.join()}
+        </Button>
+    {:else}
+        <Button
+            variant="light"
+            appearance="ghost"
+            size="sm"
+            square
+            aria-label={`${$LL.externalModule.calendar.join()} · ${event.title}`}
+            class={className}
+            onclick={join}
+        >
+            {#snippet icon()}<IconVideo class="h-4 w-4" />{/snippet}
+        </Button>
+    {/if}
+{/if}

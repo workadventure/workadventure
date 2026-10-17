@@ -1,6 +1,8 @@
 import { get, writable } from "svelte/store";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { loadLocaleAsync } from "../../../../src/i18n/i18n-util.async";
 import { setLocale } from "../../../../src/i18n/i18n-svelte";
 import {
@@ -11,6 +13,8 @@ import {
 } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoomManager";
 import type { ProximityChatRoom } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoom";
 import type { SpaceInterface } from "../../../../src/front/Space/SpaceInterface";
+
+vi.mock("@sentry/svelte", () => ({ captureException: vi.fn() }));
 
 function createFakeSpace(spaceName: string): SpaceInterface {
     return {
@@ -326,6 +330,23 @@ describe("ProximityChatRoomManager", () => {
         expect(fakeRoom.leaveSpace.mock.invocationCallOrder[1]).toBeGreaterThan(
             fakeRoom.joinSpace.mock.invocationCallOrder[1],
         );
+    });
+
+    it("does not report an aborted join to Sentry, but reports other failures", async () => {
+        const manager = createManager();
+        manager.getOrCreateRoom("space-a", "Space A");
+        const fakeRoom = roomByName.get("space-a")!;
+        vi.mocked(Sentry.captureException).mockClear();
+
+        fakeRoom.joinSpace.mockRejectedValueOnce(new AbortError());
+        await expect(manager.joinSpace("space-a", "Space A", [])).rejects.toThrow(AbortError);
+        fakeRoom.joinSpace.mockRejectedValueOnce(new DOMException("signal is aborted without reason", "AbortError"));
+        await expect(manager.joinSpace("space-a", "Space A", [])).rejects.toThrow("signal is aborted");
+        expect(Sentry.captureException).not.toHaveBeenCalled();
+
+        fakeRoom.joinSpace.mockRejectedValueOnce(new Error("Space user id not found"));
+        await expect(manager.joinSpace("space-a", "Space A", [])).rejects.toThrow("Space user id not found");
+        expect(Sentry.captureException).toHaveBeenCalledOnce();
     });
 
     it("resolves legacy targets from selected joined room then most recent joined room", async () => {

@@ -83,7 +83,7 @@ This choice only applies to screen sharing, not to your camera.
 
 ![The microphone settings, with advanced noise reduction turned on](images/settings-microphone.png)
 
-- **Enable advanced noise reduction** (off by default) removes background noise (keyboard, fan, street…) from your microphone. When it is on, choose the **Noise suppression mode**:
+- **Enable advanced noise reduction** (on by default) removes background noise (keyboard, fan, street…) from your microphone. When it is on, choose the **Noise suppression mode**:
   - **WorkAdventure noise suppression** (recommended): the noise is removed by WorkAdventure, in your browser.
   - **Voice isolation**: the noise is removed by your browser and your operating system. This choice only appears when they support it.
 - **Automatic gain control** (on by default) automatically adjusts the volume of your microphone.
@@ -111,7 +111,7 @@ The administrator of your WorkAdventure can change these defaults.
 
 ### Other settings
 
-The last section, also titled **All settings**, groups these settings:
+The last section groups these settings:
 
 ![The away mode and the other settings](images/settings-other.png)
 
@@ -121,7 +121,7 @@ The last section, also titled **All settings**, groups these settings:
 - **Enable picture-in-picture** (on by default): when you leave the WorkAdventure tab during a conversation, the videos open in a small floating window. This needs a browser that supports it, like Chrome or Edge.
 - **Always ask before opening websites and Jitsi Meet rooms**: when a website or a Jitsi room of the map would open by itself, WorkAdventure asks you first.
 - **Ignore requests to follow other users**: you no longer receive requests to follow someone.
-- **Decrease audio player volume while speaking**: in the current version, the music and sounds of the map are always played at half volume while you are in a conversation, whatever the position of this switch.
+- **Decrease audio player volume while speaking** (on by default): while you are in a conversation, the music and sounds of the map play at half volume.
 - **Block ambient sounds and music**: stops the music and sounds played by the map.
 - **Disable map animations**: stops the animated tiles of the map.
 - **Display video quality statistics**: shows technical information (resolution, codec…) on the videos.

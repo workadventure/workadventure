@@ -19,6 +19,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 
 import { subscribeToVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { createLivekitWebRtcStats } from "../WebRtc/WebRtcStatsFactory";
+import { registerAudioQualitySource } from "../WebRtc/AudioQualityAnalytics";
 import type { Streamable } from "../Space/Streamable";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 
@@ -89,6 +90,7 @@ export class LiveKitParticipant {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
+        private getLivekitRegion: () => string | undefined = () => undefined,
         private defaultVolume: number = get(volumeProximityDiscussionStore),
     ) {
         incrementLivekitConnectionsCount();
@@ -131,6 +133,14 @@ export class LiveKitParticipant {
         this.analyticsStatsUnsubscribers.push(this.subscribeToAnalyticsStats("video", this.videoWebrtcStats));
         this.analyticsStatsUnsubscribers.push(
             this.subscribeToAnalyticsStats("screenShare", this.screenShareWebrtcStats),
+        );
+        // The microphone only: a scripting audio track is not a voice
+        this.analyticsStatsUnsubscribers.push(
+            registerAudioQualitySource(
+                "SFU",
+                async () => this._microphonePublication?.track?.getRTCStatsReport(),
+                this._spaceUser.reactiveUser.microphoneState,
+            ),
         );
     }
 
@@ -528,7 +538,6 @@ export class LiveKitParticipant {
             flipX: false,
             muteAudio: this._muteAudioStore,
             displayMode: "cover",
-            displayInPictureInPictureMode: true,
             usePresentationMode: false,
             media: {
                 type: "livekit",
@@ -561,7 +570,6 @@ export class LiveKitParticipant {
             flipX: false,
             muteAudio: writable(false),
             displayMode: "fit",
-            displayInPictureInPictureMode: true,
             usePresentationMode: true,
             media: {
                 type: "livekit",
@@ -612,6 +620,7 @@ export class LiveKitParticipant {
                 remoteUserUuid: this._spaceUser.uuid,
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.livekitServerUrl,
+                getLivekitRegion: this.getLivekitRegion,
             },
             (message) => this.space.emitVideoQualityReport(message),
         );

@@ -4,7 +4,7 @@ import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
+import { getMatrixSecurity } from "../Connection/Matrix/getMatrixSecurity";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { selectedRoomStore } from "./SelectRoomStore";
@@ -81,9 +81,11 @@ export function initializeChatVisibilitySubscription() {
         const isEncrypted = get(selectedRoom.isEncrypted);
 
         if (visible && isEncrypted) {
-            matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal().catch((error) => {
-                console.error(error);
-            });
+            getMatrixSecurity()
+                .then((matrixSecurity) => matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal())
+                .catch((error) => {
+                    console.error(error);
+                });
         }
     });
 

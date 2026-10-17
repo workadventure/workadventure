@@ -72,7 +72,7 @@
                             {#if selectedDevice === speaker.deviceId}
                                 <Chip>{$LL.camera.active()}</Chip>
                             {:else}
-                                <Chip>{$LL.camera.notRecommended()}</Chip>
+                                <Chip>{$LL.camera.disabled()}</Chip>
                             {/if}
                         </div>
                     </div>

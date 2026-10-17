@@ -41,11 +41,9 @@ const recording: DeepPartial<Translation["recording"]> = {
         },
         desc: {
             needLogin: "U moet ingelogd zijn om op te nemen.",
-            needPremium: "U moet premium zijn om op te nemen.",
             advert: "Alle deelnemers worden op de hoogte gesteld dat u een opname start.",
             yourRecordInProgress: "Opname bezig, klik om te stoppen.",
             inProgress: "Een opname is bezig",
-            notEnabled: "Opnames zijn uitgeschakeld voor deze wereld.",
         },
         spacePicker: {
             megaphone: "Megafoon opnemen",

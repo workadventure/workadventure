@@ -44,6 +44,8 @@ const matrixAccessTokenExpireDate = "matrixAccessTokenExpireDate";
 const matrixRefreshToken = "matrixRefreshToken";
 const matrixDeviceId = "matrixDeviceId";
 const matrixLoginToken = "matrixLoginToken";
+const matrixStoresNeedClearing = "matrixStoresNeedClearing";
+const matrixSessionOwner = "matrixSessionOwner";
 const requestedStatus = "RequestedStatus";
 const matrixGuest = "matrixGuest";
 const pwaInstallPromptShownKey = "workadventure_pwa_install_prompt_shown";
@@ -66,6 +68,7 @@ const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
 const noiseSuppressionProviderKey = "noiseSuppressionProvider";
+const noiseSuppressionEngineKey = "noiseSuppressionEngine";
 const microphoneAutoGainControlKey = "microphoneAutoGainControl";
 const microphoneEchoCancellationKey = "microphoneEchoCancellation";
 const microphoneBrowserNoiseSuppressionKey = "microphoneBrowserNoiseSuppression";
@@ -74,6 +77,8 @@ const INITIAL_MAP_EDITOR_SIDEBAR_WIDTH = 448;
 export type VideoQualitySetting = "low" | "recommended" | "high";
 export type BandwidthConstrainedPreference = "maintain-framerate" | "maintain-resolution" | "balanced";
 export type NoiseSuppressionProvider = "workadventure" | "voiceIsolation";
+/** The model behind the "workadventure" provider: DeepFilterNet3 (48 kHz, default) or the legacy DTLN (16 kHz). */
+export type NoiseSuppressionEngine = "deepfilternet" | "dtln";
 
 const JwtAuthToken = z
     .object({
@@ -322,7 +327,7 @@ class LocalUserStore {
         localStorage.setItem(decreaseAudioPlayerVolumeWhileTalking, value.toString());
     }
     getDecreaseAudioPlayerVolumeWhileTalking(): boolean {
-        return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) === "true";
+        return localStorage.getItem(decreaseAudioPlayerVolumeWhileTalking) !== "false";
     }
 
     setDisableAnimations(value: boolean): void {
@@ -835,7 +840,8 @@ class LocalUserStore {
             localStorage.setItem(noiseSuppressionProviderKey, "workadventure");
             return false;
         }
-        return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
+        // On by default: only an explicit "false" turns it off.
+        return localStorage.getItem(noiseSuppressionEnabledKey) !== "false";
     }
 
     setNoiseSuppressionProvider(value: NoiseSuppressionProvider) {
@@ -848,6 +854,14 @@ class LocalUserStore {
             return value;
         }
         return "workadventure";
+    }
+
+    setNoiseSuppressionEngine(value: NoiseSuppressionEngine) {
+        localStorage.setItem(noiseSuppressionEngineKey, value);
+    }
+
+    getNoiseSuppressionEngine(): NoiseSuppressionEngine {
+        return localStorage.getItem(noiseSuppressionEngineKey) === "dtln" ? "dtln" : "deepfilternet";
     }
 
     setMicrophoneAutoGainControl(value: boolean) {
@@ -953,16 +967,38 @@ class LocalUserStore {
         return localStorage.getItem(matrixDeviceId + "_" + userUuid) ?? "";
     }
 
-    setMatrixLoginToken(value: string | null) {
-        if (value !== null) {
-            localStorage.setItem(matrixLoginToken, value);
+    /** The uuid of the WorkAdventure user who opened the stored Matrix session. */
+    getMatrixSessionOwner(): string | null {
+        return localStorage.getItem(matrixSessionOwner);
+    }
+
+    setMatrixSessionOwner(userUuid: string | null) {
+        if (userUuid !== null) {
+            localStorage.setItem(matrixSessionOwner, userUuid);
         } else {
-            localStorage.removeItem(matrixLoginToken);
+            localStorage.removeItem(matrixSessionOwner);
         }
     }
 
-    getMatrixLoginToken() {
-        return localStorage.getItem(matrixLoginToken);
+    /**
+     * Older versions stored the single-use Matrix login token, which is now exchanged as soon as the page lands with
+     * it and kept in memory only. Drops the one they may have left behind.
+     */
+    removeLegacyMatrixLoginToken() {
+        localStorage.removeItem(matrixLoginToken);
+    }
+
+    /** Whether the Matrix stores (IndexedDB) still hold the data of the Matrix user who used this browser before. */
+    getMatrixStoresNeedClearing(): boolean {
+        return localStorage.getItem(matrixStoresNeedClearing) === "true";
+    }
+
+    setMatrixStoresNeedClearing(value: boolean) {
+        if (value) {
+            localStorage.setItem(matrixStoresNeedClearing, "true");
+        } else {
+            localStorage.removeItem(matrixStoresNeedClearing);
+        }
     }
 
     /**
@@ -975,7 +1011,7 @@ class LocalUserStore {
      * next login overwrites it with the one the homeserver hands out.
      */
     clearMatrixSession() {
-        this.setMatrixLoginToken(null);
+        this.setMatrixSessionOwner(null);
         this.setMatrixUserId(null);
         this.setMatrixAccessToken(null);
         this.setMatrixRefreshToken(null);

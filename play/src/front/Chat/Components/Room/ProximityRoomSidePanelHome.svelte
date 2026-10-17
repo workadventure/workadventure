@@ -45,7 +45,7 @@
     let avatarColorStore = $derived(room.avatarFallbackColor);
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
     let openQuestionCount = $derived(questionRows.filter(({ state }) => !state.isAnswered).length);
-    let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`);
+    let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.status.open()}`);
     let questionCardValue = $derived(`${questionRows.length} · ${openQuestionCount} ${$LL.chat.question.openStatus()}`);
     let isPollCatalogueLoading = $derived(
         $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle",

@@ -66,6 +66,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Isolamento della voce",
             voiceIsolationDescription:
                 "Usa l'isolamento della voce del browser e del sistema operativo quando disponibile.",
+            noiseSuppressionEngine: "Motore di riduzione del rumore",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nuovo, voce a banda piena)",
+            noiseSuppressionEngineDtln: "DTLN (motore precedente)",
         },
         language: {
             title: "Lingua",
@@ -73,7 +76,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Modalità assente",
             explanation:
-                'Quando la scheda WorkAdventure nel tuo browser non è visibile, WorkAdventure passa alla modalità "assente"',
+                'Quando passi a un\'altra finestra o scheda, WorkAdventure passa alla modalità "assente", tranne durante una conversazione o una trasmissione.',
             cameraToggle: 'Mantieni la fotocamera attiva in modalità "assente"',
             microphoneToggle: 'Mantieni il microfono attivo in modalità "assente"',
         },

@@ -247,6 +247,8 @@ export interface ChatMessage {
     reactions: MapStore<string, ChatMessageReaction>;
     remove: () => void;
     edit: (newContent: string) => Promise<void>;
+    /** Only on messages carrying a file (image, file, audio, video). */
+    attachment?: ChatMessageAttachment;
     isDeleted: Readable<boolean>;
     isModified: Readable<boolean>;
     canEdit: Readable<boolean>;
@@ -423,6 +425,43 @@ export type ChatTimelineItem =
       };
 
 export type ChatMessageType = "proximity" | "text" | "incoming" | "outcoming" | "image" | "file" | "audio" | "video";
+
+/**
+ * The file of a message, for what showing it takes beyond its URL. Each source fills in what applies to it:
+ * a feature a source does not have is left out rather than stubbed, and components check for it.
+ */
+export interface ChatMessageAttachment {
+    /** Whether the file is at hand. Once it is "ready", the message content's URL points to it. */
+    readonly status: Readable<ChatAttachmentStatus>;
+    /** In bytes, when the source says. */
+    readonly size?: number;
+    /** Present when the recipient decides whether to get the file at all, before anything is downloaded. */
+    readonly consent?: ChatAttachmentConsent;
+    /** Present on the sender's copy of a file delivered to each recipient separately: how each copy is doing. */
+    readonly delivery?: Readable<ChatAttachmentRecipient[]>;
+}
+
+export type ChatAttachmentStatus =
+    | { state: "ready" }
+    | { state: "loading"; progress?: number; remainingSeconds?: number }
+    // "unavailable": the file cannot be had any more, for the sender or the recipient left the discussion.
+    | { state: "error"; error: "download" | "decrypt" | "unavailable" };
+
+export interface ChatAttachmentConsent {
+    readonly decision: Readable<"pending" | "accepted" | "declined">;
+    readonly accept: () => Promise<void>;
+    readonly decline: () => void;
+}
+
+export type ChatAttachmentRecipient = {
+    spaceUserId: string;
+    name: string;
+    pictureStore: PictureStore | undefined;
+    color: string | undefined;
+    state: "waiting" | "sending" | "received" | "declined" | "failed";
+    progress: number;
+};
+
 export type ChatMessageContent = {
     /**
      * The body can contain HTML. It will be run against DOMPurify before being outputted to the user.
@@ -430,8 +469,6 @@ export type ChatMessageContent = {
     body: string;
     url: string | undefined;
     thumbnailUrl?: string;
-    mediaState?: "ready" | "loading" | "error";
-    mediaErrorKind?: "download" | "decrypt";
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];

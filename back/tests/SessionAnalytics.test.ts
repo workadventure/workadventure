@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, type Mock } from "vitest";
-import type { AnalyticsStoredEvent, SpaceKind } from "@workadventure/messages";
+import { MAX_EVENT_ID_LENGTH, type AnalyticsStoredEvent, type SpaceKind } from "@workadventure/messages";
 import { SessionAnalytics, type SessionMember } from "../src/Model/SessionAnalytics";
 
 type Enqueue = Mock<(row: AnalyticsStoredEvent) => void>;
@@ -8,6 +8,7 @@ const member = (id: string): SessionMember => ({
     uuid: `uuid-${id}`,
     spaceUserId: `room_${id}`,
     roomId: "https://play.example/room",
+    tags: [`tag-${id}`],
 });
 
 const rowsOf = (enqueue: Enqueue): AnalyticsStoredEvent[] => enqueue.mock.calls.map(([row]) => row);
@@ -56,6 +57,9 @@ describe("SessionAnalytics", () => {
         expect(participations.map((row) => row.properties.joinRank)).toEqual([1, 2, 3]);
         expect(participations.map((row) => row.properties.durationSeconds)).toEqual([120, 120, 60]);
         expect(participations.map((row) => row.userUuid)).toEqual(["uuid-1", "uuid-2", "uuid-3"]);
+        // Each person's tags ride on their own row; the meeting's names nobody, so it has none.
+        expect(participations.map((row) => row.tags)).toEqual([["tag-1"], ["tag-2"], ["tag-3"]]);
+        expect(meetings[0].tags).toEqual([]);
         expect(participations.every((row) => row.properties.meetingId === "space")).toBe(true);
         // Same row shape as a broadcast, and in a meeting everyone is on air: the
         // broadcast-only fields are filled, not omitted, and they say exactly that.
@@ -314,5 +318,34 @@ describe("SessionAnalytics", () => {
         expect(analytics.close()).toBe(true);
         expect(analytics.close("back_shutdown")).toBe(false);
         expect(rowsOf(enqueue)).toHaveLength(3);
+    });
+
+    it("keeps event ids within the admin's limit and the same from one run to the next", () => {
+        // A world with a URL-encoded slug, as seen in prod: the readable id carried this
+        // URL three times and reached 480 characters, which the admin rejected.
+        const room =
+            "https://play.workadventu.re/@/ec-82-ac-ec-9d-b4-eb-b2-84-ec-98-a8-ea-b8-b0/%EC%82%AC%EC%9D%B4%EB%B2%84%EC%98%A8%EA%B8%B0-ver-1/ec-98-a4-ed-94-bc-ec-8a-a4";
+        const run = () => {
+            const enqueue: Enqueue = vi.fn();
+            const analytics = new SessionAnalytics(
+                `${room}.${room}#14#1791104538996`,
+                room,
+                () => "bubble",
+                { enqueue },
+                () => 1791104548966,
+            );
+            for (const id of ["1", "2"]) {
+                analytics.join({ uuid: `uuid-${id}`, spaceUserId: `${room}_${id}`, roomId: room, tags: [] }, true);
+            }
+            analytics.close();
+            return rowsOf(enqueue).map((row) => row.eventId);
+        };
+
+        const ids = run();
+        expect(ids).toHaveLength(3);
+        expect(new Set(ids).size).toBe(3);
+        expect(ids.every((id) => id.length <= MAX_EVENT_ID_LENGTH)).toBe(true);
+        // Deterministic, so a retried batch collapses in the admin's ReplacingMergeTree.
+        expect(run()).toEqual(ids);
     });
 });

@@ -21,7 +21,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
-    import bgMap from "../images/map-exemple.png";
+    import bgMap from "../images/map-exemple.webp";
     import Button from "../UI/Button.svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import SelectMicrophone from "./SelectMicrophone.svelte";
@@ -37,11 +37,14 @@
 
     let enableCameraScene = $derived(game.scene.getScene(EnableCameraSceneName) as EnableCameraScene);
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
+    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
     let selectedCamera: string | undefined = $state(undefined);
     let selectedMicrophone: string | undefined = $state(undefined);
-    const sound = new Audio("/resources/objects/webrtc-in.mp3");
+    // Not the exact URL the GameScene preloads: Firefox hands this element's cached response to Phaser's XHR,
+    // which rejects it, and the game stops on "Cannot load .../webrtc-in-ding.mp3" (NETWORK_ERROR).
+    const sound = new Audio(`/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3?speaker-test`);
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -258,7 +261,7 @@
                                 <div
                                     class="webrtcsetup flex items-center justify-center w-full aspect-video rounded-lg overflow-hidden bg-contrast"
                                 >
-                                    CAM PB <!-- TODO HUGO : catch pb with cam -->
+                                    {$LL.camera.my.loading()}
                                 </div>
                             {/if}
                         </span>
@@ -303,7 +306,7 @@
         </div>
     </section>
 </form>
-<div class="fixed start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div class="fixed start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{sceneBg}');"></div>
 <div class="fixed start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
 
 <style>

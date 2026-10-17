@@ -7,7 +7,6 @@ const warning: DeepPartial<Translation["warning"]> = {
     limit: "Questo mondo è vicino al suo limite!",
     accessDenied: {
         camera: "Accesso alla fotocamera negato. Clicca qui e controlla i permessi del tuo browser.",
-        screenSharing: "Condivisione dello schermo negata. Clicca qui e controlla i permessi del tuo browser.",
         teleport: "Non hai il diritto di teletrasportarti a questo utente.",
         room: "Accesso alla stanza negato. Non sei autorizzato ad entrare in questa stanza.",
     },

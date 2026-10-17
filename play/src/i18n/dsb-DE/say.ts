@@ -10,8 +10,8 @@ const say: DeepPartial<Translation["say"]> = {
     button: "Bublinu napóraś",
     tooltip: {
         description: {
-            say: "Pokazujo chatowu bublinu nad wašym wótgłosom. Widobna za wšyknych na kórśe, wóstawa 5 sekundow pokazana.",
-            think: "Pokazujo myslowu bublinu nad wašym wótgłosom. Widobna za wšyknych grajarjow na kórśe, wóstawa pokazana, dłujkož se njepjerědujośo.",
+            say: "Pokazujo chatowu bublinu nad wašym wótgłosom. Widobna za wšyknych, kótarež waš wótgłos wiźe, wóstawa 5 sekundow pokazana.",
+            think: "Pokazujo myslowu bublinu nad wašym wótgłosom. Widobna za wšyknych, kótarež waš wótgłos wiźe, wóstawa pokazana, dłujkož se njepjerědujośo.",
         },
     },
 };

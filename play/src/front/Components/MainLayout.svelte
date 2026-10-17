@@ -16,6 +16,8 @@
     import { coWebsites, windowSize } from "../Stores/CoWebsiteStore";
     import { proximityMeetingStore } from "../Stores/MyMediaStore";
     import { notificationPlayingStore } from "../Stores/NotificationStore";
+    import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
+    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import { popupStore } from "../Stores/PopupStore";
     import {
         mapEditorAskToClaimPersonalAreaStore,
@@ -42,7 +44,9 @@
     import { analyticsClient } from "../Administration/AnalyticsClient";
     import type { WorkAdventureComponent } from "../../types/component";
     import { LL } from "../../i18n/i18n-svelte";
+    import { sidePanelWidthStore } from "../Stores/SidePanelStore";
     import { mapEditorSideBarWidthStore } from "./MapEditor/MapEditorSideBarWidthStore";
+    import { calendarRemindersStore, startCalendarReminders } from "./Calendar/CalendarReminder";
     import ActionBar from "./ActionBar/ActionBar.svelte";
     import ActionBarButton from "./ActionBar/ActionBarButton.svelte";
 
@@ -74,6 +78,9 @@
     import RaisedHandsDock from "./Video/RaisedHandsDock.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
+    import Calendar from "./Calendar/Calendar.svelte";
+    import CalendarReminders from "./Calendar/CalendarReminders.svelte";
+    import TodoList from "./TodoList/TodoList.svelte";
     import ProximityNotificationContainer from "./ProximityNotification/ProximityNotificationContainer.svelte";
     import MeetingInvitationPopup from "./MeetingInvitation/MeetingInvitationPopup.svelte";
     import ChevronLeftIcon from "./Icons/ChevronLeftIcon.svelte";
@@ -165,9 +172,12 @@
         );
     }
 
+    let stopCalendarReminders: (() => void) | undefined;
+
     onMount(() => {
         document.addEventListener("focusin", handleFocusInEvent);
         document.addEventListener("focusout", handleFocusOutEvent);
+        stopCalendarReminders = startCalendarReminders();
     });
 
     onDestroy(() => {
@@ -177,6 +187,7 @@
         if (participantListAutoHideTimer) {
             clearTimeout(participantListAutoHideTimer);
         }
+        stopCalendarReminders?.();
     });
 
     let marginLeft = $derived($chatVisibilityStore ? $chatSidebarWidthStore : 0);
@@ -184,7 +195,7 @@
         $mapEditorVisibilityStore && $mapEditorSelectedToolStore !== EditorToolName.WAMSettingsEditor,
     );
     let mapEditorToolbarVisible = $derived($windowSize.width >= 768 || !$mapEditorVisibilityStore);
-    let marginRight = $derived(
+    let mapEditorReservedSpace = $derived(
         getMapEditorRightReservedSpace({
             isMapEditorActive: $mapEditorModeStore,
             isMapEditorPanelVisible: mapEditorPanelVisible,
@@ -192,6 +203,7 @@
             mapEditorPanelWidth: $mapEditorSideBarWidthStore,
         }),
     );
+    let marginRight = $derived(mapEditorReservedSpace + $sidePanelWidthStore);
 
     function onHighlightFullscreenSendMessage() {
         if (get(chatVisibilityStore) && get(navChat).key === "chat") {
@@ -240,7 +252,7 @@
     0
         ? 'not-cowebsite'
         : ''}"
-    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px "
+    style="padding-inline-start : {marginLeft}px; padding-inline-end: {marginRight}px; --side-panel-end: {mapEditorReservedSpace}px"
 >
     {#if $modalVisibilityStore}
         <div class="bg-black/60 w-full h-full fixed start-0 end-0"></div>
@@ -307,7 +319,9 @@
                 class="pointer-events-auto absolute right-0 top-1/2 z-[321] flex h-16 w-10 -translate-y-1/2 items-center justify-center rounded-l-lg border border-white/10 border-e-0 bg-contrast/50 shadow-md backdrop-blur transition-colors duration-200 hover:bg-white/10"
                 aria-expanded={highlightParticipantCamerasListOpen}
                 aria-controls="highlightFullScreenParticipantCamerasList"
-                aria-label={highlightParticipantCamerasListOpen ? "Hide participant list" : "Show participant list"}
+                aria-label={highlightParticipantCamerasListOpen
+                    ? $LL.actionbar.participantHideList()
+                    : $LL.actionbar.participantShowList()}
                 data-testid="toggle-highlight-participant-cameras-list"
                 onclick={() => (highlightParticipantCamerasListOpen = !highlightParticipantCamerasListOpen)}
             >
@@ -319,6 +333,16 @@
                 </span>
             </button>
         </div>
+    {/if}
+
+    <!-- Rendered here rather than beside #main-layout: its notifications and toasts must show above these
+         panels, and they cannot leave its stacking context (z-10). From md up, the panel sits in the room
+         marginRight makes for it (sidePanelWidthStore), left of the map editor's (--side-panel-end). -->
+    {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
+        <Calendar />
+    {/if}
+    {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
+        <TodoList />
     {/if}
 
     <AudioPlayer />
@@ -381,14 +405,19 @@
                 <LimitRoomModal />
             {/if}
 
-            <!-- Toast stack, with the host-side raised-hands dock stacked below it so a toast never covers the
-                 dock's buttons (the dock self-gates on visibleRaisedHandSectionsStore). -->
+            <!-- Toast stack, below the action bar, with the meeting reminders and the host-side raised-hands dock
+                 stacked under it so nothing covers anything else's buttons (the dock self-gates on
+                 visibleRaisedHandSectionsStore). Opening the agenda settles the reminders: it lists the same meetings. -->
             <div class="absolute top-0 right-2 z-[999] flex flex-col gap-2 items-end">
                 {#each [...$toastStore.entries()] as toastEntry (toastEntry[0])}
                     {@const toast = toastEntry[1]}
                     {@const ToastComponent = toast.component}
                     <ToastComponent {...toast.props} />
                 {/each}
+                <!-- Only with a reminder: an empty block would still push the dock down. -->
+                {#if $calendarIsActivatedStore && !$isCalendarVisibleStore && $calendarRemindersStore.length > 0}
+                    <CalendarReminders />
+                {/if}
                 <RaisedHandsDock />
             </div>
 

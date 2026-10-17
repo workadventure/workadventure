@@ -14,6 +14,7 @@ import type {
 } from "matrix-js-sdk";
 import {
     ClientEvent,
+    ConnectionError,
     EventTimeline,
     EventType,
     HttpApiEvent,
@@ -103,6 +104,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
+    private isSessionLoggedOut = false;
     // Per-user availability store, shared with the rendered ChatUser and kept live by
     // onUserPresenceEvent. Persistent across directRoomsUsers recomputes so the UI subscription survives.
     private readonly userAvailabilityStores = new Map<string, Writable<AvailabilityStatus>>();
@@ -584,7 +586,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 });
             }
             this.rebuildSpaceHierarchy();
-            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
+            // Best effort, like the later syncs below: a failed avatar upload (or crypto.subtle, which hashes the
+            // Woka, missing on a non-secure origin) is already logged and reported, and must not take the whole
+            // chat down with it. Whether the Woka is there yet when the init gets here is only a matter of timing.
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false).catch(() => undefined);
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
         } catch (error) {
@@ -789,7 +794,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 this.connectionStatus.set("ON_ERROR");
                 if (res?.error) {
                     console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
-                    Sentry.captureException(res?.error);
+                    // A ConnectionError means the homeserver could not be reached (network down, laptop waking up...).
+                    // The SDK keeps polling /versions every few seconds and resumes the sync once it answers.
+                    if (!(res.error instanceof ConnectionError)) {
+                        Sentry.captureException(res.error);
+                    }
                 }
                 break;
             case SyncState.Reconnecting:
@@ -868,6 +877,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * the only place a fresh Matrix login token is minted.
      */
     private onSessionLoggedOut(error: MatrixError): void {
+        this.isSessionLoggedOut = true;
         console.error("The Matrix session is no longer valid: ", error);
         Sentry.captureException(error);
         localUserStore.clearMatrixSession();
@@ -932,6 +942,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             const checkSync = () => {
                 if (this.client?.isInitialSyncComplete()) {
                     resolve();
+                } else if (this.isSessionLoggedOut) {
+                    // A dead session never syncs: don't keep the chat (and its button) waiting for the timeout.
+                    reject(new Error("Failed to wait initial sync : the Matrix session is no longer valid"));
                 } else {
                     if (Date.now() - startTime >= timeout) {
                         reject(new Error(`Failed to wait initial sync : timeout ${timeout} ms`));

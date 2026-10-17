@@ -74,6 +74,12 @@ export class ProximityChatRoomManager {
             });
         },
         (error, key) => {
+            // Leaving an area aborts its pending join on purpose, and callers ignore that. A server query
+            // that timed out also rejects with an AbortError, but its 15s timeout is longer than
+            // ROOM_OPERATION_LOCK_TIMEOUT_MS, so the lock timeout above has already reported it.
+            if (error.name === "AbortError") {
+                return;
+            }
             console.error(`Proximity room operation failed for space: ${key}`, error);
             Sentry.captureException(error, {
                 tags: { spaceName: String(key), location: "roomOperationLock" },

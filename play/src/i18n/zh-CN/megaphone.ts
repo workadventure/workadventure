@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "返回选择通信方式",
-        selectCommunication: "选择通信方式",
         title: "全局通信",
-        selectCamera: "选择摄像头 📹",
-        selectMicrophone: "选择麦克风 🎙️",
         liveMessage: {
             startMegaphone: "开始扩音器",
             stopMegaphone: "停止扩音器",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "开始实时消息",
             and: "和",
             toAll: "向所有参与者",
-            confirm: "确认",
-            cancel: "取消",
             notice: `
             实时消息或"扩音器"允许您使用摄像头和麦克风向房间或世界中所有连接的人员发送实时消息。
 

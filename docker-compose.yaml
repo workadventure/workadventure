@@ -72,7 +72,6 @@ services:
       ICON_URL: http://icon.workadventure.localhost
       STUN_SERVER: "${STUN_SERVER:-}"
       TURN_SERVER: "${TURN_SERVER:-}"
-      DISABLE_NOTIFICATIONS: "$DISABLE_NOTIFICATIONS"
       SKIP_RENDER_OPTIMIZATIONS: "$SKIP_RENDER_OPTIMIZATIONS"
       # Use TURN_USER/TURN_PASSWORD if your Coturn server is secured via hard coded credentials.
       # Advice: you should instead use Coturn with short-lived secrets thanks to TURN_STATIC_AUTH_SECRET

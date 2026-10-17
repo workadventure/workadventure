@@ -15,11 +15,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "Een moderator heeft je hand laten zakken",
     removedFromConversation: "Een moderator heeft je uit het gesprek gehaald.",
     actionFailed: "Deze actie kon niet worden voltooid",
-    notificationSentToMuteMicrophone: "Er is een melding verzonden naar {name} om de microfoon te dempen",
-    notificationSentToMuteCamera: "Er is een melding verzonden naar {name} om de camera te dempen",
     announcement: "Aankondiging",
-    open: "Openen",
-    chatRoom: "in de chatruimte",
     help: {
         title: "Toegang tot meldingen geweigerd",
         permissionDenied: "Toegang geweigerd",
@@ -30,9 +26,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Vernieuwen",
         continue: "Doorgaan zonder melding",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Meldingen toestaan via de adresbalk in Chrome",
     },
     addNewTag: "voeg een nieuw label toe: '{tag}'",
     screenSharingError: "Kan schermdeling niet starten",

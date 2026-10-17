@@ -115,6 +115,7 @@ function createFakeSpace(users: Map<string, SpaceUserExtended>) {
         getMetadata: () => new Map(),
         state: { store: stateStore, isInitialized: () => isStateInitialized },
         observePublicEvent: () => new Subject(),
+        observePrivateEvent: () => new Subject(),
         observeUserJoined,
         observeUserLeft,
         getUsers: () => Promise.resolve(users),

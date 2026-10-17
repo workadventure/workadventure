@@ -124,7 +124,7 @@
                 : 'border-success-900/30 bg-success-900/20 text-white'}"
             data-testid="roomSidePanelPollStatus"
         >
-            {$pollState.isEnded ? $LL.chat.poll.kind.closed() : $LL.chat.poll.kind.open()}
+            {$pollState.isEnded ? $LL.chat.poll.status.closed() : $LL.chat.poll.status.open()}
         </span>
         {#if isFallbackPoll}
             <span class="text-xs text-white/50">

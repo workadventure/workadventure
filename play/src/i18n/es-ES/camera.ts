@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Editar cámara",
-    editMic: "Editar micrófono",
     editSpeaker: "Editar salida de audio",
     active: "Activo",
     disabled: "Desactivado",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Se necesita acceso a la cámara/micrófono",
         cameraTitle: "Se necesita acceso a la cámara",
         microphoneTitle: "Se necesita acceso al micrófono",
-        permissionDenied: "Permiso denegado",
         cameraPermissionDenied: "Permiso de cámara denegado",
         microphonePermissionDenied: "Permiso de micrófono denegado",
         cameraMicrophonePermissionDenied: "Permisos de cámara y micrófono denegados",
@@ -86,7 +84,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Zona silenciosa",
         silentZoneDesc:
-            "Estás en una zona silenciosa. Solo puedes ver y oír a las personas con las que estás. No puedes ver ni oír a las otras personas en la sala.",
+            "Estás en una zona silenciosa. Nadie puede hablarte aquí, y tu micrófono y tu cámara están desactivados.",
         nameTag: "Tú",
         loading: "Cargando tu cámara...",
     },
@@ -104,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Pedir silenciar vídeo",
         muteVideoEveryBody: "Silenciar vídeo para todos",
         blockOrReportUser: "Bloquear o informar de usuario",
-    },
-    backgroundEffects: {
-        imageTitle: "Imágenes de fondo",
-        blurTitle: "Desenfoque de fondo",
-        resetTitle: "Desactivar efectos de fondo",
-        title: "Efectos de fondo",
-        close: "Cerrar",
-        blurAmount: "Cantidad de desenfoque",
     },
 };
 

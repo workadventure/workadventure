@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Kamera bearbeiten",
-    editMic: "Mikrofon bearbeiten",
     editSpeaker: "Audioausgabe bearbeiten",
     active: "Aktiv",
     disabled: "Deaktiviert",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Zugriff auf Kamera / Mikrofon erforderlich",
         cameraTitle: "Zugriff auf Kamera erforderlich",
         microphoneTitle: "Zugriff auf Mikrofon erforderlich",
-        permissionDenied: "Zugriff verweigert",
         cameraPermissionDenied: "Kameraberechtigung verweigert",
         microphonePermissionDenied: "Mikrofonberechtigung verweigert",
         cameraMicrophonePermissionDenied: "Kamera- und Mikrofonberechtigung verweigert",
@@ -86,7 +84,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Stiller Bereich",
         silentZoneDesc:
-            "Sie befinden sich in einer stillen Zone. Sie können nur die Menschen sehen und hören, mit denen Sie zusammen sind. Sie können die anderen Menschen im Raum nicht sehen oder hören.",
+            "Sie befinden sich in einer stillen Zone. Hier kann niemand mit Ihnen sprechen, und Ihr Mikrofon und Ihre Kamera sind ausgeschaltet.",
         nameTag: "Sie",
         loading: "Ihre Kamera wird geladen...",
     },
@@ -104,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Bitten, Video stummzuschalten",
         muteVideoEveryBody: "Video für alle stummschalten",
         blockOrReportUser: "Benutzer blockieren oder melden",
-    },
-    backgroundEffects: {
-        imageTitle: "Hintergrundbilder",
-        blurTitle: "Hintergrundunschärfe",
-        resetTitle: "Hintergrundeffekte deaktivieren",
-        title: "Hintergrundeffekte",
-        close: "Schließen",
-        blurAmount: "Unschärfemenge",
     },
 };
 

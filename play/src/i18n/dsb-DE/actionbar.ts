@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Powěsć pósłaś",
     participantInviteUser: "Wužywarja pśeprosyś",
     participantExitFullscreen: "Połny wobraz spóšćiś",
+    participantShowList: "Lisćinu wobźělnikow pokazaś",
+    participantHideList: "Lisćinu wobźělnikow schowaś",
     profil: "Wašo mě wobźěłaś",
-    startScreenSharing: "Źělenje wobrazowki startowaś",
-    stopScreenSharing: "Źělenje wobrazowki zastajiś",
-    screenSharingMode: "Modus źělenja wobrazowki",
     calendar: "Kalender",
     todoList: "Lisćina nadawkow",
     woka: "Waš avatar pśiměriś",
     companion: "Towariša pśidaś",
-    test: "Móje nastajenja testowaś",
     editCamMic: "Kameru / mikrofon wobźěłaś",
     allSettings: "Wšykne nastajenja",
     installPwa: "Web-App instalěrowaś",
@@ -32,33 +30,28 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera jo deaktiwěrowana",
         activate: "Wašu kameru aktiwěrowaś",
-        noDevices: "Žedne kamerowe rědy namakane",
-        setBackground: "Pozadk nastajiś",
-        blurEffects: "Rozmazowe efekty",
-        disableBackgroundEffects: "Pozadkowe efekty deaktiwěrowaś",
-        close: "Zacyniś",
     },
     microphone: {
         disabled: "Waš mikrofon jo deaktiwěrowany",
         activate: "Waš mikrofon aktiwěrowaś",
-        noDevices: "Žedne mikrofonowe rědy namakane",
         noSoundWarning:
             "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
-        noSoundWarningPressEnter: "Žedyn zwuk z wašogo mikrofona namakany. Tłóčće Enter, aby nastajenja wócyniś.",
         advancedNoiseReduction: "Rozšyrjone wótpóranje šuma",
+        loudEnvironmentWarning: "Na wašom mikrofonje jo se trajny slězynowy šum namakał.",
+        enableNoiseSuppression: "Wótpóranje šuma zmóžniś",
         noiseSuppressionInitializing: "Swójske wótpóranje šuma se inicializěrujo...",
         noiseSuppressionUnsupported: "Toś ten wobglědowak njamóžo swójske wótpóranje šuma wuwjasć.",
         noiseSuppressionError:
             "Swójske wótpóranje šuma njejo se raźiło. Wužywa se zaso natiwne wótpóranje šuma wobglědowaka.",
+        noiseSuppressionActive: "Aktiwne",
         openSettings: "Nastajenja wócyniś",
         ignore: "Ignorěrowaś",
     },
     speaker: {
         disabled: "Waš głośnik jo deaktiwěrowany",
-        activate: "Waš głośnik aktiwěrowaś",
         noDevices: "Žedne głośnikowe rědy namakane",
         noDevicesDesc:
-            "Waš browser nalistujo žednu wuběrabnu awdiowudaśu. Někotre browsery to wobgranicuju (na pś. Safari). Wopytajśo drugi browser, znowego zwjěžćo fejšniki abo głośniki, pśekontrolěrujśo systemowe awdionastajenja a konfiguraciju kompjutra (datowy škit, graty).",
+            "Waš browser nalistujo žednu wuběrabnu awdiowudaśu. Někotre browsery to wobgranicuju. Wopytajśo drugi browser, znowego zwjěžćo fejšniki abo głośniki, pśekontrolěrujśo systemowe awdionastajenja a konfiguraciju kompjutra (datowy škit, graty).",
     },
     status: {
         ONLINE: "Online",
@@ -160,7 +153,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Wašu wobrazowku źěliś",
-            desc: "Cośo wašu wobrazowku z drugimi wužywarjami źěliś? Móžośo! Móžośo wašu wobrazowku wšyknym w chatu pokazaś, a móžośo wubraś, aby cyłu wobrazowku abo jano wěsty wokno źělili.",
+            desc: "Cośo wašu wobrazowku z drugimi wužywarjami źěliś? Móžośo! Móžośo wašu wobrazowku luźam we wašej bublinje abo wašom zmakanjowem rumje pokazaś, a móžośo wubraś, aby cyłu wobrazowku abo jano wěsty wokno źělili.",
         },
         apps: {
             title: "Tśeśe nałoženja",
@@ -170,19 +163,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Lisćina rumow",
             desc: "Pśepytajśo lisćinu rumow, aby widźeli, chto jo pśitomny, a pśidajśo se z jadnym klikom rozgronjeju.",
         },
-        calendar: {
-            title: "Kalender",
-            desc: "Glejśo swóje pśichodne zetkanja a pśidajśo se jim direktnje z WorkAdventure.",
-        },
-        todolist: {
-            title: "Lisćina nadawkow",
-            desc: "Rědowaśo swóje nadawki dnja, bźez togo aby swój źěłowy rum wopušćili.",
-        },
         pictureInPicture: {
             title: "Wobraz we wobrazu",
-            descDisabled:
-                "Bóžko toś ta funkcija njejo na wašom rěźe k dispoziciji ❌. Pšosym wopytajśo drugi rěd abo browser wužywaś, na pśikład Chrome abo Edge, aby pśistup k toś tej funkciji dostał.",
-            desc: "Móžośo funkciju wobraz we wobrazu wužywaś, aby wideo abo pśedstajenje woglědali, mjaztym až sćo w rozgronje. Klikniśo jadnorje na symbol wobraz we wobrazu a wužywajśo swój wopśimjeś.",
+            desc: "Pokazujo wideo wašogo rozgrona w małem pławajucem woknje, aby luźi, z kótarymiž powědaśo, dalej wiźeł, mjaztym až w drugem rejtarku abo drugem nałoženju źěłaśo.",
         },
         videoNotSupported: "Waš browser njepódpěra wideo-tag.",
     },

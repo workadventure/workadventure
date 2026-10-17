@@ -111,7 +111,11 @@
                 console.error("Connection is not available");
                 return;
             }
-            await connection.deleteRecording(videoFile.filename);
+            const { success } = await connection.deleteRecording(videoFile.filename);
+            if (!success) {
+                notificationPlayingStore.playNotification($LL.recording.notification.deleteFailedNotification());
+                return;
+            }
 
             actionsCardFilename = actionsCardFilename === videoFile.filename ? null : actionsCardFilename;
             recordings = recordings.filter((r) => r.videoFile?.filename !== videoFile.filename);
@@ -119,7 +123,7 @@
             notificationPlayingStore.playNotification($LL.recording.notification.deleteNotification());
         } catch (error) {
             console.error("Failed to delete recording:", error);
-            notificationPlayingStore.playNotification($LL.recording.notification.deleteNotification());
+            notificationPlayingStore.playNotification($LL.recording.notification.deleteFailedNotification());
         }
     }
 

@@ -37,7 +37,7 @@ class Chat {
             }*/
         }
         await page.getByTestId("user-list-button").click();
-        await expect(page.getByText("Users")).toBeVisible();
+        await expect(page.getByText("Users", { exact: true })).toBeVisible();
     }
 
     get(page: Page) {

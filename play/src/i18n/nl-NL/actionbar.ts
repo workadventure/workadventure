@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Bericht verzenden",
     participantInviteUser: "Gebruiker uitnodigen",
     participantExitFullscreen: "Volledig scherm verlaten",
+    participantShowList: "Deelnemerslijst tonen",
+    participantHideList: "Deelnemerslijst verbergen",
     profil: "Bewerk je naam",
-    startScreenSharing: "Schermdeling starten",
-    stopScreenSharing: "Schermdeling stoppen",
-    screenSharingMode: "Schermdeling modus",
     calendar: "Kalender",
     todoList: "Takenlijst",
     woka: "Pas je avatar aan",
     companion: "Metgezel toevoegen",
-    test: "Test mijn instellingen",
     editCamMic: "Bewerk camera / microfoon",
     allSettings: "Alle instellingen",
     installPwa: "Web-app installeren",
@@ -32,34 +30,28 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Je camera is uitgeschakeld",
         activate: "Activeer je camera",
-        noDevices: "Geen camera-apparaat gevonden",
-        setBackground: "Achtergrond instellen",
-        blurEffects: "Vervagingseffecten",
-        disableBackgroundEffects: "Achtergrondeffecten uitschakelen",
-        close: "Sluiten",
     },
     microphone: {
         disabled: "Je microfoon is uitgeschakeld",
         activate: "Activeer je microfoon",
-        noDevices: "Geen microfoonapparaat gevonden",
         noSoundWarning:
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
-        noSoundWarningPressEnter:
-            "Geen geluid gedetecteerd van je microfoon. Druk op Enter om de instellingen te openen.",
         advancedNoiseReduction: "Geavanceerde ruisreductie",
+        loudEnvironmentWarning: "Er is aanhoudend achtergrondgeluid op je microfoon gedetecteerd.",
+        enableNoiseSuppression: "Ruisonderdrukking inschakelen",
         noiseSuppressionInitializing: "Aangepaste ruisonderdrukking initialiseren...",
         noiseSuppressionUnsupported: "Deze browser kan aangepaste ruisonderdrukking niet uitvoeren.",
         noiseSuppressionError:
             "Aangepaste ruisonderdrukking is mislukt. Er wordt teruggevallen op de ingebouwde ruisonderdrukking van de browser.",
+        noiseSuppressionActive: "Actief",
         openSettings: "Instellingen openen",
         ignore: "Negeren",
     },
     speaker: {
         disabled: "Je luidspreker is uitgeschakeld",
-        activate: "Activeer je luidspreker",
         noDevices: "Geen luidsprekerapparaat gevonden",
         noDevicesDesc:
-            "Je browser toont geen selecteerbare audio-uitvoer. Sommige browsers beperken dit (bijv. Safari). Probeer een andere browser, sluit koptelefoon of speakers opnieuw aan, controleer de systeemgeluidsinstellingen en de configuratie van de computer (privacy, apparaten).",
+            "Je browser toont geen selecteerbare audio-uitvoer. Sommige browsers beperken dit. Probeer een andere browser, sluit koptelefoon of speakers opnieuw aan, controleer de systeemgeluidsinstellingen en de configuratie van de computer (privacy, apparaten).",
     },
     status: {
         ONLINE: "Online",
@@ -161,7 +153,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Je scherm delen",
-            desc: "Wil je je scherm delen met andere gebruikers? Dat kan! Je kunt je scherm aan iedereen in de chat tonen, en je kunt kiezen om je hele scherm of alleen een specifiek venster te delen.",
+            desc: "Wil je je scherm delen met andere gebruikers? Dat kan! Je kunt je scherm tonen aan de mensen in je bubbel of vergaderruimte, en je kunt kiezen om je hele scherm of alleen een specifiek venster te delen.",
         },
         apps: {
             title: "Applicaties van derden",
@@ -171,19 +163,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Kamerlijst",
             desc: "Bekijk de lijst met kamers om te zien wie er is en doe met één klik mee aan een gesprek.",
         },
-        calendar: {
-            title: "Kalender",
-            desc: "Bekijk je aanstaande vergaderingen en doe er direct vanuit WorkAdventure aan mee.",
-        },
-        todolist: {
-            title: "Takenlijst",
-            desc: "Beheer je taken van de dag zonder je werkruimte te verlaten.",
-        },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled:
-                "Helaas is deze functie niet beschikbaar op uw apparaat ❌. Probeer een ander apparaat of browser te gebruiken, zoals Chrome of Edge, om toegang te krijgen tot deze functie.",
-            desc: "U kunt de picture-in-picture functie gebruiken om een video of presentatie te bekijken terwijl u in een gesprek bent. Klik gewoon op het picture-in-picture pictogram en geniet van uw inhoud.",
+            desc: "Toont de video's van uw gesprek in een klein zwevend venster, zodat u uw gesprekspartners blijft zien terwijl u in een ander tabblad of een andere app werkt.",
         },
         videoNotSupported: "Uw browser ondersteunt de videotag niet.",
     },

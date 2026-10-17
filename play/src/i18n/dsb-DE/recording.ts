@@ -41,11 +41,9 @@ const recording: DeepPartial<Translation["recording"]> = {
         },
         desc: {
             needLogin: "Musyśo pśizjawjony byś, aby nagrał.",
-            needPremium: "Musyśo premium byś, aby nagrał.",
             advert: "Wšykne wobźělniki dostanu powěźeńku, až zachopijośo nagraśe.",
             yourRecordInProgress: "Nagraśe běžy, klikniśo, aby jo zastajił.",
             inProgress: "Nagraśe běžy",
-            notEnabled: "Nagraśa su za toś ten swět znjemóžnjone.",
         },
         spacePicker: {
             megaphone: "Megafon nagraś",

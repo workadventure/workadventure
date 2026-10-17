@@ -7,7 +7,6 @@ const warning: DeepPartial<Translation["warning"]> = {
     limit: "該世界已接近容量上限！",
     accessDenied: {
         camera: "攝影機存取權限被拒絕。點選這裡檢查你的瀏覽器權限。",
-        screenSharing: "螢幕分享權限被拒絕。點選這裡檢查你的瀏覽器權限。",
         teleport: "您無權傳送至此使用者。",
         room: "房間存取被拒絕。你不能進入這個房間",
     },

@@ -4,7 +4,6 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} veut discuter avec toi",
     message: "{name} a envoyé un message",
-    chatRoom: "sur le salon",
     askToMuteMicrophone: "Puis-je couper votre micro ?",
     askToMuteCamera: "Puis-je couper votre caméra ?",
     microphoneMuted: "Votre micro a été coupé par un modérateur",
@@ -16,10 +15,7 @@ const notification: DeepPartial<Translation["notification"]> = {
     handLowered: "Un modérateur a baissé votre main",
     removedFromConversation: "Un modérateur vous a retiré de la conversation.",
     actionFailed: "Cette action n'a pas pu aboutir",
-    notificationSentToMuteMicrophone: "Une notification a été envoyée à {name} pour couper son micro",
-    notificationSentToMuteCamera: "Une notification a été envoyée à {name} pour couper sa caméra",
     announcement: "Annonce",
-    open: "Ouvrir",
     help: {
         title: "Accès aux notifications refusé",
         permissionDenied: "Permission refusée",
@@ -30,9 +26,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Rafraîchir",
         continue: "Continuer sans les notifications",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Autoriser les notifications via la barre d’adresse dans Chrome",
     },
     addNewTag: 'nouveau tag : "{tag}"',
     screenSharingError: "Impossible de démarrer le partage d'écran",

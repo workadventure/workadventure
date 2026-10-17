@@ -159,7 +159,6 @@ function createStreamable(uniqueId: string, spaceUserId: string, videoType: Stre
         flipX: false,
         muteAudio: writable(false),
         displayMode: "cover",
-        displayInPictureInPictureMode: false,
         usePresentationMode: false,
         spaceUserId,
         closeStreamable: vi.fn(),

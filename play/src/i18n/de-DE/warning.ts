@@ -7,7 +7,6 @@ const warning: DeepPartial<Translation["warning"]> = {
     limit: "Diese Welt ist nah an ihrer Kapazitätsgrenze!",
     accessDenied: {
         camera: "Kamerazugriff verweigert. Klicke hier und überprüfe die Berechtigungen deines Browsers.",
-        screenSharing: "Bildschirmfreigabe verweigert. Klicke hier und überprüfe die Berechtigungen deines Browsers.",
         teleport: "Dir fehlt die Berechtigung, um zu diesem Benutzer zu teleportieren.",
         room: "Zutritt nicht gestattet. Dir fehlt die Berechtigung, um diesen Raum zu betreten.",
     },

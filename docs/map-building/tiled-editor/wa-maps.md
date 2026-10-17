@@ -109,3 +109,5 @@ If you are using audio files in your map, you can declare a layer property `audi
 Resulting in a "credit" page in the menu looking like this:
 
 ![](../images/mapProperties.png)
+
+The *map* property `mapImage` (string) can point to an image of your map (a URL, relative to the map file). It is shown faded behind the videos in the [picture-in-picture](/user/picture-in-picture) window.

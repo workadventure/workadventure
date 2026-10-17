@@ -65,6 +65,9 @@ const menu: BaseTranslation = {
             voiceIsolation: "Isolamento de voz",
             voiceIsolationDescription:
                 "Usa o isolamento de voz do navegador e do sistema operacional quando disponível.",
+            noiseSuppressionEngine: "Mecanismo de supressão de ruído",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (novo, voz em banda completa)",
+            noiseSuppressionEngineDtln: "DTLN (mecanismo anterior)",
         },
         language: {
             title: "Linguagem",
@@ -72,12 +75,12 @@ const menu: BaseTranslation = {
         privacySettings: {
             title: "Modo ausente",
             explanation:
-                'Enquanto a guia WorkAdventure em seu navegador não estiver visível. WorkAdventure muda para "modo ausente"',
+                'Ao mudar para outra janela ou aba, o WorkAdventure muda para o "modo ausente", exceto durante uma conversa ou uma transmissão.',
             cameraToggle: 'Mantenha a câmera ativa no "modo ausente"',
             microphoneToggle: 'Mantenha o microfone ativo no "modo ausente"',
         },
         save: "Salvar",
-        otherSettings: "Todas as configurações",
+        otherSettings: "Outras configurações",
         fullscreen: "Tela cheia",
         notifications: "Notificações",
         enablePictureInPicture: "Habilitar picture-in-picture",

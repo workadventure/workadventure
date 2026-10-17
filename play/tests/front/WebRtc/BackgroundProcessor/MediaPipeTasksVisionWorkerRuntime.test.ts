@@ -347,4 +347,51 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         await vi.waitFor(() => expect(readable.locked).toBe(false));
         expect(posted.some((message) => message.type === "fatal")).toBe(false);
     });
+
+    it("reports a broken pipe without giving up on the worker", async () => {
+        send({ type: "initialize", assets, config: { mode: "blur" } });
+        await waitForPosted(1);
+
+        const readable = new ReadableStream<VideoFrame>({
+            start(controller) {
+                controller.enqueue(createVideoFrame(1_000_000));
+            },
+        });
+        // What writing to a generator the main thread already stopped looks like.
+        const writable = new WritableStream<VideoFrame>({
+            write() {
+                throw new DOMException("Stream closed", "InvalidStateError");
+            },
+        });
+        send({ type: "start-stream", streamId: 1, readable, writable });
+
+        await vi.waitFor(() => expect(lastPosted()).toMatchObject({ type: "stream-failed", streamId: 1 }));
+        expect(posted.some((message) => message.type === "fatal")).toBe(false);
+
+        // The segmenter survives, and the next pipe is still segmented, not only composited from a cached mask.
+        const segmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
+        expect(segmenter.close).not.toHaveBeenCalled();
+        segmenter.segmentForVideo.mockClear();
+        const written: VideoFrame[] = [];
+        const inputs = [createVideoFrame(2_000_000), createVideoFrame(2_033_000)];
+        send({
+            type: "start-stream",
+            streamId: 2,
+            readable: new ReadableStream<VideoFrame>({
+                start(controller) {
+                    for (const input of inputs) {
+                        controller.enqueue(input);
+                    }
+                },
+            }),
+            writable: new WritableStream<VideoFrame>({
+                write(frame) {
+                    written.push(frame);
+                },
+            }),
+        });
+        await vi.waitFor(() => expect(written).toHaveLength(2));
+        expect(segmenter.segmentForVideo).toHaveBeenCalled();
+        expect(written).not.toContain(inputs[1]);
+    });
 });

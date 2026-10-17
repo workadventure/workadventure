@@ -1,6 +1,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { get } from "svelte/store";
+    import { derived, get } from "svelte/store";
     import { requestVisitCardsStore, selectedChatIDRemotePlayerStore } from "../../Stores/GameStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -25,9 +25,20 @@
     let hidden = $state(true);
     let cvIframe: HTMLIFrameElement;
 
-    const chatConnection = gameManager.chatConnection;
     const selectPlayerChatID = get(selectedChatIDRemotePlayerStore);
-    const roomCreationInProgress = chatConnection.roomCreationInProgress;
+    // A Woka can be clicked as soon as the map shows, which does not wait for the chat connection: until it exists,
+    // the "send message" button stays a spinner.
+    const roomCreationInProgress = derived(
+        gameManager.chatConnectionStore,
+        (chatConnection, set) => {
+            if (!chatConnection) {
+                set(true);
+                return;
+            }
+            return chatConnection.roomCreationInProgress.subscribe(set);
+        },
+        true,
+    );
 
     function closeCard() {
         requestVisitCardsStore.set(null);

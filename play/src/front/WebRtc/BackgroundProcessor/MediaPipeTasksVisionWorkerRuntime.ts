@@ -267,7 +267,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
                 if (abortController.signal.aborted) {
                     return;
                 }
-                this.reportFatal(new Error("Background video pipe failed", { cause: error }));
+                // Not fatal: the segmenter is fine, and the main thread may have stopped this pipe's generator
+                // before its "stop-stream" got here. It knows whether the pipe was still in use.
+                this.post({ type: "stream-failed", streamId, error: serializeError(error) });
             })
             .finally(() => {
                 if (this.activeStream?.streamId === streamId) {

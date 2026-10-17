@@ -1,7 +1,6 @@
 import * as Sentry from "@sentry/svelte";
 import * as Phaser from "phaser";
 import type { Subscription } from "rxjs";
-import { TimeoutError } from "@workadventure/shared-utils/src/Abort/TimeoutError";
 import { Queue } from "queue-typescript";
 import type { Readable, Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
@@ -24,8 +23,6 @@ import { z } from "zod";
 import type { ITiledMap, ITiledMapLayer, ITiledMapObject, ITiledMapTileset } from "@workadventure/tiled-map-type-guard";
 import {
     type AreaData,
-    ENTITIES_FOLDER_PATH_NO_PREFIX,
-    ENTITY_COLLECTION_FILE,
     EntityPermissions,
     type EntityPrefabType,
     GameMap,
@@ -125,9 +122,11 @@ import {
     speakerSelectedStore,
 } from "../../Stores/MediaStore";
 import NoMicrophoneSoundToast from "../../Components/Toasts/NoMicrophoneSoundToast.svelte";
+import LoudEnvironmentToast from "../../Components/Toasts/LoudEnvironmentToast.svelte";
 import { LL, locale } from "../../../i18n/i18n-svelte";
 import { toastStore } from "../../Stores/ToastStoreSingleton";
 import { audioInterruptedStore } from "../../Stores/AudioInterruptedStore";
+import { loudEnvironmentWarningStore } from "../../Stores/LoudEnvironmentWarningStore";
 import { GameSceneUserInputHandler } from "../UserInput/GameSceneUserInputHandler";
 import { followUsersColorStore, followUsersStore } from "../../Stores/FollowStore";
 import { axiosWithRetry, hideConnectionIssueMessage, showConnectionIssueMessage } from "../../Connection/AxiosUtils";
@@ -211,7 +210,7 @@ import {
 } from "../../Stores/PeerStore";
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
-import { raceTimeout } from "../../Utils/PromiseUtils";
+import { getCustomEntityCollectionUrl } from "../../Utils/MapStorageUrl";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
@@ -342,6 +341,9 @@ export class GameScene extends DirtyScene {
     // Promise resolved when we receive the first message of the roomConnection (RoomConnectedMessage)
     private connectionAnswerPromiseDeferred: Deferred<void>;
     private roomJoinedPromiseDeferred: Deferred<RoomJoinedMessageInterface>;
+    // Resolved once the chat connection is ready (the Matrix initial sync included) and the user's Matrix id, if any,
+    // was sent to the server. Until then, the server cannot invite the user into a room. The map does not wait for it.
+    public chatIdSentDeferred: Deferred<void>;
     // true is soon as the roomConnection received the "roomJoined" message.
     private hasJoinedRoom: boolean = false;
     // A promise that will resolve when the "create" method is called (signaling loading is ended)
@@ -481,6 +483,7 @@ export class GameScene extends DirtyScene {
         this.createPromiseDeferred = new Deferred<void>();
         this.connectionAnswerPromiseDeferred = new Deferred<void>();
         this.roomJoinedPromiseDeferred = new Deferred<RoomJoinedMessageInterface>();
+        this.chatIdSentDeferred = new Deferred<void>();
         this.loader = new Loader(this);
         this.superLoad = new SuperLoaderPlugin(this);
     }
@@ -654,8 +657,10 @@ export class GameScene extends DirtyScene {
     }
 
     public getCustomEntityCollectionUrl() {
-        const mapStoragePath = `${PUBLIC_MAP_STORAGE_PREFIX}${ENTITIES_FOLDER_PATH_NO_PREFIX}/${ENTITY_COLLECTION_FILE}`;
-        return new URL(mapStoragePath, this.wamUrlFile).toString();
+        if (this.wamUrlFile === undefined) {
+            throw new Error("Cannot resolve the custom entity collection URL: the map has no WAM file.");
+        }
+        return getCustomEntityCollectionUrl(this.wamUrlFile, PUBLIC_MAP_STORAGE_PREFIX);
     }
 
     //hook initialisation
@@ -964,18 +969,8 @@ export class GameScene extends DirtyScene {
             this.gameMapFrontWrapper.initializedPromise.promise.then(() =>
                 debug("Loading process: Game map initialized"),
             ),
-            // Wait at most 5 seconds for the chat connection to be established
-            // If not, we can still proceed starting the scene without chat fully loaded
-            raceTimeout(gameManager.getChatConnection(), 5_000)
-                .then(() => debug("Loading process: Chat connection ready"))
-                .catch((e) => {
-                    if (e instanceof TimeoutError) {
-                        debug("Loading process: Chat connection timeout. Continuing loading while chat loads.");
-                        return;
-                    } else {
-                        throw e;
-                    }
-                }),
+            // The chat is deliberately not awaited: the map shows right away and the chat catches up once
+            // Matrix is ready (see GameManager.chatConnectionStore).
         ])
             .then((results) => {
                 const settledScriptLoadedResult = results[1];
@@ -1019,6 +1014,13 @@ export class GameScene extends DirtyScene {
                                 this.initializeAreaManager();
                             })
                             .catch((e) => {
+                                if (e instanceof CloseEvent) {
+                                    // The socket closed before the room was joined. This is a lost connection, not a
+                                    // bug, and the user already sees it: RoomConnection emits serverDisconnected, and
+                                    // the scene shows the connection issue toast and reconnects from there (or the page
+                                    // is unloading, code 1000). An error screen would cover that reconnection.
+                                    return;
+                                }
                                 console.error("Error while joining the room", e);
                                 Sentry.captureException(e);
                                 errorScreenStore.setException(e);
@@ -1050,7 +1052,8 @@ export class GameScene extends DirtyScene {
             .catch((e) => {
                 console.error(e);
                 Sentry.captureException(e);
-            });
+            })
+            .finally(() => this.chatIdSentDeferred.resolve());
 
         if (this.game.renderer instanceof WebGLRenderer) {
             this._focusFx = new DarkenOutsideAreaEffect(this, this.cameras.main, {
@@ -1677,6 +1680,11 @@ export class GameScene extends DirtyScene {
      * @returns The calculated viewport or null if invalid
      */
     private calculateViewport(margin = 300): ViewportInterface | null {
+        if (!this.scene.scene.renderer) {
+            // The camera's worldView is empty without a renderer: sending it would replace the viewport of the
+            // joinRoom message with a 300 px square at the map origin.
+            return this.CurrentPlayer === undefined ? null : this.getHeadlessViewport();
+        }
         const camera = this.cameras.main;
         if (!camera) {
             return null;
@@ -2858,6 +2866,17 @@ export class GameScene extends DirtyScene {
             }),
         );
 
+        const LOUD_ENVIRONMENT_TOAST_ID = "loud-environment-toast";
+        this.unsubscribers.push(
+            loudEnvironmentWarningStore.subscribe((show) => {
+                if (show) {
+                    toastStore.addToast(LoudEnvironmentToast, {}, LOUD_ENVIRONMENT_TOAST_ID);
+                } else {
+                    toastStore.removeToast(LOUD_ENVIRONMENT_TOAST_ID);
+                }
+            }),
+        );
+
         this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
             if (isStreaming) {
                 this.enableVoiceIndicator();
@@ -3456,6 +3475,10 @@ ${escapedMessage}
                 for (const eventTile of eventTiles) {
                     this.gameMapFrontWrapper.putTile(eventTile.tile, eventTile.x, eventTile.y, eventTile.layer);
                 }
+                // Tiles changed by a script must repaint even when nothing else moves (the render loop
+                // skips frames until a scene is dirty; without this, script-driven tile changes only
+                // became visible on the next local player input).
+                this.markDirty();
             }),
         );
         iframeListener.registerAnswerer("enablePlayersTracking", (enablePlayersTrackingEvent, source) => {
@@ -3931,48 +3954,57 @@ ${escapedMessage}
     }
 
     /**
-     * Analyze the #moveTo parameter in the URL.
-     * This function will try to move the player
+     * Analyze the #moveTo parameter in the URL and walk the player there (see walkToMoveTarget).
+     */
+    private tryMovePlayerWithMoveToParameter(): void {
+        const moveToParam = urlManager.getHashParameter("moveTo");
+        if (moveToParam && this.walkToMoveTarget(moveToParam)) {
+            urlManager.clearHashParameter();
+        }
+    }
+
+    /**
+     * Walk the player to a #moveTo target:
      *
      * - to the X,Y coordinates if this is X,Y coordinates
      * - if not, to the WAM area with the given name
      * - if not found, to the Tiled area with the given name
      * - if not found, to the Tiled layer with the given name
+     *
+     * Returns false when the target cannot be found. Also used by the agenda's "Go there", for a meeting in the
+     * current map, without going through the URL.
      */
-    private tryMovePlayerWithMoveToParameter(): void {
-        const moveToParam = urlManager.getHashParameter("moveTo");
-        if (moveToParam) {
-            try {
-                let endPos: { x: number; y: number };
-                const posFromParam = StringUtils.parsePointFromParam(moveToParam);
-                if (posFromParam) {
-                    endPos = posFromParam;
+    public walkToMoveTarget(target: string): boolean {
+        try {
+            let endPos: { x: number; y: number };
+            const posFromParam = StringUtils.parsePointFromParam(target);
+            if (posFromParam) {
+                endPos = posFromParam;
+            } else {
+                // First, try by id
+                let areaData = this.gameMapFrontWrapper.getAreas()?.get(target);
+                if (!areaData) {
+                    areaData = this.gameMapFrontWrapper.getAreaByName(target);
+                }
+                if (areaData) {
+                    endPos = MathUtils.randomPositionFromRect(areaData);
                 } else {
-                    // First, try by id
-                    let areaData = this.gameMapFrontWrapper.getAreas()?.get(moveToParam);
-                    if (!areaData) {
-                        areaData = this.gameMapFrontWrapper.getAreaByName(moveToParam);
-                    }
-                    if (areaData) {
-                        endPos = MathUtils.randomPositionFromRect(areaData);
+                    const destinationObject = this.gameMapFrontWrapper.getObjectWithName(target);
+                    if (destinationObject) {
+                        endPos = destinationObject;
                     } else {
-                        const destinationObject = this.gameMapFrontWrapper.getObjectWithName(moveToParam);
-                        if (destinationObject) {
-                            endPos = destinationObject;
-                        } else {
-                            endPos = this.pathfindingManager.mapTileUnitToPixels(
-                                this.gameMapFrontWrapper.getRandomPositionFromLayer(moveToParam),
-                            );
-                        }
+                        endPos = this.pathfindingManager.mapTileUnitToPixels(
+                            this.gameMapFrontWrapper.getRandomPositionFromLayer(target),
+                        );
                     }
                 }
-
-                this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
-
-                urlManager.clearHashParameter();
-            } catch (err) {
-                console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
             }
+
+            this.moveTo(endPos, false, WOKA_SPEED * 2.5).catch((e) => console.warn(e));
+            return true;
+        } catch (err) {
+            console.warn(`Cannot proceed with moveTo command:\n\t-> ${err}`);
+            return false;
         }
     }
 
@@ -4312,20 +4344,26 @@ ${escapedMessage}
         iframeListener.hasPlayerMoved(event);
     }
 
+    /**
+     * In the very special case where we have no renderer (bots run Phaser headless), the camera never follows the
+     * Woka: its worldView stays empty at the map origin. We set the viewport to something very large around the Woka
+     * to make sure it sees everything around (useful for bots, even if so far, it is a trick).
+     * The Woka's position, not lastMoveEventSent: that one is a placeholder at (-1000, -1000) until the first move,
+     * and a bot that never moves would only ever see the top-left corner of the map.
+     */
+    private getHeadlessViewport(): ViewportInterface {
+        const { x, y } = this.CurrentPlayer;
+        return {
+            left: x - 3_000,
+            top: y - 3_000,
+            right: x + 3_000,
+            bottom: y + 3_000,
+        };
+    }
+
     private getViewport(forceRecomputeCamera = false): ViewportInterface {
         if (!this.scene.scene.renderer) {
-            const x = this.lastMoveEventSent?.x ?? this.CurrentPlayer.x;
-            const y = this.lastMoveEventSent?.y ?? this.CurrentPlayer.y;
-
-            // In the very special case where we have no renderer, the viewport will not move along the Woka.
-            // We need to adjust it manually. We set it to something very large to make sure the Woka sees
-            // everything around (useful for bots, even if so far, it is a trick)
-            return {
-                left: x - 3_000,
-                top: y - 3_000,
-                right: x + 3_000,
-                bottom: y + 3_000,
-            };
+            return this.getHeadlessViewport();
         }
 
         const camera = this.cameras.main;

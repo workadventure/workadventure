@@ -19,7 +19,9 @@
  *
  * `trackAdminEvent` captures with the event's own properties, so the payload is
  * whatever the catalog declares — not the ad-hoc object each call site used to
- * build before the two sinks were folded into one call.
+ * build before the two sinks were folded into one call. The one exception is
+ * `remoteSpaceUserId`, which it strips: PostHog is not gated by the world's
+ * consent policy, and that key identifies another participant.
  *
  * `Partial` rather than a total `Record` on purpose: most of the catalog has no
  * PostHog counterpart, and requiring a key for every event would mean inventing
@@ -93,6 +95,8 @@ export const POSTHOG_EVENT_KEYS: Partial<
   "chat.message_from_user_list_clicked": "wa_send_message_from_user_list",
   "chat.message_list_opened": "wa_open_message_list",
   "chat.opened": "wa-opened-chat",
+  "chat.proximity_file.received": "wa_proximity_file_received",
+  "chat.proximity_file.sent": "wa_proximity_file_sent",
 
   "conversation.participant_added": "wa_spontaneous_discussion",
 
