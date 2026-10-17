@@ -166,6 +166,29 @@ func (w *Writer) Flush(ctx context.Context) error {
 	}
 }
 
+// Read is LoadOrFail of key with the writes not stored yet on top: what a reader gets is the last value written,
+// even while Redis is down or the write waits for its next attempt (node-redis queues a read behind the writes
+// sent before it). Without Redis, it is the pending writes alone, and the error.
+func (w *Writer) Read(key string) (map[string]string, error) {
+	m, err := LoadOrFail(w.h, key)
+	if m == nil {
+		m = map[string]string{}
+	}
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	for f, wr := range w.pending {
+		if f.key != key {
+			continue
+		}
+		if wr.value == "" {
+			delete(m, f.name)
+		} else {
+			m[f.name] = wr.value
+		}
+	}
+	return m, err
+}
+
 // Load reads a key, giving up after 2 s: a join must not wait for an unreachable Redis.
 func Load(h Hash, key string) map[string]string {
 	m, _ := LoadOrFail(h, key)
