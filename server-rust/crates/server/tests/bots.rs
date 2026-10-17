@@ -922,3 +922,34 @@ async fn analytics_reach_the_admin_signed_checked_and_with_the_connection_sessio
     assert_eq!(session["properties"]["disconnectReason"], "socket_closed");
     assert!(session["properties"]["durationSeconds"].is_u64() && session["properties"]["connectedAt"].is_string(), "{session}");
 }
+
+#[tokio::test]
+async fn an_admin_speaks_to_the_room_and_previews_a_ban_by_ip() {
+    let config = Config::load(Env::new([("SECRET_KEY", "test")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+    let mut state = AppState::new(config);
+    let (admin_url, _) = fake_admin().await;
+    state.admin = Some(wa_server::admin_api::AdminApi::with(&admin_url, "tok", serde_json::json!({}), reqwest::Client::new()));
+    let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let server = format!("http://{}", play.local_addr().unwrap());
+    tokio::spawn(async move { axum::serve(play, router(state)).await });
+    let room = "http://play.test/@/acme/world/lobby";
+    // The fake admin tags everyone "admin".
+    let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
+    let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
+
+    let global = pb::PlayGlobalMessage { r#type: "message".into(), content: "{\"ops\":[]}".into(), broadcast_to_world: false };
+    alice.send(pb::client_to_server_message::Message::PlayGlobalMessage(global)).await.unwrap();
+    let got = ib
+        .expect(WAIT, |m| match m {
+            Incoming::Top(Top::SendUserMessage(s)) => Some((s.r#type.clone(), s.message.clone())),
+            _ => None,
+        })
+        .await
+        .unwrap();
+    assert_eq!(got, ("message".to_owned(), "{\"ops\":[]}".to_owned()));
+
+    // Without a forwarded address the server does not know Bob's IP: nothing to ban by IP.
+    let q = alice.query(pb::query_message::Query::BanIpPreviewQuery(pb::BanIpPreviewQuery { ban_user_uuid: "admin-uuid-1".into() })).await.unwrap();
+    let answer = ia.expect(WAIT, answer_to(q)).await.unwrap();
+    assert!(matches!(answer, pb::answer_message::Answer::BanIpPreviewAnswer(pb::BanIpPreviewAnswer { ip_known: false, .. })), "{answer:?}");
+}

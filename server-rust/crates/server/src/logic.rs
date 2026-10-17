@@ -238,16 +238,46 @@ impl Logic {
                     return;
                 };
                 // A7: stored by the admin, which refuses the user from then on (A3); kicked anyway if it fails.
-                // ponytail: the ban by IP (byIp) needs the users of the whole world; sent without the address.
                 let Some(room) = self.room.clone() else { return };
+                let app = self.app.clone();
                 tokio::spawn(async move {
+                    // byIp: the address the server sees for the user, unless the moderator shares it.
+                    let ip = if m.by_ip {
+                        let users = crate::room_actor::world_users(&app, &session.info.world).await.unwrap_or_default();
+                        users.into_iter().find(|u| u.uuid == m.ban_user_uuid).map(|u| u.ip).filter(|ip| !ip.is_empty() && *ip != session.info.ip_address)
+                    } else {
+                        None
+                    };
                     let message = if m.reason.is_empty() { format!("User banned by admin {}", session.info.user_uuid) } else { m.reason.clone() };
                     let banned = admin
-                        .ban(&m.ban_user_uuid, &session.info.room_id, &m.ban_user_name, &message, &session.info.user_uuid, None)
+                        .ban(&m.ban_user_uuid, &session.info.room_id, &m.ban_user_name, &message, &session.info.user_uuid, ip.as_deref())
                         .await
                         .unwrap_or(false);
                     let act = Social::Kick { uuid: m.ban_user_uuid, reason: m.reason, banned };
                     let _ = room.send(RoomCmd::Social { session, act }).await;
+                });
+            }
+            // emitPlayGlobalMessage: admins only, to the room or to every room of the world.
+            M::PlayGlobalMessage(m) => {
+                if !session.info.tags.iter().any(|t| t == "admin") {
+                    return;
+                }
+                let app = self.app.clone();
+                tokio::spawn(async move {
+                    let rooms = match (&app.admin, m.broadcast_to_world) {
+                        (Some(admin), true) => match admin.rooms_from_same_world(&session.info.room_id, &[], true).await {
+                            Ok(list) => list.as_array().into_iter().flatten().filter_map(|r| r["roomUrl"].as_str().map(str::to_owned)).collect(),
+                            Err(e) => {
+                                tracing::warn!(error = %e, "the admin did not list the rooms of the world");
+                                return;
+                            }
+                        },
+                        _ => vec![session.info.room_id.clone()],
+                    };
+                    for url in rooms {
+                        let room = room_actor::get_or_spawn(&app, &url);
+                        let _ = room.send(RoomCmd::AdminMessage { kind: m.r#type.clone(), message: m.content.clone() }).await;
+                    }
                 });
             }
             M::ReportPlayerMessage(m) => {
@@ -446,6 +476,35 @@ impl Logic {
                     Ok(a) => wire::answer(id, a),
                     Err(e) => wire::answer_error(id, e),
                 });
+            });
+            return;
+        }
+        if let Q::BanIpPreviewQuery(preview) = q {
+            let app = self.app.clone();
+            tokio::spawn(async move {
+                let info = &session.info;
+                if !info.tags.iter().any(|t| t == "admin") {
+                    session.push(wire::answer_error(id, "Only an admin of the world can preview a ban"));
+                    return;
+                }
+                let Some(users) = crate::room_actor::world_users(&app, &info.world).await else {
+                    session.push(wire::answer_error(id, "A room did not answer"));
+                    return;
+                };
+                let ip = users.iter().find(|u| u.uuid == preview.ban_user_uuid).map(|u| u.ip.clone()).filter(|ip| !ip.is_empty());
+                let answer = match ip {
+                    None => pb::BanIpPreviewAnswer { ip_known: false, includes_moderator: false, users: vec![] },
+                    Some(ip) => pb::BanIpPreviewAnswer {
+                        ip_known: true,
+                        includes_moderator: ip == info.ip_address,
+                        users: users
+                            .into_iter()
+                            .filter(|u| u.ip == ip && u.uuid != preview.ban_user_uuid && u.uuid != info.user_uuid)
+                            .map(|u| pb::BanIpPreviewUser { name: u.name })
+                            .collect(),
+                    },
+                };
+                session.push(wire::answer(id, A::BanIpPreviewAnswer(answer)));
             });
             return;
         }

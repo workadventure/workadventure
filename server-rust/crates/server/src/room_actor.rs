@@ -97,7 +97,10 @@ pub enum RoomCmd {
     /// From the admin: reload the room (dispatchRoomRefresh), a message to everyone, the world is full, a
     /// message of an external module to one user.
     Refresh,
-    AdminMessage(String),
+    /// sendAdminMessageToRoom: the admin's /message leaves the type empty, a global message has one.
+    AdminMessage { kind: String, message: String },
+    /// Who is in the room (getWorldUsers), with the room's URL.
+    Users(tokio::sync::oneshot::Sender<(String, Vec<WorldUser>)>),
     WorldFull,
     ExternalModule(pb::ExternalModuleMessage),
     /// For `GET /rooms`: the URL and the number of users.
@@ -720,6 +723,30 @@ fn refuse(session: &Session, e: &VariableError) {
     session.end_after_queued();
 }
 
+pub struct WorldUser {
+    pub uuid: String,
+    pub name: String,
+    pub ip: String,
+}
+
+/// Every user in a room of the world (a room whose URL starts with it). None when a room does not answer
+/// within a second: a partial list would hide users.
+pub async fn world_users(app: &AppState, world: &str) -> Option<Vec<WorldUser>> {
+    let asks = app.rooms.live().into_iter().map(|room| async move {
+        let (tx, rx) = tokio::sync::oneshot::channel();
+        room.send(RoomCmd::Users(tx)).await.ok()?;
+        tokio::time::timeout(std::time::Duration::from_secs(1), rx).await.ok()?.ok()
+    });
+    let mut users = Vec::new();
+    for answer in futures_util::future::join_all(asks).await {
+        let (url, mut list) = answer?;
+        if url.starts_with(world) {
+            users.append(&mut list);
+        }
+    }
+    Some(users)
+}
+
 async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, app: AppState) {
     let (registry, storage) = (app.rooms.clone(), app.storage.clone());
     let url = room.url().to_owned();
@@ -972,10 +999,20 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 }));
                 Fanout::new(&mut sessions).each_all(&frame);
             }
-            RoomCmd::AdminMessage(message) => {
-                // sendAdminMessageToRoom: the pusher leaves the type empty.
-                let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: String::new(), message }));
+            RoomCmd::AdminMessage { kind, message } => {
+                let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: kind, message }));
                 Fanout::new(&mut sessions).each_all(&frame);
+            }
+            RoomCmd::Users(reply) => {
+                let users = sessions
+                    .iter()
+                    .map(|(id, s)| WorldUser {
+                        uuid: s.info.user_uuid.clone(),
+                        name: room.user(*id).map(|u| u.profile.name.clone()).unwrap_or_default(),
+                        ip: s.info.ip_address.clone(),
+                    })
+                    .collect();
+                let _ = reply.send((url.clone(), users));
             }
             RoomCmd::WorldFull => {
                 Fanout::new(&mut sessions).each_all(&wire::direct(Top::WorldFullWarningMessage(pb::WorldFullWarningMessage {})));
