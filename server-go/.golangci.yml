@@ -13,6 +13,20 @@ linters:
         - (io.Closer).Close
         - (mime/multipart.File).Close
         - (*mime/multipart.Form).RemoveAll
+    staticcheck:
+      checks:
+        - all
+        # The error strings are the TS server's, word for word: the front shows them and the E2E compare them.
+        - -ST1005
+        # `!(a || b)` reads as the TS condition it ports; De Morgan would not make it clearer.
+        - -QF1001
+        # Off by default in golangci-lint (package and doc comment forms, naming).
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
   exclusions:
     generated: strict
     paths: [internal/pb]
@@ -27,70 +41,6 @@ linters:
       - path: ^cmd/loadbot/
         linters: [gosec]
         text: 'G115|G404'
-      # TODO(lint): staticcheck internal/admin/admin.go:160
-      - path: ^internal/admin/admin\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/admin/admin.go:160
-      - path: ^internal/admin/admin\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not end with punctuation or newlines'
-      # TODO(lint): staticcheck internal/admin/http.go:342
-      - path: ^internal/admin/http\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/core/roomvars.go:156
-      - path: ^internal/core/roomvars\.go$
-        linters: [staticcheck]
-        text: 'S1016: should convert v \(type Variable\) to VariableChanged instead of using struct literal'
-      # TODO(lint): staticcheck internal/core/roomvars.go:140,143
-      - path: ^internal/core/roomvars\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/core/space_recording.go:83,84,85,117,134,220,223,237
-      - path: ^internal/core/space_recording\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/core/space_state.go:52,60,108,131,149,151,153,157,198,200,202,213,218,230,233,254,320
-      - path: ^internal/core/space_state\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/httpapi/metatags.go:15
-      - path: ^internal/httpapi/metatags\.go$
-        linters: [staticcheck]
-        text: 'QF1001: could apply De Morgan''s law'
-      # TODO(lint): staticcheck internal/mapedit/custom.go:75,81,115,122,132,167
-      - path: ^internal/mapedit/custom\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/mapedit/custom.go:115
-      - path: ^internal/mapedit/custom\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not end with punctuation or newlines'
-      # TODO(lint): staticcheck internal/mapedit/mapedit.go:39,47,92,111
-      - path: ^internal/mapedit/mapedit\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/mapedit/queue.go:12
-      - path: ^internal/mapedit/queue\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/wam/wam.go:321
-      - path: ^internal/wam/wam\.go$
-        linters: [staticcheck]
-        text: 'QF1001: could apply De Morgan''s law'
-      # TODO(lint): staticcheck internal/wam/wam.go:135,146,179,193
-      - path: ^internal/wam/wam\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/ws/mapedit.go:203
-      - path: ^internal/ws/mapedit\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
-      # TODO(lint): staticcheck internal/ws/matrix.go:118
-      - path: ^internal/ws/matrix\.go$
-        linters: [staticcheck]
-        text: 'ST1005: error strings should not be capitalized'
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
