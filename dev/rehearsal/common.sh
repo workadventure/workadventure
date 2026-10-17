@@ -26,7 +26,10 @@ candidate_src() { case "$1" in go) echo "$GO_SRC" ;; rust) echo "$RUST_SRC" ;; e
 build_candidate() {
   local img src; img=$(candidate_image "$1"); src=$(candidate_src "$1")
   [ -f "$src/Dockerfile" ] && [ -f "$src/api-version.sh" ] || { echo "$1: no Dockerfile + api-version.sh in $src" >&2; return 1; }
-  docker build --target prod --build-arg "API_VERSION=$(sh "$src/api-version.sh")" --build-arg VERSION=1.0.0 -t "$img" "$src"
+  local contexts=()
+  # The Rust image reads the protos and the pusher's static data from named contexts (server-rust/Dockerfile).
+  [ "$1" = rust ] && contexts=(--build-context "protos=$src/../messages/protos" --build-context "pusherdata=$src/../play/src/pusher/data")
+  docker buildx build --load ${contexts[@]+"${contexts[@]}"} --target prod --build-arg "API_VERSION=$(sh "$src/api-version.sh")" --build-arg VERSION=1.0.0 -t "$img" "$src"
   # The worktree may carry uncommitted work.
   { echo "commit=$(git -C "$src" rev-parse HEAD)"; echo "dirty_files=$(git -C "$src" status --porcelain . | wc -l | tr -d ' ')"
     echo "api_version=$(sh "$src/api-version.sh")"; echo "built_at=$(date -u +%FT%TZ)"; } > "$HERE/.$1-image-info"

@@ -49,6 +49,9 @@ joins `wa-socle`, where plain service names (`back`, `redis`) would resolve to a
 
 ## Playwright
 
+Before the `@matrix` specs, run `dev/dev synapse reset` **after** `warm-auth.mjs`: warm-auth logs Admin1, Admin2 and
+UserLogin1 in as User1, whose e-mail UserMatrix shares, so the first of them to reach Synapse takes `@john.doe`.
+
 One campaign at a time on the machine: `dev/dev test <stack> <specs>` waits for the slot (a lock in the git dir all
 worktrees share), runs under `caffeinate` with one worker and the stack's variables, and frees the slot when done.
 
@@ -83,6 +86,10 @@ The stacks' environment follows `.env.template` and the CI's end-to-end setup (`
 Checked on `ts` and on `ts2` running in parallel: `meeting.spec.ts` (two users in a bubble), `oidc.spec.ts`, and
 `livekit.spec.ts` "4 cameras".
 
+## Load bench
+
+`dev/bench/` runs the same generators against TS, Go and Rust on two dedicated machines, at the end of each
+milestone: see `dev/bench/README.md`. `dev/bench-2026-10-14/` keeps the first comparison, made on a Mac.
 
 ## Contract of the `server` variant
 
