@@ -65,14 +65,22 @@ for img in "$FRONT_IMAGE" "$GO_IMAGE" matthiasluedtke/iconserver:v3.21.0 \
   minikube image load "$img" -p "$PROFILE" 2>/dev/null || { echo "  load failed, pulling in the node"; minikube ssh -p "$PROFILE" -- docker pull -q "$img" >/dev/null; }
 done
 
-# 5. Port-forward 8443, on 127.0.0.1 ONLY (never 0.0.0.0: that exposes the cluster to the local network). No sudo needed.
+# 5. 127.0.0.1:8443 -> port 443 of the node (the ingress controller's hostPort), by a socat container on the
+#    profile's docker network: `kubectl port-forward` dropped under load. Published on 127.0.0.1 ONLY (never 0.0.0.0:
+#    that exposes the cluster to the local network). No sudo needed.
 #    The hosts are https://*-rehearsal.localhost without a port: browsers must map them to 127.0.0.1:8443
 #    (Chromium: --host-resolver-rules="MAP *.localhost 127.0.0.1:8443"), curl: --resolve / --connect-to (see common.sh).
-if ! lsof -nP -iTCP:$LOCAL_PORT -sTCP:LISTEN >/dev/null 2>&1; then
-  nohup kubectl --context "$CTX" -n ingress-nginx port-forward --address 127.0.0.1 svc/ingress-nginx-controller $LOCAL_PORT:443 \
-    >.port-forward.log 2>&1 &
-  echo $! > .port-forward.pid
-  sleep 2
+node_ip=$(minikube ip -p "$PROFILE")
+if [ "$(docker inspect -f '{{.State.Running}} {{index .Config.Labels "wa.rehearsal.target"}}' "$RELAY" 2>/dev/null)" != "true $node_ip:443" ]; then
+  docker rm -f "$RELAY" >/dev/null 2>&1 || true
+  docker run -d --name "$RELAY" --restart unless-stopped --network "$PROFILE" -p "127.0.0.1:$LOCAL_PORT:$LOCAL_PORT" \
+    --label "wa.rehearsal.target=$node_ip:443" "$RELAY_IMAGE" \
+    "TCP-LISTEN:$LOCAL_PORT,fork,reuseaddr" "TCP:$node_ip:443" >/dev/null
+  sleep 1
 fi
-if lsof -nP -iTCP:$LOCAL_PORT -sTCP:LISTEN >/dev/null 2>&1; then echo "127.0.0.1:$LOCAL_PORT forwarded"; else echo "$LOCAL_PORT NOT forwarded:"; cat .port-forward.log; exit 1; fi
+if nc -z 127.0.0.1 "$LOCAL_PORT"; then
+  echo "127.0.0.1:$LOCAL_PORT relayed to $node_ip:443"
+else
+  echo "$LOCAL_PORT NOT relayed:"; docker logs "$RELAY" 2>&1 | tail -5; exit 1
+fi
 echo "Ready. Next: ./deploy.sh ts"
