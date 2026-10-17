@@ -117,7 +117,8 @@ func run() error {
 }
 
 func logLevel() slog.Level {
-	if os.Getenv("DEBUG") != "" {
+	// DEBUG_MODE also turns on the front's debug tools; DEBUG, the server's debug logs only.
+	if os.Getenv("DEBUG") != "" || os.Getenv("DEBUG_MODE") == "true" {
 		return slog.LevelDebug
 	}
 	return slog.LevelInfo
