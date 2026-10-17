@@ -89,7 +89,7 @@ func subMessage(ev core.Event) *pb.SubMessage {
 		return &pb.SubMessage{Message: &pb.SubMessage_GroupUpdateMessage{GroupUpdateMessage: &pb.GroupUpdateMessage{
 			GroupId:   e.GroupID,
 			Position:  &pb.PointMessage{X: e.X, Y: e.Y},
-			GroupSize: wrapperspb.UInt32(uint32(e.Size)),
+			GroupSize: wrapperspb.UInt32(uint32(e.Size)), //nolint:gosec // a group has a few players
 			Locked:    wrapperspb.Bool(e.Locked),
 			UserIds:   e.UserIDs,
 		}}}
@@ -303,7 +303,7 @@ func appendEnvelope(dst []byte, nonce uint32, messageLen int) []byte {
 	dst = protowire.AppendTag(dst, 1, protowire.VarintType)
 	dst = protowire.AppendVarint(dst, uint64(nonce))
 	dst = protowire.AppendTag(dst, 2, protowire.BytesType)
-	return protowire.AppendVarint(dst, uint64(messageLen))
+	return protowire.AppendVarint(dst, uint64(messageLen)) //nolint:gosec // a length is not negative
 }
 
 const maxEnvelopeLen = 1 + 5 + 1 + 10

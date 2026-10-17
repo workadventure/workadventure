@@ -166,7 +166,7 @@ func (u *Uploader) uploadAudio(w http.ResponseWriter, r *http.Request) {
 }
 
 func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseMultipartForm(32 << 20); err != nil || r.MultipartForm == nil || len(r.MultipartForm.File) == 0 {
+	if err := r.ParseMultipartForm(32 << 20); err != nil || r.MultipartForm == nil || len(r.MultipartForm.File) == 0 { //nolint:gosec // the body is capped by MaxBytesReader in Handler
 		http.Error(w, "No files were uploaded.", http.StatusBadRequest)
 		return
 	}
@@ -206,7 +206,7 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			data, _ := io.ReadAll(f)
-			f.Close()
+			_ = f.Close()
 			id := newID()
 			if ext := strings.TrimPrefix(path.Ext(h.Filename), "."); ext != "" {
 				id += "." + strings.ToLower(ext)
@@ -246,7 +246,7 @@ func (u *Uploader) download(w http.ResponseWriter, r *http.Request, attachment b
 		}
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Content-Security-Policy", "default-src 'none'; sandbox")
-		http.Redirect(w, r, link, http.StatusFound)
+		http.Redirect(w, r, link, http.StatusFound) //nolint:gosec // a link this server signed, to its own bucket
 		return
 	}
 	var data []byte
@@ -271,7 +271,7 @@ func (u *Uploader) download(w http.ResponseWriter, r *http.Request, attachment b
 	if attachment {
 		w.Header().Set("Content-Disposition", "attachment")
 	}
-	_, _ = w.Write(data)
+	_, _ = w.Write(data) //nolint:gosec // sandboxed: CSP default-src none, nosniff, a safe Content-Type
 }
 
 // safeType is the type of an image, an audio or a video file; anything else is a binary blob.

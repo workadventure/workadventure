@@ -53,7 +53,7 @@ func (v *Validator) allows(token, domain string) bool {
 	if err != nil {
 		return false
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if resp.StatusCode/100 != 2 {
 		return false
 	}
@@ -123,6 +123,6 @@ func (s *Store) hook(payload map[string]string) {
 			slog.Warn("map-storage webhook", "domain", domain, "map", mapPath, "action", action, "error", err)
 			return
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}()
 }

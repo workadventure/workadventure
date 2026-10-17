@@ -220,8 +220,8 @@ func boundZoneRectangle(tl, br zoneKey) (zoneKey, zoneKey) {
 	}
 	ci := floorDiv64(int64(tl.i)+int64(br.i), 2)
 	cj := floorDiv64(int64(tl.j)+int64(br.j), 2)
-	ntl := zoneKey{int32(ci - (cw-1)/2), int32(cj - (ch-1)/2)}
-	return ntl, zoneKey{ntl.i + int32(cw) - 1, ntl.j + int32(ch) - 1}
+	ntl := zoneKey{int32(ci - (cw-1)/2), int32(cj - (ch-1)/2)}        //nolint:gosec // zone indices of a map fit in int32
+	return ntl, zoneKey{ntl.i + int32(cw) - 1, ntl.j + int32(ch) - 1} //nolint:gosec // zone indices of a map fit in int32
 }
 
 func floorDiv64(a, b int64) int64 {

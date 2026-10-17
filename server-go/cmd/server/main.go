@@ -144,7 +144,7 @@ func healthcheck() int {
 	if port == "" {
 		port = "3000"
 	}
-	resp, err := (&http.Client{Timeout: 3 * time.Second}).Get("http://127.0.0.1:" + port + "/ping")
+	resp, err := (&http.Client{Timeout: 3 * time.Second}).Get("http://127.0.0.1:" + port + "/ping") //nolint:gosec // the healthcheck asks this very process, on localhost
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		return 1

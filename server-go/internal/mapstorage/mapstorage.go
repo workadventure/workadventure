@@ -138,7 +138,7 @@ func (s *Store) Edit(key string, change func([]byte) ([]byte, error)) error {
 
 // readIfExists reads a file; a missing one is nil.
 func readIfExists(f string) ([]byte, error) {
-	data, err := os.ReadFile(f)
+	data, err := os.ReadFile(f) //nolint:gosec // a key of the store: no "..", under its root
 	if errors.Is(err, os.ErrNotExist) {
 		return nil, nil
 	}
@@ -174,7 +174,7 @@ func (s *Store) Read(key string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return os.ReadFile(f)
+	return os.ReadFile(f) //nolint:gosec // a key of the store: no "..", under its root
 }
 
 // editsKept is how long an applied edit is kept for the clients that loaded the map just before it
@@ -239,7 +239,7 @@ func (s *Store) changed(key string, deleted bool) {
 
 // writeFile writes through a temporary file, so that a reader never sees half a document.
 func writeFile(f string, data []byte) error {
-	if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(f), 0o755); err != nil { //nolint:gosec // the maps' folders are read by the TS map-storage too during a switch (shared volume)
 		return err
 	}
 	tmp, err := os.CreateTemp(filepath.Dir(f), ".tmp-*")
@@ -434,7 +434,7 @@ func (s *Store) serve(w http.ResponseWriter, r *http.Request, cacheControl strin
 		http.NotFound(w, r)
 		return
 	}
-	file, err := os.Open(f)
+	file, err := os.Open(f) //nolint:gosec // a key of the store: no "..", under its root
 	if err != nil {
 		http.NotFound(w, r)
 		return

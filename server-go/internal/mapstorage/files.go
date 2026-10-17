@@ -83,7 +83,7 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 			http.Error(w, "Invalid path in the zip file: "+e.Name, http.StatusBadRequest)
 			return
 		}
-		if total += e.UncompressedSize64; total > uint64(o.MaxUncompressed) {
+		if total += e.UncompressedSize64; total > uint64(o.MaxUncompressed) { //nolint:gosec // MaxUncompressed is a positive size
 			http.Error(w, fmt.Sprintf("File too large. Unzipped files should be less than %d bytes.", o.MaxUncompressed), http.StatusRequestEntityTooLarge)
 			return
 		}
@@ -173,7 +173,7 @@ func unzip(e *zip.File) ([]byte, error) {
 		return nil, err
 	}
 	defer in.Close()
-	data, err := io.ReadAll(io.LimitReader(in, int64(e.UncompressedSize64)+1))
+	data, err := io.ReadAll(io.LimitReader(in, int64(e.UncompressedSize64)+1)) //nolint:gosec // the total, checked first, is at most MaxUncompressed
 	if err != nil {
 		return nil, err
 	}
@@ -434,7 +434,7 @@ func (s *Store) download(w http.ResponseWriter, r *http.Request) {
 		if f == "__cache.json" || hidden(f) {
 			continue
 		}
-		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(f)))
+		data, err := os.ReadFile(filepath.Join(root, filepath.FromSlash(f))) //nolint:gosec // a key of the store: no "..", under its root (keyIn)
 		if err != nil {
 			continue
 		}
@@ -480,7 +480,7 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 		http.Error(w, "Destination already exist!", http.StatusConflict)
 		return
 	}
-	if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(to), 0o755); err != nil { //nolint:gosec // the maps' folders are read by the TS map-storage too during a switch (shared volume)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -501,7 +501,7 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 		err = statErr
 	} else if info.IsDir() {
 		err = os.CopyFS(to, os.DirFS(from))
-	} else if data, readErr := os.ReadFile(from); readErr != nil {
+	} else if data, readErr := os.ReadFile(from); readErr != nil { //nolint:gosec // a key of the store: no "..", under its root (keyIn)
 		err = readErr
 	} else {
 		err = writeFile(to, data)
