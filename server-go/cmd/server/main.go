@@ -112,6 +112,15 @@ func run() error {
 			}
 			return livekit.New(host, key, secret), nil
 		}
+		if r := cfg.RecordingS3; r.Complete() { // record on the world's LiveKit, into the same bucket
+			media.EgressFor = func(lk core.LiveKit) core.Egress {
+				if c, ok := lk.(*livekit.Client); ok {
+					return c.Egress(livekit.S3{Endpoint: r.Endpoint, AccessKey: r.AccessKey, Secret: r.Secret, Region: r.Region, Bucket: r.Bucket})
+				}
+				return nil
+			}
+			cfg.RecordingConfigured = true
+		}
 	}
 	if h, ok := adm.(*admin.HTTP); ok {
 		media.RecordingEnded = func(e core.RecordingEnded) {

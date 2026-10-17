@@ -1,11 +1,13 @@
 package analytics
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"os/exec"
 	"regexp"
 	"sort"
 	"sync"
@@ -192,5 +194,41 @@ func TestTheCatalogMatchesTheTSOne(t *testing.T) {
 		if ts[i] != ours[i] {
 			t.Fatalf("%s vs %s", ts[i], ours[i])
 		}
+	}
+}
+
+func TestThePropertiesAreTheCatalogs(t *testing.T) {
+	if ValidProperties("room.visited", map[string]any{"roomId": "r", "roomGroup": nil, "extra": true}) != nil {
+		t.Fatal("the catalog's properties, and more (passthrough)")
+	}
+	if ValidProperties("room.visited", map[string]any{"roomId": 3, "roomGroup": nil}) == nil || ValidProperties("room.visited", map[string]any{}) == nil {
+		t.Fatal("a wrong type or a missing property is refused")
+	}
+	if ValidOpenProperties("meeting.ended", map[string]any{"meetingKind": "stadium"}) == nil || ValidOpenProperties("area.dwell", map[string]any{}) == nil {
+		t.Fatal("the open properties of a timed event are checked too")
+	}
+	for name := range catalog {
+		if _, ok := schemas[name]; !ok {
+			t.Errorf("%s has no schema: run gen.sh", name)
+		}
+	}
+}
+
+// TestTheSchemasMatchTheTSCatalog regenerates catalog.json when the repository and node are there.
+func TestTheSchemasMatchTheTSCatalog(t *testing.T) {
+	if _, err := os.Stat("../../../node_modules/zod-to-json-schema"); err != nil {
+		t.Skip("no node_modules next to this checkout")
+	}
+	if _, err := exec.LookPath("npx"); err != nil {
+		t.Skip("no npx")
+	}
+	cmd := exec.Command("npx", "--no-install", "tsx", "server-go/internal/analytics/gen/catalog.ts")
+	cmd.Dir = "../../.."
+	out, err := cmd.Output()
+	if err != nil {
+		t.Skipf("cannot run the generator here: %v", err)
+	}
+	if !bytes.Equal(bytes.TrimSpace(out), bytes.TrimSpace(catalogJSON)) {
+		t.Fatal("catalog.json is stale: run server-go/internal/analytics/gen.sh")
 	}
 }
