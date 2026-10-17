@@ -2,6 +2,8 @@
 #![recursion_limit = "256"]
 
 pub mod admin;
+pub mod admin_api;
+pub mod admin_queries;
 pub mod budget;
 pub mod config;
 pub mod custom_entities;
@@ -32,6 +34,7 @@ pub mod session;
 pub mod space_actor;
 pub mod wire;
 pub mod uploader;
+pub mod user_routes;
 pub mod ws;
 
 use std::sync::Arc;
@@ -65,6 +68,8 @@ pub struct AppState {
     pub budgets: session::Budgets,
     pub storage: Arc<map_storage::Storage>,
     pub redis: Arc<redis_store::RedisStore>,
+    /// The remote admin (ADMIN_API_URL), set at startup once it answered; None: LocalAdmin.
+    pub admin: Option<Arc<admin_api::AdminApi>>,
 }
 
 impl AppState {
@@ -80,7 +85,7 @@ impl AppState {
             spaces: Arc::new(ActorRegistry::new()),
             sessions: Arc::new(DashMap::new()),
             front: Arc::new(FrontAssets::new(&config)),
-            page_script: front::script(&config),
+            page_script: front::script(&config, None),
             http: reqwest::Client::new(),
             oidc: oidc::OidcConfig::from(&config).map(Arc::new),
             oidc_provider: Arc::new(parking_lot::Mutex::new(None)),
@@ -90,6 +95,7 @@ impl AppState {
             },
             storage: Arc::new(map_storage::Storage::new(&config.storage_directory)),
             redis: redis_store::RedisStore::new(&config),
+            admin: None,
             config: Arc::new(config),
         }
     }
@@ -103,6 +109,7 @@ impl AppState {
 pub fn router(state: AppState) -> Router {
     http::routes()
         .merge(admin::routes())
+        .merge(user_routes::routes())
         .merge(openapi::routes(&state))
         .merge(front::routes())
         .merge(oidc::routes())

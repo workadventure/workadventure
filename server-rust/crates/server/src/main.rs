@@ -71,7 +71,12 @@ fn main() {
 }
 
 async fn serve(config: Config) {
-    let state = AppState::new(config);
+    let mut state = AppState::new(config);
+    // Like the pusher and the back: nothing listens before the admin gave its capabilities.
+    state.admin = wa_server::admin_api::AdminApi::connect(&state.config, state.http.clone()).await;
+    if let Some(admin) = &state.admin {
+        state.page_script = wa_server::front::script(&state.config, Some(&admin.capabilities));
+    }
     tokio::spawn(wa_server::front::poll_template(state.clone()));
     let addr = SocketAddr::from(([0, 0, 0, 0], state.config.http_port));
     let listener = tokio::net::TcpListener::bind(addr).await.expect("bind HTTP port");

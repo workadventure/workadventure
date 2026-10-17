@@ -195,8 +195,44 @@ impl Logic {
             // handleBanPlayerMessage: admins only, silently ignored otherwise. Without an admin API a ban
             // cannot be stored: it falls back to a kick, as LocalAdmin's refusal does on the pusher.
             M::BanPlayerMessage(m) => {
-                if session.info.tags.iter().any(|t| t == "admin") {
-                    self.social(Social::Kick { uuid: m.ban_user_uuid, reason: m.reason }).await;
+                if !session.info.tags.iter().any(|t| t == "admin") {
+                    return;
+                }
+                let (Some(admin), false) = (self.app.admin.clone(), m.kick) else {
+                    self.social(Social::Kick { uuid: m.ban_user_uuid, reason: m.reason, banned: false }).await;
+                    return;
+                };
+                // A7: stored by the admin, which refuses the user from then on (A3); kicked anyway if it fails.
+                // ponytail: the ban by IP (byIp) needs the users of the whole world; sent without the address.
+                let Some(room) = self.room.clone() else { return };
+                tokio::spawn(async move {
+                    let message = if m.reason.is_empty() { format!("User banned by admin {}", session.info.user_uuid) } else { m.reason.clone() };
+                    let banned = admin
+                        .ban(&m.ban_user_uuid, &session.info.room_id, &m.ban_user_name, &message, &session.info.user_uuid, None)
+                        .await
+                        .unwrap_or(false);
+                    let act = Social::Kick { uuid: m.ban_user_uuid, reason: m.reason, banned };
+                    let _ = room.send(RoomCmd::Social { session, act }).await;
+                });
+            }
+            M::ReportPlayerMessage(m) => {
+                if let Some(admin) = self.app.admin.clone() {
+                    tokio::spawn(async move {
+                        if let Err(e) = admin.report(&m.reported_user_uuid, &m.report_comment, &session.info.user_uuid, &session.info.room_id).await {
+                            tracing::warn!(error = %e, "the admin did not take a report");
+                        }
+                    });
+                }
+            }
+            M::UpdateChatIdMessage(m) => {
+                self.chat_id = Some(m.chat_id.clone());
+                if let Some(admin) = self.app.admin.clone() {
+                    tokio::spawn(async move {
+                        if let Err(e) = admin.update_chat_id(&m.email, &m.chat_id, &session.info.room_id).await {
+                            tracing::warn!(error = %e, "the admin did not take a chat id");
+                            session.push(wire::sub(pb::sub_message::Message::ErrorMessage(pb::ErrorMessage { message: e })));
+                        }
+                    });
                 }
             }
             M::UserMovesMessage(moves) => {
@@ -357,6 +393,15 @@ impl Logic {
             session.push(wire::answer_error(id, "Empty query"));
             return;
         };
+        if let Some(admin) = self.app.admin.clone().filter(|a| crate::admin_queries::handles(&q, a)) {
+            tokio::spawn(async move {
+                session.push(match crate::admin_queries::answer(&admin, &session.info, q).await {
+                    Ok(a) => wire::answer(id, a),
+                    Err(e) => wire::answer_error(id, e),
+                });
+            });
+            return;
+        }
         let answer = match q {
             Q::IceServersQuery(_) => match session.user_id() {
                 Some(user) => A::IceServersAnswer(pb::IceServersAnswer {
@@ -417,7 +462,7 @@ impl Logic {
                     state.query.as_ref().and_then(|q| q.query.as_ref()),
                     Some(S::StartRecording(_) | S::StopRecording(_))
                 );
-                if recording && !local_admin::can_record(&self.app.config, session.info.is_logged) {
+                if recording && !session.info.can_record {
                     session.push(wire::answer_error(id, "You are not allowed to record"));
                     return;
                 }

@@ -63,6 +63,10 @@ pub struct SessionInfo {
     pub last_command_id: Option<String>,
     /// Third-party applications offered to this user (roomJoinedMessage.applications).
     pub applications: Vec<wa_proto::messages::ApplicationMessage>,
+    /// From the admin (A3): the user's token for the admin's own services, and its rights.
+    pub user_room_token: String,
+    pub activated_invite_user: bool,
+    pub can_record: bool,
 }
 
 enum WriterCmd {
