@@ -112,6 +112,8 @@ type Config struct {
 	AllowedCORSOrigin                string
 	MatrixPublicURI                  string
 	Matrix                           Matrix   // the Synapse admin, when MatrixEnabled
+	Jitsi                            Jitsi    // JITSI_URL, JITSI_ISS, SECRET_JITSI_KEY: the server-wide Jitsi, unless the admin gives one
+	BBB                              BBB      // BBB_URL, BBB_SECRET
 	MapStorageAPIToken               string   // MAP_STORAGE_API_TOKEN: map-storage's calls to /roomArea and the resourceUrls
 	WhitelistedResourceURLs          []string // WHITELISTED_RESOURCE_URLS: the origins a resourceUrl may point to, PUSHER_URL's besides
 	StunServer                       string
@@ -317,6 +319,8 @@ func parse(get func(string) string) (*Config, error) {
 		Matrix: Matrix{APIURI: r.str("MATRIX_API_URI"), AdminUser: r.str("MATRIX_ADMIN_USER"), AdminPassword: r.str("MATRIX_ADMIN_PASSWORD"),
 			Domain: r.str("MATRIX_DOMAIN")},
 		MapStorageAPIToken:   r.str("MAP_STORAGE_API_TOKEN"),
+		Jitsi:                Jitsi{URL: r.str("JITSI_URL"), ISS: r.str("JITSI_ISS"), Secret: r.str("SECRET_JITSI_KEY")},
+		BBB:                  BBB{URL: r.str("BBB_URL"), Secret: r.str("BBB_SECRET")},
 		StunServer:           r.str("STUN_SERVER"),
 		TurnServer:           r.str("TURN_SERVER"),
 		TurnUser:             r.str("TURN_USER"),
@@ -501,3 +505,6 @@ type Analytics struct {
 
 // Matrix is the Synapse admin of the pusher (MATRIX_API_URI, MATRIX_ADMIN_USER, MATRIX_ADMIN_PASSWORD, MATRIX_DOMAIN).
 type Matrix struct{ APIURI, AdminUser, AdminPassword, Domain string }
+
+type Jitsi struct{ URL, ISS, Secret string }
+type BBB struct{ URL, Secret string }

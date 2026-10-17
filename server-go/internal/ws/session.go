@@ -603,6 +603,12 @@ func (s *Session) query(q *pb.QueryMessage) {
 		go s.searchTags(q.GetId(), query.SearchTagsQuery.GetSearchText())
 	case *pb.QueryMessage_GetMemberQuery:
 		go s.getMember(q.GetId(), query.GetMemberQuery.GetUuid())
+	case *pb.QueryMessage_JitsiJwtQuery:
+		go s.jitsiJWT(q.GetId(), query.JitsiJwtQuery.GetJitsiRoom())
+	case *pb.QueryMessage_JoinBBBMeetingQuery:
+		go s.joinBBB(q.GetId(), query.JoinBBBMeetingQuery)
+	case *pb.QueryMessage_OauthRefreshTokenQuery:
+		go s.refreshOAuth(q.GetId(), query.OauthRefreshTokenQuery)
 	case *pb.QueryMessage_EnterChatRoomAreaQuery:
 		s.enterChatArea(q.GetId(), query.EnterChatRoomAreaQuery.GetRoomID())
 	case *pb.QueryMessage_MapStorageJwtQuery:

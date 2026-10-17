@@ -321,3 +321,25 @@ func (a *HTTP) UpdateChatID(ctx context.Context, email, chatID, roomURL string) 
 	return a.call(ctx, http.MethodPut, a.cfg.AdminURL, "/api/members/"+email+"/chatId", nil, true, "",
 		map[string]string{"chatId": chatID, "userIdentifier": email, "roomUrl": roomURL}, nil)
 }
+
+// RefreshOAuthToken is A17, on ADMIN_URL; an answer without its message and token is an error.
+func (a *HTTP) RefreshOAuthToken(ctx context.Context, token, provider, userIdentifier string) (string, string, error) {
+	body := map[string]string{"accessToken": token}
+	if provider != "" {
+		body["provider"] = provider
+	}
+	if userIdentifier != "" {
+		body["userIdentifier"] = userIdentifier
+	}
+	var out struct {
+		Message *string `json:"message"`
+		Token   *string `json:"token"`
+	}
+	if err := a.call(ctx, http.MethodPost, a.cfg.AdminURL, "/api/oauth/refreshtoken", nil, true, "", body, &out); err != nil {
+		return "", "", err
+	}
+	if out.Message == nil || out.Token == nil {
+		return "", "", errors.New("Unable to parse refreshTokenResponse")
+	}
+	return *out.Token, *out.Message, nil
+}

@@ -22,7 +22,9 @@ type roomMap struct {
 	key    string // the WAM file in the map storage, "" for a room without one
 	wamURL string
 	mapURL string // a Tiled map served elsewhere
-	at     time.Time
+	// thirdParty is what the admin gives of the room's Jitsi and BBB (MapThirdPartyData), never sent on.
+	thirdParty map[string]any
+	at         time.Time
 }
 
 // roomMapKept is how long the server trusts what the admin said of a room's map.
@@ -45,6 +47,7 @@ func (srv *Server) roomMap(roomURL string) roomMap {
 		rm.key, rm.wamURL = srv.storageKey(w), w
 	}
 	rm.mapURL, _ = details["mapUrl"].(string)
+	rm.thirdParty, _ = details["thirdParty"].(map[string]any)
 	srv.roomMaps.Store(roomURL, rm)
 	return rm
 }

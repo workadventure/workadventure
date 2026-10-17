@@ -21,19 +21,13 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 
 ## Manques bloquants, par ordre
 
-1. **Admin distante** (contrat `dev/contracts/admin-api.md`) : capacités, `/api/map`, `/api/room/access` (avec ses refus), listes Woka et compagnon, ICE, vérification de domaine (17/10, tests contre un faux admin). Restent : la carte d'une salle tirée de `/api/map` (mondes `/@/`, `wamUrl` par domaine), ban, report, tags, sameWorld, membres, refresh OAuth, analytics, routes et socket appelés par l'admin, challenge Cloudflare, `/profile-callback`, `access_key`.
-2. **LiveKit et enregistrement** : validés (`livekit`, `map_editor_livekit`, `recording`, 17/10). Reste : identifiants LiveKit par monde et `recordings/events` (admin).
-3. **Durabilité des variables** : les écritures ne se perdent plus pendant une coupure (corrigé le 17/10). Reste qu'une room démarrée pendant une coupure garde les valeurs par défaut (`varsOnce`).
-4. **Isolation des tenants** :
-   - clé de stockage sans le domaine (`USE_DOMAIN_NAME_IN_PATH`) ;
-   - clé de space faite de l'origine et non du `world` de l'admin ;
-   - `roomsFromSameWorld` qui liste tout map-storage.
-5. **Modération** : le ban n'est ni persistant ni par IP ; `banIpPreview` est absent ; `reportPlayer` et `playGlobalMessage` sont jetés.
-6. **Front** : servi depuis `ASSETS_INTERNAL_URL` (un conteneur front nginx est toujours à côté, décision du socle du 17/10) ; pas de mode local.
-7. **Image de production** : `/maps` inscriptible, ports 3000 à 3003 et 50051, `healthcheck`, `API_VERSION` obligatoire (la CI le calcule) ; reste à construire en CI et à déployer par `deploy`.
-8. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
-9. **Matrix** : provisionnement Synapse, salons des zones (`/roomArea`, `resourceUrl`), entrée et sortie de zone, `updateChatId`.
-10. Jitsi JWT et BBB, emotes, `itemEvent`, `entityMessage`, analytics.
+1. **Admin distante** : restent A4 (challenge Cloudflare), A9 à A11 (`save-name`, `save-textures`), A23 (`recordings/events`), A24 (identifiants LiveKit par monde), A25 (Room API autorisée par l'admin), A26 et A27 (validateur et webhook de map-storage), A29 (limite de taille de l'uploader), A31 (`access_key`, `/profile-callback`). Aucun parcours SaaS joué de bout en bout.
+2. **Durabilité des variables** : une room démarrée pendant une coupure de Redis garde les valeurs par défaut (`varsOnce`).
+3. **Isolation des tenants** : clé de space faite de l'origine et non du `world` de l'admin ; `roomsFromSameWorld` sans admin liste tout map-storage.
+4. **Front** : servi depuis `ASSETS_INTERNAL_URL` (conteneur front nginx à côté, décision du socle du 17/10) ; pas de mode local.
+5. **Image de production** : à construire en CI et à déployer par `deploy` (branche `deploy-go` du socle).
+6. **Uploader** : en mémoire seulement (pas de S3 ni de Redis).
+7. **Campagne des 86 specs** contre la référence TS : pas encore jouée.
 
 ## Admin distante (A1 à A31 de `dev/contracts/admin-api.md`)
 
@@ -43,7 +37,7 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | A3 `/api/room/access` : succès, refus `ErrorApiData` (renvoyé tel quel par `/me`, écran d'erreur au WebSocket), `ROOM_ACCESS_ERROR` / `ROOM_ACCESS_VALIDATION` construits localement | validé (unitaire) | `TestTheAdminLetsAMemberIn`, `TestTheAdminsRefusalReachesTheFrontAsIs`, `TestAnUnreachableOrConfusedAdminIsAnErrorScreenNotACrash`, `httpapi_test.go` | délai de 10 s par appel (le TS n'en avait aucun : écart volontaire) | — |
 | A2 `/api/map` : page, `/map` (sans `thirdParty`), JWT toléré expiré, `MAP_VALIDATION` | partiel | `TestTheAdminDescribesTheMap`, `TestTheAdminsRefusalAndSecretsOnTheHTTPRoutes` | la salle ne tire pas encore sa carte de `/api/map` (côté back) ; pas de redirection, metatags ni couleurs dans la page | carte de salle via A2 |
 | A18 ICE (`ADMIN_URL`), A19 Woka, A20 compagnon, A21 vérification de domaine | validé (unitaire) | `TestCapabilitiesChooseBetweenTheAdminAndTheServer` | — | — |
-| A4, A9 à A11, A17, A23 à A31 (A5 à A8, A12 à A16, A18 à A21 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
+| A4, A9 à A11, A23 à A27, A29, A31 (A5 à A8, A12 à A21, A28, A30 faits ; A22 : voir « Métriques et analytics ») | absent | — | voir les manques bloquants | suivant le contrat |
 
 ## Connexion, salle, mouvements
 
@@ -69,7 +63,8 @@ Mise à jour : 2026-10-17, sur `12a438749`. L'inventaire a été fait par quatre
 | SpaceState (main levée, parole, sondages, setKind) | BSp:693-725 | validé | `core/space_filter_test.go:116-166` | revokeFloor, deletePoll et questions non testés | tests |
 | Chat de bulle (spaceMessage, isTyping) | EventProcessorInit.ts:5-45 | implémenté non vérifié | `ws/spaces.go:172,387` ; E2E vert (J2) | signature (nom, woka) non testée | test |
 | chatMembersQuery (A12), roomTagsQuery (A8) | PSM:1540, 1321 | validé | `admin/http_test.go` : `TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin` | — | — |
-| searchMember (A13), getMember (A15), searchTags (A14) ; refresh OAuth (A17) | PSM:1487-1642 | partiel | `ws/members.go`, même test | A17 absent | A17 |
+| searchMember (A13), getMember (A15), searchTags (A14), refresh OAuth (A17) | PSM:1487-1642 | validé | `admin/http_test.go`, `ws/conference_test.go` : `TestConferencesAndTheOAuthRefresh` | — | — |
+| Jitsi JWT (rôle de modérateur par `jitsiRoomAdminTag` de la carte Tiled et du WAM), BBB (création de la réunion, URL de connexion, mots de passe HMAC), réglages de l'admin (`thirdParty`) ou de l'environnement (`JITSI_URL`, `JITSI_ISS`, `SECRET_JITSI_KEY`, `BBB_URL`, `BBB_SECRET`) | back SocketManager.ts:770-904, ModeratorTagFinder.ts | validé (tests Go ; slug, hash et URL BBB identiques à ceux du TS) | `ws/conference_test.go` (2 tests) | la carte est relue à chaque requête (le TS la garde en cache par salle) | E2E Jitsi/BBB si la stack en a |
 | Matrix : `matrixUserId`, SSO, `/matrix-callback` | AuthenticateController.ts:322-405 | validé | `httpapi/oidc_test.go:101,132,142` | — | — |
 | Matrix : provider Synapse (connexion admin, levée du rate limit, salons privés des zones dans l'espace « current-visited-room », invitation, modérateur pour le tag admin, renommage, vidage), `/roomArea` (`MAP_STORAGE_API_TOKEN`), enter/leaveChatRoomArea, sortie à la fermeture, updateChatId (A16) | MatrixProvider.ts, MatrixRoomAreaController.ts, PSM:1552, 1703-1758 | validé (tests Go) | `matrix_test.go`, `ws/matrix_test.go` (2 tests) | jeton admin en mémoire, une connexion par processus (le TS le partage par Redis) ; E2E `matrixChatArea` à jouer | campagne |
 
