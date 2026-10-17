@@ -264,3 +264,21 @@ func TestTheEndOfARecordingIsToldAgainUntilTheAdminHearsIt(t *testing.T) {
 		t.Fatalf("a 502 is tried again: %v, %d calls", err, calls.Load())
 	}
 }
+
+func TestTheAdminGivesEachWorldItsLiveKit(t *testing.T) {
+	a, _ := fakeAdmin(t, func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Query().Get("playUri") {
+		case "http://play.test/@/o/w/r":
+			_, _ = w.Write([]byte(`{"livekitHost":"https://lk.w.test","livekitApiKey":"k","livekitApiSecret":"s"}`))
+		default:
+			_, _ = w.Write([]byte(`{"livekitHost":"https://lk.test"}`))
+		}
+	})
+	host, key, secret, err := a.LiveKitCredentials(context.Background(), "http://play.test/@/o/w/r")
+	if err != nil || host != "https://lk.w.test" || key != "k" || secret != "s" {
+		t.Fatal(host, key, secret, err)
+	}
+	if _, _, _, err := a.LiveKitCredentials(context.Background(), "other"); err == nil {
+		t.Fatal("incomplete credentials are an error: the space stays on WebRTC")
+	}
+}

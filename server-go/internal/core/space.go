@@ -143,7 +143,7 @@ func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
 	if media.Analytics != nil {
 		sp.s.meeting = analytics.NewMeeting(sp.s.roomName, k.World, sp.s.kind, func() string { return sp.s.strategy }, media.Analytics)
 	}
-	if media.LiveKit != nil {
+	if media.LiveKit != nil || media.LiveKitFor != nil {
 		sp.calls = make(chan func(), 64)
 		go func() {
 			for f := range sp.calls {

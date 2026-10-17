@@ -456,3 +456,19 @@ func (a *HTTP) postStatus(ctx context.Context, target string, body []byte, timeo
 	resp.Body.Close()
 	return resp.StatusCode, nil
 }
+
+// LiveKitCredentials is A24: the LiveKit of the world a play URI belongs to, asked at each move to LiveKit.
+func (a *HTTP) LiveKitCredentials(ctx context.Context, playURI string) (host, key, secret string, err error) {
+	var c struct {
+		Host   *string `json:"livekitHost"`
+		Key    *string `json:"livekitApiKey"`
+		Secret *string `json:"livekitApiSecret"`
+	}
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/livekit/credentials", url.Values{"playUri": {playURI}}, true, "", nil, &c); err != nil {
+		return "", "", "", err
+	}
+	if c.Host == nil || c.Key == nil || c.Secret == nil {
+		return "", "", "", errors.New("the admin's LiveKit credentials are incomplete")
+	}
+	return *c.Host, *c.Key, *c.Secret, nil
+}
