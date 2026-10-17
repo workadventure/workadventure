@@ -7,8 +7,8 @@ REPO=$(dirname "$DEV_DIR")
 # Local overrides (SOCLE_HTTP_PORT=8880...), not committed.
 if [ -f "$DEV_DIR/.env" ]; then set -a; . "$DEV_DIR/.env"; set +a; fi
 
-# The commit both candidates start from. Its images are published on ghcr.io: nothing heavy is built locally.
-export WA_TAG=${WA_TAG:-master-6f4d02319eddbf46a51cb99ffd38e2d75273593c}
+# The master commit the candidates are merged with (was 6f4d02319 until 2026-10-17). Its images are published on ghcr.io: nothing heavy is built locally.
+export WA_TAG=${WA_TAG:-master-034dee80bbe3b29327de03b650b38e452ecf1293}
 export SOCLE_HTTP_PORT=${SOCLE_HTTP_PORT:-80}
 export SOCLE_LIVEKIT_TCP_PORT=${SOCLE_LIVEKIT_TCP_PORT:-7881}
 export SOCLE_LIVEKIT_UDP_PORT=${SOCLE_LIVEKIT_UDP_PORT:-7882}
