@@ -816,3 +816,20 @@ manquait aussi de dépendances et du navigateur Playwright 1.50). Tout est prouv
   woka réels de l'émetteur (`eventProcessorInit.ts`).
 - `proximityChatFileTransfer.spec.ts` pas encore jouée : le front du socle est encore à 6f4d02319.
 - Couverture Go (hors code généré) : 71 % ; `internal/ws` est le plus faible (52 %).
+
+### 17/10, bibliothèques standard, tranche 1 : grpc-go pour la Room API
+
+Décision de Yannis (via le socle) : les bibliothèques connues de l'écosystème plutôt que des protocoles écrits à la main.
+
+- `internal/roomapi` sert la Room API avec grpc-go : le code est généré par protoc-gen-go-grpc depuis `room-api.proto`
+  (`internal/pb/roomapi`, `go generate ./internal/pb`). Les handlers ne gardent que la logique : clé ou admin,
+  préfixe `FRONT_URL`, lecture, écriture, diffusion, et les streams `listen*` (sans rejeu, RESOURCE_EXHAUSTED
+  quand l'écouteur ne suit pas). Une erreur qui n'est pas un statut gRPC devient INTERNAL, comme dans le pusher.
+- Supprimés : les trames gRPC, les trailers, le percent-encoding, les codes écrits à la main et le serveur h2c.
+  Le gRPC a son propre listener ; à l'arrêt, GracefulStop, coupé à la même échéance que les serveurs HTTP et avant
+  le vidage des variables.
+- Tests : les mêmes scénarios, avec un vrai client grpc-go à la place du client fait main.
+- Bilan, hors code généré : 204 lignes ajoutées, 309 supprimées. Une dépendance directe ajoutée
+  (`google.golang.org/grpc`, plus `x/net` et `genproto/rpc` indirectes). Binaire : 24,1 → 27,4 Mo.
+- `./verify.sh` vert, `CGO_ENABLED=0` vert, image prod (31 Mo) qui démarre et s'arrête proprement.
+  `room-api.spec.ts` contre Go : 5 réussis sur 5.

@@ -11,6 +11,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // AdminAuthorizer is AdminAuthenticator of the Room API (A25): with an admin, it decides which key may touch which
@@ -29,8 +32,8 @@ func NewAdminAuthorizer(adminAPIURL string, production bool) *AdminAuthorizer {
 		client: &http.Client{Timeout: 10 * time.Second}, ok: map[string]time.Time{}}
 }
 
-var adminCodes = map[string]int{"UNAUTHENTICATED": codeUnauthenticated, "NOT_FOUND": codeNotFound,
-	"PERMISSION_DENIED": codePermissionDenied, "INTERNAL": codeInternal, "UNKNOWN": codeUnknown}
+var adminCodes = map[string]codes.Code{"UNAUTHENTICATED": codes.Unauthenticated, "NOT_FOUND": codes.NotFound,
+	"PERMISSION_DENIED": codes.PermissionDenied, "INTERNAL": codes.Internal, "UNKNOWN": codes.Unknown}
 
 func (a *AdminAuthorizer) authorize(apiKey, room string) error {
 	encoded := encodeURI(room)
@@ -47,31 +50,31 @@ func (a *AdminAuthorizer) authorize(apiKey, room string) error {
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, a.url+"?"+url.Values{"roomUrl": {encoded}}.Encode(), nil)
 	if err != nil {
-		return fail(codeInternal, "Internal error! Please contact us!")
+		return status.Error(codes.Internal, "Internal error! Please contact us!")
 	}
 	req.Header.Set("X-API-Key", apiKey)
 	resp, err := a.client.Do(req)
 	if err != nil {
-		return fail(codeInternal, "Internal error! Please contact us!")
+		return status.Error(codes.Internal, "Internal error! Please contact us!")
 	}
 	defer resp.Body.Close()
 	body, _ := io.ReadAll(io.LimitReader(resp.Body, 1<<16))
 	if resp.StatusCode/100 != 2 {
 		if len(body) == 0 {
-			return fail(codeInternal, "Internal error! Please contact us!")
+			return status.Error(codes.Internal, "Internal error! Please contact us!")
 		}
-		code := codeUnauthenticated
+		code := codes.Unauthenticated
 		switch {
 		case resp.StatusCode == http.StatusBadRequest:
-			code = codeUnknown
+			code = codes.Unknown
 		case resp.StatusCode == http.StatusNotFound:
-			code = codeNotFound
+			code = codes.NotFound
 		case resp.StatusCode == http.StatusForbidden:
-			code = codePermissionDenied
+			code = codes.PermissionDenied
 		case resp.StatusCode >= 500:
-			code = codeInternal
+			code = codes.Internal
 		}
-		return fail(code, "%s", body)
+		return status.Error(code, string(body))
 	}
 	var answer struct {
 		Success *bool   `json:"success"`
@@ -79,14 +82,14 @@ func (a *AdminAuthorizer) authorize(apiKey, room string) error {
 		Message *string `json:"message"`
 	}
 	if json.Unmarshal(body, &answer) != nil || answer.Success == nil {
-		return fail(codeInternal, "Unexpected error! Please contact us!")
+		return status.Error(codes.Internal, "Unexpected error! Please contact us!")
 	}
 	if !*answer.Success {
 		code, known := adminCodes[answer.Error]
 		if !known || answer.Message == nil {
-			return fail(codeInternal, "Unexpected error! Please contact us!")
+			return status.Error(codes.Internal, "Unexpected error! Please contact us!")
 		}
-		return fail(code, "%s", *answer.Message)
+		return status.Error(code, *answer.Message)
 	}
 	if a.cache {
 		a.mu.Lock()

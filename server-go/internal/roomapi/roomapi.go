@@ -1,58 +1,32 @@
-// Package roomapi serves the public Room API (messages/protos/room-api.proto, the npm @workadventure/room-api-client):
-// gRPC, written by hand over HTTP/2 without TLS, for the five calls of the RoomApi service. It is an adapter: the
-// rooms do the work (core/roomapi.go).
+// Package roomapi serves the public Room API (messages/protos/room-api.proto, the npm @workadventure/room-api-client)
+// with grpc-go. It is an adapter: the rooms do the work (core/roomapi.go).
 package roomapi
 
 import (
 	"bytes"
 	"context"
 	"crypto/subtle"
-	"encoding/binary"
 	"encoding/json"
-	"errors"
-	"fmt"
-	"io"
-	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
+	rpb "github.com/workadventure/workadventure/server-go/internal/pb/roomapi"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
 )
 
-// gRPC status codes.
-const (
-	codeOK               = 0
-	codeUnknown          = 2
-	codeInvalidArgument  = 3
-	codeNotFound         = 5
-	codePermissionDenied = 7
-	codeResourceExhaust  = 8
-	codeUnimplemented    = 12
-	codeInternal         = 13
-	codeUnauthenticated  = 16
-)
-
-type status struct {
-	code int
-	msg  string
-}
-
-func (s *status) Error() string { return s.msg }
-
-func fail(code int, format string, args ...any) error {
-	return &status{code, fmt.Sprintf(format, args...)}
-}
-
 // Server answers the Room API for the rooms of this process.
 type Server struct {
+	rpb.UnimplementedRoomApiServer
 	key, frontURL string
 	rooms         *registry.Refs[string, *core.Room]
 	variables     func(roomURL string) core.RoomVariables // what a room starts with (map declarations, stored values)
@@ -67,91 +41,49 @@ func New(key, frontURL string, rooms *registry.Refs[string, *core.Room], variabl
 	return &Server{key: key, frontURL: frontURL, rooms: rooms, variables: variables}
 }
 
+// GRPC is the gRPC server of the Room API (without TLS, as the pusher). An error that is not a gRPC status becomes
+// the pusher's INTERNAL.
+func (s *Server) GRPC() *grpc.Server {
+	g := grpc.NewServer(
+		grpc.UnaryInterceptor(func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, h grpc.UnaryHandler) (any, error) {
+			resp, err := h(ctx, req)
+			return resp, internal(err)
+		}),
+		grpc.StreamInterceptor(func(srv any, ss grpc.ServerStream, _ *grpc.StreamServerInfo, h grpc.StreamHandler) error {
+			return internal(h(srv, ss))
+		}))
+	rpb.RegisterRoomApiServer(g, s)
+	return g
+}
+
+func internal(err error) error {
+	if _, ok := status.FromError(err); err != nil && !ok {
+		return status.Error(codes.Internal, "Internal error, please contact us!")
+	}
+	return err
+}
+
 // listenerBuffer bounds what a slow listener may have pending; past it, its stream ends (RESOURCE_EXHAUSTED).
 const listenerBuffer = 256
 
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Trailer", "Grpc-Status, Grpc-Message")
-	if r.Method != http.MethodPost || !strings.HasPrefix(r.Header.Get("Content-Type"), "application/grpc") {
-		http.Error(w, "gRPC only", http.StatusUnsupportedMediaType)
-		return
-	}
-	w.Header().Set("Content-Type", "application/grpc")
-	w.WriteHeader(http.StatusOK)
-	if f, ok := w.(http.Flusher); ok {
-		f.Flush() // a listener's client waits for the headers before the first change
-	}
-	err := s.call(r, w)
-	var st *status
-	if err != nil && !errors.As(err, &st) {
-		st = &status{codeInternal, "Internal error, please contact us!"}
-	}
-	if st == nil {
-		st = &status{codeOK, ""}
-	}
-	w.Header().Set("Grpc-Status", strconv.Itoa(st.code))
-	w.Header().Set("Grpc-Message", percentEncode(st.msg))
-}
-
-func (s *Server) call(r *http.Request, w http.ResponseWriter) error {
-	method := strings.TrimPrefix(r.URL.Path, "/roomApi.RoomApi/")
-	body, err := readMessage(r.Body)
-	if err != nil {
-		return fail(codeInvalidArgument, "%v", err)
-	}
-	send := func(m proto.Message) error { return writeMessage(w, m) }
-	key := r.Header.Get("X-Api-Key")
-	switch method {
-	case "readVariable":
-		var req pb.VariableRequest
-		if err := s.decode(body, &req, key, func() string { return req.GetRoom() }); err != nil {
-			return err
-		}
-		return s.readVariable(r.Context(), &req, send)
-	case "listenVariable":
-		var req pb.VariableRequest
-		if err := s.decode(body, &req, key, func() string { return req.GetRoom() }); err != nil {
-			return err
-		}
-		return s.listenVariable(r.Context(), &req, send)
-	case "saveVariable":
-		var req pb.SaveVariableRequest
-		if err := s.decode(body, &req, key, func() string { return req.GetRoom() }); err != nil {
-			return err
-		}
-		return s.saveVariable(r.Context(), &req, send)
-	case "broadcastEvent":
-		var req pb.DispatchEventRequest
-		if err := s.decode(body, &req, key, func() string { return req.GetRoom() }); err != nil {
-			return err
-		}
-		return s.broadcastEvent(r.Context(), &req, send)
-	case "listenToEvent":
-		var req pb.EventRequest
-		if err := s.decode(body, &req, key, func() string { return req.GetRoom() }); err != nil {
-			return err
-		}
-		return s.listenToEvent(r.Context(), &req, send)
-	}
-	return fail(codeUnimplemented, "Method %s not found", method)
-}
-
-// decode reads the request, then checks the key and the room (LocalAuthenticator of the pusher).
-func (s *Server) decode(body []byte, m proto.Message, key string, room func() string) error {
-	if err := proto.Unmarshal(body, m); err != nil {
-		return fail(codeInvalidArgument, "%v", err)
+// authorize checks the key of the call and its room (LocalAuthenticator of the pusher, or the admin).
+func (s *Server) authorize(ctx context.Context, room string) error {
+	md, _ := metadata.FromIncomingContext(ctx)
+	key := ""
+	if v := md.Get("x-api-key"); len(v) > 0 {
+		key = v[0]
 	}
 	if key == "" {
-		return fail(codeUnauthenticated, "X-API-Key metadata not defined!")
+		return status.Error(codes.Unauthenticated, "X-API-Key metadata not defined!")
 	}
 	if s.admin != nil {
-		return s.admin.authorize(key, room())
+		return s.admin.authorize(key, room)
 	}
 	if s.key == "" || subtle.ConstantTimeCompare([]byte(key), []byte(s.key)) != 1 {
-		return fail(codeUnauthenticated, "Wrong API key")
+		return status.Error(codes.Unauthenticated, "Wrong API key")
 	}
-	if s.frontURL != "/" && !strings.HasPrefix(room(), s.frontURL) {
-		return fail(codePermissionDenied, "You cannot interact with this room!")
+	if s.frontURL != "/" && !strings.HasPrefix(room, s.frontURL) {
+		return status.Error(codes.PermissionDenied, "You cannot interact with this room!")
 	}
 	return nil
 }
@@ -163,20 +95,23 @@ func (s *Server) room(ctx context.Context, url string) (room *core.Room, release
 	return room, func() { s.rooms.Release(url) }
 }
 
-func (s *Server) readVariable(ctx context.Context, req *pb.VariableRequest, send func(proto.Message) error) error {
+func (s *Server) ReadVariable(ctx context.Context, req *rpb.VariableRequest) (*structpb.Value, error) {
+	if err := s.authorize(ctx, req.GetRoom()); err != nil {
+		return nil, err
+	}
 	room, release := s.room(ctx, req.GetRoom())
 	defer release()
 	value, ok, err := room.ReadVariable(ctx, req.GetName())
-	if err != nil {
-		return err
+	if err != nil || !ok {
+		return &structpb.Value{}, err
 	}
-	if !ok {
-		return send(&structpb.Value{})
-	}
-	return send(jsonValue(value))
+	return jsonValue(value), nil
 }
 
-func (s *Server) saveVariable(ctx context.Context, req *pb.SaveVariableRequest, send func(proto.Message) error) error {
+func (s *Server) SaveVariable(ctx context.Context, req *rpb.SaveVariableRequest) (*emptypb.Empty, error) {
+	if err := s.authorize(ctx, req.GetRoom()); err != nil {
+		return nil, err
+	}
 	room, release := s.room(ctx, req.GetRoom())
 	defer release()
 	v := core.Variable{Name: req.GetName(), Value: jsonString(req.GetValue())}
@@ -199,12 +134,15 @@ func (s *Server) saveVariable(ctx context.Context, req *pb.SaveVariableRequest, 
 		}
 	}
 	if err != nil {
-		return fail(codeUnknown, "%v", err)
+		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	return send(&emptypb.Empty{})
+	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) broadcastEvent(ctx context.Context, req *pb.DispatchEventRequest, send func(proto.Message) error) error {
+func (s *Server) BroadcastEvent(ctx context.Context, req *rpb.DispatchEventRequest) (*emptypb.Empty, error) {
+	if err := s.authorize(ctx, req.GetRoom()); err != nil {
+		return nil, err
+	}
 	// Nobody to tell in a room that does not run: events are not kept for later.
 	if slices.Contains(s.rooms.Keys(), req.GetRoom()) {
 		room := s.rooms.Acquire(req.GetRoom())
@@ -213,38 +151,41 @@ func (s *Server) broadcastEvent(ctx context.Context, req *pb.DispatchEventReques
 		err := room.SendEvent(ctx, core.NewMsg(event, true), req.GetTargetUserIds())
 		s.rooms.Release(req.GetRoom())
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return send(&emptypb.Empty{})
+	return &emptypb.Empty{}, nil
 }
 
-func (s *Server) listenVariable(ctx context.Context, req *pb.VariableRequest, send func(proto.Message) error) error {
-	return s.listen(ctx, req.GetRoom(), func(e any) proto.Message {
+func (s *Server) ListenVariable(req *rpb.VariableRequest, stream grpc.ServerStreamingServer[structpb.Value]) error {
+	return listen(s, stream.Context(), req.GetRoom(), func(e any) *structpb.Value {
 		if v, ok := e.(core.VariableChanged); ok && v.Name == req.GetName() {
 			return jsonValue(v.Value)
 		}
 		return nil
-	}, send)
+	}, stream.Send)
 }
 
-func (s *Server) listenToEvent(ctx context.Context, req *pb.EventRequest, send func(proto.Message) error) error {
-	return s.listen(ctx, req.GetRoom(), func(e any) proto.Message {
+func (s *Server) ListenToEvent(req *rpb.EventRequest, stream grpc.ServerStreamingServer[rpb.EventResponse]) error {
+	return listen(s, stream.Context(), req.GetRoom(), func(e any) *rpb.EventResponse {
 		if m, ok := e.(*pb.SubMessage); ok {
 			if ev := m.GetReceivedEventMessage(); ev != nil && ev.GetName() == req.GetName() {
-				return &pb.EventResponse{Data: ev.GetData(), SenderId: ev.SenderId}
+				return &rpb.EventResponse{Data: ev.GetData(), SenderId: ev.SenderId}
 			}
 		}
 		return nil
-	}, send)
+	}, stream.Send)
 }
 
 // listen streams what pick takes from the room's changes and events, until the caller hangs up. The room stays
 // alive meanwhile.
-func (s *Server) listen(ctx context.Context, url string, pick func(any) proto.Message, send func(proto.Message) error) error {
+func listen[M any](s *Server, ctx context.Context, url string, pick func(any) *M, send func(*M) error) error {
+	if err := s.authorize(ctx, url); err != nil {
+		return err
+	}
 	room, release := s.room(ctx, url)
 	defer release()
-	out := make(chan proto.Message, listenerBuffer)
+	out := make(chan *M, listenerBuffer)
 	overflow := make(chan struct{})
 	stop, err := room.Watch(ctx, func(e any) {
 		m := pick(e)
@@ -270,7 +211,7 @@ func (s *Server) listen(ctx context.Context, url string, pick func(any) proto.Me
 		case <-ctx.Done():
 			return nil
 		case <-overflow:
-			return fail(codeResourceExhaust, "The listener does not read fast enough")
+			return status.Error(codes.ResourceExhausted, "The listener does not read fast enough")
 		case m := <-out:
 			if err := send(m); err != nil {
 				return nil
@@ -295,52 +236,4 @@ func jsonString(v *structpb.Value) string {
 	enc.SetEscapeHTML(false)
 	_ = enc.Encode(v.AsInterface())
 	return strings.TrimSuffix(b.String(), "\n")
-}
-
-// readMessage reads the one message of a gRPC request: a compression flag, a big-endian length, the bytes.
-func readMessage(body io.Reader) ([]byte, error) {
-	var head [5]byte
-	if _, err := io.ReadFull(body, head[:]); err != nil {
-		return nil, errors.New("no request message")
-	}
-	if head[0] != 0 {
-		return nil, errors.New("compressed messages are not supported")
-	}
-	n := binary.BigEndian.Uint32(head[1:])
-	if n > 4<<20 {
-		return nil, errors.New("request message too large")
-	}
-	msg := make([]byte, n)
-	_, err := io.ReadFull(body, msg)
-	return msg, err
-}
-
-func writeMessage(w http.ResponseWriter, m proto.Message) error {
-	b, err := proto.Marshal(m)
-	if err != nil {
-		return err
-	}
-	frame := make([]byte, 5, 5+len(b))
-	binary.BigEndian.PutUint32(frame[1:], uint32(len(b)))
-	if _, err := w.Write(append(frame, b...)); err != nil {
-		return err
-	}
-	if f, ok := w.(http.Flusher); ok {
-		f.Flush()
-	}
-	return nil
-}
-
-// percentEncode is how grpc-message is written: bytes outside printable ASCII, and %, as %XX.
-func percentEncode(s string) string {
-	var b strings.Builder
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c < 0x20 || c > 0x7e || c == '%' {
-			fmt.Fprintf(&b, "%%%02X", c)
-		} else {
-			b.WriteByte(c)
-		}
-	}
-	return b.String()
 }
