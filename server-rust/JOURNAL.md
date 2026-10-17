@@ -732,3 +732,18 @@ autorité et un certificat serveur signé par elle (`CA:FALSE`). Le journal ajou
 avalées (« could not fetch the map ») est ce qui l'a montré.
 
 Côté image : `api-version.sh` (même calcul que `tag-version`), cartes dans `/maps` en uid 1000, comme map-storage.
+
+**Rejeu après les deux corrections du certificat par le socle** (autorité + certificat `CA:FALSE`, dev-socle
+0e5ce6e88 ; puis chaque hôte listé dans le SAN, car webpki refuse le joker `*.localhost` sous un nom à une étiquette,
+a6de39cab) : **51 contrôles sur 51**, deux fois de suite.
+
+| Mesure | → Rust (passage 1 / 2) | → TS (passage 1 / 2) |
+|---|---|---|
+| `helm upgrade --wait` | 4 s / 4 s | 14 s / 15 s |
+| les deux se revoient bouger | 12,7 s / 10,8 s | 20,6 s / 20,8 s |
+| coupure | 2,6 s / 1,2 s | 7,2 s / 7,3 s |
+| bannière « Connection lost » | vue de +3,6 à +10,1 s / jamais | jamais / jamais |
+
+La bannière du premier passage commence quand la socket TS se ferme (+27,7 s du scénario) et finit à +34,3 s, alors
+que le pod Rust ne répond à `/ping` qu'à +33,2 s : pendant tout ce temps, les joueurs ne parlaient qu'au TS en
+train de s'arrêter. Une fois sur deux : arrêt du TS, pas un défaut Rust. Ni rechargement ni reconnexion à zéro.
