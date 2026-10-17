@@ -732,3 +732,47 @@ async fn with_an_admin_the_room_access_decides_who_enters_and_as_whom() {
     let Err(e) = refused else { panic!("a refused user must not enter") };
     assert!(format!("{e:?}").contains("You were banned") || format!("{e:?}").contains("closed"), "{e:?}");
 }
+
+#[tokio::test]
+async fn each_tenant_has_its_own_maps_under_the_same_paths() {
+    let dir = std::env::temp_dir().join(format!("wa-rust-tenants-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let (_server, maps) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("USE_DOMAIN_NAME_IN_PATH", "true"),
+        ("ENABLE_BEARER_AUTHENTICATION", "true"),
+        ("AUTHENTICATION_TOKEN", "admin-token"),
+    ])
+    .await;
+    let http = reqwest::Client::new();
+    let wam = |name: &str| format!(r#"{{"version":"2.1.0","mapUrl":"./m.tmj","areas":[],"entities":{{}},"entityCollections":[],"metadata":{{"name":"{name}"}}}}"#);
+    // The admin writes for a tenant with X-Forwarded-Host (or X-Map-Storage-Host).
+    for (host, header, name) in [("acme.maps.test", "x-forwarded-host", "Acme"), ("globex.maps.test", "x-map-storage-host", "Globex")] {
+        let r = http
+            .put(format!("{maps}/maps/m.wam"))
+            .bearer_auth("admin-token")
+            .header(header, host)
+            .header("content-type", "application/octet-stream")
+            .body(wam(name))
+            .send()
+            .await
+            .unwrap();
+        assert!(r.status().is_success(), "{host}: {}", r.status());
+    }
+    assert!(dir.join("acme.maps.test/maps/m.wam").exists() && dir.join("globex.maps.test/maps/m.wam").exists());
+    // Each one reads its own, by its host.
+    for (host, name) in [("acme.maps.test", "Acme"), ("globex.maps.test:443", "Globex")] {
+        let got: serde_json::Value = http.get(format!("{maps}/maps/m.wam")).header("host", host).send().await.unwrap().json().await.unwrap();
+        assert_eq!(got["metadata"]["name"], name, "{host}");
+        let list: serde_json::Value = http.get(format!("{maps}/maps")).header("host", host).send().await.unwrap().json().await.unwrap();
+        assert_eq!(list["maps"].as_object().unwrap().keys().collect::<Vec<_>>(), ["maps/m.wam"], "{host}");
+        assert_eq!(list["maps"]["maps/m.wam"]["metadata"]["name"], name);
+    }
+    // Nothing of a tenant for a host without maps, and no way out of a tenant's folder.
+    let other = http.get(format!("{maps}/maps/m.wam")).header("host", "initech.maps.test").send().await.unwrap();
+    assert_eq!(other.status(), 404);
+    let escape = http.get(format!("{maps}/maps/m.wam")).header("x-forwarded-host", "acme.maps.test/..").send().await.unwrap();
+    assert_eq!(escape.status(), 400);
+    let _ = std::fs::remove_dir_all(&dir);
+}
