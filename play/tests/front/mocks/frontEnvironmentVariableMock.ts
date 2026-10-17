@@ -13,6 +13,7 @@ export const JITSI_PRIVATE_MODE = false;
 export const ENABLE_MAP_EDITOR = false;
 export const MAX_USERNAME_LENGTH = 10;
 export const MAX_PER_GROUP = 4;
+export const PROXIMITY_FILE_TRANSFER_MAX_USERS = 10;
 export const MAX_DISPLAYED_VIDEOS = 16;
 export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const NODE_ENV = "test";

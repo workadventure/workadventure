@@ -31,9 +31,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "카메라가 비활성화되어 있습니다",
         activate: "카메라 활성화",
-        noImageWarning: "카메라에서 영상이 전송되지 않습니다. 다른 애플리케이션이 사용 중일 수 있습니다.",
-        retry: "다시 시도",
-        changeCamera: "카메라 변경",
     },
     microphone: {
         disabled: "마이크가 비활성화되어 있습니다",
@@ -41,6 +38,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "마이크에서 소리가 감지되지 않습니다. 문제가 있을 수 있습니다 — 설정에서 마이크를 변경해 보세요.",
         advancedNoiseReduction: "고급 소음 감소",
+        loudEnvironmentWarning: "마이크에서 지속적인 배경 소음이 감지되었습니다.",
+        enableNoiseSuppression: "소음 억제 활성화",
         noiseSuppressionInitializing: "사용자 지정 소음 억제를 초기화하는 중...",
         noiseSuppressionUnsupported: "이 브라우저에서는 사용자 지정 소음 억제를 실행할 수 없습니다.",
         noiseSuppressionError: "사용자 지정 소음 억제에 실패했습니다. 브라우저 기본 소음 억제로 돌아갑니다.",

@@ -32,7 +32,7 @@
     }
 </script>
 
-<div class="pointer-events-none absolute right-0 top-0 z-[425] flex flex-col gap-2 p-1 @md/actions:p-2">
+<div class="pointer-events-none mt-2 flex flex-col gap-2">
     {#each $calendarRemindersStore as event (event.id)}
         {@const started = event.start <= now}
         {@const link = event.resource?.onlineMeeting?.joinUrl}

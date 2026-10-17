@@ -30,10 +30,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Ihre Kamera ist deaktiviert",
         activate: "Kamera aktivieren",
-        noImageWarning:
-            "Ihre Kamera sendet keine Bilder mehr. Möglicherweise wird sie von einer anderen Anwendung verwendet.",
-        retry: "Erneut versuchen",
-        changeCamera: "Kamera wechseln",
     },
     microphone: {
         disabled: "Ihr Mikrofon ist deaktiviert",
@@ -41,6 +37,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Kein Ton von Ihrem Mikrofon erkannt. Möglicherweise liegt ein Problem vor; versuchen Sie, Ihr Mikrofon in den Einstellungen zu wechseln.",
         advancedNoiseReduction: "Erweiterte Geräuschreduzierung",
+        loudEnvironmentWarning: "An Ihrem Mikrofon wurden anhaltende Hintergrundgeräusche erkannt.",
+        enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
         noiseSuppressionInitializing: "Benutzerdefinierte Geräuschunterdrückung wird initialisiert...",
         noiseSuppressionUnsupported:
             "Dieser Browser kann die benutzerdefinierte Geräuschunterdrückung nicht ausführen.",

@@ -840,7 +840,8 @@ class LocalUserStore {
             localStorage.setItem(noiseSuppressionProviderKey, "workadventure");
             return false;
         }
-        return localStorage.getItem(noiseSuppressionEnabledKey) === "true";
+        // On by default: only an explicit "false" turns it off.
+        return localStorage.getItem(noiseSuppressionEnabledKey) !== "false";
     }
 
     setNoiseSuppressionProvider(value: NoiseSuppressionProvider) {

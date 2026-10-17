@@ -45,6 +45,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         PUBLIC_MAP_STORAGE_PREFIX: undefined,
         MAX_USERNAME_LENGTH: 20,
         MAX_PER_GROUP: 4,
+        PROXIMITY_FILE_TRANSFER_MAX_USERS: 10,
         MAX_DISPLAYED_VIDEOS: 4,
         LIVEKIT_PIXEL_DENSITY: 2 / 3,
         NODE_ENV: "test",
