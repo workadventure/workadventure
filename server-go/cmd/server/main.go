@@ -4,9 +4,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/workadventure/workadventure/server-go/internal/livekit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
+	"github.com/workadventure/workadventure/server-go/internal/matrix"
+	"github.com/workadventure/workadventure/server-go/internal/s3"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
 	"net"
@@ -22,6 +25,7 @@ import (
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/admin"
+	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/config"
 	"github.com/workadventure/workadventure/server-go/internal/core"
@@ -90,6 +94,36 @@ func run() error {
 		}
 	}
 	media.MaxUsersForWebRTC, media.SwitchOnCPULimit = cfg.MaxUsersForWebRTC, cfg.LiveKitSwitchOnCPULimitation
+	// Two queues, as two processes had: the pusher's waits for the capability, the back's sends the meetings once
+	// configured, under its own instance id.
+	events := analyticsQueue(cfg, adm, false)
+	meetings := analyticsQueue(cfg, adm, true)
+	if meetings != nil {
+		media.Analytics = meetings.Enqueue
+	}
+	if h, ok := adm.(*admin.HTTP); ok && h.Capabilities()["api/livekit/credentials"] == "v1" {
+		media.LiveKitFor = func(ctx context.Context, playURI string) (core.LiveKit, error) {
+			if playURI == "" {
+				return nil, errors.New("playUri is required when using AdminAPI for Livekit credentials")
+			}
+			host, key, secret, err := h.LiveKitCredentials(ctx, playURI)
+			if err != nil {
+				return nil, err
+			}
+			return livekit.New(host, key, secret), nil
+		}
+	}
+	if h, ok := adm.(*admin.HTTP); ok {
+		media.RecordingEnded = func(e core.RecordingEnded) {
+			go func() {
+				if err := h.RecordingEvent(context.Background(), recordingPayload(e)); err != nil {
+					slog.Error("the admin was not told a recording ended", "egress", e.EgressID, "error", err)
+				}
+			}()
+		}
+	}
+	go events.Run(ctx)
+	go meetings.Run(ctx)
 	spaces := registry.NewRefs(
 		func(k core.SpaceKey) *core.Space { metrics.Spaces.Inc(); return core.NewSpaceWithMedia(k, media) },
 		func(s *core.Space) { s.Stop(); metrics.Spaces.Dec() },
@@ -106,6 +140,10 @@ func run() error {
 	}
 	wsServer := ws.NewServer(cfg, tokens, adm, rooms, spaces, maps, vars, apiVersion)
 	maps.Changed = wsServer.MapChanged
+	wsServer.SetAnalytics(events)
+	if cfg.MatrixEnabled {
+		wsServer.SetMatrix(matrix.New(cfg.Matrix.APIURI, cfg.Matrix.AdminUser, cfg.Matrix.AdminPassword, cfg.Matrix.Domain))
+	}
 	handler := httpapi.New(cfg, tokens, adm, front, wsServer, version)
 
 	// ReadHeaderTimeout: a client that never finishes its headers must not hold a connection forever.
@@ -120,10 +158,25 @@ func run() error {
 		servers = append(servers, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
 	}
 	if cfg.UploaderPort != 0 && cfg.UploaderPort != cfg.HTTPPort && cfg.UploaderPort != cfg.WSPort && cfg.UploaderPort != cfg.MapStoragePort {
-		servers = append(servers, newServer(cfg.UploaderPort, uploader.New(cfg.Uploader).Handler()))
+		up := cfg.Uploader
+		if b := cfg.UploaderS3; b.Enabled() {
+			endpoint := b.Endpoint
+			if endpoint == "" {
+				endpoint = "https://s3." + b.Region + ".amazonaws.com"
+			}
+			up.S3, up.S3URLTTL = s3.New(endpoint, b.Region, b.Bucket, b.AccessKey, b.Secret), b.URLTTL
+		}
+		if r, ok := vars.(*store.Redis); ok {
+			up.Redis = r
+		}
+		servers = append(servers, newServer(cfg.UploaderPort, uploader.New(up).Handler()))
 	}
-	if cfg.RoomAPISecretKey != "" {
-		roomAPI := newServer(cfg.RoomAPIPort, roomapi.New(cfg.RoomAPISecretKey, cfg.FrontURL, rooms, wsServer.RoomVariables))
+	if cfg.RoomAPISecretKey != "" || cfg.AdminAPIURL != "" {
+		api := roomapi.New(cfg.RoomAPISecretKey, cfg.FrontURL, rooms, wsServer.RoomVariables)
+		if cfg.AdminAPIURL != "" {
+			api.WithAdmin(roomapi.NewAdminAuthorizer(cfg.AdminAPIURL, cfg.NodeEnv == "production"))
+		}
+		roomAPI := newServer(cfg.RoomAPIPort, api)
 		roomAPI.Addr = net.JoinHostPort(cfg.RoomAPIBindHost, strconv.Itoa(cfg.RoomAPIPort))
 		roomAPI.Protocols = new(http.Protocols)
 		roomAPI.Protocols.SetUnencryptedHTTP2(true) // gRPC without TLS (h2c with prior knowledge)
@@ -161,6 +214,14 @@ func run() error {
 	if err := wsServer.FlushVariables(shutdownCtx); err != nil {
 		slog.Error("variables lost on shutdown", "error", err)
 	}
+	wsServer.CloseAnalytics()
+	for _, k := range spaces.Keys() { // a meeting only exists once it ended
+		sp := spaces.Acquire(k)
+		sp.CloseMeeting(shutdownCtx)
+		spaces.Release(k)
+	}
+	events.Drain(time.Until(deadline(shutdownCtx)))
+	meetings.Drain(time.Until(deadline(shutdownCtx)))
 	return nil
 }
 
@@ -203,4 +264,55 @@ func healthcheck() int {
 		return 1
 	}
 	return 0
+}
+
+// analyticsQueue is an analytics queue (A22). The pusher's is on when the admin offers api/analytics/events-batch
+// v1; the back's always.
+func analyticsQueue(cfg *config.Config, adm admin.Admin, back bool) *analytics.Queue {
+	if cfg.AdminAPIURL == "" || cfg.AdminAPIToken == "" {
+		return nil
+	}
+	id := firstSet(os.Getenv("HOSTNAME"), os.Getenv("SERVER_NAME"), "pusher")
+	if back {
+		id = "back:" + firstSet(os.Getenv("HOSTNAME"), os.Getenv("SERVER_NAME"), "back")
+	}
+	q := analytics.New(analytics.Config{AdminURL: cfg.AdminAPIURL, Token: cfg.AdminAPIToken, InstanceID: id,
+		FlushInterval: cfg.Analytics.FlushInterval, Timeout: cfg.Analytics.Timeout, MaxQueue: cfg.Analytics.MaxQueue, MaxBatch: cfg.Analytics.MaxBatch})
+	q.SetEnabled(back || adm.Capabilities()["api/analytics/events-batch"] == "v1")
+	return q
+}
+
+func firstSet(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func deadline(ctx context.Context) time.Time {
+	d, _ := ctx.Deadline()
+	return d
+}
+
+// recordingPayload is the back's RecordingEventPayload.
+func recordingPayload(e core.RecordingEnded) map[string]any {
+	iso := func(t time.Time) any {
+		if t.IsZero() {
+			return nil
+		}
+		return t.UTC().Format("2006-01-02T15:04:05.000Z")
+	}
+	var errMessage any
+	if e.Info.Error != "" {
+		errMessage = e.Info.Error
+	}
+	files := make([]map[string]any, 0, len(e.Info.Files))
+	for _, f := range e.Info.Files {
+		files = append(files, map[string]any{"filename": f.Filename, "sizeBytes": f.SizeBytes, "durationSeconds": int64(f.Duration.Round(time.Second) / time.Second)})
+	}
+	return map[string]any{"phase": "ended", "status": e.Info.Status, "egressId": e.EgressID, "recordingSessionId": e.SessionID,
+		"playUri": e.Recorder.PlayURI, "recorder": map[string]string{"uuid": e.Recorder.UUID, "spaceUserId": e.Recorder.ID},
+		"startedAt": iso(e.Info.StartedAt), "endedAt": iso(e.Info.EndedAt), "error": errMessage, "files": files}
 }
