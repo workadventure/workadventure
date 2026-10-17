@@ -352,15 +352,30 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
     let mut space: Option<Space> = None;
     let mut sessions: HashMap<String, Arc<Session>> = HashMap::new();
     let instance = format!("{:x}", rand_u64());
+    // The back's SessionAnalytics: the space is looked at after every change.
+    let world = key.strip_suffix(&format!(".{local_name}")).unwrap_or_default().to_owned();
+    let mut meetings = app.analytics.clone().map(|a| (a, wa_core::meetings::Meetings::new(key.clone(), local_name.clone())));
+    let mut shutdown = app.shutdown.subscribe();
 
     loop {
         use pb::answer_message::Answer;
+        if let (Some(s), Some((a, m))) = (&space, &mut meetings) {
+            m.observe(s, crate::redis_store::now_ms());
+            a.meeting_rows(&world, m.take_rows());
+        }
         let deadline = space.as_ref().and_then(Space::next_deadline);
         let cmd = tokio::select! {
             cmd = mailbox.recv() => match cmd {
                 Some(cmd) => cmd,
                 None => break,
             },
+            Ok(()) = shutdown.changed(), if meetings.is_some() => {
+                if let Some((a, mut m)) = meetings.take() {
+                    m.close("back_shutdown", crate::redis_store::now_ms());
+                    a.meeting_rows(&world, m.take_rows());
+                }
+                continue;
+            }
             () = sleep_until_ms(deadline) => {
                 if let Some(s) = &mut space {
                     s.tick(&mut Out { name: &local_name, sessions: &sessions, media: &media });
@@ -732,6 +747,11 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                 },
             ),
         }
+    }
+    if let (Some(s), Some((a, mut m))) = (&space, meetings) {
+        m.observe(s, crate::redis_store::now_ms());
+        m.close("closed", crate::redis_store::now_ms());
+        a.meeting_rows(&world, m.take_rows());
     }
     registry.forget_dead(&key);
     METRICS.nb_spaces.dec();

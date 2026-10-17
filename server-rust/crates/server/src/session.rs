@@ -67,6 +67,8 @@ pub struct SessionInfo {
     pub user_room_token: String,
     pub activated_invite_user: bool,
     pub can_record: bool,
+    /// analyticsEventsEnabled from the admin (A3); false without one.
+    pub analytics_enabled: bool,
 }
 
 enum WriterCmd {
@@ -84,6 +86,8 @@ pub struct Session {
     pub info: SessionInfo,
     pub outbox: Outbox,
     user_id: OnceLock<UserId>,
+    /// When the room said the user joined (ms), for the connection's analytics session.
+    joined_at: OnceLock<u64>,
     last_client_nonce: AtomicU32,
     generation: AtomicU64,
     writer: mpsc::Sender<WriterCmd>,
@@ -118,6 +122,7 @@ impl Session {
             info,
             outbox: Outbox::new(Limits::default(), budgets.outboxes.clone()),
             user_id: OnceLock::new(),
+            joined_at: OnceLock::new(),
             last_client_nonce: AtomicU32::new(0),
             generation: AtomicU64::new(0),
             writer: writer_tx,
@@ -143,6 +148,11 @@ impl Session {
     /// Set once, by the room, when the user joined.
     pub fn set_user_id(&self, id: UserId) {
         let _ = self.user_id.set(id);
+        let _ = self.joined_at.set(crate::redis_store::now_ms());
+    }
+
+    pub fn joined_at(&self) -> Option<u64> {
+        self.joined_at.get().copied()
     }
 
     /// `${roomId}_${userId}`: the front computes the same string.

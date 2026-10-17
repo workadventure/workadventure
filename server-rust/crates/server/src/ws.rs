@@ -207,6 +207,7 @@ async fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &H
             world: access["world"].as_str().unwrap_or_default().to_owned(),
             can_edit: access["canEdit"].as_bool().unwrap_or(false),
             can_record: access["canRecord"].as_bool().unwrap_or(false),
+            analytics_enabled: access["analyticsEventsEnabled"].as_bool().unwrap_or(true),
             room_id,
             token: token.to_owned(),
             user_uuid: access["userUuid"].as_str().unwrap_or_default().to_owned(),
@@ -248,6 +249,7 @@ async fn prepare(state: &AppState, query: Option<&str>, token: &str, headers: &H
     let tags = claims.tags.clone().unwrap_or_default();
     Upgrade::Fresh(Box::new(SessionInfo {
         can_record: local_admin::can_record(&state.config, claims.access_token.is_some()),
+        analytics_enabled: false,
         activated_invite_user: true,
         user_room_token: String::new(),
         can_edit: local_admin::can_edit(&state.config, &room_id, &claims.identifier, &tags),
