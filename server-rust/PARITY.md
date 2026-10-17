@@ -8,6 +8,9 @@ commit indiqué en tête du dernier passage.
 le code) · `implémenté non vérifié` (code présent, aucune preuve de bout en bout) · `partiel` (une partie du
 contrat seulement, écart nommé) · `absent` · `hors périmètre explicite` (décision écrite, avec sa raison).
 
+Revue qualité (sécurité, erreurs avalées, architecture, couverture, dette) : [`IMPROVEMENTS.md`](IMPROVEMENTS.md) ;
+guide pour ajouter une fonction : [`docs/ADDING_A_FEATURE.md`](docs/ADDING_A_FEATURE.md).
+
 Un paramètre lu ou un test sans assertion ne vaut pas `validé`. « Spec » = Playwright Chromium, stack
 `dev/dev stack up rust --variant server`, comptes préchauffés (`dev/warm-auth.mjs`). « Réf. TS » = même spec sur la
 stack `ts` du socle.

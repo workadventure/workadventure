@@ -117,6 +117,42 @@ async fn serve(state: &AppState, path: &str, raw: &str) -> Response {
     response
 }
 
+/// BODY_PARSER_JSON_SIZE_LIMIT, as body-parser reads it ("100mb", "1gb", "500kb", or bytes); 100 MiB by default.
+fn json_limit(state: &AppState) -> usize {
+    let raw =
+        state.config.raw.get("BODY_PARSER_JSON_SIZE_LIMIT").map(|v| v.trim().to_ascii_lowercase()).unwrap_or_default();
+    let split = raw.find(|c: char| !c.is_ascii_digit() && c != '.').unwrap_or(raw.len());
+    let (n, unit) = raw.split_at(split);
+    let scale = match unit.trim() {
+        "" | "b" => 1.0,
+        "kb" => 1024.0,
+        "mb" => 1024.0 * 1024.0,
+        "gb" => 1024.0 * 1024.0 * 1024.0,
+        _ => return 100 * 1024 * 1024,
+    };
+    n.parse::<f64>().map_or(100 * 1024 * 1024, |n| (n * scale) as usize)
+}
+
+/// A JSON body as `bodyParser.json` takes it: only `application/json` and `application/json-patch+json` are read
+/// (anything else is an empty body), and one over the limit is a 413.
+async fn json_body(state: &AppState, request: Request) -> Result<Option<Value>, Response> {
+    let json = request.headers().get(header::CONTENT_TYPE).and_then(|v| v.to_str().ok()).is_some_and(|v| {
+        let t = v.split(';').next().unwrap_or_default().trim().to_ascii_lowercase();
+        t == "application/json" || t == "application/json-patch+json"
+    });
+    if !json {
+        return Ok(None);
+    }
+    let body = axum::body::to_bytes(request.into_body(), json_limit(state))
+        .await
+        .map_err(|_| (StatusCode::PAYLOAD_TOO_LARGE, "request entity too large").into_response())?;
+    // Strict, as body-parser: an object or an array.
+    match serde_json::from_slice::<Value>(&body) {
+        Ok(v @ (Value::Object(_) | Value::Array(_))) => Ok(Some(v)),
+        _ => Err((StatusCode::BAD_REQUEST, "Invalid JSON body").into_response()),
+    }
+}
+
 fn invalid_wam(details: &str) -> Response {
     (StatusCode::BAD_REQUEST, axum::Json(validation_error("map", "Invalid WAM file format.", details))).into_response()
 }
@@ -187,8 +223,11 @@ async fn patch(state: AppState, path: String, request: Request) -> Response {
     let Some(current) = state.storage.read(&path).await else {
         return (StatusCode::INTERNAL_SERVER_ERROR, "File not found").into_response();
     };
-    let body = axum::body::to_bytes(request.into_body(), MAX_UPLOAD).await.unwrap_or_default();
-    let Ok(Value::Array(ops)) = serde_json::from_slice::<Value>(&body) else {
+    let body = match json_body(&state, request).await {
+        Ok(body) => body,
+        Err(refused) => return refused,
+    };
+    let Some(Value::Array(ops)) = body else {
         let refusal = json!({"patch": "Invalid patch: expected an array of operations"});
         return (StatusCode::BAD_REQUEST, axum::Json(refusal)).into_response();
     };
