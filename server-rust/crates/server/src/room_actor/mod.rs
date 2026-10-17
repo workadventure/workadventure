@@ -21,10 +21,15 @@ use crate::custom_entities;
 use crate::map_storage::{CachedMap, MapChange, MapSlot, Storage};
 use crate::metrics::{METRICS, dec_room_gauge};
 use crate::outbox::Frame;
+use crate::registry::ActorRegistry;
 use crate::room_map;
 use crate::session::Session;
 use crate::session::SessionInfo;
 use crate::wire;
+
+mod admin;
+mod social;
+mod variables;
 
 pub const MAILBOX: usize = 1024;
 
@@ -755,13 +760,40 @@ pub async fn world_users(app: &AppState, world: &str) -> Option<Vec<WorldUser>> 
     Some(users)
 }
 
-async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, app: AppState) {
+/// A room and everything its task owns. Commands run one at a time, in order; I/O runs in other tasks.
+struct RoomActor {
+    room: Room,
+    app: AppState,
+    url: String,
+    map: Option<MapFile>,
+    room_vars: RoomVariables,
+    map_warning: Option<&'static str>,
+    vars_loaded: std::time::Instant,
+    map_reload: JoinSet<room_map::Defs>,
+    retries: Vec<(Arc<Session>, String, String)>,
+    var_listeners: Listeners<String>,
+    event_listeners: Listeners<EventData>,
+    variables: AreaVariables,
+    follows: Follows,
+    admins: Vec<tokio::sync::mpsc::Sender<String>>,
+    version: i32,
+    invitations: Invitations,
+    items: std::collections::BTreeMap<i32, String>,
+    sessions: HashMap<UserId, Arc<Session>>,
+    groups_seen: u64,
+    group_gauge: i64,
+    registry: Arc<ActorRegistry<RoomCmd>>,
+    details: serde_json::Value,
+}
+
+async fn run(room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, app: AppState) {
+    let room = room;
     let (registry, storage) = (app.rooms.clone(), app.storage.clone());
     let url = room.url().to_owned();
     METRICS.nb_rooms.inc();
     // Like GameRoom.create, the WAM is read before anybody joins.
     let details = room_map::details(&app, &url).await;
-    let mut map = match room_map::wam_key(&app, &url, &details) {
+    let map = match room_map::wam_key(&app, &url, &details) {
         Some(rel) => Some(MapFile::open(storage.clone(), rel).await),
         None => None,
     };
@@ -772,56 +804,93 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
     if room_vars.has_map() {
         room_vars.restore(app.redis.room_variables(&url).await);
     }
-    let mut map_warning = defs.err();
-    let mut vars_loaded = std::time::Instant::now();
+    let map_warning = defs.err();
+    let vars_loaded = std::time::Instant::now();
     // A refused write may come from a map changed since: it is read again (at most every 10 s) and the writes
     // waiting for it are tried again.
-    let mut map_reload: JoinSet<room_map::Defs> = JoinSet::new();
-    let mut retries: Vec<(Arc<Session>, String, String)> = Vec::new();
-    let mut var_listeners: Listeners<String> = Listeners::default();
-    let mut event_listeners: Listeners<EventData> = Listeners::default();
+    let map_reload: JoinSet<room_map::Defs> = JoinSet::new();
+    let retries: Vec<(Arc<Session>, String, String)> = Vec::new();
+    let var_listeners: Listeners<String> = Listeners::default();
+    let event_listeners: Listeners<EventData> = Listeners::default();
     let mut variables = AreaVariables::default();
-    let mut follows = Follows::default();
+    let follows = Follows::default();
     // The admin sockets watching this room.
-    let mut admins: Vec<tokio::sync::mpsc::Sender<String>> = Vec::new();
+    let admins: Vec<tokio::sync::mpsc::Sender<String>> = Vec::new();
     // incrementVersion: each admin refresh of the room.
-    let mut version = 0i32;
-    let mut invitations = Invitations::default();
+    let version = 0i32;
+    let invitations = Invitations::default();
     // itemEventMessage: the last state of each item, for those who join later.
-    let mut items: std::collections::BTreeMap<i32, String> = std::collections::BTreeMap::new();
+    let items: std::collections::BTreeMap<i32, String> = std::collections::BTreeMap::new();
     if let Some(wam) = map.as_ref().and_then(|m| m.wam.as_ref()) {
         variables.track(wam.areas(), std::iter::empty());
     }
-    let mut sessions: HashMap<UserId, Arc<Session>> = HashMap::new();
-    let mut groups_seen = 0u64;
-    let mut group_gauge = 0i64;
+    let sessions: HashMap<UserId, Arc<Session>> = HashMap::new();
+    let groups_seen = 0u64;
+    let group_gauge = 0i64;
 
+    let mut a = RoomActor {
+        room,
+        app,
+        url,
+        map,
+        room_vars,
+        map_warning,
+        vars_loaded,
+        map_reload,
+        retries,
+        var_listeners,
+        event_listeners,
+        variables,
+        follows,
+        admins,
+        version,
+        invitations,
+        items,
+        sessions,
+        groups_seen,
+        group_gauge,
+        registry,
+        details,
+    };
     loop {
-        use pb::server_to_client_message::Message as Top;
         let cmd = tokio::select! {
             cmd = mailbox.recv() => match cmd {
                 Some(cmd) => cmd,
                 None => break,
             },
-            done = MapFile::next_done(&mut map) => {
-                let outcomes = map.as_mut().map_or_else(Vec::new, |m| m.finish(done));
-                deliver(outcomes, &map, &mut variables, &room, &mut sessions, &url);
+            done = MapFile::next_done(&mut a.map) => {
+                let outcomes = a.map.as_mut().map_or_else(Vec::new, |m| m.finish(done));
+                deliver(outcomes, &a.map, &mut a.variables, &a.room, &mut a.sessions, &a.url);
                 continue;
             }
-            Some(Ok(defs)) = map_reload.join_next(), if !map_reload.is_empty() => {
-                map_warning = defs.as_ref().err().copied();
-                room_vars.reload(defs.ok());
-                for (session, name, value) in std::mem::take(&mut retries) {
-                    if let Err(e) = set_variable(&mut room_vars, &app, &url, &sessions, &mut var_listeners, player(&room, &session), &name, &value) {
+            Some(Ok(defs)) = a.map_reload.join_next(), if !a.map_reload.is_empty() => {
+                a.map_warning = defs.as_ref().err().copied();
+                a.room_vars.reload(defs.ok());
+                for (session, name, value) in std::mem::take(&mut a.retries) {
+                    if let Err(e) = set_variable(&mut a.room_vars, &a.app, &a.url, &a.sessions, &mut a.var_listeners, player(&a.room, &session), &name, &value) {
                         refuse(&session, &e);
                     }
                 }
                 continue;
             }
         };
+        a.handle(cmd).await;
+        a.metrics();
+    }
+    // Nobody holds a handle on this room any more.
+    if let Some(m) = &mut a.map {
+        m.drain().await;
+    }
+    a.registry.forget_dead(&a.url);
+    METRICS.nb_rooms.dec();
+}
+
+impl RoomActor {
+    async fn handle(&mut self, cmd: RoomCmd) {
+        use pb::server_to_client_message::Message as Top;
         match cmd {
             RoomCmd::Connect { session } => {
-                let commands = map.as_ref().map_or_else(Vec::new, |m| {
+                let commands = self.map.as_ref().map_or_else(Vec::new, |m| {
                     let latest = m.wam.as_ref().and_then(Wam::last_command_id);
                     m.history.after(session.info.last_command_id.as_deref(), latest).into_iter().cloned().collect()
                 });
@@ -833,288 +902,44 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 })));
             }
             RoomCmd::Edit { session, command } => {
-                let outcomes = match &mut map {
+                let outcomes = match &mut self.map {
                     Some(m) => m.submit(Pending::Edit { session, command }),
                     None => vec![Outcome::Edited {
                         session,
                         id: command.id,
-                        result: Err("This map cannot be edited".to_owned()),
+                        result: Err("This self.map cannot be edited".to_owned()),
                     }],
                 };
-                deliver(outcomes, &map, &mut variables, &room, &mut sessions, &url);
+                deliver(outcomes, &self.map, &mut self.variables, &self.room, &mut self.sessions, &self.url);
             }
-            RoomCmd::SetAreaVariable { session, variable: v } => {
-                let Some(wam) = map.as_ref().and_then(|m| m.wam.as_ref()) else { continue };
-                // A refusal is silent, as on the back.
-                if areas::may_set(wam.areas(), &v.area_id, &v.property_id, &session.info.tags)
-                    && variables.set(&v.area_id, &v.property_id, &v.key, &v.value)
-                {
-                    Fanout::new(&mut sessions).each_all(&variable_frame((v.area_id, v.property_id, v.key), v.value));
-                }
+            cmd @ (RoomCmd::SetAreaVariable { .. } | RoomCmd::Event { .. } | RoomCmd::Variable { .. }) => {
+                self.variables(cmd).await
             }
-            RoomCmd::Event { sender, name, data, targets } => {
-                event_listeners.send(&name, (data.clone(), sender));
-                let frame = wire::sub(pb::sub_message::Message::ReceivedEventMessage(pb::ReceivedEventMessage {
-                    name,
-                    data,
-                    sender_id: sender,
-                }));
-                let out = Fanout::new(&mut sessions);
-                if targets.is_empty() {
-                    out.each_all(&frame);
-                } else {
-                    out.each(&targets, &frame);
-                }
-            }
-            RoomCmd::Social { session, act } => {
-                let Some(me) = session.user_id().filter(|id| sessions.contains_key(id)) else { continue };
-                let direct = |to: UserId, sessions: &HashMap<UserId, Arc<Session>>, m: Top| {
-                    if let Some(s) = sessions.get(&to) {
-                        s.push(wire::direct(m));
-                    }
-                };
-                let others_in_group =
-                    |room: &Room| -> Vec<UserId> { room.group_members(me).into_iter().filter(|u| *u != me).collect() };
-                match act {
-                    Social::FollowRequest(m) => {
-                        for to in others_in_group(&room) {
-                            direct(to, &sessions, Top::FollowRequestMessage(m));
-                        }
-                    }
-                    Social::FollowConfirmation(m) => {
-                        if room.user(m.leader).is_some() {
-                            send_follow(follows.confirm(me, m.leader, &room.group_members(me)), &sessions);
-                        }
-                    }
-                    Social::FollowAbort(m) => {
-                        send_follow(follows.abort(me, m.leader), &sessions);
-                        // Those who got the request and did not accept yet.
-                        if me == m.leader {
-                            for to in others_in_group(&room) {
-                                direct(to, &sessions, Top::FollowAbortMessage(m));
-                            }
-                        }
-                    }
-                    Social::LockGroup(lock) => room.lock_group(me, lock, &mut Fanout::new(&mut sessions)),
-                    Social::Emote(emote) => {
-                        if wa_core::social::is_valid_emote(&emote) {
-                            room.emote(me, &emote, &mut Fanout::new(&mut sessions));
-                        }
-                    }
-                    Social::Item(m) => {
-                        let state = m.state_json.clone();
-                        Fanout::new(&mut sessions)
-                            .each_all(&wire::sub(pb::sub_message::Message::ItemEventMessage(m.clone())));
-                        items.insert(m.item_id, state);
-                    }
-                    Social::InvitationRequest(m) => {
-                        let admin = session.info.tags.iter().any(|t| t == "admin");
-                        if !admin
-                            && !invitations.try_send(
-                                SystemClock.now_ms(),
-                                &session.info.user_uuid,
-                                &m.receiver_user_uuid,
-                            )
-                        {
-                            session.push(wire::direct(Top::MeetingInvitationRequestTooHighMessage(
-                                pb::MeetingInvitationRequestTooHighMessage {},
-                            )));
-                            continue;
-                        }
-                        let sender_name = room.user(me).map(|u| u.profile.name.clone()).unwrap_or_default();
-                        for to in room.ids_of(&m.receiver_user_uuid).into_iter().filter(|u| *u != me) {
-                            let received = pb::MeetingInvitationRequestReceivedMessage {
-                                sender_user_uuid: session.info.user_uuid.clone(),
-                                sender_play_uri: url.clone(),
-                                sender_name: sender_name.clone(),
-                                sender_user_id: Some(me),
-                            };
-                            direct(to, &sessions, Top::MeetingInvitationRequestReceivedMessage(received));
-                        }
-                    }
-                    Social::InvitationResponse(m) => {
-                        let responder_name = room.user(me).map(|u| u.profile.name.clone()).unwrap_or_default();
-                        for to in room.ids_of(&m.request_sender_user_uuid).into_iter().filter(|u| *u != me) {
-                            let received = pb::MeetingInvitationResponseReceivedMessage {
-                                accepted: m.accept,
-                                responder_name: responder_name.clone(),
-                            };
-                            direct(to, &sessions, Top::MeetingInvitationResponseReceivedMessage(received));
-                        }
-                        if m.accept {
-                            invitations.clear(&m.request_sender_user_uuid);
-                        }
-                        // The responder's other tabs close their popup.
-                        for to in room.ids_of(&session.info.user_uuid).into_iter().filter(|u| *u != me) {
-                            direct(
-                                to,
-                                &sessions,
-                                Top::MeetingInvitationRequestClosedMessage(
-                                    pb::MeetingInvitationRequestClosedMessage {},
-                                ),
-                            );
-                        }
-                    }
-                    Social::Kick { uuid, reason, banned } => {
-                        // SocketManager.banUser: out of the room, told why, then the connection ends (4000).
-                        for id in room.ids_of(&uuid) {
-                            let changes = variables.moved(room.position_of(id), None);
-                            send_follow(follows.left(id), &sessions);
-                            room.leave(id, &mut Fanout::new(&mut sessions));
-                            Fanout::new(&mut sessions).variables(changes);
-                            if let Some(s) = sessions.remove(&id) {
-                                dec_room_gauge(&METRICS.nb_clients_per_room, &url);
-                                tell_admins(
-                                    &mut admins,
-                                    &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}})
-                                        .to_string(),
-                                );
-                                s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage {
-                                    r#type: if banned { "banned" } else { "kicked" }.into(),
-                                    message: reason.clone(),
-                                })));
-                                s.end_after_queued();
-                            }
-                        }
-                    }
-                }
-            }
-            RoomCmd::Api(cmd) => match cmd {
-                RoomApiCmd::Read { name, reply } => {
-                    let _ = reply.send(room_vars.get(&name).map(str::to_owned));
-                }
-                RoomApiCmd::Save { name, value, reply } => {
-                    let saved = set_variable(
-                        &mut room_vars,
-                        &app,
-                        &url,
-                        &sessions,
-                        &mut var_listeners,
-                        Writer::RoomApi,
-                        &name,
-                        &value,
-                    );
-                    let _ = reply.send(saved.map_err(|e| e.to_string()));
-                }
-                RoomApiCmd::ListenVariable { name, tx } => var_listeners.add(name, tx),
-                RoomApiCmd::ListenEvent { name, tx } => event_listeners.add(name, tx),
-            },
-            RoomCmd::AdminListen { tx } => {
-                for s in sessions.values() {
-                    let name =
-                        s.user_id().and_then(|id| room.user(id)).map(|u| u.profile.name.clone()).unwrap_or_default();
-                    let _ = tx.try_send(member_join(&s.info, &name, &url));
-                }
-                admins.push(tx);
-            }
-            RoomCmd::AdminBan { uuid, reason } => {
-                for id in room.ids_of(&uuid) {
-                    let changes = variables.moved(room.position_of(id), None);
-                    send_follow(follows.left(id), &sessions);
-                    room.leave(id, &mut Fanout::new(&mut sessions));
-                    Fanout::new(&mut sessions).variables(changes);
-                    if let Some(s) = sessions.remove(&id) {
-                        dec_room_gauge(&METRICS.nb_clients_per_room, &url);
-                        tell_admins(
-                            &mut admins,
-                            &serde_json::json!({"type": "MemberLeave", "data": {"uuid": s.info.user_uuid}}).to_string(),
-                        );
-                        s.push(wire::direct(Top::BanUserMessage(pb::BanUserMessage {
-                            r#type: "banned".into(),
-                            message: reason.clone(),
-                        })));
-                        s.end_after_queued();
-                    }
-                }
-            }
-            RoomCmd::Refresh => {
-                version += 1;
-                let frame = wire::direct(Top::RefreshRoomMessage(pb::RefreshRoomMessage {
-                    room_id: url.clone(),
-                    version_number: version,
-                    time_to_refresh: None,
-                }));
-                Fanout::new(&mut sessions).each_all(&frame);
-            }
-            RoomCmd::AdminMessage { kind, message } => {
-                let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: kind, message }));
-                Fanout::new(&mut sessions).each_all(&frame);
-            }
-            RoomCmd::Group(reply) => {
-                let _ = reply.send(details["group"].as_str().filter(|g| !g.is_empty()).map(str::to_owned));
-            }
-            RoomCmd::Users(reply) => {
-                let users = sessions
-                    .iter()
-                    .map(|(id, s)| WorldUser {
-                        uuid: s.info.user_uuid.clone(),
-                        name: room.user(*id).map(|u| u.profile.name.clone()).unwrap_or_default(),
-                        ip: s.info.ip_address.clone(),
-                    })
-                    .collect();
-                let _ = reply.send((url.clone(), users));
-            }
-            RoomCmd::WorldFull => {
-                Fanout::new(&mut sessions)
-                    .each_all(&wire::direct(Top::WorldFullWarningMessage(pb::WorldFullWarningMessage {})));
-            }
-            RoomCmd::ExternalModule(m) => {
-                let Some(uuid) = m.recipient_uuid.clone() else { continue };
-                let frame = wire::direct(Top::ExternalModuleMessage(m));
-                for id in room.ids_of(&uuid) {
-                    if let Some(s) = sessions.get(&id) {
-                        s.push(frame.clone());
-                    }
-                }
-            }
-            RoomCmd::Describe { reply } => {
-                let _ = reply.send((url.clone(), sessions.len()));
-            }
-            RoomCmd::Variable { session, name, value } => {
-                if !map_reload.is_empty() {
-                    retries.push((session, name, value));
-                    continue;
-                }
-                let Err(e) = set_variable(
-                    &mut room_vars,
-                    &app,
-                    &url,
-                    &sessions,
-                    &mut var_listeners,
-                    player(&room, &session),
-                    &name,
-                    &value,
-                ) else {
-                    continue;
-                };
-                if vars_loaded.elapsed() < std::time::Duration::from_secs(10) {
-                    tracing::error!(%url, %name, "a variable was refused, and the map was read less than 10 seconds ago");
-                    refuse(&session, &e);
-                    continue;
-                }
-                tracing::warn!(%url, %name, "a variable was refused: reading the map again");
-                vars_loaded = std::time::Instant::now();
-                retries.push((session, name, value));
-                let (app, url) = (app.clone(), url.clone());
-                let wam = map.as_ref().and_then(|m| Some((m.rel.clone(), m.wam.clone()?)));
-                map_reload.spawn(async move {
-                    room_map::variable_defs(&app, &url, wam.as_ref().map(|(rel, wam)| (rel.as_str(), wam))).await
-                });
-            }
+            RoomCmd::Social { session, act } => self.social(session, act).await,
+            cmd @ (RoomCmd::Api(_)
+            | RoomCmd::AdminListen { .. }
+            | RoomCmd::AdminBan { .. }
+            | RoomCmd::Refresh
+            | RoomCmd::AdminMessage { .. }
+            | RoomCmd::Group(_)
+            | RoomCmd::Users(_)
+            | RoomCmd::WorldFull
+            | RoomCmd::ExternalModule(_)
+            | RoomCmd::Describe { .. }) => self.admin(cmd).await,
             RoomCmd::MapFiles(change) => {
-                let Some(m) = map.as_mut().filter(|m| change.concerns(&m.rel)) else { continue };
+                let Some(m) = self.map.as_mut().filter(|m| change.concerns(&m.rel)) else { return };
                 match change {
                     // The users are asked to reload: the file they have is not the one the room now uses.
                     MapChange::Replaced(_) => {
                         let outcomes = m.submit(Pending::Load);
-                        deliver(outcomes, &map, &mut variables, &room, &mut sessions, &url);
+                        deliver(outcomes, &self.map, &mut self.variables, &self.room, &mut self.sessions, &self.url);
                     }
                     // Like the back: deleteMapMessage, then the connection closes ("Map was deleted.").
                     MapChange::Deleted(_) => {
                         m.wam = None;
                         m.queue.clear();
                         let frame = wire::direct(Top::DeleteMapMessage(pb::DeleteMapMessage {}));
-                        for s in sessions.values() {
+                        for s in self.sessions.values() {
                             s.push(frame.clone());
                             s.end_after_queued();
                         }
@@ -1123,11 +948,12 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
             }
             RoomCmd::Join { session, request, player_variables } => {
                 if session.is_ended() {
-                    continue;
+                    return;
                 }
                 let at = (f64::from(request.position.x), f64::from(request.position.y));
-                let changes = variables.moved(None, Some(at));
-                let current = variables
+                let changes = self.variables.moved(None, Some(at));
+                let current = self
+                    .variables
                     .all()
                     .map(|((area, property, key), value)| pb::AreaPropertyVariableMessage {
                         area_id: area.clone(),
@@ -1136,98 +962,101 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                         value: value.clone(),
                     })
                     .collect();
-                let readable = room_vars
+                let readable = self
+                    .room_vars
                     .readable(&session.info.tags)
                     .into_iter()
                     .map(|(name, value)| pb::VariableMessage { name, value })
                     .collect();
                 let joining = session.clone();
-                let joined = room.join(
+                let joined = self.room.join(
                     request,
                     &mut Fanout {
-                        sessions: &mut sessions,
+                        sessions: &mut self.sessions,
                         joining: Some(session.clone()),
                         variables: current,
                         room_variables: readable,
-                        items: items
+                        items: self
+                            .items
                             .iter()
                             .map(|(id, state)| pb::ItemStateMessage { item_id: *id, state_json: state.clone() })
                             .collect(),
                         player_variables,
                     },
                 );
-                if let Some(warning) = map_warning {
+                if let Some(warning) = self.map_warning {
                     joining.push(wire::sub(pb::sub_message::Message::ErrorMessage(pb::ErrorMessage {
                         message: warning.to_owned(),
                     })));
                 }
-                Fanout::new(&mut sessions).variables(changes);
+                Fanout::new(&mut self.sessions).variables(changes);
                 if joined.duplicate {
                     session.push(wire::direct(pb::server_to_client_message::Message::DuplicateUserConnectedMessage(
                         pb::DuplicateUserConnectedMessage {},
                     )));
                 }
-                if let Some(old) = joined.replaced.and_then(|id| sessions.remove(&id)) {
+                if let Some(old) = joined.replaced.and_then(|id| self.sessions.remove(&id)) {
                     old.end();
-                    dec_room_gauge(&METRICS.nb_clients_per_room, &url);
+                    dec_room_gauge(&METRICS.nb_clients_per_room, &self.url);
                 }
-                METRICS.nb_clients_per_room.with_label_values(&[&url]).inc();
-                if !admins.is_empty() {
-                    let name = room.user(joined.user_id).map(|u| u.profile.name.clone()).unwrap_or_default();
-                    tell_admins(&mut admins, &member_join(&session.info, &name, &url));
+                METRICS.nb_clients_per_room.with_label_values(&[&self.url]).inc();
+                if !self.admins.is_empty() {
+                    let name = self.room.user(joined.user_id).map(|u| u.profile.name.clone()).unwrap_or_default();
+                    tell_admins(&mut self.admins, &member_join(&session.info, &name, &self.url));
                 }
             }
             RoomCmd::Leave { session } => {
-                let Some(user) = session.user_id() else { continue };
-                let changes = variables.moved(room.position_of(user), None);
-                send_follow(follows.left(user), &sessions);
-                room.leave(user, &mut Fanout::new(&mut sessions));
-                Fanout::new(&mut sessions).variables(changes);
-                if sessions.remove(&user).is_some() {
-                    dec_room_gauge(&METRICS.nb_clients_per_room, &url);
+                let Some(user) = session.user_id() else { return };
+                let changes = self.variables.moved(self.room.position_of(user), None);
+                send_follow(self.follows.left(user), &self.sessions);
+                self.room.leave(user, &mut Fanout::new(&mut self.sessions));
+                Fanout::new(&mut self.sessions).variables(changes);
+                if self.sessions.remove(&user).is_some() {
+                    dec_room_gauge(&METRICS.nb_clients_per_room, &self.url);
                     tell_admins(
-                        &mut admins,
+                        &mut self.admins,
                         &serde_json::json!({"type": "MemberLeave", "data": {"uuid": session.info.user_uuid}})
                             .to_string(),
                     );
                 }
             }
             RoomCmd::Move { user, position, viewport } => {
-                let from = room.position_of(user);
-                let mut out = Fanout::new(&mut sessions);
-                room.move_user(user, position, &mut out);
+                let from = self.room.position_of(user);
+                let mut out = Fanout::new(&mut self.sessions);
+                self.room.move_user(user, position, &mut out);
                 if let Some(v) = viewport {
-                    room.set_viewport(user, v, &mut out);
+                    self.room.set_viewport(user, v, &mut out);
                 }
                 if from.is_some() {
-                    out.variables(variables.moved(from, room.position_of(user)));
+                    out.variables(self.variables.moved(from, self.room.position_of(user)));
                 }
             }
             RoomCmd::Viewport { user, viewport } => {
-                room.set_viewport(user, viewport, &mut Fanout::new(&mut sessions));
+                self.room.set_viewport(user, viewport, &mut Fanout::new(&mut self.sessions));
             }
             RoomCmd::Details { user, change } => {
                 // A persisted variable reaches the player's other tabs, as their own (updateDataUserSameUUID).
                 if change.variable.as_ref().is_some_and(|v| v.persist)
-                    && let Some(uuid) = room.user(user).map(|u| u.profile.uuid.clone())
+                    && let Some(uuid) = self.room.user(user).map(|u| u.profile.uuid.clone())
                 {
-                    let details = pb::SetPlayerDetailsMessage {
+                    let update = pb::SetPlayerDetailsMessage {
                         set_variable: wire::details_to(&change).set_variable,
                         ..Default::default()
                     };
-                    for brother in room.ids_of(&uuid).into_iter().filter(|b| *b != user) {
-                        if let Some(s) = sessions.get(&brother) {
+                    for brother in self.room.ids_of(&uuid).into_iter().filter(|b| *b != user) {
+                        if let Some(s) = self.sessions.get(&brother) {
                             s.push(wire::sub(pb::sub_message::Message::PlayerDetailsUpdatedMessage(
-                                pb::PlayerDetailsUpdatedMessage { user_id: brother, details: Some(details.clone()) },
+                                pb::PlayerDetailsUpdatedMessage { user_id: brother, details: Some(update.clone()) },
                             )));
                         }
                     }
                 }
-                room.update_details(user, change, &mut Fanout::new(&mut sessions));
+                self.room.update_details(user, change, &mut Fanout::new(&mut self.sessions));
             }
             RoomCmd::AskPosition { user, target_uuid, target_id, locate } => {
-                let (Some(target), Some(session)) = (room.find(&target_uuid, target_id), sessions.get(&user)) else {
-                    continue;
+                let (Some(target), Some(session)) = (self.room.find(&target_uuid, target_id), self.sessions.get(&user))
+                else {
+                    return;
                 };
                 let position = Some(wire::position_to(&target.position));
                 session.push(wire::direct(if locate {
@@ -1241,26 +1070,23 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
                 }));
             }
         }
-        // Group metrics, from the counters of the core.
-        let created = room.groups_created();
-        if created > groups_seen {
-            METRICS.counter_groups_per_room.with_label_values(&[&url]).inc_by(created - groups_seen);
-            groups_seen = created;
+    }
+
+    /// Group metrics, from the counters of the core.
+    fn metrics(&mut self) {
+        let created = self.room.groups_created();
+        if created > self.groups_seen {
+            METRICS.counter_groups_per_room.with_label_values(&[&self.url]).inc_by(created - self.groups_seen);
+            self.groups_seen = created;
         }
-        let groups = room.group_count() as i64;
-        if groups != group_gauge {
+        let groups = self.room.group_count() as i64;
+        if groups != self.group_gauge {
             if groups == 0 {
-                let _ = METRICS.nb_groups_per_room.remove_label_values(&[&url]);
+                let _ = METRICS.nb_groups_per_room.remove_label_values(&[&self.url]);
             } else {
-                METRICS.nb_groups_per_room.with_label_values(&[&url]).set(groups);
+                METRICS.nb_groups_per_room.with_label_values(&[&self.url]).set(groups);
             }
-            group_gauge = groups;
+            self.group_gauge = groups;
         }
     }
-    // Nobody holds a handle on this room any more.
-    if let Some(m) = &mut map {
-        m.drain().await;
-    }
-    registry.forget_dead(&url);
-    METRICS.nb_rooms.dec();
 }
