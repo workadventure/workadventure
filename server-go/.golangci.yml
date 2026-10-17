@@ -1,0 +1,400 @@
+version: "2"
+run:
+  tests: true
+linters:
+  default: none
+  enable: [errcheck, govet, staticcheck, unused, ineffassign, gosec, bodyclose, misspell]
+  exclusions:
+    generated: strict
+    paths: [internal/pb]
+    # Baseline of the findings present when the linters were introduced: one rule = one file + one linter + one
+    # message, so a NEW finding (another file or message) still fails the job. Fix them, then delete the rule.
+    rules:
+      # The load generator: math/rand positions and int32 coordinates of a test map are what it wants.
+      - path: ^cmd/loadbot/
+        linters: [gosec]
+        text: 'G115|G404'
+      # TODO(lint): bodyclose internal/netguard/netguard_test.go:24,27,40
+      - path: ^internal/netguard/netguard_test\.go$
+        linters: [bodyclose]
+        text: 'response body must be closed'
+      # TODO(lint): bodyclose internal/ws/adminrooms_test.go:30
+      - path: ^internal/ws/adminrooms_test\.go$
+        linters: [bodyclose]
+        text: 'response body must be closed'
+      # TODO(lint): bodyclose internal/ws/queries.go:63,65
+      - path: ^internal/ws/queries\.go$
+        linters: [bodyclose]
+        text: 'response body must be closed'
+      # TODO(lint): bodyclose internal/ws/server_test.go:82
+      - path: ^internal/ws/server_test\.go$
+        linters: [bodyclose]
+        text: 'response body must be closed'
+      # TODO(lint): errcheck cmd/server/main.go:300
+      - path: ^cmd/server/main\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/admin/http.go:99,370,395,456
+      - path: ^internal/admin/http\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/analytics/queue.go:224
+      - path: ^internal/analytics/queue\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/httpapi/front.go:72
+      - path: ^internal/httpapi/front\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/httpapi/oidc.go:154
+      - path: ^internal/httpapi/oidc\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/httpapi/oidc_test.go:128
+      - path: ^internal/httpapi/oidc_test\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/livekit/livekit.go:92
+      - path: ^internal/livekit/livekit\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/admin.go:56,126
+      - path: ^internal/mapstorage/admin\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/files.go:64,200
+      - path: ^internal/mapstorage/files\.go$
+        linters: [errcheck]
+        text: 'Error return value of `file\.Close` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/files.go:175
+      - path: ^internal/mapstorage/files\.go$
+        linters: [errcheck]
+        text: 'Error return value of `in\.Close` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/files.go:58
+      - path: ^internal/mapstorage/files\.go$
+        linters: [errcheck]
+        text: 'Error return value of `r\.MultipartForm\.RemoveAll` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/files.go:530
+      - path: ^internal/mapstorage/files\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/mapstorage.go:442
+      - path: ^internal/mapstorage/mapstorage\.go$
+        linters: [errcheck]
+        text: 'Error return value of `file\.Close` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/mapstorage.go:249
+      - path: ^internal/mapstorage/mapstorage\.go$
+        linters: [errcheck]
+        text: 'Error return value of `os\.Remove` is not checked'
+      # TODO(lint): errcheck internal/mapstorage/mapstorage.go:251
+      - path: ^internal/mapstorage/mapstorage\.go$
+        linters: [errcheck]
+        text: 'Error return value of `tmp\.Close` is not checked'
+      # TODO(lint): errcheck internal/matrix/matrix.go:194
+      - path: ^internal/matrix/matrix\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/roomapi/admin.go:60
+      - path: ^internal/roomapi/admin\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/s3/s3.go:121
+      - path: ^internal/s3/s3\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/store/store_test.go:109
+      - path: ^internal/store/store_test\.go$
+        linters: [errcheck]
+        text: 'Error return value of `\(\*github\.com/alicebob/miniredis/v2\.RedisDB\)\.Set` is not checked'
+      # TODO(lint): errcheck internal/uploader/uploader.go:150,209
+      - path: ^internal/uploader/uploader\.go$
+        linters: [errcheck]
+        text: 'Error return value of `f\.Close` is not checked'
+      # TODO(lint): errcheck internal/uploader/uploader.go:173
+      - path: ^internal/uploader/uploader\.go$
+        linters: [errcheck]
+        text: 'Error return value of `r\.MultipartForm\.RemoveAll` is not checked'
+      # TODO(lint): errcheck internal/uploader/uploader.go:305
+      - path: ^internal/uploader/uploader\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/ws/conference.go:134
+      - path: ^internal/ws/conference\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/ws/matrix.go:140
+      - path: ^internal/ws/matrix\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/ws/queries.go:88
+      - path: ^internal/ws/queries\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): errcheck internal/ws/session.go:288,370
+      - path: ^internal/ws/session\.go$
+        linters: [errcheck]
+        text: 'Error return value of `conn\.Close` is not checked'
+      # TODO(lint): errcheck internal/ws/session.go:376
+      - path: ^internal/ws/session\.go$
+        linters: [errcheck]
+        text: 'Error return value of `prev\.CloseNow` is not checked'
+      # TODO(lint): errcheck internal/ws/variables.go:83
+      - path: ^internal/ws/variables\.go$
+        linters: [errcheck]
+        text: 'Error return value of `resp\.Body\.Close` is not checked'
+      # TODO(lint): gosec cmd/server/main.go:300
+      - path: ^cmd/server/main\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec cmd/server/main.go:295
+      - path: ^cmd/server/main\.go$
+        linters: [gosec]
+        text: 'G704: SSRF via taint analysis'
+      # TODO(lint): gosec internal/admin/admin.go:8
+      - path: ^internal/admin/admin\.go$
+        linters: [gosec]
+        text: 'G505: Blocklisted import crypto/sha1: weak cryptographic primitive'
+      # TODO(lint): gosec internal/admin/admin_test.go:24,28
+      - path: ^internal/admin/admin_test\.go$
+        linters: [gosec]
+        text: 'G304: Potential file inclusion via variable'
+      # TODO(lint): gosec internal/admin/http.go:370,456
+      - path: ^internal/admin/http\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/analytics/queue.go:224
+      - path: ^internal/analytics/queue\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/analytics/queue.go:199
+      - path: ^internal/analytics/queue\.go$
+        linters: [gosec]
+        text: 'G404: Use of weak random number generator \(math/rand or math/rand/v2 instead of crypto/rand\)'
+      # TODO(lint): gosec internal/core/group.go:48
+      - path: ^internal/core/group\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> int32'
+      # TODO(lint): gosec internal/core/room_test.go:260
+      - path: ^internal/core/room_test\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> uint64'
+      # TODO(lint): gosec internal/core/room_test.go:260,295
+      - path: ^internal/core/room_test\.go$
+        linters: [gosec]
+        text: 'G404: Use of weak random number generator \(math/rand or math/rand/v2 instead of crypto/rand\)'
+      # TODO(lint): gosec internal/core/zone.go:223,223,224,224
+      - path: ^internal/core/zone\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int64 \-> int32'
+      # TODO(lint): gosec internal/httpapi/httpapi.go:135
+      - path: ^internal/httpapi/httpapi\.go$
+        linters: [gosec]
+        text: 'G705: XSS via taint analysis'
+      # TODO(lint): gosec internal/httpapi/httpapi_test.go:32
+      - path: ^internal/httpapi/httpapi_test\.go$
+        linters: [gosec]
+        text: 'G705: XSS via taint analysis'
+      # TODO(lint): gosec internal/httpapi/oidc.go:197,201
+      - path: ^internal/httpapi/oidc\.go$
+        linters: [gosec]
+        text: 'G124: http\.Cookie missing or has insecure Secure, HttpOnly, or SameSite attribute'
+      # TODO(lint): gosec internal/httpapi/oidc.go:266,308,442
+      - path: ^internal/httpapi/oidc\.go$
+        linters: [gosec]
+        text: 'G710: Open redirect via taint analysis'
+      # TODO(lint): gosec internal/httpapi/oidc_test.go:128
+      - path: ^internal/httpapi/oidc_test\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/httpapi/oidc_test.go:196
+      - path: ^internal/httpapi/oidc_test\.go$
+        linters: [gosec]
+        text: 'G124: http\.Cookie missing or has insecure Secure, HttpOnly, or SameSite attribute'
+      # TODO(lint): gosec internal/mapstorage/admin.go:56,126
+      - path: ^internal/mapstorage/admin\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/mapstorage/edit_test.go:45
+      - path: ^internal/mapstorage/edit_test\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> byte'
+      # TODO(lint): gosec internal/mapstorage/files.go:86
+      - path: ^internal/mapstorage/files\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int64 \-> uint64'
+      # TODO(lint): gosec internal/mapstorage/files.go:176
+      - path: ^internal/mapstorage/files\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion uint64 \-> int64'
+      # TODO(lint): gosec internal/mapstorage/files.go:483
+      - path: ^internal/mapstorage/files\.go$
+        linters: [gosec]
+        text: 'G301: Expect directory permissions to be 0750 or less'
+      # TODO(lint): gosec internal/mapstorage/files.go:437,504
+      - path: ^internal/mapstorage/files\.go$
+        linters: [gosec]
+        text: 'G304: Potential file inclusion via variable'
+      # TODO(lint): gosec internal/mapstorage/mapstorage.go:251
+      - path: ^internal/mapstorage/mapstorage\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/mapstorage/mapstorage.go:242
+      - path: ^internal/mapstorage/mapstorage\.go$
+        linters: [gosec]
+        text: 'G301: Expect directory permissions to be 0750 or less'
+      # TODO(lint): gosec internal/mapstorage/mapstorage.go:141,177,437
+      - path: ^internal/mapstorage/mapstorage\.go$
+        linters: [gosec]
+        text: 'G304: Potential file inclusion via variable'
+      # TODO(lint): gosec internal/mapstorage/mapstorage_test.go:197,199,247,249
+      - path: ^internal/mapstorage/mapstorage_test\.go$
+        linters: [gosec]
+        text: 'G301: Expect directory permissions to be 0750 or less'
+      # TODO(lint): gosec internal/mapstorage/mapstorage_test.go:198,200,248,250
+      - path: ^internal/mapstorage/mapstorage_test\.go$
+        linters: [gosec]
+        text: 'G306: Expect WriteFile permissions to be 0600 or less'
+      # TODO(lint): gosec internal/matrix/matrix_test.go:33,42
+      - path: ^internal/matrix/matrix_test\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> rune'
+      # TODO(lint): gosec internal/netguard/netguard_test.go:37
+      - path: ^internal/netguard/netguard_test\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> uint16'
+      # TODO(lint): gosec internal/s3/s3.go:9
+      - path: ^internal/s3/s3\.go$
+        linters: [gosec]
+        text: 'G501: Blocklisted import crypto/md5: weak cryptographic primitive'
+      # TODO(lint): gosec internal/s3/s3_test.go:32
+      - path: ^internal/s3/s3_test\.go$
+        linters: [gosec]
+        text: 'G401: Use of weak cryptographic primitive'
+      # TODO(lint): gosec internal/s3/s3_test.go:5
+      - path: ^internal/s3/s3_test\.go$
+        linters: [gosec]
+        text: 'G501: Blocklisted import crypto/md5: weak cryptographic primitive'
+      # TODO(lint): gosec internal/store/store_test.go:109
+      - path: ^internal/store/store_test\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/uploader/uploader.go:209
+      - path: ^internal/uploader/uploader\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/uploader/uploader.go:169
+      - path: ^internal/uploader/uploader\.go$
+        linters: [gosec]
+        text: 'G120: Unbounded form parsing in HTTP handlers can cause memory exhaustion'
+      # TODO(lint): gosec internal/uploader/uploader.go:274
+      - path: ^internal/uploader/uploader\.go$
+        linters: [gosec]
+        text: 'G705: XSS via taint analysis'
+      # TODO(lint): gosec internal/uploader/uploader.go:249
+      - path: ^internal/uploader/uploader\.go$
+        linters: [gosec]
+        text: 'G710: Open redirect via taint analysis'
+      # TODO(lint): gosec internal/ws/analytics.go:89
+      - path: ^internal/ws/analytics\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion uint64 \-> int64'
+      # TODO(lint): gosec internal/ws/buffers_test.go:115
+      - path: ^internal/ws/buffers_test\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> byte'
+      # TODO(lint): gosec internal/ws/codec.go:252
+      - path: ^internal/ws/codec\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int \-> uint64'
+      # TODO(lint): gosec internal/ws/codec.go:67
+      - path: ^internal/ws/codec\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion int32 \-> uint32'
+      # TODO(lint): gosec internal/ws/conference.go:134
+      - path: ^internal/ws/conference\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/ws/conference.go:301,303
+      - path: ^internal/ws/conference\.go$
+        linters: [gosec]
+        text: 'G115: integer overflow conversion rune \-> uint16'
+      # TODO(lint): gosec internal/ws/queries.go:88
+      - path: ^internal/ws/queries\.go$
+        linters: [gosec]
+        text: 'G104: Errors unhandled'
+      # TODO(lint): gosec internal/ws/variables.go:71,79
+      - path: ^internal/ws/variables\.go$
+        linters: [gosec]
+        text: 'G704: SSRF via taint analysis'
+      # TODO(lint): ineffassign internal/httpapi/whitelabel_test.go:27
+      - path: ^internal/httpapi/whitelabel_test\.go$
+        linters: [ineffassign]
+        text: 'ineffectual assignment to v'
+      # TODO(lint): staticcheck internal/admin/admin.go:160
+      - path: ^internal/admin/admin\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/admin/admin.go:160
+      - path: ^internal/admin/admin\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not end with punctuation or newlines'
+      # TODO(lint): staticcheck internal/admin/http.go:342
+      - path: ^internal/admin/http\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/core/roomvars.go:156
+      - path: ^internal/core/roomvars\.go$
+        linters: [staticcheck]
+        text: 'S1016: should convert v \(type Variable\) to VariableChanged instead of using struct literal'
+      # TODO(lint): staticcheck internal/core/roomvars.go:140,143
+      - path: ^internal/core/roomvars\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/core/space_recording.go:83,84,85,117,134,220,223,237
+      - path: ^internal/core/space_recording\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/core/space_state.go:52,60,108,131,149,151,153,157,198,200,202,213,218,230,233,254,320
+      - path: ^internal/core/space_state\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/httpapi/metatags.go:15
+      - path: ^internal/httpapi/metatags\.go$
+        linters: [staticcheck]
+        text: 'QF1001: could apply De Morgan''s law'
+      # TODO(lint): staticcheck internal/mapedit/custom.go:75,81,115,122,132,167
+      - path: ^internal/mapedit/custom\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/mapedit/custom.go:115
+      - path: ^internal/mapedit/custom\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not end with punctuation or newlines'
+      # TODO(lint): staticcheck internal/mapedit/mapedit.go:39,47,92,111
+      - path: ^internal/mapedit/mapedit\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/mapedit/queue.go:12
+      - path: ^internal/mapedit/queue\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/wam/wam.go:321
+      - path: ^internal/wam/wam\.go$
+        linters: [staticcheck]
+        text: 'QF1001: could apply De Morgan''s law'
+      # TODO(lint): staticcheck internal/wam/wam.go:135,146,179,193
+      - path: ^internal/wam/wam\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/ws/mapedit.go:203
+      - path: ^internal/ws/mapedit\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+      # TODO(lint): staticcheck internal/ws/matrix.go:118
+      - path: ^internal/ws/matrix\.go$
+        linters: [staticcheck]
+        text: 'ST1005: error strings should not be capitalized'
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false

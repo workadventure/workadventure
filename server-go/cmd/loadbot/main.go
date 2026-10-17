@@ -143,7 +143,7 @@ func (b *bot) run(ctx context.Context, st *stats) error {
 	}
 	var login struct{ AuthToken string }
 	err = json.NewDecoder(resp.Body).Decode(&login)
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -151,11 +151,11 @@ func (b *bot) run(ctx context.Context, st *stats) error {
 	q := url.Values{"roomId": {roomURL}, "version": {*version}, "chatID": {""}, "roomName": {"load"}, "cameraState": {"false"},
 		"microphoneState": {"false"}, "tabId": {fmt.Sprintf("tab-%p", b)}, "characterTextureIds": {"male1"}}
 	wsURL := strings.Replace(*httpURL, "http", "ws", 1) + "/ws/room?" + q.Encode()
-	b.conn, _, err = websocket.Dial(ctx, wsURL, &websocket.DialOptions{Subprotocols: []string{login.AuthToken}})
+	b.conn, _, err = websocket.Dial(ctx, wsURL, &websocket.DialOptions{Subprotocols: []string{login.AuthToken}}) //nolint:bodyclose // coder/websocket closes the handshake's body
 	if err != nil {
 		return err
 	}
-	defer b.conn.CloseNow()
+	defer func() { _ = b.conn.CloseNow() }()
 	b.conn.SetReadLimit(16 << 20)
 
 	joined := make(chan struct{})

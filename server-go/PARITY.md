@@ -19,7 +19,7 @@ Mise à jour : 2026-10-17, sur `626a4978a` (master fusionné, API `d2d82672`). L
 - **OSS (LocalAdmin)** : J1, J2 et J3a sont validés par Playwright. J3b est codé mais pas encore validé. LiveKit, l'enregistrement et la Room API sont absents.
 - **SaaS** : les 31 appels du contrat sont faits ; **le parcours SaaS est joué de bout en bout le 17/10 sur `dev/saas`** (OIDC, deux mondes dont un white label sans fuite, A27, `/ws/admin/rooms`, ban en cours de session, Room API, uploader ; voir JOURNAL). Il reste à le jouer contre une vraie admin de préproduction et à rejouer `proximityChatFileTransfer` avec un front au niveau de master.
 
-Améliorations relevées mais non faites : [IMPROVEMENTS.md](IMPROVEMENTS.md).
+Améliorations relevées mais non faites : [IMPROVEMENTS.md](IMPROVEMENTS.md). Ajouter une fonctionnalité : [docs/ADDING_A_FEATURE.md](docs/ADDING_A_FEATURE.md).
 
 **Hors périmètre par construction** : `POST /debug/close-space-connection`. Il n'y a pas de flux back↔pusher en
 serveur unique : la route répond comme le back (400, 500 pour un space inconnu, 200), mais sans effet. Elle accepte le

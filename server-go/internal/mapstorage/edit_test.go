@@ -55,9 +55,9 @@ func TestAnEditThatKeepsLosingTheRaceGivesUp(t *testing.T) {
 
 func TestEditsOfTwoMapsDoNotWaitForEachOther(t *testing.T) {
 	s := New(t.TempDir())
-	computing, release := make(chan struct{}), make(chan struct{})
+	computing, release, officeDone := make(chan struct{}), make(chan struct{}), make(chan error, 1)
 	go func() {
-		_ = s.Edit("maps/office.wam", func([]byte) ([]byte, error) { close(computing); <-release; return []byte("office"), nil })
+		officeDone <- s.Edit("maps/office.wam", func([]byte) ([]byte, error) { close(computing); <-release; return []byte("office"), nil })
 	}()
 	<-computing
 	done := make(chan error)
@@ -73,6 +73,10 @@ func TestEditsOfTwoMapsDoNotWaitForEachOther(t *testing.T) {
 		t.Fatal("the garden waited for the office")
 	}
 	close(release)
+	// The office still writes its file: the test's directory is removed once it is done.
+	if err := <-officeDone; err != nil {
+		t.Fatal(err)
+	}
 }
 
 func TestAMissingDocumentIsCreatedByAnEdit(t *testing.T) {
