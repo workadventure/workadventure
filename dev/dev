@@ -151,7 +151,10 @@ ENV
     eval "$("$0" env "$name")"
     cd "$REPO/tests"
     # caffeinate: a sleeping Mac turns specs into 15-minute blank pages.
-    caffeinate -i npx playwright test "${@:3}" --workers=1
+    # Chromium unless a project is given: the other browsers are not installed on the dev machines.
+    project=(--project=chromium)
+    for a in "${@:3}"; do case "$a" in --project*) project=() ;; esac; done
+    caffeinate -i npx playwright test "${@:3}" "${project[@]}" --workers=1
     ;;
 *)
     usage
