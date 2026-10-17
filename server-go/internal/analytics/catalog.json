@@ -1,0 +1,3506 @@
+{
+ "user.connected": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "connectionId": {
+     "type": "string"
+    },
+    "connectedAt": {
+     "type": "string",
+     "format": "date-time"
+    }
+   },
+   "required": [
+    "connectionId",
+    "connectedAt"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "user.disconnected": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "connectionId": {
+     "type": "string"
+    },
+    "connectedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "disconnectedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "disconnectReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "connectionId",
+    "connectedAt",
+    "disconnectedAt",
+    "durationSeconds",
+    "disconnectReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "connectionId": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "connectionId"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.video_quality.sample": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "streamId": {
+     "type": "string"
+    },
+    "connectionId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "sessionId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "remoteUserUuid": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "remoteSpaceUserId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "spaceName": {
+     "type": "string"
+    },
+    "streamCategory": {
+     "type": "string",
+     "enum": [
+      "video",
+      "screenSharing"
+     ]
+    },
+    "transportType": {
+     "type": "string",
+     "enum": [
+      "P2P",
+      "SFU"
+     ]
+    },
+    "direction": {
+     "type": "string",
+     "enum": [
+      "inbound",
+      "outbound"
+     ]
+    },
+    "relay": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "relayProtocol": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "udp",
+        "tcp",
+        "tls"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "livekitServerUrl": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "fps": {
+     "type": "number"
+    },
+    "fpsStdDev": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "jitter": {
+     "type": "number"
+    },
+    "bandwidthBytesPerSecond": {
+     "type": "number"
+    },
+    "frameWidth": {
+     "type": "integer"
+    },
+    "frameHeight": {
+     "type": "integer"
+    },
+    "mimeType": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "qualityLimitationReason": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "none",
+        "cpu",
+        "bandwidth",
+        "other"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "encoderImplementation": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "windowSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "framesDecoded": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "framesDropped": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "freezeCount": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "freezeSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "pauseCount": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "pauseSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "interFrameDelaySumSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "interFrameDelaySquaredSumSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "decodeSeconds": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "captureFps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "captureTargetFps": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "encodeMsPerFrame": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "cpuLimitedRatio": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "bandwidthLimitedRatio": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "packetsReceived": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "packetsLost": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "roundTripTimeMs": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "uploadRoundTripTimeMs": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "uploadLossRatio": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "availableOutgoingBitrate": {
+     "type": [
+      "number",
+      "null"
+     ]
+    },
+    "sampleSeq": {
+     "type": [
+      "number",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "streamId",
+    "connectionId",
+    "sessionId",
+    "remoteUserUuid",
+    "remoteSpaceUserId",
+    "spaceName",
+    "streamCategory",
+    "transportType",
+    "direction",
+    "relay",
+    "relayProtocol",
+    "livekitServerUrl",
+    "livekitRegion",
+    "fps",
+    "fpsStdDev",
+    "jitter",
+    "bandwidthBytesPerSecond",
+    "frameWidth",
+    "frameHeight",
+    "mimeType",
+    "qualityLimitationReason",
+    "encoderImplementation",
+    "windowSeconds",
+    "framesDecoded",
+    "framesDropped",
+    "freezeCount",
+    "freezeSeconds",
+    "pauseCount",
+    "pauseSeconds",
+    "interFrameDelaySumSeconds",
+    "interFrameDelaySquaredSumSeconds",
+    "decodeSeconds",
+    "captureFps",
+    "captureTargetFps",
+    "encodeMsPerFrame",
+    "cpuLimitedRatio",
+    "bandwidthLimitedRatio",
+    "packetsReceived",
+    "packetsLost",
+    "roundTripTimeMs",
+    "uploadRoundTripTimeMs",
+    "uploadLossRatio",
+    "availableOutgoingBitrate",
+    "sampleSeq"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "auth.user_identified": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "roomId": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "roomId"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "room.visited": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "roomId": {
+     "type": "string"
+    },
+    "roomGroup": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "roomId",
+    "roomGroup"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "room.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "fromRoomId": {
+     "type": "string"
+    },
+    "toRoomId": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "fromRoomId",
+    "toRoomId"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "room_list.room_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "roomId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "session.started": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "roomId": {
+     "type": "string"
+    },
+    "schemaVersion": {
+     "type": "number",
+     "const": 1
+    }
+   },
+   "required": [
+    "schemaVersion"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "session.ended": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "roomId": {
+     "type": "string"
+    },
+    "schemaVersion": {
+     "type": "number",
+     "const": 1
+    }
+   },
+   "required": [
+    "schemaVersion"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "meeting.area_entered": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "roomId": {
+     "type": "string"
+    },
+    "meetingProvider": {
+     "type": "string",
+     "enum": [
+      "livekit",
+      "jitsi",
+      "webrtc",
+      "external"
+     ]
+    },
+    "externalMeetingProviderName": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "roomId"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "meeting.started": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "roomId": {
+     "type": "string"
+    },
+    "meetingProvider": {
+     "type": "string",
+     "enum": [
+      "livekit",
+      "jitsi",
+      "webrtc",
+      "external"
+     ]
+    },
+    "externalMeetingProviderName": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.ended": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "roomId": {
+     "type": "string"
+    },
+    "meetingProvider": {
+     "type": "string",
+     "enum": [
+      "livekit",
+      "jitsi",
+      "webrtc",
+      "external"
+     ]
+    },
+    "externalMeetingProviderName": {
+     "type": "string"
+    },
+    "meetingKind": {
+     "type": "string",
+     "enum": [
+      "bubble",
+      "area",
+      "megaphone",
+      "speaker_zone",
+      "external"
+     ]
+    },
+    "participantCount": {
+     "type": "number"
+    },
+    "peakParticipantCount": {
+     "type": "number"
+    },
+    "speakerCount": {
+     "type": "number"
+    },
+    "webrtcSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "livekitSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "roomId": {
+     "type": "string"
+    },
+    "meetingProvider": {
+     "type": "string",
+     "enum": [
+      "livekit",
+      "jitsi",
+      "webrtc",
+      "external"
+     ]
+    },
+    "externalMeetingProviderName": {
+     "type": "string"
+    },
+    "meetingKind": {
+     "type": "string",
+     "enum": [
+      "bubble",
+      "area",
+      "megaphone",
+      "speaker_zone",
+      "external"
+     ]
+    },
+    "participantCount": {
+     "type": "number"
+    },
+    "peakParticipantCount": {
+     "type": "number"
+    },
+    "speakerCount": {
+     "type": "number"
+    },
+    "webrtcSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "livekitSeconds": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.screenshare.ended": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "hasAudio": {
+     "type": "boolean"
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "hasAudio",
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "hasAudio": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "hasAudio"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "meeting.layout_changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "layout": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "layout"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "meeting.picture_in_picture.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "open": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "open"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "chat.message_sent": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "chatContext": {
+     "type": "string",
+     "enum": [
+      "proximity",
+      "room"
+     ]
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "chat.proximity_file.sent": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "sizeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "recipientCount": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "sizeBytes",
+    "recipientCount"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "chat.proximity_file.received": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "sizeBytes": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "durationMs": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "relay": {
+     "type": "boolean"
+    },
+    "relayProtocol": {
+     "type": "string",
+     "enum": [
+      "udp",
+      "tcp",
+      "tls"
+     ]
+    }
+   },
+   "required": [
+    "sizeBytes",
+    "durationMs"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "invite.sent": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "inviteType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "invite.accepted": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "inviteType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "invite.walk_link_option_changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "area.dwell": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "areaId": {
+     "type": "string"
+    },
+    "areaName": {
+     "type": "string"
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "areaId",
+    "areaName",
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "areaId": {
+     "type": "string"
+    },
+    "areaName": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "areaId",
+    "areaName"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "status.dwell": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "status": {
+     "type": "string"
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "status",
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "status": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "status"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.area.lock.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "areaId": {
+     "type": "string"
+    },
+    "areaName": {
+     "type": "string"
+    },
+    "locked": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "areaId",
+    "locked"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.property.added": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "type": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name",
+    "type"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.property.removed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "type": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name",
+    "type"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.property.clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    },
+    "style": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.tool.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.application_picker.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "applicationName": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "applicationName"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.application.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "applicationName": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "applicationName"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "map_editor.save.failed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_editor.entity.added": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "entityType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_editor.entity.removed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "entityType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_editor.entity.updated": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "entityType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_editor.area.created": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "areaType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_editor.area.updated": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "areaType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_editor.area.removed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "areaType": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_loading.started": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "mapUrl": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_loading.succeeded": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "durationMs": {
+     "type": "number"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "map_loading.failed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    },
+    "durationMs": {
+     "type": "number"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "media.connection_retry": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingProvider": {
+     "type": "string",
+     "enum": [
+      "webrtc",
+      "livekit"
+     ]
+    }
+   },
+   "required": [
+    "meetingProvider"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.turn_test.succeeded": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "protocol": {
+     "type": [
+      "string",
+      "null"
+     ]
+    }
+   },
+   "required": [
+    "protocol"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.codec.degraded": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "streamCategory": {
+     "type": "string",
+     "enum": [
+      "video",
+      "screenSharing"
+     ]
+    },
+    "codec": {
+     "type": "string",
+     "enum": [
+      "av1",
+      "vp9",
+      "h264",
+      "vp8"
+     ]
+    },
+    "transportType": {
+     "type": "string",
+     "enum": [
+      "P2P",
+      "SFU"
+     ]
+    }
+   },
+   "required": [
+    "streamCategory",
+    "codec",
+    "transportType"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.livekit.connected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "livekitServerUrl": {
+     "type": "string",
+     "maxLength": 2048
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "connectMs": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "livekitServerUrl",
+    "livekitRegion",
+    "connectMs"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.livekit.reconnected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "livekitServerUrl": {
+     "type": "string",
+     "maxLength": 2048
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "previousLivekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "reconnectKind": {
+     "type": "string",
+     "enum": [
+      "resume",
+      "full"
+     ]
+    },
+    "durationMs": {
+     "type": "number",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "livekitServerUrl",
+    "livekitRegion",
+    "previousLivekitRegion",
+    "reconnectKind",
+    "durationMs"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.livekit.disconnected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "livekitServerUrl": {
+     "type": "string",
+     "maxLength": 2048
+    },
+    "livekitRegion": {
+     "anyOf": [
+      {
+       "type": "string",
+       "maxLength": 255
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "disconnectReason": {
+     "type": "string",
+     "maxLength": 64
+    },
+    "connectedSeconds": {
+     "anyOf": [
+      {
+       "type": "number",
+       "minimum": 0
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "whileReconnecting": {
+     "type": "boolean"
+    },
+    "restart": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "livekitServerUrl",
+    "livekitRegion",
+    "disconnectReason",
+    "connectedSeconds",
+    "whileReconnecting",
+    "restart"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.livekit_switch.requested": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "streamCategory": {
+     "type": "string",
+     "enum": [
+      "video",
+      "screenSharing"
+     ]
+    }
+   },
+   "required": [
+    "streamCategory"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.permission_denied": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "camera",
+      "microphone",
+      "camera_microphone"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.device_error": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "camera",
+      "microphone",
+      "camera_microphone"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.microphone.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.camera.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.notification.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.picture_in_picture.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.fullscreen.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "scripting.website_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "url": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "url"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.ask_website.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.request_follow.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.decrease_audio_volume.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "value": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "value"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.background_effect.sample": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "mode": {
+     "type": "string",
+     "enum": [
+      "blur",
+      "image"
+     ]
+    },
+    "transport": {
+     "type": "string",
+     "enum": [
+      "insertable-streams",
+      "image-bitmap"
+     ]
+    },
+    "delegate": {
+     "type": "string",
+     "enum": [
+      "GPU",
+      "CPU"
+     ]
+    },
+    "model": {
+     "type": "string",
+     "enum": [
+      "general",
+      "landscape"
+     ]
+    },
+    "meanSegmentationMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "fps": {
+     "type": "number",
+     "minimum": 0
+    },
+    "resegmentInterval": {
+     "type": "integer",
+     "minimum": 1,
+     "maximum": 4
+    },
+    "hardwareConcurrency": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "mode",
+    "transport",
+    "delegate",
+    "model",
+    "meanSegmentationMs",
+    "fps",
+    "resegmentInterval",
+    "hardwareConcurrency"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.background.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "backgroundType": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "backgroundType"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "settings.noise_suppression.changed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "enabled": {
+     "type": "boolean"
+    },
+    "provider": {
+     "type": "string",
+     "enum": [
+      "workadventure",
+      "voiceIsolation"
+     ]
+    },
+    "engine": {
+     "type": "string",
+     "enum": [
+      "deepfilternet",
+      "dtln"
+     ]
+    }
+   },
+   "required": [
+    "enabled",
+    "provider",
+    "engine"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.noise_suppression.started": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "engine": {
+     "type": "string",
+     "enum": [
+      "deepfilternet",
+      "dtln"
+     ]
+    },
+    "initMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "hardwareConcurrency": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "engine",
+    "initMs",
+    "hardwareConcurrency"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.noise_suppression.load": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "engine": {
+     "type": "string",
+     "enum": [
+      "deepfilternet",
+      "dtln"
+     ]
+    },
+    "windows": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "medianLoad": {
+     "type": "number",
+     "minimum": 0
+    },
+    "p95Load": {
+     "type": "number",
+     "minimum": 0
+    },
+    "maxLoad": {
+     "type": "number",
+     "minimum": 0
+    },
+    "slowFrames": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "frames": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "hardwareConcurrency": {
+     "type": "integer",
+     "minimum": 0
+    }
+   },
+   "required": [
+    "engine",
+    "windows",
+    "medianLoad",
+    "p95Load",
+    "maxLoad",
+    "slowFrames",
+    "frames",
+    "hardwareConcurrency"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.audio_quality.sample": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "transportType": {
+     "type": "string",
+     "enum": [
+      "P2P",
+      "SFU"
+     ]
+    },
+    "windowSeconds": {
+     "type": "number",
+     "exclusiveMinimum": 0
+    },
+    "streams": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "concealedRatio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "concealmentEvents": {
+     "type": "integer",
+     "minimum": 0
+    },
+    "deceleratedRatio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "acceleratedRatio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "packetLossRatio": {
+     "type": "number",
+     "minimum": 0,
+     "maximum": 1
+    },
+    "maxJitterMs": {
+     "type": "number",
+     "minimum": 0
+    },
+    "jitterBufferDelayMs": {
+     "anyOf": [
+      {
+       "type": "number",
+       "minimum": 0
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   },
+   "required": [
+    "transportType",
+    "windowSeconds",
+    "streams",
+    "concealedRatio",
+    "concealmentEvents",
+    "packetLossRatio",
+    "maxJitterMs",
+    "jitterBufferDelayMs"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.noise_suppression.failed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "engine": {
+     "type": "string",
+     "enum": [
+      "deepfilternet",
+      "dtln"
+     ]
+    },
+    "status": {
+     "type": "string",
+     "enum": [
+      "error",
+      "unsupported"
+     ]
+    },
+    "reason": {
+     "type": "string",
+     "maxLength": 200
+    }
+   },
+   "required": [
+    "engine",
+    "status",
+    "reason"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "cowebsite.opened": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "url": {
+     "type": "string"
+    },
+    "targetUrl": {
+     "type": "string"
+    },
+    "mediaKind": {
+     "type": "string",
+     "enum": [
+      "pdf",
+      "image",
+      "video",
+      "audio",
+      "document",
+      "presentation",
+      "spreadsheet",
+      "website",
+      "other"
+     ]
+    },
+    "triggerProperty": {
+     "type": "string",
+     "enum": [
+      "openLink",
+      "openWebsite",
+      "other"
+     ]
+    },
+    "fileName": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "fileExtension": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "areaId": {
+     "type": "string"
+    },
+    "areaName": {
+     "type": "string"
+    },
+    "schemaVersion": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "url",
+    "targetUrl",
+    "mediaKind",
+    "triggerProperty",
+    "schemaVersion"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "onboarding.woka_validated": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "scene": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "scene"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "feedback.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "feedbackSource": {
+     "type": "string",
+     "enum": [
+      "sentry",
+      "external_report_url"
+     ]
+    }
+   },
+   "required": [
+    "feedbackSource"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "feedback.submitted": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "feedbackSource": {
+     "type": "string",
+     "enum": [
+      "sentry",
+      "external_report_url"
+     ]
+    },
+    "hasScreenshot": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "feedbackSource"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "external_module.chat_band.clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "externalModuleName": {
+     "type": "string"
+    },
+    "action": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "externalModuleName",
+    "action"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "menu.custom.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "emote.launched": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "name": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "name"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "custom_button.clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "label": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "id"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "popup.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "targetRectangle": {
+     "type": "string"
+    },
+    "id": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "targetRectangle",
+    "id"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "world.entered": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "durationMs": {
+     "type": "number"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "asset.error": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "enum": [
+      "tile",
+      "asset"
+     ]
+    },
+    "reason": {
+     "type": "string"
+    }
+   },
+   "required": [
+    "kind"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "websocket.connection_lost": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "reason": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "pwa.install_prompt_shown": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "isIos": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "isIos"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "pwa.install_outcome": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "outcome": {
+     "type": "string",
+     "enum": [
+      "accepted",
+      "dismissed"
+     ]
+    }
+   },
+   "required": [
+    "outcome"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "auth.logged_sso": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "auth.logged_token": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "auth.login_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "auth.logout_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "bubble.lock.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "bubble.say.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "bubble.think.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "chat.matrix_encryption_configuration.started": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "chat.matrix_folder.created": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "chat.matrix_room.created": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "chat.message_from_user_list_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "chat.message_list_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "chat.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "conversation.participant_added": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "cowebsite.closed": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "url": {
+     "type": "string"
+    },
+    "targetUrl": {
+     "type": "string"
+    },
+    "mediaKind": {
+     "type": "string",
+     "enum": [
+      "pdf",
+      "image",
+      "video",
+      "audio",
+      "document",
+      "presentation",
+      "spreadsheet",
+      "website",
+      "other"
+     ]
+    },
+    "triggerProperty": {
+     "type": "string",
+     "enum": [
+      "openLink",
+      "openWebsite",
+      "other"
+     ]
+    },
+    "fileName": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "fileExtension": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "areaId": {
+     "type": "string"
+    },
+    "areaName": {
+     "type": "string"
+    },
+    "schemaVersion": {
+     "type": "number"
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "url",
+    "targetUrl",
+    "mediaKind",
+    "triggerProperty",
+    "schemaVersion",
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "url": {
+     "type": "string"
+    },
+    "targetUrl": {
+     "type": "string"
+    },
+    "mediaKind": {
+     "type": "string",
+     "enum": [
+      "pdf",
+      "image",
+      "video",
+      "audio",
+      "document",
+      "presentation",
+      "spreadsheet",
+      "website",
+      "other"
+     ]
+    },
+    "triggerProperty": {
+     "type": "string",
+     "enum": [
+      "openLink",
+      "openWebsite",
+      "other"
+     ]
+    },
+    "fileName": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "fileExtension": {
+     "type": [
+      "string",
+      "null"
+     ]
+    },
+    "areaId": {
+     "type": "string"
+    },
+    "areaName": {
+     "type": "string"
+    },
+    "schemaVersion": {
+     "type": "number"
+    }
+   },
+   "required": [
+    "url",
+    "targetUrl",
+    "mediaKind",
+    "triggerProperty",
+    "schemaVersion"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "cowebsite.fullscreen_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "cowebsite.link_copied": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "cowebsite.opened_in_new_tab": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "cowebsite.switched": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "emote.edit_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "external_module.calendar_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "external_module.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "external_module.todo_list_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "file.drag_dropped": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "global_audio.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "global_message.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "source": {
+     "type": "string",
+     "enum": [
+      "menu",
+      "action_bar"
+     ]
+    }
+   },
+   "required": [
+    "source"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "global_message.sound_sent": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "global_message.text_sent": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "invite.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_editor.closed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_editor.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.center_to_user_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.closed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.filtered": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.top_button_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.zoom_in_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "map_explorer.zoom_out_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "media.camera.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "media.microphone.dwell": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "media.microphone.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "media.speech.dwell": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed_by_client",
+      "socket_closed",
+      "join_failed",
+      "pusher_shutdown",
+      "pusher_crashed"
+     ]
+    }
+   },
+   "required": [
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  },
+  "openProperties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "media.turn_test.failed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "media.turn_test.timeout": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "media.video_stream_missing": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingProvider": {
+     "type": "string",
+     "enum": [
+      "webrtc",
+      "livekit"
+     ]
+    },
+    "local": {
+     "type": "boolean"
+    },
+    "streamCategory": {
+     "type": "string",
+     "enum": [
+      "video",
+      "screenSharing",
+      "scripting",
+      "component"
+     ]
+    },
+    "remoteSpaceUserId": {
+     "type": "string"
+    },
+    "pending": {
+     "type": "boolean"
+    },
+    "trackMuted": {
+     "type": "boolean"
+    },
+    "trackEnded": {
+     "type": "boolean"
+    },
+    "remoteMuted": {
+     "type": "boolean"
+    },
+    "pictureInPicture": {
+     "type": "boolean"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.actions.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.camera_layout_resized": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.floor.given": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.floor.given_back": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.floor.revoked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.hand.lowered_for_participant": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.hand.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "raised": {
+     "type": "boolean"
+    }
+   },
+   "required": [
+    "raised"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "meeting.microphone.muted": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.microphone.muted_for_everybody": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.participation.ended": {
+  "source": "pusher",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    },
+    "meetingKind": {
+     "type": "string",
+     "enum": [
+      "bubble",
+      "area",
+      "megaphone",
+      "speaker_zone",
+      "external"
+     ]
+    },
+    "joinRank": {
+     "type": "number"
+    },
+    "role": {
+     "type": "string",
+     "enum": [
+      "speaker",
+      "listener"
+     ]
+    },
+    "airtimeSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "webrtcSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "livekitSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "startedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "endedAt": {
+     "type": "string",
+     "format": "date-time"
+    },
+    "durationSeconds": {
+     "type": "number",
+     "minimum": 0
+    },
+    "endReason": {
+     "type": "string",
+     "enum": [
+      "closed",
+      "back_shutdown"
+     ]
+    }
+   },
+   "required": [
+    "meetingId",
+    "meetingKind",
+    "joinRank",
+    "role",
+    "airtimeSeconds",
+    "startedAt",
+    "endedAt",
+    "durationSeconds",
+    "endReason"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "meeting.participant.kicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.participant.pinned": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.private_message.clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.report.clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.screenshare.toggled": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.video.muted": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "meeting.video.muted_for_everybody": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "meetingId": {
+     "type": "string"
+    }
+   },
+   "additionalProperties": true
+  }
+ },
+ "megaphone.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "menu.chat.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "menu.contact.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "menu.credit.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "menu.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "menu.shortcuts.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "onboarding.companion_selected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "onboarding.custom_woka_selected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "onboarding.name_validated": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "onboarding.video_validated": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "onboarding.woka_selected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "personal_desk.entered": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "personal_desk.unclaimed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "profile.camera_edit_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "profile.companion_edit_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "profile.name_edit_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "profile.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "source": {
+     "type": "string",
+     "enum": [
+      "menu",
+      "profile_button"
+     ]
+    }
+   },
+   "required": [
+    "source"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "profile.woka_edit_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "pwa.continue_in_browser_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "pwa.install_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "pwa.install_from_profile_menu_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "recording.list_opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "recording.started": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "recording.stopped": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "room_list.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "settings.audio_volume.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "settings.background.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "settings.camera.selected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "settings.microphone.selected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "settings.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "settings.speaker.selected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "user.business_card.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "user.follow_requested": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "user.go_to_clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "user.report.clicked": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "user.woka_menu.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "user_list.opened": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "websocket.reconnected": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ },
+ "websocket.reconnecting": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {},
+   "additionalProperties": true
+  }
+ }
+}
