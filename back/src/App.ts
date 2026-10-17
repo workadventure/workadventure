@@ -11,6 +11,7 @@ import {
     HTTP_PORT,
     PROMETHEUS_PORT,
     GRPC_PORT,
+    GRPC_BIND_HOST,
     ADMIN_API_RETRY_DELAY,
     ADMIN_API_URL,
     GRPC_MAX_MESSAGE_SIZE,
@@ -83,7 +84,7 @@ class App {
         server.addService(RoomManagerService, roomManager);
         server.addService(SpaceManagerService, spaceManager);
 
-        server.bindAsync(`0.0.0.0:${GRPC_PORT}`, ServerCredentials.createInsecure(), (err) => {
+        server.bindAsync(`${GRPC_BIND_HOST}:${GRPC_PORT}`, ServerCredentials.createInsecure(), (err) => {
             if (err) {
                 throw err;
             }

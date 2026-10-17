@@ -160,6 +160,7 @@ Environment variables for the Back service (backend API).
 | `ENABLE_MAP_EDITOR` | No | Enable the built-in map editor. Defaults to false |
 | `HTTP_PORT` | No | HTTP port for the back service. Defaults to 8080 |
 | `GRPC_PORT` | No | gRPC port for the back service. Defaults to 50051 |
+| `GRPC_BIND_HOST` | No | Bind host for the back gRPC server. Defaults to `[::]` (all IPv6 and IPv4 addresses). Set to `0.0.0.0` on hosts without IPv6 support. |
 | `MAX_PER_GROUP` | Yes | Maximum number of users in a bubble/group. Defaults to 4 |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
@@ -211,6 +212,7 @@ Environment variables for the Map Storage service.
 | `MAX_UNCOMPRESSED_SIZE` | No | The maximum size of an uploaded file. This the total size of the uncompressed file (not the ZIP file). Defaults to 1GB |
 | `USE_DOMAIN_NAME_IN_PATH` | No | If true, the domain name will be used as a top level directory when fetching/storing files |
 | `PATH_PREFIX` | No | The prefix to strip if a reverse proxy is proxying calls to the map-storage from a path, e.g. /map-storage |
+| `GRPC_BIND_HOST` | No | Bind host for the map-storage gRPC server. Defaults to `[::]` (all IPv6 and IPv4 addresses). Set to `0.0.0.0` on hosts without IPv6 support. |
 | `STORAGE_DIRECTORY` | No | Storage directory for the maps on physical disk. Used if S3 storage is not configured. |
 | `CACHE_CONTROL` | No | The cache-control HTTP header to be used for "normal" resources. Note: resources containing a hash in the name will be set to "immutable", whatever this setting is. |
 | `ENABLE_WEB_HOOK` | No | If true, the webhook will be called when a WAM file is created |
