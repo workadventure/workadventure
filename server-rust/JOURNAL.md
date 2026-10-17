@@ -675,4 +675,7 @@ jamais l'id de la salle créée. Les 5 tests de `matrixChatArea` échouaient tou
 - Playwright Chromium : non-régression après refonte 22/25 (2 environnement connus, `scripting_follow` 2/2 seul) ;
   LiveKit, enregistrement, partage d'écran 10/11 (`recording:62` lent en lot, 2/2 seul) ; Matrix : `matrixChatArea`
   5/5, les 6 autres fichiers 26 réussis et 2 sautés, `matrixChatModeration:28` et `:60` échouent sur
-  `@john.doe` pris par la spec jouée avant (cas classé environnement dans la réf. TS), rejeu seul demandé.
+  `@john.doe` pris par la spec jouée avant (cas classé environnement dans la réf. TS). Rejouées seules sur un
+  Synapse vierge : encore 2 échecs, cette fois par ma faute (warm-auth, lancé juste avant, connecte User1 par le SSO
+  Matrix, qui prend `@john.doe`) ; sans warm-auth, après un nouveau vidage : **2/2**. Le socle en a tiré
+  `dev/dev synapse reset`, à lancer après warm-auth.
