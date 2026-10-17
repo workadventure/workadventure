@@ -159,7 +159,8 @@ func TestFilesGoToTheBucketOrToRedis(t *testing.T) {
 	}
 	h := New(Options{EnableUpload: true, S3: s3.New(bucket.URL, "eu", "chat", "key", "secret"), S3URLTTL: time.Minute, Redis: kv}).Handler()
 	id := upload(h)
-	if got, _ := put.Load().(string); got != "/chat/"+id+" attachment png!" {
+	// Over plain HTTP the body is aws-chunked (signed chunks around the bytes), as S3 accepts it.
+	if got, _ := put.Load().(string); !strings.HasPrefix(got, "/chat/"+id+" attachment ") || !strings.Contains(got, "\r\npng!\r\n") {
 		t.Fatalf("the file goes to the bucket: %q", got)
 	}
 	w := do(h, "GET", "/upload-file/"+id, nil, "")
