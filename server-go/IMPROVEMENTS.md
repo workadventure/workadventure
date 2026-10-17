@@ -18,4 +18,5 @@ constat, l'endroit, le risque et la proposition. Les emplacements sont ceux de l
 | 17 `_ = s.room.X(...)` | `ws/` | erreurs perdues sans trace | un assistant qui journalise l'erreur une fois |
 | Erreurs avalées « comme le TS » | divers (`_ =` sur des appels réseau) | panne silencieuse | journaliser au niveau Warn, avec une métrique |
 | `waitStatus` des tests d'enregistrement regarde un statut déjà vu ; « idle » est donc toujours vrai | `core/space_recording_test.go` | un test d'arrêt qui ne vérifie rien | attendre le statut courant, ou la fin signalée à l'admin |
+| `/debug/close-space-connection` répond sans effet (pas de flux back↔pusher) | `ws/debug.go` | la reprise d'un space n'est pas éprouvée par `map_editor_livekit:62` | vraie simulation : vider le space et faire rejoindre ses membres, comme après un redémarrage du back |
 | Autres optimisations Codex non faites | — | — | patchs de SpaceState au lieu d'états complets ; cache des variables au join ; métriques Redis ; profil du fanout ; reconstruction d'un acteur après un panic ; contrôle d'admission ; tests d'endurance et de pics |

@@ -43,7 +43,8 @@ func (srv *Server) Dump(w http.ResponseWriter, r *http.Request) {
 
 // CloseSpaceConnection is POST /debug/close-space-connection of the back. There the pushers lost their stream to
 // the space and rejoined it, which simulated a back restart. A single server has no such link to cut: the route
-// answers as the back did (400 without spaceName, 500 for an unknown space) and leaves the space as it is.
+// answers as the back did (400 without spaceName, 500 for an unknown space) and leaves the space as it is: out of
+// scope by construction (PARITY.md).
 func (srv *Server) CloseSpaceConnection(w http.ResponseWriter, r *http.Request) {
 	if !srv.debugToken(w, r) {
 		return
@@ -54,7 +55,7 @@ func (srv *Server) CloseSpaceConnection(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	for _, k := range srv.spaces.Keys() {
-		if k.Local == name {
+		if k.World+"."+k.Local == name || k.Local == name { // the back's name is the world, a dot, the local name
 			_, _ = w.Write([]byte("Space connection closed"))
 			return
 		}
