@@ -17,6 +17,6 @@ helm upgrade --install "$RELEASE" "$CHART" --kube-context "$CTX" -n "$NS" --wait
   -f "$CHART/values.yaml" -f values-common.yaml -f "values-$mode.yaml"
 helm_done=$((SECONDS - start))
 # Served through the ingress? (the browsers' point of view)
-until [ "$(curl -sk -o /dev/null -w '%{http_code}' --max-time 3 "https://play-$DOMAIN/ping" || true)" = 200 ]; do sleep 1; done
+until [ "$(rcurl -o /dev/null -w '%{http_code}' --max-time 3 "https://play-$DOMAIN:443/ping" || true)" = 200 ]; do sleep 1; done
 echo "== $mode: helm --wait ${helm_done}s, /ping through the ingress ${SECONDS}s after start"
 k -n "$NS" get pods -o custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[*].image,READY:.status.containerStatuses[*].ready
