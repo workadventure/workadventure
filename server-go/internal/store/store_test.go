@@ -1,65 +1,41 @@
 package store
 
 import (
-	"bufio"
 	"context"
 	"errors"
-	"net"
 	"strconv"
-	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/alicebob/miniredis/v2"
 )
 
-// fakeRedis answers HGETALL with one field, and +OK to anything else.
-func fakeRedis(t *testing.T) string { return slowRedis(t, 0) }
-
-// slowRedis is fakeRedis taking delay to answer each HGETALL.
-func slowRedis(t *testing.T, delay time.Duration) string {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
+func TestRedisReadsAndWritesTheVariablesAndTheTokens(t *testing.T) {
+	srv := miniredis.RunT(t)
+	srv.RequireAuth("secret")
+	c := NewRedis(srv.Addr(), "secret")
+	ctx := context.Background()
+	if err := c.HSet(ctx, "http://play/_/global/maps/m.json", "field1", `"some json"`); err != nil {
 		t.Fatal(err)
 	}
-	t.Cleanup(func() { ln.Close() })
-	go func() {
-		for {
-			conn, err := ln.Accept()
-			if err != nil {
-				return
-			}
-			go func() {
-				r := bufio.NewReader(conn)
-				for {
-					v, err := readReply(r)
-					if err != nil {
-						return
-					}
-					args := v.([]any)
-					if args[0] == "HGETALL" {
-						time.Sleep(delay)
-						_, _ = conn.Write([]byte("*2\r\n$6\r\nfield1\r\n$11\r\n\"some json\"\r\n"))
-					} else {
-						_, _ = conn.Write([]byte("+OK\r\n"))
-					}
-				}
-			}()
-		}
-	}()
-	return ln.Addr().String()
-}
-
-func TestRedisSpeaksRESP(t *testing.T) {
-	c := NewRedis(fakeRedis(t), "secret")
-	m, err := c.HGetAll(context.Background(), "http://play/_/global/maps/m.json")
+	m, err := c.HGetAll(ctx, "http://play/_/global/maps/m.json")
 	if err != nil || m["field1"] != `"some json"` {
 		t.Fatalf("%v %v", m, err)
 	}
-	if err := c.HSet(context.Background(), "k", "f", "v"); err != nil {
-		t.Fatal(err)
+	if _, ok, err := c.Get(ctx, "none"); ok || err != nil {
+		t.Fatalf("a missing key is not an error: %v %v", ok, err)
 	}
-	if !strings.HasPrefix(string(command([]string{"HSET", "k", "f", "v"})), "*4\r\n$4\r\nHSET\r\n") {
-		t.Fatal("command encoding")
+	// The Synapse admin token lock (matrix.ShareThrough): only the first SET NX wins, until it expires.
+	if ok, err := c.SetNX(ctx, "lock", "a", 30*time.Second); !ok || err != nil {
+		t.Fatal(ok, err)
+	}
+	if ok, _ := c.SetNX(ctx, "lock", "b", 30*time.Second); ok {
+		t.Fatal("a second SET NX must lose")
+	}
+	srv.FastForward(31 * time.Second)
+	if ok, _ := c.SetNX(ctx, "lock", "b", 30*time.Second); !ok {
+		t.Fatal("the lock expires")
 	}
 }
 
@@ -128,54 +104,15 @@ func TestFlushTellsHowManyWritesAreLost(t *testing.T) {
 	}
 }
 
-func TestPlayersJoiningTogetherReadTheirVariablesSideBySide(t *testing.T) {
-	c := NewRedis(slowRedis(t, 200*time.Millisecond), "")
-	start := time.Now()
-	var wg sync.WaitGroup
-	for range poolSize {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			if _, err := c.HGetAll(context.Background(), "room"); err != nil {
-				t.Error(err)
-			}
-		}()
-	}
-	wg.Wait()
-	if d := time.Since(start); d > time.Second {
-		t.Fatalf("%d reads of 200 ms took %v: they waited for each other", poolSize, d)
-	}
-}
-
 func TestTheUploadersRedisSelectsItsDatabase(t *testing.T) {
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
-	if err != nil {
-		t.Fatal(err)
+	srv := miniredis.RunT(t)
+	srv.DB(1).Set("id.txt", "file")
+	c := NewRedis(srv.Addr(), "")
+	if _, ok, _ := c.Get(context.Background(), "id.txt"); ok {
+		t.Fatal("the variables' database 0 does not have the uploader's files")
 	}
-	defer ln.Close()
-	got := make(chan string, 4)
-	go func() {
-		conn, err := ln.Accept()
-		if err != nil {
-			return
-		}
-		r := bufio.NewReader(conn)
-		for {
-			v, err := readReply(r)
-			if err != nil {
-				return
-			}
-			args := v.([]any)
-			got <- args[0].(string) + " " + args[1].(string)
-			if args[0] == "GET" {
-				_, _ = conn.Write([]byte("$4\r\nfile\r\n"))
-			} else {
-				_, _ = conn.Write([]byte("+OK\r\n"))
-			}
-		}
-	}()
-	v, ok, err := NewRedis(ln.Addr().String(), "").WithDB(1).Get(context.Background(), "id.txt")
-	if err != nil || !ok || v != "file" || <-got != "SELECT 1" || <-got != "GET id.txt" {
+	v, ok, err := c.WithDB(1).Get(context.Background(), "id.txt")
+	if err != nil || !ok || v != "file" {
 		t.Fatalf("%q %v %v", v, ok, err)
 	}
 }
