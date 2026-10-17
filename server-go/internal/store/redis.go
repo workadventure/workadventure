@@ -213,3 +213,14 @@ func (c *Redis) Set(ctx context.Context, key, value string, ttl time.Duration) e
 	_, err := c.do(ctx, args...)
 	return err
 }
+
+// SetNX writes a key only if it does not exist, expiring after ttl; ok tells whether it was written.
+func (c *Redis) SetNX(ctx context.Context, key, value string, ttl time.Duration) (bool, error) {
+	reply, err := c.do(ctx, "SET", key, value, "NX", "EX", strconv.Itoa(max(1, int(ttl.Seconds()))))
+	return reply != nil && err == nil, err
+}
+
+func (c *Redis) Del(ctx context.Context, key string) error {
+	_, err := c.do(ctx, "DEL", key)
+	return err
+}

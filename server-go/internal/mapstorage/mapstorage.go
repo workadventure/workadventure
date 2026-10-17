@@ -231,7 +231,6 @@ func (s *Store) forget(dir string) {
 }
 
 func (s *Store) changed(key string, deleted bool) {
-	s.notify(key, map[bool]string{false: "update", true: "delete"}[deleted])
 	if s.Changed != nil {
 		s.Changed(key, deleted)
 	}

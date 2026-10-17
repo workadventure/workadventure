@@ -73,7 +73,42 @@ func TestTheAdminAuthorizesWorldsAndHearsOfTheirMaps(t *testing.T) {
 		got = append(got, h["action"]+" "+h["domain"]+" "+h["mapPath"])
 	}
 	sort.Strings(got)
-	if strings.Join(got, "|") != "delete acme.ms.test maps/office.wam|delete globex.ms.test maps/office.wam|update acme.ms.test maps/office.wam|update acme.ms.test maps/office.wam" {
-		t.Fatalf("each write and the deletion: %v", got)
+	// A write names its map; a deletion is an update of the whole domain, as map-storage's generateCacheFile.
+	if strings.Join(got, "|") != "update acme.ms.test |update acme.ms.test maps/office.wam|update acme.ms.test maps/office.wam|update globex.ms.test " {
+		t.Fatalf("each write and the deletions: %v", got)
+	}
+}
+
+func TestAnUploadOrACopyTellsTheWebhookOnceForTheDomain(t *testing.T) {
+	got := make(chan map[string]string, 8)
+	hook := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, r *http.Request) {
+		var b map[string]string
+		_ = json.NewDecoder(r.Body).Decode(&b)
+		got <- b
+	}))
+	defer hook.Close()
+	hs := newHarness(t)
+	hs.h = hs.s.Handler(Options{Auth: Auth{Basic: true, User: "john.doe", Password: "password"}, MaxUncompressed: 1 << 20,
+		WebHook: WebHook{URL: hook.URL}})
+	if w := hs.do("POST", "/upload", zipOf(t, map[string]string{"dir/a.tmj": tiled, "dir/b.tmj": tiled, "assets/t.png": "png"}), "zip"); w.Code != 200 {
+		t.Fatal(w.Code, w.Body)
+	}
+	if w := hs.do("POST", "/copy", []byte(`{"source":"dir/a.wam","destination":"dir/c.wam"}`), "application/json"); w.Code/100 != 2 {
+		t.Fatal(w.Code, w.Body)
+	}
+	for i := 0; i < 2; i++ {
+		select {
+		case b := <-got:
+			if _, has := b["mapPath"]; has || b["action"] != "update" {
+				t.Fatalf("one domain-wide update, without a map: %v", b)
+			}
+		case <-time.After(2 * time.Second):
+			t.Fatal("no webhook")
+		}
+	}
+	select {
+	case b := <-got:
+		t.Fatalf("an upload of two maps is one call: %v", b)
+	case <-time.After(200 * time.Millisecond):
 	}
 }

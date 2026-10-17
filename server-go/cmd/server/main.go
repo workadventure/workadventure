@@ -142,7 +142,11 @@ func run() error {
 	maps.Changed = wsServer.MapChanged
 	wsServer.SetAnalytics(events)
 	if cfg.MatrixEnabled {
-		wsServer.SetMatrix(matrix.New(cfg.Matrix.APIURI, cfg.Matrix.AdminUser, cfg.Matrix.AdminPassword, cfg.Matrix.Domain))
+		m := matrix.New(cfg.Matrix.APIURI, cfg.Matrix.AdminUser, cfg.Matrix.AdminPassword, cfg.Matrix.Domain)
+		if r, ok := vars.(*store.Redis); ok {
+			m.ShareThrough(r)
+		}
+		wsServer.SetMatrix(m)
 	}
 	handler := httpapi.New(cfg, tokens, adm, front, wsServer, version)
 
@@ -165,6 +169,11 @@ func run() error {
 				endpoint = "https://s3." + b.Region + ".amazonaws.com"
 			}
 			up.S3, up.S3URLTTL = s3.New(endpoint, b.Region, b.Bucket, b.AccessKey, b.Secret), b.URLTTL
+			go func() { // like S3StorageProvider, once, without waiting: a bucket that refuses keeps its rules
+				if err := up.S3.PutCORS(context.Background()); err != nil {
+					slog.Warn("cannot set the CORS rules of the uploader's bucket", "error", err)
+				}
+			}()
 		}
 		if r, ok := vars.(*store.Redis); ok {
 			up.Redis = r.WithDB(cfg.UploaderRedisDB)

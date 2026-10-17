@@ -158,6 +158,7 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 			s.changed(path.Join(directory, name), false)
 		}
 	}
+	s.notifyDomain(r)
 	_, _ = io.WriteString(w, "File successfully uploaded.")
 }
 
@@ -229,6 +230,7 @@ func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
 	}
 	if path.Ext(key) == ".wam" {
 		s.changed(key, false)
+		s.notify(key, "update")
 	}
 	_, _ = io.WriteString(w, "File successfully uploaded.")
 }
@@ -294,6 +296,7 @@ func (s *Store) patch(w http.ResponseWriter, r *http.Request) {
 	default:
 		s.forget(key)
 		s.changed(key, false)
+		s.notify(key, "update")
 		writeJSON(w, http.StatusOK, map[string]bool{"success": true})
 	}
 }
@@ -328,6 +331,7 @@ func (s *Store) remove(w http.ResponseWriter, r *http.Request) {
 	if path.Ext(key) == ".wam" {
 		s.changed(key, true)
 	}
+	s.notifyDomain(r)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -473,14 +477,27 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 			return
 		}
 		s.forget(strings.Trim(*req.Source, "/"))
+		s.notifyDomain(r)
 		w.WriteHeader(http.StatusOK)
 		_, _ = io.WriteString(w, "OK")
 		return
 	}
-	if err := os.CopyFS(to, os.DirFS(from)); err != nil {
+	// fs.copy of map-storage: a file or a whole directory.
+	var err error
+	if info, statErr := os.Stat(from); statErr != nil {
+		err = statErr
+	} else if info.IsDir() {
+		err = os.CopyFS(to, os.DirFS(from))
+	} else if data, readErr := os.ReadFile(from); readErr != nil {
+		err = readErr
+	} else {
+		err = writeFile(to, data)
+	}
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	s.notifyDomain(r)
 	w.WriteHeader(http.StatusCreated)
 	_, _ = io.WriteString(w, "Created")
 }
