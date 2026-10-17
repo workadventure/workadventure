@@ -30,15 +30,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "您的摄像头已禁用",
         activate: "激活您的摄像头",
-        noImageWarning: "您的摄像头已停止发送画面。可能有其他应用正在使用它。",
-        retry: "重试",
-        changeCamera: "更换摄像头",
     },
     microphone: {
         disabled: "您的麦克风已禁用",
         activate: "激活您的麦克风",
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         advancedNoiseReduction: "高级降噪",
+        loudEnvironmentWarning: "检测到麦克风中存在持续的背景噪声。",
+        enableNoiseSuppression: "启用噪声抑制",
         noiseSuppressionInitializing: "正在初始化自定义噪声抑制...",
         noiseSuppressionUnsupported: "此浏览器无法运行自定义噪声抑制。",
         noiseSuppressionError: "自定义噪声抑制失败。正在回退到浏览器原生噪声抑制。",

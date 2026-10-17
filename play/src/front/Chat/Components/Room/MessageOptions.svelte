@@ -1,5 +1,6 @@
 <script lang="ts">
-    import type { ChatMessage } from "../../Connection/ChatConnection";
+    import { readable } from "svelte/store";
+    import type { ChatAttachmentStatus, ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import EmojiButton from "./EmojiButton.svelte";
@@ -34,10 +35,16 @@
     }
 
     let { content, canDelete, canReact, canEdit } = $derived(message);
+    const noAttachment = readable<ChatAttachmentStatus>({ state: "ready" });
+    let attachmentStatus = $derived(message.attachment?.status ?? noAttachment);
+    // A file offered but not accepted, or still downloading or decrypting, has nothing to save yet.
+    let canDownload = $derived(
+        message.type !== "text" && $content.url !== undefined && $attachmentStatus.state === "ready",
+    );
 </script>
 
 <div class="flex flex-row gap-1 items-center">
-    {#if message.type !== "text"}
+    {#if canDownload}
         <a
             href={$content.url}
             download={$content.body}
