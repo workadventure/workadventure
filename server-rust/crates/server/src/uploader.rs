@@ -252,7 +252,11 @@ async fn upload_file(State(u): State<Uploader>, mut form: Multipart) -> Response
 
 /// `new Date()` as JSON writes it.
 pub fn iso_now() -> String {
-    let ms = crate::redis_store::now_ms();
+    iso_at(crate::redis_store::now_ms())
+}
+
+/// A Unix time (ms) as JSON writes a Date.
+pub fn iso_at(ms: u64) -> String {
     let (secs, millis) = (ms / 1000, ms % 1000);
     let (days, rem) = (secs / 86_400, secs % 86_400);
     // Civil date from days since 1970-01-01 (Howard Hinnant's algorithm).

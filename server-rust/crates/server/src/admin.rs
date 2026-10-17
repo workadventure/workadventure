@@ -16,6 +16,9 @@ pub fn routes() -> Router<AppState> {
         .route("/rooms", get(rooms))
         .route("/global/event", post(global_event))
         .route("/livekit/egress/webhook", post(egress_webhook))
+        .route("/room/refresh", post(room_refresh))
+        .route("/message", post(message))
+        .route("/external-module/event", post(external_module_event))
 }
 
 /// The adminToken middleware: `admin-token` (deprecated) or `Authorization` must be ADMIN_API_TOKEN.
@@ -56,6 +59,78 @@ async fn global_event(State(state): State<AppState>, headers: HeaderMap, body: a
     "ok".into_response()
 }
 
+/// A room of this server, if it runs (the back answers nothing for a room it does not hold).
+async fn to_room(state: &AppState, room: &str, cmd: RoomCmd) {
+    if let Some(actor) = state.rooms.get(room) {
+        let _ = actor.send(cmd).await;
+    }
+}
+
+fn json_body(body: &[u8]) -> Option<serde_json::Value> {
+    serde_json::from_slice(body).ok()
+}
+
+/// `POST /room/refresh {roomId}`: the users of the room reload it.
+async fn room_refresh(State(state): State<AppState>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
+    if let Some(r) = refused(&state, &headers) {
+        return r;
+    }
+    let Some(body) = json_body(&body) else {
+        return (StatusCode::BAD_REQUEST, "Invalid JSON body").into_response();
+    };
+    let Some(room) = body["roomId"].as_str() else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Incorrect roomId parameter").into_response();
+    };
+    to_room(&state, room, RoomCmd::Refresh).await;
+    "ok".into_response()
+}
+
+/// `POST /message {text, type: message | capacity, targets}`: an admin message, or the world-full warning.
+async fn message(State(state): State<AppState>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
+    if let Some(r) = refused(&state, &headers) {
+        return r;
+    }
+    let Some(body) = json_body(&body) else {
+        return (StatusCode::BAD_REQUEST, "Invalid JSON body").into_response();
+    };
+    let (Some(text), Some(kind), Some(targets)) = (body["text"].as_str(), body["type"].as_str(), body["targets"].as_array()) else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Incorrect text, type or targets parameter").into_response();
+    };
+    if kind != "message" && kind != "capacity" {
+        return (StatusCode::INTERNAL_SERVER_ERROR, "Incorrect type parameter").into_response();
+    }
+    for room in targets.iter().filter_map(|t| t.as_str()) {
+        let cmd = if kind == "message" { RoomCmd::AdminMessage(text.to_owned()) } else { RoomCmd::WorldFull };
+        to_room(&state, room, cmd).await;
+    }
+    "ok".into_response()
+}
+
+/// `POST /external-module/event {data: {roomId, moduleId, recipientUuid, message}}`: to one user of a room.
+async fn external_module_event(State(state): State<AppState>, headers: HeaderMap, body: axum::body::Bytes) -> Response {
+    if let Some(r) = refused(&state, &headers) {
+        return r;
+    }
+    let Some(body) = json_body(&body) else {
+        return (StatusCode::BAD_REQUEST, "Invalid JSON body").into_response();
+    };
+    let d = &body["data"];
+    let (Some(room), Some(module), Some(recipient)) = (d["roomId"].as_str(), d["moduleId"].as_str(), d["recipientUuid"].as_str()) else {
+        return (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"cause": "Incorrect parameters"}))).into_response();
+    };
+    if !d["message"].is_object() {
+        return (StatusCode::INTERNAL_SERVER_ERROR, axum::Json(serde_json::json!({"cause": "Incorrect message parameter"}))).into_response();
+    }
+    let message = wa_proto::messages::ExternalModuleMessage {
+        module_id: module.to_owned(),
+        recipient_uuid: Some(recipient.to_owned()),
+        room_id: Some(room.to_owned()),
+        message: Some(crate::wire::json_to(&d["message"])),
+    };
+    to_room(&state, room, RoomCmd::ExternalModule(message)).await;
+    "ok".into_response()
+}
+
 #[derive(serde::Deserialize)]
 struct EgressQuery {
     space: Option<String>,
@@ -78,33 +153,22 @@ async fn egress_webhook(
     if body.is_empty() {
         return (StatusCode::BAD_REQUEST, "Invalid request body").into_response();
     }
-    let Some(lk) = crate::livekit::Livekit::from_config(&state.config) else {
-        return (StatusCode::INTERNAL_SERVER_ERROR, "LiveKit is not configured").into_response();
-    };
     let auth = headers
         .get(header::AUTHORIZATION)
         .or_else(|| headers.get("authorize"))
         .and_then(|v| v.to_str().ok())
-        .unwrap_or_default();
-    let event = match crate::livekit::verify_webhook(&lk, auth, &body) {
-        Ok(event) => event,
-        Err(e) if e == "invalid body" => return (StatusCode::BAD_REQUEST, e).into_response(),
-        Err(e) => return (StatusCode::UNAUTHORIZED, e).into_response(),
-    };
-    let ended = match event["event"].as_str() {
-        Some("egress_started") => false,
-        Some("egress_ended") => true,
-        _ => return StatusCode::NO_CONTENT.into_response(),
-    };
-    let info = crate::livekit::field(&event, "egressInfo", "egress_info");
-    let Some(egress_id) = crate::livekit::field(info, "egressId", "egress_id").as_str().map(str::to_owned) else {
-        return (StatusCode::BAD_REQUEST, "egressInfo.egressId is required").into_response();
-    };
-    tracing::info!(%space, %session_id, %egress_id, ended, "egress webhook");
-    if let Some(actor) = state.spaces.get(&space) {
-        let _ = actor.send(crate::space_actor::SpaceCmd::Egress { session_id, egress_id, ended }).await;
+        .unwrap_or_default()
+        .to_owned();
+    tracing::info!(%space, %session_id, "egress webhook");
+    // The space checks it, with the credentials it records with (the admin's, per world, or the server's).
+    let Some(actor) = state.spaces.get(&space) else { return StatusCode::NO_CONTENT.into_response() };
+    let (reply, answer) = tokio::sync::oneshot::channel();
+    let cmd = crate::space_actor::SpaceCmd::Egress { session_id, auth, body, reply };
+    if actor.send(cmd).await.is_err() {
+        return StatusCode::NO_CONTENT.into_response();
     }
-    StatusCode::NO_CONTENT.into_response()
+    let status = answer.await.unwrap_or(StatusCode::NO_CONTENT);
+    status.into_response()
 }
 
 /// `GET /rooms`: `{roomUrl: users}` for every room; a room that does not answer within a second is left out.

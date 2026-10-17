@@ -81,10 +81,12 @@ pub enum SpaceCmd {
         result: Result<String, String>,
     },
     /// An egress webhook for one of this space's recordings: started (false) or ended (true).
+    /// An egress webhook for one of this space's recordings, as received (checked here).
     Egress {
         session_id: String,
-        egress_id: String,
-        ended: bool,
+        auth: String,
+        body: axum::body::Bytes,
+        reply: tokio::sync::oneshot::Sender<axum::http::StatusCode>,
     },
 }
 
@@ -334,13 +336,15 @@ impl SpaceSink for Out<'_> {
 async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Receiver<SpaceCmd>, app: AppState) {
     let registry = app.spaces.clone();
     METRICS.nb_spaces.inc();
-    let media = Media {
+    let mut media = Media {
         livekit: Livekit::from_config(&app.config),
         room: livekit::room_name(&key),
         http: app.http.clone(),
     };
     let raw = |k: &str| app.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
-    let media_config = MediaConfig {
+    // A24: the admin may give the LiveKit credentials (per world); they are asked when the space starts.
+    let admin_livekit = app.admin.clone().filter(|a| a.has("api/livekit/credentials"));
+    let mut media_config = MediaConfig {
         max_webrtc: raw("MAX_USERS_FOR_WEBRTC").and_then(|v| v.parse().ok()).unwrap_or(4),
         livekit: media.livekit.is_some(),
         switch_on_cpu: !matches!(raw("LIVEKIT_SWITCH_ON_CPU_LIMITATION").as_deref(), Some("false" | "0")),
@@ -371,9 +375,23 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                 SpaceCmd::Join {
                     filter,
                     properties_to_sync,
+                    user,
                     ..
                 },
             ) => {
+                if let Some(admin) = &admin_livekit {
+                    // ponytail: awaited once, when the space starts (the back asks at each switch).
+                    match admin.livekit_credentials(&user.play_uri).await {
+                        Ok(c) => {
+                            let s = |k: &str| c[k].as_str().map(str::to_owned);
+                            if let (Some(host), Some(key), Some(secret)) = (s("livekitHost"), s("livekitApiKey"), s("livekitApiSecret")) {
+                                media.livekit = Some(Livekit { host: host.trim_end_matches('/').to_owned(), key, secret });
+                            }
+                        }
+                        Err(e) => tracing::error!(error = %e, "the admin did not give LiveKit credentials"),
+                    }
+                    media_config.livekit = media.livekit.is_some();
+                }
                 let mut s = Space::new(local_name.clone(), *filter, properties_to_sync.clone(), instance.clone());
                 s.configure_media(media_config, Box::new(SystemClock));
                 space.insert(s)
@@ -603,10 +621,42 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     wire::answer(query_id, Answer::SpaceStateAnswer(pb::SpaceStateAnswer {}))
                 });
             }
-            SpaceCmd::Egress { session_id, egress_id, ended } => {
+            SpaceCmd::Egress { session_id, auth, body, reply } => {
+                use axum::http::StatusCode;
+                let Some(lk) = &media.livekit else {
+                    let _ = reply.send(StatusCode::INTERNAL_SERVER_ERROR);
+                    continue;
+                };
+                let event = match livekit::verify_webhook(lk, &auth, &body) {
+                    Ok(event) => event,
+                    Err(e) => {
+                        tracing::warn!(error = e, "egress webhook refused");
+                        let _ = reply.send(if e == "invalid body" { StatusCode::BAD_REQUEST } else { StatusCode::UNAUTHORIZED });
+                        continue;
+                    }
+                };
+                let ended = match event["event"].as_str() {
+                    Some("egress_started") => false,
+                    Some("egress_ended") => true,
+                    _ => {
+                        let _ = reply.send(StatusCode::NO_CONTENT);
+                        continue;
+                    }
+                };
+                let info = livekit::field(&event, "egressInfo", "egress_info").clone();
+                let Some(egress_id) = livekit::field(&info, "egressId", "egress_id").as_str().map(str::to_owned) else {
+                    let _ = reply.send(StatusCode::BAD_REQUEST);
+                    continue;
+                };
+                let _ = reply.send(StatusCode::NO_CONTENT);
                 let out = &mut Out { name: &local_name, sessions: &sessions, media: &media };
                 if ended {
-                    space.webhook_ended(&session_id, out);
+                    // A23: the admin turns it into its customers' recording.completed webhook.
+                    if let (Some(r), Some(admin)) = (space.webhook_ended(&session_id, out), app.admin.clone())
+                        && admin.has("api/recordings/events")
+                    {
+                        tokio::spawn(async move { admin.recording_ended(recording_event(&r, &egress_id, &info)).await });
+                    }
                 } else if let Some(stop) = space.webhook_started(&session_id, &egress_id, out) {
                     media.stop_egress(&stop);
                 }
@@ -685,6 +735,41 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
     }
     registry.forget_dead(&key);
     METRICS.nb_spaces.dec();
+}
+
+/// RecordingEventPayload: the end of an egress, its files and times as LiveKit reports them (nanoseconds).
+fn recording_event(r: &wa_core::space::Recording, egress_id: &str, info: &serde_json::Value) -> serde_json::Value {
+    let f = |k: &str, s: &str| livekit::field(info, k, s).clone();
+    let ns = |v: &serde_json::Value| v.as_i64().or_else(|| v.as_str().and_then(|s| s.parse().ok())).unwrap_or(0);
+    let iso = |v: serde_json::Value| -> serde_json::Value {
+        let ms = ns(&v) / 1_000_000;
+        if ms <= 0 { serde_json::Value::Null } else { crate::uploader::iso_at(ms as u64).into() }
+    };
+    let files: Vec<serde_json::Value> = f("fileResults", "file_results")
+        .as_array()
+        .into_iter()
+        .flatten()
+        .map(|file| {
+            serde_json::json!({
+                "filename": file["filename"],
+                "sizeBytes": ns(&file["size"]),
+                "durationSeconds": (ns(&file["duration"]) as f64 / 1e9).round() as i64,
+            })
+        })
+        .collect();
+    let error = f("error", "error");
+    serde_json::json!({
+        "phase": "ended",
+        "status": f("status", "status").as_str().unwrap_or_default(),
+        "egressId": egress_id,
+        "recordingSessionId": r.session_id,
+        "playUri": r.play_uri,
+        "recorder": {"uuid": r.recorder_uuid, "spaceUserId": r.recorder},
+        "startedAt": iso(f("startedAt", "started_at")),
+        "endedAt": iso(f("endedAt", "ended_at")),
+        "error": if error.as_str().is_some_and(|e| !e.is_empty()) { error } else { serde_json::Value::Null },
+        "files": files,
+    })
 }
 
 /// Never, without a deadline.
