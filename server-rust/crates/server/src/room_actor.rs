@@ -99,6 +99,8 @@ pub enum RoomCmd {
     Refresh,
     /// sendAdminMessageToRoom: the admin's /message leaves the type empty, a global message has one.
     AdminMessage { kind: String, message: String },
+    /// The room's group (map details): the world of the world-scoped player variables.
+    Group(tokio::sync::oneshot::Sender<Option<String>>),
     /// Who is in the room (getWorldUsers), with the room's URL.
     Users(tokio::sync::oneshot::Sender<(String, Vec<WorldUser>)>),
     WorldFull,
@@ -1002,6 +1004,9 @@ async fn run(mut room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, 
             RoomCmd::AdminMessage { kind, message } => {
                 let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: kind, message }));
                 Fanout::new(&mut sessions).each_all(&frame);
+            }
+            RoomCmd::Group(reply) => {
+                let _ = reply.send(details["group"].as_str().filter(|g| !g.is_empty()).map(str::to_owned));
             }
             RoomCmd::Users(reply) => {
                 let users = sessions
