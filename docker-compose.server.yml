@@ -1,0 +1,140 @@
+services:
+  # Override for the Go server (server-go/): it replaces the play (pusher), back, map-storage and uploader containers.
+  # Use it after docker-compose.e2e.yml AND docker-compose.livekit.yaml (it depends on rustfs-livekit-init):
+  # docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up -d
+  # The TypeScript services stay defined, behind the "ts" profile (COMPOSE_PROFILES=ts brings them back).
+  reverse-proxy:
+    depends_on: !override
+      play:
+        condition: service_healthy
+
+  play:
+    image: ghcr.io/workadventure/server-go-dev-build:amd64-${GITHUB_SHA}
+    # The image comes from server-go/Dockerfile (target prod), not from play/Dockerfile.
+    build: !reset null
+    command: !reset null
+    working_dir: !reset null
+    # No Node debugger in this image.
+    ports: !reset []
+    tmpfs: !reset []
+    # Only the maps volume: no bind mount of the repository.
+    volumes: !override
+      - server-maps:/maps
+    # The image is distroless: no curl, hence the server's own healthcheck subcommand.
+    healthcheck:
+      test: ["CMD", "/server", "healthcheck"]
+      interval: 5s
+      timeout: 5s
+      start_period: 3s
+      retries: 20
+    depends_on:
+      redis:
+        condition: service_started
+      # /ready waits for the index.html template of the front container.
+      front:
+        condition: service_healthy
+      rustfs-livekit-init:
+        condition: service_completed_successfully
+    environment:
+      # The server checks the sites it is asked to embed and refuses private addresses (SSRF guard); the test maps are
+      # served on the docker network. A whitelisted domain is embedded without that check, as with the TS pusher.
+      EMBEDDED_DOMAINS_WHITELIST: "maps.workadventure.localhost"
+      # Pusher: the server reads index.html from the front container, and proxies the assets that must stay same-origin
+      # with the page (ASSETS_URL is empty, see docker-compose.e2e.yml).
+      ASSETS_URL: ""
+      ASSETS_INTERNAL_URL: http://front
+      # What the back used to read.
+      PLAY_URL: http://play.workadventure.localhost
+      GROUP_RADIUS: "${GROUP_RADIUS:-}"
+      STORE_VARIABLES_FOR_LOCAL_MAPS: "true"
+      PLAYER_VARIABLES_MAX_TTL: "${PLAYER_VARIABLES_MAX_TTL:-}"
+      PROMETHEUS_AUTHORIZATION_TOKEN: "${PROMETHEUS_AUTHORIZATION_TOKEN:-}"
+      LIVEKIT_HOST: "${LIVEKIT_HOST:-}"
+      MAX_USERS_FOR_WEBRTC: "${MAX_USERS_FOR_WEBRTC:-}"
+      LIVEKIT_SWITCH_ON_CPU_LIMITATION: "${LIVEKIT_SWITCH_ON_CPU_LIMITATION:-}"
+      # What the map-storage used to read (the tests upload maps with basic authentication).
+      STORAGE_DIRECTORY: /maps
+      PATH_PREFIX: ""
+      ENABLE_BASIC_AUTHENTICATION: "true"
+      AUTHENTICATION_USER: john.doe
+      AUTHENTICATION_PASSWORD: password
+      ENABLE_BEARER_AUTHENTICATION: "true"
+      AUTHENTICATION_TOKEN: "123"
+      # What the uploader used to read.
+      UPLOAD_MAX_FILESIZE: "${UPLOAD_MAX_FILESIZE:-}"
+    # Replaces the labels of docker-compose.yaml and docker-compose.e2e.yml: the "front" and "play-vite" routers of the
+    # dev stack point to a Vite server that is not here.
+    labels: !override
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"
+      - "traefik.http.routers.play.entryPoints=web"
+      - "traefik.http.routers.play.priority=1"
+      - "traefik.http.routers.play.service=play"
+      - "traefik.http.services.play.loadbalancer.server.port=3000"
+      # The back's HTTP host (api.workadventure.localhost: /dump, /debug/*) is the server too.
+      - "traefik.http.routers.back.rule=Host(`api.workadventure.localhost`)"
+      - "traefik.http.routers.back.entryPoints=web"
+      - "traefik.http.routers.back.service=play"
+
+      - "traefik.http.routers.play-ws.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/ws/`)"
+      - "traefik.http.routers.play-ws.entryPoints=web"
+      - "traefik.http.routers.play-ws.priority=2"
+      - "traefik.http.routers.play-ws.service=play-ws"
+      - "traefik.http.services.play-ws.loadbalancer.server.port=3001"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.name=wa_ws_affinity"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.httpOnly=true"
+      - "traefik.http.services.play-ws.loadbalancer.sticky.cookie.sameSite=lax"
+
+      - "traefik.http.routers.room-api.rule=Host(`room-api.workadventure.localhost`)"
+      - "traefik.http.routers.room-api.service=room-api"
+      - "traefik.http.services.room-api.loadbalancer.server.port=50051"
+      - "traefik.http.services.room-api.loadbalancer.server.scheme=h2c"
+
+      # The map-storage and the uploader are served by the same process, on their own ports.
+      - "traefik.http.routers.map-storage.rule=Host(`map-storage.workadventure.localhost`)"
+      - "traefik.http.routers.map-storage.entryPoints=web"
+      - "traefik.http.routers.map-storage.service=map-storage"
+      - "traefik.http.services.map-storage.loadbalancer.server.port=3002"
+
+      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
+      - "traefik.http.routers.uploader.entryPoints=web"
+      - "traefik.http.routers.uploader.service=uploader"
+      - "traefik.http.services.uploader.loadbalancer.server.port=3003"
+
+  # The compiled front (play/Dockerfile, target front): the server reads its index.html template.
+  front:
+    image: ghcr.io/workadventure/front-dev-build:amd64-${GITHUB_SHA}
+    build:
+      context: ./
+      dockerfile: play/Dockerfile
+      target: front
+      cache_from:
+        - ghcr.io/workadventure/front-dev-build:amd64-${GITHUB_SHA}
+      args:
+        BUILDKIT_INLINE_CACHE: 1
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/index.html"]
+      interval: 5s
+      timeout: 5s
+      start_period: 3s
+      retries: 20
+
+  back:
+    profiles: [ts]
+  map-storage:
+    profiles: [ts]
+  uploader:
+    profiles: [ts]
+
+  everything_started:
+    depends_on: !override
+      # The server is the first thing we need (to upload the maps): it hosts the map-storage.
+      play:
+        condition: service_healthy
+      synapse:
+        condition: service_healthy
+
+volumes:
+  server-maps:
