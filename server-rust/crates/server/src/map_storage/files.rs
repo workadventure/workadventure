@@ -101,7 +101,14 @@ async fn serve(state: &AppState, path: &str, raw: &str) -> Response {
     } else if immutable(name) {
         "public, max-age=31536000, immutable".to_owned()
     } else {
-        state.config.raw.get("CACHE_CONTROL").cloned().unwrap_or_else(|| "public, s-max-age=10".into())
+        // Empty means the default, like the TS emptyStringToDefault (the chart sets CACHE_CONTROL: "").
+        state
+            .config
+            .raw
+            .get("CACHE_CONTROL")
+            .filter(|v| !v.is_empty())
+            .cloned()
+            .unwrap_or_else(|| "public, s-max-age=10".into())
     };
     let modified =
         meta.modified().ok().and_then(|m| m.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_millis());
