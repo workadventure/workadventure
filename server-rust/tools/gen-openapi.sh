@@ -8,4 +8,4 @@ repo="$(cd "$here/../.." && pwd)"
 main="$(dirname "$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir)")"
 cd "$repo/play"
 API_URL=back:50051 ICON_URL=http://icon MAP_STORAGE_API_TOKEN=x SECRET_KEY=x UPLOADER_URL=http://uploader \
-    node "$main/node_modules/tsx/dist/cli.mjs" ../server-rust/tools/openapi.ts ../server-rust/crates/server/openapi > /dev/null
+    node "$main/node_modules/tsx/dist/cli.mjs" --tsconfig ../server-rust/tools/tsconfig.json ../server-rust/tools/openapi.ts ../server-rust/crates/server/openapi > /dev/null

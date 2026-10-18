@@ -58,7 +58,15 @@ function clean(node: unknown): unknown {
         if (kept.length === 1) {
             delete out.anyOf;
             Object.assign(out, kept[0]);
-        } else out.anyOf = kept;
+        } else if (kept.some((b) => b.type === "null")) {
+            out.anyOf = kept;
+        } else {
+            // A zod union is one of its branches. Written anyOf, a branch that is a $ref (a named definition) makes
+            // the generator give up proving they exclude each other: it yields a struct of optional flattened parts,
+            // which accepts anything. oneOf keeps it an enum that refuses what fits no branch.
+            delete out.anyOf;
+            out.oneOf = kept;
+        }
     }
     return out;
 }

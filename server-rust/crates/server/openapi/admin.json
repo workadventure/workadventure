@@ -342,6 +342,14 @@
                   ],
                   "description": "LiveKit server that carried the stream, when applicable."
                 },
+                "livekitRegion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 255,
+                  "description": "Region of the LiveKit server the client was connected to: set by LiveKit Cloud, null on P2P streams and usually on a self-hosted server."
+                },
                 "fps": {
                   "type": [
                     "number"
@@ -406,6 +414,153 @@
                   ],
                   "description": "Outbound only: encoder the browser picked, e.g. \"libaom\", \"libvpx\", \"ExternalEncoder\"."
                 },
+                "windowSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: time covered by the playback counters below, i.e. since this stream's previous sample. Null when the window is not measurable (first sample, counters restarted, right after a deliberate pause), which nulls every counter below. Divide summed counters by summed windows, never average per-sample ratios."
+                },
+                "framesDecoded": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Inbound only: frames decoded during the window. 0 while video was expected means the stream stalled; a stall that never resumes shows only here, since the browser counts freezes and pauses when the next frame arrives."
+                },
+                "framesDropped": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Inbound only: frames the receiver dropped during the window (before decoding, or too late to display)."
+                },
+                "freezeCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Inbound only: freezes during the window, as the browser defines them: a gap between two rendered frames of max(3 × the average frame duration, average + 150 ms), up to 5 s. Counted when the next frame is rendered. Null when the browser does not report it."
+                },
+                "freezeSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: total duration of those freezes, in seconds."
+                },
+                "pauseCount": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Inbound only: gaps longer than 5 s between two rendered frames (never counted as freezes). Pauses we caused are excluded: no sample is sent while we pause a stream on purpose, nor right after."
+                },
+                "pauseSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: total duration of those pauses. Counted when the video resumes, so it can exceed windowSeconds."
+                },
+                "interFrameDelaySumSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: sum of the delays between consecutive rendered frames during the window. With the squared sum and framesDecoded, gives the per-frame delay variance: Σd²/n − (Σd/n)²."
+                },
+                "interFrameDelaySquaredSumSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: sum of the squared delays between consecutive rendered frames during the window."
+                },
+                "decodeSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: time spent decoding during the window. Divided by framesDecoded: the receiver's decode cost per frame, which depends on codec and resolution."
+                },
+                "captureFps": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only, over the last second like fps: frames per second the camera or screen capture delivered to the encoder (RTCVideoSourceStats). Against captureTargetFps, tells a camera that starves the encoder (dim light, overloaded machine) from an encoder dropping frames. A screen capture only delivers frames when the content changes."
+                },
+                "captureTargetFps": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate)."
+                },
+                "encodeMsPerFrame": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only, over the last second: encoding time per encoded frame, all simulcast/SVC layers together, in milliseconds."
+                },
+                "cpuLimitedRatio": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of CPU (qualityLimitationDurations), where qualityLimitationReason is only a snapshot."
+                },
+                "bandwidthLimitedRatio": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of bandwidth."
+                },
+                "packetsReceived": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Inbound only, over windowSeconds like the playback counters: RTP packets of the video received."
+                },
+                "packetsLost": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Inbound only, over windowSeconds: RTP packets of the video lost on the way to us. Loss share = Σ packetsLost / Σ (packetsLost + packetsReceived). A packet counted as lost then received late is taken back, never below 0."
+                },
+                "roundTripTimeMs": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Inbound only: round-trip time of the connection the stream arrives on (selected ICE candidate pair) when the sample was taken: to the peer or its TURN relay in P2P, to the SFU otherwise."
+                },
+                "uploadRoundTripTimeMs": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only: round-trip time to the other end (peer or SFU), from its latest receiver report about the largest layer."
+                },
+                "uploadLossRatio": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only: share of the packets (0 to 1) the other end reported lost in its latest receiver report about the largest layer."
+                },
+                "availableOutgoingBitrate": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "description": "Outbound only: the browser's estimate of the bandwidth it can send on this connection, in bits per second."
+                },
                 "sampleSeq": {
                   "type": [
                     "number",
@@ -427,6 +582,7 @@
                 "relay",
                 "relayProtocol",
                 "livekitServerUrl",
+                "livekitRegion",
                 "fps",
                 "fpsStdDev",
                 "jitter",
@@ -436,6 +592,27 @@
                 "mimeType",
                 "qualityLimitationReason",
                 "encoderImplementation",
+                "windowSeconds",
+                "framesDecoded",
+                "framesDropped",
+                "freezeCount",
+                "freezeSeconds",
+                "pauseCount",
+                "pauseSeconds",
+                "interFrameDelaySumSeconds",
+                "interFrameDelaySquaredSumSeconds",
+                "decodeSeconds",
+                "captureFps",
+                "captureTargetFps",
+                "encodeMsPerFrame",
+                "cpuLimitedRatio",
+                "bandwidthLimitedRatio",
+                "packetsReceived",
+                "packetsLost",
+                "roundTripTimeMs",
+                "uploadRoundTripTimeMs",
+                "uploadLossRatio",
+                "availableOutgoingBitrate",
                 "sampleSeq"
               ],
               "additionalProperties": true
@@ -1515,6 +1692,171 @@
             "properties"
           ],
           "description": "The user sent a chat message. Content is never collected."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "chat.proximity_file.sent"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "sizeBytes": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "Size of the file."
+                },
+                "recipientCount": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "How many people in the proximity chat were offered the file. Each one who accepts gets a full copy from the sender's browser."
+                }
+              },
+              "required": [
+                "sizeBytes",
+                "recipientCount"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "The user sent a file in the proximity chat, peer to peer. One event per file, so a send of several files reports several. The file name and content are never collected."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "chat.proximity_file.received"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "sizeBytes": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "Size of the file."
+                },
+                "durationMs": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "From the first byte received to the last. Leaves out the time the recipient took to accept and the connection setup, so sizeBytes / durationMs is the transfer speed."
+                },
+                "relay": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "Whether the transfer went through a TURN relay. Absent when the browser did not report the connection path."
+                },
+                "relayProtocol": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "udp",
+                    "tcp",
+                    "tls"
+                  ],
+                  "description": "Transport to the TURN relay, only when relayed. TCP and TLS relays are much slower than UDP."
+                }
+              },
+              "required": [
+                "sizeBytes",
+                "durationMs"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "The user accepted a file sent in the proximity chat and received all of it. Declined or interrupted transfers are not reported."
         },
         {
           "type": [
@@ -3270,6 +3612,298 @@
                 "string"
               ],
               "enum": [
+                "media.livekit.connected"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "livekitServerUrl": {
+                  "type": [
+                    "string"
+                  ],
+                  "maxLength": 2048,
+                  "description": "LiveKit server of the room."
+                },
+                "livekitRegion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 255,
+                  "description": "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server."
+                },
+                "connectMs": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "From the start of room.connect() to the room being connected, signalling and media."
+                }
+              },
+              "required": [
+                "livekitServerUrl",
+                "livekitRegion",
+                "connectMs"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "This client joined a LiveKit room: the denominator of media.livekit.disconnected, and where LiveKit routed it."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.livekit.reconnected"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "livekitServerUrl": {
+                  "type": [
+                    "string"
+                  ],
+                  "maxLength": 2048,
+                  "description": "LiveKit server of the room."
+                },
+                "livekitRegion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 255,
+                  "description": "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server."
+                },
+                "previousLivekitRegion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 255,
+                  "description": "Region before the reconnection. A different one means LiveKit moved the client to another region."
+                },
+                "reconnectKind": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "resume",
+                    "full"
+                  ],
+                  "description": "resume: only the signalling connection came back. full: the media connections were rebuilt too, possibly on another server."
+                },
+                "durationMs": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "How long the room was reconnecting."
+                }
+              },
+              "required": [
+                "livekitServerUrl",
+                "livekitRegion",
+                "previousLivekitRegion",
+                "reconnectKind",
+                "durationMs"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "livekit-client lost its connection to the LiveKit server and recovered it by itself: the user saw the media stall, not a disconnection."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.livekit.disconnected"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "livekitServerUrl": {
+                  "type": [
+                    "string"
+                  ],
+                  "maxLength": 2048,
+                  "description": "LiveKit server of the room."
+                },
+                "livekitRegion": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "maxLength": 255,
+                  "description": "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server."
+                },
+                "disconnectReason": {
+                  "type": [
+                    "string"
+                  ],
+                  "maxLength": 64,
+                  "description": "livekit-client DisconnectReason name: SIGNAL_CLOSE, CONNECTION_TIMEOUT, STATE_MISMATCH, JOIN_FAILURE, DUPLICATE_IDENTITY, PARTICIPANT_REMOVED, MEDIA_FAILURE... UNKNOWN when it gave none (it gave up reconnecting)."
+                },
+                "connectedSeconds": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "How long the room had been connected. Null when it never connected: the LiveKit server could not be reached or refused the join."
+                },
+                "whileReconnecting": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "livekit-client was trying to reconnect when it gave up."
+                },
+                "restart": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "Whether WorkAdventure asks the back for a new invitation. It does not when another connection took this one's place or the back removed it."
+                }
+              },
+              "required": [
+                "livekitServerUrl",
+                "livekitRegion",
+                "disconnectReason",
+                "connectedSeconds",
+                "whileReconnecting",
+                "restart"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "This client lost its LiveKit room for a reason it did not choose: not its own leave, nor the back closing the room. The media stop until a new invitation arrives."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
                 "media.livekit_switch.requested"
               ]
             },
@@ -4265,6 +4899,535 @@
             "properties"
           ],
           "description": "The user changed their video background."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "settings.noise_suppression.changed"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "enabled": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "Whether advanced noise reduction is on after the change."
+                },
+                "provider": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "workadventure",
+                    "voiceIsolation"
+                  ],
+                  "description": "workadventure: our own AudioWorklet model. voiceIsolation: the browser and OS voice isolation."
+                },
+                "engine": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "deepfilternet",
+                    "dtln"
+                  ],
+                  "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+                }
+              },
+              "required": [
+                "enabled",
+                "provider",
+                "engine"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "The user changed advanced noise reduction: the switch, the mode or the engine. Carries the whole resulting setting, so the latest row per user is their current choice."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.noise_suppression.started"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "engine": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "deepfilternet",
+                    "dtln"
+                  ],
+                  "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+                },
+                "initMs": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "From the start of initialization to the worklet reporting ready, model download and wasm compilation included."
+                },
+                "hardwareConcurrency": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "navigator.hardwareConcurrency, 0 when the browser hides it."
+                }
+              },
+              "required": [
+                "engine",
+                "initMs",
+                "hardwareConcurrency"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "WorkAdventure noise suppression is processing the microphone. Read against media.noise_suppression.failed for each engine's failure rate, the figure that decides whether DeepFilterNet3 can become the default."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.noise_suppression.load"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "engine": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "deepfilternet",
+                    "dtln"
+                  ],
+                  "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+                },
+                "windows": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "2 s windows measured (30 for the default minute)."
+                },
+                "medianLoad": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "Median share of real time the worklet spent denoising, per 2 s window. 0.05 = 5 %."
+                },
+                "p95Load": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "95th percentile of the per-window load."
+                },
+                "maxLoad": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "Worst window. Above 0.7 twice in a row, the overload fallback kicks in."
+                },
+                "slowFrames": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "Frames measured at 3 ms or more, i.e. that took 2 ms or more, close to the 2.67 ms render quantum: the ones that can crackle. Worklets only have Date.now() (1 ms steps), so shorter frames cannot be timed one by one."
+                },
+                "frames": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "10 ms frames processed during the measurement."
+                },
+                "hardwareConcurrency": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "navigator.hardwareConcurrency, 0 when the browser hides it."
+                }
+              },
+              "required": [
+                "engine",
+                "windows",
+                "medianLoad",
+                "p95Load",
+                "maxLoad",
+                "slowFrames",
+                "frames",
+                "hardwareConcurrency"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "How heavy WorkAdventure noise suppression really is on this device: sent once per pipeline, after a minute of processing (DeepFilterNet3 only). The data that decides whether noise suppression can be on by default — the overload fallback only says when it is too heavy."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.audio_quality.sample"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "transportType": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "P2P",
+                    "SFU"
+                  ],
+                  "description": "Direct peer connections, or LiveKit."
+                },
+                "windowSeconds": {
+                  "type": [
+                    "number"
+                  ],
+                  "exclusiveMinimum": 0,
+                  "description": "Length of the window the counters were taken over."
+                },
+                "streams": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "Remote microphones whose audio the window counts: only the time each one was on counts."
+                },
+                "concealedRatio": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Share of the received audio the browser had to invent because packets were late or missing — what a listener hears as robotic or choppy. Excludes the silence Opus DTX fills during pauses."
+                },
+                "concealmentEvents": {
+                  "type": [
+                    "integer"
+                  ],
+                  "minimum": 0,
+                  "description": "How many separate concealment episodes the window had."
+                },
+                "deceleratedRatio": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Share of the received audio the jitter buffer added by slowing the voice down, to wait for late packets (insertedSamplesForDeceleration). Missing when the browser does not report it, or from older clients."
+                },
+                "acceleratedRatio": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Share of the received audio the jitter buffer dropped by speeding the voice up, to catch up after a burst (removedSamplesForAcceleration). Missing when the browser does not report it, or from older clients."
+                },
+                "packetLossRatio": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "maximum": 1,
+                  "description": "Packets lost over packets expected."
+                },
+                "maxJitterMs": {
+                  "type": [
+                    "number"
+                  ],
+                  "minimum": 0,
+                  "description": "Highest jitter estimate among the streams, at the end of the window."
+                },
+                "jitterBufferDelayMs": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "description": "Mean time audio waited in the jitter buffer: the latency the network's irregularity costs."
+                }
+              },
+              "required": [
+                "transportType",
+                "windowSeconds",
+                "streams",
+                "concealedRatio",
+                "concealmentEvents",
+                "packetLossRatio",
+                "maxJitterMs",
+                "jitterBufferDelayMs"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "How the voices this client received survived the network over the last minute, aggregated over every remote microphone of one transport. Only the time a microphone was on counts: muted time (and the fade-out of each mute) would otherwise read as invented audio. No event for a window in which no audio was received. The counterpart of media.noise_suppression.*: those tell whether the sender's audio was clean, this tells whether it arrived intact."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.noise_suppression.failed"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "engine": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "deepfilternet",
+                    "dtln"
+                  ],
+                  "description": "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz."
+                },
+                "status": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "error",
+                    "unsupported"
+                  ],
+                  "description": "unsupported: the browser lacks AudioWorklet. error: loading, the worklet or the AudioContext failed."
+                },
+                "reason": {
+                  "type": [
+                    "string"
+                  ],
+                  "maxLength": 200,
+                  "description": "The failure message, truncated."
+                }
+              },
+              "required": [
+                "engine",
+                "status",
+                "reason"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "WorkAdventure noise suppression gave up; the microphone falls back to the browser's own processing."
         },
         {
           "type": [
@@ -8016,9 +9179,73 @@
               "type": [
                 "object"
               ],
-              "properties": {},
-              "additionalProperties": true,
-              "description": "This event carries no properties of its own."
+              "properties": {
+                "meetingProvider": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "webrtc",
+                    "livekit"
+                  ],
+                  "description": "Which backend the missing stream was coming over. Absent for the user's own previews."
+                },
+                "local": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "The missing stream was the user's own camera or screen-share preview, which comes over no backend."
+                },
+                "streamCategory": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "video",
+                    "screenSharing",
+                    "scripting",
+                    "component"
+                  ],
+                  "description": "Whether the missing stream was a camera or a screen share."
+                },
+                "remoteSpaceUserId": {
+                  "type": [
+                    "string"
+                  ],
+                  "description": "The space user whose video never arrived. Never sent to PostHog."
+                },
+                "pending": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "The stream was replacing one already on screen (a switch between backends or a reconnection) and was not shown yet."
+                },
+                "trackMuted": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "The video track was muted: no frame was arriving, from the network for a remote stream, from the camera or capture for a local one."
+                },
+                "trackEnded": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "The video track (the receiving one, or the capture track when local) had ended."
+                },
+                "remoteMuted": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "LiveKit only: the publisher's track was marked as muted."
+                },
+                "pictureInPicture": {
+                  "type": [
+                    "boolean"
+                  ],
+                  "description": "The video was in the Picture-in-Picture window, a known source of false alarms. A hidden tab without Picture-in-Picture unmounts the video and never reports this event."
+                }
+              },
+              "additionalProperties": true
             }
           },
           "required": [
@@ -8028,7 +9255,7 @@
             "eventId",
             "properties"
           ],
-          "description": "A video stream was expected but never arrived. Counted as an experience issue."
+          "description": "A video stream was expected but no frame was rendered within 5 seconds."
         },
         {
           "type": [
@@ -11504,6 +12731,21 @@
                   "null"
                 ],
                 "description": "Browser tab the socket belongs to."
+              },
+              "tags": {
+                "type": [
+                  "array"
+                ],
+                "items": {
+                  "type": [
+                    "string"
+                  ]
+                },
+                "description": "The reporter's tags in this world, as the admin returned them at connection. Optional, so an admin that predates the field ignores it rather than rejecting the batch: no schemaVersion bump. Empty on a row that names nobody.",
+                "example": [
+                  "admin",
+                  "member"
+                ]
               },
               "properties": {
                 "type": [
