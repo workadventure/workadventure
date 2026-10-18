@@ -594,22 +594,10 @@ pub struct RoomAccessVariant0CompanionTexture {
 }
 #[doc = "`RoomAccessVariant1`"]
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum RoomAccessVariant1 {
-    #[serde(rename = "error")]
-    Error {
-        code: ::std::string::String,
-        details: ::std::string::String,
-        #[serde(skip_serializing_if = "::std::option::Option::is_none")]
-        image: ::std::option::Option<::std::string::String>,
-        #[serde(rename = "imageLogo", skip_serializing_if = "::std::option::Option::is_none")]
-        image_logo: ::std::option::Option<::std::string::String>,
-        status: ::std::string::String,
-        subtitle: ::std::string::String,
-        title: ::std::string::String,
-    },
-    #[serde(rename = "retry")]
-    Retry {
+    Variant0(ErrorApiData),
+    Variant1 {
         #[serde(rename = "buttonTitle", skip_serializing_if = "::std::option::Option::is_none")]
         button_title: ::std::option::Option<::std::string::String>,
         #[serde(rename = "canRetryManual")]
@@ -625,15 +613,17 @@ pub enum RoomAccessVariant1 {
         #[serde(rename = "timeToRetry")]
         time_to_retry: f64,
         title: ::std::string::String,
+        #[serde(rename = "type")]
+        type_: ::std::string::String,
     },
-    #[serde(rename = "redirect")]
-    Redirect {
+    Variant2 {
         status: ::std::string::String,
+        #[serde(rename = "type")]
+        type_: ::std::string::String,
         #[serde(rename = "urlToRedirect")]
         url_to_redirect: ::std::string::String,
     },
-    #[serde(rename = "unauthorized")]
-    Unauthorized {
+    Variant3 {
         #[serde(rename = "buttonTitle", skip_serializing_if = "::std::option::Option::is_none")]
         button_title: ::std::option::Option<::std::string::String>,
         code: ::std::string::String,
@@ -645,7 +635,14 @@ pub enum RoomAccessVariant1 {
         status: ::std::string::String,
         subtitle: ::std::string::String,
         title: ::std::string::String,
+        #[serde(rename = "type")]
+        type_: ::std::string::String,
     },
+}
+impl ::std::convert::From<ErrorApiData> for RoomAccessVariant1 {
+    fn from(value: ErrorApiData) -> Self {
+        Self::Variant0(value)
+    }
 }
 #[doc = "`RoomRedirect`"]
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]

@@ -534,7 +534,7 @@
       ]
     },
     "RoomAccess": {
-      "anyOf": [
+      "oneOf": [
         {
           "type": "object",
           "properties": {
@@ -714,45 +714,9 @@
           ]
         },
         {
-          "anyOf": [
+          "oneOf": [
             {
-              "type": "object",
-              "properties": {
-                "status": {
-                  "type": "string",
-                  "const": "error"
-                },
-                "type": {
-                  "type": "string",
-                  "const": "error"
-                },
-                "code": {
-                  "type": "string"
-                },
-                "title": {
-                  "type": "string"
-                },
-                "subtitle": {
-                  "type": "string"
-                },
-                "details": {
-                  "type": "string"
-                },
-                "image": {
-                  "type": "string"
-                },
-                "imageLogo": {
-                  "type": "string"
-                }
-              },
-              "required": [
-                "status",
-                "type",
-                "code",
-                "title",
-                "subtitle",
-                "details"
-              ]
+              "$ref": "#/definitions/ErrorApiData"
             },
             {
               "type": "object",
