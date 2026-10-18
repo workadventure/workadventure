@@ -1,0 +1,1131 @@
+{
+  "$ref": "#/definitions/AdminAnswers",
+  "definitions": {
+    "MapDetailsData": {
+      "type": "object",
+      "properties": {
+        "mapUrl": {
+          "type": "string"
+        },
+        "wamUrl": {
+          "type": "string",
+          "format": "uri"
+        },
+        "authenticationMandatory": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "group": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "contactPage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "opidLogoutRedirectUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "opidWokaNamePolicy": {
+          "anyOf": [
+            {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "user_input",
+                    "allow_override_opid",
+                    "force_opid",
+                    ""
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expireOn": {
+          "type": "string"
+        },
+        "canReport": {
+          "type": "boolean"
+        },
+        "editable": {
+          "type": "boolean"
+        },
+        "loadingLogo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "loginSceneLogo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "backgroundSceneImage": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "showPoweredBy": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "thirdParty": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "bbb": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "secret": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "jitsi": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string"
+                        },
+                        "iss": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "secret": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "url"
+                      ]
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "metadata": {},
+        "roomName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "pricingUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "enableMatrixChat": {
+          "type": "boolean"
+        },
+        "enableChat": {
+          "type": "boolean"
+        },
+        "enableChatUpload": {
+          "type": "boolean"
+        },
+        "enableChatOnlineList": {
+          "type": "boolean"
+        },
+        "enableChatDisconnectedList": {
+          "type": "boolean"
+        },
+        "enableSay": {
+          "type": "boolean"
+        },
+        "enableIssueReport": {
+          "type": "boolean"
+        },
+        "defaultWokaName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "defaultWokaTexture": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "metatags": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string",
+                  "default": "WorkAdventure"
+                },
+                "description": {
+                  "type": "string",
+                  "default": "Create your own digital office, Metaverse and meet online with the world."
+                },
+                "author": {
+                  "type": "string",
+                  "default": "WorkAdventure team"
+                },
+                "provider": {
+                  "type": "string",
+                  "default": "WorkAdventure"
+                },
+                "favIcons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "rel": {
+                        "type": "string"
+                      },
+                      "sizes": {
+                        "type": "string"
+                      },
+                      "src": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "rel",
+                      "sizes",
+                      "src"
+                    ]
+                  }
+                },
+                "manifestIcons": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "sizes": {
+                        "type": "string"
+                      },
+                      "src": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "purpose": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "sizes",
+                      "src"
+                    ]
+                  }
+                },
+                "appName": {
+                  "type": "string"
+                },
+                "shortAppName": {
+                  "type": "string"
+                },
+                "themeColor": {
+                  "type": "string"
+                },
+                "cardImage": {
+                  "type": "string"
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "legals": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "termsOfUseUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "privacyPolicyUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cookiePolicyUrl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "customizeWokaScene": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "clothesIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "accessoryIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "hatIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "hairIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "eyesIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "bodyIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "turnIcon": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "backgroundColor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "primaryColor": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "reportIssuesUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entityCollectionsUrls": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errorSceneLogo": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "modules": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "isLogged": {
+          "type": "boolean"
+        },
+        "provideDefaultWokaName": {
+          "type": "string",
+          "enum": [
+            "no",
+            "random",
+            "fix",
+            "fix-plus-random-numbers"
+          ]
+        },
+        "provideDefaultWokaTexture": {
+          "type": "string",
+          "enum": [
+            "no",
+            "random",
+            "fix"
+          ]
+        },
+        "skipCameraPage": {
+          "type": "boolean"
+        },
+        "defaultCameraPrivacySettings": {
+          "type": "boolean"
+        },
+        "defaultMicrophonePrivacySettings": {
+          "type": "boolean"
+        },
+        "bypassPwa": {
+          "type": "boolean"
+        },
+        "recording": {
+          "type": "object",
+          "properties": {
+            "buttonState": {
+              "type": "string",
+              "enum": [
+                "hidden",
+                "enabled",
+                "disabled"
+              ]
+            },
+            "disabledReason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "buttonState",
+            "disabledReason"
+          ]
+        }
+      },
+      "required": [
+        "group"
+      ]
+    },
+    "RoomRedirect": {
+      "type": "object",
+      "properties": {
+        "redirectUrl": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "redirectUrl"
+      ]
+    },
+    "ErrorApiData": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "const": "error"
+        },
+        "type": {
+          "type": "string",
+          "const": "error"
+        },
+        "code": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "subtitle": {
+          "type": "string"
+        },
+        "details": {
+          "type": "string"
+        },
+        "image": {
+          "type": "string"
+        },
+        "imageLogo": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "type",
+        "code",
+        "title",
+        "subtitle",
+        "details"
+      ]
+    },
+    "RoomAccess": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "const": "ok"
+            },
+            "email": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "username": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "userUuid": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "visitCardUrl": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "isCharacterTexturesValid": {
+              "type": "boolean"
+            },
+            "characterTextures": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "id",
+                  "url"
+                ]
+              }
+            },
+            "isCompanionTextureValid": {
+              "type": "boolean"
+            },
+            "companionTexture": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "url": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "url"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "userRoomToken": {
+              "type": "string"
+            },
+            "activatedInviteUser": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "applications": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string"
+                      },
+                      "script": {
+                        "type": "string"
+                      },
+                      "doc": {
+                        "type": "string"
+                      },
+                      "image": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "enabled": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "regexUrl": {
+                        "type": "string"
+                      },
+                      "targetUrl": {
+                        "type": "string"
+                      },
+                      "default": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "forceNewTab": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "allowAPI": {
+                        "type": "boolean",
+                        "default": false
+                      },
+                      "policy": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "name"
+                    ]
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "canEdit": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "world": {
+              "type": "string"
+            },
+            "chatID": {
+              "type": "string"
+            },
+            "canRecord": {
+              "type": "boolean"
+            },
+            "analyticsEventsEnabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "status",
+            "email",
+            "userUuid",
+            "tags",
+            "visitCardUrl",
+            "isCharacterTexturesValid",
+            "characterTextures",
+            "isCompanionTextureValid",
+            "world"
+          ]
+        },
+        {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ErrorApiData"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "const": "error"
+                },
+                "type": {
+                  "type": "string",
+                  "const": "retry"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "subtitle": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                },
+                "imageLogo": {
+                  "type": "string"
+                },
+                "buttonTitle": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "timeToRetry": {
+                  "type": "number"
+                },
+                "canRetryManual": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "status",
+                "type",
+                "code",
+                "title",
+                "subtitle",
+                "details",
+                "timeToRetry",
+                "canRetryManual"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "const": "error"
+                },
+                "type": {
+                  "type": "string",
+                  "const": "redirect"
+                },
+                "urlToRedirect": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "status",
+                "type",
+                "urlToRedirect"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "const": "error"
+                },
+                "type": {
+                  "type": "string",
+                  "const": "unauthorized"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "subtitle": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "string"
+                },
+                "image": {
+                  "type": "string"
+                },
+                "imageLogo": {
+                  "type": "string"
+                },
+                "buttonTitle": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "status",
+                "type",
+                "code",
+                "title",
+                "subtitle",
+                "details"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "ShortMapDescriptionList": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The name of the map."
+          },
+          "roomUrl": {
+            "type": "string"
+          },
+          "wamUrl": {
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A description of the map. Can be used in social networks when sharing a link to the map."
+          },
+          "copyright": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Copyright notice for this map. Can be a link to a license. Parts of this map like tilesets or images can have their own copyright."
+          },
+          "thumbnail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "URL to a thumbnail image. This image will be used in social networks when sharing a link to the map."
+          },
+          "areasSearchable": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of areas define as searchable by the map editor for the exploration mode."
+          },
+          "entitiesSearchable": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Number of entities define as searchable by the map editor for the exploration mode."
+          }
+        },
+        "required": [
+          "roomUrl"
+        ]
+      }
+    },
+    "WorldChatMembersData": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "number",
+          "minimum": 0
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "uuid": {
+                "type": "string"
+              },
+              "wokaName": {
+                "type": "string"
+              },
+              "email": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "chatId": {
+                "type": "string"
+              },
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "uuid",
+              "email",
+              "tags"
+            ]
+          }
+        }
+      },
+      "required": [
+        "total",
+        "members"
+      ]
+    },
+    "MemberData": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "email": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "visitCardUrl": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "chatID": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ]
+    },
+    "OauthRefreshToken": {
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "token": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message",
+        "token"
+      ]
+    },
+    "IceServer": {
+      "type": "object",
+      "properties": {
+        "urls": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "username": {
+          "type": "string"
+        },
+        "credential": {
+          "type": "string"
+        },
+        "credentialType": {
+          "type": "string",
+          "enum": [
+            "password",
+            "oauth"
+          ]
+        }
+      },
+      "required": [
+        "urls"
+      ]
+    },
+    "LivekitCredentials": {
+      "type": "object",
+      "properties": {
+        "livekitHost": {
+          "type": "string"
+        },
+        "livekitApiKey": {
+          "type": "string"
+        },
+        "livekitApiSecret": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "livekitHost",
+        "livekitApiKey",
+        "livekitApiSecret"
+      ]
+    },
+    "AdminAnswers": {
+      "type": "object",
+      "properties": {
+        "mapDetails": {
+          "$ref": "#/definitions/MapDetailsData"
+        },
+        "roomRedirect": {
+          "$ref": "#/definitions/RoomRedirect"
+        },
+        "errorApiData": {
+          "$ref": "#/definitions/ErrorApiData"
+        },
+        "roomAccess": {
+          "$ref": "#/definitions/RoomAccess"
+        },
+        "sameWorld": {
+          "$ref": "#/definitions/ShortMapDescriptionList"
+        },
+        "chatMembers": {
+          "$ref": "#/definitions/WorldChatMembersData"
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MemberData"
+          }
+        },
+        "member": {
+          "$ref": "#/definitions/MemberData"
+        },
+        "oauthRefreshToken": {
+          "$ref": "#/definitions/OauthRefreshToken"
+        },
+        "iceServers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IceServer"
+          }
+        },
+        "livekitCredentials": {
+          "$ref": "#/definitions/LivekitCredentials"
+        }
+      },
+      "required": [
+        "mapDetails",
+        "roomRedirect",
+        "errorApiData",
+        "roomAccess",
+        "sameWorld",
+        "chatMembers",
+        "members",
+        "member",
+        "oauthRefreshToken",
+        "iceServers",
+        "livekitCredentials"
+      ]
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
