@@ -287,6 +287,10 @@ jobs:
           else
             echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
           fi
+      # Tests recreate the play container (rebootBack, rebootPlay), which drops its logs from `compose logs`: follow
+      # each successive container into a file, side-loaded in the report on failure.
+      - name: Keep the server logs across container recreations
+        run: nohup sh -c 'while :; do docker logs -f $(docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml ps -q play) >> /tmp/play-all.log 2>&1; sleep 1; done' > /dev/null 2>&1 &
       - name: Run Playwright tests
         run: npm run test -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
@@ -313,7 +317,9 @@ jobs:
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml logs > tests/playwright-report/docker-compose.log
+        run: |
+          docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml logs > tests/playwright-report/docker-compose.log
+          cp /tmp/play-all.log tests/playwright-report/server.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
