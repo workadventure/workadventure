@@ -720,8 +720,6 @@ jobs:
               repository: thecodingmachine/workadventure-server-go
             env:
               PROMETHEUS_PORT: "9090"
-              # Space updates in the logs (user, mask, changed or not): read them in server.log of a failed run.
-              DEBUG_MODE: "true"
             secretEnv:
               ROOM_API_SECRET_KEY: "password"
             podAnnotations:
