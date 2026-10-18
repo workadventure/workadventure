@@ -359,6 +359,7 @@ async fn openid_callback(State(state): State<AppState>, headers: HeaderMap, RawQ
     let sealed = cookie(&headers, "code_verifier").and_then(|c| unseal(&state.config.secret_key, &c));
     let flow: Option<(String, String)> = sealed.and_then(|s| serde_json::from_str(&s).ok());
     let (Some(oidc), Some((verifier, nonce))) = (state.oidc.as_ref(), flow) else {
+        tracing::error!("OpenID callback: no OpenID configuration or no readable code_verifier cookie");
         return fail();
     };
     let pairs = query_pairs(q.as_deref());
@@ -366,10 +367,19 @@ async fn openid_callback(State(state): State<AppState>, headers: HeaderMap, RawQ
     // The state must come back, and be this browser's.
     match (cookie(&headers, "oidc_state"), get("state")) {
         (Some(expected), Some(got)) if expected == got => {}
-        _ => return fail(),
+        (expected, got) => {
+            tracing::error!(cookie = expected.is_some(), param = got.is_some(), "OpenID callback: state mismatch");
+            return fail();
+        }
     }
-    let Some(code) = get("code") else { return fail() };
-    let Ok(p) = provider(&state).await else { return fail() };
+    let Some(code) = get("code") else {
+        tracing::error!("OpenID callback: no code");
+        return fail();
+    };
+    let Ok(p) = provider(&state).await else {
+        tracing::error!("OpenID callback: provider metadata unavailable");
+        return fail();
+    };
     let access_token = match exchange_code(&state, &p, &code, &verifier).await {
         Ok((access, id_token)) => match verify_id_token(&state, &p, &id_token, &nonce).await {
             Ok(()) => access,
