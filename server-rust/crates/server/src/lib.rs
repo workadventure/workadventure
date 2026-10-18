@@ -129,5 +129,6 @@ pub fn router(state: AppState) -> Router {
         .merge(matrix::routes())
         .route("/ws/room", get(ws::ws_room))
         .route("/ws/admin/rooms", get(admin_socket::ws_admin_rooms))
+        .layer(axum::middleware::from_fn_with_state(state.clone(), http::cors))
         .with_state(state)
 }

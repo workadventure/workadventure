@@ -371,7 +371,7 @@ fn web_hook(state: &AppState, change: &MapChange) {
 }
 
 pub fn router(state: AppState) -> Router {
-    let router = Router::new()
+    let router: Router<AppState> = Router::new()
         .route("/ping", get(|| async { "pong" }))
         .route("/upload", post(upload::upload))
         .route("/download", get(upload::download))
@@ -383,9 +383,10 @@ pub fn router(state: AppState) -> Router {
         .fallback(files::any)
         .layer(DefaultBodyLimit::max(MAX_UPLOAD))
         .layer(middleware::from_fn(cors));
-    // PATH_PREFIX: mounted under it; the routes themselves stay the same.
+    // PATH_PREFIX: like the TS map-storage, the proxy normally strips it (Traefik, single-domain ingress); a proxy that
+    // forwards it as is still reaches the same routes.
     let prefix = state.config.map_storage_prefix.clone();
-    let router = if prefix.is_empty() || prefix == "/" { router } else { Router::new().nest(&prefix, router) };
+    let router = if prefix.is_empty() || prefix == "/" { router } else { router.clone().nest(&prefix, router) };
     router.with_state(state)
 }
 

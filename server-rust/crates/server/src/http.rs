@@ -1,8 +1,9 @@
 //! Plain HTTP routes: health and metrics.
 
 use axum::Router;
-use axum::extract::State;
-use axum::http::{HeaderMap, StatusCode, header};
+use axum::extract::{Request, State};
+use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
+use axum::middleware::Next;
 use axum::response::{IntoResponse, Response};
 use axum::routing::get;
 
@@ -64,4 +65,36 @@ fn serve_metrics(state: &AppState, headers: &HeaderMap) -> Response {
     }
     let (content_type, body) = metrics::render();
     ([(header::CONTENT_TYPE, content_type)], body).into_response()
+}
+
+/// The pusher's cors() middleware: ALLOWED_CORS_ORIGIN, where "*" reflects the caller's origin; "*" when unset.
+pub async fn cors(State(state): State<AppState>, request: Request, next: Next) -> Response {
+    let allowed = state.config.raw.get("ALLOWED_CORS_ORIGIN").map(String::as_str).unwrap_or_default();
+    let origin = request.headers().get(header::ORIGIN).cloned();
+    let preflight =
+        request.method() == Method::OPTIONS && request.headers().contains_key(header::ACCESS_CONTROL_REQUEST_METHOD);
+    let mut response = if preflight { StatusCode::NO_CONTENT.into_response() } else { next.run(request).await };
+    let h = response.headers_mut();
+    let allow = match (allowed, origin) {
+        ("*", Some(o)) => Some(o),
+        ("", _) => Some(HeaderValue::from_static("*")),
+        (a, _) => HeaderValue::from_str(a).ok(),
+    };
+    if let Some(a) = allow {
+        h.insert(header::ACCESS_CONTROL_ALLOW_ORIGIN, a);
+        if !allowed.is_empty() {
+            h.append(header::VARY, HeaderValue::from_static("Origin"));
+        }
+    }
+    h.insert(header::ACCESS_CONTROL_ALLOW_CREDENTIALS, HeaderValue::from_static("true"));
+    if preflight {
+        h.insert(header::ACCESS_CONTROL_ALLOW_METHODS, HeaderValue::from_static("GET,POST,OPTIONS,PUT,PATCH,DELETE"));
+        h.insert(
+            header::ACCESS_CONTROL_ALLOW_HEADERS,
+            HeaderValue::from_static(
+                "Content-Type,Authorization,Origin,X-Requested-With,Accept,Pragma,Cache-Control,baggage,sentry-trace",
+            ),
+        );
+    }
+    response
 }
