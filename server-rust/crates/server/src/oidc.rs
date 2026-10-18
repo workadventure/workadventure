@@ -188,6 +188,7 @@ async fn verify_id_token(state: &AppState, p: &Provider, id_token: &str, nonce: 
     use jsonwebtoken::{Algorithm, DecodingKey, Validation, jwk::JwkSet};
     let oidc = state.oidc.as_ref().ok_or("OpenID is not configured")?;
     let header = jsonwebtoken::decode_header(id_token).map_err(|e| e.to_string())?;
+    let mut jwk_seen = String::new();
     let key = if matches!(header.alg, Algorithm::HS256 | Algorithm::HS384 | Algorithm::HS512) {
         DecodingKey::from_secret(oidc.client_secret.as_bytes())
     } else {
@@ -199,6 +200,8 @@ async fn verify_id_token(state: &AppState, p: &Provider, id_token: &str, nonce: 
             None => keys.keys.first(),
         }
         .ok_or("no key of the JWKS matches the id_token")?;
+        // Public key material only: logged when the id_token is refused, to tell a provider's odd key apart.
+        jwk_seen = serde_json::to_string(jwk).unwrap_or_default();
         DecodingKey::from_jwk(jwk).map_err(|e| e.to_string())?
     };
     let mut v = Validation::new(header.alg);
@@ -207,7 +210,7 @@ async fn verify_id_token(state: &AppState, p: &Provider, id_token: &str, nonce: 
     v.set_required_spec_claims(&["exp", "iss", "aud"]);
     v.leeway = 60;
     let claims = jsonwebtoken::decode::<Value>(id_token, &key, &v)
-        .map_err(|e| format!("{e} (header alg {:?}, kid {:?})", header.alg, header.kid))?
+        .map_err(|e| format!("{e} (header alg {:?}, kid {:?}, jwk {jwk_seen})", header.alg, header.kid))?
         .claims;
     if claims["nonce"].as_str() != Some(nonce) {
         return Err("the id_token's nonce is not this login's".into());
