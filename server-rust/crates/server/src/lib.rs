@@ -82,8 +82,16 @@ pub struct AppState {
     pub matrix: Option<Arc<matrix::Matrix>>,
 }
 
+/// jsonwebtoken 10 picks its crypto backend once per process. livekit-token installs an HMAC-only one on its first
+/// token if nothing is installed yet, after which every RS256 id_token is refused (InvalidAlgorithm): install the
+/// full aws-lc backend first.
+pub fn install_jwt_crypto() {
+    let _ = jsonwebtoken::crypto::aws_lc::DEFAULT_PROVIDER.install_default();
+}
+
 impl AppState {
     pub fn new(config: Config) -> Self {
+        install_jwt_crypto();
         session::set_idle_timer(config.socket_idle_timer);
         Self {
             room_config: RoomConfig {
