@@ -35,7 +35,14 @@ build_candidate() {
     echo "api_version=$(sh "$src/api-version.sh")"; echo "built_at=$(date -u +%FT%TZ)"; } > "$HERE/.$1-image-info"
 }
 # minikube image load, falling back to a pull in the node (some multi-arch ghcr images: "not found in tar").
+# minikube image load keeps the node's image when the tag already exists there (a rebuilt :rehearsal stayed stale):
+# untag it in the node first, then check the node now has the local build (Created: the IDs differ between the host's containerd store and the node).
+node_image_built() { minikube ssh -p "$PROFILE" -- docker image inspect -f '{{.Created}}' "$1" 2>/dev/null | tr -d '\r' || true; }
 load_image() {
   echo "load $1"
+  local want; want=$(docker image inspect -f '{{.Created}}' "$1" 2>/dev/null || true)
+  if [ -n "$want" ] && [ "$(node_image_built "$1")" = "$want" ]; then echo "  already in the node"; return; fi
+  [ -z "$want" ] || minikube ssh -p "$PROFILE" -- docker rmi -f "$1" >/dev/null 2>&1 || true
   minikube image load "$1" -p "$PROFILE" 2>/dev/null || { echo "  load failed, pulling in the node"; minikube ssh -p "$PROFILE" -- docker pull -q "$1" >/dev/null; }
+  if [ -n "$want" ] && [ "$(node_image_built "$1")" != "$want" ]; then echo "  $1 in the node is not the local image" >&2; return 1; fi
 }
