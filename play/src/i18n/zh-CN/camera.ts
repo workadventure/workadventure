@@ -14,6 +14,8 @@ const camera: DeepPartial<Translation["camera"]> = {
     unavailable: {
         noImage: "您的摄像头已停止发送画面：其他人看到的是您的头像，并显示“摄像头不可用”。",
         inUse: "您的摄像头正被其他应用（Teams、Meet 等）使用。麦克风仍可正常使用；摄像头空闲后会自动恢复。",
+        disconnected: "您的摄像头“{camera}”已断开连接：其他人看到的是您的头像，并显示“摄像头不可用”。",
+        useCamera: "使用“{camera}”",
         retry: "重试",
         turnOff: "关闭摄像头",
     },

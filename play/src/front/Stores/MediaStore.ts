@@ -80,7 +80,9 @@ export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
  * Why the camera the user wants gives no image, while it stays wanted:
  * - "no_image": it stopped delivering frames, frozen or black (see CameraStallDetector);
  * - "in_use": another application holds it (getUserMedia fails with NotReadableError, as on Windows with Teams);
- * - "no_answer": getUserMedia did not answer (a camera the system holds back, a locked session).
+ * - "no_answer": getUserMedia did not answer (a camera the system holds back, a locked session);
+ * - "disconnected": it went away (see disconnectedCameraStore), and is never replaced by another camera behind the
+ *   user's back.
  *
  * Nothing is turned off behind the user's back. The video is left out of the constraints, so the others get the
  * avatar with "Camera unavailable" instead of a red tile, and the microphone is asked for alone. The camera is asked
@@ -88,8 +90,14 @@ export const cameraAccessIssueStore = writable<MediaAccessIssue | null>(null);
  * Asking for a busy camera fails at once and cannot take it from the application that holds it; a camera that does
  * not answer is given up after 15 seconds (getUserMediaUnlessStuck). Never asked for again on a timer.
  */
-export type CameraUnavailableReason = "no_image" | "in_use" | "no_answer";
+export type CameraUnavailableReason = "no_image" | "in_use" | "no_answer" | "disconnected";
 export const cameraUnavailableStore = writable<CameraUnavailableReason | undefined>(undefined);
+
+/**
+ * The camera that went away, until a camera is obtained again or the user picks another one. It is asked for again by
+ * its id only: falling back to the default camera would switch cameras behind the user's back (privacy).
+ */
+export const disconnectedCameraStore = writable<{ deviceId: string | undefined; label: string } | undefined>(undefined);
 
 /**
  * Last microphone access failure, or no audioinput reported by the browser.
@@ -962,6 +970,10 @@ async function runRawStreamUpdate(
                 stream.getTracks().forEach((track) => track.stop());
                 return nextConstraints;
             }
+            if (stream.getVideoTracks().length > 0) {
+                stream.getVideoTracks().forEach(markCameraDisconnectedWhenTrackEnds);
+                disconnectedCameraStore.set(undefined);
+            }
             const oldStream = currentStream;
             currentStream =
                 oldStream === undefined
@@ -996,7 +1008,12 @@ async function runRawStreamUpdate(
             batchGetUserMediaStore.commitChanges();
             hideHelpCameraSettings();
         } catch (e) {
-            if (isOverConstrainedError(e) && e.constraint === "deviceId") {
+            if (mustRequestNewVideo && isOverConstrainedError(e) && get(disconnectedCameraStore) !== undefined) {
+                // The disconnected camera is still away: no fallback to the default camera, see disconnectedCameraStore
+                console.info("The disconnected camera is still away: asking for the microphone alone", e);
+                emitCurrentStreamOrError(setIfCurrent, e);
+                cameraUnavailableStore.set("disconnected");
+            } else if (isOverConstrainedError(e) && e.constraint === "deviceId") {
                 analyticsClient.trackAdminEvent("media.device_error", {
                     kind: "camera_microphone",
                     reason: "device_constraint",
@@ -1079,6 +1096,53 @@ function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
  */
 export function retryCamera(): void {
     cameraUnavailableStore.set(undefined);
+}
+
+/**
+ * The user picks another camera for an unavailable one: it becomes the preferred camera, as in the settings.
+ */
+export function switchToCamera(deviceId: string): void {
+    batchGetUserMediaStore.startBatch();
+    disconnectedCameraStore.set(undefined);
+    requestedCameraDeviceIdStore.set(deviceId);
+    localUserStore.setPreferredVideoInputDevice(deviceId);
+    retryCamera();
+    batchGetUserMediaStore.commitChanges();
+}
+
+/**
+ * The camera in use went away: the browser ended its track, or it left the device list. Marked unavailable and pinned
+ * by its id, in one batch so that nothing asks for a camera in between.
+ */
+function cameraDisconnected(deviceId: string | undefined, label: string): void {
+    if (get(cameraUnavailableStore) === "disconnected") {
+        return;
+    }
+    console.info(`The camera "${label}" is disconnected`);
+    analyticsClient.trackAdminEvent("media.device_error", { kind: "camera", reason: "disconnected" });
+    batchGetUserMediaStore.startBatch();
+    disconnectedCameraStore.set({ deviceId, label });
+    if (deviceId !== undefined) {
+        requestedCameraDeviceIdStore.set(deviceId);
+    }
+    cameraUnavailableStore.set("disconnected");
+    batchGetUserMediaStore.commitChanges();
+}
+
+/**
+ * The browser ends a camera track by itself when the camera goes away (an iPhone used as a Continuity Camera that
+ * disconnects), sometimes while the camera stays in the device list, so the device list handler never sees it and the
+ * video stays black. Our own track.stop() does not fire "ended".
+ */
+function markCameraDisconnectedWhenTrackEnds(track: MediaStreamTrack): void {
+    const { deviceId } = track.getSettings();
+    const onEnded = () => {
+        track.removeEventListener("ended", onEnded);
+        if (currentStream?.getTracks().includes(track)) {
+            cameraDisconnected(deviceId, track.label);
+        }
+    };
+    track.addEventListener("ended", onEnded);
 }
 
 // An unavailable camera may be back when the user returns to the tab (from the application that held it, typically),
@@ -1804,6 +1868,15 @@ deviceListStore.subscribe((mediaDeviceInfos) => {
         );
         lastNewMediaDeviceDetectedStore.set(newDevices);
 
+        // The disconnected camera is back: ask for it again (the same camera, not a switch)
+        const disconnectedCamera = get(disconnectedCameraStore);
+        if (
+            get(cameraUnavailableStore) === "disconnected" &&
+            newDevices.some((device) => device.deviceId === disconnectedCamera?.deviceId)
+        ) {
+            retryCamera();
+        }
+
         // Detect removed devices
         const removedDevices = thePreviousMediaDevices.filter(
             (device) => mediaDeviceInfos.find((d) => d.deviceId === device.deviceId) === undefined,
@@ -1814,13 +1887,7 @@ deviceListStore.subscribe((mediaDeviceInfos) => {
                 removedDevice.kind === "videoinput" &&
                 currentStream?.getVideoTracks()[0]?.getSettings().deviceId === removedDevice.deviceId
             ) {
-                if (get(requestedCameraDeviceIdStore) === undefined) {
-                    // If we removed the default camera device, we retry (and ask for the new default camera that the OS will pick)
-                    retryGetUserMedia(true, false);
-                } else {
-                    // If we removed a camera specifically requested, we retry without passing a device id.
-                    requestedCameraDeviceIdStore.set(undefined);
-                }
+                cameraDisconnected(removedDevice.deviceId, removedDevice.label);
             } else if (
                 removedDevice.kind === "audioinput" &&
                 currentStream?.getAudioTracks()[0]?.getSettings().deviceId === removedDevice.deviceId

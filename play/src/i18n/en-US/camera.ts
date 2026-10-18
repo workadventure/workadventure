@@ -13,6 +13,9 @@ const camera: BaseTranslation = {
     unavailable: {
         noImage: "Your camera stopped sending images: the others see your avatar, marked “Camera unavailable”.",
         inUse: "Your camera is used by another application (Teams, Meet…). Your microphone still works; your camera comes back once it is free.",
+        disconnected:
+            "Your camera “{camera}” is disconnected: the others see your avatar, marked “Camera unavailable”.",
+        useCamera: "Use “{camera}”",
         retry: "Try again",
         turnOff: "Turn camera off",
     },

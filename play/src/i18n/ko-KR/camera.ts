@@ -15,6 +15,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         noImage:
             "카메라에서 영상이 전송되지 않습니다. 다른 사람들에게는 '카메라를 사용할 수 없음' 표시와 함께 아바타가 보입니다.",
         inUse: "다른 애플리케이션(Teams, Meet 등)이 카메라를 사용 중입니다. 마이크는 계속 작동하며, 카메라는 사용 가능해지면 돌아옵니다.",
+        disconnected:
+            "카메라 '{camera}'의 연결이 끊어졌습니다. 다른 사람들에게는 '카메라를 사용할 수 없음' 표시와 함께 아바타가 보입니다.",
+        useCamera: "'{camera}' 사용",
         retry: "다시 시도",
         turnOff: "카메라 끄기",
     },
