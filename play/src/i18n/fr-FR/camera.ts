@@ -15,6 +15,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         noImage:
             "Votre caméra n'envoie plus d'image : les autres voient votre avatar, avec la mention « Caméra indisponible ».",
         inUse: "Votre caméra est utilisée par une autre application (Teams, Meet…). Votre micro fonctionne toujours ; votre caméra reviendra dès qu'elle sera libre.",
+        disconnected:
+            "Votre caméra « {camera} » est déconnectée : les autres voient votre avatar, avec la mention « Caméra indisponible ».",
+        useCamera: "Utiliser « {camera} »",
         retry: "Réessayer",
         turnOff: "Couper la caméra",
     },

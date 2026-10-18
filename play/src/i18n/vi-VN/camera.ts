@@ -15,6 +15,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         noImage:
             "Camera của bạn đã ngừng gửi hình ảnh: người khác sẽ thấy ảnh đại diện của bạn kèm dòng chữ “Camera không khả dụng”.",
         inUse: "Camera của bạn đang được một ứng dụng khác (Teams, Meet…) sử dụng. Micro vẫn hoạt động; camera sẽ quay lại ngay khi được giải phóng.",
+        disconnected:
+            "Camera “{camera}” của bạn đã bị ngắt kết nối: người khác sẽ thấy ảnh đại diện của bạn kèm dòng chữ “Camera không khả dụng”.",
+        useCamera: "Dùng “{camera}”",
         retry: "Thử lại",
         turnOff: "Tắt camera",
     },

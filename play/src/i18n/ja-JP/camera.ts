@@ -15,6 +15,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         noImage:
             "カメラから映像が送信されなくなりました。ほかの参加者には「カメラを利用できません」と表示されたアバターが見えています。",
         inUse: "カメラは別のアプリ（Teams、Meet など）で使用中です。マイクは引き続き使えます。カメラは空き次第戻ります。",
+        disconnected:
+            "カメラ「{camera}」の接続が切れました。ほかの参加者には「カメラを利用できません」と表示されたアバターが見えています。",
+        useCamera: "「{camera}」を使う",
         retry: "再試行",
         turnOff: "カメラをオフにする",
     },

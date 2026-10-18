@@ -15,6 +15,9 @@ const camera: DeepPartial<Translation["camera"]> = {
         noImage:
             "Waša kamera wěcej žedne wobraze njesćelo: druge wiźe Wašu awataru z pokazką „Kamera njestoj k dispoziciji“.",
         inUse: "Waša kamera se wót drugego nałoženja wužywa (Teams, Meet…). Waš mikrofon dalej funkcioněrujo; kamera se wrośi, gaž jo zasej lichy.",
+        disconnected:
+            "Waša kamera „{camera}“ njejo wěcej zwězana: druge wiźe Wašu awataru z pokazką „Kamera njestoj k dispoziciji“.",
+        useCamera: "„{camera}“ wužywaś",
         retry: "Hyšći raz wopytaś",
         turnOff: "Kameru wušaltowaś",
     },
