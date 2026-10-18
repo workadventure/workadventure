@@ -76,11 +76,12 @@ fn api_version_of(html: &str) -> Option<&str> {
 
 /// Keeps the template up to date. Runs for the life of the process.
 pub async fn poll_template(state: AppState) {
-    let (Some(internal), Some(public)) = (state.config.assets_internal_url.clone(), state.config.assets_url.clone())
-    else {
+    let Some(internal) = state.config.assets_internal_url.clone() else {
         tracing::warn!("ASSETS_URL is not set: no front container to serve the page from");
         return;
     };
+    // Without ASSETS_URL (ASSETS_INTERNAL_URL only), the assets stay on this origin and go through the proxy.
+    let public = state.config.assets_url.clone().unwrap_or_default();
     let client = reqwest::Client::new();
     let mut etag: Option<String> = None;
     loop {
