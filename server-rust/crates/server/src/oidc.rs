@@ -206,7 +206,9 @@ async fn verify_id_token(state: &AppState, p: &Provider, id_token: &str, nonce: 
     v.set_audience(&[&oidc.client_id]);
     v.set_required_spec_claims(&["exp", "iss", "aud"]);
     v.leeway = 60;
-    let claims = jsonwebtoken::decode::<Value>(id_token, &key, &v).map_err(|e| e.to_string())?.claims;
+    let claims = jsonwebtoken::decode::<Value>(id_token, &key, &v)
+        .map_err(|e| format!("{e} (header alg {:?}, kid {:?})", header.alg, header.kid))?
+        .claims;
     if claims["nonce"].as_str() != Some(nonce) {
         return Err("the id_token's nonce is not this login's".into());
     }
