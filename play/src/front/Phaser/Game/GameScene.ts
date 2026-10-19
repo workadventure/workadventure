@@ -2877,7 +2877,7 @@ export class GameScene extends DirtyScene {
             }),
         );
 
-        this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingStore.subscribe((isStreaming) => {
+        this.isLiveStreamingUnsubscriber = this.spaceRegistry.isLiveStreamingAudioStore.subscribe((isStreaming) => {
             if (isStreaming) {
                 this.enableVoiceIndicator();
             } else {
