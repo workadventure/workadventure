@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Allumez votre caméra et votre microphone",
         start: "Bienvenue sur notre page de configuration des périphériques audio et vidéo ! Trouvez ici les outils pour optimiser votre expérience en ligne. Ajustez les paramètres selon vos préférences pour résoudre les problèmes éventuels. Assurez-vous que votre matériel est bien connecté et à jour. Explorez et testez différentes configurations pour trouver celle qui convient le mieux.",
     },
+    unavailable: {
+        noImage:
+            "Votre caméra n'envoie plus d'image : les autres voient votre avatar, avec la mention « Caméra indisponible ».",
+        inUse: "Votre caméra est utilisée par une autre application (Teams, Meet…). Votre micro fonctionne toujours ; votre caméra reviendra dès qu'elle sera libre.",
+        retry: "Réessayer",
+        turnOff: "Couper la caméra",
+    },
     help: {
         title: "Accès à la caméra / au microphone nécessaire",
         cameraTitle: "Accès à la caméra nécessaire",
@@ -40,6 +47,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "Aucune caméra utilisable",
             noDeviceDesc:
                 "Le navigateur ne détecte aucune caméra utilisable. Essayez un autre navigateur, vérifiez qu’une caméra est branchée, vérifiez les configurations de l’ordinateur (confidentialité, périphériques), ou redémarrez l’ordinateur si le matériel devrait fonctionner.",
+            inUseTitle: "Caméra utilisée par une autre application",
+            inUseDesc:
+                "Une autre application (Teams, Meet…) utilise votre caméra. Fermez-la de ce côté : WorkAdventure la redemande quand vous revenez sur cet onglet ou entrez dans une conversation.",
+            unavailableTitle: "Caméra indisponible",
+            unavailableDesc:
+                "Votre caméra n'envoie plus d'image : les autres voient votre avatar. Réessayez depuis le message, ou coupez puis rallumez votre caméra.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/fr-FR-chrome.png",

@@ -11,6 +11,12 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "يرجى تشغيل الكاميرا والميكروفون.", // Please turn on your camera and microphone.
         start: "لنبدأ!", // Let's start!
     },
+    unavailable: {
+        noImage: "توقفت الكاميرا عن إرسال الصور: يرى الآخرون صورتك الرمزية مع عبارة «الكاميرا غير متاحة».",
+        inUse: "يستخدم تطبيق آخر (Teams أو Meet…) الكاميرا. لا يزال الميكروفون يعمل، وستعود الكاميرا بمجرد أن تصبح متاحة.",
+        retry: "إعادة المحاولة",
+        turnOff: "إيقاف الكاميرا",
+    },
     help: {
         title: "مطلوب الوصول إلى الكاميرا / الميكروفون", // Access to camera/microphone required
         cameraTitle: "مطلوب الوصول إلى الكاميرا",
@@ -39,6 +45,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "لا توجد كاميرا صالحة للاستخدام",
             noDeviceDesc:
                 "المتصفح لا يكتشف أي كاميرا يمكن استخدامها. جرّب متصفحًا آخر، أو تحقق من توصيل الكاميرا، أو تحقق من إعدادات الجهاز (الخصوصية، الأجهزة)، أو أعد تشغيل الجهاز إذا كان يفترض أن يعمل.",
+            inUseTitle: "الكاميرا مستخدمة من تطبيق آخر",
+            inUseDesc:
+                "يستخدم تطبيق آخر (Teams أو Meet…) الكاميرا. أغلقه هناك: سيطلب WorkAdventure الكاميرا مجددًا عند عودتك إلى هذا التبويب أو انضمامك إلى محادثة.",
+            unavailableTitle: "الكاميرا غير متاحة",
+            unavailableDesc:
+                "توقفت الكاميرا عن إرسال الصور: يرى الآخرون صورتك الرمزية. أعد المحاولة من الرسالة، أو أوقف الكاميرا ثم شغّلها مجددًا.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

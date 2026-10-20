@@ -4,6 +4,7 @@ import type { Translation } from "../i18n-types";
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "Zwjazowy problem!",
     no_video_stream_received: "Žane widejowe póćahi dóstane.",
+    camera_unavailable: "Kamera njeje k dispoziciji",
     user_is_muted: "{name} je němy.",
     reduce: "Pomjeńšić",
     connecting: "Zwjazujo so...",

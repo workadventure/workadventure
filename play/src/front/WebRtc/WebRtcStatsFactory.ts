@@ -476,6 +476,8 @@ export function buildWebRtcSenderStatsFromReport(
         fps: Math.max(0, (topLayer.framesEncoded ?? 0) - topPrev.framesEncoded) / timeDiffSeconds,
         activeLayers: reportsActive ? activeLayers : undefined,
         activeFps: reportsActive ? activeFps : undefined,
+        // The layers of a sender with a track name the media source they encode
+        hasTrack: layers.some((layer) => typeof layer.mediaSourceId === "string"),
         qualityLimitationReason: toQualityLimitationReason(topLayer.qualityLimitationReason),
         encoderImplementation:
             typeof topLayer.encoderImplementation === "string" ? topLayer.encoderImplementation : undefined,

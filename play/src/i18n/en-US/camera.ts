@@ -10,6 +10,12 @@ const camera: BaseTranslation = {
         title: "Turn on your camera and microphone",
         start: "Welcome to our audio and video device configuration page! Find the tools here to enhance your online experience. Adjust settings to your preferences to address any potential issues. Ensure your hardware is properly connected and up to date. Explore and test different configurations to find what works best for you.",
     },
+    unavailable: {
+        noImage: "Your camera stopped sending images: the others see your avatar, marked “Camera unavailable”.",
+        inUse: "Your camera is used by another application (Teams, Meet…). Your microphone still works; your camera comes back once it is free.",
+        retry: "Try again",
+        turnOff: "Turn camera off",
+    },
     help: {
         title: "Camera / Microphone access needed",
         cameraTitle: "Camera access needed",
@@ -39,6 +45,12 @@ const camera: BaseTranslation = {
             noDeviceTitle: "No usable camera",
             noDeviceDesc:
                 "Your browser does not see any camera you can use. Try another browser, check that a camera is connected, check your computer's settings (privacy, devices), or restart your computer if the device should work.",
+            inUseTitle: "Camera used by another application",
+            inUseDesc:
+                "Another application (Teams, Meet…) is using your camera. Close it there: WorkAdventure asks for it again when you come back to this tab or join a conversation.",
+            unavailableTitle: "Camera unavailable",
+            unavailableDesc:
+                "Your camera stopped sending images: the others see your avatar. Try again from the message, or turn your camera off and on.",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

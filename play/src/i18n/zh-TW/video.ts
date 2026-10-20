@@ -4,6 +4,7 @@ import type { Translation } from "../i18n-types";
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "網路連線問題！",
     no_video_stream_received: "未收到視訊串流。",
+    camera_unavailable: "攝影機無法使用",
     user_is_muted: "{name} 已靜音。",
     reduce: "縮小",
     connecting: "連線中...",

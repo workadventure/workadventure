@@ -68,6 +68,9 @@ export interface WebRtcSenderStats {
     activeLayers?: number;
     // Frames encoded per second on the busiest active layer. 0 with active layers: the source delivers nothing.
     activeFps?: number;
+    // Whether a track is attached to the sender. LiveKit pauses a publication (pauseUpstream) by detaching its
+    // track: the layers stay active, and nothing is encoded since there is nothing to encode.
+    hasTrack?: boolean;
     // Why the browser is not encoding at the requested quality ("cpu" = the machine cannot keep up)
     qualityLimitationReason: WebRtcQualityLimitationReason;
     // Encoder reported by the browser, e.g. "libaom" / "libvpx" (software) or "ExternalEncoder" (hardware)

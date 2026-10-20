@@ -11,6 +11,13 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "カメラとマイクを有効にしてください",
         start: "オーディオおよびビデオデバイスの設定ページへようこそ！オンライン体験を向上させるためのツールをここで見つけることができます。潜在的な問題を解決するために、設定を好みに合わせて調整してください。ハードウェアが正しく接続され、最新の状態であることを確認してください。最適な構成を見つけるために、さまざまな構成を探索してテストしてください。",
     },
+    unavailable: {
+        noImage:
+            "カメラから映像が送信されなくなりました。ほかの参加者には「カメラを利用できません」と表示されたアバターが見えています。",
+        inUse: "カメラは別のアプリ（Teams、Meet など）で使用中です。マイクは引き続き使えます。カメラは空き次第戻ります。",
+        retry: "再試行",
+        turnOff: "カメラをオフにする",
+    },
     help: {
         title: "カメラとマイクへのアクセスが必要です",
         cameraTitle: "カメラへのアクセスが必要です",
@@ -40,6 +47,12 @@ const camera: DeepPartial<Translation["camera"]> = {
             noDeviceTitle: "使用できるカメラがありません",
             noDeviceDesc:
                 "ブラウザが使用できるカメラを検出できません。別のブラウザを試すか、カメラの接続を確認するか、パソコンの設定（プライバシー、デバイス）を確認するか、ハードウェアに問題がなければパソコンを再起動してください。",
+            inUseTitle: "カメラは別のアプリで使用中です",
+            inUseDesc:
+                "別のアプリ（Teams、Meet など）がカメラを使用しています。そちらで閉じてください。このタブに戻るか会話に参加すると、WorkAdventure がカメラを再度要求します。",
+            unavailableTitle: "カメラを利用できません",
+            unavailableDesc:
+                "カメラから映像が送信されなくなりました。ほかの参加者にはアバターが表示されています。メッセージから再試行するか、カメラをオフにしてからもう一度オンにしてください。",
             permissionMedia: {
                 firefox: "/resources/help-setting-camera-permission/en-US-firefox.png",
                 chrome: "/resources/help-setting-camera-permission/en-US-firefox.png",

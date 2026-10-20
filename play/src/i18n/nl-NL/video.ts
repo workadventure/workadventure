@@ -4,6 +4,7 @@ import type { DeepPartial } from "../DeepPartial";
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "Verbindingsprobleem!",
     no_video_stream_received: "Geen videostream ontvangen.",
+    camera_unavailable: "Camera niet beschikbaar",
     user_is_muted: "{name} is gedempt.",
     reduce: "Verminderen",
     connecting: "Verbinden...",

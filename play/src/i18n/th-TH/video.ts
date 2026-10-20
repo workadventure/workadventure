@@ -4,6 +4,7 @@ import type { Translation } from "../i18n-types";
 const video: DeepPartial<Translation["video"]> = {
     connection_issue: "ปัญหาการเชื่อมต่อเครือข่าย",
     no_video_stream_received: "ไม่ได้รับสตรีมวิดีโอ",
+    camera_unavailable: "กล้องไม่พร้อมใช้งาน",
     user_is_muted: "{name} ถูกปิดเสียงอยู่",
     reduce: "ย่อ",
     connecting: "กำลังเชื่อมต่อ...",
