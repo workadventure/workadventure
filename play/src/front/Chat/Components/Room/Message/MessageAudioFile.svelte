@@ -13,7 +13,7 @@
 </script>
 
 {#if $content.url !== undefined}
-    <audio use:audioOutput controls src={$content.url} class="w-full max-w-sm block p-2 [color-scheme:dark]"></audio>
+    <audio use:audioOutput controls src={$content.url} class="max-w-full min-w-96 block p-2"></audio>
 {:else}
     <MessageAttachmentOffer {content} {message} />
 {/if}
