@@ -129,7 +129,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     MAX_PER_GROUP: 4,
     MAX_DISPLAYED_VIDEOS: 16,
     LIVEKIT_PIXEL_DENSITY,
-    NODE_ENV: "test",
     CONTACT_URL: undefined,
     POSTHOG_API_KEY: undefined,
     POSTHOG_URL: undefined,
