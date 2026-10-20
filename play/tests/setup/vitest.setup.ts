@@ -48,7 +48,6 @@ if (typeof window !== "undefined" && window.env === undefined) {
         PROXIMITY_FILE_TRANSFER_MAX_USERS: 10,
         MAX_DISPLAYED_VIDEOS: 4,
         LIVEKIT_PIXEL_DENSITY: 2 / 3,
-        NODE_ENV: "test",
         CONTACT_URL: undefined,
         POSTHOG_API_KEY: undefined,
         POSTHOG_URL: undefined,

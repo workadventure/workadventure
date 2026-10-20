@@ -17,7 +17,6 @@ export interface FrontConfigurationInterface {
     PROXIMITY_FILE_TRANSFER_MAX_USERS: number;
     MAX_DISPLAYED_VIDEOS: number;
     LIVEKIT_PIXEL_DENSITY: number;
-    NODE_ENV: string;
     CONTACT_URL: string | undefined;
     POSTHOG_API_KEY: string | undefined;
     POSTHOG_URL: string | undefined;
