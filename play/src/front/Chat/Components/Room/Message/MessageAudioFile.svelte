@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
+    import { audioOutput } from "../../../../WebRtc/AudioOutputManager";
     import MessageAttachmentOffer from "./MessageAttachmentOffer.svelte";
 
     interface Props {
@@ -12,7 +13,7 @@
 </script>
 
 {#if $content.url !== undefined}
-    <audio controls src={$content.url} class="max-w-full min-w-96 block p-2"></audio>
+    <audio use:audioOutput controls src={$content.url} class="max-w-full min-w-96 block p-2"></audio>
 {:else}
     <MessageAttachmentOffer {content} {message} />
 {/if}
