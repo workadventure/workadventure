@@ -702,7 +702,17 @@ export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
      */
     private republishCamera(): void {
         this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
-            .then(() => this.dropCameraPublication())
+            .then(async () => {
+                if (!this.localCameraTrack || !this.localParticipant) {
+                    return;
+                }
+                // livekit-client forgets the backup codecs' clones on unpublish, without stopping them
+                this.stopBackupCodecTracks(this.localCameraTrack);
+                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
+                this.cameraAnalyticsUnsubscribe?.();
+                this.cameraAnalyticsUnsubscribe = undefined;
+                this.localCameraTrack = undefined;
+            })
             .catch((err) => {
                 console.error("An error occurred while unpublishing the camera for a codec change", err);
                 Sentry.captureException(err);
