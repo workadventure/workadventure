@@ -7,95 +7,90 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import type { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 
 const DEFAULT_START_NAME = "start";
+// ponytail: random redraws, not an exhaustive search. A start zone mostly covered by areas the user cannot enter can
+// still miss its free spots, then the next kind of start position is used.
+const MAX_DRAWS_PER_CANDIDATE = 10;
 
+/**
+ * Chooses where the current player appears. Never inside an area the user has no access to (see isPositionAllowed)
+ * when the map offers another start position: a forbidden "#area-name" falls back to the default start position.
+ */
 export function computeStartPosition(
     gameMapFrontWrapper: GameMapFrontWrapper,
     mapFile: ITiledMap,
-    initPosition?: PositionInterface,
-    startPositionName?: string,
+    initPosition: PositionInterface | undefined,
+    startPositionName: string | undefined,
+    isPositionAllowed: (position: PositionInterface) => boolean,
 ): PositionInterface {
-    let startPosition: PositionInterface | undefined = undefined;
-    // If there is an init position passed
-    if (initPosition != undefined) {
-        startPosition = initPosition;
-    } else {
-        if (startPositionName) {
-            // try to get custom starting position from a map-editor area object with the correct area name
-            startPosition = getStartPositionFromArea(gameMapFrontWrapper, startPositionName);
-            if (startPosition) {
-                return startPosition;
+    // From the most to the least specific. Most of them draw a random position, hence the functions.
+    const candidates: (() => PositionInterface | undefined)[] = [];
+    if (initPosition !== undefined) {
+        candidates.push(() => initPosition);
+    }
+    if (startPositionName) {
+        candidates.push(
+            // a map-editor area with the correct area name and a "start" property
+            () => getStartPositionFromArea(gameMapFrontWrapper, startPositionName),
+            // a Tiled area object
+            () => getStartPositionFromTiledArea(gameMapFrontWrapper, startPositionName, true),
+            // a layer with the custom name
+            () => getStartPositionFromLayerName(gameMapFrontWrapper, mapFile, startPositionName),
+            // a tile
+            () => getStartPositionFromTile(gameMapFrontWrapper, mapFile, startPositionName),
+        );
+    }
+    candidates.push(
+        () => getStartPositionFromPersonalArea(gameMapFrontWrapper),
+        // map-editor areas with the DEFAULT property set
+        () => getStartPositionFromDefaultStartArea(gameMapFrontWrapper),
+        () => getStartPositionFromTiledArea(gameMapFrontWrapper, DEFAULT_START_NAME, false),
+        () => getStartPositionFromTile(gameMapFrontWrapper, mapFile, DEFAULT_START_NAME),
+        () => getStartPositionFromLayerName(gameMapFrontWrapper, mapFile),
+    );
+
+    let firstForbiddenPosition: PositionInterface | undefined = undefined;
+    for (const candidate of candidates) {
+        for (let draw = 0; draw < MAX_DRAWS_PER_CANDIDATE; draw++) {
+            const position = candidate();
+            if (position === undefined) {
+                break;
             }
-
-            // try to get custom starting position from Area object
-            startPosition = getStartPositionFromTiledArea(gameMapFrontWrapper, startPositionName, true);
-            if (startPosition) {
-                return startPosition;
+            if (isPositionAllowed(position)) {
+                return position;
             }
-
-            // if not found, look for custom name Layers
-            startPosition = getStartPositionFromLayerName(gameMapFrontWrapper, mapFile, startPositionName);
-            if (startPosition) {
-                return startPosition;
-            }
-
-            // if not found, look for Tile
-            startPosition = getStartPositionFromTile(gameMapFrontWrapper, mapFile, startPositionName);
-            if (startPosition) {
-                return startPosition;
-            }
-        }
-
-        // If no start position in the URL, let's look if we have a personal desk first
-        const uuid = localUserStore.getLocalUser()?.uuid;
-        if (uuid) {
-            const personalArea = gameMapFrontWrapper
-                .getGameMap()
-                .getWamFile()
-                ?.getGameMapAreas()
-                .findPersonalArea(uuid);
-            if (personalArea) {
-                return {
-                    x: personalArea.x + personalArea.width * 0.5,
-                    y: personalArea.y + personalArea.height * 0.5,
-                };
-            }
-        }
-
-        // if not found, look for map-editor areas with DEFAULT property set
-        startPosition = getStartPositionFromDefaultStartArea(gameMapFrontWrapper);
-        if (startPosition) {
-            return startPosition;
-        }
-
-        // try to get custom starting position from Area object
-        startPosition = getStartPositionFromTiledArea(gameMapFrontWrapper, DEFAULT_START_NAME, false);
-        if (startPosition) {
-            return startPosition;
-        }
-
-        // if not found, look for Tile
-        startPosition = getStartPositionFromTile(gameMapFrontWrapper, mapFile, DEFAULT_START_NAME);
-        if (startPosition) {
-            return startPosition;
-        }
-
-        // default name layer
-        startPosition = getStartPositionFromLayerName(gameMapFrontWrapper, mapFile);
-        if (startPosition) {
-            return startPosition;
+            firstForbiddenPosition ??= position;
         }
     }
+
+    if (firstForbiddenPosition !== undefined) {
+        // ponytail: the map has no start position this user may enter. Keep the one they would have had before
+        // access rights were checked at spawn, rather than inventing one that may be inside a wall.
+        console.warn("Every start position of this map is inside an area the user does not have access to.");
+        return firstForbiddenPosition;
+    }
+
     // Still no start position? Something is wrong with the map, we need a "start" layer.
-    if (startPosition === undefined) {
-        console.warn('This map is missing a layer named "start" that contains the available default start positions.');
-        // Let's start in the middle of the map
-        startPosition = {
-            x: (mapFile.width ?? 0) * 16,
-            y: (mapFile.height ?? 0) * 16,
-        };
-    }
+    console.warn('This map is missing a layer named "start" that contains the available default start positions.');
+    // Let's start in the middle of the map
+    return {
+        x: (mapFile.width ?? 0) * 16,
+        y: (mapFile.height ?? 0) * 16,
+    };
+}
 
-    return startPosition;
+function getStartPositionFromPersonalArea(gameMapFrontWrapper: GameMapFrontWrapper): PositionInterface | undefined {
+    const uuid = localUserStore.getLocalUser()?.uuid;
+    if (!uuid) {
+        return undefined;
+    }
+    const personalArea = gameMapFrontWrapper.getGameMap().getWamFile()?.getGameMapAreas().findPersonalArea(uuid);
+    if (!personalArea) {
+        return undefined;
+    }
+    return {
+        x: personalArea.x + personalArea.width * 0.5,
+        y: personalArea.y + personalArea.height * 0.5,
+    };
 }
 
 function getStartPositionFromTiledArea(

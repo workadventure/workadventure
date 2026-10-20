@@ -164,6 +164,17 @@ export class GameMapAreas {
         return areaRightTags.some((tag) => userConnectedTags.includes(tag));
     }
 
+    /**
+     * Returns the areas covering the given player position that the user is NOT allowed to access, based on their
+     * connected tags. An empty array means the user may stand there. The Woka Y offset is applied, so "inside"
+     * means the same thing as for the area enter/leave events (the Woka feet).
+     */
+    public getForbiddenAreasOnPosition(position: { x: number; y: number }, userConnectedTags: string[]): AreaData[] {
+        return this.getAreasOnPosition(position, this.areasPositionOffsetY).filter(
+            (area) => !this.hasAreaAccess(area, userConnectedTags),
+        );
+    }
+
     public isOverlappingArea(areaId: string): boolean {
         const area = this.getArea(areaId);
         if (area === undefined) {

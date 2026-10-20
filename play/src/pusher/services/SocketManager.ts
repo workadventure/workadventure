@@ -250,6 +250,7 @@ export class SocketManager implements ZoneEventListener {
             const connectToRoomMessage: ConnectToRoomMessage = {
                 roomId: socketData.roomId,
                 tag: socketData.tags,
+                canEdit: socketData.canEdit,
                 lastCommandId: socketData.lastCommandId ?? "", // TODO: turn this into an optional field
             };
 
