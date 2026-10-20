@@ -778,6 +778,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * announced on, but livekit-client keeps the paused flag of the tracks we paused, so pauseUpstream() does nothing:
      * the room would get a camera or microphone that is turned off, or the live microphone of a podium attendee.
      * Resuming then pausing takes the track off the new sender and announces it muted again.
+     *
+     * TODO: remove this workaround once https://github.com/livekit/client-sdk-js/pull/2162 is released and we upgrade.
      */
     private handleLocalTrackPublished(publication: LocalTrackPublication) {
         const track = publication.track;
