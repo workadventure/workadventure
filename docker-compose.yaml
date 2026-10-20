@@ -81,7 +81,7 @@ services:
       OPENID_CLIENT_SECRET: authorization-code-client-secret
       OPENID_CLIENT_ISSUER: http://oidc.workadventure.localhost
       OPENID_PROFILE_SCREEN_PROVIDER: ${OPENID_PROFILE_SCREEN_PROVIDER:-}
-      OPENID_SCOPE: profile openid email tags-scope
+      OPENID_SCOPE: profile openid email tags-scope offline_access
       OPENID_PROMPT: ${OPENID_PROMPT:-}
       OPENID_USERNAME_CLAIM: ${OPENID_USERNAME_CLAIM:-}
       OPENID_LOCALE_CLAIM: ${OPENID_LOCALE_CLAIM:-}
