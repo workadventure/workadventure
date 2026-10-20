@@ -37,8 +37,54 @@
         }
     });
 
-    // Apply the selected output device as soon as the element exists, even before a stream is attached: the attach
-    // below joins this very request.
+    let lastRequestedDeviceId: string | undefined;
+
+    async function safeSetSinkId(deviceId: string, el: HTMLAudioElement) {
+        if (destroyed) {
+            return false;
+        }
+        if (lastRequestedDeviceId === deviceId) {
+            return true;
+        }
+        if (typeof el.setSinkId !== "function") {
+            return false;
+        }
+        lastRequestedDeviceId = deviceId;
+        try {
+            debug("Setting output device to ", deviceId);
+            await el.setSinkId(deviceId);
+            debug("Output device set to ", deviceId);
+            return true;
+        } catch (e) {
+            // Not applied: the next request for this device must call setSinkId() again, not report success.
+            // Unless a newer request already replaced it.
+            if (lastRequestedDeviceId === deviceId) {
+                lastRequestedDeviceId = undefined;
+            }
+            if (destroyed) {
+                return false;
+            }
+
+            Sentry.captureException(e);
+            if (e instanceof DOMException && e.name === "AbortError") {
+                // An error occurred while setting the sinkId. Let's fall back to default.
+                console.warn("Error setting the audio output device. We fallback to default.");
+
+                try {
+                    lastRequestedDeviceId = "";
+                    await el.setSinkId("");
+                } catch (e) {
+                    console.error("Error resetting the audio output device: ", e);
+                }
+
+                onselectoutputaudiodeviceerror?.();
+                return false;
+            }
+            console.error("Error setting the audio output device: ", e);
+            return false;
+        }
+    }
+
     $effect(() => {
         const el = audioElement;
         const deviceId = outputDeviceId;

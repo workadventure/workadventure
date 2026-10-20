@@ -42,8 +42,6 @@ describe("AudioStream output device", () => {
         flushSync();
         outputDevice.set("headset");
         flushSync();
-        // Requests on an element are queued, so setSinkId() runs a microtask later
-        await flush();
 
         expect(setSinkId).toHaveBeenCalledTimes(2);
         expect(setSinkId).toHaveBeenLastCalledWith("headset");
