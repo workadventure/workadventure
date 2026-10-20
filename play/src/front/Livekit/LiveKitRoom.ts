@@ -348,6 +348,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      * clones the camera again: replaceTrack() and resumeUpstream() keep sending that first clone. After a camera
      * off/on, those subscribers got the camera of before, still captured by the clone, or nothing once it had ended
      * (a camera behind a background effect). Do what restartTrack() does.
+     *
+     * Upstream fix: https://github.com/livekit/client-sdk-js/pull/2152. Once a livekit-client release includes it,
+     * remove this, stopBackupCodecTracks() and their calls.
      */
     private async cloneCameraForBackupCodecs(
         cameraTrack: LocalVideoTrack,
