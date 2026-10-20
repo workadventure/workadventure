@@ -12,6 +12,7 @@ import {
     OPID_LOCALE_CLAIM,
     OPID_SCOPE,
     OPID_PROMPT,
+    OPID_ACCESS_TYPE,
     SECRET_KEY,
     OPID_TAGS_CLAIM,
 } from "../enums/EnvironmentVariable";
@@ -98,6 +99,7 @@ class OpenIDClient {
             return client.authorizationUrl({
                 scope: OPID_SCOPE,
                 prompt: OPID_PROMPT,
+                access_type: OPID_ACCESS_TYPE,
                 state: state,
                 //nonce: nonce,
                 playUri,
@@ -123,6 +125,7 @@ class OpenIDClient {
         email: string;
         sub: string;
         access_token: string;
+        encrypted_refresh_token: string | undefined;
         username: string;
         locale: string;
         matrix_url: string | undefined;
@@ -165,9 +168,10 @@ class OpenIDClient {
                             email: res.email ?? "",
                             sub: res.sub,
                             access_token: tokenSet.access_token ?? "",
-                            username: res[OPID_USERNAME_CLAIM] as string,
-                            locale: res[OPID_LOCALE_CLAIM] as string,
-                            tags: res[OPID_TAGS_CLAIM] as string[],
+                            encrypted_refresh_token: tokenSet.refresh_token
+                                ? this.encrypt(tokenSet.refresh_token)
+                                : undefined,
+                            ...userClaims(res),
                             matrix_url: res.matrix_url as string | undefined,
                             matrix_identity_provider: res.matrix_identity_provider as string | undefined,
                         };
@@ -176,12 +180,18 @@ class OpenIDClient {
         });
     }
 
-    public logoutUser(token: string): Promise<void> {
-        return this.initClient().then((client) => {
-            if (!client.metadata.revocation_endpoint) {
-                return;
-            }
-            return client.revoke(token);
+    public async logoutUser(token: string, encryptedRefreshToken?: string): Promise<void> {
+        const client = await this.initClient();
+        if (!client.metadata.revocation_endpoint) {
+            return;
+        }
+        await client.revoke(token);
+
+        if (!encryptedRefreshToken) {
+            return;
+        }
+        await client.revoke(this.decrypt(encryptedRefreshToken), "refresh_token").catch((err) => {
+            console.warn("Could not revoke the OpenID Connect refresh token on logout", err);
         });
     }
 
@@ -189,6 +199,51 @@ class OpenIDClient {
         return this.initClient().then((client) => {
             return client.userinfo(token);
         });
+    }
+
+    public async checkTokenAuthWithRefresh(
+        accessToken: string,
+        encryptedRefreshToken: string | undefined,
+    ): Promise<{
+        userInfo: IntrospectionResponse;
+        claims: ReturnType<typeof userClaims>;
+        accessToken: string;
+        encryptedRefreshToken: string | undefined;
+        refreshed: boolean;
+    }> {
+        try {
+            const userInfo = await this.checkTokenAuth(accessToken);
+            return {
+                userInfo,
+                claims: userClaims(userInfo),
+                accessToken,
+                encryptedRefreshToken,
+                refreshed: false,
+            };
+        } catch (err) {
+            if (!encryptedRefreshToken || !isExpiredTokenError(err)) {
+                throw err;
+            }
+
+            const client = await this.initClient();
+            const tokenSet = await client.refresh(this.decrypt(encryptedRefreshToken));
+            if (!tokenSet.access_token) {
+                throw new Error("The OpenID Connect provider returned no access token when refreshing", {
+                    cause: err,
+                });
+            }
+
+            const userInfo = await this.checkTokenAuth(tokenSet.access_token);
+            return {
+                userInfo,
+                claims: userClaims(userInfo),
+                accessToken: tokenSet.access_token,
+                encryptedRefreshToken: tokenSet.refresh_token
+                    ? this.encrypt(tokenSet.refresh_token)
+                    : encryptedRefreshToken,
+                refreshed: true,
+            };
+        }
     }
 
     private encrypt(text: string): string {
@@ -218,6 +273,22 @@ class OpenIDClient {
         decrypted = Buffer.concat([decrypted, decipher.final()]);
         return decrypted.toString();
     }
+}
+
+function userClaims(userInfo: Record<string, unknown>) {
+    return {
+        username: userInfo[OPID_USERNAME_CLAIM] as string,
+        locale: userInfo[OPID_LOCALE_CLAIM] as string,
+        tags: userInfo[OPID_TAGS_CLAIM] as string[],
+    };
+}
+
+function isExpiredTokenError(err: unknown): boolean {
+    if (typeof err !== "object" || err === null) {
+        return false;
+    }
+    const { error, response } = err as { error?: unknown; response?: { statusCode?: unknown } };
+    return error === "invalid_token" || error === "invalid_grant" || response?.statusCode === 401;
 }
 
 export const openIDClient = new OpenIDClient();
