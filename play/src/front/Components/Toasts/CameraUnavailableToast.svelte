@@ -28,7 +28,7 @@
         return $LL.camera.unavailable.noImage();
     });
 
-    // Never switched to behind the user's back: offered here
+    // A track that ended while its camera stays listed is not replaced on our own: the other cameras are offered here
     let otherCameras = $derived(
         ($cameraListStore ?? []).filter(
             (camera) => camera.deviceId !== ($disconnectedCameraStore?.deviceId ?? $usedCameraDeviceIdStore),
