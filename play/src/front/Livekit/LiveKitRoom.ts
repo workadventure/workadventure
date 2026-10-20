@@ -293,6 +293,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
             if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
+                await this.cloneCameraForBackupCodecs(this.localCameraTrack, videoTrack);
             }
             return;
         }
@@ -331,6 +332,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             await this.localCameraTrack.replaceTrack(videoTrack, {
                 userProvidedTrack: true,
             });
+            await this.cloneCameraForBackupCodecs(this.localCameraTrack, videoTrack);
 
             // livekit-client mutes a camera track that ended (unplugged, killed by the system), and replaceTrack()
             // keeps the new one disabled while muted: we never mute the camera ourselves, the new track is the cure.
@@ -341,6 +343,40 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }
+        }
+    }
+
+    /**
+     * The subscribers that cannot decode the camera's codec (VP9) get the backup codec (VP8), which livekit-client
+     * sends from its own clone of the camera track, taken when the first of them arrived. Only its restartTrack()
+     * clones the camera again: replaceTrack() and resumeUpstream() keep sending that first clone. After a camera
+     * off/on, those subscribers got the camera of before, still captured by the clone, or nothing once it had ended
+     * (a camera behind a background effect). Do what restartTrack() does.
+     *
+     * Upstream fix: https://github.com/livekit/client-sdk-js/pull/2152. Once a livekit-client release includes it,
+     * remove this, stopBackupCodecTracks() and their calls.
+     */
+    private async cloneCameraForBackupCodecs(
+        cameraTrack: LocalVideoTrack,
+        videoTrack: MediaStreamTrack,
+    ): Promise<void> {
+        this.stopBackupCodecTracks(cameraTrack);
+        await Promise.all(
+            Array.from(cameraTrack.simulcastCodecs.values(), async (backup) => {
+                backup.mediaStreamTrack = videoTrack.clone();
+                if (backup.sender && backup.sender.transport?.state !== "closed") {
+                    await backup.sender.replaceTrack(backup.mediaStreamTrack);
+                }
+            }),
+        );
+    }
+
+    /**
+     * A clone of the camera keeps it on, even once the camera track itself is stopped.
+     */
+    private stopBackupCodecTracks(cameraTrack: LocalVideoTrack): void {
+        for (const backup of cameraTrack.simulcastCodecs.values()) {
+            backup.mediaStreamTrack.stop();
         }
     }
 
@@ -559,6 +595,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 if (!this.localCameraTrack || !this.localParticipant) {
                     return;
                 }
+                // livekit-client forgets the backup codecs' clones on unpublish, without stopping them
+                this.stopBackupCodecTracks(this.localCameraTrack);
                 await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
                 this.cameraAnalyticsUnsubscribe?.();
                 this.cameraAnalyticsUnsubscribe = undefined;
@@ -745,6 +783,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (this.localCameraTrack) {
             await this.localCameraTrack.pauseUpstream();
+            // Or the camera stays on once turned off. cloneCameraForBackupCodecs() clones it again on resume.
+            this.stopBackupCodecTracks(this.localCameraTrack);
             // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
             // Instead, we just pause the upstream of the track when unpublishing, and "replaceTrack" when publishing a new one.
             // await this.localParticipant?.unpublishTrack(this.localCameraTrack, false);
