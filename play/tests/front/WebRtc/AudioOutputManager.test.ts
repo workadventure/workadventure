@@ -1,24 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Readable } from "svelte/store";
-import { applySinkId, playOnSelectedOutput, pendingSinkRequests } from "../../../src/front/WebRtc/AudioOutputManager";
-
-// The real store ignores every selection where livekit-client says the browser cannot choose the output, jsdom included
-const selectedSpeaker = vi.hoisted(() => ({ deviceId: undefined as string | undefined }));
-vi.mock("../../../src/front/Stores/AudioOutputStore", () => ({
-    speakerSelectedStore: {
-        subscribe: (run: (deviceId: string | undefined) => void) => {
-            run(selectedSpeaker.deviceId);
-            return () => {};
-        },
-    } satisfies Readable<string | undefined>,
-}));
+import { applySinkId } from "../../../src/front/WebRtc/AudioOutputManager";
 
 /** A media element whose setSinkId() calls are settled by the test. */
 function fakeElement() {
     const calls: { deviceId: string; resolve: () => void; reject: (e: unknown) => void }[] = [];
     const el = {
         sinkId: "",
-        play: vi.fn(() => Promise.resolve()),
         setSinkId: (deviceId: string) =>
             new Promise<void>((resolve, reject) => {
                 const settle = () => {
@@ -28,12 +15,7 @@ function fakeElement() {
                 calls.push({ deviceId, resolve: settle, reject });
             }),
     };
-    return {
-        el: el as unknown as HTMLMediaElement,
-        play: el.play,
-        calls,
-        requested: () => calls.map((call) => call.deviceId),
-    };
+    return { el: el as unknown as HTMLMediaElement, calls, requested: () => calls.map((call) => call.deviceId) };
 }
 
 const flush = () => vi.advanceTimersByTimeAsync(0);
@@ -73,20 +55,8 @@ describe("applySinkId", () => {
         await flush();
         expect(requested()).toEqual(["headset-a", ""]);
         calls[1].resolve();
-        expect(await request).toBe("fell-back");
+        await request;
         expect(el.sinkId).toBe("");
-    });
-
-    it("joins a request for the device already being requested", async () => {
-        const { el, calls, requested } = fakeElement();
-        const first = applySinkId(el, "headset-a");
-        const second = applySinkId(el, "headset-a");
-        expect(second).toBe(first);
-        await flush();
-        expect(requested()).toEqual(["headset-a"]);
-
-        calls[0].resolve();
-        expect(await second).toBe("applied");
     });
 
     it("does not wait forever on a hung request, and re-applies the newer device if it settles late", async () => {
@@ -104,56 +74,5 @@ describe("applySinkId", () => {
         await Promise.all(requests);
         await flush();
         expect(el.sinkId).toBe("headset-b");
-    });
-
-    it("exposes the pending requests of an element until they settled", async () => {
-        const { el, calls } = fakeElement();
-        expect(pendingSinkRequests(el)).toBeUndefined();
-
-        applySinkId(el, "headset-a").catch(() => {});
-        const pending = pendingSinkRequests(el);
-        const settled = vi.fn();
-        pending?.then(settled).catch(() => {});
-        await flush();
-        expect(pending).toBeDefined();
-        expect(settled).not.toHaveBeenCalled();
-
-        calls[0].resolve();
-        await flush();
-        expect(settled).toHaveBeenCalledOnce();
-        expect(pendingSinkRequests(el)).toBeUndefined();
-    });
-});
-
-describe("playOnSelectedOutput", () => {
-    beforeEach(() => {
-        vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-        selectedSpeaker.deviceId = undefined;
-        vi.useRealTimers();
-    });
-
-    it("plays only once the selected output is applied", async () => {
-        selectedSpeaker.deviceId = "headset";
-        const { el, play, calls, requested } = fakeElement();
-        const playing = playOnSelectedOutput(el);
-        await flush();
-        expect(requested()).toEqual(["headset"]);
-        expect(play).not.toHaveBeenCalled();
-
-        calls[0].resolve();
-        await playing;
-        expect(play).toHaveBeenCalledOnce();
-    });
-
-    // WebKit only plays within the user gesture: nothing may be awaited before play() where no output is chosen
-    it("plays synchronously when no output is selected", async () => {
-        const { el, play, requested } = fakeElement();
-        const playing = playOnSelectedOutput(el);
-        expect(play).toHaveBeenCalledOnce();
-        expect(requested()).toEqual([]);
-        await playing;
     });
 });

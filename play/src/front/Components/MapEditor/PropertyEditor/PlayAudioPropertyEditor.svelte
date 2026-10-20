@@ -8,8 +8,6 @@
     import InputRadio from "../../Input/InputRadio.svelte";
     import { IconFileMusic } from "../../Icons";
     import { audioOutput } from "../../../WebRtc/AudioOutputManager";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
-    import { resolveSoundUrl } from "../../../Utils/UrlPlaceholderResolver";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import FileUpload from "./FileUpload/FileUpload.svelte";
 

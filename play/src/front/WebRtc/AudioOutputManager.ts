@@ -1,101 +1,77 @@
 import Debug from "debug";
 import type { Action } from "svelte/action";
-import { get } from "svelte/store";
-import type { Unsubscriber } from "svelte/store";
 import { speakerSelectedStore } from "../Stores/AudioOutputStore";
-import { localUserStore } from "../Connection/LocalUserStore";
 
 const debug = Debug("AudioOutput");
 
 /**
- * setSinkId() can take seconds (a Bluetooth headset switching profile) or never settle. Past this delay, what waits for
- * it stops waiting: the next request for the same element, a sound about to play, a stream about to be attached.
+ * setSinkId() can take seconds (a Bluetooth headset switching profile) or never settle. Past this delay, the next
+ * request for the same element stops waiting for it.
  */
-export const SINK_ID_TIMEOUT_MS = 2_000;
-
-/** What setSinkId() routes: a media element, or an AudioContext (Chrome 110+), for sound that never goes through one. */
-type AudioSink = HTMLMediaElement | AudioContext;
-
-/** How a request ended. "fell-back": the device could not be switched to, the element plays on the system default. */
-export type SinkOutcome = "applied" | "fell-back" | "failed";
-
-interface SinkRequest {
-    deviceId: string;
-    outcome: Promise<SinkOutcome>;
-    settled: boolean;
-    /** When the next request may start: once this one settled, or SINK_ID_TIMEOUT_MS after it started. */
-    turn: Promise<void>;
-}
+const SINK_ID_TIMEOUT_MS = 2_000;
 
 /**
- * Per element: its last request. setSinkId() is asynchronous, so two calls racing on the same element could settle in
- * reverse order and leave it on the wrong device: requests run one after the other.
+ * Per element: the device last requested, and the tail of its request queue. setSinkId() is asynchronous, so two calls
+ * racing on the same element could settle in reverse order and leave it on the wrong device.
  */
-const sinks = new WeakMap<AudioSink, SinkRequest>();
-
-const delay = (ms: number) =>
-    new Promise<void>((resolve) => {
-        setTimeout(resolve, ms);
-    });
+const sinks = new WeakMap<HTMLMediaElement, { deviceId: string; queue: Promise<void> }>();
 
 /**
- * Routes a media element or an AudioContext to an audio output ("" is the system default). Requests on the same element
- * run in order, and a request for the device already being requested joins it. Resolves once the request settled,
- * which can take seconds or never happen (see SINK_ID_TIMEOUT_MS). Never rejects.
+ * Routes a media element to an audio output ("" is the system default). Requests on the same element are applied in
+ * order. The promise settles once this request is applied, failed or timed out, and never rejects.
  */
-export function applySinkId(el: AudioSink, deviceId: string): Promise<SinkOutcome> {
-    const previous = sinks.get(el);
-    if (previous?.deviceId === deviceId && !previous.settled) {
-        return previous.outcome;
-    }
+export function applySinkId(el: HTMLMediaElement, deviceId: string): Promise<void> {
     if (typeof el.setSinkId !== "function") {
-        return Promise.resolve("failed");
+        return Promise.resolve();
     }
     const setSinkId = el.setSinkId.bind(el);
-
-    const start = previous?.turn ?? Promise.resolve();
-    const outcome: Promise<SinkOutcome> = start.then(() =>
-        el.sinkId === deviceId ? "applied" : setSinkIdOrFallBack(el, setSinkId, deviceId),
-    );
-    const request: SinkRequest = {
-        deviceId,
-        outcome,
-        settled: false,
-        turn: start.then(() => Promise.race([outcome.then(() => undefined), delay(SINK_ID_TIMEOUT_MS)])),
-    };
-    sinks.set(el, request);
-
-    outcome
-        .then(() => {
-            request.settled = true;
-            // A newer request that went ahead (this one took too long) settled first: this one left the element on
-            // its older device.
-            const latest = sinks.get(el);
-            if (latest !== undefined && latest !== request && latest.settled) {
-                debug("setSinkId(%s) settled late, applying %s again", deviceId, latest.deviceId);
-                return applySinkId(el, latest.deviceId);
-            }
-            return undefined;
-        })
-        .catch((e: unknown) => console.warn("Could not re-apply the audio output device", e));
-    return outcome;
+    const queue = (sinks.get(el)?.queue ?? Promise.resolve()).then(() => applyInTurn(el, setSinkId, deviceId));
+    sinks.set(el, { deviceId, queue });
+    return queue;
 }
 
-/** While requests for el are pending: a promise that resolves once they settled (never rejects). Otherwise undefined. */
-export function pendingSinkRequests(el: AudioSink): Promise<void> | undefined {
-    const request = sinks.get(el);
-    return request && !request.settled ? request.outcome.then(() => undefined) : undefined;
+async function applyInTurn(
+    el: HTMLMediaElement,
+    setSinkId: (sinkId: string) => Promise<void>,
+    deviceId: string,
+): Promise<void> {
+    if (el.sinkId === deviceId) {
+        return;
+    }
+
+    const request = setSinkIdOrFallBack(el, setSinkId, deviceId);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    const settled = await Promise.race([
+        request.then(() => true),
+        new Promise<boolean>((resolve) => {
+            timeout = setTimeout(() => resolve(false), SINK_ID_TIMEOUT_MS);
+        }),
+    ]);
+    clearTimeout(timeout);
+
+    if (!settled) {
+        debug("setSinkId(%s) is taking too long, moving on to the next request", deviceId);
+        // If it settles after a newer request went ahead, it leaves the element on this older device.
+        request
+            .then(() => {
+                const latest = sinks.get(el)?.deviceId;
+                if (latest !== undefined && latest !== deviceId) {
+                    return applySinkId(el, latest);
+                }
+                return undefined;
+            })
+            .catch((e: unknown) => console.warn("Could not re-apply the audio output device", e));
+    }
 }
 
 async function setSinkIdOrFallBack(
-    el: AudioSink,
+    el: HTMLMediaElement,
     setSinkId: (sinkId: string) => Promise<void>,
     deviceId: string,
-): Promise<SinkOutcome> {
+): Promise<void> {
     try {
         await setSinkId(deviceId);
         debug("Audio output set to %s", deviceId);
-        return "applied";
     } catch (e) {
         // Not reported to Sentry: the element keeps playing on its current output, and an embedding page without the
         // speaker-selection permission would make every element fail on every selection change.
@@ -108,59 +84,23 @@ async function setSinkIdOrFallBack(
             } catch (fallbackError) {
                 console.warn("Could not reset the audio output device", fallbackError);
             }
-            return "fell-back";
+            return;
         }
         console.warn("Could not set the audio output device", e);
-        return "failed";
     }
 }
 
 /**
- * Keeps a media element or an AudioContext on the audio output selected in the settings, until the returned function
- * is called.
- */
-export function bindAudioOutput(el: AudioSink): Unsubscriber {
-    return speakerSelectedStore.subscribe((deviceId) => {
-        // undefined: nothing selected, or a browser where we never choose the output (see speakerSelectionSupported)
-        if (deviceId !== undefined) {
-            applySinkId(el, deviceId).catch((e: unknown) => console.warn("Could not set the audio output device", e));
-        }
-    });
-}
-
-/**
- * {@link bindAudioOutput} for an element of a template: `<audio use:audioOutput>`.
+ * Keeps a media element on the audio output selected in the settings: `<audio use:audioOutput>`.
  *
  * Only for elements playing a `src`: a MediaStream in `srcObject` must not be attached before setSinkId() resolved
  * (crbug 971947), which AudioStream.svelte handles itself.
  */
-export const audioOutput: Action<HTMLMediaElement> = (el) => ({ destroy: bindAudioOutput(el) });
-
-/**
- * Plays an element not rendered by a template (a one-off sound) on the audio output selected in the settings. The sink
- * is applied before play(), waiting at most SINK_ID_TIMEOUT_MS for it. Rejects like play() does.
- */
-export async function playOnSelectedOutput(el: HTMLMediaElement): Promise<void> {
-    const deviceId = get(speakerSelectedStore);
-    // undefined: play() stays synchronous, within the user gesture that triggered it (WebKit requires one)
-    if (deviceId !== undefined) {
-        await Promise.race([applySinkId(el, deviceId), delay(SINK_ID_TIMEOUT_MS)]);
-    }
-    await el.play();
-}
-
-let speakerTestSound: HTMLAudioElement | undefined;
-
-/**
- * Plays the bubble sound on the selected audio output, for the user to check it. One element per sound, so that a
- * click while it plays does not stack another one.
- */
-export function playSpeakerTestSound(): Promise<void> {
-    // Not the exact URL the GameScene preloads: Firefox hands this element's cached response to Phaser's XHR, which
-    // rejects it, and the game stops on "Cannot load .../webrtc-in-ding.mp3" (NETWORK_ERROR).
-    const url = `/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3?speaker-test`;
-    if (speakerTestSound?.getAttribute("src") !== url) {
-        speakerTestSound = new Audio(url);
-    }
-    return playOnSelectedOutput(speakerTestSound);
-}
+export const audioOutput: Action<HTMLMediaElement> = (el) => ({
+    destroy: speakerSelectedStore.subscribe((deviceId) => {
+        // undefined: nothing selected, or a browser where we never choose the output (see speakerSelectionSupported)
+        if (deviceId !== undefined) {
+            applySinkId(el, deviceId).catch((e: unknown) => console.warn("Could not set the audio output device", e));
+        }
+    }),
+});
