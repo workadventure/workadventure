@@ -47,6 +47,14 @@
         return sinkRequest?.deviceId === deviceId && sinkRequest.el === el;
     }
 
+    // A failed request was not applied: the next request for this device must call setSinkId() again, not reuse
+    // this one. Unless a newer request already replaced it.
+    function forgetSinkRequest(deviceId: string, el: HTMLAudioElement): void {
+        if (isCurrentSinkRequest(deviceId, el)) {
+            sinkRequest = undefined;
+        }
+    }
+
     function ensureSinkId(deviceId: string, el: HTMLAudioElement): Promise<boolean> {
         if (!sinkRequest || !isCurrentSinkRequest(deviceId, el)) {
             sinkRequest = { deviceId, el, promise: safeSetSinkId(deviceId, el) };
@@ -67,11 +75,6 @@
             debug("Output device set to ", deviceId);
             return true;
         } catch (e) {
-            // Not applied: the next request for this device must call setSinkId() again, not report success.
-            // Unless a newer request already replaced it.
-            if (lastRequestedDeviceId === deviceId) {
-                lastRequestedDeviceId = undefined;
-            }
             if (destroyed) {
                 return false;
             }
@@ -89,19 +92,16 @@
 
                 try {
                     await el.setSinkId("");
-                    // The element is back on the default output: forget the failed request so that the same
-                    // device can be requested again later.
-                    if (isCurrentSinkRequest(deviceId, el)) {
-                        sinkRequest = undefined;
-                    }
                 } catch (e) {
                     console.error("Error resetting the audio output device: ", e);
                 }
+                forgetSinkRequest(deviceId, el);
 
                 onselectoutputaudiodeviceerror?.();
                 return false;
             }
             console.error("Error setting the audio output device: ", e);
+            forgetSinkRequest(deviceId, el);
             return false;
         }
     }
