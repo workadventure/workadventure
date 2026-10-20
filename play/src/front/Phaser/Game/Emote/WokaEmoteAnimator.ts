@@ -1,6 +1,6 @@
 import * as Phaser from "phaser";
-import type { WokaEmoteDefinition, WokaEmoteParticleSpec } from "./WokaEmoteCatalog";
-import { sampleWokaEmote } from "./WokaEmoteCatalog";
+import type { WokaEmoteDefinition, WokaEmoteParticleSpec, WokaEmotePropSpec } from "./WokaEmoteCatalog";
+import { mirrorWokaEmoteState, sampleWokaEmote } from "./WokaEmoteCatalog";
 import { FEET_OFFSET, feetAnchoredOffset } from "./WokaEmoteGeometry";
 import { buildGlyphSvg } from "./WokaEmoteGlyphs";
 
@@ -37,13 +37,16 @@ export class WokaEmoteAnimator {
     private spawnCount = 0;
     private readonly firedBatches = new Set<string>();
     private ground: Graphics | undefined;
+    private readonly props: { spec: WokaEmotePropSpec; element: DOMElement }[] = [];
 
     constructor(
         private readonly scene: Phaser.Scene & { markDirty: () => void },
         private readonly sprites: Map<string, Sprite>,
         private readonly container: Container,
-        public readonly definition: WokaEmoteDefinition,
+        public readonly definition: WokaEmoteDefinition<string>,
         private readonly onComplete: () => void,
+        /** Plays the recipe the other way round: what came from the left comes from the right. */
+        private readonly mirrored = false,
     ) {
         this.onSceneUpdate = (_time: number, delta: number) => this.step(delta);
     }
@@ -54,6 +57,7 @@ export class WokaEmoteAnimator {
             sprite.anims.stop();
         }
         this.createGround();
+        this.createProps();
         this.step(0);
         this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.onSceneUpdate);
     }
@@ -67,7 +71,9 @@ export class WokaEmoteAnimator {
         this.emitParticles(previous, this.elapsed);
         this.moveParticles(delta);
         this.stepGround();
-        const state = sampleWokaEmote(this.definition, this.elapsed);
+        this.stepProps();
+        const sampled = sampleWokaEmote(this.definition, this.elapsed);
+        const state = this.mirrored ? mirrorWokaEmoteState(sampled) : sampled;
         const offset = feetAnchoredOffset(state);
 
         for (const sprite of this.sprites.values()) {
@@ -75,6 +81,7 @@ export class WokaEmoteAnimator {
             sprite.setPosition(offset.x, offset.y);
             sprite.setScale(state.scaleX, state.scaleY);
             sprite.setAngle(state.angle);
+            sprite.setAlpha(state.alpha);
         }
         // The scene only renders when something marked it dirty, and it does not track animations
         // of sprites living inside a container.
@@ -113,15 +120,50 @@ export class WokaEmoteAnimator {
         // rotates, so setAngle() would tilt the flattened ellipse instead of spinning it flat —
         // the turn is baked into the path and the transform is left to do the squashing alone.
         this.ground.clear();
-        this.ground.lineStyle(spec.thickness ?? 1, spec.color, 1);
-        for (const [from, to] of spec.arcs) {
-            this.ground.beginPath();
-            this.ground.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from + turn), Phaser.Math.DegToRad(to + turn));
-            this.ground.strokePath();
+        this.ground.setX((this.mirrored ? -1 : 1) * (state.x ?? 0));
+        if (spec.fill) {
+            this.ground.fillStyle(spec.color, 1);
+            this.ground.fillCircle(0, 0, spec.radius);
+        } else {
+            this.ground.lineStyle(spec.thickness ?? 1, spec.color, 1);
+            for (const [from, to] of spec.arcs) {
+                this.ground.beginPath();
+                this.ground.arc(0, 0, spec.radius, Phaser.Math.DegToRad(from + turn), Phaser.Math.DegToRad(to + turn));
+                this.ground.strokePath();
+            }
         }
         const size = state.scale ?? 1;
         this.ground.setScale(size, size * (spec.flatten ?? 0.42));
         this.ground.setAlpha(state.alpha ?? 1);
+    }
+
+    private createProps(): void {
+        for (const spec of this.definition.props ?? []) {
+            const span = document.createElement("span");
+            // Built from the glyph tables alone, like the particles.
+            span.innerHTML = buildGlyphSvg(spec.glyph);
+            const element = new DOMElement(this.scene, 0, 0, span, "z-index:10;pointer-events:none;");
+            // Anchored by the bottom centre, so a prop stands on the floor the way the Woka does.
+            element.setOrigin(0.5, 1);
+            element.setVisible(false);
+            this.container.add(element);
+            this.props.push({ spec, element });
+        }
+    }
+
+    private stepProps(): void {
+        const elapsed = Math.min(Math.max(this.elapsed, 0), this.definition.duration);
+        for (const { spec, element } of this.props) {
+            const state = spec.sample(elapsed);
+            element.setVisible(state !== null);
+            if (!state) continue;
+            const side = this.mirrored ? -1 : 1;
+            element.setPosition(side * state.x, FEET_OFFSET + state.y);
+            element.setAngle(side * (state.angle ?? 0));
+            // A negative scale flips the drawing too: the boot faces the Woka from either side.
+            element.setScale(side * (state.scaleX ?? 1), state.scaleY ?? state.scaleX ?? 1);
+            element.setAlpha(state.alpha ?? 1);
+        }
     }
 
     private emitParticles(from: number, to: number): void {
@@ -192,12 +234,17 @@ export class WokaEmoteAnimator {
             particle.element.destroy();
         }
         this.particles.length = 0;
+        for (const { element } of this.props) {
+            element.destroy();
+        }
+        this.props.length = 0;
         this.ground?.destroy();
         this.ground = undefined;
         for (const sprite of this.sprites.values()) {
             sprite.setPosition(0, 0);
             sprite.setScale(1, 1);
             sprite.setAngle(0);
+            sprite.setAlpha(1);
         }
         this.scene.markDirty();
     }

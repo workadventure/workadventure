@@ -504,7 +504,7 @@ export class SocketManager {
 
     private onClientLeave(thing: Movable, currentZone: ZonePosition, newZone: Zone | null, listener: RoomSocket) {
         if (thing instanceof User) {
-            this.emitUserLeftEvent(listener, currentZone, thing.id, newZone);
+            this.emitUserLeftEvent(listener, currentZone, thing.id, newZone, thing.ejection);
         } else if (thing instanceof Group) {
             this.emitDeleteGroupEvent(listener, currentZone, thing.getId(), newZone);
         } else {
@@ -617,6 +617,7 @@ export class SocketManager {
         currentZone: ZonePosition,
         userId: number,
         newZone: Zone | null,
+        ejection: User["ejection"],
     ): void {
         emitZoneMessage(
             SocketManager.toZoneMessage(currentZone, {
@@ -624,6 +625,7 @@ export class SocketManager {
                 userLeftZoneMessage: {
                     userId,
                     toZone: SocketManager.toProtoZone(newZone),
+                    ejection,
                 },
             }),
             client,
@@ -1075,6 +1077,7 @@ export class SocketManager {
         recipientUuid: string,
         message: string,
         type: "banned" | "kicked" = "banned",
+        moderatorUuid?: string,
     ): Promise<void> {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
@@ -1106,7 +1109,20 @@ export class SocketManager {
             return;
         }
 
+        // The ejection comes from the moderator, when they are in the room: from their side, and from their
+        // own Woka when they stand within a conversation bubble's reach. A moderator removing themselves
+        // has no one to come from. Back-office orders come from either side, at random.
+        const [moderator] = moderatorUuid && moderatorUuid !== recipientUuid ? room.getUsersByUuid(moderatorUuid) : [];
         for (const recipient of recipients) {
+            // The players around see the Woka being thrown out rather than vanishing.
+            recipient.ejection = {
+                type,
+                fromLeft: moderator ? moderator.getPosition().x < recipient.getPosition().x : Math.random() < 0.5,
+                moderatorUserId: moderator?.id,
+                melee: moderator !== undefined && GameRoom.computeDistance(moderator, recipient) <= MINIMUM_DISTANCE,
+                // Drawn apart from the side: every player derives the same variant of the scene from it.
+                roll: Math.floor(Math.random() * 2 ** 32),
+            };
             // Let's leave the room now.
             room.leave(recipient);
 

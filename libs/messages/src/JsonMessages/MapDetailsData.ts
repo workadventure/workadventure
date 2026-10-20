@@ -254,6 +254,11 @@ export const isMapDetailsData = z.object({
       "Whether the users can communicate via 'comics-like' conversation bubbles.",
     example: true,
   }),
+  enableEjectionAnimations: extendApi(z.boolean().optional(), {
+    description:
+      "Whether the other players see an animation (and hear a sound) when a moderator kicks or bans a user. Enabled when absent.",
+    example: true,
+  }),
   enableIssueReport: extendApi(z.boolean().optional(), {
     description:
       "Whether the feature 'issue report' is enabled or not on this room",
