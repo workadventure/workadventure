@@ -20,7 +20,7 @@ const settle = () =>
         setTimeout(resolve, 0);
     });
 
-const harness = async (worldRecorded: boolean | (() => boolean) = true) => {
+const harness = async (roomRecorded = true) => {
     let egressCount = 0;
     const state = {
         startTrackEgress: vi.fn((_spaceUserId: string, _trackSid: string, _filepath: string, _s3: unknown) =>
@@ -35,7 +35,7 @@ const harness = async (worldRecorded: boolean | (() => boolean) = true) => {
         { world: "org/world", getSpaceName: () => "org/world.bubble" },
         () => state as never,
         {
-            resolveWorld: typeof worldRecorded === "function" ? worldRecorded : () => Promise.resolve(worldRecorded),
+            resolveRoom: () => Promise.resolve(roomRecorded),
             writeManifest,
             nowMs: () => now,
             manifestDelayMs: 0,
@@ -53,14 +53,14 @@ describe("AutoRecorder", () => {
         const recorder = new AutoRecorder(
             { world: "org/world", getSpaceName: () => "org/world.bubble" },
             () => ({}) as never,
-            { resolveWorld: () => true },
+            { resolveRoom: () => true },
         );
 
         expect(recorder.resolve("https://play.example/@/org/world/office")).toBeUndefined();
         expect(recorder.isEnabled).toBe(true);
     });
 
-    it("records nothing in a world that is not recorded", async () => {
+    it("records nothing in a room that is not recorded", async () => {
         const { recorder, state } = await harness(false);
 
         recorder.microphonePublished(user("a"), microphone("TR_a"));
@@ -70,7 +70,7 @@ describe("AutoRecorder", () => {
         expect(state.startTrackEgress).not.toHaveBeenCalled();
     });
 
-    it("records each microphone once the meeting opens, in the meeting's folder, named after a hash of the speaker", async () => {
+    it("records each microphone once the meeting opens, in the meeting's folder, named after the speaker", async () => {
         const { recorder, state, tick } = await harness();
 
         recorder.microphonePublished(user("a"), microphone("TR_a"));
@@ -85,8 +85,9 @@ describe("AutoRecorder", () => {
             ["b", "TR_b"],
         ]);
         const files = state.startTrackEgress.mock.calls.map(([, , filepath]) => filepath);
-        expect(files[0]).toMatch(/^org_world\/office\/2026-10-09\/meeting-event-id\/[0-9a-f]{16}-\d+\.ogg$/);
-        expect(files[0]).not.toContain("uuid-a");
+        expect(files[0]).toBe(
+            `auto-recordings/org_world/office/2026-10-09/meeting-event-id/uuid-a-${OPENED_AT_MS}.ogg`,
+        );
         expect(files[1]).toContain(`-${OPENED_AT_MS + 5000}.ogg`);
     });
 
@@ -143,7 +144,7 @@ describe("AutoRecorder", () => {
 
         expect(writeManifest).toHaveBeenCalledTimes(1);
         const [key, manifest] = writeManifest.mock.calls[0];
-        expect(key).toBe("org_world/office/2026-10-09/meeting-event-id/manifest.json");
+        expect(key).toBe("auto-recordings/org_world/office/2026-10-09/meeting-event-id/manifest.json");
         expect(manifest).toMatchObject({
             meetingId: "meeting-event-id",
             kind: "bubble",
@@ -161,28 +162,6 @@ describe("AutoRecorder", () => {
                 },
             ],
         });
-    });
-
-    it("stops recording the meeting within a minute of its world no longer being recorded", async () => {
-        vi.useFakeTimers({ toFake: ["setInterval", "clearInterval"] });
-        try {
-            let recorded = true;
-            const { recorder, state, writeManifest } = await harness(() => recorded);
-            recorder.microphonePublished(user("a"), microphone("TR_a"));
-            recorder.sessionChanged(session());
-            await settle();
-
-            recorded = false;
-            vi.advanceTimersByTime(60_000);
-            await settle();
-
-            expect(state.stopEgress).toHaveBeenCalledWith("EG_1");
-            expect(writeManifest).toHaveBeenCalledOnce();
-            recorder.microphonePublished(user("b"), microphone("TR_b"));
-            expect(state.startTrackEgress).toHaveBeenCalledOnce();
-        } finally {
-            vi.useRealTimers();
-        }
     });
 
     it("writes no manifest for a meeting nobody spoke in", async () => {

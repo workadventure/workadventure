@@ -1,55 +1,61 @@
-import { createHmac } from "node:crypto";
 import * as Sentry from "@sentry/node";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import type { SetMicrophoneTrackQuery, SpaceUser } from "@workadventure/messages";
+import { isMapDetailsData, type MicrophoneTrackPublishedMessage, type SpaceUser } from "@workadventure/messages";
 import { S3Upload } from "livekit-server-sdk";
 import {
+    ADMIN_API_URL,
     AUTO_RECORDING_ENABLED,
-    AUTO_RECORDING_S3_BUCKET,
-    AUTO_RECORDING_SPEAKER_SECRET,
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
+    LIVEKIT_RECORDING_S3_BUCKET,
     LIVEKIT_RECORDING_S3_ENDPOINT,
     LIVEKIT_RECORDING_S3_REGION,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
 } from "../Enum/EnvironmentVariable";
 import { adminApi } from "../Services/AdminApi";
-import { getCapability } from "../Services/Capabilities";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { EgressFile, IAutoRecordableState, ICommunicationState } from "./Interfaces/ICommunicationState";
 import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy";
 import type { OpenedSession } from "./SessionAnalytics";
 
-const LIVEKIT_CREDENTIALS_CAPABILITY = "api/livekit/credentials";
-/** How long a world's answer is reused: every space's first join would call the admin otherwise. */
-const WORLD_FLAG_TTL_MS = 60_000;
-const worldFlags = new Map<string, { enabled: Promise<boolean>; value?: boolean; expiresAtMs: number }>();
+/** Where the automatic recordings go in the LiveKit recordings bucket, apart from the recordings users start. */
+const FOLDER = "auto-recordings";
+/** How long a room's answer is reused: every space's first join would call the admin otherwise. */
+const ROOM_FLAG_TTL_MS = 60_000;
+const roomFlags = new Map<string, { enabled: Promise<boolean>; value?: boolean; expiresAtMs: number }>();
 
 /**
- * Whether a world's spaces are recorded automatically. The admin answers per world, in its LiveKit credentials;
- * without an admin, AUTO_RECORDING_ENABLED applies to every world. Never without a bucket and a speaker secret,
- * which also spares the admin call on a back that does not record.
+ * Whether a room's spaces are recorded automatically. The admin answers per room, in its map details (/api/map);
+ * without an admin, AUTO_RECORDING_ENABLED applies to every room. Never without the LiveKit recordings bucket, which
+ * also spares the admin call on a back that does not record.
  *
- * A boolean when the answer is known now (no admin to ask, or the world asked less than a minute ago): the caller
- * then decides within the same handler, and only the first space of a world waits for the admin.
+ * A boolean when the answer is known now (no admin to ask, or the room asked less than a minute ago): the caller
+ * then decides within the same handler, and only the first space of a room waits for the admin.
  */
-export function isWorldAutoRecorded(world: string, spaceName: string, playUri: string): boolean | Promise<boolean> {
-    if (!AUTO_RECORDING_S3_BUCKET || !AUTO_RECORDING_SPEAKER_SECRET) {
+export function isRoomAutoRecorded(playUri: string): boolean | Promise<boolean> {
+    if (!LIVEKIT_RECORDING_S3_BUCKET) {
         return false;
     }
-    if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) !== "v1") {
+    if (!ADMIN_API_URL) {
         return AUTO_RECORDING_ENABLED;
     }
-    const cached = worldFlags.get(world);
+    const roomUrl = playUri.split(/[?#]/)[0];
+    const cached = roomFlags.get(roomUrl);
     if (cached && cached.expiresAtMs > Date.now()) {
         return cached.value ?? cached.enabled;
     }
     const entry: { enabled: Promise<boolean>; value?: boolean; expiresAtMs: number } = {
         enabled: adminApi
-            .fetchLivekitCredentials(spaceName, playUri)
+            .fetchMapDetails(roomUrl)
             .then(
-                (credentials) => credentials.autoRecording ?? false,
+                (details) => {
+                    const mapDetails = isMapDetailsData.safeParse(details);
+                    return mapDetails.success && (mapDetails.data.autoRecording ?? false);
+                },
                 (error) => {
-                    console.error(`Could not tell whether world ${world} is recorded automatically; it is not:`, error);
+                    console.error(
+                        `Could not tell whether room ${roomUrl} is recorded automatically; it is not:`,
+                        error,
+                    );
                     Sentry.captureException(error);
                     return false;
                 },
@@ -58,20 +64,20 @@ export function isWorldAutoRecorded(world: string, spaceName: string, playUri: s
                 entry.value = enabled;
                 return enabled;
             }),
-        expiresAtMs: Date.now() + WORLD_FLAG_TTL_MS,
+        expiresAtMs: Date.now() + ROOM_FLAG_TTL_MS,
     };
-    worldFlags.set(world, entry);
+    roomFlags.set(roomUrl, entry);
     return entry.enabled;
 }
 
-/** The S3 of the LiveKit recordings, in a bucket of its own. */
+/** The S3 of the LiveKit recordings. */
 const bucketUpload = (): S3Upload =>
     new S3Upload({
         endpoint: LIVEKIT_RECORDING_S3_ENDPOINT,
         accessKey: LIVEKIT_RECORDING_S3_ACCESS_KEY,
         secret: LIVEKIT_RECORDING_S3_SECRET_KEY,
         region: LIVEKIT_RECORDING_S3_REGION,
-        bucket: AUTO_RECORDING_S3_BUCKET,
+        bucket: LIVEKIT_RECORDING_S3_BUCKET,
         forcePathStyle: true,
     });
 
@@ -90,20 +96,13 @@ const writeManifestToBucket: ManifestWriter = async (key, manifest) => {
     });
     await s3Client.send(
         new PutObjectCommand({
-            Bucket: AUTO_RECORDING_S3_BUCKET,
+            Bucket: LIVEKIT_RECORDING_S3_BUCKET,
             Key: key,
             Body: JSON.stringify(manifest, null, 2),
             ContentType: "application/json",
         }),
     );
 };
-
-/** Names a speaker without their user id, yet the same person gets the same name in every meeting. */
-const speakerOf = (uuid: string): string =>
-    createHmac("sha256", AUTO_RECORDING_SPEAKER_SECRET ?? "")
-        .update(uuid)
-        .digest("hex")
-        .slice(0, 16);
 
 /** A path segment any bucket takes. */
 const segment = (value: string): string => value.replace(/[^A-Za-z0-9._-]+/g, "_").slice(0, 100) || "_";
@@ -141,7 +140,7 @@ type TrackRecording = {
 type Meeting = { session: OpenedSession; folder: string; recordings: TrackRecording[] };
 
 export type AutoRecorderDependencies = {
-    resolveWorld?: typeof isWorldAutoRecorded;
+    resolveRoom?: typeof isRoomAutoRecorded;
     writeManifest?: ManifestWriter;
     nowMs?: () => number;
     /** How long after a meeting the manifest is written: the egresses need that long to report their files. */
@@ -149,26 +148,24 @@ export type AutoRecorderDependencies = {
 };
 
 /**
- * Records every microphone of a meeting, each to its own file, when the space's world says so (see
- * `isWorldAutoRecorded`). Independent of the recording a user starts (RecordingManager): neither starts nor stops
+ * Records every microphone of a meeting, each to its own file, when the space's room says so (see
+ * `isRoomAutoRecorded`). Independent of the recording a user starts (RecordingManager): neither starts nor stops
  * the other.
  *
  * A meeting is a session as the analytics count it — a bubble or a meeting area with at least two people — so its
  * files go under the id of its meeting.ended row. Each client tells which publication is its microphone; one track
- * egress per publication copies the Opus packets to `<world>/<room>/<date>/<meeting>/<speaker>-<ms>.ogg`, and a
+ * egress per publication copies the Opus packets to `auto-recordings/<world>/<room>/<date>/<meeting>/<user uuid>-<ms>.ogg`, and a
  * muted microphone becomes silence, so every file keeps the meeting's timeline. When the meeting ends, a
  * `manifest.json` next to the files says who spoke when, in which language and through which noise suppression.
  */
 export class AutoRecorder {
     private enabled = false;
-    /** The room URL the world was asked with, to ask again while a meeting is recorded. */
-    private playUri: string | undefined;
-    private refreshTimer: ReturnType<typeof setInterval> | undefined;
+    private resolved = false;
     private readonly microphones = new Map<string, Microphone>();
     private meeting: Meeting | undefined;
     /** What each member's microphone is being recorded to, now. */
     private readonly recordings = new Map<string, TrackRecording>();
-    private readonly resolveWorld: typeof isWorldAutoRecorded;
+    private readonly resolveRoom: typeof isRoomAutoRecorded;
     private readonly writeManifest: ManifestWriter;
     private readonly nowMs: () => number;
     private readonly manifestDelayMs: number;
@@ -178,7 +175,7 @@ export class AutoRecorder {
         private readonly currentState: () => ICommunicationState<ICommunicationStrategy>,
         dependencies: AutoRecorderDependencies = {},
     ) {
-        this.resolveWorld = dependencies.resolveWorld ?? isWorldAutoRecorded;
+        this.resolveRoom = dependencies.resolveRoom ?? isRoomAutoRecorded;
         this.writeManifest = dependencies.writeManifest ?? writeManifestToBucket;
         this.nowMs = dependencies.nowMs ?? Date.now;
         this.manifestDelayMs = dependencies.manifestDelayMs ?? 30_000;
@@ -190,16 +187,16 @@ export class AutoRecorder {
     }
 
     /**
-     * Asks when the space's first member comes: a member's room URL is what the admin finds the world by. Returns the
-     * pending answer, or undefined when `isEnabled` already holds it. The world is asked again at each meeting and
-     * every minute of it (see `refresh`).
+     * Asks when the space's first member comes, by their room URL, once for the space's life: turning the recording
+     * off means kicking everyone out of the room. Returns the pending answer, or undefined when `isEnabled` already
+     * holds it.
      */
     public resolve(playUri: string): Promise<void> | undefined {
-        if (this.playUri !== undefined) {
+        if (this.resolved) {
             return undefined;
         }
-        this.playUri = playUri;
-        const answer = this.resolveWorld(this.space.world, this.space.getSpaceName(), playUri);
+        this.resolved = true;
+        const answer = this.resolveRoom(playUri);
         if (typeof answer === "boolean") {
             this.enabled = answer;
             return undefined;
@@ -209,15 +206,15 @@ export class AutoRecorder {
         });
     }
 
-    public microphonePublished(user: SpaceUser, query: SetMicrophoneTrackQuery): void {
+    public microphonePublished(user: SpaceUser, message: MicrophoneTrackPublishedMessage): void {
         if (!this.enabled) {
             return;
         }
         this.microphones.set(user.spaceUserId, {
             user,
-            trackSid: query.trackSid,
-            language: query.language,
-            noiseSuppression: query.noiseSuppression,
+            trackSid: message.trackSid,
+            language: message.language,
+            noiseSuppression: message.noiseSuppression,
         });
         this.record(user.spaceUserId);
     }
@@ -235,57 +232,22 @@ export class AutoRecorder {
         }
     }
 
-    /**
-     * Asks the world again (an answer cached for a minute, see `isWorldAutoRecorded`): a world that stopped being
-     * recorded stops the meeting being recorded now, not when its space empties.
-     */
-    private refresh(): void {
-        if (this.playUri === undefined) {
-            return;
-        }
-        const answer = this.resolveWorld(this.space.world, this.space.getSpaceName(), this.playUri);
-        if (typeof answer === "boolean") {
-            this.answered(answer);
-            return;
-        }
-        answer
-            .then((enabled) => this.answered(enabled))
-            .catch((error) => {
-                console.error(`Could not ask again whether world ${this.space.world} is recorded:`, error);
-            });
-    }
-
-    private answered(enabled: boolean): void {
-        this.enabled = enabled;
-        if (!enabled) {
-            this.close();
-        }
-    }
-
     private open(session: OpenedSession): void {
         if (!this.enabled || !RECORDED_KINDS.has(session.kind)) {
-            return;
-        }
-        // Only a recorded world is asked again: a world that starts being recorded does so in its next spaces.
-        this.refresh();
-        if (!this.enabled) {
             return;
         }
         const date = new Date(session.openedAtMs).toISOString().slice(0, 10);
         this.meeting = {
             session,
-            folder: [segment(this.space.world), roomSegment(session.roomId), date, session.eventId].join("/"),
+            folder: [FOLDER, segment(this.space.world), roomSegment(session.roomId), date, session.eventId].join("/"),
             recordings: [],
         };
         for (const spaceUserId of this.microphones.keys()) {
             this.record(spaceUserId);
         }
-        this.refreshTimer = setInterval(() => this.refresh(), WORLD_FLAG_TTL_MS);
     }
 
     private close(): void {
-        clearInterval(this.refreshTimer);
-        this.refreshTimer = undefined;
         const meeting = this.meeting;
         if (!meeting) {
             return;
@@ -316,9 +278,9 @@ export class AutoRecorder {
             return;
         }
         const requestedAtMs = this.nowMs();
-        const speaker = speakerOf(microphone.user.uuid);
+        const speaker = microphone.user.uuid;
         const recording: TrackRecording = {
-            file: `${meeting.folder}/${speaker}-${requestedAtMs}.ogg`,
+            file: `${meeting.folder}/${segment(speaker)}-${requestedAtMs}.ogg`,
             speaker,
             trackSid: microphone.trackSid,
             language: microphone.language,

@@ -6,7 +6,7 @@ import {
     type MeetingConnectionRestartMessage,
     type SpaceUser,
     type SpaceKind,
-    type SetMicrophoneTrackQuery,
+    type MicrophoneTrackPublishedMessage,
     FilterType,
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
@@ -274,7 +274,7 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     /**
-     * Asks, at the space's first arrival, whether its world is recorded automatically. When the answer is known now,
+     * Asks, at the space's first arrival, whether its room is recorded automatically. When the answer is known now,
      * the policy reads it in this very handler. Otherwise the space moves to LiveKit once the admin has answered
      * (one call, done before any media flows), through the usual transition: the handler does not wait for it, as
      * a handler that waited would leave a window for the next message to start a transition of its own.
@@ -653,8 +653,11 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     /** A member published their microphone (a new publication after a reconnection, too). */
-    public handleMicrophoneTrackPublished(user: SpaceUser, query: SetMicrophoneTrackQuery): void {
-        this.autoRecorder.microphonePublished(user, query);
+    public handleMicrophoneTrackPublished(spaceUserId: string, message: MicrophoneTrackPublishedMessage): void {
+        const user = this.space.getAllUsers().find((candidate) => candidate.spaceUserId === spaceUserId);
+        if (user) {
+            this.autoRecorder.microphonePublished(user, message);
+        }
     }
 
     /** The space learnt what it is: a session waiting on that may open now. */

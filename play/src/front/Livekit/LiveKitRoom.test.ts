@@ -123,8 +123,8 @@ describe("LiveKitRoom", () => {
             screenSharingLocalStreamStore: writable(undefined),
             shouldPublishScreenShareStore: writable(false),
         });
-        const setMicrophoneTrack = vi.fn();
-        room["space"] = { state: { setMicrophoneTrack } } as never;
+        const emitBackEvent = vi.fn();
+        room["space"] = { emitBackEvent } as never;
 
         room["handleLocalTrackPublished"]({
             source: Track.Source.Microphone,
@@ -142,11 +142,16 @@ describe("LiveKitRoom", () => {
             trackSid: "TR_camera",
         } as never);
 
-        expect(setMicrophoneTrack).toHaveBeenCalledOnce();
-        expect(setMicrophoneTrack).toHaveBeenCalledWith({
-            trackSid: "TR_microphone",
-            language: navigator.language,
-            noiseSuppression: expect.any(String),
+        expect(emitBackEvent).toHaveBeenCalledOnce();
+        expect(emitBackEvent).toHaveBeenCalledWith({
+            event: {
+                $case: "microphoneTrackPublishedMessage",
+                microphoneTrackPublishedMessage: {
+                    trackSid: "TR_microphone",
+                    language: navigator.language,
+                    noiseSuppression: expect.any(String),
+                },
+            },
         });
     });
 

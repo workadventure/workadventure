@@ -593,8 +593,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 );
                 break;
             }
+            case "microphoneTrackPublishedMessage": {
+                this.communicationManager.handleMicrophoneTrackPublished(
+                    backEvent.senderUserId,
+                    event.microphoneTrackPublishedMessage,
+                );
+                break;
+            }
             default: {
-                const _exhaustiveCheck: never = event as never;
+                const _exhaustiveCheck: never = event;
             }
         }
     }
@@ -724,8 +731,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return this.proximityQAManager.delete(sender, query.deleteQuestion.questionId);
             case "setKind":
                 return this.setKind(query.setKind.kind);
-            case "setMicrophoneTrack":
-                return this.communicationManager.handleMicrophoneTrackPublished(sender, query.setMicrophoneTrack);
             default: {
                 const _exhaustiveCheck: never = query;
                 throw new Error("Unknown space state query");

@@ -234,6 +234,11 @@ export const isMapDetailsData = z.object({
     description: "Whether the chat is enabled or not on this room",
     example: true,
   }),
+  autoRecording: extendApi(z.boolean().optional(), {
+    description:
+      "Whether the room's spaces are recorded automatically: they all use LiveKit, and every microphone of a bubble or meeting area is recorded to its own file. Read once per space; to change it, kick everyone out of the room. Defaults to false.",
+    example: false,
+  }),
   enableChatUpload: extendApi(z.boolean().optional(), {
     description:
       "Whether the feature 'upload' in the chat is enabled or not on this room",

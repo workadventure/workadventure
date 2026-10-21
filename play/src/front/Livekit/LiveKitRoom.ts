@@ -827,10 +827,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (publication.source !== Track.Source.Microphone || publication.trackName === SCRIPTING_AUDIO_TRACK_NAME) {
             return;
         }
-        this.space.state.setMicrophoneTrack({
-            trackSid: publication.trackSid,
-            language: navigator.language,
-            noiseSuppression: get(noiseSuppressionEnabledStore) ? get(effectiveNoiseSuppressionProviderStore) : "none",
+        this.space.emitBackEvent({
+            event: {
+                $case: "microphoneTrackPublishedMessage",
+                microphoneTrackPublishedMessage: {
+                    trackSid: publication.trackSid,
+                    language: navigator.language,
+                    noiseSuppression: get(noiseSuppressionEnabledStore)
+                        ? get(effectiveNoiseSuppressionProviderStore)
+                        : "none",
+                },
+            },
         });
     }
 
