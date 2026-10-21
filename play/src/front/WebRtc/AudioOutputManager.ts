@@ -1,5 +1,6 @@
 import Debug from "debug";
 import type { Action } from "svelte/action";
+import { get } from "svelte/store";
 import { speakerSelectedStore } from "../Stores/AudioOutputStore";
 
 const debug = Debug("AudioOutput");
@@ -104,3 +105,16 @@ export const audioOutput: Action<HTMLMediaElement> = (el) => ({
         }
     }),
 });
+
+/**
+ * Plays an element not rendered by a template (a one-off sound) on the audio output selected in the settings. The sink
+ * is applied before play(), waiting at most SINK_ID_TIMEOUT_MS for it. Rejects like play() does.
+ */
+export async function playOnSelectedOutput(el: HTMLMediaElement): Promise<void> {
+    const deviceId = get(speakerSelectedStore);
+    // undefined: play() stays synchronous, within the user gesture that triggered it (WebKit requires one)
+    if (deviceId !== undefined) {
+        await applySinkId(el, deviceId);
+    }
+    await el.play();
+}
