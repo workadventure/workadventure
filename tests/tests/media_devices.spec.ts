@@ -1,5 +1,6 @@
 import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { publicTestMapUrl } from "./utils/urls";
+import Menu from "./utils/menu";
 
 declare global {
     interface Window {
@@ -8,10 +9,37 @@ declare global {
         __disconnectSpeaker: (deviceId: string) => void;
         __lastRequestedAudioDeviceId: () => string | undefined;
         __lastRequestedVideoDeviceId: () => string | undefined;
+        __releaseGetUserMedia: () => void;
     }
 }
 
 test.describe("Media devices @nomobile @nowebkit", () => {
+    test("saving the camera page before the devices load keeps the camera and the microphone on", async ({
+        browser,
+    }) => {
+        const context = await browser.newContext();
+        // getUserMedia answers only when the test says so, like a browser waiting on its permission prompt
+        await context.addInitScript(() => {
+            const getUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+            const released = new Promise<void>((resolve) => {
+                window.__releaseGetUserMedia = resolve;
+            });
+            navigator.mediaDevices.getUserMedia = async (constraints?: MediaStreamConstraints) => {
+                await released;
+                return getUserMedia(constraints);
+            };
+        });
+        const page = await context.newPage();
+
+        await loginWithMockedMediaDevices(page, publicTestMapUrl("tests/E2E/empty.json", "camera-page-early-save"));
+        await page.evaluate(() => window.__releaseGetUserMedia());
+
+        await Menu.expectMicrophoneOn(page);
+        await Menu.expectCameraOn(page);
+
+        await context.close();
+    });
+
     test("should fallback from the last microphone until no microphone remains", async ({ browser, browserName }) => {
         test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
         test.skip(

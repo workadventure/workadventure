@@ -85,8 +85,15 @@
     }
 
     function submit() {
-        selectCamera(selectedCamera);
-        selectMicrophone(selectedMicrophone);
+        // Clicking "Disable" turns the device off at once (see handleSelect*). Here, undefined only means that the
+        // stream has not delivered that track yet (getUserMedia pending, or the microphone still waiting on the noise
+        // suppression model): saving then must not turn the device off.
+        if (selectedCamera) {
+            selectCamera(selectedCamera);
+        }
+        if (selectedMicrophone) {
+            selectMicrophone(selectedMicrophone);
+        }
         enableCameraScene.login();
     }
 
