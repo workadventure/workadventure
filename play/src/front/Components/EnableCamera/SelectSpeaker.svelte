@@ -77,7 +77,14 @@
                         </div>
                     </div>
                     {#if selectedDevice === speaker.deviceId}
-                        <Button variant="secondary" square class="self-end" type="button">
+                        <Button
+                            variant="secondary"
+                            square
+                            class="self-end"
+                            type="button"
+                            aria-label={$LL.actionbar.speaker.test()}
+                            title={$LL.actionbar.speaker.test()}
+                        >
                             {#snippet icon()}
                                 <!-- TODO HUGO -->
                                 <IconUnMute font-size="20" />

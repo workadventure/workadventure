@@ -48,6 +48,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "スピーカーが無効になっています",
+        test: "音声出力をテスト",
         noDevices: "スピーカーデバイスが見つかりません",
         noDevicesDesc:
             "ブラウザに選択可能な音声出力が表示されません。ブラウザによっては制限があります。別のブラウザを試すか、ヘッドフォンやスピーカーを再接続するか、システムのサウンド設定とパソコンの設定（プライバシー、デバイス）を確認してください。",

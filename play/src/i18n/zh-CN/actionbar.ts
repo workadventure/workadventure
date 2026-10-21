@@ -47,6 +47,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "您的扬声器已禁用",
+        test: "测试音频输出",
         noDevices: "未找到扬声器设备",
         noDevicesDesc:
             "浏览器未列出可选择的音频输出设备。某些浏览器会限制此项。请尝试其他浏览器、重新连接耳机或扬声器，检查系统声音设置和计算机的配置（隐私、设备）。",

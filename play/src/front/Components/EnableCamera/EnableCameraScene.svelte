@@ -20,7 +20,7 @@
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { playOnSelectedOutput } from "../../WebRtc/AudioOutputManager";
+    import { playSpeakerTestSound } from "../../WebRtc/AudioOutputManager";
 
     import bgMap from "../images/map-exemple.webp";
     import Button from "../UI/Button.svelte";
@@ -43,9 +43,6 @@
 
     let selectedCamera: string | undefined = $state(undefined);
     let selectedMicrophone: string | undefined = $state(undefined);
-    // Not the exact URL the GameScene preloads: Firefox hands this element's cached response to Phaser's XHR,
-    // which rejects it, and the game stops on "Cannot load .../webrtc-in-ding.mp3" (NETWORK_ERROR).
-    const sound = new Audio(`/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3?speaker-test`);
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -145,7 +142,6 @@
         requestedMicrophoneState.enableMicrophone();
 
         batchGetUserMediaStore.commitChanges();
-        sound.load();
     });
 
     function handleSelectCamera(deviceId: string | undefined) {
@@ -190,7 +186,7 @@
     }
 
     function playSoundClick() {
-        playOnSelectedOutput(sound).catch((e) => console.error(e));
+        playSpeakerTestSound().catch((e) => console.error(e));
     }
     /* eslint-disable svelte/no-at-html-tags */
 </script>

@@ -3,6 +3,7 @@ import type { Action } from "svelte/action";
 import { get } from "svelte/store";
 import type { Unsubscriber } from "svelte/store";
 import { speakerSelectedStore } from "../Stores/AudioOutputStore";
+import { localUserStore } from "../Connection/LocalUserStore";
 
 const debug = Debug("AudioOutput");
 
@@ -127,4 +128,20 @@ export async function playOnSelectedOutput(el: HTMLMediaElement): Promise<void> 
         await applySinkId(el, deviceId);
     }
     await el.play();
+}
+
+let speakerTestSound: HTMLAudioElement | undefined;
+
+/**
+ * Plays the bubble sound on the selected audio output, for the user to check it. One element per sound, so that a
+ * click while it plays does not stack another one.
+ */
+export function playSpeakerTestSound(): Promise<void> {
+    // Not the exact URL the GameScene preloads: Firefox hands this element's cached response to Phaser's XHR, which
+    // rejects it, and the game stops on "Cannot load .../webrtc-in-ding.mp3" (NETWORK_ERROR).
+    const url = `/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3?speaker-test`;
+    if (speakerTestSound?.getAttribute("src") !== url) {
+        speakerTestSound = new Audio(url);
+    }
+    return playOnSelectedOutput(speakerTestSound);
 }

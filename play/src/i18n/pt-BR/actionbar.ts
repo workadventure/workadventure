@@ -53,6 +53,7 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
+        test: "Testar saída de áudio",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
         noDevicesDesc:
             "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso. Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",

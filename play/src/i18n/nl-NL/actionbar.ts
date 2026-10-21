@@ -49,6 +49,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Je luidspreker is uitgeschakeld",
+        test: "Audio-uitvoer testen",
         noDevices: "Geen luidsprekerapparaat gevonden",
         noDevicesDesc:
             "Je browser toont geen selecteerbare audio-uitvoer. Sommige browsers beperken dit. Probeer een andere browser, sluit koptelefoon of speakers opnieuw aan, controleer de systeemgeluidsinstellingen en de configuratie van de computer (privacy, apparaten).",
