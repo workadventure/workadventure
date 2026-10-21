@@ -50,3 +50,28 @@ func get(u string) error {
 	}
 	return err
 }
+
+// The client is the right-most address no trusted proxy stands for: what a client writes in X-Forwarded-For itself
+// is never taken over what the proxies saw, so it cannot dodge an IP ban.
+func TestClientIPTrustsOnlyTheProxies(t *testing.T) {
+	trusted := []netip.Prefix{netip.MustParsePrefix("10.0.0.0/8"), netip.MustParsePrefix("::1/128")}
+	for _, c := range []struct{ remote, xff, want string }{
+		{"10.0.0.2:4000", "1.2.3.4, 203.0.113.7", "203.0.113.7"},  // the client claims 1.2.3.4; the proxy saw 203.0.113.7
+		{"10.0.0.2:4000", "203.0.113.7, 10.0.0.9", "203.0.113.7"}, // through two trusted proxies
+		{"198.51.100.1:4000", "1.2.3.4", "198.51.100.1"},          // no proxy in front: the header is the client's
+		{"10.0.0.2:4000", "", "10.0.0.2"},                         // a client of the private network
+		{"10.0.0.2:4000", "10.0.0.5", "10.0.0.5"},                 // every hop trusted: the left-most
+		{"[::1]:4000", "203.0.113.7:51000", "203.0.113.7"},        // a hop with its port
+		{"10.0.0.2:4000", "unknown", ""},                          // a trusted proxy that did not know
+		{"10.0.0.2:4000", "::ffff:203.0.113.7", "203.0.113.7"},    // an IPv4-mapped address
+	} {
+		r := httptest.NewRequest(http.MethodGet, "/", nil)
+		r.RemoteAddr = c.remote
+		if c.xff != "" {
+			r.Header.Set("X-Forwarded-For", c.xff)
+		}
+		if got := ClientIP(r, trusted); got != c.want {
+			t.Errorf("remote %s, X-Forwarded-For %q: %q, want %q", c.remote, c.xff, got, c.want)
+		}
+	}
+}

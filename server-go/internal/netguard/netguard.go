@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 	"net/netip"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -45,4 +46,50 @@ func Client(timeout time.Duration) *http.Client {
 		return d.DialContext(ctx, network, addr)
 	}
 	return &http.Client{Timeout: timeout, Transport: t}
+}
+
+// ClientIP is the address of the client of r: walking X-Forwarded-For from the peer leftwards, the first address
+// that is not one of the trusted proxies. Each proxy appends the address it got the request from, so only the
+// entries written by a trusted proxy can be believed; the left-most ones are whatever the client claimed, and taking
+// them, like getClientIpFromXForwardedFor does, let anyone dodge an IP ban. When every hop is trusted (a client on
+// the private network), it is the left-most one; "" when the address a trusted proxy gave is not an IP.
+func ClientIP(r *http.Request, trusted []netip.Prefix) string {
+	var hops []string
+	for _, h := range r.Header.Values("X-Forwarded-For") {
+		for _, hop := range strings.Split(h, ",") {
+			if hop = strings.TrimSpace(hop); hop != "" {
+				hops = append(hops, hop)
+			}
+		}
+	}
+	hops = append(hops, r.RemoteAddr)
+	var ip netip.Addr
+	for i := len(hops) - 1; i >= 0; i-- {
+		ip = parseHop(hops[i])
+		if !ip.IsValid() {
+			return ""
+		}
+		if !trustedHop(ip, trusted) {
+			break
+		}
+	}
+	return ip.String()
+}
+
+// parseHop reads an address, with or without a port.
+func parseHop(hop string) netip.Addr {
+	if ap, err := netip.ParseAddrPort(hop); err == nil {
+		return ap.Addr().Unmap()
+	}
+	ip, _ := netip.ParseAddr(hop)
+	return ip.Unmap()
+}
+
+func trustedHop(ip netip.Addr, trusted []netip.Prefix) bool {
+	for _, p := range trusted {
+		if p.Contains(ip) {
+			return true
+		}
+	}
+	return false
 }

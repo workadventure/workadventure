@@ -11,6 +11,7 @@ import (
 	"cmp"
 	"errors"
 	"fmt"
+	"net/netip"
 	"net/url"
 	"os"
 	"reflect"
@@ -56,6 +57,8 @@ type Config struct {
 	MapStorage       mapstorage.Options
 
 	EmbeddedDomainsWhitelist []string
+	// TrustedProxies are the proxies whose X-Forwarded-For entries are believed (netguard.ClientIP).
+	TrustedProxies []netip.Prefix
 
 	// Variables
 	RedisHost, RedisPassword   string
@@ -191,6 +194,7 @@ type vars struct {
 	DirectUploadURL                  string  `env:"DIRECT_UPLOAD_URL"`
 	DisableAnonymous                 bool    `env:"DISABLE_ANONYMOUS"`
 	EmbeddedDomainsWhitelist         string  `env:"EMBEDDED_DOMAINS_WHITELIST"`
+	TrustedProxies                   string  `env:"TRUSTED_PROXIES" envDefault:"127.0.0.0/8,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7"`
 	EmbedlyKey                       string  `env:"EMBEDLY_KEY"`
 	EnableBasicAuthentication        bool    `env:"ENABLE_BASIC_AUTHENTICATION"`
 	EnableBearerAuthentication       bool    `env:"ENABLE_BEARER_AUTHENTICATION"`
@@ -563,6 +567,14 @@ func parse(environ map[string]string) (*Config, error) {
 
 	if c.SecretKey == "" {
 		errs = append(errs, "SECRET_KEY: required")
+	}
+	for _, cidr := range list(v.TrustedProxies) {
+		p, err := netip.ParsePrefix(strings.TrimSpace(cidr))
+		if err != nil {
+			errs = append(errs, "TRUSTED_PROXIES: "+err.Error())
+			continue
+		}
+		c.TrustedProxies = append(c.TrustedProxies, p)
 	}
 	// PROMETHEUS_PORT equal to the HTTP port means "serve on the main port", like the pusher.
 	if p := v.PrometheusPort; p != c.HTTPPort {

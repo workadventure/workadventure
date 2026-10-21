@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/netguard"
 )
 
 // /ws/admin/rooms of the pusher (IoSocketController.adminRoomSocket): the admin watches who enters and leaves its
@@ -126,7 +127,7 @@ func (srv *Server) AdminRooms(w http.ResponseWriter, r *http.Request) {
 			if len(refused) > 0 {
 				list, _ := json.Marshal(refused)
 				refuse(websocket.StatusPolicyViolation, "Access refused",
-					"Admin socket refused for client on "+clientIP(r)+" listening of : \n"+string(list))
+					"Admin socket refused for client on "+netguard.ClientIP(r, srv.cfg.TrustedProxies)+" listening of : \n"+string(list))
 				return
 			}
 			for _, id := range *m.RoomIDs {

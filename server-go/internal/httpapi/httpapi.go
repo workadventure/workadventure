@@ -20,6 +20,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/config"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
+	"github.com/workadventure/workadventure/server-go/internal/netguard"
 )
 
 type API struct {
@@ -189,11 +190,6 @@ func newUUID() string {
 	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
 }
 
-func clientIP(r *http.Request) string {
-	first, _, _ := strings.Cut(r.Header.Get("X-Forwarded-For"), ",")
-	return strings.TrimSpace(first)
-}
-
 func (api *API) me(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	if !q.Has("token") || !q.Has("playUri") {
@@ -206,7 +202,7 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	member, err := api.admin.MemberData(r.Context(), admin.MemberQuery{
-		Identifier: tok.Identifier, AccessToken: tok.AccessToken, PlayURI: q.Get("playUri"), IPAddress: clientIP(r), Locale: r.Header.Get("Accept-Language"),
+		Identifier: tok.Identifier, AccessToken: tok.AccessToken, PlayURI: q.Get("playUri"), IPAddress: netguard.ClientIP(r, api.cfg.TrustedProxies), Locale: r.Header.Get("Accept-Language"),
 		CharacterTextureIDs: q["localStorageCharacterTextureIds[]"], CompanionTextureID: q.Get("localStorageCompanionTextureId"),
 		Tags: tok.Tags, ChatID: q.Get("chatID"),
 	})

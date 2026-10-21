@@ -8,6 +8,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/matrix"
+	"github.com/workadventure/workadventure/server-go/internal/netguard"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
 	"net/http"
@@ -127,7 +128,7 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	member, err := srv.admin.MemberData(r.Context(), admin.MemberQuery{
 		Identifier: tok.Identifier, AccessToken: tok.AccessToken, PlayURI: q.Get("roomId"),
-		IPAddress: clientIP(r), CharacterTextureIDs: q["characterTextureIds"], CompanionTextureID: q.Get("companionTextureId"),
+		IPAddress: netguard.ClientIP(r, srv.cfg.TrustedProxies), CharacterTextureIDs: q["characterTextureIds"], CompanionTextureID: q.Get("companionTextureId"),
 		Locale: r.Header.Get("Accept-Language"), Tags: tok.Tags, ChatID: q.Get("chatID"),
 	})
 	var refused *admin.Refusal
@@ -157,7 +158,7 @@ func (srv *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	s := newSession(srv, sessionInfo{
 		token: token, roomID: q.Get("roomId"), connectionID: q.Get("connectionId"), tabID: q.Get("tabId"),
-		userUUID: member.UserUUID, ipAddress: clientIP(r), isLogged: tok.AccessToken != "", member: member, chatID: q.Get("chatID"), roomName: q.Get("roomName"),
+		userUUID: member.UserUUID, ipAddress: netguard.ClientIP(r, srv.cfg.TrustedProxies), isLogged: tok.AccessToken != "", member: member, chatID: q.Get("chatID"), roomName: q.Get("roomName"),
 		lastCommandID: q.Get("lastCommandId"),
 	})
 	if id := s.info.connectionID; id != "" {
@@ -198,12 +199,6 @@ func (srv *Server) reject(w http.ResponseWriter, r *http.Request, token string, 
 func internalError(details string) *pb.ServerToClientMessage {
 	return errorScreen(errorScreenData{Type: "error", Code: "internal_error", Title: "500 Internal Server Error",
 		Subtitle: "Something wrong happened while connecting!", Details: details})
-}
-
-// clientIP is the first X-Forwarded-For entry, like getClientIpFromXForwardedFor.
-func clientIP(r *http.Request) string {
-	first, _, _ := strings.Cut(r.Header.Get("X-Forwarded-For"), ",")
-	return strings.TrimSpace(first)
 }
 
 // validateQuery checks the query of /ws/room like the zod schema of IoSocketController.

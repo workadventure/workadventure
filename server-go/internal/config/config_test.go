@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"net/netip"
 	"os"
 	"regexp"
 	"strings"
@@ -26,6 +27,20 @@ func TestDefaults(t *testing.T) {
 	}
 	if env["NODE_ENV"] != "development" || env["ENABLE_CHAT"] != true {
 		t.Fatalf("unexpected front env: %v", c.FrontEnv)
+	}
+}
+
+// The proxies trusted with X-Forwarded-For are the private ranges unless TRUSTED_PROXIES says otherwise.
+func TestTrustedProxies(t *testing.T) {
+	c, err := parse(map[string]string{"SECRET_KEY": "s"})
+	if err != nil || len(c.TrustedProxies) != 6 || !c.TrustedProxies[3].Contains(netip.MustParseAddr("172.18.0.4")) {
+		t.Fatalf("default trusted proxies: %v %v", c.TrustedProxies, err)
+	}
+	if c, err = parse(map[string]string{"SECRET_KEY": "s", "TRUSTED_PROXIES": "203.0.113.0/24, 2001:db8::/32"}); err != nil || len(c.TrustedProxies) != 2 {
+		t.Fatalf("trusted proxies: %v %v", c.TrustedProxies, err)
+	}
+	if _, err = parse(map[string]string{"SECRET_KEY": "s", "TRUSTED_PROXIES": "10.0.0.1"}); err == nil || !strings.Contains(err.Error(), "TRUSTED_PROXIES") {
+		t.Fatalf("a range is expected: %v", err)
 	}
 }
 
