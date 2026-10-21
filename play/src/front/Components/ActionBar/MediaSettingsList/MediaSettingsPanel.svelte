@@ -19,6 +19,7 @@
     } from "../../../Stores/MediaStore";
     import { cameraPermissionStateStore, microphonePermissionStateStore } from "../../../Stores/MediaStatusStore";
     import { speakerSelectionSupported } from "../../../Stores/AudioOutputStore";
+    import { playSpeakerTestSound } from "../../../WebRtc/AudioOutputManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
@@ -297,6 +298,20 @@
                     <IconHeadphones font-size="14" />
                     {$LL.actionbar.subtitle.speaker()}
                 </div>
+                {#snippet actions()}
+                    {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                        <button
+                            type="button"
+                            data-testid="speaker-test-button"
+                            class="flex h-7 w-7 items-center justify-center rounded text-white/50 hover:bg-white/10 hover:text-white"
+                            aria-label={$LL.actionbar.speaker.test()}
+                            title={$LL.actionbar.speaker.test()}
+                            onclick={() => playSpeakerTestSound().catch((e) => console.error(e))}
+                        >
+                            <IconUnMute font-size="14" />
+                        </button>
+                    {/if}
+                {/snippet}
             </SectionTitle>
             {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
                 {#each $speakerListStore as speaker, index (index)}
