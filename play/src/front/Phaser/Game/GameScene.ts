@@ -181,7 +181,7 @@ import {
 } from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
-import { bindAudioOutput } from "../../WebRtc/AudioOutputManager";
+import { bindAudioOutput, pendingSinkRequests } from "../../WebRtc/AudioOutputManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -2325,16 +2325,27 @@ export class GameScene extends DirtyScene {
 
                 const context = audioContextManager.getContext();
 
+                let previousState: AudioContextState | undefined;
                 const onStateChange = () => {
                     const state = context.state;
+                    const wasRunning = previousState === "running";
+                    previousState = state;
 
                     // Note: some browsers (Vivaldi / Brave) will start in "running" state directly despite
                     // no user activation and this will not stop them from blocking WebRTC sound afterwards.
                     if (state === "suspended") {
                         audioInterruptedStore.setInterrupted(false);
-                        this.unregisterAudioContextPlaybackRetry = audioPlaybackStore.register(() => {
-                            context.resume().catch((e) => console.error(e));
-                        });
+                        const outputSwitch = wasRunning ? pendingSinkRequests(context) : undefined;
+                        if (outputSwitch) {
+                            // Chrome suspends a running context while it switches the audio output, and resumes it
+                            // after. Not blocked playback: flagging it sets the SOUND_BLOCKED status, which leaves the
+                            // bubble. Resumed here too, in case the switch failed half way.
+                            outputSwitch.then(() => context.resume()).catch((e) => console.error(e));
+                        } else {
+                            this.unregisterAudioContextPlaybackRetry = audioPlaybackStore.register(() => {
+                                context.resume().catch((e) => console.error(e));
+                            });
+                        }
                     } else if (state === "running") {
                         this.unregisterAudioContextPlaybackRetry?.();
                         this.unregisterAudioContextPlaybackRetry = undefined;

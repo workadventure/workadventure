@@ -81,6 +81,12 @@ export function applySinkId(el: AudioSink, deviceId: string): Promise<SinkOutcom
     return outcome;
 }
 
+/** While requests for el are pending: a promise that resolves once they settled (never rejects). Otherwise undefined. */
+export function pendingSinkRequests(el: AudioSink): Promise<void> | undefined {
+    const request = sinks.get(el);
+    return request && !request.settled ? request.outcome.then(() => undefined) : undefined;
+}
+
 async function setSinkIdOrFallBack(
     el: AudioSink,
     setSinkId: (sinkId: string) => Promise<void>,
