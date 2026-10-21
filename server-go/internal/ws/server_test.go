@@ -261,6 +261,24 @@ func TestResumeReplaysMissedFramesAndDropsDuplicates(t *testing.T) {
 	}
 }
 
+// Once the process's resume budget is spent, a new session keeps no frame: after a drop it reconnects from scratch.
+func TestPastTheResumeBudgetANewSessionCannotResume(t *testing.T) {
+	h := newHarness(t)
+	h.srv.resumeBudget.max = 1
+	bob := h.dial("bob", "c-bob", nil) // its first frames spend the budget
+	bob.send(join(900, 900))
+	bob.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	_ = alice.conn.CloseNow()
+	// She says she missed her last frame: with a buffer, it would be replayed.
+	resumed := h.dialWithToken(alice.token, "alice", "c-alice", url.Values{"lastReceivedNonce": {strconv.Itoa(int(alice.lastReceived) - 1)}})
+	if _, _, err := resumed.recv(2 * time.Second); websocket.CloseStatus(err) != websocket.StatusPolicyViolation {
+		t.Fatalf("expected the resume refused (1008), got %v", err)
+	}
+}
+
 func TestResumeOfAnUnknownConnectionIsRefused(t *testing.T) {
 	h := newHarness(t)
 	c := h.dial("alice", "never-seen", url.Values{"lastReceivedNonce": {"3"}})

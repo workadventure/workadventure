@@ -30,6 +30,9 @@ var (
 	unhandledMessages = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_unhandled_messages_total", Help: "Client messages of a type the server does not handle, dropped"}, []string{"type"})
 	unhandledLogged   sync.Map // type → struct{}: the types already logged
 
+	// ResumeBufferBytes is what the sessions keep for a transport resume, under RESUME_BUFFER_BUDGET_BYTES.
+	ResumeBufferBytes = promauto.NewGauge(prometheus.GaugeOpts{Name: "server_resume_buffer_bytes", Help: "Bytes of the frames kept for a transport resume"})
+
 	// ActorPanics counts the panics an actor recovered, by kind of actor (room, space).
 	ActorPanics = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_actor_panics_total", Help: "Panics recovered in an actor, whose state was then discarded"}, []string{"kind"})
 

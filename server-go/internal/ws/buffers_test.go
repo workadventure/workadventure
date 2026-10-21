@@ -120,3 +120,29 @@ func TestResumeStoreFreesChunksAndKeepsFramesIntact(t *testing.T) {
 		t.Fatalf("the frame index is not reused: %d slots for %d frames", len(r.frames), r.len())
 	}
 }
+
+func TestResumeBudgetIsSharedAndGivenBack(t *testing.T) {
+	now := time.Unix(0, 0)
+	b := &resumeBudget{max: 9}
+	r := &resumeStore{maxBytes: 1 << 10, retention: time.Hour, budget: b}
+	for n := uint32(1); n <= 3; n++ {
+		r.add(n, []byte("abc"), now)
+	}
+	if !b.spent() || b.used.Load() != 9 {
+		t.Fatalf("the budget counts the bytes kept: %d", b.used.Load())
+	}
+	r.add(4, []byte("abc"), now)
+	if b.used.Load() != 9 || r.len() != 3 {
+		t.Fatalf("past the budget, a store evicts its own oldest frames: %d bytes, %d frames", b.used.Load(), r.len())
+	}
+	r.release()
+	if b.used.Load() != 0 {
+		t.Fatalf("a session that ended gives its bytes back: %d", b.used.Load())
+	}
+	if f := r.add(5, []byte("x"), now); string(f) != "x" || b.used.Load() != 0 {
+		t.Fatal("a store without a buffer sends the frame as built and keeps nothing")
+	}
+	if !r.canResumeAfter(5, now) || r.canResumeAfter(4, now) {
+		t.Fatal("without a buffer, only a client that missed nothing resumes")
+	}
+}

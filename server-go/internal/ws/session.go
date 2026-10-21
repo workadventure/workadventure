@@ -108,7 +108,10 @@ func newSession(srv *Server, info sessionInfo) *Session {
 	s := &Session{srv: srv, info: info, memberships: memberships{spaces: map[string]*core.Space{}, joinedBy: map[int32]string{}}}
 	s.chat.id = info.chatID
 	s.ctx, s.cancel = context.WithCancel(context.Background())
-	s.t.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention}
+	s.t.store = resumeStore{maxBytes: resumeMaxBytes, retention: srv.cfg.ClientDisconnectRetention, budget: &srv.resumeBudget}
+	if srv.resumeBudget.spent() {
+		s.t.store.maxBytes = 0 // the newest sessions do without, see resumeBudget
+	}
 	s.out = newOutbox(outboxLimit, func() { go s.destroy(statusSessionDestroyed, "Too slow to receive messages") })
 	s.room = srv.rooms.Acquire(info.roomID)
 	srv.sessions.Store(s, struct{}{})

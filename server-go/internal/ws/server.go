@@ -11,6 +11,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/netguard"
 	"github.com/workadventure/workadventure/server-go/internal/store"
 	"log/slog"
+	"math"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -33,6 +34,7 @@ import (
 // Server handles /ws/room (IoSocketController + PusherRoomSocketController).
 type Server struct {
 	cfg          *config.Config
+	resumeBudget resumeBudget
 	auth         *auth.Manager
 	admin        admin.Admin
 	rooms        *registry.Refs[string, *core.Room]
@@ -70,6 +72,10 @@ func NewServer(cfg *config.Config, d Deps) *Server {
 		retained: registry.New[string, *Session](), maps: d.Maps, edits: mapedit.NewQueue(), vars: d.Vars, varWriter: store.NewWriter(d.Vars),
 		apiVersion: d.APIVersion, analytics: d.Analytics, matrix: d.Matrix, recordings: d.Recordings}
 	d.Maps.Changed = srv.MapChanged // the files replaced from map-storage's HTTP API reach their rooms
+	srv.resumeBudget.max = cfg.ResumeBufferBudget
+	if srv.resumeBudget.max <= 0 {
+		srv.resumeBudget.max = math.MaxInt64 // no budget
+	}
 	return srv
 }
 

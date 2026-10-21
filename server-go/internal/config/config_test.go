@@ -21,6 +21,9 @@ func TestDefaults(t *testing.T) {
 	if c.ClientDisconnectRetention != 30*time.Second || c.SocketIdleTimer != 120*time.Second {
 		t.Fatalf("unexpected durations: %v %v", c.ClientDisconnectRetention, c.SocketIdleTimer)
 	}
+	if c.ResumeBufferBudget != 256<<20 {
+		t.Fatalf("unexpected resume budget: %d", c.ResumeBufferBudget)
+	}
 	env := envMap(t, c.FrontEnv)
 	if _, ok := env["ADMIN_URL"]; ok {
 		t.Fatal("unset optional variables must be left out of window.env")

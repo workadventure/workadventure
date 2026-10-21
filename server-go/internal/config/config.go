@@ -79,6 +79,9 @@ type Config struct {
 
 	SocketIdleTimer           time.Duration
 	ClientDisconnectRetention time.Duration
+	// ResumeBufferBudget caps the bytes all the sessions keep for a transport resume (RESUME_BUFFER_BUDGET_BYTES,
+	// new: the TS pusher had no cap, and one reached 2.2 GB). 0 or less: no cap.
+	ResumeBufferBudget int64
 
 	PusherURL         string
 	FrontURL          string
@@ -318,6 +321,7 @@ type vars struct {
 	SkipCameraPage                   bool    `env:"SKIP_CAMERA_PAGE"`
 	SkipRenderOptimizations          bool    `env:"SKIP_RENDER_OPTIMIZATIONS"`
 	SocketIdleTimer                  int     `env:"SOCKET_IDLE_TIMER" envDefault:"120"`
+	ResumeBufferBudgetBytes          int64   `env:"RESUME_BUFFER_BUDGET_BYTES" envDefault:"268435456"`
 	StartRoomURL                     string  `env:"START_ROOM_URL" envDefault:"/_/global/maps.workadventu.re/starter/map.json"`
 	StorageDirectory                 string  `env:"STORAGE_DIRECTORY" envDefault:"./public"`
 	StoreVariablesForLocalMaps       bool    `env:"STORE_VARIABLES_FOR_LOCAL_MAPS"`
@@ -476,6 +480,7 @@ func parse(environ map[string]string) (*Config, error) {
 		DisableAnonymous:          v.DisableAnonymous,
 		SocketIdleTimer:           time.Duration(v.SocketIdleTimer) * time.Second,
 		ClientDisconnectRetention: time.Duration(v.ClientDisconnectionRetentionMS) * time.Millisecond,
+		ResumeBufferBudget:        v.ResumeBufferBudgetBytes,
 		PusherURL:                 v.PusherURL,
 		FrontURL:                  v.FrontURL,
 		AssetsURL:                 strings.TrimSuffix(v.AssetsURL, "/"),

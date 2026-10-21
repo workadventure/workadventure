@@ -1,6 +1,30 @@
 package ws
 
-import "time"
+import (
+	"sync/atomic"
+	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
+)
+
+// resumeBudget caps the frames every session of the process keeps for a resume (RESUME_BUFFER_BUDGET_BYTES): a
+// store per client bounds one client, not ten thousand. Once the budget is spent, a new session gets no resume
+// buffer, and a store that grows evicts its own oldest frames: the clients concerned reconnect from scratch
+// after a drop, instead of the process growing without bound.
+type resumeBudget struct {
+	max  int64
+	used atomic.Int64
+}
+
+func (b *resumeBudget) add(n int) {
+	if b != nil {
+		b.used.Add(int64(n))
+		metrics.ResumeBufferBytes.Add(float64(n))
+	}
+}
+
+func (b *resumeBudget) spent() bool { return b != nil && b.used.Load() >= b.max }
+func (b *resumeBudget) over() bool  { return b != nil && b.used.Load() > b.max }
 
 // resumeStore keeps the frames recently sent to a client, so that a client whose transport dropped can reconnect
 // and get what it missed (NoncedMessageStore). It is bounded by age (CLIENT_DISCONNECTION_RETENTION_MS, like the
@@ -13,7 +37,8 @@ type resumeStore struct {
 	frames    []storedFrame // oldest first, from index head
 	head      int
 	bytes     int
-	maxBytes  int
+	maxBytes  int           // 0: no resume buffer, the frames are not kept
+	budget    *resumeBudget // nil: no budget but maxBytes
 	retention time.Duration
 	lastNonce uint32
 	chunks    []*chunk // oldest first; the last one is being filled
@@ -35,6 +60,10 @@ const chunkSize = 8 << 10
 
 // add copies the frame into the store and returns the stored copy.
 func (r *resumeStore) add(nonce uint32, frame []byte, now time.Time) []byte {
+	r.lastNonce = nonce
+	if r.maxBytes == 0 {
+		return frame // a resume finds nothing to replay: only one that missed nothing succeeds
+	}
 	c := r.chunkFor(len(frame))
 	start := len(c.buf)
 	c.buf = append(c.buf, frame...)
@@ -42,12 +71,18 @@ func (r *resumeStore) add(nonce uint32, frame []byte, now time.Time) []byte {
 	data := c.buf[start:len(c.buf):len(c.buf)]
 	r.frames = append(r.frames, storedFrame{nonce: nonce, at: now.UnixNano(), data: data, chunk: c})
 	r.bytes += len(data)
-	r.lastNonce = nonce
+	r.budget.add(len(data))
 	r.prune(now)
-	for r.bytes > r.maxBytes && r.len() > 1 {
+	for (r.bytes > r.maxBytes || r.budget.over()) && r.len() > 1 {
 		r.dropOldest()
 	}
 	return data
+}
+
+// release gives the frames' bytes back to the budget once the session ended, and keeps no frame afterwards.
+func (r *resumeStore) release() {
+	r.budget.add(-r.bytes)
+	*r = resumeStore{lastNonce: r.lastNonce}
 }
 
 func (r *resumeStore) chunkFor(n int) *chunk {
@@ -71,6 +106,7 @@ func (r *resumeStore) prune(now time.Time) {
 func (r *resumeStore) dropOldest() {
 	f := &r.frames[r.head]
 	r.bytes -= len(f.data)
+	r.budget.add(-len(f.data))
 	f.chunk.live--
 	*f = storedFrame{}
 	r.head++

@@ -185,6 +185,7 @@ func (t *transport) shutdown() (conn *websocket.Conn, first bool) {
 		return nil, false
 	}
 	t.destroyed = true
+	t.store.release()
 	conn, t.cur = t.cur, nil
 	if t.retention != nil {
 		t.retention.Stop()
