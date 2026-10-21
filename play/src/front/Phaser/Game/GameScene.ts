@@ -181,6 +181,7 @@ import {
 } from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { bindAudioOutput } from "../../WebRtc/AudioOutputManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
@@ -530,6 +531,11 @@ export class GameScene extends DirtyScene {
         this.load.audio("meeting-out", "/resources/objects/meeting-out.wav");
 
         this.sound.pauseOnBlur = false;
+        // Bubble, meeting and scripting API sounds play through Phaser's own AudioContext (absent when Phaser falls back
+        // to HTML5 audio), bypassing media elements: it follows the selected audio output itself.
+        if (this.sound instanceof Phaser.Sound.WebAudioSoundManager) {
+            this.unsubscribers.push(bindAudioOutput(this.sound.context));
+        }
 
         this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: { src: string }) => {
             // If we happen to be in HTTP and we are trying to load a URL in HTTPS only... (this happens only in dev environments)
