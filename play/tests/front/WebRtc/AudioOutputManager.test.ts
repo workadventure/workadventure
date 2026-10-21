@@ -73,8 +73,20 @@ describe("applySinkId", () => {
         await flush();
         expect(requested()).toEqual(["headset-a", ""]);
         calls[1].resolve();
-        await request;
+        expect(await request).toBe("fell-back");
         expect(el.sinkId).toBe("");
+    });
+
+    it("joins a request for the device already being requested", async () => {
+        const { el, calls, requested } = fakeElement();
+        const first = applySinkId(el, "headset-a");
+        const second = applySinkId(el, "headset-a");
+        expect(second).toBe(first);
+        await flush();
+        expect(requested()).toEqual(["headset-a"]);
+
+        calls[0].resolve();
+        expect(await second).toBe("applied");
     });
 
     it("does not wait forever on a hung request, and re-applies the newer device if it settles late", async () => {

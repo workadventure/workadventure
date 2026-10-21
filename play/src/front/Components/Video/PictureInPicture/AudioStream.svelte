@@ -6,6 +6,7 @@
     import { signalAudioPlaybackBlocked } from "../../../Stores/AudioPlaybackStore";
     import { userActivationManager } from "../../../Stores/UserActivationStore";
     import { audioContextManager } from "../../../WebRtc/AudioContextManager";
+    import { applySinkId, SINK_ID_TIMEOUT_MS } from "../../../WebRtc/AudioOutputManager";
 
     interface Props {
         streamStore: Readable<MediaStream | undefined>;
@@ -36,83 +37,23 @@
         }
     });
 
-    // The sink request currently applied (or in flight). De-duplication is done on the *promise*, not on the
-    // requested device id: callers must be able to await the actual completion of setSinkId(), which is what
-    // the srcObject attach below relies on. Keying on the element too makes the sink re-apply when the <audio>
-    // tag is recreated (see the {#if !$isBlocked} block).
-    let sinkRequest: { deviceId: string; el: HTMLAudioElement; promise: Promise<boolean> } | undefined;
-
-    function isCurrentSinkRequest(deviceId: string, el: HTMLAudioElement): boolean {
-        return sinkRequest?.deviceId === deviceId && sinkRequest.el === el;
-    }
-
-    // A failed request was not applied: the next request for this device must call setSinkId() again, not reuse
-    // this one. Unless a newer request already replaced it.
-    function forgetSinkRequest(deviceId: string, el: HTMLAudioElement): void {
-        if (isCurrentSinkRequest(deviceId, el)) {
-            sinkRequest = undefined;
-        }
-    }
-
-    function ensureSinkId(deviceId: string, el: HTMLAudioElement): Promise<boolean> {
-        if (!sinkRequest || !isCurrentSinkRequest(deviceId, el)) {
-            sinkRequest = { deviceId, el, promise: safeSetSinkId(deviceId, el) };
-        }
-        return sinkRequest.promise;
-    }
-
-    async function safeSetSinkId(deviceId: string, el: HTMLAudioElement) {
-        if (destroyed) {
-            return false;
-        }
-        if (typeof el.setSinkId !== "function") {
-            return false;
-        }
-        try {
-            debug("Setting output device to ", deviceId);
-            await el.setSinkId(deviceId);
-            debug("Output device set to ", deviceId);
-            return true;
-        } catch (e) {
-            if (destroyed) {
-                return false;
-            }
-
-            Sentry.captureException(e);
-            if (e instanceof DOMException && e.name === "AbortError") {
-                // The user picked another device while this request was in flight: resetting the element to
-                // the default output would override that newer choice.
-                if (!isCurrentSinkRequest(deviceId, el)) {
-                    return false;
-                }
-
-                // An error occurred while setting the sinkId. Let's fall back to default.
-                console.warn("Error setting the audio output device. We fallback to default.");
-
-                try {
-                    await el.setSinkId("");
-                } catch (e) {
-                    console.error("Error resetting the audio output device: ", e);
-                }
-                forgetSinkRequest(deviceId, el);
-
-                onselectoutputaudiodeviceerror?.();
-                return false;
-            }
-            console.error("Error setting the audio output device: ", e);
-            forgetSinkRequest(deviceId, el);
-            return false;
-        }
-    }
-
-    // Apply the selected output device as soon as the element exists, even before a stream is attached (the
-    // attach below waits for this very request to resolve).
+    // Apply the selected output device as soon as the element exists, even before a stream is attached: the attach
+    // below joins this very request.
     $effect(() => {
-        if (outputDeviceId && audioElement) {
-            ensureSinkId(outputDeviceId, audioElement).catch((e) => {
-                console.error("Error setting the audio output device: ", e);
-                Sentry.captureException(e);
-            });
+        const el = audioElement;
+        const deviceId = outputDeviceId;
+        if (deviceId && el) {
+            applySinkId(el, deviceId)
+                .then((outcome) => {
+                    // The device could not be switched to: the element fell back to the system default
+                    if (outcome === "fell-back" && !destroyed) {
+                        onselectoutputaudiodeviceerror?.();
+                    }
+                })
+                .catch((e: unknown) => {
+                    console.error("Error setting the audio output device: ", e);
+                    Sentry.captureException(e);
+                });
         }
     });
 
@@ -238,10 +179,6 @@
 
     let stream = $derived($streamStore ? $streamStore : undefined);
 
-    // setSinkId() can take seconds (a Bluetooth headset switching profile) or never settle. Past this delay, the
-    // stream starts on the current output rather than keeping the remote peer silent.
-    const SINK_ID_TIMEOUT_MS = 2_000;
-
     function attachStream(el: HTMLAudioElement, mediaStream: MediaStream): void {
         if (destroyed) {
             return;
@@ -274,6 +211,7 @@
         }
 
         // Set by the cleanup when the element, the stream or the device changed: the next run takes over.
+        // If setSinkId() takes too long, the stream starts on the current output rather than keeping the peer silent.
         let cancelled = false;
         let attachedBeforeSink = false;
         const timeout = setTimeout(() => {
@@ -283,7 +221,7 @@
             }
         }, SINK_ID_TIMEOUT_MS);
 
-        ensureSinkId(deviceId, el)
+        applySinkId(el, deviceId)
             .then(() => {
                 clearTimeout(timeout);
                 if (cancelled) {
