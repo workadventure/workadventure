@@ -3,6 +3,7 @@ package core
 import (
 	"context"
 	"errors"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -88,12 +89,13 @@ func ask(t *testing.T, sp *Space, id string, q any) error {
 	return err
 }
 
-func sawStatus(p *recorder, status string) bool {
+// isStatus says whether the last recording status p was sent is status: one it saw before does not count.
+func isStatus(p *recorder, status string) bool {
 	p.mu.Lock()
 	defer p.mu.Unlock()
-	for _, e := range p.events {
-		if s, ok := e.(SpaceStatePatch); ok && strings.Contains(s.Patch, `"status":"`+status+`"`) {
-			return true
+	for _, e := range slices.Backward(p.events) {
+		if s, ok := e.(SpaceStatePatch); ok && strings.Contains(s.Patch, `"status":"`) {
+			return strings.Contains(s.Patch, `"status":"`+status+`"`)
 		}
 	}
 	return false
@@ -101,7 +103,7 @@ func sawStatus(p *recorder, status string) bool {
 
 func waitStatus(t *testing.T, sp *Space, p *recorder, status string) {
 	t.Helper()
-	if !until(t, sp, func() bool { return sawStatus(p, status) }) {
+	if !until(t, sp, func() bool { return isStatus(p, status) }) {
 		t.Fatalf("the recording never became %s", status)
 	}
 }
