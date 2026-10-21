@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Readable } from "svelte/store";
-import { applySinkId, playOnSelectedOutput } from "../../../src/front/WebRtc/AudioOutputManager";
+import { applySinkId, playOnSelectedOutput, pendingSinkRequests } from "../../../src/front/WebRtc/AudioOutputManager";
 
 // The real store ignores every selection where livekit-client says the browser cannot choose the output, jsdom included
 const selectedSpeaker = vi.hoisted(() => ({ deviceId: undefined as string | undefined }));
@@ -104,6 +104,24 @@ describe("applySinkId", () => {
         await Promise.all(requests);
         await flush();
         expect(el.sinkId).toBe("headset-b");
+    });
+
+    it("exposes the pending requests of an element until they settled", async () => {
+        const { el, calls } = fakeElement();
+        expect(pendingSinkRequests(el)).toBeUndefined();
+
+        applySinkId(el, "headset-a").catch(() => {});
+        const pending = pendingSinkRequests(el);
+        const settled = vi.fn();
+        pending?.then(settled).catch(() => {});
+        await flush();
+        expect(pending).toBeDefined();
+        expect(settled).not.toHaveBeenCalled();
+
+        calls[0].resolve();
+        await flush();
+        expect(settled).toHaveBeenCalledOnce();
+        expect(pendingSinkRequests(el)).toBeUndefined();
     });
 });
 
