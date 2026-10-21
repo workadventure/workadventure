@@ -138,13 +138,25 @@ func (s *Session) roomsFromSameWorld(id int32) {
 		s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_RoomsFromSameWorldAnswer{RoomsFromSameWorldAnswer: &pb.RoomsFromSameWorldAnswer{RoomDescriptions: rooms}}})
 		return
 	}
-	if s.srv.mapKey(s.info.roomID) == "" {
+	key := s.srv.mapKey(s.info.roomID)
+	if key == "" {
 		s.answerError(id, "No admin backoffice set!")
 		return
 	}
+	// The world is the folder of the room's domain with USE_DOMAIN_NAME_IN_PATH: only its maps, by their path in it,
+	// as map-storage's /maps answers (MapListService). Without it, the storage holds a single world.
+	prefix := ""
+	if s.srv.cfg.MapStorage.UseDomainNameInPath {
+		domain, _, _ := strings.Cut(key, "/")
+		prefix = domain + "/"
+	}
 	base := strings.TrimRight(s.srv.cfg.PublicMapStorageURL, "/") + "/"
 	var rooms []*pb.RoomShortDescription
-	for p, m := range s.srv.maps.Maps() {
+	for k, m := range s.srv.maps.Maps() {
+		p, mine := strings.CutPrefix(k, prefix)
+		if !mine {
+			continue
+		}
 		meta, _ := m["metadata"].(map[string]any)
 		str := func(k string) *string {
 			if v, ok := meta[k].(string); ok {

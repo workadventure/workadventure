@@ -3,6 +3,7 @@ package ws
 import (
 	"encoding/json"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -170,5 +171,35 @@ func TestTheMapEditorsCommandsLandInTheFile(t *testing.T) {
 	doc := file()
 	if len(doc["entities"].(map[string]any)) != 0 || len(doc["areas"].([]any)) != 0 || doc["metadata"].(map[string]any)["name"] != "Office" {
 		t.Fatalf("after the deletions: %v", doc)
+	}
+}
+
+// Without an admin, the exit editor lists the maps of the room's world only: with USE_DOMAIN_NAME_IN_PATH, the
+// folder of its domain, never another world's.
+func TestRoomsFromSameWorldStayInTheWorld(t *testing.T) {
+	h := newHarness(t)
+	h.srv.cfg.PublicMapStorageURL = "http://map-storage.test"
+	h.srv.cfg.MapStorage.UseDomainNameInPath = true
+	wam := []byte(`{"version":"2.0.0","mapUrl":"./m.tmj","areas":[],"entities":{},"entityCollections":[]}`)
+	for _, k := range []string{"map-storage.test/maps/office.wam", "map-storage.test/hall.wam", "other-world.test/secret.wam"} {
+		if err := h.srv.maps.Put(k, wam); err != nil {
+			t.Fatal(err)
+		}
+	}
+	token, _ := h.auth.Create(auth.Token{Identifier: "alice"})
+	c := h.dialWithToken(token, "alice", "", url.Values{"roomId": {wamRoom}})
+	c.send(join(100, 100))
+	c.query(1, &pb.QueryMessage{Query: &pb.QueryMessage_RoomsFromSameWorldQuery{RoomsFromSameWorldQuery: &pb.RoomsFromSameWorldQuery{}}})
+	var urls []string
+	c.waitFor("the rooms", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		a := d.GetAnswerMessage().GetRoomsFromSameWorldAnswer()
+		for _, r := range a.GetRoomDescriptions() {
+			urls = append(urls, r.GetRoomUrl()+" "+r.GetWamUrl())
+		}
+		return a != nil
+	})
+	slices.Sort(urls)
+	if want := []string{"/~/hall.wam http://map-storage.test/hall.wam", "/~/maps/office.wam http://map-storage.test/maps/office.wam"}; !slices.Equal(urls, want) {
+		t.Fatalf("rooms %v, want %v", urls, want)
 	}
 }
