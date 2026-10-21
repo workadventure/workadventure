@@ -14,9 +14,11 @@ Un paramètre lu ou un test sans assertion ne suffit pas à « valider ».
 
 Mise à jour : 2026-10-17, sur `626a4978a` (master fusionné, API `d2d82672`). L'inventaire a été fait par quatre agents en lecture seule (TS et Go), puis relu. Les résultats Playwright cités viennent de `JOURNAL.md` (J1 à J3a) ; J3b reste à rejouer (voir le journal).
 
+Relecture du 2026-10-21 : contradictions levées (OIDC, LiveKit, A23 à A27 dans les tables par sujet) et correctifs récents reportés (proxys de confiance, pprof, Sentry, budget de reprise, mouvements sans position, `httpx`, erreurs ignorées et messages non gérés, panics d'acteur, horloge, ban, cartes du même monde, JSON Patch, schémas zod).
+
 ## Verdict
 
-- **OSS (LocalAdmin)** : J1, J2 et J3a sont validés par Playwright. J3b est codé mais pas encore validé. LiveKit, l'enregistrement et la Room API sont absents.
+- **OSS (LocalAdmin)** : J1, J2 et J3a sont validés par Playwright. J3b est codé mais pas encore validé. LiveKit, l'enregistrement et la Room API sont validés par les tests Go (l'enregistrement aussi par `recording.spec.ts`, 5/5) ; `livekit.spec.ts` et `room-api.spec.ts` restent à jouer sur la stack Go.
 - **SaaS** : les 31 appels du contrat sont faits ; **le parcours SaaS est joué de bout en bout le 17/10 sur `dev/saas`** (OIDC, deux mondes dont un white label sans fuite, A27, `/ws/admin/rooms`, ban en cours de session, Room API, uploader ; voir JOURNAL). Il reste à le jouer contre une vraie admin de préproduction et à rejouer `proximityChatFileTransfer` avec un front au niveau de master.
 
 Améliorations relevées mais non faites : [IMPROVEMENTS.md](IMPROVEMENTS.md). Ajouter une fonctionnalité : [docs/ADDING_A_FEATURE.md](docs/ADDING_A_FEATURE.md).
@@ -45,19 +47,21 @@ reconnexion côté Go.
 | A23 fin d'enregistrement (capacité `api/recordings/events`, 3 réessais, `recordingSessionId`, fichiers et durées tirés de `ListEgress`), A25 Room API autorisée par l'admin (`X-API-Key`, codes gRPC, cache en production selon `Cache-Control`), A26 validateur de map-storage (bearer autre que `AUTHENTICATION_TOKEN`, par domaine, même cache), A27 webhook de map-storage (`update` à chaque écriture d'un WAM, `delete`) | validé (tests Go) | `admin/http_test.go`, `core/space_recording_test.go`, `livekit/egressinfo_test.go`, `roomapi/admin_test.go`, `mapstorage/admin_test.go` | A27 comme generateCacheFile : un appel sans `mapPath` pour un upload, une suppression, un déplacement ou une copie, et jamais `delete` (comme le TS) ; domaine vide pour une édition sans `USE_DOMAIN_NAME_IN_PATH` | — |
 | A24 identifiants LiveKit par monde (capacité `api/livekit/credentials` : demandés avec le `playUri` d'un membre à chaque passage en LiveKit, sans cache ; en échec, le space reste en WebRTC) | validé (tests Go) | `core/space_livekit_test.go` : `TestAWorldsOwnLiveKitIsAskedForEachMove`, `admin/http_test.go` | l'enregistrement passe par l'egress du LiveKit du monde | — |
 
+Les réponses de l'admin (`/api/map`, `/api/room/access`, `sameWorld`, membres du chat, membres) sont validées contre les schémas zod du pusher, exportés en JSON Schema (`schemas/`, `internal/admin/admin.schema.json`, types générés dans `admin.gen.go`) ; voir `schemas/README.md`.
+
 ## Connexion, salle, mouvements
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
 | Upgrade WS `/ws/room`, rejets (version, jeton, texture) | IoSocketController.ts:252, 488-507 | validé | `ws/server_test.go:162,227` ; J1 Playwright | `WorldConnectionMessage` jamais émis (remplacé par ErrorScreen) | tester les autres rejets |
-| joinRoom → RoomJoinedMessage | PSM:393 → BSM:191 | partiel | `ws/session.go:431-460`, `core/room.go:40` ; J1 | pas d'`item` (états d'objets) | itemEvent |
-| Reprise de transport (connectionId) | PusherWebSocket.replaceSocket | validé | `ws/server_test.go:189,218`, `buffers_test.go:83,103` | — | — |
-| userMoves, viewport, setPlayerDetails | IOC:613-647 | validé | `core/room_test.go:81,125,181`, `ws/server_test.go:322` | une position nil devient (0,0) | refuser les champs absents |
+| joinRoom → RoomJoinedMessage | PSM:393 → BSM:191 | validé | `core/roomevents_test.go` : `TestANewcomerGetsTheStateOfTheInteractiveObjects` ; `ws/server_test.go` : `TestAJoinWithoutAPositionIsRefused` ; J1 | un join sans position est refusé comme en TS (`ErrorMessage`, puis Kick : `WS_CLOSE_CODE_SESSION_DESTROYED`) au lieu de placer le joueur en (0,0) | — |
+| Reprise de transport (connectionId) | PusherWebSocket.replaceSocket | validé | `ws/server_test.go:189,218`, `buffers_test.go` (dont `TestResumeBudgetIsSharedAndGivenBack`) | 512 Kio par session, et un budget pour tout le processus (`RESUME_BUFFER_BUDGET_BYTES`, 256 Mio par défaut, 0 sans limite ; jauge `server_resume_buffer_bytes`) : une fois dépensé, une nouvelle session n'a pas de tampon et repart de zéro après une coupure (le TS n'avait pas de plafond) | — |
+| userMoves, viewport, setPlayerDetails | IOC:613-647 | validé | `core/room_test.go:81,125,181`, `ws/server_test.go` : `TestAMoveWithoutAPositionKeepsTheLastOne` | comme en TS : sans viewport, le mouvement est ignoré ; sans position, le joueur garde la dernière, son viewport est suivi | — |
 | Bulles (groupes, verrou) | BSM:500-527, 1253 | validé | `core/room_test.go:117,154` ; J1 | — | — |
 | Suivre (request, confirm, abort) | BSM:1208-1234 | validé | `core/roomplayers_test.go:48` ; J3b à rejouer | pas de sortie de zone autour du meneur | — |
-| askPosition (MoveTo, Locate) | BSM:1313 | implémenté non vérifié | `core/room.go:93` | aucun test | test |
-| Emotes | BSM:1196 | absent (reporté depuis J1) | message jeté | les autres ne voient pas l'emote | porter |
-| itemEvent, entityMessage | BSM:279, 325 | absent | message jeté | objets interactifs et sons d'entité sans effet | porter |
+| askPosition (MoveTo, Locate) | BSM:1313 | validé (unitaire) | `core/recovery_test.go` : `TestAskingWhereAPlayerIsMovesOrLocates` | — | — |
+| Emotes | BSM:1196 | validé (unitaire) | `core/roomevents_test.go` : `TestAnEmoteReachesThoseWhoSeeTheSenderAndOnlyIfItIsAnEmoji` | — | — |
+| itemEvent, entityMessage | BSM:279, 325 | partiel | `ws/handlers.go` (`onItemEvent`, `onEntity`) ; `TestANewcomerGetsTheStateOfTheInteractiveObjects` | `entityMessage` sans test | test |
 | abortQuery | IOC:1046 | validé | `server_test.go` : `TestAnAbortedJoinLeavesTheSpace` ; `map_editor_livekit:111` | — | — |
 | Invitations à une réunion | BSM:1355-1391 | validé (cœur) | `core/roomvars_test.go:52` ; J3b à rejouer | — | — |
 
@@ -66,7 +70,7 @@ reconnexion côté Go.
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
 | join/leave space, filtres, updateSpaceUser, metadata | PSM:497-1405 | validé | `core/space_test.go`, `space_filter_test.go` ; J2, `scripting_spaces` | rejoindre deux fois renvoie un succès | — |
-| SpaceState (main levée, parole, sondages, setKind) | BSp:693-725 | validé | `core/space_filter_test.go:116-166` | revokeFloor, deletePoll et questions non testés | tests |
+| SpaceState (main levée, parole, sondages, setKind) | BSp:693-725 | validé | `core/space_filter_test.go:116-166` ; types et validation générés du schéma zod (`spacestate.schema.json`, `spacestate/validate_test.go`) | revokeFloor, deletePoll et questions non testés | tests |
 | Chat de bulle (spaceMessage, isTyping) | EventProcessorInit.ts:5-45 | implémenté non vérifié | `ws/spaces.go:172,387` ; E2E vert (J2) | signature (nom, woka) non testée | test |
 | chatMembersQuery (A12), roomTagsQuery (A8) | PSM:1540, 1321 | validé | `admin/http_test.go` : `TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin` | — | — |
 | searchMember (A13), getMember (A15), searchTags (A14), refresh OAuth (A17) | PSM:1487-1642 | validé | `admin/http_test.go`, `ws/conference_test.go` : `TestConferencesAndTheOAuthRefresh` | — | — |
@@ -90,8 +94,8 @@ reconnexion côté Go.
 | `USE_DOMAIN_NAME_IN_PATH` | PathMapper.ts:76 | absent | — | le domaine de la clé vient du `wamUrl` donné par l'admin, ou de l'hôte HTTP ; sans admin, toutes les salles ont l'hôte de `PUBLIC_MAP_STORAGE_URL` | tranche admin |
 | `WAM_TEMPLATE_URL` | UploadController.ts:604 | validé | `mapstorage_test.go` : `TestAMapUploadedAloneStartsFromTheWAMTemplate` | — | — |
 | `resourceUrl` des propriétés de zone (POST à l'ajout, PATCH au changement, DELETE au retrait et à la suppression de la zone ; seulement `PUSHER_URL` et `WHITELISTED_RESOURCE_URLS`) | ResourceUrlModule.ts, UpdateAreaMapStorageCommand.ts | validé | `mapedit/resource_test.go`, `ws/matrix_test.go` | un seul DELETE à la suppression d'une zone (le TS en envoie deux) | — |
-| webhooks, validateur d'API key, S3 de map-storage | MS Services | absent | JOURNAL J3a | SaaS : toute écriture répond 401 | avec le contrat admin |
-| embeddableWebsite, mapStorageJwt, roomsFromSameWorld | PSM:1420, 1760, 1346 | implémenté non vérifié | `ws/queries.go` ; J3a `start_exit:40` | roomsFromSameWorld liste tout map-storage | filtrer par domaine |
+| webhooks, validateur d'API key, S3 de map-storage | MS Services | partiel | A26, A27 (table de l'admin) | webhook et validateur faits ; S3 absent (disque seulement) | décider avec l'équipe (voir « Persistance ») |
+| embeddableWebsite, mapStorageJwt, roomsFromSameWorld | PSM:1420, 1760, 1346 | implémenté non vérifié | `ws/queries.go` ; J3a `start_exit:40` | sans admin, seules les cartes du dossier du monde de la salle (avec `USE_DOMAIN_NAME_IN_PATH`), comme `/maps` de map-storage : `ws/mapedit_test.go` : `TestRoomsFromSameWorldStayInTheWorld` | tests d'`embeddableWebsite` et `mapStorageJwt` |
 
 ## Variables, scripts, modération
 
@@ -101,9 +105,9 @@ reconnexion côté Go.
 | Variables de joueur `pr_` | PlayerVariables.ts | partiel | `ws/variables.go:196` | pas de portée monde `pw_` | avec l'admin (`group`) |
 | sendEvent, `/global/event`, `/rooms` | BSM:709, AdminController.ts | partiel | `core/roomplayers_test.go:26` | pas d'écouteurs Room API ; routes admin non testées | Room API |
 | Kick (message final, puis fermeture) | — | validé | J3a `map_storage_upload:85` passe, rejoué seul | — | — |
-| Ban | PSM:772-821 | partiel | `core/roomplayers_test.go:5` | toujours un kick : ni persisté, ni par IP | client admin |
-| reportPlayer, playGlobalMessage, banIpPreview | PSM:756, 1177, 986 | absent | messages jetés | — | porter |
-| mute/kickOff réservés aux admins | EPI-p:5-53 | implémenté non vérifié | `ws/spaces.go:179-205` | frontière de sécurité sans test | tests |
+| Ban | PSM:772-821 | validé (tests Go) | `ws/session_test.go` : `TestOnlyAnAdminEjectsAPlayer`, `TestARefusedBanEjectsNoOne` ; `core/roomplayers_test.go:5` | enregistré par l'admin (compte, ou IP du joueur dans le monde avec `byIp`). **Écart volontaire** : un ban que l'admin refuse n'éjecte personne et le modérateur en est prévenu (le pusher éjectait quand même) ; admin injoignable : kick, comme le pusher, et le modérateur apprend que ce n'était qu'un kick | — |
+| reportPlayer, playGlobalMessage, banIpPreview | PSM:756, 1177, 986 | implémenté non vérifié | `ws/moderation.go` (`onReport`), `ws/handlers.go` (`playGlobalMessage`, admins seulement), `ws/world.go` (`banIPPreview`) | aucun test | tests |
+| mute/kickOff réservés aux admins | EPI-p:5-53 | validé (unitaire) | `ws/session_test.go` : `TestOnlyAnAdminForcesAMuteOrKicksOff` | — | — |
 
 ## HTTP, configuration, déploiement
 
@@ -114,16 +118,20 @@ reconnexion côté Go.
 | Ports : WS 3001, map-storage 3002 et uploader 3003 actifs par défaut, Room API 50051 si `ROOM_API_SECRET_KEY` | chart `server.enabled` | implémenté non vérifié | `config.go`, `Dockerfile` (EXPOSE) | — | `deploy` OSS |
 | `PATH_PREFIX` de map-storage (fichiers privés derrière `/map-storage`) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` : `TestPrivateFilesBehindAPathPrefix` | — | — |
 | Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` ; stockage S3 (`AWS_*`, téléchargement par lien signé, `UPLOADER_AWS_SIGNED_URL_EXPIRATION`), sinon Redis, sinon mémoire ; audio dans Redis, sinon mémoire | uploader/src/Controller/FileController.ts, Service/*StorageProvider.ts | validé (tests Go) | `uploader_test.go` (4 tests) | règles CORS posées sur le bucket au démarrage ; Redis partagé avec les variables (`REDIS_DB_NUMBER` ignoré) ; mémoire limitée à 256 Mo | — |
-| `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` derrière le jeton, coupé sans | — |
-| OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
-| `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |
+| `/metrics` | PrometheusController.ts | validé | `metrics_test.go` (4 tests) | moins de métriques ; `/debug/pprof` derrière `PROMETHEUS_AUTHORIZATION_TOKEN`, 404 sans lui (les métriques restent ouvertes, comme en TS) | — |
+| OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token vérifié par go-oidc (signature, émetteur, audience, nonce) ; le code verifier PKCE et le nonce voyagent dans un cookie scellé (AES-GCM, clé tirée de `SECRET_KEY`) ; les claims viennent de userinfo, comme dans le pusher | — |
+| `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | validé (tests Go) | voir A4, A9 à A11, A31 (table de l'admin) | — | — |
 | `/room/refresh`, `/message`, `/external-module/event` (`ADMIN_API_TOKEN`) | AdminController.ts | validé | `server_test.go` : `TestTheAdminTalksToThePlayersOfARoom` | — | — |
 | `/ws/admin/rooms` (`ADMIN_SOCKETS_TOKEN` : `listen` → `MemberJoin`/`MemberLeave`, `banned` sur les salles du monde, fermetures 1007/1008) | IoSocketController.ts:86, SocketManager.ts:113 | validé | `adminrooms_test.go` : `TestTheAdminSocketFollowsTheMembersAndBans` ; `roomapi_test.go` : `TestAWatcherSeesWhoComesAndGoes` | file de 1000 messages, les suivants perdus (pas de limite en octets ni de délai de vidage) ; pas de fermeture 1011 (pas de back séparé à perdre) | — |
 | OpenAPI, swagger-ui (`ENABLE_OPENAPI_ENDPOINT`) | SwaggerController.ts | validé | `swagger_doc.spec.ts` | swagger-ui depuis un CDN (5.32.6) | — |
 | Front sans `ASSETS_URL` (mode local) | FrontAssets.ts:79 | absent | `httpapi/front.go:36` | toutes les pages répondent 503 | mode local, ou `ASSETS_URL` obligatoire |
-| Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` ; `NODE_TLS_REJECT_UNAUTHORIZED=0` sans effet : un certificat auto-signé (LiveKit, S3, admin de test) se donne par `SSL_CERT_FILE`/`SSL_CERT_DIR`, que Go lit seul | aligner ; décision de Yannis s'il faut aussi un interrupteur sans vérification |
+| Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` ; `NODE_TLS_REJECT_UNAUTHORIZED=0` sans effet : un certificat auto-signé (LiveKit, S3, admin de test) se donne par `SSL_CERT_FILE`/`SSL_CERT_DIR`, que Go lit seul ; nouvelles, sans équivalent TS : `TRUSTED_PROXIES` et `RESUME_BUFFER_BUDGET_BYTES` (documentées dans `docs/others/self-hosting/env-variables.md`) | aligner ; décision de Yannis s'il faut aussi un interrupteur sans vérification |
 | Dockerfile de prod | play/Dockerfile | partiel | `Dockerfile` | voir manque 7 | étape « Déploiement » |
 | Sentry serveur : `SENTRY_DSN_PUSHER` (le conteneur play que ce serveur remplace), sinon `SENTRY_DSN` (le back) ; vide : rien n'est envoyé. `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`. Envoyés : chaque `slog.Error` (attributs `actor`, `room`, `space`, `session`, `user`, `world`… en tags, les autres en contexte `attributes`), les panics rattrapées des acteurs et des sessions (pile jusqu'à la panic), les panics et réponses 5xx du handler HTTP principal (`sentryhttp`, sans corps). Nettoyés avant envoi : en-têtes `Authorization`, cookies, `X-Forwarded-For`, paramètres `token`/`jwt`, tout ce qui ressemble à un JWT, un email ou une IPv4. Vidé 2 s à l'arrêt | back/src/server.ts:20, pusher EnvironmentVariable.ts:125 | validé (unitaire) | `sentryx_test.go` (3 tests) | `SENTRY_TRACES_SAMPLE_RATE` lu mais pas de traces (une requête WebSocket dure toute la visite) ; ports map-storage et uploader dédiés non couverts par le middleware HTTP (leurs `slog.Error` le sont) | — |
+| IP cliente : l'adresse la plus à droite de `X-Forwarded-For` qui n'est pas un proxy de confiance (`TRUSTED_PROXIES`, CIDR séparés par des virgules, plages privées par défaut), le pair compris ; une seule fonction (`netguard.ClientIP`) pour le WebSocket, le socket admin et `/me` | — | validé (unitaire) | `netguard_test.go` : `TestClientIPTrustsOnlyTheProxies` | **écart volontaire** : le TS prend la première entrée, que le client écrit lui-même (un ban par IP se contournait) | — |
+| Clients HTTP sortants : chacun a un délai (file analytics : `ANALYTICS_TIMEOUT_MS` ; gabarit WAM : 10 s) ; une seule `httpx.WriteJSON`, qui n'échappe pas le HTML, comme `JSON.stringify` | — | validé (unitaire) | `httpx_test.go`, `analytics_test.go` : `TestASlowAdminDoesNotHoldTheQueue` | — | — |
+| Erreurs ignorées : journalisées en Warn et comptées dans `server_ignored_errors_total{op}` (un contexte annulé ne compte pas) ; messages du client non gérés : comptés dans `server_unhandled_messages_total{type}`, le premier de chaque type en Warn, une fois par processus | — | validé (unitaire) | `metrics_test.go` : `TestAnIgnoredErrorIsCountedUnlessItIsACancellation`, `TestAnUnhandledMessageIsCountedEachTimeAndLoggedOncePerType` | le TS les avalait ou les journalisait en Debug | — |
+| Panic dans une salle ou un space : comptée (`server_actor_panics_total{kind}`), envoyée à Sentry, puis tous les membres sont éjectés (Kick, `WS_CLOSE_CODE_SESSION_DESTROYED`) et les nouveaux refusés jusqu'à ce que l'acteur soit vide et abandonné | back : exception d'un handler | validé (unitaire) | `core/recovery_test.go` : `TestAPanicInARoomKicksEveryoneAndRefusesNewcomers`, `TestAPanicInASpaceKicksItsMembersAndRefusesNewcomers` ; `actor_test.go` | **écart volontaire** : le TS ferme la connexion de l'émetteur et continue ; l'acteur Go ne connaît pas l'émetteur, et une panic peut laisser l'état à moitié modifié : le comportement d'un crash du back, limité à une salle | — |
 | Télémétrie, drain (`DRAIN_TIMEOUT_MS`) | — | absent | — | — | — |
 
 ## LiveKit
@@ -132,27 +140,27 @@ reconnexion côté Go.
 |---|---|---|---|---|---|
 | Stratégie initiale WebRTC ; sans LiveKit configuré, WebRTC quelle que soit la taille | AbstractCommunicationState.ts:45-106 | validé | `core/space_test.go:32`, `space_livekit_test.go` (`TestWithoutLiveKitABubbleStaysOnWebRTCWhateverItsSize`) | — | — |
 | Bascule au-delà de `MAX_USERS_FOR_WEBRTC` ou sur CPU limité (bulle de 3+) | TransitionPolicy.ts:37-55 | validé (unitaire) | `space_livekit_test.go` (bascule à 5, CPU limité à 3) | — | `livekit.spec.ts` sur la stack |
-| Retour en WebRTC 20 s après, annulé si la condition revient | CommunicationManager.ts:286-396 | validé (unitaire) | `TestABubbleGoesBackToWebRTCOnlyOnceItStayedSmall`, `TestSomeoneComingBackKeepsTheBubbleOnLiveKit` | pas encore bloqué par un enregistrement (absent) | avec l'enregistrement |
+| Retour en WebRTC 20 s après, annulé si la condition revient | CommunicationManager.ts:286-396 | validé (unitaire) | `TestABubbleGoesBackToWebRTCOnlyOnceItStayedSmall`, `TestSomeoneComingBackKeepsTheBubbleOnLiveKit` (horloge factice : minuteries sur `actor.After` et `core.Clock`) | bloqué pendant un enregistrement (voir « Enregistrement ») | — |
 | `switchMessage`, puis `finalizeSwitchMessage` de l'ancienne stratégie 5 s après | StateLifecycleManager.ts:52-84 | validé (unitaire) | idem | — | — |
 | Twirp ListRooms, CreateRoom, DeleteRoom ; jeton HS256 (grants, identité `spaceUserId`, métadonnées) | LivekitService.ts:110-163 | validé (unitaire) | `livekit/livekit_test.go` (2 tests) | **écart volontaire** : la salle est supprimée à la finalisation du retour en WebRTC (le TS la laissait orpheline) | — |
 | Invitations (membres du filtre et observateurs), déconnexion, salle supprimée quand plus personne ne diffuse | LivekitCommunicationStrategy.ts:60-229 | validé (unitaire) | `TestABubblePastFourMovesToLiveKitAndEveryoneGetsAToken`, `TestAMegaphoneRoomLastsAsLongAsSomeoneSpeaks` | — | spec |
-| Relance `meetingConnectionRestart` sans pair : nouveau jeton | LivekitCommunicationStrategy.ts:250-263 | implémenté non vérifié | `core/space_livekit.go` (`restartLiveKit`), `ws/spaces.go` | — | test |
-| Identifiants LiveKit par monde (`api/livekit/credentials`) | StateFactory.ts:48-75 | absent | — | SaaS (LiveKit Cloud) | avec l'admin |
+| Relance `meetingConnectionRestart` sans pair : nouveau jeton | LivekitCommunicationStrategy.ts:250-263 | validé (unitaire) | `core/recovery_test.go` : `TestAMemberThatLostLiveKitIsInvitedAgain` | — | — |
+| Identifiants LiveKit par monde (`api/livekit/credentials`) | StateFactory.ts:48-75 | validé (tests Go) | voir A24 (table de l'admin) | — | — |
 
 ## Enregistrement
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| start/stop, une session par space, arrêt par le seul recorder, arrêts automatiques, pas de retour WebRTC pendant l'enregistrement | RecordingManager.ts | validé | `recording.spec.ts` 5/5 (17/10) ; `core/space_recording_test.go` (3) | état de l'egress interrogé chaque seconde au lieu du webhook | — |
+| start/stop, une session par space, arrêt par le seul recorder, arrêts automatiques, pas de retour WebRTC pendant l'enregistrement | RecordingManager.ts | validé | `recording.spec.ts` 5/5 (17/10) ; `core/space_recording_test.go` (3, `waitStatus` attend le statut courant) | état de l'egress interrogé chaque seconde au lieu du webhook | — |
 | `canRecord`, `recording.buttonState` | LocalAdmin.ts:69-75,236,342 | validé | `admin_test.go` ; `recording.spec.ts:144,358` | — | — |
 | Liste, suppression, vignettes, URL signée S3 | RecordingService.ts | validé | `recording.spec.ts` ; `s3_test.go` (signature AWS) ; `recordings_test.go` | — | — |
-| Notification à l'admin `api/recordings/events` | back AdminApi.ts:35-65 | absent | — | webhook client `recording.completed` | avec l'admin (A23) |
+| Notification à l'admin `api/recordings/events` | back AdminApi.ts:35-65 | validé (tests Go) | voir A23 (table de l'admin) | — | — |
 
 ## Room API
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| Serveur gRPC h2c (`ROOM_API_PORT`, ou `SERVER_ROOM_API_PORT`, servi si `ROOM_API_SECRET_KEY`), clé `X-API-Key`, room sous `FRONT_URL` | play/src/server.ts:139-150, AuthenticationGuard.ts, LocalAuthenticator.ts | validé (unitaire) | `roomapi_test.go` : `TestTheRoomAPIWantsItsKeyAndARoomOfThisServer` | autorisation par l'admin absente (`api/room-api/authorization`) ; `room-api.spec.ts` à jouer | spec J3c ; admin |
+| Serveur gRPC h2c (`ROOM_API_PORT`, ou `SERVER_ROOM_API_PORT`, servi si `ROOM_API_SECRET_KEY`), clé `X-API-Key`, room sous `FRONT_URL` | play/src/server.ts:139-150, AuthenticationGuard.ts, LocalAuthenticator.ts | validé (unitaire) | `roomapi_test.go` : `TestTheRoomAPIWantsItsKeyAndARoomOfThisServer` | autorisation par l'admin : voir A25 ; `room-api.spec.ts` à jouer | spec J3c |
 | readVariable, saveVariable (sans `writableBy`, variable non déclarée refusée, relecture de la carte) | RoomApiServer.ts, GameRoom.ts:672-735 | validé (unitaire) | `core/roomapi_test.go` (3 tests), `roomapi_test.go` | — | spec |
 | listenVariable, listenToEvent, broadcastEvent (ciblé : joueurs seulement) | RoomManager.ts:615-748 | validé (unitaire) | `core/roomapi_test.go`, `roomapi_test.go` | un écouteur trop lent est coupé (RESOURCE_EXHAUSTED) au-delà de 256 messages en attente | spec |
 
@@ -172,7 +180,7 @@ reconnexion côté Go.
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| `/metrics` (501 sans jeton ni port, 401) et pprof | PrometheusController.ts | validé | `metrics_test.go` (2 tests) | pprof derrière le même jeton, coupé sans jeton | — |
+| `/metrics` (501 sans jeton ni port, 401) et pprof | PrometheusController.ts | validé | `metrics_test.go` : `TestMetricsAreClosedUnlessOnTheirOwnPortOrBehindAToken`, `TestTheProfilerWantsTheMetricsToken` | pprof derrière le même jeton, 404 sans jeton | — |
 | `nb_sockets`, `nb_clients_per_room`, `nb_rooms`, `nb_spaces` | GaugeManager.ts | implémenté non vérifié | `metrics.go` | une série au lieu de deux jobs (pusher, back) | revoir les tableaux de bord |
 | `nb_publishers_per_space`, `nb_watchers_per_world` | back GaugeManager.ts:38-69 | absent | — | bug TS (`world` contre `name`) | définir la sémantique |
 | `nodejs_*` | collectDefaultMetrics | remplacé par `go_*` | — | alertes à revoir | — |
