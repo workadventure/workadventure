@@ -1,6 +1,7 @@
 import Debug from "debug";
 import type { Action } from "svelte/action";
 import { get } from "svelte/store";
+import type { Unsubscriber } from "svelte/store";
 import { speakerSelectedStore } from "../Stores/AudioOutputStore";
 
 const debug = Debug("AudioOutput");
@@ -11,17 +12,20 @@ const debug = Debug("AudioOutput");
  */
 const SINK_ID_TIMEOUT_MS = 2_000;
 
+/** What setSinkId() routes: a media element, or an AudioContext (Chrome 110+), for sound that never goes through one. */
+type AudioSink = HTMLMediaElement | AudioContext;
+
 /**
  * Per element: the device last requested, and the tail of its request queue. setSinkId() is asynchronous, so two calls
  * racing on the same element could settle in reverse order and leave it on the wrong device.
  */
-const sinks = new WeakMap<HTMLMediaElement, { deviceId: string; queue: Promise<void> }>();
+const sinks = new WeakMap<AudioSink, { deviceId: string; queue: Promise<void> }>();
 
 /**
- * Routes a media element to an audio output ("" is the system default). Requests on the same element are applied in
+ * Routes a media element or an AudioContext to an audio output ("" is the system default). Requests on the same element are applied in
  * order. The promise settles once this request is applied, failed or timed out, and never rejects.
  */
-export function applySinkId(el: HTMLMediaElement, deviceId: string): Promise<void> {
+export function applySinkId(el: AudioSink, deviceId: string): Promise<void> {
     if (typeof el.setSinkId !== "function") {
         return Promise.resolve();
     }
@@ -32,7 +36,7 @@ export function applySinkId(el: HTMLMediaElement, deviceId: string): Promise<voi
 }
 
 async function applyInTurn(
-    el: HTMLMediaElement,
+    el: AudioSink,
     setSinkId: (sinkId: string) => Promise<void>,
     deviceId: string,
 ): Promise<void> {
@@ -66,7 +70,7 @@ async function applyInTurn(
 }
 
 async function setSinkIdOrFallBack(
-    el: HTMLMediaElement,
+    el: AudioSink,
     setSinkId: (sinkId: string) => Promise<void>,
     deviceId: string,
 ): Promise<void> {
@@ -92,19 +96,25 @@ async function setSinkIdOrFallBack(
 }
 
 /**
- * Keeps a media element on the audio output selected in the settings: `<audio use:audioOutput>`.
- *
- * Only for elements playing a `src`: a MediaStream in `srcObject` must not be attached before setSinkId() resolved
- * (crbug 971947), which AudioStream.svelte handles itself.
+ * Keeps a media element or an AudioContext on the audio output selected in the settings, until the returned function
+ * is called.
  */
-export const audioOutput: Action<HTMLMediaElement> = (el) => ({
-    destroy: speakerSelectedStore.subscribe((deviceId) => {
+export function bindAudioOutput(el: AudioSink): Unsubscriber {
+    return speakerSelectedStore.subscribe((deviceId) => {
         // undefined: nothing selected, or a browser where we never choose the output (see speakerSelectionSupported)
         if (deviceId !== undefined) {
             applySinkId(el, deviceId).catch((e: unknown) => console.warn("Could not set the audio output device", e));
         }
-    }),
-});
+    });
+}
+
+/**
+ * {@link bindAudioOutput} for an element of a template: `<audio use:audioOutput>`.
+ *
+ * Only for elements playing a `src`: a MediaStream in `srcObject` must not be attached before setSinkId() resolved
+ * (crbug 971947), which AudioStream.svelte handles itself.
+ */
+export const audioOutput: Action<HTMLMediaElement> = (el) => ({ destroy: bindAudioOutput(el) });
 
 /**
  * Plays an element not rendered by a template (a one-off sound) on the audio output selected in the settings. The sink
