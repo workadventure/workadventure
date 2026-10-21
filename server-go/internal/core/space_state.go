@@ -103,6 +103,10 @@ func (s *spaceState) query(sender *SpaceUser, q any) error {
 	return fmt.Errorf("unknown space state query %T", q)
 }
 
+// setKind is open to any member, like the back: every member's front claims the kind of the space when it joins it
+// (SpaceRegistry), so reserving it to admins would refuse the claim of almost everyone. The kind only labels the space
+// (the analytics, labels the front draws itself); a member who lies about it spoils the rows of a meeting it is in,
+// nothing it could not spoil by joining and leaving. A value outside the enum is refused, and a non-member has no say.
 func (s *spaceState) setKind(_ *SpaceUser, q SetKind) error {
 	kind := spacestate.SpaceKind(q.Kind)
 	if err := kind.Validate(); err != nil {

@@ -102,6 +102,27 @@ func query(t *testing.T, sp *Space, id string, q any) error {
 	return <-res
 }
 
+// Any member claims the kind of its space, admin or not, as its front does on joining; a value outside the enum, or
+// a stranger, is refused.
+func TestAnyMemberSetsTheKindOfItsSpace(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "kind"})
+	defer sp.Stop()
+	alice := &recorder{}
+	joinSpace(t, sp, alice, "alice")
+	if err := query(t, sp, "alice", SetKind{Kind: "megaphone"}); err != nil {
+		t.Fatal(err)
+	}
+	if p := lastPatch(t, alice); !strings.Contains(p, `"path":"/kind","value":"megaphone"`) {
+		t.Fatalf("the kind is in the state: %s", p)
+	}
+	if query(t, sp, "alice", SetKind{Kind: "throne_room"}) == nil {
+		t.Fatal("a kind outside the enum is refused")
+	}
+	if query(t, sp, "stranger", SetKind{Kind: "bubble"}) == nil {
+		t.Fatal("a non-member has no say")
+	}
+}
+
 func lastPatch(t *testing.T, p *recorder) string {
 	t.Helper()
 	patch := ""
