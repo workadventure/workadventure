@@ -47,7 +47,7 @@ type RecordingEnded struct {
 }
 
 // recordingPoll is how often a running egress is asked for its status.
-var recordingPoll = time.Second
+const recordingPoll = time.Second
 
 type recording struct {
 	recorder  SpaceUser
@@ -117,13 +117,13 @@ func (s *spaceState) recordWhenReady() {
 	}
 	r.egressID, r.egress = "pending", egress
 	gen, room, recorder := r.gen, s.roomName, r.recorder
-	go func() {
+	s.call(func() {
 		id, err := egress.Start(context.Background(), room, recorder)
 		s.later(func() {
 			r := s.rec
 			if r == nil || r.gen != gen {
 				if err == nil {
-					go func() { metrics.Ignore("egress.Stop", egress.Stop(context.Background(), id)) }() // the space moved on meanwhile
+					s.call(func() { metrics.Ignore("egress.Stop", egress.Stop(context.Background(), id)) }) // the space moved on meanwhile
 				}
 				return
 			}
@@ -135,64 +135,52 @@ func (s *spaceState) recordWhenReady() {
 			r.egressID = id
 			s.watchEgress(gen)
 		})
-	}()
+	})
 }
 
 // watchEgress asks the egress for its status until it ends.
 func (s *spaceState) watchEgress(gen int) {
-	time.AfterFunc(recordingPoll, func() {
-		var id string
-		var egress Egress
-		ok := make(chan bool, 1)
-		s.later(func() {
-			if r := s.rec; r != nil && r.gen == gen {
-				id, egress = r.egressID, r.egress
-				ok <- true
-				return
-			}
-			ok <- false
-		})
-		select {
-		case still := <-ok:
-			if !still {
-				return
-			}
-		case <-time.After(10 * time.Second): // the space stopped
+	s.after(recordingPoll, func() {
+		r := s.rec
+		if r == nil || r.gen != gen {
 			return
 		}
-		info, err := egress.Status(context.Background(), id)
-		status := info.Status
-		s.later(func() {
-			r := s.rec
-			if r == nil || r.gen != gen {
-				return
-			}
-			switch {
-			case err != nil:
-				slog.Warn("cannot read the recording's status", "error", err)
-			case status == "EGRESS_ACTIVE" && r.status == spacestate.RecordingStatusStarting:
-				r.status = spacestate.RecordingStatusRecording
-				s.publishRecording(r.status, r.recorder.ID)
-				for _, reply := range r.starting {
-					reply(nil)
+		id, egress := r.egressID, r.egress
+		s.call(func() {
+			info, err := egress.Status(context.Background(), id)
+			status := info.Status
+			s.later(func() {
+				r := s.rec
+				if r == nil || r.gen != gen {
+					return
 				}
-				r.starting = nil
-				if r.stopAsked {
-					s.stopEgress()
+				switch {
+				case err != nil:
+					slog.Warn("cannot read the recording's status", "error", err)
+				case status == "EGRESS_ACTIVE" && r.status == spacestate.RecordingStatusStarting:
+					r.status = spacestate.RecordingStatusRecording
+					s.publishRecording(r.status, r.recorder.ID)
+					for _, reply := range r.starting {
+						reply(nil)
+					}
+					r.starting = nil
+					if r.stopAsked {
+						s.stopEgress()
+					}
+				case status == "EGRESS_ACTIVE" && r.status == spacestate.RecordingStatusStopping: // the stop was lost
+					s.sendStop(r.egress, r.egressID)
+				case status == "EGRESS_COMPLETE" || status == "EGRESS_FAILED" || status == "EGRESS_ABORTED" || status == "EGRESS_LIMIT_REACHED":
+					if r.status != spacestate.RecordingStatusStopping {
+						slog.Warn("the recording ended by itself", "room", s.roomName, "status", status)
+					}
+					if s.mediaCfg.Recordings != nil {
+						s.mediaCfg.Recordings.RecordingEnded(RecordingEnded{SessionID: r.sessionID, EgressID: r.egressID, Recorder: r.recorder, Info: info})
+					}
+					s.endRecording(nil)
+					return
 				}
-			case status == "EGRESS_ACTIVE" && r.status == spacestate.RecordingStatusStopping: // the stop was lost
-				sendStop(r.egress, r.egressID)
-			case status == "EGRESS_COMPLETE" || status == "EGRESS_FAILED" || status == "EGRESS_ABORTED" || status == "EGRESS_LIMIT_REACHED":
-				if r.status != spacestate.RecordingStatusStopping {
-					slog.Warn("the recording ended by itself", "room", s.roomName, "status", status)
-				}
-				if s.mediaCfg.Recordings != nil {
-					s.mediaCfg.Recordings.RecordingEnded(RecordingEnded{SessionID: r.sessionID, EgressID: r.egressID, Recorder: r.recorder, Info: info})
-				}
-				s.endRecording(nil)
-				return
-			}
-			s.watchEgress(gen)
+				s.watchEgress(gen)
+			})
 		})
 	})
 }
@@ -247,14 +235,14 @@ func (s *spaceState) stopEgress() {
 	r := s.rec
 	r.status = spacestate.RecordingStatusStopping
 	s.publishRecording(r.status, r.recorder.ID)
-	sendStop(r.egress, r.egressID)
+	s.sendStop(r.egress, r.egressID)
 }
 
 // sendStop asks the egress to stop. On failure watchEgress asks again while the egress says it is active.
-func sendStop(egress Egress, id string) {
-	go func() {
+func (s *spaceState) sendStop(egress Egress, id string) {
+	s.call(func() {
 		if err := egress.Stop(context.Background(), id); err != nil {
 			slog.Warn("cannot stop the recording, will ask again", "error", err)
 		}
-	}()
+	})
 }

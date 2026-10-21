@@ -57,12 +57,12 @@ func (f *fakeEgress) Status(_ context.Context, id string) (EgressInfo, error) {
 
 func recordingSpace(t *testing.T) (*Space, *fakeEgress) {
 	t.Helper()
-	recordingPoll = 10 * time.Millisecond
 	egress := &fakeEgress{status: map[string]string{}}
 	m := DefaultMedia(&fakeLiveKit{})
 	m.Provider = ServerLiveKit{LiveKit: m.Provider.(ServerLiveKit).LiveKit, Egress: egress}
 	m.Recordings = egress
 	m.FinalizeAfter = 20 * time.Millisecond
+	m.Clock = newFakeClock()
 	sp := NewSpaceWithMedia(SpaceKey{"http://play.test", "room#1#0"}, m)
 	t.Cleanup(sp.Stop)
 	return sp, egress
@@ -74,13 +74,18 @@ func ask(t *testing.T, sp *Space, id string, q any) error {
 	if err := sp.Query(ctx, id, q, func(err error) { got <- err }); err != nil {
 		t.Fatal(err)
 	}
-	select {
-	case err := <-got:
-		return err
-	case <-time.After(3 * time.Second):
+	var err error
+	if !until(t, sp, func() bool {
+		select {
+		case err = <-got:
+			return true
+		default:
+			return false
+		}
+	}) {
 		t.Fatalf("%T never answered", q)
-		return nil
 	}
+	return err
 }
 
 func sawStatus(p *recorder, status string) bool {
@@ -96,13 +101,9 @@ func sawStatus(p *recorder, status string) bool {
 
 func waitStatus(t *testing.T, sp *Space, p *recorder, status string) {
 	t.Helper()
-	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
-		syncSpace(t, sp)
-		if sawStatus(p, status) {
-			return
-		}
+	if !until(t, sp, func() bool { return sawStatus(p, status) }) {
+		t.Fatalf("the recording never became %s", status)
 	}
-	t.Fatalf("the recording never became %s", status)
 }
 
 func TestARecordingStartsOnLiveKitAndEndsOnceItsFileIsWritten(t *testing.T) {
@@ -124,14 +125,11 @@ func TestARecordingStartsOnLiveKitAndEndsOnceItsFileIsWritten(t *testing.T) {
 	}
 	waitStatus(t, sp, host, "stopping")
 	waitStatus(t, sp, host, "idle")
-	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
+	until(t, sp, func() bool {
 		egress.mu.Lock()
-		n := len(egress.ended)
-		egress.mu.Unlock()
-		if n > 0 {
-			break
-		}
-	}
+		defer egress.mu.Unlock()
+		return len(egress.ended) > 0
+	})
 	egress.mu.Lock()
 	defer egress.mu.Unlock()
 	if egress.started != 1 {
@@ -164,12 +162,12 @@ func TestWithoutEgressThereIsNoRecording(t *testing.T) {
 }
 
 func TestARecordingUsesTheEgressOfTheWorldsLiveKit(t *testing.T) {
-	recordingPoll = 10 * time.Millisecond
 	world := &fakeLiveKit{}
 	egress := &fakeEgress{status: map[string]string{}}
 	var askedFor LiveKit
 	m := DefaultMedia(nil)
 	m.FinalizeAfter = 20 * time.Millisecond
+	m.Clock = newFakeClock()
 	m.Provider = worldLiveKit{liveKit: func(context.Context, string) (LiveKit, error) { return world, nil },
 		egress: func(lk LiveKit) Egress { askedFor = lk; return egress }}
 	sp := NewSpaceWithMedia(SpaceKey{"org/w", "room#1#0"}, m)
@@ -202,13 +200,11 @@ func TestALostStopIsAskedAgain(t *testing.T) {
 	if err := ask(t, sp, "host", StopRecording{}); err != nil {
 		t.Fatal(err)
 	}
-	for deadline := time.Now().Add(3 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
+	if !until(t, sp, func() bool {
 		egress.mu.Lock()
-		ended := len(egress.ended)
-		egress.mu.Unlock()
-		if ended == 1 {
-			return
-		}
+		defer egress.mu.Unlock()
+		return len(egress.ended) == 1
+	}) {
+		t.Fatal("the recording stayed stopping")
 	}
-	t.Fatal("the recording stayed stopping")
 }

@@ -45,7 +45,7 @@ func only(t *testing.T, transport *sentry.MockTransport) *sentry.Event {
 
 func TestAPanicInAnActorReachesSentryWithTheActorNameAndTheStack(t *testing.T) {
 	transport := capture(t)
-	a := actor.Start("room:https://play/_/global/map.json", 1)
+	a := actor.Start("room:https://play/_/global/map.json", 1, nil)
 	if err := a.Post(context.Background(), func() { panic("boom") }); err != nil {
 		t.Fatal(err)
 	}

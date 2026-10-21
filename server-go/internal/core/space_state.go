@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"slices"
 	"sort"
-	"time"
 	"unicode/utf16"
 
 	"github.com/workadventure/workadventure/server-go/internal/spacestate"
@@ -126,7 +125,7 @@ func (s *spaceState) raiseHand(sender *SpaceUser, q RaiseHand) error {
 		if !q.Raised {
 			st.RaisedHands = removeHand(st.RaisedHands, sender.ID)
 		} else if !slices.ContainsFunc(st.RaisedHands, func(e spacestate.RaisedHandEntry) bool { return e.SpaceUserID == sender.ID }) {
-			st.RaisedHands = append(st.RaisedHands, spacestate.RaisedHandEntry{SpaceUserID: sender.ID, Name: sender.Name, At: now()})
+			st.RaisedHands = append(st.RaisedHands, spacestate.RaisedHandEntry{SpaceUserID: sender.ID, Name: sender.Name, At: s.now()})
 		}
 		return nil
 	})
@@ -183,7 +182,7 @@ func (s *spaceState) createPoll(sender *SpaceUser, q CreatePoll) error {
 		}
 		name := truncateJS(sender.Name, senderNameMaxLength)
 		poll := spacestate.ProximityPoll{ID: newUUID(), Question: q.Question, Kind: spacestate.ProximityPollKind(q.Kind), Answers: answers,
-			MaxSelections: int64(q.MaxSelections), SenderID: voterID(sender), SenderName: &name, CreatedAt: now(),
+			MaxSelections: int64(q.MaxSelections), SenderID: voterID(sender), SenderName: &name, CreatedAt: s.now(),
 			Votes: map[string]spacestate.ProximityPollVote{}}
 		st.Polls[poll.ID] = poll
 		return nil
@@ -209,7 +208,7 @@ func (s *spaceState) votePoll(sender *SpaceUser, q VotePoll) error {
 		if len(q.AnswerIDs) == 0 {
 			delete(poll.Votes, voterID(sender))
 		} else {
-			poll.Votes[voterID(sender)] = spacestate.ProximityPollVote{AnswerIDs: slices.Clone(q.AnswerIDs), UpdatedAt: now()}
+			poll.Votes[voterID(sender)] = spacestate.ProximityPollVote{AnswerIDs: slices.Clone(q.AnswerIDs), UpdatedAt: s.now()}
 		}
 		return nil
 	})
@@ -221,7 +220,7 @@ func (s *spaceState) closePoll(sender *SpaceUser, q ClosePoll) error {
 		if err != nil || poll.End != nil {
 			return err
 		}
-		poll.End = &spacestate.ProximityPollEnd{ClosingMessage: q.ClosingMessage, ClosedAt: now()}
+		poll.End = &spacestate.ProximityPollEnd{ClosingMessage: q.ClosingMessage, ClosedAt: s.now()}
 		st.Polls[q.PollID] = poll
 		return nil
 	})
@@ -241,7 +240,7 @@ func (s *spaceState) askQuestion(sender *SpaceUser, q AskQuestion) error {
 	return s.updateState(func(st *spacestate.SpaceState) error {
 		name := truncateJS(sender.Name, senderNameMaxLength)
 		question := spacestate.ProximityQuestion{ID: newUUID(), Body: q.Body, SenderID: voterID(sender), SenderName: &name,
-			CreatedAt: now(), Upvotes: map[string]int64{}}
+			CreatedAt: s.now(), Upvotes: map[string]int64{}}
 		st.Questions[question.ID] = question
 		return nil
 	})
@@ -259,7 +258,7 @@ func (s *spaceState) upvoteQuestion(sender *SpaceUser, q UpvoteQuestion) error {
 			return errors.New("This question has already been answered")
 		}
 		if _, already := question.Upvotes[voterID(sender)]; q.Upvoted && !already {
-			question.Upvotes[voterID(sender)] = now()
+			question.Upvotes[voterID(sender)] = s.now()
 		} else if !q.Upvoted {
 			delete(question.Upvotes, voterID(sender))
 		}
@@ -277,7 +276,7 @@ func (s *spaceState) answerQuestion(sender *SpaceUser, q AnswerQuestion) error {
 			return fmt.Errorf("Question %s does not exist in this space", q.QuestionID)
 		}
 		if question.Answer == nil {
-			question.Answer = &spacestate.ProximityQuestionAnswer{ModeratorID: voterID(sender), AnsweredAt: now()}
+			question.Answer = &spacestate.ProximityQuestionAnswer{ModeratorID: voterID(sender), AnsweredAt: s.now()}
 			st.Questions[q.QuestionID] = question
 		}
 		return nil
@@ -400,7 +399,7 @@ func voterID(u *SpaceUser) string {
 
 func isAdmin(u *SpaceUser) bool { return slices.Contains(u.Tags, "admin") }
 
-func now() int64 { return time.Now().UnixMilli() }
+func (s *spaceState) now() int64 { return s.mediaCfg.Clock.Now().UnixMilli() }
 
 // truncateJS is s.slice(0, n) of JavaScript, counted in UTF-16 units, without splitting a surrogate pair.
 func truncateJS(s string, n int) string {

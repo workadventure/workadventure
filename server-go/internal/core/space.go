@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log/slog"
 	"slices"
-	"sync"
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/actor"
@@ -122,25 +121,38 @@ type SpaceKey struct{ World, Local string }
 // Space is a group of users sharing presence, events and media (a bubble, a meeting room, the whole world for
 // the user list). Like a Room, it is an actor.
 type Space struct {
-	Key SpaceKey
-	a   *actor.Actor
-	s   *spaceState
-	// Timers and LiveKit answers come back through later, refused once the space stopped.
-	mu      sync.RWMutex
-	stopped bool
-	calls   chan func() // LiveKit calls, one at a time, off the actor
+	Key   SpaceKey
+	a     *actor.Actor
+	s     *spaceState
+	calls chan func() // LiveKit calls, one at a time, off the actor
 }
+
+// Clock is the time a space reads and its timers run on. Tests give a fake one, which they advance by hand instead
+// of sleeping.
+type Clock interface {
+	Now() time.Time
+	AfterFunc(d time.Duration, f func()) (stop func() bool)
+}
+
+type RealClock struct{}
+
+func (RealClock) Now() time.Time                                  { return time.Now() }
+func (RealClock) AfterFunc(d time.Duration, f func()) func() bool { return time.AfterFunc(d, f).Stop }
 
 // NewSpace is a space without LiveKit: its media go through WebRTC whatever its size.
 func NewSpace(k SpaceKey) *Space { return NewSpaceWithMedia(k, Media{}) }
 
 func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
-	sp := &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize), s: &spaceState{
+	if media.Clock == nil {
+		media.Clock = RealClock{}
+	}
+	sp := &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize, media.Clock), s: &spaceState{
 		local: k.Local, members: map[string]*spaceMember{}, conns: map[[2]string]string{},
 		state: spacestate.Empty(), metadata: map[string]json.RawMessage{},
 		mediaCfg: media, strategy: strategyWebRTC, present: map[string]bool{}, roomName: k.World + "." + k.Local, lk: liveKitState{invited: map[string]bool{}},
 	}}
-	sp.s.later = sp.later
+	// Timers and LiveKit answers come back through later, dropped once the space stopped.
+	sp.s.later, sp.s.after = sp.a.Later, sp.a.After
 	if media.Meetings != nil {
 		sp.s.meeting = media.Meetings.Open(sp.s.roomName, k.World, sp.s.kind, func() string { return sp.s.strategy })
 	}
@@ -156,20 +168,8 @@ func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
 	return sp
 }
 
-// later runs f on the space's goroutine, unless the space stopped.
-func (sp *Space) later(f func()) {
-	sp.mu.RLock()
-	defer sp.mu.RUnlock()
-	if !sp.stopped {
-		_ = sp.a.Post(context.Background(), f) // without a deadline, Post cannot fail
-	}
-}
-
 func (sp *Space) Stop() {
 	_ = sp.a.Post(context.Background(), func() { sp.s.closeMeeting("closed") }) // the last closure before the actor ends
-	sp.mu.Lock()
-	sp.stopped = true
-	sp.mu.Unlock()
 	sp.a.Stop()
 	if sp.calls != nil {
 		go func() { <-sp.a.Done(); close(sp.calls) }() // the last closures may still queue a call
@@ -194,16 +194,17 @@ type spaceState struct {
 	roomName      string // the LiveKit room: the space's name, prefixed by its world
 	lk            liveKitState
 	finalizing    string // the strategy left, until it is finalized
-	finalizeTimer *time.Timer
+	finalizeTimer func() // stops the timer; nil when none runs
 	finalizeGen   int
-	backTimer     *time.Timer
+	backTimer     func()
 	backGen       int
 	rec           *recording      // space_recording.go
 	meeting       MeetingReporter // nil without analytics (space_analytics.go)
 	present       map[string]bool // the members the meeting counts
 	recGen        int
-	later         func(func()) // run on the space's goroutine, from a timer or a LiveKit answer
-	call          func(func()) // run a LiveKit call off the space's goroutine
+	later         func(func())                                  // run on the space's goroutine, from a LiveKit answer
+	after         func(d time.Duration, f func()) (stop func()) // run on the space's goroutine once d passed
+	call          func(func())                                  // run a LiveKit call off the space's goroutine
 }
 
 type spaceMember struct {

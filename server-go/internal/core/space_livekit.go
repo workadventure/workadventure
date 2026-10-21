@@ -30,6 +30,7 @@ type Media struct {
 	FinalizeAfter     time.Duration
 	Meetings          Meetings          // nil: no meeting analytics
 	Recordings        RecordingReporter // nil: nobody told when a recording ends
+	Clock             Clock             // nil: the real clock
 }
 
 // MediaProvider gives a space the LiveKit server where it meets past WebRTC, and the egress that records on it.
@@ -144,16 +145,14 @@ func (s *spaceState) evaluate() {
 			s.cancelBack()
 		} else if s.backTimer == nil {
 			gen := s.backGen
-			s.backTimer = time.AfterFunc(s.mediaCfg.BackToWebRTCAfter, func() {
-				s.later(func() {
-					if gen != s.backGen {
-						return
-					}
-					s.backTimer = nil
-					if s.strategy == strategyLiveKit && s.mayGoBack() {
-						s.switchTo(strategyWebRTC)
-					}
-				})
+			s.backTimer = s.after(s.mediaCfg.BackToWebRTCAfter, func() {
+				if gen != s.backGen {
+					return
+				}
+				s.backTimer = nil
+				if s.strategy == strategyLiveKit && s.mayGoBack() {
+					s.switchTo(strategyWebRTC)
+				}
 			})
 		}
 	}
@@ -162,7 +161,7 @@ func (s *spaceState) evaluate() {
 
 func (s *spaceState) cancelBack() {
 	if s.backTimer != nil {
-		s.backTimer.Stop()
+		s.backTimer()
 		s.backTimer = nil
 		s.backGen++
 	}
@@ -194,12 +193,10 @@ func (s *spaceState) switchTo(target string) {
 	}
 	s.finalizing = old
 	gen := s.finalizeGen
-	s.finalizeTimer = time.AfterFunc(s.mediaCfg.FinalizeAfter, func() {
-		s.later(func() {
-			if gen == s.finalizeGen {
-				s.finalize()
-			}
-		})
+	s.finalizeTimer = s.after(s.mediaCfg.FinalizeAfter, func() {
+		if gen == s.finalizeGen {
+			s.finalize()
+		}
 	})
 }
 
@@ -209,7 +206,7 @@ func (s *spaceState) finalize() {
 	s.finalizing = ""
 	s.finalizeGen++
 	if s.finalizeTimer != nil {
-		s.finalizeTimer.Stop()
+		s.finalizeTimer()
 		s.finalizeTimer = nil
 	}
 	for _, id := range s.order {

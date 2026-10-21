@@ -29,7 +29,7 @@ type Room struct {
 }
 
 func NewRoom(url string, cfg Config) *Room {
-	return &Room{URL: url, a: actor.Start("room "+url, inboxSize), s: newState(url, cfg)}
+	return &Room{URL: url, a: actor.Start("room "+url, inboxSize, nil), s: newState(url, cfg)}
 }
 
 // Stop ends the room once its pending messages are processed. Nothing may be posted after Stop.

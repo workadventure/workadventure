@@ -33,17 +33,6 @@ func (f *fakeLiveKit) DeleteRoom(_ context.Context, room string) error {
 func (f *fakeLiveKit) Token(room string, u SpaceUser) (string, error) { return room + "/" + u.ID, nil }
 func (f *fakeLiveKit) URL() string                                    { return "ws://livekit.test" }
 
-// deletedSoon waits for the deletions, which are called off the space's goroutine.
-func (f *fakeLiveKit) deletedSoon(n int) []string {
-	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
-		if _, deleted := f.rooms(); len(deleted) >= n {
-			return deleted
-		}
-	}
-	_, deleted := f.rooms()
-	return deleted
-}
-
 func (f *fakeLiveKit) rooms() (created, deleted []string) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -55,6 +44,7 @@ func liveKitSpace(t *testing.T, _ FilterType) (*Space, *fakeLiveKit) {
 	lk := &fakeLiveKit{}
 	m := DefaultMedia(lk)
 	m.BackToWebRTCAfter, m.FinalizeAfter = 80*time.Millisecond, 30*time.Millisecond
+	m.Clock = newFakeClock()
 	sp := NewSpaceWithMedia(SpaceKey{"http://play.test", "room#1#0"}, m)
 	t.Cleanup(sp.Stop)
 	return sp, lk
@@ -85,19 +75,121 @@ func strategy(ev []any, kind string) func(p SpacePrivateEvent) bool {
 	}
 }
 
+// fakeClock is a Clock that moves only when a test moves it: the timers of a space run without the test sleeping.
+type fakeClock struct {
+	mu     sync.Mutex
+	now    time.Time
+	timers []*fakeTimer
+}
+
+type fakeTimer struct {
+	at   time.Time
+	f    func()
+	done bool // ran or stopped
+}
+
+func newFakeClock() *fakeClock { return &fakeClock{now: time.Unix(1_700_000_000, 0)} }
+
+func (c *fakeClock) Now() time.Time {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	return c.now
+}
+
+func (c *fakeClock) AfterFunc(d time.Duration, f func()) func() bool {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	t := &fakeTimer{at: c.now.Add(d), f: f}
+	c.timers = append(c.timers, t)
+	return func() bool {
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		stopped := !t.done
+		t.done = true
+		return stopped
+	}
+}
+
+// Advance moves the clock by d, running the timers due by then, earliest first.
+func (c *fakeClock) Advance(d time.Duration) {
+	until := c.Now().Add(d)
+	for c.fire(until) {
+	}
+	c.mu.Lock()
+	c.now = until
+	c.mu.Unlock()
+}
+
+// Next moves the clock to the next timer and runs it; false when no timer is pending.
+func (c *fakeClock) Next() bool { return c.fire(time.Time{}) }
+
+// fire runs the earliest pending timer due by until (any, when until is zero).
+func (c *fakeClock) fire(until time.Time) bool {
+	c.mu.Lock()
+	c.timers = slices.DeleteFunc(c.timers, func(t *fakeTimer) bool { return t.done })
+	var next *fakeTimer
+	for _, t := range c.timers {
+		if (until.IsZero() || !t.at.After(until)) && (next == nil || t.at.Before(next.at)) {
+			next = t
+		}
+	}
+	if next == nil {
+		c.mu.Unlock()
+		return false
+	}
+	next.done = true
+	if next.at.After(c.now) {
+		c.now = next.at
+	}
+	c.mu.Unlock()
+	next.f() // outside the lock: f may start another timer
+	return true
+}
+
+// clockOf is the fake clock of a space built by these tests.
+func clockOf(sp *Space) *fakeClock {
+	c, _ := sp.s.mediaCfg.Clock.(*fakeClock)
+	return c
+}
+
+// settle runs what the space has in flight: its queued closures, then its LiveKit calls, then their answers.
+func settle(t *testing.T, sp *Space) {
+	t.Helper()
+	syncSpace(t, sp)
+	if sp.calls != nil {
+		done := make(chan struct{})
+		sp.calls <- func() { close(done) }
+		<-done
+	}
+	syncSpace(t, sp)
+}
+
+// until settles the space until cond holds, running its next timer each time it does not: what the space does
+// over time, without waiting for the time to pass.
+func until(t *testing.T, sp *Space, cond func() bool) bool {
+	t.Helper()
+	for range 1000 {
+		settle(t, sp)
+		if cond() {
+			return true
+		}
+		if c := clockOf(sp); c != nil {
+			c.Next()
+		}
+	}
+	return false
+}
+
 // eventually waits for p to have received what match describes (whatever it received before, too).
 func eventually(t *testing.T, sp *Space, p *recorder, what string, match func(SpacePrivateEvent) bool) {
 	t.Helper()
-	for deadline := time.Now().Add(2 * time.Second); time.Now().Before(deadline); time.Sleep(5 * time.Millisecond) {
-		syncSpace(t, sp)
+	if !until(t, sp, func() bool {
 		p.mu.Lock()
-		found := has(p.events, match)
-		p.mu.Unlock()
-		if found {
-			return
-		}
+		defer p.mu.Unlock()
+		return has(p.events, match)
+	}) {
+		t.Fatalf("never got %s: %#v", what, p.events)
 	}
-	t.Fatalf("never got %s: %#v", what, p.events)
 }
 
 func TestABubblePastFourMovesToLiveKitAndEveryoneGetsAToken(t *testing.T) {
@@ -141,7 +233,8 @@ func TestABubbleGoesBackToWebRTCOnlyOnceItStayedSmall(t *testing.T) {
 	}
 	eventually(t, sp, a, "the return to WebRTC", strategy(nil, "switch WEBRTC"))
 	eventually(t, sp, a, "the end of LiveKit", strategy(nil, "finalize LIVEKIT"))
-	if deleted := lk.deletedSoon(1); len(deleted) != 1 {
+	settle(t, sp) // the deletion is called off the space's goroutine
+	if _, deleted := lk.rooms(); len(deleted) != 1 {
 		t.Fatalf("the LiveKit room is deleted, not left to its empty timeout: %v", deleted)
 	}
 }
@@ -159,7 +252,8 @@ func TestSomeoneComingBackKeepsTheBubbleOnLiveKit(t *testing.T) {
 	a.take() // the switch to WebRTC of its arrival is behind it
 	_ = sp.Leave(ctx, "e", nil)
 	enter(t, sp, "f")
-	time.Sleep(150 * time.Millisecond) // past the return delay
+	syncSpace(t, sp)
+	clockOf(sp).Advance(150 * time.Millisecond) // past the return delay
 	syncSpace(t, sp)
 	if has(a.take(), strategy(nil, "switch WEBRTC")) {
 		t.Fatal("five again before the delay: the return is cancelled")
@@ -195,7 +289,8 @@ func TestAMegaphoneRoomLastsAsLongAsSomeoneSpeaks(t *testing.T) {
 	}
 	_ = sp.UpdateUser(ctx, "speaker", SpaceUser{Megaphone: false}, []string{"megaphoneState"})
 	eventually(t, sp, audience[0], "the end of the broadcast", strategy(nil, "disconnect"))
-	if deleted := lk.deletedSoon(1); len(deleted) != 1 {
+	settle(t, sp)
+	if _, deleted := lk.rooms(); len(deleted) != 1 {
 		t.Fatalf("nobody speaks: the room goes: %v", deleted)
 	}
 }
@@ -241,6 +336,7 @@ func TestAWorldsOwnLiveKitIsAskedForEachMove(t *testing.T) {
 	var mu sync.Mutex
 	m := DefaultMedia(nil)
 	m.FinalizeAfter = 30 * time.Millisecond
+	m.Clock = newFakeClock()
 	m.Provider = worldLiveKit{liveKit: func(_ context.Context, playURI string) (LiveKit, error) {
 		mu.Lock()
 		asked = append(asked, playURI)
