@@ -27,8 +27,21 @@ var (
 	CoalescedPositions = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_coalesced_position_updates_total", Help: "Position updates replaced by a newer one of the same player before being sent"})
 	SlowConsumers      = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_slow_consumers_closed_total", Help: "Connections closed because their outbound queue stayed full"})
 
+	unhandledMessages = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_unhandled_messages_total", Help: "Client messages of a type the server does not handle, dropped"}, []string{"type"})
+	unhandledLogged   sync.Map // type → struct{}: the types already logged
+
 	ignoredErrors = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_ignored_errors_total", Help: "Errors nobody could act on, that should not have happened"}, []string{"op"})
 )
+
+// Unhandled counts a client message of a type the server drops. The first of each type is logged at Warn, once per
+// process: a front newer than the server would otherwise flood the logs. type is the name of a field of the message
+// oneof, a bounded set.
+func Unhandled(typ string) {
+	unhandledMessages.WithLabelValues(typ).Inc()
+	if _, logged := unhandledLogged.LoadOrStore(typ, struct{}{}); !logged {
+		slog.Warn("client message not handled, dropped", "type", typ)
+	}
+}
 
 // Ignore is for an error its caller cannot act on (nobody waits for an answer) but which should not happen: it is
 // logged at Warn and counted under op, a fixed name, never a value of the request. A cancelled context is the

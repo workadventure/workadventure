@@ -1,8 +1,6 @@
 package ws
 
 import (
-	"log/slog"
-
 	"google.golang.org/protobuf/proto"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
@@ -81,7 +79,7 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 			return
 		}
 		if f := m.ProtoReflect().WhichOneof(m.ProtoReflect().Descriptor().Oneofs().Get(0)); f != nil {
-			slog.Debug("message not handled yet", "type", f.Name())
+			metrics.Unhandled(string(f.Name()))
 		}
 	}
 }

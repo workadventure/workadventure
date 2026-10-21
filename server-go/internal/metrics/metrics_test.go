@@ -1,11 +1,14 @@
 package metrics
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -63,4 +66,20 @@ func counted(c prometheus.Counter) float64 {
 	var m dto.Metric
 	_ = c.Write(&m)
 	return m.GetCounter().GetValue()
+}
+
+func TestAnUnhandledMessageIsCountedEachTimeAndLoggedOncePerType(t *testing.T) {
+	var logs bytes.Buffer
+	defer slog.SetDefault(slog.Default())
+	slog.SetDefault(slog.New(slog.NewTextHandler(&logs, nil)))
+	for range 3 {
+		Unhandled("testMessage")
+	}
+	Unhandled("otherTestMessage")
+	if n := counted(unhandledMessages.WithLabelValues("testMessage")); n != 3 {
+		t.Fatalf("counted %v, want 3", n)
+	}
+	if n := strings.Count(logs.String(), "level=WARN"); n != 2 {
+		t.Fatalf("%d warnings, want one per type:\n%s", n, logs.String())
+	}
 }
