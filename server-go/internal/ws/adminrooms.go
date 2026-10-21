@@ -11,6 +11,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/netguard"
 )
 
@@ -91,6 +92,7 @@ func (srv *Server) AdminRooms(w http.ResponseWriter, r *http.Request) {
 	}()
 	refuse := func(code websocket.StatusCode, reason, message string) {
 		b, _ := json.Marshal(map[string]any{"type": "Error", "data": map[string]string{"message": message}})
+		// The socket may already be closed: there is nobody left to tell.
 		_ = conn.Write(ctx, websocket.MessageText, b)
 		_ = conn.Close(code, reason)
 	}
@@ -139,9 +141,9 @@ func (srv *Server) AdminRooms(w http.ResponseWriter, r *http.Request) {
 		case "banned":
 			for _, id := range authorized {
 				if parts := strings.Split(id, "/"); len(parts) > 5 && parts[5] == *m.World {
-					_ = srv.liveRoom(id, func(room *core.Room) error {
+					metrics.Ignore("room.Eject", srv.liveRoom(id, func(room *core.Room) error {
 						return room.Eject(context.Background(), *m.Message.UserUUID, "banned", *m.Message.Message)
-					})
+					}))
 				}
 			}
 		}

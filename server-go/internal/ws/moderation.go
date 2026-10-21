@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/workadventure/workadventure/server-go/internal/admin"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -18,12 +19,12 @@ func (s *Session) onBan(b *pb.BanPlayerMessage) {
 	}
 	reason := strings.TrimSpace(b.GetReason())
 	if b.GetKick() {
-		_ = s.room.Eject(s.ctx, b.GetBanUserUuid(), "kicked", reason)
+		metrics.Ignore("room.Eject", s.room.Eject(s.ctx, b.GetBanUserUuid(), "kicked", reason))
 		return
 	}
 	switch err := s.recordBan(b, reason); {
 	case err == nil:
-		_ = s.room.Eject(s.ctx, b.GetBanUserUuid(), "banned", reason)
+		metrics.Ignore("room.Eject", s.room.Eject(s.ctx, b.GetBanUserUuid(), "banned", reason))
 	case errors.Is(err, admin.ErrBanRefused):
 		// The admin decided against it (in its eyes, the moderator may not ban in this world): the pusher ejects the
 		// user as a kick all the same, which overrides that decision. Here the user stays and the moderator, whose
@@ -32,7 +33,7 @@ func (s *Session) onBan(b *pb.BanPlayerMessage) {
 	default:
 		// Not recorded (no admin, or it could not be reached): the user is ejected all the same, as a kick, like the
 		// pusher does; the moderator learns that nothing stops them from coming back.
-		_ = s.room.Eject(s.ctx, b.GetBanUserUuid(), "kicked", reason)
+		metrics.Ignore("room.Eject", s.room.Eject(s.ctx, b.GetBanUserUuid(), "kicked", reason))
 		s.push(userMessage("The ban could not be recorded: " + b.GetBanUserName() + " was only kicked and can come back."))
 	}
 }

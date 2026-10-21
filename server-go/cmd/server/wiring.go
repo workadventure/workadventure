@@ -227,7 +227,7 @@ func (s *servers) shutdown(ctx context.Context) {
 		close(stopped)
 	}()
 	for _, h := range s.http {
-		_ = h.Shutdown(ctx)
+		metrics.Ignore("http.Shutdown", h.Shutdown(ctx))
 	}
 	select {
 	case <-stopped:

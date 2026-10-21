@@ -86,7 +86,7 @@ func fetch(ctx context.Context, method, raw string) (int, http.Header, error) {
 	if err != nil {
 		return 0, nil, err
 	}
-	_ = resp.Body.Close()
+	_ = resp.Body.Close() // nothing was read: a failed close loses nothing
 	return resp.StatusCode, resp.Header, nil
 }
 

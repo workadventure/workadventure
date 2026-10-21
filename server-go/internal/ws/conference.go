@@ -130,7 +130,7 @@ func (s *Session) joinBBB(id int32, q *pb.JoinBBBMeetingQuery) {
 		s.answerError(id, err.Error())
 		return
 	}
-	_ = resp.Body.Close()
+	_ = resp.Body.Close() // nothing was read: a failed close loses nothing
 	pw := attendee
 	if moderator {
 		pw = mod

@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/netguard"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
@@ -173,6 +174,7 @@ func declaredVariables(tiled []byte) (map[string]core.VarDef, map[string]string)
 					case "default":
 						defaults[o.Name] = string(p.Value)
 					case "persist":
+						// A property the map author mistyped keeps its default, as in the back.
 						_ = json.Unmarshal(p.Value, &def.Persist)
 					case "readableBy":
 						_ = json.Unmarshal(p.Value, &def.ReadableBy)
@@ -204,7 +206,7 @@ func (s *Session) setVariable(ctx context.Context, v core.Variable) {
 		return
 	}
 	if s.room.Redeclare(ctx, s.srv.roomVariables(s.info.roomID)) == nil {
-		_ = s.room.SetVariable(ctx, s, v, s.info.member.Tags, false, func(bool) {})
+		metrics.Ignore("room.SetVariable", s.room.SetVariable(ctx, s, v, s.info.member.Tags, false, func(bool) {}))
 	}
 }
 

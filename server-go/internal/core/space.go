@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/actor"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/spacestate"
 )
 
@@ -160,7 +161,7 @@ func (sp *Space) later(f func()) {
 	sp.mu.RLock()
 	defer sp.mu.RUnlock()
 	if !sp.stopped {
-		_ = sp.a.Post(context.Background(), f)
+		_ = sp.a.Post(context.Background(), f) // without a deadline, Post cannot fail
 	}
 }
 
@@ -489,11 +490,11 @@ func (s *spaceState) leave(id string) {
 	s.order = slices.DeleteFunc(s.order, func(o string) bool { return o == id })
 	s.toMembers(func(o *spaceMember) bool { return o.watching && s.visible(&o.user, &m.user) }, NewMsg(SpaceUserRemoved{Space: s.local, UserID: id}, true))
 	// RaiseHandManager: no ghost in the queue nor among the floor holders.
-	_ = s.updateState(func(st *spacestate.SpaceState) error {
+	metrics.Ignore("space.updateState", s.updateState(func(st *spacestate.SpaceState) error {
 		st.RaisedHands = removeHand(st.RaisedHands, id)
 		st.FloorHolders = removeFloorHolder(st.FloorHolders, id)
 		return nil
-	})
+	}))
 	s.evaluate()
 	s.syncPresence(id)
 }
@@ -593,10 +594,10 @@ func (s *spaceState) update(id string, from SpaceUser, mask, allowed []string, o
 	}
 	if old.Megaphone && !m.user.Megaphone {
 		// A floor holder who stops streaming no longer holds the floor.
-		_ = s.updateState(func(st *spacestate.SpaceState) error {
+		metrics.Ignore("space.updateState", s.updateState(func(st *spacestate.SpaceState) error {
 			st.FloorHolders = removeFloorHolder(st.FloorHolders, id)
 			return nil
-		})
+		}))
 	}
 }
 

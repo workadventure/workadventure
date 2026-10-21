@@ -13,6 +13,7 @@ import (
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/httpx"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -25,7 +26,7 @@ func (s *Session) sendEvent(id int32, q *pb.SendEventQuery) {
 		return
 	}
 	event := core.ScriptingEvent{Name: q.GetName(), Data: jsonOf(q.GetData()), SenderID: &uid}
-	_ = s.room.SendEvent(s.ctx, core.NewMsg(event, true), q.GetTargetUserIds())
+	metrics.Ignore("room.SendEvent", s.room.SendEvent(s.ctx, core.NewMsg(event, true), q.GetTargetUserIds()))
 	s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_SendEventAnswer{SendEventAnswer: &pb.SendEventAnswer{}}})
 }
 
@@ -88,11 +89,11 @@ func (srv *Server) GlobalEvent(w http.ResponseWriter, r *http.Request) {
 	event := core.NewMsg(core.ScriptingEvent{Name: *body.Name, Data: data}, true)
 	for _, roomURL := range srv.rooms.Keys() {
 		room := srv.rooms.Acquire(roomURL)
-		_ = room.SendEvent(context.Background(), event, nil)
+		metrics.Ignore("room.SendEvent", room.SendEvent(context.Background(), event, nil))
 		srv.rooms.Release(roomURL)
 	}
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	_, _ = io.WriteString(w, "ok")
+	_, _ = io.WriteString(w, "ok") // the caller may be gone: nothing to do about it
 }
 
 // liveRoom runs f on a room that has players; a room nobody is in is not created for it.
@@ -118,7 +119,7 @@ func (srv *Server) RoomRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	srv.roomMaps.Delete(*body.RoomID)
-	_ = srv.liveRoom(*body.RoomID, func(room *core.Room) error { return room.MapChanged(context.Background(), false) })
+	metrics.Ignore("room.MapChanged", srv.liveRoom(*body.RoomID, func(room *core.Room) error { return room.MapChanged(context.Background(), false) }))
 	_, _ = io.WriteString(w, "ok")
 }
 
@@ -143,7 +144,7 @@ func (srv *Server) AdminMessage(w http.ResponseWriter, r *http.Request) {
 		m = core.NewMsg(core.WorldFullWarning{}, false)
 	}
 	for _, url := range body.Targets {
-		_ = srv.liveRoom(url, func(room *core.Room) error { return room.ToUsers(context.Background(), m) })
+		metrics.Ignore("room.ToUsers", srv.liveRoom(url, func(room *core.Room) error { return room.ToUsers(context.Background(), m) }))
 	}
 	_, _ = io.WriteString(w, "ok")
 }
@@ -170,6 +171,6 @@ func (srv *Server) ExternalModuleEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	d := body.Data
 	m := core.NewMsg(core.ModuleMessage{ModuleID: *d.ModuleID, RecipientUUID: d.RecipientUUID, RoomID: &d.RoomID, Message: d.Message}, false)
-	_ = srv.liveRoom(d.RoomID, func(room *core.Room) error { return room.ToUUID(context.Background(), *d.RecipientUUID, m) })
+	metrics.Ignore("room.ToUUID", srv.liveRoom(d.RoomID, func(room *core.Room) error { return room.ToUUID(context.Background(), *d.RecipientUUID, m) }))
 	_, _ = io.WriteString(w, "ok")
 }

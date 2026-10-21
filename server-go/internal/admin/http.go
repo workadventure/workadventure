@@ -376,7 +376,7 @@ func (a *HTTP) SaveUser(ctx context.Context, what SaveWhat, userIdentifier, room
 	if err != nil {
 		return err
 	}
-	_ = resp.Body.Close()
+	_ = resp.Body.Close() // only the status is read: a failed close loses nothing
 	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("%s: got %d, expected 204", s.path, resp.StatusCode)
 	}

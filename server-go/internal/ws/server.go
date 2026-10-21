@@ -192,6 +192,7 @@ func (srv *Server) reject(w http.ResponseWriter, r *http.Request, token string, 
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), writeTimeout)
 	defer cancel()
+	// The socket may already be closed: there is nobody left to tell.
 	_ = conn.Write(ctx, websocket.MessageBinary, directFrame(1, b))
 	_ = conn.Close(websocket.StatusNormalClosure, "Error message sent")
 }

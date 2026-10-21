@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/workadventure/workadventure/server-go/internal/httpx"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -73,7 +74,7 @@ func (srv *Server) RoomArea(w http.ResponseWriter, r *http.Request) {
 			err = srv.matrix.Rename(r.Context(), roomID, p["displayName"].(string))
 		}
 		if err == nil {
-			_, _ = io.WriteString(w, "Room name updated successfully")
+			_, _ = io.WriteString(w, "Room name updated successfully") // the caller may be gone: nothing to do about it
 			return
 		}
 	default:
@@ -138,7 +139,7 @@ func (srv *Server) resource(method, target string, property map[string]any) (map
 		return nil, fmt.Errorf("HTTP %d", resp.StatusCode)
 	}
 	var out map[string]any
-	_ = json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&out)
+	metrics.Ignore("matrix.decodeAreaProperty", json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&out))
 	return out, nil
 }
 

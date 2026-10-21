@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/spacestate"
 )
 
@@ -61,14 +62,14 @@ type recording struct {
 
 func (s *spaceState) publishRecording(status spacestate.RecordingStatus, recorder string) {
 	r := recorder
-	_ = s.updateState(func(st *spacestate.SpaceState) error {
+	metrics.Ignore("space.updateState", s.updateState(func(st *spacestate.SpaceState) error {
 		st.Recording = spacestate.RecordingState{Recording: status == spacestate.RecordingStatusRecording || status == spacestate.RecordingStatusStopping,
 			Recorder: &r, Status: status}
 		if recorder == "" {
 			st.Recording.Recorder = nil
 		}
 		return nil
-	})
+	}))
 }
 
 // startRecording answers StartRecording once the egress runs, or why not.
@@ -122,7 +123,7 @@ func (s *spaceState) recordWhenReady() {
 			r := s.rec
 			if r == nil || r.gen != gen {
 				if err == nil {
-					go func() { _ = egress.Stop(context.Background(), id) }() // the space moved on meanwhile
+					go func() { metrics.Ignore("egress.Stop", egress.Stop(context.Background(), id)) }() // the space moved on meanwhile
 				}
 				return
 			}

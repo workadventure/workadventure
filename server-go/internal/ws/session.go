@@ -318,7 +318,7 @@ func (s *Session) destroy(code websocket.StatusCode, reason string) {
 	joined := s.presence.joined
 	s.presence.mu.Unlock()
 	if joined {
-		_ = s.room.Leave(context.Background(), s)
+		metrics.Ignore("room.Leave", s.room.Leave(context.Background(), s))
 		metrics.ClientLeft(s.info.roomID)
 	}
 	s.srv.rooms.Release(s.info.roomID)

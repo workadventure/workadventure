@@ -21,16 +21,16 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 		s.setVariable(ctx, core.Variable{Name: msg.VariableMessage.GetName(), Value: msg.VariableMessage.GetValue()})
 	case *pb.ClientToServerMessage_UserMovesMessage:
 		vp := toViewport(msg.UserMovesMessage.GetViewport())
-		_ = s.room.Move(ctx, s, toPosition(msg.UserMovesMessage.GetPosition()), &vp)
+		metrics.Ignore("room.Move", s.room.Move(ctx, s, toPosition(msg.UserMovesMessage.GetPosition()), &vp))
 	case *pb.ClientToServerMessage_ViewportMessage:
-		_ = s.room.SetViewport(ctx, s, toViewport(msg.ViewportMessage))
+		metrics.Ignore("room.SetViewport", s.room.SetViewport(ctx, s, toViewport(msg.ViewportMessage)))
 	case *pb.ClientToServerMessage_SetPlayerDetailsMessage:
 		s.onSetPlayerDetails(msg.SetPlayerDetailsMessage)
 	case *pb.ClientToServerMessage_AskPositionMessage:
 		a := msg.AskPositionMessage
-		_ = s.room.AskPosition(ctx, s, a.GetUserIdentifier(), a.UserId, a.GetAskType() == pb.AskPositionMessage_LOCATE)
+		metrics.Ignore("room.AskPosition", s.room.AskPosition(ctx, s, a.GetUserIdentifier(), a.UserId, a.GetAskType() == pb.AskPositionMessage_LOCATE))
 	case *pb.ClientToServerMessage_LockGroupPromptMessage:
-		_ = s.room.LockGroup(ctx, s, msg.LockGroupPromptMessage.GetLock())
+		metrics.Ignore("room.LockGroup", s.room.LockGroup(ctx, s, msg.LockGroupPromptMessage.GetLock()))
 	case *pb.ClientToServerMessage_PingMessage:
 		// The pong of the application-level ping: liveness is checked by the transport pings.
 	case *pb.ClientToServerMessage_QueryMessage:
@@ -42,7 +42,7 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 			go s.playGlobalMessage(msg.PlayGlobalMessage)
 		}
 	case *pb.ClientToServerMessage_EmotePromptMessage:
-		_ = s.room.Emote(ctx, s, msg.EmotePromptMessage.GetEmote())
+		metrics.Ignore("room.Emote", s.room.Emote(ctx, s, msg.EmotePromptMessage.GetEmote()))
 	case *pb.ClientToServerMessage_ItemEventMessage:
 		s.onItemEvent(msg.ItemEventMessage)
 	case *pb.ClientToServerMessage_EntityMessage:
@@ -62,20 +62,20 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	case *pb.ClientToServerMessage_VideoQualityReportMessage:
 		s.videoQuality(msg.VideoQualityReportMessage)
 	case *pb.ClientToServerMessage_MeetingInvitationRequestMessage:
-		_ = s.room.InviteToMeeting(ctx, s, msg.MeetingInvitationRequestMessage.GetReceiverUserUuid(), s.isAdmin())
+		metrics.Ignore("room.InviteToMeeting", s.room.InviteToMeeting(ctx, s, msg.MeetingInvitationRequestMessage.GetReceiverUserUuid(), s.isAdmin()))
 	case *pb.ClientToServerMessage_MeetingInvitationResponseMessage:
 		r := msg.MeetingInvitationResponseMessage
-		_ = s.room.AnswerMeetingInvitation(ctx, s, r.GetAccept(), r.GetRequestSenderUserUuid())
+		metrics.Ignore("room.AnswerMeetingInvitation", s.room.AnswerMeetingInvitation(ctx, s, r.GetAccept(), r.GetRequestSenderUserUuid()))
 	case *pb.ClientToServerMessage_FollowRequestMessage:
-		_ = s.room.FollowRequest(ctx, s, msg.FollowRequestMessage.GetForceFollow())
+		metrics.Ignore("room.FollowRequest", s.room.FollowRequest(ctx, s, msg.FollowRequestMessage.GetForceFollow()))
 	case *pb.ClientToServerMessage_FollowConfirmationMessage:
-		_ = s.room.FollowConfirm(ctx, s, msg.FollowConfirmationMessage.GetLeader())
+		metrics.Ignore("room.FollowConfirm", s.room.FollowConfirm(ctx, s, msg.FollowConfirmationMessage.GetLeader()))
 	case *pb.ClientToServerMessage_FollowAbortMessage:
-		_ = s.room.FollowAbort(ctx, s, msg.FollowAbortMessage.GetLeader(), msg.FollowAbortMessage.GetFollower())
+		metrics.Ignore("room.FollowAbort", s.room.FollowAbort(ctx, s, msg.FollowAbortMessage.GetLeader(), msg.FollowAbortMessage.GetFollower()))
 	case *pb.ClientToServerMessage_SetAreaPropertyVariableMessage:
 		v := msg.SetAreaPropertyVariableMessage
-		_ = s.room.SetAreaVariable(ctx, s, core.AreaVariable{AreaID: v.GetAreaId(), PropertyID: v.GetPropertyId(), Key: v.GetKey(), Value: v.GetValue()},
-			s.info.member.Tags)
+		metrics.Ignore("room.SetAreaVariable", s.room.SetAreaVariable(ctx, s, core.AreaVariable{AreaID: v.GetAreaId(), PropertyID: v.GetPropertyId(), Key: v.GetKey(), Value: v.GetValue()},
+			s.info.member.Tags))
 	default:
 		if s.handleSpaceMessage(m) {
 			return
@@ -110,12 +110,12 @@ func (s *Session) onJoinRoom(j *pb.JoinRoomFrontMessage) {
 	}
 	// The variables are read here, on this reader, before the join is posted: the join sees them.
 	s.room.InitVariables(s.ctx, func() core.RoomVariables { return s.srv.roomVariables(s.info.roomID) })
-	_ = s.room.Join(s.ctx, s, core.JoinRequest{
+	metrics.Ignore("room.Join", s.room.Join(s.ctx, s, core.JoinRequest{
 		UUID: s.info.userUUID, TabID: s.info.tabID, Name: j.GetName(), Textures: coreTextures(s.info.member.CharacterTextures),
 		Companion: companion, VisitCardURL: visitCard, ChatID: chatID, Status: core.AvailabilityStatus(j.GetAvailabilityStatus()),
 		Position: toPosition(j.GetPositionMessage()), Viewport: toViewport(j.GetViewportMessage()),
 		Tags: s.info.member.Tags, IsLogged: s.info.isLogged, IPAddress: s.info.ipAddress, PlayerVariables: s.storedPlayerVariables(),
-	})
+	}))
 }
 
 // onSetPlayerDetails changes what the player shows (status, a player variable), in the room and in its spaces.
@@ -127,14 +127,14 @@ func (s *Session) onSetPlayerDetails(m *pb.SetPlayerDetailsMessage) {
 	if d.SetVariable != nil {
 		s.storePlayerVariable(d.SetVariable)
 	}
-	_ = s.room.SetPlayerDetails(s.ctx, s, d)
+	metrics.Ignore("room.SetPlayerDetails", s.room.SetPlayerDetails(s.ctx, s, d))
 	s.updateSpacesWithPlayerDetails(d)
 }
 
 // onItemEvent keeps the state of an item and relays the event to the room.
 func (s *Session) onItemEvent(e *pb.ItemEventMessage) {
-	_ = s.room.ItemEvent(s.ctx, core.ItemState{ItemID: e.GetItemId(), StateJSON: e.GetStateJson()},
-		core.NewMsg(core.ItemEvent{ItemID: e.GetItemId(), Event: e.GetEvent(), StateJSON: e.GetStateJson(), ParametersJSON: e.GetParametersJson()}, true))
+	metrics.Ignore("room.ItemEvent", s.room.ItemEvent(s.ctx, core.ItemState{ItemID: e.GetItemId(), StateJSON: e.GetStateJson()},
+		core.NewMsg(core.ItemEvent{ItemID: e.GetItemId(), Event: e.GetEvent(), StateJSON: e.GetStateJson(), ParametersJSON: e.GetParametersJson()}, true)))
 }
 
 // onEntity relays an entity event to the whole room (dispatchEntityEvent).
@@ -144,7 +144,7 @@ func (s *Session) onEntity(e *pb.EntityMessage) {
 	}
 	event, err := proto.Marshal(e.GetEntityEvent())
 	if err == nil {
-		_ = s.room.SendEvent(s.ctx, core.NewMsg(core.EntityEvent{EntityID: e.GetEntityId(), Event: event}, true), nil)
+		metrics.Ignore("room.SendEvent", s.room.SendEvent(s.ctx, core.NewMsg(core.EntityEvent{EntityID: e.GetEntityId(), Event: event}, true), nil))
 	}
 }
 

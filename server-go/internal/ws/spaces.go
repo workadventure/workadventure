@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -165,14 +166,14 @@ func (s *Session) leaveSpace(id int32, local string) {
 		reply()
 		return
 	}
-	_ = space.Leave(context.Background(), s.spaceUserID(), reply)
+	metrics.Ignore("space.Leave", space.Leave(context.Background(), s.spaceUserID(), reply))
 	s.srv.spaces.Release(s.spaceKey(local))
 }
 
 // leaveAllSpaces runs when the session ends, after its readers stopped.
 func (s *Session) leaveAllSpaces() {
 	for local, space := range s.memberships.takeAll() {
-		_ = space.Leave(context.Background(), s.spaceUserID(), nil)
+		metrics.Ignore("space.Leave", space.Leave(context.Background(), s.spaceUserID(), nil))
 		s.srv.spaces.Release(s.spaceKey(local))
 	}
 }
@@ -211,12 +212,12 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 		s.onWatch(msg.AddSpaceFilterMessage.GetSpaceFilterMessage().GetSpaceName())
 	case *pb.ClientToServerMessage_RemoveSpaceFilterMessage:
 		if space := s.joinedSpace(msg.RemoveSpaceFilterMessage.GetSpaceFilterMessage().GetSpaceName()); space != nil {
-			_ = space.Unwatch(s.ctx, s.spaceUserID())
+			metrics.Ignore("space.Unwatch", space.Unwatch(s.ctx, s.spaceUserID()))
 		}
 	case *pb.ClientToServerMessage_UpdateSpaceUserMessage:
 		u := msg.UpdateSpaceUserMessage
 		if space := s.joinedSpace(u.GetSpaceName()); space != nil {
-			_ = space.UpdateUser(s.ctx, s.spaceUserID(), fromSpaceUser(u.GetUser()), u.GetUpdateMask().GetPaths())
+			metrics.Ignore("space.UpdateUser", space.UpdateUser(s.ctx, s.spaceUserID(), fromSpaceUser(u.GetUser()), u.GetUpdateMask().GetPaths()))
 		}
 	case *pb.ClientToServerMessage_PublicEvent:
 		s.onPublicEvent(msg.PublicEvent)
@@ -234,7 +235,7 @@ func (s *Session) handleSpaceMessage(m *pb.ClientToServerMessage) bool {
 
 func (s *Session) onWatch(local string) {
 	if space := s.joinedSpace(local); space != nil {
-		_ = space.Watch(s.ctx, s.spaceUserID(), s.notPartOf(local))
+		metrics.Ignore("space.Watch", space.Watch(s.ctx, s.spaceUserID(), s.notPartOf(local)))
 	} else {
 		s.notPartOf(local)()
 	}
@@ -255,7 +256,7 @@ func (s *Session) onPublicEvent(e *pb.PublicEventFrontToPusher) {
 		}
 	}
 	payload, _ := proto.Marshal(e.GetSpaceEvent())
-	_ = space.PublicEvent(s.ctx, s.spaceUserID(), payload, s.notPartOf(e.GetSpaceName()))
+	metrics.Ignore("space.PublicEvent", space.PublicEvent(s.ctx, s.spaceUserID(), payload, s.notPartOf(e.GetSpaceName())))
 }
 
 // onPrivateEvent relays an event to one member, after the server's own rules: kicking off is the admin's, a mute is
@@ -282,7 +283,7 @@ func (s *Session) onPrivateEvent(e *pb.PrivateEventFrontToPusher) {
 		v.ProximityFileTransferOffer.CharacterTextures, v.ProximityFileTransferOffer.Name = characterTextures(u.Textures), proto.String(u.Name)
 	}
 	payload, _ := proto.Marshal(ev)
-	_ = space.PrivateEvent(s.ctx, s.spaceUserID(), e.GetReceiverUserId(), payload, s.notPartOf(e.GetSpaceName()))
+	metrics.Ignore("space.PrivateEvent", space.PrivateEvent(s.ctx, s.spaceUserID(), e.GetReceiverUserId(), payload, s.notPartOf(e.GetSpaceName())))
 }
 
 // onSpaceMetadata merges a JSON object into the space's metadata (the z.record of the pusher); anything else is dropped.
@@ -293,7 +294,7 @@ func (s *Session) onSpaceMetadata(u *pb.UpdateSpaceMetadataMessage) {
 		return
 	}
 	if space := s.joinedSpace(u.GetSpaceName()); space != nil {
-		_ = space.SetMetadata(s.ctx, s.spaceUserID(), delta)
+		metrics.Ignore("space.SetMetadata", space.SetMetadata(s.ctx, s.spaceUserID(), delta))
 	}
 }
 
@@ -304,9 +305,9 @@ func (s *Session) onBackEvent(e *pb.BackEventFrontToPusherMessage) {
 	switch {
 	case restart == nil || space == nil:
 	case restart.UserId == nil: // the front lost LiveKit: a new token
-		_ = space.RestartLiveKit(s.ctx, s.spaceUserID())
+		metrics.Ignore("space.RestartLiveKit", space.RestartLiveKit(s.ctx, s.spaceUserID()))
 	default:
-		_ = space.RestartConnection(s.ctx, s.spaceUserID(), restart.GetUserId(), restart.ConnectionId)
+		metrics.Ignore("space.RestartConnection", space.RestartConnection(s.ctx, s.spaceUserID(), restart.GetUserId(), restart.ConnectionId))
 	}
 }
 
@@ -329,13 +330,13 @@ func (s *Session) spaceStateQuery(id int32, q *pb.SpaceStateQueryFrontToPusher) 
 			return
 		}
 	}
-	_ = space.Query(s.ctx, s.spaceUserID(), query, func(err error) {
+	metrics.Ignore("space.Query", space.Query(s.ctx, s.spaceUserID(), query, func(err error) {
 		if err != nil {
 			s.answerError(id, err.Error())
 			return
 		}
 		s.answer(id, &pb.AnswerMessage{Answer: &pb.AnswerMessage_SpaceStateAnswer{SpaceStateAnswer: &pb.SpaceStateAnswer{}}})
-	})
+	}))
 }
 
 func stateQuery(q *pb.SpaceStateQuery) any {
@@ -392,7 +393,7 @@ func (s *Session) updateSpacesWithPlayerDetails(d core.PlayerDetails) {
 		return
 	}
 	for _, sp := range s.memberships.all() {
-		_ = sp.UpdatePlayerDetails(s.ctx, s.spaceUserID(), u, mask)
+		metrics.Ignore("space.UpdatePlayerDetails", sp.UpdatePlayerDetails(s.ctx, s.spaceUserID(), u, mask))
 	}
 }
 
@@ -462,7 +463,7 @@ func spaceSubMessage(ev core.Event) *pb.SubMessage {
 		return &pb.SubMessage{Message: &pb.SubMessage_SpaceStatePatchMessage{SpaceStatePatchMessage: &pb.SpaceStatePatchMessage{SpaceName: e.Space, Patch: e.Patch}}}
 	case core.SpacePublicEvent:
 		var ev pb.SpaceEvent
-		_ = proto.Unmarshal(e.Payload, &ev)
+		metrics.Ignore("space.unmarshalPublicEvent", proto.Unmarshal(e.Payload, &ev)) // marshalled by onPublicEvent
 		// The server signs chat messages and typing notices with the sender's name and woka (EventProcessorInit).
 		switch v := ev.GetEvent().(type) {
 		case *pb.SpaceEvent_SpaceMessage:
@@ -494,7 +495,7 @@ func privateSpaceEvent(ev core.PrivateEvent) *pb.PrivateSpaceEvent {
 		return &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_LivekitDisconnectMessage{LivekitDisconnectMessage: &pb.LivekitDisconnectMessage{}}}
 	case core.RelayedEvent:
 		var p pb.PrivateSpaceEvent
-		_ = proto.Unmarshal(e.Payload, &p)
+		metrics.Ignore("space.unmarshalPrivateEvent", proto.Unmarshal(e.Payload, &p)) // marshalled by onPrivateEvent
 		return &p
 	}
 	panic("ws: unknown private space event")

@@ -3,7 +3,10 @@
 package metrics
 
 import (
+	"context"
 	"crypto/subtle"
+	"errors"
+	"log/slog"
 	"net/http"
 	"strings"
 	"sync"
@@ -23,7 +26,20 @@ var (
 	// Position merging and backpressure (new: the TS services had neither).
 	CoalescedPositions = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_coalesced_position_updates_total", Help: "Position updates replaced by a newer one of the same player before being sent"})
 	SlowConsumers      = promauto.NewCounter(prometheus.CounterOpts{Name: "workadventure_slow_consumers_closed_total", Help: "Connections closed because their outbound queue stayed full"})
+
+	ignoredErrors = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_ignored_errors_total", Help: "Errors nobody could act on, that should not have happened"}, []string{"op"})
 )
+
+// Ignore is for an error its caller cannot act on (nobody waits for an answer) but which should not happen: it is
+// logged at Warn and counted under op, a fixed name, never a value of the request. A cancelled context is the
+// caller going away (a closed connection, a shutdown), not a failure: it is neither logged nor counted.
+func Ignore(op string, err error) {
+	if err == nil || errors.Is(err, context.Canceled) {
+		return
+	}
+	ignoredErrors.WithLabelValues(op).Inc()
+	slog.Warn("error ignored", "op", op, "error", err)
+}
 
 var (
 	roomCountsMu sync.Mutex

@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -78,7 +79,7 @@ func (s *Session) playGlobalMessage(m *pb.PlayGlobalMessage) {
 			continue // nobody there
 		}
 		room := s.srv.rooms.Acquire(url)
-		_ = room.SendUserMessage(context.Background(), core.UserMessage{Type: m.GetType(), Message: m.GetContent()})
+		metrics.Ignore("room.SendUserMessage", room.SendUserMessage(context.Background(), core.UserMessage{Type: m.GetType(), Message: m.GetContent()}))
 		s.srv.rooms.Release(url)
 	}
 }

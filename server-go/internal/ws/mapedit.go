@@ -14,6 +14,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
@@ -107,7 +108,7 @@ func (s *Session) connectToRoom() {
 		return core.External{Value: &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomConnectedMessage{RoomConnectedMessage: &pb.RoomConnectedMessage{
 			EditMapCommandsArrayMessage: &pb.EditMapCommandsArrayMessage{EditMapCommands: missed}, Tag: s.info.member.Tags}}}}
 	}
-	_ = s.room.Connect(s.ctx, s, load, connected)
+	metrics.Ignore("room.Connect", s.room.Connect(s.ctx, s, load, connected))
 }
 
 // editMap queues a command of the map editor behind the other edits of its map (mapedit.Queue): it is stored off
@@ -138,8 +139,8 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 		// The room is held for the announcement: the editor may have left meanwhile.
 		room := s.srv.rooms.Acquire(roomURL)
 		defer s.srv.rooms.Release(roomURL)
-		_ = room.MapEdited(context.Background(), mapEdit(done),
-			res.Areas, func() { s.srv.maps.Record(key, m.GetId(), done) })
+		metrics.Ignore("room.MapEdited", room.MapEdited(context.Background(), mapEdit(done),
+			res.Areas, func() { s.srv.maps.Record(key, m.GetId(), done) }))
 	})
 	if err != nil {
 		refuse(err)
@@ -360,7 +361,7 @@ func (srv *Server) MapChanged(key string, deleted bool) {
 			continue
 		}
 		room := srv.rooms.Acquire(roomURL)
-		_ = room.MapChanged(context.Background(), deleted)
+		metrics.Ignore("room.MapChanged", room.MapChanged(context.Background(), deleted))
 		srv.rooms.Release(roomURL)
 	}
 }

@@ -221,6 +221,6 @@ func (q *Queue) post(ctx context.Context, url string, body []byte) (int, error) 
 	if err != nil {
 		return 0, err
 	}
-	_ = resp.Body.Close()
+	_ = resp.Body.Close() // only the status is read: a failed close loses nothing
 	return resp.StatusCode, nil
 }
