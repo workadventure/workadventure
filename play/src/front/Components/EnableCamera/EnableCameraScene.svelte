@@ -20,7 +20,7 @@
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { playSpeakerTestSound } from "../../WebRtc/AudioOutputManager";
+    import { playOnSelectedOutput } from "../../WebRtc/AudioOutputManager";
 
     import bgMap from "../images/map-exemple.webp";
     import Button from "../UI/Button.svelte";
@@ -190,7 +190,7 @@
     }
 
     function playSoundClick() {
-        playSpeakerTestSound().catch((e) => console.error(e));
+        playOnSelectedOutput(sound).catch((e) => console.error(e));
     }
     /* eslint-disable svelte/no-at-html-tags */
 </script>
