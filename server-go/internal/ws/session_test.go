@@ -11,6 +11,7 @@ import (
 	"github.com/coder/websocket"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
+	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
@@ -100,6 +101,46 @@ func TestOnlyAnAdminEjectsAPlayer(t *testing.T) {
 	})
 	// Bob is still there (eve's ban did nothing) and sees eve leave.
 	bob.waitFor("eve leaving", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return s.GetUserLeftMessage() != nil })
+}
+
+// refusingAdmin refuses to ban bob; the other bans go to the local admin, which cannot record them.
+type refusingAdmin struct{ admin.Admin }
+
+func (a refusingAdmin) Ban(ctx context.Context, b admin.Ban) error {
+	if b.UUID == "bob" {
+		return admin.ErrBanRefused
+	}
+	return a.Admin.Ban(ctx, b)
+}
+
+// A ban the admin refuses ejects no one: the moderator is told, the user stays. An admin that cannot be asked (none
+// here) still gets the user out, as a kick, and the moderator is told it was only that.
+func TestARefusedBanEjectsNoOne(t *testing.T) {
+	h := newHarness(t)
+	h.srv.admin = refusingAdmin{h.srv.admin}
+	moderator := h.dialAs(auth.Token{Identifier: "admin", Tags: []string{"admin"}}, "")
+	bob := h.dialAs(auth.Token{Identifier: "bob"}, "")
+	eve := h.dialAs(auth.Token{Identifier: "eve"}, "")
+	ban := func(uuid string) {
+		moderator.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_BanPlayerMessage{BanPlayerMessage: &pb.BanPlayerMessage{
+			BanUserUuid: uuid, BanUserName: uuid, Reason: "spam"}}})
+	}
+	toldModerator := func(what string) {
+		moderator.waitFor(what, func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+			return strings.Contains(d.GetSendUserMessage().GetMessage(), what)
+		})
+	}
+
+	ban("eve") // the local admin records nothing: a kick
+	eve.waitFor("the kick", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		return d.GetBanUserMessage().GetType() == "kicked"
+	})
+	toldModerator("eve was only kicked")
+
+	ban("bob")
+	toldModerator("bob was not banned")
+	bob.send(moveTo(120, 120)) // bob is still in the room: the moderator sees him move
+	moderator.waitFor("bob moving", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool { return s.GetUserMovedMessage() != nil })
 }
 
 // A logged player's persistent variable is there when it comes back, with its TTL capped by PLAYER_VARIABLES_MAX_TTL;

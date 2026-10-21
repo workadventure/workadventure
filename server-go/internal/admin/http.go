@@ -261,7 +261,7 @@ func (a *HTTP) Report(ctx context.Context, r Report) error {
 }
 
 // Ban is A7: a 2xx records it, unless its body says status "error".
-func (a *HTTP) Ban(ctx context.Context, b Ban) bool {
+func (a *HTTP) Ban(ctx context.Context, b Ban) error {
 	body := map[string]string{"uuidToBan": b.UUID, "playUri": b.PlayURI, "name": b.Name, "message": b.Message, "byUserUuid": b.ByUUID}
 	if b.IPAddress != "" {
 		body["ipAddress"] = b.IPAddress
@@ -269,9 +269,13 @@ func (a *HTTP) Ban(ctx context.Context, b Ban) bool {
 	var answer map[string]any
 	if err := a.call(ctx, http.MethodPost, a.cfg.AdminAPIURL, "/api/ban", nil, true, "", body, &answer); err != nil {
 		slog.Warn("the admin did not record the ban", "error", err)
-		return false
+		return err
 	}
-	return answer["status"] != "error"
+	if answer["status"] == "error" {
+		slog.Warn("the admin refused the ban", "answer", answer)
+		return ErrBanRefused
+	}
+	return nil
 }
 
 // RoomTags is A8: any failure is no tag.

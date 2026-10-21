@@ -173,7 +173,7 @@ func TestModerationAndTheMapEditorAskTheAdmin(t *testing.T) {
 		reported["reportWorldSlug"] != "https://w.test/r" {
 		t.Fatalf("report: %v %v", reported, err)
 	}
-	if !a.Ban(ctx, Ban{UUID: "bad", Message: "spam"}) || a.Ban(ctx, Ban{UUID: "vip"}) {
+	if a.Ban(ctx, Ban{UUID: "bad", Message: "spam"}) != nil || !errors.Is(a.Ban(ctx, Ban{UUID: "vip"}), ErrBanRefused) {
 		t.Fatal("a 2xx records the ban, unless it says status error")
 	}
 	if tags := a.RoomTags(ctx, "https://w.test/r"); len(tags) != 2 {

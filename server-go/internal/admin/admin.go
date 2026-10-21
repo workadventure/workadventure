@@ -104,8 +104,9 @@ type Admin interface {
 	VerifyDomain(ctx context.Context, playURI string) bool
 	// Report is A5: a player reports another one.
 	Report(ctx context.Context, r Report) error
-	// Ban is A7: true when the admin recorded the ban (it then refuses the user in MemberData).
-	Ban(ctx context.Context, b Ban) bool
+	// Ban is A7: nil when the admin recorded the ban (it then refuses the user in MemberData), ErrBanRefused when
+	// it answered that it would not record it, any other error when it could not be asked.
+	Ban(ctx context.Context, b Ban) error
 	// RoomTags is A8, the tags the map editor suggests.
 	RoomTags(ctx context.Context, roomURL string) []string
 	// SameWorld is A6: the rooms of the world of roomURL. ok is false without an admin: the server lists its maps.
@@ -158,6 +159,10 @@ type Member struct {
 }
 
 var errNoAdmin = errors.New("No admin backoffice set!")
+
+// ErrBanRefused is the admin answering a ban with an error body: the moderator is not an admin of the world in its
+// eyes, or the room or the user is unknown. Unlike an admin that cannot be reached, it is a decision.
+var ErrBanRefused = errors.New("the admin refused the ban")
 
 type Report struct{ ReportedUUID, Comment, ReporterUUID, RoomURL string }
 
@@ -235,7 +240,7 @@ func (l *Local) CompanionList(context.Context, string, string) (json.RawMessage,
 func (l *Local) Report(context.Context, Report) error {
 	return errors.New("no admin backoffice to report to")
 }
-func (l *Local) Ban(context.Context, Ban) bool             { return false }
+func (l *Local) Ban(context.Context, Ban) error            { return errNoAdmin }
 func (l *Local) RoomTags(context.Context, string) []string { return []string{} }
 
 func (l *Local) ChatMembers(context.Context, string, string) (ChatMembers, error) {
