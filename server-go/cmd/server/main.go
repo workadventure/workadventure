@@ -16,6 +16,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/getsentry/sentry-go"
+
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/analytics"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
@@ -25,6 +27,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/registry"
+	"github.com/workadventure/workadventure/server-go/internal/sentryx"
 	"github.com/workadventure/workadventure/server-go/internal/ws"
 )
 
@@ -45,11 +48,17 @@ func main() {
 }
 
 func run() error {
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel()})))
+	// The Sentry handler sends nothing until sentryx.Init has a DSN, so it can wrap the logs from the start.
+	slog.SetDefault(slog.New(sentryx.Handler(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: logLevel()}))))
 	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
+	if err := sentryx.Init(cfg.Sentry.DSN, cfg.Sentry.Environment, cfg.Sentry.Release); err != nil {
+		return fmt.Errorf("sentry: %w", err)
+	}
+	// Last of the shutdown, and on an error return too: the events still queued would otherwise die with the process.
+	defer sentry.Flush(2 * time.Second)
 	// Go follows the container's CPU limit (cgroup) for GOMAXPROCS since 1.25 (with a floor of 2), but not its
 	// memory limit: give that one to the garbage collector ourselves. Both are logged so a deployment can check.
 	slog.Info("starting", "version", version, "apiVersion", apiVersion, "GOMAXPROCS", runtime.GOMAXPROCS(0),
@@ -92,7 +101,7 @@ func run() error {
 	vars := variableStore(cfg)
 	wsServer := ws.NewServer(cfg, ws.Deps{Auth: tokens, Admin: adm, Rooms: rooms, Spaces: spaces, Maps: maps, Vars: vars,
 		APIVersion: apiVersion, Analytics: events, Matrix: matrixClient(cfg, vars), Recordings: recordings})
-	srv := buildServers(cfg, httpapi.New(cfg, tokens, adm, front, wsServer, version), maps, buildUploader(cfg, vars),
+	srv := buildServers(cfg, sentryx.Middleware(httpapi.New(cfg, tokens, adm, front, wsServer, version)), maps, buildUploader(cfg, vars),
 		buildRoomAPI(cfg, rooms, wsServer))
 	if err := srv.serve(ctx); err != nil {
 		return err

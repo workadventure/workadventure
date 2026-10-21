@@ -139,6 +139,10 @@ type Config struct {
 	ServerIcon                       string
 	NodeEnv                          string
 
+	// Sentry is where the server reports its errors. DSN is SENTRY_DSN_PUSHER, as on the play container this server
+	// replaces, else SENTRY_DSN, as on the back; empty: no reporting.
+	Sentry struct{ DSN, Environment, Release string }
+
 	FrontEnv FrontEnv
 }
 
@@ -298,6 +302,7 @@ type vars struct {
 	RoomAPISecretKey                 string  `env:"ROOM_API_SECRET_KEY"`
 	SecretJitsiKey                   string  `env:"SECRET_JITSI_KEY"`
 	SecretKey                        string  `env:"SECRET_KEY"`
+	SentryDSN                        string  `env:"SENTRY_DSN"`
 	SentryDSNFront                   string  `env:"SENTRY_DSN_FRONT"`
 	SentryDSNPusher                  string  `env:"SENTRY_DSN_PUSHER"`
 	SentryEnvironment                string  `env:"SENTRY_ENVIRONMENT"`
@@ -581,6 +586,7 @@ func parse(environ map[string]string) (*Config, error) {
 		c.PrometheusPort = p
 	}
 
+	c.Sentry.DSN, c.Sentry.Environment, c.Sentry.Release = cmp.Or(v.SentryDSNPusher, v.SentryDSN), v.SentryEnvironment, v.SentryRelease
 	c.FrontEnv = frontEnv(v, c, environ)
 
 	if len(errs) > 0 {

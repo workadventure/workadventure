@@ -123,7 +123,8 @@ reconnexion côté Go.
 | Front sans `ASSETS_URL` (mode local) | FrontAssets.ts:79 | absent | `httpapi/front.go:36` | toutes les pages répondent 503 | mode local, ou `ASSETS_URL` obligatoire |
 | Variables d'environnement : mêmes noms que TS | EnvironmentVariable*.ts | partiel | `config/config.go` | ports `SERVER_MAP_STORAGE_PORT` (défaut 0) ; `UPLOADER_URL` et `ICON_URL` plus requises ; `EMBEDDED_DOMAINS_WHITELIST` non normalisée ; "" retiré de `window.env` ; `NODE_TLS_REJECT_UNAUTHORIZED=0` sans effet : un certificat auto-signé (LiveKit, S3, admin de test) se donne par `SSL_CERT_FILE`/`SSL_CERT_DIR`, que Go lit seul | aligner ; décision de Yannis s'il faut aussi un interrupteur sans vérification |
 | Dockerfile de prod | play/Dockerfile | partiel | `Dockerfile` | voir manque 7 | étape « Déploiement » |
-| Sentry serveur, télémétrie, drain (`DRAIN_TIMEOUT_MS`) | — | absent | — | — | — |
+| Sentry serveur : `SENTRY_DSN_PUSHER` (le conteneur play que ce serveur remplace), sinon `SENTRY_DSN` (le back) ; vide : rien n'est envoyé. `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE`. Envoyés : chaque `slog.Error` (attributs `actor`, `room`, `space`, `session`, `user`, `world`… en tags, les autres en contexte `attributes`), les panics rattrapées des acteurs et des sessions (pile jusqu'à la panic), les panics et réponses 5xx du handler HTTP principal (`sentryhttp`, sans corps). Nettoyés avant envoi : en-têtes `Authorization`, cookies, `X-Forwarded-For`, paramètres `token`/`jwt`, tout ce qui ressemble à un JWT, un email ou une IPv4. Vidé 2 s à l'arrêt | back/src/server.ts:20, pusher EnvironmentVariable.ts:125 | validé (unitaire) | `sentryx_test.go` (3 tests) | `SENTRY_TRACES_SAMPLE_RATE` lu mais pas de traces (une requête WebSocket dure toute la visite) ; ports map-storage et uploader dédiés non couverts par le middleware HTTP (leurs `slog.Error` le sont) | — |
+| Télémétrie, drain (`DRAIN_TIMEOUT_MS`) | — | absent | — | — | — |
 
 ## LiveKit
 
