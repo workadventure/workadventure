@@ -14,7 +14,7 @@ func (s *Session) chatMembers(id int32, search string) {
 		s.answerError(id, err.Error())
 		return
 	}
-	a := &pb.ChatMembersAnswer{Total: m.Total}
+	a := &pb.ChatMembersAnswer{Total: int64(m.Total)}
 	for _, c := range m.Members {
 		tags := c.Tags
 		if tags == nil {

@@ -247,7 +247,7 @@ func (s *Session) roomJoined(j core.RoomJoined) *pb.ServerToClientMessage {
 	mb := s.info.member
 	apps := make([]*pb.ApplicationMessage, len(mb.Applications))
 	for i, a := range mb.Applications {
-		apps[i] = &pb.ApplicationMessage{Name: a.Name, Doc: opt(a.Doc), Image: opt(a.Image), Description: opt(a.Description),
+		apps[i] = &pb.ApplicationMessage{Name: a.Name, Doc: optp(a.Doc), Image: optp(a.Image), Description: optp(a.Description),
 			Enabled: &a.Enabled, Default: &a.Default, ForceNewTab: &a.ForceNewTab, AllowAPI: &a.AllowAPI}
 	}
 	var companion *pb.CompanionTextureMessage
@@ -266,6 +266,13 @@ func opt(s string) *string {
 		return nil
 	}
 	return &s
+}
+
+func optp(s *string) *string {
+	if s == nil {
+		return nil
+	}
+	return opt(*s)
 }
 
 // recoverPanic ends the session instead of the whole process when handling one client goes wrong.

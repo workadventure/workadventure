@@ -108,7 +108,7 @@ func TestTheAdminDescribesTheMap(t *testing.T) {
 		if r.URL.Query().Get("userId") != "a@b.c" || r.Header.Get("Accept-Language") != "en" {
 			t.Errorf("%v %v", r.URL.Query(), r.Header)
 		}
-		_, _ = w.Write([]byte(`{"group":"org/w","wamUrl":"https://w-1.ms.test/office.wam","thirdParty":{"jitsi":{"secret":"s"}}}`))
+		_, _ = w.Write([]byte(`{"group":"org/w","wamUrl":"https://w-1.ms.test/office.wam","thirdParty":{"jitsi":{"url":"https://jitsi.test","secret":"s"}}}`))
 	})
 	d, _ := a.MapDetails(context.Background(), MapQuery{PlayURI: "https://world.test/@/org/w/r", UserID: "a@b.c"})
 	if d.Raw["wamUrl"] != "https://w-1.ms.test/office.wam" || d.Raw["thirdParty"] == nil {
@@ -198,7 +198,7 @@ func TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin(t *testing.T) {
 		case "GET /api/members":
 			_, _ = w.Write([]byte(`[{"id":"u1","name":"Jo","email":"jo@x.test"}]`))
 		case "GET /api/members/u1":
-			_, _ = w.Write([]byte(`{"id":"u1","name":"Jo","visitCardUrl":"http://card"}`))
+			_, _ = w.Write([]byte(`{"id":"u1","name":"Jo","email":null,"visitCardUrl":"http://card"}`))
 		case "GET /api/world/tags":
 			_, _ = w.Write([]byte(`["admin","member"]`))
 		case "PUT /api/members/jo@x.test/chatId":
@@ -280,5 +280,20 @@ func TestTheAdminGivesEachWorldItsLiveKit(t *testing.T) {
 	}
 	if _, _, _, err := a.LiveKitCredentials(context.Background(), "other"); err == nil {
 		t.Fatal("incomplete credentials are an error: the space stays on WebRTC")
+	}
+}
+
+// WorldChatMembersData's email: .transform(null → undefined). A JSON null is a nil pointer here, an absent field in
+// the protobuf answer: the front's undefined.
+func TestAChatMemberWithoutEmailHasNone(t *testing.T) {
+	var m ChatMembers
+	if err := checked([]byte(`{"total":1,"members":[{"uuid":"u","email":null,"tags":[]}]}`), "WorldChatMembers", false, &m); err != nil {
+		t.Fatal(err)
+	}
+	if len(m.Members) != 1 || m.Members[0].Email != nil {
+		t.Fatalf("members: %+v", m.Members)
+	}
+	if checked([]byte(`{"total":1,"members":[{"uuid":"u","tags":[]}]}`), "WorldChatMembers", false, &m) == nil {
+		t.Fatal("email is required (nullable, not optional)")
 	}
 }

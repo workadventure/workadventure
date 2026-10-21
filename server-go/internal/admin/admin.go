@@ -23,21 +23,10 @@ import (
 )
 
 // Texture is a woka layer or companion texture (WokaDetail / CompanionDetail).
-type Texture struct {
-	ID  string `json:"id"`
-	URL string `json:"url"`
-}
+// Texture is a woka or companion texture of the admin's answers (WokaDetail, CompanionDetail: one shape).
+type Texture = WokaDetail
 
-type Application struct {
-	Name        string `json:"name"`
-	Doc         string `json:"doc,omitempty"`
-	Image       string `json:"image,omitempty"`
-	Description string `json:"description,omitempty"`
-	Enabled     bool   `json:"enabled"`
-	Default     bool   `json:"default"`
-	ForceNewTab bool   `json:"forceNewTab"`
-	AllowAPI    bool   `json:"allowAPI"`
-}
+// The admin's answers are generated from their zod schemas (admin.gen.go, server-go/schemas).
 
 // MemberData is the member as seen by the admin (FetchMemberDataByUuidResponse, status "ok"). Its JSON is part of
 // the /me response.
@@ -138,25 +127,11 @@ const (
 )
 
 // ChatMembers is WorldChatMembersData.
-type ChatMembers struct {
-	Total   int64 `json:"total"`
-	Members []struct {
-		UUID     string   `json:"uuid"`
-		WokaName *string  `json:"wokaName"`
-		Email    *string  `json:"email"`
-		ChatID   *string  `json:"chatId"`
-		Tags     []string `json:"tags"`
-	} `json:"members"`
-}
-
-// Member is a MemberData of the admin's search.
-type Member struct {
-	ID           string  `json:"id"`
-	Name         *string `json:"name"`
-	Email        *string `json:"email"`
-	VisitCardURL *string `json:"visitCardUrl"`
-	ChatID       *string `json:"chatID"`
-}
+// ChatMembers is the admin's chat members of a world (WorldChatMembersData), Member one of its members (MemberData).
+type (
+	ChatMembers = WorldChatMembers
+	Member      = ChatMember
+)
 
 var errNoAdmin = errors.New("No admin backoffice set!")
 
@@ -326,16 +301,16 @@ func (l *Local) applications() []Application {
 		Application
 	}
 	all := []app{
-		{env.KlaxoonEnabled, Application{Name: "Klaxoon", Doc: "https://klaxoon.com", Image: "https://static.klaxoon.com/favicon.ico", Description: "Klaxoon (Brainstorming, Quiz, Survey)"}},
-		{env.YoutubeEnabled, Application{Name: "Youtube", Doc: "https://youtube.com", Image: "https://www.youtube.com/favicon.ico", Description: "Youtube (Video sharing)"}},
-		{env.GoogleDriveEnabled, Application{Name: "Google Drive", Doc: "https://drive.google.com", Description: "Google Drive (Docs, Sheets, Slides)"}},
-		{env.GoogleDocsEnabled, Application{Name: "Google Docs", Doc: "https://docs.google.com", Description: "Google Docs (Word Processor)"}},
-		{env.GoogleSheetsEnabled, Application{Name: "Google Sheets", Doc: "https://sheets.google.com", Description: "Google Sheets (Spreadsheet)"}},
-		{env.GoogleSlidesEnabled, Application{Name: "Google Slides", Doc: "https://slides.google.com", Description: "Google Slides (Presentation)"}},
-		{env.EraserEnabled, Application{Name: "Eraser", Doc: "https://workadventu.re", Description: "Eraser (White board)"}},
-		{env.ExcalidrawEnabled, Application{Name: "Excalidraw", Doc: "https://excalidraw.com", Description: "Excalidraw (White board)"}},
-		{env.CardsEnabled, Application{Name: "Cards", Doc: "https://workadventu.re", Description: "Cards (learning tool)"}},
-		{env.TldrawEnabled, Application{Name: "tldraw", Doc: "https://tldraw.com", Description: "tldraw (White board)"}},
+		{env.KlaxoonEnabled, Application{Name: "Klaxoon", Doc: ptr("https://klaxoon.com"), Image: ptr("https://static.klaxoon.com/favicon.ico"), Description: ptr("Klaxoon (Brainstorming, Quiz, Survey)")}},
+		{env.YoutubeEnabled, Application{Name: "Youtube", Doc: ptr("https://youtube.com"), Image: ptr("https://www.youtube.com/favicon.ico"), Description: ptr("Youtube (Video sharing)")}},
+		{env.GoogleDriveEnabled, Application{Name: "Google Drive", Doc: ptr("https://drive.google.com"), Description: ptr("Google Drive (Docs, Sheets, Slides)")}},
+		{env.GoogleDocsEnabled, Application{Name: "Google Docs", Doc: ptr("https://docs.google.com"), Description: ptr("Google Docs (Word Processor)")}},
+		{env.GoogleSheetsEnabled, Application{Name: "Google Sheets", Doc: ptr("https://sheets.google.com"), Description: ptr("Google Sheets (Spreadsheet)")}},
+		{env.GoogleSlidesEnabled, Application{Name: "Google Slides", Doc: ptr("https://slides.google.com"), Description: ptr("Google Slides (Presentation)")}},
+		{env.EraserEnabled, Application{Name: "Eraser", Doc: ptr("https://workadventu.re"), Description: ptr("Eraser (White board)")}},
+		{env.ExcalidrawEnabled, Application{Name: "Excalidraw", Doc: ptr("https://excalidraw.com"), Description: ptr("Excalidraw (White board)")}},
+		{env.CardsEnabled, Application{Name: "Cards", Doc: ptr("https://workadventu.re"), Description: ptr("Cards (learning tool)")}},
+		{env.TldrawEnabled, Application{Name: "tldraw", Doc: ptr("https://tldraw.com"), Description: ptr("tldraw (White board)")}},
 	}
 	out := []Application{}
 	for _, a := range all {
@@ -509,3 +484,5 @@ func (l *Local) iceServers(userID int32) []IceServer {
 	}
 	return servers
 }
+
+func ptr(s string) *string { return &s }

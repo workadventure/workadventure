@@ -182,7 +182,7 @@ func (s *spaceState) createPoll(sender *SpaceUser, q CreatePoll) error {
 		}
 		name := truncateJS(sender.Name, senderNameMaxLength)
 		poll := spacestate.ProximityPoll{ID: newUUID(), Question: q.Question, Kind: spacestate.ProximityPollKind(q.Kind), Answers: answers,
-			MaxSelections: int64(q.MaxSelections), SenderID: voterID(sender), SenderName: &name, CreatedAt: s.now(),
+			MaxSelections: int(q.MaxSelections), SenderID: voterID(sender), SenderName: &name, CreatedAt: s.now(),
 			Votes: map[string]spacestate.ProximityPollVote{}}
 		st.Polls[poll.ID] = poll
 		return nil
@@ -197,7 +197,7 @@ func (s *spaceState) votePoll(sender *SpaceUser, q VotePoll) error {
 			return fmt.Errorf("Poll %s does not exist in this space", q.PollID)
 		case poll.End != nil:
 			return errors.New("This poll is closed")
-		case int64(len(q.AnswerIDs)) > poll.MaxSelections:
+		case len(q.AnswerIDs) > poll.MaxSelections:
 			return errors.New("Poll vote selects more answers than the poll allows")
 		}
 		for _, id := range q.AnswerIDs {
@@ -240,7 +240,7 @@ func (s *spaceState) askQuestion(sender *SpaceUser, q AskQuestion) error {
 	return s.updateState(func(st *spacestate.SpaceState) error {
 		name := truncateJS(sender.Name, senderNameMaxLength)
 		question := spacestate.ProximityQuestion{ID: newUUID(), Body: q.Body, SenderID: voterID(sender), SenderName: &name,
-			CreatedAt: s.now(), Upvotes: map[string]int64{}}
+			CreatedAt: s.now(), Upvotes: map[string]int{}}
 		st.Questions[question.ID] = question
 		return nil
 	})
@@ -399,7 +399,7 @@ func voterID(u *SpaceUser) string {
 
 func isAdmin(u *SpaceUser) bool { return slices.Contains(u.Tags, "admin") }
 
-func (s *spaceState) now() int64 { return s.mediaCfg.Clock.Now().UnixMilli() }
+func (s *spaceState) now() int { return int(s.mediaCfg.Clock.Now().UnixMilli()) }
 
 // truncateJS is s.slice(0, n) of JavaScript, counted in UTF-16 units, without splitting a surrogate pair.
 func truncateJS(s string, n int) string {

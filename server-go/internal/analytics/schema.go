@@ -1,5 +1,7 @@
 package analytics
 
+//go:generate sh gen.sh
+
 import (
 	"bytes"
 	_ "embed"

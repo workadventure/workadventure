@@ -146,7 +146,7 @@ func TestRaiseHandAndFloor(t *testing.T) {
 	if err := query(t, sp, "guest", RaiseHand{Raised: true}); err != nil {
 		t.Fatal(err)
 	}
-	if p := lastPatch(t, admin); !strings.Contains(p, `"path":"/raisedHands"`) || !strings.Contains(p, `"spaceUserId":"guest","name":"Guest"`) {
+	if p := lastPatch(t, admin); !strings.Contains(p, `"path":"/raisedHands"`) || !strings.Contains(p, `"spaceUserId":"guest"`) || !strings.Contains(p, `"name":"Guest"`) {
 		t.Fatalf("every member gets the raised hand: %s", p)
 	}
 	if query(t, sp, "guest", LowerHand{Target: "guest"}) == nil {
@@ -155,7 +155,7 @@ func TestRaiseHandAndFloor(t *testing.T) {
 	if err := query(t, sp, "host", GiveFloor{Target: "guest"}); err != nil {
 		t.Fatal(err)
 	}
-	if p := lastPatch(t, guest); !strings.Contains(p, `{"op":"replace","path":"/floorHolders","value":[{"spaceUserId":"guest","name":"Guest"}]}`) ||
+	if p := lastPatch(t, guest); !strings.Contains(p, `{"op":"replace","path":"/floorHolders","value":[{"name":"Guest","spaceUserId":"guest"}]}`) ||
 		!strings.Contains(p, `{"op":"replace","path":"/raisedHands","value":[]}`) {
 		t.Fatalf("the floor goes to the guest, whose hand goes down: %s", p)
 	}

@@ -173,7 +173,7 @@ func TestTheClientMayReportOnlyItsOwnEvents(t *testing.T) {
 func TestTheCatalogMatchesTheTSOne(t *testing.T) {
 	src, err := os.ReadFile("../../../libs/messages/src/JsonMessages/AnalyticsEventCatalog.ts")
 	if err != nil {
-		t.Skip("no TS catalog next to this checkout")
+		unavailable(t, "no TS catalog next to this checkout")
 	}
 	var ts, ours []string
 	for _, m := range regexp.MustCompile(`(?m)^  "([a-z0-9_.]+)": (\w+)\(`).FindAllSubmatch(src, -1) {
@@ -217,16 +217,16 @@ func TestThePropertiesAreTheCatalogs(t *testing.T) {
 // TestTheSchemasMatchTheTSCatalog regenerates catalog.json when the repository and node are there.
 func TestTheSchemasMatchTheTSCatalog(t *testing.T) {
 	if _, err := os.Stat("../../../node_modules/zod-to-json-schema"); err != nil {
-		t.Skip("no node_modules next to this checkout")
+		unavailable(t, "no node_modules next to this checkout")
 	}
 	if _, err := exec.LookPath("npx"); err != nil {
-		t.Skip("no npx")
+		unavailable(t, "no npx")
 	}
 	cmd := exec.Command("npx", "--no-install", "tsx", "server-go/internal/analytics/gen/catalog.ts")
 	cmd.Dir = "../../.."
 	out, err := cmd.Output()
 	if err != nil {
-		t.Skipf("cannot run the generator here: %v", err)
+		unavailable(t, "cannot run the generator here: "+err.Error())
 	}
 	if !bytes.Equal(bytes.TrimSpace(out), bytes.TrimSpace(catalogJSON)) {
 		t.Fatal("catalog.json is stale: run server-go/internal/analytics/gen.sh")
@@ -247,4 +247,14 @@ func TestASlowAdminDoesNotHoldTheQueue(t *testing.T) {
 	if d := time.Since(start); d > 5*time.Second || q.pending() != 0 {
 		t.Fatalf("flush took %s, %d pending", d, q.pending())
 	}
+}
+
+// unavailable skips a test that needs the repository's TS side, except in CI, where it must run (CI is set by the
+// runners): a skip there would hide a stale catalog.
+func unavailable(t *testing.T, why string) {
+	t.Helper()
+	if os.Getenv("CI") != "" {
+		t.Fatal(why)
+	}
+	t.Skip(why)
 }

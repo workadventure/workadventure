@@ -4,7 +4,7 @@
 // accepts.
 package spacestate
 
-//go:generate sh gen.sh
+// The types are generated (server-go/schemas, go generate there); validate.go checks a state against the schema.
 
 // Empty is emptySpaceState(): collections are empty, never null.
 func Empty() SpaceState {

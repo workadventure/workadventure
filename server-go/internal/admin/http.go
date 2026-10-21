@@ -162,7 +162,7 @@ func (a *HTTP) MemberData(ctx context.Context, q MemberQuery) (MemberData, error
 		MemberData
 		AnalyticsEventsEnabled *bool `json:"analyticsEventsEnabled"`
 	}
-	if generic["status"] != "ok" || json.Unmarshal(raw, &m) != nil || m.UserUUID == "" || m.World == "" {
+	if !valid("MemberAccessGranted", generic) || json.Unmarshal(raw, &m) != nil || m.UserUUID == "" || m.World == "" {
 		return MemberData{}, refusal("ROOM_ACCESS_VALIDATION", "Invalid answer", "The admin's answer to /api/room/access does not follow the contract")
 	}
 	m.MemberData.AnalyticsEventsEnabled = m.AnalyticsEventsEnabled == nil || *m.AnalyticsEventsEnabled // on unless said otherwise
@@ -196,9 +196,7 @@ func (a *HTTP) mapDetails(ctx context.Context, q MapQuery) (map[string]any, erro
 	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/map", query, true, orEN(q.Locale), nil, &m); err != nil {
 		return refusal("ROOM_ACCESS_ERROR", "Connection error", err.Error()).Data, nil
 	}
-	_, isRedirect := m["redirectUrl"].(string)
-	_, hasGroup := m["group"]
-	if !isRedirect && !hasGroup && !isErrorAPI(m, "error") {
+	if !valid("MapDetailsData", m) && !valid("RoomRedirect", m) && !(isErrorAPI(m, "error") && valid("ErrorApiErrorData", m)) {
 		return refusal("MAP_VALIDATION", "Invalid answer", "The admin's answer to /api/map does not follow the contract").Data, nil
 	}
 	return m, nil
@@ -293,28 +291,44 @@ func (a *HTTP) RoomTags(ctx context.Context, roomURL string) []string {
 // SameWorld is A6; tags is present even empty, joined by commas.
 func (a *HTTP) SameWorld(ctx context.Context, roomURL string, tags []string, bypassTagFilter bool) ([]RoomDescription, bool, error) {
 	q := url.Values{"roomUrl": {roomURL}, "bypassTagFilter": {fmt.Sprint(bypassTagFilter)}, "tags": {strings.Join(tags, ",")}}
+	var raw json.RawMessage
 	var rooms []RoomDescription
-	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/sameWorld", q, true, "en", nil, &rooms)
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/room/sameWorld", q, true, "en", nil, &raw)
+	if err == nil {
+		err = checked(raw, "ShortMapDescriptionList", false, &rooms)
+	}
 	return rooms, true, err
 }
 
 // ChatMembers is A12 (playUri, though the OpenAPI says roomUrl).
 func (a *HTTP) ChatMembers(ctx context.Context, roomURL, search string) (ChatMembers, error) {
+	var raw json.RawMessage
 	var m ChatMembers
-	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/chat/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &m)
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/chat/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &raw)
+	if err == nil {
+		err = checked(raw, "WorldChatMembers", false, &m)
+	}
 	return m, err
 }
 
 func (a *HTTP) SearchMembers(ctx context.Context, roomURL, search string) ([]Member, error) {
+	var raw json.RawMessage
 	var m []Member
-	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &m)
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members", url.Values{"playUri": {roomURL}, "searchText": {search}}, true, "", nil, &raw)
+	if err == nil {
+		err = checked(raw, "ChatMember", true, &m)
+	}
 	return m, err
 }
 
 // GetMember is A15; like the pusher, the uuid goes into the path as it is.
 func (a *HTTP) GetMember(ctx context.Context, uuid string) (Member, error) {
+	var raw json.RawMessage
 	var m Member
-	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members/"+uuid, nil, true, "", nil, &m)
+	err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/members/"+uuid, nil, true, "", nil, &raw)
+	if err == nil {
+		err = checked(raw, "ChatMember", false, &m)
+	}
 	return m, err
 }
 
