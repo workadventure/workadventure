@@ -1,5 +1,6 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
+    import { playOnSelectedOutput } from "../../WebRtc/AudioOutputManager";
     import Button from "../UI/Button.svelte";
     import Select from "./Select.svelte";
 
@@ -38,7 +39,7 @@
         }
         sound.src = url;
         sound.volume = volume;
-        sound.play().catch((e) => {
+        playOnSelectedOutput(sound).catch((e) => {
             console.error(e);
             Sentry.captureException(e);
         });
