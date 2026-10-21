@@ -215,6 +215,23 @@ func TestAMoveWithoutAPositionKeepsTheLastOne(t *testing.T) {
 	})
 }
 
+// A join without a position is refused as in the TS: an error, then the connection closes, and nobody joined.
+func TestAJoinWithoutAPositionIsRefused(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_JoinRoomFrontMessage{JoinRoomFrontMessage: &pb.JoinRoomFrontMessage{
+		Name: "bot", ViewportMessage: &pb.ViewportMessage{Right: 1000, Bottom: 1000}}}})
+	alice.waitFor("the error", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
+		if d.GetRoomJoinedMessage() != nil {
+			t.Fatal("joined without a position")
+		}
+		return d.GetErrorMessage().GetMessage() == "Missing position message"
+	})
+	if _, _, err := alice.recv(2 * time.Second); websocket.CloseStatus(err) != statusSessionDestroyed {
+		t.Fatalf("expected the connection closed with %d, got %v", statusSessionDestroyed, err)
+	}
+}
+
 func TestResumeReplaysMissedFramesAndDropsDuplicates(t *testing.T) {
 	h := newHarness(t)
 	alice := h.dial("alice", "c-alice", nil)

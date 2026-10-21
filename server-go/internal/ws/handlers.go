@@ -95,6 +95,14 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 
 // onJoinRoom enters the room: the player shows itself with its name, textures, position and stored variables.
 func (s *Session) onJoinRoom(j *pb.JoinRoomFrontMessage) {
+	if j.GetPositionMessage() == nil {
+		// GameRoom.join throws, and the back's joinRoom stream answers an ErrorMessage then closes the connection,
+		// rather than putting the player at (0,0), the corner of the map.
+		const reason = "Missing position message"
+		s.Send(core.NewMsg(core.RoomError{Message: reason}, false))
+		s.Kick("Error while handling joinRoom message: " + reason)
+		return
+	}
 	s.presence.mu.Lock()
 	first := !s.presence.joined
 	s.presence.joined = true
