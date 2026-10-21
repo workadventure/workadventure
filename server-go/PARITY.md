@@ -114,7 +114,7 @@ reconnexion côté Go.
 | Ports : WS 3001, map-storage 3002 et uploader 3003 actifs par défaut, Room API 50051 si `ROOM_API_SECRET_KEY` | chart `server.enabled` | implémenté non vérifié | `config.go`, `Dockerfile` (EXPOSE) | — | `deploy` OSS |
 | `PATH_PREFIX` de map-storage (fichiers privés derrière `/map-storage`) | VerifyJwt.ts:33 | validé | `mapstorage_test.go` : `TestPrivateFilesBehindAPathPrefix` | — | — |
 | Uploader : messages audio (60 s), fichiers du chat, CORS `ALLOWED_CORS_ORIGIN`/`PLAY_URL`, `ENABLE_CHAT_UPLOAD`, `UPLOAD_MAX_FILESIZE` ; stockage S3 (`AWS_*`, téléchargement par lien signé, `UPLOADER_AWS_SIGNED_URL_EXPIRATION`), sinon Redis, sinon mémoire ; audio dans Redis, sinon mémoire | uploader/src/Controller/FileController.ts, Service/*StorageProvider.ts | validé (tests Go) | `uploader_test.go` (4 tests) | règles CORS posées sur le bucket au démarrage ; Redis partagé avec les variables (`REDIS_DB_NUMBER` ignoré) ; mémoire limitée à 256 Mo | — |
-| `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` sans jeton | protéger pprof |
+| `/metrics` | PrometheusController.ts | implémenté non vérifié | `metrics.go` | moins de métriques ; `/debug/pprof` derrière le jeton, coupé sans | — |
 | OpenID (login, callback, logout, `/me`) | AuthenticateController.ts | validé | `httpapi/oidc_test.go` ; J2 `oidc` | id_token non vérifié ; code verifier en clair (ponytail) | revue sécurité |
 | `/profile-callback`, `access_key`, challenge Cloudflare, `save-*` | AuthenticateController.ts:470, FrontController.ts | absent | — | SaaS | avec l'admin |
 | `/room/refresh`, `/message`, `/external-module/event` (`ADMIN_API_TOKEN`) | AdminController.ts | validé | `server_test.go` : `TestTheAdminTalksToThePlayersOfARoom` | — | — |
@@ -171,7 +171,7 @@ reconnexion côté Go.
 
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
-| `/metrics` (501 sans jeton ni port, 401) et pprof | PrometheusController.ts | validé | `metrics_test.go` (2 tests) | pprof derrière le même jeton | — |
+| `/metrics` (501 sans jeton ni port, 401) et pprof | PrometheusController.ts | validé | `metrics_test.go` (2 tests) | pprof derrière le même jeton, coupé sans jeton | — |
 | `nb_sockets`, `nb_clients_per_room`, `nb_rooms`, `nb_spaces` | GaugeManager.ts | implémenté non vérifié | `metrics.go` | une série au lieu de deux jobs (pusher, back) | revoir les tableaux de bord |
 | `nb_publishers_per_space`, `nb_watchers_per_world` | back GaugeManager.ts:38-69 | absent | — | bug TS (`world` contre `name`) | définir la sémantique |
 | `nodejs_*` | collectDefaultMetrics | remplacé par `go_*` | — | alertes à revoir | — |

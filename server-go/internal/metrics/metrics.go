@@ -91,9 +91,14 @@ func Handler(dedicatedPort bool, token string) http.Handler {
 	})
 }
 
-// Guard requires the metrics token, when there is one, before h (the profiler of the metrics port).
+// Guard requires the metrics token before h (the profiler of the metrics port). Without a token, h is off: the
+// metrics of a dedicated port may stay open as in the TS, not the profiler, which shows the server's internals.
 func Guard(token string, h http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if token == "" {
+			http.NotFound(w, r)
+			return
+		}
 		if authorized(w, r, token) {
 			h(w, r)
 		}

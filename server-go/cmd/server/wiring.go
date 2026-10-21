@@ -179,7 +179,7 @@ func buildServers(cfg *config.Config, main http.Handler, maps *mapstorage.Store,
 		s.http = append(s.http, newServer(cfg.UploaderPort, upload))
 	}
 	if cfg.PrometheusPort != 0 {
-		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics.
+		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics (none: no profiler).
 		mux := http.NewServeMux()
 		mux.Handle("GET /metrics", metrics.Handler(true, cfg.PrometheusToken))
 		mux.HandleFunc("/debug/pprof/", metrics.Guard(cfg.PrometheusToken, pprof.Index))

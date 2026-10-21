@@ -45,6 +45,9 @@ func TestTheProfilerWantsTheMetricsToken(t *testing.T) {
 	if status(profiler, "") != 401 || status(profiler, "Bearer s3cret") != 200 {
 		t.Fatal("the profiler is behind the token")
 	}
+	if status(Guard("", func(w http.ResponseWriter, _ *http.Request) { w.WriteHeader(http.StatusOK) }), "") != http.StatusNotFound {
+		t.Fatal("without a token, the profiler is off")
+	}
 }
 
 func TestAnIgnoredErrorIsCountedUnlessItIsACancellation(t *testing.T) {
