@@ -20,6 +20,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
 )
 
 var ErrBadPath = errors.New("invalid path")
@@ -301,7 +303,7 @@ func (s *Store) Handler(o Options) http.Handler {
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, "pong") })
 	mux.HandleFunc("GET /health/live", func(w http.ResponseWriter, _ *http.Request) { _, _ = io.WriteString(w, "ok") })
 	mux.HandleFunc("GET /upload-endpoint", func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, map[string]string{"url": uploadURL(o, r)})
+		httpx.WriteJSON(w, http.StatusOK, map[string]string{"url": uploadURL(o, r)})
 	})
 	mux.HandleFunc("GET /maps", s.list)
 	mux.HandleFunc("POST /upload", auth(func(w http.ResponseWriter, r *http.Request) { s.upload(w, r, o) }))
@@ -329,12 +331,6 @@ func (s *Store) Handler(o Options) http.Handler {
 		}
 		mux.ServeHTTP(w, r)
 	})
-}
-
-func writeJSON(w http.ResponseWriter, status int, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	w.WriteHeader(status)
-	_ = jsonEncode(w, v)
 }
 
 func uploadURL(o Options, r *http.Request) string {

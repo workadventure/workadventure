@@ -232,3 +232,19 @@ func TestTheSchemasMatchTheTSCatalog(t *testing.T) {
 		t.Fatal("catalog.json is stale: run server-go/internal/analytics/gen.sh")
 	}
 }
+
+// An admin that never answers costs each post its Timeout, not the queue's life.
+func TestASlowAdminDoesNotHoldTheQueue(t *testing.T) {
+	release := make(chan struct{})
+	slow := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) { <-release }))
+	defer slow.Close()
+	defer close(release)
+	q := New(Config{AdminURL: slow.URL, Token: "t", InstanceID: "p", Timeout: 50 * time.Millisecond, MaxQueue: 10, MaxBatch: 10})
+	q.SetEnabled(true)
+	q.Enqueue(ev("x"))
+	start := time.Now()
+	q.Flush(context.Background())
+	if d := time.Since(start); d > 5*time.Second || q.pending() != 0 {
+		t.Fatalf("flush took %s, %d pending", d, q.pending())
+	}
+}

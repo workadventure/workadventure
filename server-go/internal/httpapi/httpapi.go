@@ -19,6 +19,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/auth"
 	"github.com/workadventure/workadventure/server-go/internal/config"
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	"github.com/workadventure/workadventure/server-go/internal/netguard"
 )
@@ -136,11 +137,6 @@ func text(w http.ResponseWriter, status int, body string) {
 	_, _ = w.Write([]byte(body)) //nolint:gosec // text/plain, never HTML
 }
 
-func writeJSON(w http.ResponseWriter, v any) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	_ = json.NewEncoder(w).Encode(v)
-}
-
 // cors mirrors the cors() middleware of the pusher: ALLOWED_CORS_ORIGIN, "*" reflecting the caller's origin.
 func cors(cfg *config.Config, next http.Handler) http.Handler {
 	allowed := cfg.AllowedCORSOrigin
@@ -178,7 +174,7 @@ func (api *API) anonymLogin(w http.ResponseWriter, _ *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	writeJSON(w, map[string]string{"authToken": token, "userUuid": userUUID})
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"authToken": token, "userUuid": userUUID})
 }
 
 // newUUID returns a random (version 4) UUID.
@@ -208,7 +204,7 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 	})
 	var refused *admin.Refusal
 	if errors.As(err, &refused) {
-		writeJSON(w, refused.Data) // the front shows the admin's error (banned, world full, login needed...)
+		httpx.WriteJSON(w, http.StatusOK, refused.Data) // the front shows the admin's error (banned, world full, login needed...)
 		return
 	}
 	if err != nil {
@@ -240,7 +236,7 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 			resp[k] = v
 		}
 	}
-	writeJSON(w, resp)
+	httpx.WriteJSON(w, http.StatusOK, resp)
 }
 
 func (api *API) mapDetails(w http.ResponseWriter, r *http.Request) {
@@ -269,7 +265,7 @@ func (api *API) mapDetails(w http.ResponseWriter, r *http.Request) {
 	if api.cfg.DisableAnonymous && details.IsRoom() {
 		front["authenticationMandatory"] = true
 	}
-	writeJSON(w, front)
+	httpx.WriteJSON(w, http.StatusOK, front)
 }
 
 func (api *API) authenticatedList(list func(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)) http.HandlerFunc {
@@ -327,7 +323,7 @@ func (api *API) serverJSON(w http.ResponseWriter, _ *http.Request) {
 	if api.cfg.NodeEnv != "production" {
 		version += "-dev"
 	}
-	writeJSON(w, map[string]string{"domain": api.cfg.PusherURL, "name": api.cfg.ServerName, "motd": api.cfg.ServerMotd, "icon": api.cfg.ServerIcon, "version": version})
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"domain": api.cfg.PusherURL, "name": api.cfg.ServerName, "motd": api.cfg.ServerMotd, "icon": api.cfg.ServerIcon, "version": version})
 }
 
 func fullURL(r *http.Request) string {

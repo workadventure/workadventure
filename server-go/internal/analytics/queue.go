@@ -62,7 +62,7 @@ type Queue struct {
 
 // New returns a queue that sends nothing until SetEnabled(true), nor ever without an admin URL and token.
 func New(cfg Config) *Queue {
-	return &Queue{cfg: cfg, client: &http.Client{}}
+	return &Queue{cfg: cfg, client: &http.Client{Timeout: cfg.Timeout}}
 }
 
 func (q *Queue) canSend() bool {

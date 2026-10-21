@@ -2,8 +2,9 @@ package ws
 
 import (
 	"crypto/subtle"
-	"encoding/json"
 	"net/http"
+
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
 )
 
 // The debug routes of the back (DebugController.ts), with its token: ADMIN_API_TOKEN in the query.
@@ -37,8 +38,7 @@ func (srv *Server) Dump(w http.ResponseWriter, r *http.Request) {
 		}
 		srv.rooms.Release(url)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(out)
+	httpx.WriteJSON(w, http.StatusOK, out)
 }
 
 // CloseSpaceConnection is POST /debug/close-space-connection of the back. There the pushers lost their stream to

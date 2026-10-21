@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -56,9 +57,7 @@ func (srv *Server) RoomArea(w http.ResponseWriter, r *http.Request) {
 	case http.MethodPost:
 		if roomID, err = srv.matrix.CreateAreaRoom(r.Context()); err == nil {
 			p["serverData"] = map[string]any{"matrixRoomId": roomID}
-			w.Header().Set("Content-Type", "application/json")
-			w.WriteHeader(http.StatusCreated)
-			_ = json.NewEncoder(w).Encode(p)
+			httpx.WriteJSON(w, http.StatusCreated, p)
 			return
 		}
 	case http.MethodDelete:

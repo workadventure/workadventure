@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/workadventure/workadventure/server-go/internal/core"
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -59,8 +60,7 @@ func (srv *Server) Rooms(w http.ResponseWriter, r *http.Request) {
 		}
 		srv.rooms.Release(roomURL)
 	}
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(out)
+	httpx.WriteJSON(w, http.StatusOK, out)
 }
 
 // GlobalEvent is POST /global/event of the pusher: an administration tool sends a scripting event to every room.

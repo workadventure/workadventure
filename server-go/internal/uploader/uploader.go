@@ -8,7 +8,6 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/workadventure/workadventure/server-go/internal/s3"
 	"io"
 	"log/slog"
 	"mime"
@@ -18,6 +17,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
+	"github.com/workadventure/workadventure/server-go/internal/s3"
 )
 
 // Options are the uploader's settings.
@@ -162,7 +164,7 @@ func (u *Uploader) uploadAudio(w http.ResponseWriter, r *http.Request) {
 	} else {
 		u.store(id, data, audioTTL)
 	}
-	writeJSON(w, http.StatusOK, map[string]string{"id": id, "path": "/download-audio-message/" + id})
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"id": id, "path": "/download-audio-message/" + id})
 }
 
 func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
@@ -172,12 +174,12 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.MultipartForm.RemoveAll()
 	if u.o.AdminAPIURL == "" && !u.o.EnableUpload {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"message": "disabled"})
+		httpx.WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": "disabled"})
 		return
 	}
 	roomToken := r.FormValue("userRoomToken")
 	if u.o.AdminAPIURL != "" && roomToken == "" {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"message": "not-logged"})
+		httpx.WriteJSON(w, http.StatusUnauthorized, map[string]string{"message": "not-logged"})
 		return
 	}
 	type uploaded struct {
@@ -193,11 +195,11 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 		for _, h := range headers {
 			if u.o.AdminAPIURL != "" {
 				if code, body := u.adminLimit(r.Context(), roomToken, h.Size); code != 0 {
-					writeJSON(w, code, body)
+					httpx.WriteJSON(w, code, body)
 					return
 				}
 			} else if h.Size > u.o.MaxFileSize {
-				writeJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"message": "file-too-big", "maxFileSize": strconv.FormatInt(u.o.MaxFileSize, 10)})
+				httpx.WriteJSON(w, http.StatusRequestEntityTooLarge, map[string]string{"message": "file-too-big", "maxFileSize": strconv.FormatInt(u.o.MaxFileSize, 10)})
 				return
 			}
 			f, err := h.Open()
@@ -220,7 +222,7 @@ func (u *Uploader) uploadFiles(w http.ResponseWriter, r *http.Request) {
 				Size: len(data), LastModified: time.Now(), Type: h.Header.Get("Content-Type")})
 		}
 	}
-	writeJSON(w, http.StatusOK, out)
+	httpx.WriteJSON(w, http.StatusOK, out)
 }
 
 // download serves a file as a user uploaded it: never as active content on this origin.
@@ -282,12 +284,6 @@ func safeType(name string) string {
 		return base
 	}
 	return "application/octet-stream"
-}
-
-func writeJSON(w http.ResponseWriter, code int, v any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(code)
-	_ = json.NewEncoder(w).Encode(v)
 }
 
 // adminLimit asks the admin whether the player may send a file of size bytes (A29, /api/limit/fileSize): 0 when

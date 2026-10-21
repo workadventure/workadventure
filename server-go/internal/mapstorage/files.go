@@ -20,14 +20,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
 )
-
-func jsonEncode(w io.Writer, v any) error {
-	enc := json.NewEncoder(w)
-	enc.SetEscapeHTML(false)
-	return enc.Encode(v)
-}
 
 // hidden says whether a path has a segment starting with "." (macOS metadata, .git...): map-storage drops them.
 func hidden(name string) bool {
@@ -103,7 +98,7 @@ func (s *Store) upload(w http.ResponseWriter, r *http.Request, o Options) {
 		}
 	}
 	if len(errs) > 0 {
-		writeJSON(w, http.StatusBadRequest, errs)
+		httpx.WriteJSON(w, http.StatusBadRequest, errs)
 		return
 	}
 
@@ -194,7 +189,7 @@ func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
 	if strings.HasPrefix(r.Header.Get("Content-Type"), "multipart/") {
 		file, _, ferr := r.FormFile("file")
 		if ferr != nil {
-			writeJSON(w, http.StatusBadRequest, report{"request": {{Type: "error", Message: "No file was uploaded"}}})
+			httpx.WriteJSON(w, http.StatusBadRequest, report{"request": {{Type: "error", Message: "No file was uploaded"}}})
 			return
 		}
 		defer file.Close()
@@ -212,7 +207,7 @@ func (s *Store) put(w http.ResponseWriter, r *http.Request, o Options) {
 	}
 	// ponytail: a .tmj is checked without its images (map-storage cannot load them from a relative URL either).
 	if rep := validateFile(key, data, nil); rep != nil {
-		writeJSON(w, http.StatusBadRequest, rep)
+		httpx.WriteJSON(w, http.StatusBadRequest, rep)
 		return
 	}
 	f, err := s.file(key)
@@ -267,7 +262,7 @@ func (s *Store) patch(w http.ResponseWriter, r *http.Request, o Options) {
 	}
 	list, isList := ops.([]any)
 	if !isList {
-		writeJSON(w, http.StatusBadRequest, map[string]string{"patch": "Invalid patch: expected a JSON-Patch document (an array of operations)"})
+		httpx.WriteJSON(w, http.StatusBadRequest, map[string]string{"patch": "Invalid patch: expected a JSON-Patch document (an array of operations)"})
 		return
 	}
 	var invalid report
@@ -301,16 +296,16 @@ func (s *Store) patch(w http.ResponseWriter, r *http.Request, o Options) {
 	case errors.Is(err, os.ErrNotExist):
 		http.NotFound(w, r)
 	case errors.As(err, &pe):
-		writeJSON(w, http.StatusBadRequest, map[string]string{"patch": pe.Error()})
+		httpx.WriteJSON(w, http.StatusBadRequest, map[string]string{"patch": pe.Error()})
 	case invalid != nil:
-		writeJSON(w, http.StatusBadRequest, invalid)
+		httpx.WriteJSON(w, http.StatusBadRequest, invalid)
 	case err != nil:
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	default:
 		s.forget(key)
 		s.changed(key, false)
 		s.notify(key, "update")
-		writeJSON(w, http.StatusOK, map[string]bool{"success": true})
+		httpx.WriteJSON(w, http.StatusOK, map[string]bool{"success": true})
 	}
 }
 
@@ -378,7 +373,7 @@ func (s *Store) list(w http.ResponseWriter, r *http.Request) {
 		}
 		maps = mine
 	}
-	writeJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": maps})
+	httpx.WriteJSON(w, http.StatusOK, map[string]any{"version": "go-1", "maps": maps})
 }
 
 // Maps lists the valid WAM files by path, with their mapUrl, metadata and vendor.
@@ -515,15 +510,16 @@ func (s *Store) moveOrCopy(w http.ResponseWriter, r *http.Request, move bool) {
 	_, _ = io.WriteString(w, "Created")
 }
 
-// fetch reads a small document over HTTP (the WAM template), within 10 s.
+// templateClient fetches the WAM template, a small document: 10 s is plenty.
+var templateClient = &http.Client{Timeout: 10 * time.Second}
+
+// fetch reads a small document over HTTP (the WAM template).
 func fetch(ctx context.Context, url string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
-	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := templateClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
