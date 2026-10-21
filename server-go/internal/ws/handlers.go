@@ -18,8 +18,17 @@ func (s *Session) handle(m *pb.ClientToServerMessage) {
 	case *pb.ClientToServerMessage_VariableMessage:
 		s.setVariable(ctx, core.Variable{Name: msg.VariableMessage.GetName(), Value: msg.VariableMessage.GetValue()})
 	case *pb.ClientToServerMessage_UserMovesMessage:
-		vp := toViewport(msg.UserMovesMessage.GetViewport())
-		metrics.Ignore("room.Move", s.room.Move(ctx, s, toPosition(msg.UserMovesMessage.GetPosition()), &vp))
+		// A move without a position would teleport the player to (0,0). As in the TS: without a viewport the pusher
+		// and the back drop it; without a position the back keeps the last one, the pusher still follows the viewport.
+		um := msg.UserMovesMessage
+		switch {
+		case um.GetViewport() == nil:
+		case um.GetPosition() == nil:
+			metrics.Ignore("room.SetViewport", s.room.SetViewport(ctx, s, toViewport(um.GetViewport())))
+		default:
+			vp := toViewport(um.GetViewport())
+			metrics.Ignore("room.Move", s.room.Move(ctx, s, toPosition(um.GetPosition()), &vp))
+		}
 	case *pb.ClientToServerMessage_ViewportMessage:
 		metrics.Ignore("room.SetViewport", s.room.SetViewport(ctx, s, toViewport(msg.ViewportMessage)))
 	case *pb.ClientToServerMessage_SetPlayerDetailsMessage:

@@ -187,6 +187,34 @@ func TestTwoBotsSeeEachOtherMoveAndFormABubble(t *testing.T) {
 	})
 }
 
+// A move without a position (or without a viewport) keeps the player where it was, instead of sending it to (0,0).
+func TestAMoveWithoutAPositionKeepsTheLastOne(t *testing.T) {
+	h := newHarness(t)
+	alice := h.dial("alice", "c-alice", nil)
+	alice.send(join(100, 100))
+	alice.waitFor("roomJoined", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetRoomJoinedMessage() != nil })
+	bob := h.dial("bob", "c-bob", nil)
+	bob.send(join(500, 500))
+	alice.waitFor("bob", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		return s.GetUserJoinedMessage().GetUserUuid() == "bob"
+	})
+	bob.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_UserMovesMessage{UserMovesMessage: &pb.UserMovesMessage{
+		Viewport: &pb.ViewportMessage{Left: 0, Top: 0, Right: 1000, Bottom: 1000}}}})
+	bob.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_UserMovesMessage{UserMovesMessage: &pb.UserMovesMessage{
+		Position: &pb.PositionMessage{X: 0, Y: 0}}}})
+	time.Sleep(2 * batchDelay) // the moves above would land in their own batch
+	bob.send(moveTo(530, 500))
+	alice.waitFor("bob's move", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		if mv := s.GetUserMovedMessage(); mv != nil {
+			if mv.GetPosition().GetX() != 530 {
+				t.Fatalf("bob moved to %v", mv.GetPosition())
+			}
+			return true
+		}
+		return false
+	})
+}
+
 func TestResumeReplaysMissedFramesAndDropsDuplicates(t *testing.T) {
 	h := newHarness(t)
 	alice := h.dial("alice", "c-alice", nil)
