@@ -29,7 +29,28 @@ type Room struct {
 }
 
 func NewRoom(url string, cfg Config) *Room {
-	return &Room{URL: url, a: actor.Start("room "+url, inboxSize, nil), s: newState(url, cfg)}
+	r := &Room{URL: url, s: newState(url, cfg)}
+	r.a = actor.Start("room "+url, inboxSize, nil, r.s.breakDown)
+	return r
+}
+
+// errBrokenReason is what the connections of a broken room are kicked with.
+const errBrokenReason = "The room had an internal error."
+
+// breakDown runs after a closure of the room panicked: its state may be half-changed (a player in a group that
+// no longer lists it, a zone that missed a leave), and going on with it would show the errors to everyone, for as
+// long as the room lives. So the room does what a crash of the back did: every connection is kicked, and each new
+// one too, until the room is empty and dropped. The fronts reconnect from scratch, to a fresh room.
+func (s *state) breakDown() {
+	s.broken = true
+	for p := range s.listeners {
+		p.Kick(errBrokenReason)
+	}
+	for p := range s.byPeer {
+		if _, kicked := s.listeners[p]; !kicked {
+			p.Kick(errBrokenReason)
+		}
+	}
 }
 
 // Stop ends the room once its pending messages are processed. Nothing may be posted after Stop.
@@ -177,6 +198,7 @@ type state struct {
 	roomVars    *RoomVariables          // nil until InitVariables
 	varsAt      time.Time               // when the map's declarations were read
 	varsWritten map[string]bool         // the room variables written since the room started (roomvars.go)
+	broken      bool                    // a closure panicked: see breakDown
 }
 
 func newState(url string, cfg Config) *state {
@@ -241,6 +263,10 @@ func (u *user) listens(k zoneKey) bool {
 }
 
 func (s *state) join(p Peer, req JoinRequest) {
+	if s.broken {
+		p.Kick(errBrokenReason)
+		return
+	}
 	if s.byPeer[p] != nil {
 		return // joinRoomFrontMessage sent twice
 	}

@@ -40,6 +40,10 @@ type (
 // that no edit falls between the two. load reads the areas of the map, once per room.
 func (r *Room) Connect(ctx context.Context, p Peer, load func() []Area, connected func() Event) error {
 	return r.a.Post(ctx, func() {
+		if r.s.broken {
+			p.Kick(errBrokenReason)
+			return
+		}
 		if !r.s.areasLoaded {
 			r.s.areasLoaded = true
 			r.s.setAreas(load())

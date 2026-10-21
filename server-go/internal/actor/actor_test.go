@@ -5,10 +5,14 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	dto "github.com/prometheus/client_model/go"
+
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 )
 
 func TestClosuresRunInOrderOnOneGoroutine(t *testing.T) {
-	a := Start("t", 4, nil)
+	a := Start("t", 4, nil, nil)
 	var got []int // touched only by the actor: the race detector checks there is no other writer
 	for i := 0; i < 100; i++ {
 		if err := a.Post(context.Background(), func() { got = append(got, i) }); err != nil {
@@ -25,7 +29,7 @@ func TestClosuresRunInOrderOnOneGoroutine(t *testing.T) {
 }
 
 func TestPostBlocksWhenFullAndHonoursContext(t *testing.T) {
-	a := Start("t", 1, nil)
+	a := Start("t", 1, nil, nil)
 	release := make(chan struct{})
 	_ = a.Post(context.Background(), func() { <-release }) // occupies the goroutine
 	_ = a.Post(context.Background(), func() {})            // fills the inbox
@@ -43,7 +47,7 @@ func TestPostBlocksWhenFullAndHonoursContext(t *testing.T) {
 }
 
 func TestPanicDoesNotKillTheActor(t *testing.T) {
-	a := Start("t", 2, nil)
+	a := Start("t", 2, nil, nil)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	_ = a.Post(context.Background(), func() { panic("boom") })
@@ -62,7 +66,7 @@ func (m *manualTimers) AfterFunc(_ time.Duration, f func()) func() bool {
 
 func TestAfterRunsOnTheActorAndNotOnceItStopped(t *testing.T) {
 	timers := &manualTimers{}
-	a := Start("t", 1, timers)
+	a := Start("t", 1, timers, nil)
 	ran := make(chan struct{})
 	a.After(time.Second, func() { close(ran) })
 	timers.fire()
@@ -76,4 +80,25 @@ func TestAfterRunsOnTheActorAndNotOnceItStopped(t *testing.T) {
 	a.Stop()
 	<-a.Done()
 	timers.fire() // must neither run nor post on the closed inbox
+}
+
+func TestAPanicIsCountedAndHandedToOnPanicOnce(t *testing.T) {
+	before := panics()
+	handled := 0
+	a := Start("test t", 4, nil, func() { handled++; panic("again") })
+	_ = a.Post(context.Background(), func() { panic("boom") })
+	a.Stop()
+	<-a.Done()
+	if handled != 1 {
+		t.Fatalf("onPanic ran %d times, want once even though it panicked itself", handled)
+	}
+	if n := panics() - before; n != 2 {
+		t.Fatalf("counted %v panics, want 2", n)
+	}
+}
+
+func panics() float64 {
+	var m dto.Metric
+	_ = metrics.ActorPanics.WithLabelValues("test").Write(&m)
+	return m.GetCounter().GetValue()
 }

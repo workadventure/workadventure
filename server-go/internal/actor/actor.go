@@ -7,8 +7,11 @@ import (
 	"context"
 	"log/slog"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
 )
 
 type Actor struct {
@@ -16,6 +19,8 @@ type Actor struct {
 	inbox  chan func()
 	done   chan struct{}
 	timers Timers
+	// onPanic runs on the actor after a closure panicked: the state it left half-changed cannot be trusted.
+	onPanic func()
 	// Later and the timers post from other goroutines, which may outlive the actor: stopped keeps them from
 	// posting on a closed inbox.
 	mu      sync.RWMutex
@@ -32,13 +37,14 @@ type realTimers struct{}
 
 func (realTimers) AfterFunc(d time.Duration, f func()) func() bool { return time.AfterFunc(d, f).Stop }
 
-// Start launches the owner goroutine. The inbox holds at most size closures. timers runs After; nil is the real
-// clock.
-func Start(name string, size int, timers Timers) *Actor {
+// Start launches the owner goroutine. The inbox holds at most size closures. name starts with the kind of actor
+// and a space ("room …"), the label of its panics. timers runs After; nil is the real clock. onPanic, when not nil,
+// runs after a closure panicked.
+func Start(name string, size int, timers Timers, onPanic func()) *Actor {
 	if timers == nil {
 		timers = realTimers{}
 	}
-	a := &Actor{name: name, inbox: make(chan func(), size), done: make(chan struct{}), timers: timers}
+	a := &Actor{name: name, inbox: make(chan func(), size), done: make(chan struct{}), timers: timers, onPanic: onPanic}
 	go a.run()
 	return a
 }
@@ -51,14 +57,26 @@ func (a *Actor) run() {
 }
 
 // safely keeps one faulty message from killing the whole process (and every other room with it), like the
-// per-message catch of the TS services.
+// per-message catch of the TS services. Unlike a TS handler, which mostly throws while validating, before any
+// change, a Go panic is a bug that may stop half-way through a change: onPanic then deals with the state left.
 func (a *Actor) safely(f func()) {
+	if a.recovered(f) && a.onPanic != nil {
+		a.recovered(a.onPanic) // a panic of its own is logged and counted, not handled again
+	}
+}
+
+// recovered runs f and says whether it panicked; the panic is logged, so sent to Sentry, and counted.
+func (a *Actor) recovered(f func()) (panicked bool) {
 	defer func() {
 		if r := recover(); r != nil {
+			panicked = true
 			slog.Error("panic in actor", "actor", a.name, "panic", r, "stack", string(debug.Stack()))
+			kind, _, _ := strings.Cut(a.name, " ")
+			metrics.ActorPanics.WithLabelValues(kind).Inc()
 		}
 	}()
 	f()
+	return false
 }
 
 // Post queues f, blocking while the inbox is full. A connection reader that blocks here stops reading its socket,

@@ -30,6 +30,9 @@ var (
 	unhandledMessages = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_unhandled_messages_total", Help: "Client messages of a type the server does not handle, dropped"}, []string{"type"})
 	unhandledLogged   sync.Map // type → struct{}: the types already logged
 
+	// ActorPanics counts the panics an actor recovered, by kind of actor (room, space).
+	ActorPanics = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_actor_panics_total", Help: "Panics recovered in an actor, whose state was then discarded"}, []string{"kind"})
+
 	ignoredErrors = promauto.NewCounterVec(prometheus.CounterOpts{Name: "server_ignored_errors_total", Help: "Errors nobody could act on, that should not have happened"}, []string{"op"})
 )
 

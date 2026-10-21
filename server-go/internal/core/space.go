@@ -146,11 +146,12 @@ func NewSpaceWithMedia(k SpaceKey, media Media) *Space {
 	if media.Clock == nil {
 		media.Clock = RealClock{}
 	}
-	sp := &Space{Key: k, a: actor.Start("space "+k.World+"."+k.Local, inboxSize, media.Clock), s: &spaceState{
+	sp := &Space{Key: k, s: &spaceState{
 		local: k.Local, members: map[string]*spaceMember{}, conns: map[[2]string]string{},
 		state: spacestate.Empty(), metadata: map[string]json.RawMessage{},
 		mediaCfg: media, strategy: strategyWebRTC, present: map[string]bool{}, roomName: k.World + "." + k.Local, lk: liveKitState{invited: map[string]bool{}},
 	}}
+	sp.a = actor.Start("space "+k.World+"."+k.Local, inboxSize, media.Clock, sp.s.breakDown)
 	// Timers and LiveKit answers come back through later, dropped once the space stopped.
 	sp.s.later, sp.s.after = sp.a.Later, sp.a.After
 	if media.Meetings != nil {
@@ -205,6 +206,7 @@ type spaceState struct {
 	later         func(func())                                  // run on the space's goroutine, from a LiveKit answer
 	after         func(d time.Duration, f func()) (stop func()) // run on the space's goroutine once d passed
 	call          func(func())                                  // run a LiveKit call off the space's goroutine
+	broken        bool                                          // a closure panicked: see breakDown
 }
 
 type spaceMember struct {
@@ -282,7 +284,21 @@ func (s *spaceState) toMembers(match func(*spaceMember) bool, m *Msg) {
 	}
 }
 
+// breakDown is the room's (see state.breakDown): after a panic, the members are kicked, and so is whoever joins
+// until the space is dropped.
+func (s *spaceState) breakDown() {
+	s.broken = true
+	for _, m := range s.members {
+		m.peer.Kick(errBrokenReason)
+	}
+}
+
 func (s *spaceState) join(p Peer, j SpaceJoin, reply func(error)) {
+	if s.broken {
+		reply(errors.New(errBrokenReason))
+		p.Kick(errBrokenReason)
+		return
+	}
 	id := j.User.ID
 	if existing := s.members[id]; existing != nil {
 		reply(nil) // joined twice: already a member

@@ -241,3 +241,43 @@ func TestSpaceUserUpdatesAreTracedInDebug(t *testing.T) {
 		t.Fatalf("both updates traced, the second as a no-op: %q", traced)
 	}
 }
+
+// A panic leaves the room's state half-changed: everyone is sent away to reconnect to a fresh room, as when the back
+// crashed, and so is whoever comes before the room is dropped.
+func TestAPanicInARoomKicksEveryoneAndRefusesNewcomers(t *testing.T) {
+	r := NewRoom("http://play/_/global/maps/m.json", cfg)
+	defer r.Stop()
+	alice := join(t, r, "alice", at(10, 10), wholeMap)
+	listener := &recorder{}
+	_ = r.Connect(ctx, listener, func() []Area { return nil }, func() Event { return External{Value: "connected"} })
+	_ = r.a.Post(ctx, func() { panic("half-way") })
+	sync_(t, r)
+	if alice.kicked != errBrokenReason || listener.kicked != errBrokenReason {
+		t.Fatalf("everyone is kicked: %q, %q", alice.kicked, listener.kicked)
+	}
+	late, later := &recorder{}, &recorder{}
+	_ = r.Connect(ctx, late, func() []Area { return nil }, func() Event { return External{Value: "connected"} })
+	_ = r.Join(ctx, later, JoinRequest{UUID: "later", Position: at(1, 1)})
+	if st := sync_(t, r); late.kicked == "" || later.kicked == "" || st.Users != 1 {
+		t.Fatalf("a newcomer is kicked, not added: %q, %q, %+v", late.kicked, later.kicked, st)
+	}
+}
+
+func TestAPanicInASpaceKicksItsMembersAndRefusesNewcomers(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "room#1#0"})
+	defer sp.Stop()
+	a := &recorder{}
+	joinSpace(t, sp, a, "a")
+	_ = sp.a.Post(ctx, func() { panic("half-way") })
+	syncSpace(t, sp)
+	if a.kicked != errBrokenReason {
+		t.Fatalf("the member is kicked: %q", a.kicked)
+	}
+	b := &recorder{}
+	var refused error
+	_ = sp.Join(ctx, b, SpaceJoin{User: SpaceUser{ID: "b"}}, func(err error) { refused = err })
+	syncSpace(t, sp)
+	if refused == nil || b.kicked == "" {
+		t.Fatalf("a newcomer is refused: %v, %q", refused, b.kicked)
+	}
+}
