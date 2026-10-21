@@ -179,7 +179,7 @@ import {
 } from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
 import { audioContextManager } from "../../WebRtc/AudioContextManager";
-import { bindAudioOutput } from "../../WebRtc/AudioOutputManager";
+import { bindAudioOutput, pendingSinkRequests } from "../../WebRtc/AudioOutputManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { WorldUserProvider } from "../../Chat/UserProvider/WorldUserProvider";
