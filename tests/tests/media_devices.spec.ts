@@ -37,6 +37,10 @@ test.describe("Media devices @nomobile @nowebkit", () => {
         await Menu.expectMicrophoneOn(page);
         await Menu.expectCameraOn(page);
 
+        // Saving marked the camera page as done: it is not shown again
+        await page.reload();
+        await waitForMapAfterOnboarding(page);
+
         await context.close();
     });
 
