@@ -60,6 +60,13 @@ type client struct {
 	connectionID string
 	token        string
 	userID       int32
+	unread       []frame // what expect read past the message it waited for, kept for the next one
+}
+
+// frame is one message as expect sees it: a direct message or a sub-message of a batch, the other one nil.
+type frame struct {
+	direct *pb.ServerToClientMessage
+	sub    *pb.SubMessage
 }
 
 func (h *harness) dial(name, connectionID string, extra url.Values) *client {
@@ -126,24 +133,37 @@ func (c *client) recv(timeout time.Duration) ([]*pb.ServerToClientMessage, []*pb
 // waitFor reads until match accepts a message.
 func (c *client) waitFor(what string, match func(*pb.ServerToClientMessage, *pb.SubMessage) bool) {
 	c.t.Helper()
-	deadline := time.Now().Add(3 * time.Second)
-	for time.Now().Before(deadline) {
+	expect(c, 3*time.Second, what, func(d *pb.ServerToClientMessage, s *pb.SubMessage) (struct{}, bool) { return struct{}{}, match(d, s) })
+}
+
+// expect reads c until pick takes a message, and returns what pick took from it. Batches are flattened: pick sees
+// either a direct message or one sub-message, the other being nil. What follows the taken message in its batch is
+// kept for the next call, so that waiting for one message never loses the one after it.
+func expect[T any](c *client, timeout time.Duration, what string, pick func(*pb.ServerToClientMessage, *pb.SubMessage) (T, bool)) T {
+	c.t.Helper()
+	deadline := time.Now().Add(timeout)
+	for {
+		for len(c.unread) > 0 {
+			f := c.unread[0]
+			c.unread = c.unread[1:]
+			if v, ok := pick(f.direct, f.sub); ok {
+				return v
+			}
+		}
+		if !time.Now().Before(deadline) {
+			c.t.Fatalf("timeout waiting for %s", what)
+		}
 		direct, subs, err := c.recv(time.Until(deadline))
 		if err != nil {
 			c.t.Fatalf("waiting for %s: %v", what, err)
 		}
 		for _, d := range direct {
-			if match(d, nil) {
-				return
-			}
+			c.unread = append(c.unread, frame{direct: d})
 		}
 		for _, s := range subs {
-			if match(nil, s) {
-				return
-			}
+			c.unread = append(c.unread, frame{sub: s})
 		}
 	}
-	c.t.Fatalf("timeout waiting for %s", what)
 }
 
 func join(x, y int32) *pb.ClientToServerMessage {
