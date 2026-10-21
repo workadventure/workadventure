@@ -48,6 +48,7 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         disabled: "Your speaker is disabled",
+        test: "Test audio output",
         noDevices: "No speaker device found",
         noDevicesDesc:
             "Your browser does not list any selectable audio output. Some browsers limit this. Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",

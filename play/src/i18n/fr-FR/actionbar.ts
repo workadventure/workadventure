@@ -51,6 +51,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Votre haut-parleur est désactivé",
+        test: "Tester la sortie audio",
         noDevices: "Aucun haut-parleur trouvé",
         noDevicesDesc:
             "Le navigateur ne propose aucune sortie audio sélectionnable. Certains navigateurs limitent ce choix. Essayez un autre navigateur, reconnectez casque ou enceintes, vérifiez les réglages audio du système et les configurations de l’ordinateur.",

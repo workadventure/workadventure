@@ -49,6 +49,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Tu altavoz está desactivado",
+        test: "Probar la salida de audio",
         noDevices: "No se encontró ningún dispositivo de altavoz",
         noDevicesDesc:
             "El navegador no muestra ninguna salida de audio seleccionable. Algunos navegadores lo limitan. Prueba otro navegador, vuelve a conectar auriculares o altavoces, revisa la configuración de sonido del sistema y la configuración del equipo.",
