@@ -96,9 +96,8 @@ export type AutoRecorderDependencies = {
 };
 
 /**
- * Records every microphone of a meeting, each to its own file, when the admin says so for the room of the
- * space's first member (see `decide`). Independent of the recording a user starts (RecordingManager): neither starts nor stops
- * the other.
+ * Records every microphone of a meeting, each to its own file, when the world's LiveKit settings say so (see
+ * `decide`). Independent of the recording a user starts (RecordingManager): neither starts nor stops the other.
  *
  * A meeting is a session as the analytics count it — a bubble or a meeting area with at least two people — so its
  * files go under the id of its meeting.ended row. Each client tells which publication is its microphone; one track
@@ -108,12 +107,12 @@ export type AutoRecorderDependencies = {
  */
 export class AutoRecorder {
     private enabled = false;
-    private decided = false;
     private readonly microphones = new Map<string, Microphone>();
     private meeting: Meeting | undefined;
     /** What each member's microphone is being recorded to, now. */
     private readonly recordings = new Map<string, TrackRecording>();
-    private readonly backRecords: boolean;
+    /** AUTO_RECORDING_ENABLED with the LiveKit recordings bucket set: only such a back asks whether a space is recorded. */
+    public readonly backRecords: boolean;
     private readonly writeManifest: ManifestWriter;
     private readonly nowMs: () => number;
     private readonly manifestDelayMs: number;
@@ -135,17 +134,11 @@ export class AutoRecorder {
     }
 
     /**
-     * Takes the admin's answer for the room of the space's first member (`autoRecording` of /api/room/access, carried
-     * by the pusher with each join), once for the space's life: turning the recording off means kicking everyone out
-     * of the room, so that they reconnect and bring the new answer. Called before the member is added, so the policy
-     * reads it in the same handler.
+     * Whether the world records this space, decided once, at the space's first join, before the transport is chosen
+     * (see `CommunicationManager.askAutoRecording`): turning the recording off means kicking everyone out of the room.
      */
-    public decide(roomRecorded: boolean): void {
-        if (this.decided) {
-            return;
-        }
-        this.decided = true;
-        this.enabled = this.backRecords && roomRecorded;
+    public decide(worldRecorded: boolean): void {
+        this.enabled = this.backRecords && worldRecorded;
     }
 
     public microphonePublished(user: SpaceUser, message: MicrophoneTrackPublishedMessage): void {

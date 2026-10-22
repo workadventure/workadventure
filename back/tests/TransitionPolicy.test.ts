@@ -360,6 +360,10 @@ describe("TransitionPolicy", () => {
             expect(recorded().shouldTransition(CommunicationType.WEBRTC, 1)).toBe(true);
         });
 
+        it("leaves an empty recorded space where it is", () => {
+            expect(recorded().shouldTransition(CommunicationType.WEBRTC, 0)).toBe(false);
+        });
+
         it("never brings a recorded space back to WebRTC", () => {
             expect(recorded().shouldTransition(CommunicationType.LIVEKIT, 1)).toBe(false);
         });

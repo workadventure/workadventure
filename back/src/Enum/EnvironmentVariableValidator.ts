@@ -174,7 +174,7 @@ Note that anonymous players don't have any TTL limit because their data is store
     AUTO_RECORDING_ENABLED: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe(
-            "Record every microphone of every bubble and meeting area automatically, one audio file per microphone, without user action. With an admin API, only the rooms whose /api/room/access says autoRecording are recorded (the pusher passes it on with each space join). The files go under auto-recordings/ in LIVEKIT_RECORDING_S3_BUCKET. Recorded spaces always use LiveKit. Defaults to false",
+            "Record every microphone of every bubble and meeting area automatically, one audio file per microphone, without user action. With an admin API, only the worlds whose /api/livekit/credentials says autoRecording are recorded (asked once per space, at its first join). The files go under auto-recordings/ in LIVEKIT_RECORDING_S3_BUCKET. Recorded spaces always use LiveKit. Defaults to false",
         ),
 });
 

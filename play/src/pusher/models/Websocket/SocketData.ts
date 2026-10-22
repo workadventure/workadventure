@@ -75,8 +75,6 @@ export type ConnectingSocketData = {
     // The abort controllers for each queries received
     queryAbortControllers: Map<number, AbortController>;
     canRecord: boolean;
-    /** Whether the admin records the room automatically, told to the back with each space join. */
-    autoRecording: boolean;
 };
 
 export type SocketData = ConnectingSocketData & {

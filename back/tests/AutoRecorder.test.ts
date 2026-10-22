@@ -20,7 +20,7 @@ const settle = () =>
         setTimeout(resolve, 0);
     });
 
-const harness = (roomRecorded = true) => {
+const harness = (worldRecorded = true) => {
     let egressCount = 0;
     const state = {
         startTrackEgress: vi.fn((_spaceUserId: string, _trackSid: string, _filepath: string, _s3: unknown) =>
@@ -41,7 +41,7 @@ const harness = (roomRecorded = true) => {
             manifestDelayMs: 0,
         },
     );
-    recorder.decide(roomRecorded);
+    recorder.decide(worldRecorded);
     const tick = (seconds: number) => {
         now += seconds * 1000;
     };
@@ -49,14 +49,6 @@ const harness = (roomRecorded = true) => {
 };
 
 describe("AutoRecorder", () => {
-    it("keeps the first answer for the life of the space", () => {
-        const { recorder } = harness();
-
-        recorder.decide(false);
-
-        expect(recorder.isEnabled).toBe(true);
-    });
-
     it("records nothing on a back that does not record, whatever the admin says", () => {
         const recorder = new AutoRecorder(
             { world: "org/world", getSpaceName: () => "org/world.bubble" },
@@ -69,7 +61,7 @@ describe("AutoRecorder", () => {
         expect(recorder.isEnabled).toBe(false);
     });
 
-    it("records nothing in a room that is not recorded", () => {
+    it("records nothing in a world that is not recorded", () => {
         const { recorder, state } = harness(false);
 
         recorder.microphonePublished(user("a"), microphone("TR_a"));

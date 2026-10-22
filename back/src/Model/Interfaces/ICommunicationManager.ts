@@ -21,7 +21,6 @@ export interface ICommunicationManager {
     handleUserToNotifyDeleted(user: SpaceUser): Promise<void>;
     handleMemberActiveChanged(spaceUserId: string, active: boolean): void;
     handleSpaceKindChanged(): void;
-    handleAutoRecordingDecided(roomRecorded: boolean): void;
     handleMicrophoneTrackPublished(spaceUserId: string, message: MicrophoneTrackPublishedMessage): void;
     closeSession(endReason: SessionEndReason): boolean;
     handleMeetingConnectionRestartMessage(

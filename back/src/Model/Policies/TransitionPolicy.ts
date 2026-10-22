@@ -29,7 +29,8 @@ export class TransitionPolicy implements ITransitionPolicy {
      * - LiveKit -> WebRTC: when user count drops to or below maxUsersForWebRTC, unless a recording is running or a
      *   `cpuLimited` user is present. The two legs are asymmetric on purpose: once a bubble moved for a flag, only
      *   that user leaving brings it back, so a third member coming and going never bounces it
-     * - A space recorded automatically goes to LiveKit, whatever its size, and never leaves it
+     * - A space recorded automatically goes to LiveKit as soon as someone is in it, whatever its size, and never
+     *   leaves it
      * - VoidState: no transitions
      *
      * @param currentType - The current communication type
@@ -42,7 +43,9 @@ export class TransitionPolicy implements ITransitionPolicy {
 
         if (currentType === CommunicationType.WEBRTC) {
             const shouldSwitch =
-                this.autoRecording.isEnabled || userCount > this.maxUsersForWebRTC || (cpuLimited && userCount > 2);
+                (this.autoRecording.isEnabled && userCount > 0) ||
+                userCount > this.maxUsersForWebRTC ||
+                (cpuLimited && userCount > 2);
             if (shouldSwitch && !this.livekitChecker.isAvailable()) {
                 return false;
             }

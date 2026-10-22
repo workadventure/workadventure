@@ -11,12 +11,14 @@ import {
 } from "@workadventure/messages";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { adminApi, type RecordingEventPayload } from "../Services/AdminApi";
+import type { LivekitCredentialsResponse } from "../Services/Repository/LivekitCredentialsResponse";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationManager } from "./Interfaces/ICommunicationManager";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
 import { CommunicationType } from "./Types/CommunicationTypes";
 import { WebRTCState } from "./States/WebRTCState";
 import { VoidState } from "./States/VoidState";
+import { livekitCredentialsFromAdmin } from "./States/StateFactory";
 import type { IRecordingManager, ManagedRecordingState } from "./RecordingManager";
 import { RecordingManager } from "./RecordingManager";
 import { SessionAnalytics, type SessionEndReason } from "./SessionAnalytics";
@@ -127,6 +129,7 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly _sessionAnalytics: SessionAnalytics;
     /** Records every microphone of the space's meetings when its world asks for it; unrelated to `_recordingManager`. */
     private readonly autoRecorder: AutoRecorder;
+    private autoRecordingAsked = false;
     private readonly recordingEventNotifier: (payload: RecordingEventPayload) => Promise<void>;
     private destroyed = false;
 
@@ -215,6 +218,7 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUser(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
+        this.askAutoRecording(user);
 
         // Decide the strategy before telling the joiner which one to use. If this join tips the
         // bubble into LiveKit, the old state's switchState() already told the joiner (the registry
@@ -271,9 +275,48 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    /** Whether the room of the member about to join records automatically: only the first answer counts. */
-    public handleAutoRecordingDecided(roomRecorded: boolean): void {
-        this.autoRecorder.decide(roomRecorded);
+    /**
+     * At the first join of a media space, on a back that records, learns whether the world records it before the
+     * transport is chosen: a recorded space starts on LiveKit rather than in P2P. With an admin, that takes asking
+     * for the world's LiveKit settings, and the transition lock is held meanwhile, so every join waits for the answer.
+     * Without one, AUTO_RECORDING_ENABLED alone decides, and the policy reads it in this very handler.
+     */
+    private askAutoRecording(user: SpaceUser): void {
+        if (
+            this.autoRecordingAsked ||
+            !this.autoRecorder.backRecords ||
+            this.lifecycleManager.getCurrentState().communicationType !== CommunicationType.WEBRTC
+        ) {
+            return;
+        }
+        this.autoRecordingAsked = true;
+        if (!livekitCredentialsFromAdmin()) {
+            this.autoRecorder.decide(true);
+            return;
+        }
+        this.orchestrator.setTransitionLock(this.decideAutoRecording(user));
+    }
+
+    /**
+     * Holds the transition lock: once the admin answers, takes the transport decision itself, with the settings it got
+     * for a LiveKit state, before releasing it. The lock is awaited once, it is not a mutex: the joins waiting on it
+     * must wake on a settled space, or each of them would start its own transition.
+     */
+    private async decideAutoRecording(user: SpaceUser): Promise<void> {
+        let credentials: LivekitCredentialsResponse | undefined;
+        try {
+            credentials = await adminApi.fetchLivekitCredentials(this.space.getSpaceName(), user.playUri);
+        } catch (error) {
+            console.error(
+                `Could not tell whether ${this.space.getSpaceName()} is recorded automatically; it is not:`,
+                error,
+            );
+            Sentry.captureException(error);
+        }
+        this.autoRecorder.decide(credentials?.autoRecording ?? false);
+        if (!this.destroyed) {
+            await this.transitionIfNeeded(user, credentials);
+        }
     }
 
     /**
@@ -282,8 +325,10 @@ export class CommunicationManager implements ICommunicationManager {
     private async evaluateAndHandleTransition(user: SpaceUser): Promise<void> {
         // Wait for any ongoing transition to complete
         await this.orchestrator.waitForTransitionLock();
+        await this.transitionIfNeeded(user);
+    }
 
-        // Check if transition is needed
+    private async transitionIfNeeded(user: SpaceUser, livekitCredentials?: LivekitCredentialsResponse): Promise<void> {
         if (!this.shouldTransition()) {
             return;
         }
@@ -294,13 +339,17 @@ export class CommunicationManager implements ICommunicationManager {
         }
 
         // Execute transition with lock
-        await this.executeTransition(nextStateType, user);
+        await this.executeTransition(nextStateType, user, livekitCredentials);
     }
 
     /**
      * Executes a state transition to the specified type.
      */
-    private async executeTransition(nextStateType: CommunicationType, user: SpaceUser): Promise<void> {
+    private async executeTransition(
+        nextStateType: CommunicationType,
+        user: SpaceUser,
+        livekitCredentials?: LivekitCredentialsResponse,
+    ): Promise<void> {
         // Cancel any existing pending transition
         this.orchestrator.cancelPendingTransition();
 
@@ -309,6 +358,7 @@ export class CommunicationManager implements ICommunicationManager {
             users: this.userRegistry.getUsers(),
             usersToNotify: this.userRegistry.getUsersToNotify(),
             playUri: user.playUri,
+            livekitCredentials,
         };
 
         // Handle different transition types

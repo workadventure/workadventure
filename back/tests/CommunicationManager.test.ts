@@ -1,5 +1,5 @@
 // Disabled because test mocks use vi.fn() which are passed as object properties
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 import {
     HandleLivekitWebhookRequest,
     HandleRecordingWebhookRequest,
@@ -22,7 +22,11 @@ import type { IStateLifecycleManager } from "../src/Model/Interfaces/IStateLifec
 import { UserRegistry } from "../src/Model/Services/UserRegistry";
 import type { ICommunicationStrategy } from "../src/Model/Interfaces/ICommunicationStrategy";
 import type { IRecordingManager } from "../src/Model/RecordingManager";
+import { AutoRecorder } from "../src/Model/AutoRecorder";
 import { analyticsEventsQueue } from "../src/Services/AnalyticsEventsQueue";
+import { adminApi } from "../src/Services/AdminApi";
+import { setCapabilities } from "../src/Services/Capabilities";
+import type { LivekitCredentialsResponse } from "../src/Services/Repository/LivekitCredentialsResponse";
 
 describe("CommunicationManager", () => {
     // Helper to create real SpaceUser objects
@@ -154,6 +158,16 @@ describe("CommunicationManager", () => {
             dispose: mocks.dispose,
             mocks,
         };
+    };
+
+    // Gives the orchestrator mock a real transition lock (waiters block until it is cleared)
+    const withRealTransitionLock = (orchestrator: ReturnType<typeof createOrchestrator>) => {
+        orchestrator.mocks.setTransitionLock.mockImplementation((promise: Promise<void>) => {
+            orchestrator.mocks.waitForTransitionLock.mockReturnValue(promise);
+        });
+        orchestrator.mocks.clearTransitionLock.mockImplementation(() => {
+            orchestrator.mocks.waitForTransitionLock.mockResolvedValue(undefined);
+        });
     };
 
     // Real lifecycle manager implementation
@@ -617,16 +631,6 @@ describe("CommunicationManager", () => {
 
             expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledWith(newState);
         });
-
-        // Gives the orchestrator mock a real transition lock (waiters block until it is cleared)
-        const withRealTransitionLock = (orchestrator: ReturnType<typeof createOrchestrator>) => {
-            orchestrator.mocks.setTransitionLock.mockImplementation((promise: Promise<void>) => {
-                orchestrator.mocks.waitForTransitionLock.mockReturnValue(promise);
-            });
-            orchestrator.mocks.clearTransitionLock.mockImplementation(() => {
-                orchestrator.mocks.waitForTransitionLock.mockResolvedValue(undefined);
-            });
-        };
 
         it("should make a concurrent watch wait for the in-flight transition instead of cancelling it", async () => {
             const space = createSpace();
@@ -1475,6 +1479,101 @@ describe("CommunicationManager", () => {
                 expect(rows().filter((row) => row.eventName === "meeting.ended")).toHaveLength(1);
                 expect(rows().filter((row) => row.eventName === "meeting.participation.ended")).toHaveLength(2);
             });
+        });
+    });
+
+    describe("automatic recording", () => {
+        const credentials = (autoRecording: boolean): LivekitCredentialsResponse => ({
+            livekitHost: "https://livekit.example",
+            livekitApiKey: "key",
+            livekitApiSecret: "secret",
+            autoRecording,
+        });
+
+        /** A space on a back that records, asking an admin whose answer the test gives when it wants. */
+        const recordingSpace = (users: SpaceUser[], backRecords = true) => {
+            setCapabilities({ "api/livekit/credentials": "v1" });
+            let answer!: (credentials: LivekitCredentialsResponse) => void;
+            const fetchLivekitCredentials = vi.spyOn(adminApi, "fetchLivekitCredentials").mockReturnValue(
+                new Promise((resolve) => {
+                    answer = resolve;
+                }),
+            );
+            const space = createSpace(users);
+            const oldState = createState(CommunicationType.WEBRTC);
+            const newState = createState(CommunicationType.LIVEKIT);
+            const orchestrator = createOrchestrator();
+            withRealTransitionLock(orchestrator);
+            orchestrator.mocks.executeImmediateTransition.mockResolvedValue(newState);
+            const lifecycleManager = createLifecycleManager(oldState);
+            lifecycleManager.mocks.transitionTo.mockImplementation(
+                (state: ICommunicationState<ICommunicationStrategy>) => {
+                    lifecycleManager.mocks.getCurrentState.mockReturnValue(state);
+                },
+            );
+            // The real policy, which reads the recorder
+            const manager = new CommunicationManager(space, {
+                orchestrator,
+                lifecycleManager,
+                recordingManager: createRecordingManager(),
+                autoRecorder: new AutoRecorder(space, () => lifecycleManager.getCurrentState(), { backRecords }),
+            });
+            return { manager, answer, fetchLivekitCredentials, oldState, newState, orchestrator, lifecycleManager };
+        };
+
+        afterEach(() => {
+            setCapabilities({});
+            vi.restoreAllMocks();
+        });
+
+        it("makes the first joins wait for the world's answer, then starts a recorded space on LiveKit with it", async () => {
+            const users = [createSpaceUser("user_1"), createSpaceUser("user_2")];
+            const { manager, answer, fetchLivekitCredentials, oldState, orchestrator, lifecycleManager } =
+                recordingSpace(users);
+
+            // Two distinct back messages, both arriving before the admin answers
+            const firstJoin = manager.handleUserAdded(users[0]);
+            await Promise.resolve();
+            const secondJoin = manager.handleUserAdded(users[1]);
+            await Promise.resolve();
+            expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
+
+            answer(credentials(true));
+            await Promise.all([firstJoin, secondJoin]);
+
+            expect(fetchLivekitCredentials).toHaveBeenCalledOnce();
+            // One LiveKit state, created from that same answer; nobody ever told to use P2P
+            expect(orchestrator.mocks.executeImmediateTransition).toHaveBeenCalledOnce();
+            expect(orchestrator.mocks.executeImmediateTransition).toHaveBeenCalledWith(
+                CommunicationType.LIVEKIT,
+                expect.objectContaining({ livekitCredentials: credentials(true) }),
+            );
+            expect(lifecycleManager.mocks.transitionTo).toHaveBeenCalledOnce();
+            expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
+        });
+
+        it("keeps a world that is not recorded in P2P, and asks once per space", async () => {
+            const users = [createSpaceUser("user_1"), createSpaceUser("user_2")];
+            const { manager, answer, fetchLivekitCredentials, oldState, orchestrator } = recordingSpace(users);
+
+            const firstJoin = manager.handleUserAdded(users[0]);
+            answer(credentials(false));
+            await firstJoin;
+            await manager.handleUserAdded(users[1]);
+
+            expect(fetchLivekitCredentials).toHaveBeenCalledOnce();
+            expect(orchestrator.mocks.executeImmediateTransition).not.toHaveBeenCalled();
+            expect(oldState.mocks.handleUserAdded).toHaveBeenCalledTimes(2);
+        });
+
+        it("does not ask on a back that does not record", async () => {
+            const users = [createSpaceUser("user_1")];
+            const { manager, fetchLivekitCredentials, oldState } = recordingSpace(users, false);
+
+            await manager.handleUserAdded(users[0]);
+
+            expect(fetchLivekitCredentials).not.toHaveBeenCalled();
+            expect(oldState.mocks.handleUserAdded).toHaveBeenCalledOnce();
         });
     });
 });

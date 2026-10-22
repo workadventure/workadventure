@@ -111,7 +111,6 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                     spaceName: this._space.name,
                     user: spaceUser,
                     filterType: filterType,
-                    autoRecording: socketData.autoRecording,
                 },
             });
 

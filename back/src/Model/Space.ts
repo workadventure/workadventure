@@ -631,9 +631,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                         throw new Error("Filter type mismatch when adding user to space");
                     }
 
-                    this.communicationManager.handleAutoRecordingDecided(
-                        spaceQueryMessage.query.addSpaceUserQuery.autoRecording,
-                    );
                     this.addUser(watcher, spaceQueryMessage.query.addSpaceUserQuery.user);
                     this._spaceUpdatedSubject.next(this);
                     return {
