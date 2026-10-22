@@ -5,7 +5,6 @@
     import Debug from "debug";
     import { derived, get } from "svelte/store";
     import {
-        isInActiveConversationStore,
         isInRemoteConversation,
         myCameraPeerStore,
         streamableCollectionStore,
@@ -17,7 +16,6 @@
         pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
-    import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -337,39 +335,6 @@
 
         const unsubscribeWanted = desktopPip?.onWanted(setNativeMeetingVideo);
 
-        // Tear down every presenter-facing surface (the screen share) whose audience just vanished:
-        // requestedScreenSharingState=false clears activeScreenShareSourceStore, so PresenterHudBridge
-        // closes the meeting bar.
-        function closePresenterSurfaces(): void {
-            if (get(requestedScreenSharingState)) {
-                requestedScreenSharingState.disableScreenSharing();
-            }
-        }
-
-        // Re-evaluate the moment a proximity bubble forms (someone walked into our meeting), even
-        // before any media stream actually lands. Lets PiP pop up as soon as a participant joins.
-        // On the way OUT (bubble breaks, presenter walks away, meeting ends), also clean up so
-        // the HUD bars don't linger on the presenter's screen after the audience has dispersed.
-        const unsubscribeActiveConv = isInActiveConversationStore.subscribe((inConversation) => {
-            if (!inConversation) {
-                closePresenterSurfaces();
-            }
-        });
-
-        // A room-to-room transition (portal, teleport, /!command switch) tears the Phaser scene
-        // down without necessarily emptying the current proximity bubble in the same tick — the
-        // conversation-end subscription above wouldn't catch it. gameSceneIsLoadedStore flips
-        // false on every scene shutdown, so we use it as a room-change signal to close the
-        // presenter surfaces (they belong to the OLD room's audience). Skip the first
-        // false→false initial notification with wasLoaded.
-        let wasSceneLoaded = get(gameSceneIsLoadedStore);
-        const unsubscribeSceneLoaded = gameSceneIsLoadedStore.subscribe((loaded) => {
-            if (wasSceneLoaded && !loaded) {
-                closePresenterSurfaces();
-            }
-            wasSceneLoaded = loaded;
-        });
-
         try {
             const currentScene = gameManager.getCurrentGameScene();
             if (currentScene) {
@@ -403,8 +368,6 @@
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
             unsubscribeWanted?.();
-            unsubscribeActiveConv();
-            unsubscribeSceneLoaded();
             presenterHudBridge.stop();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
