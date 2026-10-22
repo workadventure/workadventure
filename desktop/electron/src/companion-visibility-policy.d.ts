@@ -12,13 +12,8 @@ export type CompanionState = {
     waShowing?: boolean;
     /** Closed by the user since they last came back to WA. */
     dismissed?: boolean;
-    /** Somewhere to open by itself (see displayForAutoOpenDuringShare). */
+    /** Somewhere to open by itself (see companionAutoOpenDisplay). */
     placeAvailable?: boolean;
 };
 
 export function companionMode(state: CompanionState): CompanionMode;
-export function displayForAutoOpenDuringShare(
-    displayIds: number[],
-    sharedDisplayId: number | undefined,
-    preferredDisplayId: number
-): number | undefined;

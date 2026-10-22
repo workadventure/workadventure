@@ -11,6 +11,7 @@ const fake = vi.hoisted(() => ({
     sent: [],
     displays: [1],
     identifying: false,
+    canHide: true,
 }));
 
 vi.mock("electron", () => ({
@@ -57,6 +58,7 @@ vi.mock("./tab-manager", () => ({
     getControllingWorldContents: () => ({ send: (channel, value) => fake.sent.push(value) }),
 }));
 vi.mock("./content-protection", () => ({ shouldProtectWindowFromCapture: () => false }));
+vi.mock("./platform-capture-policy", () => ({ canHideWindowsFromCapture: () => fake.canHide }));
 vi.mock("./screen-identify", () => ({ isIdentifyingScreens: () => fake.identifying }));
 
 let controller;
@@ -70,6 +72,7 @@ beforeEach(async () => {
     fake.sent = [];
     fake.displays = [1];
     fake.identifying = false;
+    fake.canHide = true;
     controller = await import("./companion-controller");
     controller.startCompanionController();
 });
@@ -239,6 +242,15 @@ test('during "Identify screens": its windows hiding WA are not leaving it, and n
     await vi.advanceTimersByTimeAsync(500);
     expect(isOpen()).toBe(false);
 
+    await leaveWA();
+    expect(isOpen()).toBe(false);
+});
+
+test("on Linux, during the user's share, it never opens by itself, even with another screen", async () => {
+    fake.canHide = false;
+    fake.displays = [1, 2];
+    await setPresence({ screenSharing: true });
+    controller.setSharedScreenDisplay(1);
     await leaveWA();
     expect(isOpen()).toBe(false);
 });

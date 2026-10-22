@@ -36,6 +36,7 @@ const desktop: BaseTranslation = {
         statusBackInAMoment: "Be right back",
         statusDoNotDisturb: "Do not disturb",
         statusLocked: "Status can't be changed during a meeting",
+        visibleInShare: "Others see this window in your screen share",
         invitation: "{name} invites you to a meeting",
         someone: "Someone",
         accept: "Accept",

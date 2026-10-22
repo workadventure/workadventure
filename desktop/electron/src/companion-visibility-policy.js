@@ -8,8 +8,8 @@
  *   Automatic opening  In a meeting, WA stops showing (minimized, hidden, or fully covered: tracked
  *                      on macOS and Windows; on Linux only minimizing counts), the setting is on, and
  *                      the user did not close it since they last came back to WA.
- *   Placement          During the user's own screen share, only on another screen than the shared
- *                      one; nothing during "Identify screens". Out of the capture while sharing.
+ *   Placement          During the user's own screen share: see share-surfaces-policy. Out of the
+ *                      capture while sharing.
  *   Opening by hand    PiP button, tray, shortcut: always, on the screen under the pointer.
  *   Invitation         Opens it even after a close, whatever the setting; counts as automatic.
  *   Automatic closing  Opened by itself: WA shows again, or the meeting ends. Always: leaving the
@@ -31,7 +31,7 @@
  *   autoOpenAllowed?: boolean, // the "Allow picture-in-picture" setting
  *   waShowing?: boolean,
  *   dismissed?: boolean, // closed by the user since they last came back to WA
- *   placeAvailable?: boolean, // somewhere to open by itself (see displayForAutoOpenDuringShare)
+ *   placeAvailable?: boolean, // somewhere to open by itself (see companionAutoOpenDisplay)
  * }} state
  * @returns {"closed" | "auto" | "manual"}
  */
@@ -57,29 +57,6 @@ function companionMode(state) {
     return "closed";
 }
 
-/**
- * Where the companion may open by itself during the user's own screen share: on another screen than
- * the shared one, the one the user looks at if possible. With a single screen, or when the shared
- * screen is unknown (a window is shared, or the system share dialog chose it), nowhere: it would
- * land over what the user presents. Opening it by hand is not concerned.
- *
- * @param {number[]} displayIds every screen
- * @param {number | undefined} sharedDisplayId
- * @param {number} preferredDisplayId the screen under the pointer
- * @returns {number | undefined}
- */
-function displayForAutoOpenDuringShare(displayIds, sharedDisplayId, preferredDisplayId) {
-    if (sharedDisplayId === undefined) {
-        return undefined;
-    }
-    const others = (displayIds || []).filter((id) => id !== sharedDisplayId);
-    if (others.length === 0) {
-        return undefined;
-    }
-    return others.includes(preferredDisplayId) ? preferredDisplayId : others[0];
-}
-
 module.exports = {
     companionMode,
-    displayForAutoOpenDuringShare,
 };

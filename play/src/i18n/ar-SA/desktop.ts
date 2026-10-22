@@ -33,6 +33,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         statusBackInAMoment: "سأعود بعد قليل",
         statusDoNotDisturb: "عدم الإزعاج",
         statusLocked: "لا يمكن تغيير الحالة أثناء الاجتماع",
+        visibleInShare: "يرى الآخرون هذه النافذة في مشاركة شاشتك",
         invitation: "{name} يدعوك إلى اجتماع",
         someone: "شخص ما",
         accept: "قبول",

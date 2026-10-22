@@ -315,6 +315,19 @@ button {
     font-size: 11px;
 }
 
+/* ── Share warning (Linux: the companion shows in the user's share) ─────── */
+.share-warning {
+    padding: 7px 12px;
+    background: rgba(233, 200, 78, 0.16);
+    color: var(--st-busy);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+}
+.share-warning[hidden] {
+    display: none;
+}
+
 /* ── Invitation banner ──────────────────────────────────────────────────── */
 .invitation {
     display: flex;
