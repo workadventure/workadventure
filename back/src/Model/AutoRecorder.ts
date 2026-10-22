@@ -3,7 +3,6 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import type { MicrophoneTrackPublishedMessage, SpaceUser } from "@workadventure/messages";
 import { S3Upload } from "livekit-server-sdk";
 import {
-    AUTO_RECORDING_ENABLED,
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_BUCKET,
     LIVEKIT_RECORDING_S3_ENDPOINT,
@@ -87,7 +86,7 @@ type TrackRecording = {
 type Meeting = { session: OpenedSession; folder: string; recordings: TrackRecording[] };
 
 export type AutoRecorderDependencies = {
-    /** AUTO_RECORDING_ENABLED with the LiveKit recordings bucket set: whether this back records at all. */
+    /** The LiveKit recordings bucket is set: whether this back can record at all. */
     backRecords?: boolean;
     writeManifest?: ManifestWriter;
     nowMs?: () => number;
@@ -109,9 +108,11 @@ export class AutoRecorder {
     private enabled = false;
     private readonly microphones = new Map<string, Microphone>();
     private meeting: Meeting | undefined;
+    /** The space's open session, recorded or not: it may open before the world has answered (see `decide`). */
+    private session: OpenedSession | undefined;
     /** What each member's microphone is being recorded to, now. */
     private readonly recordings = new Map<string, TrackRecording>();
-    /** AUTO_RECORDING_ENABLED with the LiveKit recordings bucket set: only such a back asks whether a space is recorded. */
+    /** The LiveKit recordings bucket is set: only such a back asks whether a space is recorded, there is nowhere to write otherwise. */
     public readonly backRecords: boolean;
     private readonly writeManifest: ManifestWriter;
     private readonly nowMs: () => number;
@@ -122,7 +123,7 @@ export class AutoRecorder {
         private readonly currentState: () => ICommunicationState<ICommunicationStrategy>,
         dependencies: AutoRecorderDependencies = {},
     ) {
-        this.backRecords = dependencies.backRecords ?? (AUTO_RECORDING_ENABLED && !!LIVEKIT_RECORDING_S3_BUCKET);
+        this.backRecords = dependencies.backRecords ?? !!LIVEKIT_RECORDING_S3_BUCKET;
         this.writeManifest = dependencies.writeManifest ?? writeManifestToBucket;
         this.nowMs = dependencies.nowMs ?? Date.now;
         this.manifestDelayMs = dependencies.manifestDelayMs ?? 30_000;
@@ -139,6 +140,10 @@ export class AutoRecorder {
      */
     public decide(worldRecorded: boolean): void {
         this.enabled = this.backRecords && worldRecorded;
+        // The meeting opens with the second arrival, which may come while the admin is being asked.
+        if (this.session && !this.meeting) {
+            this.open(this.session);
+        }
     }
 
     public microphonePublished(user: SpaceUser, message: MicrophoneTrackPublishedMessage): void {
@@ -160,6 +165,7 @@ export class AutoRecorder {
     }
 
     public sessionChanged(session: OpenedSession | undefined): void {
+        this.session = session;
         if (session) {
             this.open(session);
         } else {

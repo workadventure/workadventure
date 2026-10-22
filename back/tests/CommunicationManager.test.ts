@@ -294,7 +294,7 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserAdded(user);
 
-            expect(state.mocks.handleUserAdded).toHaveBeenCalledWith(user);
+            expect(state.mocks.handleUserAdded).toHaveBeenCalledWith(user, true);
         });
 
         it("should evaluate transition when user is added", async () => {
@@ -483,7 +483,7 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserToNotifyAdded(user);
 
-            expect(state.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(user);
+            expect(state.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(user, true);
         });
     });
 
@@ -726,7 +726,7 @@ describe("CommunicationManager", () => {
             // the join must complete through the new state without waiting for init() to finish.
             const lateJoiner = createSpaceUser("user_5");
             await manager.handleUserAdded(lateJoiner);
-            expect(newState.mocks.handleUserAdded).toHaveBeenCalledWith(lateJoiner);
+            expect(newState.mocks.handleUserAdded).toHaveBeenCalledWith(lateJoiner, true);
             expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
 
             finishInit();
@@ -1552,6 +1552,22 @@ describe("CommunicationManager", () => {
             expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
         });
 
+        it("still tells each joiner the strategy once, when its join and its watch both waited for the answer", async () => {
+            const users = [createSpaceUser("user_1")];
+            const { manager, answer, oldState } = recordingSpace(users);
+
+            // The join and the watch of the same user, both before the admin answers
+            const join = manager.handleUserAdded(users[0]);
+            await Promise.resolve();
+            const watch = manager.handleUserToNotifyAdded(users[0]);
+            answer(credentials(false));
+            await Promise.all([join, watch]);
+
+            // The join came first: it tells the strategy, the watch does not
+            expect(oldState.mocks.handleUserAdded).toHaveBeenCalledWith(users[0], true);
+            expect(oldState.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(users[0], false);
+        });
+
         it("keeps a world that is not recorded in P2P, and asks once per space", async () => {
             const users = [createSpaceUser("user_1"), createSpaceUser("user_2")];
             const { manager, answer, fetchLivekitCredentials, oldState, orchestrator } = recordingSpace(users);
@@ -1562,6 +1578,19 @@ describe("CommunicationManager", () => {
             await manager.handleUserAdded(users[1]);
 
             expect(fetchLivekitCredentials).toHaveBeenCalledOnce();
+            expect(orchestrator.mocks.executeImmediateTransition).not.toHaveBeenCalled();
+            expect(oldState.mocks.handleUserAdded).toHaveBeenCalledTimes(2);
+        });
+
+        it("neither asks nor records without an admin", async () => {
+            const users = [createSpaceUser("user_1"), createSpaceUser("user_2")];
+            const { manager, fetchLivekitCredentials, oldState, orchestrator } = recordingSpace(users);
+            setCapabilities({});
+
+            await manager.handleUserAdded(users[0]);
+            await manager.handleUserAdded(users[1]);
+
+            expect(fetchLivekitCredentials).not.toHaveBeenCalled();
             expect(orchestrator.mocks.executeImmediateTransition).not.toHaveBeenCalled();
             expect(oldState.mocks.handleUserAdded).toHaveBeenCalledTimes(2);
         });

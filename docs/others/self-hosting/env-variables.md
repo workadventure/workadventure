@@ -192,7 +192,6 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
-| `AUTO_RECORDING_ENABLED` | No | Record every microphone of every bubble and meeting area automatically, one audio file per microphone, without user action. With an admin API, only the worlds whose /api/livekit/credentials says autoRecording are recorded (asked once per space, at its first join). The files go under auto-recordings/ in LIVEKIT_RECORDING_S3_BUCKET. Recorded spaces always use LiveKit. Defaults to false |
 
 ## Map Storage Service
 

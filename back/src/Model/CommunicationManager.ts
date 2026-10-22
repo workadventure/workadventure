@@ -214,6 +214,8 @@ export class CommunicationManager implements ICommunicationManager {
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
+        // Read now: while this handler waits on the transition lock, the user may enter the other registry too.
+        const firstRegistry = !this.userRegistry.hasUserToNotify(user.spaceUserId);
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
         this.syncPresence(user, wasPresent);
@@ -226,7 +228,7 @@ export class CommunicationManager implements ICommunicationManager {
         const stateBefore = this.lifecycleManager.getCurrentState();
         await this.evaluateAndHandleTransition(user);
         if (this.lifecycleManager.getCurrentState() === stateBefore) {
-            await stateBefore.handleUserAdded(user);
+            await stateBefore.handleUserAdded(user, firstRegistry);
         }
     }
 
@@ -253,6 +255,8 @@ export class CommunicationManager implements ICommunicationManager {
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
+        // Read now, as in handleUserAdded.
+        const firstRegistry = !this.userRegistry.hasUser(user.spaceUserId);
         this.userRegistry.addUserToNotify(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
@@ -261,7 +265,7 @@ export class CommunicationManager implements ICommunicationManager {
         const stateBefore = this.lifecycleManager.getCurrentState();
         await this.evaluateAndHandleTransition(user);
         if (this.lifecycleManager.getCurrentState() === stateBefore) {
-            await stateBefore.handleUserToNotifyAdded(user);
+            await stateBefore.handleUserToNotifyAdded(user, firstRegistry);
         }
     }
 
@@ -276,24 +280,21 @@ export class CommunicationManager implements ICommunicationManager {
     }
 
     /**
-     * At the first join of a media space, on a back that records, learns whether the world records it before the
-     * transport is chosen: a recorded space starts on LiveKit rather than in P2P. With an admin, that takes asking
-     * for the world's LiveKit settings, and the transition lock is held meanwhile, so every join waits for the answer.
-     * Without one, AUTO_RECORDING_ENABLED alone decides, and the policy reads it in this very handler.
+     * At the first join of a media space, asks the admin for the world's LiveKit settings before the transport is
+     * chosen: a recorded space starts on LiveKit rather than in P2P. The transition lock is held meanwhile, so every
+     * join waits for the answer. Only the admin records a world: without one (or without the LiveKit recordings
+     * bucket), nothing is asked and nothing is recorded.
      */
     private askAutoRecording(user: SpaceUser): void {
         if (
             this.autoRecordingAsked ||
             !this.autoRecorder.backRecords ||
+            !livekitCredentialsFromAdmin() ||
             this.lifecycleManager.getCurrentState().communicationType !== CommunicationType.WEBRTC
         ) {
             return;
         }
         this.autoRecordingAsked = true;
-        if (!livekitCredentialsFromAdmin()) {
-            this.autoRecorder.decide(true);
-            return;
-        }
         this.orchestrator.setTransitionLock(this.decideAutoRecording(user));
     }
 

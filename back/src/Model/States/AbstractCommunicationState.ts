@@ -42,9 +42,12 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         this._space.dispatchPrivateEvent(privateEvent);
     }
 
-    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+    handleUserAdded(
+        user: SpaceUser,
+        firstRegistry = !this.usersToNotify.has(user.spaceUserId),
+    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
-            if (!this.usersToNotify.has(user.spaceUserId)) {
+            if (firstRegistry) {
                 this.notifyUserOfCurrentStrategy(user, this._communicationType);
             }
             this._currentStrategy.addUser(user).catch((e) => {
@@ -65,9 +68,12 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         this._currentStrategy.updateUser(user);
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+    handleUserToNotifyAdded(
+        user: SpaceUser,
+        firstRegistry = !this.users.has(user.spaceUserId),
+    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
-            if (!this.users.has(user.spaceUserId)) {
+            if (firstRegistry) {
                 this.notifyUserOfCurrentStrategy(user, this._communicationType);
             }
             this._currentStrategy.addUserToNotify(user).catch((e) => {

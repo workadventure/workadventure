@@ -71,6 +71,21 @@ describe("AutoRecorder", () => {
         expect(state.startTrackEgress).not.toHaveBeenCalled();
     });
 
+    it("records a meeting that opened while the world was being asked", () => {
+        const { state } = harness();
+        const recorder = new AutoRecorder(
+            { world: "org/world", getSpaceName: () => "org/world.bubble" },
+            () => state as never,
+            { backRecords: true },
+        );
+
+        recorder.sessionChanged(session());
+        recorder.decide(true);
+        recorder.microphonePublished(user("a"), microphone("TR_a"));
+
+        expect(state.startTrackEgress).toHaveBeenCalledOnce();
+    });
+
     it("records each microphone once the meeting opens, in the meeting's folder, named after the speaker", () => {
         const { recorder, state, tick } = harness();
 

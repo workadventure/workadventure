@@ -170,12 +170,6 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for Livekit recording."),
     LIVEKIT_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for Livekit recording."),
     LIVEKIT_RECORDING_S3_BUCKET: z.string().optional().describe("The S3 bucket for Livekit recording."),
-
-    AUTO_RECORDING_ENABLED: BoolAsString.optional()
-        .transform((val) => toBool(val, false))
-        .describe(
-            "Record every microphone of every bubble and meeting area automatically, one audio file per microphone, without user action. With an admin API, only the worlds whose /api/livekit/credentials says autoRecording are recorded (asked once per space, at its first join). The files go under auto-recordings/ in LIVEKIT_RECORDING_S3_BUCKET. Recorded spaces always use LiveKit. Defaults to false",
-        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;
