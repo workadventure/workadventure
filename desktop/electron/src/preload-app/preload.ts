@@ -35,8 +35,6 @@ const pipApi: WorkAdventureDesktopPipApi = {
 };
 
 const presenterHudApi: WorkAdventureDesktopHudApi = {
-    openMeetingBar: (opts) => ipcRenderer.invoke("app:hud:open-meeting-bar", opts),
-    closeMeetingBar: () => ipcRenderer.invoke("app:hud:close-meeting-bar"),
     pushState: (state) => ipcRenderer.send("app:hud:state-from-main", state),
     onCommand: (callback) => subscribe("app:hud:command-to-main", (command) => callback(command as DesktopPipCommand)),
 };

@@ -33,6 +33,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         statusBackInAMoment: "Wróću so bórze",
         statusDoNotDisturb: "Njewobćežować",
         statusLocked: "Status njeda so za čas zasedanja změnić",
+        visibleInShare: "Druzy widźa tute wokno w twojim dźělenju wobrazowki",
         invitation: "{name} was na zasedanje přeprošuje",
         someone: "Něchtó",
         accept: "Akceptować",

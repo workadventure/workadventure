@@ -1,4 +1,4 @@
-import { ipcMain, app, desktopCapturer, shell } from "electron";
+import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
 import path from "path";
@@ -28,6 +28,8 @@ import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, s
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
+import { companionVisibleInShare, meetingBarDisplay } from "./share-surfaces-policy";
+import { canHideWindowsFromCapture } from "./platform-capture-policy";
 import {
     broadcastHudState,
     closeHudWindow,
@@ -631,24 +633,27 @@ export default () => {
         return displayId;
     }
 
-    // The screen the user shares, so that the companion never opens by itself over it.
+    // The user's share started, changed source, or stopped (null). The app places what floats during
+    // it (share-surfaces-policy): the meeting bar here, the companion through its controller.
     ipcMain.on("app:screen-share-source", (event, source: unknown) => {
         if (!isFromMainRenderer(event)) return;
+        const sharing = source !== null && typeof source === "object";
         resolveHudDisplayId(source)
-            .then((displayId) => setSharedScreenDisplay(displayId))
-            .catch((error) => ElectronLog.debug("Unable to resolve the shared screen", error));
-    });
-
-    ipcMain.handle("app:hud:open-meeting-bar", async (event, opts: unknown) => {
-        if (!isFromMainRenderer(event)) {
-            ElectronLog.warn("Rejected meeting-bar open from non-main renderer");
-            return false;
-        }
-        return openHudWindow("meeting-bar", await resolveHudDisplayId(opts));
-    });
-    ipcMain.handle("app:hud:close-meeting-bar", (event) => {
-        if (!isFromMainRenderer(event)) return;
-        closeHudWindow("meeting-bar");
+            .then((displayId) => {
+                setSharedScreenDisplay(displayId);
+                const barDisplayId = meetingBarDisplay({
+                    canHideFromCapture: canHideWindowsFromCapture(process.platform),
+                    sharing,
+                    sharedDisplayId: displayId,
+                    pointerDisplayId: screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id,
+                });
+                if (barDisplayId === undefined) {
+                    closeHudWindow("meeting-bar");
+                    return undefined;
+                }
+                return openHudWindow("meeting-bar", barDisplayId);
+            })
+            .catch((error) => ElectronLog.debug("Unable to place the meeting bar", error));
     });
 
     // Main renderer → HUD windows
@@ -667,7 +672,18 @@ export default () => {
     // shape); sendHudState targets only the companion window and replays on (re)open.
     ipcMain.on("app:companion:state-from-main", (event, state: unknown) => {
         if (!isFromMainRenderer(event)) return;
-        sendHudState("companion", state);
+        // Where the companion cannot be kept out of the capture, it warns it shows in the user's share.
+        const raw = state && typeof state === "object" ? (state as { media?: { screenSharing?: unknown } }) : undefined;
+        const sharing = raw?.media?.screenSharing === true;
+        sendHudState(
+            "companion",
+            raw
+                ? {
+                      ...raw,
+                      visibleInShare: companionVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),
+                  }
+                : state
+        );
     });
 
     // Main renderer → companion + meeting bar strings, translated by the world in the language the

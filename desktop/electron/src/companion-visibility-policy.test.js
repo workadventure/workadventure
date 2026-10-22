@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { companionMode, displayForAutoOpenDuringShare } from "./companion-visibility-policy";
+import { companionMode } from "./companion-visibility-policy";
 
 // One test per row of the rules table in companion-visibility-policy.js.
 const awayInMeeting = {
@@ -22,11 +22,6 @@ test("automatic opening: in a meeting, WA not showing, setting on, not closed si
 test("placement: nowhere to land keeps it closed, but an open companion stays where it is", () => {
     expect(companionMode({ ...awayInMeeting, placeAvailable: false })).toBe("closed");
     expect(companionMode({ ...awayInMeeting, placeAvailable: false, opened: "auto" })).toBe("auto");
-    // During the user's own share: another screen than the shared one, none with a single screen.
-    expect(displayForAutoOpenDuringShare([1], 1, 1)).toBeUndefined();
-    expect(displayForAutoOpenDuringShare([1, 2], undefined, 1)).toBeUndefined();
-    expect(displayForAutoOpenDuringShare([1, 2, 3], 1, 3)).toBe(3);
-    expect(displayForAutoOpenDuringShare([1, 2, 3], 1, 1)).toBe(2);
 });
 
 test("opening by hand: always, and it stays when WA shows again", () => {

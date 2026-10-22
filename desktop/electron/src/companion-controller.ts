@@ -4,7 +4,9 @@ import { closeHudWindow, getHudWindow, isHudWindowOpen, openHudWindow } from "./
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 import { getControllingWorldContents } from "./tab-manager";
-import { companionMode, displayForAutoOpenDuringShare } from "./companion-visibility-policy";
+import { companionMode } from "./companion-visibility-policy";
+import { companionAutoOpenDisplay } from "./share-surfaces-policy";
+import { canHideWindowsFromCapture } from "./platform-capture-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 import { isIdentifyingScreens } from "./screen-identify";
 
@@ -56,23 +58,16 @@ function cursorDisplayId(): number {
     return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id;
 }
 
-/**
- * The screen the companion opens on by itself: the one the user looks at. During their own share,
- * only another screen than the shared one, and none with a single screen (see
- * displayForAutoOpenDuringShare). "Identify screens" covers every screen: nothing opens meanwhile.
- */
+/** The screen the companion opens on by itself, if any (see companionAutoOpenDisplay). */
 function autoOpenDisplayId(): number | undefined {
-    if (isIdentifyingScreens()) {
-        return undefined;
-    }
-    if (!getPresenceSnapshot().screenSharing) {
-        return cursorDisplayId();
-    }
-    return displayForAutoOpenDuringShare(
-        screen.getAllDisplays().map((display) => display.id),
-        sharedScreenDisplayId,
-        cursorDisplayId()
-    );
+    return companionAutoOpenDisplay({
+        canHideFromCapture: canHideWindowsFromCapture(process.platform),
+        sharing: getPresenceSnapshot().screenSharing,
+        identifyingScreens: isIdentifyingScreens(),
+        displayIds: screen.getAllDisplays().map((display) => display.id),
+        sharedDisplayId: sharedScreenDisplayId,
+        pointerDisplayId: cursorDisplayId(),
+    });
 }
 
 /** The world tells which screen the user shares (undefined: none, a window, or unknown). */

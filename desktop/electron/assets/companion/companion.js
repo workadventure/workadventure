@@ -106,6 +106,7 @@
         selfName: byId("c-self-name"),
         statusMenu: byId("c-status-menu"),
         statusLocked: byId("c-status-locked"),
+        shareWarning: byId("c-share-warning"),
         invitation: byId("c-invitation"),
         invitationText: byId("c-invitation-text"),
         inviteAccept: byId("c-invite-accept"),
@@ -1275,6 +1276,7 @@
     var lastState = null;
     function render(state) {
         lastState = state;
+        els.shareWarning.hidden = state.visibleInShare !== true;
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderChat(

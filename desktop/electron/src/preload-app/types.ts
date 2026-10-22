@@ -151,8 +151,6 @@ export type DesktopPresenterHudState = {
  * the bar reuse the {@link DesktopPipCommand} union.
  */
 export type WorkAdventureDesktopHudApi = {
-    openMeetingBar: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
-    closeMeetingBar: () => Promise<void>;
     pushState: (state: DesktopPresenterHudState) => void;
     onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
