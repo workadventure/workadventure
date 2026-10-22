@@ -9,13 +9,15 @@ const fake = vi.hoisted(() => ({
     presence: {},
     presenceListener: () => {},
     sent: [],
+    displays: [1],
+    identifying: false,
 }));
 
 vi.mock("electron", () => ({
     screen: {
         getCursorScreenPoint: () => ({ x: 0, y: 0 }),
         getDisplayNearestPoint: () => ({ id: 1 }),
-        getAllDisplays: () => [{ id: 1 }],
+        getAllDisplays: () => fake.displays.map((id) => ({ id })),
     },
 }));
 vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
@@ -55,7 +57,7 @@ vi.mock("./tab-manager", () => ({
     getControllingWorldContents: () => ({ send: (channel, value) => fake.sent.push(value) }),
 }));
 vi.mock("./content-protection", () => ({ shouldProtectWindowFromCapture: () => false }));
-vi.mock("./screen-identify", () => ({ isIdentifyingScreens: () => false }));
+vi.mock("./screen-identify", () => ({ isIdentifyingScreens: () => fake.identifying }));
 
 let controller;
 
@@ -66,6 +68,8 @@ beforeEach(async () => {
     fake.main = { minimized: false, focused: true };
     fake.presence = { inWorld: true, inMeeting: true, autoOpenAllowed: true };
     fake.sent = [];
+    fake.displays = [1];
+    fake.identifying = false;
     controller = await import("./companion-controller");
     controller.startCompanionController();
 });
@@ -181,5 +185,60 @@ test("leaving the world closes it, even opened by hand; a portal hop does not", 
 
     await setPresence({ inWorld: false });
     await vi.advanceTimersByTimeAsync(1600);
+    expect(isOpen()).toBe(false);
+});
+
+test("a page hidden while WA has the focus is a tab switch inside WA, not leaving it", async () => {
+    controller.onPageVisibilityChange(true);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(isOpen()).toBe(false);
+});
+
+test("WA fully covered (page hidden without the focus) is leaving it; showing again closes it", async () => {
+    fake.main = { minimized: false, focused: false };
+    controller.onPageVisibilityChange(true);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(isOpen()).toBe(true);
+
+    controller.onPageVisibilityChange(false);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(isOpen()).toBe(false);
+});
+
+test("during the user's share on a single screen, nothing opens by itself; by hand it does", async () => {
+    await setPresence({ screenSharing: true });
+    controller.setSharedScreenDisplay(1);
+    await leaveWA();
+    expect(isOpen()).toBe(false);
+
+    controller.toggleCompanion();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(isOpen()).toBe(true);
+});
+
+test("during the user's share with another screen, it opens by itself", async () => {
+    fake.displays = [1, 2];
+    await setPresence({ screenSharing: true });
+    controller.setSharedScreenDisplay(1);
+    await leaveWA();
+    expect(isOpen()).toBe(true);
+});
+
+test("a companion already open stays when the user starts sharing their only screen", async () => {
+    await leaveWA();
+    await setPresence({ screenSharing: true });
+    controller.setSharedScreenDisplay(1);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(isOpen()).toBe(true);
+});
+
+test('during "Identify screens": its windows hiding WA are not leaving it, and nothing opens by itself', async () => {
+    fake.identifying = true;
+    fake.main = { minimized: false, focused: false };
+    controller.onPageVisibilityChange(true);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(isOpen()).toBe(false);
+
+    await leaveWA();
     expect(isOpen()).toBe(false);
 });
