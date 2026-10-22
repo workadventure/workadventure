@@ -236,7 +236,7 @@ export const isMapDetailsData = z.object({
   }),
   autoRecording: extendApi(z.boolean().optional(), {
     description:
-      "Whether the room's spaces are recorded automatically: they all use LiveKit, and every microphone of a bubble or meeting area is recorded to its own file. Read once per space; to change it, kick everyone out of the room. Defaults to false.",
+      "Whether the room's spaces are recorded automatically: they all use LiveKit, and every microphone of a bubble or meeting area is recorded to its own file. Only read by a back with AUTO_RECORDING_ENABLED, once per space; to change it, kick everyone out of the room. Defaults to false.",
     example: false,
   }),
   enableChatUpload: extendApi(z.boolean().optional(), {

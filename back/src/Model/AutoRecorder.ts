@@ -24,19 +24,19 @@ const ROOM_FLAG_TTL_MS = 60_000;
 const roomFlags = new Map<string, { enabled: Promise<boolean>; value?: boolean; expiresAtMs: number }>();
 
 /**
- * Whether a room's spaces are recorded automatically. The admin answers per room, in its map details (/api/map);
- * without an admin, AUTO_RECORDING_ENABLED applies to every room. Never without the LiveKit recordings bucket, which
- * also spares the admin call on a back that does not record.
+ * Whether a room's spaces are recorded automatically. Never without AUTO_RECORDING_ENABLED and the LiveKit recordings
+ * bucket, which also spares the admin call on a back that does not record. With an admin, it answers per room, in its
+ * map details (/api/map); without one, every room is recorded.
  *
  * A boolean when the answer is known now (no admin to ask, or the room asked less than a minute ago): the caller
  * then decides within the same handler, and only the first space of a room waits for the admin.
  */
 export function isRoomAutoRecorded(playUri: string): boolean | Promise<boolean> {
-    if (!LIVEKIT_RECORDING_S3_BUCKET) {
+    if (!AUTO_RECORDING_ENABLED || !LIVEKIT_RECORDING_S3_BUCKET) {
         return false;
     }
     if (!ADMIN_API_URL) {
-        return AUTO_RECORDING_ENABLED;
+        return true;
     }
     const roomUrl = playUri.split(/[?#]/)[0];
     const cached = roomFlags.get(roomUrl);
