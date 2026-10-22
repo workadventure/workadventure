@@ -61,6 +61,8 @@ services:
       ENABLE_MAP_EDITOR: "$ENABLE_MAP_EDITOR"
       HOST: "0.0.0.0"
       NODE_ENV: development
+      # Same as play/Dockerfile: the auth token sent in Sec-WebSocket-Protocol can exceed uWebSockets' 4 KB default
+      UWS_HTTP_MAX_HEADERS_SIZE: "16384"
       ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
       PUSHER_URL: http://play.workadventure.localhost
       FRONT_URL: http://play.workadventure.localhost
