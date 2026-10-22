@@ -174,8 +174,7 @@ export type DesktopOverlayDrawOp =
 
 /** Drives the transparent screen-annotation overlay window from the main renderer. */
 export type WorkAdventureDesktopOverlayApi = {
-    open: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
-    close: () => Promise<void>;
+    /** Whether the user draws on their own share: the app then shows the overlay (share-surfaces-policy). */
     setDrawMode: (enabled: boolean) => void;
     setTool: (tool: DesktopOverlayToolState) => void;
     pushElements: (elements: DesktopOverlayElement[]) => void;

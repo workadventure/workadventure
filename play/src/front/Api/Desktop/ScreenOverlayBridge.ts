@@ -15,7 +15,6 @@ import {
     screenAnnotationLocallyHiddenStore,
 } from "../../Stores/ScreenAnnotationStore";
 import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
-import { presenterToolStore } from "../../Stores/PresenterEffectStore";
 
 type WindowWithDesktop = Window & { WAD?: WorkAdventureDesktopApi };
 
@@ -51,12 +50,14 @@ function drawingOnMyShare(): boolean {
 }
 
 /**
- * Bridges the transparent Electron annotation overlay to the WorkAdventure annotation system:
- * - opens the overlay when the presenter turns drawing on, keeps it open while sharing (a viewer
- *   draws on the shared image in the app, never through this full-display window);
- * - mirrors the presenter's annotation elements + tool state onto the overlay;
+ * Bridges the transparent Electron annotation overlay to the WorkAdventure annotation system. The
+ * desktop app decides when the overlay shows (while the user draws on their own share or uses a
+ * presenter tool); this bridge:
+ * - reports whether the user draws on their share (setDrawMode);
+ * - mirrors the presenter's annotation elements + tool state, replayed by the app when it opens;
  * - routes strokes drawn ON the overlay back through {@link ScreenAnnotationManager} so they sync to
- *   every viewer via the normal Space events (and appear baked into the shared screen).
+ *   every viewer via the space;
+ * - clears the annotations when another screen is shared (they were drawn over the previous one).
  *
  * Overlay-generated element ids are remapped to real (manager-issued) ids; in-progress strokes are
  * broadcast network-only (no local store write) so the overlay's own live draft is never
@@ -64,14 +65,6 @@ function drawingOnMyShare(): boolean {
  */
 class ScreenOverlayBridge {
     private subscriptions: Unsubscriber[] = [];
-    private onDrawUnsub: (() => void) | undefined;
-    private onExitUnsub: (() => void) | undefined;
-    private overlayOpen = false;
-    // Whether the overlay should be open. A close() during a pending open() flips it, so the window
-    // that opens late is closed instead of being left up with nothing driving it.
-    private wanted = false;
-    private openPromise: Promise<void> | undefined;
-    private openedForSourceId: string | undefined;
     private readonly overlayIdToReal = new Map<string, string>();
 
     public start(): void {
@@ -80,62 +73,32 @@ class ScreenOverlayBridge {
             return;
         }
 
-        // Turning annotation on opens the overlay and enters draw mode; turning it off leaves the
-        // overlay up (still displaying/baking existing strokes) but click-through.
         this.subscriptions.push(
-            localAnnotationTargetStore.subscribe(() => {
-                if (drawingOnMyShare()) {
-                    this.ensureOpen()
-                        .then(() => getScreenOverlayApi()?.setDrawMode(true))
-                        .catch(() => {});
-                } else if (this.overlayOpen) {
-                    api.setDrawMode(false);
-                }
-            }),
+            api.onDraw((op) => this.handleDraw(op)),
+            // The overlay closed (share stopped, another screen shared) or the user left it (Escape).
+            api.onExit(() => localAnnotationTargetStore.set(undefined)),
         );
 
-        // A presenter tool (laser / spotlight / loupe) also needs the overlay open — it's where
-        // the local, presenter-only effect preview is drawn (content-protected, so not captured).
-        // Stays click-through (no draw mode): the presenter is driving the shared app, not drawing.
-        this.subscriptions.push(
-            presenterToolStore.subscribe((tool) => {
-                if (tool !== "none" && get(requestedScreenSharingState)) {
-                    this.ensureOpen().catch(() => {});
-                }
-            }),
-        );
+        const reportDrawing = () => {
+            const drawing = drawingOnMyShare();
+            if (!drawing) {
+                this.overlayIdToReal.clear();
+            }
+            api.setDrawMode(drawing);
+        };
+        this.subscriptions.push(localAnnotationTargetStore.subscribe(reportDrawing));
+        this.subscriptions.push(requestedScreenSharingState.subscribe(reportDrawing));
 
-        // Another screen picked during the share: move the overlay to it (it covers one display).
+        let sharedSourceId = get(activeScreenShareSourceStore)?.id;
         this.subscriptions.push(
             activeScreenShareSourceStore.subscribe((source) => {
-                if (!source || !this.overlayOpen || source.id === this.openedForSourceId) {
-                    return;
+                if (source && sharedSourceId !== undefined && source.id !== sharedSourceId) {
+                    screenAnnotationManager.clearAll();
                 }
-                this.close();
-                if (drawingOnMyShare() || get(presenterToolStore) !== "none") {
-                    this.ensureOpen()
-                        .then(() => {
-                            if (drawingOnMyShare()) {
-                                getScreenOverlayApi()?.setDrawMode(true);
-                            }
-                        })
-                        .catch(() => {});
-                }
+                sharedSourceId = source?.id;
             }),
         );
 
-        // Close the overlay when the presenter stops sharing.
-        let wasSharing = get(requestedScreenSharingState);
-        this.subscriptions.push(
-            requestedScreenSharingState.subscribe((sharing) => {
-                if (wasSharing && !sharing) {
-                    this.close();
-                }
-                wasSharing = sharing;
-            }),
-        );
-
-        // Mirror elements + tool onto the overlay while it is open.
         this.subscriptions.push(screenAnnotationElementsStore.subscribe(() => this.pushElements()));
         // "Hide annotations locally": stop mirroring elements to the overlay (others keep drawing
         // and their strokes keep flowing to viewers; only the LOCAL rendering is suspended).
@@ -148,67 +111,13 @@ class ScreenOverlayBridge {
     public stop(): void {
         this.subscriptions.forEach((unsubscribe) => unsubscribe());
         this.subscriptions = [];
-        this.close();
-    }
-
-    /** Resolves once the overlay is open (or failed to): callers chain draw mode on it. */
-    private ensureOpen(): Promise<void> {
-        this.wanted = true;
-        if (this.overlayOpen) {
-            return Promise.resolve();
-        }
-        this.openPromise ??= this.open().finally(() => {
-            this.openPromise = undefined;
-        });
-        return this.openPromise;
-    }
-
-    private async open(): Promise<void> {
-        const api = getScreenOverlayApi();
-        if (!api) {
-            return;
-        }
-        // Pass the shared source so the main process places the overlay on the RIGHT screen
-        // (resolves the display from the source's display_id / `screen:<id>` id).
-        const source = get(activeScreenShareSourceStore);
-        const opened = await api.open({ displayId: source?.display_id, sourceId: source?.id });
-        if (!this.wanted) {
-            // Closed (share stopped, bridge stopped) while the window was opening.
-            if (opened) {
-                api.close().catch(() => {});
-            }
-            return;
-        }
-        this.overlayOpen = opened;
-        this.openedForSourceId = source?.id;
-        if (!this.overlayOpen) {
-            return;
-        }
-        this.onDrawUnsub = api.onDraw((op) => this.handleDraw(op));
-        this.onExitUnsub = api.onExit(() => localAnnotationTargetStore.set(undefined));
-        this.pushElements();
-        this.pushTool();
-    }
-
-    private close(): void {
-        this.wanted = false;
-        this.openedForSourceId = undefined;
-        const api = getScreenOverlayApi();
-        this.onDrawUnsub?.();
-        this.onDrawUnsub = undefined;
-        this.onExitUnsub?.();
-        this.onExitUnsub = undefined;
-        this.overlayIdToReal.clear();
-        if (this.overlayOpen && api) {
-            api.close().catch(() => {});
-        }
-        this.overlayOpen = false;
+        getScreenOverlayApi()?.setDrawMode(false);
     }
 
     private pushElements(): void {
         const api = getScreenOverlayApi();
         const target = screenAnnotationManager.localUserId;
-        if (!api || !this.overlayOpen || !target) {
+        if (!api || !target) {
             return;
         }
         if (get(screenAnnotationLocallyHiddenStore)) {
@@ -221,7 +130,7 @@ class ScreenOverlayBridge {
 
     private pushTool(): void {
         const api = getScreenOverlayApi();
-        if (!api || !this.overlayOpen) {
+        if (!api) {
             return;
         }
         api.setTool({

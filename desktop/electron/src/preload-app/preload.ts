@@ -37,8 +37,6 @@ const pipApi: WorkAdventureDesktopPipApi = {
 };
 
 const screenOverlayApi: WorkAdventureDesktopOverlayApi = {
-    open: (opts) => ipcRenderer.invoke("app:overlay:open", opts),
-    close: () => ipcRenderer.invoke("app:overlay:close"),
     setDrawMode: (enabled) => ipcRenderer.send("app:overlay:set-draw-mode", enabled),
     setTool: (tool) => ipcRenderer.send("app:overlay:set-tool", tool),
     pushElements: (elements) => ipcRenderer.send("app:overlay:set-elements", elements),
