@@ -186,8 +186,7 @@ export class NativePictureInPictureClient {
         return this.active;
     }
 
-    /** `userRequested`: the user asked for it, unlike the automatic opening when they leave the app. */
-    async start(onClosed?: () => void, userRequested = false): Promise<boolean> {
+    async start(onClosed?: () => void): Promise<boolean> {
         const pip = getDesktopPipApi();
         if (!pip) {
             return false;
@@ -203,7 +202,7 @@ export class NativePictureInPictureClient {
             // pip.open() blocks in main process until the PiP renderer signals `app:pip:ready`,
             // so by the time we wire tracks below the renderer is guaranteed to have subscribed
             // to onOffer/onIce/onState.
-            opened = await pip.open({ userRequested });
+            opened = await pip.open();
         } catch (error) {
             debug("pip.open() failed", error);
             this.active = false;
@@ -974,30 +973,4 @@ export class NativePictureInPictureClient {
             debug("sendState failed", error);
         }
     }
-}
-
-/**
- * Pure policy: should we open the native PiP window right now? Extracted so the rule can be
- * unit-tested without a DOM or Electron runtime.
- *
- * `inActiveConversation` is the source of truth for "the user is engaged with at least one other
- * participant" — it flips true as soon as a proximity bubble forms, even before any media stream
- * starts flowing. That lets PiP auto-open the instant someone walks into the meeting while the
- * user is alt-tabbed elsewhere; with the older streams-only signal we'd wait for the first video
- * track and miss the entire "someone just joined you" UX window.
- */
-export function shouldOpenNativePictureInPicture(input: {
-    nativeAvailable: boolean;
-    allowedByUser: boolean;
-    inActiveConversation: boolean;
-    userAwayFromApp: boolean;
-    userManuallyOpened: boolean;
-}): boolean {
-    if (!input.nativeAvailable || !input.allowedByUser) {
-        return false;
-    }
-    if (input.userManuallyOpened) {
-        return input.inActiveConversation;
-    }
-    return input.userAwayFromApp && input.inActiveConversation;
 }

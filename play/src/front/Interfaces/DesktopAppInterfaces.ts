@@ -82,9 +82,13 @@ export type DesktopPipCommand =
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
-    /** `userRequested`: the user asked for the meeting video, which reopens a companion they closed. */
-    open: (options?: { userRequested?: boolean }) => Promise<boolean>;
+    /** Start the meeting video in the companion; false unless the app asked for it (onWanted). */
+    open: () => Promise<boolean>;
     close: () => Promise<void>;
+    /** The PiP button: open or close the companion by hand. */
+    toggle: () => void;
+    /** The app wants the meeting video in the companion (true) or not any more (false). */
+    onWanted: (callback: (wanted: boolean) => void) => () => void;
     sendOffer: (sdp: DesktopPipSdp) => void;
     sendIce: (candidate: RTCIceCandidateInit) => void;
     sendState: (state: DesktopPipState) => void;
@@ -270,6 +274,8 @@ export type WorkAdventureDesktopApi = {
         inWorld?: boolean;
         onboarding?: boolean;
         invitationPending?: boolean;
+        /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
+        autoOpenAllowed?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;

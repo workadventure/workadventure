@@ -24,6 +24,7 @@ import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterSt
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
+import { allowPictureInPictureStore } from "../../Stores/PeerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
@@ -63,6 +64,7 @@ type PresenceSnapshot = {
     /** A first-connection screen (name, Woka, companion, camera) is waiting for the user. */
     onboarding: boolean;
     invitationPending: boolean;
+    autoOpenAllowed: boolean;
     requestedStatus: TrayAvailability;
     statusLocked: boolean;
 };
@@ -424,6 +426,7 @@ class DesktopApi {
                     gameSceneIsLoadedStore,
                     onboardingStore,
                     meetingInvitationRequestStore,
+                    allowPictureInPictureStore,
                 ],
                 ([
                     $inMeeting,
@@ -435,6 +438,7 @@ class DesktopApi {
                     $inWorld,
                     $onboarding,
                     $invitation,
+                    $allowPictureInPicture,
                 ]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
@@ -443,6 +447,7 @@ class DesktopApi {
                     inWorld: Boolean($inWorld),
                     onboarding: $onboarding,
                     invitationPending: $invitation !== null,
+                    autoOpenAllowed: $allowPictureInPicture,
                     requestedStatus: requestedStatusToKey($requested),
                     statusLocked: STATUS_LOCKED_SET.has($availability),
                 }),

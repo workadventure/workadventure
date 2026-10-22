@@ -79,9 +79,13 @@ export type DesktopPipCommand =
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
-    /** `userRequested`: the user asked for the meeting video, which reopens a companion they closed. */
-    open: (options?: { userRequested?: boolean }) => Promise<boolean>;
+    /** Start the meeting video in the companion; false unless the app asked for it (onWanted). */
+    open: () => Promise<boolean>;
     close: () => Promise<void>;
+    /** The PiP button: open or close the companion by hand. */
+    toggle: () => void;
+    /** The app wants the meeting video in the companion (true) or not any more (false). */
+    onWanted: (callback: (wanted: boolean) => void) => () => void;
     sendOffer: (sdp: DesktopPipSdp) => void;
     sendIce: (candidate: RTCIceCandidateInit) => void;
     sendState: (state: DesktopPipState) => void;
