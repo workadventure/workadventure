@@ -100,6 +100,10 @@ export const isFetchMemberDataByUuidSuccessResponse = z.object({
         description:
             "True if the user can record the room. In addition to this, the user still needs to have the correct tags as defined in the WAM settings.",
     }),
+    autoRecording: extendApi(z.boolean().optional(), {
+        description:
+            "True if every microphone of the room's bubbles and meeting areas is recorded automatically (audio dataset). Read by the back, once per space, on a back with AUTO_RECORDING_ENABLED; to change it, kick everyone out of the room.",
+    }),
     analyticsEventsEnabled: extendApi(z.boolean().optional(), {
         description: "True if admin analytics events can be sent for this world.",
     }),

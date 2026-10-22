@@ -20,7 +20,7 @@ const settle = () =>
         setTimeout(resolve, 0);
     });
 
-const harness = async (roomRecorded = true) => {
+const harness = (roomRecorded = true) => {
     let egressCount = 0;
     const state = {
         startTrackEgress: vi.fn((_spaceUserId: string, _trackSid: string, _filepath: string, _s3: unknown) =>
@@ -35,13 +35,13 @@ const harness = async (roomRecorded = true) => {
         { world: "org/world", getSpaceName: () => "org/world.bubble" },
         () => state as never,
         {
-            resolveRoom: () => Promise.resolve(roomRecorded),
+            backRecords: true,
             writeManifest,
             nowMs: () => now,
             manifestDelayMs: 0,
         },
     );
-    await recorder.resolve("https://play.example/@/org/world/office");
+    recorder.decide(roomRecorded);
     const tick = (seconds: number) => {
         now += seconds * 1000;
     };
@@ -49,19 +49,28 @@ const harness = async (roomRecorded = true) => {
 };
 
 describe("AutoRecorder", () => {
-    it("knows at once when the answer is already known, so the policy reads it in the same handler", () => {
-        const recorder = new AutoRecorder(
-            { world: "org/world", getSpaceName: () => "org/world.bubble" },
-            () => ({}) as never,
-            { resolveRoom: () => true },
-        );
+    it("keeps the first answer for the life of the space", () => {
+        const { recorder } = harness();
 
-        expect(recorder.resolve("https://play.example/@/org/world/office")).toBeUndefined();
+        recorder.decide(false);
+
         expect(recorder.isEnabled).toBe(true);
     });
 
-    it("records nothing in a room that is not recorded", async () => {
-        const { recorder, state } = await harness(false);
+    it("records nothing on a back that does not record, whatever the admin says", () => {
+        const recorder = new AutoRecorder(
+            { world: "org/world", getSpaceName: () => "org/world.bubble" },
+            () => ({}) as never,
+            { backRecords: false },
+        );
+
+        recorder.decide(true);
+
+        expect(recorder.isEnabled).toBe(false);
+    });
+
+    it("records nothing in a room that is not recorded", () => {
+        const { recorder, state } = harness(false);
 
         recorder.microphonePublished(user("a"), microphone("TR_a"));
         recorder.sessionChanged(session());
@@ -70,8 +79,8 @@ describe("AutoRecorder", () => {
         expect(state.startTrackEgress).not.toHaveBeenCalled();
     });
 
-    it("records each microphone once the meeting opens, in the meeting's folder, named after the speaker", async () => {
-        const { recorder, state, tick } = await harness();
+    it("records each microphone once the meeting opens, in the meeting's folder, named after the speaker", () => {
+        const { recorder, state, tick } = harness();
 
         recorder.microphonePublished(user("a"), microphone("TR_a"));
         expect(state.startTrackEgress).not.toHaveBeenCalled();
@@ -91,8 +100,8 @@ describe("AutoRecorder", () => {
         expect(files[1]).toContain(`-${OPENED_AT_MS + 5000}.ogg`);
     });
 
-    it("does not record a broadcast", async () => {
-        const { recorder, state } = await harness();
+    it("does not record a broadcast", () => {
+        const { recorder, state } = harness();
 
         recorder.microphonePublished(user("a"), microphone("TR_a"));
         recorder.sessionChanged(session("megaphone"));
@@ -101,7 +110,7 @@ describe("AutoRecorder", () => {
     });
 
     it("records a new publication of a microphone to a new file, and only once", async () => {
-        const { recorder, state } = await harness();
+        const { recorder, state } = harness();
         recorder.sessionChanged(session());
 
         recorder.microphonePublished(user("a"), microphone("TR_1"));
@@ -115,7 +124,7 @@ describe("AutoRecorder", () => {
     });
 
     it("stops recording a member who leaves", async () => {
-        const { recorder, state } = await harness();
+        const { recorder, state } = harness();
         recorder.sessionChanged(session());
         recorder.microphonePublished(user("a"), microphone("TR_a"));
         await settle();
@@ -126,7 +135,7 @@ describe("AutoRecorder", () => {
     });
 
     it("writes a manifest when the meeting ends, with the times each file really starts at", async () => {
-        const { recorder, state, writeManifest, tick } = await harness();
+        const { recorder, state, writeManifest, tick } = harness();
         state.getEgressFile.mockResolvedValue({
             startedAtMs: OPENED_AT_MS + 1500,
             endedAtMs: OPENED_AT_MS + 60_000,
@@ -165,7 +174,7 @@ describe("AutoRecorder", () => {
     });
 
     it("writes no manifest for a meeting nobody spoke in", async () => {
-        const { recorder, writeManifest } = await harness();
+        const { recorder, writeManifest } = harness();
 
         recorder.sessionChanged(session());
         recorder.sessionChanged(undefined);

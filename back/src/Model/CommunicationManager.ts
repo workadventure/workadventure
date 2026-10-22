@@ -215,7 +215,6 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUser(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
-        this.resolveAutoRecording(user);
 
         // Decide the strategy before telling the joiner which one to use. If this join tips the
         // bubble into LiveKit, the old state's switchState() already told the joiner (the registry
@@ -253,7 +252,6 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUserToNotify(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
-        this.resolveAutoRecording(user);
 
         // Same ordering as handleUserAdded.
         const stateBefore = this.lifecycleManager.getCurrentState();
@@ -273,24 +271,9 @@ export class CommunicationManager implements ICommunicationManager {
         await this.evaluateAndHandleTransition(user);
     }
 
-    /**
-     * Asks, at the space's first arrival, whether its room is recorded automatically. When the answer is known now,
-     * the policy reads it in this very handler. Otherwise the space moves to LiveKit once the admin has answered
-     * (one call, done before any media flows), through the usual transition: the handler does not wait for it, as
-     * a handler that waited would leave a window for the next message to start a transition of its own.
-     */
-    private resolveAutoRecording(user: SpaceUser): void {
-        this.autoRecorder
-            .resolve(user.playUri)
-            ?.then(async () => {
-                if (this.autoRecorder.isEnabled && this.space.getAllUsers().length > 0) {
-                    await this.evaluateAndHandleTransition(user);
-                }
-            })
-            .catch((error) => {
-                console.error(`Error while moving recorded space ${this.space.getSpaceName()} to LiveKit:`, error);
-                Sentry.captureException(error);
-            });
+    /** Whether the room of the member about to join records automatically: only the first answer counts. */
+    public handleAutoRecordingDecided(roomRecorded: boolean): void {
+        this.autoRecorder.decide(roomRecorded);
     }
 
     /**

@@ -87,6 +87,7 @@ describe("SpaceToBackForwarder", () => {
                     spaceUserId: "foo_1",
                     name: "foo_1",
                     spaces: new Set<string>(),
+                    autoRecording: true,
                 }),
             });
 
@@ -130,6 +131,7 @@ describe("SpaceToBackForwarder", () => {
                         lowercaseName: "foo_1",
                     },
                     filterType: FilterType.ALL_USERS,
+                    autoRecording: true,
                 },
             });
             expect(mockSendQuery).toHaveBeenCalledOnce();

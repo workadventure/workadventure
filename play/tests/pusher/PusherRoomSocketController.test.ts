@@ -511,6 +511,7 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         attendeesState: false,
         queryAbortControllers: new Map(),
         canRecord: false,
+        autoRecording: false,
         name: "name",
         viewport: {} as never,
         availabilityStatus: "online" as never,

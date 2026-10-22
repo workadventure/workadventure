@@ -1,9 +1,8 @@
 import * as Sentry from "@sentry/node";
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import { isMapDetailsData, type MicrophoneTrackPublishedMessage, type SpaceUser } from "@workadventure/messages";
+import type { MicrophoneTrackPublishedMessage, SpaceUser } from "@workadventure/messages";
 import { S3Upload } from "livekit-server-sdk";
 import {
-    ADMIN_API_URL,
     AUTO_RECORDING_ENABLED,
     LIVEKIT_RECORDING_S3_ACCESS_KEY,
     LIVEKIT_RECORDING_S3_BUCKET,
@@ -11,7 +10,6 @@ import {
     LIVEKIT_RECORDING_S3_REGION,
     LIVEKIT_RECORDING_S3_SECRET_KEY,
 } from "../Enum/EnvironmentVariable";
-import { adminApi } from "../Services/AdminApi";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { EgressFile, IAutoRecordableState, ICommunicationState } from "./Interfaces/ICommunicationState";
 import type { ICommunicationStrategy } from "./Interfaces/ICommunicationStrategy";
@@ -19,57 +17,6 @@ import type { OpenedSession } from "./SessionAnalytics";
 
 /** Where the automatic recordings go in the LiveKit recordings bucket, apart from the recordings users start. */
 const FOLDER = "auto-recordings";
-/** How long a room's answer is reused: every space's first join would call the admin otherwise. */
-const ROOM_FLAG_TTL_MS = 60_000;
-const roomFlags = new Map<string, { enabled: Promise<boolean>; value?: boolean; expiresAtMs: number }>();
-
-/**
- * Whether a room's spaces are recorded automatically. Never without AUTO_RECORDING_ENABLED and the LiveKit recordings
- * bucket, which also spares the admin call on a back that does not record. With an admin, it answers per room, in its
- * map details (/api/map); without one, every room is recorded.
- *
- * A boolean when the answer is known now (no admin to ask, or the room asked less than a minute ago): the caller
- * then decides within the same handler, and only the first space of a room waits for the admin.
- */
-export function isRoomAutoRecorded(playUri: string): boolean | Promise<boolean> {
-    if (!AUTO_RECORDING_ENABLED || !LIVEKIT_RECORDING_S3_BUCKET) {
-        return false;
-    }
-    if (!ADMIN_API_URL) {
-        return true;
-    }
-    const roomUrl = playUri.split(/[?#]/)[0];
-    const cached = roomFlags.get(roomUrl);
-    if (cached && cached.expiresAtMs > Date.now()) {
-        return cached.value ?? cached.enabled;
-    }
-    const entry: { enabled: Promise<boolean>; value?: boolean; expiresAtMs: number } = {
-        enabled: adminApi
-            .fetchMapDetails(roomUrl)
-            .then(
-                (details) => {
-                    const mapDetails = isMapDetailsData.safeParse(details);
-                    return mapDetails.success && (mapDetails.data.autoRecording ?? false);
-                },
-                (error) => {
-                    console.error(
-                        `Could not tell whether room ${roomUrl} is recorded automatically; it is not:`,
-                        error,
-                    );
-                    Sentry.captureException(error);
-                    return false;
-                },
-            )
-            .then((enabled) => {
-                entry.value = enabled;
-                return enabled;
-            }),
-        expiresAtMs: Date.now() + ROOM_FLAG_TTL_MS,
-    };
-    roomFlags.set(roomUrl, entry);
-    return entry.enabled;
-}
-
 /** The S3 of the LiveKit recordings. */
 const bucketUpload = (): S3Upload =>
     new S3Upload({
@@ -140,7 +87,8 @@ type TrackRecording = {
 type Meeting = { session: OpenedSession; folder: string; recordings: TrackRecording[] };
 
 export type AutoRecorderDependencies = {
-    resolveRoom?: typeof isRoomAutoRecorded;
+    /** AUTO_RECORDING_ENABLED with the LiveKit recordings bucket set: whether this back records at all. */
+    backRecords?: boolean;
     writeManifest?: ManifestWriter;
     nowMs?: () => number;
     /** How long after a meeting the manifest is written: the egresses need that long to report their files. */
@@ -148,8 +96,8 @@ export type AutoRecorderDependencies = {
 };
 
 /**
- * Records every microphone of a meeting, each to its own file, when the space's room says so (see
- * `isRoomAutoRecorded`). Independent of the recording a user starts (RecordingManager): neither starts nor stops
+ * Records every microphone of a meeting, each to its own file, when the admin says so for the room of the
+ * space's first member (see `decide`). Independent of the recording a user starts (RecordingManager): neither starts nor stops
  * the other.
  *
  * A meeting is a session as the analytics count it — a bubble or a meeting area with at least two people — so its
@@ -160,12 +108,12 @@ export type AutoRecorderDependencies = {
  */
 export class AutoRecorder {
     private enabled = false;
-    private resolved = false;
+    private decided = false;
     private readonly microphones = new Map<string, Microphone>();
     private meeting: Meeting | undefined;
     /** What each member's microphone is being recorded to, now. */
     private readonly recordings = new Map<string, TrackRecording>();
-    private readonly resolveRoom: typeof isRoomAutoRecorded;
+    private readonly backRecords: boolean;
     private readonly writeManifest: ManifestWriter;
     private readonly nowMs: () => number;
     private readonly manifestDelayMs: number;
@@ -175,7 +123,7 @@ export class AutoRecorder {
         private readonly currentState: () => ICommunicationState<ICommunicationStrategy>,
         dependencies: AutoRecorderDependencies = {},
     ) {
-        this.resolveRoom = dependencies.resolveRoom ?? isRoomAutoRecorded;
+        this.backRecords = dependencies.backRecords ?? (AUTO_RECORDING_ENABLED && !!LIVEKIT_RECORDING_S3_BUCKET);
         this.writeManifest = dependencies.writeManifest ?? writeManifestToBucket;
         this.nowMs = dependencies.nowMs ?? Date.now;
         this.manifestDelayMs = dependencies.manifestDelayMs ?? 30_000;
@@ -187,23 +135,17 @@ export class AutoRecorder {
     }
 
     /**
-     * Asks when the space's first member comes, by their room URL, once for the space's life: turning the recording
-     * off means kicking everyone out of the room. Returns the pending answer, or undefined when `isEnabled` already
-     * holds it.
+     * Takes the admin's answer for the room of the space's first member (`autoRecording` of /api/room/access, carried
+     * by the pusher with each join), once for the space's life: turning the recording off means kicking everyone out
+     * of the room, so that they reconnect and bring the new answer. Called before the member is added, so the policy
+     * reads it in the same handler.
      */
-    public resolve(playUri: string): Promise<void> | undefined {
-        if (this.resolved) {
-            return undefined;
+    public decide(roomRecorded: boolean): void {
+        if (this.decided) {
+            return;
         }
-        this.resolved = true;
-        const answer = this.resolveRoom(playUri);
-        if (typeof answer === "boolean") {
-            this.enabled = answer;
-            return undefined;
-        }
-        return answer.then((enabled) => {
-            this.enabled = enabled;
-        });
+        this.decided = true;
+        this.enabled = this.backRecords && roomRecorded;
     }
 
     public microphonePublished(user: SpaceUser, message: MicrophoneTrackPublishedMessage): void {

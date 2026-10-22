@@ -251,6 +251,8 @@ class LocalAdmin implements AdminInterface {
             world: roomUrl.origin,
             applications,
             canRecord,
+            // Without an admin, the back's AUTO_RECORDING_ENABLED alone decides.
+            autoRecording: true,
             // LocalAdmin is the no-admin-backoffice path, so there is nothing to
             // report analytics to. Deny explicitly rather than omitting it: the
             // field is optional and the queue gates on `=== false`, so leaving it

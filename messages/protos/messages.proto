@@ -981,6 +981,9 @@ message AddSpaceUserQuery {
   string spaceName = 1;
   SpaceUser user = 2;
   FilterType filterType = 3;
+  // Whether the admin records the user's room automatically (autoRecording of /api/room/access). Only the first
+  // join of a space counts, and only on a back with AUTO_RECORDING_ENABLED.
+  bool autoRecording = 4;
 }
 
 message RemoveSpaceUserQuery { 

@@ -346,6 +346,7 @@ export class IoSocketController {
                         world: "",
                         chatID,
                         canRecord: false,
+                        autoRecording: false,
                         // No admin, so there is nobody to report analytics to. This
                         // placeholder is only used until fetchMemberDataByUuid answers;
                         // when it never does, denying is the right default.
@@ -467,6 +468,7 @@ export class IoSocketController {
                         analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
                         queryAbortControllers: new Map<number, AbortController>(),
                         canRecord: userData.canRecord ?? false,
+                        autoRecording: userData.autoRecording ?? false,
                     };
 
                     /* This immediately calls open handler, you must not use res after this call */
