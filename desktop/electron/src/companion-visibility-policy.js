@@ -1,128 +1,60 @@
 "use strict";
 
 /**
- * Should the Companion panel be visible right now, and does a presence change arm the auto-show?
+ * When the Companion (People / Chat / meeting video) opens and closes. The desktop app is the only
+ * decider: the world page reports facts (in a meeting, the "Allow picture-in-picture" setting, a
+ * pending invitation) and shows the meeting video in the companion when the app asks it to.
  *
- * The panel used to appear on *every* alt-tab away from a world, which made it noise. It now only
- * auto-opens on two deliberate triggers, both of which set a one-shot "latch":
- *   1. a bubble forms around the user (someone joined them), or
- *   2. the user is already in a meeting and WA stops showing: minimized, hidden, or fully covered
- *      (tracked on macOS and Windows only). Losing the focus is not leaving: WA keeps showing while
- *      the user works on another screen, or drags its window.
- * Anything else — walking around a world alone, tabbing out of an empty world — leaves the latch
- * down and the panel closed. Returning to the app, leaving the meeting, or leaving the world drops
- * the latch again, so each away-session needs a fresh trigger.
+ *   Automatic opening  In a meeting, WA stops showing (minimized, hidden, or fully covered: tracked
+ *                      on macOS and Windows; on Linux only minimizing counts), the setting is on, and
+ *                      the user did not close it since they last came back to WA.
+ *   Placement          During the user's own screen share, only on another screen than the shared
+ *                      one; nothing during "Identify screens". Out of the capture while sharing.
+ *   Opening by hand    PiP button, tray, shortcut: always, on the screen under the pointer.
+ *   Invitation         Opens it even after a close, whatever the setting; counts as automatic.
+ *   Automatic closing  Opened by itself: WA shows again, or the meeting ends. Always: leaving the
+ *                      world.
+ *   Meeting ends       Opened by hand: it stays and shows People / Chat.
+ *   Closing by hand    Close button, window close, tray, shortcut, PiP button: closed until the user
+ *                      comes back to WA.
+ *   Outside a meeting  Never by itself.
  *
- * Closing the panel (its close button, the window's own close, the tray) dismisses it until the
- * user comes back to WA (the controller lifts it on focus) or the meeting ends: neither trigger
- * brings it back meanwhile.
- *
- * Pure functions (no Electron dependency) so the rules can be unit-tested with `node --test`.
+ * Pure functions (no Electron dependency) so the rules can be unit-tested.
  */
 
 /**
- * Decide the panel's visibility. Order matters: each rule below overrides the ones under it.
- *
  * @param {{
- *   mainWindowInView?: boolean, // WA shows: not minimized, hidden or fully covered
- *   pipActive?: boolean,
- *   invitationPending?: boolean,
+ *   opened?: "no" | "auto" | "manual", // how the companion currently open was opened
  *   inWorld?: boolean,
- *   autoOpenLatch?: boolean,
- *   autoOpenAllowed?: boolean, // false: nowhere to open by itself (see displayForAutoOpenDuringShare)
- *   override?: "auto" | "force-open" | "force-closed",
+ *   inMeeting?: boolean,
+ *   invitationPending?: boolean,
+ *   autoOpenAllowed?: boolean, // the "Allow picture-in-picture" setting
+ *   waShowing?: boolean,
+ *   dismissed?: boolean, // closed by the user since they last came back to WA
+ *   placeAvailable?: boolean, // somewhere to open by itself (see displayForAutoOpenDuringShare)
  * }} state
- * @returns {boolean}
+ * @returns {"closed" | "auto" | "manual"}
  */
-function shouldShowCompanion(state) {
+function companionMode(state) {
     const s = state || {};
-    // WA showing with no active meeting video keeping the panel alive → hide; the app has everything.
-    if (s.mainWindowInView && !s.pipActive) {
-        return false;
+    if (!s.inWorld) {
+        return "closed";
     }
-    // An incoming meeting invitation force-opens the panel even after a manual dismissal.
+    if (s.opened === "manual") {
+        return "manual";
+    }
+    if (s.waShowing) {
+        return "closed";
+    }
     if (s.invitationPending) {
-        return true;
+        return "auto";
     }
-    // A dismissal (close button, window close, tray) wins over the keep-open and the auto-show:
-    // closing the companion during a meeting tears down its embedded video, which is the intent.
-    if (s.override === "force-closed") {
-        return false;
+    // Placement only matters for opening: an open companion stays where it is.
+    const canLand = s.opened === "auto" || Boolean(s.placeAvailable);
+    if (s.inMeeting && s.autoOpenAllowed && !s.dismissed && canLand) {
+        return "auto";
     }
-    // Active meeting video (embedded PiP) keeps the panel open even when WA is focused, so clicking
-    // back to the app doesn't tear down the video.
-    if (s.pipActive) {
-        return true;
-    }
-    if (s.override === "force-open") {
-        return true;
-    }
-    // Auto-show only inside a world, once a trigger has armed the latch, and where it may land.
-    return Boolean(s.inWorld && s.autoOpenLatch && s.autoOpenAllowed !== false);
-}
-
-/**
- * Fold a presence change into the auto-show latch.
- *
- * The bubble-forming trigger is the RISING edge of `inMeeting`: WA sets it the moment a bubble
- * closes around the user, which is precisely "someone joined me". Leaving the world or the meeting
- * disarms it, so a later alt-tab alone in a world does not reopen the panel.
- *
- * @param {boolean} latch current latch
- * @param {{inWorld?: boolean, inMeeting?: boolean}} previous last presence seen
- * @param {{inWorld?: boolean, inMeeting?: boolean}} next presence just received
- * @returns {boolean} the new latch
- */
-function latchAfterPresenceChange(latch, previous, next) {
-    const before = previous || {};
-    const after = next || {};
-    // Left the world entirely (portal, landing, logout) → every trigger is stale.
-    if (!after.inWorld) {
-        return false;
-    }
-    // A bubble just formed around the user.
-    if (after.inMeeting && !before.inMeeting) {
-        return true;
-    }
-    // Meeting over → disarm, so merely being away in a world no longer shows the panel.
-    if (!after.inMeeting) {
-        return false;
-    }
-    return Boolean(latch);
-}
-
-/**
- * Fold WA ceasing to show into the latch: leaving the app *while in a meeting* is the second
- * trigger. Leaving outside a meeting must not arm it — that is the noise we removed.
- *
- * @param {boolean} latch
- * @param {{inWorld?: boolean, inMeeting?: boolean}} presence
- * @returns {boolean}
- */
-function latchAfterLeavingApp(latch, presence) {
-    const p = presence || {};
-    if (p.inWorld && p.inMeeting) {
-        return true;
-    }
-    return Boolean(latch);
-}
-
-/**
- * A meeting that starts or ends, or leaving the world, lifts a dismissal (coming back to WA does
- * too, see the controller).
- *
- * @param {boolean} dismissed
- * @param {{inWorld?: boolean, inMeeting?: boolean}} previous
- * @param {{inWorld?: boolean, inMeeting?: boolean}} next
- * @returns {boolean}
- */
-function dismissalAfterPresenceChange(dismissed, previous, next) {
-    const before = previous || {};
-    const after = next || {};
-    if (!after.inWorld || Boolean(before.inMeeting) !== Boolean(after.inMeeting)) {
-        return false;
-    }
-    return Boolean(dismissed);
+    return "closed";
 }
 
 /**
@@ -147,24 +79,7 @@ function displayForAutoOpenDuringShare(displayIds, sharedDisplayId, preferredDis
     return others.includes(preferredDisplayId) ? preferredDisplayId : others[0];
 }
 
-/**
- * True when presence just crossed from inside a world to outside it — the moment the panel should
- * close and every latch reset. Callers debounce this: `inWorld` also dips false during a same-world
- * scene reload (a portal hop), and tearing the panel down there would kill a live meeting video.
- *
- * @param {{inWorld?: boolean}} previous
- * @param {{inWorld?: boolean}} next
- * @returns {boolean}
- */
-function leftWorld(previous, next) {
-    return Boolean(previous && previous.inWorld) && !(next && next.inWorld);
-}
-
 module.exports = {
-    shouldShowCompanion,
-    latchAfterPresenceChange,
-    latchAfterLeavingApp,
-    dismissalAfterPresenceChange,
+    companionMode,
     displayForAutoOpenDuringShare,
-    leftWorld,
 };

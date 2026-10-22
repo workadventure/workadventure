@@ -8,11 +8,11 @@ import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
-    closeCompanionPip,
     dismissCompanion,
+    isCompanionReadyForVideo,
     onPageVisibilityChange,
-    openCompanionForPip,
     setSharedScreenDisplay,
+    toggleCompanion,
 } from "./companion-controller";
 import {
     getControllingWorldContents,
@@ -270,6 +270,7 @@ export default () => {
             inWorld: Boolean(raw.inWorld),
             onboarding: Boolean(raw.onboarding),
             invitationPending: Boolean(raw.invitationPending),
+            autoOpenAllowed: raw.autoOpenAllowed !== false,
             requestedStatus: raw.requestedStatus,
             statusLocked: Boolean(raw.statusLocked),
         });
@@ -544,50 +545,47 @@ export default () => {
         }
     }
 
-    ipcMain.handle("app:pip:open", async (event, options: unknown) => {
+    // The world page starts the meeting video once the companion controller asked it to
+    // (`app:pip:wanted`): the companion is open and its renderer ready for the first SDP offer.
+    ipcMain.handle("app:pip:open", (event) => {
         if (!isFromMainRenderer(event)) {
             ElectronLog.warn("Rejected PiP open from non-main renderer");
             return false;
         }
-        // The meeting video renders as HTML <video> tiles inside the companion window. Ensure the
-        // companion is open and its renderer is ready (openCompanionForPip awaits hud-ready) before
-        // the WA renderer starts sending its SDP offer — otherwise the first offer lands in a deaf
-        // renderer and tracks only start mirroring on the next store change (someone joining/leaving).
-        const userRequested = Boolean(
-            options && typeof options === "object" && (options as { userRequested?: unknown }).userRequested === true
-        );
-        await openCompanionForPip(userRequested);
+        if (!isCompanionReadyForVideo()) {
+            return false;
+        }
         // The window closes asynchronously, possibly after a tab switch: tell the world that opened the
         // PiP, not whichever tab is active by then.
         pipOwner = event.sender;
         const companion = getHudWindow("companion");
         if (companion && !pipClosedHookWired.has(companion)) {
             pipClosedHookWired.add(companion);
-            // Mirror the old PiP window's onClosed: if the user closes the companion (its host) while
-            // the call is live, tell the WA renderer to tear its side down too. stop() is idempotent,
-            // so a late fire after the meeting already ended is harmless.
+            // The meeting video lives in the companion: closing it tears the world's side down too.
+            // stop() is idempotent, so a late fire after the meeting already ended is harmless.
             companion.once("closed", () => {
                 if (pipOwner && !pipOwner.isDestroyed()) {
                     pipOwner.send("app:pip:closed");
                 }
-                // A companion reopened in the meantime hosts a new PiP: this late close is not about it.
-                const current = getHudWindow("companion");
-                if (!current || current === companion || current.isDestroyed()) {
-                    closeCompanionPip();
-                }
             });
         }
-        return isPipWindowOpen();
+        return true;
     });
 
     // Close requests are honoured from the foreground world only, like the opens: a background tab
     // whose own meeting ends must not tear down the windows the active tab is using.
     ipcMain.handle("app:pip:close", (event) => {
         if (!isFromMainRenderer(event)) return;
-        // Tear down the companion's meeting peer connection + tiles, then drop the keep-open and
-        // re-evaluate the panel's visibility (it stays open on People if WA is still backgrounded).
+        // Tear down the companion's meeting peer connection + tiles; the companion itself follows the
+        // controller's rules.
         sendToPip("app:pip:close");
-        closeCompanionPip();
+    });
+
+    // The world's PiP button opens or closes the companion by hand, like the tray.
+    ipcMain.on("app:pip:toggle", (event) => {
+        if (isFromMainRenderer(event)) {
+            toggleCompanion();
+        }
     });
 
     // Main renderer → companion renderer (the meeting-video peer lives in the companion)

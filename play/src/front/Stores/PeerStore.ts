@@ -37,4 +37,15 @@ export const pictureInPictureLayoutStore = derived(activePictureInPictureStore, 
  */
 export const camerasInCompanionStore = derived(activePictureInPictureStore, ($active) => $active && desktopCompanion);
 export const askPictureInPictureActivatingStore = writable(false);
+/** The "Allow picture-in-picture" setting, persisted on set. */
+export const allowPictureInPictureStore = (() => {
+    const { subscribe, set } = writable(localUserStore.getAllowPictureInPicture());
+    return {
+        subscribe,
+        set: (value: boolean) => {
+            localUserStore.setAllowPictureInPicture(value);
+            set(value);
+        },
+    };
+})();
 export const pictureInPictureSupportedStore = writable(true);

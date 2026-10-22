@@ -31,6 +31,8 @@ type PresenceState = {
     onboarding: boolean;
     /** True while a meeting invitation is pending — the companion force-opens to show its banner. */
     invitationPending: boolean;
+    /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
+    autoOpenAllowed: boolean;
     /** The user's current chosen availability (the tray Status radio reflects this). */
     requestedStatus: TrayAvailability;
     /** True while WA locks the status bar (in a meeting / silent zone) — the tray submenu grays out. */
@@ -46,6 +48,7 @@ const state: PresenceState = {
     inWorld: false,
     onboarding: false,
     invitationPending: false,
+    autoOpenAllowed: true,
     requestedStatus: "online",
     statusLocked: false,
 };
@@ -97,6 +100,7 @@ export function setRendererPresence(next: {
     inWorld?: boolean;
     onboarding?: boolean;
     invitationPending?: boolean;
+    autoOpenAllowed?: boolean;
     requestedStatus?: unknown;
     statusLocked?: boolean;
 }): void {
@@ -107,6 +111,7 @@ export function setRendererPresence(next: {
     const inWorld = Boolean(next.inWorld);
     const onboarding = Boolean(next.onboarding);
     const invitationPending = Boolean(next.invitationPending);
+    const autoOpenAllowed = next.autoOpenAllowed !== false;
     const requestedStatus = coerceAvailability(next.requestedStatus);
     const statusLocked = Boolean(next.statusLocked);
     if (
@@ -117,6 +122,7 @@ export function setRendererPresence(next: {
         state.inWorld === inWorld &&
         state.onboarding === onboarding &&
         state.invitationPending === invitationPending &&
+        state.autoOpenAllowed === autoOpenAllowed &&
         state.requestedStatus === requestedStatus &&
         state.statusLocked === statusLocked
     ) {
@@ -129,6 +135,7 @@ export function setRendererPresence(next: {
     state.inWorld = inWorld;
     state.onboarding = onboarding;
     state.invitationPending = invitationPending;
+    state.autoOpenAllowed = autoOpenAllowed;
     state.requestedStatus = requestedStatus;
     state.statusLocked = statusLocked;
     emit();
@@ -157,6 +164,7 @@ export function resetPresence(): void {
     state.inWorld = false;
     state.onboarding = false;
     state.invitationPending = false;
+    state.autoOpenAllowed = true;
     state.requestedStatus = "online";
     state.statusLocked = false;
     emit();
@@ -203,6 +211,7 @@ export function getPresenceSnapshot(): {
     inWorld: boolean;
     onboarding: boolean;
     invitationPending: boolean;
+    autoOpenAllowed: boolean;
 } {
     return {
         inMeeting: state.inMeeting,
@@ -212,5 +221,6 @@ export function getPresenceSnapshot(): {
         inWorld: state.inWorld,
         onboarding: state.onboarding,
         invitationPending: state.invitationPending,
+        autoOpenAllowed: state.autoOpenAllowed,
     };
 }
