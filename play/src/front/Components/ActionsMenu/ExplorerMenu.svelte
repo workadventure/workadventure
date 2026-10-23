@@ -2,6 +2,7 @@
     import { onDestroy } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
+    import { cameraDetachedStore } from "../../Stores/CameraStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { BUTTON_ZOOM_FACTOR_PER_SECOND, BUTTON_ZOOM_STEP_FACTOR } from "../../Phaser/Game/CameraZoomUtils";
@@ -103,6 +104,10 @@
     function centerToUser() {
         analyticsClient.trackAdminEvent("map_explorer.center_to_user_clicked");
 
+        if ($cameraDetachedStore) {
+            getCameraManager()?.resumePlayerFollow();
+            return;
+        }
         mapEditorModeStore.switchMode(false);
         gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.CloseMapEditor);
     }
@@ -154,7 +159,7 @@
                 </div>
             </div>
         </div>
-        {#if $mapExplorationModeStore === false}
+        {#if $mapExplorationModeStore === false && !$cameraDetachedStore}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
@@ -169,9 +174,10 @@
                 </div>
             </div>
         {:else}
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
+            <button
+                type="button"
+                aria-label={$LL.mapEditor.explorer.showMyLocation()}
+                data-testid="center-camera-on-player"
                 class="group flex justify-center items-center p-1 rounded hover:bg-white/30 cursor-pointer"
                 onclick={centerToUser}
             >
@@ -181,7 +187,7 @@
                 >
                     {$LL.mapEditor.explorer.showMyLocation()}
                 </div>
-            </div>
+            </button>
         {/if}
     </div>
 </div>

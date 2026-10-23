@@ -39,7 +39,7 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { iceServersManager } from "../../WebRtc/IceServersManager";
-import { UserInputManager } from "../UserInput/UserInputManager";
+import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
@@ -1388,7 +1388,17 @@ export class GameScene extends DirtyScene {
             : undefined;
 
         if (this.hasJoinedRoom) {
-            this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+            const moveEvents = this.userInputManager.getEventListForGameTick();
+            if (
+                moveEvents.get(UserInputEvent.MoveUp) ||
+                moveEvents.get(UserInputEvent.MoveDown) ||
+                moveEvents.get(UserInputEvent.MoveLeft) ||
+                moveEvents.get(UserInputEvent.MoveRight)
+            ) {
+                this.userInputManager.userInputHandler.handlePointerCancelEvent?.();
+                this.cameraManager.resumePlayerFollow();
+            }
+            this.CurrentPlayer.moveUser(delta, moveEvents);
         }
         if (this.mapEditorModeManager?.isActive()) {
             this.mapEditorModeManager.update(time, delta);
