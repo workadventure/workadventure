@@ -8,7 +8,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "이 방에서 연결이 끊어졌습니다.",
         deletePromptDetails: "이 지도는 더 이상 존재하지 않으므로 새로고침해도 복원되지 않습니다.",
         editionFailed: "변경 사항을 저장하지 못하여 취소되었습니다.",
-        editionForbidden: "이 변경을 할 권한이 없어 취소되었습니다.",
     },
     sideBar: {
         areaEditor: "영역 편집 도구",
