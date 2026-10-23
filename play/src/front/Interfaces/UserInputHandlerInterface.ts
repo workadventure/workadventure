@@ -16,6 +16,7 @@ export interface UserInputHandlerInterface {
     handlePointerUpEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
     handlePointerDownEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
     handlePointerMoveEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
+    handlePointerOutEvent?: () => void;
     handlePointerCancelEvent?: () => void;
 
     handleKeyUpEvent: (event: KeyboardEvent) => KeyboardEvent;
