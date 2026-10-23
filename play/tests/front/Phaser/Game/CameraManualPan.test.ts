@@ -68,6 +68,53 @@ function setup(zoom = 1, animate = false) {
 }
 
 describe("manual camera pan", () => {
+    it.each([0.5, 1, 2])("scales release inertia to the current zoom %s and slows it down", (zoom) => {
+        const { camera, manager, scene } = setup(zoom);
+        manager.startManualPan();
+        manager.releaseManualPan({ x: -8, y: 0 });
+        camera.preRender();
+        const origin = camera.midPoint.x;
+        scene.events.emit(Phaser.Scenes.Events.UPDATE, 0, 20);
+        camera.preRender();
+        const firstStep = camera.midPoint.x - origin;
+        expect(firstStep * zoom).toBeCloseTo(4);
+        scene.events.emit(Phaser.Scenes.Events.UPDATE, 20, 20);
+        camera.preRender();
+        expect(camera.midPoint.x - origin - firstStep).toBeLessThan(firstStep);
+    });
+
+    it("gives a fast release more momentum and a stopped pointer none", () => {
+        const measure = (velocity: number) => {
+            const { manager, scene, camera } = setup();
+            manager.startManualPan();
+            manager.releaseManualPan({ x: velocity, y: 0 });
+            camera.preRender();
+            const origin = camera.midPoint.x;
+            scene.events.emit(Phaser.Scenes.Events.UPDATE, 0, 20);
+            camera.preRender();
+            return Math.abs(camera.midPoint.x - origin);
+        };
+        expect(measure(-8)).toBeGreaterThan(measure(-2));
+        expect(measure(0)).toBe(0);
+    });
+
+    it("cancels inertia on another drag, resuming player follow, and teardown", () => {
+        const { manager, scene } = setup();
+        manager.startManualPan();
+        manager.releaseManualPan({ x: -8, y: 0 });
+        expect(scene.events.listenerCount(Phaser.Scenes.Events.UPDATE)).toBe(1);
+        manager.stopManualPanInertia();
+        expect(scene.events.listenerCount(Phaser.Scenes.Events.UPDATE)).toBe(0);
+        manager.releaseManualPan({ x: -8, y: 0 });
+        manager.resumePlayerFollow();
+        expect(scene.events.listenerCount(Phaser.Scenes.Events.UPDATE)).toBe(0);
+        manager.startManualPan();
+        manager.releaseManualPan({ x: -8, y: 0 });
+        manager.destroy();
+        managers.splice(managers.indexOf(manager), 1);
+        expect(scene.events.listenerCount(Phaser.Scenes.Events.UPDATE)).toBe(0);
+    });
+
     it("recenters progressively towards the moving player without restarting on each movement tick", () => {
         const { camera, manager, player, advanceTween, addCounter } = setup(1, true);
         manager.startManualPan();

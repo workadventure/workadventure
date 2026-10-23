@@ -117,9 +117,13 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
 
     public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
         if (pointer.leftButtonReleased() && !pointer.wasTouch) {
+            const wasDragging = this.draggingMap;
             const dragged = this.mapDrag.end(pointer.id);
             this.restoreDragCursor();
             if (dragged) {
+                if (wasDragging && this.canDragMap() && pointer.velocity) {
+                    this.gameScene.getCameraManager().releaseManualPan(pointer.velocity);
+                }
                 return;
             }
         }
@@ -179,6 +183,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (pointer.wasTouch || !pointer.leftButtonDown() || !this.canDragMap()) {
             return;
         }
+        pointer.motionFactor = 0.35;
+        this.gameScene.getCameraManager().stopManualPanInertia();
         this.restoreDragCursor();
         this.mapDrag.begin(pointer);
     }
@@ -187,7 +193,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (pointer.wasTouch) {
             return;
         }
-        if (!pointer.leftButtonDown() || !this.canDragMap()) {
+        if (!pointer.leftButtonDown()) {
+            if (this.draggingMap) this.handlePointerCancelEvent();
+            return;
+        }
+        if (!this.canDragMap()) {
             this.handlePointerCancelEvent();
             return;
         }
@@ -205,6 +215,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerCancelEvent(): void {
+        this.gameScene.getCameraManager().stopManualPanInertia();
         this.mapDrag.cancel();
         this.restoreDragCursor();
     }
