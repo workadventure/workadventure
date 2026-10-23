@@ -167,7 +167,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (state === "off" && this.gameScene.groups.size > 0) {
             this.sendFollowRequest();
         } else if (state === "active") {
-            followStateStore.set("ending");
             this.gameScene.connection?.emitFollowAbort();
             followUsersStore.stopFollowing();
         }
