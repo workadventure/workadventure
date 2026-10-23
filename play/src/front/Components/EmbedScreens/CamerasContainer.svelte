@@ -40,7 +40,7 @@
         orderedStreamableCollectionStore,
         maxVisibleVideosStore,
     } from "../../Stores/OrderedStreamableCollectionStore";
-    import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { pictureInPictureLayoutStore } from "../../Stores/PeerStore";
     import { oneLineStreamableCollectionStore } from "../../Stores/OneLineStreamableCollectionStore";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import ChevronLeftIcon from "../Icons/ChevronLeftIcon.svelte";
@@ -481,7 +481,7 @@
         class:not-highlighted={mode === "grid"}
         class:mt-0={mode === "grid"}
         class:h-full={mode === "pipGrid"}
-        class:m-2={$activePictureInPictureStore}
+        class:m-2={$pictureInPictureLayoutStore}
         id="cameras-container"
         data-testid="cameras-container"
         onscroll={updateScrollIndicators}
