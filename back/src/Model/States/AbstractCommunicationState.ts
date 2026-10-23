@@ -44,7 +44,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
 
     handleUserAdded(
         user: SpaceUser,
-        firstRegistry = !this.usersToNotify.has(user.spaceUserId),
+        firstRegistry: boolean,
     ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
             if (firstRegistry) {
@@ -70,7 +70,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
     }
     handleUserToNotifyAdded(
         user: SpaceUser,
-        firstRegistry = !this.users.has(user.spaceUserId),
+        firstRegistry: boolean,
     ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
             if (firstRegistry) {

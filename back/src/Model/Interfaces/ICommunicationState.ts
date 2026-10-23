@@ -21,14 +21,14 @@ export interface ICommunicationState<T extends ICommunicationStrategy> {
      */
     handleUserAdded(
         user: SpaceUser,
-        firstRegistry?: boolean,
+        firstRegistry: boolean,
     ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserUpdated(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     /** `firstRegistry`: as for `handleUserAdded`, for `usersToNotify`. */
     handleUserToNotifyAdded(
         user: SpaceUser,
-        firstRegistry?: boolean,
+        firstRegistry: boolean,
     ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     switchState(targetCommunicationType: string): void;
