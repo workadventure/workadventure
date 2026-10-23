@@ -8,6 +8,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "Du wurdest von diesem Raum getrennt.",
         deletePromptDetails: "Ein Neuladen stellt diese Karte nicht wieder her, da sie nicht mehr existiert.",
         editionFailed: "Deine Änderung konnte nicht gespeichert werden und wurde rückgängig gemacht.",
+        editionForbidden: "Du darfst diese Änderung nicht vornehmen, deshalb wurde sie rückgängig gemacht.",
     },
     sideBar: {
         areaEditor: "Fläche bearbeiten",
