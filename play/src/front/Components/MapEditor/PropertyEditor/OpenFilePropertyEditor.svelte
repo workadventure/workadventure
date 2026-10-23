@@ -165,7 +165,6 @@
             <FileUpload
                 propertyId={property.id}
                 name={property.name}
-                kind={UploadedFileKind.Document}
                 onupload={(name, link) => {
                     property.name = name;
                     property.link = link;

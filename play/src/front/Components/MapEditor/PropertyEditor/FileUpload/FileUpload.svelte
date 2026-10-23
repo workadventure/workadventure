@@ -1,7 +1,6 @@
 <script lang="ts">
     import { v4 as uuidv4 } from "uuid";
-    import type { UploadableFileKind } from "@workadventure/map-editor";
-    import { UPLOADED_FILE_FORMATS } from "@workadventure/map-editor";
+    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, uploadedFileFolder } from "@workadventure/map-editor";
     import type { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
@@ -17,13 +16,13 @@
         propertyId: string;
         /** Name of the uploaded file. Empty while there is none, which shows the drop zone. */
         name: string | null | undefined;
-        /** What the file is for, which decides the formats offered and where map-storage stores it. */
-        kind: UploadableFileKind;
+        /** Offered formats, as in the `accept` attribute of a file input: MIME types or extensions. */
+        accept?: string;
         onupload: (name: string, link: string) => void;
         ondeleteFile?: () => void;
     }
 
-    let { propertyId, name, kind, onupload, ondeleteFile }: Props = $props();
+    let { propertyId, name, accept = FILE_UPLOAD_SUPPORTED_FORMATS_FRONT, onupload, ondeleteFile }: Props = $props();
 
     let files: FileList | undefined = $state(undefined);
     let dropZoneRef: HTMLDivElement | undefined = $state();
@@ -31,8 +30,7 @@
     let fileToUpload: UploadFileMessage | undefined = undefined;
     const BYTES_TO_MB = 1024 * 1024;
 
-    const format = $derived(UPLOADED_FILE_FORMATS[kind]);
-    const acceptedFormats = $derived(format.accept.split(",").map((accepted) => accepted.trim()));
+    const acceptedFormats = $derived(accept.split(",").map((format) => format.trim()));
 
     $effect(() => {
         if (files) {
@@ -65,7 +63,6 @@
             file: fileAsUint8Array,
             name: file.name,
             propertyId,
-            kind,
         };
 
         const roomConnection = gameManager.getCurrentGameScene()?.connection;
@@ -83,17 +80,18 @@
         const fileName = file.name.slice(0, lastDot);
         const fileExt = file.name.slice(lastDot + 1);
 
-        const fileUrl = new URL(`${format.folder}/${fileName}-${propertyId}.${fileExt}`, mapStorageUrl).toString();
+        // map-storage picks the same folder from the extension.
+        const folder = uploadedFileFolder(file.name);
+        const fileUrl = new URL(`${folder}/${fileName}-${propertyId}.${fileExt}`, mapStorageUrl).toString();
 
         onupload(file.name, fileUrl);
     }
 
     function isASupportedFormat(file: File): boolean {
-        const accepted = acceptedFormats.some((accepted) =>
-            accepted.startsWith(".") ? file.name.toLowerCase().endsWith(accepted) : accepted === file.type,
+        const accepted = acceptedFormats.some((format) =>
+            format.startsWith(".") ? file.name.toLowerCase().endsWith(format) : format === file.type,
         );
-        // map-storage refuses the others.
-        return accepted && format.extensions.test(file.name);
+        return accepted && uploadedFileFolder(file.name) !== undefined;
     }
 
     function dropHandler(event: DragEvent) {
@@ -139,7 +137,7 @@
             bind:this={dropZoneRef}
             class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white/10"
         >
-            <input id="upload-{propertyId}" class="hidden" type="file" accept={format.accept} bind:files />
+            <input id="upload-{propertyId}" class="hidden" type="file" {accept} bind:files />
 
             <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload-{propertyId}">
                 <IconCloudUpload font-size={32} />
@@ -151,7 +149,7 @@
                         >
                     </span>
                     <span class="text-xs m-0 opacity-50"
-                        >{acceptedFormats.map((accepted) => accepted.replace(/^.*[./]/, "")).join(", ")}</span
+                        >{acceptedFormats.map((format) => format.replace(/^.*[./]/, "")).join(", ")}</span
                     >
                     {#if errorOnFile}
                         <span class="text-xx text-red-500">{errorOnFile}</span>
