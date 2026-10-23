@@ -10,6 +10,7 @@ import { notePresenceReport, setRendererPresence } from "./presence";
 import {
     dismissCompanion,
     isCompanionReadyForVideo,
+    openCompanion,
     onPageVisibilityChange,
     setSharedScreenDisplay,
     toggleCompanion,
@@ -670,6 +671,13 @@ export default () => {
 
     // Main renderer → companion panel. Separate channel/state from the presenter bars (different
     // shape); sendHudState targets only the companion window and replays on (re)open.
+    // WA's profile menu: open the companion by hand.
+    ipcMain.on("app:companion:open", (event) => {
+        if (isFromMainRenderer(event)) {
+            openCompanion();
+        }
+    });
+
     ipcMain.on("app:companion:state-from-main", (event, state: unknown) => {
         if (!isFromMainRenderer(event)) return;
         // Where the companion cannot be kept out of the capture, it warns it shows in the user's share.

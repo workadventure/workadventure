@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "تطبيق سطح المكتب",
         changeWorld: "تغيير العالم",
+        openCompanion: "فتح اللوحة المرافقة",
         title: "فتح عالم آخر",
         description: "الصق عنوان URL الكامل لعالم WorkAdventure الذي تريد فتحه.",
         urlLabel: "عنوان URL للعالم",

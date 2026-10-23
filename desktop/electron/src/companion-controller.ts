@@ -255,6 +255,16 @@ export function toggleCompanion(): void {
     updateCompanion();
 }
 
+/** Opened by hand from WA's profile menu, the Dock menu or the taskbar task: never closes it, unlike the toggle. */
+export function openCompanion(): void {
+    cancelPendingOpen();
+    dismissed = false;
+    // An open companion becomes one opened by hand: it stays when WA shows again.
+    opened = "manual";
+    getHudWindow("companion")?.showInactive();
+    updateCompanion();
+}
+
 /** Closed by hand (its close button, the window close, the tray): until the user comes back to WA. */
 export function dismissCompanion(): void {
     dismissed = true;

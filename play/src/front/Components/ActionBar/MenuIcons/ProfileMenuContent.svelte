@@ -35,7 +35,7 @@
     import Companion from "../../Companion/Companion.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import { IconBug, IconFileDownload, IconHelpCircle, IconLogout, IconWorldSearch } from "../../Icons";
+    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout, IconWorldSearch } from "../../Icons";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import Woka from "../../Woka/WokaFromUserId.svelte";
@@ -226,6 +226,18 @@
             >
                 <IconWorldSearch font-size="22" />
             </ActionBarButton>
+            {#if window.WAD.companion?.open}
+                <ActionBarButton
+                    label={$LL.actionbar.desktop.openCompanion()}
+                    onclick={() => {
+                        window.WAD?.companion?.open?.();
+                        openedMenuStore.close("profileMenu");
+                    }}
+                    dataTestId="desktop-open-companion"
+                >
+                    <IconAppWindow font-size="22" />
+                </ActionBarButton>
+            {/if}
         {/if}
 
         {#if showContextualMenuItems}
