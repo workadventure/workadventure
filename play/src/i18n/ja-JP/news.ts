@@ -1,0 +1,9 @@
+import type { Translation } from "../i18n-types";
+
+export default {
+    label: "新着情報",
+    skip: "スキップ",
+    previous: "前へ",
+    next: "次へ",
+    finish: "完了",
+} satisfies Translation["news"];
