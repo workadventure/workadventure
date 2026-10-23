@@ -91,6 +91,22 @@ button {
     gap: 6px;
 }
 
+/* At the default width (340px) the name next to the status dot does not fit with the close button:
+   the dot alone says the status, the menu still opens on it. */
+@media (max-width: 400px) {
+    .header {
+        gap: 4px;
+        padding: 8px 6px;
+    }
+    .hdr-end {
+        gap: 2px;
+    }
+    .status-btn .self-name,
+    .status-btn .chev {
+        display: none;
+    }
+}
+
 /* Media controls pill — the app's ActionBar style, ported from the PiP toolbar. */
 /* No container at rest (matches the mockup): the media buttons float as plain icons and only pick up
    a background when toggled (is-active blue / is-forbidden red) or hovered. */
@@ -299,6 +315,207 @@ button {
     font-size: 11px;
 }
 
+/* ── Share warning (Linux: the companion shows in the user's share) ─────── */
+.share-warning {
+    padding: 7px 12px;
+    background: rgba(233, 200, 78, 0.16);
+    color: var(--st-busy);
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+    font-weight: 600;
+}
+.share-warning[hidden] {
+    display: none;
+}
+
+/* ── Agenda: next-meeting strip + Today view ────────────────────────────── */
+.nav-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--st-busy);
+    box-shadow: 0 0 0 2px var(--header);
+}
+.nav-btn[hidden],
+.nav-dot[hidden],
+.next-strip[hidden] {
+    display: none;
+}
+.next-strip {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px 8px 12px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    font-size: 12.5px;
+}
+.cal-ico {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    display: grid;
+    place-items: center;
+    background: var(--blue-soft);
+    color: #9aa6ff;
+}
+.cal-ico svg {
+    width: 15px;
+    height: 15px;
+}
+.next-text {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+.next-title,
+.ag-title,
+.ag-sub {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.next-title {
+    font-weight: 650;
+}
+.next-when {
+    color: var(--st-busy);
+    font-size: 11.5px;
+}
+.next-when.live {
+    color: var(--st-online);
+}
+.join-btn {
+    flex: 0 0 auto;
+    padding: 5px 11px;
+    border: 0;
+    border-radius: 7px;
+    background: var(--blue);
+    color: #fff;
+    font-weight: 650;
+    font-size: 12px;
+}
+.join-btn.ghost {
+    background: var(--surface-2);
+    color: var(--text);
+}
+.join-btn[hidden] {
+    display: none;
+}
+.view-agenda {
+    z-index: 26;
+}
+.ag-section {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 6px 4px;
+    color: var(--faint);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ag-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 8px;
+    border-radius: 9px;
+}
+.ag-row:hover {
+    background: var(--surface);
+}
+.ag-time {
+    flex: 0 0 42px;
+    color: var(--muted);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+.ag-bar {
+    flex: 0 0 3px;
+    align-self: stretch;
+    border-radius: 2px;
+    background: var(--surface-2);
+}
+.ag-row.live .ag-time {
+    color: var(--st-online);
+    font-weight: 700;
+}
+.ag-row.live .ag-bar {
+    background: var(--st-online);
+}
+.ag-row.next .ag-bar {
+    background: var(--blue);
+}
+.ag-main {
+    flex: 1;
+    min-width: 0;
+}
+.ag-title {
+    font-weight: 600;
+}
+.ag-sub {
+    color: var(--faint);
+    font-size: 11px;
+}
+.task-dot {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    border: 2px solid var(--faint);
+}
+.task-dot.progress {
+    border-color: var(--blue);
+    background: conic-gradient(var(--blue) 0 50%, transparent 50% 100%);
+}
+.due {
+    flex: 0 0 auto;
+    padding: 2px 7px;
+    border-radius: 9px;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: var(--surface-2);
+    color: var(--muted);
+}
+.due.late {
+    background: var(--red-soft);
+    color: var(--red);
+}
+.due.today {
+    background: rgba(233, 200, 78, 0.16);
+    color: var(--st-busy);
+}
+.ag-empty {
+    padding: 4px 8px 6px;
+    color: var(--faint);
+    font-size: 12px;
+}
+.ag-more {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 2px 0 6px;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #9aa6ff;
+    font-size: 12px;
+    font-weight: 600;
+}
+.ag-more:hover {
+    background: var(--surface);
+}
+
 /* ── Invitation banner ──────────────────────────────────────────────────── */
 .invitation {
     display: flex;
@@ -378,8 +595,6 @@ button {
     position: absolute;
     inset: 0;
     display: none;
-    grid-template-columns: 1fr;
-    grid-auto-rows: 1fr;
     gap: 3px;
     padding: 3px;
 }
@@ -409,6 +624,14 @@ button {
     object-fit: cover;
     display: block;
     background: #000;
+}
+/* The large screen share is shown whole, never cropped. */
+.tile.is-highlighted .video-layer video {
+    object-fit: contain;
+}
+/* A screen share has no microphone to show as muted. */
+.tile.is-highlighted .mic-off-badge {
+    display: none;
 }
 /* Self tile mirrors the camera + gets an accent ring (active-speaker style). */
 .tile.is-self .video-layer video {

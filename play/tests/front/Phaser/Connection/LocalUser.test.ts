@@ -71,10 +71,16 @@ describe("localUserStore microphone noise suppression settings", () => {
         localStorage.clear();
     });
 
-    it("keeps advanced noise suppression off and browser noise suppression on by default", () => {
-        expect(localUserStore.getNoiseSuppressionEnabled()).toBe(false);
+    it("turns advanced noise suppression and browser noise suppression on by default", () => {
+        expect(localUserStore.getNoiseSuppressionEnabled()).toBe(true);
         expect(localUserStore.getNoiseSuppressionProvider()).toBe("workadventure");
         expect(localUserStore.getMicrophoneBrowserNoiseSuppression()).toBe(true);
+    });
+
+    it("keeps advanced noise suppression off when explicitly disabled", () => {
+        localUserStore.setNoiseSuppressionEnabled(false);
+
+        expect(localUserStore.getNoiseSuppressionEnabled()).toBe(false);
     });
 
     it("does not migrate the legacy browser provider to active WorkAdventure noise suppression", () => {

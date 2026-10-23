@@ -1,4 +1,4 @@
-import { ipcMain, app, desktopCapturer, shell } from "electron";
+import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
 import path from "path";
@@ -7,7 +7,14 @@ import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustSe
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
 import { getPresenceSnapshot, notePresenceReport, onPresenceChange, setRendererPresence } from "./presence";
-import { closeCompanionPip, dismissCompanion, onMainWindowHidden, openCompanionForPip } from "./companion-controller";
+import {
+    dismissCompanion,
+    isCompanionReadyForVideo,
+    openCompanion,
+    onPageVisibilityChange,
+    setSharedScreenDisplay,
+    toggleCompanion,
+} from "./companion-controller";
 import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
     getControllingWorldContents,
@@ -23,7 +30,8 @@ import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, s
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
-import { canOpenAnnotationOverlay } from "./platform-capture-policy";
+import { annotationOverlayDisplay, companionVisibleInShare, meetingBarDisplay } from "./share-surfaces-policy";
+import { canHideWindowsFromCapture } from "./platform-capture-policy";
 import {
     awaitOverlayReady,
     closeOverlayWindow,
@@ -75,6 +83,13 @@ type CapturerCacheEntry = {
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
 let presenterToolGeneration = 0;
 let pipOwner: Electron.WebContents | undefined;
+// What the world reports for the annotation overlay (see updateOverlay).
+let sharedDisplayId: number | undefined;
+let overlayDrawing = false;
+let overlayPresenterTool = false;
+let overlayDisplayId: number | undefined;
+let overlayTool: unknown;
+let overlayElements: unknown;
 
 const keepAwakeByTab = new Map<number, number>();
 const unreadByTab = new Map<number, number>();
@@ -278,16 +293,18 @@ export default () => {
             inWorld: Boolean(raw.inWorld),
             onboarding: Boolean(raw.onboarding),
             invitationPending: Boolean(raw.invitationPending),
+            autoOpenAllowed: raw.autoOpenAllowed !== false,
             requestedStatus: raw.requestedStatus,
             statusLocked: Boolean(raw.statusLocked),
         });
     });
 
-    // The world page went hidden: the window was fully covered or minimized (the browser engine
-    // tracks occlusion on macOS and Windows). Only the visible tab counts, background tabs are hidden.
-    ipcMain.on("app:page-hidden", (event) => {
+    // The world page went hidden (the window was fully covered or minimized: the browser engine
+    // tracks occlusion on macOS and Windows) or showed again. Only the active tab counts, background
+    // tabs are hidden.
+    ipcMain.on("app:page-visibility", (event, hidden: unknown) => {
         if (isFromActiveRenderer(event)) {
-            onMainWindowHidden();
+            onPageVisibilityChange(hidden === true);
         }
     });
 
@@ -309,7 +326,9 @@ export default () => {
         const raw = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
         const tool = typeof raw.tool === "string" ? raw.tool : "none";
         const sourceId = typeof raw.sourceId === "string" ? raw.sourceId : undefined;
-        if (tool !== "laser" && tool !== "spotlight" && tool !== "loupe") {
+        overlayPresenterTool = tool === "laser" || tool === "spotlight" || tool === "loupe";
+        updateOverlay();
+        if (!overlayPresenterTool) {
             stopPresenterCursor();
             sendToOverlay("app:overlay:presenter-effect", { tool: "none", x: 0, y: 0, scale: 0, active: false });
             return;
@@ -599,47 +618,47 @@ export default () => {
         }
     }
 
-    ipcMain.handle("app:pip:open", async (event) => {
+    // The world page starts the meeting video once the companion controller asked it to
+    // (`app:pip:wanted`): the companion is open and its renderer ready for the first SDP offer.
+    ipcMain.handle("app:pip:open", (event) => {
         if (!isFromMainRenderer(event)) {
             ElectronLog.warn("Rejected PiP open from non-main renderer");
             return false;
         }
-        // The meeting video renders as HTML <video> tiles inside the companion window. Ensure the
-        // companion is open and its renderer is ready (openCompanionForPip awaits hud-ready) before
-        // the WA renderer starts sending its SDP offer — otherwise the first offer lands in a deaf
-        // renderer and tracks only start mirroring on the next store change (someone joining/leaving).
-        await openCompanionForPip();
+        if (!isCompanionReadyForVideo()) {
+            return false;
+        }
         // The window closes asynchronously, possibly after a tab switch: tell the world that opened the
         // PiP, not whichever tab is active by then.
         pipOwner = event.sender;
         const companion = getHudWindow("companion");
         if (companion && !pipClosedHookWired.has(companion)) {
             pipClosedHookWired.add(companion);
-            // Mirror the old PiP window's onClosed: if the user closes the companion (its host) while
-            // the call is live, tell the WA renderer to tear its side down too. stop() is idempotent,
-            // so a late fire after the meeting already ended is harmless.
+            // The meeting video lives in the companion: closing it tears the world's side down too.
+            // stop() is idempotent, so a late fire after the meeting already ended is harmless.
             companion.once("closed", () => {
                 if (pipOwner && !pipOwner.isDestroyed()) {
                     pipOwner.send("app:pip:closed");
                 }
-                // A companion reopened in the meantime hosts a new PiP: this late close is not about it.
-                const current = getHudWindow("companion");
-                if (!current || current === companion || current.isDestroyed()) {
-                    closeCompanionPip();
-                }
             });
         }
-        return isPipWindowOpen();
+        return true;
     });
 
     // Close requests are honoured from the foreground world only, like the opens: a background tab
     // whose own meeting ends must not tear down the windows the active tab is using.
     ipcMain.handle("app:pip:close", (event) => {
         if (!isFromMainRenderer(event)) return;
-        // Tear down the companion's meeting peer connection + tiles, then drop the keep-open and
-        // re-evaluate the panel's visibility (it stays open on People if WA is still backgrounded).
+        // Tear down the companion's meeting peer connection + tiles; the companion itself follows the
+        // controller's rules.
         sendToPip("app:pip:close");
-        closeCompanionPip();
+    });
+
+    // The world's PiP button opens or closes the companion by hand, like the tray.
+    ipcMain.on("app:pip:toggle", (event) => {
+        if (isFromMainRenderer(event)) {
+            toggleCompanion();
+        }
     });
 
     // Main renderer → companion renderer (the meeting-video peer lives in the companion)
@@ -672,74 +691,71 @@ export default () => {
         sendToPip("app:pip:state-to-pip", state);
     });
 
-    // ---- Screen-annotation overlay (transparent, always-on-top, click-through) ----
-    // A real desktop window that covers the shared screen; captured by getDisplayMedia so strokes
-    // are baked into the shared pixels. Draw ops from the presenter are relayed to the main renderer,
-    // which routes them through the normal Space-event annotation sync.
+    // ---- Screen-annotation overlay (transparent, always-on-top, click-through, out of the capture) ----
+    // The app decides when it covers the shared screen (annotationOverlayDisplay). The world reports
+    // whether the user draws on their share (set-draw-mode) and the presenter tool
+    // (app:presenter:setTool), and pushes the elements and the tool, replayed when the overlay opens.
+    // Draw ops from the presenter are relayed back to the world, which syncs them through the space.
     function isFromOverlayRenderer(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
         const overlayWin = getOverlayWindow();
         return Boolean(overlayWin) && !overlayWin!.isDestroyed() && event.sender === overlayWin!.webContents;
     }
 
-    ipcMain.handle("app:overlay:open", async (event, opts: unknown) => {
-        if (!isFromMainRenderer(event)) {
-            ElectronLog.warn("Rejected overlay open from non-main renderer");
-            return false;
-        }
-        if (!canOpenAnnotationOverlay(process.platform, getPresenceSnapshot().screenSharing)) {
-            ElectronLog.warn("Rejected overlay open: not sharing a screen, or no way to keep it out of the capture");
-            return false;
-        }
-        const options = (opts && typeof opts === "object" ? opts : {}) as { displayId?: unknown; sourceId?: unknown };
-        let displayId = typeof options.displayId === "number" ? options.displayId : undefined;
-        // Cover the screen that is actually being shared (not the primary display).
-        if (displayId === undefined && typeof options.sourceId === "string" && options.sourceId.startsWith("screen:")) {
-            displayId = await resolveDisplayIdFromScreenSource(options.sourceId);
-        }
-        ElectronLog.info(
-            `overlay:open sourceId=${String(options.sourceId)} displayIdIn=${String(
-                options.displayId
-            )} resolvedDisplayId=${String(displayId)}`
-        );
-        if (!isOverlayWindowOpen()) {
-            const owner = event.sender;
-            createOverlayWindow({
-                displayId,
-                onClosed: () => {
-                    // To the world that opened it: by the time it closes, another tab may be active.
-                    if (!owner.isDestroyed()) {
-                        owner.send("app:overlay:exit-to-main");
-                    }
-                },
-            });
-        }
-        await awaitOverlayReady();
-        return true;
-    });
-
-    ipcMain.handle("app:overlay:close", (event) => {
-        if (!isFromMainRenderer(event)) return;
-        closeOverlayWindow();
-    });
-    // The overlay never outlives the share it covers, whatever the renderer does.
-    onPresenceChange(() => {
-        if (!getPresenceSnapshot().screenSharing) {
+    function updateOverlay(): void {
+        const displayId = annotationOverlayDisplay({
+            canHideFromCapture: canHideWindowsFromCapture(process.platform),
+            sharing: getPresenceSnapshot().screenSharing,
+            sharedDisplayId,
+            drawing: overlayDrawing,
+            presenterTool: overlayPresenterTool,
+        });
+        if (isOverlayWindowOpen() && displayId !== overlayDisplayId) {
             closeOverlayWindow();
         }
-    });
+        if (displayId === undefined || isOverlayWindowOpen()) {
+            return;
+        }
+        overlayDisplayId = displayId;
+        // To the world that drives it: by the time it closes, another tab may be active.
+        const owner = getControllingWorldContents();
+        createOverlayWindow({
+            displayId,
+            onClosed: () => {
+                if (owner && !owner.isDestroyed()) {
+                    owner.send("app:overlay:exit-to-main");
+                }
+            },
+        });
+        awaitOverlayReady()
+            .then(() => {
+                setOverlayDrawMode(overlayDrawing);
+                sendToOverlay("app:overlay:draw-mode", overlayDrawing);
+                sendToOverlay("app:overlay:tool", overlayTool);
+                sendToOverlay("app:overlay:elements", overlayElements);
+            })
+            .catch((error) => ElectronLog.warn("Annotation overlay did not get ready", error));
+    }
+
+    onPresenceChange(updateOverlay);
 
     // Main renderer → overlay renderer
     ipcMain.on("app:overlay:set-draw-mode", (event, enabled: unknown) => {
-        if (!isFromMainRenderer(event) || !isOverlayWindowOpen()) return;
-        setOverlayDrawMode(enabled === true);
-        sendToOverlay("app:overlay:draw-mode", enabled === true);
+        if (!isFromMainRenderer(event)) return;
+        overlayDrawing = enabled === true;
+        updateOverlay();
+        if (isOverlayWindowOpen()) {
+            setOverlayDrawMode(overlayDrawing);
+            sendToOverlay("app:overlay:draw-mode", overlayDrawing);
+        }
     });
     ipcMain.on("app:overlay:set-tool", (event, tool: unknown) => {
-        if (!isFromMainRenderer(event) || !isOverlayWindowOpen()) return;
+        if (!isFromMainRenderer(event)) return;
+        overlayTool = tool;
         sendToOverlay("app:overlay:tool", tool);
     });
     ipcMain.on("app:overlay:set-elements", (event, elements: unknown) => {
-        if (!isFromMainRenderer(event) || !isOverlayWindowOpen()) return;
+        if (!isFromMainRenderer(event)) return;
+        overlayElements = elements;
         sendToOverlay("app:overlay:elements", elements);
     });
 
@@ -774,16 +790,34 @@ export default () => {
         return displayId;
     }
 
-    ipcMain.handle("app:hud:open-meeting-bar", async (event, opts: unknown) => {
-        if (!isFromMainRenderer(event)) {
-            ElectronLog.warn("Rejected meeting-bar open from non-main renderer");
-            return false;
-        }
-        return openHudWindow("meeting-bar", await resolveHudDisplayId(opts));
-    });
-    ipcMain.handle("app:hud:close-meeting-bar", (event) => {
+    // The user's share started, changed source, or stopped (null). The app places what floats during
+    // it (share-surfaces-policy): the meeting bar here, the companion through its controller.
+    ipcMain.on("app:screen-share-source", (event, source: unknown) => {
         if (!isFromMainRenderer(event)) return;
-        closeHudWindow("meeting-bar");
+        const sharing = source !== null && typeof source === "object";
+        resolveHudDisplayId(source)
+            .then((displayId) => {
+                // Another shared screen closes the overlay and ends the drawing (the world clears the
+                // annotations); a presenter tool follows to the new screen.
+                if (displayId !== sharedDisplayId) {
+                    overlayDrawing = false;
+                }
+                sharedDisplayId = sharing ? displayId : undefined;
+                updateOverlay();
+                setSharedScreenDisplay(displayId);
+                const barDisplayId = meetingBarDisplay({
+                    canHideFromCapture: canHideWindowsFromCapture(process.platform),
+                    sharing,
+                    sharedDisplayId: displayId,
+                    pointerDisplayId: screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id,
+                });
+                if (barDisplayId === undefined) {
+                    closeHudWindow("meeting-bar");
+                    return undefined;
+                }
+                return openHudWindow("meeting-bar", barDisplayId);
+            })
+            .catch((error) => ElectronLog.debug("Unable to place the meeting bar", error));
     });
 
     // Main renderer → HUD windows
@@ -800,9 +834,27 @@ export default () => {
 
     // Main renderer → companion panel. Separate channel/state from the presenter bars (different
     // shape); sendHudState targets only the companion window and replays on (re)open.
+    // WA's profile menu: open the companion by hand.
+    ipcMain.on("app:companion:open", (event) => {
+        if (isFromMainRenderer(event)) {
+            openCompanion();
+        }
+    });
+
     ipcMain.on("app:companion:state-from-main", (event, state: unknown) => {
         if (!isFromMainRenderer(event)) return;
-        sendHudState("companion", state);
+        // Where the companion cannot be kept out of the capture, it warns it shows in the user's share.
+        const raw = state && typeof state === "object" ? (state as { media?: { screenSharing?: unknown } }) : undefined;
+        const sharing = raw?.media?.screenSharing === true;
+        sendHudState(
+            "companion",
+            raw
+                ? {
+                      ...raw,
+                      visibleInShare: companionVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),
+                  }
+                : state
+        );
     });
 
     // Main renderer → companion + meeting bar strings, translated by the world in the language the

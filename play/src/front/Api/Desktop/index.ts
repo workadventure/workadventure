@@ -13,14 +13,29 @@ import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
-import { requestedScreenSharingState, screenSharingAvailableStore } from "../../Stores/ScreenSharingStore";
-import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../Stores/PeerStore";
+import {
+    activeScreenShareSourceStore,
+    requestedScreenSharingState,
+    screenSharingAvailableStore,
+} from "../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
+import {
+    calendarEventsStore,
+    isActivatedStore as isCalendarActivatedStore,
+    isCalendarVisibleStore,
+} from "../../Stores/CalendarStore";
+import {
+    isActivatedStore as isTodoListActivatedStore,
+    isTodoListVisibleStore,
+    todoListsStore,
+} from "../../Stores/TodoListStore";
+import { joinMeeting } from "../../Components/Calendar/joinMeeting";
+import { allowPictureInPictureStore } from "../../Stores/PeerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
 import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
@@ -49,6 +64,7 @@ import type {
 } from "../../Interfaces/DesktopAppInterfaces";
 import { screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
 import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
+import { buildCompanionAgenda } from "./CompanionAgenda";
 import { startDesktopStringsBridge } from "./DesktopStringsBridge";
 
 type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
@@ -62,6 +78,7 @@ type PresenceSnapshot = {
     /** A first-connection screen (name, Woka, companion, camera) is waiting for the user. */
     onboarding: boolean;
     invitationPending: boolean;
+    autoOpenAllowed: boolean;
     requestedStatus: TrayAvailability;
     statusLocked: boolean;
 };
@@ -348,6 +365,10 @@ class DesktopApi {
         // store WITHOUT persisting (no localUserStore.setRequestedStatus) so auto-away never
         // survives a restart, and only from the neutral (null) state so a manual DND/busy/brb is
         // left untouched.
+        //
+        // Never during a meeting: someone following it without touching the keyboard or the mouse
+        // (a presentation, the companion's video) is not away, and BACK_IN_A_MOMENT would cut their
+        // camera and microphone.
         if (window.WAD.onSystemIdle) {
             let autoAwayActive = false;
             window.WAD.onSystemIdle((idle) => {
@@ -356,6 +377,7 @@ class DesktopApi {
                     if (autoAwayActive) return;
                     if (get(requestedStatusStore) !== null) return;
                     if (!get(focusStore)) return;
+                    if (get(isInActiveConversationStore)) return;
                     requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
                     autoAwayActive = true;
                 } else {
@@ -384,6 +406,15 @@ class DesktopApi {
 
         // Push live presence (meeting + mic/camera) to main so the tray shows a status dot and
         // reflects the mic/camera state in its quick-action checkmarks.
+        // The screen the user shares, so that the companion never opens by itself over it.
+        if (window.WAD.setScreenShareSource) {
+            const setScreenShareSource = window.WAD.setScreenShareSource;
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            activeScreenShareSourceStore.subscribe((source) => {
+                setScreenShareSource(source ? { sourceId: source.id, displayId: source.display_id } : null);
+            });
+        }
+
         if (window.WAD.setPresence) {
             const setPresence = window.WAD.setPresence;
             // The screens shown before the world, which wait for the user: the shell must not mistake
@@ -409,6 +440,7 @@ class DesktopApi {
                     gameSceneIsLoadedStore,
                     onboardingStore,
                     meetingInvitationRequestStore,
+                    allowPictureInPictureStore,
                 ],
                 ([
                     $inMeeting,
@@ -420,6 +452,7 @@ class DesktopApi {
                     $inWorld,
                     $onboarding,
                     $invitation,
+                    $allowPictureInPicture,
                 ]): PresenceSnapshot => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
@@ -428,6 +461,7 @@ class DesktopApi {
                     inWorld: Boolean($inWorld),
                     onboarding: $onboarding,
                     invitationPending: $invitation !== null,
+                    autoOpenAllowed: $allowPictureInPicture,
                     requestedStatus: requestedStatusToKey($requested),
                     statusLocked: STATUS_LOCKED_SET.has($availability),
                 }),
@@ -515,7 +549,6 @@ class DesktopApi {
             screenSharing: false,
             canScreenShare: false,
             inMeeting: false,
-            pipOpen: false,
             status: "online",
             statusLocked: false,
         };
@@ -585,6 +618,15 @@ class DesktopApi {
                 media: latestMedia,
                 invitation: latestInvitation,
                 chatStatus: latestChatStatus,
+                agenda: buildCompanionAgenda({
+                    events: get(isCalendarActivatedStore) ? get(calendarEventsStore).values() : undefined,
+                    lists: get(isTodoListActivatedStore) ? get(todoListsStore).values() : undefined,
+                    now: new Date(),
+                    labels: {
+                        inProgress: get(LL).desktop.companion.inProgress(),
+                        until: (time) => get(LL).desktop.companion.until({ time }),
+                    },
+                }),
             });
         };
         const schedulePush = () => {
@@ -639,7 +681,6 @@ class DesktopApi {
                 requestedScreenSharingState,
                 requestedStatusStore,
                 availabilityStatusStore,
-                activePictureInPictureStore,
                 screenSharingAvailableStore,
                 screenAnnotationEnabledStore,
             ],
@@ -650,7 +691,6 @@ class DesktopApi {
                 $share,
                 $requested,
                 $availability,
-                $pipOpen,
                 $canShare,
                 $annotationEnabled,
             ]): CompanionMedia => ({
@@ -662,7 +702,6 @@ class DesktopApi {
                 // itself would not: sharing needs a bubble/live-stream, not just being in a world.
                 canScreenShare: Boolean($canShare),
                 inMeeting: Boolean($inMeeting),
-                pipOpen: Boolean($pipOpen),
                 status: requestedStatusToKey($requested),
                 statusLocked: STATUS_LOCKED_SET.has($availability),
                 // On macOS and Windows, the meeting bar over the shared screen offers these.
@@ -677,6 +716,15 @@ class DesktopApi {
             latestMedia = media;
             schedulePush();
         });
+
+        // Agenda + tasks: re-push on change, and every 30 s for "in 12 minutes" and what is in progress.
+        for (const store of [isCalendarActivatedStore, calendarEventsStore, isTodoListActivatedStore, todoListsStore]) {
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            store.subscribe(() => schedulePush());
+        }
+        setInterval(() => {
+            if (get(isCalendarActivatedStore) || get(isTodoListActivatedStore)) schedulePush();
+        }, 30_000);
 
         // Pending meeting invitation → banner in the panel (the controller force-opens for it).
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -908,17 +956,6 @@ class DesktopApi {
                 case "annotation-clear":
                     screenAnnotationManager.clearAll();
                     break;
-                case "toggle-pip":
-                    // Open / close the proven native meeting-video window (PiP).
-                    if (get(activePictureInPictureStore)) {
-                        window.WAD?.pip?.close().catch(() => {
-                            /* best-effort */
-                        });
-                        askPictureInPictureActivatingStore.set(false);
-                    } else {
-                        askPictureInPictureActivatingStore.set(true);
-                    }
-                    break;
                 case "set-status":
                     applyRequestedStatus(command.status);
                     break;
@@ -937,6 +974,17 @@ class DesktopApi {
                 }
                 case "open-conversation-in-main":
                     openConversationInMain(command.conversationId);
+                    break;
+                case "join-meeting": {
+                    const event = [...get(calendarEventsStore).values()].find(({ id }) => id === command.eventId);
+                    if (event) joinMeeting(event);
+                    break;
+                }
+                case "open-agenda":
+                    isCalendarVisibleStore.set(true);
+                    break;
+                case "open-tasks":
+                    isTodoListVisibleStore.set(true);
                     break;
                 case "dm": {
                     const player = playerById.get(command.userId);

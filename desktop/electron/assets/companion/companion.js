@@ -93,19 +93,29 @@
     var els = {
         openChat: byId("c-open-chat"),
         openPeople: byId("c-open-people"),
+        openAgenda: byId("c-open-agenda"),
+        agendaDot: byId("c-agenda-dot"),
+        nextStrip: byId("c-next-strip"),
+        nextTitle: byId("c-next-title"),
+        nextWhen: byId("c-next-when"),
+        nextJoin: byId("c-next-join"),
+        viewAgenda: byId("c-view-agenda"),
+        agendaClose: byId("c-agenda-close"),
+        agendaList: byId("c-agenda"),
         chatBadge: byId("c-chat-badge"),
         peopleCount: byId("c-people-count"),
         peopleCountH: byId("c-people-count-h"),
         hdrMic: byId("c-hdr-mic"),
         hdrCam: byId("c-hdr-cam"),
         hdrShare: byId("c-hdr-share"),
-        hdrPip: byId("c-hdr-pip"),
         expand: byId("c-expand"),
+        close: byId("c-close"),
         statusBtn: byId("c-status-btn"),
         selfDot: byId("c-self-dot"),
         selfName: byId("c-self-name"),
         statusMenu: byId("c-status-menu"),
         statusLocked: byId("c-status-locked"),
+        shareWarning: byId("c-share-warning"),
         invitation: byId("c-invitation"),
         annotations: byId("c-annotations"),
         annotationsAllow: byId("c-annotations-allow"),
@@ -294,6 +304,7 @@
         this.container.classList.toggle("is-self", meta.isSelf === true);
         this.container.classList.toggle("is-muted", meta.hasAudio === false);
         this.container.classList.toggle("is-speaking", meta.speaking === true);
+        this.container.classList.toggle("is-highlighted", meta.highlighted === true);
         // Track presence wins over the meta hint (avoids a black flicker before pc.ontrack lands).
         this.container.classList.toggle("has-video", this.trackId !== null);
     };
@@ -349,12 +360,107 @@
             els.videos.insertBefore(selfTiles[i], els.videos.firstChild);
         }
     }
+
+    // ── Video layout: the browser picture-in-picture's rules (play: pictureInPictureGridLayout.ts and
+    //    the picture-in-picture branch of PresentationLayout.svelte). Keep them in step. ──
+    var PIP_MAX_TILES = 8;
+    var Q4 = [[1, 2, 1, 2], [2, 3, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3]];
+    // By tile count: [columns, rows, tiles] for a landscape area, then for a portrait one. A tile is
+    // [columnStart, columnEnd, rowStart, rowEnd] in grid lines (end excluded).
+    var PIP_GRIDS = [
+        null,
+        [[1, 1, [[1, 2, 1, 2]]], [1, 1, [[1, 2, 1, 2]]]],
+        [[2, 1, [[1, 2, 1, 2], [2, 3, 1, 2]]], [1, 2, [[1, 2, 1, 2], [1, 2, 2, 3]]]],
+        [
+            [2, 2, [[1, 2, 1, 3], [2, 3, 1, 2], [2, 3, 2, 3]]],
+            [2, 2, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 3, 2, 3]]],
+        ],
+        [[2, 2, Q4], [2, 2, Q4]],
+        [
+            [6, 2, [[1, 3, 1, 2], [3, 5, 1, 2], [5, 7, 1, 2], [1, 4, 2, 3], [4, 7, 2, 3]]],
+            [2, 3, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 3, 2, 3], [1, 2, 3, 4], [2, 3, 3, 4]]],
+        ],
+        [
+            [3, 2, [[1, 2, 1, 2], [2, 3, 1, 2], [3, 4, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [3, 4, 2, 3]]],
+            [2, 3, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [1, 2, 3, 4], [2, 3, 3, 4]]],
+        ],
+        [
+            [12, 2, [[1, 4, 1, 2], [4, 7, 1, 2], [7, 10, 1, 2], [10, 13, 1, 2], [1, 5, 2, 3], [5, 9, 2, 3], [9, 13, 2, 3]]],
+            [2, 4, [[1, 2, 1, 2], [1, 2, 3, 4], [1, 2, 4, 5], [1, 3, 2, 3], [2, 3, 1, 2], [2, 3, 3, 4], [2, 3, 4, 5]]],
+        ],
+        [
+            [4, 2, [[1, 2, 1, 2], [2, 3, 1, 2], [3, 4, 1, 2], [4, 5, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [3, 4, 2, 3], [4, 5, 2, 3]]],
+            [2, 4, [[1, 2, 1, 2], [2, 3, 1, 2], [1, 2, 2, 3], [2, 3, 2, 3], [1, 2, 3, 4], [2, 3, 3, 4], [1, 2, 4, 5], [2, 3, 4, 5]]],
+        ],
+    ];
+    function pipGrid(count, width, height) {
+        var n = Math.min(PIP_MAX_TILES, count);
+        var line = [];
+        var i;
+        if (width > height * 3) {
+            for (i = 0; i < n; i++) line.push([i + 1, i + 2, 1, 2]);
+            return [n, 1, line];
+        }
+        if (height > width * 2) {
+            for (i = 0; i < n; i++) line.push([1, 2, i + 1, i + 2]);
+            return [1, n, line];
+        }
+        if (n === 0) return [1, 1, []];
+        return PIP_GRIDS[n][height > width ? 1 : 0];
+    }
+    function tracks(n) {
+        return "repeat(" + Math.max(1, n) + ", minmax(0, 1fr))";
+    }
+    // One grid for every tile, so that a <video> never moves in the DOM. A remote screen share takes
+    // 80%, the cameras 20%: a column on the right of a landscape panel, a row above in a portrait one.
     function updateVideoLayout() {
         var count = tiles.size;
         els.videoEmpty.style.display = count === 0 ? "" : "none";
         els.videos.style.display = count === 0 ? "none" : "grid";
-        var cols = count <= 1 ? 1 : count <= 4 ? 2 : 3;
-        els.videos.style.gridTemplateColumns = "repeat(" + cols + ", 1fr)";
+        var width = els.videos.clientWidth;
+        var height = els.videos.clientHeight;
+        var stage = null;
+        var cameras = [];
+        Array.prototype.forEach.call(els.videos.children, function (el) {
+            if (!stage && el.classList.contains("is-highlighted")) stage = el;
+            else cameras.push(el);
+        });
+        var landscape = width > height;
+        var withStage = stage !== null && cameras.length > 0;
+        var grid = withStage
+            ? landscape
+                ? pipGrid(cameras.length, width * 0.2, height)
+                : pipGrid(cameras.length, width, height * 0.2)
+            : pipGrid(cameras.length, width, height);
+        var columnOffset = withStage && landscape ? 1 : 0;
+        if (!withStage) {
+            els.videos.style.gridTemplateColumns = tracks(grid[0]);
+            els.videos.style.gridTemplateRows = tracks(grid[1]);
+        } else if (landscape) {
+            els.videos.style.gridTemplateColumns = "minmax(0, " + 4 * grid[0] + "fr) " + tracks(grid[0]);
+            els.videos.style.gridTemplateRows = tracks(grid[1]);
+        } else {
+            els.videos.style.gridTemplateColumns = tracks(grid[0]);
+            els.videos.style.gridTemplateRows = tracks(grid[1]) + " minmax(0, " + 4 * grid[1] + "fr)";
+        }
+        if (stage) {
+            stage.style.display = "";
+            stage.style.gridColumn = !withStage ? "1 / -1" : landscape ? "1 / 2" : "1 / -1";
+            stage.style.gridRow = !withStage ? "1 / -1" : landscape ? "1 / -1" : grid[1] + 1 + " / " + (grid[1] + 2);
+        }
+        cameras.forEach(function (el, index) {
+            var place = grid[2][index];
+            // Beyond 8 tiles, like the browser's picture-in-picture.
+            el.style.display = place ? "" : "none";
+            if (!place) return;
+            el.style.gridColumn = place[0] + columnOffset + " / " + (place[1] + columnOffset);
+            el.style.gridRow = place[2] + " / " + place[3];
+        });
+    }
+    if (typeof ResizeObserver === "function") {
+        new ResizeObserver(function () {
+            updateVideoLayout();
+        }).observe(els.videos);
     }
 
     function ensurePeerConnection() {
@@ -679,7 +785,7 @@
     });
     window.addEventListener("pagehide", teardownMeeting);
 
-    // ── Views: "video" | "people" | "chat" ──────────────────────────────────
+    // ── Views: "video" | "people" | "chat" | "agenda" ───────────────────────
     // Base view is the meeting video (HTML tiles in #c-video-area) while in a meeting, People
     // otherwise. People/Chat are left side panels that slide over the video (z-index); closing them
     // reveals the video again.
@@ -702,10 +808,14 @@
         // z-index 0) shows through on the right — no native view, so no rect coordination needed.
         els.viewPeople.dataset.open = currentView === "people" ? "true" : "false";
         els.viewChat.dataset.open = currentView === "chat" ? "true" : "false";
+        els.viewAgenda.dataset.open = currentView === "agenda" ? "true" : "false";
         els.viewPeople.classList.toggle("full", !inMeeting);
         els.viewChat.classList.toggle("full", !inMeeting);
+        els.viewAgenda.classList.toggle("full", !inMeeting);
         els.openPeople.dataset.active = currentView === "people" ? "true" : "false";
         els.openChat.dataset.active = currentView === "chat" ? "true" : "false";
+        els.openAgenda.dataset.active = currentView === "agenda" ? "true" : "false";
+        renderNextStrip();
     }
 
     function setView(view) {
@@ -719,7 +829,13 @@
     els.openChat.addEventListener("click", function () {
         setView(currentView === "chat" ? baseView() : "chat");
     });
+    els.openAgenda.addEventListener("click", function () {
+        setView(currentView === "agenda" ? baseView() : "agenda");
+    });
     els.peopleClose.addEventListener("click", function () {
+        setView(baseView());
+    });
+    els.agendaClose.addEventListener("click", function () {
         setView(baseView());
     });
     els.chatClose.addEventListener("click", function () {
@@ -730,6 +846,9 @@
     els.expand.addEventListener("click", function () {
         send({ type: "focus-main" });
     });
+    els.close.addEventListener("click", function () {
+        send({ type: "close" });
+    });
     els.hdrMic.addEventListener("click", function () {
         send({ type: "toggle-mic" });
     });
@@ -739,10 +858,6 @@
     els.hdrShare.addEventListener("click", function () {
         if (els.hdrShare.disabled) return;
         send({ type: "toggle-screenshare" });
-    });
-    els.hdrPip.addEventListener("click", function () {
-        if (els.hdrPip.disabled) return;
-        send({ type: "toggle-pip" });
     });
     els.annotationsAllow.addEventListener("click", function () {
         send({ type: "annotation-toggle-others" });
@@ -1145,15 +1260,6 @@
               ? t("companion.shareScreenNeedsMeeting", "Join a meeting to share your screen")
               : t("companion.shareScreen", "Share your screen");
         els.hdrShare.setAttribute("aria-label", els.hdrShare.title);
-        // Picture-in-picture: single icon; active turns it secondary-blue. Only meaningful in a meeting.
-        els.hdrPip.classList.toggle("is-active", media.pipOpen === true);
-        els.hdrPip.disabled = !media.inMeeting;
-        els.hdrPip.title = media.pipOpen
-            ? t("companion.closePip", "Close picture-in-picture")
-            : els.hdrPip.disabled
-              ? t("companion.pipNeedsMeeting", "Join a meeting to open picture-in-picture")
-              : t("companion.pip", "Picture-in-picture");
-        els.hdrPip.setAttribute("aria-label", els.hdrPip.title);
 
         // Annotations of the user's own share: only sent where no meeting bar floats over it (Linux).
         var annotating = typeof media.othersMayAnnotate === "boolean";
@@ -1202,9 +1308,112 @@
         }
     }
 
+    // ── Agenda + tasks (texts formatted by the world) ───────────────────────
+    var agenda = null;
+    function soonMeeting() {
+        var meetings = (agenda && agenda.meetings) || [];
+        for (var i = 0; i < meetings.length; i++) {
+            if (meetings[i].soon) return meetings[i];
+        }
+        return null;
+    }
+    function joinMeeting(meeting) {
+        send({ type: "join-meeting", eventId: meeting.id });
+        // A meeting in this WorkAdventure happens in the app; another one opens in the browser.
+        if (meeting.inApp) send({ type: "focus-main" });
+    }
+    // The strip under the header: outside a meeting, and not over the Today view that lists it.
+    function renderNextStrip() {
+        var meeting = soonMeeting();
+        var shown = Boolean(meeting) && !inMeeting && currentView !== "agenda";
+        els.nextStrip.hidden = !shown;
+        if (!shown) return;
+        els.nextTitle.textContent = meeting.title;
+        els.nextWhen.textContent = meeting.detail;
+        els.nextWhen.classList.toggle("live", meeting.live === true);
+        els.nextJoin.hidden = !meeting.joinable;
+        els.nextJoin.onclick = function () {
+            joinMeeting(meeting);
+        };
+    }
+    function agendaEl(tag, className, text) {
+        var el = document.createElement(tag);
+        if (className) el.className = className;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
+    function agendaLink(text, command) {
+        var link = agendaEl("button", "ag-more", text);
+        link.type = "button";
+        link.addEventListener("click", function () {
+            send({ type: "focus-main" });
+            send({ type: command });
+        });
+        return link;
+    }
+    function renderAgenda(next) {
+        agenda = next && (next.meetings || next.tasks) ? next : null;
+        els.openAgenda.hidden = !agenda;
+        els.agendaDot.hidden = !soonMeeting();
+        if (!agenda && currentView === "agenda") {
+            setView(baseView());
+        }
+        renderNextStrip();
+        var list = els.agendaList;
+        list.textContent = "";
+        if (!agenda) return;
+        if (agenda.meetings) {
+            list.appendChild(agendaEl("div", "ag-section", t("companion.meetings", "Meetings")));
+            if (agenda.meetings.length === 0) {
+                list.appendChild(agendaEl("div", "ag-empty", t("companion.noMoreMeetings", "No more meetings today")));
+            }
+            // Accent bar: green for a meeting in progress, blue for the next one to start.
+            var nextIndex = agenda.meetings.length && agenda.meetings[0].live ? 1 : 0;
+            agenda.meetings.forEach(function (meeting, index) {
+                var row = agendaEl("div", "ag-row" + (meeting.live ? " live" : index === nextIndex ? " next" : ""));
+                row.appendChild(agendaEl("span", "ag-time", meeting.time));
+                row.appendChild(agendaEl("span", "ag-bar"));
+                var main = agendaEl("div", "ag-main");
+                main.appendChild(agendaEl("div", "ag-title", meeting.title));
+                main.appendChild(agendaEl("div", "ag-sub", meeting.detail));
+                row.appendChild(main);
+                if (meeting.joinable) {
+                    var join = agendaEl("button", "join-btn" + (meeting.live ? "" : " ghost"), t("companion.join", "Join"));
+                    join.type = "button";
+                    join.addEventListener("click", function () {
+                        joinMeeting(meeting);
+                    });
+                    row.appendChild(join);
+                }
+                list.appendChild(row);
+            });
+            list.appendChild(agendaLink(t("companion.fullAgenda", "Full agenda in WorkAdventure"), "open-agenda"));
+        }
+        if (agenda.tasks) {
+            var head = agendaEl("div", "ag-section", t("companion.tasks", "Tasks"));
+            if (agenda.tasks.open > 0) head.appendChild(agendaEl("span", "view-count", String(agenda.tasks.open)));
+            list.appendChild(head);
+            if (agenda.tasks.items.length === 0) {
+                list.appendChild(agendaEl("div", "ag-empty", t("companion.noTasks", "Nothing to do")));
+            }
+            agenda.tasks.items.forEach(function (task) {
+                var row = agendaEl("div", "ag-row");
+                row.appendChild(agendaEl("span", "task-dot" + (task.inProgress ? " progress" : "")));
+                var main = agendaEl("div", "ag-main");
+                main.appendChild(agendaEl("div", "ag-title", task.title));
+                main.appendChild(agendaEl("div", "ag-sub", task.list));
+                row.appendChild(main);
+                if (task.due) row.appendChild(agendaEl("span", "due " + task.urgency, task.due));
+                list.appendChild(row);
+            });
+            list.appendChild(agendaLink(t("companion.allTasks", "All tasks in WorkAdventure"), "open-tasks"));
+        }
+    }
+
     var lastState = null;
     function render(state) {
         lastState = state;
+        els.shareWarning.hidden = state.visibleInShare !== true;
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderChat(
@@ -1223,6 +1432,7 @@
         };
         renderMeeting(media);
         renderMedia(media);
+        renderAgenda(state.agenda);
     }
 
     api.onState(function (state) {

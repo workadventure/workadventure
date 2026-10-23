@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Desktopowe nałoženje",
         changeWorld: "Swět změnić",
+        openCompanion: "Přewodne wokno wočinić",
         title: "Druhi swět wočinić",
         description: "Zasadźće dospołny URL WorkAdventure-swěta, kotryž chceće wočinić.",
         urlLabel: "URL swěta",
@@ -48,9 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera je deaktiwowana",
         activate: "Wašu kameru aktiwěrować",
-        noImageWarning: "Waša kamera hižo žane wobrazy njesćele. Snano ju druha aplikacija wužiwa.",
-        retry: "Hišće raz spytać",
-        changeCamera: "Kameru změnić",
     },
     microphone: {
         disabled: "Waš mikrofon je deaktiwowany",
@@ -58,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Žadyn zwuk z wašeho mikrofona namakany. Móže problem być; spytajće mikrofon w nastajenjach změnić.",
         advancedNoiseReduction: "Rozšěrjene potłóčowanje šuma",
+        loudEnvironmentWarning: "Na wašim mikrofonje je so trajny pozadkowy šum zwěsćił.",
+        enableNoiseSuppression: "Potłóčowanje šuma zmóžnić",
         noiseSuppressionInitializing: "Swójske potłóčowanje šuma so inicializuje...",
         noiseSuppressionUnsupported: "Tutón wobhladowak njemóže swójske potłóčowanje šuma wuwjesć.",
         noiseSuppressionError:
@@ -68,6 +68,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Waš wótřerěčak je deaktiwowany",
+        test: "Awdijowu wudaću testować",
         noDevices: "Žane wótřerěčakowe graty namakane",
         noDevicesDesc:
             "Waš wobhladowak naliči žanu wuběrabnu awdijowu wudaću. Někotre wobhladowaki to wobmjezuja. Spytajće druhi wobhladowak, zaso zwjazajće fejšniki abo wótřerěčaki, přepruwujće systemowe awdijowe nastajenja a konfiguraciju kompjutra (datowy škit, graty).",

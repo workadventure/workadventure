@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Desktop-App",
         changeWorld: "Welt wechseln",
+        openCompanion: "Companion öffnen",
         title: "Eine andere Welt öffnen",
         description: "Fügen Sie die vollständige URL der WorkAdventure-Welt ein, die Sie öffnen möchten.",
         urlLabel: "Welt-URL",
@@ -48,10 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Ihre Kamera ist deaktiviert",
         activate: "Kamera aktivieren",
-        noImageWarning:
-            "Ihre Kamera sendet keine Bilder mehr. Möglicherweise wird sie von einer anderen Anwendung verwendet.",
-        retry: "Erneut versuchen",
-        changeCamera: "Kamera wechseln",
     },
     microphone: {
         disabled: "Ihr Mikrofon ist deaktiviert",
@@ -59,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Kein Ton von Ihrem Mikrofon erkannt. Möglicherweise liegt ein Problem vor; versuchen Sie, Ihr Mikrofon in den Einstellungen zu wechseln.",
         advancedNoiseReduction: "Erweiterte Geräuschreduzierung",
+        loudEnvironmentWarning: "An Ihrem Mikrofon wurden anhaltende Hintergrundgeräusche erkannt.",
+        enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
         noiseSuppressionInitializing: "Benutzerdefinierte Geräuschunterdrückung wird initialisiert...",
         noiseSuppressionUnsupported:
             "Dieser Browser kann die benutzerdefinierte Geräuschunterdrückung nicht ausführen.",
@@ -70,6 +69,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Ihr Lautsprecher ist deaktiviert",
+        test: "Audioausgabe testen",
         noDevices: "Kein Lautsprecher gefunden",
         noDevicesDesc:
             "Ihr Browser listet keine auswählbare Audioausgabe auf. Einige Browser schränken das ein. Versuchen Sie einen anderen Browser, schließen Sie Kopfhörer oder Lautsprecher erneut an, prüfen Sie die Systemtöne und die Konfiguration des Computers (Datenschutz, Geräte).",

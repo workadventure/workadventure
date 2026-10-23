@@ -21,3 +21,5 @@
 @source "../../**/*.{html,js,svelte,ts}";
 @source "../../../index.html";
 @source "../../../pip-layout-test.html";
+/* Gitignored, so Tailwind skips it unless registered explicitly (see play/.gitignore). */
+@source "../external-modules";

@@ -52,8 +52,7 @@ export function resolveDisplay(displayId: number | undefined, label = "Overlay")
 
 /**
  * Create a transparent, click-through, always-on-top window that exactly covers the shared display.
- * Because it is a real desktop window, it is captured by getDisplayMedia, so the strokes drawn on it
- * are baked into the shared pixels for every viewer.
+ * It is kept out of the capture: viewers draw the annotations from the space state themselves.
  */
 export function createOverlayWindow(opts: CreateOverlayOptions = {}): BrowserWindow {
     if (overlayWindow && !overlayWindow.isDestroyed()) {

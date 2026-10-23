@@ -39,6 +39,7 @@ export const OPID_CLIENT_REDIRECT_LOGOUT_URL = `${PUSHER_URL}/logout-callback`;
 export const OPID_PROFILE_SCREEN_PROVIDER: string | undefined = undefined;
 export const OPID_SCOPE = "openid email profile ";
 export const OPID_PROMPT: string | undefined = undefined;
+export const OPID_ACCESS_TYPE: string | undefined = undefined;
 export const OPID_USERNAME_CLAIM = "username";
 export const OPID_LOCALE_CLAIM = "locale";
 export const OPID_WOKA_NAME_POLICY: OpidWokaNamePolicy = "user_input";
@@ -127,9 +128,9 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PUBLIC_MAP_STORAGE_PREFIX: undefined,
     MAX_USERNAME_LENGTH: 10,
     MAX_PER_GROUP: 4,
+    PROXIMITY_FILE_TRANSFER_MAX_USERS: 10,
     MAX_DISPLAYED_VIDEOS: 16,
     LIVEKIT_PIXEL_DENSITY,
-    NODE_ENV: "test",
     CONTACT_URL: undefined,
     POSTHOG_API_KEY: undefined,
     POSTHOG_URL: undefined,

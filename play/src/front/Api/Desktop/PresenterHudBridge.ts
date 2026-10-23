@@ -15,11 +15,7 @@ import {
     usedMicrophoneDeviceIdStore,
 } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import {
-    activeScreenShareSourceStore,
-    requestedScreenSharingState,
-    startScreenShareWithSource,
-} from "../../Stores/ScreenSharingStore";
+import { requestedScreenSharingState, startScreenShareWithSource } from "../../Stores/ScreenSharingStore";
 import {
     currentAnnotationColorStore,
     currentAnnotationToolStore,
@@ -44,20 +40,14 @@ function getPresenterHudApi(): NonNullable<WorkAdventureDesktopApi["presenterHud
 }
 
 /**
- * Bridges the presenter HUD windows (Zoom-style meeting bar + separate annotation bar, both
- * placed on the SHARED display and excluded from the capture) to the WorkAdventure stores:
- * - opens the meeting bar while a desktop screen share is active, on the shared display;
- * - opens the annotation bar while drawing mode is on;
- * - pushes mic/camera/share/annotation state to the bars, routes their commands back to the
- *   same stores/managers the in-app UI uses (single source of truth stays in this renderer).
+ * Bridges the presenter HUD window (Zoom-style meeting bar, excluded from the capture) to the
+ * WorkAdventure stores: pushes mic/camera/share/annotation state to the bar, and routes its commands
+ * back to the same stores/managers the in-app UI uses. The desktop app decides when the bar shows and
+ * where, from the share source this world reports (setScreenShareSource).
  */
 class PresenterHudBridge {
     private subscriptions: Unsubscriber[] = [];
     private onCommandUnsub: (() => void) | undefined;
-    private meetingBarOpen = false;
-    // Whether the bar should be open: a close during a pending open closes the late window.
-    private meetingBarWanted = false;
-    private lastSourceId: string | undefined;
 
     public start(): void {
         const api = getPresenterHudApi();
@@ -66,24 +56,6 @@ class PresenterHudBridge {
         }
 
         this.onCommandUnsub = api.onCommand((command) => this.handleCommand(command));
-
-        // The meeting bar tracks the ACTIVE desktop capture source: set when a share starts (or
-        // switches source), cleared when sharing stops. This is more reliable than the requested
-        // state because it carries the display the bar must be placed on.
-        this.subscriptions.push(
-            activeScreenShareSourceStore.subscribe((source) => {
-                if (source) {
-                    if (source.id !== this.lastSourceId) {
-                        this.lastSourceId = source.id;
-                        this.openMeetingBar();
-                    }
-                } else {
-                    this.lastSourceId = undefined;
-                    // Share ended: drop the whole HUD (the annotation manager ends the drawing mode).
-                    this.closeMeetingBar();
-                }
-            }),
-        );
 
         this.subscriptions.push(
             localAnnotationActiveStore.subscribe((active) => {
@@ -127,10 +99,6 @@ class PresenterHudBridge {
         this.subscriptions = [];
         this.onCommandUnsub?.();
         this.onCommandUnsub = undefined;
-        this.closeMeetingBar();
-        // Otherwise a restart during the same share (the component remounts when a video goes full
-        // screen) sees an unchanged source and never reopens the meeting bar.
-        this.lastSourceId = undefined;
     }
 
     private buildState(): DesktopPresenterHudState {
@@ -166,38 +134,6 @@ class PresenterHudBridge {
 
     private pushState(): void {
         getPresenterHudApi()?.pushState(this.buildState());
-    }
-
-    private openMeetingBar(): void {
-        const api = getPresenterHudApi();
-        if (!api) {
-            return;
-        }
-        this.meetingBarWanted = true;
-        const source = get(activeScreenShareSourceStore);
-        api.openMeetingBar({ displayId: source?.display_id, sourceId: source?.id })
-            .then((opened) => {
-                if (!this.meetingBarWanted) {
-                    if (opened) {
-                        api.closeMeetingBar().catch(() => {});
-                    }
-                    return;
-                }
-                this.meetingBarOpen = opened;
-                if (opened) {
-                    this.pushState();
-                }
-            })
-            .catch(() => {});
-    }
-
-    private closeMeetingBar(): void {
-        this.meetingBarWanted = false;
-        const api = getPresenterHudApi();
-        if (this.meetingBarOpen && api) {
-            api.closeMeetingBar().catch(() => {});
-        }
-        this.meetingBarOpen = false;
     }
 
     private handleCommand(command: DesktopPipCommand): void {

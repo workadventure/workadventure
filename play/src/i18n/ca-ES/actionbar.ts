@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Aplicació d'escriptori",
         changeWorld: "Canviar de món",
+        openCompanion: "Obre el panell company",
         title: "Obrir un altre món",
         description: "Enganxa l'URL complet del món de WorkAdventure que vols obrir.",
         urlLabel: "URL del món",
@@ -48,9 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "La teva càmera està desactivada",
         activate: "Activar la teva càmera",
-        noImageWarning: "La teva càmera ha deixat d'enviar imatges. Potser una altra aplicació l'està fent servir.",
-        retry: "Torna-ho a provar",
-        changeCamera: "Canvia de càmera",
     },
     microphone: {
         disabled: "El teu micròfon està desactivat",
@@ -58,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "No s'ha detectat cap so del micròfon. Pot haver-hi un problema; prova de canviar el micròfon a la configuració.",
         advancedNoiseReduction: "Reducció avançada del soroll",
+        loudEnvironmentWarning: "S'ha detectat soroll de fons continu al micròfon.",
+        enableNoiseSuppression: "Activa la supressió de soroll",
         noiseSuppressionInitializing: "S'està inicialitzant la supressió de soroll personalitzada...",
         noiseSuppressionUnsupported: "Aquest navegador no pot executar la supressió de soroll personalitzada.",
         noiseSuppressionError:
@@ -68,6 +68,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "El teu altaveu està desactivat",
+        test: "Prova la sortida d'àudio",
         noDevices: "No s'ha trobat cap dispositiu d'altaveu",
         noDevicesDesc:
             "El navegador no mostra cap sortida d'àudio seleccionable. Alguns navegadors ho limiten. Prova un altre navegador, torna a connectar auriculars o altaveus, revisa la configuració de so del sistema i la configuració de l'ordinador.",

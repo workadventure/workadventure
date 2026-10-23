@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Desktop-app",
         changeWorld: "Van wereld wisselen",
+        openCompanion: "Companion openen",
         title: "Een andere wereld openen",
         description: "Plak de volledige URL van de WorkAdventure-wereld die je wilt openen.",
         urlLabel: "Wereld-URL",
@@ -48,9 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Je camera is uitgeschakeld",
         activate: "Activeer je camera",
-        noImageWarning: "Je camera stuurt geen beeld meer. Misschien gebruikt een andere toepassing hem.",
-        retry: "Opnieuw proberen",
-        changeCamera: "Andere camera kiezen",
     },
     microphone: {
         disabled: "Je microfoon is uitgeschakeld",
@@ -58,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Geen geluid gedetecteerd van je microfoon. Er kan een probleem zijn; probeer je microfoon te wijzigen in de instellingen.",
         advancedNoiseReduction: "Geavanceerde ruisreductie",
+        loudEnvironmentWarning: "Er is aanhoudend achtergrondgeluid op je microfoon gedetecteerd.",
+        enableNoiseSuppression: "Ruisonderdrukking inschakelen",
         noiseSuppressionInitializing: "Aangepaste ruisonderdrukking initialiseren...",
         noiseSuppressionUnsupported: "Deze browser kan aangepaste ruisonderdrukking niet uitvoeren.",
         noiseSuppressionError:
@@ -68,6 +68,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Je luidspreker is uitgeschakeld",
+        test: "Audio-uitvoer testen",
         noDevices: "Geen luidsprekerapparaat gevonden",
         noDevicesDesc:
             "Je browser toont geen selecteerbare audio-uitvoer. Sommige browsers beperken dit. Probeer een andere browser, sluit koptelefoon of speakers opnieuw aan, controleer de systeemgeluidsinstellingen en de configuratie van de computer (privacy, apparaten).",

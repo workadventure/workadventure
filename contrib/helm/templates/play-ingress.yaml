@@ -48,7 +48,7 @@ spec:
                 port:
                   number: {{ $.Values.front.service.port }}
           {{- end }}
-          {{- range list "/iframe_api.js" "/iframe_api.js.map" "/service-worker-prod.js" "/notification-service-worker.js" }}
+          {{- range list "/iframe_api.js" "/iframe_api.js.map" "/service-worker-prod.js" }}
           - path: {{ . }}
             pathType: Exact
             backend:

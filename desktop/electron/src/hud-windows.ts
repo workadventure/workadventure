@@ -205,8 +205,8 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         newWindow.on("move", scheduleSaveBounds);
     }
     // The meeting bar must stay out of the *shared* screen — viewers must not see the presenter's
-    // own controls. The companion is a normal utility panel, so it is
-    // never protected (it would otherwise be impossible to screenshot). Protection is also lifted in
+    // own controls. The companion is a normal utility panel, only protected while the user shares
+    // (companion-controller), so it can be screenshot otherwise. Protection is also lifted in
     // development / with WA_ALLOW_WINDOW_CAPTURE=1 so the bars can be captured (see content-protection).
     if (kind !== "companion" && shouldProtectWindowFromCapture()) {
         try {
@@ -217,7 +217,14 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         }
     }
     try {
-        newWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+        // On macOS this call switches the app's process type, which briefly hides the app's windows and
+        // Dock tiles. The companion opens right as WA gets minimized, whose Dock tile then went missing:
+        // it skips the switch (and so does not show over full-screen apps). The meeting bar keeps it to
+        // stay over a full-screen presentation.
+        newWindow.setVisibleOnAllWorkspaces(true, {
+            visibleOnFullScreen: true,
+            skipTransformProcessType: kind === "companion",
+        });
     } catch (error) {
         ElectronLog.debug(`HUD ${kind} setVisibleOnAllWorkspaces failed`, error);
     }

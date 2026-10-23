@@ -29,15 +29,9 @@ import {
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
-import { rememberWorldUrl } from "./world-history";
+import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
-import {
-    onMainWindowBlur,
-    onMainWindowFocus,
-    onMainWindowHidden,
-    stopCompanion,
-    updateCompanion,
-} from "./companion-controller";
+import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
@@ -601,18 +595,28 @@ function configureSession() {
     // system portal asked here (one dialog) is the picker. Elsewhere the in-app picker is used.
     if (usesSystemScreenSharePicker(process.platform, process.env)) {
         session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+            // null refuses the share: getDisplayMedia() rejects with an AbortError. An empty object made
+            // Electron throw, which surfaced as an unhandled error dialog.
+            const refuse = () => {
+                try {
+                    callback(null);
+                } catch (error) {
+                    ElectronLog.warn("Could not refuse the screen share request", error);
+                }
+            };
             const frame = request.frame;
             if (!frame || frame.parent !== null || !isAllowedNavigationUrl(frame.url, getDesktopConfig())) {
                 ElectronLog.warn(`Rejected screen share request from disallowed frame "${frame?.url ?? ""}".`);
-                callback({});
+                refuse();
                 return;
             }
             desktopCapturer
                 .getSources({ types: ["screen", "window"] })
-                .then((sources) => callback(sources[0] ? { video: sources[0] } : {}))
+                .then((sources) => (sources[0] ? callback({ video: sources[0] }) : refuse()))
                 .catch((error) => {
-                    ElectronLog.error("Screen share portal failed", error);
-                    callback({});
+                    // Also what closing the system dialog without choosing gives.
+                    ElectronLog.info("Screen share dialog closed or failed", error);
+                    refuse();
                 });
         });
     }
@@ -667,7 +671,17 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         }
     });
 
-    window.webContents.on("did-navigate", (event, url) => {
+    window.webContents.on("did-navigate", (event, url, httpResponseCode) => {
+        // An error page answered (a world that no longer exists, a server down): Chromium counts it as
+        // loaded, so did-fail-load never fires. Back to the Landing, and forget it as the last room.
+        if (httpResponseCode >= 400) {
+            ElectronLog.warn(`HTTP ${httpResponseCode} for "${stripSensitiveQueryParams(url) || url}".`);
+            forgetLastRoomUrl(url);
+            if (isActiveWorldContents(webContents)) {
+                void recoverToLandingWithError(t("landing.loadFailure"));
+            }
+            return;
+        }
         rememberWorldUrl(url);
         // A full navigation replaces the document, so the presence this world pushed (in a meeting,
         // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
@@ -770,7 +784,7 @@ export async function createWindow(initialUrl?: string) {
             forgetHudState();
             // Presence is a single global describing the controlling tab, and only that renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
-            // later blur would re-arm the companion for a meeting the new tab isn't in — and the
+            // later minimize would re-arm the companion for a meeting the new tab isn't in — and the
             // panel would come back showing the previous world's People list. Clear it, then ask the
             // new tab for its own state: it pushes only on change, so without the request it would
             // stay blank until something there happened to move.
@@ -813,15 +827,8 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("restore", () => refreshRendererViewport("restore"));
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
-    // PiP lifecycle is owned by the renderer (shouldOpenNativePictureInPicture policy). Don't
-    // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
-    // clicks back onto the main app, AND the destroy-in-flight also races with the utility
-    // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
-    // Any of these can change whether the main window is in view, which feeds the companion panel's
-    // visibility. Focus, blur and hiding are split out because they are edges, not just state:
-    // leaving WA *during a meeting* is one of the two triggers that arm the companion's auto-show
-    // (a blur towards another screen where WA keeps showing does not count, hiding it does), and
-    // focusing ends the away-session.
+    // Any of these can change whether the main window shows, which the companion controller decides
+    // on (companion-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
         updateCompanion();
@@ -836,7 +843,6 @@ export async function createWindow(initialUrl?: string) {
     });
     mainWindow.on("blur", () => {
         emitDesktopWindowStateChange();
-        onMainWindowBlur();
     });
     mainWindow.on("show", onWindowStateEvent);
     mainWindow.on("hide", onWindowHidden);

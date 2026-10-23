@@ -28,7 +28,9 @@ export class MessageNotification implements NotificationWA {
                 return;
             }
 
-            const registration = await navigator.serviceWorker.register("/notification-service-worker.js");
+            // The page-wide service worker (Network/ServiceWorker.ts) owns the "/" scope and the notificationclick
+            // handler. Registering another script here would replace it.
+            const registration = await navigator.serviceWorker.ready;
 
             const data = {
                 chatRoomId: this.chatRoomId,

@@ -93,6 +93,7 @@ async function createUser(
     name:
         | "Alice"
         | "Bob"
+        | "Charlie"
         | "Eve"
         | "Mallory"
         | "Admin1"
@@ -196,6 +197,7 @@ export async function getPage(
     name:
         | "Alice"
         | "Bob"
+        | "Charlie"
         | "Eve"
         | "Mallory"
         | "Admin1"
@@ -214,6 +216,13 @@ export async function getPage(
 ): Promise<Page> {
     await createUser(name, browser, url);
     const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
+    // Noise suppression is on by default: turn it off so that each page does not load the noise suppression models.
+    // Only when unset, so a test that turns it on keeps its choice across reloads.
+    await newBrowser.addInitScript(() => {
+        if (localStorage.getItem("noiseSuppressionEnabled") === null) {
+            localStorage.setItem("noiseSuppressionEnabled", "false");
+        }
+    });
     const page: Page = await newBrowser.newPage();
     if (options.pageCreatedHook) {
         await options.pageCreatedHook(page);

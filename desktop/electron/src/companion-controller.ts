@@ -1,34 +1,23 @@
-import { screen } from "electron";
+import { screen, type BrowserWindow } from "electron";
 import ElectronLog from "electron-log";
-import { closeHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
+import { closeHudWindow, getHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
-import {
-    latchAfterMainWindowBlur,
-    latchAfterPresenceChange,
-    leftWorld,
-    shouldShowCompanion,
-    staysInViewAfterBlur,
-} from "./companion-visibility-policy";
-import { canHideWindowsFromCapture, knowsWindowPositions } from "./platform-capture-policy";
+import { getControllingWorldContents } from "./tab-manager";
+import { companionMode } from "./companion-visibility-policy";
+import { companionAutoOpenDisplay } from "./share-surfaces-policy";
+import { canHideWindowsFromCapture } from "./platform-capture-policy";
+import { shouldProtectWindowFromCapture } from "./content-protection";
+import { isIdentifyingScreens } from "./screen-identify";
 
 /**
- * Drives the unified Companion — the People / Chat / Meeting / Controls window. It never steals
- * focus and (screen sharing aside) is the single floating surface. A tray/shortcut toggle or the
- * panel's own close button dismisses it for the current away-session; returning to the app resets
- * to auto. Screen sharing hides it in favour of the content-protected presenter HUD.
- *
- * It does NOT simply appear whenever WA is backgrounded — that made it noise. Two deliberate
- * triggers arm a one-shot latch (see companion-visibility-policy): a bubble forming around the
- * user, or leaving the app while already in a meeting. Moving to another screen while WA keeps
- * showing there is not leaving it. Leaving the world closes the
- * panel and disarms everything, so each away-session needs a fresh trigger.
+ * Drives the Companion — the People / Chat / meeting video window — and is the only place that
+ * decides when it opens and closes (rules in companion-visibility-policy). The world page reports
+ * facts through presence and shows the meeting video in the companion when told to
+ * (`app:pip:wanted`): while the companion is open during a meeting.
  */
 
-type Override = "auto" | "force-open" | "force-closed";
-
-// Auto-opens are debounced so a quick alt-tab away-and-back doesn't flash the panel. Manual opens
-// skip the delay to stay responsive.
+// Automatic opens wait this long so a quick away-and-back doesn't flash the panel. Manual opens don't.
 const OPEN_DEBOUNCE_MS = 400;
 // `inWorld` also dips false while a same-world scene reloads (a portal hop), so the leaving-a-world
 // teardown waits this long to be contradicted. Without it every portal would kill a live meeting.
@@ -36,37 +25,118 @@ const LEAVE_WORLD_GRACE_MS = 1500;
 
 let started = false;
 let opening = false;
-let override: Override = "auto";
+// How the companion currently open was opened ("no" while closed).
+let opened: "no" | "auto" | "manual" = "no";
 let openTimer: ReturnType<typeof setTimeout> | undefined;
 let leaveWorldTimer: ReturnType<typeof setTimeout> | undefined;
-// True while the embedded meeting-video (PiP) is open — keeps the companion open even when WA is
-// focused, so clicking back to the app doesn't kill the video (preserving the old "PiP stays alive").
-let pipActive = false;
-// One-shot arming for the auto-show; see the module comment.
-let autoOpenLatch = false;
-// Last presence seen, so presence callbacks can compute rising / falling edges.
-let lastPresence = { inWorld: false, inMeeting: false };
-// WA lost focus but keeps showing on another screen (see staysInViewAfterBlur), until it gets
-// minimized or fully covered.
-let mainWindowStaysInView = false;
+// The world page is hidden: WA fully covered (tracked on macOS and Windows) or minimized.
+let pageHidden = false;
+// The screen in the user's own screen share, when known (a whole screen is shared).
+let sharedScreenDisplayId: number | undefined;
+// Closed by the user since they last came back to WA.
+let dismissed = false;
+// Last `app:pip:wanted` sent to the world page.
+let videoWanted = false;
+// Companion windows closed by this controller, as opposed to by the user (window close shortcut).
+const closedByController = new WeakSet<BrowserWindow>();
+const watchedWindows = new WeakSet<BrowserWindow>();
 
 function isMainWindowFocused(): boolean {
     const mainWindow = getWindow();
     return Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isFocused());
 }
 
-function wantOpen(): boolean {
+function isMainWindowShowing(): boolean {
+    const mainWindow = getWindow();
+    return (
+        Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized()) &&
+        !pageHidden
+    );
+}
+
+function cursorDisplayId(): number {
+    return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id;
+}
+
+/** The screen the companion opens on by itself, if any (see companionAutoOpenDisplay). */
+function autoOpenDisplayId(): number | undefined {
+    return companionAutoOpenDisplay({
+        canHideFromCapture: canHideWindowsFromCapture(process.platform),
+        sharing: getPresenceSnapshot().screenSharing,
+        identifyingScreens: isIdentifyingScreens(),
+        displayIds: screen.getAllDisplays().map((display) => display.id),
+        sharedDisplayId: sharedScreenDisplayId,
+        pointerDisplayId: cursorDisplayId(),
+    });
+}
+
+/** The world tells which screen the user shares (undefined: none, a window, or unknown). */
+export function setSharedScreenDisplay(displayId: number | undefined): void {
+    sharedScreenDisplayId = displayId;
+    updateCompanion();
+}
+
+function wantedMode(): "closed" | "auto" | "manual" {
     const p = getPresenceSnapshot();
-    return shouldShowCompanion({
-        screenSharing: p.screenSharing,
-        // The meeting bar replaces the panel while sharing, where it can be kept out of the capture.
-        meetingBarAvailable: canHideWindowsFromCapture(process.platform),
-        mainWindowInView: isMainWindowFocused() || mainWindowStaysInView,
-        pipActive,
+    return companionMode({
+        opened,
+        // Still in the world during the portal-hop grace period.
+        inWorld: p.inWorld || leaveWorldTimer !== undefined,
+        inMeeting: p.inMeeting,
         invitationPending: p.invitationPending,
-        inWorld: p.inWorld,
-        autoOpenLatch,
-        override,
+        autoOpenAllowed: p.autoOpenAllowed,
+        waShowing: isMainWindowShowing(),
+        dismissed,
+        placeAvailable: autoOpenDisplayId() !== undefined,
+    });
+}
+
+/**
+ * The viewers of the user's screen share must not see the companion (their own faces, the chat):
+ * it is kept out of the capture while the user shares, where the system allows it (macOS, Windows).
+ */
+function protectFromCaptureWhileSharing(): void {
+    const companion = getHudWindow("companion");
+    if (!companion) {
+        return;
+    }
+    try {
+        companion.setContentProtection(getPresenceSnapshot().screenSharing && shouldProtectWindowFromCapture());
+    } catch (error) {
+        ElectronLog.warn("Companion setContentProtection failed", error);
+    }
+}
+
+/** Tell the world page whether to show the meeting video in the companion. */
+function syncMeetingVideo(): void {
+    const wanted = opened !== "no" && !opening && isHudWindowOpen("companion") && getPresenceSnapshot().inMeeting;
+    if (wanted === videoWanted) {
+        return;
+    }
+    videoWanted = wanted;
+    getControllingWorldContents()?.send("app:pip:wanted", wanted);
+}
+
+function closeCompanionWindow(): void {
+    opened = "no";
+    const companion = getHudWindow("companion");
+    if (companion) {
+        closedByController.add(companion);
+    }
+    closeHudWindow("companion");
+}
+
+/** The user closing the window themselves (close shortcut) dismisses it like its close button. */
+function watchUserClose(): void {
+    const companion = getHudWindow("companion");
+    if (!companion || watchedWindows.has(companion)) {
+        return;
+    }
+    watchedWindows.add(companion);
+    companion.once("closed", () => {
+        if (!closedByController.has(companion)) {
+            dismissCompanion();
+        }
     });
 }
 
@@ -84,149 +154,121 @@ function cancelPendingLeaveWorld(): void {
     }
 }
 
-function performOpen(): void {
-    // Re-check under current conditions — the debounce delay or the async open may have raced.
-    if (opening || isHudWindowOpen("companion") || !wantOpen()) {
+function performOpen(mode: "auto" | "manual"): void {
+    if (opening || isHudWindowOpen("companion")) {
         return;
     }
+    // Re-check under current conditions: the debounce delay may have raced.
+    if (wantedMode() !== mode) {
+        return;
+    }
+    opened = mode;
     opening = true;
-    // Open on the display the user is actually looking at (cursor), not necessarily WA's.
-    const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-    openHudWindow("companion", display.id)
+    const automatic = mode === "auto" && !getPresenceSnapshot().invitationPending;
+    openHudWindow("companion", (automatic ? autoOpenDisplayId() : undefined) ?? cursorDisplayId())
         .then(() => {
             opening = false;
-            // Conditions may have changed while we opened (refocus / share started / manual close).
-            if (!wantOpen()) {
-                closeHudWindow("companion");
-            }
+            watchUserClose();
+            updateCompanion();
         })
         .catch((error) => {
             opening = false;
+            opened = "no";
             ElectronLog.warn("Failed to open companion panel", error);
         });
 }
 
-/**
- * Fold a presence push into the latch, then re-evaluate. Edges have to be computed here, before
- * `updateCompanion()`, because the snapshot alone cannot tell "a bubble just formed" from "still in
- * the same meeting".
- */
 function handlePresenceChange(): void {
-    const p = getPresenceSnapshot();
-    const next = { inWorld: p.inWorld, inMeeting: p.inMeeting };
-
-    if (leftWorld(lastPresence, next)) {
-        // Debounced: a portal hop briefly drops inWorld too, and tearing down there would kill a
-        // live meeting video. If the world comes back before the timer fires, nothing happens.
+    if (getPresenceSnapshot().inWorld) {
         cancelPendingLeaveWorld();
+    } else if (isHudWindowOpen("companion") && leaveWorldTimer === undefined) {
+        // Debounced: a portal hop briefly drops inWorld too. If the world comes back before the
+        // timer fires, nothing happens; otherwise the companion closes, whoever opened it.
         leaveWorldTimer = setTimeout(() => {
             leaveWorldTimer = undefined;
-            if (getPresenceSnapshot().inWorld) {
-                return;
-            }
-            // Left for real (world change, landing, logout): close and disarm, so the panel only
-            // returns on a fresh trigger in whatever world comes next.
-            autoOpenLatch = false;
-            lastPresence = { inWorld: false, inMeeting: false };
-            stopCompanion();
+            dismissed = false;
+            updateCompanion();
         }, LEAVE_WORLD_GRACE_MS);
-    } else if (next.inWorld) {
-        cancelPendingLeaveWorld();
     }
+    updateCompanion();
+}
 
-    autoOpenLatch = latchAfterPresenceChange(autoOpenLatch, lastPresence, next);
-    lastPresence = next;
+/** The main window got minimized or hidden. */
+export function onMainWindowHidden(): void {
     updateCompanion();
 }
 
 /**
- * The main window lost focus. Switching to another window *while in a meeting* is the second
- * auto-show trigger, unless that window is on another screen and WA keeps showing; blurring outside
- * a meeting deliberately does nothing.
+ * The world page went hidden (WA minimized, or fully covered: tracked on macOS and Windows) or
+ * showed again. A page hidden in a focused window is a tab switch inside WA, not leaving it.
  */
-export function onMainWindowBlur(): void {
-    const mainWindow = getWindow();
-    mainWindowStaysInView =
-        Boolean(mainWindow && !mainWindow.isDestroyed()) &&
-        staysInViewAfterBlur({
-            knowsWindowPositions: knowsWindowPositions(process.platform, process.env),
-            pointerDisplayId: screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id,
-            windowDisplayId: mainWindow ? screen.getDisplayMatching(mainWindow.getBounds()).id : undefined,
-        });
-    if (!mainWindowStaysInView) {
-        leaveMainWindow();
-    }
-    updateCompanion();
-}
-
-/** The main window got minimized, hidden or fully covered: WA is out of view, even on another screen. */
-export function onMainWindowHidden(): void {
-    if (isMainWindowFocused()) {
+export function onPageVisibilityChange(hidden: boolean): void {
+    if (hidden && (isMainWindowFocused() || isIdentifyingScreens())) {
         return;
     }
-    mainWindowStaysInView = false;
-    leaveMainWindow();
+    pageHidden = hidden;
     updateCompanion();
 }
 
-function leaveMainWindow(): void {
-    const p = getPresenceSnapshot();
-    autoOpenLatch = latchAfterMainWindowBlur(autoOpenLatch, { inWorld: p.inWorld, inMeeting: p.inMeeting });
-}
-
-/** The main window regained focus: the away-session is over, so disarm and revert any override. */
 export function onMainWindowFocus(): void {
-    autoOpenLatch = false;
-    mainWindowStaysInView = false;
+    pageHidden = false;
     updateCompanion();
 }
 
 export function updateCompanion(): void {
-    // Returning to the app ends the away-session, so any manual dismissal / open reverts to auto.
-    if (isMainWindowFocused()) {
-        override = "auto";
-        autoOpenLatch = false;
+    protectFromCaptureWhileSharing();
+    // Coming back to WA lifts a close by hand: leaving it again reopens the companion.
+    if (isMainWindowShowing()) {
+        dismissed = false;
     }
 
-    const want = wantOpen();
+    const mode = wantedMode();
     const isOpen = isHudWindowOpen("companion");
 
-    if (!want) {
+    if (mode === "closed") {
         cancelPendingOpen();
         if (isOpen) {
-            closeHudWindow("companion");
+            closeCompanionWindow();
         }
-        return;
+    } else if (!isOpen && !opening && openTimer === undefined) {
+        if (mode === "manual") {
+            performOpen("manual");
+        } else {
+            openTimer = setTimeout(() => {
+                openTimer = undefined;
+                performOpen("auto");
+            }, OPEN_DEBOUNCE_MS);
+        }
     }
-
-    if (isOpen || opening || openTimer !== undefined) {
-        return;
-    }
-    if (override === "force-open") {
-        performOpen();
-    } else {
-        openTimer = setTimeout(() => {
-            openTimer = undefined;
-            performOpen();
-        }, OPEN_DEBOUNCE_MS);
-    }
+    syncMeetingVideo();
 }
 
-/** Toggle from the tray / global shortcut: force the opposite of the current visibility. */
+/** Tray, global shortcut, and the world's PiP button: open by hand, or close by hand. */
 export function toggleCompanion(): void {
-    override = isHudWindowOpen("companion") ? "force-closed" : "force-open";
+    if (isHudWindowOpen("companion")) {
+        dismissCompanion();
+        return;
+    }
+    cancelPendingOpen();
+    dismissed = false;
+    opened = "manual";
     updateCompanion();
 }
 
-/**
- * Dismiss from the panel's own close button. Goes through the override (unlike a bare close) so the
- * panel stays closed for the rest of the away-session instead of re-opening on the next presence
- * change while still backgrounded.
- */
+/** Opened by hand from WA's profile menu, the Dock menu or the taskbar task: never closes it, unlike the toggle. */
+export function openCompanion(): void {
+    cancelPendingOpen();
+    dismissed = false;
+    // An open companion becomes one opened by hand: it stays when WA shows again.
+    opened = "manual";
+    getHudWindow("companion")?.showInactive();
+    updateCompanion();
+}
+
+/** Closed by hand (its close button, the window close, the tray): until the user comes back to WA. */
 export function dismissCompanion(): void {
-    override = "force-closed";
-    // Drop the trigger too, so the next presence push doesn't immediately undo the dismissal.
-    autoOpenLatch = false;
+    dismissed = true;
+    closeCompanionWindow();
     updateCompanion();
 }
 
@@ -234,51 +276,26 @@ export function isCompanionVisible(): boolean {
     return isHudWindowOpen("companion");
 }
 
-/**
- * The front is opening the meeting video: make sure the companion is open and mark the video active
- * so the panel stays open (even when WA is focused) until it closes. The companion renderer switches
- * its own layout to the video-first view on the inMeeting rising edge, so there is nothing to select
- * here — awaiting the open guarantees the renderer is ready before the WA renderer's first SDP offer.
- */
-export async function openCompanionForPip(): Promise<void> {
-    pipActive = true;
-    cancelPendingOpen();
-    if (!isHudWindowOpen("companion")) {
-        const display = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
-        await openHudWindow("companion", display.id);
-    }
+/** The world page starts the meeting video: it can only go into a companion this controller opened. */
+export function isCompanionReadyForVideo(): boolean {
+    return videoWanted;
 }
 
-/** The meeting video closed: drop the keep-open and re-evaluate the panel's visibility. */
-export function closeCompanionPip(): void {
-    if (!pipActive) {
-        return;
-    }
-    pipActive = false;
-    updateCompanion();
-}
-
-/** Start reacting to presence changes. Focus/blur updates are pushed in from window.ts. */
+/** Start reacting to presence changes. Focus and visibility updates are pushed in from window.ts and ipc.ts. */
 export function startCompanionController(): void {
     if (started) {
         return;
     }
     started = true;
-    const p = getPresenceSnapshot();
-    lastPresence = { inWorld: p.inWorld, inMeeting: p.inMeeting };
     onPresenceChange(handlePresenceChange);
     updateCompanion();
 }
 
-/** Close the panel and reset to auto (used on tab switch, world change and window teardown). */
+/** Close the panel and reset (used on tab switch, world change and window teardown). */
 export function stopCompanion(): void {
     cancelPendingOpen();
     cancelPendingLeaveWorld();
-    override = "auto";
-    // A fresh trigger is required after a teardown; otherwise the panel would pop straight back on
-    // the next presence push in the new world / tab.
-    autoOpenLatch = false;
-    // The meeting video lives in the companion renderer, so it dies with the window.
-    pipActive = false;
-    closeHudWindow("companion");
+    dismissed = false;
+    closeCompanionWindow();
+    syncMeetingVideo();
 }

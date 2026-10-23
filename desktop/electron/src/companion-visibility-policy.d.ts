@@ -1,32 +1,19 @@
-export type CompanionOverride = "auto" | "force-open" | "force-closed";
+export type CompanionMode = "closed" | "auto" | "manual";
 
-export type CompanionVisibilityState = {
-    screenSharing?: boolean;
-    /** False where no content-protected meeting bar can replace the panel during a share (Linux). */
-    meetingBarAvailable?: boolean;
-    mainWindowInView?: boolean;
-    pipActive?: boolean;
-    invitationPending?: boolean;
-    inWorld?: boolean;
-    autoOpenLatch?: boolean;
-    override?: CompanionOverride;
-};
-
-export type CompanionPresenceEdge = {
+export type CompanionState = {
+    /** How the companion currently open was opened. */
+    opened?: "no" | "auto" | "manual";
     inWorld?: boolean;
     inMeeting?: boolean;
+    invitationPending?: boolean;
+    /** The "Allow picture-in-picture" setting. */
+    autoOpenAllowed?: boolean;
+    /** WA shows: not minimized, hidden or fully covered. */
+    waShowing?: boolean;
+    /** Closed by the user since they last came back to WA. */
+    dismissed?: boolean;
+    /** Somewhere to open by itself (see companionAutoOpenDisplay). */
+    placeAvailable?: boolean;
 };
 
-export function shouldShowCompanion(state: CompanionVisibilityState): boolean;
-export function latchAfterPresenceChange(
-    latch: boolean,
-    previous: CompanionPresenceEdge,
-    next: CompanionPresenceEdge
-): boolean;
-export function latchAfterMainWindowBlur(latch: boolean, presence: CompanionPresenceEdge): boolean;
-export function staysInViewAfterBlur(blur: {
-    knowsWindowPositions?: boolean;
-    pointerDisplayId?: number;
-    windowDisplayId?: number;
-}): boolean;
-export function leftWorld(previous: CompanionPresenceEdge, next: CompanionPresenceEdge): boolean;
+export function companionMode(state: CompanionState): CompanionMode;

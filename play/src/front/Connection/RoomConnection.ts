@@ -549,6 +549,7 @@ export class RoomConnection implements RoomConnection {
                         throw new Error("Received multiple roomConnectedMessage, this should never happen");
                     }
                     this.tags = message.roomConnectedMessage.tag;
+                    this.canEdit = message.roomConnectedMessage.canEdit;
                     this._roomConnectedPromise.resolve({
                         connection: this,
                         roomConnectedMessage: message.roomConnectedMessage,
@@ -824,6 +825,10 @@ export class RoomConnection implements RoomConnection {
         // If the socket closes after connection but before the room is joined,
         // reject the roomJoined promise to avoid leaving callers hanging.
         if (!this.userId && !this._closed) {
+            // GameScene awaits roomJoinedPromise only once the map and scripts are loaded, and never if the scene is
+            // torn down first. Callers awaiting it still get the rejection; this only stops an unhandled rejection
+            // when nobody awaits for the error yet. The lost socket is handled by the reconnection flow.
+            this.roomJoinedPromise.catch(() => undefined);
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {

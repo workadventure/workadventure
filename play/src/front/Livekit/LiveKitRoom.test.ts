@@ -9,6 +9,7 @@ import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { demotedCodecStore } from "../WebRtc/CodecPerformance";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LiveKitRoom } from "./LiveKitRoom";
 
 const audioPlaybackStoreMock = vi.hoisted(() => {
@@ -87,6 +88,7 @@ vi.mock("livekit-client", async (importOriginal) => {
         public resumeUpstream = vi.fn().mockResolvedValue(undefined);
         public pauseUpstream = vi.fn().mockResolvedValue(undefined);
         public replaceTrack = vi.fn().mockResolvedValue(undefined);
+        public simulcastCodecs = new Map();
         constructor(public mediaStreamTrack: MediaStreamTrack) {}
     }
     return {
@@ -96,6 +98,8 @@ vi.mock("livekit-client", async (importOriginal) => {
         // Codec support is probed through RTCRtpSender, which jsdom does not have
         supportsAV1: () => false,
         supportsVP9: () => true,
+        // As on Safari, where switching the audio output throws
+        supportsAudioOutputSelection: () => false,
     };
 });
 
@@ -205,6 +209,32 @@ describe("LiveKitRoom", () => {
         expect(room["localCameraTrack"]?.mediaStreamTrack.id).toBe("camera-track");
     });
 
+    it("should report a reconnection once, with the region it moved from", () => {
+        const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const serverInfo = { region: "ojohannesburg1a" };
+        room["room"] = { state: ConnectionState.Connected, engine: { latestJoinResponse: { serverInfo } } } as never;
+
+        room["handleReconnecting"]("resume");
+        // The resume failed: livekit-client rebuilds the connection, on a server of another region
+        room["handleReconnecting"]("full");
+        serverInfo.region = "osaudiarabia1a";
+        room["handleReconnected"]();
+        room["handleReconnected"]();
+
+        expect(trackAdminEvent).toHaveBeenCalledOnce();
+        expect(trackAdminEvent).toHaveBeenCalledWith("media.livekit.reconnected", {
+            livekitServerUrl: "wss://livekit.example.com",
+            livekitRegion: "osaudiarabia1a",
+            previousLivekitRegion: "ojohannesburg1a",
+            reconnectKind: "full",
+            durationMs: expect.any(Number),
+        });
+    });
+
     // A camera that stops delivering frames (taken by another app, laptop waking up) stays "live" but muted.
     // livekit-client then pauses the upstream, which the room sees as a muted camera: the others get the avatar.
     // Resuming that upstream tells the room the camera is on again, so every tile mounted afterwards waits for
@@ -273,6 +303,72 @@ describe("LiveKitRoom", () => {
         expect(unmute).toHaveBeenCalledOnce();
     });
 
+    // The subscribers that cannot decode VP9 get the VP8 backup codec, which livekit-client sends from its own clone
+    // of the camera track. Seen in production: they never got the camera back after it was turned off and on.
+    it("should send the new camera to the subscribers of the backup codec after a camera off/on", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        await room["handleCameraTrack"](createCameraStream());
+        const cameraTrack = room["localCameraTrack"];
+        if (!cameraTrack) {
+            throw new Error("The camera was not published");
+        }
+        // A subscriber that cannot decode VP9 joined: livekit-client publishes VP8 from a clone of the camera
+        const stopOldBackupTrack = vi.fn();
+        const oldBackupTrack = Object.assign(createCameraTrack("camera-track-clone"), { stop: stopOldBackupTrack });
+        const backupSender = { replaceTrack: vi.fn().mockResolvedValue(undefined) };
+        cameraTrack.simulcastCodecs.set("vp8", {
+            codec: "vp8",
+            mediaStreamTrack: oldBackupTrack,
+            sender: backupSender as unknown as RTCRtpSender,
+        });
+
+        await room["handleCameraTrack"](undefined);
+        // A clone left running keeps the camera on
+        expect(stopOldBackupTrack).toHaveBeenCalled();
+
+        await room["handleCameraTrack"](createCameraStream("new-camera-track"));
+
+        const backupTrack = cameraTrack.simulcastCodecs.get("vp8")?.mediaStreamTrack;
+        expect(backupTrack?.id).toBe("new-camera-track-clone");
+        expect(backupSender.replaceTrack).toHaveBeenLastCalledWith(backupTrack);
+    });
+
+    it("should clone the camera again for the backup codec when the space streams video again", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        const cameraStream = createCameraStream();
+        await room["handleCameraTrack"](cameraStream);
+        const cameraTrack = room["localCameraTrack"];
+        if (!cameraTrack) {
+            throw new Error("The camera was not published");
+        }
+        const oldBackupTrack = createCameraTrack("camera-track-clone");
+        const backupSender = { replaceTrack: vi.fn().mockResolvedValue(undefined) };
+        cameraTrack.simulcastCodecs.set("vp8", {
+            codec: "vp8",
+            mediaStreamTrack: oldBackupTrack,
+            sender: backupSender as unknown as RTCRtpSender,
+        });
+
+        // The space stops streaming video, the camera stays on
+        await room["handleCameraTrack"](undefined);
+        Object.assign(cameraTrack, { isUpstreamPaused: true });
+        await room["handleCameraTrack"](cameraStream);
+
+        const backupTrack = cameraTrack.simulcastCodecs.get("vp8")?.mediaStreamTrack;
+        expect(backupTrack).not.toBe(oldBackupTrack);
+        expect(backupSender.replaceTrack).toHaveBeenLastCalledWith(backupTrack);
+    });
+
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
         const room = createLiveKitRoom({
             screenSharingLocalStreamStore: writable(undefined),
@@ -334,21 +430,64 @@ describe("LiveKitRoom", () => {
         });
 
         it("should tear the room down without restarting on a duplicate identity", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
             const { room, decrement, emitBackEvent } = createDisconnectedRoom();
 
             room["handleDisconnected"](DisconnectReason.DUPLICATE_IDENTITY);
 
             expect(decrement).toHaveBeenCalledOnce();
             expect(emitBackEvent).not.toHaveBeenCalled();
+            expect(trackAdminEvent).toHaveBeenCalledWith(
+                "media.livekit.disconnected",
+                expect.objectContaining({ disconnectReason: "DUPLICATE_IDENTITY", restart: false }),
+            );
+        });
+
+        it("should report why and where the room was lost", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+            const { room } = createDisconnectedRoom();
+            room["room"] = {
+                off: vi.fn(),
+                disconnect: vi.fn().mockResolvedValue(undefined),
+                engine: { latestJoinResponse: { serverInfo: { region: "ojohannesburg1a" } } },
+            } as never;
+            room["connectedAt"] = Date.now() - 90_000;
+            room["handleReconnecting"]("resume");
+
+            room["handleDisconnected"](DisconnectReason.SIGNAL_CLOSE);
+
+            expect(trackAdminEvent).toHaveBeenCalledWith("media.livekit.disconnected", {
+                livekitServerUrl: "wss://livekit.example.com",
+                livekitRegion: "ojohannesburg1a",
+                disconnectReason: "SIGNAL_CLOSE",
+                connectedSeconds: 90,
+                whileReconnecting: true,
+                restart: true,
+            });
+        });
+
+        it("should report a room that never connected", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
+            const { room } = createDisconnectedRoom();
+            room["everConnected"] = false;
+
+            room["handleDisconnected"](undefined);
+
+            expect(trackAdminEvent).toHaveBeenCalledWith(
+                "media.livekit.disconnected",
+                expect.objectContaining({ disconnectReason: "UNKNOWN", livekitRegion: null, connectedSeconds: null }),
+            );
         });
 
         it("should do nothing when the client initiated the disconnection", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
             const { room, decrement, emitBackEvent } = createDisconnectedRoom();
 
             room["handleDisconnected"](DisconnectReason.CLIENT_INITIATED);
 
             expect(decrement).not.toHaveBeenCalled();
             expect(emitBackEvent).not.toHaveBeenCalled();
+            expect(trackAdminEvent).not.toHaveBeenCalled();
         });
 
         it("should only destroy the room once", () => {
@@ -359,6 +498,20 @@ describe("LiveKitRoom", () => {
 
             expect(decrement).toHaveBeenCalledOnce();
         });
+    });
+
+    it("should not ask livekit-client to switch the audio output where it cannot", () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+            speakerDeviceIdStore: writable("airpods"),
+        });
+        const switchActiveDevice = vi.fn().mockRejectedValue(new Error("cannot switch audio output"));
+        room["room"] = { switchActiveDevice } as never;
+
+        room["synchronizeMediaState"]();
+
+        expect(switchActiveDevice).not.toHaveBeenCalled();
     });
 
     it("should not forward screen share updates when the space forbids screen share publication", () => {
@@ -390,6 +543,44 @@ describe("LiveKitRoom", () => {
         shouldPublishScreenShareStore.set(false);
 
         expect(queueScreenShareUpdate).toHaveBeenLastCalledWith(undefined);
+    });
+
+    it("should remove a remote participant that left after a full reconnection", () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const spaceUser = {
+            spaceUserId: "alice-space-user",
+            reactiveUser: { cameraState: writable(true), microphoneState: writable(true) },
+        };
+        Object.assign(room["space"], {
+            mySpaceUserId: "me",
+            getSpaceUserBySpaceUserId: (id: string) => (id === spaceUser.spaceUserId ? spaceUser : undefined),
+        });
+        const participant = {
+            identity: "alice",
+            sid: "PA_before",
+            metadata: JSON.stringify({ userId: spaceUser.spaceUserId }),
+            isSpeaking: false,
+            name: "Alice",
+            on: vi.fn(),
+            off: vi.fn(),
+            getTrackPublications: () => [],
+        };
+        const removed: Streamable[] = [];
+        const subscription = room["_streamableSubjects"].videoPeerRemoved.subscribe((streamable) =>
+            removed.push(streamable),
+        );
+
+        room["handleParticipantConnected"](participant as never);
+        // livekit-client keeps the same RemoteParticipant across a full reconnection and updates its sid in place
+        participant.sid = "PA_after";
+        room["handleParticipantDisconnected"](participant as never);
+        subscription.unsubscribe();
+
+        expect(removed.map((streamable) => streamable.spaceUserId)).toEqual([spaceUser.spaceUserId]);
+        expect(participant.off).toHaveBeenCalled();
     });
 });
 
@@ -445,9 +636,16 @@ describe("codec demotion", () => {
         expect(publishTrack).toHaveBeenCalledTimes(2);
         expect(publishTrack.mock.calls[1][1].videoCodec).toBe("h264");
 
+        // An OpenH264 that cannot keep up either: VP8, the floor on LiveKit
+        demotedCodecStore.video.set("h264");
+        room["republishCamera"]();
+        await room["mediaTrackUpdateQueue"];
+        expect(unpublishTrack).toHaveBeenCalledTimes(2);
+        expect(publishTrack.mock.calls[2][1].videoCodec).toBe("vp8");
+
         // Turning the camera off afterwards pauses the publication, as before
         await room["handleCameraTrack"](undefined);
-        expect(unpublishTrack).toHaveBeenCalledOnce();
+        expect(unpublishTrack).toHaveBeenCalledTimes(2);
         const cameraTrack = room["localCameraTrack"] as unknown as { pauseUpstream: ReturnType<typeof vi.fn> };
         expect(cameraTrack.pauseUpstream.mock.calls).toHaveLength(1);
     });
@@ -470,9 +668,11 @@ function createLiveKitRoom({
     shouldPublishScreenShareStore,
     livekitRoomCounter = { increment: vi.fn(), decrement: vi.fn() },
     emitBackEvent = vi.fn(),
+    speakerDeviceIdStore = writable(undefined),
 }: {
     screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>;
     shouldPublishScreenShareStore: Readable<boolean>;
+    speakerDeviceIdStore?: Readable<string | undefined>;
     livekitRoomCounter?: { increment: () => void; decrement: () => void };
     emitBackEvent?: SpaceInterface["emitBackEvent"];
 }): LiveKitRoom {
@@ -484,7 +684,7 @@ function createLiveKitRoom({
         writable(new Set<string>()),
         new AbortController().signal,
         screenSharingLocalStreamStore,
-        writable(undefined),
+        speakerDeviceIdStore,
         livekitRoomCounter,
         writable({ type: "success", stream: undefined }),
     );
@@ -505,15 +705,21 @@ function createSpace(
 }
 
 function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
-    const track = {
-        id,
-        kind: "video",
-        getSettings: () => ({ width: 1280, height: 720 }),
-    } as unknown as MediaStreamTrack;
+    const track = createCameraTrack(id);
     return {
         type: "success",
         stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
     };
+}
+
+function createCameraTrack(id: string): MediaStreamTrack {
+    return {
+        id,
+        kind: "video",
+        getSettings: () => ({ width: 1280, height: 720 }),
+        clone: vi.fn(() => createCameraTrack(`${id}-clone`)),
+        stop: vi.fn(),
+    } as unknown as MediaStreamTrack;
 }
 
 function createStreamableSubjects(): StreamableSubjects {

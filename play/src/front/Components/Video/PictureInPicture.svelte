@@ -5,7 +5,6 @@
     import Debug from "debug";
     import { derived, get } from "svelte/store";
     import {
-        isInActiveConversationStore,
         isInRemoteConversation,
         myCameraPeerStore,
         streamableCollectionStore,
@@ -16,8 +15,7 @@
         pictureInPictureLayoutStore,
         pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
-    import { userAwayFromAppStore } from "../../Stores/DesktopVisibilityStore";
-    import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
+    import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
@@ -32,18 +30,13 @@
         currentAnnotationColorStore,
         currentAnnotationToolStore,
         localAnnotationActiveStore,
-        localAnnotationTargetStore,
         isAnnotationTool,
     } from "../../Stores/ScreenAnnotationStore";
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { screenOverlayBridge } from "../../Api/Desktop/ScreenOverlayBridge";
     import { presenterHudBridge } from "../../Api/Desktop/PresenterHudBridge";
     import { presenterEffectsBridge } from "../../Api/Desktop/PresenterEffectsBridge";
-    import {
-        NativePictureInPictureClient,
-        isNativePictureInPictureAvailable,
-        shouldOpenNativePictureInPicture,
-    } from "./PictureInPicture/NativePictureInPictureClient";
+    import { NativePictureInPictureClient, getDesktopPipApi } from "./PictureInPicture/NativePictureInPictureClient";
     import {
         hasPictureInPictureContent,
         isDocumentPictureInPictureSupported,
@@ -57,7 +50,9 @@
 
     const debug = Debug("app:PictureInPicture");
 
-    const useNativeDesktopPip = isNativePictureInPictureAvailable();
+    // The desktop app decides when its companion shows the meeting video (pip.onWanted).
+    const desktopPip = getDesktopPipApi();
+    const useNativeDesktopPip = desktopPip !== undefined;
     let nativeClient: NativePictureInPictureClient | undefined;
 
     let divElement: HTMLDivElement;
@@ -164,11 +159,7 @@
     }
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
-        if (!isTalking) {
-            if (useNativeDesktopPip && nativeClient?.isActive()) {
-                nativeClient.stop();
-                activePictureInPictureStore.set(false);
-            }
+        if (!isTalking && !useNativeDesktopPip) {
             destroyPictureInPictureComponent();
         }
     });
@@ -176,20 +167,8 @@
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
 
+        // The desktop app opens its companion itself (see the PiP button).
         if (useNativeDesktopPip) {
-            // Native path: do not open a DocumentPictureInPicture window — the Electron utility
-            // window covers this case (and avoids the user-gesture limitation). Keep the request
-            // store active while the native PiP is open: the action-bar button uses the same
-            // value to turn a second click into an explicit close request.
-            //
-            // We deliberately skip the hasPictureInPictureContent gate here: it wants either an
-            // existing remote video stream or a non-empty streamable collection, but the native
-            // PiP is happy to open with placeholder tiles as soon as the user is engaged in an
-            // active conversation. Requiring streams caused the first click to be silently dropped
-            // whenever the user pressed the button before any peer had published video, so users
-            // had to click twice. evaluateNativePipState + shouldOpenNativePictureInPicture already
-            // gate on isInActiveConversation, which is the right signal for the native path.
-            evaluateNativePipState();
             return;
         }
 
@@ -385,76 +364,23 @@
         }
 
         const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
-            if (active) {
-                requestPictureInPicture();
-            } else if (!useNativeDesktopPip) {
-                destroyPictureInPictureComponent();
-            } else {
-                evaluateNativePipState();
-            }
-        });
-
-        const unsubscribe = userAwayFromAppStore.subscribe((userAwayFromApp) => {
             if (useNativeDesktopPip) {
-                evaluateNativePipState();
                 return;
             }
-            if (!userAwayFromApp) {
+            if (active) {
+                requestPictureInPicture();
+            } else {
                 destroyPictureInPictureComponent();
             }
         });
 
-        const unsubscribeStreamables = streamableCollectionStore.subscribe(() => {
-            if (useNativeDesktopPip) {
-                evaluateNativePipState();
+        const unsubscribe = visibilityStore.subscribe((visible) => {
+            if (!useNativeDesktopPip && visible) {
+                destroyPictureInPictureComponent();
             }
         });
 
-        const unsubscribeRemote = isInRemoteConversation.subscribe(() => {
-            if (useNativeDesktopPip) {
-                evaluateNativePipState();
-            }
-        });
-
-        // Tear down every presenter-facing surface (annotation drawing + screen share) whose
-        // audience just vanished. Cascades through the existing bridges:
-        //   localAnnotationTargetStore=undefined → PresenterHudBridge closes annotation bar,
-        //     ScreenOverlayBridge drops draw mode.
-        //   requestedScreenSharingState=false → ScreenOverlayBridge closes the overlay,
-        //     activeScreenShareSourceStore clears → PresenterHudBridge closes meeting bar.
-        function closePresenterSurfaces(): void {
-            localAnnotationTargetStore.set(undefined);
-            if (get(requestedScreenSharingState)) {
-                requestedScreenSharingState.disableScreenSharing();
-            }
-        }
-
-        // Re-evaluate the moment a proximity bubble forms (someone walked into our meeting), even
-        // before any media stream actually lands. Lets PiP pop up as soon as a participant joins.
-        // On the way OUT (bubble breaks, presenter walks away, meeting ends), also clean up so
-        // the HUD bars don't linger on the presenter's screen after the audience has dispersed.
-        const unsubscribeActiveConv = isInActiveConversationStore.subscribe((inConversation) => {
-            if (!inConversation) {
-                closePresenterSurfaces();
-            }
-            if (useNativeDesktopPip) {
-                evaluateNativePipState();
-            }
-        });
-
-        // A room-to-room transition (portal, teleport, /!command switch) tears the Phaser scene
-        // down without necessarily emptying the current proximity bubble in the same tick — the
-        // conversation-end subscription above wouldn't catch it. gameSceneIsLoadedStore flips
-        // false on every scene shutdown, so we use it as a room-change signal to close the
-        // presenter surfaces (they belong to the OLD room's audience). Skip the first
-        // false→false initial notification with wasLoaded.
-        let wasSceneLoaded = get(gameSceneIsLoadedStore);
-        const unsubscribeSceneLoaded = gameSceneIsLoadedStore.subscribe((loaded) => {
-            if (wasSceneLoaded && !loaded) {
-                closePresenterSurfaces();
-            }
-            wasSceneLoaded = loaded;
-        });
+        const unsubscribeWanted = desktopPip?.onWanted(setNativeMeetingVideo);
 
         try {
             const currentScene = gameManager.getCurrentGameScene();
@@ -468,9 +394,8 @@
         }
 
         // Browser PiP is closed as soon as the main window regains focus (the DocumentPictureInPicture
-        // spec assumes you no longer need it once you're back on the tab). The native Electron PiP
-        // has its own lifecycle policy in shouldOpenNativePictureInPicture — manual-opens must
-        // stay visible even when the user clicks back on the main app — so we skip the reset here.
+        // spec assumes you no longer need it once you're back on the tab). The desktop app decides
+        // for its companion (a companion opened by hand stays), so we skip the reset there.
         const onFocus = () => {
             if (useNativeDesktopPip) return;
             // The picture-in-picture window takes the focus when it opens, so a click on the picture-in-picture
@@ -489,10 +414,7 @@
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
-            unsubscribeStreamables();
-            unsubscribeRemote();
-            unsubscribeActiveConv();
-            unsubscribeSceneLoaded();
+            unsubscribeWanted?.();
             screenOverlayBridge.stop();
             presenterHudBridge.stop();
             presenterEffectsBridge.stop();
@@ -513,35 +435,17 @@
         };
     });
 
-    function evaluateNativePipState() {
-        if (!useNativeDesktopPip || !nativeClient) return;
-        const shouldOpen = shouldOpenNativePictureInPicture({
-            nativeAvailable: true,
-            allowedByUser: localUserStore.getAllowPictureInPicture(),
-            inActiveConversation: $isInActiveConversationStore,
-            userAwayFromApp: $userAwayFromAppStore,
-            userManuallyOpened: $askPictureInPictureActivatingStore,
-        });
-
-        if (shouldOpen && !nativeClient.isActive()) {
+    function setNativeMeetingVideo(wanted: boolean) {
+        if (!nativeClient) return;
+        if (wanted && !nativeClient.isActive()) {
             nativeClient
-                .start(() => {
-                    askPictureInPictureActivatingStore.set(false);
-                    activePictureInPictureStore.set(false);
-                })
-                .then((started) => {
-                    if (started) {
-                        activePictureInPictureStore.set(true);
-                    } else {
-                        askPictureInPictureActivatingStore.set(false);
-                    }
-                })
+                .start(() => activePictureInPictureStore.set(false))
+                .then((started) => activePictureInPictureStore.set(started))
                 .catch((error: unknown) => {
                     debug("Native Picture-in-Picture failed to start", error);
-                    askPictureInPictureActivatingStore.set(false);
                     activePictureInPictureStore.set(false);
                 });
-        } else if (!shouldOpen && nativeClient.isActive()) {
+        } else if (!wanted && nativeClient.isActive()) {
             nativeClient.stop();
             activePictureInPictureStore.set(false);
         }

@@ -24,6 +24,8 @@ const pipApi: WorkAdventureDesktopPipApi = {
     supported: true,
     open: () => ipcRenderer.invoke("app:pip:open"),
     close: () => ipcRenderer.invoke("app:pip:close"),
+    toggle: () => ipcRenderer.send("app:pip:toggle"),
+    onWanted: (callback) => subscribe("app:pip:wanted", (wanted) => callback(wanted === true)),
     sendOffer: (sdp) => ipcRenderer.send("app:pip:offer-from-main", sdp),
     sendIce: (candidate) => ipcRenderer.send("app:pip:ice-from-main-renderer", candidate),
     sendState: (state) => ipcRenderer.send("app:pip:state-from-main", state),
@@ -35,8 +37,6 @@ const pipApi: WorkAdventureDesktopPipApi = {
 };
 
 const screenOverlayApi: WorkAdventureDesktopOverlayApi = {
-    open: (opts) => ipcRenderer.invoke("app:overlay:open", opts),
-    close: () => ipcRenderer.invoke("app:overlay:close"),
     setDrawMode: (enabled) => ipcRenderer.send("app:overlay:set-draw-mode", enabled),
     setTool: (tool) => ipcRenderer.send("app:overlay:set-tool", tool),
     pushElements: (elements) => ipcRenderer.send("app:overlay:set-elements", elements),
@@ -45,24 +45,20 @@ const screenOverlayApi: WorkAdventureDesktopOverlayApi = {
 };
 
 const presenterHudApi: WorkAdventureDesktopHudApi = {
-    openMeetingBar: (opts) => ipcRenderer.invoke("app:hud:open-meeting-bar", opts),
-    closeMeetingBar: () => ipcRenderer.invoke("app:hud:close-meeting-bar"),
     pushState: (state) => ipcRenderer.send("app:hud:state-from-main", state),
     onCommand: (callback) => subscribe("app:hud:command-to-main", (command) => callback(command as DesktopPipCommand)),
 };
 
 const companionApi: WorkAdventureDesktopCompanionApi = {
     pushState: (state) => ipcRenderer.send("app:companion:state-from-main", state),
+    open: () => ipcRenderer.send("app:companion:open"),
     onCommand: (callback) =>
         subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
 };
 
-// Lets the companion open when the window gets fully covered, even on another screen than the
-// one the user moved to (see onMainWindowHidden).
+// Lets the companion open when the window gets fully covered or minimized (see onPageVisibilityChange).
 document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") {
-        ipcRenderer.send("app:page-hidden");
-    }
+    ipcRenderer.send("app:page-visibility", document.visibilityState === "hidden");
 });
 
 const api: WorkAdventureDesktopApi = {
@@ -75,6 +71,7 @@ const api: WorkAdventureDesktopApi = {
     setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
+    setScreenShareSource: (source) => ipcRenderer.send("app:screen-share-source", source),
     onSetStatus: (callback) =>
         subscribe("app:on-set-status", (status) => {
             if (

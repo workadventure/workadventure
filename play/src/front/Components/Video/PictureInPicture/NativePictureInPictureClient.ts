@@ -128,6 +128,8 @@ type TileSource = {
      * cam off we flip to placeholder immediately instead of waiting for the track to end.
      */
     hasVideo: boolean;
+    /** Another participant's screen share: the first one is shown large, like in the browser's picture-in-picture. */
+    remoteScreenShare: boolean;
 };
 
 /**
@@ -598,6 +600,8 @@ export class NativePictureInPictureClient {
             name: get(streamable.name) || (isSelf ? "You" : ""),
             trackIds: new Set(),
             hasVideo: get(streamable.hasVideo) === true,
+            // The user's own previews have no space user.
+            remoteScreenShare: streamable.videoType === "screenSharing" && streamable.spaceUserId !== undefined,
         };
         this.tileSources.set(boxId, source);
 
@@ -923,7 +927,10 @@ export class NativePictureInPictureClient {
             }
         }
         const tiles: DesktopPipTile[] = [];
+        let highlightGiven = false;
         for (const source of this.tileSources.values()) {
+            const highlighted: boolean = source.remoteScreenShare && !highlightGiven;
+            highlightGiven ||= highlighted;
             const hasAudio = this.hasAudioByBoxId.get(source.boxId) === true;
             // Per-tile menu inputs (remote boxes only; the self box isn't in the collection).
             const box = boxes.get(source.boxId);
@@ -958,6 +965,7 @@ export class NativePictureInPictureClient {
                     speaking,
                     volume,
                     hasVisitCard,
+                    highlighted,
                 });
                 continue;
             }
@@ -976,6 +984,7 @@ export class NativePictureInPictureClient {
                 speaking,
                 volume,
                 hasVisitCard,
+                highlighted,
             });
         }
         const state: DesktopPipState = {
@@ -997,30 +1006,4 @@ export class NativePictureInPictureClient {
             debug("sendState failed", error);
         }
     }
-}
-
-/**
- * Pure policy: should we open the native PiP window right now? Extracted so the rule can be
- * unit-tested without a DOM or Electron runtime.
- *
- * `inActiveConversation` is the source of truth for "the user is engaged with at least one other
- * participant" — it flips true as soon as a proximity bubble forms, even before any media stream
- * starts flowing. That lets PiP auto-open the instant someone walks into the meeting while the
- * user is alt-tabbed elsewhere; with the older streams-only signal we'd wait for the first video
- * track and miss the entire "someone just joined you" UX window.
- */
-export function shouldOpenNativePictureInPicture(input: {
-    nativeAvailable: boolean;
-    allowedByUser: boolean;
-    inActiveConversation: boolean;
-    userAwayFromApp: boolean;
-    userManuallyOpened: boolean;
-}): boolean {
-    if (!input.nativeAvailable || !input.allowedByUser) {
-        return false;
-    }
-    if (input.userManuallyOpened) {
-        return input.inActiveConversation;
-    }
-    return input.userAwayFromApp && input.inActiveConversation;
 }

@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "デスクトップアプリ",
         changeWorld: "ワールドを変更",
+        openCompanion: "コンパニオンを開く",
         title: "別のワールドを開く",
         description: "開きたい WorkAdventure ワールドの完全な URL を貼り付けてください。",
         urlLabel: "ワールド URL",
@@ -48,9 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "カメラが無効になっています",
         activate: "カメラを有効にする",
-        noImageWarning: "カメラから映像が送信されなくなりました。別のアプリが使用している可能性があります。",
-        retry: "再試行",
-        changeCamera: "カメラを変更",
     },
     microphone: {
         disabled: "マイクが無効になっています",
@@ -58,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "マイクから音が検出されません。問題がある可能性があります — 設定でマイクを変更してみてください。",
         advancedNoiseReduction: "高度なノイズ低減",
+        loudEnvironmentWarning: "マイクで継続的な背景ノイズが検出されました。",
+        enableNoiseSuppression: "ノイズ抑制を有効にする",
         noiseSuppressionInitializing: "カスタムノイズ抑制を初期化しています...",
         noiseSuppressionUnsupported: "このブラウザではカスタムノイズ抑制を実行できません。",
         noiseSuppressionError: "カスタムノイズ抑制に失敗しました。ブラウザ標準のノイズ抑制に戻します。",
@@ -67,6 +67,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "スピーカーが無効になっています",
+        test: "音声出力をテスト",
         noDevices: "スピーカーデバイスが見つかりません",
         noDevicesDesc:
             "ブラウザに選択可能な音声出力が表示されません。ブラウザによっては制限があります。別のブラウザを試すか、ヘッドフォンやスピーカーを再接続するか、システムのサウンド設定とパソコンの設定（プライバシー、デバイス）を確認してください。",

@@ -122,13 +122,15 @@ export class CpuLimitationDetector {
         }
         // undefined when the encoders disagree on the codec: not ours to demote
         const codec = videoCodecFromMimeType(mimeType);
-        // Nothing below H.264; and a cheaper codec gains a hardware encoder nothing, while a set that is only
-        // partly hardware still has software encoders to relieve
+        const types = stats.encoders.map((encoder) => describeEncoder(encoder.encoderImplementation).type);
+        // Nothing below VP8. A cheaper codec gains a hardware encoder nothing, while a set that is only partly
+        // hardware still has software encoders to relieve. H.264 is hardware until named otherwise, and the P2P
+        // floor: it is only left on LiveKit, as OpenH264 (see preferredVideoCodecs)
         if (
             codec === undefined ||
-            codec === "h264" ||
             codec === "vp8" ||
-            stats.encoders.every((encoder) => describeEncoder(encoder.encoderImplementation).type === "hardware")
+            (codec === "h264" && (stats.source !== "Livekit" || !types.every((type) => type === "software"))) ||
+            types.every((type) => type === "hardware")
         ) {
             return undefined;
         }

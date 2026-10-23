@@ -29,6 +29,15 @@ describe("describeEncoder", () => {
         ["OpenH264", "software"],
         ["ExternalEncoder", "hardware"],
         ["VideoToolbox", "hardware"],
+        // Names reported in production
+        ["MediaFoundationVideoEncodeAccelerator (Intel® Quick Sync Video H.264 Encoder MFT)", "hardware"],
+        ["D3D12VideoEncodeAccelerator", "hardware"],
+        ["NdkVideoEncodeAccelerator(c2.qti.avc.encoder) input: buffer", "hardware"],
+        ["MediaFoundationSoftwareVideoEncoder", "software"],
+        ["NdkVideoEncodeAccelerator(c2.android.avc.encoder) input: buffer", "software"],
+        ["SimulcastEncoderAdapter (MediaFoundationSoftwareVideoEncoder)", "software"],
+        // The smallest simulcast layer stays in software under 360p
+        ["SimulcastEncoderAdapter (OpenH264, VaapiVideoEncodeAccelerator, VaapiVideoEncodeAccelerator)", "hardware"],
         ["SomethingNew", "unknown"],
     ] as const)("classifies %s as %s", (implementation, type) => {
         expect(describeEncoder(implementation)).toEqual({ name: implementation, type });
