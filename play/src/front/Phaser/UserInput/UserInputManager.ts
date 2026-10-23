@@ -88,6 +88,7 @@ export class UserInputManager {
     public userInputHandler: UserInputHandlerInterface;
     private enableUserInputsStoreUnsubscribe: Unsubscriber;
     private readonly disableControlsReasons: Set<DisableControlsReason> = new Set();
+    private readonly cancelPointerGesture = () => this.userInputHandler.handlePointerCancelEvent?.();
 
     constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
         this.scene = scene;
@@ -240,6 +241,7 @@ export class UserInputManager {
             console.warn(e);
         }
         this.isInputDisabled = true;
+        this.cancelPointerGesture();
     }
 
     /**
@@ -341,12 +343,19 @@ export class UserInputManager {
     }
 
     destroy(): void {
+        this.cancelPointerGesture();
+        this.scene.input.off(Phaser.Input.Events.GAME_OUT, this.cancelPointerGesture);
+        this.scene.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.cancelPointerGesture);
+        this.scene.game.events.off(Phaser.Core.Events.BLUR, this.cancelPointerGesture);
         this.enableUserInputsStoreUnsubscribe();
         this.joystick?.destroy();
         this.joystick = undefined;
     }
 
     private bindInputEventHandlers() {
+        this.scene.input.on(Phaser.Input.Events.GAME_OUT, this.cancelPointerGesture);
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.cancelPointerGesture);
+        this.scene.game.events.on(Phaser.Core.Events.BLUR, this.cancelPointerGesture);
         this.scene.input.on(
             Phaser.Input.Events.POINTER_WHEEL,
             (pointer: Pointer, gameObjects: GameObject[], deltaX: number, deltaY: number, deltaZ: number) => {
