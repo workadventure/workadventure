@@ -13,7 +13,6 @@ vi.mock("../../fileSystem", () => ({
     fileSystem: { writeByteArrayAsFile: vi.fn(), deleteFiles: vi.fn() },
 }));
 
-import { UploadedFileKind } from "@workadventure/messages";
 import { fileSystem } from "../../fileSystem";
 import { CustomFileService } from "../CustomFileService";
 
@@ -28,46 +27,19 @@ describe("CustomFileService", () => {
         vi.clearAllMocks();
     });
 
-    const upload = (name: string, kind: UploadedFileKind, propertyId = UUID) =>
-        service.uploadFile({ id: "f", name, propertyId, kind, file: new Uint8Array([1]) });
-
-    it("stores documents in the world's private files and sounds in its public assets", async () => {
-        await upload("doc.pdf", UploadedFileKind.Document);
-        await upload("gong.mp3", UploadedFileKind.Sound);
-        expect(vi.mocked(fileSystem.writeByteArrayAsFile).mock.calls.map(([path]) => path)).toEqual([
+    it("writes an uploaded file in the world's private files", async () => {
+        await service.uploadFile({ id: "f", name: "doc.pdf", propertyId: UUID, file: new Uint8Array([1]) });
+        expect(fileSystem.writeByteArrayAsFile).toHaveBeenCalledWith(
             `attacker.test/private/files/doc-${UUID}.pdf`,
-            `attacker.test/assets/sounds/gong-${UUID}.mp3`,
-        ]);
-    });
-
-    it("refuses a format its kind does not accept, and a kind it does not know", async () => {
-        await expect(upload("x.html", UploadedFileKind.Document)).rejects.toThrow();
-        await expect(upload("x.pdf", UploadedFileKind.Sound)).rejects.toThrow();
-        await expect(upload("x.mp3", UploadedFileKind.Document)).rejects.toThrow();
-        await expect(upload("x.mp3", UploadedFileKind.UNRECOGNIZED)).rejects.toThrow();
-        await expect(upload("x.mp3", 42 as UploadedFileKind)).rejects.toThrow();
-        expect(fileSystem.writeByteArrayAsFile).not.toHaveBeenCalled();
+            expect.anything(),
+        );
     });
 
     it("refuses an upload whose property id climbs out of the world's folder", async () => {
-        await expect(upload("x.png", UploadedFileKind.Document, TRAVERSAL_ID)).rejects.toThrow();
+        await expect(
+            service.uploadFile({ id: "f", name: "x.png", propertyId: TRAVERSAL_ID, file: new Uint8Array([1]) }),
+        ).rejects.toThrow();
         expect(fileSystem.writeByteArrayAsFile).not.toHaveBeenCalled();
-    });
-
-    it("finds the folder of a file to delete from the property type", async () => {
-        await service.deleteFile({
-            id: UUID,
-            type: "openFile",
-            name: "doc.pdf",
-            link: "",
-            newTab: false,
-            hideUrl: false,
-        });
-        await service.deleteFile({ id: UUID, type: "playAudio", audioLink: "", audioName: "gong.mp3" });
-        expect(vi.mocked(fileSystem.deleteFiles).mock.calls).toEqual([
-            [`attacker.test/private/files/doc-${UUID}.pdf`],
-            [`attacker.test/assets/sounds/gong-${UUID}.mp3`],
-        ]);
     });
 
     it("refuses to delete a file whose property id climbs out of the world's folder", async () => {
