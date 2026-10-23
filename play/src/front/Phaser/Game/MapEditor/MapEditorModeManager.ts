@@ -336,8 +336,7 @@ export class MapEditorModeManager {
         connection.editMapCommandMessageStream.subscribe((editMapCommandMessage) => {
             limit(async () => {
                 if (editMapCommandMessage.editMapMessage?.message?.$case === "errorCommandMessage") {
-                    const { reason, permissionDenied } =
-                        editMapCommandMessage.editMapMessage.message.errorCommandMessage;
+                    const reason = editMapCommandMessage.editMapMessage.message.errorCommandMessage.reason;
                     logger("ErrorCommandMessage received", reason);
                     // The only place a map editor edit is known to have failed. The
                     // commands themselves send fire-and-forget, so this is where the
@@ -355,11 +354,7 @@ export class MapEditorModeManager {
                         // original stack, and a refusal is also the expected answer to a command the
                         // user was not allowed to run.
                         await this.revertPendingCommands();
-                        warningMessageStore.addWarningMessage(
-                            permissionDenied
-                                ? get(LL).mapEditor.map.editionForbidden()
-                                : get(LL).mapEditor.map.editionFailed(),
-                        );
+                        warningMessageStore.addWarningMessage(get(LL).mapEditor.map.editionFailed());
                     }
                     return;
                 }

@@ -342,9 +342,6 @@ message EditMapMessage {
 
 message ErrorCommandMessage {
   string reason = 1;
-  // True when the command was refused because the user is not allowed to make it, as opposed to
-  // failing for another reason. The front tells the user they were not allowed.
-  bool permissionDenied = 2;
 }
 
 message UpdateWAMSettingsMessage {
