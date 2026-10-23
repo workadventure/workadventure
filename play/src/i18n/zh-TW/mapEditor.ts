@@ -8,6 +8,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "你已與此房間中斷連線。",
         deletePromptDetails: "重新整理不會復原此地圖，因為它已經不存在了。",
         editionFailed: "您的變更無法儲存，已被復原。",
+        editionForbidden: "您沒有權限進行此變更，因此已被復原。",
     },
     sideBar: {
         areaEditor: "區域編輯器工具",

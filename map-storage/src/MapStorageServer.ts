@@ -58,6 +58,13 @@ const COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT = new Set<string>([
     "modifyAreaMessage",
 ]);
 
+/**
+ * Thrown when a user is not allowed to run a command. Like any error thrown while handling a command, it is
+ * turned into an errorCommandMessage sent back to the sender only: the command is neither applied nor
+ * broadcast. The permissionDenied flag lets the front tell the user they were not allowed.
+ */
+class PermissionDeniedError extends Error {}
+
 const mapStorageServer: MapStorageServer = {
     ping(call: ServerUnaryCall<PingMessage, Empty>, callback: sendUnaryData<PingMessage>): void {
         callback(null, call.request);
@@ -142,7 +149,7 @@ const mapStorageServer: MapStorageServer = {
                 // be trusted (a fake size would move the "center" into the user's zone).
                 const assertCanEditEntityAt = (position: EntityCoordinates, action: string) => {
                     if (!entityPermissions.canEdit(position)) {
-                        throw new Error(
+                        throw new PermissionDeniedError(
                             `User ${userUUID} is not allowed to ${action} at (${position.x}, ${position.y}) on map ${mapUrl}`,
                         );
                     }
@@ -150,7 +157,7 @@ const mapStorageServer: MapStorageServer = {
                 // Uploads are not tied to a position: any editor access is enough (same rule as the front).
                 const assertHasEditorAccess = (action: string) => {
                     if (!userCanEdit && !gameMapAreas.isGameMapContainsSpecificAreas(userUUID, connectedUserTags)) {
-                        throw new Error(
+                        throw new PermissionDeniedError(
                             `User ${userUUID} has no editor access and is not allowed to ${action} on map ${mapUrl}`,
                         );
                     }
@@ -160,7 +167,7 @@ const mapStorageServer: MapStorageServer = {
 
                 if (!userCanEdit && !COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT.has(editMapMessage.$case)) {
                     // A user tried to bypass security!
-                    throw new Error(
+                    throw new PermissionDeniedError(
                         `User ${userUUID} is not allowed to edit the map but tried to execute command: ${editMapMessage.$case} on map ${mapUrl}`,
                     );
                 }
@@ -173,7 +180,7 @@ const mapStorageServer: MapStorageServer = {
                             // TODO: Remove this check once we have a proper system for associating data with areas
                             // (e.g., personal area data) or a WAM section accessible to all users.
                             if (!isModifyAreaMessageOnlyClaim(message, userUUID, existingArea)) {
-                                throw new Error(
+                                throw new PermissionDeniedError(
                                     `User ${userUUID} is not allowed to edit the map and this modification is not a valid claim or revoke on map ${mapUrl}`,
                                 );
                             }
@@ -316,13 +323,21 @@ const mapStorageServer: MapStorageServer = {
                     case "createEntityMessage": {
                         const message = editMapMessage.createEntityMessage;
                         assertCanEditEntityAt(message, "create an entity");
-                        const command = new CreateEntityMapStorageCommand(
-                            wamFile,
-                            message.id,
-                            {
-                                prefabRef: {
-                                    id: message.prefabId,
-                                    collectionName: message.collectionName,
+                        await mapsManager.executeCommand(
+                            mapKey,
+                            mapUrl.host,
+                            new CreateEntityCommand(
+                                wamFile,
+                                message.id,
+                                {
+                                    prefabRef: {
+                                        id: message.prefabId,
+                                        collectionName: message.collectionName,
+                                    },
+                                    x: message.x,
+                                    y: message.y,
+                                    properties: message.properties as EntityDataProperties,
+                                    name: message.name,
                                 },
                                 x: message.x,
                                 y: message.y,
@@ -461,6 +476,7 @@ const mapStorageServer: MapStorageServer = {
                         $case: "errorCommandMessage",
                         errorCommandMessage: {
                             reason: getMessageFromError(e),
+                            permissionDenied: e instanceof PermissionDeniedError,
                         },
                     },
                 },
@@ -488,7 +504,7 @@ async function assertUserCanEditCustomEntity(
     }
     const entity = await new CustomEntityCollectionService(mapUrl.hostname).getEntity(entityId);
     if (!canUserEditCustomEntity(entity, userUUID, userCanEdit)) {
-        throw new Error(
+        throw new PermissionDeniedError(
             `User ${userUUID} is not allowed to ${action} the custom entity ${entityId} on map ${mapUrl.toString()}: only its creator or a user with map edit rights can.`,
         );
     }

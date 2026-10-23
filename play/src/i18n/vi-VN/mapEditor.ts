@@ -8,6 +8,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "Bạn đã bị ngắt kết nối khỏi phòng này.",
         deletePromptDetails: "Tải lại sẽ không khôi phục bản đồ này vì nó không còn tồn tại.",
         editionFailed: "Thay đổi của bạn không lưu được và đã bị hoàn tác.",
+        editionForbidden: "Bạn không có quyền thực hiện thay đổi này nên nó đã bị hoàn tác.",
     },
     sideBar: {
         areaEditor: "Công cụ chỉnh sửa khu vực",
