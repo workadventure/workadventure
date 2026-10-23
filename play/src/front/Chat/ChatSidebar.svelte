@@ -108,19 +108,22 @@
         {@attach blocker}
         class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0"
     >
-        {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
-            <div class="close-window absolute end-2 top-3 rounded-sm p-1 bg-contrast/80 z-50">
+        <div class="absolute end-2 top-3 z-50 flex gap-1">
+            {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
                 <button
-                    class="hover:bg-white/10 rounded aspect-square w-8 h-8 m-0 flex items-center justify-center !text-white"
+                    class="close-window rounded-sm bg-contrast/80 hover:bg-white/10 aspect-square w-8 h-8 flex items-center justify-center !text-white"
                     data-testid="closeChatButton"
                     onclick={closeChat}
                 >
                     <IconX font-size="20" />
                 </button>
-            </div>
-        {/if}
+            {/if}
+        </div>
 
-        <Chat {sideBarWidth} />
+        <div class="flex h-full w-full flex-col">
+            <Chat {sideBarWidth} />
+        </div>
+
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize select-none"

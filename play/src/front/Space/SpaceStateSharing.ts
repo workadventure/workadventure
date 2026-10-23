@@ -15,6 +15,7 @@ export function shareUnchanged(previous: SpaceState, next: SpaceState): SpaceSta
         recording: keep(previous.recording, next.recording),
         polls: keepEntries(previous.polls, next.polls),
         questions: keepEntries(previous.questions, next.questions),
+        annotations: keepEntries(previous.annotations, next.annotations),
     };
 }
 
