@@ -30,8 +30,8 @@ export class EntityPermissions {
 
     private isEntityInsideAreaWithUserWriteAccess(
         entityCenterCoordinates: EntityCoordinates,
-        height: number,
         width: number,
+        height: number,
         floating: boolean,
     ) {
         return this.gameMapAreas.isUserHasWriteAccessOnAreaForEntityCoordinates(
