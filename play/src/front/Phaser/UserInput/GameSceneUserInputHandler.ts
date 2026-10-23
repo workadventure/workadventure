@@ -120,7 +120,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         deltaY: number,
         deltaZ: number,
     ): void {
-        this.gameScene.handleMouseWheel(deltaY);
+        this.gameScene.handleMouseWheel(deltaY, pointer);
     }
 
     public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {

@@ -21,21 +21,24 @@ afterEach(() => {
     vi.restoreAllMocks();
 });
 
-function setup(zoom = 1, animate = false) {
+function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     // Use the real Phaser camera and preRender so assertions concern the rendered viewport, not just callbacks.
     const camera = new Phaser.Cameras.Scene2D.Camera(0, 0, 800, 600);
-    Object.defineProperty(camera, "scaleManager", { value: { zoom: 1 } });
+    Object.defineProperty(camera, "scaleManager", { value: { zoom: 1, width: 800, height: 600 } });
+    Object.defineProperty(camera, "sceneManager", { value: { customViewports: 0 } });
     camera.setZoom(zoom);
     const player = { x: 1200, y: 1000 };
     const sendViewportToServer = vi.fn();
     type TweenConfig = {
         duration: number;
+        from: number;
+        to: number;
         onUpdate?: (tween: { getValue: () => number }) => void;
         onComplete?: () => void;
     };
     let activeTween: TweenConfig | undefined;
     const advanceTween = (progress: number) => {
-        activeTween?.onUpdate?.({ getValue: () => progress });
+        activeTween?.onUpdate?.({ getValue: () => activeTween.from + (activeTween.to - activeTween.from) * progress });
         if (progress === 1) {
             activeTween?.onComplete?.();
         }
@@ -59,7 +62,20 @@ function setup(zoom = 1, animate = false) {
         sendViewportToServer,
         tweens: { addCounter },
     } as unknown as GameScene;
-    const scale = { getTargetZoomModifierFor: () => 1 } as unknown as WaScaleManager;
+    let modifier = zoom;
+    const scale = {
+        getTargetZoomModifierFor: () => 1,
+        get zoomModifier() {
+            return modifier;
+        },
+        setZoomModifier: (value: number, cam: Phaser.Cameras.Scene2D.Camera, animating: boolean) => {
+            modifier = value;
+            if (resizeAtEnd && !animating) {
+                cam.setSize(400, 300);
+                cam.setZoom(value / 2);
+            } else cam.setZoom(value);
+        },
+    } as unknown as WaScaleManager;
     const manager = new CameraManager(scene, { width: 4000, height: 3000 }, scale);
     managers.push(manager);
     camera.startFollow(player, true);
@@ -68,6 +84,44 @@ function setup(zoom = 1, animate = false) {
 }
 
 describe("manual camera pan", () => {
+    it.each([false, true])(
+        "keeps the cursor's world point fixed throughout zoom, including canvas resize=%s",
+        (resizeAtEnd) => {
+            const { camera, manager, advanceTween } = setup(1, true, resizeAtEnd);
+            const before = camera.getWorldPoint(600, 150);
+            manager.zoomByFactorAtPointer(2, 250, { x: 600, y: 150 });
+            advanceTween(0.5);
+            camera.preRender();
+            const middle = camera.getWorldPoint(camera.width * 0.75, camera.height * 0.25);
+            expect(middle.x).toBeCloseTo(before.x);
+            expect(middle.y).toBeCloseTo(before.y);
+            manager.zoomByFactorAtPointer(1.2, 250, { x: camera.width * 0.75, y: camera.height * 0.25 });
+            advanceTween(1);
+            camera.preRender();
+            const after = camera.getWorldPoint(camera.width * 0.75, camera.height * 0.25);
+            expect(after.x).toBeCloseTo(before.x);
+            expect(after.y).toBeCloseTo(before.y);
+            expect(get(cameraDetachedStore)).toBe(true);
+        },
+    );
+
+    it("keeps regular zoom centred on the player and recentres after cursor zoom", () => {
+        const { camera, manager, player, advanceTween } = setup(1, true);
+        manager.zoomByFactor(2, 250);
+        advanceTween(1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x);
+        expect(get(cameraDetachedStore)).toBe(false);
+        manager.zoomByFactorAtPointer(2, 250, { x: 600, y: 150 });
+        advanceTween(1);
+        manager.resumePlayerFollow();
+        advanceTween(1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x);
+        expect(camera.midPoint.y).toBe(player.y);
+        expect(get(cameraDetachedStore)).toBe(false);
+    });
+
     it.each([0.5, 1, 2])("scales release inertia to the current zoom %s and slows it down", (zoom) => {
         const { camera, manager, scene } = setup(zoom);
         manager.startManualPan();

@@ -4730,7 +4730,7 @@ ${escapedMessage}
         });
     }
 
-    handleMouseWheel(deltaY: number) {
+    handleMouseWheel(deltaY: number, pointer?: { x: number; y: number }) {
         // Calculate the velocity of the zoom
         //const velocity = deltaY / 30;
 
@@ -4748,16 +4748,18 @@ ${escapedMessage}
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
         // Apply the zoom
-        this.zoomByFactor(zoomFactor, true);
+        const cursor = deltaY < 0 && !get(mapEditorModeStore) && !waScaleManager.getFocusTarget() ? pointer : undefined;
+        this.zoomByFactor(zoomFactor, true, cursor);
     }
 
-    zoomByFactor(zoomFactor: number, smooth: boolean) {
+    zoomByFactor(zoomFactor: number, smooth: boolean, pointer?: { x: number; y: number }) {
         if (this.cameraManager.isZoomLocked()) {
             return;
         }
 
         const time = zoomFactor > 1 ? zoomFactor * 250 : (1 / zoomFactor) * 250;
-        this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
+        if (pointer) this.cameraManager.zoomByFactorAtPointer(zoomFactor, smooth ? time : 0, pointer);
+        else this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
     }
 
     get room(): Room {

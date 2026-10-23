@@ -52,6 +52,12 @@ type SpeedCameraAnimation = {
 
 type CameraAnimation = FocusCameraAnimation | SpeedCameraAnimation;
 
+type CursorZoomAnchor = {
+    screenX: number;
+    screenY: number;
+    world: { x: number; y: number };
+};
+
 type ZoomAnimation = {
     onInterrupt: () => void;
 };
@@ -81,6 +87,7 @@ export class CameraManager extends EventEmitter {
     private playerToFollow?: Player | RemotePlayer;
     private zoomLocked: boolean;
     private manuallyDetached = false;
+    private cursorZoomAnchor: CursorZoomAnchor | undefined;
 
     private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
@@ -535,6 +542,7 @@ export class CameraManager extends EventEmitter {
 
     /** Detach only the view: unlike the map explorer, this keeps avatar controls enabled. */
     public startManualPan(): void {
+        if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
         this.setExplorationMode();
         this.setManuallyDetached(true);
     }
@@ -555,6 +563,7 @@ export class CameraManager extends EventEmitter {
 
     public resumePlayerFollow(): void {
         if (this.manuallyDetached) {
+            if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
             this.startFollowPlayer(this.scene.CurrentPlayer, 500);
         }
     }
@@ -594,6 +603,23 @@ export class CameraManager extends EventEmitter {
      */
     public zoomByFactor(zoomFactor: number, duration: number, callback?: () => void): void {
         this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor, duration, callback);
+    }
+
+    public zoomByFactorAtPointer(zoomFactor: number, duration: number, pointer: { x: number; y: number }): void {
+        if (this.isZoomLocked() || (zoomFactor > 1 && this.waScaleManager.isMaximumZoomInReached)) return;
+        // Normalized coordinates survive WaScaleManager switching between canvas and camera zoom.
+        const screenX = (pointer.x - this.camera.x) / this.camera.width;
+        const screenY = (pointer.y - this.camera.y) / this.camera.height;
+        this.zoomAnimation?.onInterrupt();
+        this.startManualPan();
+        this.camera.preRender();
+        const world = this.camera.getWorldPoint(
+            this.camera.x + screenX * this.camera.width,
+            this.camera.y + screenY * this.camera.height,
+        );
+        const anchor = { screenX, screenY, world };
+        this.cursorZoomAnchor = anchor;
+        this.animateToZoomLevel(this.waScaleManager.zoomModifier * zoomFactor, duration, undefined, anchor);
     }
 
     /**
@@ -654,8 +680,25 @@ export class CameraManager extends EventEmitter {
         this.stopButtonZoomAnimation();
     }
 
-    private animateToZoomLevel(targetZoomModifier: number, duration: number, callback?: () => void): void {
+    private animateToZoomLevel(
+        targetZoomModifier: number,
+        duration: number,
+        callback?: () => void,
+        anchor?: CursorZoomAnchor,
+    ): void {
         this.zoomAnimation?.onInterrupt();
+        const applyZoom = (value: number, animating: boolean): void => {
+            this.waScaleManager.setZoomModifier(value, this.camera, animating);
+            if (anchor && this.cursorZoomAnchor === anchor && this.manuallyDetached) {
+                this.camera.preRender();
+                const point = this.camera.getWorldPoint(
+                    this.camera.x + anchor.screenX * this.camera.width,
+                    this.camera.y + anchor.screenY * this.camera.height,
+                );
+                this.scrollCamera(anchor.world.x - point.x, anchor.world.y - point.y);
+                this.camera.preRender();
+            }
+        };
         const startZoomModifier = this.waScaleManager.zoomModifier;
         const startDate = Date.now();
 
@@ -671,11 +714,12 @@ export class CameraManager extends EventEmitter {
                 if (value === null) {
                     return;
                 }
-                this.waScaleManager.setZoomModifier(value, this.camera, true);
+                applyZoom(value, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
             onComplete: () => {
-                this.waScaleManager.setZoomModifier(targetZoomModifier, this.camera, false);
+                applyZoom(targetZoomModifier, false);
+                if (this.cursorZoomAnchor === anchor) this.cursorZoomAnchor = undefined;
                 callback?.();
             },
             onStop: () => {
@@ -699,17 +743,20 @@ export class CameraManager extends EventEmitter {
                 } else {
                     value = targetZoomModifier;
                 }
-                this.waScaleManager.setZoomModifier(value, this.camera, true);
+                applyZoom(value, true);
                 this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
             },
         });
 
-        this.zoomAnimation = {
+        const animation: ZoomAnimation = {
             onInterrupt: () => {
                 zoomTween.stop();
                 zoomTween.destroy();
+                if (this.zoomAnimation === animation) this.zoomAnimation = undefined;
+                if (this.cursorZoomAnchor === anchor) this.cursorZoomAnchor = undefined;
             },
         };
+        this.zoomAnimation = animation;
     }
 
     private startButtonZoomAnimation(): void {
