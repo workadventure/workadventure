@@ -8,7 +8,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "Je bent losgekoppeld van deze ruimte.",
         deletePromptDetails: "Verversen zal deze kaart niet herstellen omdat deze niet meer bestaat.",
         editionFailed: "Je wijziging kon niet worden opgeslagen en is ongedaan gemaakt.",
-        editionForbidden: "Je mag deze wijziging niet maken, dus is ze ongedaan gemaakt.",
     },
     sideBar: {
         areaEditor: "Gebied editor tool",

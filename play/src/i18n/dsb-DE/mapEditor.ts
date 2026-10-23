@@ -8,7 +8,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "Sy se wót togo rumoja źělił.",
         deletePromptDetails: "Aktualizěrowanje toś tu kórtu njewótnowi, dokulaž wěcej njeeksistěrujo.",
         editionFailed: "Twója změna njejo se dała składowaś a jo se anulěrowała.",
-        editionForbidden: "Njesmějoš toś tu změnu cyniś, togodla jo se anulěrowała.",
     },
     sideBar: {
         areaEditor: "Areal wobźěłaś",
