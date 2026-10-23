@@ -28,8 +28,16 @@ export class CustomFileService {
     }
 
     public async uploadFile(uploadFileMessage: UploadFileMessage) {
-        const { name, propertyId, kind, file } = uploadFileMessage;
-        const mapPath = this.getFilePath(name, propertyId, kind);
+        const { file } = uploadFileMessage;
+        const { name: filename, ext: fileExtension } = path.parse(uploadFileMessage.name);
+
+        const errorm = "File extension is not a supported format :" + fileExtension + uploadFileMessage.name;
+
+        if (!fileExtension.match(fileUploadSupportedFormatForMapStorage)) {
+            throw new Error(errorm);
+        }
+
+        const mapPath = this.getFilePath(filename, uploadFileMessage.propertyId, fileExtension);
         console.info("Uploading file to: ", mapPath);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
     }
@@ -42,47 +50,18 @@ export class CustomFileService {
         await fileSystem.deleteFiles(this.getFilePath(file.name, property.id, file.kind));
     }
 
-    /**
-     * A copied property still links to the file uploaded for the property it was copied from (files are named
-     * after the property id). Gives it its own copy of that file, so that deleting or replacing one of them
-     * leaves the other alone. Returns the link to the copy, or undefined if the property already owns its file.
-     */
-    public async copySharedFile(property: AreaDataProperty | EntityDataProperty): Promise<string | undefined> {
-        const file = uploadedFile(property);
-        const link =
-            property.type === "openFile" ? property.link : property.type === "playAudio" ? property.audioLink : null;
-        if (!file?.name || !link) {
-            return undefined;
-        }
-        const { name, ext } = path.parse(file.name);
-        const url = new URL(link);
-        const linkedFileName = decodeURIComponent(path.posix.basename(url.pathname));
-        if (!linkedFileName.startsWith(`${name}-`) || !linkedFileName.endsWith(ext)) {
-            return undefined;
-        }
-        const linkedPropertyId = linkedFileName.slice(name.length + 1, linkedFileName.length - ext.length);
-        if (linkedPropertyId === property.id) {
-            return undefined;
-        }
-        await fileSystem.copy(
-            this.getFilePath(file.name, linkedPropertyId, file.kind),
-            this.getFilePath(file.name, property.id, file.kind),
-        );
-        url.pathname = path.posix.join(path.posix.dirname(url.pathname), `${name}-${property.id}${ext}`);
-        return url.toString();
+        const { name: filename, ext: fileExtension } = path.parse(property.name);
+
+        await fileSystem.deleteFiles(this.getFilePath(filename, property.id, fileExtension));
+        return;
     }
 
-    private getFilePath(fileName: string, propertyId: string, kind: UploadedFileKind): string {
+    private getFilePath(filename: string, propertyId: string, fileExtension: string): string {
         // The property id comes from the client (front-generated UUID). A separator in it would let the
         // normalized path climb out of this world's folder, into another world's files.
         if (/[/\\]/.test(propertyId)) {
             throw new Error(`Invalid property id: ${propertyId}`);
         }
-        const format = getUploadedFileFormat(kind);
-        const { name, ext } = path.parse(fileName);
-        if (!format?.extensions.test(ext)) {
-            throw new Error(`Unsupported file "${fileName}" for kind ${kind}`);
-        }
-        return mapPathUsingDomainWithPrefix(`/${format.folder}/${name}-${propertyId}${ext}`, this.hostname);
+        return mapPathUsingDomainWithPrefix(`/private/files/${filename}-${propertyId}${fileExtension}`, this.hostname);
     }
 }
