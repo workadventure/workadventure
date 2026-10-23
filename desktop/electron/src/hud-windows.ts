@@ -217,7 +217,14 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         }
     }
     try {
-        newWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+        // On macOS this call switches the app's process type, which briefly hides the app's windows and
+        // Dock tiles. The companion opens right as WA gets minimized, whose Dock tile then went missing:
+        // it skips the switch (and so does not show over full-screen apps). The meeting bar keeps it to
+        // stay over a full-screen presentation.
+        newWindow.setVisibleOnAllWorkspaces(true, {
+            visibleOnFullScreen: true,
+            skipTransformProcessType: kind === "companion",
+        });
     } catch (error) {
         ElectronLog.debug(`HUD ${kind} setVisibleOnAllWorkspaces failed`, error);
     }
