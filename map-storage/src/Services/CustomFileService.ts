@@ -22,10 +22,7 @@ export class CustomFileService {
             throw new Error(errorm);
         }
 
-        const mapPath = mapPathUsingDomainWithPrefix(
-            `/private/files/${filename}-${uploadFileMessage.propertyId}${fileExtension}`,
-            this.hostname,
-        );
+        const mapPath = this.getFilePath(filename, uploadFileMessage.propertyId, fileExtension);
         console.info("Uploading file to: ", mapPath);
         await fileSystem.writeByteArrayAsFile(mapPath, file);
         return;
@@ -42,12 +39,16 @@ export class CustomFileService {
 
         const { name: filename, ext: fileExtension } = path.parse(property.name);
 
-        const mapPath = mapPathUsingDomainWithPrefix(
-            `/private/files/${filename}-${property.id}${fileExtension}`,
-            this.hostname,
-        );
-
-        await fileSystem.deleteFiles(mapPath);
+        await fileSystem.deleteFiles(this.getFilePath(filename, property.id, fileExtension));
         return;
+    }
+
+    private getFilePath(filename: string, propertyId: string, fileExtension: string): string {
+        // The property id comes from the client (front-generated UUID). A separator in it would let the
+        // normalized path climb out of this world's folder, into another world's files.
+        if (/[/\\]/.test(propertyId)) {
+            throw new Error(`Invalid property id: ${propertyId}`);
+        }
+        return mapPathUsingDomainWithPrefix(`/private/files/${filename}-${propertyId}${fileExtension}`, this.hostname);
     }
 }
