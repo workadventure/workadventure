@@ -19,6 +19,7 @@ import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { waScaleManager } from "../Services/WaScaleManager";
+import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
 import type { Shortcut } from "./UserInputManager";
 
@@ -30,10 +31,17 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private controlKeyisPressed: boolean = false;
     private readonly mapDrag = new MapDragGesture();
     private draggingMap = false;
+    private readonly pointerCapture: MapDragPointerCapture;
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.pointerCapture = new MapDragPointerCapture(
+            gameScene.game.canvas,
+            () => this.canDragMap(),
+            () => this.handlePointerCancelEvent(),
+        );
+        gameScene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.pointerCapture.destroy());
 
         this.initShortcuts();
     }
@@ -120,6 +128,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             const wasDragging = this.draggingMap;
             const dragged = this.mapDrag.end(pointer.id);
             this.restoreDragCursor();
+            this.pointerCapture.release();
             if (dragged) {
                 if (wasDragging && this.canDragMap() && pointer.velocity) {
                     this.gameScene.getCameraManager().releaseManualPan(pointer.velocity);
@@ -214,7 +223,12 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         cameraManager.panBy(delta.x, delta.y);
     }
 
+    public handlePointerOutEvent(): void {
+        if (this.draggingMap && !this.pointerCapture.active) this.handlePointerCancelEvent();
+    }
+
     public handlePointerCancelEvent(): void {
+        this.pointerCapture.release();
         this.gameScene.getCameraManager().stopManualPanInertia();
         this.mapDrag.cancel();
         this.restoreDragCursor();
