@@ -162,7 +162,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         roomList: {
             title: "Lisćina rumow",
-            desc: "Přepytajće lisćinu rumow, zo byšće widźeli, štó je přitomny, a přidajće so z jednym klikom rozmołwje.",
         },
         pictureInPicture: {
             title: "Wobraz we wobrazu",

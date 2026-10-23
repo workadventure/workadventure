@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Explorar la sala",
         closeMapEditor: "Cerrar editor de mapa",
         mapManagerActivated: "Gestor de mapa activado",
-        mapExplorerActivated: "Vista general del mapa",
         exploreTheRoomActivated: "Explorar la sala activado",
         areaEditorActivated: "Editor de zonas activado",
         entityEditorActivated: "Editor de entidades activado",
@@ -29,7 +28,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "Silencio",
             description: "No permitir conversaciones en el interior.",
-            actionButtonLabel: "No molestar",
         },
         text: {
             label: "Texto de cabecera",
@@ -76,7 +74,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Cancelar",
                 validate: "Validar",
             },
-            actionButtonLabel: "Iniciar reunión Jitsi",
         },
         playAudio: {
             label: "Reproducir archivo de audio",
@@ -86,7 +83,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Reproducir música",
             error: "No se pudo cargar el sonido",
-            actionButtonLabel: "Reproducir música",
             playForAllUsersLabel: "Reproducir para todos los usuarios del mapa",
             audibleRadiusLabel: "Radio audible (en píxeles)",
             audibleRadiusPlaceholder: "Audible en todas partes si está vacío",
@@ -117,7 +113,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "Forzar en nueva pestaña",
             openApplication: "Abrir aplicación",
             hideUrlLabel: "Ocultar URL",
-            actionButtonLabel: "Abrir enlace",
         },
         speakerMegaphone: {
             label: "Podio",
@@ -125,7 +120,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Los usuarios en el podio (escenario) pueden hablar a todos los asistentes en la zona "Audiencia" correspondiente.',
             nameLabel: "Nombre",
             namePlaceholder: "EscenarioPrincipal",
-            actionButtonLabel: "Unirse al podio",
         },
         listenerMegaphone: {
             label: "Audiencia",
@@ -138,7 +132,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Parece haber un problema con el enlace que ha proporcionado. ¿Puede comprobarlo? 🙏",
             waitingMedialLinkHelp: "El enlace correcto debe ser 'https://milinkmedia.com/…'.",
             waitingSpeaker: "Esperando al orador 🎤✨",
-            actionButtonLabel: "Unirse a la audiencia",
         },
         seeAttendees: "Ver asistentes",
         start: {
@@ -151,7 +144,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "Usar si la URL contiene #[nombre-zona]",
             infoAreaName:
                 "El nombre de la zona se usará en el selector de zona de salida. Debe ser único en el mapa y no puede contener espacios ni caracteres especiales.",
-            actionButtonLabel: "Ir al inicio",
         },
         exit: {
             label: "Zona de salida",
@@ -159,42 +151,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Salir del mapa",
             exitMapStartAreaName: "Nombre de la zona de inicio",
             defaultStartArea: "Zona de inicio por defecto",
-            actionButtonLabel: "Ir a la salida",
         },
         youtube: {
             label: "Abrir vídeo de YouTube",
             description: "Abrir vídeo de YouTube dentro de WorkAdventure o en una nueva pestaña.",
             error: "Introduzca una URL de YouTube válida",
             disabled: "La integración de YouTube está desactivada.",
-            actionButtonLabel: "Abrir vídeo de YouTube",
         },
         googleDocs: {
             label: "Abrir Google Docs",
             description: "Abrir Google Docs dentro de WorkAdventure o en una nueva pestaña.",
             error: "Introduzca una URL de Google Docs válida",
             disabled: "La integración de Google Docs está desactivada.",
-            actionButtonLabel: "Abrir Google Docs",
         },
         klaxoon: {
             label: "Abrir Klaxoon",
             description: "Abrir Klaxoon dentro de WorkAdventure o en una nueva pestaña.",
             error: "Introduzca una URL de Klaxoon válida",
             disabled: "La integración de Klaxoon está desactivada.",
-            actionButtonLabel: "Abrir Klaxoon",
         },
         googleSheets: {
             label: "Abrir Google Sheets",
             description: "Abrir Google Sheets dentro de WorkAdventure o en una nueva pestaña.",
             error: "Introduzca una URL de Google Sheets válida",
             disabled: "La integración de Google Sheets está desactivada.",
-            actionButtonLabel: "Abrir Google Sheets",
         },
         googleSlides: {
             label: "Abrir Google Slides",
             description: "Abrir Google Slides dentro de WorkAdventure o en una nueva pestaña.",
             error: "Introduzca una URL de Google Slides válida",
             disabled: "La integración de Google Slides está desactivada.",
-            actionButtonLabel: "Abrir Google Slides",
         },
         eraser: {
             label: "Borrador",
@@ -202,14 +188,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Borrar",
             error: "Introduzca una URL de Eraser válida",
             disabled: "La integración de Eraser está desactivada.",
-            actionButtonLabel: "Borrar dibujos",
         },
         googleDrive: {
             label: "Abrir Google Drive",
             description: "Abrir Google Drive dentro de WorkAdventure o en una nueva pestaña.",
             error: "Introduzca una URL de Google Drive válida",
             disabled: "La integración de Google Drive está desactivada.",
-            actionButtonLabel: "Abrir Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "Añadir derechos",
@@ -222,7 +206,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Derechos de acceso",
             rightReadDescription:
                 "Los derechos de acceso definen quién puede interactuar con la zona. Los usuarios que coincidan con una de esas etiquetas pueden entrar en la zona y usar los objetos.",
-            actionButtonLabel: "Ir a la sala privada",
         },
         personalAreaPropertyData: {
             label: "Zona personal",
@@ -238,7 +221,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Usuario permitido",
             owner: "Propietario",
             revokeAccess: "Revocar acceso",
-            actionButtonLabel: "Ir al escritorio personal",
         },
         excalidraw: {
             label: "Abrir Excalidraw",
@@ -246,7 +228,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Pizarra virtual de estilo dibujado a mano, de código abierto. Colaborativa y cifrada de extremo a extremo.",
             error: "Introduzca una URL de Excalidraw válida",
             disabled: "La integración de Excalidraw está desactivada.",
-            actionButtonLabel: "Abrir Excalidraw",
         },
         cards: {
             label: "Abrir Cards",
@@ -254,14 +235,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "La forma más rápida y sencilla de compartir tu conocimiento en poco tiempo, en línea, en MS Teams y en móvil.",
             error: "Introduzca una URL de Cards válida",
             disabled: "La integración de Cards está desactivada.",
-            actionButtonLabel: "Abrir Cards",
         },
         tldraw: {
             label: "Abrir tldraw",
             description: "SDK de pizarra en línea / lienzo infinito.",
             error: "Introduzca una URL de tldraw válida",
             disabled: "La integración de tldraw está desactivada.",
-            actionButtonLabel: "Abrir tldraw",
         },
         matrixRoomPropertyData: {
             label: "Vincular sala Matrix",
@@ -270,7 +249,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Nombre visible de la sala",
             roomNameLabelPlaceholder: "Mi sala",
             defaultChatRoomAreaName: "Zona de sala",
-            actionButtonLabel: "Iniciar chat",
         },
         tooltipPropertyData: {
             label: "Información en burbuja",
@@ -278,7 +256,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "Escriba el contenido aquí ✍️",
             duration: "Duración (en segundos) ⏱️",
             infinityDuration: "Duración infinita ⏱️",
-            actionButtonLabel: "Ver burbuja de información",
         },
         openFile: {
             label: "Abrir archivo",
@@ -296,7 +273,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "El archivo es demasiado grande, el tamaño máximo es {size} MB",
             },
             hideUrlLabel: "Ocultar URL",
-            actionButtonLabel: "Abrir archivo",
         },
         livekitRoomProperty: {
             label: "Sala de reuniones",
@@ -315,7 +291,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Cancelar",
                 validate: "Validar",
             },
-            actionButtonLabel: "Iniciar reunión",
         },
         advancedOptions: "Opciones avanzadas",
         chatEnabled: "Asociar un canal de chat dedicado",
@@ -521,12 +496,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Explorar la sala",
-        description:
-            "Permite explorar la sala. Podrá moverse por la sala e interactuar con los objetos. Hay 2 modos disponibles: 'Exploración' y 'Búsqueda'. El modo 'Búsqueda' le permitirá buscar o filtrar entidades y zonas de la sala. El modo 'Exploración' le permitirá moverse libremente por la sala.",
         noEntitiesFound: "No se encontraron entidades en la sala 🙅‍♂️",
         entitiesFound: "objeto{{s}} encontrado{{s}}",
         noAreasFound: "No se encontraron zonas en la sala 🙅‍♀️",
         areasFound: "zona{{s}} encontrada{{s}}",
+        noName: "Sin nombre",
         noDescriptionFound: "No se encontró descripción 🫥",
         details: {
             close: "Cerrar",
@@ -546,6 +520,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Moviéndose a la sala: {roomNameSelected}... Hasta pronto... 🫡",
         searchLabel: "Buscar una sala",
         searchPlaceholder: "Escriba palabras clave...",
+        active: "Activa",
     },
 };
 

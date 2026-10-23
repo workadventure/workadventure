@@ -2,6 +2,7 @@
     import { onDestroy } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
+    import { mapManagerActivated } from "../../Stores/MenuStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
     import { BUTTON_ZOOM_FACTOR_PER_SECOND, BUTTON_ZOOM_STEP_FACTOR } from "../../Phaser/Game/CameraZoomUtils";
@@ -154,7 +155,7 @@
                 </div>
             </div>
         </div>
-        {#if $mapExplorationModeStore === false}
+        {#if $mapExplorationModeStore === false && $mapManagerActivated}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
@@ -168,7 +169,7 @@
                     {$LL.mapEditor.explorer.title()}
                 </div>
             </div>
-        {:else}
+        {:else if $mapExplorationModeStore}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div

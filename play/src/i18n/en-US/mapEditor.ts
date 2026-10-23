@@ -17,7 +17,6 @@ const mapEditor: BaseTranslation = {
         exploreTheRoom: "Explore the room",
         closeMapEditor: "Close map editor",
         mapManagerActivated: "Map manager activated",
-        mapExplorerActivated: "Map overview",
         exploreTheRoomActivated: "Explore the room activated",
         areaEditorActivated: "Area editor activated",
         entityEditorActivated: "Entity editor activated",
@@ -28,7 +27,6 @@ const mapEditor: BaseTranslation = {
         silent: {
             label: "Silent",
             description: "Do not allow for conversations inside.",
-            actionButtonLabel: "Do not disturb",
         },
         text: {
             label: "Header Text",
@@ -75,7 +73,6 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
-            actionButtonLabel: "Start Jitsi meeting",
         },
         playAudio: {
             label: "Play Audio File",
@@ -85,7 +82,6 @@ const mapEditor: BaseTranslation = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Play music",
             error: "Could not load sound",
-            actionButtonLabel: "Play music",
             playForAllUsersLabel: "Play for all users on the map",
             audibleRadiusLabel: "Audible radius (in pixels)",
             audibleRadiusPlaceholder: "Heard everywhere if empty",
@@ -116,14 +112,12 @@ const mapEditor: BaseTranslation = {
             forcedInNewTab: "Forced in new tab",
             openApplication: "Open application",
             hideUrlLabel: "Hide URL",
-            actionButtonLabel: "Open link",
         },
         speakerMegaphone: {
             label: "Podium",
             description: 'Users on the podium (stage) can speak to all attendees in the matching "Audience" area.',
             nameLabel: "Name",
             namePlaceholder: "MainStage",
-            actionButtonLabel: "Join podium",
         },
         listenerMegaphone: {
             label: "Audience",
@@ -136,7 +130,6 @@ const mapEditor: BaseTranslation = {
                 "There seems to be an issue with the link you provided. Could you please double-check it? 🙏",
             waitingMedialLinkHelp: "The correct link should be 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Waiting for speaker 🎤✨",
-            actionButtonLabel: "Join audience",
         },
         seeAttendees: "See attendees",
         start: {
@@ -149,7 +142,6 @@ const mapEditor: BaseTranslation = {
             hashMenuItem: "Use if URL contains #[area-name]",
             infoAreaName:
                 "The area name will be used in the exit area selector. It must be unique on the map and cannot contain spaces or special characters.",
-            actionButtonLabel: "Go to start",
         },
         exit: {
             label: "Exit area",
@@ -157,42 +149,36 @@ const mapEditor: BaseTranslation = {
             exitMap: "Exit map",
             exitMapStartAreaName: "Start area name",
             defaultStartArea: "Default start area",
-            actionButtonLabel: "Go to exit",
         },
         youtube: {
             label: "Open YouTube Video",
             description: "Open YouTube video within WorkAdventure or as a new tab.",
             error: "Please enter a valid YouTube URL",
             disabled: "YouTube integration is disabled.",
-            actionButtonLabel: "Open youtube video",
         },
         googleDocs: {
             label: "Open Google Docs",
             description: "Open Google Docs within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Docs URL",
             disabled: "Google Docs integration is disabled.",
-            actionButtonLabel: "Open google docs",
         },
         klaxoon: {
             label: "Open Klaxoon",
             description: "Open Klaxoon within WorkAdventure or as a new tab.",
             error: "Please enter a valid Klaxoon URL",
             disabled: "Klaxoon integration is disabled.",
-            actionButtonLabel: "Open klaxoon",
         },
         googleSheets: {
             label: "Open Google Sheets",
             description: "Open Google Sheets within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Sheets URL",
             disabled: "Google Sheets integration is disabled.",
-            actionButtonLabel: "Open google sheets",
         },
         googleSlides: {
             label: "Open Google Slides",
             description: "Open Google Slides within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Slides URL",
             disabled: "Google Slides integration is disabled.",
-            actionButtonLabel: "Open google slides",
         },
         eraser: {
             label: "Eraser",
@@ -200,14 +186,12 @@ const mapEditor: BaseTranslation = {
             defaultButtonLabel: "Erase",
             error: "Please enter a valid Eraser URL",
             disabled: "Eraser integration is disabled.",
-            actionButtonLabel: "Erase drawings",
         },
         googleDrive: {
             label: "Open Google Drive",
             description: "Open Google Drive within WorkAdventure or as a new tab.",
             error: "Please enter a valid Google Drive URL",
             disabled: "Google Drive integration is disabled.",
-            actionButtonLabel: "Open google drive",
         },
         restrictedRightsPropertyData: {
             label: "Add rights",
@@ -220,7 +204,6 @@ const mapEditor: BaseTranslation = {
             rightReadTitle: "Access rights",
             rightReadDescription:
                 "Access rights define who can interact with the area. Users matching one of these tags can enter the area and use objects whithin the area.",
-            actionButtonLabel: "Go to private room",
         },
         personalAreaPropertyData: {
             label: "Personal area",
@@ -235,14 +218,12 @@ const mapEditor: BaseTranslation = {
             allowedUser: "Allowed user",
             owner: "Owner",
             revokeAccess: "Revoke access",
-            actionButtonLabel: "Got to personal desk",
         },
         excalidraw: {
             label: "Open Excalidraw",
             description: "An open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
             error: "Please enter a valid Excalidraw URL",
             disabled: "Excalidraw integration is disabled.",
-            actionButtonLabel: "Open excalidraw",
         },
         cards: {
             label: "Open Cards",
@@ -250,14 +231,12 @@ const mapEditor: BaseTranslation = {
                 "Quickest and easyestsolution to share your knowledge in no time, online, on MS Teams and on mobile.",
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
-            actionButtonLabel: "Open cards",
         },
         tldraw: {
             label: "Open tldraw",
             description: "A Online whiteboard / infinite canvas SDK.",
             error: "Please enter a valid tldraw URL",
             disabled: "tldraw integration is disabled.",
-            actionButtonLabel: "Open tldraw",
         },
         matrixRoomPropertyData: {
             label: "Link Matrix room",
@@ -266,7 +245,6 @@ const mapEditor: BaseTranslation = {
             roomNameLabel: "Display name of room",
             roomNameLabelPlaceholder: "My room",
             defaultChatRoomAreaName: "Room Area",
-            actionButtonLabel: "Start chatting",
         },
         tooltipPropertyData: {
             label: "Info Bulle",
@@ -274,7 +252,6 @@ const mapEditor: BaseTranslation = {
             contentPlaceholder: "Write content here ✍️",
             duration: "Duration (in seconds) ⏱️",
             infinityDuration: "Infinite duration ⏱️",
-            actionButtonLabel: "See info bubble",
         },
         openFile: {
             label: "Open file",
@@ -292,7 +269,6 @@ const mapEditor: BaseTranslation = {
                 errorOnFileSize: "File is too large, max size is {size} MB",
             },
             hideUrlLabel: "Hide URL",
-            actionButtonLabel: "Open file",
         },
         livekitRoomProperty: {
             label: "Meeting Room",
@@ -311,7 +287,6 @@ const mapEditor: BaseTranslation = {
                 cancel: "Cancel",
                 validate: "Validate",
             },
-            actionButtonLabel: "Start meeting",
         },
         maxUsersInAreaPropertyData: {
             label: "Maximum users",
@@ -516,12 +491,11 @@ const mapEditor: BaseTranslation = {
     },
     explorer: {
         title: "Explore the room",
-        description:
-            "Allow to explore the room. You be able to move around the room and interact with objects. 2 mode are available: 'Exploration' and 'Search'. The 'Search mode' mode will propose you to search or filter entities and areas in the room. The 'Exploration mode' mode will let you move freely in the room.",
         noEntitiesFound: "No entity found in the room 🙅‍♂️",
         entitiesFound: "object{{s}} found",
         noAreasFound: "No area found in the room 🙅‍♀️",
         areasFound: "area{{s}} found",
+        noName: "No name",
         noDescriptionFound: "No description found 🫥",
         details: {
             close: "Close",
@@ -541,6 +515,7 @@ const mapEditor: BaseTranslation = {
         movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "Search a room",
         searchPlaceholder: "Type keywords...",
+        active: "Active",
     },
 };
 

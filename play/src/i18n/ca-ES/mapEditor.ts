@@ -18,7 +18,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         exploreTheRoom: "Explorar la sala",
         closeMapEditor: "Tancar l'editor de mapes",
         mapManagerActivated: "Gestor de mapes activat",
-        mapExplorerActivated: "Vista general del mapa",
         exploreTheRoomActivated: "Exploració de la sala activada",
         areaEditorActivated: "Editor d'àrees activat",
         entityEditorActivated: "Editor d'entitats activat",
@@ -29,7 +28,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         silent: {
             label: "Silenciós",
             description: "No permet converses a l'interior.",
-            actionButtonLabel: "No molestar",
         },
         text: {
             label: "Text de capçalera",
@@ -76,7 +74,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Cancel·lar",
                 validate: "Validar",
             },
-            actionButtonLabel: "Iniciar una reunió Jitsi",
         },
         playAudio: {
             label: "Reproduir fitxer d'àudio",
@@ -86,7 +83,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
             defaultButtonLabel: "Reproduir música",
             error: "No s'ha pogut carregar el so",
-            actionButtonLabel: "Reproduir música",
             playForAllUsersLabel: "Reproduir per a tots els usuaris del mapa",
             audibleRadiusLabel: "Radi audible (en píxels)",
             audibleRadiusPlaceholder: "Audible arreu si és buit",
@@ -117,7 +113,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             forcedInNewTab: "Forçat en una nova pestanya",
             openApplication: "Obrir aplicació",
             hideUrlLabel: "Ocultar URL",
-            actionButtonLabel: "Obrir enllaç",
         },
         speakerMegaphone: {
             label: "Pòdium",
@@ -125,7 +120,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 'Els usuaris al pòdium (escenari) poden parlar a tots els assistents a l\'àrea "Audiència" corresponent.',
             nameLabel: "Nom",
             namePlaceholder: "EscenariPrincipal",
-            actionButtonLabel: "Unir-se al pòdium",
         },
         listenerMegaphone: {
             label: "Audiència",
@@ -138,7 +132,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Sembla que hi ha un problema amb l'enllaç que has proporcionat. El podries comprovar de nou? 🙏",
             waitingMedialLinkHelp: "L'enllaç correcte hauria de ser 'https://monlienmedia.com/…'.",
             waitingSpeaker: "Esperant l'orador 🎤✨",
-            actionButtonLabel: "Unir-se a l'audiència",
         },
         seeAttendees: "Veure assistents",
         start: {
@@ -151,7 +144,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             hashMenuItem: "Utilitzar si l'URL conté #[nom-d'àrea]",
             infoAreaName:
                 "El nom de l'àrea s'utilitzarà al selector d'àrea de sortida. Ha de ser únic al mapa i no pot contenir espais ni caràcters especials.",
-            actionButtonLabel: "Anar a l'inici",
         },
         exit: {
             label: "Àrea de sortida",
@@ -159,42 +151,36 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             exitMap: "Sortir del mapa",
             exitMapStartAreaName: "Nom de l'àrea d'inici",
             defaultStartArea: "Àrea d'inici per defecte",
-            actionButtonLabel: "Anar a la sortida",
         },
         youtube: {
             label: "Obrir vídeo de YouTube",
             description: "Obrir un vídeo de YouTube dins de WorkAdventure o en una nova pestanya.",
             error: "Si us plau, introduïu una URL de YouTube vàlida",
             disabled: "La integració de YouTube està desactivada.",
-            actionButtonLabel: "Obrir vídeo de YouTube",
         },
         googleDocs: {
             label: "Obrir Google Docs",
             description: "Obrir Google Docs dins de WorkAdventure o en una nova pestanya.",
             error: "Si us plau, introduïu una URL de Google Docs vàlida",
             disabled: "La integració de Google Docs està desactivada.",
-            actionButtonLabel: "Obrir Google Docs",
         },
         klaxoon: {
             label: "Obrir Klaxoon",
             description: "Obrir Klaxoon dins de WorkAdventure o en una nova pestanya.",
             error: "Si us plau, introduïu una URL de Klaxoon vàlida",
             disabled: "La integració de Klaxoon està desactivada.",
-            actionButtonLabel: "Obrir Klaxoon",
         },
         googleSheets: {
             label: "Obrir Google Sheets",
             description: "Obrir Google Sheets dins de WorkAdventure o en una nova pestanya.",
             error: "Si us plau, introduïu una URL de Google Sheets vàlida",
             disabled: "La integració de Google Sheets està desactivada.",
-            actionButtonLabel: "Obrir Google Sheets",
         },
         googleSlides: {
             label: "Obrir Google Slides",
             description: "Obrir Google Slides dins de WorkAdventure o en una nova pestanya.",
             error: "Si us plau, introduïu una URL de Google Slides vàlida",
             disabled: "La integració de Google Slides està desactivada.",
-            actionButtonLabel: "Obrir Google Slides",
         },
         eraser: {
             label: "Eraser",
@@ -202,14 +188,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             defaultButtonLabel: "Esborrar",
             error: "Si us plau, introduïu una URL d'Eraser vàlida",
             disabled: "La integració d'Eraser està desactivada.",
-            actionButtonLabel: "Esborrar dibuixos",
         },
         googleDrive: {
             label: "Obrir Google Drive",
             description: "Obrir Google Drive dins de WorkAdventure o en una nova pestanya.",
             error: "Si us plau, introduïu una URL de Google Drive vàlida",
             disabled: "La integració de Google Drive està desactivada.",
-            actionButtonLabel: "Obrir Google Drive",
         },
         restrictedRightsPropertyData: {
             label: "Afegir drets",
@@ -222,7 +206,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             rightReadTitle: "Drets d'accés",
             rightReadDescription:
                 "Els drets d'accés defineixen qui pot interactuar amb l'àrea. Els usuaris que coincideixen amb una d'aquestes etiquetes poden entrar a l'àrea i utilitzar objectes dins de l'àrea.",
-            actionButtonLabel: "Anar a la sala privada",
         },
         personalAreaPropertyData: {
             label: "Àrea personal",
@@ -238,14 +221,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             allowedUser: "Usuari permès",
             owner: "Propietari",
             revokeAccess: "Revocar l'accés",
-            actionButtonLabel: "Anar al escriptori personal",
         },
         excalidraw: {
             label: "Obrir Excalidraw",
             description: "Un tauler virtual de dibuix a mà. Col·laboratiu i xifrat de punt a punt.",
             error: "Si us plau, introduïu una URL d'Excalidraw vàlida",
             disabled: "La integració d'Excalidraw està desactivada.",
-            actionButtonLabel: "Obrir Excalidraw",
         },
         cards: {
             label: "Obrir Cards",
@@ -253,14 +234,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Solució més ràpida i fàcil per compartir els vostres coneixements en poc temps, en línia, a MS Teams i al mòbil.",
             error: "Si us plau, introduïu una URL de Cards vàlida",
             disabled: "La integració de Cards està desactivada.",
-            actionButtonLabel: "Obrir Cards",
         },
         tldraw: {
             label: "Obrir tldraw",
             description: "Un SDK de tauler / llenç infinit en línia.",
             error: "Si us plau, introduïu una URL de tldraw vàlida",
             disabled: "La integració de tldraw està desactivada.",
-            actionButtonLabel: "Obrir tldraw",
         },
         matrixRoomPropertyData: {
             label: "Vincular sala Matrix",
@@ -269,7 +248,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             roomNameLabel: "Nom de visualització de la sala",
             roomNameLabelPlaceholder: "La meva sala",
             defaultChatRoomAreaName: "Àrea de sala",
-            actionButtonLabel: "Començar a xatejar",
         },
         tooltipPropertyData: {
             label: "Bombolla d'informació",
@@ -277,7 +255,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             contentPlaceholder: "Escriviu el contingut aquí ✍️",
             duration: "Durada (en segons) ⏱️",
             infinityDuration: "Durada infinita ⏱️",
-            actionButtonLabel: "Veure la bombolla d'informació",
         },
         openFile: {
             label: "Obrir fitxer",
@@ -295,7 +272,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 errorOnFileSize: "El fitxer és massa gran, la mida màxima és de {size} MB",
             },
             hideUrlLabel: "Ocultar URL",
-            actionButtonLabel: "Obrir fitxer",
         },
         livekitRoomProperty: {
             label: "Sala de reunió",
@@ -314,7 +290,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 cancel: "Cancel·lar",
                 validate: "Validar",
             },
-            actionButtonLabel: "Iniciar reunió",
         },
         maxUsersInAreaPropertyData: {
             label: "Nombre màxim d'usuaris",
@@ -521,12 +496,11 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     explorer: {
         title: "Explorar la sala",
-        description:
-            "Permet explorar la sala. Podreu moure-us per la sala i interactuar amb objectes. Hi ha 2 modes disponibles: 'Exploració' i 'Cerca'. El mode 'Cerca' us proposarà cercar o filtrar entitats i àrees a la sala. El mode 'Exploració' us permetrà moure-us lliurement per la sala.",
         noEntitiesFound: "No s'ha trobat cap entitat a la sala 🙅‍♂️",
         entitiesFound: "objecte{{s}} trobat{{s}}",
         noAreasFound: "No s'ha trobat cap àrea a la sala 🙅‍♀️",
-        areasFound: "àrea{{s}} trobada{{s}}",
+        areasFound: "{{àrea trobada|àrees trobades}}",
+        noName: "Sense nom",
         noDescriptionFound: "No s'ha trobat cap descripció 🫥",
         details: {
             close: "Tancar",
@@ -546,6 +520,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Movent-se a la sala: {roomNameSelected}... Fins aviat... 🫡",
         searchLabel: "Cercar una sala",
         searchPlaceholder: "Escriviu paraules clau...",
+        active: "Activa",
     },
 };
 

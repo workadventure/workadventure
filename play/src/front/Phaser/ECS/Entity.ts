@@ -23,7 +23,6 @@ import type { ActivatableInterface } from "../Game/ActivatableInterface";
 import { GameScene } from "../Game/GameScene";
 import type { OutlineableInterface } from "../Game/OutlineableInterface";
 import { SpeechDomElement } from "../Entity/SpeechDomElement";
-import LL from "../../../i18n/i18n-svelte";
 import { DEBUG_MODE } from "../../Enum/EnvironmentVariable";
 
 import Image = Phaser.GameObjects.Image;
@@ -558,35 +557,6 @@ export class Entity extends Image implements ActivatableInterface, OutlineableIn
             this.speechDomElement.destroy();
             this.speechDomElement = null;
         }
-    }
-
-    // Get action button label from properties
-    get actionButtonLabel(): string {
-        if (this.entityData.properties.length === 0)
-            return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
-        const property = this.entityData.properties.find((p) => p.type !== "entityDescriptionProperties");
-        if (!property) return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
-
-        const properties = get(LL).mapEditor.properties;
-        let propertyKey = property.type as keyof typeof properties;
-
-        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
-        if (propertyKey === "openWebsite" && "application" in property) {
-            const openWebsiteProperty = property as { application: string };
-            if (openWebsiteProperty.application != "website") {
-                propertyKey = openWebsiteProperty.application as keyof typeof properties;
-            }
-        }
-
-        const propertyTranslation = properties[propertyKey];
-        if (
-            propertyTranslation != undefined &&
-            "actionButtonLabel" in propertyTranslation &&
-            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
-        ) {
-            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
-        }
-        return get(LL).mapEditor.explorer.details.moveToEntity({ name: "" });
     }
 
     /**
