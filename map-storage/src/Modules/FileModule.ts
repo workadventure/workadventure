@@ -1,91 +1,50 @@
-import { CustomFileService } from "../Services/CustomFileService";
+import type { AreaDataProperty, EntityDataProperty } from "@workadventure/map-editor";
+import { CustomFileService, uploadedFileName } from "../Services/CustomFileService";
 import type { HookManager } from "./HookManager";
 import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
 
+/**
+ * Deletes the file a property uploaded once it no longer uses it: the file was removed, replaced by
+ * another one, or (for a sound) swapped for a URL.
+ */
+async function onPropertyChange<T extends AreaDataProperty | EntityDataProperty>(
+    oldProperty: T,
+    newProperty: T,
+    hostname: string,
+): Promise<T> {
+    if (!newProperty) {
+        return oldProperty;
+    }
+    const oldFileName = uploadedFileName(oldProperty);
+    if (oldFileName && uploadedFileName(newProperty) !== oldFileName) {
+        await new CustomFileService(hostname).deleteFile(oldProperty);
+    }
+    return newProperty;
+}
+
+async function onPropertyDelete<T extends AreaDataProperty | EntityDataProperty>(
+    property: T,
+    hostname: string,
+): Promise<T> {
+    if (uploadedFileName(property)) {
+        try {
+            await new CustomFileService(hostname).deleteFile(property);
+        } catch (error) {
+            console.error("Error deleting file", error);
+        }
+    }
+    return property;
+}
+
 export class FileModule implements MapStorageModuleInterface {
     public init(hookManager: HookManager): void {
-        hookManager.subscribeAreaPropertyChange(async (area, oldProperty, newProperty, hostname) => {
-            if (!newProperty) {
-                return oldProperty;
-            }
-
-            if (newProperty.type !== "openFile") {
-                return newProperty;
-            }
-
-            const fileService = new CustomFileService(hostname);
-
-            // If the newProperty link and name are empty, it means the property is not connected to a file
-            // and we need to delete the file if it exists
-            if (
-                oldProperty.type == "openFile" &&
-                oldProperty.name &&
-                oldProperty.link &&
-                !newProperty.name &&
-                !newProperty.link
-            ) {
-                await fileService.deleteFile(oldProperty);
-            }
-
-            return Promise.resolve(newProperty);
-        });
-
-        hookManager.subscribeAreaPropertyDelete(async (area, oldProperty, hostname) => {
-            if (oldProperty.type !== "openFile") {
-                return oldProperty;
-            }
-
-            try {
-                const fileService = new CustomFileService(hostname);
-                await fileService.deleteFile(oldProperty);
-            } catch (error) {
-                console.error("Error deleting file", error);
-                return oldProperty;
-            }
-
-            return Promise.resolve(oldProperty);
-        });
-
-        hookManager.subscribeEntityPropertyChange(async (entity, oldProperty, newProperty, hostname) => {
-            if (!newProperty) {
-                return oldProperty;
-            }
-
-            if (newProperty.type !== "openFile") {
-                return newProperty;
-            }
-
-            const fileService = new CustomFileService(hostname);
-
-            // If the newProperty link and name are empty, it means the property is not connected to a file
-            // and we need to delete the file if it exists
-            if (
-                oldProperty.type == "openFile" &&
-                oldProperty.name &&
-                oldProperty.link &&
-                !newProperty.name &&
-                !newProperty.link
-            ) {
-                await fileService.deleteFile(oldProperty);
-            }
-
-            return Promise.resolve(newProperty);
-        });
-
-        hookManager.subscribeEntityPropertyDelete(async (entity, oldProperty, hostname) => {
-            if (oldProperty.type !== "openFile") {
-                return oldProperty;
-            }
-
-            try {
-                const fileService = new CustomFileService(hostname);
-                await fileService.deleteFile(oldProperty);
-            } catch (error) {
-                console.error("Error deleting file", error);
-                return oldProperty;
-            }
-
-            return Promise.resolve(oldProperty);
-        });
+        hookManager.subscribeAreaPropertyChange((area, oldProperty, newProperty, hostname) =>
+            onPropertyChange(oldProperty, newProperty, hostname),
+        );
+        hookManager.subscribeAreaPropertyDelete((area, property, hostname) => onPropertyDelete(property, hostname));
+        hookManager.subscribeEntityPropertyChange((entity, oldProperty, newProperty, hostname) =>
+            onPropertyChange(oldProperty, newProperty, hostname),
+        );
+        hookManager.subscribeEntityPropertyDelete((entity, property, hostname) => onPropertyDelete(property, hostname));
     }
 }

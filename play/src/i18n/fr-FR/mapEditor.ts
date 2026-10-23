@@ -83,6 +83,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Jouer un audio avec un volume réglable.",
             audioLinkLabel: "Lien vers l'audio",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Importer un fichier",
+            sourceUrl: "Utiliser une URL",
             defaultButtonLabel: "Jouer de la musique",
             volumeLabel: "Volume",
             error: "Impossible de charger le son",

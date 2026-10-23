@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "Âm lượng",
             audioLinkLabel: "Liên kết âm thanh",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Tải tệp lên",
+            sourceUrl: "Dùng URL",
             defaultButtonLabel: "Phát nhạc",
             error: "Không thể tải âm thanh",
             actionButtonLabel: "Phát nhạc",

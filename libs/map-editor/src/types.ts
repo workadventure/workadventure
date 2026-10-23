@@ -83,6 +83,11 @@ export const JitsiRoomPropertyData = PropertyBase.extend({
 export const PlayAudioPropertyData = PropertyBase.extend({
     type: z.literal("playAudio"),
     audioLink: z.string(),
+    /**
+     * Name of the file uploaded to the map-storage, which audioLink then points to. Empty when
+     * audioLink is a URL typed by the user.
+     */
+    audioName: z.string().nullable().optional(),
     volume: z.number().default(1).optional(),
     triggerMessage: z.string().optional(),
     /**

@@ -83,6 +83,8 @@ const mapEditor: BaseTranslation = {
             volumeLabel: "Volume",
             audioLinkLabel: "Audio Link",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Upload a file",
+            sourceUrl: "Use a URL",
             defaultButtonLabel: "Play music",
             error: "Could not load sound",
             actionButtonLabel: "Play music",
