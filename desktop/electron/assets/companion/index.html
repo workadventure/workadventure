@@ -19,6 +19,11 @@
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0"/><path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/><path d="M21 21v-2a4 4 0 0 0 -3 -3.85"/></svg>
                     <span class="nav-badge count" id="c-people-count" hidden>0</span>
                 </button>
+                <!-- Shown when the world has a calendar or a task list connected. -->
+                <button class="icon-btn nav-btn" id="c-open-agenda" type="button" data-active="false" title="Today" aria-label="Today" data-i18n-label="companion.today" hidden>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg>
+                    <span class="nav-dot" id="c-agenda-dot" hidden></span>
+                </button>
             </div>
 
             <!-- Media controls: the app's ActionBar pill style (ported from the PiP toolbar / design-system). -->
@@ -63,6 +68,16 @@
 
         <!-- ── Linux: this window shows in the user's screen share ───────── -->
         <div class="share-warning" id="c-share-warning" hidden data-i18n="companion.visibleInShare">Others see this window in your screen share</div>
+
+        <!-- ── Next meeting: in progress or starting within the hour (outside a meeting) ── -->
+        <div class="next-strip" id="c-next-strip" hidden>
+            <span class="cal-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"/><path d="M16 3v4"/><path d="M8 3v4"/><path d="M4 11h16"/></svg></span>
+            <div class="next-text">
+                <span class="next-title" id="c-next-title"></span>
+                <span class="next-when" id="c-next-when"></span>
+            </div>
+            <button class="join-btn" id="c-next-join" type="button" data-i18n="companion.join">Join</button>
+        </div>
 
         <!-- ── Meeting invitation banner ──────────────────────────────────── -->
         <div class="invitation" id="c-invitation" hidden>
@@ -121,6 +136,15 @@
                         </button>
                     </form>
                 </div>
+            </section>
+
+            <!-- Today view (slide-in): the day's next meetings and the most urgent tasks -->
+            <section class="view view-agenda" id="c-view-agenda" data-open="false">
+                <div class="view-head">
+                    <span class="view-title" data-i18n="companion.today">Today</span>
+                    <button class="icon-btn view-close" id="c-agenda-close" type="button" title="Close" aria-label="Close" data-i18n-label="companion.close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6l-12 12"/><path d="M6 6l12 12"/></svg></button>
+                </div>
+                <div class="list" id="c-agenda"></div>
             </section>
         </div>
     </div>
