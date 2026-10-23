@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from "electron";
 import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
 import type {
     CompanionCommand,
+    DesktopOverlayDrawOp,
     DesktopPipCommand,
     DesktopPipSdp,
     DesktopNativeStrings,
@@ -9,6 +10,7 @@ import type {
     WorkAdventureDesktopApi,
     WorkAdventureDesktopCompanionApi,
     WorkAdventureDesktopHudApi,
+    WorkAdventureDesktopOverlayApi,
     WorkAdventureDesktopPipApi,
 } from "./types";
 
@@ -32,6 +34,14 @@ const pipApi: WorkAdventureDesktopPipApi = {
     onClosed: (callback) => subscribe("app:pip:closed", () => callback()),
     onRequestClose: (callback) => subscribe("app:pip:request-close-from-pip", () => callback()),
     onCommand: (callback) => subscribe("app:pip:command-to-main", (command) => callback(command as DesktopPipCommand)),
+};
+
+const screenOverlayApi: WorkAdventureDesktopOverlayApi = {
+    setDrawMode: (enabled) => ipcRenderer.send("app:overlay:set-draw-mode", enabled),
+    setTool: (tool) => ipcRenderer.send("app:overlay:set-tool", tool),
+    pushElements: (elements) => ipcRenderer.send("app:overlay:set-elements", elements),
+    onDraw: (callback) => subscribe("app:overlay:draw-to-main", (op) => callback(op as DesktopOverlayDrawOp)),
+    onExit: (callback) => subscribe("app:overlay:exit-to-main", () => callback()),
 };
 
 const presenterHudApi: WorkAdventureDesktopHudApi = {
@@ -79,6 +89,15 @@ const api: WorkAdventureDesktopApi = {
     onMediaPreempted: (callback) => subscribe("app:on-media-preempted", () => callback()),
     onOtherMeetingMuted: (callback) =>
         subscribe("app:on-other-meeting-muted", (worldName) => callback(String(worldName ?? ""))),
+    presenter: {
+        setTool: (tool, displayId, sourceId) =>
+            ipcRenderer.send("app:presenter:setTool", { tool, displayId, sourceId }),
+        onCursor: (callback) =>
+            subscribe("app:on-presenter-cursor", (point) => {
+                const p = (point && typeof point === "object" ? point : {}) as { x?: unknown; y?: unknown };
+                callback(Number(p.x) || 0, Number(p.y) || 0);
+            }),
+    },
     onMuteToggle: (callback) => {
         ipcRenderer.on("app:on-mute-toggle", callback);
     },
@@ -118,6 +137,8 @@ const api: WorkAdventureDesktopApi = {
         openAdminSignup: () => ipcRenderer.invoke("app:navigation:openAdminSignup"),
         getStrings: () => ipcRenderer.sendSync("app:i18n:landing") as DesktopNativeStrings | null,
     },
+    // The overlay keeps its strokes out of the shared image, which only macOS and Windows can do.
+    screenOverlay: canHideWindowsFromCapture(process.platform) ? screenOverlayApi : undefined,
     // The meeting bar floats over the shared screen: only where it can be kept out of the capture.
     presenterHud: canHideWindowsFromCapture(process.platform) ? presenterHudApi : undefined,
     companion: companionApi,

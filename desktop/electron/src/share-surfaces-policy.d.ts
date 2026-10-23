@@ -13,3 +13,10 @@ export function companionAutoOpenDisplay(state: {
     pointerDisplayId: number;
 }): number | undefined;
 export function companionVisibleInShare(canHideFromCapture: boolean, sharing: boolean): boolean;
+export function annotationOverlayDisplay(state: {
+    canHideFromCapture: boolean;
+    sharing: boolean;
+    sharedDisplayId?: number;
+    drawing: boolean;
+    presenterTool: boolean;
+}): number | undefined;

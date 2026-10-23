@@ -11,6 +11,10 @@
  *                      (none with a single screen, or when the shared screen is unknown), and never
  *                      on Linux, where it cannot be kept out of the capture. Opened by hand it stays,
  *                      and on Linux it warns it is visible in the share.
+ *   Annotation overlay Over the shared screen while the user draws on their share or uses a
+ *                      presenter tool (laser, spotlight, loupe), out of the capture: a whole screen
+ *                      on macOS and Windows only. Another shared screen closes it; the world clears
+ *                      the annotations.
  *   Identify screens   Nothing opens by itself while its windows cover every screen.
  *
  * Pure functions (no Electron dependency) so the rules can be unit-tested.
@@ -70,4 +74,23 @@ function companionVisibleInShare(canHideFromCapture, sharing) {
     return sharing && !canHideFromCapture;
 }
 
-module.exports = { meetingBarDisplay, companionAutoOpenDisplay, companionVisibleInShare };
+/**
+ * The screen the annotation overlay covers, or undefined for no overlay.
+ *
+ * @param {{
+ *   canHideFromCapture: boolean,
+ *   sharing: boolean,
+ *   sharedDisplayId?: number, // undefined when a window is shared
+ *   drawing: boolean,
+ *   presenterTool: boolean,
+ * }} s
+ * @returns {number | undefined}
+ */
+function annotationOverlayDisplay(s) {
+    if (!s.canHideFromCapture || !s.sharing || s.sharedDisplayId === undefined) {
+        return undefined;
+    }
+    return s.drawing || s.presenterTool ? s.sharedDisplayId : undefined;
+}
+
+module.exports = { meetingBarDisplay, companionAutoOpenDisplay, companionVisibleInShare, annotationOverlayDisplay };

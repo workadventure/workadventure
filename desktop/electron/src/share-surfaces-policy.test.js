@@ -1,5 +1,10 @@
 import { expect, test } from "vitest";
-import { companionAutoOpenDisplay, companionVisibleInShare, meetingBarDisplay } from "./share-surfaces-policy";
+import {
+    annotationOverlayDisplay,
+    companionAutoOpenDisplay,
+    companionVisibleInShare,
+    meetingBarDisplay,
+} from "./share-surfaces-policy";
 
 // One test per row of the rules table in share-surfaces-policy.js.
 const macSharing = { canHideFromCapture: true, sharing: true, pointerDisplayId: 3 };
@@ -25,6 +30,22 @@ test("companion: opens by itself during a share only on another screen, never on
     expect(companionVisibleInShare(false, true)).toBe(true);
     expect(companionVisibleInShare(true, true)).toBe(false);
     expect(companionVisibleInShare(false, false)).toBe(false);
+});
+
+test("annotation overlay: over the shared screen while drawing or using a presenter tool, whole screens on macOS/Windows", () => {
+    const sharingScreen = {
+        canHideFromCapture: true,
+        sharing: true,
+        sharedDisplayId: 2,
+        drawing: false,
+        presenterTool: false,
+    };
+    expect(annotationOverlayDisplay(sharingScreen)).toBeUndefined();
+    expect(annotationOverlayDisplay({ ...sharingScreen, drawing: true })).toBe(2);
+    expect(annotationOverlayDisplay({ ...sharingScreen, presenterTool: true })).toBe(2);
+    expect(annotationOverlayDisplay({ ...sharingScreen, drawing: true, sharedDisplayId: undefined })).toBeUndefined();
+    expect(annotationOverlayDisplay({ ...sharingScreen, drawing: true, canHideFromCapture: false })).toBeUndefined();
+    expect(annotationOverlayDisplay({ ...sharingScreen, drawing: true, sharing: false })).toBeUndefined();
 });
 
 test("identify screens: nothing opens by itself", () => {

@@ -16,6 +16,17 @@ import {
 } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { requestedScreenSharingState, startScreenShareWithSource } from "../../Stores/ScreenSharingStore";
+import {
+    currentAnnotationColorStore,
+    currentAnnotationToolStore,
+    localAnnotationActiveStore,
+    screenAnnotationElementsStore,
+    screenAnnotationEnabledStore,
+    screenAnnotationLocallyHiddenStore,
+    isAnnotationTool,
+} from "../../Stores/ScreenAnnotationStore";
+import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
+import { isActivePresenterTool, presenterToolStore } from "../../Stores/PresenterEffectStore";
 
 type WindowWithDesktop = Window & { WAD?: WorkAdventureDesktopApi };
 
@@ -30,9 +41,9 @@ function getPresenterHudApi(): NonNullable<WorkAdventureDesktopApi["presenterHud
 
 /**
  * Bridges the presenter HUD window (Zoom-style meeting bar, excluded from the capture) to the
- * WorkAdventure stores: pushes mic/camera/share state to the bar, and routes its commands back to the
- * same stores the in-app UI uses. The desktop app decides when the bar shows and where, from the
- * share source this world reports (setScreenShareSource).
+ * WorkAdventure stores: pushes mic/camera/share/annotation state to the bar, and routes its commands
+ * back to the same stores/managers the in-app UI uses. The desktop app decides when the bar shows and
+ * where, from the share source this world reports (setScreenShareSource).
  */
 class PresenterHudBridge {
     private subscriptions: Unsubscriber[] = [];
@@ -46,11 +57,31 @@ class PresenterHudBridge {
 
         this.onCommandUnsub = api.onCommand((command) => this.handleCommand(command));
 
-        // Push presenter state to the bar whenever any of its inputs change.
+        this.subscriptions.push(
+            localAnnotationActiveStore.subscribe((active) => {
+                if (active) {
+                    // Entering draw mode always re-shows annotations locally: drawing on a hidden
+                    // canvas would silently broadcast strokes the presenter cannot see. The drawing
+                    // toolbar is now a panel of the meeting bar (driven by the pushed annotation
+                    // state), so there is no separate window to open/close here.
+                    screenAnnotationLocallyHiddenStore.set(false);
+                }
+            }),
+        );
+
+        // Push presenter state to the bars whenever any of its inputs change.
         const pushOnChange = [
             requestedMicrophoneState,
             requestedCameraState,
             requestedScreenSharingState,
+            localAnnotationActiveStore,
+            currentAnnotationToolStore,
+            currentAnnotationColorStore,
+            screenAnnotationLocallyHiddenStore,
+            screenAnnotationEnabledStore,
+            // Re-push when elements change so the bar's undo/redo enabled state stays live.
+            screenAnnotationElementsStore,
+            presenterToolStore,
             cameraListStore,
             microphoneListStore,
             requestedCameraDeviceIdStore,
@@ -71,10 +102,21 @@ class PresenterHudBridge {
     }
 
     private buildState(): DesktopPresenterHudState {
+        const target = screenAnnotationManager.localUserId;
         return {
             micEnabled: get(requestedMicrophoneState),
             cameraEnabled: get(requestedCameraState),
             screenSharing: get(requestedScreenSharingState),
+            annotation: {
+                active: get(localAnnotationActiveStore),
+                tool: get(currentAnnotationToolStore),
+                color: get(currentAnnotationColorStore),
+                othersCanDraw: target ? get(screenAnnotationEnabledStore).get(target) === true : false,
+                locallyHidden: get(screenAnnotationLocallyHiddenStore),
+                canUndo: target ? screenAnnotationManager.canUndoLocal(target) : false,
+                canRedo: target ? screenAnnotationManager.canRedoLocal(target) : false,
+            },
+            presenterTool: get(presenterToolStore),
             devices: {
                 cameras: (get(cameraListStore) ?? []).map((d, i) => ({
                     id: d.deviceId,
@@ -127,6 +169,54 @@ class PresenterHudBridge {
                     display_id: command.displayId,
                 });
                 break;
+            case "annotation-toggle":
+                screenAnnotationManager.toggleDrawingOnMyShare();
+                break;
+            case "annotation-set-tool":
+                if (isAnnotationTool(command.tool)) {
+                    currentAnnotationToolStore.set(command.tool);
+                }
+                break;
+            case "annotation-set-color":
+                currentAnnotationColorStore.set(command.color);
+                break;
+            case "annotation-undo": {
+                const target = screenAnnotationManager.localUserId;
+                if (target) {
+                    screenAnnotationManager.undoLastLocalElement(target);
+                }
+                break;
+            }
+            case "annotation-redo": {
+                const target = screenAnnotationManager.localUserId;
+                if (target) {
+                    screenAnnotationManager.redoLastLocalElement(target);
+                }
+                break;
+            }
+            case "annotation-clear":
+                screenAnnotationManager.clearAll();
+                break;
+            case "annotation-toggle-local-hide":
+                screenAnnotationLocallyHiddenStore.set(!get(screenAnnotationLocallyHiddenStore));
+                break;
+            case "annotation-toggle-others": {
+                const target = screenAnnotationManager.localUserId;
+                if (target) {
+                    screenAnnotationManager.setOthersAllowed(get(screenAnnotationEnabledStore).get(target) !== true);
+                }
+                break;
+            }
+            case "presenter-set-tool": {
+                // Toggle: clicking the active tool turns it off; picking another switches to it.
+                const current = get(presenterToolStore);
+                if (isActivePresenterTool(command.tool)) {
+                    presenterToolStore.set(current === command.tool ? "none" : command.tool);
+                } else {
+                    presenterToolStore.set("none");
+                }
+                break;
+            }
             case "pick-device": {
                 // Same as the in-app media settings: set the requested device (the media machine
                 // re-acquires the stream) AND persist it as the preferred device.

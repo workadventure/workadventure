@@ -6,7 +6,7 @@ import { pathToFileURL } from "url";
 import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
 import settings from "./settings";
 import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
-import { notePresenceReport, setRendererPresence } from "./presence";
+import { getPresenceSnapshot, notePresenceReport, onPresenceChange, setRendererPresence } from "./presence";
 import {
     dismissCompanion,
     isCompanionReadyForVideo,
@@ -15,6 +15,7 @@ import {
     setSharedScreenDisplay,
     toggleCompanion,
 } from "./companion-controller";
+import { startPresenterCursor, stopPresenterCursor } from "./presenter-cursor";
 import {
     getControllingWorldContents,
     getDesktopWindowState,
@@ -29,8 +30,19 @@ import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, s
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
 import { isPipWindowOpen, sendToPip } from "./pip-window";
-import { companionVisibleInShare, meetingBarDisplay } from "./share-surfaces-policy";
+import { annotationOverlayDisplay, companionVisibleInShare, meetingBarDisplay } from "./share-surfaces-policy";
 import { canHideWindowsFromCapture } from "./platform-capture-policy";
+import {
+    awaitOverlayReady,
+    closeOverlayWindow,
+    createOverlayWindow,
+    getOverlayWindow,
+    isOverlayWindowOpen,
+    markOverlayReady,
+    sendToOverlay,
+    setOverlayDrawMode,
+    setOverlayKeyboardFocus,
+} from "./overlay-window";
 import {
     broadcastHudState,
     closeHudWindow,
@@ -69,7 +81,15 @@ type CapturerCacheEntry = {
     result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
 };
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
+let presenterToolGeneration = 0;
 let pipOwner: Electron.WebContents | undefined;
+// What the world reports for the annotation overlay (see updateOverlay).
+let sharedDisplayId: number | undefined;
+let overlayDrawing = false;
+let overlayPresenterTool = false;
+let overlayDisplayId: number | undefined;
+let overlayTool: unknown;
+let overlayElements: unknown;
 
 const keepAwakeByTab = new Map<number, number>();
 const unreadByTab = new Map<number, number>();
@@ -138,8 +158,8 @@ function sanitizeDesktopCapturerOptions(options: unknown): Electron.SourcesOptio
     };
 }
 
-/** Map a `screen:<id>:<n>` desktopCapturer source to its Electron Display.id, so the meeting bar
- * goes on the screen that is actually being shared. */
+/** Map a `screen:<id>:<n>` desktopCapturer source to its Electron Display.id, so the annotation
+ * overlay covers the screen that is actually being shared. */
 async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<number | undefined> {
     try {
         const sources = await desktopCapturer.getSources({ types: ["screen"] });
@@ -295,6 +315,56 @@ export default () => {
         setActiveWorldTitle(title);
     });
 
+    // Presenter tools: start/stop global cursor tracking over the shared display. When a tool is
+    // active, main polls the cursor and streams normalized positions back to the renderer, which
+    // broadcasts them to viewers over the space. tool === "none" (or empty) stops tracking.
+    ipcMain.on("app:presenter:setTool", (event, payload: unknown) => {
+        if (!isFromMainRenderer(event)) {
+            return;
+        }
+        const generation = ++presenterToolGeneration;
+        const raw = (payload && typeof payload === "object" ? payload : {}) as Record<string, unknown>;
+        const tool = typeof raw.tool === "string" ? raw.tool : "none";
+        const sourceId = typeof raw.sourceId === "string" ? raw.sourceId : undefined;
+        overlayPresenterTool = tool === "laser" || tool === "spotlight" || tool === "loupe";
+        updateOverlay();
+        if (!overlayPresenterTool) {
+            stopPresenterCursor();
+            sendToOverlay("app:overlay:presenter-effect", { tool: "none", x: 0, y: 0, scale: 0, active: false });
+            return;
+        }
+        void (async () => {
+            let displayId = typeof raw.displayId === "number" ? raw.displayId : undefined;
+            // Resolve the display from the capture source when display_id is missing (e.g. Wayland),
+            // so the cursor is normalized against the SHARED screen, not the primary one.
+            if (displayId === undefined && sourceId && sourceId.startsWith("screen:")) {
+                displayId = await resolveDisplayIdFromScreenSource(sourceId);
+                // A newer tool choice, or a tab switch (which stops the cursor), happened meanwhile.
+                if (generation !== presenterToolGeneration || !isFromMainRenderer(event)) {
+                    return;
+                }
+            }
+            startPresenterCursor(displayId, (x, y, point) => {
+                // → the world renderer, which broadcasts to viewers over the space. Viewers map this
+                // onto the full shared-display video, so the display-normalized (x, y) is right for them.
+                getControllingWorldContents()?.send("app:on-presenter-cursor", { x, y });
+                // → the content-protected overlay, so the PRESENTER sees the effect locally over the
+                // shared app (not captured, so viewers don't get a doubled render). The overlay window
+                // does NOT always cover the whole display (on macOS the menu-bar strip is excluded), so
+                // the display-normalized (x, y) would draw the dot off the real cursor. Re-normalize the
+                // raw cursor against the overlay's actual on-screen rect so it sits on the cursor tip.
+                const overlay = getOverlayWindow();
+                if (!overlay || overlay.isDestroyed()) {
+                    return;
+                }
+                const rect = overlay.getContentBounds();
+                const ox = rect.width > 0 ? Math.min(1, Math.max(0, (point.x - rect.x) / rect.width)) : x;
+                const oy = rect.height > 0 ? Math.min(1, Math.max(0, (point.y - rect.y) / rect.height)) : y;
+                sendToOverlay("app:overlay:presenter-effect", { tool, x: ox, y: oy, scale: 0, active: true });
+            });
+        })();
+    });
+
     ipcMain.handle("app:getDesktopCapturerSources", async (event, options: unknown) => {
         const config = getDesktopConfig();
         const senderFrame = event.senderFrame;
@@ -324,7 +394,7 @@ export default () => {
             name: source.name,
             thumbnailURL: source.thumbnail.toDataURL(),
             // Electron exposes display_id (as a string) for screen sources; used to place the
-            // meeting bar on the correct display.
+            // annotation overlay on the correct display.
             display_id: source.display_id ? Number(source.display_id) : undefined,
         }));
         // Entries only serve the throttle window: drop the stale ones (frames of closed tabs and
@@ -621,9 +691,95 @@ export default () => {
         sendToPip("app:pip:state-to-pip", state);
     });
 
-    // ---- Presenter HUD (meeting bar) ----
-    // A content-protected floating window placed on the SHARED display: the presenter sees it,
-    // the captured stream does not. State is pushed from the main renderer; user actions
+    // ---- Screen-annotation overlay (transparent, always-on-top, click-through, out of the capture) ----
+    // The app decides when it covers the shared screen (annotationOverlayDisplay). The world reports
+    // whether the user draws on their share (set-draw-mode) and the presenter tool
+    // (app:presenter:setTool), and pushes the elements and the tool, replayed when the overlay opens.
+    // Draw ops from the presenter are relayed back to the world, which syncs them through the space.
+    function isFromOverlayRenderer(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {
+        const overlayWin = getOverlayWindow();
+        return Boolean(overlayWin) && !overlayWin!.isDestroyed() && event.sender === overlayWin!.webContents;
+    }
+
+    function updateOverlay(): void {
+        const displayId = annotationOverlayDisplay({
+            canHideFromCapture: canHideWindowsFromCapture(process.platform),
+            sharing: getPresenceSnapshot().screenSharing,
+            sharedDisplayId,
+            drawing: overlayDrawing,
+            presenterTool: overlayPresenterTool,
+        });
+        if (isOverlayWindowOpen() && displayId !== overlayDisplayId) {
+            closeOverlayWindow();
+        }
+        if (displayId === undefined || isOverlayWindowOpen()) {
+            return;
+        }
+        overlayDisplayId = displayId;
+        // To the world that drives it: by the time it closes, another tab may be active.
+        const owner = getControllingWorldContents();
+        createOverlayWindow({
+            displayId,
+            onClosed: () => {
+                if (owner && !owner.isDestroyed()) {
+                    owner.send("app:overlay:exit-to-main");
+                }
+            },
+        });
+        awaitOverlayReady()
+            .then(() => {
+                setOverlayDrawMode(overlayDrawing);
+                sendToOverlay("app:overlay:draw-mode", overlayDrawing);
+                sendToOverlay("app:overlay:tool", overlayTool);
+                sendToOverlay("app:overlay:elements", overlayElements);
+            })
+            .catch((error) => ElectronLog.warn("Annotation overlay did not get ready", error));
+    }
+
+    onPresenceChange(updateOverlay);
+
+    // Main renderer → overlay renderer
+    ipcMain.on("app:overlay:set-draw-mode", (event, enabled: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        overlayDrawing = enabled === true;
+        updateOverlay();
+        if (isOverlayWindowOpen()) {
+            setOverlayDrawMode(overlayDrawing);
+            sendToOverlay("app:overlay:draw-mode", overlayDrawing);
+        }
+    });
+    ipcMain.on("app:overlay:set-tool", (event, tool: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        overlayTool = tool;
+        sendToOverlay("app:overlay:tool", tool);
+    });
+    ipcMain.on("app:overlay:set-elements", (event, elements: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        overlayElements = elements;
+        sendToOverlay("app:overlay:elements", elements);
+    });
+
+    // Overlay renderer → main renderer (active world view)
+    ipcMain.on("app:overlay:draw-from-overlay", (event, op: unknown) => {
+        if (!isFromOverlayRenderer(event)) return;
+        getControllingWorldContents()?.send("app:overlay:draw-to-main", op);
+    });
+    ipcMain.on("app:overlay:request-exit", (event) => {
+        if (!isFromOverlayRenderer(event)) return;
+        getControllingWorldContents()?.send("app:overlay:exit-to-main");
+    });
+    ipcMain.on("app:overlay:set-keyboard-focus", (event, enabled: unknown) => {
+        if (!isFromOverlayRenderer(event)) return;
+        setOverlayKeyboardFocus(enabled === true);
+    });
+    ipcMain.on("app:overlay:ready", (event) => {
+        if (!isFromOverlayRenderer(event)) return;
+        markOverlayReady();
+    });
+
+    // ---- Presenter HUD (meeting bar + annotation bar) ----
+    // Two content-protected floating windows placed on the SHARED display: the presenter sees
+    // them, the captured stream does not. State is pushed from the main renderer; user actions
     // come back as commands (same union as the PiP commands).
     async function resolveHudDisplayId(opts: unknown): Promise<number | undefined> {
         const options = (opts && typeof opts === "object" ? opts : {}) as { displayId?: unknown; sourceId?: unknown };
@@ -641,6 +797,13 @@ export default () => {
         const sharing = source !== null && typeof source === "object";
         resolveHudDisplayId(source)
             .then((displayId) => {
+                // Another shared screen closes the overlay and ends the drawing (the world clears the
+                // annotations); a presenter tool follows to the new screen.
+                if (displayId !== sharedDisplayId) {
+                    overlayDrawing = false;
+                }
+                sharedDisplayId = sharing ? displayId : undefined;
+                updateOverlay();
                 setSharedScreenDisplay(displayId);
                 const barDisplayId = meetingBarDisplay({
                     canHideFromCapture: canHideWindowsFromCapture(process.platform),
