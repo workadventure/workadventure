@@ -217,6 +217,21 @@ export const isMapDetailsData = z.object({
   metadata: extendApi(z.unknown().optional(), {
     description: "Metadata from administration",
   }),
+  extensionModuleAccessTokens: extendApi(
+    z
+      .array(
+        z.object({
+          token: z.string(),
+          provider: z.string(),
+          scopes: z.string().nullable().optional(),
+        }),
+      )
+      .optional(),
+    {
+      description:
+        "OAuth access tokens of the player, for the extension modules only. Unlike metadata, never exposed to the scripting API.",
+    },
+  ),
   roomName: extendApi(z.string().nullable().optional(), {
     description: "The name of the current room.",
     example: "WA Village",
