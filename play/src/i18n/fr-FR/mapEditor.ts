@@ -8,6 +8,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "Vous avez été déconnecté de cette salle.",
         deletePromptDetails: "Actualiser ne restaurera pas cette carte, car elle n'existe plus.",
         editionFailed: "Votre modification n'a pas pu être enregistrée et a été annulée.",
+        editionForbidden: "Vous n'avez pas le droit de faire cette modification, elle a donc été annulée.",
     },
     sideBar: {
         areaEditor: "Outil d'édition de zone",

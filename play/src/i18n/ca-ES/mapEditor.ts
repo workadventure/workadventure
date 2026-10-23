@@ -8,6 +8,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "Se t'ha desconnectat d'aquesta sala.",
         deletePromptDetails: "Actualitzar no restaurarà aquest mapa perquè ja no existeix.",
         editionFailed: "No s'ha pogut desar el teu canvi i s'ha desfet.",
+        editionForbidden: "No tens permís per fer aquest canvi, així que s'ha desfet.",
     },
     sideBar: {
         areaEditor: "Eina d'edició d'àrees",
