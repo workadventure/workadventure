@@ -58,6 +58,7 @@ export {
     isControllingWorldContents,
 } from "./tab-manager";
 import { closeAllHudWindows, forgetHudState } from "./hud-windows";
+import { adoptCompanionWindow, companionWindowOptions } from "./svelte-companion";
 
 // The shell window stays hidden until the first world page finishes loading. `did-fail-load` covers
 // errors, but not a server that accepts the connection and then goes quiet (captive portal, DNS
@@ -622,7 +623,13 @@ function configureSession() {
 
 function configureNavigationSecurity(webContents: Electron.WebContents) {
     const window = { webContents };
-    window.webContents.setWindowOpenHandler(({ url }) => {
+    window.webContents.setWindowOpenHandler(({ url, frameName }) => {
+        // The Svelte companion prototype: a child window main asked the world page to open.
+        const companionOptions = companionWindowOptions(url, frameName);
+        if (companionOptions) {
+            return { action: "allow", overrideBrowserWindowOptions: companionOptions };
+        }
+
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             void openDesktopBrowserFlow(url);
             return { action: "deny" };
@@ -638,6 +645,10 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         void openWorldTab(url);
         return { action: "deny" };
     });
+
+    window.webContents.on("did-create-window", (childWindow, { frameName }) =>
+        adoptCompanionWindow(childWindow, frameName)
+    );
 
     window.webContents.on("will-navigate", (event, url) => {
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {

@@ -9,6 +9,7 @@ import { companionAutoOpenDisplay } from "./share-surfaces-policy";
 import { canHideWindowsFromCapture } from "./platform-capture-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 import { isIdentifyingScreens } from "./screen-identify";
+import { SVELTE_COMPANION, openSvelteCompanion } from "./svelte-companion";
 
 /**
  * Drives the Companion — the People / Chat / meeting video window — and is the only place that
@@ -165,7 +166,8 @@ function performOpen(mode: "auto" | "manual"): void {
     opened = mode;
     opening = true;
     const automatic = mode === "auto" && !getPresenceSnapshot().invitationPending;
-    openHudWindow("companion", (automatic ? autoOpenDisplayId() : undefined) ?? cursorDisplayId())
+    const displayId = (automatic ? autoOpenDisplayId() : undefined) ?? cursorDisplayId();
+    (SVELTE_COMPANION ? openSvelteCompanion(displayId) : openHudWindow("companion", displayId))
         .then(() => {
             opening = false;
             watchUserClose();

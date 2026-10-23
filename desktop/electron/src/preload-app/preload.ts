@@ -24,6 +24,7 @@ const pipApi: WorkAdventureDesktopPipApi = {
     close: () => ipcRenderer.invoke("app:pip:close"),
     toggle: () => ipcRenderer.send("app:pip:toggle"),
     onWanted: (callback) => subscribe("app:pip:wanted", (wanted) => callback(wanted === true)),
+    onOpenWindow: (callback) => subscribe("app:companion:open-window", () => callback()),
     sendOffer: (sdp) => ipcRenderer.send("app:pip:offer-from-main", sdp),
     sendIce: (candidate) => ipcRenderer.send("app:pip:ice-from-main-renderer", candidate),
     sendState: (state) => ipcRenderer.send("app:pip:state-from-main", state),

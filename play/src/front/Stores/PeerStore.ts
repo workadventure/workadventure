@@ -27,15 +27,21 @@ export const volumeProximityDiscussionStore = writable(localUserStore.getVolumeP
 
 export const activePictureInPictureStore = writable(false);
 const desktopCompanion = typeof window !== "undefined" && Boolean(window.WAD?.desktop && window.WAD.pip);
+/** PROTOTYPE: the desktop companion is a child window of this page, which takes the videos like the browser PiP. */
+export const svelteCompanionWindowStore = writable(false);
 /** The videos take the picture-in-picture layout: in the browser only, see usesPictureInPictureLayout. */
-export const pictureInPictureLayoutStore = derived(activePictureInPictureStore, ($active) =>
-    usesPictureInPictureLayout($active, desktopCompanion),
+export const pictureInPictureLayoutStore = derived(
+    [activePictureInPictureStore, svelteCompanionWindowStore],
+    ([$active, $svelteCompanion]) => usesPictureInPictureLayout($active, desktopCompanion && !$svelteCompanion),
 );
 /**
  * The desktop companion shows the meeting: the app hides its cameras, like the browser's picture-in-picture
  * (screen shares stay, to be read in the large window).
  */
-export const camerasInCompanionStore = derived(activePictureInPictureStore, ($active) => $active && desktopCompanion);
+export const camerasInCompanionStore = derived(
+    [activePictureInPictureStore, svelteCompanionWindowStore],
+    ([$active, $svelteCompanion]) => $active && desktopCompanion && !$svelteCompanion,
+);
 export const askPictureInPictureActivatingStore = writable(false);
 /** The "Allow picture-in-picture" setting, persisted on set. */
 export const allowPictureInPictureStore = (() => {

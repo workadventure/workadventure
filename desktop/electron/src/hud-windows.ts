@@ -13,7 +13,7 @@ import { shouldProtectWindowFromCapture } from "./content-protection";
  */
 
 /** The display with the given id, or the primary display when there is none (or no id). */
-function resolveDisplay(displayId: number | undefined, label = "HUD"): Electron.Display {
+export function resolveDisplay(displayId: number | undefined, label = "HUD"): Electron.Display {
     const all = screen.getAllDisplays();
     if (typeof displayId === "number") {
         const match = all.find((display) => display.id === displayId);
@@ -41,7 +41,7 @@ type HudEntry = {
     readyResolve: () => void;
 };
 
-const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
+export const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     "meeting-bar": { width: 680, height: 76 },
     // Interactive quick-access panel (People / Chat / Controls). Resizable; this is the initial size.
     companion: { width: 340, height: 480 },
@@ -185,6 +185,31 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
             backgroundThrottling: false,
         },
     });
+    const readyPromise = setUpHudWindow(kind, newWindow, false);
+
+    const indexPath = path.resolve(__dirname, "..", "assets", kind, "index.html");
+    newWindow.loadFile(indexPath).catch((error) => {
+        ElectronLog.error(`Failed to load HUD renderer at ${indexPath}`, error);
+        try {
+            newWindow.destroy();
+        } catch {
+            /* best-effort */
+        }
+        if (hudWindows.get(kind)?.window === newWindow) {
+            hudWindows.delete(kind);
+        }
+    });
+
+    await readyPromise;
+    return isHudWindowOpen(kind);
+}
+
+/**
+ * Everything a HUD window gets once created: always on top on every workspace, bounds saved for the
+ * companion, capture protection for the meeting bar. `ready` is true for a window whose renderer is
+ * already usable (the Svelte companion, a child window of the world page: see svelte-companion).
+ */
+export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow, ready: boolean): Promise<void> {
     newWindow.setMenu(null);
     if (kind === "companion") {
         newWindow.setMinimumSize(COMPANION_MIN_WIDTH, COMPANION_MIN_HEIGHT);
@@ -242,7 +267,7 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
     const readyPromise = new Promise<void>((resolve) => {
         readyResolve = resolve;
     });
-    const entry: HudEntry = { window: newWindow, ready: false, readyPromise, readyResolve };
+    const entry: HudEntry = { window: newWindow, ready, readyPromise, readyResolve };
     hudWindows.set(kind, entry);
 
     newWindow.once("ready-to-show", () => {
@@ -263,21 +288,10 @@ export async function openHudWindow(kind: HudKind, displayId?: number): Promise<
         readyResolve();
     });
 
-    const indexPath = path.resolve(__dirname, "..", "assets", kind, "index.html");
-    newWindow.loadFile(indexPath).catch((error) => {
-        ElectronLog.error(`Failed to load HUD renderer at ${indexPath}`, error);
-        try {
-            newWindow.destroy();
-        } catch {
-            /* best-effort */
-        }
-        if (hudWindows.get(kind)?.window === newWindow) {
-            hudWindows.delete(kind);
-        }
-    });
-
-    await readyPromise;
-    return isHudWindowOpen(kind);
+    if (ready) {
+        readyResolve();
+    }
+    return readyPromise;
 }
 
 export function closeHudWindow(kind: HudKind): void {

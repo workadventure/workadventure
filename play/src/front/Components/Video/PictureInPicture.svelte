@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
-    import { onDestroy, onMount, tick } from "svelte";
+    import { flushSync, mount, onDestroy, onMount, tick, unmount } from "svelte";
     import { on } from "svelte/events";
     import Debug from "debug";
     import { derived, get } from "svelte/store";
@@ -14,6 +14,7 @@
         askPictureInPictureActivatingStore,
         pictureInPictureLayoutStore,
         pictureInPictureSupportedStore,
+        svelteCompanionWindowStore,
     } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -32,6 +33,7 @@
         hasPictureInPictureContent,
         isDocumentPictureInPictureSupported,
     } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
+    import DesktopCompanion from "./PictureInPicture/DesktopCompanion.svelte";
 
     interface Props {
         children?: Snippet<[{ inPictureInPicture: boolean }]>;
@@ -53,6 +55,12 @@
     let pipRequested = false;
     let unloading = false;
     let stopPictureInPictureEventDelegation: Array<() => void> = [];
+    // PROTOTYPE (WA_SVELTE_COMPANION=1): the desktop companion as a child window of this page.
+    let companionWindow: Window | undefined;
+    let companionApp: ReturnType<typeof mount> | undefined;
+    let companionProps: { videoHost?: HTMLDivElement } = $state({});
+    // The app may ask for the meeting video before the companion has finished mounting.
+    let meetingWantedInCompanion = false;
 
     const delegatedPictureInPictureEvents = [
         "beforeinput",
@@ -242,6 +250,68 @@
             });
     }
 
+    /** The desktop app asked for its companion (it decides when): open it as a child window of this page. */
+    function openSvelteCompanion() {
+        if (companionWindow) return;
+        // Same origin as this page (about:blank), so this page renders into it directly.
+        const child = window.open("about:blank", "wa-companion");
+        if (!child) return;
+        companionWindow = child;
+        child.document.title = "WorkAdventure";
+        copySteelSheet(child);
+        attachPictureInPictureEventDelegation(child);
+        child.addEventListener("pagehide", closeSvelteCompanion);
+        svelteCompanionWindowStore.set(true);
+        gameManager
+            .getCurrentGameScene()
+            .userProviderMerger.then((userProviderMerger) => {
+                if (companionWindow !== child) return;
+                companionApp = mount(DesktopCompanion, {
+                    target: child.document.body,
+                    props: {
+                        userProviderMerger,
+                        onClose: () => desktopPip?.toggle(),
+                        get videoHost() {
+                            return companionProps.videoHost;
+                        },
+                        set videoHost(element) {
+                            companionProps.videoHost = element;
+                        },
+                    },
+                });
+                flushSync();
+                if (meetingWantedInCompanion) showMeetingInCompanion(true);
+            })
+            .catch((error: unknown) => debug("Desktop companion: user list unavailable", error));
+    }
+
+    /** The companion window closed (main closed it, or the page goes away): take the videos back. */
+    function closeSvelteCompanion() {
+        if (!companionWindow) return;
+        showMeetingInCompanion(false);
+        if (companionApp) void unmount(companionApp);
+        companionApp = undefined;
+        companionWindow.removeEventListener("pagehide", closeSvelteCompanion);
+        if (!companionWindow.closed) companionWindow.close();
+        companionWindow = undefined;
+        detachPictureInPictureEventDelegation();
+        svelteCompanionWindowStore.set(false);
+    }
+
+    function showMeetingInCompanion(show: boolean) {
+        meetingWantedInCompanion = show;
+        const host = companionProps.videoHost;
+        if (show && host) {
+            // eslint-disable-next-line svelte/no-dom-manipulating
+            host.append(divElement);
+            activePictureInPictureStore.set(true);
+        } else if (parentDivElement) {
+            // eslint-disable-next-line svelte/no-dom-manipulating
+            parentDivElement.append(divElement);
+            activePictureInPictureStore.set(false);
+        }
+    }
+
     onMount(() => {
         try {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -334,6 +404,7 @@
         });
 
         const unsubscribeWanted = desktopPip?.onWanted(setNativeMeetingVideo);
+        const unsubscribeOpenWindow = desktopPip?.onOpenWindow?.(openSvelteCompanion);
 
         try {
             const currentScene = gameManager.getCurrentGameScene();
@@ -368,6 +439,8 @@
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
             unsubscribeWanted?.();
+            unsubscribeOpenWindow?.();
+            closeSvelteCompanion();
             presenterHudBridge.stop();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -387,6 +460,10 @@
     });
 
     function setNativeMeetingVideo(wanted: boolean) {
+        if (companionWindow) {
+            showMeetingInCompanion(wanted);
+            return;
+        }
         if (!nativeClient) return;
         if (wanted && !nativeClient.isActive()) {
             nativeClient

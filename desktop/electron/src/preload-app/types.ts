@@ -86,6 +86,8 @@ export type WorkAdventureDesktopPipApi = {
     toggle: () => void;
     /** The app wants the meeting video in the companion (true) or not any more (false). */
     onWanted: (callback: (wanted: boolean) => void) => () => void;
+    /** PROTOTYPE (WA_SVELTE_COMPANION=1): main asks the page to open the Svelte companion window. */
+    onOpenWindow?: (callback: () => void) => () => void;
     sendOffer: (sdp: DesktopPipSdp) => void;
     sendIce: (candidate: RTCIceCandidateInit) => void;
     sendState: (state: DesktopPipState) => void;
