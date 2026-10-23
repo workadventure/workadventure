@@ -11,6 +11,10 @@ export const LivekitCredentialsResponse = z.object({
     livekitApiSecret: extendApi(z.string(), {
         description: "The Api secret to be used in admin",
     }),
+    autoRecording: extendApi(z.boolean().optional(), {
+        description:
+            "Whether the world's spaces are recorded automatically: every microphone of a bubble or meeting area is recorded to its own file, by an egress on this LiveKit server. Asked once per space, at its first join, by a back with LIVEKIT_RECORDING_S3_BUCKET set. Defaults to false.",
+    }),
 });
 
 export type LivekitCredentialsResponse = z.infer<typeof LivekitCredentialsResponse>;

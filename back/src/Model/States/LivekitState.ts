@@ -1,18 +1,19 @@
 import * as Sentry from "@sentry/node";
 import type { HandleRecordingWebhookRequest, SpaceUser } from "@workadventure/messages";
+import type { S3Upload } from "livekit-server-sdk";
 import { CommunicationType } from "../Types/CommunicationTypes";
 import { LivekitCommunicationStrategy } from "../Strategies/LivekitCommunicationStrategy";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST, PLAY_URL } from "../../Enum/EnvironmentVariable";
 import { LiveKitService, type RecordingStartInfo } from "../Services/LivekitService";
-import type { IRecordableState } from "../Interfaces/ICommunicationState";
+import type { EgressFile, IAutoRecordableState, IRecordableState } from "../Interfaces/ICommunicationState";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import { CommunicationState } from "./AbstractCommunicationState";
 
 export class LivekitState
     extends CommunicationState<LivekitCommunicationStrategy>
-    implements IRecordableState<IRecordableStrategy>
+    implements IRecordableState<IRecordableStrategy>, IAutoRecordableState
 {
     protected _communicationType: CommunicationType = CommunicationType.LIVEKIT;
     protected _nextCommunicationType: CommunicationType = CommunicationType.WEBRTC;
@@ -69,6 +70,18 @@ export class LivekitState
 
     async handleStopRecording(egressId?: string): Promise<void> {
         await this._currentStrategy.stopRecording(egressId);
+    }
+
+    startTrackEgress(spaceUserId: string, trackSid: string, filepath: string, s3: S3Upload): Promise<string> {
+        return this._currentStrategy.startTrackEgress(spaceUserId, trackSid, filepath, s3);
+    }
+
+    stopEgress(egressId: string): Promise<void> {
+        return this._currentStrategy.stopEgress(egressId);
+    }
+
+    getEgressFile(egressId: string): Promise<EgressFile | undefined> {
+        return this._currentStrategy.getEgressFile(egressId);
     }
 
     async handleLivekitWebhook(

@@ -46,6 +46,16 @@ type Participation = {
     spoke: boolean;
 };
 
+/** A session as it opens, for whoever acts on the same meeting the analytics count (see `onSessionChanged`). */
+export type OpenedSession = {
+    /** The meeting.ended row's eventId: what joins anything filed under it to the analytics. */
+    eventId: string;
+    kind: SpaceKind;
+    openedAtMs: number;
+    /** The room of whoever arrived first in the space. */
+    roomId: string;
+};
+
 /** Which media transport carried the space from `fromMs` on. */
 type TransportSegment = { transport: string; fromMs: number };
 
@@ -97,6 +107,8 @@ export class SessionAnalytics {
      * adds nothing there.
      */
     private readonly meetingId: string;
+    /** Told when a session opens (with it) and when it closes (with undefined). */
+    public onSessionChanged?: (session: OpenedSession | undefined) => void;
 
     public constructor(
         private readonly id: string,
@@ -205,6 +217,7 @@ export class SessionAnalytics {
             return false;
         }
         this.session = undefined;
+        this.onSessionChanged?.(undefined);
 
         // Every kind emits the same two rows; `meetingKind` is what tells a broadcast
         // from a conversation, and the admin filters on it where the business does.
@@ -295,6 +308,12 @@ export class SessionAnalytics {
         for (const key of this.members.keys()) {
             this.addParticipation(key);
         }
+        this.onSessionChanged?.({
+            eventId: eventIdOf(this.id, this.session.openedAtMs),
+            kind,
+            openedAtMs: this.session.openedAtMs,
+            roomId: this.roomId,
+        });
     }
 
     private addParticipation(key: string): void {
