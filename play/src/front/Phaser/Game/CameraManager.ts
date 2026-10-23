@@ -152,6 +152,8 @@ export class CameraManager extends EventEmitter {
 
     public destroy(): void {
         this.setManuallyDetached(false);
+        this.cameraAnimation?.onInterrupt();
+        this.cameraAnimation = undefined;
         this.cancelOffsetTween();
         this.zoomAnimation?.onInterrupt();
         this.zoomAnimation = undefined;
@@ -539,6 +541,16 @@ export class CameraManager extends EventEmitter {
 
     public panBy(screenX: number, screenY: number): void {
         this.scrollCamera(screenX / this.camera.zoom, screenY / this.camera.zoom);
+    }
+
+    /** Use the explorer's inertia, converting screen velocity to world units at the current zoom. */
+    public releaseManualPan(velocity: { x: number; y: number }): void {
+        if (!this.manuallyDetached || !Number.isFinite(velocity.x) || !Number.isFinite(velocity.y)) return;
+        this.setSpeed({ x: (-velocity.x * 10) / this.camera.zoom, y: (-velocity.y * 10) / this.camera.zoom });
+    }
+
+    public stopManualPanInertia(): void {
+        if (this.manuallyDetached) this.stopSpeed();
     }
 
     public resumePlayerFollow(): void {
