@@ -116,6 +116,14 @@ export function rememberWorldUrl(url: string): void {
     }
 }
 
+/** A world that answered with an error page is no longer reopened at launch (it stays in the history). */
+export function forgetLastRoomUrl(url: string): void {
+    if (settings.get("last_room_url") === normalizePersistedLastRoomUrl(url)) {
+        // Empty rather than undefined, which set() ignores; an empty last room counts as none.
+        settings.set("last_room_url", "");
+    }
+}
+
 export function onWorldHistoryChange(listener: () => void): () => void {
     historyChangeListeners.add(listener);
     return () => historyChangeListeners.delete(listener);

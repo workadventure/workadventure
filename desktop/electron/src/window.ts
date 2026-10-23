@@ -29,7 +29,7 @@ import {
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
-import { rememberWorldUrl } from "./world-history";
+import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
 import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
@@ -669,7 +669,17 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         }
     });
 
-    window.webContents.on("did-navigate", (event, url) => {
+    window.webContents.on("did-navigate", (event, url, httpResponseCode) => {
+        // An error page answered (a world that no longer exists, a server down): Chromium counts it as
+        // loaded, so did-fail-load never fires. Back to the Landing, and forget it as the last room.
+        if (httpResponseCode >= 400) {
+            ElectronLog.warn(`HTTP ${httpResponseCode} for "${stripSensitiveQueryParams(url) || url}".`);
+            forgetLastRoomUrl(url);
+            if (isActiveWorldContents(webContents)) {
+                void recoverToLandingWithError(t("landing.loadFailure"));
+            }
+            return;
+        }
         rememberWorldUrl(url);
         // A full navigation replaces the document, so the presence this world pushed (in a meeting,
         // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
