@@ -8,7 +8,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "このルームから切断されました。",
         deletePromptDetails: "このマップはもう存在しないため、再読み込みしても復元されません。",
         editionFailed: "変更を保存できなかったため、元に戻されました。",
-        editionForbidden: "この変更を行う権限がないため、元に戻されました。",
     },
     sideBar: {
         areaEditor: "エリアエディターツール",

@@ -75,8 +75,8 @@ async function expectRefused(user: typeof VISITOR, message: EditMapMessage): Pro
     const response = await send(user, message);
     expect(response.editMapMessage?.message?.$case).toBe("errorCommandMessage");
     const errorMessage = response.editMapMessage?.message;
-    expect(errorMessage?.$case === "errorCommandMessage" && errorMessage.errorCommandMessage.permissionDenied).toBe(
-        true,
+    expect(errorMessage?.$case === "errorCommandMessage" && errorMessage.errorCommandMessage.reason).toMatch(
+        /is not allowed/,
     );
     expect(wamFile.getWam()).toEqual(wamBefore);
     expect(addCommandToQueue).not.toHaveBeenCalled();

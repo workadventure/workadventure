@@ -8,7 +8,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         deletePromptSubtitle: "คุณถูกตัดการเชื่อมต่อจากห้องนี้",
         deletePromptDetails: "การรีเฟรชจะไม่นำแผนที่นี้กลับมา เพราะแผนที่ไม่มีอยู่แล้ว",
         editionFailed: "ไม่สามารถบันทึกการเปลี่ยนแปลงของคุณได้ และถูกย้อนกลับแล้ว",
-        editionForbidden: "คุณไม่ได้รับอนุญาตให้ทำการเปลี่ยนแปลงนี้ จึงถูกย้อนกลับแล้ว",
     },
     sideBar: {
         areaEditor: "เครื่องมือแก้ไขพื้นที่",
