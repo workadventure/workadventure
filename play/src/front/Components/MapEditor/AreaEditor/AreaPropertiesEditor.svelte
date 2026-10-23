@@ -6,7 +6,6 @@
         AreaDataPropertiesKeys,
         AreaDataProperty,
         OpenWebsitePropertyData,
-        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { PersonalAreaAccessClaimMode, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import type { KlaxoonEvent } from "@workadventure/shared-utils";
@@ -543,11 +542,6 @@
         });
     }
 
-    // Fixme: this is a hack to force the map editor to update the property
-    function onUpdateAudioProperty(property: PlayAudioPropertyData) {
-        onUpdateProperty(property);
-    }
-
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
@@ -903,14 +897,14 @@
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "playAudio"}
+                        {:else if properties[i].type === "playAudio"}
                             <PlayAudioPropertyEditor
-                                property={{ ...property, hideButtonLabel: true }}
+                                bind:property={properties[i]}
                                 isArea={true}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                onaudiolink={onUpdateAudioProperty}
+                                onchange={() => onUpdateProperty(property)}
                             />
                         {:else if properties[i].type === "openWebsite"}
                             <OpenWebsitePropertyEditor
