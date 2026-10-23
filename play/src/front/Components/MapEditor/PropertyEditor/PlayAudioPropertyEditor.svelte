@@ -1,23 +1,30 @@
 <script lang="ts">
     import type { PlayAudioPropertyData } from "@workadventure/map-editor";
+    import { SOUND_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
     import { LL } from "../../../../i18n/i18n-svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Input from "../../Input/Input.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
+    import InputRadio from "../../Input/InputRadio.svelte";
     import { IconFileMusic } from "../../Icons";
     import { audioOutput } from "../../../WebRtc/AudioOutputManager";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
+    import FileUpload from "./FileUpload/FileUpload.svelte";
 
     interface Props {
         property: PlayAudioPropertyData;
         isArea?: boolean;
         onchange?: () => void;
         onclose?: () => void;
-        onaudiolink?: (property: PlayAudioPropertyData) => void;
     }
 
-    let { property = $bindable(), isArea = false, onchange, onclose, onaudiolink }: Props = $props();
+    let { property = $bindable(), isArea = false, onchange, onclose }: Props = $props();
     let optionAdvancedActivated = $state(false);
+
+    // The sound is uploaded to the map-storage or linked by URL. Switching tabs changes nothing: the
+    // sound is only replaced once a file is uploaded or a URL typed.
+    let source: "upload" | "url" = $state(property.audioLink && !property.audioName ? "url" : "upload");
+    let url = $state(property.audioName ? "" : property.audioLink);
 
     let HTMLAudioPlayer: HTMLAudioElement;
     let playing = $state(false);
@@ -63,8 +70,13 @@
     function onValueChange() {
         errorMessage = "";
         onchange?.();
-        // Fixme: this is a hack to force the map editor to update the property
-        onaudiolink?.(property);
+    }
+
+    function setSound(audioLink: string, audioName: string | null) {
+        stopAudio();
+        property.audioLink = audioLink;
+        property.audioName = audioName;
+        onValueChange();
     }
 
     function onRangeChange() {
@@ -90,18 +102,47 @@
         <span>
             <div class="value-input">
                 <div class="flex">
-                    <Input
-                        id="audioLink"
-                        label={$LL.mapEditor.properties.playAudio.audioLinkLabel()}
-                        type="text"
-                        placeholder={$LL.mapEditor.properties.playAudio.audioLinkPlaceholder()}
-                        bind:value={property.audioLink}
-                        onchange={onValueChange}
+                    <InputRadio
+                        id="audioSourceUpload-{property.id}"
+                        label={$LL.mapEditor.properties.playAudio.sourceUpload()}
+                        value="upload"
+                        bind:group={source}
                     />
+                    <InputRadio
+                        id="audioSourceUrl-{property.id}"
+                        label={$LL.mapEditor.properties.playAudio.sourceUrl()}
+                        value="url"
+                        bind:group={source}
+                    />
+                </div>
+                <div class="flex items-end gap-1">
+                    <div class="grow">
+                        {#if source === "upload"}
+                            <FileUpload
+                                propertyId={property.id}
+                                name={property.audioName}
+                                accept={SOUND_UPLOAD_SUPPORTED_FORMATS_FRONT}
+                                onupload={(name, link) => {
+                                    url = "";
+                                    setSound(link, name);
+                                }}
+                                ondeleteFile={() => setSound("", null)}
+                            />
+                        {:else}
+                            <Input
+                                id="audioLink"
+                                label={$LL.mapEditor.properties.playAudio.audioLinkLabel()}
+                                type="text"
+                                placeholder={$LL.mapEditor.properties.playAudio.audioLinkPlaceholder()}
+                                bind:value={url}
+                                onchange={() => setSound(url, null)}
+                            />
+                        {/if}
+                    </div>
                     {#if !playing}
-                        <button onclick={playAudio} class="mt-7 ps-1 pe-0 text-xl"> ▶️ </button>
+                        <button onclick={playAudio} class="ps-1 pe-0 pb-1 text-xl"> ▶️ </button>
                     {:else}
-                        <button onclick={stopAudio} class="mt-7 ps-1 pe-0 text-xl"> ⏹️ </button>
+                        <button onclick={stopAudio} class="ps-1 pe-0 pb-1 text-xl"> ⏹️ </button>
                     {/if}
                 </div>
                 <audio use:audioOutput class="audio-manager-audioplayer" bind:this={HTMLAudioPlayer}></audio>
@@ -165,7 +206,7 @@
                             buttonShape="square"
                         />
                     </div>
-                    {#if !property.hideButtonLabel}
+                    {#if !isArea && !property.hideButtonLabel}
                         <div class="value-input">
                             <Input
                                 label={$LL.mapEditor.entityEditor.buttonLabel()}

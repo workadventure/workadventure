@@ -162,13 +162,14 @@
             {/if}
 
             <FileUpload
-                bind:property
-                onchange={() => {
+                propertyId={property.id}
+                name={property.name}
+                onupload={(name, link) => {
+                    property.name = name;
+                    property.link = link;
                     onchange?.(property.link);
                 }}
-                ondeleteFile={() => {
-                    deleteFile();
-                }}
+                ondeleteFile={deleteFile}
             />
 
             {#if !property.hideButtonLabel}
