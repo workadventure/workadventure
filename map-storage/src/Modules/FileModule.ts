@@ -1,5 +1,5 @@
 import type { AreaDataProperty, EntityDataProperty } from "@workadventure/map-editor";
-import { CustomFileService, uploadedFile } from "../Services/CustomFileService";
+import { CustomFileService, uploadedFileName } from "../Services/CustomFileService";
 import type { HookManager } from "./HookManager";
 import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
 
@@ -15,8 +15,8 @@ async function onPropertyChange<T extends AreaDataProperty | EntityDataProperty>
     if (!newProperty) {
         return oldProperty;
     }
-    const oldFileName = uploadedFile(oldProperty)?.name;
-    if (oldFileName && uploadedFile(newProperty)?.name !== oldFileName) {
+    const oldFileName = uploadedFileName(oldProperty);
+    if (oldFileName && uploadedFileName(newProperty) !== oldFileName) {
         await new CustomFileService(hostname).deleteFile(oldProperty);
     }
     return newProperty;
@@ -26,7 +26,7 @@ async function onPropertyDelete<T extends AreaDataProperty | EntityDataProperty>
     property: T,
     hostname: string,
 ): Promise<T> {
-    if (uploadedFile(property)?.name) {
+    if (uploadedFileName(property)) {
         try {
             await new CustomFileService(hostname).deleteFile(property);
         } catch (error) {
@@ -36,22 +36,8 @@ async function onPropertyDelete<T extends AreaDataProperty | EntityDataProperty>
     return property;
 }
 
-/** A copied property gets its own copy of the file it links to. */
-async function onPropertyAdd<T extends AreaDataProperty | EntityDataProperty>(
-    property: T,
-    hostname: string,
-): Promise<T> {
-    const link = await new CustomFileService(hostname).copySharedFile(property);
-    if (link === undefined) {
-        return property;
-    }
-    return property.type === "openFile" ? { ...property, link } : { ...property, audioLink: link };
-}
-
 export class FileModule implements MapStorageModuleInterface {
     public init(hookManager: HookManager): void {
-        hookManager.subscribeAreaPropertyAdd((area, property, hostname) => onPropertyAdd(property, hostname));
-        hookManager.subscribeEntityPropertyAdd((entity, property, hostname) => onPropertyAdd(property, hostname));
         hookManager.subscribeAreaPropertyChange((area, oldProperty, newProperty, hostname) =>
             onPropertyChange(oldProperty, newProperty, hostname),
         );
