@@ -24,6 +24,17 @@ import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterSt
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
+import {
+    calendarEventsStore,
+    isActivatedStore as isCalendarActivatedStore,
+    isCalendarVisibleStore,
+} from "../../Stores/CalendarStore";
+import {
+    isActivatedStore as isTodoListActivatedStore,
+    isTodoListVisibleStore,
+    todoListsStore,
+} from "../../Stores/TodoListStore";
+import { joinMeeting } from "../../Components/Calendar/joinMeeting";
 import { allowPictureInPictureStore } from "../../Stores/PeerStore";
 import { playersStore } from "../../Stores/PlayersStore";
 import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
@@ -51,6 +62,7 @@ import type {
     CompanionUser,
     WorkAdventureDesktopApi,
 } from "../../Interfaces/DesktopAppInterfaces";
+import { buildCompanionAgenda } from "./CompanionAgenda";
 import { startDesktopStringsBridge } from "./DesktopStringsBridge";
 
 type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
@@ -604,6 +616,15 @@ class DesktopApi {
                 media: latestMedia,
                 invitation: latestInvitation,
                 chatStatus: latestChatStatus,
+                agenda: buildCompanionAgenda({
+                    events: get(isCalendarActivatedStore) ? get(calendarEventsStore).values() : undefined,
+                    lists: get(isTodoListActivatedStore) ? get(todoListsStore).values() : undefined,
+                    now: new Date(),
+                    labels: {
+                        inProgress: get(LL).desktop.companion.inProgress(),
+                        until: (time) => get(LL).desktop.companion.until({ time }),
+                    },
+                }),
             });
         };
         const schedulePush = () => {
@@ -678,6 +699,15 @@ class DesktopApi {
             latestMedia = media;
             schedulePush();
         });
+
+        // Agenda + tasks: re-push on change, and every 30 s for "in 12 minutes" and what is in progress.
+        for (const store of [isCalendarActivatedStore, calendarEventsStore, isTodoListActivatedStore, todoListsStore]) {
+            //eslint-disable-next-line svelte/no-ignored-unsubscribe
+            store.subscribe(() => schedulePush());
+        }
+        setInterval(() => {
+            if (get(isCalendarActivatedStore) || get(isTodoListActivatedStore)) schedulePush();
+        }, 30_000);
 
         // Pending meeting invitation → banner in the panel (the controller force-opens for it).
         //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -917,6 +947,17 @@ class DesktopApi {
                 }
                 case "open-conversation-in-main":
                     openConversationInMain(command.conversationId);
+                    break;
+                case "join-meeting": {
+                    const event = [...get(calendarEventsStore).values()].find(({ id }) => id === command.eventId);
+                    if (event) joinMeeting(event);
+                    break;
+                }
+                case "open-agenda":
+                    isCalendarVisibleStore.set(true);
+                    break;
+                case "open-tasks":
+                    isTodoListVisibleStore.set(true);
                     break;
                 case "dm": {
                     const player = playerById.get(command.userId);
