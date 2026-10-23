@@ -41,6 +41,7 @@ const presenterHudApi: WorkAdventureDesktopHudApi = {
 
 const companionApi: WorkAdventureDesktopCompanionApi = {
     pushState: (state) => ipcRenderer.send("app:companion:state-from-main", state),
+    open: () => ipcRenderer.send("app:companion:open"),
     onCommand: (callback) =>
         subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
 };

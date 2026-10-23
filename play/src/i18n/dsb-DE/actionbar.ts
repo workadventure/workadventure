@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Desktopowe nałoženje",
         changeWorld: "Swět změniś",
+        openCompanion: "Pśewóźaŕske wokno wótcyniś",
         title: "Drugi swět wócyniś",
         description: "Zasajźćo dopołny URL WorkAdventure-swěta, kótaryž cośo wócyniś.",
         urlLabel: "URL swěta",

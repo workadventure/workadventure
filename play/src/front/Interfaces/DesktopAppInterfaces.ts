@@ -287,6 +287,8 @@ export type CompanionCommand =
 /** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
 export type WorkAdventureDesktopCompanionApi = {
     pushState: (state: CompanionState) => void;
+    /** Open the companion by hand (it stays when WA shows again). Absent from older desktop apps. */
+    open?: () => void;
     onCommand: (callback: (command: CompanionCommand) => void) => () => void;
 };
 

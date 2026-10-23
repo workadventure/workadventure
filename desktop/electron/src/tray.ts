@@ -185,23 +185,18 @@ function drawTrayStatusImage(status: TrayStatus): NativeImage {
     }
 }
 
-function updateTrayContextMenu() {
-    if (!tray) {
-        return;
-    }
-
+/**
+ * Status, microphone, camera and companion: what is worth reaching for with the window hidden. The
+ * tray's menu starts with them, and so does the Dock icon's menu (macOS).
+ */
+function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
     const status = getTrayStatus();
     // Status / mic / camera / companion only make sense inside a world; gray them out otherwise
     // (landing / login, or no window). "offline" is exactly the not-in-a-world state.
     const inWorld = status !== "offline";
     const media = getMediaState();
     const shortcuts = settings.get("shortcuts");
-
-    // Kept deliberately short: a menu-bar status item is glanced at mid-meeting, so only the things
-    // worth reaching for with a window hidden stay at the top level (status, mic, camera, companion,
-    // show/hide). World switching and diagnostics are real but rare, so they collapse into submenus;
-    // both also exist in the application menu, which is unreachable while the window is hidden.
-    const trayContextMenu = Menu.buildFromTemplate([
+    return [
         {
             // The live status IS the label, so this one row both reports and changes it (it used to
             // be a disabled header plus a separate "Set status" row saying the same thing twice).
@@ -242,6 +237,22 @@ function updateTrayContextMenu() {
                 toggleCompanion();
             },
         },
+    ];
+}
+
+function updateTrayContextMenu() {
+    // Right-click on the Dock icon: the quick actions, the companion among them.
+    app.dock?.setMenu(Menu.buildFromTemplate(quickActionMenuItems()));
+    if (!tray) {
+        return;
+    }
+
+    // Kept deliberately short: a menu-bar status item is glanced at mid-meeting, so only the things
+    // worth reaching for with a window hidden stay at the top level (status, mic, camera, companion,
+    // show/hide). World switching and diagnostics are real but rare, so they collapse into submenus;
+    // both also exist in the application menu, which is unreachable while the window is hidden.
+    const trayContextMenu = Menu.buildFromTemplate([
+        ...quickActionMenuItems(),
         { type: "separator" },
         {
             id: "open",

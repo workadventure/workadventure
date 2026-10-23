@@ -25,6 +25,7 @@ const actionbar: BaseTranslation = {
     desktop: {
         section: "Desktop app",
         changeWorld: "Change world",
+        openCompanion: "Open the companion",
         title: "Open another world",
         description: "Paste the complete URL of the WorkAdventure world you want to open.",
         urlLabel: "World URL",

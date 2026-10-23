@@ -324,6 +324,8 @@ export type CompanionCommand =
 export type WorkAdventureDesktopCompanionApi = {
     /** Push the current companion state to the panel (no-op if the panel is closed). */
     pushState: (state: CompanionState) => void;
+    /** Open the companion by hand (it stays when WA shows again). */
+    open: () => void;
     /** Subscribe to commands raised by the panel. Returns an unsubscriber. */
     onCommand: (callback: (command: CompanionCommand) => void) => () => void;
 };
