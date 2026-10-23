@@ -15,10 +15,21 @@ export interface StateTransitionResult<T extends ICommunicationStrategy> {
 export interface ICommunicationState<T extends ICommunicationStrategy> {
     get communicationType(): string;
     init(): Promise<void>;
-    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
+    /**
+     * `firstRegistry`: whether `users` is the first of the two registries the user entered, which is when the user is
+     * told the space's strategy. Taken when the manager's handler starts: the other registry may fill while it waits.
+     */
+    handleUserAdded(
+        user: SpaceUser,
+        firstRegistry: boolean,
+    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserUpdated(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
-    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
+    /** `firstRegistry`: as for `handleUserAdded`, for `usersToNotify`. */
+    handleUserToNotifyAdded(
+        user: SpaceUser,
+        firstRegistry: boolean,
+    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void>;
     switchState(targetCommunicationType: string): void;
     finalize(): void;

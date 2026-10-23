@@ -294,7 +294,7 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserAdded(user);
 
-            expect(state.mocks.handleUserAdded).toHaveBeenCalledWith(user);
+            expect(state.mocks.handleUserAdded).toHaveBeenCalledWith(user, true);
         });
 
         it("should evaluate transition when user is added", async () => {
@@ -483,7 +483,7 @@ describe("CommunicationManager", () => {
             const user = createSpaceUser("user_1");
             await manager.handleUserToNotifyAdded(user);
 
-            expect(state.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(user);
+            expect(state.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(user, true);
         });
     });
 
@@ -726,7 +726,7 @@ describe("CommunicationManager", () => {
             // the join must complete through the new state without waiting for init() to finish.
             const lateJoiner = createSpaceUser("user_5");
             await manager.handleUserAdded(lateJoiner);
-            expect(newState.mocks.handleUserAdded).toHaveBeenCalledWith(lateJoiner);
+            expect(newState.mocks.handleUserAdded).toHaveBeenCalledWith(lateJoiner, true);
             expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
 
             finishInit();
@@ -1552,7 +1552,7 @@ describe("CommunicationManager", () => {
             expect(oldState.mocks.handleUserAdded).not.toHaveBeenCalled();
         });
 
-        it("hands a joiner's join and watch to the state once the answer came, the state telling the strategy once", async () => {
+        it("still tells each joiner the strategy once, when its join and its watch both waited for the answer", async () => {
             const users = [createSpaceUser("user_1")];
             const { manager, answer, oldState } = recordingSpace(users);
 
@@ -1563,9 +1563,9 @@ describe("CommunicationManager", () => {
             answer(credentials(false));
             await Promise.all([join, watch]);
 
-            // Both reach the state; telling the strategy only once is the state's job (WebRTCState.test.ts)
-            expect(oldState.mocks.handleUserAdded).toHaveBeenCalledWith(users[0]);
-            expect(oldState.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(users[0]);
+            // The join came first: it tells the strategy, the watch does not
+            expect(oldState.mocks.handleUserAdded).toHaveBeenCalledWith(users[0], true);
+            expect(oldState.mocks.handleUserToNotifyAdded).toHaveBeenCalledWith(users[0], false);
         });
 
         it("keeps a world that is not recorded in P2P, and asks once per space", async () => {
