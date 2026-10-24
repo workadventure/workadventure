@@ -18,6 +18,9 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { MapDragPointerCapture } from "./MapDragPointerCapture";
+import { MapDragGesture } from "./MapDragGesture";
 import type { Shortcut } from "./UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
@@ -26,10 +29,19 @@ import GameObject = Phaser.GameObjects.GameObject;
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    private readonly mapDrag = new MapDragGesture();
+    private draggingMap = false;
+    private readonly pointerCapture: MapDragPointerCapture;
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.pointerCapture = new MapDragPointerCapture(
+            gameScene.game.canvas,
+            () => this.canDragMap(),
+            () => this.handlePointerCancelEvent(),
+        );
+        gameScene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.pointerCapture.destroy());
 
         this.initShortcuts();
     }
@@ -112,7 +124,25 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
+        if (pointer.leftButtonReleased() && !pointer.wasTouch) {
+            const wasDragging = this.draggingMap;
+            const dragged = this.mapDrag.end(pointer.id);
+            this.restoreDragCursor();
+            this.pointerCapture.release();
+            if (dragged) {
+                if (wasDragging && this.canDragMap() && pointer.velocity) {
+                    this.gameScene.getCameraManager().releaseManualPan(pointer.velocity);
+                }
+                return;
+            }
+        }
+        if (get(mapEditorModeStore)) {
+            return;
+        }
         if (pointer.wasTouch || pointer.leftButtonReleased()) {
+            if (!this.gameScene.userInputManager.isControlsEnabled) {
+                return;
+            }
             for (const object of gameObjects) {
                 if (isActivatable(object)) {
                     this.gameScene.getActivatablesManager().handlePointerDownEvent(object);
@@ -144,6 +174,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
         const camera = this.gameScene.getCameraManager().getCamera();
         const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
+        this.gameScene.getCameraManager().resumePlayerFollow();
         this.gameScene
             .moveTo(
                 {
@@ -157,9 +188,67 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             });
     }
 
-    public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
+    public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
+        if (pointer.wasTouch || !pointer.leftButtonDown() || !this.canDragMap()) {
+            return;
+        }
+        pointer.motionFactor = 0.35;
+        this.gameScene.getCameraManager().stopManualPanInertia();
+        this.restoreDragCursor();
+        this.mapDrag.begin(pointer);
+    }
 
-    public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
+    public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {
+        if (pointer.wasTouch) {
+            return;
+        }
+        if (!pointer.leftButtonDown()) {
+            if (this.draggingMap) this.handlePointerCancelEvent();
+            return;
+        }
+        if (!this.canDragMap()) {
+            this.handlePointerCancelEvent();
+            return;
+        }
+        const delta = this.mapDrag.move(pointer);
+        if (!delta) {
+            return;
+        }
+        const cameraManager = this.gameScene.getCameraManager();
+        if (!this.draggingMap) {
+            cameraManager.startManualPan();
+            this.draggingMap = true;
+            this.gameScene.input.setDefaultCursor("grabbing");
+        }
+        cameraManager.panBy(delta.x, delta.y);
+    }
+
+    public handlePointerOutEvent(): void {
+        if (this.draggingMap && !this.pointerCapture.active) this.handlePointerCancelEvent();
+    }
+
+    public handlePointerCancelEvent(): void {
+        this.pointerCapture.release();
+        this.gameScene.getCameraManager().stopManualPanInertia();
+        this.mapDrag.cancel();
+        this.restoreDragCursor();
+    }
+
+    private canDragMap(): boolean {
+        return (
+            this.gameScene.userInputManager.isControlsEnabled &&
+            !get(mapEditorModeStore) &&
+            !this.gameScene.getCameraManager().isZoomLocked() &&
+            !waScaleManager.getFocusTarget()
+        );
+    }
+
+    private restoreDragCursor(): void {
+        if (this.draggingMap) {
+            this.gameScene.input.setDefaultCursor("auto");
+            this.draggingMap = false;
+        }
+    }
 
     private handleKeyF() {
         const state = get(followStateStore);

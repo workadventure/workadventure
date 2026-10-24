@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
 import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { cameraDetachedStore } from "../../Stores/CameraStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
 import type { Box } from "../../WebRtc/LayoutManager";
@@ -79,6 +80,7 @@ export class CameraManager extends EventEmitter {
 
     private playerToFollow?: Player | RemotePlayer;
     private zoomLocked: boolean;
+    private manuallyDetached = false;
 
     private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
 
@@ -149,6 +151,9 @@ export class CameraManager extends EventEmitter {
     };
 
     public destroy(): void {
+        this.setManuallyDetached(false);
+        this.cameraAnimation?.onInterrupt();
+        this.cameraAnimation = undefined;
         this.cancelOffsetTween();
         this.zoomAnimation?.onInterrupt();
         this.zoomAnimation = undefined;
@@ -170,6 +175,11 @@ export class CameraManager extends EventEmitter {
         duration: number,
         callback?: () => void,
     ): void {
+        const wasManuallyDetached = this.manuallyDetached;
+        this.setManuallyDetached(false);
+        if (wasManuallyDetached) {
+            this.doUpdateCameraOffset(true);
+        }
         this.cameraAnimation?.onInterrupt();
 
         if (duration === 0) {
@@ -384,6 +394,10 @@ export class CameraManager extends EventEmitter {
     public doUpdateCameraOffset(instant = false): void {
         const targetFollowOffset = this.updateTargetFollowOffset();
 
+        if (this.manuallyDetached) {
+            return;
+        }
+
         if (instant) {
             if (!this.cameraOffsetCurrentTween) {
                 this.camera.setFollowOffset(targetFollowOffset.x, targetFollowOffset.y);
@@ -498,6 +512,10 @@ export class CameraManager extends EventEmitter {
 
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
+        this.setManuallyDetached(false);
+        this.cameraAnimation?.onInterrupt();
+        this.cameraAnimation = undefined;
+        this.cancelOffsetTween();
         this.camera.setFollowOffset(0, 0);
 
         // this.camera.setBounds(
@@ -513,6 +531,37 @@ export class CameraManager extends EventEmitter {
             y: this.camera.scrollY + this.camera.height / 2,
         };
         this.camera.startFollow(this.explorerFocusOn, true);
+    }
+
+    /** Detach only the view: unlike the map explorer, this keeps avatar controls enabled. */
+    public startManualPan(): void {
+        this.setExplorationMode();
+        this.setManuallyDetached(true);
+    }
+
+    public panBy(screenX: number, screenY: number): void {
+        this.scrollCamera(screenX / this.camera.zoom, screenY / this.camera.zoom);
+    }
+
+    /** Use the explorer's inertia, converting screen velocity to world units at the current zoom. */
+    public releaseManualPan(velocity: { x: number; y: number }): void {
+        if (!this.manuallyDetached || !Number.isFinite(velocity.x) || !Number.isFinite(velocity.y)) return;
+        this.setSpeed({ x: (-velocity.x * 10) / this.camera.zoom, y: (-velocity.y * 10) / this.camera.zoom });
+    }
+
+    public stopManualPanInertia(): void {
+        if (this.manuallyDetached) this.stopSpeed();
+    }
+
+    public resumePlayerFollow(): void {
+        if (this.manuallyDetached) {
+            this.startFollowPlayer(this.scene.CurrentPlayer, 500);
+        }
+    }
+
+    private setManuallyDetached(detached: boolean): void {
+        this.manuallyDetached = detached;
+        cameraDetachedStore.set(detached);
     }
 
     public setFollowMode(): void {
