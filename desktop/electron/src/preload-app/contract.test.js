@@ -83,6 +83,7 @@ test("the floating windows API keeps its members", () => {
         "onOpen",
         "onMeetingWanted",
         "toggleCompanion",
+        "openCompanion",
         "dismissCompanion",
         "focusMain",
         "visibleInShare",

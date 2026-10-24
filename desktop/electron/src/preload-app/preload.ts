@@ -16,6 +16,7 @@ const windowsApi: WorkAdventureDesktopWindowsApi = {
         }),
     onMeetingWanted: (callback) => subscribe("app:windows:meeting-wanted", (wanted) => callback(wanted === true)),
     toggleCompanion: () => ipcRenderer.send("app:windows:toggle-companion"),
+    openCompanion: () => ipcRenderer.send("app:windows:open-companion"),
     dismissCompanion: () => ipcRenderer.send("app:windows:dismiss-companion"),
     focusMain: () => ipcRenderer.send("app:windows:focus-main"),
     visibleInShare: (sharing) => companionVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),

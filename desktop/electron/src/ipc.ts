@@ -9,6 +9,7 @@ import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOp
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
     dismissCompanion,
+    openCompanion,
     onPageVisibilityChange,
     setSharedScreenDisplay,
     toggleCompanion,
@@ -546,6 +547,11 @@ export default () => {
     ipcMain.on("app:windows:toggle-companion", (event) => {
         if (isFromMainRenderer(event)) {
             toggleCompanion();
+        }
+    });
+    ipcMain.on("app:windows:open-companion", (event) => {
+        if (isFromMainRenderer(event)) {
+            openCompanion();
         }
     });
     ipcMain.on("app:windows:dismiss-companion", (event) => {

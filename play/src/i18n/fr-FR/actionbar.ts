@@ -27,6 +27,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Application desktop",
         changeWorld: "Changer de world",
+        openCompanion: "Ouvrir le compagnon",
         title: "Ouvrir un autre world",
         description: "Collez l’URL complète du world WorkAdventure que vous souhaitez ouvrir.",
         urlLabel: "URL du world",

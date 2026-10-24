@@ -217,6 +217,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "แอปเดสก์ท็อป",
         changeWorld: "เปลี่ยนโลก",
+        openCompanion: "เปิดแผงคู่หู",
         title: "เปิดโลกอื่น",
         description: "วาง URL แบบเต็มของโลก WorkAdventure ที่คุณต้องการเปิด",
         urlLabel: "URL ของโลก",

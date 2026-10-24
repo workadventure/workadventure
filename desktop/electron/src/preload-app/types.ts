@@ -87,6 +87,8 @@ export type WorkAdventureDesktopWindowsApi = {
     onMeetingWanted: (callback: (wanted: boolean) => void) => () => void;
     /** The PiP button: open or close the companion by hand. */
     toggleCompanion: () => void;
+    /** WA's profile menu: open the companion by hand (it stays when WA shows again, a second call keeps it). */
+    openCompanion: () => void;
     /** The companion's close button: closed until the user comes back to WorkAdventure. */
     dismissCompanion: () => void;
     /** Bring the WorkAdventure window to the front. */

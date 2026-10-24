@@ -6,7 +6,7 @@ import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { getTabs } from "./tab-manager";
 import { createTray } from "./tray";
 import { startIdleMonitor } from "./idle-monitor";
-import { startCompanionController } from "./companion-controller";
+import { openCompanion, startCompanionController } from "./companion-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { updateAutoLaunch } from "./auto-launch";
@@ -14,6 +14,7 @@ import ipc from "./ipc";
 import settings from "./settings";
 import { setLogLevel } from "./log";
 import { loadShortcuts } from "./shortcuts";
+import { t } from "./i18n";
 import { DESKTOP_APP_NAME } from "./app-name-policy";
 import { createDefaultProtocolClientArgs } from "./protocol-client-policy";
 import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./desktop-url-policy";
@@ -21,6 +22,8 @@ import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./
 let pendingProtocolTarget: string | undefined;
 
 app.setName(DESKTOP_APP_NAME);
+
+const OPEN_COMPANION_ARG = "--open-companion";
 
 function getProtocolUrl(argv: string[]) {
     return argv.find((arg) => arg.startsWith("workadventure://"));
@@ -69,6 +72,11 @@ async function init() {
     registerProtocolHandler();
 
     app.on("second-instance", (event, argv) => {
+        // The taskbar task (Windows): open the companion, and leave the main window where it is.
+        if (argv.includes(OPEN_COMPANION_ARG)) {
+            openCompanion();
+            return;
+        }
         queueProtocolUrl(getProtocolUrl(argv));
         const target = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
@@ -128,6 +136,19 @@ async function init() {
         createNativeApplicationMenu();
         createTray();
         loadShortcuts();
+        if (process.platform === "win32") {
+            // Right-click on the taskbar button: the task relaunches the app, the running one opens the companion.
+            app.setUserTasks([
+                {
+                    program: process.execPath,
+                    arguments: app.isPackaged ? OPEN_COMPANION_ARG : `"${app.getAppPath()}" ${OPEN_COMPANION_ARG}`,
+                    iconPath: process.execPath,
+                    iconIndex: 0,
+                    title: t("tray.companionPanel"),
+                    description: t("tray.companionPanel"),
+                },
+            ]);
+        }
 
         const initialProtocolTarget = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
