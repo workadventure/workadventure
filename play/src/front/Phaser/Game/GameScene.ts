@@ -4796,6 +4796,11 @@ ${escapedMessage}
         return this._spaceRegistry;
     }
 
+    /** Resolves once the proximity chat is set up, a little after the scene loads. */
+    get proximityChatRoomManagerReady(): Promise<ProximityChatRoomManager> {
+        return this._proximityChatRoomManagerDeferred.promise;
+    }
+
     get proximityChatRoomManager(): ProximityChatRoomManager {
         if (!this._proximityChatRoomManager) {
             throw new Error("_proximityChatRoomManager not yet initialized");

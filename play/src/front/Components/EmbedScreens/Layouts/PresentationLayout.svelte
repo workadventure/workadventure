@@ -9,7 +9,7 @@
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
     import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
-    import { pictureInPictureLayoutStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
+    import { activePictureInPictureStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
     import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
     import { selectPictureInPictureHighlight } from "../../Video/PictureInPicture/PictureInPictureHighlightPolicy";
 
@@ -85,13 +85,13 @@
     let pictureInPictureHighlightedScreen = $derived(
         selectPictureInPictureHighlight(
             inPictureInPicture,
-            $pictureInPictureLayoutStore,
+            $activePictureInPictureStore,
             $screenShareStreamElementsStore,
             $highlightedEmbedScreen,
         ),
     );
     let pipHighlightLayoutEnabled = $derived(
-        inPictureInPicture && $pictureInPictureLayoutStore && pictureInPictureHighlightedScreen != undefined,
+        inPictureInPicture && $activePictureInPictureStore && pictureInPictureHighlightedScreen != undefined,
     );
     let pipHighlightLandscape = $derived(pipHighlightLayoutEnabled && containerWidth > containerHeight);
     let pipCameraContainerStyle = $derived(
@@ -165,10 +165,9 @@
             </div>
         {/if}
 
-        <!-- The browser's picture-in-picture window only: the desktop companion carries its own controls. -->
-        {#if $pictureInPictureLayoutStore}
+        {#if $activePictureInPictureStore}
             <div
-                class="flex-none"
+                class="flex-none pip-action-bar"
                 class:fixed={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
                 class:bottom-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
                 class:left-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}

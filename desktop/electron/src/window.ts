@@ -10,7 +10,6 @@ import { ensureWorldOriginTrusted, getDesktopConfig } from "./origin-verificatio
 import { nativeLocale, t } from "./i18n";
 import { textDirection } from "./native-locale-policy";
 import { createDesktopWindowTitle } from "./app-name-policy";
-import { createDesktopWindowState, type DesktopWindowState } from "./desktop-window-state-policy";
 import {
     createDesktopConfig,
     createDesktopLoginUrl,
@@ -57,8 +56,9 @@ export {
     isActiveWorldContents,
     isControllingWorldContents,
 } from "./tab-manager";
-import { closeAllHudWindows, forgetHudState } from "./hud-windows";
-import { adoptCompanionWindow, companionWindowOptions } from "./svelte-companion";
+import { closeAllHudWindows } from "./hud-windows";
+import { adoptChildWindow, childWindowOptions } from "./child-windows";
+import { forgetPage } from "./page-contract";
 
 // The shell window stays hidden until the first world page finishes loading. `did-fail-load` covers
 // errors, but not a server that accepts the connection and then goes quiet (captive portal, DNS
@@ -156,15 +156,6 @@ function buildLoopbackCallbackUrl(origin: string, flow: DesktopCallbackFlow): st
 
 export function getWindow() {
     return mainWindow;
-}
-
-export function getDesktopWindowState(): DesktopWindowState {
-    return createDesktopWindowState(mainWindow);
-}
-
-function emitDesktopWindowStateChange() {
-    // Window-state changes are relevant to the on-screen (active) world renderer.
-    getActiveWorldContents()?.send("app:on-window-state-change", getDesktopWindowState());
 }
 
 function cancelReachWorldWatchdog() {
@@ -622,12 +613,20 @@ function configureSession() {
 }
 
 function configureNavigationSecurity(webContents: Electron.WebContents) {
+    // Each new page has to say hello again (page-contract.ts): it may be another server, or an older one.
+    webContents.on("did-start-navigation", (details) => {
+        if (details.isMainFrame && !details.isSameDocument) {
+            forgetPage(webContents);
+        }
+    });
+    webContents.once("destroyed", () => forgetPage(webContents));
+
     const window = { webContents };
     window.webContents.setWindowOpenHandler(({ url, frameName }) => {
-        // The Svelte companion prototype: a child window main asked the world page to open.
-        const companionOptions = companionWindowOptions(url, frameName);
-        if (companionOptions) {
-            return { action: "allow", overrideBrowserWindowOptions: companionOptions };
+        // The companion or the meeting bar: a child window main asked the world page to open.
+        const childOptions = childWindowOptions(url, frameName);
+        if (childOptions) {
+            return { action: "allow", overrideBrowserWindowOptions: childOptions };
         }
 
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
@@ -647,7 +646,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     });
 
     window.webContents.on("did-create-window", (childWindow, { frameName }) =>
-        adoptCompanionWindow(childWindow, frameName)
+        adoptChildWindow(childWindow, frameName)
     );
 
     window.webContents.on("will-navigate", (event, url) => {
@@ -788,7 +787,6 @@ export async function createWindow(initialUrl?: string) {
         onControllingTabChange(() => {
             closeAllHudWindows();
             stopCompanion();
-            forgetHudState();
             // Presence is a single global describing the controlling tab, and only that renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
             // later minimize would re-arm the companion for a meeting the new tab isn't in — and the
@@ -834,25 +832,11 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
     // Any of these can change whether the main window shows, which the companion controller decides
     // on (companion-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
-    const onWindowStateEvent = () => {
-        emitDesktopWindowStateChange();
-        updateCompanion();
-    };
-    const onWindowHidden = () => {
-        emitDesktopWindowStateChange();
-        onMainWindowHidden();
-    };
-    mainWindow.on("focus", () => {
-        emitDesktopWindowStateChange();
-        onMainWindowFocus();
-    });
-    mainWindow.on("blur", () => {
-        emitDesktopWindowStateChange();
-    });
-    mainWindow.on("show", onWindowStateEvent);
-    mainWindow.on("hide", onWindowHidden);
-    mainWindow.on("minimize", onWindowHidden);
-    mainWindow.on("restore", onWindowStateEvent);
+    mainWindow.on("focus", onMainWindowFocus);
+    mainWindow.on("show", updateCompanion);
+    mainWindow.on("hide", onMainWindowHidden);
+    mainWindow.on("minimize", onMainWindowHidden);
+    mainWindow.on("restore", updateCompanion);
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {

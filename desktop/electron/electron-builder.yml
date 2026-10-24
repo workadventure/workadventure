@@ -70,5 +70,7 @@ appImage:
     executableArgs: []
 
 publish:
-    provider: generic
-    url: https://desktop-updates.workadventu.re/stable
+    provider: github
+    owner: workadventure
+    repo: workadventure
+    releaseType: release

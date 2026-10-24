@@ -68,6 +68,7 @@ const warning: BaseTranslation = {
     },
     otherMeetingMuted:
         "Agora você está em uma reunião aqui. Seu microfone, câmera e compartilhamento de tela foram desligados em {world}.",
+    desktopAppOutdated: "Uma nova versão do aplicativo WorkAdventure está disponível: {url}",
 };
 
 export default warning;

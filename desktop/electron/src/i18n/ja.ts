@@ -89,7 +89,6 @@ const ja: NativeStrings = {
     "tray.status.idle": "アイドル",
     "tray.status.online": "オンライン",
     "tray.status.offline": "オフライン",
-    "tray.statusLocked": "ミーティング中はステータスを変更できません",
     "tray.microphone": "マイク",
     "tray.camera": "カメラ",
     "tray.companionPanel": "コンパニオンパネル",

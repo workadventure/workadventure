@@ -1,15 +1,16 @@
-import { BrowserWindow, screen } from "electron";
+import { type BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
-import path from "path";
 import settings from "./settings";
-import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, normalizeCompanionBounds } from "./companion-window-policy";
+import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH } from "./companion-window-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
- * Presenter HUD windows (Zoom-style), placed on the SHARED display while screen sharing. The
- * "meeting bar" (mic / camera / switch screen / stop share, plus its "…" menu) is frameless,
- * always-on-top, draggable, and — crucially — content-protected (`setContentProtection(true)`), so
- * the presenter sees it but it is EXCLUDED from the captured pixels.
+ * The floating windows: the companion and the presenter meeting bar. Both are child windows of the
+ * world page, which renders them (child-windows.ts); this registry gives them their floating treatment
+ * and lets the controllers find and close them.
+ *
+ * The meeting bar is placed on the SHARED display while screen sharing and — crucially — content-protected
+ * (`setContentProtection(true)`), so the presenter sees it but it is EXCLUDED from the captured pixels.
  */
 
 /** The display with the given id, or the primary display when there is none (or no id). */
@@ -34,182 +35,45 @@ export function resolveDisplay(displayId: number | undefined, label = "HUD"): El
 
 export type HudKind = "meeting-bar" | "companion";
 
-type HudEntry = {
-    window: BrowserWindow;
-    ready: boolean;
-    readyPromise: Promise<void>;
-    readyResolve: () => void;
-};
-
 export const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
-    "meeting-bar": { width: 680, height: 76 },
+    // The pill, pinned to the bottom; the page grows the window when a panel opens. 100 high, not the pill's
+    // 76: Chromium keeps a window a page resizes at least 100 high, so it could not come back to 76.
+    "meeting-bar": { width: 680, height: 100 },
     // Interactive quick-access panel (People / Chat / Controls). Resizable; this is the initial size.
     companion: { width: 340, height: 480 },
 };
 
-/** Meeting-bar height while the screen-switch source picker is open (bottom edge stays anchored). */
-const MEETING_BAR_EXPANDED_HEIGHT = 420;
 const HUD_MARGIN = 24;
 
-const hudWindows = new Map<HudKind, HudEntry>();
-
-/**
- * The last state pushed per kind; replayed to a window that opens (or becomes ready) afterwards.
- * Kept per-kind so the interactive companion panel — whose state shape differs entirely from the
- * presenter bars — never receives a stale presenter-HUD state on open, and vice versa.
- */
-const lastStateByKind = new Map<HudKind, unknown>();
-
-/**
- * The companion / meeting bar strings, translated by the world renderer in the language chosen in
- * WorkAdventure. Unlike the state, kept across tab switches (the next world re-pushes its own on
- * the presence request) and replayed to every HUD window when it becomes ready.
- */
-let hudStrings: Record<string, string> | undefined;
-
-export function setHudStrings(strings: Record<string, string>): void {
-    hudStrings = strings;
-    for (const entry of hudWindows.values()) {
-        if (!entry.window.isDestroyed() && entry.ready) {
-            entry.window.webContents.send("app:hud:strings", strings);
-        }
-    }
-}
+const hudWindows = new Map<HudKind, BrowserWindow>();
 
 export function isHudWindowOpen(kind: HudKind): boolean {
-    const entry = hudWindows.get(kind);
-    return Boolean(entry && !entry.window.isDestroyed());
+    return getHudWindow(kind) !== undefined;
 }
 
-/** The live BrowserWindow for a HUD kind (used to host the companion's embedded PiP view). */
+/** The live BrowserWindow for a HUD kind. */
 export function getHudWindow(kind: HudKind): BrowserWindow | undefined {
-    const entry = hudWindows.get(kind);
-    return entry && !entry.window.isDestroyed() ? entry.window : undefined;
+    const window = hudWindows.get(kind);
+    return window && !window.isDestroyed() ? window : undefined;
 }
 
-/** True when the given IPC sender is one of the HUD windows. */
-export function isHudSender(sender: Electron.WebContents): boolean {
-    for (const entry of hudWindows.values()) {
-        if (!entry.window.isDestroyed() && entry.window.webContents === sender) {
-            return true;
-        }
-    }
-    return false;
-}
-
-export function hudKindOfSender(sender: Electron.WebContents): HudKind | undefined {
-    for (const [kind, entry] of hudWindows.entries()) {
-        if (!entry.window.isDestroyed() && entry.window.webContents === sender) {
-            return kind;
-        }
-    }
-    return undefined;
-}
-
-/** Push state to a single HUD window (floating toolbar + companion, driven directly from main). */
-export function sendHudState(kind: HudKind, state: unknown): void {
-    lastStateByKind.set(kind, state);
-    const entry = hudWindows.get(kind);
-    if (entry && !entry.window.isDestroyed() && entry.ready) {
-        entry.window.webContents.send("app:hud:state", state);
-    }
-}
-
-function positionFor(kind: HudKind, display: Electron.Display): { x: number; y: number } {
-    const { width, height } = HUD_SIZES[kind];
+/** Where the meeting bar opens on a display: bottom-centre, like Zoom's control bar. */
+export function meetingBarBounds(display: Electron.Display): Electron.Rectangle {
+    const { width, height } = HUD_SIZES["meeting-bar"];
     const area = display.workArea;
-    // The companion panel anchors to the bottom-right corner (Slack-style), out of the way of the
-    // centered meeting controls.
-    if (kind === "companion") {
-        return {
-            x: Math.round(area.x + area.width - width - HUD_MARGIN),
-            y: Math.round(area.y + area.height - height - HUD_MARGIN),
-        };
-    }
-    // Meeting bar: bottom-centre, like Zoom's control bar.
     return {
         x: Math.round(area.x + (area.width - width) / 2),
         y: Math.round(area.y + area.height - height - HUD_MARGIN),
+        width,
+        height,
     };
 }
 
-export async function openHudWindow(kind: HudKind, displayId?: number): Promise<boolean> {
-    const existing = hudWindows.get(kind);
-    if (existing && !existing.window.isDestroyed()) {
-        // Re-open on a (possibly) different display: reposition instead of recreating. The companion
-        // is resizable and user-placed, so leave its bounds alone.
-        if (kind !== "companion") {
-            const display = resolveDisplay(displayId, `HUD ${kind}`);
-            const { x, y } = positionFor(kind, display);
-            const { width, height } = HUD_SIZES[kind];
-            existing.window.setBounds({ x, y, width, height });
-        }
-        existing.window.showInactive();
-        await existing.readyPromise;
-        return true;
-    }
-
-    const display = resolveDisplay(displayId, `HUD ${kind}`);
-    // The companion is the one resizable HUD: restore its saved size/position (clamped into the
-    // current work area). Every other HUD uses its fixed size + computed anchor.
-    const bounds =
-        kind === "companion"
-            ? normalizeCompanionBounds(settings.get("companion_bounds"), display.workArea, HUD_SIZES.companion)
-            : { ...positionFor(kind, display), ...HUD_SIZES[kind] };
-
-    const newWindow = new BrowserWindow({
-        ...bounds,
-        transparent: true,
-        frame: false,
-        resizable: kind === "companion",
-        // Movable so the pill can be dragged with -webkit-app-region: drag.
-        movable: true,
-        minimizable: false,
-        maximizable: false,
-        fullscreenable: false,
-        skipTaskbar: true,
-        alwaysOnTop: true,
-        focusable: true,
-        hasShadow: false,
-        backgroundColor: "#00000000",
-        show: false,
-        webPreferences: {
-            preload: path.resolve(__dirname, "preload-hud", "preload.js"),
-            nodeIntegration: false,
-            contextIsolation: true,
-            sandbox: true,
-            webSecurity: true,
-            // These HUD windows live in the background by definition (shown while WA is unfocused).
-            // Chromium throttles timers/rendering in unfocused windows, which would freeze the
-            // companion's meeting video once it hosts one — so opt out of throttling.
-            backgroundThrottling: false,
-        },
-    });
-    const readyPromise = setUpHudWindow(kind, newWindow, false);
-
-    const indexPath = path.resolve(__dirname, "..", "assets", kind, "index.html");
-    newWindow.loadFile(indexPath).catch((error) => {
-        ElectronLog.error(`Failed to load HUD renderer at ${indexPath}`, error);
-        try {
-            newWindow.destroy();
-        } catch {
-            /* best-effort */
-        }
-        if (hudWindows.get(kind)?.window === newWindow) {
-            hudWindows.delete(kind);
-        }
-    });
-
-    await readyPromise;
-    return isHudWindowOpen(kind);
-}
-
 /**
- * Everything a HUD window gets once created: always on top on every workspace, bounds saved for the
- * companion, capture protection for the meeting bar. `ready` is true for a window whose renderer is
- * already usable (the Svelte companion, a child window of the world page: see svelte-companion).
+ * Everything a floating window gets once created: always on top on every workspace, bounds saved for
+ * the companion, capture protection for the meeting bar.
  */
-export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow, ready: boolean): Promise<void> {
+export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
     newWindow.setMenu(null);
     if (kind === "companion") {
         newWindow.setMinimumSize(COMPANION_MIN_WIDTH, COMPANION_MIN_HEIGHT);
@@ -262,120 +126,25 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow, ready: b
         ElectronLog.debug(`HUD ${kind} setAlwaysOnTop failed`, error);
     }
 
-    // Per-window ready promise captured in this closure (see pip-window.ts for the rationale).
-    let readyResolve: () => void = () => {};
-    const readyPromise = new Promise<void>((resolve) => {
-        readyResolve = resolve;
-    });
-    const entry: HudEntry = { window: newWindow, ready, readyPromise, readyResolve };
-    hudWindows.set(kind, entry);
-
-    newWindow.once("ready-to-show", () => {
-        if (!newWindow.isDestroyed()) {
-            // Never steal focus from the app the presenter is currently driving.
-            newWindow.showInactive();
-            // Cross-platform belt-and-braces: even with the relativeLevel bump above, a window of the
-            // same level created just after the HUD can end up sitting above until the next window
-            // ordering event. moveTop() forces the HUD to the top of its level right now.
-            newWindow.moveTop();
-        }
-    });
-
+    hudWindows.set(kind, newWindow);
     newWindow.on("closed", () => {
-        if (hudWindows.get(kind)?.window === newWindow) {
+        if (hudWindows.get(kind) === newWindow) {
             hudWindows.delete(kind);
         }
-        readyResolve();
     });
 
-    if (ready) {
-        readyResolve();
-    }
-    return readyPromise;
+    // Never steal focus from the app the presenter is currently driving. moveTop: a window of the same
+    // level created just before can otherwise sit above until the next window ordering event.
+    newWindow.showInactive();
+    newWindow.moveTop();
 }
 
 export function closeHudWindow(kind: HudKind): void {
-    const entry = hudWindows.get(kind);
+    const window = getHudWindow(kind);
     hudWindows.delete(kind);
-    if (entry && !entry.window.isDestroyed()) {
-        entry.window.close();
-    }
-}
-
-/** Forget the replayed state: after a tab switch it describes the world we just left. */
-export function forgetHudState(): void {
-    lastStateByKind.clear();
+    window?.close();
 }
 
 export function closeAllHudWindows(): void {
     closeHudWindow("meeting-bar");
-}
-
-/**
- * Push the presenter state to the meeting-bar HUD window (pre-seeded so it still gets the state on
- * ready if it opens after the broadcast). The companion panel is excluded — it carries a different
- * state shape, fed via sendHudState.
- */
-export function broadcastHudState(state: unknown): void {
-    lastStateByKind.set("meeting-bar", state);
-    for (const [kind, entry] of hudWindows.entries()) {
-        if (kind === "companion") {
-            continue;
-        }
-        if (!entry.window.isDestroyed() && entry.ready) {
-            entry.window.webContents.send("app:hud:state", state);
-        }
-    }
-}
-
-export function markHudReady(sender: Electron.WebContents): void {
-    const kind = hudKindOfSender(sender);
-    if (!kind) {
-        return;
-    }
-    const entry = hudWindows.get(kind);
-    if (!entry || entry.window.isDestroyed()) {
-        return;
-    }
-    entry.ready = true;
-    entry.readyResolve();
-    // Strings before state, so the first render is already in the right language.
-    if (hudStrings) {
-        entry.window.webContents.send("app:hud:strings", hudStrings);
-    }
-    const replay = lastStateByKind.get(kind);
-    if (replay !== undefined) {
-        entry.window.webContents.send("app:hud:state", replay);
-    }
-}
-
-/**
- * Grow/shrink the meeting bar so its source picker fits, keeping the bottom edge anchored where
- * the user left the bar (it may have been dragged away from its initial position).
- */
-export function setMeetingBarExpanded(sender: Electron.WebContents, expanded: boolean, height?: number): void {
-    const kind = hudKindOfSender(sender);
-    if (kind !== "meeting-bar") {
-        return;
-    }
-    const entry = hudWindows.get(kind);
-    if (!entry || entry.window.isDestroyed()) {
-        return;
-    }
-    const collapsed = HUD_SIZES["meeting-bar"].height;
-    const bounds = entry.window.getBounds();
-    // Expanding: use the requested height (a short panel asks for less than the full picker
-    // height), clamped between the collapsed pill and the tallest panel.
-    const requested = typeof height === "number" ? height : MEETING_BAR_EXPANDED_HEIGHT;
-    const targetHeight = expanded ? Math.min(Math.max(requested, collapsed), MEETING_BAR_EXPANDED_HEIGHT) : collapsed;
-    if (bounds.height === targetHeight) {
-        return;
-    }
-    const bottom = bounds.y + bounds.height;
-    entry.window.setBounds({
-        x: bounds.x,
-        y: bottom - targetHeight,
-        width: bounds.width,
-        height: targetHeight,
-    });
 }

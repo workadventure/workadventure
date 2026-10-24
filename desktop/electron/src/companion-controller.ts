@@ -1,6 +1,6 @@
 import { screen, type BrowserWindow } from "electron";
 import ElectronLog from "electron-log";
-import { closeHudWindow, getHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
+import { closeHudWindow, getHudWindow, isHudWindowOpen } from "./hud-windows";
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 import { getControllingWorldContents } from "./tab-manager";
@@ -9,13 +9,13 @@ import { companionAutoOpenDisplay } from "./share-surfaces-policy";
 import { canHideWindowsFromCapture } from "./platform-capture-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 import { isIdentifyingScreens } from "./screen-identify";
-import { SVELTE_COMPANION, openSvelteCompanion } from "./svelte-companion";
+import { openChildWindow } from "./child-windows";
 
 /**
  * Drives the Companion — the People / Chat / meeting video window — and is the only place that
  * decides when it opens and closes (rules in companion-visibility-policy). The world page reports
- * facts through presence and shows the meeting video in the companion when told to
- * (`app:pip:wanted`): while the companion is open during a meeting.
+ * facts through presence, opens the window when asked (child-windows) and moves the meeting video
+ * into it when told to (`app:windows:meeting-wanted`): while the companion is open during a meeting.
  */
 
 // Automatic opens wait this long so a quick away-and-back doesn't flash the panel. Manual opens don't.
@@ -36,7 +36,7 @@ let pageHidden = false;
 let sharedScreenDisplayId: number | undefined;
 // Closed by the user since they last came back to WA.
 let dismissed = false;
-// Last `app:pip:wanted` sent to the world page.
+// Last `app:windows:meeting-wanted` sent to the world page.
 let videoWanted = false;
 // Companion windows closed by this controller, as opposed to by the user (window close shortcut).
 const closedByController = new WeakSet<BrowserWindow>();
@@ -115,7 +115,7 @@ function syncMeetingVideo(): void {
         return;
     }
     videoWanted = wanted;
-    getControllingWorldContents()?.send("app:pip:wanted", wanted);
+    getControllingWorldContents()?.send("app:windows:meeting-wanted", wanted);
 }
 
 function closeCompanionWindow(): void {
@@ -167,7 +167,7 @@ function performOpen(mode: "auto" | "manual"): void {
     opening = true;
     const automatic = mode === "auto" && !getPresenceSnapshot().invitationPending;
     const displayId = (automatic ? autoOpenDisplayId() : undefined) ?? cursorDisplayId();
-    (SVELTE_COMPANION ? openSvelteCompanion(displayId) : openHudWindow("companion", displayId))
+    openChildWindow("companion", displayId)
         .then(() => {
             opening = false;
             watchUserClose();
@@ -266,11 +266,6 @@ export function dismissCompanion(): void {
 
 export function isCompanionVisible(): boolean {
     return isHudWindowOpen("companion");
-}
-
-/** The world page starts the meeting video: it can only go into a companion this controller opened. */
-export function isCompanionReadyForVideo(): boolean {
-    return videoWanted;
 }
 
 /** Start reacting to presence changes. Focus and visibility updates are pushed in from window.ts and ipc.ts. */

@@ -7,17 +7,10 @@ import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
 import settings from "./settings";
 import { createWindow, getWindow } from "./window";
-import { emitCameraToggle, emitMuteToggle, emitSetStatus } from "./ipc";
+import { emitCameraToggle, emitMuteToggle } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
-import {
-    getAvailabilityInfo,
-    getMediaState,
-    getTrayStatus,
-    onPresenceChange,
-    type TrayAvailability,
-    type TrayStatus,
-} from "./presence";
+import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
 import { isCompanionVisible, toggleCompanion } from "./companion-controller";
 import { t } from "./i18n";
 
@@ -51,25 +44,6 @@ const TRAY_STATUS_EMOJI: Record<TrayStatus, string> = {
 
 function trayStatusLabel(status: TrayStatus): string {
     return `${TRAY_STATUS_EMOJI[status]} ${t(`tray.status.${status}`)}`;
-}
-
-// The four user-selectable availability statuses, in display order. Colors mirror WA's status dots.
-const AVAILABILITY_ITEMS: ReadonlyArray<TrayAvailability> = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
-
-function buildStatusSubmenuItems(): Electron.MenuItemConstructorOptions[] {
-    const { status, locked } = getAvailabilityInfo();
-    if (locked) {
-        // WA locks the status bar in a meeting / silent zone; mirror that so we don't fight it.
-        return [{ label: t("tray.statusLocked"), enabled: false }];
-    }
-    return AVAILABILITY_ITEMS.map((item) => ({
-        label: trayStatusLabel(item),
-        type: "radio" as const,
-        checked: status === item,
-        click() {
-            emitSetStatus(item);
-        },
-    }));
 }
 
 // Logical tray icon size in points; a matching @2x representation is added for Retina crispness.
@@ -203,11 +177,9 @@ function updateTrayContextMenu() {
     // both also exist in the application menu, which is unreachable while the window is hidden.
     const trayContextMenu = Menu.buildFromTemplate([
         {
-            // The live status IS the label, so this one row both reports and changes it (it used to
-            // be a disabled header plus a separate "Set status" row saying the same thing twice).
+            // Reports the live status; it is changed in WorkAdventure or the companion.
             label: trayStatusLabel(status),
-            enabled: inWorld,
-            submenu: buildStatusSubmenuItems(),
+            enabled: false,
         },
         { type: "separator" },
         {

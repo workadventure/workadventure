@@ -89,7 +89,6 @@ const hsb: NativeStrings = {
     "tray.status.idle": "Njeaktiwny",
     "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Status njeda so za čas zasedanja změnić",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",
     "tray.companionPanel": "Přewodny panel",

@@ -9,14 +9,12 @@ import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOp
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
     dismissCompanion,
-    isCompanionReadyForVideo,
     onPageVisibilityChange,
     setSharedScreenDisplay,
     toggleCompanion,
 } from "./companion-controller";
 import {
     getControllingWorldContents,
-    getDesktopWindowState,
     getWindow,
     isActiveWorldContents,
     isControllingWorldContents,
@@ -27,21 +25,11 @@ import {
 import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, setTabInMeeting } from "./tab-manager";
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
-import { isPipWindowOpen, sendToPip } from "./pip-window";
-import { companionVisibleInShare, meetingBarDisplay } from "./share-surfaces-policy";
+import { meetingBarDisplay } from "./share-surfaces-policy";
 import { canHideWindowsFromCapture } from "./platform-capture-policy";
-import {
-    broadcastHudState,
-    closeHudWindow,
-    getHudWindow,
-    hudKindOfSender,
-    isHudSender,
-    markHudReady,
-    openHudWindow,
-    sendHudState,
-    setHudStrings,
-    setMeetingBarExpanded,
-} from "./hud-windows";
+import { closeHudWindow, getHudWindow, meetingBarBounds, resolveDisplay } from "./hud-windows";
+import { openChildWindow } from "./child-windows";
+import { DESKTOP_CONTRACT, recordHello } from "./page-contract";
 import { nativeStrings, t } from "./i18n";
 import { sanitizeStringTable } from "./native-locale-policy";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
@@ -68,7 +56,6 @@ type CapturerCacheEntry = {
     result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
 };
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
-let pipOwner: Electron.WebContents | undefined;
 
 const keepAwakeByTab = new Map<number, number>();
 const unreadByTab = new Map<number, number>();
@@ -105,11 +92,6 @@ function trackPerTab(
     values.set(contents.id, value);
     apply();
 }
-
-// Companion windows we've already wired the "closed → tell the WA renderer to stop the PiP" hook to.
-// The companion outlives a single meeting (it stays open on People after a call ends), so app:pip:open
-// can fire several times against the same window — this keeps exactly one close listener per window.
-const pipClosedHookWired = new WeakSet<Electron.BrowserWindow>();
 
 function clampThumbnailSize(value: unknown): { width: number; height: number } {
     const fallback = DESKTOP_CAPTURER_MAX_THUMBNAIL;
@@ -157,6 +139,16 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
     return parsed ? Number(parsed[1]) : undefined;
 }
 
+/** Bring the WorkAdventure window to the front. */
+function focusMainWindow(): void {
+    const mainWindow = getWindow();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        if (mainWindow.isMinimized()) mainWindow.restore();
+        mainWindow.show();
+        mainWindow.focus();
+    }
+}
+
 export function emitMuteToggle() {
     // Toggle mic in the on-screen world (only it captures media).
     getControllingWorldContents()?.send("app:on-mute-toggle");
@@ -166,15 +158,11 @@ export function emitCameraToggle() {
     getControllingWorldContents()?.send("app:on-camera-toggle");
 }
 
-/** Ask the active world to change the user's availability status (from the tray Status submenu). */
-export function emitSetStatus(status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") {
-    getControllingWorldContents()?.send("app:on-set-status", status);
-}
-
 function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
     if (typeof payload === "string") {
-        const title = payload.trim();
-        return title ? { title, body: "" } : undefined;
+        // notify(text), as in contract 1: the text is the body.
+        const body = payload.trim();
+        return body ? { title: "WorkAdventure", body } : undefined;
     }
     if (payload && typeof payload === "object") {
         const raw = payload as Record<string, unknown>;
@@ -198,12 +186,24 @@ function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | und
 export default () => {
     ipcMain.handle("is-development", () => electronIsDev);
     ipcMain.handle("get-version", () => (electronIsDev ? "dev" : app.getVersion()));
-    ipcMain.handle("app:getWindowState", () => getDesktopWindowState());
+
+    // The handshake: a world page says which contract it speaks; the app answers with its own.
+    ipcMain.on("app:hello", (event, page: unknown) => {
+        if (!isWorldContents(event.sender)) {
+            event.returnValue = null;
+            return;
+        }
+        recordHello(
+            event.sender,
+            page && typeof page === "object" ? (page as { contract?: unknown }).contract : undefined
+        );
+        event.returnValue = { contract: DESKTOP_CONTRACT };
+    });
 
     // app ipc
     ipcMain.on("app:notify", (event, payload: unknown) => {
-        // Accept both the legacy plain-string form (`notify(body)`) and the enriched object form
-        // (`notify({title, body, tag, silent})`). Anything else is ignored — the renderer
+        // Accept both `notify(text)` (a string) and `notifyMessage({title, body, tag, silent})` (an
+        // object). Anything else is ignored — the renderer
         // typedef gates this at compile time, but we still guard so a mis-wired call from an
         // untyped surface doesn't crash the main process.
         const options = normalizeNotifyPayload(payload);
@@ -213,12 +213,7 @@ export default () => {
         // The click belongs to the world that raised the notification, which may be a background tab.
         const sender = event.sender;
         showNotification(options, (tag) => {
-            const mainWindow = getWindow();
-            if (mainWindow && !mainWindow.isDestroyed()) {
-                if (mainWindow.isMinimized()) mainWindow.restore();
-                mainWindow.show();
-                mainWindow.focus();
-            }
+            focusMainWindow();
             const tab = getTabs().find((candidate) => candidate.view.webContents === sender);
             if (!tab || sender.isDestroyed()) {
                 return;
@@ -274,7 +269,6 @@ export default () => {
             invitationPending: Boolean(raw.invitationPending),
             autoOpenAllowed: raw.autoOpenAllowed !== false,
             requestedStatus: raw.requestedStatus,
-            statusLocked: Boolean(raw.statusLocked),
         });
     });
 
@@ -547,83 +541,38 @@ export default () => {
         }
     }
 
-    // The world page starts the meeting video once the companion controller asked it to
-    // (`app:pip:wanted`): the companion is open and its renderer ready for the first SDP offer.
-    ipcMain.handle("app:pip:open", (event) => {
-        if (!isFromMainRenderer(event)) {
-            ElectronLog.warn("Rejected PiP open from non-main renderer");
-            return false;
-        }
-        if (!isCompanionReadyForVideo()) {
-            return false;
-        }
-        // The window closes asynchronously, possibly after a tab switch: tell the world that opened the
-        // PiP, not whichever tab is active by then.
-        pipOwner = event.sender;
-        const companion = getHudWindow("companion");
-        if (companion && !pipClosedHookWired.has(companion)) {
-            pipClosedHookWired.add(companion);
-            // The meeting video lives in the companion: closing it tears the world's side down too.
-            // stop() is idempotent, so a late fire after the meeting already ended is harmless.
-            companion.once("closed", () => {
-                if (pipOwner && !pipOwner.isDestroyed()) {
-                    pipOwner.send("app:pip:closed");
-                }
-            });
-        }
-        return true;
-    });
-
-    // Close requests are honoured from the foreground world only, like the opens: a background tab
-    // whose own meeting ends must not tear down the windows the active tab is using.
-    ipcMain.handle("app:pip:close", (event) => {
-        if (!isFromMainRenderer(event)) return;
-        // Tear down the companion's meeting peer connection + tiles; the companion itself follows the
-        // controller's rules.
-        sendToPip("app:pip:close");
-    });
-
-    // The world's PiP button opens or closes the companion by hand, like the tray.
-    ipcMain.on("app:pip:toggle", (event) => {
+    // The companion window (a child window of the world page): opened and closed by hand from the
+    // world (its PiP button, its close button) and its "back to WorkAdventure" button.
+    ipcMain.on("app:windows:toggle-companion", (event) => {
         if (isFromMainRenderer(event)) {
             toggleCompanion();
         }
     });
-
-    // Main renderer → companion renderer (the meeting-video peer lives in the companion)
-    ipcMain.on("app:pip:offer-from-main", (event, sdp: unknown) => {
-        if (!isFromMainRenderer(event) || !isPipWindowOpen()) return;
-        sendToPip("app:pip:offer", sdp);
+    ipcMain.on("app:windows:dismiss-companion", (event) => {
+        if (isFromMainRenderer(event)) {
+            dismissCompanion();
+        }
     });
-    ipcMain.on("app:pip:ice-from-main-renderer", (event, candidate: unknown) => {
-        if (!isFromMainRenderer(event) || !isPipWindowOpen()) return;
-        sendToPip("app:pip:ice-from-main", candidate);
+    // The meeting bar's "Display tabs": shows or hides the tab strip (non-destructive; the native menu
+    // keeps the multi-tab confirmation).
+    ipcMain.handle("app:windows:tab-strip-shown", (event) =>
+        isFromMainRenderer(event) ? settings.get("tab_bar_enabled") !== false : false
+    );
+    ipcMain.on("app:windows:toggle-tab-strip", (event) => {
+        if (!isFromMainRenderer(event)) return;
+        const shown = settings.get("tab_bar_enabled") === false;
+        settings.set("tab_bar_enabled", shown);
+        setTabStripVisible(shown);
     });
-
-    // Companion renderer → main renderer (relayed by main process, to the active world view). Both
-    // are sender-validated: the answer/ICE can only originate from the companion window (the sole
-    // holder of the WAHud meeting bridge), never from arbitrary web content.
-    ipcMain.on("app:pip:answer", (event, sdp: unknown) => {
-        if (hudKindOfSender(event.sender) !== "companion") return;
-        getControllingWorldContents()?.send("app:pip:answer-to-main", sdp);
-    });
-    ipcMain.on("app:pip:ice-from-pip", (event, candidate: unknown) => {
-        if (hudKindOfSender(event.sender) !== "companion") return;
-        getControllingWorldContents()?.send("app:pip:ice-to-main", candidate);
-    });
-
-    // Main renderer pushes tile metadata + device state (mic/cam/screenshare) to the companion
-    // renderer, which drives the meeting tiles. Validated: state can only originate from the main
-    // renderer, and it is only forwarded while the companion (the meeting-video host) is open.
-    ipcMain.on("app:pip:state-from-main", (event, state: unknown) => {
-        if (!isFromMainRenderer(event) || !isPipWindowOpen()) return;
-        sendToPip("app:pip:state-to-pip", state);
+    ipcMain.on("app:windows:focus-main", (event) => {
+        if (isFromMainRenderer(event)) {
+            focusMainWindow();
+        }
     });
 
-    // ---- Presenter HUD (meeting bar) ----
-    // A content-protected floating window placed on the SHARED display: the presenter sees it,
-    // the captured stream does not. State is pushed from the main renderer; user actions
-    // come back as commands (same union as the PiP commands).
+    // ---- Presenter meeting bar ----
+    // A content-protected child window of the world page, placed on the SHARED display: the presenter
+    // sees it, the captured stream does not. The page renders it (child-windows.ts).
     async function resolveHudDisplayId(opts: unknown): Promise<number | undefined> {
         const options = (opts && typeof opts === "object" ? opts : {}) as { displayId?: unknown; sourceId?: unknown };
         let displayId = typeof options.displayId === "number" ? options.displayId : undefined;
@@ -651,132 +600,14 @@ export default () => {
                     closeHudWindow("meeting-bar");
                     return undefined;
                 }
-                return openHudWindow("meeting-bar", barDisplayId);
+                // Already open (the share changed source): move it to the newly shared screen.
+                const bar = getHudWindow("meeting-bar");
+                if (bar) {
+                    bar.setBounds(meetingBarBounds(resolveDisplay(barDisplayId, "meeting-bar")));
+                    return undefined;
+                }
+                return openChildWindow("meeting-bar", barDisplayId);
             })
             .catch((error) => ElectronLog.debug("Unable to place the meeting bar", error));
-    });
-
-    // Main renderer → HUD windows
-    ipcMain.on("app:hud:state-from-main", (event, state: unknown) => {
-        if (!isFromMainRenderer(event)) return;
-        // Inject the tab-strip state (a main-process setting, not known to the front) so the meeting
-        // bar's "Display tabs" toggle reflects reality.
-        const augmented =
-            state && typeof state === "object"
-                ? { ...(state as Record<string, unknown>), tabBarEnabled: settings.get("tab_bar_enabled") !== false }
-                : state;
-        broadcastHudState(augmented);
-    });
-
-    // Main renderer → companion panel. Separate channel/state from the presenter bars (different
-    // shape); sendHudState targets only the companion window and replays on (re)open.
-    ipcMain.on("app:companion:state-from-main", (event, state: unknown) => {
-        if (!isFromMainRenderer(event)) return;
-        // Where the companion cannot be kept out of the capture, it warns it shows in the user's share.
-        const raw = state && typeof state === "object" ? (state as { media?: { screenSharing?: unknown } }) : undefined;
-        const sharing = raw?.media?.screenSharing === true;
-        sendHudState(
-            "companion",
-            raw
-                ? {
-                      ...raw,
-                      visibleInShare: companionVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),
-                  }
-                : state
-        );
-    });
-
-    // Main renderer → companion + meeting bar strings, translated by the world in the language the
-    // user chose in WorkAdventure. Kept and replayed to each HUD window when it becomes ready.
-    ipcMain.on("app:hud:strings-from-main", (event, strings: unknown) => {
-        if (!isFromMainRenderer(event)) return;
-        const table = sanitizeStringTable(strings);
-        if (!table) {
-            ElectronLog.warn("Rejected a malformed HUD string table");
-            return;
-        }
-        setHudStrings(table);
-    });
-
-    // HUD windows → main renderer
-    ipcMain.on("app:hud:command-from-hud", (event, command: unknown) => {
-        if (!isHudSender(event.sender)) return;
-        const type = command !== null && typeof command === "object" ? (command as { type?: unknown }).type : undefined;
-        // `focus-main` is handled directly in the main process, like the PiP command.
-        if (type === "focus-main") {
-            const mainWindow = getWindow();
-            if (mainWindow && !mainWindow.isDestroyed()) {
-                if (mainWindow.isMinimized()) {
-                    mainWindow.restore();
-                }
-                mainWindow.show();
-                mainWindow.focus();
-            }
-            return;
-        }
-        // Meeting bar "Display tabs": toggle the tab strip (a main-process setting). Non-destructive —
-        // it only shows/hides the strip; the native menu keeps the multi-tab confirmation flow.
-        if (type === "toggle-tabs") {
-            const enabled = settings.get("tab_bar_enabled") !== false;
-            settings.set("tab_bar_enabled", !enabled);
-            setTabStripVisible(!enabled);
-            return;
-        }
-        // The companion panel is main-managed (not tied to the screen-share PresenterHud bridge):
-        // mic/camera toggles and "close" are handled here (mic/cam via the same path the global
-        // shortcuts use, reliable whether or not a screen share is active); everything else (status,
-        // chat, per-user actions, screen-share) is forwarded to the active world renderer.
-        if (hudKindOfSender(event.sender) === "companion") {
-            if (type === "toggle-mic") {
-                emitMuteToggle();
-            } else if (type === "toggle-camera") {
-                emitCameraToggle();
-            } else if (type === "close") {
-                // If a meeting video is running in the companion, tell the WA renderer to tear its
-                // PiP side down too before we dismiss (mirrors the old PiP window's close). stop() is
-                // idempotent, so this is a no-op when no call is active.
-                getControllingWorldContents()?.send("app:pip:closed");
-                // Go through the controller so the dismissal sticks (force-closed), instead of a bare
-                // close that would re-open on the next presence change.
-                dismissCompanion();
-            } else {
-                getControllingWorldContents()?.send("app:companion:command-to-main", command);
-            }
-            return;
-        }
-        getControllingWorldContents()?.send("app:hud:command-to-main", command);
-    });
-
-    // Source enumeration for the meeting bar's direct screen switcher. Sender-validated: only the
-    // HUD windows hold the preload-hud script, so no third party can reach this handler.
-    ipcMain.handle("app:hud:request-sources", async (event) => {
-        if (!isHudSender(event.sender)) {
-            ElectronLog.warn("Rejected app:hud:request-sources from a non-HUD renderer");
-            return [];
-        }
-        const sources = await desktopCapturer.getSources({
-            types: ["screen", "window"],
-            thumbnailSize: { width: 320, height: 180 },
-        });
-        return sources.map((source) => ({
-            id: source.id,
-            name: source.name,
-            thumbnailURL: source.thumbnail.toDataURL(),
-            type: source.id.startsWith("window:") ? "window" : "screen",
-            display_id: source.display_id ? Number(source.display_id) : undefined,
-        }));
-    });
-
-    ipcMain.on("app:hud:set-expanded", (event, payload: unknown) => {
-        // Back-compat: the renderer used to send a bare boolean; it now sends { expanded, height }.
-        const raw = (payload && typeof payload === "object" ? payload : { expanded: payload }) as {
-            expanded?: unknown;
-            height?: unknown;
-        };
-        const height = typeof raw.height === "number" ? raw.height : undefined;
-        setMeetingBarExpanded(event.sender, raw.expanded === true, height);
-    });
-    ipcMain.on("app:hud:ready", (event) => {
-        markHudReady(event.sender);
     });
 };

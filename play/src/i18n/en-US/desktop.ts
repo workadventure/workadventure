@@ -1,9 +1,7 @@
 import type { BaseTranslation } from "../i18n-types";
 
-// Desktop app (Electron) strings. `companion` and `meetingBar` are not used by the front itself: they
-// are flattened and pushed to the desktop's companion panel / presenter meeting bar windows (see
-// Api/Desktop/DesktopStringsBridge.ts), which substitute the `{placeholders}` themselves — so keep
-// placeholders untyped (`{count}`, not `{count:number}`).
+// Desktop app (Electron) strings: `companion` and `meetingBar` are the companion and the presenter meeting
+// bar, windows of the desktop app that the front renders (Components/Video/PictureInPicture/).
 const desktop: BaseTranslation = {
     sourcePicker: {
         title: "Share your screen",
