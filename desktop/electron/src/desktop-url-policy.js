@@ -112,8 +112,9 @@ function createDesktopConfig(env = process.env) {
         portalOrigin,
         allowedOrigins: Array.from(allowedOrigins),
         allowedHostSuffixes,
-        updateFeedUrl:
-            env.updateFeedUrl || env.WA_DESKTOP_UPDATE_URL || "https://desktop-updates.workadventu.re/stable",
+        // Unset: the releases on GitHub (the publish settings of electron-builder.yml). Set: a feed of the
+        // organization's own, e.g. to hold versions back until they are validated internally.
+        updateFeedUrl: env.updateFeedUrl || env.WA_DESKTOP_UPDATE_URL || undefined,
     };
 }
 

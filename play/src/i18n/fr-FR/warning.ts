@@ -70,6 +70,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     otherMeetingMuted:
         "Vous êtes maintenant en réunion ici. Votre microphone, votre caméra et votre partage d'écran ont été désactivés dans {world}.",
+    desktopAppOutdated: "Une nouvelle version de l'appli WorkAdventure est disponible : {url}",
 };
 
 export default warning;

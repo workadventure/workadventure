@@ -1,69 +1,38 @@
 import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
-import { AvailabilityStatus, AskPositionMessage_AskType } from "@workadventure/messages";
+import { AvailabilityStatus } from "@workadventure/messages";
 import {
-    availabilityStatusStore,
     enableCameraSceneVisibilityStore,
     requestedCameraState,
     requestedMicrophoneState,
     requestedStatusStore,
     silentStore,
 } from "../../Stores/MediaStore";
-import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
-import {
-    activeScreenShareSourceStore,
-    requestedScreenSharingState,
-    screenSharingAvailableStore,
-} from "../../Stores/ScreenSharingStore";
+import { activeScreenShareSourceStore, requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../Stores/GameSceneStore";
 import { loginSceneVisibleStore } from "../../Stores/LoginSceneStore";
 import { selectCharacterSceneVisibleStore } from "../../Stores/SelectCharacterStore";
 import { selectCompanionSceneVisibleStore } from "../../Stores/SelectCompanionStore";
 import { pwaInstallSceneVisibleStore } from "../../Stores/PwaInstallStore";
 import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
-import {
-    calendarEventsStore,
-    isActivatedStore as isCalendarActivatedStore,
-    isCalendarVisibleStore,
-} from "../../Stores/CalendarStore";
-import {
-    isActivatedStore as isTodoListActivatedStore,
-    isTodoListVisibleStore,
-    todoListsStore,
-} from "../../Stores/TodoListStore";
-import { joinMeeting } from "../../Components/Calendar/joinMeeting";
 import { allowPictureInPictureStore } from "../../Stores/PeerStore";
-import { playersStore } from "../../Stores/PlayersStore";
-import { streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
-import { currentPlayerWokaStore } from "../../Stores/CurrentPlayerWokaStore";
-import { requestVisitCardsStore, userIsAdminStore } from "../../Stores/GameStore";
-import { analyticsClient } from "../../Administration/AnalyticsClient";
-import { meetingOf } from "../../Administration/CurrentMeeting";
-import { openModerationModal } from "../../Components/Moderation/openModerationModal";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { CharacterLayerManager } from "../../Phaser/Entity/CharacterLayerManager";
 import { notificationManager } from "../../Notification/NotificationManager";
-import { chatVisibilityStore, isMatrixChatEnabledStore } from "../../Stores/ChatStore";
-import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
 import { focusStore } from "../../Stores/FocusStore";
-import type { PlayerInterface } from "../../Phaser/Game/PlayerInterface";
-import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../Chat/Connection/ChatConnection";
-import type {
-    CompanionConversation,
-    CompanionInvitation,
-    CompanionMedia,
-    CompanionMessage,
-    CompanionSelectedConversation,
-    CompanionUser,
-    WorkAdventureDesktopApi,
-} from "../../Interfaces/DesktopAppInterfaces";
-import { buildCompanionAgenda } from "./CompanionAgenda";
-import { startDesktopStringsBridge } from "./DesktopStringsBridge";
+import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
+import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
+import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
+import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMeetingBar.svelte";
+import desktopMeetingBarStyles from "../../Components/Video/PictureInPicture/desktopMeetingBar.css?raw";
+
+/** The desktop contract this page speaks (see `hello` in DesktopAppInterfaces). */
+const PAGE_CONTRACT = 2;
+const DESKTOP_APP_DOWNLOAD_URL = "https://github.com/workadventure/workadventure/releases/latest";
 
 type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
 
@@ -78,20 +47,7 @@ type PresenceSnapshot = {
     invitationPending: boolean;
     autoOpenAllowed: boolean;
     requestedStatus: TrayAvailability;
-    statusLocked: boolean;
 };
-
-// WA locks the status bar while the user is in a meeting / silent zone; mirror that set so the
-// tray "Set status" submenu grays out instead of fighting the availability machine.
-const STATUS_LOCKED_SET: ReadonlySet<AvailabilityStatus> = new Set([
-    AvailabilityStatus.LISTENER,
-    AvailabilityStatus.SPEAKER,
-    AvailabilityStatus.JITSI,
-    AvailabilityStatus.LIVEKIT,
-    AvailabilityStatus.BBB,
-    AvailabilityStatus.DENY_PROXIMITY_MEETING,
-    AvailabilityStatus.SILENT,
-]);
 
 function requestedStatusToKey(status: RequestedStatus | null): TrayAvailability {
     switch (status) {
@@ -104,129 +60,6 @@ function requestedStatusToKey(status: RequestedStatus | null): TrayAvailability 
         default:
             return "online";
     }
-}
-
-/** Apply a status chosen from the tray submenu or the companion controls (same persisted setter). */
-function applyRequestedStatus(status: TrayAvailability): void {
-    switch (status) {
-        case "busy":
-            resetAllStatusStoreExcept(AvailabilityStatus.BUSY);
-            break;
-        case "back_in_a_moment":
-            resetAllStatusStoreExcept(AvailabilityStatus.BACK_IN_A_MOMENT);
-            break;
-        case "do_not_disturb":
-            resetAllStatusStoreExcept(AvailabilityStatus.DO_NOT_DISTURB);
-            break;
-        case "online":
-        default:
-            resetAllStatusStoreExcept(null);
-            break;
-    }
-}
-
-/**
- * Map any effective availability to a companion status-dot key. Meeting/engaged statuses collapse to
- * "busy" so the People list shows a meaningful dot color even for statuses the user can't pick
- * directly. AWAY keeps its own key so it renders in WA's away color, not the (blue) back_in_a_moment.
- */
-function availabilityToCompanionKey(status: AvailabilityStatus): string {
-    switch (status) {
-        case AvailabilityStatus.BUSY:
-            return "busy";
-        case AvailabilityStatus.DO_NOT_DISTURB:
-            return "do_not_disturb";
-        case AvailabilityStatus.BACK_IN_A_MOMENT:
-            return "back_in_a_moment";
-        case AvailabilityStatus.AWAY:
-            return "away";
-        case AvailabilityStatus.SILENT:
-        case AvailabilityStatus.DENY_PROXIMITY_MEETING:
-        case AvailabilityStatus.JITSI:
-        case AvailabilityStatus.BBB:
-        case AvailabilityStatus.LIVEKIT:
-        case AvailabilityStatus.SPEAKER:
-        case AvailabilityStatus.LISTENER:
-            return "busy";
-        case AvailabilityStatus.ONLINE:
-        default:
-            return "online";
-    }
-}
-
-/** Sort companion conversations: unread / mentioned first, then most-recent activity. */
-function sortCompanionConversations(list: CompanionConversation[]): CompanionConversation[] {
-    return [...list].sort((a, b) => {
-        const aUnread = a.unreadCount > 0 || a.highlightCount > 0 ? 1 : 0;
-        const bUnread = b.unreadCount > 0 || b.highlightCount > 0 ? 1 : 0;
-        return bUnread - aUnread || b.lastActivityAt - a.lastActivityAt;
-    });
-}
-
-/**
- * Matrix conversation summaries (direct rooms + rooms) as a Readable<CompanionConversation[]>. Same
- * dynamic per-room subscribe idea as {@link createTotalUnreadStore}: each room's unread / highlight
- * counts and messages are watched, and the list is rebuilt from a fresh read on any change.
- */
-function createConversationsStore(connection: ChatConnectionInterface): Readable<CompanionConversation[]> {
-    return derived(
-        [connection.directRooms, connection.rooms],
-        ([$direct, $rooms], set) => {
-            const entries: Array<{ room: ChatRoom; kind: "direct" | "room" }> = [
-                ...$direct.map((room) => ({ room, kind: "direct" as const })),
-                ...$rooms.map((room) => ({ room, kind: "room" as const })),
-            ];
-            const unsubs: Unsubscriber[] = [];
-
-            const emit = () => {
-                set(
-                    entries.map(({ room, kind }): CompanionConversation => {
-                        let preview = "";
-                        let lastActivityAt = room.lastMessageTimestamp || 0;
-                        try {
-                            const msgs = get(room.messages);
-                            const last = msgs[msgs.length - 1];
-                            if (last) {
-                                preview = get(last.content).body ?? "";
-                                if (last.date instanceof Date) {
-                                    lastActivityAt = Math.max(lastActivityAt, last.date.getTime());
-                                }
-                            }
-                        } catch {
-                            /* a room without a readable last message still lists by name */
-                        }
-                        return {
-                            id: room.id,
-                            name: get(room.name),
-                            kind,
-                            preview,
-                            lastActivityAt,
-                            // Real total unread count, and the @-mention subset when the room exposes it.
-                            unreadCount: get(room.unreadNotificationCount) || 0,
-                            highlightCount: room.unreadHighlightCount ? get(room.unreadHighlightCount) || 0 : 0,
-                        };
-                    }),
-                );
-            };
-
-            for (const { room } of entries) {
-                unsubs.push(room.unreadNotificationCount.subscribe(() => emit()));
-                unsubs.push(room.hasUnreadMessages.subscribe(() => emit()));
-                if (room.unreadHighlightCount) {
-                    unsubs.push(room.unreadHighlightCount.subscribe(() => emit()));
-                }
-                unsubs.push(room.messages.subscribe(() => emit()));
-            }
-            emit();
-
-            return () => {
-                for (const unsub of unsubs) {
-                    unsub();
-                }
-            };
-        },
-        [] as CompanionConversation[],
-    );
 }
 
 /**
@@ -300,6 +133,16 @@ class DesktopApi {
         }
 
         console.info("Yipee you are using the desktop app ;)");
+
+        // The handshake: this page speaks contract 2, so the app may open its floating windows here. An
+        // app without it is older than this page: it keeps working, the user is told an update exists.
+        if (window.WAD.hello) {
+            window.WAD.hello({ contract: PAGE_CONTRACT });
+        } else {
+            warningMessageStore.addWarningMessage(
+                get(LL).warning.desktopAppOutdated({ url: DESKTOP_APP_DOWNLOAD_URL }),
+            );
+        }
 
         window.WAD.onMuteToggle(() => {
             if (this.isSilent) return;
@@ -434,7 +277,6 @@ class DesktopApi {
                     requestedCameraState,
                     requestedScreenSharingState,
                     requestedStatusStore,
-                    availabilityStatusStore,
                     gameSceneIsLoadedStore,
                     onboardingStore,
                     meetingInvitationRequestStore,
@@ -446,7 +288,6 @@ class DesktopApi {
                     $cam,
                     $share,
                     $requested,
-                    $availability,
                     $inWorld,
                     $onboarding,
                     $invitation,
@@ -461,7 +302,6 @@ class DesktopApi {
                     invitationPending: $invitation !== null,
                     autoOpenAllowed: $allowPictureInPicture,
                     requestedStatus: requestedStatusToKey($requested),
-                    statusLocked: STATUS_LOCKED_SET.has($availability),
                 }),
             );
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -477,17 +317,26 @@ class DesktopApi {
             });
         }
 
-        // Apply availability changes requested from the tray "Set status" submenu. Uses the same
-        // persisted setter as the in-app status picker (resetAllStatusStoreExcept), so a tray choice
-        // behaves exactly like picking the status from the profile menu. "online" clears to null.
-        if (window.WAD.onSetStatus) {
-            window.WAD.onSetStatus((status) => applyRequestedStatus(status));
+        // The presenter meeting bar: the desktop app asks for it while the user shares their screen and
+        // closes it itself (child-windows.ts in the desktop app).
+        const windows = window.WAD.windows;
+        if (windows) {
+            let meetingBar: DesktopChildWindow | undefined;
+            windows.onOpen((kind) => {
+                if (kind !== "meeting-bar" || meetingBar) return;
+                meetingBar = openDesktopChildWindow(
+                    "wa-meeting-bar",
+                    DesktopMeetingBar,
+                    (ownerDocument) => ({ windows, ownerDocument }),
+                    {
+                        onClose: () => (meetingBar = undefined),
+                        styles: desktopMeetingBarStyles,
+                        // Its own design only: the app's styles would fight it.
+                        pageStyles: false,
+                    },
+                );
+            });
         }
-
-        if (window.WAD.companion) {
-            this.initCompanion(window.WAD.companion);
-        }
-        startDesktopStringsBridge(window.WAD);
 
         // Give the desktop tab a meaningful label: the admin-configured world name, pushed once
         // the scene has loaded (and re-pushed on every scene load, e.g. walking through a portal to
@@ -523,579 +372,6 @@ class DesktopApi {
                     console.warn("Desktop unread badge: chat connection failed to hydrate", error);
                 });
         }
-    }
-
-    /**
-     * Feed the companion panel: builds CompanionState from the room player list, proximity chat,
-     * chat mentions, and the media/status stores, pushing a debounced snapshot on any change; and
-     * routes the panel's commands back to the app (mic/camera/close are handled in main).
-     */
-    private initCompanion(companion: NonNullable<WorkAdventureDesktopApi["companion"]>): void {
-        let latestOtherUsers: CompanionUser[] = [];
-        let latestMatrixConversations: CompanionConversation[] = [];
-        let latestNearby: CompanionConversation | null = null;
-        // The local user's Woka — used as the proximity chat's avatar, like the app's ProximityRoomRow.
-        let latestLocalWoka: string | undefined = get(currentPlayerWokaStore);
-        let latestSelected: CompanionSelectedConversation | null = null;
-        let selectedConversationId: string | null = null;
-        let chatConnection: ChatConnectionInterface | undefined;
-        let latestChatStatus: "connecting" | "online" | "unavailable" = "connecting";
-        let latestInvitation: CompanionInvitation | null = null;
-        let latestMedia: CompanionMedia = {
-            micEnabled: false,
-            cameraEnabled: false,
-            screenSharing: false,
-            canScreenShare: false,
-            inMeeting: false,
-            status: "online",
-            statusLocked: false,
-        };
-        const playerById = new Map<string, PlayerInterface>();
-
-        // Woka avatars for the People list. Generating one renders a Phaser snapshot, so cache it by
-        // the character-texture signature (many players share a Woka) and reuse it across pushes;
-        // rows fall back to a colour disc in the panel until their Woka finishes generating.
-        const wokaCache = new Map<string, string>();
-        const wokaInFlight = new Set<string>();
-        const playerSig = new Map<string, string>(); // playerId → texture signature
-        const wokaSignature = (textures: PlayerInterface["characterTextures"]): string =>
-            textures.map((t) => t.id).join("|");
-        const ensureWoka = (sig: string, textures: PlayerInterface["characterTextures"]): void => {
-            if (!sig || textures.length === 0 || wokaCache.has(sig) || wokaInFlight.has(sig)) {
-                return;
-            }
-            if (!get(gameSceneIsLoadedStore)) {
-                return; // wokaBase64 needs an active game scene
-            }
-            wokaInFlight.add(sig);
-            // wokaBase64 only reads {id, url} from each texture, which is exactly what
-            // WokaTextureDescriptionInterface carries; the parameter is typed as the fuller
-            // CharacterTextureMessage, so widen through unknown.
-            CharacterLayerManager.wokaBase64(
-                textures as unknown as Parameters<typeof CharacterLayerManager.wokaBase64>[0],
-            )
-                .then((dataUrl) => {
-                    wokaCache.set(sig, dataUrl);
-                })
-                .catch(() => {
-                    /* keep the colour-disc fallback */
-                })
-                .finally(() => {
-                    wokaInFlight.delete(sig);
-                    schedulePush();
-                });
-        };
-
-        // Debounced push: many stores change in bursts (players + messages + media), so coalesce.
-        let pushTimer: ReturnType<typeof setTimeout> | undefined;
-        const pushNow = () => {
-            const self: CompanionUser = {
-                id: "self",
-                name: gameManager.getPlayerName() || "You",
-                status: availabilityToCompanionKey(get(availabilityStatusStore)),
-                isSelf: true,
-            };
-            // Fill each row's Woka from the cache at push time (generation may have finished after the
-            // player list was last built).
-            const usersWithWoka = latestOtherUsers.map((u) => {
-                const sig = playerSig.get(u.id);
-                const woka = sig ? wokaCache.get(sig) : undefined;
-                return woka ? { ...u, woka } : u;
-            });
-            companion.pushState({
-                world: {
-                    name: connectionManager.currentRoom?.roomName ?? "WorkAdventure",
-                    participantCount: latestOtherUsers.length + 1,
-                },
-                users: [self, ...usersWithWoka],
-                conversations: sortCompanionConversations([
-                    ...(latestNearby ? [latestNearby] : []),
-                    ...latestMatrixConversations,
-                ]),
-                selectedConversation: latestSelected,
-                media: latestMedia,
-                invitation: latestInvitation,
-                chatStatus: latestChatStatus,
-                agenda: buildCompanionAgenda({
-                    events: get(isCalendarActivatedStore) ? get(calendarEventsStore).values() : undefined,
-                    lists: get(isTodoListActivatedStore) ? get(todoListsStore).values() : undefined,
-                    now: new Date(),
-                    labels: {
-                        inProgress: get(LL).desktop.companion.inProgress(),
-                        until: (time) => get(LL).desktop.companion.until({ time }),
-                    },
-                }),
-            });
-        };
-        const schedulePush = () => {
-            if (pushTimer !== undefined) {
-                return;
-            }
-            pushTimer = setTimeout(() => {
-                pushTimer = undefined;
-                pushNow();
-            }, 200);
-        };
-        // After a tab switch the shell drops the previous world's companion state and asks the newly
-        // active world for its own; without this push the panel would stay empty until a store moved.
-        window.WAD?.onRequestPresence?.(() => schedulePush());
-
-        // Local Woka (proximity chat avatar) — re-push when it resolves / changes.
-        //eslint-disable-next-line svelte/no-ignored-unsubscribe
-        currentPlayerWokaStore.subscribe((woka) => {
-            latestLocalWoka = woka;
-            schedulePush();
-        });
-
-        // People + count from the room's player list (availabilityStatus is a snapshot per join).
-        //eslint-disable-next-line svelte/no-ignored-unsubscribe
-        playersStore.subscribe((players) => {
-            playerById.clear();
-            playerSig.clear();
-            const users: CompanionUser[] = [];
-            for (const p of players.values()) {
-                const id = String(p.userId);
-                playerById.set(id, p);
-                const sig = wokaSignature(p.characterTextures);
-                playerSig.set(id, sig);
-                ensureWoka(sig, p.characterTextures);
-                users.push({
-                    id,
-                    name: p.name || "Someone",
-                    status: availabilityToCompanionKey(p.availabilityStatus),
-                    isSelf: false,
-                });
-            }
-            latestOtherUsers = users;
-            schedulePush();
-        });
-
-        // Media + status.
-        const mediaStore = derived(
-            [
-                isInActiveConversationStore,
-                requestedMicrophoneState,
-                requestedCameraState,
-                requestedScreenSharingState,
-                requestedStatusStore,
-                availabilityStatusStore,
-                screenSharingAvailableStore,
-            ],
-            ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare]): CompanionMedia => ({
-                micEnabled: Boolean($mic),
-                cameraEnabled: Boolean($cam),
-                screenSharing: Boolean($share),
-                // Mirror the app's own ActionBar gating (it renders ScreenSharingMenuItem behind
-                // screenSharingAvailableStore) so the companion cannot offer a share that the app
-                // itself would not: sharing needs a bubble/live-stream, not just being in a world.
-                canScreenShare: Boolean($canShare),
-                inMeeting: Boolean($inMeeting),
-                status: requestedStatusToKey($requested),
-                statusLocked: STATUS_LOCKED_SET.has($availability),
-            }),
-        );
-        //eslint-disable-next-line svelte/no-ignored-unsubscribe
-        mediaStore.subscribe((media) => {
-            latestMedia = media;
-            schedulePush();
-        });
-
-        // Agenda + tasks: re-push on change, and every 30 s for "in 12 minutes" and what is in progress.
-        for (const store of [isCalendarActivatedStore, calendarEventsStore, isTodoListActivatedStore, todoListsStore]) {
-            //eslint-disable-next-line svelte/no-ignored-unsubscribe
-            store.subscribe(() => schedulePush());
-        }
-        setInterval(() => {
-            if (get(isCalendarActivatedStore) || get(isTodoListActivatedStore)) schedulePush();
-        }, 30_000);
-
-        // Pending meeting invitation → banner in the panel (the controller force-opens for it).
-        //eslint-disable-next-line svelte/no-ignored-unsubscribe
-        meetingInvitationRequestStore.subscribe((request) => {
-            latestInvitation = request ? { name: request.senderName ?? "" } : null;
-            schedulePush();
-        });
-
-        const NEARBY_ID = "nearby";
-        const mapMessage = (m: ChatMessage): CompanionMessage => ({
-            id: m.id,
-            author: m.sender?.username ?? "",
-            text: get(m.content).body ?? "",
-            isSelf: m.isMyMessage === true,
-            ts: m.date ? m.date.getTime() : 0,
-            // Proximity system notices ("New discussion with X", join/leave) — shown as a centered
-            // notice by the companion, not a chat bubble.
-            system: m.type === "incoming" || m.type === "outcoming",
-        });
-
-        // Stream the currently-selected conversation's last 50 messages. Reading the room is a fresh
-        // lookup each time so it survives scene reloads / late-hydrating chat.
-        let selectedMessagesUnsub: Unsubscriber | undefined;
-        const streamSelected = () => {
-            selectedMessagesUnsub?.();
-            selectedMessagesUnsub = undefined;
-            const id = selectedConversationId;
-            if (id === null) {
-                latestSelected = null;
-                schedulePush();
-                return;
-            }
-            let name = "";
-            let messages: Readable<readonly ChatMessage[]> | undefined;
-            if (id === NEARBY_ID) {
-                name = "Proximity Chat";
-                try {
-                    messages = gameManager.getCurrentGameScene().proximityChatRoomManager.resolveTargetRoom()?.messages;
-                } catch {
-                    messages = undefined;
-                }
-            } else {
-                try {
-                    const room = chatConnection?.getRoomByID(id);
-                    name = room ? get(room.name) : "";
-                    messages = room?.messages;
-                } catch {
-                    messages = undefined;
-                }
-            }
-            if (!messages) {
-                latestSelected = null;
-                schedulePush();
-                return;
-            }
-            selectedMessagesUnsub = messages.subscribe((msgs) => {
-                latestSelected = { id, name, messages: msgs.slice(-50).map(mapMessage) };
-                schedulePush();
-            });
-        };
-
-        // Matrix conversation list. The chat connection is a lazy singleton built during scene load
-        // (needs login + a matrix server url). Calling getChatConnection() before that only ever
-        // returns a throwaway VoidChatConnection with empty rooms — which is why a one-shot early call
-        // left the companion list permanently empty while the main app chat (opened later) worked.
-        // Instead, (re)acquire the real connection whenever chat becomes enabled.
-        let conversationsUnsub: Unsubscriber | undefined;
-        let chatStatusUnsub: Unsubscriber | undefined;
-        const wireChatConnection = () => {
-            gameManager
-                .getChatConnection()
-                .then((connection) => {
-                    chatConnection = connection;
-                    conversationsUnsub?.();
-                    conversationsUnsub = createConversationsStore(connection).subscribe((conversations) => {
-                        latestMatrixConversations = conversations;
-                        schedulePush();
-                    });
-                    // Reflect the live connection status so the panel can distinguish "connecting" /
-                    // "chat unavailable" from a genuinely empty conversation list.
-                    chatStatusUnsub?.();
-                    chatStatusUnsub = connection.connectionStatus.subscribe((status) => {
-                        latestChatStatus =
-                            status === "ONLINE" ? "online" : status === "CONNECTING" ? "connecting" : "unavailable";
-                        schedulePush();
-                    });
-                    // A conversation may have been selected before the connection hydrated.
-                    if (selectedConversationId !== null && selectedConversationId !== NEARBY_ID) {
-                        streamSelected();
-                    }
-                })
-                .catch((error) => {
-                    console.warn("Desktop companion: chat connection failed to hydrate", error);
-                    latestChatStatus = "unavailable";
-                    schedulePush();
-                });
-        };
-        //eslint-disable-next-line svelte/no-ignored-unsubscribe
-        isMatrixChatEnabledStore.subscribe((enabled) => {
-            if (enabled) {
-                wireChatConnection();
-            }
-        });
-
-        // Nearby proximity conversation summary. The manager is per-scene, so re-wire on every load.
-        let proximityRoomUnsub: Unsubscriber | undefined;
-        let nearbyMessagesUnsub: Unsubscriber | undefined;
-        //eslint-disable-next-line svelte/no-ignored-unsubscribe
-        gameSceneIsLoadedStore.subscribe((loaded) => {
-            nearbyMessagesUnsub?.();
-            nearbyMessagesUnsub = undefined;
-            proximityRoomUnsub?.();
-            proximityRoomUnsub = undefined;
-            latestNearby = null;
-            if (selectedConversationId === NEARBY_ID) {
-                streamSelected();
-            }
-            schedulePush();
-            if (!loaded) {
-                return;
-            }
-            try {
-                proximityRoomUnsub = gameManager
-                    .getCurrentGameScene()
-                    .proximityChatRoomManager.activeRoomStore.subscribe((room) => {
-                        nearbyMessagesUnsub?.();
-                        nearbyMessagesUnsub = undefined;
-                        if (!room) {
-                            latestNearby = null;
-                            if (selectedConversationId === NEARBY_ID) {
-                                streamSelected();
-                            }
-                            schedulePush();
-                            return;
-                        }
-                        nearbyMessagesUnsub = room.messages.subscribe((msgs) => {
-                            const last = msgs[msgs.length - 1];
-                            latestNearby = {
-                                id: NEARBY_ID,
-                                name: "Proximity Chat",
-                                kind: "nearby",
-                                preview: last ? (get(last.content).body ?? "") : "",
-                                lastActivityAt: last?.date instanceof Date ? last.date.getTime() : 0,
-                                unreadCount: 0,
-                                highlightCount: 0,
-                                woka: latestLocalWoka,
-                            };
-                            schedulePush();
-                        });
-                        if (selectedConversationId === NEARBY_ID) {
-                            streamSelected();
-                        }
-                    });
-            } catch (error) {
-                console.warn("Desktop companion: proximity chat not available", error);
-            }
-        });
-
-        const resolveMatrixRoom = (id: string) => {
-            try {
-                return chatConnection?.getRoomByID(id);
-            } catch {
-                return undefined;
-            }
-        };
-        const markConversationRead = (id: string) => {
-            if (id === NEARBY_ID) {
-                return; // proximity chat has no read receipts
-            }
-            try {
-                resolveMatrixRoom(id)?.setTimelineAsRead();
-            } catch (error) {
-                console.warn("Desktop companion: mark read failed", error);
-            }
-        };
-        const sendToConversation = (id: string, text: string) => {
-            try {
-                if (id === NEARBY_ID) {
-                    gameManager.getCurrentGameScene().proximityChatRoomManager.resolveTargetRoom()?.sendMessage(text);
-                } else {
-                    resolveMatrixRoom(id)?.sendMessage(text);
-                }
-            } catch (error) {
-                console.warn("Desktop companion: send message failed", error);
-            }
-        };
-        const openConversationInMain = (id: string) => {
-            if (id === NEARBY_ID) {
-                return;
-            }
-            const room = resolveMatrixRoom(id);
-            if (room) {
-                selectedRoomStore.set(room);
-                chatVisibilityStore.set(true);
-            }
-        };
-        const openDmConversation = async (chatId: string) => {
-            try {
-                const room =
-                    (await chatConnection?.getDirectRoomFor(chatId)) ??
-                    (await chatConnection?.createDirectRoom(chatId));
-                if (room) {
-                    selectedConversationId = room.id;
-                    markConversationRead(room.id);
-                    streamSelected();
-                }
-            } catch (error) {
-                console.warn("Desktop companion: open DM failed", error);
-            }
-        };
-
-        // Route panel commands back to the app (focus-main / close / mic / camera handled in main).
-        companion.onCommand((command) => {
-            switch (command.type) {
-                case "toggle-screenshare":
-                    if (get(requestedScreenSharingState)) {
-                        requestedScreenSharingState.disableScreenSharing();
-                    } else {
-                        requestedScreenSharingState.enableScreenSharing();
-                    }
-                    break;
-                case "set-status":
-                    applyRequestedStatus(command.status);
-                    break;
-                case "select-conversation":
-                    selectedConversationId = command.conversationId;
-                    // Mark read ONLY on an explicit selection — never on auto-open / state replay.
-                    markConversationRead(command.conversationId);
-                    streamSelected();
-                    break;
-                case "send-message": {
-                    const text = command.text.trim();
-                    if (text) {
-                        sendToConversation(command.conversationId, text);
-                    }
-                    break;
-                }
-                case "open-conversation-in-main":
-                    openConversationInMain(command.conversationId);
-                    break;
-                case "join-meeting": {
-                    const event = [...get(calendarEventsStore).values()].find(({ id }) => id === command.eventId);
-                    if (event) joinMeeting(event);
-                    break;
-                }
-                case "open-agenda":
-                    isCalendarVisibleStore.set(true);
-                    break;
-                case "open-tasks":
-                    isTodoListVisibleStore.set(true);
-                    break;
-                case "dm": {
-                    const player = playerById.get(command.userId);
-                    if (player?.chatID) {
-                        openDmConversation(player.chatID).catch(() => {
-                            /* errors are handled inside openDmConversation */
-                        });
-                    }
-                    break;
-                }
-                case "locate": {
-                    const player = playerById.get(command.userId);
-                    if (player) {
-                        try {
-                            const scene = gameManager.getCurrentGameScene();
-                            scene.connection?.emitAskPosition(
-                                player.userUuid,
-                                scene.roomUrl,
-                                AskPositionMessage_AskType.MOVE,
-                                player.userId,
-                            );
-                        } catch (error) {
-                            console.warn("Desktop companion: locate failed", error);
-                        }
-                    }
-                    break;
-                }
-                case "invite": {
-                    // Same action as the in-app user list "Invite to meeting" button:
-                    // InviteManager applies the antispam rules and emits the request over the wire.
-                    const player = playerById.get(command.userId);
-                    if (player) {
-                        try {
-                            const scene = gameManager.getCurrentGameScene();
-                            const sent = scene.inviteManager?.requestMeetingInvitation(player.userUuid, player.userId);
-                            if (sent) {
-                                scene.playSound("meeting-in", 0.15);
-                            }
-                        } catch (error) {
-                            console.warn("Desktop companion: invite failed", error);
-                        }
-                    }
-                    break;
-                }
-                case "accept-invitation":
-                case "decline-invitation": {
-                    // Respond to the pending invitation with the same handlers as the in-app popup.
-                    // Bringing the app to the front on accept is done by the panel (it also sends
-                    // focus-main), so the user lands in the meeting they just joined.
-                    const request = get(meetingInvitationRequestStore);
-                    if (request) {
-                        const payload = {
-                            senderUserUuid: request.senderUserUuid ?? "",
-                            senderPlayUri: request.senderPlayUri ?? "",
-                            senderName: request.senderName ?? "",
-                            senderUserId: request.senderUserId ?? 0,
-                        };
-                        try {
-                            const inviteManager = gameManager.getCurrentGameScene().inviteManager;
-                            if (command.type === "accept-invitation") {
-                                inviteManager?.handleAccept(payload);
-                            } else {
-                                inviteManager?.handleDecline(payload);
-                            }
-                        } catch (error) {
-                            console.warn("Desktop companion: invitation response failed", error);
-                        }
-                        meetingInvitationRequestStore.set(null);
-                    }
-                    break;
-                }
-                case "tile-action": {
-                    // Same actions as the in-app video-tile menu (ActionMediaBox), resolved via the
-                    // streamable collection (tileKey = VideoBox id) to the participant's space user.
-                    const spaceUser = get(streamableCollectionStore).get(command.tileKey)?.spaceUser;
-                    if (!spaceUser) break;
-                    // The panel hides what the user may not do, but the rights are checked here, as in
-                    // ActionMediaBox: the panel only renders state it was sent.
-                    const isAdmin = get(userIsAdminStore);
-                    const canAskToMute = isAdmin || get(spaceUser.space.canAskToMuteAudioOrTurnOffVideo);
-                    const meeting = meetingOf(spaceUser.space);
-                    try {
-                        switch (command.action) {
-                            case "mute-audio":
-                                if (!canAskToMute) break;
-                                analyticsClient.trackAdminEvent("meeting.microphone.muted", meeting);
-                                spaceUser.emitPrivateEvent({ $case: "muteAudio", muteAudio: { force: false } });
-                                break;
-                            case "mute-video":
-                                if (!canAskToMute) break;
-                                analyticsClient.trackAdminEvent("meeting.video.muted", meeting);
-                                spaceUser.emitPrivateEvent({ $case: "muteVideo", muteVideo: { force: false } });
-                                break;
-                            case "mute-audio-all":
-                                if (!isAdmin) break;
-                                analyticsClient.trackAdminEvent("meeting.microphone.muted_for_everybody", meeting);
-                                spaceUser.space.emitPublicMessage({
-                                    $case: "muteAudioForEverybody",
-                                    muteAudioForEverybody: {},
-                                });
-                                break;
-                            case "mute-video-all":
-                                if (!isAdmin) break;
-                                analyticsClient.trackAdminEvent("meeting.video.muted_for_everybody", meeting);
-                                spaceUser.space.emitPublicMessage({
-                                    $case: "muteVideoForEverybody",
-                                    muteVideoForEverybody: {},
-                                });
-                                break;
-                            case "kick":
-                                if (!isAdmin) break;
-                                analyticsClient.trackAdminEvent("meeting.participant.kicked", meeting);
-                                spaceUser.emitPrivateEvent({ $case: "kickOffUser", kickOffUser: {} });
-                                break;
-                            case "report":
-                                openModerationModal(spaceUser.uuid, spaceUser.name);
-                                break;
-                            case "visit-card":
-                                requestVisitCardsStore.set(spaceUser.visitCardUrl ?? null);
-                                break;
-                        }
-                    } catch (error) {
-                        console.warn("Desktop companion: tile action failed", error);
-                    }
-                    break;
-                }
-                case "tile-volume": {
-                    const box = get(streamableCollectionStore).get(command.tileKey);
-                    const streamable = box ? get(box.streamable) : undefined;
-                    if (streamable) {
-                        streamable.volume.set(Math.max(0, Math.min(1, command.value)));
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-        });
     }
 }
 

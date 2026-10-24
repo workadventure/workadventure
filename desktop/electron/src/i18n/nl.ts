@@ -90,7 +90,6 @@ const nl: NativeStrings = {
     "tray.status.idle": "Inactief",
     "tray.status.online": "Beschikbaar",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Je status kan niet worden gewijzigd tijdens een vergadering",
     "tray.microphone": "Microfoon",
     "tray.camera": "Camera",
     "tray.companionPanel": "Begeleidend paneel",

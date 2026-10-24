@@ -86,7 +86,6 @@ const th: NativeStrings = {
     "tray.status.idle": "ไม่ได้ใช้งาน",
     "tray.status.online": "ว่าง",
     "tray.status.offline": "ออฟไลน์",
-    "tray.statusLocked": "ไม่สามารถเปลี่ยนสถานะระหว่างการประชุมได้",
     "tray.microphone": "ไมโครโฟน",
     "tray.camera": "กล้อง",
     "tray.companionPanel": "แผงคู่หู",

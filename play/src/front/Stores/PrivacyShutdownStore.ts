@@ -33,7 +33,7 @@ function createPrivacyShutdownStore() {
         if (get(focusStore)) {
             return apply(false);
         }
-        const nativePipOpen = Boolean(window.WAD?.desktop && window.WAD.pip) && get(activePictureInPictureStore);
+        const nativePipOpen = Boolean(window.WAD?.desktop && window.WAD.windows) && get(activePictureInPictureStore);
         // Once the camera is off for privacy, only coming back (or the desktop PiP, which the user is
         // looking at) turns it on again. The other signals only keep it on while the user is still
         // engaged; otherwise someone walking up to an AWAY user would switch their camera back on.

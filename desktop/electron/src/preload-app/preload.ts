@@ -1,16 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
-import type {
-    CompanionCommand,
-    DesktopPipCommand,
-    DesktopPipSdp,
-    DesktopNativeStrings,
-    DesktopWindowState,
-    WorkAdventureDesktopApi,
-    WorkAdventureDesktopCompanionApi,
-    WorkAdventureDesktopHudApi,
-    WorkAdventureDesktopPipApi,
-} from "./types";
+import { companionVisibleInShare } from "../share-surfaces-policy";
+import type { DesktopNativeStrings, WorkAdventureDesktopApi, WorkAdventureDesktopWindowsApi } from "./types";
 
 function subscribe(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args);
@@ -18,32 +9,19 @@ function subscribe(channel: string, callback: (...args: unknown[]) => void): () 
     return () => ipcRenderer.removeListener(channel, listener);
 }
 
-const pipApi: WorkAdventureDesktopPipApi = {
-    supported: true,
-    open: () => ipcRenderer.invoke("app:pip:open"),
-    close: () => ipcRenderer.invoke("app:pip:close"),
-    toggle: () => ipcRenderer.send("app:pip:toggle"),
-    onWanted: (callback) => subscribe("app:pip:wanted", (wanted) => callback(wanted === true)),
-    sendOffer: (sdp) => ipcRenderer.send("app:pip:offer-from-main", sdp),
-    sendIce: (candidate) => ipcRenderer.send("app:pip:ice-from-main-renderer", candidate),
-    sendState: (state) => ipcRenderer.send("app:pip:state-from-main", state),
-    onAnswer: (callback) => subscribe("app:pip:answer-to-main", (sdp) => callback(sdp as DesktopPipSdp)),
-    onIce: (callback) => subscribe("app:pip:ice-to-main", (candidate) => callback(candidate as RTCIceCandidateInit)),
-    onClosed: (callback) => subscribe("app:pip:closed", () => callback()),
-    onRequestClose: (callback) => subscribe("app:pip:request-close-from-pip", () => callback()),
-    onCommand: (callback) => subscribe("app:pip:command-to-main", (command) => callback(command as DesktopPipCommand)),
-};
-
-const presenterHudApi: WorkAdventureDesktopHudApi = {
-    pushState: (state) => ipcRenderer.send("app:hud:state-from-main", state),
-    onCommand: (callback) => subscribe("app:hud:command-to-main", (command) => callback(command as DesktopPipCommand)),
-};
-
-const companionApi: WorkAdventureDesktopCompanionApi = {
-    pushState: (state) => ipcRenderer.send("app:companion:state-from-main", state),
-    open: () => ipcRenderer.send("app:companion:open"),
-    onCommand: (callback) =>
-        subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
+const windowsApi: WorkAdventureDesktopWindowsApi = {
+    onOpen: (callback) =>
+        subscribe("app:windows:open", (kind) => {
+            if (kind === "companion" || kind === "meeting-bar") callback(kind);
+        }),
+    onMeetingWanted: (callback) => subscribe("app:windows:meeting-wanted", (wanted) => callback(wanted === true)),
+    toggleCompanion: () => ipcRenderer.send("app:windows:toggle-companion"),
+    openCompanion: () => ipcRenderer.send("app:windows:open-companion"),
+    dismissCompanion: () => ipcRenderer.send("app:windows:dismiss-companion"),
+    focusMain: () => ipcRenderer.send("app:windows:focus-main"),
+    visibleInShare: (sharing) => companionVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),
+    tabStripShown: () => ipcRenderer.invoke("app:windows:tab-strip-shown"),
+    toggleTabStrip: () => ipcRenderer.send("app:windows:toggle-tab-strip"),
 };
 
 // Lets the companion open when the window gets fully covered or minimized (see onPageVisibilityChange).
@@ -51,30 +29,23 @@ document.addEventListener("visibilitychange", () => {
     ipcRenderer.send("app:page-visibility", document.visibilityState === "hidden");
 });
 
+// A tab shows the native Landing (a local file) or a world (a remote page); the preload runs for each.
+const onNativeLanding = location.protocol === "file:";
+
 const api: WorkAdventureDesktopApi = {
     desktop: true,
+    hello: (page) => ipcRenderer.sendSync("app:hello", page) as { contract: number } | null,
     isDevelopment: () => ipcRenderer.invoke("is-development"),
     getVersion: () => ipcRenderer.invoke("get-version"),
-    notify: (payload) => ipcRenderer.send("app:notify", payload),
+    notify: (text) => ipcRenderer.send("app:notify", String(text)),
+    notifyMessage: (payload) => ipcRenderer.send("app:notify", payload),
     onNotificationClick: (callback) =>
         subscribe("app:on-notification-click", (tag) => callback(typeof tag === "string" ? tag : undefined)),
     setKeepAwake: (enabled) => ipcRenderer.send("app:setKeepAwake", Boolean(enabled)),
     setUnreadCount: (count) => ipcRenderer.send("app:setUnreadCount", Number(count) || 0),
     setPresence: (presence) => ipcRenderer.send("app:setPresence", presence),
     setScreenShareSource: (source) => ipcRenderer.send("app:screen-share-source", source),
-    onSetStatus: (callback) =>
-        subscribe("app:on-set-status", (status) => {
-            if (
-                status === "online" ||
-                status === "busy" ||
-                status === "back_in_a_moment" ||
-                status === "do_not_disturb"
-            ) {
-                callback(status);
-            }
-        }),
     setTabTitle: (title) => ipcRenderer.send("app:setTabTitle", String(title ?? "")),
-    setHudStrings: (strings) => ipcRenderer.send("app:hud:strings-from-main", strings),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
     onMediaPreempted: (callback) => subscribe("app:on-media-preempted", () => callback()),
     onOtherMeetingMuted: (callback) =>
@@ -90,12 +61,6 @@ const api: WorkAdventureDesktopApi = {
         ipcRenderer.on("app:request-presence", listener);
         return () => ipcRenderer.removeListener("app:request-presence", listener);
     },
-    getWindowState: () => ipcRenderer.invoke("app:getWindowState"),
-    onWindowStateChange: (callback) => {
-        const listener = (_event: Electron.IpcRendererEvent, state: DesktopWindowState) => callback(state);
-        ipcRenderer.on("app:on-window-state-change", listener);
-        return () => ipcRenderer.removeListener("app:on-window-state-change", listener);
-    },
     // Under Wayland the system share dialog is the picker: without these, the front shares through
     // getDisplayMedia, which the main process answers with that dialog (see configureSession).
     ...(usesSystemScreenSharePicker(process.platform, process.env)
@@ -107,20 +72,22 @@ const api: WorkAdventureDesktopApi = {
               identifyScreens: () => ipcRenderer.invoke("app:screen-identify:start"),
               cancelIdentifyScreens: () => ipcRenderer.send("app:screen-identify:cancel"),
           }),
-    pip: pipApi,
     navigation: {
         joinWorld: (url: string) => ipcRenderer.invoke("app:navigation:joinWorld", url),
-        trustServerAndJoin: (url: string) => ipcRenderer.invoke("app:navigation:trustServerAndJoin", url),
-        getRecentWorlds: () => ipcRenderer.invoke("app:navigation:getRecentWorlds"),
-        getPinnedWorlds: () => ipcRenderer.invoke("app:navigation:getPinnedWorlds"),
-        togglePin: (url: string) => ipcRenderer.invoke("app:navigation:togglePin", url),
-        isPinned: (url: string) => ipcRenderer.invoke("app:navigation:isPinned", url),
         openAdminSignup: () => ipcRenderer.invoke("app:navigation:openAdminSignup"),
-        getStrings: () => ipcRenderer.sendSync("app:i18n:landing") as DesktopNativeStrings | null,
+        // The rest only serves the native Landing (main checks it too): world pages never see it.
+        ...(onNativeLanding
+            ? {
+                  trustServerAndJoin: (url: string) => ipcRenderer.invoke("app:navigation:trustServerAndJoin", url),
+                  getRecentWorlds: () => ipcRenderer.invoke("app:navigation:getRecentWorlds"),
+                  getPinnedWorlds: () => ipcRenderer.invoke("app:navigation:getPinnedWorlds"),
+                  togglePin: (url: string) => ipcRenderer.invoke("app:navigation:togglePin", url),
+                  isPinned: (url: string) => ipcRenderer.invoke("app:navigation:isPinned", url),
+                  getStrings: () => ipcRenderer.sendSync("app:i18n:landing") as DesktopNativeStrings | null,
+              }
+            : {}),
     },
-    // The meeting bar floats over the shared screen: only where it can be kept out of the capture.
-    presenterHud: canHideWindowsFromCapture(process.platform) ? presenterHudApi : undefined,
-    companion: companionApi,
+    windows: windowsApi,
     screenPermission: {
         get: () => ipcRenderer.invoke("app:screen-permission:get"),
         request: () => ipcRenderer.invoke("app:screen-permission:request"),

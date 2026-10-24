@@ -70,6 +70,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     otherMeetingMuted:
         "Sće nětko tu na zetkanju. Waš mikrofon, kamera a dźělenje wobrazowki su so w {world} wotšaltowali.",
+    desktopAppOutdated: "Nowa wersija aplikacije WorkAdventure je k dispoziciji: {url}",
 };
 
 export default warning;

@@ -89,7 +89,6 @@ const dsb: NativeStrings = {
     "tray.status.idle": "Njeaktiwny",
     "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Status njedajo se za cas zasedanja změniś",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamara",
     "tray.companionPanel": "Pśewóźowański panel",

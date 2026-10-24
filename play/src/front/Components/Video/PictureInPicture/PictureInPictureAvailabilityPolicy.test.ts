@@ -1,9 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-    hasPictureInPictureContent,
-    isDocumentPictureInPictureSupported,
-    usesPictureInPictureLayout,
-} from "./PictureInPictureAvailabilityPolicy";
+import { hasPictureInPictureContent, isDocumentPictureInPictureSupported } from "./PictureInPictureAvailabilityPolicy";
 
 describe("PictureInPictureAvailabilityPolicy", () => {
     it("allows PiP when the user is in a remote conversation", () => {
@@ -24,12 +20,5 @@ describe("PictureInPictureAvailabilityPolicy", () => {
         ).toBe(true);
         expect(isDocumentPictureInPictureSupported({ documentPictureInPicture: {} })).toBe(false);
         expect(isDocumentPictureInPictureSupported({})).toBe(false);
-    });
-
-    it("gives the videos the picture-in-picture layout in the browser only", () => {
-        expect(usesPictureInPictureLayout(true, false)).toBe(true);
-        // The desktop companion mirrors the videos: the main window keeps its layout.
-        expect(usesPictureInPictureLayout(true, true)).toBe(false);
-        expect(usesPictureInPictureLayout(false, false)).toBe(false);
     });
 });

@@ -89,7 +89,6 @@ const pt: NativeStrings = {
     "tray.status.idle": "Inativo",
     "tray.status.online": "Disponível",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Não é possível alterar o status durante uma reunião",
     "tray.microphone": "Microfone",
     "tray.camera": "Câmera",
     "tray.companionPanel": "Painel complementar",

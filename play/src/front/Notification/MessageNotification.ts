@@ -22,9 +22,14 @@ export class MessageNotification implements NotificationWA {
             // In the Electron shell, route through the main-process notification: the WA icon is
             // pinned, and the chatRoomId travels as `tag` so a click can focus the app and open
             // the originating room. The service-worker path is web-only.
+            // A shell of contract 1 only has notify(text).
             const wad = window.WAD;
-            if (wad?.desktop && wad.notify) {
-                wad.notify({ title: this.chatRoomName, body, tag: this.chatRoomId });
+            if (wad?.desktop && wad.notifyMessage) {
+                wad.notifyMessage({ title: this.chatRoomName, body, tag: this.chatRoomId });
+                return;
+            }
+            if (wad?.desktop) {
+                wad.notify(`${this.chatRoomName} — ${body}`);
                 return;
             }
 

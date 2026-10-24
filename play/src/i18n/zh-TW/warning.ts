@@ -64,6 +64,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         neverShowPage: "不再詢問",
     },
     otherMeetingMuted: "你現在正在這裡開會。你在 {world} 中的麥克風、攝影機和螢幕分享已關閉。",
+    desktopAppOutdated: "WorkAdventure 應用程式有新版本可用：{url}",
 };
 
 export default warning;
