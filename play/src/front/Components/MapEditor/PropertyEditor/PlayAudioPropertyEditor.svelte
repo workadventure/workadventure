@@ -8,6 +8,8 @@
     import InputRadio from "../../Input/InputRadio.svelte";
     import { IconFileMusic } from "../../Icons";
     import { audioOutput } from "../../../WebRtc/AudioOutputManager";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
+    import { resolveSoundUrl } from "../../../Utils/UrlPlaceholderResolver";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
     import FileUpload from "./FileUpload/FileUpload.svelte";
 
@@ -36,7 +38,8 @@
             return;
         }
         HTMLAudioPlayer.pause();
-        HTMLAudioPlayer.src = property.audioLink;
+        // Played from the same address as on the map, placeholders and relative links included.
+        HTMLAudioPlayer.src = resolveSoundUrl(property.audioLink, gameManager.getCurrentGameScene().getMapUrl());
         if (property.volume !== undefined) {
             HTMLAudioPlayer.volume = property.volume;
         }
