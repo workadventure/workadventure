@@ -1,5 +1,5 @@
 import type { AreaDataProperty, EntityDataProperty } from "@workadventure/map-editor";
-import { CustomFileService, uploadedFileName } from "../Services/CustomFileService";
+import { CustomFileService, uploadedFile } from "../Services/CustomFileService";
 import type { HookManager } from "./HookManager";
 import type { MapStorageModuleInterface } from "./MapStorageModuleInterface";
 
@@ -15,8 +15,8 @@ async function onPropertyChange<T extends AreaDataProperty | EntityDataProperty>
     if (!newProperty) {
         return oldProperty;
     }
-    const oldFileName = uploadedFileName(oldProperty);
-    if (oldFileName && uploadedFileName(newProperty) !== oldFileName) {
+    const oldFileName = uploadedFile(oldProperty)?.name;
+    if (oldFileName && uploadedFile(newProperty)?.name !== oldFileName) {
         await new CustomFileService(hostname).deleteFile(oldProperty);
     }
     return newProperty;
@@ -26,7 +26,7 @@ async function onPropertyDelete<T extends AreaDataProperty | EntityDataProperty>
     property: T,
     hostname: string,
 ): Promise<T> {
-    if (uploadedFileName(property)) {
+    if (uploadedFile(property)?.name) {
         try {
             await new CustomFileService(hostname).deleteFile(property);
         } catch (error) {

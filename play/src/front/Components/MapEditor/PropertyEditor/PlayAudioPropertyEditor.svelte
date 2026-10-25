@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { PlayAudioPropertyData } from "@workadventure/map-editor";
-    import { SOUND_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
+    import { UploadedFileKind } from "@workadventure/messages";
     import { LL } from "../../../../i18n/i18n-svelte";
     import RangeSlider from "../../Input/RangeSlider.svelte";
     import Input from "../../Input/Input.svelte";
@@ -124,7 +124,7 @@
                             <FileUpload
                                 propertyId={property.id}
                                 name={property.audioName}
-                                accept={SOUND_UPLOAD_SUPPORTED_FORMATS_FRONT}
+                                kind={UploadedFileKind.Sound}
                                 onupload={(name, link) => {
                                     url = "";
                                     setSound(link, name);
