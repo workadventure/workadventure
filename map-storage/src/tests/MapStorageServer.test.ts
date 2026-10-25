@@ -2,6 +2,7 @@ import type { ServerUnaryCall } from "@grpc/grpc-js";
 import { WamFile } from "@workadventure/map-editor";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import type { EditMapCommandMessage, EditMapCommandWithKeyMessage } from "@workadventure/messages";
+import { UploadedFileKind } from "@workadventure/messages";
 import type { Empty } from "@workadventure/messages/src/ts-proto-generated/google/protobuf/empty";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -115,7 +116,13 @@ function deleteEntity(id: string): EditMapMessage {
 
 const uploadFile: EditMapMessage = {
     $case: "uploadFileMessage",
-    uploadFileMessage: { id: "file", name: "doc.pdf", propertyId: "prop", file: new Uint8Array([1]) },
+    uploadFileMessage: {
+        id: "file",
+        name: "doc.pdf",
+        propertyId: "prop",
+        kind: UploadedFileKind.Document,
+        file: new Uint8Array([1]),
+    },
 };
 
 const uploadEntity: EditMapMessage = {

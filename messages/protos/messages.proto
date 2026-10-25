@@ -465,6 +465,14 @@ message UploadEntityMessage {
   optional string ownerId = 10;
 }
 
+// What an uploaded file is for, which decides where map-storage stores it and which formats it accepts.
+enum UploadedFileKind {
+  // A file of the "open file" property, stored privately.
+  Document = 0;
+  // A sound of the "play audio" property, stored as a public map asset.
+  Sound = 1;
+}
+
 message UploadFileMessage {
   bytes file = 1;
   string id = 2;
@@ -472,6 +480,7 @@ message UploadFileMessage {
   string propertyId = 4;
   optional string areaId = 5;
   optional string entityId = 6;  
+  UploadedFileKind kind = 7;
 }
 
 message ModifyCustomEntityMessage {

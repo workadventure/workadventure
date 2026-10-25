@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import type { OpenFilePropertyData } from "@workadventure/map-editor";
+    import { UploadedFileKind } from "@workadventure/messages";
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
     import {
@@ -164,6 +165,7 @@
             <FileUpload
                 propertyId={property.id}
                 name={property.name}
+                kind={UploadedFileKind.Document}
                 onupload={(name, link) => {
                     property.name = name;
                     property.link = link;
