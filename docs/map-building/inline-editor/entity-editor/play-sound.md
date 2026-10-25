@@ -24,6 +24,18 @@ When editing an area or an entity, you can add the play sound property to it. Yo
 Uploaded sounds are stored with the map. Unlike files added with the "Open file" property, they are
 not protected by the area's access rights: anyone who has the link can download them.
 
+## Placeholders in the URL
+
+The URL can contain placeholders, which are replaced when the sound is played:
+
+| Placeholder | Replaced by |
+|-------------|-------------|
+| `{play_url}` | The address of WorkAdventure, for instance `https://play.workadventu.re` |
+| `{map_storage_url}` | The address of the map storage of your world |
+
+For instance, `{play_url}/resources/objects/megaphone/megaphone1.mp3` plays a sound that ships with
+WorkAdventure, whatever domain it runs on. A URL that is not absolute is relative to the URL of the map.
+
 ## Playing a sound for everyone
 
 By default the sound is only heard by the player who triggers it. On an **entity**, the advanced
