@@ -105,8 +105,10 @@ func (s *Session) connectToRoom() {
 				missed = append(missed, e.(*pb.EditMapCommandMessage))
 			}
 		}
+		// CanEdit: the front keeps a player out of the areas it may not enter, unless it edits the map (93fe50b5d7).
 		return core.External{Value: &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_RoomConnectedMessage{RoomConnectedMessage: &pb.RoomConnectedMessage{
-			EditMapCommandsArrayMessage: &pb.EditMapCommandsArrayMessage{EditMapCommands: missed}, Tag: s.info.member.Tags}}}}
+			EditMapCommandsArrayMessage: &pb.EditMapCommandsArrayMessage{EditMapCommands: missed}, Tag: s.info.member.Tags,
+			CanEdit: s.info.member.CanEdit}}}}
 	}
 	metrics.Ignore("room.Connect", s.room.Connect(s.ctx, s, load, connected))
 }

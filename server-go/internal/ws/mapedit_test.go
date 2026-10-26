@@ -203,3 +203,22 @@ func TestRoomsFromSameWorldStayInTheWorld(t *testing.T) {
 		t.Fatalf("rooms %v, want %v", urls, want)
 	}
 }
+
+// The connection tells the front whether this player edits the map: an editor may stand in an area the others may
+// not enter, so the front only keeps the others out of it (93fe50b5d7).
+func TestTheConnectionSaysWhoEditsTheMap(t *testing.T) {
+	h := editorHarness(t)
+	for _, tc := range []struct {
+		tok  auth.Token
+		want bool
+	}{{auth.Token{Identifier: "ed", Tags: []string{"editor"}}, true}, {auth.Token{Identifier: "visitor"}, false}} {
+		token, _ := h.auth.Create(tc.tok)
+		c := h.dialWithToken(token, tc.tok.Identifier, "", url.Values{"roomId": {wamRoom}})
+		got := expect(c, 3*time.Second, "roomConnected", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) (*pb.RoomConnectedMessage, bool) {
+			return d.GetRoomConnectedMessage(), d.GetRoomConnectedMessage() != nil
+		})
+		if got.GetCanEdit() != tc.want {
+			t.Fatalf("%s: canEdit = %v, want %v", tc.tok.Identifier, !tc.want, tc.want)
+		}
+	}
+}
