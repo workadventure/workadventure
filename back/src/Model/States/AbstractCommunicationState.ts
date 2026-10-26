@@ -18,8 +18,39 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC),
     ) {}
 
+    /**
+     * The users this state told its strategy to. A user must hear it before any message about a peer (a WebRTC start):
+     * the front only listens to those once it knows the strategy, and drops them otherwise.
+     */
+    private readonly toldStrategy = new Set<string>();
+
     public init(): Promise<void> {
+        // Everyone already in the registries heard of this state from the previous one's switchState()
+        for (const spaceUserId of [...this.users.keys(), ...this.usersToNotify.keys()]) {
+            this.toldStrategy.add(spaceUserId);
+        }
         return this._currentStrategy.initialize(this.users, this.usersToNotify);
+    }
+
+    /**
+     * Tells the strategy to every user of the registries who has not heard it yet, not only the one being handled: after
+     * a wait on the transition lock, several users sit in the registries before any of their handlers runs, and the
+     * first handler already pairs them up.
+     */
+    private tellStrategyToNewcomers(): void {
+        for (const user of [...this.users.values(), ...this.usersToNotify.values()]) {
+            if (!this.toldStrategy.has(user.spaceUserId)) {
+                this.toldStrategy.add(user.spaceUserId);
+                this.notifyUserOfCurrentStrategy(user, this._communicationType);
+            }
+        }
+    }
+
+    /** A user who left both registries hears the strategy again when they come back. */
+    private forgetIfGone(user: SpaceUser): void {
+        if (!this.users.has(user.spaceUserId) && !this.usersToNotify.has(user.spaceUserId)) {
+            this.toldStrategy.delete(user.spaceUserId);
+        }
     }
 
     dispatchSwitchEvent(
@@ -42,14 +73,9 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         this._space.dispatchPrivateEvent(privateEvent);
     }
 
-    handleUserAdded(
-        user: SpaceUser,
-        firstRegistry: boolean,
-    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
-            if (firstRegistry) {
-                this.notifyUserOfCurrentStrategy(user, this._communicationType);
-            }
+            this.tellStrategyToNewcomers();
             this._currentStrategy.addUser(user).catch((e) => {
                 Sentry.captureException(e);
                 console.error(e);
@@ -61,6 +87,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         }
     }
     handleUserDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+        this.forgetIfGone(user);
         this._currentStrategy.deleteUser(user);
         return Promise.resolve();
     }
@@ -68,14 +95,9 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         this._currentStrategy.updateUser(user);
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(
-        user: SpaceUser,
-        firstRegistry: boolean,
-    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
-            if (firstRegistry) {
-                this.notifyUserOfCurrentStrategy(user, this._communicationType);
-            }
+            this.tellStrategyToNewcomers();
             this._currentStrategy.addUserToNotify(user).catch((e) => {
                 Sentry.captureException(e);
                 console.error(e);
@@ -87,6 +109,7 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         return Promise.resolve();
     }
     handleUserToNotifyDeleted(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+        this.forgetIfGone(user);
         this._currentStrategy.deleteUserFromNotify(user);
         return Promise.resolve();
     }

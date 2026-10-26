@@ -214,8 +214,6 @@ export class CommunicationManager implements ICommunicationManager {
 
     public async handleUserAdded(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
-        // Read now: while this handler waits on the transition lock, the user may enter the other registry too.
-        const firstRegistry = !this.userRegistry.hasUserToNotify(user.spaceUserId);
         this._recordingManager.handleAddUser(user);
         this.userRegistry.addUser(user);
         this.syncPresence(user, wasPresent);
@@ -228,7 +226,7 @@ export class CommunicationManager implements ICommunicationManager {
         const stateBefore = this.lifecycleManager.getCurrentState();
         await this.evaluateAndHandleTransition(user);
         if (this.lifecycleManager.getCurrentState() === stateBefore) {
-            await stateBefore.handleUserAdded(user, firstRegistry);
+            await stateBefore.handleUserAdded(user);
         }
     }
 
@@ -255,8 +253,6 @@ export class CommunicationManager implements ICommunicationManager {
 
     public async handleUserToNotifyAdded(user: SpaceUser): Promise<void> {
         const wasPresent = this.isPresent(user.spaceUserId);
-        // Read now, as in handleUserAdded.
-        const firstRegistry = !this.userRegistry.hasUser(user.spaceUserId);
         this.userRegistry.addUserToNotify(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
@@ -265,7 +261,7 @@ export class CommunicationManager implements ICommunicationManager {
         const stateBefore = this.lifecycleManager.getCurrentState();
         await this.evaluateAndHandleTransition(user);
         if (this.lifecycleManager.getCurrentState() === stateBefore) {
-            await stateBefore.handleUserToNotifyAdded(user, firstRegistry);
+            await stateBefore.handleUserToNotifyAdded(user);
         }
     }
 
