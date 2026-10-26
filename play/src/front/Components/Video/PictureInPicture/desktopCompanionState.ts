@@ -50,17 +50,6 @@ export type CompanionConversation = {
     woka?: string;
 };
 
-export type CompanionMessage = {
-    id: string;
-    author: string;
-    text: string;
-    isSelf: boolean;
-    /** Epoch ms; 0 when unknown. */
-    ts: number;
-    /** A proximity notice ("New discussion with X"), shown centred rather than as a bubble. */
-    system: boolean;
-};
-
 export type CompanionMedia = {
     micEnabled: boolean;
     cameraEnabled: boolean;
@@ -292,17 +281,6 @@ function lastMessage(messages: readonly ChatMessage[]): { preview: string; at: n
     };
 }
 
-function toCompanionMessage(message: ChatMessage): CompanionMessage {
-    return {
-        id: message.id,
-        author: message.sender?.username ?? "",
-        text: get(message.content).body ?? "",
-        isSelf: message.isMyMessage === true,
-        ts: message.date ? message.date.getTime() : 0,
-        system: message.type === "incoming" || message.type === "outcoming",
-    };
-}
-
 /**
  * The chat of the companion: the bubble's proximity chat and the Matrix conversations, and the one that
  * is open. Made when the companion opens, destroyed when it closes (every subscription goes with it).
@@ -310,12 +288,14 @@ function toCompanionMessage(message: ChatMessage): CompanionMessage {
 export function createCompanionChat() {
     const unsubscribers: Unsubscriber[] = [];
     let connection: ChatConnectionInterface | undefined;
+    let disposed = false;
+    let connectionGeneration = 0;
 
     const matrixConversations = writable<CompanionConversation[]>([]);
     const nearby = writable<CompanionConversation | null>(null);
     const status = writable<"connecting" | "online" | "unavailable">("connecting");
     const selectedId = writable<string | null>(null);
-    const selected = writable<{ id: string; name: string; messages: CompanionMessage[] } | null>(null);
+    const selected = writable<{ id: string; name: string; room: ChatRoom } | null>(null);
 
     const roomOf = (id: string): ChatRoom | undefined => {
         try {
@@ -342,9 +322,8 @@ export function createCompanionChat() {
             selected.set(null);
             return;
         }
-        const name = id === NEARBY_CONVERSATION_ID ? get(LL).chat.proximity() : get(room.name);
-        selectedUnsubscribe = room.messages.subscribe((messages) => {
-            selected.set({ id, name, messages: messages.slice(-50).map(toCompanionMessage) });
+        selectedUnsubscribe = room.name.subscribe((name) => {
+            selected.set({ id, name: id === NEARBY_CONVERSATION_ID ? get(LL).chat.proximity() : name, room });
         });
     };
     unsubscribers.push(() => selectedUnsubscribe?.());
@@ -354,10 +333,20 @@ export function createCompanionChat() {
     unsubscribers.push(() => roomsUnsubscribe?.());
     unsubscribers.push(
         isMatrixChatEnabledStore.subscribe((enabled) => {
-            if (!enabled) return;
+            const generation = ++connectionGeneration;
+            roomsUnsubscribe?.();
+            roomsUnsubscribe = undefined;
+            connection = undefined;
+            if (!enabled) {
+                matrixConversations.set([]);
+                status.set("unavailable");
+                if (get(selectedId) !== NEARBY_CONVERSATION_ID) selected.set(null);
+                return;
+            }
             gameManager
                 .getChatConnection()
                 .then((chatConnection) => {
+                    if (disposed || generation !== connectionGeneration) return;
                     connection = chatConnection;
                     roomsUnsubscribe?.();
                     const statusUnsubscribe = chatConnection.connectionStatus.subscribe((connectionStatus) =>
@@ -410,7 +399,9 @@ export function createCompanionChat() {
                     // A conversation may have been opened before the connection was there.
                     if (get(selectedId) !== null && get(selectedId) !== NEARBY_CONVERSATION_ID) streamSelected();
                 })
-                .catch(() => status.set("unavailable"));
+                .catch(() => {
+                    if (!disposed && generation === connectionGeneration) status.set("unavailable");
+                });
         }),
     );
 
@@ -475,7 +466,7 @@ export function createCompanionChat() {
         selected: { subscribe: selected.subscribe } as Readable<{
             id: string;
             name: string;
-            messages: CompanionMessage[];
+            room: ChatRoom;
         } | null>,
         /** Open a conversation, marking it read (an explicit choice only). */
         open(id: string) {
@@ -483,28 +474,31 @@ export function createCompanionChat() {
             if (id !== NEARBY_CONVERSATION_ID) roomOf(id)?.setTimelineAsRead();
             streamSelected();
         },
-        send(id: string, text: string) {
-            const message = text.trim();
-            if (!message) return;
-            if (id === NEARBY_CONVERSATION_ID) nearbyRoom()?.sendMessage(message);
-            else roomOf(id)?.sendMessage(message);
-        },
-        /** The direct conversation with someone, created if needed; resolves its id once it exists. */
+        /** Existing DM only: the compact surface never creates rooms. */
         async openDirect(userId: string): Promise<string | undefined> {
             const chatId = playerOf(userId)?.chatID;
             if (!chatId || !connection) return undefined;
-            const room = (await connection.getDirectRoomFor(chatId)) ?? (await connection.createDirectRoom(chatId));
+            const currentConnection = connection;
+            const room = await currentConnection.getDirectRoomFor(chatId);
+            if (disposed || currentConnection !== connection) return undefined;
             if (room) this.open(room.id);
             return room?.id;
         },
+        openMeeting(): string | undefined {
+            if (!get(nearby)) return undefined;
+            this.open(NEARBY_CONVERSATION_ID);
+            return NEARBY_CONVERSATION_ID;
+        },
         /** Show a conversation in the app's own chat. */
         openInApp(id: string) {
-            const room = roomOf(id);
+            const room = id === NEARBY_CONVERSATION_ID ? nearbyRoom() : roomOf(id);
             if (!room) return;
             selectedRoomStore.set(room);
             chatVisibilityStore.set(true);
         },
         destroy() {
+            disposed = true;
+            connectionGeneration++;
             unsubscribers.forEach((unsubscribe) => unsubscribe());
         },
     };

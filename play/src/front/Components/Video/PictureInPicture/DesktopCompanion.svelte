@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, tick } from "svelte";
+    import { onDestroy } from "svelte";
     import { Color } from "@workadventure/shared-utils";
     import { meetingInvitationRequestStore } from "../../../Stores/MeetingInvitationStore";
     import { calendarEventsStore, isCalendarVisibleStore } from "../../../Stores/CalendarStore";
@@ -7,10 +7,10 @@
     import { joinMeeting } from "../../Calendar/joinMeeting";
     import type { WorkAdventureDesktopWindowsApi } from "../../../Interfaces/DesktopAppInterfaces";
     import type { CompanionAgendaMeeting } from "../../../Interfaces/DesktopAppInterfaces";
+    import CompactConversation from "../../../Chat/Components/CompactConversation.svelte";
     import FloatingUiPopupList from "../../Util/FloatingUiPopupList.svelte";
-    import { LL, locale } from "../../../../i18n/i18n-svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import {
-        NEARBY_CONVERSATION_ID,
         companionAgendaStore,
         companionMediaStore,
         companionUsersStore,
@@ -52,8 +52,6 @@
     let inConversation = $state(false);
     // The conversation shown; null while a new direct conversation is being created.
     let conversationId: string | null = $state(null);
-    let draft = $state("");
-    let messagesElement: HTMLDivElement | undefined = $state();
 
     let media = $derived($companionMediaStore);
     let inMeeting = $derived(media.inMeeting);
@@ -79,6 +77,13 @@
 
     function toggleView(next: View) {
         view = view === next ? baseView : next;
+        if (view === "chat" && inMeeting && conversationId === null) {
+            const id = chat.openMeeting();
+            if (id) {
+                conversationId = id;
+                inConversation = true;
+            }
+        }
     }
 
     // A click anywhere closes the status menu.
@@ -109,61 +114,21 @@
         chat.openDirect(userId)
             .then((id) => {
                 if (id && conversationId === null) conversationId = id;
+                else if (!id) {
+                    inConversation = false;
+                    windows.focusMain();
+                }
             })
             .catch(() => {
                 /* the conversation stays empty */
             });
     }
 
-    function sendMessage(event: SubmitEvent) {
-        event.preventDefault();
-        if (!conversationId || !draft.trim()) return;
-        chat.send(conversationId, draft);
-        draft = "";
-    }
-
-    // Follow new messages only when the user was already at the bottom, not while reading the history.
-    let renderedConversationId: string | null = null;
-    $effect.pre(() => {
-        const messages = shownConversation?.messages;
-        const element = messagesElement;
-        if (!messages || !element) return;
-        const sameConversation = renderedConversationId === conversationId;
-        renderedConversationId = conversationId;
-        const wasAtBottom = !sameConversation || element.scrollHeight - element.scrollTop - element.clientHeight < 24;
-        tick()
-            .then(() => {
-                if (wasAtBottom) element.scrollTop = element.scrollHeight;
-            })
-            .catch(() => {});
-    });
-
     function initials(name: string): string {
         const parts = name.trim().split(/\s+/).filter(Boolean);
         if (parts.length === 0) return "?";
         if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    function formatTime(ts: number): string {
-        return new Date(ts).toLocaleTimeString($locale, { hour: "2-digit", minute: "2-digit" });
-    }
-
-    function daySeparator(ts: number): string {
-        const startOfDay = (date: Date) => new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
-        const days = Math.round((startOfDay(new Date()) - startOfDay(new Date(ts))) / 86_400_000);
-        if (days === 0) return $LL.desktop.companion.today();
-        if (days === 1) return $LL.desktop.companion.yesterday();
-        return new Date(ts).toLocaleDateString($locale, { weekday: "short", day: "numeric", month: "short" });
-    }
-
-    function isNewDay(index: number): boolean {
-        const messages = shownConversation?.messages ?? [];
-        const ts = messages[index]?.ts;
-        if (!ts) return false;
-        let previous = index - 1;
-        while (previous >= 0 && !messages[previous].ts) previous--;
-        return previous < 0 || new Date(messages[previous].ts).toDateString() !== new Date(ts).toDateString();
     }
 
     function join(meeting: CompanionAgendaMeeting) {
@@ -680,7 +645,7 @@
                         <div class="conversation-title">
                             {shownConversation?.name || $LL.desktop.companion.conversation()}
                         </div>
-                        {#if conversationId && conversationId !== NEARBY_CONVERSATION_ID}
+                        {#if conversationId}
                             {@const id = conversationId}
                             <button
                                 class="icon-btn"
@@ -704,50 +669,11 @@
                             </button>
                         {/if}
                     </div>
-                    <div class="list messages" bind:this={messagesElement}>
-                        {#each shownConversation?.messages ?? [] as message, index (message.id)}
-                            {#if isNewDay(index)}
-                                <div class="date-sep"><span>{daySeparator(message.ts)}</span></div>
-                            {/if}
-                            {#if message.system}
-                                <div class="msg-system">{message.text}</div>
-                            {:else}
-                                <div class="msg" class:is-self={message.isSelf}>
-                                    {#if !message.isSelf && message.author}<div class="msg-author">
-                                            {message.author}
-                                        </div>{/if}
-                                    <div class="msg-text">{message.text}</div>
-                                    {#if message.ts}<div class="msg-time">{formatTime(message.ts)}</div>{/if}
-                                </div>
-                            {/if}
-                        {/each}
-                    </div>
-                    <div class="empty" class:is-visible={(shownConversation?.messages.length ?? 0) === 0}>
-                        {$LL.desktop.companion.noMessages()}
-                    </div>
-                    <form class="composer" onsubmit={sendMessage}>
-                        <input
-                            type="text"
-                            autocomplete="off"
-                            placeholder={$LL.desktop.companion.messagePlaceholder()}
-                            maxlength="2000"
-                            bind:value={draft}
-                        />
-                        <button class="send-btn" type="submit" aria-label={$LL.desktop.companion.send()}>
-                            <svg
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                stroke-width="2"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                aria-hidden="true"
-                                ><path d="M10 14l11 -11" /><path
-                                    d="M21 3l-6.5 18a.55 .55 0 0 1 -1 0l-3.5 -7l-7 -3.5a.55 .55 0 0 1 0 -1l18 -6.5"
-                                /></svg
-                            >
-                        </button>
-                    </form>
+                    {#if view === "chat" && shownConversation}
+                        {#key shownConversation.room.id}
+                            <CompactConversation room={shownConversation.room} {ownerDocument} />
+                        {/key}
+                    {/if}
                 </div>
             {/if}
         </section>

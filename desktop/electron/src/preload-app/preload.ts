@@ -10,9 +10,20 @@ function subscribe(channel: string, callback: (...args: unknown[]) => void): () 
 }
 
 const windowsApi: WorkAdventureDesktopWindowsApi = {
+    ...(canHideWindowsFromCapture(process.platform)
+        ? {
+              setAnnotationState: (
+                  state: Parameters<NonNullable<WorkAdventureDesktopWindowsApi["setAnnotationState"]>>[0],
+              ) => ipcRenderer.send("app:windows:annotation-state", state),
+              onAnnotationCursor: (callback: (x: number, y: number) => void) =>
+                  subscribe("app:windows:annotation-cursor", (x, y) => {
+                      if (typeof x === "number" && typeof y === "number") callback(x, y);
+                  }),
+          }
+        : {}),
     onOpen: (callback) =>
         subscribe("app:windows:open", (kind) => {
-            if (kind === "companion" || kind === "meeting-bar") callback(kind);
+            if (kind === "companion" || kind === "meeting-bar" || kind === "annotation") callback(kind);
         }),
     onMeetingWanted: (callback) => subscribe("app:windows:meeting-wanted", (wanted) => callback(wanted === true)),
     toggleCompanion: () => ipcRenderer.send("app:windows:toggle-companion"),
@@ -67,7 +78,7 @@ const api: WorkAdventureDesktopApi = {
         ? {}
         : {
               getDesktopCapturerSources: (
-                  options: Parameters<NonNullable<WorkAdventureDesktopApi["getDesktopCapturerSources"]>>[0]
+                  options: Parameters<NonNullable<WorkAdventureDesktopApi["getDesktopCapturerSources"]>>[0],
               ) => ipcRenderer.invoke("app:getDesktopCapturerSources", options),
               identifyScreens: () => ipcRenderer.invoke("app:screen-identify:start"),
               cancelIdentifyScreens: () => ipcRenderer.send("app:screen-identify:cancel"),

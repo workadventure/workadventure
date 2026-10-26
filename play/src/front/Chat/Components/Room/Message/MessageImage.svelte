@@ -1,10 +1,13 @@
 <script lang="ts">
+    import { getChatInteraction } from "../../../ChatInteractionContext";
     import type { Readable } from "svelte/store";
     import LL from "../../../../../i18n/i18n-svelte";
     import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";
     import MessageAttachmentOffer from "./MessageAttachmentOffer.svelte";
     import { modals } from "@wa-modals";
+
+    const interaction = getChatInteraction();
 
     interface Props {
         content: Readable<ChatMessageContent>;
@@ -18,7 +21,8 @@
     let canDisplayImage = $derived(displayUrl !== undefined);
 
     function openImagePreview(url: string, alt: string | undefined) {
-        modals.open(ChatImagePreviewModal, { url, alt });
+        if (interaction.openImage) interaction.openImage(url, alt);
+        else modals.open(ChatImagePreviewModal, { url, alt });
     }
 </script>
 

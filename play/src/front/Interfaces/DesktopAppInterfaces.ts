@@ -79,7 +79,7 @@ export type CompanionAgenda = {
 };
 
 /** The floating windows the world page renders as child windows. */
-export type DesktopChildWindowKind = "companion" | "meeting-bar";
+export type DesktopChildWindowKind = "companion" | "meeting-bar" | "annotation";
 
 /**
  * The companion and the meeting bar: child windows of the world page that the page renders itself.
@@ -87,6 +87,9 @@ export type DesktopChildWindowKind = "companion" | "meeting-bar";
  * into the companion when told.
  */
 export type WorkAdventureDesktopWindowsApi = {
+    /** Optional native screen overlay; absent on older shells and Linux. No business state crosses IPC. */
+    setAnnotationState?: (state: { visible: boolean; interactive: boolean; trackCursor: boolean }) => void;
+    onAnnotationCursor?: (callback: (x: number, y: number) => void) => () => void;
     /** Main asks the page to open a window: `window.open("about:blank", "wa-companion" | "wa-meeting-bar")`. */
     onOpen: (callback: (kind: DesktopChildWindowKind) => void) => () => void;
     /** The app wants the meeting video in the companion (true) or not any more (false). */

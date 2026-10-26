@@ -54,6 +54,7 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
             setQuality: vi.fn(),
         },
         screenSharingLocalMedia: writable(undefined),
+        activeScreenShareSourceStore: writable(undefined),
     };
 });
 

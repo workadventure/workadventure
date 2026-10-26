@@ -27,6 +27,8 @@ import { focusStore } from "../../Stores/FocusStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
+import { startSvelteAnnotations } from "./SvelteAnnotations";
+import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
 import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMeetingBar.svelte";
 import desktopMeetingBarStyles from "../../Components/Video/PictureInPicture/desktopMeetingBar.css?raw";
 
@@ -321,8 +323,21 @@ class DesktopApi {
         // closes it itself (child-windows.ts in the desktop app).
         const windows = window.WAD.windows;
         if (windows) {
+            const stopAnnotations = startSvelteAnnotations(windows);
+            window.addEventListener("pagehide", stopAnnotations, { once: true });
+            let annotation: DesktopChildWindow | undefined;
             let meetingBar: DesktopChildWindow | undefined;
             windows.onOpen((kind) => {
+                if (kind === "annotation") {
+                    if (!annotation)
+                        annotation = openDesktopChildWindow("wa-annotation", DesktopAnnotationOverlay, () => ({}), {
+                            styles: "html, body { background: transparent !important; margin: 0; overflow: hidden; }",
+                            onClose: () => {
+                                annotation = undefined;
+                            },
+                        });
+                    return;
+                }
                 if (kind !== "meeting-bar" || meetingBar) return;
                 meetingBar = openDesktopChildWindow(
                     "wa-meeting-bar",

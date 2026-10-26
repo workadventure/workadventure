@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy } from "svelte";
+    import { onMount } from "svelte";
     import ButtonClose from "../../Components/Input/ButtonClose.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { IconExternalLink } from "@wa-icons";
@@ -8,24 +8,32 @@
     interface Props {
         url: string;
         alt?: string;
+        ownerDocument?: Document;
+        onClose?: () => void;
     }
 
-    let { url, alt = undefined }: Props = $props();
+    let {
+        url,
+        alt = undefined,
+        ownerDocument = document,
+        onClose = () => {
+            modals.close();
+        },
+    }: Props = $props();
 
     let containerRef: HTMLDivElement;
 
     function handleKeydown(event: KeyboardEvent) {
         if (event.key === "Escape") {
             event.preventDefault();
-            modals.close();
+            onClose();
         }
     }
 
-    onDestroy(() => {
-        document.removeEventListener("keydown", handleKeydown);
+    onMount(() => {
+        ownerDocument.addEventListener("keydown", handleKeydown);
+        return () => ownerDocument.removeEventListener("keydown", handleKeydown);
     });
-
-    document.addEventListener("keydown", handleKeydown);
 </script>
 
 <div
@@ -40,7 +48,7 @@
         type="button"
         class="absolute inset-0 w-full h-full cursor-default"
         aria-label={$LL.chat.imagePreview.close()}
-        onclick={() => modals.close()}
+        onclick={onClose}
     ></button>
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -76,7 +84,7 @@
                         <IconExternalLink class="h-6 w-6" />
                     </a>
                 {/if}
-                <ButtonClose dataTestId="close-image-preview-modal" size="sm" onclick={() => modals.close()} />
+                <ButtonClose dataTestId="close-image-preview-modal" size="sm" onclick={onClose} />
             </div>
         </div>
     </div>

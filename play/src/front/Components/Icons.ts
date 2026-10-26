@@ -155,3 +155,15 @@ export { default as IconPhoto } from "~icons/tabler/photo";
 export { default as IconVideo } from "~icons/tabler/video";
 export { default as IconBell } from "~icons/tabler/bell";
 export { default as IconStack2 } from "~icons/tabler/stack-2";
+export { default as IconLine } from "~icons/tabler/line";
+export { default as IconArrowNarrowRight } from "~icons/tabler/arrow-narrow-right";
+export { default as IconSquare } from "~icons/tabler/square";
+export { default as IconTypography } from "~icons/tabler/typography";
+export { default as IconEraser } from "~icons/tabler/eraser";
+export { default as IconPalette } from "~icons/tabler/palette";
+
+export { default as IconPointer } from "~icons/tabler/pointer";
+
+export { default as IconArrowForwardUp } from "~icons/tabler/arrow-forward-up";
+
+export { default as IconEyeOff } from "~icons/tabler/eye-off";

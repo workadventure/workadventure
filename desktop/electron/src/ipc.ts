@@ -1,3 +1,4 @@
+import { setAnnotationSource, setAnnotationState } from "./annotation-controller";
 import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
@@ -41,7 +42,7 @@ const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection
 // Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
 // back to Landing after a failed navigation, and we still want that page to keep its IPC access.
 const NATIVE_LANDING_PATHNAME = pathToFileURL(
-    path.resolve(__dirname, "..", "assets", "landing", "index.html")
+    path.resolve(__dirname, "..", "assets", "landing", "index.html"),
 ).pathname;
 
 function getAdminSignupUrl(): string {
@@ -81,7 +82,7 @@ function trackPerTab(
     values: Map<number, number>,
     contents: Electron.WebContents,
     value: number,
-    apply: () => void
+    apply: () => void,
 ): void {
     if (!values.has(contents.id)) {
         const id = contents.id;
@@ -111,7 +112,7 @@ function sanitizeDesktopCapturerOptions(options: unknown): Electron.SourcesOptio
     const raw = (options || {}) as { types?: unknown; thumbnailSize?: unknown };
     const types: AllowedSourceType[] = Array.isArray(raw.types)
         ? raw.types.filter(
-              (t): t is AllowedSourceType => typeof t === "string" && DESKTOP_CAPTURER_ALLOWED_TYPES.has(t)
+              (t): t is AllowedSourceType => typeof t === "string" && DESKTOP_CAPTURER_ALLOWED_TYPES.has(t),
           )
         : [];
     return {
@@ -196,7 +197,7 @@ export default () => {
         }
         recordHello(
             event.sender,
-            page && typeof page === "object" ? (page as { contract?: unknown }).contract : undefined
+            page && typeof page === "object" ? (page as { contract?: unknown }).contract : undefined,
         );
         event.returnValue = { contract: DESKTOP_CONTRACT };
     });
@@ -504,13 +505,13 @@ export default () => {
     // Asked from the Landing at first launch, so that the restart macOS requires happens before any
     // conversation, and checked before each share.
     ipcMain.handle("app:screen-permission:get", (event) =>
-        isFromActiveRenderer(event) ? screenPermission() : "not-needed"
+        isFromActiveRenderer(event) ? screenPermission() : "not-needed",
     );
     ipcMain.handle("app:screen-permission:request", (event) =>
-        isFromNativeLanding(event) ? requestScreenPermission() : screenPermission()
+        isFromNativeLanding(event) ? requestScreenPermission() : screenPermission(),
     );
     ipcMain.handle("app:screen-permission:ensure", (event) =>
-        isFromActiveRenderer(event) ? ensureScreenPermission() : false
+        isFromActiveRenderer(event) ? ensureScreenPermission() : false,
     );
 
     // ---- Picture-in-Picture (native utility window) ----
@@ -562,7 +563,7 @@ export default () => {
     // The meeting bar's "Display tabs": shows or hides the tab strip (non-destructive; the native menu
     // keeps the multi-tab confirmation).
     ipcMain.handle("app:windows:tab-strip-shown", (event) =>
-        isFromMainRenderer(event) ? settings.get("tab_bar_enabled") !== false : false
+        isFromMainRenderer(event) ? settings.get("tab_bar_enabled") !== false : false,
     );
     ipcMain.on("app:windows:toggle-tab-strip", (event) => {
         if (!isFromMainRenderer(event)) return;
@@ -574,6 +575,13 @@ export default () => {
         if (isFromMainRenderer(event)) {
             focusMainWindow();
         }
+    });
+
+    ipcMain.on("app:windows:annotation-state", (event, state: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        void setAnnotationState(event.sender, state).catch((error) =>
+            ElectronLog.warn("Annotation window failed", error),
+        );
     });
 
     // ---- Presenter meeting bar ----
@@ -590,12 +598,16 @@ export default () => {
 
     // The user's share started, changed source, or stopped (null). The app places what floats during
     // it (share-surfaces-policy): the meeting bar here, the companion through its controller.
+    let shareSourceGeneration = 0;
     ipcMain.on("app:screen-share-source", (event, source: unknown) => {
         if (!isFromMainRenderer(event)) return;
+        const generation = ++shareSourceGeneration;
         const sharing = source !== null && typeof source === "object";
         resolveHudDisplayId(source)
             .then((displayId) => {
+                if (generation !== shareSourceGeneration || !isFromMainRenderer(event)) return undefined;
                 setSharedScreenDisplay(displayId);
+                setAnnotationSource(sharing ? displayId : undefined);
                 const barDisplayId = meetingBarDisplay({
                     canHideFromCapture: canHideWindowsFromCapture(process.platform),
                     sharing,

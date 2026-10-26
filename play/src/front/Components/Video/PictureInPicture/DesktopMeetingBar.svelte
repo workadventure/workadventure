@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { screenAnnotationManager } from "../../../Space/ScreenAnnotation/ScreenAnnotationManager";
+    import { localAnnotationActiveStore } from "../../../Stores/ScreenAnnotationStore";
     import { onMount, tick } from "svelte";
     import {
         cameraListStore,
@@ -344,6 +346,17 @@
 
 <div id="bar" data-testid="desktop-meeting-bar">
     <div class="pill">
+        <button
+            type="button"
+            class="bar-btn"
+            class:is-active={$localAnnotationActiveStore}
+            data-testid="desktop-annotate"
+            title={$LL.desktop.meetingBar.annotate()}
+            onclick={() => screenAnnotationManager.toggleDrawingOnMyShare()}
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l12-12-4-4L4 16z" /></svg>
+            <span>{$LL.desktop.meetingBar.annotate()}</span>
+        </button>
         <span class="bar-handle" aria-hidden="true">
             <svg viewBox="0 0 24 24"
                 ><circle cx="8" cy="5" r="1.5" /><circle cx="16" cy="5" r="1.5" /><circle

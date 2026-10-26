@@ -1,10 +1,14 @@
 <script lang="ts">
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import { readable } from "svelte/store";
     import type { ChatAttachmentStatus, ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
-    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+
     import EmojiButton from "./EmojiButton.svelte";
     import { IconArrowBackUp, IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
+
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply, edit: selectedChatMessageToEdit } = chatInteraction;
 
     interface Props {
         message: ChatMessage;
