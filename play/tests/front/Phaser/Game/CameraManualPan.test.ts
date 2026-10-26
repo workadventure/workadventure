@@ -38,9 +38,11 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     };
     let activeTween: TweenConfig | undefined;
     const advanceTween = (progress: number) => {
-        activeTween?.onUpdate?.({ getValue: () => activeTween.from + (activeTween.to - activeTween.from) * progress });
+        const tween = activeTween;
+        if (!tween) return;
+        tween.onUpdate?.({ getValue: () => tween.from + (tween.to - tween.from) * progress });
         if (progress === 1) {
-            activeTween?.onComplete?.();
+            tween.onComplete?.();
         }
     };
     const addCounter = vi.fn((config: TweenConfig) => {
@@ -63,10 +65,14 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
         tweens: { addCounter },
     } as unknown as GameScene;
     let modifier = zoom;
+    const limits = { minZoomReached: false };
     const scale = {
         getTargetZoomModifierFor: () => 1,
         get zoomModifier() {
             return modifier;
+        },
+        get isMaximumZoomOutReached() {
+            return limits.minZoomReached;
         },
         setZoomModifier: (value: number, cam: Phaser.Cameras.Scene2D.Camera, animating: boolean) => {
             modifier = value;
@@ -80,7 +86,7 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     managers.push(manager);
     camera.startFollow(player, true);
     camera.preRender();
-    return { camera, manager, player, scene, sendViewportToServer, advanceTween, addCounter };
+    return { camera, manager, player, scene, sendViewportToServer, advanceTween, addCounter, limits };
 }
 
 describe("manual camera pan", () => {
@@ -88,6 +94,7 @@ describe("manual camera pan", () => {
         "keeps the cursor's world point fixed throughout zoom, including canvas resize=%s",
         (resizeAtEnd) => {
             const { camera, manager, advanceTween } = setup(1, true, resizeAtEnd);
+            manager.startManualPan();
             const before = camera.getWorldPoint(600, 150);
             manager.zoomByFactorAtPointer(2, 250, { x: 600, y: 150 });
             advanceTween(0.5);
@@ -112,6 +119,7 @@ describe("manual camera pan", () => {
         camera.preRender();
         expect(camera.midPoint.x).toBe(player.x);
         expect(get(cameraDetachedStore)).toBe(false);
+        manager.startManualPan();
         manager.zoomByFactorAtPointer(2, 250, { x: 600, y: 150 });
         advanceTween(1);
         manager.resumePlayerFollow();
@@ -120,6 +128,34 @@ describe("manual camera pan", () => {
         expect(camera.midPoint.x).toBe(player.x);
         expect(camera.midPoint.y).toBe(player.y);
         expect(get(cameraDetachedStore)).toBe(false);
+    });
+
+    it.each([0.5, 2])("zooms by %s on the avatar while following, and on the cursor once detached", (factor) => {
+        const { camera, manager, player, advanceTween } = setup(2, true);
+        manager.zoomByFactorAtPointer(factor, 250, { x: 600, y: 150 });
+        advanceTween(1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x);
+        expect(camera.midPoint.y).toBe(player.y);
+        expect(get(cameraDetachedStore)).toBe(false);
+
+        manager.startManualPan();
+        const before = camera.getWorldPoint(600, 150);
+        manager.zoomByFactorAtPointer(factor, 250, { x: 600, y: 150 });
+        advanceTween(1);
+        camera.preRender();
+        const after = camera.getWorldPoint(600, 150);
+        expect(after.x).toBeCloseTo(before.x);
+        expect(after.y).toBeCloseTo(before.y);
+    });
+
+    it("ignores cursor zoom-out at minimum zoom", () => {
+        const { manager, addCounter, limits } = setup(1, true);
+        manager.startManualPan();
+        limits.minZoomReached = true;
+        const tweens = addCounter.mock.calls.length;
+        manager.zoomByFactorAtPointer(0.5, 250, { x: 600, y: 150 });
+        expect(addCounter.mock.calls.length).toBe(tweens);
     });
 
     it.each([0.5, 1, 2])("scales release inertia to the current zoom %s and slows it down", (zoom) => {
