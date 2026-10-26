@@ -155,6 +155,9 @@ type OpenID struct {
 	ClientID, ClientSecret, Issuer        string
 	Scope, Prompt                         string
 	UsernameClaim, LocaleClaim, TagsClaim string
+	// AccessType is the access_type sent on the authorization request ("" sends none). Google wants "offline" to
+	// hand out a refresh token, and ignores the offline_access scope other providers expect in the scope.
+	AccessType string
 }
 
 // Load reads the configuration from the process environment.
@@ -262,6 +265,7 @@ type vars struct {
 	MaxUsersForWebRTC                int     `env:"MAX_USERS_FOR_WEBRTC" envDefault:"4"`
 	MinimumDistance                  int     `env:"MINIMUM_DISTANCE" envDefault:"64"`
 	NodeEnv                          string  `env:"NODE_ENV"`
+	OpenidAccessType                 string  `env:"OPENID_ACCESS_TYPE"`
 	OpenidClientID                   string  `env:"OPENID_CLIENT_ID"`
 	OpenidClientIssuer               string  `env:"OPENID_CLIENT_ISSUER"`
 	OpenidClientSecret               string  `env:"OPENID_CLIENT_SECRET"`
@@ -535,6 +539,7 @@ func parse(environ map[string]string) (*Config, error) {
 		LocaleClaim:   firstNonEmpty(v.OpenidLocaleClaim, v.OPIDLocaleClaim, "locale"),
 		TagsClaim:     firstNonEmpty(v.OpenidTagsClaim, v.OPIDTagsClaim, "tags"),
 		Prompt:        firstNonEmpty(v.OpenidPrompt, v.OPIDPrompt),
+		AccessType:    v.OpenidAccessType,
 	}
 	deprecated := firstNonEmpty(v.OPIDClientID, v.OPIDClientSecret, v.OPIDClientIssuer, v.OPIDProfileScreenProvider, v.OPIDScope,
 		v.OPIDPrompt, v.OPIDUsernameClaim, v.OPIDLocaleClaim, v.OPIDWokaNamePolicy, v.OPIDTagsClaim) != ""

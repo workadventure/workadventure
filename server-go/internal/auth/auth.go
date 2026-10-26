@@ -18,6 +18,9 @@ type Token struct {
 	Locale       string   `json:"locale,omitempty"`
 	Tags         []string `json:"tags,omitempty"`
 	MatrixUserID string   `json:"matrixUserId,omitempty"`
+	// EncryptedRefreshToken is the provider's refresh token, sealed with SECRET_KEY: the token sits in the browser's
+	// local storage, where anyone reading it must not be able to renew the access on their own.
+	EncryptedRefreshToken string `json:"encryptedRefreshToken,omitempty"`
 }
 
 var ErrInvalid = errors.New("token is invalid")
@@ -54,6 +57,7 @@ func (m *Manager) verify(raw string, opts ...jwt.ParserOption) (Token, error) {
 		Locale       string          `json:"locale"`
 		Tags         json.RawMessage `json:"tags"`
 		MatrixUserID string          `json:"matrixUserId"`
+		Refresh      string          `json:"encryptedRefreshToken"`
 		jwt.RegisteredClaims
 	}
 	_, err := jwt.ParseWithClaims(raw, &c, func(*jwt.Token) (any, error) { return m.secret, nil },
@@ -65,7 +69,8 @@ func (m *Manager) verify(raw string, opts ...jwt.ParserOption) (Token, error) {
 	if err != nil {
 		return Token{}, ErrInvalid
 	}
-	return Token{Identifier: c.Identifier, AccessToken: c.AccessToken, Username: c.Username, Locale: c.Locale, Tags: tags, MatrixUserID: c.MatrixUserID}, nil
+	return Token{Identifier: c.Identifier, AccessToken: c.AccessToken, Username: c.Username, Locale: c.Locale, Tags: tags, MatrixUserID: c.MatrixUserID,
+		EncryptedRefreshToken: c.Refresh}, nil
 }
 
 // parseTags accepts an array of strings, or a string holding a JSON array, or a plain string (the zod

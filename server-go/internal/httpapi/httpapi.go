@@ -192,10 +192,33 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Parameters token and playUri are required", http.StatusBadRequest)
 		return
 	}
-	tok, err := api.auth.Verify(q.Get("token"))
+	token := q.Get("token")
+	tok, err := api.auth.Verify(token)
 	if err != nil || (tok.AccessToken != "" && api.oidc == nil) {
 		http.Error(w, "Invalid token", http.StatusUnauthorized)
 		return
+	}
+	var logged *session
+	if tok.AccessToken != "" {
+		// A logged user: the provider must still accept the access token, renewed if need be. This comes before the
+		// admin call, since the admin may identify the member by the access token.
+		s, err := api.oidc.check(r.Context(), tok)
+		if err != nil {
+			slog.Warn("Error while checking token auth", "error", err)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+		logged = &s
+		if s.renewed {
+			// A renewal stands for a new login: the name, locale and tags come from the fresh claims, so that a tag
+			// removed on the provider does not live on in a new 30-day token. The front stores the token it gets.
+			tok = api.oidc.withClaims(tok, s.claims)
+			tok.AccessToken, tok.EncryptedRefreshToken = s.accessToken, s.refreshToken
+			if token, err = api.auth.Create(tok); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
 	}
 	member, err := api.admin.MemberData(r.Context(), admin.MemberQuery{
 		Identifier: tok.Identifier, AccessToken: tok.AccessToken, PlayURI: q.Get("playUri"), IPAddress: netguard.ClientIP(r, api.cfg.TrustedProxies), Locale: r.Header.Get("Accept-Language"),
@@ -215,24 +238,18 @@ func (api *API) me(w http.ResponseWriter, r *http.Request) {
 	b, _ := json.Marshal(member)
 	var resp map[string]any
 	_ = json.Unmarshal(b, &resp)
-	resp["authToken"] = q.Get("token")
+	resp["authToken"] = token
 	for k, v := range map[string]string{"username": tok.Username, "locale": tok.Locale, "matrixUserId": tok.MatrixUserID, "matrixServerUrl": api.cfg.MatrixPublicURI} {
 		if v != "" {
 			resp[k] = v
 		}
 	}
-	if tok.AccessToken != "" {
-		// A logged user: the provider must still accept the access token. Its claims override the member data.
-		claims, err := api.oidc.userinfo(r.Context(), tok.AccessToken, nil)
-		if err != nil {
-			slog.Warn("Error while checking token auth", "error", err)
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-		if m := claimString(claims, "matrix_url"); m != "" {
+	if logged != nil {
+		// The provider's claims override the member data.
+		if m := claimString(logged.claims, "matrix_url"); m != "" {
 			resp["matrixServerUrl"] = m
 		}
-		for k, v := range claims {
+		for k, v := range logged.claims {
 			resp[k] = v
 		}
 	}

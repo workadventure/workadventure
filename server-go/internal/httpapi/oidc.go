@@ -33,7 +33,7 @@ type openID struct {
 	pusherURL   string
 	matrixURI   string
 	redirectURL string
-	cookieKey   [32]byte // seals the PKCE verifier and the nonce in their cookie (SHA-256 of SECRET_KEY)
+	cookieKey   [32]byte // seals the PKCE verifier, the nonce and the refresh token (SHA-256 of SECRET_KEY)
 	http        *http.Client
 
 	mu       sync.Mutex
@@ -95,9 +95,8 @@ type pkce struct {
 	Nonce    string `json:"n"`
 }
 
-// seal encrypts and authenticates p (AES-256-GCM): the browser can neither read nor change it.
-func (o *openID) seal(p pkce) string {
-	plain, _ := json.Marshal(p)
+// encrypt encrypts and authenticates plain (AES-256-GCM): the browser can neither read nor change it.
+func (o *openID) encrypt(plain []byte) string {
 	block, _ := aes.NewCipher(o.cookieKey[:])
 	gcm, _ := cipher.NewGCM(block)
 	nonce := make([]byte, gcm.NonceSize())
@@ -105,15 +104,24 @@ func (o *openID) seal(p pkce) string {
 	return base64.RawURLEncoding.EncodeToString(gcm.Seal(nonce, nonce, plain, nil))
 }
 
-func (o *openID) open(sealed string) (pkce, error) {
-	var p pkce
+func (o *openID) decrypt(sealed string) ([]byte, error) {
 	b, err := base64.RawURLEncoding.DecodeString(sealed)
 	block, _ := aes.NewCipher(o.cookieKey[:])
 	gcm, _ := cipher.NewGCM(block)
 	if err != nil || len(b) < gcm.NonceSize() {
-		return p, errors.New("invalid code verifier cookie")
+		return nil, errors.New("not sealed by this server")
 	}
-	plain, err := gcm.Open(nil, b[:gcm.NonceSize()], b[gcm.NonceSize():], nil)
+	return gcm.Open(nil, b[:gcm.NonceSize()], b[gcm.NonceSize():], nil)
+}
+
+func (o *openID) seal(p pkce) string {
+	plain, _ := json.Marshal(p)
+	return o.encrypt(plain)
+}
+
+func (o *openID) open(sealed string) (pkce, error) {
+	var p pkce
+	plain, err := o.decrypt(sealed)
 	if err != nil || json.Unmarshal(plain, &p) != nil || p.Verifier == "" || p.Nonce == "" {
 		return p, errors.New("invalid code verifier cookie")
 	}
@@ -157,12 +165,61 @@ func (o *openID) do(req *http.Request, v any) error {
 		return err
 	}
 	if resp.StatusCode/100 != 2 {
-		return fmt.Errorf("%s %s: %s %s", req.Method, req.URL.Redacted(), resp.Status, body)
+		return &providerError{status: resp.StatusCode, msg: fmt.Sprintf("%s %s: %s %s", req.Method, req.URL.Redacted(), resp.Status, body)}
 	}
 	if v == nil {
 		return nil
 	}
 	return json.Unmarshal(body, v)
+}
+
+// providerError is an answer of the provider other than a success.
+type providerError struct {
+	status int
+	msg    string
+}
+
+func (e *providerError) Error() string { return e.msg }
+
+// rejected says whether the provider refused the access token itself (401, invalid_token in RFC 6750), as opposed
+// to failing for another reason.
+func rejected(err error) bool {
+	var pe *providerError
+	return errors.As(err, &pe) && pe.status == http.StatusUnauthorized
+}
+
+// session is what the provider says of a logged user when the front asks /me.
+type session struct {
+	claims       map[string]any
+	accessToken  string
+	refreshToken string // encrypted
+	renewed      bool
+}
+
+// check asks the provider whether tok's access token is still good, and renews it with the refresh token when, and
+// only when, the provider rejects it: a network or configuration failure is reported, not papered over. Access
+// tokens live an hour on Google while the auth token lives 30 days: without the renewal, the next reload after the
+// hour sends a playing user back to the login screen.
+func (o *openID) check(ctx context.Context, tok auth.Token) (session, error) {
+	claims, err := o.userinfo(ctx, tok.AccessToken, nil)
+	if err == nil || tok.EncryptedRefreshToken == "" || !rejected(err) {
+		return session{claims: claims, accessToken: tok.AccessToken, refreshToken: tok.EncryptedRefreshToken}, err
+	}
+	refresh, err := o.decrypt(tok.EncryptedRefreshToken)
+	if err != nil {
+		return session{}, fmt.Errorf("refresh token: %w", err)
+	}
+	// x/oauth2 keeps the current refresh token when the provider does not rotate it, and fails without an access
+	// token in the answer.
+	fresh, err := o.oauth.TokenSource(o.client(ctx), &oauth2.Token{RefreshToken: string(refresh)}).Token()
+	if err != nil {
+		return session{}, fmt.Errorf("refresh: %w", err)
+	}
+	claims, err = o.userinfo(ctx, fresh.AccessToken, nil)
+	if err != nil {
+		return session{}, err
+	}
+	return session{claims: claims, accessToken: fresh.AccessToken, refreshToken: o.encrypt([]byte(fresh.RefreshToken)), renewed: true}, nil
 }
 
 // userinfo returns the claims of the user the access token belongs to.
@@ -256,6 +313,9 @@ func (api *API) loginScreen(w http.ResponseWriter, r *http.Request) {
 	if o.cfg.Prompt != "" {
 		opts = append(opts, oauth2.SetAuthURLParam("prompt", o.cfg.Prompt))
 	}
+	if o.cfg.AccessType != "" {
+		opts = append(opts, oauth2.SetAuthURLParam("access_type", o.cfg.AccessType))
+	}
 	for _, k := range []string{"manuallyTriggered", "chatRoomId", "providerId"} {
 		if q.Has(k) {
 			opts = append(opts, oauth2.SetAuthURLParam(k, q.Get(k)))
@@ -273,7 +333,7 @@ func (api *API) openIDCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing playUri in cookies", http.StatusInternalServerError)
 		return
 	}
-	claims, accessToken, err := api.oidc.exchange(r)
+	claims, tokens, err := api.oidc.exchange(r)
 	if err != nil {
 		slog.Error("An error occurred while connecting to OpenID Provider", "error", err)
 		http.Error(w, "An error occurred while connecting to OpenID Provider", http.StatusInternalServerError)
@@ -289,12 +349,12 @@ func (api *API) openIDCallback(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "No email in the response", http.StatusInternalServerError)
 		return
 	}
-	cfg := api.oidc.cfg
-	token, err := api.auth.Create(auth.Token{
-		Identifier: email, AccessToken: accessToken, Username: claimString(claims, cfg.UsernameClaim),
-		Locale: claimString(claims, cfg.LocaleClaim), Tags: claimStrings(claims, cfg.TagsClaim),
-		MatrixUserID: strings.Replace(email, "@", "_", 1),
-	})
+	tok := api.oidc.withClaims(auth.Token{Identifier: email, MatrixUserID: strings.Replace(email, "@", "_", 1)}, claims)
+	tok.AccessToken = tokens.AccessToken
+	if tokens.RefreshToken != "" {
+		tok.EncryptedRefreshToken = api.oidc.encrypt([]byte(tokens.RefreshToken))
+	}
+	token, err := api.auth.Create(tok)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -324,49 +384,55 @@ func (api *API) openIDCallback(w http.ResponseWriter, r *http.Request) {
         window.location.href = %s;`, token, m.String())
 }
 
-// exchange trades the authorization code for an access token, then reads the user's claims.
-func (o *openID) exchange(r *http.Request) (map[string]any, string, error) {
+// withClaims is tok with what the provider's claims say of the user: its name, locale and tags.
+func (o *openID) withClaims(tok auth.Token, claims map[string]any) auth.Token {
+	tok.Username, tok.Locale, tok.Tags = claimString(claims, o.cfg.UsernameClaim), claimString(claims, o.cfg.LocaleClaim), claimStrings(claims, o.cfg.TagsClaim)
+	return tok
+}
+
+// exchange trades the authorization code for the provider's tokens, then reads the user's claims.
+func (o *openID) exchange(r *http.Request) (map[string]any, *oauth2.Token, error) {
 	q := r.URL.Query()
 	if e := q.Get("error"); e != "" {
-		return nil, "", fmt.Errorf("provider error %s: %s", e, q.Get("error_description"))
+		return nil, nil, fmt.Errorf("provider error %s: %s", e, q.Get("error_description"))
 	}
 	sealed := cookie(r, "code_verifier")
 	if sealed == "" {
-		return nil, "", errors.New("code verifier doesn't exist")
+		return nil, nil, errors.New("code verifier doesn't exist")
 	}
 	login, err := o.open(sealed)
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 	// The state only matters to providers without PKCE; openid-client refuses a state it has nothing to compare to.
 	if state := q.Get("state"); state != "" {
 		if expected := cookie(r, "oidc_state"); expected != "" && expected != state {
-			return nil, "", errors.New("state mismatch")
+			return nil, nil, errors.New("state mismatch")
 		} else if expected == "" {
-			return nil, "", errors.New("checks.state argument is missing")
+			return nil, nil, errors.New("checks.state argument is missing")
 		}
 	}
 	if _, err := o.metadata(r.Context()); err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 	ctx := o.client(r.Context())
 	tokens, err := o.oauth.Exchange(ctx, q.Get("code"), oauth2.VerifierOption(login.Verifier))
 	if err != nil {
-		return nil, "", err
+		return nil, nil, err
 	}
 	raw, _ := tokens.Extra("id_token").(string)
 	if raw == "" {
-		return nil, "", errors.New("no id_token in the token response")
+		return nil, nil, errors.New("no id_token in the token response")
 	}
 	idToken, err := o.idTokens.Verify(ctx, raw)
 	if err != nil {
-		return nil, "", fmt.Errorf("id_token: %w", err)
+		return nil, nil, fmt.Errorf("id_token: %w", err)
 	}
 	if idToken.Nonce != login.Nonce {
-		return nil, "", errors.New("id_token: nonce mismatch")
+		return nil, nil, errors.New("id_token: nonce mismatch")
 	}
 	claims, err := o.userinfo(r.Context(), tokens.AccessToken, url.Values{"playUri": {cookie(r, "playUri")}})
-	return claims, tokens.AccessToken, err
+	return claims, tokens, err
 }
 
 func (api *API) matrixCallback(w http.ResponseWriter, r *http.Request) {
@@ -410,7 +476,7 @@ func redirectPage(w http.ResponseWriter, script string, values ...string) {
 	_, _ = fmt.Fprintf(w, "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <script>\n        "+script+"\n    </script>\n</head>\n<body>\n</body>\n</html>", args...)
 }
 
-// logout revokes the access token, then goes back to the room, where the front logs in anonymously.
+// logout revokes the access token and the refresh token, then goes back to the room, where the front logs in anonymously.
 // ponytail: the "redirect" parameter of the pusher (an open redirect, and /logout-callback behind it) is left out:
 // the front never sends it.
 func (api *API) logout(w http.ResponseWriter, r *http.Request) {
@@ -438,6 +504,13 @@ func (api *API) logout(w http.ResponseWriter, r *http.Request) {
 		defer cancel()
 		if err := api.oidc.postForm(ctx, meta.RevocationEndpoint, url.Values{"token": {tok.AccessToken}}, nil); err != nil {
 			slog.Warn("cannot revoke the OpenID access token", "error", err)
+		}
+		// Revoking the access token leaves the refresh token alive on a provider that follows RFC 7009.
+		if refresh, err := api.oidc.decrypt(tok.EncryptedRefreshToken); err == nil && len(refresh) > 0 {
+			err := api.oidc.postForm(ctx, meta.RevocationEndpoint, url.Values{"token": {string(refresh)}, "token_type_hint": {"refresh_token"}}, nil)
+			if err != nil {
+				slog.Warn("cannot revoke the OpenID refresh token", "error", err)
+			}
 		}
 	}
 	http.Redirect(w, r, playURI, http.StatusFound) //nolint:gosec // playUri passed VerifyDomain above
