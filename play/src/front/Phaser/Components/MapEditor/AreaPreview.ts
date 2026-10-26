@@ -622,31 +622,4 @@ export class AreaPreview extends Rectangle {
         }
         return get(LL).mapEditor.properties.noProperties();
     }
-
-    get actionButtonLabel(): string {
-        if (this.areaData.properties.length === 0) return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
-        const property = this.areaData.properties.find((p) => p.type !== "areaDescriptionProperties");
-        if (!property) return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
-
-        const properties = get(LL).mapEditor.properties;
-        let propertyKey = property.type as keyof typeof properties;
-
-        // If the property is an openWebsite and the application is not website, we need to use the application as the property key
-        if (property.type === "openWebsite" && "application" in property) {
-            const openWebsiteProperty = property as { application: string };
-            if (openWebsiteProperty.application != "website") {
-                propertyKey = openWebsiteProperty.application as keyof typeof properties;
-            }
-        }
-
-        const propertyTranslation = properties[propertyKey];
-        if (
-            propertyTranslation != undefined &&
-            "actionButtonLabel" in propertyTranslation &&
-            typeof (propertyTranslation as { actionButtonLabel?: unknown }).actionButtonLabel === "function"
-        ) {
-            return (propertyTranslation as { actionButtonLabel: () => string }).actionButtonLabel();
-        }
-        return get(LL).mapEditor.explorer.details.moveToArea({ name: "" });
-    }
 }
