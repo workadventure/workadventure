@@ -21,6 +21,17 @@ export interface BuildMicrophoneAudioConstraintsOptions {
     sampleRateSupported: boolean;
 }
 
+/**
+ * Chrome lists voiceIsolation in getSupportedConstraints() and reports it as false in getSettings() even where nothing
+ * can apply it (desktop Chrome without its denoiser model), so only trust a track that has it on or can turn it on.
+ */
+export function isVoiceIsolationSupported(
+    settings: MediaTrackSettings | undefined,
+    capabilities: MediaTrackCapabilities | undefined,
+): boolean {
+    return settings?.voiceIsolation === true || capabilities?.voiceIsolation?.includes(true) === true;
+}
+
 export function getEffectiveNoiseSuppressionProvider({
     provider,
     voiceIsolationSupported,

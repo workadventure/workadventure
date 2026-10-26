@@ -20,8 +20,10 @@ function subscribe(channel: string, callback: (...args: unknown[]) => void): () 
 
 const pipApi: WorkAdventureDesktopPipApi = {
     supported: true,
-    open: (options) => ipcRenderer.invoke("app:pip:open", options),
+    open: () => ipcRenderer.invoke("app:pip:open"),
     close: () => ipcRenderer.invoke("app:pip:close"),
+    toggle: () => ipcRenderer.send("app:pip:toggle"),
+    onWanted: (callback) => subscribe("app:pip:wanted", (wanted) => callback(wanted === true)),
     sendOffer: (sdp) => ipcRenderer.send("app:pip:offer-from-main", sdp),
     sendIce: (candidate) => ipcRenderer.send("app:pip:ice-from-main-renderer", candidate),
     sendState: (state) => ipcRenderer.send("app:pip:state-from-main", state),
@@ -33,14 +35,13 @@ const pipApi: WorkAdventureDesktopPipApi = {
 };
 
 const presenterHudApi: WorkAdventureDesktopHudApi = {
-    openMeetingBar: (opts) => ipcRenderer.invoke("app:hud:open-meeting-bar", opts),
-    closeMeetingBar: () => ipcRenderer.invoke("app:hud:close-meeting-bar"),
     pushState: (state) => ipcRenderer.send("app:hud:state-from-main", state),
     onCommand: (callback) => subscribe("app:hud:command-to-main", (command) => callback(command as DesktopPipCommand)),
 };
 
 const companionApi: WorkAdventureDesktopCompanionApi = {
     pushState: (state) => ipcRenderer.send("app:companion:state-from-main", state),
+    open: () => ipcRenderer.send("app:companion:open"),
     onCommand: (callback) =>
         subscribe("app:companion:command-to-main", (command) => callback(command as CompanionCommand)),
 };

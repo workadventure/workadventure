@@ -335,11 +335,14 @@ describe("SpaceProviderInterface implementation", () => {
                 );
                 speakerZone.startListenerStreaming();
                 expect(get(spaceRegistry.isLiveStreamingStore)).toBe(true);
+                expect(get(spaceRegistry.isLiveStreamingAudioStore)).toBe(false);
                 expect(get(spaceRegistry.shouldPublishScreenShareStore)).toBe(false);
 
                 speakerZone.startStreaming();
+                expect(get(spaceRegistry.isLiveStreamingAudioStore)).toBe(true);
                 expect(get(spaceRegistry.shouldPublishScreenShareStore)).toBe(true);
                 speakerZone.stopStreaming();
+                expect(get(spaceRegistry.isLiveStreamingAudioStore)).toBe(false);
                 expect(get(spaceRegistry.shouldPublishScreenShareStore)).toBe(false);
 
                 roomMegaphone.startStreaming();
@@ -347,13 +350,20 @@ describe("SpaceProviderInterface implementation", () => {
                 roomMegaphone.stopStreaming();
                 expect(get(spaceRegistry.shouldPublishScreenShareStore)).toBe(false);
 
-                await spaceRegistry.joinSpace(
+                const bubble = await spaceRegistry.joinSpace(
                     "bubble",
                     FilterType.ALL_USERS,
                     ["cameraState", "microphoneState", "screenSharingState"],
                     new AbortController().signal,
                 );
+                expect(get(spaceRegistry.isLiveStreamingStore)).toBe(true);
+                expect(get(spaceRegistry.isLiveStreamingAudioStore)).toBe(true);
                 expect(get(spaceRegistry.shouldPublishScreenShareStore)).toBe(true);
+
+                await spaceRegistry.leaveSpace(bubble);
+                await spaceRegistry.leaveSpace(speakerZone);
+                await spaceRegistry.leaveSpace(roomMegaphone);
+                expect(get(spaceRegistry.isLiveStreamingAudioStore)).toBe(false);
             });
         });
         describe("SpaceRegistry race condition handling", () => {

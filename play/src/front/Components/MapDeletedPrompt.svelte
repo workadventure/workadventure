@@ -11,6 +11,7 @@
     }
 
     const backgroundColor = getBackgroundColor();
+    const logo = gameManager.currentStartedRoom.loginSceneLogo ?? logoImg;
 </script>
 
 <main
@@ -20,7 +21,7 @@
 >
     <div class="flex flex-col items-center" style="width: 90%;">
         <div class="logo">
-            <img src={logoImg} alt="Logo" style="max-height:25vh; max-width:80%;" draggable="false" />
+            <img src={logo} alt="Logo" style="max-height:25vh; max-width:80%;" draggable="false" />
         </div>
 
         <div class="icon">

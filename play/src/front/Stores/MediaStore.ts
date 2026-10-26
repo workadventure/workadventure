@@ -11,7 +11,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
-import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
+import { isIOS } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -58,7 +58,8 @@ import {
     type LocalTrackStoreValue,
 } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
-import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
+import { buildMicrophoneAudioConstraints, isVoiceIsolationSupported } from "./MicrophoneSettings";
+import { speakerSelectedStore, speakerSelectionSupported } from "./AudioOutputStore";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
 
@@ -950,11 +951,11 @@ async function runRawStreamUpdate(
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
             }
             if (currentStream.getAudioTracks().length > 0) {
-                const audioTrackSettings = currentStream.getAudioTracks()[0]?.getSettings();
+                const audioTrack = currentStream.getAudioTracks()[0];
+                const audioTrackSettings = audioTrack?.getSettings();
                 usedMicrophoneDeviceIdStore.set(audioTrackSettings?.deviceId);
                 voiceIsolationSupportedStore.setSupported(
-                    navigator.mediaDevices?.getSupportedConstraints().voiceIsolation === true &&
-                        audioTrackSettings?.voiceIsolation !== undefined,
+                    isVoiceIsolationSupported(audioTrackSettings, audioTrack?.getCapabilities?.()),
                 );
             } else {
                 voiceIsolationSupportedStore.setSupported(false);
@@ -985,12 +986,11 @@ async function runRawStreamUpdate(
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
                 trackMediaAccessIssue(mustRequestNewAudio ? "camera_microphone" : "camera", classified);
+                // Only the camera: turning it off asks for the microphone alone, which turns the microphone off in
+                // its own turn if it fails too. A camera taken by another application (NotReadableError on Windows)
+                // must not cost the microphone.
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
-                if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classified);
-                }
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
                 setIfCurrent({
@@ -1029,13 +1029,6 @@ function retryGetUserMedia(retryVideo: boolean, retryAudio: boolean) {
         oldConstraints.audio = false;
     }
     userMediaRetryCountStore.update((count) => count + 1);
-}
-
-/**
- * Asks for the camera again: the current one stopped delivering frames (see CameraStallDetector).
- */
-export function restartCamera(): void {
-    retryGetUserMedia(true, false);
 }
 
 /**
@@ -1650,12 +1643,8 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
         return undefined;
     }
 
-    // Livekit does not support audio output device selection on Safari
-    // Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
-    // And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
-    // Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
-    // features in both modes. So we disable audio output device selection on Safari here.
-    if (isSafari() || isIOS()) {
+    // Hidden wherever speakerSelectedStore ignores a selection (Safari, iOS): see AudioOutputStore
+    if (!speakerSelectionSupported) {
         return;
     }
 
@@ -1685,7 +1674,7 @@ speakerListStore.subscribe((devices) => {
     }
 });
 
-export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
+export { speakerSelectedStore };
 
 let previousMediaDevices: MediaDeviceInfo[] | undefined = undefined;
 

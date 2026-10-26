@@ -25,6 +25,8 @@ export interface CodecPerformance {
 const PROBED_CODECS = ["av1", "vp9", "h264"] as const;
 type ProbedCodec = (typeof PROBED_CODECS)[number];
 
+// With no profile-level-id, libwebrtc reads H.264 as Constrained Baseline: LiveKit's profile, not the Baseline P2P
+// negotiates, and the one Chrome encodes in software on macOS and Windows
 const CONTENT_TYPES: Record<ProbedCodec, string> = { av1: "video/AV1", vp9: "video/VP9", h264: "video/H264" };
 
 // The sizes we decide at: 720p for a P2P connection and a LiveKit camera, larger LiveKit screen share captures

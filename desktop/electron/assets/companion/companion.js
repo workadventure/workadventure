@@ -93,6 +93,15 @@
     var els = {
         openChat: byId("c-open-chat"),
         openPeople: byId("c-open-people"),
+        openAgenda: byId("c-open-agenda"),
+        agendaDot: byId("c-agenda-dot"),
+        nextStrip: byId("c-next-strip"),
+        nextTitle: byId("c-next-title"),
+        nextWhen: byId("c-next-when"),
+        nextJoin: byId("c-next-join"),
+        viewAgenda: byId("c-view-agenda"),
+        agendaClose: byId("c-agenda-close"),
+        agendaList: byId("c-agenda"),
         chatBadge: byId("c-chat-badge"),
         peopleCount: byId("c-people-count"),
         peopleCountH: byId("c-people-count-h"),
@@ -106,6 +115,7 @@
         selfName: byId("c-self-name"),
         statusMenu: byId("c-status-menu"),
         statusLocked: byId("c-status-locked"),
+        shareWarning: byId("c-share-warning"),
         invitation: byId("c-invitation"),
         invitationText: byId("c-invitation-text"),
         inviteAccept: byId("c-invite-accept"),
@@ -772,7 +782,7 @@
     });
     window.addEventListener("pagehide", teardownMeeting);
 
-    // ── Views: "video" | "people" | "chat" ──────────────────────────────────
+    // ── Views: "video" | "people" | "chat" | "agenda" ───────────────────────
     // Base view is the meeting video (HTML tiles in #c-video-area) while in a meeting, People
     // otherwise. People/Chat are left side panels that slide over the video (z-index); closing them
     // reveals the video again.
@@ -795,10 +805,14 @@
         // z-index 0) shows through on the right — no native view, so no rect coordination needed.
         els.viewPeople.dataset.open = currentView === "people" ? "true" : "false";
         els.viewChat.dataset.open = currentView === "chat" ? "true" : "false";
+        els.viewAgenda.dataset.open = currentView === "agenda" ? "true" : "false";
         els.viewPeople.classList.toggle("full", !inMeeting);
         els.viewChat.classList.toggle("full", !inMeeting);
+        els.viewAgenda.classList.toggle("full", !inMeeting);
         els.openPeople.dataset.active = currentView === "people" ? "true" : "false";
         els.openChat.dataset.active = currentView === "chat" ? "true" : "false";
+        els.openAgenda.dataset.active = currentView === "agenda" ? "true" : "false";
+        renderNextStrip();
     }
 
     function setView(view) {
@@ -812,7 +826,13 @@
     els.openChat.addEventListener("click", function () {
         setView(currentView === "chat" ? baseView() : "chat");
     });
+    els.openAgenda.addEventListener("click", function () {
+        setView(currentView === "agenda" ? baseView() : "agenda");
+    });
     els.peopleClose.addEventListener("click", function () {
+        setView(baseView());
+    });
+    els.agendaClose.addEventListener("click", function () {
         setView(baseView());
     });
     els.chatClose.addEventListener("click", function () {
@@ -1272,9 +1292,112 @@
         }
     }
 
+    // ── Agenda + tasks (texts formatted by the world) ───────────────────────
+    var agenda = null;
+    function soonMeeting() {
+        var meetings = (agenda && agenda.meetings) || [];
+        for (var i = 0; i < meetings.length; i++) {
+            if (meetings[i].soon) return meetings[i];
+        }
+        return null;
+    }
+    function joinMeeting(meeting) {
+        send({ type: "join-meeting", eventId: meeting.id });
+        // A meeting in this WorkAdventure happens in the app; another one opens in the browser.
+        if (meeting.inApp) send({ type: "focus-main" });
+    }
+    // The strip under the header: outside a meeting, and not over the Today view that lists it.
+    function renderNextStrip() {
+        var meeting = soonMeeting();
+        var shown = Boolean(meeting) && !inMeeting && currentView !== "agenda";
+        els.nextStrip.hidden = !shown;
+        if (!shown) return;
+        els.nextTitle.textContent = meeting.title;
+        els.nextWhen.textContent = meeting.detail;
+        els.nextWhen.classList.toggle("live", meeting.live === true);
+        els.nextJoin.hidden = !meeting.joinable;
+        els.nextJoin.onclick = function () {
+            joinMeeting(meeting);
+        };
+    }
+    function agendaEl(tag, className, text) {
+        var el = document.createElement(tag);
+        if (className) el.className = className;
+        if (text !== undefined) el.textContent = text;
+        return el;
+    }
+    function agendaLink(text, command) {
+        var link = agendaEl("button", "ag-more", text);
+        link.type = "button";
+        link.addEventListener("click", function () {
+            send({ type: "focus-main" });
+            send({ type: command });
+        });
+        return link;
+    }
+    function renderAgenda(next) {
+        agenda = next && (next.meetings || next.tasks) ? next : null;
+        els.openAgenda.hidden = !agenda;
+        els.agendaDot.hidden = !soonMeeting();
+        if (!agenda && currentView === "agenda") {
+            setView(baseView());
+        }
+        renderNextStrip();
+        var list = els.agendaList;
+        list.textContent = "";
+        if (!agenda) return;
+        if (agenda.meetings) {
+            list.appendChild(agendaEl("div", "ag-section", t("companion.meetings", "Meetings")));
+            if (agenda.meetings.length === 0) {
+                list.appendChild(agendaEl("div", "ag-empty", t("companion.noMoreMeetings", "No more meetings today")));
+            }
+            // Accent bar: green for a meeting in progress, blue for the next one to start.
+            var nextIndex = agenda.meetings.length && agenda.meetings[0].live ? 1 : 0;
+            agenda.meetings.forEach(function (meeting, index) {
+                var row = agendaEl("div", "ag-row" + (meeting.live ? " live" : index === nextIndex ? " next" : ""));
+                row.appendChild(agendaEl("span", "ag-time", meeting.time));
+                row.appendChild(agendaEl("span", "ag-bar"));
+                var main = agendaEl("div", "ag-main");
+                main.appendChild(agendaEl("div", "ag-title", meeting.title));
+                main.appendChild(agendaEl("div", "ag-sub", meeting.detail));
+                row.appendChild(main);
+                if (meeting.joinable) {
+                    var join = agendaEl("button", "join-btn" + (meeting.live ? "" : " ghost"), t("companion.join", "Join"));
+                    join.type = "button";
+                    join.addEventListener("click", function () {
+                        joinMeeting(meeting);
+                    });
+                    row.appendChild(join);
+                }
+                list.appendChild(row);
+            });
+            list.appendChild(agendaLink(t("companion.fullAgenda", "Full agenda in WorkAdventure"), "open-agenda"));
+        }
+        if (agenda.tasks) {
+            var head = agendaEl("div", "ag-section", t("companion.tasks", "Tasks"));
+            if (agenda.tasks.open > 0) head.appendChild(agendaEl("span", "view-count", String(agenda.tasks.open)));
+            list.appendChild(head);
+            if (agenda.tasks.items.length === 0) {
+                list.appendChild(agendaEl("div", "ag-empty", t("companion.noTasks", "Nothing to do")));
+            }
+            agenda.tasks.items.forEach(function (task) {
+                var row = agendaEl("div", "ag-row");
+                row.appendChild(agendaEl("span", "task-dot" + (task.inProgress ? " progress" : "")));
+                var main = agendaEl("div", "ag-main");
+                main.appendChild(agendaEl("div", "ag-title", task.title));
+                main.appendChild(agendaEl("div", "ag-sub", task.list));
+                row.appendChild(main);
+                if (task.due) row.appendChild(agendaEl("span", "due " + task.urgency, task.due));
+                list.appendChild(row);
+            });
+            list.appendChild(agendaLink(t("companion.allTasks", "All tasks in WorkAdventure"), "open-tasks"));
+        }
+    }
+
     var lastState = null;
     function render(state) {
         lastState = state;
+        els.shareWarning.hidden = state.visibleInShare !== true;
         renderInvitation(state.invitation);
         renderPeople(Array.isArray(state.users) ? state.users : []);
         renderChat(
@@ -1293,6 +1416,7 @@
         };
         renderMeeting(media);
         renderMedia(media);
+        renderAgenda(state.agenda);
     }
 
     api.onState(function (state) {

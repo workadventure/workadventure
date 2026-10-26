@@ -30,9 +30,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Camera của bạn đang tắt",
         activate: "Bật camera của bạn",
-        noImageWarning: "Camera của bạn đã ngừng gửi hình ảnh. Có thể một ứng dụng khác đang sử dụng camera.",
-        retry: "Thử lại",
-        changeCamera: "Đổi camera",
     },
     microphone: {
         disabled: "Micrô của bạn đang tắt",
@@ -40,6 +37,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Không phát hiện âm thanh từ micrô của bạn. Có thể đang có sự cố; hãy thử đổi micrô trong phần cài đặt.",
         advancedNoiseReduction: "Khử tiếng ồn nâng cao",
+        loudEnvironmentWarning: "Đã phát hiện tiếng ồn nền liên tục trên micrô của bạn.",
+        enableNoiseSuppression: "Bật khử tiếng ồn",
         noiseSuppressionInitializing: "Đang khởi tạo bộ khử tiếng ồn tùy chỉnh...",
         noiseSuppressionUnsupported: "Trình duyệt này không chạy được bộ khử tiếng ồn tùy chỉnh.",
         noiseSuppressionError: "Bộ khử tiếng ồn tùy chỉnh gặp lỗi. Chuyển về bộ khử tiếng ồn tích hợp của trình duyệt.",
@@ -49,6 +48,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Loa của bạn đang tắt",
+        test: "Kiểm tra đầu ra âm thanh",
         noDevices: "Không tìm thấy thiết bị loa",
         noDevicesDesc:
             "Trình duyệt của bạn không liệt kê đầu ra âm thanh nào có thể chọn. Một số trình duyệt hạn chế điều này. Hãy thử trình duyệt khác, cắm lại tai nghe hoặc loa, kiểm tra cài đặt âm thanh hệ thống và cấu hình máy tính của bạn (quyền riêng tư, thiết bị).",
@@ -217,6 +217,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Ứng dụng máy tính",
         changeWorld: "Đổi thế giới",
+        openCompanion: "Mở bảng đồng hành",
         title: "Mở một thế giới khác",
         description: "Dán URL đầy đủ của thế giới WorkAdventure bạn muốn mở.",
         urlLabel: "URL thế giới",

@@ -43,6 +43,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_PROFILE_SCREEN_PROVIDER` | No | URL of the 'profile' page (typically part of the optionnal Admin component) |
 | `OPENID_SCOPE` | No | OAuth2 scopes to request (space-separated). Defaults to 'openid email profile' |
 | `OPENID_PROMPT` | No | OpenID Connect prompt parameter (e.g., 'login', 'consent') |
+| `OPENID_ACCESS_TYPE` | No | OAuth2 'access_type' parameter sent on the authorization request (e.g. 'offline') |
 | `OPENID_USERNAME_CLAIM` | No | JWT claim to use as the username. Defaults to 'preferred_username' |
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
 | `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
@@ -86,6 +87,7 @@ Environment variables for the Play service (frontend and pusher).
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
 | `MAX_PER_GROUP` | No | Maximum number of users in a bubble/group. Defaults to 4 |
+| `PROXIMITY_FILE_TRANSFER_MAX_USERS` | No | Maximum number of users (sender included) in a proximity chat for files to be shared in it. Files travel peer to peer, so the sender uploads a copy to every recipient. Defaults to 10 |
 | `MAX_DISPLAYED_VIDEOS` | No | An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room. |
 | `NODE_ENV` | No | Node.js environment: 'development', 'production', or 'test' |
 | `CONTACT_URL` | No | URL for users to contact support or administrators |

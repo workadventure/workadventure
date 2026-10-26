@@ -20,8 +20,9 @@
     import { myCameraStore, myMicrophoneStore } from "../../Stores/MyMediaStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { playSpeakerTestSound } from "../../WebRtc/AudioOutputManager";
 
-    import bgMap from "../images/map-exemple.png";
+    import bgMap from "../images/map-exemple.webp";
     import Button from "../UI/Button.svelte";
     import HorizontalSoundMeterWidget from "./HorizontalSoundMeterWidget.svelte";
     import SelectMicrophone from "./SelectMicrophone.svelte";
@@ -37,13 +38,11 @@
 
     let enableCameraScene = $derived(game.scene.getScene(EnableCameraSceneName) as EnableCameraScene);
     const bgColor = gameManager.currentStartedRoom.backgroundColor ?? "#1B2A41";
+    const sceneBg = gameManager.currentStartedRoom.backgroundSceneImage ?? bgMap;
     let legals = gameManager.currentStartedRoom?.legals ?? {};
 
     let selectedCamera: string | undefined = $state(undefined);
     let selectedMicrophone: string | undefined = $state(undefined);
-    // Not the exact URL the GameScene preloads: Firefox hands this element's cached response to Phaser's XHR,
-    // which rejects it, and the game stops on "Cannot load .../webrtc-in-ding.mp3" (NETWORK_ERROR).
-    const sound = new Audio(`/resources/objects/webrtc-in-${localUserStore.getBubbleSound()}.mp3?speaker-test`);
 
     let legalStrings: string[] = [];
     if (legals?.termsOfUseUrl) {
@@ -86,8 +85,12 @@
     }
 
     function submit() {
-        selectCamera(selectedCamera);
-        selectMicrophone(selectedMicrophone);
+        // Picking a device or "Disable" is applied at click time (see handleSelect*). Re-applying the displayed
+        // selection here would turn off a device whose track is not delivered yet, and pin the browser's default device
+        // as the preferred one. A saved preferred device is what marks this page as done (see GameManager): "" means
+        // no preference, follow the system default.
+        localUserStore.setPreferredVideoInputDevice(localUserStore.getPreferredVideoInputDevice() ?? "");
+        localUserStore.setPreferredAudioInputDevice(localUserStore.getPreferredAudioInputDevice() ?? "");
         enableCameraScene.login();
     }
 
@@ -143,7 +146,6 @@
         requestedMicrophoneState.enableMicrophone();
 
         batchGetUserMediaStore.commitChanges();
-        sound.load();
     });
 
     function handleSelectCamera(deviceId: string | undefined) {
@@ -188,7 +190,7 @@
     }
 
     function playSoundClick() {
-        sound.play().catch((e) => console.error(e));
+        playSpeakerTestSound().catch((e) => console.error(e));
     }
     /* eslint-disable svelte/no-at-html-tags */
 </script>
@@ -305,7 +307,7 @@
         </div>
     </section>
 </form>
-<div class="fixed start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{bgMap}');"></div>
+<div class="fixed start-0 top-0 w-dvw h-dvh bg-cover z-10" style="background-image: url('{sceneBg}');"></div>
 <div class="fixed start-0 top-0 w-dvw h-dvh bg-contrast/80 z-20" style="background-color: '{bgColor}';"></div>
 
 <style>

@@ -28,7 +28,7 @@ import {
 import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
-import { rememberWorldUrl } from "./world-history";
+import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
 import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
@@ -668,7 +668,17 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         }
     });
 
-    window.webContents.on("did-navigate", (event, url) => {
+    window.webContents.on("did-navigate", (event, url, httpResponseCode) => {
+        // An error page answered (a world that no longer exists, a server down): Chromium counts it as
+        // loaded, so did-fail-load never fires. Back to the Landing, and forget it as the last room.
+        if (httpResponseCode >= 400) {
+            ElectronLog.warn(`HTTP ${httpResponseCode} for "${stripSensitiveQueryParams(url) || url}".`);
+            forgetLastRoomUrl(url);
+            if (isActiveWorldContents(webContents)) {
+                void recoverToLandingWithError(t("landing.loadFailure"));
+            }
+            return;
+        }
         rememberWorldUrl(url);
         // A full navigation replaces the document, so the presence this world pushed (in a meeting,
         // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
@@ -809,14 +819,8 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("restore", () => refreshRendererViewport("restore"));
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
-    // PiP lifecycle is owned by the renderer (shouldOpenNativePictureInPicture policy). Don't
-    // close PiP defensively here: doing so would wipe manually-opened PiP whenever the user
-    // clicks back onto the main app, AND the destroy-in-flight also races with the utility
-    // window's loadFile, spraying ERR_FAILED logs and occasionally taking the whole app down.
-    // Any of these can change whether the main window shows, which feeds the companion panel's
-    // visibility. Focus and hiding are split out because they are edges, not just state: WA ceasing
-    // to show *during a meeting* is one of the two triggers that arm the companion's auto-show, and
-    // focusing ends the away-session. Losing the focus alone is not leaving: WA keeps showing.
+    // Any of these can change whether the main window shows, which the companion controller decides
+    // on (companion-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
     const onWindowStateEvent = () => {
         emitDesktopWindowStateChange();
         updateCompanion();

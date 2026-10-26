@@ -82,9 +82,13 @@ export type DesktopPipCommand =
 
 export type WorkAdventureDesktopPipApi = {
     readonly supported: true;
-    /** `userRequested`: the user asked for the meeting video, which reopens a companion they closed. */
-    open: (options?: { userRequested?: boolean }) => Promise<boolean>;
+    /** Start the meeting video in the companion; false unless the app asked for it (onWanted). */
+    open: () => Promise<boolean>;
     close: () => Promise<void>;
+    /** The PiP button: open or close the companion by hand. */
+    toggle: () => void;
+    /** The app wants the meeting video in the companion (true) or not any more (false). */
+    onWanted: (callback: (wanted: boolean) => void) => () => void;
     sendOffer: (sdp: DesktopPipSdp) => void;
     sendIce: (candidate: RTCIceCandidateInit) => void;
     sendState: (state: DesktopPipState) => void;
@@ -140,8 +144,6 @@ export type DesktopPresenterHudState = {
  * the bar reuse the {@link DesktopPipCommand} union.
  */
 export type WorkAdventureDesktopHudApi = {
-    openMeetingBar: (opts: { displayId?: number; sourceId?: string }) => Promise<boolean>;
-    closeMeetingBar: () => Promise<void>;
     pushState: (state: DesktopPresenterHudState) => void;
     onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
@@ -210,6 +212,40 @@ export type CompanionInvitation = {
     name: string;
 };
 
+/** A meeting of the day in the companion's Today view; texts formatted by the world. */
+export type CompanionAgendaMeeting = {
+    id: string;
+    title: string;
+    /** Start time, "10:45". */
+    time: string;
+    /** "in 12 minutes · Google Meet", "In progress · until 10:30 · WorkAdventure". */
+    detail: string;
+    live: boolean;
+    /** In progress or starting within the hour: the strip under the header. */
+    soon: boolean;
+    joinable: boolean;
+    /** Takes place in this WorkAdventure: joining brings the app to the front. */
+    inApp: boolean;
+};
+
+/** An open task in the companion's Today view (read-only, like in WorkAdventure). */
+export type CompanionAgendaTask = {
+    id: string;
+    title: string;
+    /** The task list it belongs to. */
+    list: string;
+    inProgress: boolean;
+    /** "Yesterday", "Today", "Fri 16"; absent without a due date. */
+    due?: string;
+    urgency: "late" | "today" | "later";
+};
+
+/** Each part is absent when the world has no calendar / no task list connected. */
+export type CompanionAgenda = {
+    meetings?: CompanionAgendaMeeting[];
+    tasks?: { open: number; items: CompanionAgendaTask[] };
+};
+
 export type CompanionState = {
     world: { name: string; participantCount: number };
     users: CompanionUser[];
@@ -219,6 +255,8 @@ export type CompanionState = {
     invitation?: CompanionInvitation | null;
     /** Matrix chat availability, so the empty conversation list isn't mistaken for "no chat". */
     chatStatus?: "connecting" | "online" | "unavailable";
+    /** The day's meetings and the most urgent tasks; absent when the world has neither. */
+    agenda?: CompanionAgenda;
 };
 
 export type CompanionCommand =
@@ -241,11 +279,16 @@ export type CompanionCommand =
       }
     | { type: "tile-volume"; tileKey: string; value: number }
     | { type: "accept-invitation" }
-    | { type: "decline-invitation" };
+    | { type: "decline-invitation" }
+    | { type: "join-meeting"; eventId: string }
+    | { type: "open-agenda" }
+    | { type: "open-tasks" };
 
 /** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
 export type WorkAdventureDesktopCompanionApi = {
     pushState: (state: CompanionState) => void;
+    /** Open the companion by hand (it stays when WA shows again). Absent from older desktop apps. */
+    open?: () => void;
     onCommand: (callback: (command: CompanionCommand) => void) => () => void;
 };
 
@@ -270,6 +313,8 @@ export type WorkAdventureDesktopApi = {
         inWorld?: boolean;
         onboarding?: boolean;
         invitationPending?: boolean;
+        /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
+        autoOpenAllowed?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
         statusLocked?: boolean;
     }) => void;

@@ -31,15 +31,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "กล้องของคุณถูกปิดอยู่",
         activate: "เปิดกล้องของคุณ",
-        noImageWarning: "กล้องของคุณหยุดส่งภาพแล้ว แอปอื่นอาจกำลังใช้งานกล้องอยู่",
-        retry: "ลองอีกครั้ง",
-        changeCamera: "เปลี่ยนกล้อง",
     },
     microphone: {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",
         activate: "เปิดไมโครโฟนของคุณ",
         noSoundWarning: "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
         advancedNoiseReduction: "การลดเสียงรบกวนขั้นสูง",
+        loudEnvironmentWarning: "ตรวจพบเสียงรบกวนพื้นหลังต่อเนื่องจากไมโครโฟนของคุณ",
+        enableNoiseSuppression: "เปิดการลดเสียงรบกวน",
         noiseSuppressionInitializing: "กำลังเริ่มต้นระบบตัดเสียงรบกวนแบบกำหนดเอง...",
         noiseSuppressionUnsupported: "เบราว์เซอร์นี้ไม่สามารถใช้ระบบตัดเสียงรบกวนแบบกำหนดเองได้",
         noiseSuppressionError: "ระบบตัดเสียงรบกวนแบบกำหนดเองล้มเหลว กำลังกลับไปใช้ระบบตัดเสียงรบกวนของเบราว์เซอร์",
@@ -49,6 +48,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "ลำโพงของคุณถูกปิดอยู่",
+        test: "ทดสอบเอาต์พุตเสียง",
         noDevices: "ไม่พบอุปกรณ์ลำโพง",
         noDevicesDesc:
             "เบราว์เซอร์ของคุณไม่แสดงรายการเอาต์พุตเสียงที่เลือกได้ เบราว์เซอร์บางตัวจำกัดความสามารถนี้ ลองใช้เบราว์เซอร์อื่น เชื่อมต่อหูฟังหรือลำโพงใหม่ ตรวจสอบการตั้งค่าเสียงของระบบและการกำหนดค่าคอมพิวเตอร์ของคุณ (ความเป็นส่วนตัว อุปกรณ์)",
@@ -217,6 +217,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "แอปเดสก์ท็อป",
         changeWorld: "เปลี่ยนโลก",
+        openCompanion: "เปิดแผงคู่หู",
         title: "เปิดโลกอื่น",
         description: "วาง URL แบบเต็มของโลก WorkAdventure ที่คุณต้องการเปิด",
         urlLabel: "URL ของโลก",

@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "App desktop",
         changeWorld: "Cambia mondo",
+        openCompanion: "Apri il pannello compagno",
         title: "Apri un altro mondo",
         description: "Incolla l'URL completo del mondo WorkAdventure che vuoi aprire.",
         urlLabel: "URL del mondo",
@@ -48,10 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "La tua fotocamera è disabilitata",
         activate: "Attiva la tua fotocamera",
-        noImageWarning:
-            "La tua fotocamera ha smesso di inviare immagini. Potrebbe essere in uso da un'altra applicazione.",
-        retry: "Riprova",
-        changeCamera: "Cambia fotocamera",
     },
     microphone: {
         disabled: "Il tuo microfono è disabilitato",
@@ -59,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Nessun suono rilevato dal microfono. Potrebbe esserci un problema; prova a cambiare microfono nelle impostazioni.",
         advancedNoiseReduction: "Riduzione avanzata del rumore",
+        loudEnvironmentWarning: "È stato rilevato un rumore di fondo continuo sul microfono.",
+        enableNoiseSuppression: "Attiva la soppressione del rumore",
         noiseSuppressionInitializing: "Inizializzazione della soppressione del rumore personalizzata...",
         noiseSuppressionUnsupported: "Questo browser non può eseguire la soppressione del rumore personalizzata.",
         noiseSuppressionError:
@@ -69,6 +68,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Il tuo altoparlante è disabilitato",
+        test: "Prova l'uscita audio",
         noDevices: "Nessun dispositivo altoparlante trovato",
         noDevicesDesc:
             "Il browser non elenca alcuna uscita audio selezionabile. Alcuni browser limitano questa scelta. Prova un altro browser, ricollega cuffie o altoparlanti, controlla le impostazioni audio di sistema e le impostazioni del computer (privacy, dispositivi).",

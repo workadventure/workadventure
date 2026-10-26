@@ -25,6 +25,7 @@ const actionbar: BaseTranslation = {
     desktop: {
         section: "Desktop app",
         changeWorld: "Change world",
+        openCompanion: "Open the companion",
         title: "Open another world",
         description: "Paste the complete URL of the WorkAdventure world you want to open.",
         urlLabel: "World URL",
@@ -48,9 +49,6 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Your camera is disabled",
         activate: "Activate your camera",
-        noImageWarning: "Your camera stopped sending images. Another application may be using it.",
-        retry: "Try again",
-        changeCamera: "Change camera",
     },
     microphone: {
         disabled: "Your microphone is disabled",
@@ -58,6 +56,8 @@ const actionbar: BaseTranslation = {
         noSoundWarning:
             "No sound detected from your microphone. There may be a problem; try changing your microphone in settings.",
         advancedNoiseReduction: "Advanced noise reduction",
+        loudEnvironmentWarning: "Sustained background noise was detected on your microphone.",
+        enableNoiseSuppression: "Enable noise suppression",
         noiseSuppressionInitializing: "Initializing custom noise suppression...",
         noiseSuppressionUnsupported: "This browser cannot run custom noise suppression.",
         noiseSuppressionError: "Custom noise suppression failed. Falling back to browser native noise suppression.",
@@ -67,6 +67,7 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         disabled: "Your speaker is disabled",
+        test: "Test audio output",
         noDevices: "No speaker device found",
         noDevicesDesc:
             "Your browser does not list any selectable audio output. Some browsers limit this. Try another browser, reconnect headphones or speakers, check your system sound settings and your computer's configuration (privacy, devices).",

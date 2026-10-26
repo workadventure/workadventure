@@ -1,51 +1,81 @@
 <script lang="ts">
-    import type { TodoTaskInterface } from "@workadventure/shared-utils";
+    import LL from "../../../i18n/i18n-svelte";
+    import type { TodoItem } from "./todo";
+    import { daysUntil, formatDue, listColor } from "./todo";
+    import { IconNotes, IconRepeat } from "@wa-icons";
 
     interface Props {
-        task: TodoTaskInterface;
-        oddColor?: string | boolean;
-        evenColor?: string | boolean;
+        item: TodoItem;
+        now: Date;
+        /** Off where the section title already says when the task is due. */
+        showDue?: boolean;
+        /** Inside the "for today" card: the list goes on its own line. */
+        prominent?: boolean;
     }
 
-    let { task, oddColor = "odd:bg-white/10", evenColor = "even:bg-white/5" }: Props = $props();
+    let { item, now, showDue = true, prominent = false }: Props = $props();
 
-    let opendDescription = $state(false);
+    let task = $derived(item.task);
+    let overdue = $derived(task.start !== undefined && daysUntil(task.start, now) < 0);
+    // Read-only: the providers only grant reading tasks, so a click shows the note rather than ticking the task off.
+    let open = $state(false);
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
+{#snippet summary()}
+    <span class="h-2.5 w-2.5 shrink-0 rounded-full {listColor(item.listIndex)}" aria-hidden="true"></span>
+    <span class="flex min-w-0 flex-1 flex-col gap-0.5">
+        <span class="truncate {prominent ? 'text-base font-bold' : 'text-base'}">{task.title}</span>
+        <span class="flex min-w-0 items-center gap-1.5 text-xs text-contrast-200">
+            <span class="truncate">{item.list.title}</span>
+            {#if task.status === "inProgress"}
+                <span class="shrink-0 rounded-sm bg-secondary/35 px-1.5 text-white">
+                    {$LL.externalModule.todoList.inProgress()}
+                </span>
+            {/if}
+            {#if task.recurence}
+                <span class="flex shrink-0 items-center gap-1">
+                    <IconRepeat class="h-3.5 w-3.5" aria-hidden="true" />
+                    {$LL.externalModule.todoList.recurrence[task.recurence]()}
+                </span>
+            {/if}
+            {#if task.description && !open}
+                <IconNotes class="h-3.5 w-3.5 shrink-0" aria-label={$LL.externalModule.todoList.hasNote()} />
+            {/if}
+        </span>
+    </span>
+    {#if showDue && task.start}
+        <span
+            class="shrink-0 whitespace-nowrap text-sm tabular-nums {overdue
+                ? 'font-bold text-danger-600'
+                : 'text-contrast-200'}"
+        >
+            {formatDue(task.start, now)}
+        </span>
+    {/if}
+{/snippet}
+
 <div
-    class="flex flex-col text-left my-2 p-2 box-border hover:bg-white/15 transition-all {oddColor ?? ''} {evenColor ??
-        ''} rounded-md"
-    class:cursor-pointer={task.status == "completed"}
-    onclick={() => (opendDescription = !opendDescription)}
+    class="rounded-md border border-solid {overdue ? 'border-danger-600/60' : 'border-white/10'} {prominent
+        ? 'bg-contrast'
+        : 'bg-white/5'}"
 >
-    <p class="text-lg m-0 p-0" class:line-through={task.status === "completed" && !opendDescription}>
-        <span class="font-bold">{task.title}</span>
-        {#if task.end}<span class="text-sm border border-gray-400 border-solid rounded-lg px-2"
-                >{task.end.toLocaleDateString()}</span
-            >{/if}
-    </p>
-    {#if task.status !== "completed"}
-        {#if task.description}
-            <p class="text-sm m-0 p-0 py-2">Description: {task.description}</p>
-        {/if}
-        {#if task.start}
-            <p class="w-fit text-xs m-0 p-0 border border-gray-400 border-solid rounded-lg px-2">
-                Due date: {task.start.toLocaleDateString()}
+    {#if task.description}
+        <button
+            type="button"
+            class="m-0 flex w-full cursor-pointer items-center gap-2.5 border-0 bg-transparent px-3 py-2.5 text-left text-white"
+            aria-expanded={open}
+            onclick={() => (open = !open)}
+        >
+            {@render summary()}
+        </button>
+        {#if open}
+            <p class="m-0 whitespace-pre-line break-words px-3 pb-3 ps-8 text-sm text-contrast-100">
+                {task.description}
             </p>
         {/if}
-        {#if task.end}
-            <p class="w-fit text-xs m-0 p-0 border border-gray-400 border-solid rounded-lg px-2">
-                Complete: {task.end.toLocaleDateString()}
-            </p>
-        {/if}
-        {#if task.recurence}
-            <p class="w-fit text-xs m-0 p-0 border border-gray-400 border-solid rounded-lg px-2">
-                Repeat: {task.recurence}
-            </p>
-        {/if}
-    {:else if task.description && opendDescription}
-        <p class="text-sm m-0 p-0 py-2">Description: {task.description}</p>
+    {:else}
+        <div class="flex items-center gap-2.5 px-3 py-2.5">
+            {@render summary()}
+        </div>
     {/if}
 </div>

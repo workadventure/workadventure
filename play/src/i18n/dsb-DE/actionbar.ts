@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Desktopowe nałoženje",
         changeWorld: "Swět změniś",
+        openCompanion: "Pśewóźaŕske wokno wótcyniś",
         title: "Drugi swět wócyniś",
         description: "Zasajźćo dopołny URL WorkAdventure-swěta, kótaryž cośo wócyniś.",
         urlLabel: "URL swěta",
@@ -48,9 +49,6 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera jo deaktiwěrowana",
         activate: "Wašu kameru aktiwěrowaś",
-        noImageWarning: "Waša kamera wěcej žedne wobraze njesćelo. Snaź ju druga aplikacija wužywa.",
-        retry: "Hyšći raz wopytaś",
-        changeCamera: "Kameru změniś",
     },
     microphone: {
         disabled: "Waš mikrofon jo deaktiwěrowany",
@@ -58,6 +56,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         noSoundWarning:
             "Žedyn zwuk z wašogo mikrofona namakany. Móžo problem byś; wopytajśo mikrofon w nastajenjach změniś.",
         advancedNoiseReduction: "Rozšyrjone wótpóranje šuma",
+        loudEnvironmentWarning: "Na wašom mikrofonje jo se trajny slězynowy šum namakał.",
+        enableNoiseSuppression: "Wótpóranje šuma zmóžniś",
         noiseSuppressionInitializing: "Swójske wótpóranje šuma se inicializěrujo...",
         noiseSuppressionUnsupported: "Toś ten wobglědowak njamóžo swójske wótpóranje šuma wuwjasć.",
         noiseSuppressionError:
@@ -68,6 +68,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "Waš głośnik jo deaktiwěrowany",
+        test: "Awdiowudaśu testowaś",
         noDevices: "Žedne głośnikowe rědy namakane",
         noDevicesDesc:
             "Waš browser nalistujo žednu wuběrabnu awdiowudaśu. Někotre browsery to wobgranicuju. Wopytajśo drugi browser, znowego zwjěžćo fejšniki abo głośniki, pśekontrolěrujśo systemowe awdionastajenja a konfiguraciju kompjutra (datowy škit, graty).",

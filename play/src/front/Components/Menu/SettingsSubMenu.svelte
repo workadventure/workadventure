@@ -21,7 +21,7 @@
     import { browserNotificationStore } from "../../Stores/BrowserNotificationStore";
     import { helpNotificationSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
-    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import { allowPictureInPictureStore, volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
     import { settingsSubMenuTargetStore } from "../../Stores/MenuStore";
     import {
@@ -233,7 +233,7 @@
             value: allowPictureInPicture ? "true" : "false",
         });
 
-        localUserStore.setAllowPictureInPicture(allowPictureInPicture);
+        allowPictureInPictureStore.set(allowPictureInPicture);
     }
 
     function changeBlockAudio() {

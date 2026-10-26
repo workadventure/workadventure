@@ -90,6 +90,7 @@ export class LiveKitParticipant {
         private _streamableSubjects: StreamableSubjects,
         private _blockedUsersStore: Readable<Set<string>>,
         private abortSignal: AbortSignal,
+        private getLivekitRegion: () => string | undefined = () => undefined,
         private defaultVolume: number = get(volumeProximityDiscussionStore),
     ) {
         incrementLivekitConnectionsCount();
@@ -135,7 +136,11 @@ export class LiveKitParticipant {
         );
         // The microphone only: a scripting audio track is not a voice
         this.analyticsStatsUnsubscribers.push(
-            registerAudioQualitySource("SFU", async () => this._microphonePublication?.track?.getRTCStatsReport()),
+            registerAudioQualitySource(
+                "SFU",
+                async () => this._microphonePublication?.track?.getRTCStatsReport(),
+                this._spaceUser.reactiveUser.microphoneState,
+            ),
         );
     }
 
@@ -615,6 +620,7 @@ export class LiveKitParticipant {
                 remoteUserUuid: this._spaceUser.uuid,
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.livekitServerUrl,
+                getLivekitRegion: this.getLivekitRegion,
             },
             (message) => this.space.emitVideoQualityReport(message),
         );

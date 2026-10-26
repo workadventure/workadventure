@@ -8,6 +8,7 @@
     "RedirectUris": ["http://*.workadventure.localhost", "https://*.test.workadventu.re"],
     "RequirePkce": false,
     "AllowedScopes": ["openid", "profile", "email", "tags-scope", "some-app-scope-1"],
+    "AllowOfflineAccess": true,
     "IdentityTokenLifetime": 3600,
     "AccessTokenLifetime": 3600,
     "RequireClientSecret": false

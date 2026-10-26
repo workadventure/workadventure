@@ -118,14 +118,38 @@ describe("CpuLimitationDetector", () => {
         expect(decisionTicks[0]).toBeGreaterThan(samplesNeeded * 2);
     });
 
-    it("leaves H.264, VP8 and hardware encoders alone", () => {
-        expect(decisions(episode(stats("cpu", { mimeType: "video/H264" })))).toHaveLength(0);
+    it("leaves VP8 and hardware encoders alone", () => {
         expect(decisions(episode(stats("cpu", { mimeType: "video/VP8" })))).toHaveLength(0);
         expect(decisions(episode(stats("cpu", { mimeType: undefined })))).toHaveLength(0);
         expect(decisions(episode(stats("cpu", { encoderImplementation: "ExternalEncoder" })))).toHaveLength(0);
         expect(decisions(episode(stats("cpu", { mimeType: "video/AV1", encoderImplementation: "libaom" })))).toEqual([
             [WARMUP_SAMPLES + WINDOW_SAMPLES - 1, "av1"],
         ]);
+    });
+
+    it("only leaves H.264 on LiveKit, when the encoder is named software", () => {
+        const h264 = (extra: Partial<LocalEncoderStats>) =>
+            decisions(episode(stats("cpu", { mimeType: "video/H264", source: "Livekit", ...extra })));
+
+        // Constrained Baseline on a Mac: OpenH264 at every layer, simulcast or not
+        expect(h264({ encoderImplementation: "OpenH264" })).toEqual([[WARMUP_SAMPLES + WINDOW_SAMPLES - 1, "h264"]]);
+        expect(h264({ encoderImplementation: "SimulcastEncoderAdapter (OpenH264, OpenH264)" })).toHaveLength(1);
+        // Windows' software encoder, met when Chrome tries Constrained Baseline on Media Foundation
+        expect(
+            h264({ encoderImplementation: "SimulcastEncoderAdapter (MediaFoundationSoftwareVideoEncoder)" }),
+        ).toHaveLength(1);
+        // Hardware, even when the smallest layer is software, or unnamed (Safari): left alone
+        expect(h264({ encoderImplementation: "VideoToolbox" })).toHaveLength(0);
+        expect(
+            h264({
+                encoderImplementation:
+                    "SimulcastEncoderAdapter (NdkVideoEncodeAccelerator(c2.mtk.avc.encoder) input: buffer)",
+            }),
+        ).toHaveLength(0);
+        expect(h264({ encoderImplementation: "SimulcastEncoderAdapter (OpenH264, ExternalEncoder)" })).toHaveLength(0);
+        expect(h264({ encoderImplementation: undefined })).toHaveLength(0);
+        // P2P: H.264 is the floor (small tiles are OpenH264 by Chrome's own rule), the relief there is LiveKit
+        expect(h264({ source: "P2P", encoderImplementation: "OpenH264" })).toHaveLength(0);
     });
 
     it("only demotes a codec every encoder of the set is on", () => {

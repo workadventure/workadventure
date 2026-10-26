@@ -45,9 +45,9 @@ if (typeof window !== "undefined" && window.env === undefined) {
         PUBLIC_MAP_STORAGE_PREFIX: undefined,
         MAX_USERNAME_LENGTH: 20,
         MAX_PER_GROUP: 4,
+        PROXIMITY_FILE_TRANSFER_MAX_USERS: 10,
         MAX_DISPLAYED_VIDEOS: 4,
         LIVEKIT_PIXEL_DENSITY: 2 / 3,
-        NODE_ENV: "test",
         CONTACT_URL: undefined,
         POSTHOG_API_KEY: undefined,
         POSTHOG_URL: undefined,
@@ -134,10 +134,12 @@ const createStubContext = () => {
     } as unknown as CanvasRenderingContext2D;
 };
 
-// @ts-ignore Override getContext to return our stub instead of throwing "not implemented".
-HTMLCanvasElement.prototype.getContext = function getContext() {
-    return createStubContext();
-};
+if (typeof HTMLCanvasElement !== "undefined") {
+    // @ts-ignore Override getContext to return our stub instead of throwing "not implemented".
+    HTMLCanvasElement.prototype.getContext = function getContext() {
+        return createStubContext();
+    };
+}
 
 // Note: do not import Phaser here. Setup files run once per test file and, with `isolate: true`,
 // in a fresh module registry every time, so a global import re-evaluates Phaser's 8.8 MB bundle

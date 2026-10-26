@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "桌面应用",
         changeWorld: "切换世界",
+        openCompanion: "打开伴侣面板",
         title: "打开另一个世界",
         description: "粘贴您想打开的 WorkAdventure 世界的完整 URL。",
         urlLabel: "世界 URL",
@@ -48,15 +49,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "您的摄像头已禁用",
         activate: "激活您的摄像头",
-        noImageWarning: "您的摄像头已停止发送画面。可能有其他应用正在使用它。",
-        retry: "重试",
-        changeCamera: "更换摄像头",
     },
     microphone: {
         disabled: "您的麦克风已禁用",
         activate: "激活您的麦克风",
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         advancedNoiseReduction: "高级降噪",
+        loudEnvironmentWarning: "检测到麦克风中存在持续的背景噪声。",
+        enableNoiseSuppression: "启用噪声抑制",
         noiseSuppressionInitializing: "正在初始化自定义噪声抑制...",
         noiseSuppressionUnsupported: "此浏览器无法运行自定义噪声抑制。",
         noiseSuppressionError: "自定义噪声抑制失败。正在回退到浏览器原生噪声抑制。",
@@ -66,6 +66,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "您的扬声器已禁用",
+        test: "测试音频输出",
         noDevices: "未找到扬声器设备",
         noDevicesDesc:
             "浏览器未列出可选择的音频输出设备。某些浏览器会限制此项。请尝试其他浏览器、重新连接耳机或扬声器，检查系统声音设置和计算机的配置（隐私、设备）。",

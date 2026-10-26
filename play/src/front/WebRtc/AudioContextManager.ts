@@ -1,3 +1,6 @@
+import type { Unsubscriber } from "svelte/store";
+import { bindAudioOutput } from "./AudioOutputManager";
+
 export interface AudioContextProbe {
     readonly isPlaybackAvailable: boolean;
     resume: () => Promise<void>;
@@ -13,6 +16,9 @@ export interface AudioContextProbe {
  */
 class AudioContextManager {
     private audioContexts: Map<number, AudioContext> = new Map();
+    // What plays through a context (the WebAudio playback fallback, the scripting API's PCM streams) bypasses media
+    // elements, so each context follows the selected audio output itself, until it is closed.
+    private outputBindings: Map<AudioContext, Unsubscriber> = new Map();
     private isShuttingDown = false;
 
     /**
@@ -35,6 +41,7 @@ class AudioContextManager {
             const options = sampleRate ? { sampleRate } : undefined;
             context = new AudioContext(options);
             this.audioContexts.set(key, context);
+            this.outputBindings.set(context, bindAudioOutput(context));
             console.debug(
                 `[AudioContextManager] Created new AudioContext with ${
                     sampleRate ? `sample rate ${sampleRate}` : "default sample rate"
@@ -59,6 +66,7 @@ class AudioContextManager {
             this.audioContexts.delete(key);
             try {
                 await context.close();
+                this.unbindOutput(context);
                 console.debug(`[AudioContextManager] Closed AudioContext with key ${key}`);
             } catch (err) {
                 console.error(`[AudioContextManager] Error closing AudioContext with key ${key}:`, err);
@@ -89,7 +97,14 @@ class AudioContextManager {
         await Promise.all(closePromises);
         // Clear the map after all contexts are closed
         this.audioContexts.clear();
+        this.outputBindings.forEach((unbind) => unbind());
+        this.outputBindings.clear();
         console.debug("[AudioContextManager] All AudioContexts closed");
+    }
+
+    private unbindOutput(context: AudioContext): void {
+        this.outputBindings.get(context)?.();
+        this.outputBindings.delete(context);
     }
 
     /**

@@ -29,6 +29,7 @@ const actionbar: BaseTranslation = {
     desktop: {
         section: "Aplicativo desktop",
         changeWorld: "Mudar de mundo",
+        openCompanion: "Abrir o painel companheiro",
         title: "Abrir outro mundo",
         description: "Cole a URL completa do mundo WorkAdventure que você deseja abrir.",
         urlLabel: "URL do mundo",
@@ -52,9 +53,6 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
-        noImageWarning: "Sua câmera parou de enviar imagens. Outro aplicativo pode estar usando a câmera.",
-        retry: "Tentar novamente",
-        changeCamera: "Trocar de câmera",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
@@ -62,6 +60,8 @@ const actionbar: BaseTranslation = {
         noSoundWarning:
             "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
         advancedNoiseReduction: "Redução de ruído avançada",
+        loudEnvironmentWarning: "Foi detectado ruído de fundo contínuo no seu microfone.",
+        enableNoiseSuppression: "Ativar supressão de ruído",
         noiseSuppressionInitializing: "Inicializando a supressão de ruído personalizada...",
         noiseSuppressionUnsupported: "Este navegador não pode executar a supressão de ruído personalizada.",
         noiseSuppressionError:
@@ -72,6 +72,7 @@ const actionbar: BaseTranslation = {
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
+        test: "Testar saída de áudio",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
         noDevicesDesc:
             "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso. Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",

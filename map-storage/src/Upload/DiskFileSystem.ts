@@ -4,6 +4,7 @@ import type { NextFunction, Response } from "express";
 import type ZipStream from "zip-stream";
 import type * as unzipper from "unzipper";
 import { MapListService } from "../Services/MapListService";
+import { mime } from "../Services/Mime";
 import { FileNotFoundError } from "./FileNotFoundError";
 import type { FileSystemInterface } from "./FileSystemInterface";
 import { NodeError } from "./NodeError";
@@ -98,6 +99,11 @@ export class DiskFileSystem implements FileSystemInterface {
         (async () => {
             const fullPath = this.getFullPath(virtualPath);
             if (await fs.pathExists(fullPath)) {
+                // `sendFile` does not know the map formats (.tmj, .wam...) and would send them as application/octet-stream.
+                const contentType = mime.getType(fullPath);
+                if (contentType) {
+                    res.set("Content-Type", contentType);
+                }
                 res.sendFile(fullPath, (err) => {
                     if (err) {
                         next(err);

@@ -25,6 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "تطبيق سطح المكتب",
         changeWorld: "تغيير العالم",
+        openCompanion: "فتح اللوحة المرافقة",
         title: "فتح عالم آخر",
         description: "الصق عنوان URL الكامل لعالم WorkAdventure الذي تريد فتحه.",
         urlLabel: "عنوان URL للعالم",
@@ -48,15 +49,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
-        noImageWarning: "توقفت الكاميرا عن إرسال الصور. ربما يستخدمها تطبيق آخر.",
-        retry: "إعادة المحاولة",
-        changeCamera: "تغيير الكاميرا",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
         noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
         advancedNoiseReduction: "تقليل الضوضاء المتقدم",
+        loudEnvironmentWarning: "تم اكتشاف ضوضاء خلفية مستمرة في الميكروفون.",
+        enableNoiseSuppression: "تفعيل تقليل الضوضاء",
         noiseSuppressionInitializing: "جارٍ تهيئة تقليل الضوضاء المخصص...",
         noiseSuppressionUnsupported: "لا يمكن لهذا المتصفح تشغيل تقليل الضوضاء المخصص.",
         noiseSuppressionError: "فشل تقليل الضوضاء المخصص. يتم الرجوع إلى تقليل الضوضاء الأصلي في المتصفح.",
@@ -66,6 +66,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     speaker: {
         disabled: "مكبر الصوت معطل",
+        test: "اختبار مخرج الصوت",
         noDevices: "لم يتم العثور على جهاز مكبر صوت",
         noDevicesDesc:
             "لا يعرض المتصفح أي مخرجات صوت يمكن اختيارها. بعض المتصفحات تقتصر على ذلك. جرّب متصفحًا آخر، أو أعد توصيل سماعات الرأس أو السماعات، أو تحقق من إعدادات صوت النظام وإعدادات الجهاز (الخصوصية، الأجهزة).",
