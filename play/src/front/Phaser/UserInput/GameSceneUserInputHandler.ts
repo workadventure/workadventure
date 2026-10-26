@@ -21,6 +21,7 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
+import { MapPanShortcut } from "./MapPanShortcut";
 import type { Shortcut } from "./UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
@@ -32,6 +33,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private readonly mapDrag = new MapDragGesture();
     private draggingMap = false;
     private readonly pointerCapture: MapDragPointerCapture;
+    private readonly panShortcut: MapPanShortcut;
+    private readonly spaceKey: Phaser.Input.Keyboard.Key | undefined;
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
@@ -41,7 +44,25 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             () => this.canDragMap(),
             () => this.handlePointerCancelEvent(),
         );
-        gameScene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.pointerCapture.destroy());
+        // Same Key object as the "interact" key: addKey returns the existing one.
+        this.spaceKey = gameScene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false);
+        this.panShortcut = new MapPanShortcut(gameScene.game.canvas, {
+            // Middle button everywhere. Space + left button only in the map editor: in game mode, Space interacts.
+            canStart: (event) =>
+                (event.button === 1 ||
+                    (event.button === 0 && this.spaceKey?.isDown === true && get(mapEditorModeStore))) &&
+                this.canMoveView(),
+            start: () => this.gameScene.getCameraManager().startManualPan(),
+            pan: (deltaX, deltaY) => {
+                // CSS pixels to game pixels, the unit Phaser pointers (and so panBy) use.
+                const scale = this.gameScene.scale.displayScale;
+                this.gameScene.getCameraManager().panBy(deltaX * scale.x, deltaY * scale.y);
+            },
+        });
+        gameScene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.pointerCapture.destroy();
+            this.panShortcut.destroy();
+        });
 
         this.initShortcuts();
     }
@@ -234,14 +255,18 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         this.restoreDragCursor();
     }
 
-    private canDragMap(): boolean {
+    /** Whether the user may move the view: not behind a modal or a zoom lock, nor (in game mode) in a focus zone. */
+    private canMoveView(): boolean {
         if (!this.gameScene.userInputManager.isControlsEnabled || this.gameScene.getCameraManager().isZoomLocked()) {
             return false;
         }
-        // The other editor tools use the left drag themselves. The explorer list sets a focus target on hover,
-        // which must not lock its view like a focus zone does.
-        if (get(mapExplorationModeStore)) return true;
-        return !get(mapEditorModeStore) && !waScaleManager.getFocusTarget();
+        // The explorer list sets a focus target on hover, which must not hold the editor's view like a focus zone.
+        return get(mapEditorModeStore) || !waScaleManager.getFocusTarget();
+    }
+
+    private canDragMap(): boolean {
+        // The other editor tools use the left drag themselves; they pan with MapPanShortcut instead.
+        return this.canMoveView() && (!get(mapEditorModeStore) || get(mapExplorationModeStore));
     }
 
     /** In game mode a touch drag belongs to the joystick; in the explorer, one finger pans the map. */
