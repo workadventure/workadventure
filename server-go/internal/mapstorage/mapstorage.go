@@ -4,6 +4,7 @@ package mapstorage
 
 import (
 	"bytes"
+	"cmp"
 	"crypto/subtle"
 	"errors"
 	"fmt"
@@ -416,6 +417,10 @@ var (
 	hashedName = regexp.MustCompile(`(?i)[.-]([a-f0-9]{8})\.([a-z]{2,4})$`)
 	uuidName   = regexp.MustCompile(`(?i)([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}).*\.([a-z]{2,4})`)
 	cacheable  = map[string]bool{".png": true, ".css": true, ".js": true, ".jpg": true, ".jpeg": true, ".ico": true, ".svg": true, ".html": true, ".htm": true}
+	// The types the mime package of the TS map-storage gives the sounds uploaded from the map editor. Go's built-in
+	// table has none of them and the distroless image has no /etc/mime.types: the type would depend on the host, or
+	// be sniffed from the content.
+	audioTypes = map[string]string{".mp3": "audio/mpeg", ".ogg": "audio/ogg", ".wav": "audio/wav", ".m4a": "audio/mp4", ".flac": "audio/x-flac"}
 )
 
 func (s *Store) serve(w http.ResponseWriter, r *http.Request, cacheControl string) {
@@ -455,7 +460,7 @@ func (s *Store) serve(w http.ResponseWriter, r *http.Request, cacheControl strin
 	case ".wam", ".json", ".tmj", ".tsj":
 		w.Header().Set("Content-Type", "application/json")
 	default:
-		if t := mime.TypeByExtension(ext); t != "" {
+		if t := cmp.Or(audioTypes[ext], mime.TypeByExtension(ext)); t != "" {
 			w.Header().Set("Content-Type", t)
 		}
 	}

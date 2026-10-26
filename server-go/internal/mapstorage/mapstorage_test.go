@@ -189,6 +189,22 @@ func TestStaticFiles(t *testing.T) {
 	}
 }
 
+// A sound uploaded for a "play audio" property is a public map asset: served without a token or credentials, with
+// the type of the TS map-storage, and in ranges, which Firefox asks for to play it.
+func TestUploadedSoundsArePublicAndServedInRanges(t *testing.T) {
+	hs := newHarness(t)
+	_ = os.MkdirAll(filepath.Join(hs.dir, "assets/sounds"), 0o755)
+	_ = os.WriteFile(filepath.Join(hs.dir, "assets/sounds/gong-p.mp3"), []byte("ID3sound"), 0o644)
+	r := httptest.NewRequest("GET", "/assets/sounds/gong-p.mp3", nil)
+	r.Header.Set("Range", "bytes=3-")
+	w := httptest.NewRecorder()
+	hs.h.ServeHTTP(w, r)
+	if w.Code != http.StatusPartialContent || w.Body.String() != "sound" || w.Header().Get("Content-Type") != "audio/mpeg" ||
+		w.Header().Get("Accept-Ranges") != "bytes" || w.Header().Get("Content-Range") != "bytes 3-7/8" {
+		t.Fatalf("%d %q %v", w.Code, w.Body, w.Header())
+	}
+}
+
 func TestPrivateFilesNeedAToken(t *testing.T) {
 	hs := newHarness(t)
 	doc := `{"version":"2.1.0","mapUrl":"./m.tmj","entityCollections":[],"entities":{},"areas":[{"id":"a","name":"","x":0,"y":0,"width":1,"height":1,` +

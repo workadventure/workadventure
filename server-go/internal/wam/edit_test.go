@@ -2,6 +2,7 @@ package wam
 
 import (
 	"encoding/json"
+	"slices"
 	"strings"
 	"testing"
 )
@@ -87,6 +88,41 @@ func TestTheFileOfARemovedPropertyIsReportedForDeletion(t *testing.T) {
 		"hideButtonLabel": false, "forceApi": false}
 	if _, res, _ = Edit(file, "c4", ModifyArea{ID: "a1", Properties: []any{renamed}, ModifyProperties: true}); len(res.Removed) != 0 {
 		t.Fatalf("a property still holding its file keeps it: %v", res.Removed)
+	}
+}
+
+// The sound a "play audio" property uploaded is reported removed once the property no longer uses it: swapped for a
+// URL, replaced by another file, or deleted with its entity. A sound still used, or a URL, has nothing to remove.
+func TestAnUploadedSoundIsReportedForDeletionOnceUnused(t *testing.T) {
+	sound := map[string]any{"id": "p1", "type": "playAudio", "audioLink": "https://ms/assets/sounds/gong-p1.mp3", "audioName": "gong.mp3"}
+	linked := map[string]any{"id": "p1", "type": "playAudio", "audioLink": "https://x.test/a.mp3"}
+	file, _, err := Edit([]byte(emptyWAM), "c1", CreateEntity{ID: "e1", PrefabID: "p", X: 1, Y: 1, Properties: []any{sound}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	gong := []string{"assets/sounds/gong-p1.mp3"}
+	bell, quieter := clone(sound), clone(sound)
+	bell["audioName"], quieter["volume"] = "bell.mp3", 0.5
+	for name, c := range map[string]struct {
+		props []any
+		want  []string
+	}{
+		"swapped for a URL": {[]any{linked}, gong},
+		"replaced":          {[]any{bell}, gong},
+		"removed":           {nil, gong},
+		"still used":        {[]any{quieter}, nil},
+	} {
+		_, res, err := Edit(file, "c2", ModifyEntity{ID: "e1", X: 1, Y: 1, Properties: c.props, ModifyProperties: true})
+		if err != nil || !slices.Equal(res.Removed, c.want) {
+			t.Errorf("%s: %v %v, want %v", name, res.Removed, err, c.want)
+		}
+	}
+	if _, res, _ := Edit(file, "c3", DeleteEntity{ID: "e1"}); !slices.Equal(res.Removed, gong) {
+		t.Errorf("deleted with its entity: %v", res.Removed)
+	}
+	file, _, _ = Edit(file, "c4", ModifyEntity{ID: "e1", X: 1, Y: 1, Properties: []any{linked}, ModifyProperties: true})
+	if _, res, _ := Edit(file, "c5", DeleteEntity{ID: "e1"}); len(res.Removed) != 0 {
+		t.Errorf("a URL: %v", res.Removed)
 	}
 }
 

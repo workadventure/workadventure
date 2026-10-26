@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -99,7 +100,7 @@ type (
 type Result struct {
 	Doc     map[string]any // the edited document
 	Area    map[string]any // ModifyArea: the area as it now is, which is what the editors are told
-	Removed []string       // private files no property links to anymore
+	Removed []string       // uploaded files no property uses anymore
 }
 
 // Edit applies a command to a WAM file and returns the new file. A file that does not follow the schema is refused,
@@ -301,38 +302,65 @@ func clone(v any) map[string]any {
 	return out
 }
 
-// PrivateFile is where a file uploaded for an openFile property is stored (CustomFileService). The property id comes
-// from the client (a UUID of the front): one with a separator, which would climb out of the folder, is refused.
-func PrivateFile(name, propertyID string) (string, error) {
+// The formats of the files uploaded from the map editor, and their folders (uploadedFileFolder of the map-editor
+// lib). "Open file" documents are private (/private/files asks for a token honoring the area's read restrictions)
+// while "play audio" sounds are public map assets, like tilesets.
+var (
+	soundFile    = regexp.MustCompile(`(?i)\.(mp3|ogg|wav|m4a|flac)$`)
+	documentFile = regexp.MustCompile(`(?i)\.(pdf|jpg|jpeg|png|gif|webp|bmp|svg)$`)
+)
+
+// UploadedFile is where a file uploaded for a property is stored, in the folder its extension picks
+// (CustomFileService). A format neither a document nor a sound is refused, and so is a property id with a separator:
+// it comes from the client (a UUID of the front), and would climb out of the folder.
+func UploadedFile(name, propertyID string) (string, error) {
 	if strings.ContainsAny(propertyID, `/\`) {
 		return "", fmt.Errorf("Invalid property id: %s", propertyID)
 	}
 	base := path.Base(name)
 	ext := path.Ext(base)
-	return "private/files/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext, nil
+	folder := "private/files"
+	switch {
+	case soundFile.MatchString(ext):
+		folder = "assets/sounds"
+	case !documentFile.MatchString(ext):
+		return "", fmt.Errorf("File extension is not a supported format: %s", name)
+	}
+	return folder + "/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext, nil
 }
 
-// filesRemoved lists the private files of the openFile properties of old that next drops, or empties (FileModule).
+// uploadedName is the name of the file a property uploaded, "" when it has none: the file of an "open file", the
+// sound of a "play audio" (whose audioLink is then that file; it has no name when it is a URL typed by the user).
+func uploadedName(p map[string]any) string {
+	var name any
+	switch p["type"] {
+	case "openFile":
+		name = p["name"]
+	case "playAudio":
+		name = p["audioName"]
+	}
+	s, _ := name.(string)
+	return s
+}
+
+// filesRemoved lists the uploaded files of the properties of old that next no longer uses: the property went, or its
+// file was removed, replaced by another one, or (for a sound) swapped for a URL (FileModule).
 func filesRemoved(old, next []any) []string {
 	var out []string
 	for _, o := range old {
 		op, _ := o.(map[string]any)
-		name, _ := op["name"].(string)
-		if op["type"] != "openFile" || name == "" {
+		name := uploadedName(op)
+		if name == "" {
 			continue
 		}
 		i := slices.IndexFunc(next, func(n any) bool { m, _ := n.(map[string]any); return m["id"] == op["id"] })
 		if i >= 0 {
-			np, _ := next[i].(map[string]any)
-			newName, _ := np["name"].(string)
-			newLink, _ := np["link"].(string)
-			oldLink, _ := op["link"].(string)
-			if !(oldLink != "" && newName == "" && newLink == "") {
+			if np, _ := next[i].(map[string]any); uploadedName(np) == name {
 				continue
 			}
 		}
 		id, _ := op["id"].(string)
-		if f, err := PrivateFile(name, id); err == nil {
+		if f, err := UploadedFile(name, id); err == nil {
 			out = append(out, f)
 		}
 	}

@@ -31,17 +31,15 @@ type (
 		DepthOffset   *int32
 	}
 	DeleteCustomEntity struct{ ID string }
-	// UploadFile stores the file of an openFile property, readable through /private/files with a token.
+	// UploadFile stores the file of an "open file" property, readable through /private/files with a token, or the
+	// sound of a "play audio" one, a public map asset.
 	UploadFile struct {
 		Name, PropertyID string
 		File             []byte
 	}
 )
 
-var (
-	imageFile    = regexp.MustCompile(`(?i)\.(jpg|jpeg|png|webp)$`)
-	uploadedFile = regexp.MustCompile(`(?i)\.(pdf|jpg|jpeg|png|gif|webp|bmp|svg)$`)
-)
+var imageFile = regexp.MustCompile(`(?i)\.(jpg|jpeg|png|webp)$`)
 
 // editCollection changes the custom entities collection; f gets its entries.
 func editCollection(maps Maps, f func(entries []map[string]any) ([]map[string]any, error)) error {
@@ -162,11 +160,7 @@ func deleteCustomEntity(maps Maps, ed Editor, id string) error {
 }
 
 func uploadFile(maps Maps, c UploadFile) error {
-	name := path.Base(c.Name)
-	if !uploadedFile.MatchString(name) {
-		return fmt.Errorf("File extension is not a supported format :%s%s", path.Ext(name), name)
-	}
-	key, err := wam.PrivateFile(name, c.PropertyID)
+	key, err := wam.UploadedFile(c.Name, c.PropertyID)
 	if err != nil {
 		return err
 	}

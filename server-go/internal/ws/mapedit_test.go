@@ -2,6 +2,9 @@ package ws
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"slices"
 	"strconv"
@@ -12,6 +15,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"github.com/workadventure/workadventure/server-go/internal/auth"
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 )
 
@@ -197,6 +201,36 @@ func TestAnUploadedFileLandsInTheMapsWorld(t *testing.T) {
 	}
 	if _, err := h.srv.maps.Read("private/files/plan-doc.pdf"); err == nil {
 		t.Fatal("stored at the root")
+	}
+}
+
+// The path of the map_editor_play_audio spec, end to end: an editor uploads a sound for a "play audio" property, and
+// map-storage serves it to anyone, without a token, as audio, in ranges (Firefox plays nothing otherwise).
+func TestAnUploadedSoundIsServedToEveryone(t *testing.T) {
+	h := editorHarness(t)
+	editor := h.dialWAM(auth.Token{Identifier: "ed", Tags: []string{"editor"}})
+	editor.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_EditMapCommandMessage{EditMapCommandMessage: &pb.EditMapCommandMessage{
+		Id: "up", EditMapMessage: &pb.EditMapMessage{Message: &pb.EditMapMessage_UploadFileMessage{UploadFileMessage: &pb.UploadFileMessage{
+			Id: "f", Name: "test-sound.mp3", PropertyId: "0b8e3b9e-4f0a-4c1e-9d5b-2a6f1c7e8d90", File: []byte("ID3sound")}}}}}})
+	editor.waitFor("the upload", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		if e := s.GetEditMapCommandMessage().GetEditMapMessage().GetErrorCommandMessage(); e != nil {
+			t.Fatalf("refused: %s", e.GetReason())
+		}
+		return s.GetEditMapCommandMessage().GetId() == "up"
+	})
+	ms := httptest.NewServer(h.srv.maps.Handler(mapstorage.Options{SecretKey: "secret"}))
+	defer ms.Close()
+	req, _ := http.NewRequest("GET", ms.URL+"/assets/sounds/test-sound-0b8e3b9e-4f0a-4c1e-9d5b-2a6f1c7e8d90.mp3", nil)
+	req.Header.Set("Range", "bytes=3-")
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer res.Body.Close()
+	body, _ := io.ReadAll(res.Body)
+	if res.StatusCode != http.StatusPartialContent || string(body) != "sound" || res.Header.Get("Content-Type") != "audio/mpeg" ||
+		res.Header.Get("Accept-Ranges") != "bytes" {
+		t.Fatalf("%d %q %v", res.StatusCode, body, res.Header)
 	}
 }
 
