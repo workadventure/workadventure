@@ -1174,6 +1174,24 @@ async fn the_profile_pages_ask_the_provider_who_the_token_is() {
 }
 
 #[tokio::test]
+async fn only_the_page_service_worker_comes_from_the_front_container() {
+    let front = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let front_url = format!("http://{}", front.local_addr().unwrap());
+    let app = axum::Router::new().fallback(|| async { "from the front" });
+    tokio::spawn(async move { axum::serve(front, app).await });
+    let server = start_with(&[("SECRET_KEY", "test"), ("ASSETS_INTERNAL_URL", front_url.as_str())]).await.0;
+    let get = |path: &'static str| {
+        let url = format!("{server}{path}");
+        async move { reqwest::get(url).await.unwrap() }
+    };
+    assert_eq!(get("/service-worker-prod.js").await.text().await.unwrap(), "from the front");
+    for gone in ["/service-worker-dev.js", "/notification-service-worker.js"] {
+        let r = get(gone).await;
+        assert_ne!(r.text().await.unwrap(), "from the front", "{gone}");
+    }
+}
+
+#[tokio::test]
 async fn the_manifest_and_the_server_card_describe_this_server() {
     let server =
         start_with(&[("SECRET_KEY", "test"), ("PUSHER_URL", "http://play.test"), ("SERVER_NAME", "Ours")]).await.0;

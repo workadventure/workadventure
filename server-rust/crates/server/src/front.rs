@@ -749,13 +749,8 @@ pub fn routes() -> Router<AppState> {
     for prefix in ["/assets", "/static", "/resources", "/collections"] {
         router = router.route(&format!("{prefix}/{{*rest}}"), any(proxy));
     }
-    for file in [
-        "/iframe_api.js",
-        "/iframe_api.js.map",
-        "/service-worker-dev.js",
-        "/service-worker-prod.js",
-        "/notification-service-worker.js",
-    ] {
+    // One service worker: the page's, which also handles notification clicks (576bcb9df6, 7dfe35f327).
+    for file in ["/iframe_api.js", "/iframe_api.js.map", "/service-worker-prod.js"] {
         router = router.route(file, any(proxy));
     }
     router
