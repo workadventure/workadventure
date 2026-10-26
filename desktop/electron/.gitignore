@@ -2,3 +2,5 @@
 /node_modules/
 /yarn-error.log
 /build/
+/e2e-results/
+/e2e-report/
