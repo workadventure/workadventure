@@ -84,7 +84,8 @@ Les réponses de l'admin (`/api/map`, `/api/room/access`, `sameWorld`, membres d
 |---|---|---|---|---|---|
 | Éditions hors de l'acteur de salle, file par carte | — (relecture du 15/10) | validé | `mapedit_test.go` (salle livrée pendant l'écriture, ordre, cartes indépendantes) | annoncée à la seule salle de l'éditeur | — |
 | Version attendue à l'écriture | — | validé | `mapstorage/edit_test.go` (v10 n'écrase pas v11, abandon après 5 essais) | — | — |
-| Droits : zones, entités, réglages, métadonnées | MSS:154-405 | validé | `mapedit_test.go` ; J3a `area_rights`, `custom_entity_rights` | suppression d'entité ouverte à tous, comme MSS | — |
+| Droits : zones, entités, réglages, métadonnées | MSS:154-405 | validé | `mapedit_test.go` ; J3a `area_rights`, `custom_entity_rights` | — | — |
+| Édition d'entité refusée (67bce38773, 59a1ade946, 370a0c86da) : erreur au seul émetteur, ni appliquée ni diffusée ; droits vérifiés au coin haut-gauche, sur la position actuelle et sur la destination ; suppression vérifiée (sauf entité déjà disparue) ; upload d'entité ou de fichier réservé à qui peut écrire quelque part sur la carte | MapStorageServer.ts (master) | validé | `mapedit_test.go` : `TestAMemberPlacesFurnitureOnlyWhereItsTagsMayWrite`, `TestAMemberDeletesOnlyTheEntitiesWhereItMayWrite`, `TestUploadingTakesWriteAccessSomewhereOnTheMap` ; refus au seul émetteur : `ws/mapedit_test.go` | le refus était déjà renvoyé au seul émetteur en Go ; 370a0c86da (largeur et hauteur inversées) concerne le contrôle du front, le serveur ne lit plus la taille | — |
 | Revendication de zone personnelle | MSS:232 | validé | `mapedit_test.go` (3 tests) ; J3a | `personal_area_claim:20` échoue aussi en TS | rejouer |
 | Entités personnalisées | MSS:346-370 | validé | `mapedit_test.go` (3 tests) | — | — |
 | Rattrapage `lastCommandId` | BSM:132-185 | validé | `mapstorage/edit_test.go`, `core/roommap_test.go:55` | — | — |

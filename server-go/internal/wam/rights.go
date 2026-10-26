@@ -29,8 +29,8 @@ func strings_(v any) []string {
 	return out
 }
 
-// CanEditAt says whether a user who may not edit the map may still place or change an entity centred at (x, y):
-// inside an area whose write tags it has, or a personal area it owns (EntityPermissions.canEdit).
+// CanEditAt says whether a user who may not edit the map may still place, change or delete an entity whose top-left
+// corner is at (x, y): inside an area it may write in (EntityPermissions.canEdit).
 func CanEditAt(file []byte, x, y float64, tags []string, uuid string) bool {
 	doc, err := Parse(file)
 	if err != nil {
@@ -43,22 +43,55 @@ func CanEditAt(file []byte, x, y float64, tags []string, uuid string) bool {
 		if x < ax || x > ax+number(area["width"]) || y < ay || y > ay+number(area["height"]) {
 			continue
 		}
-		props, _ := area["properties"].([]any)
-		for _, p := range props {
-			m, _ := p.(map[string]any)
-			switch m["type"] {
-			case "restrictedRightsPropertyData":
-				if slices.ContainsFunc(strings_(m["writeTags"]), func(t string) bool { return slices.Contains(tags, t) }) {
-					return true
-				}
-			case "personalAreaPropertyData":
-				if owner, _ := m["ownerId"].(string); owner != "" && owner == uuid {
-					return true
-				}
+		if writable(area, tags, uuid) {
+			return true
+		}
+	}
+	return false
+}
+
+// HasEditorAccess says whether a user who may not edit the map may write somewhere on it: that is what uploading a
+// custom entity or a file takes, since an upload is tied to no position (isGameMapContainsSpecificAreas).
+func HasEditorAccess(file []byte, tags []string, uuid string) bool {
+	doc, err := Parse(file)
+	if err != nil {
+		return false
+	}
+	areas, _ := doc["areas"].([]any)
+	return slices.ContainsFunc(areas, func(a any) bool { area, _ := a.(map[string]any); return writable(area, tags, uuid) })
+}
+
+// writable says whether the user may write in an area: one whose write tags it has, or a personal area it owns.
+func writable(area map[string]any, tags []string, uuid string) bool {
+	props, _ := area["properties"].([]any)
+	for _, p := range props {
+		m, _ := p.(map[string]any)
+		switch m["type"] {
+		case "restrictedRightsPropertyData":
+			if slices.ContainsFunc(strings_(m["writeTags"]), func(t string) bool { return slices.Contains(tags, t) }) {
+				return true
+			}
+		case "personalAreaPropertyData":
+			if owner, _ := m["ownerId"].(string); owner != "" && owner == uuid {
+				return true
 			}
 		}
 	}
 	return false
+}
+
+// EntityAt is where the entity id stands on the map, its top-left corner; ok is false when the map has no such entity.
+func EntityAt(file []byte, id string) (x, y float64, ok bool) {
+	doc, err := Parse(file)
+	if err != nil {
+		return 0, 0, false
+	}
+	entities, _ := doc["entities"].(map[string]any)
+	e, ok := entities[id].(map[string]any)
+	if !ok {
+		return 0, 0, false
+	}
+	return number(e["x"]), number(e["y"]), true
 }
 
 // Claim turns a ModifyArea from a user who may not edit the map into what it is allowed to be: claiming a free

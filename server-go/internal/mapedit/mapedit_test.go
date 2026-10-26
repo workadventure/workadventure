@@ -336,13 +336,18 @@ func TestAMemberPlacesFurnitureOnlyWhereItsTagsMayWrite(t *testing.T) {
 	mustApply(t, maps, member, chair("c1", 10, 10))
 	mustRefuse(t, maps, member, chair("c2", 210, 10), "the boardroom is for the board")
 	mustRefuse(t, maps, member, chair("c3", 500, 500), "nowhere it may write")
-	mustRefuse(t, maps, member, chair("c4", 90, 10), "the chair's centre (106, 26) is out of the workshop")
+	mustApply(t, maps, member, chair("c4", 90, 10)) // what counts is the top-left corner, in the workshop
+	fake := chair("c5", 120, 10)
+	fake.Width = -200
+	mustRefuse(t, maps, member, fake, "a made-up size does not bring the chair at (120, 10) into the workshop")
 	mustRefuse(t, maps, member, wam.ModifyEntity{ID: "c1", X: 210, Y: 10, Width: 32, Height: 32}, "a member may not move furniture out")
+	mustApply(t, maps, admin, chair("throne", 210, 10))
+	mustRefuse(t, maps, member, wam.ModifyEntity{ID: "throne", X: 10, Y: 10, Width: 32, Height: 32}, "nor bring in furniture from a zone it may not write in")
 	mustApply(t, maps, member, wam.ModifyEntity{ID: "c1", X: 40, Y: 40, Width: 32, Height: 32})
 	if e := maps.entity(t, office, "c1"); e["x"] != float64(40) {
 		t.Fatalf("moved within the workshop: %v", e)
 	}
-	mustApply(t, maps, admin, chair("c5", 500, 500)) // a map editor places anything anywhere
+	mustApply(t, maps, admin, chair("c6", 500, 500)) // a map editor places anything anywhere
 }
 
 func TestTheOwnerOfAPersonalAreaFurnishesItAndNobodyElse(t *testing.T) {
@@ -366,14 +371,27 @@ func TestOnlyMapEditorsChangeTheMapSettingsAndDetails(t *testing.T) {
 	}
 }
 
-func TestAnyoneInTheRoomMayDeleteAnEntity(t *testing.T) {
-	// As in map-storage: a deletion is not checked against the rights of where the entity is.
+func TestAMemberDeletesOnlyTheEntitiesWhereItMayWrite(t *testing.T) {
 	maps := newMaps(t)
+	mustApply(t, maps, admin, rightsArea("workshop", 0, "member"))
 	mustApply(t, maps, admin, chair("c1", 500, 500))
-	mustApply(t, maps, member, wam.DeleteEntity{ID: "c1"})
-	if maps.entity(t, office, "c1") != nil {
+	mustApply(t, maps, admin, chair("c2", 10, 10))
+	mustRefuse(t, maps, member, wam.DeleteEntity{ID: "c1"}, "the chair is out of the workshop")
+	mustApply(t, maps, member, wam.DeleteEntity{ID: "c2"})
+	if maps.entity(t, office, "c2") != nil {
 		t.Fatal("deleted")
 	}
+	// An entity someone else deleted meanwhile: the delete is a no-op every client still gets.
+	mustApply(t, maps, member, wam.DeleteEntity{ID: "c2"})
+}
+
+func TestUploadingTakesWriteAccessSomewhereOnTheMap(t *testing.T) {
+	maps := newMaps(t)
+	mustRefuse(t, maps, member, upload("plant"), "a member who may write nowhere uploads nothing")
+	mustRefuse(t, maps, member, UploadFile{Name: "plan.pdf", PropertyID: "doc", File: []byte("%PDF")}, "nor files")
+	mustApply(t, maps, admin, rightsArea("workshop", 0, "member"))
+	mustApply(t, maps, member, upload("plant"))
+	mustApply(t, maps, member, UploadFile{Name: "plan.pdf", PropertyID: "doc", File: []byte("%PDF")})
 }
 
 // --- Personal areas.
@@ -477,6 +495,7 @@ func collection(t *testing.T, maps *memMaps) []any {
 
 func TestAnUploadedCustomEntityBelongsToItsUploader(t *testing.T) {
 	maps := newMaps(t)
+	mustApply(t, maps, admin, rightsArea("workshop", 0, "member"))
 	if res := mustApply(t, maps, member, upload("plant")); res.Areas != nil {
 		t.Fatal("a custom entity does not change the map's areas")
 	}
@@ -496,6 +515,7 @@ func TestAnUploadedCustomEntityBelongsToItsUploader(t *testing.T) {
 
 func TestOnlyItsUploaderOrAMapEditorChangesOrDeletesACustomEntity(t *testing.T) {
 	maps := newMaps(t)
+	mustApply(t, maps, admin, rightsArea("workshop", 0, "member"))
 	mustApply(t, maps, member, upload("plant"))
 	if _, err := Apply(maps, office, other, "cmd", ModifyCustomEntity{ID: "plant", Name: "Mine now"}); err == nil {
 		t.Fatal("someone else's entity")

@@ -39,12 +39,18 @@ type Result struct {
 var errNotEditor = errors.New("You are not allowed to edit this map")
 
 // Apply runs one command of ed on the map stored at key; id is the command's id, which the map keeps as its
-// lastCommandId. Map editors may do anything. The others may place and move entities where they may write, delete
-// entities, change their own custom entities, upload files, and claim or give back a personal area (map-storage's
-// COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT). Who may do what is decided on the version of the map being changed.
+// lastCommandId. Map editors may do anything. The others may place, move and delete entities where they may write,
+// change their own custom entities, upload when they may write somewhere on the map, and claim or give back a
+// personal area (map-storage's COMMANDS_ACCESSIBLE_WITHOUT_CAN_EDIT). Who may do what is decided on the version of the map being changed.
 func Apply(maps Maps, key string, ed Editor, id string, cmd any) (Result, error) {
 	if key == "" {
 		return Result{}, errors.New("This room has no map to edit")
+	}
+	switch cmd.(type) {
+	case UploadEntity, UploadFile:
+		if err := mayUpload(maps, key, ed); err != nil {
+			return Result{}, err
+		}
 	}
 	switch c := cmd.(type) {
 	case UploadEntity:
@@ -93,22 +99,51 @@ func allow(file []byte, key string, ed Editor, cmd any) (any, error) {
 		}
 		return claimed, nil
 	case wam.CreateEntity:
-		return cmd, mayPlace(file, key, ed, c.X, c.Y, c.Width, c.Height)
+		return cmd, mayEditAt(file, key, ed, float64(c.X), float64(c.Y))
 	case wam.ModifyEntity:
-		return cmd, mayPlace(file, key, ed, c.X, c.Y, c.Width, c.Height)
-	case wam.DeleteEntity, wam.DeleteEntitiesOf:
-		// ponytail: like map-storage, anyone in the room may delete an entity.
+		// Both where the entity is and where it goes: a member may not pull furniture out of a zone it may not
+		// write in, nor push it into one.
+		if x, y, ok := wam.EntityAt(file, c.ID); ok {
+			if err := mayEditAt(file, key, ed, x, y); err != nil {
+				return nil, err
+			}
+		}
+		return cmd, mayEditAt(file, key, ed, float64(c.X), float64(c.Y))
+	case wam.DeleteEntity:
+		// An entity already gone (a concurrent delete) is not checked: the delete is a no-op that every client still
+		// gets, so that they agree.
+		if x, y, ok := wam.EntityAt(file, c.ID); ok {
+			return cmd, mayEditAt(file, key, ed, x, y)
+		}
+		return cmd, nil
+	case wam.DeleteEntitiesOf:
+		// The copies of a custom entity go with it, wherever they are: whether ed may delete the entity was decided
+		// on the entity (mayChange).
 		return cmd, nil
 	}
 	return nil, errNotEditor
 }
 
-// mayPlace checks that an entity is placed where ed may write: what counts is where its centre falls.
-func mayPlace(file []byte, key string, ed Editor, x, y, width, height int64) error {
-	if wam.CanEditAt(file, float64(x)+float64(width)/2, float64(y)+float64(height)/2, ed.Tags, ed.UUID) {
+// mayEditAt checks that ed may write where an entity's top-left corner is. The corner is the only point of an entity
+// the server knows: the map stores no size, and the size the client sends cannot be trusted, since a made-up size
+// would move the centre into the editor's zone.
+func mayEditAt(file []byte, key string, ed Editor, x, y float64) error {
+	if wam.CanEditAt(file, x, y, ed.Tags, ed.UUID) {
 		return nil
 	}
-	return fmt.Errorf("User %s is not allowed to edit this entity on map %s", ed.UUID, key)
+	return fmt.Errorf("User %s is not allowed to edit an entity at (%g, %g) on map %s", ed.UUID, x, y, key)
+}
+
+// mayUpload checks that ed may write somewhere on the map: an upload is tied to no position.
+func mayUpload(maps Maps, key string, ed Editor) error {
+	if ed.CanEdit {
+		return nil
+	}
+	file, err := maps.Read(key)
+	if err == nil && wam.HasEditorAccess(file, ed.Tags, ed.UUID) {
+		return nil
+	}
+	return fmt.Errorf("User %s has no editor access and is not allowed to upload on map %s", ed.UUID, key)
 }
 
 // RoomAreas is what a room needs of the areas of a map: where they are, and their lock and capacity.
