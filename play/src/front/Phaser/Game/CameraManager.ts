@@ -1,6 +1,5 @@
 import * as Phaser from "phaser";
-import { get } from "svelte/store";
-import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../Stores/MapEditorStore";
 import { cameraDetachedStore } from "../../Stores/CameraStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -90,13 +89,16 @@ export class CameraManager extends EventEmitter {
     private manuallyDetached = false;
     private cursorZoomAnchor: CursorZoomAnchor | undefined;
 
-    private readonly EDITOR_MODE_SCROLL_SPEED: number = 5;
+    /** Key scrolling in the map editor, in world units per ms at zoom modifier 1 (same on-screen speed at any zoom). */
+    private readonly KEY_SCROLL_SPEED = 0.6;
+    private mapEditorOpen = false;
+    private zoomBeforeMapEditor: number | undefined;
 
     private readonly unsubscribeMapEditorModeStore: () => void;
 
     private _resistanceEndZoomLevel = 0.3;
 
-    // The point of the scene the explorer mode is focusing on.
+    // The free point the view follows when it does not follow a player: after a drag, or in the map editor.
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
 
     // The tween for the camera offset
@@ -142,6 +144,11 @@ export class CameraManager extends EventEmitter {
             } else {
                 // We set the bounds back after a call to start following the player
                 this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+            }
+            if (isOpened !== this.mapEditorOpen) {
+                this.mapEditorOpen = isOpened;
+                if (isOpened) this.enterMapEditor();
+                else this.leaveMapEditor();
             }
         });
 
@@ -294,35 +301,29 @@ export class CameraManager extends EventEmitter {
         this.restoreZoom(duration);
     }
 
-    public move(moveEvents: ActiveEventList): void {
-        let sendViewportUpdate = false;
-        if (moveEvents.get(UserInputEvent.MoveUp)) {
-            this.explorerFocusOn.y -= this.EDITOR_MODE_SCROLL_SPEED;
-            this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
-            this.scene.markDirty();
-            sendViewportUpdate = true;
-        } else if (moveEvents.get(UserInputEvent.MoveDown)) {
-            this.explorerFocusOn.y += this.EDITOR_MODE_SCROLL_SPEED;
-            this.explorerFocusOn.y = Clamp(this.explorerFocusOn.y, 0, this.mapSize.height);
-            this.scene.markDirty();
-            sendViewportUpdate = true;
-        }
+    /** Scrolls the free view with the move keys, as the map editor does. `delta` is the frame time in ms. */
+    public move(moveEvents: ActiveEventList, delta: number): void {
+        const x = Number(moveEvents.get(UserInputEvent.MoveRight)) - Number(moveEvents.get(UserInputEvent.MoveLeft));
+        const y = Number(moveEvents.get(UserInputEvent.MoveDown)) - Number(moveEvents.get(UserInputEvent.MoveUp));
+        if (x === 0 && y === 0) return;
+        const step = (this.KEY_SCROLL_SPEED * delta) / this.waScaleManager.zoomModifier;
+        this.scrollCamera(x * step, y * step);
+    }
 
-        if (moveEvents.get(UserInputEvent.MoveLeft)) {
-            this.explorerFocusOn.x -= this.EDITOR_MODE_SCROLL_SPEED;
-            this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
-            this.scene.markDirty();
-            sendViewportUpdate = true;
-        } else if (moveEvents.get(UserInputEvent.MoveRight)) {
-            this.explorerFocusOn.x += this.EDITOR_MODE_SCROLL_SPEED;
-            this.explorerFocusOn.x = Clamp(this.explorerFocusOn.x, 0, this.mapSize.width);
-            this.scene.markDirty();
-            sendViewportUpdate = true;
-        }
+    /** In the map editor the view is free: the move keys scroll it and the wheel zooms on the cursor. */
+    private enterMapEditor(): void {
+        this.zoomBeforeMapEditor = this.waScaleManager.zoomModifier;
+        this.setExplorationMode();
+    }
 
-        if (sendViewportUpdate) {
-            this.scene.sendViewportToServer();
-        }
+    private leaveMapEditor(): void {
+        // Zoomed out past the resistance level (to see the whole map, say): go back to the zoom from before.
+        const targetZoom =
+            this.waScaleManager.zoomModifier < this.resistanceEndZoomLevel
+                ? Math.max(this.zoomBeforeMapEditor ?? 0, this.resistanceEndZoomLevel)
+                : undefined;
+        this.startFollowPlayer(this.scene.CurrentPlayer, 1000);
+        if (targetZoom) this.zoomByFactor(targetZoom / this.waScaleManager.zoomModifier, 1000);
     }
 
     public startFollowPlayer(player: Player | RemotePlayer, duration = 0): void {
@@ -545,25 +546,24 @@ export class CameraManager extends EventEmitter {
 
     /**
      * Make the view follow the free point the user drags and zooms. In game mode this detaches the view from the
-     * avatar but keeps avatar controls. The map explorer has its own way back to the avatar, so it never counts as
-     * detached (no recentre button).
+     * avatar but keeps avatar controls. In the map editor the view is always free, so it never counts as detached.
      */
     public startManualPan(): void {
         if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
         this.setExplorationMode();
-        if (!get(mapExplorationModeStore)) this.setManuallyDetached(true);
+        if (!this.mapEditorOpen) this.setManuallyDetached(true);
     }
 
-    /** The view follows the free point rather than the avatar: after a drag, or in the map explorer. */
+    /** The view follows the free point rather than the avatar: after a drag, or in the map editor. */
     private isFreeCamera(): boolean {
-        return this.manuallyDetached || get(mapExplorationModeStore);
+        return this.manuallyDetached || this.mapEditorOpen;
     }
 
     public panBy(screenX: number, screenY: number): void {
         this.scrollCamera(screenX / this.camera.zoom, screenY / this.camera.zoom);
     }
 
-    /** Use the explorer's inertia, converting screen velocity to world units at the current zoom. */
+    /** Keep the view gliding after a drag, converting screen velocity to world units at the current zoom. */
     public releaseManualPan(velocity: { x: number; y: number }): void {
         if (!this.isFreeCamera() || !Number.isFinite(velocity.x) || !Number.isFinite(velocity.y)) return;
         this.setSpeed({ x: (-velocity.x * 10) / this.camera.zoom, y: (-velocity.y * 10) / this.camera.zoom });
@@ -627,7 +627,7 @@ export class CameraManager extends EventEmitter {
     }
 
     public zoomByFactorAtPointer(zoomFactor: number, duration: number, pointer: { x: number; y: number }): void {
-        // While following the avatar, the wheel zooms on it. Cursor zoom needs a free view (a drag, or the explorer).
+        // While following the avatar, the wheel zooms on it. Cursor zoom needs a free view (a drag, or the editor).
         if (!this.isFreeCamera()) {
             this.zoomByFactor(zoomFactor, duration);
             return;

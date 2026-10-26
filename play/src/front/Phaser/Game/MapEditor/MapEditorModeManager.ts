@@ -106,7 +106,7 @@ export class MapEditorModeManager {
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
             [EditorToolName.TrashEditor]: new TrashEditorTool(this, areaEditorTool),
-            [EditorToolName.ExploreTheRoom]: new ExplorerTool(this, this.scene),
+            [EditorToolName.ExploreTheRoom]: new ExplorerTool(this.scene),
             [EditorToolName.CloseMapEditor]: new CloseTool(),
         };
         this.activeTool = undefined;
@@ -433,15 +433,9 @@ export class MapEditorModeManager {
             return false;
         }
 
-        // Only restore exploration when it is the currently active tool. Relying on the
-        // last used tool could switch the active editor tool (Area/Floor/Entity...) to
-        // exploration mode when the Woka menu is closed, which is not desired.
-        if (this.activeTool === EditorToolName.ExploreTheRoom) {
-            this.scene.getCameraManager().setExplorationMode();
-            return true;
-        }
-
-        return false;
+        // The whole map editor has a free view: stop following the remote player, stay where the view is.
+        this.scene.getCameraManager().setExplorationMode();
+        return true;
     }
 
     private emitMapEditorUpdate(command: FrontCommandInterface, delay = 0): void {

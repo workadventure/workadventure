@@ -1,3 +1,6 @@
+/** How far, in screen pixels, a pointer must move before a press becomes a map drag rather than a click. */
+export const MAP_DRAG_THRESHOLD = 6;
+
 interface DragPointer {
     id: number;
     x: number;
@@ -23,7 +26,7 @@ export class MapDragGesture {
         if (!this.origin || !this.previous || pointer.id !== this.origin.id) {
             return;
         }
-        if (!this.dragging && Math.hypot(pointer.x - this.origin.x, pointer.y - this.origin.y) < 6) {
+        if (!this.dragging && Math.hypot(pointer.x - this.origin.x, pointer.y - this.origin.y) < MAP_DRAG_THRESHOLD) {
             return;
         }
         this.dragging = true;

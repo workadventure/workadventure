@@ -5,7 +5,9 @@ import { CameraManager } from "../../../../src/front/Phaser/Game/CameraManager";
 import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
 import type { WaScaleManager } from "../../../../src/front/Phaser/Services/WaScaleManager";
 import { cameraDetachedStore } from "../../../../src/front/Stores/CameraStore";
-import { mapExplorationModeStore } from "../../../../src/front/Stores/MapEditorStore";
+import { mapEditorModeStore } from "../../../../src/front/Stores/MapEditorStore";
+import type { ActiveEventList } from "../../../../src/front/Phaser/UserInput/UserInputManager";
+import { UserInputEvent } from "../../../../src/front/Phaser/UserInput/UserInputManager";
 
 vi.mock("../../../../src/front/Phaser/Player/Player", () => ({ hasMovedEventName: "hasMoved" }));
 vi.mock("../../../../src/front/Phaser/Services/WaScaleManager", () => ({
@@ -18,7 +20,7 @@ vi.mock("../../../../src/front/Phaser/UserInput/UserInputManager", () => ({
 const managers: CameraManager[] = [];
 afterEach(() => {
     managers.splice(0).forEach((manager) => manager.destroy());
-    mapExplorationModeStore.set(false);
+    mapEditorModeStore.set(false);
     document.body.innerHTML = "";
     vi.restoreAllMocks();
 });
@@ -151,9 +153,9 @@ describe("manual camera pan", () => {
         expect(after.y).toBeCloseTo(before.y);
     });
 
-    it("zooms on the cursor in the explorer, even after hovering a list item, without detaching", () => {
-        mapExplorationModeStore.set(true);
+    it("zooms on the cursor in the map editor, even after hovering an explorer list item, without detaching", () => {
         const { camera, manager, advanceTween } = setup(1, true);
+        mapEditorModeStore.set(true);
         // Hovering an explorer list item makes the camera follow that item.
         manager.centerCameraOn({ x: 1500, y: 1200 });
         advanceTween(1);
@@ -177,6 +179,24 @@ describe("manual camera pan", () => {
         manager.scrollCamera(100, 0);
         camera.preRender();
         expect(camera.midPoint.x).toBe(1600);
+    });
+
+    it("scrolls the map editor's view with the move keys, then recentres on the avatar when it closes", () => {
+        const { camera, manager, player, advanceTween } = setup(2, true);
+        mapEditorModeStore.set(true);
+        const right = {
+            get: (event: UserInputEvent) => event === UserInputEvent.MoveRight,
+        } as unknown as ActiveEventList;
+        manager.move(right, 100);
+        camera.preRender();
+        // 0.6 world units per ms at zoom 1, halved at zoom 2 so the map moves as fast on screen.
+        expect(camera.midPoint.x).toBeCloseTo(player.x + 30);
+        expect(camera.midPoint.y).toBe(player.y);
+        mapEditorModeStore.set(false);
+        advanceTween(1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x);
+        expect(camera.midPoint.y).toBe(player.y);
     });
 
     it("ignores cursor zoom-out at minimum zoom", () => {
