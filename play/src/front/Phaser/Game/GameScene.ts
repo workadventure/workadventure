@@ -4748,7 +4748,11 @@ ${escapedMessage}
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
         // Apply the zoom
-        const cursor = !get(mapEditorModeStore) && !waScaleManager.getFocusTarget() ? pointer : undefined;
+        // The explorer's view is always free (its list sets a focus target only to centre on hovered items).
+        // Elsewhere, the editor tools and focus zones keep zooming on the centre.
+        const cursorZoom =
+            get(mapExplorationModeStore) || (!get(mapEditorModeStore) && !waScaleManager.getFocusTarget());
+        const cursor = cursorZoom ? pointer : undefined;
         this.zoomByFactor(zoomFactor, true, cursor);
     }
 
