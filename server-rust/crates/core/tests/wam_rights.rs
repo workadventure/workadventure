@@ -107,12 +107,12 @@ fn a_free_personal_desk_is_claimed_given_back_and_built_on_by_its_owner_only() {
 #[test]
 fn deleting_an_area_or_unlinking_a_file_names_the_private_files_to_remove() {
     let mut w = office();
-    let file = |link: &str| json!({"id": "f", "type": "openFile", "link": link, "name": "doc.pdf", "newTab": false});
+    let file = |name: &str| json!({"id": "f", "type": "openFile", "link": format!("http://maps/x/{name}"), "name": name, "newTab": false});
     let area = obj(
-        json!({"id": "library", "x": 0, "y": 300, "width": 50, "height": 50, "name": "", "properties": [file("http://maps/private/files/doc-f.pdf")]}),
+        json!({"id": "library", "x": 0, "y": 300, "width": 50, "height": 50, "name": "", "properties": [file("doc.pdf")]}),
     );
     w.apply("c1", Edit::CreateArea(area), ADMIN).unwrap();
-    // The link goes (upload closed): the file is to remove.
+    // The upload is closed: the file is to remove, found from its name and property id, not from the link.
     let unlinked = json!({"id": "f", "type": "openFile", "link": "", "name": "", "newTab": false});
     let applied = w
         .apply(
@@ -121,24 +121,55 @@ fn deleting_an_area_or_unlinking_a_file_names_the_private_files_to_remove() {
             ADMIN,
         )
         .unwrap();
-    assert_eq!(applied.dropped_files, ["http://maps/private/files/doc-f.pdf"]);
+    assert_eq!(applied.dropped_files, ["private/files/doc-f.pdf"]);
 
     // Deleting the area: the non-editor is refused, the editor's command names its files.
     w.apply(
         "c3",
-        Edit::ModifyArea {
-            id: "library".into(),
-            fields: Map::new(),
-            properties: Some(vec![file("http://maps/private/files/b-f.pdf")]),
-        },
+        Edit::ModifyArea { id: "library".into(), fields: Map::new(), properties: Some(vec![file("b.pdf")]) },
         ADMIN,
     )
     .unwrap();
     let alice = Editor { uuid: "alice", tags: &[], can_edit: false };
     assert!(w.apply("c4", Edit::DeleteArea("library".into()), alice).is_err());
     let applied = w.apply("c5", Edit::DeleteArea("library".into()), ADMIN).unwrap();
-    assert_eq!(applied.dropped_files, ["http://maps/private/files/b-f.pdf"]);
+    assert_eq!(applied.dropped_files, ["private/files/b-f.pdf"]);
     assert!(doc(&w)["areas"].as_array().unwrap().iter().all(|a| a["id"] != "library"));
+}
+
+#[test]
+fn an_uploaded_sound_goes_once_its_property_stops_using_it() {
+    // 95f0b95567 (FileModule.test): removed, replaced by another file, swapped for a URL, or deleted with its entity.
+    const SOUND: &str = "assets/sounds/gong-s.mp3";
+    let uploaded = json!({"id": "s", "type": "playAudio", "audioLink": "http://maps/assets/sounds/gong-s.mp3", "audioName": "gong.mp3"});
+    let linked = json!({"id": "s", "type": "playAudio", "audioLink": "https://x.test/a.mp3"});
+    let mut w = office();
+    let entity =
+        obj(json!({"prefabRef": {"id": "radio", "collectionName": "basic"}, "x": 300, "y": 300, "properties": []}));
+    w.apply("c0", Edit::CreateEntity { id: "e".into(), entity }, ADMIN).unwrap();
+    let mut set = |props: Vec<Value>| {
+        let edit = Edit::ModifyEntity { id: "e".into(), fields: Map::new(), properties: Some(props) };
+        w.apply("c", edit, ADMIN).unwrap().dropped_files
+    };
+    let quieter = {
+        let mut p = uploaded.clone();
+        p["volume"] = json!(0.5);
+        p
+    };
+    let bell = {
+        let mut p = uploaded.clone();
+        p["audioName"] = json!("bell.mp3");
+        p
+    };
+    // Still used: kept. A URL has no file. Then replaced, then swapped for a URL.
+    assert!(set(vec![uploaded.clone()]).is_empty());
+    assert!(set(vec![quieter]).is_empty());
+    assert_eq!(set(vec![bell]), [SOUND]);
+    assert_eq!(set(vec![linked.clone()]), ["assets/sounds/bell-s.mp3"]);
+    assert!(set(vec![]).is_empty());
+    set(vec![uploaded]);
+    let applied = w.apply("c9", Edit::DeleteEntity("e".into()), ADMIN).unwrap();
+    assert_eq!(applied.dropped_files, [SOUND]);
 }
 
 #[test]
@@ -147,6 +178,7 @@ fn an_uploaded_file_stays_in_its_folder_whatever_the_client_names() {
     // reach another world's folder.
     assert_eq!(uploaded_file_path("doc.PDF", "p-1").unwrap(), "private/files/doc-p-1.PDF");
     assert_eq!(uploaded_file_path("../../a.b.png", "p").unwrap(), "private/files/a.b-p.png");
+    assert_eq!(uploaded_file_path("gong.mp3", "p").unwrap(), "assets/sounds/gong-p.mp3");
     for id in ["/../../../../other.domain", "..\\other", "a/b"] {
         assert!(uploaded_file_path("doc.pdf", id).is_err(), "{id}");
     }

@@ -1,7 +1,8 @@
 //! The map editor's own files: custom entities (CustomEntityCollectionService: images under
 //! `assets/entities/`, listed in `assets/entities/entities.json`, which the front loads) and the files of
-//! openFile properties (CustomFileService: `private/files/`). All of them live in the map's world folder (`dir`,
-//! empty without USE_DOMAIN_NAME_IN_PATH), where map-storage serves them for that world's host.
+//! openFile and playAudio properties (CustomFileService: `private/files/` for documents, `assets/sounds/` for
+//! sounds). All of them live in the map's world folder (`dir`, empty without USE_DOMAIN_NAME_IN_PATH), where
+//! map-storage serves them for that world's host.
 
 use serde_json::{Value, json};
 use wa_core::wam::{Editor, uploaded_file_path};
@@ -120,7 +121,7 @@ pub async fn delete(storage: &Storage, dir: &str, id: &str, editor: Editor<'_>) 
     Ok(())
 }
 
-/// `uploadFileMessage`: the file of an openFile property, as `private/files/<name>-<propertyId><ext>`.
+/// `uploadFileMessage`: the file of an openFile or playAudio property, as `<folder>/<name>-<propertyId><ext>`.
 pub async fn upload_file(storage: &Storage, dir: &str, m: &pb::UploadFileMessage) -> Result<(), String> {
     let path = uploaded_file_path(&m.name, &m.property_id)?;
     storage.put_asset(format!("{dir}{path}"), m.file.to_vec()).await.map_err(|e| e.to_string())

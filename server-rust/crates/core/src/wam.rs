@@ -59,50 +59,63 @@ pub struct Editor<'a> {
     pub can_edit: bool,
 }
 
-/// What a command did besides the WAM: the links of the private files it dropped (FileModule's hooks).
+/// What a command did besides the WAM: the uploaded files it dropped (FileModule's hooks), as paths under the map's
+/// world folder.
 #[derive(Debug, Default, PartialEq)]
 pub struct Applied {
     pub dropped_files: Vec<String>,
 }
 
-/// CustomFileService.getFilePath: where the file `name` of an openFile property is stored, under the map's world
-/// folder. The property id comes from the client (a front-generated UUID): a separator in it would let the path
-/// climb out of the world's folder, into another world's files.
+/// The folder of an uploaded file and the extensions it accepts (uploadedFileFolder of libs/map-editor): "open
+/// file" documents are private (served with a token that honors the area's read restrictions) while "play audio"
+/// sounds are public map assets, like tilesets.
+const UPLOAD_FOLDERS: [(&str, &[&str]); 2] = [
+    ("assets/sounds", &["mp3", "ogg", "wav", "m4a", "flac"]),
+    ("private/files", &["pdf", "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]),
+];
+
+/// CustomFileService.getFilePath: where the file `name` of a property is stored, under the map's world folder. The
+/// property id comes from the client (a front-generated UUID): a separator in it would let the path climb out of
+/// the world's folder, into another world's files.
 pub fn uploaded_file_path(name: &str, property_id: &str) -> Result<String, String> {
     if property_id.contains(['/', '\\']) {
         return Err(format!("Invalid property id: {property_id}"));
     }
     let base = name.rsplit(['/', '\\']).next().unwrap_or(name);
-    let accepted = |ext: &str| {
-        ["pdf", "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].contains(&ext.to_ascii_lowercase().as_str())
+    let folder = |ext: &str| {
+        let ext = ext.to_ascii_lowercase();
+        UPLOAD_FOLDERS.iter().find(|(_, exts)| exts.contains(&ext.as_str())).map(|(folder, _)| *folder)
     };
     match base.rsplit_once('.') {
-        Some((stem, ext)) if !stem.is_empty() && accepted(ext) => {
-            Ok(format!("private/files/{stem}-{property_id}.{ext}"))
-        }
+        Some((stem, ext)) if !stem.is_empty() => match folder(ext) {
+            Some(folder) => Ok(format!("{folder}/{stem}-{property_id}.{ext}")),
+            None => Err(format!("Unsupported file \"{name}\"")),
+        },
         _ => Err(format!("Unsupported file \"{name}\"")),
     }
 }
 
-/// The links of a property list's files (openFile properties with a link), by property id.
-fn file_links(props: &[Value]) -> Vec<(&str, &str)> {
-    props
-        .iter()
-        .filter(|p| p["type"] == "openFile")
-        .filter_map(|p| Some((p["id"].as_str()?, p["link"].as_str().filter(|l| !l.is_empty())?)))
-        .collect()
+/// uploadedFileName: the name of the file a property uploaded, if any (the `name` of an openFile, the `audioName`
+/// of a playAudio; a playAudio with only a typed URL has none).
+fn uploaded_name(p: &Value) -> Option<&str> {
+    let name = match p["type"].as_str()? {
+        "openFile" => &p["name"],
+        "playAudio" => &p["audioName"],
+        _ => return None,
+    };
+    name.as_str().filter(|n| !n.is_empty())
 }
 
-/// Files the new property list no longer links: the property is gone, or its upload was closed.
+/// FileModule: the files the new property list no longer uses. A file goes once its property is gone, or its
+/// upload was removed, replaced by another file, or (for a sound) swapped for a URL.
 fn dropped(old: &[Value], new: &[Value]) -> Vec<String> {
-    file_links(old)
-        .into_iter()
-        .filter(|(id, _)| {
-            new.iter().find(|p| p["id"] == *id).is_none_or(|p| {
-                p["link"].as_str().is_none_or(str::is_empty) && p["name"].as_str().is_none_or(str::is_empty)
-            })
+    old.iter()
+        .filter_map(|p| {
+            let (id, name) = (p["id"].as_str()?, uploaded_name(p)?);
+            let kept = new.iter().find(|n| n["id"] == id).is_some_and(|n| uploaded_name(n) == Some(name));
+            // An id the upload would have refused never stored a file.
+            (!kept).then(|| uploaded_file_path(name, id).ok()).flatten()
         })
-        .map(|(_, link)| link.to_owned())
         .collect()
 }
 

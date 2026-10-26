@@ -50,6 +50,8 @@ const JITSI: Fields = &[
 ];
 const PLAY_AUDIO: Fields = &[
     ("audioLink", Str, true),
+    // The file uploaded to the map-storage, which audioLink then points to; absent for a typed URL.
+    ("audioName", StrOrNull, false),
     ("volume", Num, false),
     ("triggerMessage", Str, false),
     ("playForAllUsers", Bool, false),
@@ -220,6 +222,8 @@ mod tests {
         ok(json!({"id": "a", "type": "livekitRoomProperty", "roomName": "r", "livekitRoomConfig": {"startWithAudioMuted": true, "startWithVideoMuted": false}}), true).unwrap();
         ok(json!({"id": "a", "type": "maxUsersInAreaPropertyData", "maxUsers": null}), false).unwrap();
         ok(json!({"id": "a", "type": "jitsiRoomProperty", "roomName": "r", "jitsiRoomConfig": {}}), false).unwrap();
+        ok(json!({"id": "a", "type": "playAudio", "audioLink": "/s.mp3", "audioName": null}), true).unwrap();
+        ok(json!({"id": "a", "type": "playAudio", "audioLink": "/s.mp3", "audioName": "s.mp3"}), false).unwrap();
 
         for (p, entity) in [
             (json!({"id": "a", "type": "nope"}), false),
@@ -235,6 +239,7 @@ mod tests {
             ),
             (json!({"id": "a", "type": "jitsiRoomProperty", "roomName": "r"}), false),
             (json!({"id": "a", "type": "silent", "buttonLabel": null}), false),
+            (json!({"id": "a", "type": "playAudio", "audioLink": "/s.mp3", "audioName": 1}), false),
             (json!({"id": 3, "type": "silent"}), false),
         ] {
             assert!(ok(p.clone(), entity).is_err(), "{p} should be refused");

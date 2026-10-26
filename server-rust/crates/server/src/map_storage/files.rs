@@ -39,7 +39,7 @@ pub(super) async fn any(State(state): State<AppState>, request: Request) -> Resp
         Method::PATCH => patch(state, format!("{dir}{}", decode(&raw, false)), request).await,
         Method::DELETE => delete(state, format!("{dir}{}", decode(&raw, false)), request.headers()).await,
         // `GET *.wam` has its own route, which keeps `+` (proxyFiles turns it into a space).
-        _ => serve(&state, &format!("{dir}{}", decode(&raw, !raw.ends_with(".wam"))), &raw).await,
+        _ => serve(&state, &format!("{dir}{}", decode(&raw, !raw.ends_with(".wam"))), &raw, request.headers()).await,
     }
 }
 
@@ -77,6 +77,8 @@ fn content_type(path: &str) -> &'static str {
         "ogg" => "audio/ogg",
         "mp3" => "audio/mpeg",
         "wav" => "audio/wav",
+        "m4a" => "audio/mp4",
+        "flac" => "audio/x-flac",
         "mp4" => "video/mp4",
         "pdf" => "application/pdf",
         "zip" => "application/zip",
@@ -84,7 +86,47 @@ fn content_type(path: &str) -> &'static str {
     }
 }
 
-async fn serve(state: &AppState, path: &str, raw: &str) -> Response {
+/// What to answer to a `Range` header.
+#[derive(Debug, PartialEq)]
+enum Ranged {
+    Whole,
+    /// Inclusive bounds.
+    Part(usize, usize),
+    Unsatisfiable,
+}
+
+/// The `Range` header as `send` (Express' static files) reads it with range-parser: a single `bytes` range is
+/// answered with its part, its end clamped to the file; when no range fits the file it is unsatisfiable; several
+/// ranges, or another unit, get the whole file. Firefox asks for ranges to play audio.
+fn byte_range(header: &str, len: usize) -> Ranged {
+    let Some(spec) = header.trim_start().strip_prefix("bytes=") else { return Ranged::Whole };
+    let size = i64::try_from(len).unwrap_or(i64::MAX);
+    let ranges: Vec<(i64, i64)> = spec
+        .split(',')
+        .filter_map(|r| {
+            let (a, b) = r.split_once('-')?;
+            let (start, end) = match (a.trim().parse::<i64>().ok(), b.trim().parse::<i64>().ok()) {
+                (Some(start), Some(end)) => (start, end),
+                (Some(start), None) => (start, size - 1),
+                // A suffix: the last bytes.
+                (None, Some(last)) => (size - last, size - 1),
+                (None, None) => return None,
+            };
+            let end = end.min(size - 1);
+            (start >= 0 && start <= end).then_some((start, end))
+        })
+        .collect();
+    match ranges.as_slice() {
+        [] => Ranged::Unsatisfiable,
+        [(start, end)] => match (usize::try_from(*start), usize::try_from(*end)) {
+            (Ok(start), Ok(end)) => Ranged::Part(start, end),
+            _ => Ranged::Whole,
+        },
+        _ => Ranged::Whole,
+    }
+}
+
+async fn serve(state: &AppState, path: &str, raw: &str, headers: &HeaderMap) -> Response {
     if path.contains("..") {
         return (StatusCode::BAD_REQUEST, "Invalid path").into_response();
     }
@@ -112,9 +154,24 @@ async fn serve(state: &AppState, path: &str, raw: &str) -> Response {
     };
     let modified =
         meta.modified().ok().and_then(|m| m.duration_since(std::time::UNIX_EPOCH).ok()).map_or(0, |d| d.as_millis());
-    let mut response = Response::new(Body::from(bytes));
+    let len = bytes.len();
+    let range = headers.get(header::RANGE).and_then(|v| v.to_str().ok()).map_or(Ranged::Whole, |r| byte_range(r, len));
+    let (status, body, content_range) = match range {
+        Ranged::Part(start, end) => match bytes.get(start..=end) {
+            Some(part) => (StatusCode::PARTIAL_CONTENT, part.to_vec(), Some(format!("bytes {start}-{end}/{len}"))),
+            None => (StatusCode::RANGE_NOT_SATISFIABLE, Vec::new(), Some(format!("bytes */{len}"))),
+        },
+        Ranged::Unsatisfiable => (StatusCode::RANGE_NOT_SATISFIABLE, Vec::new(), Some(format!("bytes */{len}"))),
+        Ranged::Whole => (StatusCode::OK, bytes, None),
+    };
+    let mut response = Response::new(Body::from(body));
+    *response.status_mut() = status;
     let h = response.headers_mut();
     h.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type(path)));
+    h.insert(header::ACCEPT_RANGES, HeaderValue::from_static("bytes"));
+    if let Some(v) = content_range.and_then(|r| HeaderValue::from_str(&r).ok()) {
+        h.insert(header::CONTENT_RANGE, v);
+    }
     if let Ok(v) = HeaderValue::from_str(&cache) {
         h.insert(header::CACHE_CONTROL, v);
     }
@@ -488,7 +545,7 @@ pub(super) async fn private_file(
             if !read_tags.is_empty() && !read_tags.iter().any(|t| tags.contains(&t.as_str())) {
                 return refused(StatusCode::FORBIDDEN, "You are not allowed to access this file");
             }
-            return serve(&state, &format!("{dir}{path}"), &raw).await;
+            return serve(&state, &format!("{dir}{path}"), &raw, request.headers()).await;
         }
         tokio::time::sleep(Duration::from_millis(500)).await;
     }
@@ -498,6 +555,19 @@ pub(super) async fn private_file(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_single_byte_range_is_answered_as_send_does() {
+        assert_eq!(byte_range("bytes=0-", 10), Ranged::Part(0, 9));
+        assert_eq!(byte_range("bytes=2-4", 10), Ranged::Part(2, 4));
+        assert_eq!(byte_range("bytes=5-100", 10), Ranged::Part(5, 9));
+        assert_eq!(byte_range("bytes=-3", 10), Ranged::Part(7, 9));
+        assert_eq!(byte_range("bytes=10-", 10), Ranged::Unsatisfiable);
+        assert_eq!(byte_range("bytes=4-2", 10), Ranged::Unsatisfiable);
+        assert_eq!(byte_range("bytes=-20", 10), Ranged::Unsatisfiable);
+        assert_eq!(byte_range("bytes=0-1,5-6", 10), Ranged::Whole);
+        assert_eq!(byte_range("items=0-1", 10), Ranged::Whole);
+    }
 
     #[test]
     fn hashed_and_uuid_names_are_immutable() {

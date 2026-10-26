@@ -35,7 +35,7 @@ pub(super) enum Pending {
         session: Arc<Session>,
         command: pb::EditMapCommandMessage,
     },
-    /// Files of openFile properties whose link went away.
+    /// Files that properties no longer use, under the world folder.
     Remove(Vec<String>),
     /// The files changed over HTTP: read the WAM again.
     Load,
@@ -169,7 +169,7 @@ impl MapFile {
                     let dir = self.dir.clone();
                     self.io.spawn(async move {
                         for path in paths {
-                            storage.remove_asset(&format!("{dir}{}", path.trim_start_matches('/'))).await;
+                            storage.remove_asset(&format!("{dir}{path}")).await;
                         }
                         Done::Removed
                     });
@@ -331,13 +331,7 @@ impl MapFile {
             }
             Some(other) => {
                 let edit = wire::edit_from(other).ok_or("This map edit is not supported by this server yet")?;
-                let dropped: Vec<String> = wam
-                    .apply(&command.id, edit, editor)?
-                    .dropped_files
-                    .iter()
-                    .map(|link| custom_entities::link_path(link))
-                    .filter(|path| path.starts_with("/private/files/"))
-                    .collect();
+                let dropped = wam.apply(&command.id, edit, editor)?.dropped_files;
                 if !dropped.is_empty() {
                     // Before the commands after this one: one of them may upload a file of the same name.
                     self.queue.push_front(Pending::Remove(dropped));

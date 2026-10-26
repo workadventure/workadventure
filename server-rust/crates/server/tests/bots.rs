@@ -650,6 +650,94 @@ async fn the_editor_files_of_a_world_stay_in_its_folder() {
 }
 
 #[tokio::test]
+async fn an_uploaded_sound_is_a_public_map_asset_that_firefox_can_play() {
+    // 95f0b95567: "play audio" sounds go to assets/sounds, served without a token, with an audio type and ranges.
+    use pb::edit_map_message::Message as E;
+    let dir = std::env::temp_dir().join(format!("wa-rust-sounds-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    let wam = r#"{"version":"2.1.0","mapUrl":"./t.tmj","areas":[],"entities":{},"entityCollections":[]}"#;
+    std::fs::write(dir.join("maps/t.wam"), wam).unwrap();
+    let (server, maps) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("ENABLE_MAP_EDITOR", "true"),
+    ])
+    .await;
+    let (mut alice, mut ia) = bot(&server, "http://play.test/~/maps/t.wam", "Alice", 100, 100).await;
+    let mut send = async |id: &'static str, message: E| {
+        alice.send(edit(id, message)).await.unwrap();
+        ia.expect(WAIT, |m| {
+            edit_echo(m).filter(|c| c.id == id).map(|c| match c.edit_map_message.as_ref()?.message.as_ref()? {
+                E::ErrorCommandMessage(e) => Some(e.reason.clone()),
+                _ => None,
+            })
+        })
+        .await
+        .unwrap()
+    };
+    let id = "0b8e3b9e-4f0a-4c1e-9d5b-2a6f1c7e8d90";
+    let upload = |name: &str| pb::UploadFileMessage {
+        id: "file".into(),
+        name: name.into(),
+        property_id: id.into(),
+        file: (0..10u8).collect::<Vec<_>>().into(),
+        ..Default::default()
+    };
+    assert_eq!(send("cmd-sound", E::UploadFileMessage(upload("test-sound.mp3"))).await, None);
+    let sound = format!("assets/sounds/test-sound-{id}.mp3");
+    assert!(dir.join(&sound).exists());
+    let refused = send("cmd-page", E::UploadFileMessage(upload("page.html"))).await;
+    assert!(refused.is_some_and(|r| r.contains("Unsupported file")));
+
+    // No token: a sound is played by everyone the map broadcasts it to.
+    let http = reqwest::Client::new();
+    let whole = http.get(format!("{maps}/{sound}")).send().await.unwrap();
+    assert_eq!(whole.status(), 200);
+    assert_eq!(whole.headers()["content-type"], "audio/mpeg");
+    assert_eq!(whole.headers()["accept-ranges"], "bytes");
+    assert_eq!(whole.bytes().await.unwrap().len(), 10);
+    let part = http.get(format!("{maps}/{sound}")).header("range", "bytes=2-4").send().await.unwrap();
+    assert_eq!(part.status(), 206);
+    assert_eq!(part.headers()["content-range"], "bytes 2-4/10");
+    assert_eq!(part.bytes().await.unwrap().as_ref(), [2, 3, 4]);
+    let past = http.get(format!("{maps}/{sound}")).header("range", "bytes=10-").send().await.unwrap();
+    assert_eq!(past.status(), 416);
+    assert_eq!(past.headers()["content-range"], "bytes */10");
+
+    // Swapped for a URL, the uploaded sound goes.
+    let property = |name: Option<&str>| {
+        let mut p = serde_json::json!({"id": id, "type": "playAudio", "audioLink": format!("{maps}/{sound}")});
+        if let Some(name) = name {
+            p["audioName"] = name.into();
+        }
+        wa_server::wire::json_to(&p)
+    };
+    let area = |properties| pb::CreateAreaMessage {
+        id: "hall".into(),
+        width: 32,
+        height: 32,
+        properties,
+        ..Default::default()
+    };
+    assert_eq!(send("cmd-area", E::CreateAreaMessage(area(vec![property(Some("test-sound.mp3"))]))).await, None);
+    let modify = pb::ModifyAreaMessage {
+        id: "hall".into(),
+        properties: vec![property(None)],
+        modify_properties: Some(true),
+        ..Default::default()
+    };
+    assert_eq!(send("cmd-url", E::ModifyAreaMessage(modify)).await, None);
+    let gone = async {
+        while dir.join(&sound).exists() {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    };
+    tokio::time::timeout(WAIT, gone).await.unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
 async fn what_a_player_sent_before_leaving_is_handled_before_it_leaves() {
     // 70d0a91b36: the back closed a joinRoom stream with messages still queued behind a slow handler, and lost
     // them (the last variable write of a player navigating away). Here a session reads its inbox to the end
