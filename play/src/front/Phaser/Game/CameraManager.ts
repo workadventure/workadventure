@@ -100,6 +100,8 @@ export class CameraManager extends EventEmitter {
 
     // The free point the view follows when it does not follow a player: after a drag, or in the map editor.
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
+    // What the camera follows, or is gliding towards (a player, a focus zone...). Undefined while the view is free.
+    private followTarget: { x: number; y: number } | undefined;
 
     // The tween for the camera offset
     private cameraOffsetCurrentTween?: Tween;
@@ -192,6 +194,7 @@ export class CameraManager extends EventEmitter {
     ): void {
         // The focus tween moves explorerFocusOn itself: let a running cursor zoom finish around the centre instead.
         this.cursorZoomAnchor = undefined;
+        this.followTarget = target;
         const wasManuallyDetached = this.manuallyDetached;
         this.setManuallyDetached(false);
         if (wasManuallyDetached) {
@@ -313,7 +316,16 @@ export class CameraManager extends EventEmitter {
     /** In the map editor the view is free: the move keys scroll it and the wheel zooms on the cursor. */
     private enterMapEditor(): void {
         this.zoomBeforeMapEditor = this.waScaleManager.zoomModifier;
+        // Unless the user dragged the view away, start where a following camera would be: on its target, with its
+        // offset. A small map holds the game-mode view away from the avatar, and a camera reopened while gliding back
+        // to the avatar (just after closing the editor) would otherwise stop halfway.
+        const target = this.manuallyDetached ? undefined : this.followTarget;
+        const offset = { x: this.camera.followOffset.x, y: this.camera.followOffset.y };
         this.setExplorationMode();
+        if (!target) return;
+        this.explorerFocusOn.x = target.x;
+        this.explorerFocusOn.y = target.y;
+        this.camera.setFollowOffset(offset.x, offset.y);
     }
 
     private leaveMapEditor(): void {
@@ -523,6 +535,7 @@ export class CameraManager extends EventEmitter {
 
     // Create function to define the camera on exploration mode. The camera can be moved anywhere on the map. The camera is not locked on the player. The camera can be zoomed in and out. The camera can be moved with the mouse. The camera can be moved with the keyboard. The camera can be moved with the touchpad.
     public setExplorationMode(): void {
+        this.followTarget = undefined;
         this.setManuallyDetached(false);
         this.cameraAnimation?.onInterrupt();
         this.cameraAnimation = undefined;

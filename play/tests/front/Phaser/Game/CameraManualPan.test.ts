@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { get } from "svelte/store";
 import { CameraManager } from "../../../../src/front/Phaser/Game/CameraManager";
 import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
+import type { Player } from "../../../../src/front/Phaser/Player/Player";
 import type { WaScaleManager } from "../../../../src/front/Phaser/Services/WaScaleManager";
 import { cameraDetachedStore } from "../../../../src/front/Stores/CameraStore";
 import { mapEditorModeStore } from "../../../../src/front/Stores/MapEditorStore";
@@ -194,6 +195,36 @@ describe("manual camera pan", () => {
         expect(camera.midPoint.y).toBe(player.y);
         mapEditorModeStore.set(false);
         advanceTween(1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x);
+        expect(camera.midPoint.y).toBe(player.y);
+    });
+
+    it("opens the map editor on the avatar, even when a small map held the game view elsewhere", () => {
+        const { camera, manager, player } = setup(1);
+        player.x = 100;
+        player.y = 100;
+        manager.startFollowPlayer(player as unknown as Player, 0);
+        camera.preRender();
+        // In game mode the camera stays inside the map, so it can't centre on an avatar near the corner.
+        expect(camera.midPoint.x).toBe(400);
+        mapEditorModeStore.set(true);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(100);
+        expect(camera.midPoint.y).toBe(100);
+    });
+
+    it("ends on the avatar when the editor reopens while the view glides back to it", () => {
+        const { camera, manager, player, advanceTween } = setup(1, true);
+        mapEditorModeStore.set(true);
+        manager.scrollCamera(500, 0);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x + 500);
+        mapEditorModeStore.set(false);
+        advanceTween(0.5);
+        camera.preRender();
+        expect(camera.midPoint.x).toBeGreaterThan(player.x);
+        mapEditorModeStore.set(true);
         camera.preRender();
         expect(camera.midPoint.x).toBe(player.x);
         expect(camera.midPoint.y).toBe(player.y);
