@@ -93,7 +93,7 @@ export class ExplorerTool implements MapEditorTool {
 
         this.explorationMouseIsActive = true;
         this.scene.input.setDefaultCursor("grabbing");
-        // Stops inertia, and takes the view back if hovering the explorer list made the camera follow an item.
+        // Stops inertia and any hover animation, so the drag moves the view from where it is now.
         this.scene.getCameraManager().startManualPan();
     };
     private pointerMoveHandler = (pointer: Pointer) => {

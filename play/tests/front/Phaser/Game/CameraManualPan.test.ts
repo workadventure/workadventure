@@ -168,6 +168,17 @@ describe("manual camera pan", () => {
         expect(get(cameraDetachedStore)).toBe(false);
     });
 
+    it("keeps scrolling the view after centring on a point, as the explorer list does on hover", () => {
+        const { camera, manager, advanceTween } = setup(1, true);
+        manager.centerCameraOn({ x: 1500, y: 1200 });
+        advanceTween(1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(1500);
+        manager.scrollCamera(100, 0);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(1600);
+    });
+
     it("ignores cursor zoom-out at minimum zoom", () => {
         const { manager, addCounter, limits } = setup(1, true);
         manager.startManualPan();
