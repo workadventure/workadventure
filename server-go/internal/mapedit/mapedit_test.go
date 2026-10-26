@@ -461,7 +461,7 @@ func TestAnAreaTheFrontCouldNotLoadIsRefused(t *testing.T) {
 func TestDroppingAnOpenFilePropertyDeletesItsFile(t *testing.T) {
 	maps := newMaps(t)
 	mustApply(t, maps, admin, UploadFile{Name: "plan.pdf", PropertyID: "doc", File: []byte("%PDF")})
-	file, _ := wam.UploadedFile("plan.pdf", "doc")
+	file, _ := wam.UploadedFile(wam.Document, "plan.pdf", "doc")
 	if _, err := maps.Read(file); err != nil {
 		t.Fatal("the file is stored for the property")
 	}
@@ -475,17 +475,24 @@ func TestDroppingAnOpenFilePropertyDeletesItsFile(t *testing.T) {
 	}
 }
 
-func TestOnlyDocumentsImagesAndSoundsAreUploaded(t *testing.T) {
+// The client says what a file is for, so it may only choose between the documents and the sounds.
+func TestAnUploadTakesTheFormatsOfItsKind(t *testing.T) {
 	maps := newMaps(t)
-	if _, err := Apply(maps, office, admin, "cmd", UploadFile{Name: "run.sh", PropertyID: "p", File: []byte("rm -rf /")}); err == nil {
-		t.Fatal("a script is not a document")
+	for _, c := range []UploadFile{
+		{Kind: wam.Document, Name: "run.sh"},
+		{Kind: wam.Document, Name: "gong.mp3"},
+		{Kind: wam.Sound, Name: "plan.pdf"},
+		{Kind: 42, Name: "gong.mp3"},
+	} {
+		c.PropertyID, c.File = "p", []byte("x")
+		mustRefuse(t, maps, admin, c, c.Name)
 	}
 }
 
 // A sound of a "play audio" property is a public map asset, next to the tilesets, not a private file.
 func TestAnUploadedSoundIsAPublicMapAsset(t *testing.T) {
 	maps := newMaps(t)
-	mustApply(t, maps, admin, UploadFile{Name: "gong.mp3", PropertyID: "p", File: []byte("ID3")})
+	mustApply(t, maps, admin, UploadFile{Kind: wam.Sound, Name: "gong.mp3", PropertyID: "p", File: []byte("ID3")})
 	if _, err := maps.Read("assets/sounds/gong-p.mp3"); err != nil {
 		t.Fatal("stored in the map's public assets")
 	}

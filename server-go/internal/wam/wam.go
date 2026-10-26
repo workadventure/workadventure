@@ -302,45 +302,57 @@ func clone(v any) map[string]any {
 	return out
 }
 
-// The formats of the files uploaded from the map editor, and their folders (uploadedFileFolder of the map-editor
-// lib). "Open file" documents are private (/private/files asks for a token honoring the area's read restrictions)
-// while "play audio" sounds are public map assets, like tilesets.
-var (
-	soundFile    = regexp.MustCompile(`(?i)\.(mp3|ogg|wav|m4a|flac)$`)
-	documentFile = regexp.MustCompile(`(?i)\.(pdf|jpg|jpeg|png|gif|webp|bmp|svg)$`)
+// FileKind is what a file uploaded from the map editor is for (UploadedFileKind of messages.proto): it decides the
+// folder of the file and the formats accepted.
+type FileKind int32
+
+const (
+	// Document is the file of an "open file" property, private: /private/files asks for a token honoring the area's
+	// read restrictions.
+	Document FileKind = 0
+	// Sound is the sound of a "play audio" property, a public map asset, like the tilesets.
+	Sound FileKind = 1
 )
 
-// UploadedFile is where a file uploaded for a property is stored, in the folder its extension picks
-// (CustomFileService). A format neither a document nor a sound is refused, and so is a property id with a separator:
-// it comes from the client (a UUID of the front), and would climb out of the folder.
-func UploadedFile(name, propertyID string) (string, error) {
+// fileFormats gives each kind its folder and its extensions (UPLOADED_FILE_FORMATS of the map-editor lib).
+var fileFormats = map[FileKind]struct {
+	folder     string
+	extensions *regexp.Regexp
+}{
+	Document: {"private/files", regexp.MustCompile(`(?i)\.(pdf|jpg|jpeg|png|gif|webp|bmp|svg)$`)},
+	Sound:    {"assets/sounds", regexp.MustCompile(`(?i)\.(mp3|ogg|wav|m4a|flac)$`)},
+}
+
+// UploadedFile is where a file uploaded for a property is stored, in the folder of its kind (CustomFileService). The
+// client says the kind, so it may only choose between the two lists: a format its kind does not accept is refused,
+// and so is a kind this version does not know. So is a property id with a separator: it comes from the client (a
+// UUID of the front), and would climb out of the folder.
+func UploadedFile(kind FileKind, name, propertyID string) (string, error) {
 	if strings.ContainsAny(propertyID, `/\`) {
 		return "", fmt.Errorf("Invalid property id: %s", propertyID)
 	}
 	base := path.Base(name)
 	ext := path.Ext(base)
-	folder := "private/files"
-	switch {
-	case soundFile.MatchString(ext):
-		folder = "assets/sounds"
-	case !documentFile.MatchString(ext):
-		return "", fmt.Errorf("File extension is not a supported format: %s", name)
+	format, ok := fileFormats[kind]
+	if !ok || !format.extensions.MatchString(ext) {
+		return "", fmt.Errorf("Unsupported file %q for kind %d", name, kind)
 	}
-	return folder + "/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext, nil
+	return format.folder + "/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext, nil
 }
 
-// uploadedName is the name of the file a property uploaded, "" when it has none: the file of an "open file", the
-// sound of a "play audio" (whose audioLink is then that file; it has no name when it is a URL typed by the user).
-func uploadedName(p map[string]any) string {
-	var name any
+// uploadedFile is the name of the file a property uploaded, "" when it has none, and its kind, which follows from the
+// property type: the file of an "open file", the sound of a "play audio" (whose audioLink is then that file; it has
+// no name when it is a URL typed by the user).
+func uploadedFile(p map[string]any) (string, FileKind) {
 	switch p["type"] {
 	case "openFile":
-		name = p["name"]
+		name, _ := p["name"].(string)
+		return name, Document
 	case "playAudio":
-		name = p["audioName"]
+		name, _ := p["audioName"].(string)
+		return name, Sound
 	}
-	s, _ := name.(string)
-	return s
+	return "", Document
 }
 
 // filesRemoved lists the uploaded files of the properties of old that next no longer uses: the property went, or its
@@ -349,18 +361,19 @@ func filesRemoved(old, next []any) []string {
 	var out []string
 	for _, o := range old {
 		op, _ := o.(map[string]any)
-		name := uploadedName(op)
+		name, kind := uploadedFile(op)
 		if name == "" {
 			continue
 		}
 		i := slices.IndexFunc(next, func(n any) bool { m, _ := n.(map[string]any); return m["id"] == op["id"] })
 		if i >= 0 {
-			if np, _ := next[i].(map[string]any); uploadedName(np) == name {
+			np, _ := next[i].(map[string]any)
+			if newName, _ := uploadedFile(np); newName == name {
 				continue
 			}
 		}
 		id, _ := op["id"].(string)
-		if f, err := UploadedFile(name, id); err == nil {
+		if f, err := UploadedFile(kind, name, id); err == nil {
 			out = append(out, f)
 		}
 	}

@@ -226,7 +226,7 @@ func command(e *pb.EditMapMessage) (any, error) {
 		return mapedit.DeleteCustomEntity{ID: v.DeleteCustomEntityMessage.GetId()}, nil
 	case *pb.EditMapMessage_UploadFileMessage:
 		c := v.UploadFileMessage
-		return mapedit.UploadFile{Name: c.GetName(), PropertyID: c.GetPropertyId(), File: c.GetFile()}, nil
+		return mapedit.UploadFile{Kind: wam.FileKind(c.GetKind()), Name: c.GetName(), PropertyID: c.GetPropertyId(), File: c.GetFile()}, nil
 	}
 	return nil, errors.New("This command is not supported")
 }

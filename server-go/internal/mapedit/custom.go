@@ -34,6 +34,7 @@ type (
 	// UploadFile stores the file of an "open file" property, readable through /private/files with a token, or the
 	// sound of a "play audio" one, a public map asset.
 	UploadFile struct {
+		Kind             wam.FileKind // what it is for, which decides where it goes
 		Name, PropertyID string
 		File             []byte
 	}
@@ -160,7 +161,7 @@ func deleteCustomEntity(maps Maps, ed Editor, id string) error {
 }
 
 func uploadFile(maps Maps, c UploadFile) error {
-	key, err := wam.UploadedFile(c.Name, c.PropertyID)
+	key, err := wam.UploadedFile(c.Kind, c.Name, c.PropertyID)
 	if err != nil {
 		return err
 	}

@@ -211,7 +211,7 @@ func TestAnUploadedSoundIsServedToEveryone(t *testing.T) {
 	editor := h.dialWAM(auth.Token{Identifier: "ed", Tags: []string{"editor"}})
 	editor.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_EditMapCommandMessage{EditMapCommandMessage: &pb.EditMapCommandMessage{
 		Id: "up", EditMapMessage: &pb.EditMapMessage{Message: &pb.EditMapMessage_UploadFileMessage{UploadFileMessage: &pb.UploadFileMessage{
-			Id: "f", Name: "test-sound.mp3", PropertyId: "0b8e3b9e-4f0a-4c1e-9d5b-2a6f1c7e8d90", File: []byte("ID3sound")}}}}}})
+			Id: "f", Kind: pb.UploadedFileKind_Sound, Name: "test-sound.mp3", PropertyId: "0b8e3b9e-4f0a-4c1e-9d5b-2a6f1c7e8d90", File: []byte("ID3sound")}}}}}})
 	editor.waitFor("the upload", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
 		if e := s.GetEditMapCommandMessage().GetEditMapMessage().GetErrorCommandMessage(); e != nil {
 			t.Fatalf("refused: %s", e.GetReason())
