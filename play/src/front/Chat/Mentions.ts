@@ -12,7 +12,20 @@ const PILL_REGEX = /<a\b([^>]*)>([^<]*)<\/a>/g;
 const MATRIX_PERMALINK_PREFIX = "https://matrix.to/#/";
 export const MATRIX_HTML_FORMAT = "org.matrix.custom.html";
 
-export type MentionCandidate = { id: string; name: string };
+export type MentionCandidate = {
+    id: string;
+    name: string;
+    /** Other words that find it after an "@". */
+    keywords?: string[];
+};
+
+/**
+ * "@room" notifies everyone in the conversation. Like Element, it is only offered to the members allowed to: the
+ * power level for notifications.room in a Matrix room (which the server checks too), the admins of the map in the
+ * proximity chat (which every receiver checks, there is no server in between).
+ */
+export const ROOM_MENTION_ID = "@room";
+export const ROOM_MENTION: MentionCandidate = { id: ROOM_MENTION_ID, name: "room", keywords: ["all", "tous"] };
 
 function decode(value: string): string | undefined {
     try {
@@ -64,9 +77,22 @@ export function mentionsToPlainText(html: string): string {
 }
 
 /** Flags the pills naming the current user, so that the timeline can color them. */
-export function markOwnMentions(html: string, ownId: string): string {
+export function markOwnMentions(html: string, ownIds: readonly string[]): string {
+    return html.replace(PILL_REGEX, (pill, attributes: string) => {
+        const id = getPillId(attributes);
+        return id !== undefined && ownIds.includes(id) ? pill.replace("<a", "<a data-mention-me") : pill;
+    });
+}
+
+/** Element writes "@room" as plain text and draws the pill itself: so do we. */
+export function pillRoomMention(text: string): string {
+    return text.replace(/(^|[\s>(])@room\b/g, `$1<a data-mention="${encodeURIComponent(ROOM_MENTION_ID)}">room</a>`);
+}
+
+/** The "@room" pills of a sender who may not notify everyone, back to plain text. */
+export function withoutRoomMention(html: string): string {
     return html.replace(PILL_REGEX, (pill, attributes: string) =>
-        getPillId(attributes) === ownId ? pill.replace("<a", "<a data-mention-me") : pill,
+        getPillId(attributes) === ROOM_MENTION_ID ? ROOM_MENTION_ID : pill,
     );
 }
 
@@ -76,22 +102,30 @@ export function markOwnMentions(html: string, ownId: string): string {
  * formatted_body, which is what Element renders as pills.
  */
 export function getMatrixMessageContent(message: string): RoomMessageEventContent {
-    const userIds = getMentionedIds(message);
-    if (userIds.length === 0) {
+    const ids = getMentionedIds(message);
+    if (ids.length === 0) {
         // m.mentions is set even when empty: like Element, we tell the server not to guess mentions from the
         // display names found in the text.
         return { msgtype: MsgType.Text, body: message, formatted_body: message, "m.mentions": {} };
     }
 
+    const userIds = ids.filter((id) => id !== ROOM_MENTION_ID);
     const markdown = message.replace(PILL_REGEX, (pill, attributes: string, name: string) => {
         const id = getPillId(attributes);
-        return id === undefined ? pill : `<a href="${MATRIX_PERMALINK_PREFIX}${id}">${name}</a>`;
+        if (id === undefined) {
+            return pill;
+        }
+        // Like Element, "@room" stays plain text: m.mentions.room is what notifies.
+        return id === ROOM_MENTION_ID ? ROOM_MENTION_ID : `<a href="${MATRIX_PERMALINK_PREFIX}${id}">${name}</a>`;
     });
     return {
         msgtype: MsgType.Text,
         body: mentionsToPlainText(message),
         format: MATRIX_HTML_FORMAT,
         formatted_body: new Marked({ breaks: true }).parse(markdown, { async: false }).trim(),
-        "m.mentions": { user_ids: userIds },
+        "m.mentions": {
+            ...(userIds.length > 0 ? { user_ids: userIds } : {}),
+            ...(ids.includes(ROOM_MENTION_ID) ? { room: true } : {}),
+        },
     };
 }

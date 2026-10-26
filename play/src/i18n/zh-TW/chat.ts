@@ -12,6 +12,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     beFirst: "成為第一個傳送訊息的人",
     enter: "輸入訊息...",
     mentionSuggestions: "可提及的成員",
+    mentionRoom: "通知此對話中的所有人",
     menu: {
         visitCard: "名片",
         addFriend: "加好友",

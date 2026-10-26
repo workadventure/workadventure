@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
-    import { createMentionPill, findMentionQuery, type MentionCandidate } from "../../Mentions";
+    import { createMentionPill, findMentionQuery, type MentionCandidate, ROOM_MENTION_ID } from "../../Mentions";
 
     interface Props {
         candidates: Readable<readonly MentionCandidate[]>;
@@ -28,7 +28,11 @@
         query === undefined
             ? []
             : $candidates
-                  .filter((candidate) => normalize(candidate.name).includes(normalize(query ?? "")))
+                  .filter((candidate) =>
+                      [candidate.name, ...(candidate.keywords ?? [])].some((word) =>
+                          normalize(word).includes(normalize(query ?? "")),
+                      ),
+                  )
                   .slice(0, MAX_SUGGESTIONS),
     );
 
@@ -151,6 +155,9 @@
                 }}
             >
                 @{candidate.name}
+                {#if candidate.id === ROOM_MENTION_ID}
+                    <span class="ms-2 text-xs text-white/60">{$LL.chat.mentionRoom()}</span>
+                {/if}
             </li>
         {/each}
     </ul>

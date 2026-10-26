@@ -14,6 +14,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     beFirst: "Buž prěni, kotryž pósćele powěsć",
     enter: "Spisaj swoju powěsć...",
     mentionSuggestions: "Čłonojo k naspomnjenju",
+    mentionRoom: "Wšěch w tutej rozmołwje zdźělić",
     menu: {
         visitCard: "Wizitka",
         addFriend: "přećelku/a přidać",

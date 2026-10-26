@@ -73,7 +73,7 @@ import type {
 import { ChatPermissionLevel, ChatRoomSettingsError } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-import { getMatrixMessageContent, type MentionCandidate } from "../../Mentions";
+import { getMatrixMessageContent, type MentionCandidate, ROOM_MENTION } from "../../Mentions";
 import { gameManager, GameSceneNotFoundError } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
@@ -318,15 +318,22 @@ export class MatrixChatRoom
             // With lazy loading, only the members seen in the timeline are known: fetch them all once an "@" is typed.
             this.ensureMembersInitialized().catch((error) => console.error(error));
             return this.members.subscribe((members) =>
-                set(
-                    members
+                set([
+                    // Same check as Element before offering @room: the power level for notifications.room.
+                    ...(this.matrixRoom
+                        .getLiveTimeline()
+                        .getState(EventTimeline.FORWARDS)
+                        ?.mayTriggerNotifOfType("room", this.matrixRoom.myUserId)
+                        ? [ROOM_MENTION]
+                        : []),
+                    ...members
                         .filter(
                             (member) =>
                                 member.id !== this.matrixRoom.myUserId &&
                                 get(member.membership) === KnownMembership.Join,
                         )
                         .map((member) => ({ id: member.id, name: get(member.name) })),
-                ),
+                ]),
             );
         });
         this.directRoomPeerAvatarMember = this.getDirectRoomPeerRoomMember();

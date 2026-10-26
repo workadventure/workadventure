@@ -70,7 +70,15 @@ import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerMana
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 import { iceServersManager } from "../../../WebRtc/IceServersManager";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
-import { getMentionedIds, markOwnMentions, type MentionCandidate, mentionsToPlainText } from "../../Mentions";
+import {
+    getMentionedIds,
+    markOwnMentions,
+    type MentionCandidate,
+    mentionsToPlainText,
+    ROOM_MENTION,
+    ROOM_MENTION_ID,
+    withoutRoomMention,
+} from "../../Mentions";
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
 import { ProximityChatQuestion } from "./ProximityChatQuestion";
 import { canCreateProximityContent } from "./ProximityCreationPermissions";
@@ -180,11 +188,12 @@ export class ProximityChatRoom implements ChatRoom {
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
-    readonly mentionCandidates: Readable<readonly MentionCandidate[]> = derived(this.spaceUsersStore, (users) =>
-        Array.from(users.values())
+    readonly mentionCandidates: Readable<readonly MentionCandidate[]> = derived(this.spaceUsersStore, (users) => [
+        ...(this.isCurrentUserAdmin(this.getCurrentSpaceUser(users)) ? [ROOM_MENTION] : []),
+        ...Array.from(users.values())
             .filter((user) => user.spaceUserId !== this._spaceUserId)
             .map((user) => ({ id: user.spaceUserId, name: user.name })),
-    );
+    ]);
     // The polls and questions of the space state (owned by the back).
     // One store per slice, set only when the slice changed: a raised hand must not rebuild the polls.
     private readonly pollsStore = writable<SpaceState["polls"]>({});
@@ -469,15 +478,23 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
 
+        const spaceUser = this.users?.get(senderUserId);
+
         // Create content message
-        const mentionsMe = getMentionedIds(message).includes(this._spaceUserId);
+        const mentionedIds = getMentionedIds(message);
+        // Only an admin of the map may mention everyone. The message comes straight from a peer, with no server to
+        // enforce it: check the sender here (an unknown sender is not an admin), and leave a plain "@room" otherwise.
+        const roomMention = mentionedIds.includes(ROOM_MENTION_ID) && (spaceUser?.tags ?? []).includes("admin");
+        const mentionsMe = roomMention || mentionedIds.includes(this._spaceUserId);
         const newChatMessageContent = {
-            body: markOwnMentions(message, this._spaceUserId),
+            body: markOwnMentions(roomMention ? message : withoutRoomMention(message), [
+                this._spaceUserId,
+                ROOM_MENTION_ID,
+            ]),
             url: undefined,
             mentionsMe,
         };
 
-        const spaceUser = this.users?.get(senderUserId);
         let chatUser: AnyKindOfUser = { ...this.unknownUser, spaceUserId: senderUserId };
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);

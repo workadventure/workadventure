@@ -14,6 +14,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     beFirst: "첫 번째로 메시지를 보내보세요",
     enter: "메시지를 입력하세요...",
     mentionSuggestions: "멘션할 멤버",
+    mentionRoom: "이 대화의 모든 사람에게 알림",
     menu: {
         visitCard: "명함 보기",
         addFriend: "친구 추가",

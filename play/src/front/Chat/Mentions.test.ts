@@ -6,6 +6,9 @@ import {
     getMentionedIds,
     markOwnMentions,
     mentionsToPlainText,
+    pillRoomMention,
+    ROOM_MENTION,
+    withoutRoomMention,
 } from "./Mentions";
 
 // What the composer's innerHTML holds once a member was picked.
@@ -15,7 +18,7 @@ describe("Mentions", () => {
     it("finds the name being typed after an @", () => {
         expect(findMentionQuery("hello @Yan")).toBe("Yan");
         expect(findMentionQuery("@")).toBe("");
-        expect(findMentionQuery("hello @Yan")).toBe("Yan");
+        expect(findMentionQuery("hello\u00a0@Yan")).toBe("Yan");
         expect(findMentionQuery("mail me at bob@example")).toBeUndefined();
         expect(findMentionQuery("@Yannis hello")).toBeUndefined();
     });
@@ -60,9 +63,35 @@ describe("Mentions", () => {
 
         expect(mentionsToPlainText(html)).toBe("@Bob @Me a link");
         // What the composer leaves after a pill, and how it escapes what was typed.
-        expect(mentionsToPlainText(`${pill("@bob:server", "Bob")}&nbsp;a &amp; b<br>c`)).toBe("@Bob a & b\nc");
-        expect(markOwnMentions(html, "@me:server")).toBe(
+        expect(mentionsToPlainText(`${pill("@bob:server", "Bob")}&nbsp;a &amp; b<br>c`)).toBe("@Bob\u00a0a & b\nc");
+        expect(markOwnMentions(html, ["@me:server"])).toBe(
             `${pill("@bob:server", "Bob")} <a data-mention-me href="https://matrix.to/#/@me:server">Me</a> <a href="https://example.com">a link</a>`,
         );
+    });
+
+    it("sends @room the way Element does: m.mentions.room, and plain text in the HTML", () => {
+        const room = createMentionPill(ROOM_MENTION).outerHTML;
+
+        expect(getMatrixMessageContent(`${room} réunion à 14h`)).toEqual({
+            msgtype: "m.text",
+            body: "@room réunion à 14h",
+            format: "org.matrix.custom.html",
+            formatted_body: "<p>@room réunion à 14h</p>",
+            "m.mentions": { room: true },
+        });
+        expect(getMatrixMessageContent(`${room} et ${pill("@bob:server", "Bob")}`)["m.mentions"]).toEqual({
+            user_ids: ["@bob:server"],
+            room: true,
+        });
+    });
+
+    it("pills the @room of an allowed sender, and only drops the pill of the others", () => {
+        const received = pillRoomMention("@room réunion, pas @roomy ni bob@room.fr");
+        expect(getMentionedIds(received)).toEqual(["@room"]);
+        expect(mentionsToPlainText(received)).toBe("@room réunion, pas @roomy ni bob@room.fr");
+
+        const fromProximity = `${createMentionPill(ROOM_MENTION).outerHTML} ${pill("me", "Me")}`;
+        expect(getMentionedIds(withoutRoomMention(fromProximity))).toEqual(["me"]);
+        expect(mentionsToPlainText(withoutRoomMention(fromProximity))).toBe("@room @Me");
     });
 });

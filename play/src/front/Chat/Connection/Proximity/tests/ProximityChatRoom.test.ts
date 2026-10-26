@@ -16,7 +16,7 @@ import type { ChatMessage } from "../../ChatConnection";
 import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
-import { createMentionPill } from "../../../Mentions";
+import { createMentionPill, ROOM_MENTION } from "../../../Mentions";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => ({
     gameManager: {
@@ -449,6 +449,32 @@ describe("ProximityChatRoom mentions", () => {
         receive(room, "no mention");
         expect(get(room.hasUnreadMessages)).toBe(true);
         expect(get(room.hasUnreadMentions)).toBe(false);
+    });
+
+    it("only honors @room from an admin of the map", () => {
+        const room = createRoom();
+        const toEveryone = `${createMentionPill(ROOM_MENTION).outerHTML} réunion`;
+        const sender = (tags: string[]) =>
+            new Map([
+                [
+                    "sender",
+                    { spaceUserId: "sender", name: "Sender", tags, reactiveUser: { availabilityStatus: writable(0) } },
+                ],
+            ]);
+        const lastContent = () => get(get(room.messages).at(-1)!.content);
+
+        // Unknown sender, then a known one without the admin tag: a plain "@room".
+        receive(room, toEveryone);
+        expect(lastContent()).toMatchObject({ mentionsMe: false, body: "@room réunion" });
+        Reflect.set(room, "users", sender(["member"]));
+        receive(room, toEveryone);
+        expect(lastContent()).toMatchObject({ mentionsMe: false, body: "@room réunion" });
+
+        Reflect.set(room, "users", sender(["admin"]));
+        receive(room, toEveryone);
+        expect(lastContent().mentionsMe).toBe(true);
+        expect(lastContent().body).toContain("<a data-mention-me ");
+        expect(get(room.hasUnreadMentions)).toBe(true);
     });
 });
 

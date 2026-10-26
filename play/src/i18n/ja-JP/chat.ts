@@ -14,6 +14,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     beFirst: "最初にメッセージを送信する人になる",
     enter: "メッセージを入力してください",
     mentionSuggestions: "メンションするメンバー",
+    mentionRoom: "この会話の全員に通知",
     menu: {
         visitCard: "名刺",
         addFriend: "ともだち登録",

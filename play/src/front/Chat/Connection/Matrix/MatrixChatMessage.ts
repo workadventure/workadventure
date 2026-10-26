@@ -1,5 +1,5 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
-import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
+import { Direction, EventTimeline, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
@@ -15,7 +15,7 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
-import { MATRIX_HTML_FORMAT, markOwnMentions } from "../../Mentions";
+import { MATRIX_HTML_FORMAT, markOwnMentions, pillRoomMention, ROOM_MENTION_ID } from "../../Mentions";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -141,11 +141,19 @@ export class MatrixChatMessage implements ChatMessage {
         // @room and the keywords set up in Element. Recalculated because the cached actions may predate decryption.
         const mentionsMe =
             !this.isMyMessage && this.room.client.getPushActionsForEvent(this.event, true)?.tweaks.highlight === true;
+        // An @room counts, and is drawn as a pill, only when its sender may notify the whole room: the server checks
+        // the same power level before notifying anyone.
+        const roomMention = content["m.mentions"]?.room === true && this.senderMayNotifyRoom();
+        const withPills = (html: string) =>
+            markOwnMentions(
+                roomMention ? pillRoomMention(html) : html,
+                mentionsMe ? [myUserId, ROOM_MENTION_ID] : [myUserId],
+            );
 
         if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
             return {
-                body: markOwnMentions(content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""), myUserId),
+                body: withPills(content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, "")),
                 url: undefined,
                 mentionsMe,
             };
@@ -168,16 +176,28 @@ export class MatrixChatMessage implements ChatMessage {
 
         // A message mentioning someone is rendered from its HTML, where the mentions are pills (whether they come
         // from our composer or from Element). The other ones keep being rendered from their markdown body.
-        const mentionsSomeone =
-            content.format === MATRIX_HTML_FORMAT &&
-            typeof content.formatted_body === "string" &&
-            (content["m.mentions"]?.user_ids?.length ?? 0) > 0;
-        return {
-            body: content.body,
-            url: undefined,
-            formattedBody: mentionsSomeone ? markOwnMentions(content.formatted_body, myUserId) : undefined,
-            mentionsMe,
-        };
+        const html =
+            content.format === MATRIX_HTML_FORMAT && typeof content.formatted_body === "string"
+                ? content.formatted_body
+                : undefined;
+        const mentionsUsers = (content["m.mentions"]?.user_ids?.length ?? 0) > 0;
+        let formattedBody: string | undefined;
+        if (roomMention) {
+            // Element sends a lone @room without any HTML.
+            formattedBody = withPills(html ?? content.body);
+        } else if (mentionsUsers && html !== undefined) {
+            formattedBody = withPills(html);
+        }
+        return { body: content.body, url: undefined, formattedBody, mentionsMe };
+    }
+
+    private senderMayNotifyRoom(): boolean {
+        const sender = this.event.getSender();
+        return (
+            sender !== undefined &&
+            (this.room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.mayTriggerNotifOfType("room", sender) ??
+                false)
+        );
     }
 
     private loadImageMediaIfNeeded() {

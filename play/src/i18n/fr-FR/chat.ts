@@ -14,6 +14,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     beFirst: "Soyez le premier à envoyer un message",
     enter: "Entrez votre message...",
     mentionSuggestions: "Membres à mentionner",
+    mentionRoom: "Notifier toute la conversation",
     menu: {
         visitCard: "Carte de visite",
         addFriend: "Ajouter un ami",
