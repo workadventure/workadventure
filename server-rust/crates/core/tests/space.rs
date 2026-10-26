@@ -531,3 +531,22 @@ fn a_recording_cannot_start_where_nobody_publishes() {
     assert_eq!(s.start_recording("l", "x".into(), &mut r).unwrap_err(), "Failed to start recording");
     assert_eq!(s.state().recording.status, wa_core::space_state::RecordingStatus::Idle);
 }
+
+#[test]
+fn a_watch_that_arrives_after_its_user_left_registers_nobody() {
+    // The space actor handles a user's commands in the order the session sent them, so a watch can only be
+    // late relative to a leave if the leave came first: it must then be a no-op (29ca208789).
+    let (mut s, mut r) = (space(FilterType::AllUsers), Rec::default());
+    for id in ["a", "b"] {
+        s.join(FilterType::AllUsers, user(id), &mut r).unwrap();
+    }
+    assert!(s.watch("a", &mut r));
+    s.leave("b", &mut r);
+    r.take();
+
+    assert!(!s.watch("b", &mut r));
+    assert!(r.take().is_empty(), "no init for a user who is gone");
+    // Nobody is notified on its behalf afterwards.
+    s.join(FilterType::AllUsers, user("c"), &mut r).unwrap();
+    assert!(r.take().iter().all(|(to, _)| !to.contains(&"b".to_owned())));
+}

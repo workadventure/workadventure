@@ -572,6 +572,48 @@ async fn an_upload_without_editor_access_is_refused_to_its_sender_only_and_write
 }
 
 #[tokio::test]
+async fn what_a_player_sent_before_leaving_is_handled_before_it_leaves() {
+    // 70d0a91b36: the back closed a joinRoom stream with messages still queued behind a slow handler, and lost
+    // them (the last variable write of a player navigating away). Here a session reads its inbox to the end
+    // before it leaves, and the room handles its commands in that order.
+    use pb::client_to_server_message::Message as M;
+    let dir = std::env::temp_dir().join(format!("wa-rust-last-write-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    let tmj = serde_json::json!({"layers": [{"type": "objectgroup", "objects": [
+        {"name": "door", "class": "variable", "properties": [{"name": "default", "value": 0}, {"name": "persist", "value": true}]},
+    ]}]});
+    std::fs::write(dir.join("maps/v.tmj"), tmj.to_string()).unwrap();
+    std::fs::write(
+        dir.join("maps/v.wam"),
+        r#"{"version":"1.0.0","mapUrl":"./v.tmj","areas":[],"entities":{},"entityCollections":[]}"#,
+    )
+    .unwrap();
+    let (server, _maps) = start_with(&[("SECRET_KEY", "test"), ("STORAGE_DIRECTORY", dir.to_str().unwrap())]).await;
+    let room = "http://play.test/~/maps/v.wam";
+    let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
+    let (mut alice, _ia) = bot(&server, room, "Alice", 100, 100).await;
+
+    for i in 1..=30 {
+        alice
+            .send(M::VariableMessage(pb::VariableMessage { name: "door".into(), value: i.to_string() }))
+            .await
+            .unwrap();
+    }
+    alice.close().await;
+    ib.expect(WAIT, |m| match m {
+        Incoming::Sub(Sub::VariableMessage(v)) if v.name == "door" && v.value == "30" => Some(()),
+        _ => None,
+    })
+    .await
+    .unwrap();
+    let (carol, _ic) = bot(&server, room, "Carol", 200, 200).await;
+    let door = carol.joined.variable.iter().find(|v| v.name == "door").map(|v| v.value.clone());
+    assert_eq!(door.as_deref(), Some("30"));
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
 async fn room_variables_follow_the_map_rights_and_reach_who_may_read_them() {
     use pb::client_to_server_message::Message as M;
     let dir = std::env::temp_dir().join(format!("wa-rust-vars-{}", std::process::id()));
