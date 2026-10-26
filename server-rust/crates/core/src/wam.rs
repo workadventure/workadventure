@@ -24,20 +24,17 @@ pub enum Edit {
         properties: Option<Vec<Value>>,
     },
     DeleteArea(String),
-    /// createEntityMessage: the stored entity (prefabRef, x, y, properties, name) and its size, for the rights.
+    /// createEntityMessage: the stored entity (prefabRef, x, y, properties, name). The size the client sends is
+    /// not kept: the rights are checked at the top-left corner, the only point of an entity the file knows.
     CreateEntity {
         id: String,
         entity: Map<String, Value>,
-        width: f64,
-        height: f64,
     },
     /// modifyEntityMessage: fields merged into the entity, properties replaced when `modifyProperties` is set.
     ModifyEntity {
         id: String,
         fields: Map<String, Value>,
         properties: Option<Vec<Value>>,
-        width: f64,
-        height: f64,
     },
     DeleteEntity(String),
     /// deleteCustomEntityMessage: the entities made from that prefab go (the caller checks the owner).
@@ -102,6 +99,15 @@ fn num(v: &Value) -> f64 {
 fn inside(x: f64, y: f64, area: &Value) -> bool {
     let (ax, ay) = (num(&area["x"]), num(&area["y"]));
     (ax..=ax + num(&area["width"])).contains(&x) && (ay..=ay + num(&area["height"])).contains(&y)
+}
+
+/// The area gives the editor write access: its write tags, or it is their personal area.
+fn writes(area: &Value, editor: Editor<'_>) -> bool {
+    props(area).iter().any(|p| {
+        (p["type"] == "restrictedRightsPropertyData"
+            && p["writeTags"].as_array().is_some_and(|t| t.iter().any(|t| editor.tags.iter().any(|u| t == u))))
+            || (p["type"] == "personalAreaPropertyData" && p["ownerId"] == editor.uuid)
+    })
 }
 
 /// `isModifyAreaMessageOnlyClaim`: someone who may not edit can still take a free personal area, or give
@@ -295,19 +301,21 @@ impl Wam {
                     applied.dropped_files = dropped(props(&area), &[]);
                 }
             }
-            Edit::CreateEntity { id, entity, width, height } => {
-                let (x, y) = (num(&entity["x"]), num(&entity["y"]));
-                if !editor.can_edit && !self.can_write_at(x + width / 2.0, y + height / 2.0, width, height, editor) {
+            Edit::CreateEntity { id, entity } => {
+                if !self.can_write_at(num(&entity["x"]), num(&entity["y"]), editor) {
                     return Err(format!("User {} is not allowed to place an entity here", editor.uuid));
                 }
                 // An id that is already there is ignored (GameMapEntities.addEntity).
                 self.entities_mut().entry(id).or_insert(Value::Object(entity));
             }
-            Edit::ModifyEntity { id, mut fields, properties, width, height } => {
+            Edit::ModifyEntity { id, mut fields, properties } => {
                 let Some(current) = self.doc["entities"].get(&id).cloned() else { return Ok(applied) };
                 let x = fields.get("x").map_or_else(|| num(&current["x"]), num);
                 let y = fields.get("y").map_or_else(|| num(&current["y"]), num);
-                if !editor.can_edit && !self.can_write_at(x + width / 2.0, y + height / 2.0, width, height, editor) {
+                // Where it is and where it goes: a zone editor neither pulls an entity in nor pushes one out.
+                if !self.can_write_at(num(&current["x"]), num(&current["y"]), editor)
+                    || !self.can_write_at(x, y, editor)
+                {
                     return Err(format!("User {} is not allowed to edit this entity", editor.uuid));
                 }
                 let Some(Value::Object(entity)) = self.entities_mut().get_mut(&id) else { return Ok(applied) };
@@ -326,8 +334,8 @@ impl Wam {
             }
             Edit::DeleteEntity(id) => {
                 let Some(current) = self.doc["entities"].get(&id).cloned() else { return Ok(applied) };
-                // map-storage lets anyone delete any entity; here only where one could have placed it.
-                if !editor.can_edit && !self.can_write_at(num(&current["x"]), num(&current["y"]), 0.0, 0.0, editor) {
+                // Only where one could have placed it. One already gone is a no-op that still goes out (above).
+                if !self.can_write_at(num(&current["x"]), num(&current["y"]), editor) {
                     return Err(format!("User {} is not allowed to delete this entity", editor.uuid));
                 }
                 self.entities_mut().remove(&id);
@@ -384,17 +392,16 @@ impl Wam {
         Ok(applied)
     }
 
-    /// EntityPermissions: an entity of that size, centred there, lies in an area whose write tags the editor
-    /// has, or that is the editor's personal area.
-    pub fn can_write_at(&self, cx: f64, cy: f64, width: f64, height: f64, editor: Editor<'_>) -> bool {
-        let corners = [(cx - width / 2.0, cy - height / 2.0), (cx + width / 2.0, cy + height / 2.0)];
-        self.areas().iter().filter(|a| inside(cx, cy, a) && corners.iter().all(|(x, y)| inside(*x, *y, a))).any(|a| {
-            props(a).iter().any(|p| {
-                (p["type"] == "restrictedRightsPropertyData"
-                    && p["writeTags"].as_array().is_some_and(|t| t.iter().any(|t| editor.tags.iter().any(|u| t == u))))
-                    || (p["type"] == "personalAreaPropertyData" && p["ownerId"] == editor.uuid)
-            })
-        })
+    /// EntityPermissions at an entity's top-left corner: the editor edits the map, or the point lies in an area
+    /// they write to.
+    pub fn can_write_at(&self, x: f64, y: f64, editor: Editor<'_>) -> bool {
+        editor.can_edit || self.areas().iter().any(|a| inside(x, y, a) && writes(a, editor))
+    }
+
+    /// isGameMapContainsSpecificAreas: the editor edits the map, or there is an area they write to. Uploads are
+    /// tied to no position, so this is what they need.
+    pub fn has_editor_access(&self, editor: Editor<'_>) -> bool {
+        editor.can_edit || self.areas().iter().any(|a| writes(a, editor))
     }
 
     /// WAMFileFormat, structurally: the fields the server and the front rely on, with their types. Unknown

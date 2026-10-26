@@ -142,8 +142,6 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 
 ## 9. Écarts volontaires (gardés)
 
-- Droits des entités : un non-éditeur ne supprime une entité que là où il peut écrire (map-storage laisse tout
-  supprimer). Une création ou modification refusée est refusée à l'émetteur, non diffusée.
 - Une commande d'édition qui casse la structure de la WAM est refusée et ne change rien (map-storage la garde en
   mémoire).
 - `/upload-endpoint` garde le port de l'en-tête `Host` (Express le perd : `map_storage_upload:185` échoue en TS).
@@ -161,3 +159,11 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | gabarit et fichiers du front depuis `ASSETS_INTERNAL_URL` | `validé` (stacks du socle) | — |
 | `apiVersionHash` exposé pour le contrôle du pipeline SaaS | `validé` | `GET /api-version` (texte ; 503 tant que le gabarit du front n'est pas lu), test `…the_protocol_hash_is_exposed` |
 | contextes `protos` et `pusherdata` passés par la CI | `validé` (en tête du Dockerfile) | — |
+
+## 11. Ports from master
+
+One row per TS change ported after the merge of master (`ba54d9b1c`). The behaviour is ported, not the code.
+
+| TS commit(s) | Behaviour | State | Proof | Difference from TS |
+|---|---|---|---|---|
+| `67bce3877`, `59a1ade94`, `370a0c86d` | refused entity edit: error to the sender only, neither applied nor broadcast; rights at the top-left corner, of the stored position and of the destination; uploads need editor access (map edit or an area one writes to) | `validé` | tests `a_zone_editor_neither_pulls_an_entity_into_their_zone_nor_edits_one_outside_it`, `only_someone_who_edits_somewhere_may_upload`, `an_upload_without_editor_access_is_refused_to_its_sender_only_and_writes_nothing` | the entity size the client sends is no longer carried by `Edit` at all, so no check can use it; `370a0c86d` (front-side width/height swap) has nothing to port: the server checks a point |

@@ -516,6 +516,62 @@ async fn the_room_goes_on_during_a_slow_upload_and_the_edits_keep_their_order() 
 }
 
 #[tokio::test]
+async fn an_upload_without_editor_access_is_refused_to_its_sender_only_and_writes_nothing() {
+    use pb::edit_map_message::Message as E;
+    let dir = std::env::temp_dir().join(format!("wa-rust-upload-rights-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    let wam = r#"{"version":"1.0.0","mapUrl":"./t.tmj","areas":[],"entities":{},"entityCollections":[]}"#;
+    std::fs::write(dir.join("maps/t.wam"), wam).unwrap();
+    let (server, _maps) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("ENABLE_MAP_EDITOR", "true"),
+        ("MAP_EDITOR_ALLOW_ALL_USERS", "false"),
+    ])
+    .await;
+    let room = "http://play.test/~/maps/t.wam";
+    let (mut vera, mut iv) = bot(&server, room, "Vera", 100, 100).await;
+    let (_bob, mut ib) = bot(&server, room, "Bob", 200, 200).await;
+    let refusal = |id: &'static str| {
+        move |m: &Incoming| {
+            edit_echo(m).filter(|c| c.id == id).and_then(|c| match c.edit_map_message.as_ref()?.message.as_ref()? {
+                E::ErrorCommandMessage(e) => Some(e.reason.clone()),
+                _ => None,
+            })
+        }
+    };
+
+    let entity = pb::UploadEntityMessage {
+        file: vec![1, 2, 3].into(),
+        id: "entity-1".into(),
+        name: "Lamp".into(),
+        image_path: "lamp.png".into(),
+        ..Default::default()
+    };
+    vera.send(edit("cmd-entity", E::UploadEntityMessage(entity))).await.unwrap();
+    let file = pb::UploadFileMessage {
+        id: "file-1".into(),
+        name: "doc.pdf".into(),
+        property_id: "p".into(),
+        file: vec![1].into(),
+        ..Default::default()
+    };
+    vera.send(edit("cmd-file", E::UploadFileMessage(file))).await.unwrap();
+    for id in ["cmd-entity", "cmd-file"] {
+        let reason = iv.expect(WAIT, refusal(id)).await.unwrap();
+        assert!(reason.contains("not allowed to upload"), "{reason}");
+    }
+    // The delete of an entity already gone still goes to everyone; the uploads before it reached nobody but her.
+    vera.send(edit("cmd-delete", E::DeleteEntityMessage(pb::DeleteEntityMessage { id: "none".into() }))).await.unwrap();
+    ib.expect(WAIT, |m| edit_echo(m).filter(|c| c.id == "cmd-delete").map(|_| ())).await.unwrap();
+    assert!(ib.seen().iter().all(|m| edit_echo(m).is_none_or(|c| c.id == "cmd-delete")));
+    assert!(!dir.join("assets/entities/lamp.png").exists());
+    assert!(!dir.join("private/files/doc-p.pdf").exists());
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
 async fn room_variables_follow_the_map_rights_and_reach_who_may_read_them() {
     use pb::client_to_server_message::Message as M;
     let dir = std::env::temp_dir().join(format!("wa-rust-vars-{}", std::process::id()));

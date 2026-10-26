@@ -260,6 +260,16 @@ impl MapFile {
         if !io || self.wam.is_none() {
             return Some(self.complete(session, command, Ok(())));
         }
+        let uploads = matches!(
+            command.edit_map_message.as_ref().and_then(|m| m.message.as_ref()),
+            Some(M::UploadEntityMessage(_) | M::UploadFileMessage(_))
+        );
+        let info = &session.info;
+        let editor = Editor { uuid: &info.user_uuid, tags: &info.tags, can_edit: info.can_edit };
+        if uploads && !self.wam.as_ref().is_some_and(|w| w.has_editor_access(editor)) {
+            let refused = Err(format!("User {} has no editor access and is not allowed to upload", info.user_uuid));
+            return Some(self.complete(session, command, refused));
+        }
         self.io.spawn(async move {
             let info = &session.info;
             let editor = Editor { uuid: &info.user_uuid, tags: &info.tags, can_edit: info.can_edit };

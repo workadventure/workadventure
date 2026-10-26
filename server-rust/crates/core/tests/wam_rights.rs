@@ -32,8 +32,6 @@ fn place(id: &str, x: f64, y: f64) -> Edit {
     Edit::CreateEntity {
         id: id.into(),
         entity: obj(json!({"prefabRef": {"id": "chair", "collectionName": "basic"}, "x": x, "y": y, "properties": []})),
-        width: 32.0,
-        height: 32.0,
     }
 }
 
@@ -55,25 +53,20 @@ fn a_member_with_the_write_tag_builds_inside_the_restricted_area_only() {
     let visitor = Editor { uuid: "vera", tags: &[], can_edit: false };
 
     w.apply("c1", place("in", 50.0, 50.0), builder).unwrap();
-    // Straddling the border, or outside: refused, and nothing changes.
-    assert!(w.apply("c2", place("edge", 180.0, 50.0), builder).is_err());
-    assert!(w.apply("c3", place("out", 300.0, 300.0), builder).is_err());
+    // Rights are at the top-left corner (the size the client sends cannot be trusted): one sticking out on the
+    // right is in; one up and left of the area is out, and nothing changes.
+    w.apply("c2", place("edge", 180.0, 50.0), builder).unwrap();
+    assert!(w.apply("c3", place("out", -10.0, 50.0), builder).is_err());
     // Without the tag, not even inside.
     assert!(w.apply("c4", place("v", 60.0, 60.0), visitor).is_err());
     // An editor places anything anywhere.
     w.apply("c5", place("anywhere", 300.0, 300.0), ADMIN).unwrap();
     let entities = doc(&w)["entities"].as_object().unwrap().keys().cloned().collect::<Vec<_>>();
-    assert_eq!(entities, ["anywhere", "in"]);
+    assert_eq!(entities, ["anywhere", "edge", "in"]);
     assert_eq!(w.last_command_id(), Some("c5"));
 
     // Moving it out of the area is refused; within, it moves.
-    let moved = |x: f64| Edit::ModifyEntity {
-        id: "in".into(),
-        fields: obj(json!({"x": x})),
-        properties: None,
-        width: 32.0,
-        height: 32.0,
-    };
+    let moved = |x: f64| Edit::ModifyEntity { id: "in".into(), fields: obj(json!({"x": x})), properties: None };
     assert!(w.apply("c6", moved(400.0), builder).is_err());
     w.apply("c7", moved(80.0), builder).unwrap();
     assert_eq!(doc(&w)["entities"]["in"]["x"], 80.0);
@@ -156,8 +149,6 @@ fn a_deleted_custom_entity_takes_its_placed_copies_with_it() {
         entity: obj(
             json!({"prefabRef": {"id": prefab, "collectionName": "custom entities"}, "x": 300, "y": 300, "properties": []}),
         ),
-        width: 32.0,
-        height: 32.0,
     };
     w.apply("c1", custom("a", "statue"), ADMIN).unwrap();
     w.apply("c2", custom("b", "statue"), ADMIN).unwrap();
@@ -176,4 +167,33 @@ fn a_command_that_breaks_the_file_is_refused_and_changes_nothing() {
     assert!(refused.contains("must be a number"), "{refused}");
     assert_eq!(doc(&w), before);
     assert_eq!(w.last_command_id(), None);
+}
+
+#[test]
+fn a_zone_editor_neither_pulls_an_entity_into_their_zone_nor_edits_one_outside_it() {
+    let mut w = office();
+    let builder_tags = ["builder".to_owned()];
+    let builder = Editor { uuid: "carl", tags: &builder_tags, can_edit: false };
+    w.apply("c1", place("statue", 300.0, 300.0), ADMIN).unwrap();
+    let before = doc(&w);
+    let modify = |fields: Value| Edit::ModifyEntity { id: "statue".into(), fields: obj(fields), properties: None };
+
+    // Into the zone, or renamed where it stands: refused, the file unchanged.
+    assert!(w.apply("c2", modify(json!({"x": 50, "y": 50})), builder).is_err());
+    assert!(w.apply("c3", modify(json!({"x": 300, "y": 300, "name": "mine"})), builder).is_err());
+    assert_eq!(doc(&w), before);
+    // Nor deleted.
+    assert!(w.apply("c4", Edit::DeleteEntity("statue".into()), builder).is_err());
+    assert_eq!(doc(&w), before);
+}
+
+#[test]
+fn only_someone_who_edits_somewhere_may_upload() {
+    let w = office();
+    let builder_tags = ["builder".to_owned()];
+    assert!(w.has_editor_access(ADMIN));
+    assert!(w.has_editor_access(Editor { uuid: "carl", tags: &builder_tags, can_edit: false }));
+    // Bob owns a desk.
+    assert!(w.has_editor_access(Editor { uuid: "bob", tags: &[], can_edit: false }));
+    assert!(!w.has_editor_access(Editor { uuid: "vera", tags: &[], can_edit: false }));
 }

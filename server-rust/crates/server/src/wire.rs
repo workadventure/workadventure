@@ -327,7 +327,7 @@ pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit
             if let Some(name) = &e.name {
                 entity.insert("name".into(), name.clone().into());
             }
-            Edit::CreateEntity { id: e.id.clone(), entity, width: f64::from(e.width), height: f64::from(e.height) }
+            Edit::CreateEntity { id: e.id.clone(), entity }
         }
         M::ModifyEntityMessage(e) => {
             let mut fields = Map::new();
@@ -340,8 +340,6 @@ pub fn edit_from(m: &pb::edit_map_message::Message) -> Option<wa_core::wam::Edit
                 id: e.id.clone(),
                 fields,
                 properties: (e.modify_properties == Some(true)).then(|| e.properties.iter().map(json_from).collect()),
-                width: f64::from(e.width),
-                height: f64::from(e.height),
             }
         }
         M::DeleteEntityMessage(e) => Edit::DeleteEntity(e.id.clone()),
