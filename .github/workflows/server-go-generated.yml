@@ -8,7 +8,7 @@ on:
       - "server-go/**"
       - "libs/messages/**"
       - "libs/shared-utils/src/SpaceState/**"
-      - "libs/map-editor/src/types.ts"
+      - "libs/map-editor/src/**"
       - "messages/protos/**"
       - "play/src/pusher/services/AdminApi.ts"
       - "play/src/pusher/services/ShortMapDescription.ts"
@@ -31,6 +31,11 @@ jobs:
           cache: npm
       - name: Install the repository's node modules (zod, zod-to-json-schema, tsx)
         run: npm ci
+      - name: Build the TypeScript protobuf types (libs/map-editor imports @workadventure/messages)
+        working-directory: messages
+        run: |
+          npm ci
+          npm run ts-proto
       - uses: actions/setup-go@v5
         with:
           go-version-file: server-go/go.mod
