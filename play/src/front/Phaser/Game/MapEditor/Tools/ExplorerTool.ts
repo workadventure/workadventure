@@ -82,7 +82,7 @@ export class ExplorerTool implements MapEditorTool {
         deltaY: number,
         deltaZ: number,
     ) => {
-        this.scene.handleMouseWheel(deltaY);
+        this.scene.handleMouseWheel(deltaY, pointer);
     };
     private pointerDownHandler = (pointer: Pointer) => {
         // The motion factor is used to smooth out the velocity of the camera.
@@ -93,14 +93,13 @@ export class ExplorerTool implements MapEditorTool {
 
         this.explorationMouseIsActive = true;
         this.scene.input.setDefaultCursor("grabbing");
-        this.scene.getCameraManager().stopSpeed();
+        // Stops inertia, and takes the view back if hovering the explorer list made the camera follow an item.
+        this.scene.getCameraManager().startManualPan();
     };
     private pointerMoveHandler = (pointer: Pointer) => {
         if (!this.explorationMouseIsActive) return;
 
-        this.scene
-            .getCameraManager()
-            .scrollCamera(pointer.prevPosition.x - pointer.x, pointer.prevPosition.y - pointer.y);
+        this.scene.getCameraManager().panBy(pointer.prevPosition.x - pointer.x, pointer.prevPosition.y - pointer.y);
     };
     private pointerUpHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
         this.scene.input.setDefaultCursor("grab");
@@ -114,8 +113,7 @@ export class ExplorerTool implements MapEditorTool {
 
         // The velocity will be null if the cursor is no longer above the game when the button is released
         if (pointer.velocity) {
-            // Let's compute the remaining velocity
-            this.scene.getCameraManager().setSpeed({ x: -pointer.velocity.x * 10, y: -pointer.velocity.y * 10 });
+            this.scene.getCameraManager().releaseManualPan(pointer.velocity);
         }
 
         this.scene.markDirty();

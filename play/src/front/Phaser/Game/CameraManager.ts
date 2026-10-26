@@ -1,5 +1,6 @@
 import * as Phaser from "phaser";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { get } from "svelte/store";
+import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
 import { cameraDetachedStore } from "../../Stores/CameraStore";
 import { Easing } from "../../types";
 import { HtmlUtils } from "../../WebRtc/HtmlUtils";
@@ -182,6 +183,8 @@ export class CameraManager extends EventEmitter {
         duration: number,
         callback?: () => void,
     ): void {
+        // The focus tween moves explorerFocusOn itself: let a running cursor zoom finish around the centre instead.
+        this.cursorZoomAnchor = undefined;
         const wasManuallyDetached = this.manuallyDetached;
         this.setManuallyDetached(false);
         if (wasManuallyDetached) {
@@ -540,11 +543,20 @@ export class CameraManager extends EventEmitter {
         this.camera.startFollow(this.explorerFocusOn, true);
     }
 
-    /** Detach only the view: unlike the map explorer, this keeps avatar controls enabled. */
+    /**
+     * Make the view follow the free point the user drags and zooms. In game mode this detaches the view from the
+     * avatar but keeps avatar controls. The map explorer has its own way back to the avatar, so it never counts as
+     * detached (no recentre button).
+     */
     public startManualPan(): void {
         if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
         this.setExplorationMode();
-        this.setManuallyDetached(true);
+        if (!get(mapExplorationModeStore)) this.setManuallyDetached(true);
+    }
+
+    /** The view follows the free point rather than the avatar: after a drag, or in the map explorer. */
+    private isFreeCamera(): boolean {
+        return this.manuallyDetached || get(mapExplorationModeStore);
     }
 
     public panBy(screenX: number, screenY: number): void {
@@ -553,17 +565,16 @@ export class CameraManager extends EventEmitter {
 
     /** Use the explorer's inertia, converting screen velocity to world units at the current zoom. */
     public releaseManualPan(velocity: { x: number; y: number }): void {
-        if (!this.manuallyDetached || !Number.isFinite(velocity.x) || !Number.isFinite(velocity.y)) return;
+        if (!this.isFreeCamera() || !Number.isFinite(velocity.x) || !Number.isFinite(velocity.y)) return;
         this.setSpeed({ x: (-velocity.x * 10) / this.camera.zoom, y: (-velocity.y * 10) / this.camera.zoom });
     }
 
     public stopManualPanInertia(): void {
-        if (this.manuallyDetached) this.stopSpeed();
+        if (this.isFreeCamera()) this.stopSpeed();
     }
 
     public resumePlayerFollow(): void {
         if (this.manuallyDetached) {
-            if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
             this.startFollowPlayer(this.scene.CurrentPlayer, 500);
         }
     }
@@ -606,8 +617,8 @@ export class CameraManager extends EventEmitter {
     }
 
     public zoomByFactorAtPointer(zoomFactor: number, duration: number, pointer: { x: number; y: number }): void {
-        // While following the avatar, the wheel zooms on it. Only a drag detaches the view and enables cursor zoom.
-        if (!this.manuallyDetached) {
+        // While following the avatar, the wheel zooms on it. Cursor zoom needs a free view (a drag, or the explorer).
+        if (!this.isFreeCamera()) {
             this.zoomByFactor(zoomFactor, duration);
             return;
         }
@@ -696,7 +707,7 @@ export class CameraManager extends EventEmitter {
         this.zoomAnimation?.onInterrupt();
         const applyZoom = (value: number, animating: boolean): void => {
             this.waScaleManager.setZoomModifier(value, this.camera, animating);
-            if (anchor && this.cursorZoomAnchor === anchor && this.manuallyDetached) {
+            if (anchor && this.cursorZoomAnchor === anchor && this.isFreeCamera()) {
                 this.camera.preRender();
                 const point = this.camera.getWorldPoint(
                     this.camera.x + anchor.screenX * this.camera.width,

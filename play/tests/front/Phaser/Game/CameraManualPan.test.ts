@@ -5,6 +5,7 @@ import { CameraManager } from "../../../../src/front/Phaser/Game/CameraManager";
 import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
 import type { WaScaleManager } from "../../../../src/front/Phaser/Services/WaScaleManager";
 import { cameraDetachedStore } from "../../../../src/front/Stores/CameraStore";
+import { mapExplorationModeStore } from "../../../../src/front/Stores/MapEditorStore";
 
 vi.mock("../../../../src/front/Phaser/Player/Player", () => ({ hasMovedEventName: "hasMoved" }));
 vi.mock("../../../../src/front/Phaser/Services/WaScaleManager", () => ({
@@ -17,6 +18,7 @@ vi.mock("../../../../src/front/Phaser/UserInput/UserInputManager", () => ({
 const managers: CameraManager[] = [];
 afterEach(() => {
     managers.splice(0).forEach((manager) => manager.destroy());
+    mapExplorationModeStore.set(false);
     document.body.innerHTML = "";
     vi.restoreAllMocks();
 });
@@ -147,6 +149,23 @@ describe("manual camera pan", () => {
         const after = camera.getWorldPoint(600, 150);
         expect(after.x).toBeCloseTo(before.x);
         expect(after.y).toBeCloseTo(before.y);
+    });
+
+    it("zooms on the cursor in the explorer, even after hovering a list item, without detaching", () => {
+        mapExplorationModeStore.set(true);
+        const { camera, manager, advanceTween } = setup(1, true);
+        // Hovering an explorer list item makes the camera follow that item.
+        manager.centerCameraOn({ x: 1500, y: 1200 });
+        advanceTween(1);
+        camera.preRender();
+        const before = camera.getWorldPoint(600, 150);
+        manager.zoomByFactorAtPointer(2, 250, { x: 600, y: 150 });
+        advanceTween(1);
+        camera.preRender();
+        const after = camera.getWorldPoint(600, 150);
+        expect(after.x).toBeCloseTo(before.x);
+        expect(after.y).toBeCloseTo(before.y);
+        expect(get(cameraDetachedStore)).toBe(false);
     });
 
     it("ignores cursor zoom-out at minimum zoom", () => {
