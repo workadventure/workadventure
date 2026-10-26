@@ -161,6 +161,7 @@ Les réponses de l'admin (`/api/map`, `/api/room/access`, `sameWorld`, membres d
 | `canRecord`, `recording.buttonState` | LocalAdmin.ts:69-75,236,342 | validé | `admin_test.go` ; `recording.spec.ts:144,358` | — | — |
 | Liste, suppression, vignettes, URL signée S3 | RecordingService.ts | validé | `recording.spec.ts` ; `s3_test.go` (signature AWS) ; `recordings_test.go` | — | — |
 | Notification à l'admin `api/recordings/events` | back AdminApi.ts:35-65 | validé (tests Go) | voir A23 (table de l'admin) | — | — |
+| Enregistrement automatique des micros d'une réunion quand le monde le demande (ef1f19ebab) : un egress de piste par micro publié dans une salle LiveKit (`MicrophoneTrackPublishedMessage` du front), fichiers et manifeste sur S3, arrêt avec la réunion, suivi dans les analytics de session | back AutoRecorder.ts, CommunicationManager.ts, LivekitService.ts (master) | absent | — | non porté : ni le message `MicrophoneTrackPublishedMessage`, ni les egress de piste, ni le manifeste | décider avec l'équipe avant de porter |
 
 ## Room API
 
