@@ -73,14 +73,9 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         this._space.dispatchPrivateEvent(privateEvent);
     }
 
-    handleUserAdded(
-        user: SpaceUser,
-        firstRegistry: boolean,
-    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+    handleUserAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
-            if (firstRegistry) {
-                this.notifyUserOfCurrentStrategy(user, this._communicationType);
-            }
+            this.tellStrategyToNewcomers();
             this._currentStrategy.addUser(user).catch((e) => {
                 Sentry.captureException(e);
                 console.error(e);
@@ -100,14 +95,9 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         this._currentStrategy.updateUser(user);
         return Promise.resolve();
     }
-    handleUserToNotifyAdded(
-        user: SpaceUser,
-        firstRegistry: boolean,
-    ): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
+    handleUserToNotifyAdded(user: SpaceUser): Promise<StateTransitionResult<T> | ICommunicationState<T> | void> {
         try {
-            if (firstRegistry) {
-                this.notifyUserOfCurrentStrategy(user, this._communicationType);
-            }
+            this.tellStrategyToNewcomers();
             this._currentStrategy.addUserToNotify(user).catch((e) => {
                 Sentry.captureException(e);
                 console.error(e);
