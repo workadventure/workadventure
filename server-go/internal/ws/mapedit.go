@@ -14,6 +14,7 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/admin"
 	"github.com/workadventure/workadventure/server-go/internal/core"
 	"github.com/workadventure/workadventure/server-go/internal/mapedit"
+	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
 	"github.com/workadventure/workadventure/server-go/internal/metrics"
 	pb "github.com/workadventure/workadventure/server-go/internal/pb/messages"
 	"github.com/workadventure/workadventure/server-go/internal/wam"
@@ -129,9 +130,14 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 		refuse(err)
 		return
 	}
+	maps, mapKey := mapedit.Maps(s.srv.maps), key
+	if s.srv.cfg.MapStorage.UseDomainNameInPath {
+		folder, rest, _ := strings.Cut(key, "/")
+		maps, mapKey = worldMaps{store: s.srv.maps, folder: folder}, rest
+	}
 	err = s.srv.edits.Run(key, func() {
-		cmd, after := mapedit.Resources(s.srv.maps, key, ed, cmd, s.srv.resource)
-		res, err := mapedit.Apply(s.srv.maps, key, ed, m.GetId(), cmd)
+		cmd, after := mapedit.Resources(maps, mapKey, ed, cmd, s.srv.resource)
+		res, err := mapedit.Apply(maps, mapKey, ed, m.GetId(), cmd)
 		if err != nil {
 			refuse(err)
 			return
@@ -147,6 +153,21 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 	if err != nil {
 		refuse(err)
 	}
+}
+
+// worldMaps is the store as the map editor sees it with USE_DOMAIN_NAME_IN_PATH: the folder of the map's world, where
+// map-storage keeps the files uploaded from the editor and the custom entities (mapPathUsingDomainWithPrefix with the
+// map's host), next to the map.
+type worldMaps struct {
+	store  *mapstorage.Store
+	folder string
+}
+
+func (w worldMaps) Read(key string) ([]byte, error)   { return w.store.Read(w.folder + "/" + key) }
+func (w worldMaps) Put(key string, data []byte) error { return w.store.Put(w.folder+"/"+key, data) }
+func (w worldMaps) Remove(key string) error           { return w.store.Remove(w.folder + "/" + key) }
+func (w worldMaps) Edit(key string, change func([]byte) ([]byte, error)) error {
+	return w.store.Edit(w.folder+"/"+key, change)
 }
 
 // mapEdit is an edit of the map as the core carries it, encoded once.

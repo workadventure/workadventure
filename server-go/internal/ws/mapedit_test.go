@@ -174,6 +174,32 @@ func TestTheMapEditorsCommandsLandInTheFile(t *testing.T) {
 	}
 }
 
+// With USE_DOMAIN_NAME_IN_PATH, a file uploaded from the map editor lands in the folder of the map's world, where
+// map-storage serves it, and not at the root shared by every world.
+func TestAnUploadedFileLandsInTheMapsWorld(t *testing.T) {
+	h := editorHarness(t)
+	h.srv.cfg.MapStorage.UseDomainNameInPath = true
+	if err := h.srv.maps.Put("map-storage.test/maps/office.wam", []byte(`{"version":"2.0.0","mapUrl":"./office.tmj","areas":[],"entities":{},"entityCollections":[]}`)); err != nil {
+		t.Fatal(err)
+	}
+	editor := h.dialWAM(auth.Token{Identifier: "ed", Tags: []string{"editor"}})
+	editor.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_EditMapCommandMessage{EditMapCommandMessage: &pb.EditMapCommandMessage{
+		Id: "up", EditMapMessage: &pb.EditMapMessage{Message: &pb.EditMapMessage_UploadFileMessage{UploadFileMessage: &pb.UploadFileMessage{
+			Id: "f", Name: "plan.pdf", PropertyId: "doc", File: []byte("%PDF")}}}}}})
+	editor.waitFor("the upload", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		if e := s.GetEditMapCommandMessage().GetEditMapMessage().GetErrorCommandMessage(); e != nil {
+			t.Fatalf("refused: %s", e.GetReason())
+		}
+		return s.GetEditMapCommandMessage().GetId() == "up"
+	})
+	if _, err := h.srv.maps.Read("map-storage.test/private/files/plan-doc.pdf"); err != nil {
+		t.Fatalf("not in the world's folder: %v", err)
+	}
+	if _, err := h.srv.maps.Read("private/files/plan-doc.pdf"); err == nil {
+		t.Fatal("stored at the root")
+	}
+}
+
 // Without an admin, the exit editor lists the maps of the room's world only: with USE_DOMAIN_NAME_IN_PATH, the
 // folder of its domain, never another world's.
 func TestRoomsFromSameWorldStayInTheWorld(t *testing.T) {

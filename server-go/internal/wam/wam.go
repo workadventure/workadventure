@@ -301,11 +301,15 @@ func clone(v any) map[string]any {
 	return out
 }
 
-// PrivateFile is where a file uploaded for an openFile property is stored (CustomFileService).
-func PrivateFile(name, propertyID string) string {
+// PrivateFile is where a file uploaded for an openFile property is stored (CustomFileService). The property id comes
+// from the client (a UUID of the front): one with a separator, which would climb out of the folder, is refused.
+func PrivateFile(name, propertyID string) (string, error) {
+	if strings.ContainsAny(propertyID, `/\`) {
+		return "", fmt.Errorf("Invalid property id: %s", propertyID)
+	}
 	base := path.Base(name)
 	ext := path.Ext(base)
-	return "private/files/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext
+	return "private/files/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext, nil
 }
 
 // filesRemoved lists the private files of the openFile properties of old that next drops, or empties (FileModule).
@@ -328,7 +332,9 @@ func filesRemoved(old, next []any) []string {
 			}
 		}
 		id, _ := op["id"].(string)
-		out = append(out, PrivateFile(name, id))
+		if f, err := PrivateFile(name, id); err == nil {
+			out = append(out, f)
+		}
 	}
 	return out
 }

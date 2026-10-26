@@ -75,7 +75,7 @@ func TestTheFileOfARemovedPropertyIsReportedForDeletion(t *testing.T) {
 		t.Fatal(err)
 	}
 	_, res, err := Edit(file, "c2", DeleteArea{ID: "a1"})
-	if err != nil || len(res.Removed) != 1 || res.Removed[0] != PrivateFile("report.pdf", "p1") {
+	if err != nil || len(res.Removed) != 1 || res.Removed[0] != "private/files/report-p1.pdf" {
 		t.Fatalf("%v %v", res.Removed, err)
 	}
 	cleared := map[string]any{"id": "p1", "type": "openFile", "name": "", "link": "", "newTab": false, "hideButtonLabel": false, "forceApi": false}

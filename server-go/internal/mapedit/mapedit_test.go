@@ -461,7 +461,7 @@ func TestAnAreaTheFrontCouldNotLoadIsRefused(t *testing.T) {
 func TestDroppingAnOpenFilePropertyDeletesItsFile(t *testing.T) {
 	maps := newMaps(t)
 	mustApply(t, maps, admin, UploadFile{Name: "plan.pdf", PropertyID: "doc", File: []byte("%PDF")})
-	file := wam.PrivateFile("plan.pdf", "doc")
+	file, _ := wam.PrivateFile("plan.pdf", "doc")
 	if _, err := maps.Read(file); err != nil {
 		t.Fatal("the file is stored for the property")
 	}
@@ -479,6 +479,15 @@ func TestOnlyDocumentsAndImagesAreUploaded(t *testing.T) {
 	maps := newMaps(t)
 	if _, err := Apply(maps, office, admin, "cmd", UploadFile{Name: "run.sh", PropertyID: "p", File: []byte("rm -rf /")}); err == nil {
 		t.Fatal("a script is not a document")
+	}
+}
+
+// The property id comes from the client: one with a separator would put the file in another folder, maybe in another
+// world's.
+func TestAnUploadedFileStaysInTheFilesFolder(t *testing.T) {
+	maps := newMaps(t)
+	for _, id := range []string{"../../other.test/x", "a/b", `a\b`} {
+		mustRefuse(t, maps, admin, UploadFile{Name: "plan.pdf", PropertyID: id, File: []byte("%PDF")}, id)
 	}
 }
 

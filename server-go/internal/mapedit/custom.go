@@ -166,5 +166,9 @@ func uploadFile(maps Maps, c UploadFile) error {
 	if !uploadedFile.MatchString(name) {
 		return fmt.Errorf("File extension is not a supported format :%s%s", path.Ext(name), name)
 	}
-	return maps.Put(wam.PrivateFile(name, c.PropertyID), c.File)
+	key, err := wam.PrivateFile(name, c.PropertyID)
+	if err != nil {
+		return err
+	}
+	return maps.Put(key, c.File)
 }
