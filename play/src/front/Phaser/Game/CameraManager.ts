@@ -603,7 +603,17 @@ export class CameraManager extends EventEmitter {
     }
 
     public centerCameraOn(position: { x: number; y: number }, zoom?: number): void {
-        this.animateToFocus(position, 1000);
+        // End on the free point (now at `position`), not on `position` itself, so keys, drags and zoom still move the view.
+        this.animateToFocus(position, 1000, () => {
+            this.camera.startFollow(
+                this.explorerFocusOn,
+                true,
+                1,
+                1,
+                this.camera.followOffset.x,
+                this.camera.followOffset.y,
+            );
+        });
         if (zoom) {
             this.animateToZoomLevel(zoom, 1000);
         }
