@@ -164,7 +164,6 @@ pub fn front_env(c: &Config) -> Value {
         "MAX_PER_GROUP": c.max_per_group,
         "MAX_DISPLAYED_VIDEOS": n("MAX_DISPLAYED_VIDEOS", 16.0),
         "LIVEKIT_PIXEL_DENSITY": n("LIVEKIT_PIXEL_DENSITY", 2.0 / 3.0),
-        "NODE_ENV": s("NODE_ENV").unwrap_or_else(|| "development".into()),
         "CONTACT_URL": raw("CONTACT_URL"),
         "POSTHOG_API_KEY": raw("POSTHOG_API_KEY"),
         "POSTHOG_URL": raw("POSTHOG_URL"),
@@ -805,6 +804,8 @@ mod tests {
         assert_eq!(env["ENABLE_CHAT"], json!(true));
         assert_eq!(env["LIVEKIT_PIXEL_DENSITY"], json!(2.0 / 3.0));
         assert!(env.get("JITSI_URL").is_none());
+        // The front no longer reads it (94fd550008): a server setting, not the front's.
+        assert!(env.get("NODE_ENV").is_none());
         assert!(page_script(&c, None).starts_with("window.env = {"));
         // White label colours as the pusher computes them (expected values printed by chroma-js).
         let p = string_palette(Some("#ff0000"), "secondary");
