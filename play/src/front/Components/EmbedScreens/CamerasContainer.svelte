@@ -53,6 +53,7 @@
         pipGridTemplateRows,
         PIP_GRID_MAX_VIDEOS,
     } from "../Video/PictureInPicture/pictureInPictureGridLayout";
+    import { observeElementSize } from "../Video/PictureInPicture/childWindow";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -435,6 +436,16 @@
         camerasContainer.scrollBy({ top: step, behavior: "smooth" });
     }
 
+    // Re-observed when entering or leaving picture-in-picture: the container then moves to another window.
+    $effect(() => {
+        const _exhaustiveCheck = $activePictureInPictureStore;
+        if (!camerasContainer) return;
+        return observeElementSize(camerasContainer, (width, height) => {
+            containerWidth = width;
+            camerasContainerHeight = height;
+        });
+    });
+
     // Re-run scroll indicator check when layout or content changes
     $effect(() => {
         if (camerasContainer) {
@@ -446,8 +457,6 @@
 
 <div class="group/cameras-container w-full" bind:clientHeight={maxContainerHeight} class:h-full={mode !== "row"}>
     <div
-        bind:clientWidth={containerWidth}
-        bind:clientHeight={camerasContainerHeight}
         bind:this={camerasContainer}
         class="no-scroll-bar mx-1"
         class:justify-center-safe={mode === "row"}
