@@ -144,3 +144,25 @@ func TestAWatcherSeesWhoComesAndGoes(t *testing.T) {
 		t.Fatalf("those already there, then each arrival and departure: %v", seen)
 	}
 }
+
+// 70d0a91b36 made the back's admin socket wait for a pending subscription before leaving, or the admin was added to
+// the room after it had left. Here the subscription and the unsubscription are closures on the room, run in the
+// order they were posted: an admin that leaves right after subscribing is gone before the next arrival.
+func TestAWatcherThatLeftRightAfterSubscribingHearsNothingMore(t *testing.T) {
+	r := NewRoom("http://play/_/global/maps/m.json", cfg)
+	defer r.Stop()
+	var mu sync.Mutex
+	var seen []any
+	stop, err := r.Watch(ctx, func(e Event) { mu.Lock(); seen = append(seen, e); mu.Unlock() })
+	if err != nil {
+		t.Fatal(err)
+	}
+	stop() // without waiting for the subscription to be processed
+	_ = r.Join(ctx, &recorder{}, JoinRequest{UUID: "bob", Name: "Bob", Position: at(900, 900), Viewport: wholeMap})
+	sync_(t, r)
+	mu.Lock()
+	defer mu.Unlock()
+	if len(seen) != 0 {
+		t.Fatalf("a watcher that left hears of nobody: %v", seen)
+	}
+}

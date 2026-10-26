@@ -63,6 +63,7 @@ Les réponses de l'admin (`/api/map`, `/api/room/access`, `sameWorld`, membres d
 | Emotes | BSM:1196 | validé (unitaire) | `core/roomevents_test.go` : `TestAnEmoteReachesThoseWhoSeeTheSenderAndOnlyIfItIsAnEmoji` | — | — |
 | itemEvent, entityMessage | BSM:279, 325 | partiel | `ws/handlers.go` (`onItemEvent`, `onEntity`) ; `TestANewcomerGetsTheStateOfTheInteractiveObjects` | `entityMessage` sans test | test |
 | abortQuery | IOC:1046 | validé | `server_test.go` : `TestAnAbortedJoinLeavesTheSpace` ; `map_editor_livekit:111` | — | — |
+| Messages reçus juste avant la fermeture traités avant le départ de la salle ; socket admin qui part juste après s'être abonné (70d0a91b36) | back RoomManager.ts (master) | validé | `ws/variables_room_test.go` : `TestTheWritesSentJustBeforeClosingAreApplied` ; `core/roomapi_test.go` : `TestAWatcherThatLeftRightAfterSubscribingHearsNothingMore` | garanti par construction, sans code ajouté : le lecteur d'une connexion poste chaque message à l'acteur de salle avant de lire la trame suivante, et `destroy` attend la fin des lecteurs avant de poster le départ ; l'abonnement et le désabonnement du socket admin sont deux closures de l'acteur, traitées dans l'ordre | — |
 | Invitations à une réunion | BSM:1355-1391 | validé (cœur) | `core/roomvars_test.go:52` ; J3b à rejouer | — | — |
 
 ## Spaces, chat, Matrix

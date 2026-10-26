@@ -3,6 +3,7 @@ package ws
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -123,5 +124,26 @@ func TestAVariableSetWhileRedisIsDownSurvivesTheRoom(t *testing.T) {
 			}
 		}
 		return true
+	})
+}
+
+// 70d0a91b36: the back closed a joinRoom stream as soon as it ended, dropping the messages still queued behind a
+// slow handler, such as the last variable write of a player navigating away. Here a connection's reader hands each
+// message to the room before it reads the next frame, and the player leaves the room only once its readers have
+// stopped (destroy waits for them): every write sent before the close reaches the room while the player is in it.
+func TestTheWritesSentJustBeforeClosingAreApplied(t *testing.T) {
+	h := editorHarness(t)
+	if err := h.srv.maps.Put("maps/office.tmj", []byte(officeTiled)); err != nil {
+		t.Fatal(err)
+	}
+	observer := h.dialWAM(auth.Token{Identifier: "observer"})
+	leaving := h.dialWAM(auth.Token{Identifier: "leaving"})
+	const last = 50
+	for i := 1; i <= last; i++ {
+		leaving.send(setVariable("note", fmt.Sprintf(`"%d"`, i)))
+	}
+	_ = leaving.conn.Close(websocket.StatusNormalClosure, "Page unloading")
+	observer.waitFor("the last note", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		return s.GetVariableMessage().GetName() == "note" && s.GetVariableMessage().GetValue() == fmt.Sprintf(`"%d"`, last)
 	})
 }
