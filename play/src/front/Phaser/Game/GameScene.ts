@@ -39,7 +39,7 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { iceServersManager } from "../../WebRtc/IceServersManager";
-import { UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
+import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
@@ -149,7 +149,6 @@ import {
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
-    mapExplorationModeStore,
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
@@ -1387,7 +1386,11 @@ export class GameScene extends DirtyScene {
             ? { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y }
             : undefined;
 
-        if (this.hasJoinedRoom) {
+        if (this.hasJoinedRoom && this.mapEditorModeManager?.isActive()) {
+            // In the map editor, the move keys scroll the map and the avatar stays put.
+            this.cameraManager.move(this.userInputManager.getEventListForGameTick(), delta);
+            this.CurrentPlayer.moveUser(delta, new ActiveEventList());
+        } else if (this.hasJoinedRoom) {
             const moveEvents = this.userInputManager.getEventListForGameTick();
             if (
                 moveEvents.get(UserInputEvent.MoveUp) ||
@@ -2820,16 +2823,6 @@ export class GameScene extends DirtyScene {
                     this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
                 }
                 this.markDirty();
-            }),
-        );
-
-        this.unsubscribers.push(
-            mapExplorationModeStore.subscribe((exploration) => {
-                if (exploration) {
-                    this.cameraManager.setExplorationMode();
-                } else {
-                    this.input.keyboard?.enableGlobalCapture();
-                }
             }),
         );
 
@@ -4748,11 +4741,9 @@ ${escapedMessage}
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
         // Apply the zoom
-        // The explorer's view is always free (its list sets a focus target only to centre on hovered items).
-        // Elsewhere, the editor tools and focus zones keep zooming on the centre.
-        const cursorZoom =
-            get(mapExplorationModeStore) || (!get(mapEditorModeStore) && !waScaleManager.getFocusTarget());
-        const cursor = cursorZoom ? pointer : undefined;
+        // The map editor's view is always free (the explorer list sets a focus target only to centre on hovered
+        // items). In game mode, focus zones keep zooming on the centre.
+        const cursor = get(mapEditorModeStore) || !waScaleManager.getFocusTarget() ? pointer : undefined;
         this.zoomByFactor(zoomFactor, true, cursor);
     }
 

@@ -5,7 +5,7 @@ import { Player } from "../Player/Player";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
 import { mapManagerActivated } from "../../Stores/MenuStore";
 import { displayEmote, isEmoteIndex } from "../../Stores/EmoteStore";
@@ -124,7 +124,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
-        if (pointer.leftButtonReleased() && !pointer.wasTouch) {
+        if (pointer.leftButtonReleased() && this.canDragWith(pointer)) {
             const wasDragging = this.draggingMap;
             const dragged = this.mapDrag.end(pointer.id);
             this.restoreDragCursor();
@@ -189,7 +189,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
-        if (pointer.wasTouch || !pointer.leftButtonDown() || !this.canDragMap()) {
+        if (!this.canDragWith(pointer) || !pointer.leftButtonDown() || !this.canDragMap()) {
             return;
         }
         pointer.motionFactor = 0.35;
@@ -199,7 +199,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {
-        if (pointer.wasTouch) {
+        if (!this.canDragWith(pointer)) {
             return;
         }
         if (!pointer.leftButtonDown()) {
@@ -235,17 +235,23 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     private canDragMap(): boolean {
-        return (
-            this.gameScene.userInputManager.isControlsEnabled &&
-            !get(mapEditorModeStore) &&
-            !this.gameScene.getCameraManager().isZoomLocked() &&
-            !waScaleManager.getFocusTarget()
-        );
+        if (!this.gameScene.userInputManager.isControlsEnabled || this.gameScene.getCameraManager().isZoomLocked()) {
+            return false;
+        }
+        // The other editor tools use the left drag themselves. The explorer list sets a focus target on hover,
+        // which must not lock its view like a focus zone does.
+        if (get(mapExplorationModeStore)) return true;
+        return !get(mapEditorModeStore) && !waScaleManager.getFocusTarget();
+    }
+
+    /** In game mode a touch drag belongs to the joystick; in the explorer, one finger pans the map. */
+    private canDragWith(pointer: Pointer): boolean {
+        return !pointer.wasTouch || get(mapExplorationModeStore);
     }
 
     private restoreDragCursor(): void {
         if (this.draggingMap) {
-            this.gameScene.input.setDefaultCursor("auto");
+            this.gameScene.input.setDefaultCursor(get(mapExplorationModeStore) ? "grab" : "auto");
             this.draggingMap = false;
         }
     }

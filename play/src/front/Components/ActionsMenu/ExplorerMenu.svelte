@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
+    import { mapEditorModeStore } from "../../Stores/MapEditorStore";
     import { cameraDetachedStore } from "../../Stores/CameraStore";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -104,12 +104,10 @@
     function centerToUser() {
         analyticsClient.trackAdminEvent("map_explorer.center_to_user_clicked");
 
-        if ($cameraDetachedStore) {
-            getCameraManager()?.resumePlayerFollow();
-            return;
-        }
-        mapEditorModeStore.switchMode(false);
-        gameManager.getCurrentGameScene().getMapEditorModeManager()?.equipTool(EditorToolName.CloseMapEditor);
+        const scene = gameManager.getCurrentGameScene();
+        // In the map editor, bring the view back to the avatar and stay in the editor.
+        if ($mapEditorModeStore) scene.getCameraManager().centerCameraOn(scene.CurrentPlayer);
+        else getCameraManager()?.resumePlayerFollow();
     }
 
     onDestroy(() => {
@@ -159,7 +157,7 @@
                 </div>
             </div>
         </div>
-        {#if $mapExplorationModeStore === false && !$cameraDetachedStore}
+        {#if !$mapEditorModeStore && !$cameraDetachedStore}
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div
