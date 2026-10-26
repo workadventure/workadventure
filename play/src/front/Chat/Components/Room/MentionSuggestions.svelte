@@ -1,7 +1,9 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
+    import { defaultColor } from "@workadventure/shared-utils";
     import LL from "../../../../i18n/i18n-svelte";
     import { createMentionPill, findMentionQuery, type MentionCandidate, ROOM_MENTION_ID } from "../../Mentions";
+    import Avatar from "../Avatar.svelte";
 
     interface Props {
         candidates: Readable<readonly MentionCandidate[]>;
@@ -34,6 +36,11 @@
                       ),
                   )
                   .slice(0, MAX_SUGGESTIONS),
+    );
+    let firstMemberIndex = $derived(matches.findIndex((candidate) => candidate.id !== ROOM_MENTION_ID));
+    // The members of the conversation, us included, for the "@room" row. Only computed once the list is shown.
+    let everyoneCount = $derived(
+        query === undefined ? 0 : $candidates.filter((candidate) => candidate.id !== ROOM_MENTION_ID).length + 1,
     );
 
     function getCaret(): { node: Text; offset: number } | undefined {
@@ -135,30 +142,80 @@
 </script>
 
 {#if matches.length > 0}
-    <ul
-        class="absolute bottom-full left-0 z-50 m-0 mb-1 w-full list-none rounded-lg bg-contrast/95 p-1 backdrop-blur"
-        role="listbox"
-        aria-label={$LL.chat.mentionSuggestions()}
+    <div
+        class="absolute bottom-full start-0 end-0 z-50 mx-2 mb-2 overflow-hidden rounded-xl border border-solid border-white/10 bg-contrast shadow-xl"
         data-testid="mentionSuggestions"
     >
-        {#each matches as candidate, index (candidate.id)}
-            <!-- mousedown, not click: the input must keep the focus and the caret. -->
-            <li
-                role="option"
-                aria-selected={index === activeIndex}
-                class="cursor-pointer truncate rounded px-3 py-1.5 text-sm text-white {index === activeIndex
-                    ? 'bg-white/20'
-                    : 'hover:bg-white/10'}"
-                onmousedown={(event) => {
-                    event.preventDefault();
-                    insert(candidate);
-                }}
-            >
-                @{candidate.name}
-                {#if candidate.id === ROOM_MENTION_ID}
-                    <span class="ms-2 text-xs text-white/60">{$LL.chat.mentionRoom()}</span>
+        <ul
+            class="m-0 max-h-80 list-none overflow-y-auto p-1"
+            role="listbox"
+            aria-label={$LL.chat.mention.suggestions()}
+        >
+            {#each matches as candidate, index (candidate.id)}
+                {@const isRoom = candidate.id === ROOM_MENTION_ID}
+                {@const active = index === activeIndex}
+                {#if isRoom || index === firstMemberIndex}
+                    <li
+                        role="presentation"
+                        class="px-2 pb-1 pt-2 text-xxs font-bold uppercase tracking-wider text-white/60"
+                    >
+                        {isRoom ? $LL.chat.mention.notify() : $LL.chat.mention.members()}
+                    </li>
                 {/if}
-            </li>
-        {/each}
-    </ul>
+                <!-- mousedown, not click: the input must keep the focus and the caret. -->
+                <li
+                    role="option"
+                    aria-selected={active}
+                    class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-white {active
+                        ? 'bg-secondary'
+                        : 'hover:bg-white/10'}"
+                    onmousedown={(event) => {
+                        event.preventDefault();
+                        insert(candidate);
+                    }}
+                    onmouseenter={() => (activeIndex = index)}
+                >
+                    {#if isRoom}
+                        <div
+                            class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-danger-1000 text-base font-bold"
+                        >
+                            @
+                        </div>
+                        <div class="text-sm font-bold">room</div>
+                        <div class="ms-auto truncate text-xs {active ? 'text-white/85' : 'text-white/60'}">
+                            {$LL.chat.mention.room({ count: everyoneCount })}
+                        </div>
+                    {:else}
+                        <div class="relative shrink-0">
+                            <Avatar
+                                compact
+                                pictureStore={candidate.pictureStore}
+                                fallbackName={candidate.name}
+                                color={candidate.color ?? defaultColor}
+                            />
+                            {#if candidate.online !== undefined}
+                                <span
+                                    class="absolute -bottom-0.5 -end-0.5 h-2.5 w-2.5 rounded-full border-2 border-solid border-contrast {candidate.online
+                                        ? 'bg-success'
+                                        : 'bg-white/40'}"
+                                ></span>
+                            {/if}
+                        </div>
+                        <div
+                            class="min-w-0 truncate text-sm font-bold {candidate.online === false && !active
+                                ? 'text-white/75'
+                                : ''}"
+                        >
+                            {candidate.name}
+                        </div>
+                        {#if candidate.online !== undefined}
+                            <div class="ms-auto shrink-0 text-xs {active ? 'text-white/85' : 'text-white/60'}">
+                                {candidate.online ? $LL.chat.mention.online() : $LL.chat.mention.offline()}
+                            </div>
+                        {/if}
+                    {/if}
+                </li>
+            {/each}
+        </ul>
+    </div>
 {/if}

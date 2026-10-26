@@ -13,8 +13,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "아직 보낸 메시지가 없습니다!",
     beFirst: "첫 번째로 메시지를 보내보세요",
     enter: "메시지를 입력하세요...",
-    mentionSuggestions: "멘션할 멤버",
-    mentionRoom: "이 대화의 모든 사람에게 알림",
+    mention: {
+        suggestions: "멘션할 멤버",
+        notify: "알림",
+        members: "멤버",
+        room: "대화 참여자 전체 · {count}",
+        online: "온라인",
+        offline: "자리 비움",
+        mentionedYou: "님이 회원님을 멘션함",
+    },
     menu: {
         visitCard: "명함 보기",
         addFriend: "친구 추가",

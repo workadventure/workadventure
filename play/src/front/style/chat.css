@@ -272,7 +272,7 @@
 .message-bubble a[data-mention],
 .message-bubble a[href^="https://matrix.to/#/@"],
 .message-input a[data-mention] {
-    @apply inline-block rounded-full bg-white/20 px-1.5 font-bold text-white no-underline opacity-100 cursor-default;
+    @apply rounded-md bg-white/15 px-1 py-px font-semibold text-white no-underline opacity-100 cursor-default;
 }
 .message-bubble a[data-mention]::before,
 .message-bubble a[href^="https://matrix.to/#/@"]::before,
@@ -280,7 +280,7 @@
     content: "@";
 }
 .message-bubble a[data-mention-me] {
-    @apply bg-danger;
+    @apply bg-danger-1000;
 }
 pre {
     margin: 0;

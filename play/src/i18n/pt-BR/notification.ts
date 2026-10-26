@@ -3,7 +3,7 @@ import type { BaseTranslation } from "../i18n-types";
 const notification: BaseTranslation = {
     discussion: "{name} quer discutir com você",
     message: "{name} envia uma mensagem",
-    mention: "{name} mencionou você em uma mensagem",
+    mention: "{name} mencionou você",
     askToMuteMicrophone: "Posso silenciar seu microfone?",
     askToMuteCamera: "Posso silenciar sua câmera?",
     microphoneMuted: "Seu microfone foi silenciado por um moderador",

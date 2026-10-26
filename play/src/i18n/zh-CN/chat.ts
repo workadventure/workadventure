@@ -11,8 +11,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "还没有发送消息！",
     beFirst: "成为第一个发送消息的人",
     enter: "输入消息...",
-    mentionSuggestions: "可提及的成员",
-    mentionRoom: "通知此对话中的所有人",
+    mention: {
+        suggestions: "可提及的成员",
+        notify: "通知",
+        members: "成员",
+        room: "整个对话 · {count}",
+        online: "在线",
+        offline: "离开",
+        mentionedYou: "提及了你",
+    },
     menu: {
         visitCard: "访问卡",
         addFriend: "添加朋友",

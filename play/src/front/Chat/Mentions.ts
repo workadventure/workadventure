@@ -1,6 +1,7 @@
 import { Marked } from "marked";
 import { MsgType } from "matrix-js-sdk";
 import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
+import type { PictureStore } from "../Stores/PictureStore";
 
 /**
  * A mention travels as a pill in the message HTML:
@@ -17,6 +18,10 @@ export type MentionCandidate = {
     name: string;
     /** Other words that find it after an "@". */
     keywords?: string[];
+    pictureStore?: PictureStore;
+    color?: string;
+    /** Connected to the world right now. */
+    online?: boolean;
 };
 
 /**

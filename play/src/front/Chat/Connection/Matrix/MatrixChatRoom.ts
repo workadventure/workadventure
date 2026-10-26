@@ -238,7 +238,7 @@ export class MatrixChatRoom
                 message.id,
                 true,
                 undefined,
-                mentionsMe,
+                mentionsMe ? { pictureStore: message.sender?.pictureStore, color: message.sender?.color } : undefined,
             );
         },
     ) {
@@ -315,9 +315,10 @@ export class MatrixChatRoom
         this.joinedMemberCount = readonly(this.joinedMemberCountStore);
         this.membersForMessageAvatars = this.members;
         this.mentionCandidates = readable<readonly MentionCandidate[]>([], (set) => {
-            // With lazy loading, only the members seen in the timeline are known: fetch them all once an "@" is typed.
-            this.ensureMembersInitialized().catch((error) => console.error(error));
-            return this.members.subscribe((members) =>
+            let members: MatrixChatRoomMember[] = [];
+            // Chat ids of the users connected to the world: the others are shown as away.
+            let onlineChatIds = new Set<string>();
+            const update = () =>
                 set([
                     // Same check as Element before offering @room: the power level for notifications.room.
                     ...(this.matrixRoom
@@ -332,9 +333,45 @@ export class MatrixChatRoom
                                 member.id !== this.matrixRoom.myUserId &&
                                 get(member.membership) === KnownMembership.Join,
                         )
-                        .map((member) => ({ id: member.id, name: get(member.name) })),
-                ]),
-            );
+                        .map((member) => ({
+                            id: member.id,
+                            name: get(member.name),
+                            pictureStore: member.pictureStore,
+                            color: get(member.avatarFallbackColor),
+                            online: onlineChatIds.has(member.id),
+                        }))
+                        .sort((a, b) => Number(b.online) - Number(a.online)),
+                ]);
+
+            // With lazy loading, only the members seen in the timeline are known: fetch them all once an "@" is typed.
+            this.ensureMembersInitialized().catch((error) => console.error(error));
+            const unsubscribeMembers = this.members.subscribe((value) => {
+                members = value;
+                update();
+            });
+            let unsubscribeOnline: (() => void) | undefined;
+            let stopped = false;
+            this.userProviderMergerPromise
+                .then((merger) => {
+                    if (stopped || !merger) {
+                        return;
+                    }
+                    unsubscribeOnline = merger.usersByRoomStore.subscribe((usersByRoom) => {
+                        // A user with no play URI is known to the world but not connected to it.
+                        onlineChatIds = new Set(
+                            Array.from(usersByRoom.entries())
+                                .filter(([playUri]) => playUri !== undefined)
+                                .flatMap(([, room]) => room.users.flatMap((user) => user.chatId ?? [])),
+                        );
+                        update();
+                    });
+                })
+                .catch((error) => console.error(error));
+            return () => {
+                stopped = true;
+                unsubscribeMembers();
+                unsubscribeOnline?.();
+            };
         });
         this.directRoomPeerAvatarMember = this.getDirectRoomPeerRoomMember();
         if (this.directRoomPeerAvatarMember) {

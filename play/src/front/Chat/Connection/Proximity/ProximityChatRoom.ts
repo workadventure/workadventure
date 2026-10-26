@@ -192,7 +192,14 @@ export class ProximityChatRoom implements ChatRoom {
         ...(this.isCurrentUserAdmin(this.getCurrentSpaceUser(users)) ? [ROOM_MENTION] : []),
         ...Array.from(users.values())
             .filter((user) => user.spaceUserId !== this._spaceUserId)
-            .map((user) => ({ id: user.spaceUserId, name: user.name })),
+            .map((user) => ({
+                id: user.spaceUserId,
+                name: user.name,
+                pictureStore: user.pictureStore,
+                color: user.color,
+                // Everyone in the bubble is here.
+                online: true,
+            })),
     ]);
     // The polls and questions of the space state (owned by the back).
     // One store per slice, set only when the slice changed: a raised hand must not rebuild the polls.
@@ -1457,7 +1464,9 @@ export class ProximityChatRoom implements ChatRoom {
                     lastMessage.id,
                     true,
                     undefined,
-                    mentionsMe,
+                    mentionsMe
+                        ? { pictureStore: lastMessage.sender.pictureStore, color: lastMessage.sender.color }
+                        : undefined,
                 );
             }
         });

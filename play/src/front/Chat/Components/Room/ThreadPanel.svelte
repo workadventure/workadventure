@@ -140,7 +140,7 @@
                                     {#if summary.hasUnreadMessages}
                                         <span
                                             class="ml-auto flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full {summary.hasUnreadMentions
-                                                ? 'bg-danger text-white'
+                                                ? 'bg-danger-1000 text-white'
                                                 : 'bg-success text-contrast'} px-1.5 text-xs font-bold"
                                             data-testid={`threadPanelItemUnread-${summary.rootMessageId}`}
                                             aria-label={$LL.chat.thread.unreadAriaLabel({

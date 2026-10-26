@@ -13,8 +13,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "Nessun messaggio inviato per ora!",
     beFirst: "Sii il primo a inviare un messaggio",
     enter: "Inserisci il tuo messaggio...",
-    mentionSuggestions: "Membri da menzionare",
-    mentionRoom: "Avvisa tutti in questa conversazione",
+    mention: {
+        suggestions: "Membri da menzionare",
+        notify: "Notifica",
+        members: "Membri",
+        room: "Tutta la conversazione · {count}",
+        online: "online",
+        offline: "assente",
+        mentionedYou: "ti ha menzionato",
+    },
     menu: {
         visitCard: "Visita la scheda",
         addFriend: "Aggiungi amico",

@@ -4,7 +4,7 @@ import type { DeepPartial } from "../DeepPartial";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} wil met je praten",
     message: "{name} stuurt een bericht",
-    mention: "{name} heeft je vermeld in een bericht",
+    mention: "{name} heeft je vermeld",
     askToMuteMicrophone: "Vraag om je microfoon te dempen 🙏",
     askToMuteCamera: "Vraag om je camera te dempen 🙏",
     microphoneMuted: "Je microfoon is gedempt door een moderator",
