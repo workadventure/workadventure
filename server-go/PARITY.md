@@ -71,6 +71,7 @@ Les réponses de l'admin (`/api/map`, `/api/room/access`, `sameWorld`, membres d
 | Fonction | Contrat TS | État | Preuve | Écart | Prochaine action |
 |---|---|---|---|---|---|
 | join/leave space, filtres, updateSpaceUser, metadata | PSM:497-1405 | validé | `core/space_test.go`, `space_filter_test.go` ; J2, `scripting_spaces` | rejoindre deux fois renvoie un succès | — |
+| Un observateur parti pendant l'attente de l'init n'est pas réinscrit (29ca208789) | pusher Space.ts:154 (master) | validé | `core/space_test.go` : `TestAWatcherThatLeftIsNotKeptAsOne` | garanti par construction, sans code ajouté : la liste des membres et l'inscription de l'observateur sont une seule closure de l'acteur du space, sans aller-retour vers un back ; un départ arrive avant (l'observation est refusée) ou après (le départ la défait) | — |
 | SpaceState (main levée, parole, sondages, setKind) | BSp:693-725 | validé | `core/space_filter_test.go:116-166` ; types et validation générés du schéma zod (`spacestate.schema.json`, `spacestate/validate_test.go`) | revokeFloor, deletePoll et questions non testés | tests |
 | Chat de bulle (spaceMessage, isTyping) | EventProcessorInit.ts:5-45 | implémenté non vérifié | `ws/spaces.go:172,387` ; E2E vert (J2) | signature (nom, woka) non testée | test |
 | chatMembersQuery (A12), roomTagsQuery (A8) | PSM:1540, 1321 | validé | `admin/http_test.go` : `TestTheChatAndTheMapEditorSearchTheMembersOfTheAdmin` | — | — |

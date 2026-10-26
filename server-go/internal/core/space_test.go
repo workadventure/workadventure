@@ -120,3 +120,44 @@ func TestSpaceRulesAndRelays(t *testing.T) {
 		t.Fatal("a stranger cannot publish")
 	}
 }
+
+// 29ca208789: the pusher registered a watcher with the back after waiting for the space's user list, by which time
+// the user might have left; the back then kept a ghost watcher that WebRTC paired with every newcomer. Here the
+// user list and the registration are one closure on the space: a departure comes either before it (the watch finds
+// no member) or after it (the departure undoes it), never in between.
+func TestAWatcherThatLeftIsNotKeptAsOne(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "room#1#0"})
+	defer sp.Stop()
+	after, before := &recorder{}, &recorder{}
+	joinSpace(t, sp, after, "room_2", media...)
+	_ = sp.Watch(ctx, "room_2", nil)
+	_ = sp.Leave(ctx, "room_2", nil) // left once watching
+	joinSpace(t, sp, before, "room_4", media...)
+	_ = sp.Leave(ctx, "room_4", nil)
+	notMember := make(chan struct{}, 1)
+	_ = sp.Watch(ctx, "room_4", func() { notMember <- struct{}{} }) // the watch comes after the departure
+	newcomer := &recorder{}
+	joinSpace(t, sp, newcomer, "room_3", media...)
+	_ = sp.Watch(ctx, "room_3", nil)
+	syncSpace(t, sp)
+
+	select {
+	case <-notMember:
+	default:
+		t.Fatal("a watch after the departure is refused")
+	}
+	for _, gone := range []*recorder{after, before} {
+		for _, e := range gone.take() {
+			if a, ok := e.(SpaceUserAdded); ok && a.User.ID == "room_3" {
+				t.Fatalf("a user who left still watches: %#v", e)
+			}
+		}
+	}
+	ev := newcomer.take()
+	if has(ev, func(p SpacePrivateEvent) bool { s, ok := p.Event.(WebRTCStart); return ok && s.UserID != "room_3" }) {
+		t.Fatalf("the newcomer is paired with nobody who left: %#v", ev)
+	}
+	if !has(ev, func(i SpaceUsersInit) bool { return len(i.Users) == 1 }) {
+		t.Fatalf("the newcomer sees itself alone: %#v", ev)
+	}
+}
