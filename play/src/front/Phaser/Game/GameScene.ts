@@ -4748,7 +4748,7 @@ ${escapedMessage}
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
         // Apply the zoom
-        const cursor = deltaY < 0 && !get(mapEditorModeStore) && !waScaleManager.getFocusTarget() ? pointer : undefined;
+        const cursor = !get(mapEditorModeStore) && !waScaleManager.getFocusTarget() ? pointer : undefined;
         this.zoomByFactor(zoomFactor, true, cursor);
     }
 

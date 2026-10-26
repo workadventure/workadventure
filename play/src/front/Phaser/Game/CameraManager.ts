@@ -606,7 +606,14 @@ export class CameraManager extends EventEmitter {
     }
 
     public zoomByFactorAtPointer(zoomFactor: number, duration: number, pointer: { x: number; y: number }): void {
-        if (this.isZoomLocked() || (zoomFactor > 1 && this.waScaleManager.isMaximumZoomInReached)) return;
+        // While following the avatar, the wheel zooms on it. Only a drag detaches the view and enables cursor zoom.
+        if (!this.manuallyDetached) {
+            this.zoomByFactor(zoomFactor, duration);
+            return;
+        }
+        const limitReached =
+            zoomFactor > 1 ? this.waScaleManager.isMaximumZoomInReached : this.waScaleManager.isMaximumZoomOutReached;
+        if (this.isZoomLocked() || limitReached) return;
         // Normalized coordinates survive WaScaleManager switching between canvas and camera zoom.
         const screenX = (pointer.x - this.camera.x) / this.camera.width;
         const screenY = (pointer.y - this.camera.y) / this.camera.height;
