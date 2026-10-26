@@ -5,7 +5,7 @@
 //! map-storage serves them for that world's host.
 
 use serde_json::{Value, json};
-use wa_core::wam::{Editor, uploaded_file_path};
+use wa_core::wam::{Editor, FileKind, uploaded_file_path};
 use wa_proto::messages as pb;
 
 use crate::map_storage::Storage;
@@ -121,9 +121,15 @@ pub async fn delete(storage: &Storage, dir: &str, id: &str, editor: Editor<'_>) 
     Ok(())
 }
 
-/// `uploadFileMessage`: the file of an openFile or playAudio property, as `<folder>/<name>-<propertyId><ext>`.
+/// `uploadFileMessage`: the file of an openFile or playAudio property, as `<folder>/<name>-<propertyId><ext>` in
+/// the folder of the kind the client says it is. A kind this version does not know is refused.
 pub async fn upload_file(storage: &Storage, dir: &str, m: &pb::UploadFileMessage) -> Result<(), String> {
-    let path = uploaded_file_path(&m.name, &m.property_id)?;
+    let kind = match pb::UploadedFileKind::try_from(m.kind) {
+        Ok(pb::UploadedFileKind::Document) => FileKind::Document,
+        Ok(pb::UploadedFileKind::Sound) => FileKind::Sound,
+        Err(_) => return Err(format!("Unknown kind {} for the file \"{}\"", m.kind, m.name)),
+    };
+    let path = uploaded_file_path(&m.name, &m.property_id, kind)?;
     storage.put_asset(format!("{dir}{path}"), m.file.to_vec()).await.map_err(|e| e.to_string())
 }
 

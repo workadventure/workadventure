@@ -2,7 +2,7 @@
 //! Each one is a sequence of commands, then what the file holds.
 
 use serde_json::{Map, Value, json};
-use wa_core::wam::{Edit, Editor, Wam, uploaded_file_path};
+use wa_core::wam::{Edit, Editor, FileKind, Wam, uploaded_file_path};
 
 fn obj(v: Value) -> Map<String, Value> {
     v.as_object().unwrap().clone()
@@ -176,14 +176,29 @@ fn an_uploaded_sound_goes_once_its_property_stops_using_it() {
 fn an_uploaded_file_stays_in_its_folder_whatever_the_client_names() {
     // 8bc544ce0f: the property id comes from the client; with USE_DOMAIN_NAME_IN_PATH, `/../other.domain` would
     // reach another world's folder.
-    assert_eq!(uploaded_file_path("doc.PDF", "p-1").unwrap(), "private/files/doc-p-1.PDF");
-    assert_eq!(uploaded_file_path("../../a.b.png", "p").unwrap(), "private/files/a.b-p.png");
-    assert_eq!(uploaded_file_path("gong.mp3", "p").unwrap(), "assets/sounds/gong-p.mp3");
+    use FileKind::{Document, Sound};
+    assert_eq!(uploaded_file_path("doc.PDF", "p-1", Document).unwrap(), "private/files/doc-p-1.PDF");
+    assert_eq!(uploaded_file_path("../../a.b.png", "p", Document).unwrap(), "private/files/a.b-p.png");
     for id in ["/../../../../other.domain", "..\\other", "a/b"] {
-        assert!(uploaded_file_path("doc.pdf", id).is_err(), "{id}");
+        assert!(uploaded_file_path("doc.pdf", id, Document).is_err(), "{id}");
+        assert!(uploaded_file_path("gong.mp3", id, Sound).is_err(), "{id}");
     }
     for name in ["page.html", ".pdf", "pdf", "doc.pdf.exe"] {
-        assert!(uploaded_file_path(name, "p").is_err(), "{name}");
+        assert!(uploaded_file_path(name, "p", Document).is_err(), "{name}");
+    }
+}
+
+#[test]
+fn each_kind_of_upload_has_its_folder_and_formats() {
+    // e2c5f174df: the client says what the file is for; it can only choose between the two lists.
+    use FileKind::{Document, Sound};
+    assert_eq!(uploaded_file_path("gong.mp3", "p", Sound).unwrap(), "assets/sounds/gong-p.mp3");
+    for ext in ["ogg", "wav", "M4A", "flac"] {
+        assert!(uploaded_file_path(&format!("a.{ext}"), "p", Sound).unwrap().starts_with("assets/sounds/"));
+    }
+    assert_eq!(uploaded_file_path("doc.pdf", "p", Document).unwrap(), "private/files/doc-p.pdf");
+    for (name, kind) in [("x.pdf", Sound), ("x.png", Sound), ("x.mp3", Document), ("x.html", Sound)] {
+        assert!(uploaded_file_path(name, "p", kind).is_err(), "{name} as {kind:?}");
     }
 }
 

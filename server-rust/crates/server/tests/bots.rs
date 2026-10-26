@@ -677,18 +677,29 @@ async fn an_uploaded_sound_is_a_public_map_asset_that_firefox_can_play() {
         .unwrap()
     };
     let id = "0b8e3b9e-4f0a-4c1e-9d5b-2a6f1c7e8d90";
-    let upload = |name: &str| pb::UploadFileMessage {
+    let upload = |name: &str, kind: i32| pb::UploadFileMessage {
         id: "file".into(),
         name: name.into(),
         property_id: id.into(),
+        kind,
         file: (0..10u8).collect::<Vec<_>>().into(),
         ..Default::default()
     };
-    assert_eq!(send("cmd-sound", E::UploadFileMessage(upload("test-sound.mp3"))).await, None);
+    let (document, sound_kind) = (pb::UploadedFileKind::Document as i32, pb::UploadedFileKind::Sound as i32);
+    assert_eq!(send("cmd-sound", E::UploadFileMessage(upload("test-sound.mp3", sound_kind))).await, None);
     let sound = format!("assets/sounds/test-sound-{id}.mp3");
     assert!(dir.join(&sound).exists());
-    let refused = send("cmd-page", E::UploadFileMessage(upload("page.html"))).await;
-    assert!(refused.is_some_and(|r| r.contains("Unsupported file")));
+    // e2c5f174df: a format the kind does not accept, and a kind this version does not know, are refused.
+    for (cmd, name, kind) in [
+        ("cmd-mp3-as-document", "a.mp3", document),
+        ("cmd-pdf-as-sound", "a.pdf", sound_kind),
+        ("cmd-unknown-kind", "a.mp3", 42),
+    ] {
+        let refused = send(cmd, E::UploadFileMessage(upload(name, kind))).await;
+        assert!(refused.is_some_and(|r| r.contains("Unsupported file") || r.contains("Unknown kind")), "{cmd}");
+    }
+    assert!(!dir.join("private").exists());
+    assert_eq!(std::fs::read_dir(dir.join("assets/sounds")).unwrap().count(), 1);
 
     // No token: a sound is played by everyone the map broadcasts it to.
     let http = reqwest::Client::new();

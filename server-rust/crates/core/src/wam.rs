@@ -66,44 +66,58 @@ pub struct Applied {
     pub dropped_files: Vec<String>,
 }
 
-/// The folder of an uploaded file and the extensions it accepts (uploadedFileFolder of libs/map-editor): "open
-/// file" documents are private (served with a token that honors the area's read restrictions) while "play audio"
-/// sounds are public map assets, like tilesets.
-const UPLOAD_FOLDERS: [(&str, &[&str]); 2] = [
-    ("assets/sounds", &["mp3", "ogg", "wav", "m4a", "flac"]),
-    ("private/files", &["pdf", "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]),
-];
+/// What an uploaded file is for (UploadedFileKind of messages.proto), which decides where it is stored and which
+/// formats it may have (UPLOADED_FILE_FORMATS of libs/map-editor). The client says it, rather than the server
+/// guessing from the extension, so two kinds may one day share an extension.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FileKind {
+    /// A file of the "open file" property, private: served with a token that honors the area's read restrictions.
+    Document,
+    /// A sound of the "play audio" property, a public map asset like the tilesets.
+    Sound,
+}
 
-/// CustomFileService.getFilePath: where the file `name` of a property is stored, under the map's world folder. The
-/// property id comes from the client (a front-generated UUID): a separator in it would let the path climb out of
-/// the world's folder, into another world's files.
-pub fn uploaded_file_path(name: &str, property_id: &str) -> Result<String, String> {
+impl FileKind {
+    fn folder(self) -> &'static str {
+        match self {
+            Self::Document => "private/files",
+            Self::Sound => "assets/sounds",
+        }
+    }
+
+    fn extensions(self) -> &'static [&'static str] {
+        match self {
+            Self::Document => &["pdf", "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"],
+            Self::Sound => &["mp3", "ogg", "wav", "m4a", "flac"],
+        }
+    }
+}
+
+/// CustomFileService.getFilePath: where the file `name` of a property is stored, under the map's world folder: the
+/// folder of its kind, if the kind accepts its format. The property id comes from the client (a front-generated
+/// UUID): a separator in it would let the path climb out of the world's folder, into another world's files.
+pub fn uploaded_file_path(name: &str, property_id: &str, kind: FileKind) -> Result<String, String> {
     if property_id.contains(['/', '\\']) {
         return Err(format!("Invalid property id: {property_id}"));
     }
     let base = name.rsplit(['/', '\\']).next().unwrap_or(name);
-    let folder = |ext: &str| {
-        let ext = ext.to_ascii_lowercase();
-        UPLOAD_FOLDERS.iter().find(|(_, exts)| exts.contains(&ext.as_str())).map(|(folder, _)| *folder)
-    };
     match base.rsplit_once('.') {
-        Some((stem, ext)) if !stem.is_empty() => match folder(ext) {
-            Some(folder) => Ok(format!("{folder}/{stem}-{property_id}.{ext}")),
-            None => Err(format!("Unsupported file \"{name}\"")),
-        },
-        _ => Err(format!("Unsupported file \"{name}\"")),
+        Some((stem, ext)) if !stem.is_empty() && kind.extensions().contains(&ext.to_ascii_lowercase().as_str()) => {
+            Ok(format!("{}/{stem}-{property_id}.{ext}", kind.folder()))
+        }
+        _ => Err(format!("Unsupported file \"{name}\" for kind {kind:?}")),
     }
 }
 
-/// uploadedFileName: the name of the file a property uploaded, if any (the `name` of an openFile, the `audioName`
-/// of a playAudio; a playAudio with only a typed URL has none).
-fn uploaded_name(p: &Value) -> Option<&str> {
-    let name = match p["type"].as_str()? {
-        "openFile" => &p["name"],
-        "playAudio" => &p["audioName"],
+/// uploadedFile: the file a property uploaded, if any, its kind following from the property type (the `name` of an
+/// openFile, the `audioName` of a playAudio; a playAudio with only a typed URL has none).
+fn uploaded_file(p: &Value) -> Option<(&str, FileKind)> {
+    let (name, kind) = match p["type"].as_str()? {
+        "openFile" => (&p["name"], FileKind::Document),
+        "playAudio" => (&p["audioName"], FileKind::Sound),
         _ => return None,
     };
-    name.as_str().filter(|n| !n.is_empty())
+    Some((name.as_str().filter(|n| !n.is_empty())?, kind))
 }
 
 /// FileModule: the files the new property list no longer uses. A file goes once its property is gone, or its
@@ -111,10 +125,10 @@ fn uploaded_name(p: &Value) -> Option<&str> {
 fn dropped(old: &[Value], new: &[Value]) -> Vec<String> {
     old.iter()
         .filter_map(|p| {
-            let (id, name) = (p["id"].as_str()?, uploaded_name(p)?);
-            let kept = new.iter().find(|n| n["id"] == id).is_some_and(|n| uploaded_name(n) == Some(name));
-            // An id the upload would have refused never stored a file.
-            (!kept).then(|| uploaded_file_path(name, id).ok()).flatten()
+            let (id, (name, kind)) = (p["id"].as_str()?, uploaded_file(p)?);
+            let kept = new.iter().find(|n| n["id"] == id).is_some_and(|n| uploaded_file(n).map(|f| f.0) == Some(name));
+            // An id or a format the upload would have refused never stored a file.
+            (!kept).then(|| uploaded_file_path(name, id, kind).ok()).flatten()
         })
         .collect()
 }
