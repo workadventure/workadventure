@@ -23,6 +23,9 @@ pub struct Claims {
     pub tags: Option<Vec<String>>,
     #[serde(rename = "matrixUserId", skip_serializing_if = "Option::is_none")]
     pub matrix_user_id: Option<String>,
+    /// The provider's refresh token, sealed with SECRET_KEY (oidc::seal): the payload is readable by the browser.
+    #[serde(rename = "encryptedRefreshToken", skip_serializing_if = "Option::is_none")]
+    pub encrypted_refresh_token: Option<String>,
 }
 
 /// Tags may come as a JSON-encoded string (AuthTokenData's preprocess).

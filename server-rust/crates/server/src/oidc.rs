@@ -4,7 +4,8 @@
 //! The ID token is verified as OIDC Core 3.1.3.7 asks: signature (the provider's JWKS, or the client secret for an
 //! HMAC one), `iss` (the discovered issuer), `aud` (this client), `exp`, and the `nonce` this server sent. The PKCE
 //! verifier and the nonce travel in one HttpOnly cookie sealed with AES-256-GCM under a key derived from
-//! SECRET_KEY: unreadable and unforgeable by the browser.
+//! SECRET_KEY: unreadable and unforgeable by the browser. The provider's refresh token, if it sends one, is sealed
+//! the same way into the auth token, whose payload the browser can read.
 
 use std::time::Duration;
 
@@ -28,6 +29,9 @@ pub struct OidcConfig {
     pub issuer: String,
     pub scope: String,
     pub prompt: Option<String>,
+    /// OPENID_ACCESS_TYPE: Google's `access_type` (`offline` for a refresh token); the spec's way is the
+    /// `offline_access` scope.
+    pub access_type: Option<String>,
     pub username_claim: String,
     pub locale_claim: String,
     pub tags_claim: String,
@@ -53,6 +57,7 @@ impl OidcConfig {
             issuer: get("OPENID_CLIENT_ISSUER", "OPID_CLIENT_ISSUER").unwrap_or_default(),
             scope: get("OPENID_SCOPE", "OPID_SCOPE").unwrap_or_else(|| "openid email profile ".into()),
             prompt: get("OPENID_PROMPT", "OPID_PROMPT").or_else(|| deprecated.then(|| "login".into())),
+            access_type: config.raw.get("OPENID_ACCESS_TYPE").filter(|v| !v.is_empty()).cloned(),
             username_claim: get("OPENID_USERNAME_CLAIM", "OPID_USERNAME_CLAIM").unwrap_or_else(|| "username".into()),
             locale_claim: get("OPENID_LOCALE_CLAIM", "OPID_LOCALE_CLAIM").unwrap_or_else(|| "locale".into()),
             tags_claim: get("OPENID_TAGS_CLAIM", "OPID_TAGS_CLAIM").unwrap_or_else(|| "tags".into()),
@@ -160,7 +165,7 @@ fn cookie_key(secret: &str) -> aws_lc_rs::aead::LessSafeKey {
 }
 
 /// `nonce || ciphertext || tag`, base64url.
-fn seal(secret: &str, plain: &str) -> String {
+pub fn seal(secret: &str, plain: &str) -> String {
     let mut nonce = [0u8; 12];
     aws_lc_rs::rand::fill(&mut nonce).expect("system randomness");
     let mut data = plain.as_bytes().to_vec();
@@ -251,6 +256,9 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
     if let Some(prompt) = &oidc.prompt {
         params.append_pair("prompt", prompt);
     }
+    if let Some(access_type) = &oidc.access_type {
+        params.append_pair("access_type", access_type);
+    }
     for k in ["manuallyTriggered", "chatRoomId", "providerId"] {
         if let Some(v) = get(k) {
             params.append_pair(k, &v);
@@ -279,17 +287,52 @@ async fn login_screen(State(state): State<AppState>, RawQuery(q): RawQuery) -> R
     )
 }
 
+/// Why the provider gave no claims: it refused the access token (401, the one case a renewal fixes), or anything
+/// else, which a renewal would not fix.
+#[derive(Debug)]
+enum UserinfoError {
+    Refused,
+    Failed(String),
+}
+
+impl std::fmt::Display for UserinfoError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Refused => f.write_str("userinfo refused the access token"),
+            Self::Failed(e) => f.write_str(e),
+        }
+    }
+}
+
 /// The provider's claims for an access token.
-async fn userinfo(state: &AppState, p: &Provider, access_token: &str, play_uri: Option<&str>) -> Result<Value, String> {
+async fn userinfo(
+    state: &AppState,
+    p: &Provider,
+    access_token: &str,
+    play_uri: Option<&str>,
+) -> Result<Value, UserinfoError> {
     let mut req = state.http.get(&p.userinfo_endpoint).bearer_auth(access_token).timeout(Duration::from_secs(50));
     if let Some(uri) = play_uri {
         req = req.query(&[("playUri", uri)]);
     }
-    let r = req.send().await.map_err(|e| e.to_string())?;
-    if !r.status().is_success() {
-        return Err(format!("userinfo answered {}", r.status()));
+    let r = req.send().await.map_err(|e| UserinfoError::Failed(e.to_string()))?;
+    if r.status() == StatusCode::UNAUTHORIZED {
+        return Err(UserinfoError::Refused);
     }
-    r.json().await.map_err(|e| e.to_string())
+    if !r.status().is_success() {
+        return Err(UserinfoError::Failed(format!("userinfo answered {}", r.status())));
+    }
+    r.json().await.map_err(|e| UserinfoError::Failed(e.to_string()))
+}
+
+/// The username, locale and tags of the provider's claims, under the configured claim names.
+fn identity(oidc: &OidcConfig, info: &Value) -> (Option<String>, Option<String>, Option<Vec<String>>) {
+    let text = |k: &str| info[k].as_str().filter(|s| !s.is_empty()).map(str::to_owned);
+    let tags = match &info[oidc.tags_claim.as_str()] {
+        Value::Array(a) => Some(a.iter().filter_map(|t| t.as_str().map(str::to_owned)).collect()),
+        _ => None,
+    };
+    (text(&oidc.username_claim), text(&oidc.locale_claim), tags)
 }
 
 fn basic_auth(oidc: &OidcConfig) -> String {
@@ -297,15 +340,10 @@ fn basic_auth(oidc: &OidcConfig) -> String {
     format!("Basic {}", STANDARD.encode(format!("{}:{}", enc(&oidc.client_id), enc(&oidc.client_secret))))
 }
 
-/// The access token and the id_token.
-async fn exchange_code(state: &AppState, p: &Provider, code: &str, verifier: &str) -> Result<(String, String), String> {
+/// A request to the token endpoint, authenticated as this client: the tokens it answers.
+async fn token_request(state: &AppState, p: &Provider, form: &[(&str, &str)]) -> Result<Value, String> {
     let oidc = state.oidc.as_ref().ok_or("OpenID is not configured")?;
-    let body = form_urlencoded::Serializer::new(String::new())
-        .append_pair("grant_type", "authorization_code")
-        .append_pair("code", code)
-        .append_pair("redirect_uri", &oidc.redirect_url)
-        .append_pair("code_verifier", verifier)
-        .finish();
+    let body = form_urlencoded::Serializer::new(String::new()).extend_pairs(form).finish();
     let r = state
         .http
         .post(&p.token_endpoint)
@@ -316,10 +354,27 @@ async fn exchange_code(state: &AppState, p: &Provider, code: &str, verifier: &st
         .send()
         .await
         .map_err(|e| e.to_string())?;
-    let tokens: Value = r.json().await.map_err(|e| e.to_string())?;
+    r.json().await.map_err(|e| e.to_string())
+}
+
+/// The access token, the id_token, and the refresh token if the provider gives one.
+async fn exchange_code(
+    state: &AppState,
+    p: &Provider,
+    code: &str,
+    verifier: &str,
+) -> Result<(String, String, Option<String>), String> {
+    let oidc = state.oidc.as_ref().ok_or("OpenID is not configured")?;
+    let form = [
+        ("grant_type", "authorization_code"),
+        ("code", code),
+        ("redirect_uri", oidc.redirect_url.as_str()),
+        ("code_verifier", verifier),
+    ];
+    let tokens = token_request(state, p, &form).await?;
     let text = |k: &str| tokens[k].as_str().map(str::to_owned);
     match (text("access_token"), text("id_token")) {
-        (Some(access), Some(id)) => Ok((access, id)),
+        (Some(access), Some(id)) => Ok((access, id, text("refresh_token"))),
         _ => Err(format!("no access token or no id_token: {tokens}")),
     }
 }
@@ -382,9 +437,9 @@ async fn openid_callback(State(state): State<AppState>, headers: HeaderMap, RawQ
         tracing::error!("OpenID callback: provider metadata unavailable");
         return fail();
     };
-    let access_token = match exchange_code(&state, &p, &code, &verifier).await {
-        Ok((access, id_token)) => match verify_id_token(&state, &p, &id_token, &nonce).await {
-            Ok(()) => access,
+    let (access_token, refresh_token) = match exchange_code(&state, &p, &code, &verifier).await {
+        Ok((access, id_token, refresh)) => match verify_id_token(&state, &p, &id_token, &nonce).await {
+            Ok(()) => (access, refresh),
             Err(e) => {
                 tracing::error!(error = %e, "OpenID id_token refused");
                 return fail();
@@ -406,19 +461,17 @@ async fn openid_callback(State(state): State<AppState>, headers: HeaderMap, RawQ
     let Some(email) = text("email").or_else(|| text("sub")) else {
         return (StatusCode::INTERNAL_SERVER_ERROR, "No email in the response").into_response();
     };
-    let tags = match &info[oidc.tags_claim.as_str()] {
-        Value::Array(a) => Some(a.iter().filter_map(|t| t.as_str().map(str::to_owned)).collect()),
-        _ => None,
-    };
+    let (username, locale, tags) = identity(oidc, &info);
     let token = jwt::create(
         &state.config.secret_key,
         Claims {
             identifier: email.clone(),
             access_token: Some(access_token),
-            username: text(&oidc.username_claim),
-            locale: text(&oidc.locale_claim),
+            username,
+            locale,
             tags,
             matrix_user_id: Some(email.replacen('@', "_", 1)),
+            encrypted_refresh_token: refresh_token.map(|r| seal(&state.config.secret_key, &r)),
         },
     );
     let consumed = [clear_cookie("code_verifier"), clear_cookie("oidc_state")];
@@ -482,24 +535,34 @@ async fn logout(State(state): State<AppState>, RawQuery(q): RawQuery) -> Respons
     if !same_domain(&state, &play_uri).await {
         return (StatusCode::FORBIDDEN, "Unauthorized domain in playUri").into_response();
     }
-    let Some(access_token) = jwt::verify(&state.config.secret_key, &token).ok().and_then(|c| c.access_token) else {
+    let claims = jwt::verify(&state.config.secret_key, &token).ok();
+    let Some(access_token) = claims.as_ref().and_then(|c| c.access_token.clone()) else {
         return (StatusCode::INTERNAL_SERVER_ERROR, "Cannot log out, no access token found.").into_response();
     };
     if let (Ok(p), Some(oidc)) = (provider(&state).await, state.oidc.as_ref())
         && let Some(revocation) = &p.revocation_endpoint
     {
-        let body = form_urlencoded::Serializer::new(String::new()).append_pair("token", &access_token).finish();
-        let revoked = state
-            .http
-            .post(revocation)
-            .header(header::AUTHORIZATION, basic_auth(oidc))
-            .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
-            .body(body)
-            .timeout(Duration::from_secs(10))
-            .send()
-            .await;
-        if let Err(e) = revoked {
-            tracing::warn!(error = %e, "OpenID token revocation failed");
+        // Revoking the access token does not revoke the refresh token on a provider that follows the spec.
+        let refresh = claims
+            .and_then(|c| c.encrypted_refresh_token)
+            .and_then(|t| unseal(&state.config.secret_key, &t))
+            .map(|t| (t, Some("refresh_token")));
+        for (token, hint) in std::iter::once((access_token, None)).chain(refresh) {
+            let mut form = vec![("token", token.as_str())];
+            form.extend(hint.map(|h| ("token_type_hint", h)));
+            let body = form_urlencoded::Serializer::new(String::new()).extend_pairs(form).finish();
+            let revoked = state
+                .http
+                .post(revocation)
+                .header(header::AUTHORIZATION, basic_auth(oidc))
+                .header(header::CONTENT_TYPE, "application/x-www-form-urlencoded")
+                .body(body)
+                .timeout(Duration::from_secs(10))
+                .send()
+                .await;
+            if let Err(e) = revoked {
+                tracing::warn!(error = %e, ?hint, "OpenID token revocation failed");
+            }
         }
     }
     match get("redirect") {
@@ -515,10 +578,57 @@ async fn logout_callback(State(state): State<AppState>, headers: HeaderMap) -> R
     }
 }
 
-/// `/me` for a token that carries an OpenID access token: the provider must still accept it.
+/// The provider still accepts this access token: its claims.
 pub async fn check_access_token(state: &AppState, access_token: &str) -> Option<Value> {
     let p = provider(state).await.ok()?;
     userinfo(state, &p, access_token, None).await.ok()
+}
+
+/// What the provider says of an auth token's user: its claims, and the auth token's new claims when the access
+/// token had to be renewed.
+pub struct Checked {
+    pub info: Value,
+    pub renewed: Option<Claims>,
+}
+
+/// `/me` for an auth token from an OpenID login: the provider must still accept its access token. Refused (401),
+/// the access token is renewed with the refresh token, when the login got one; any other failure is not retried.
+/// A renewal stands for a new login: the username, locale and tags are read again from the provider, so that a
+/// tag removed there does not live on in a new 30-day auth token.
+pub async fn check_with_refresh(state: &AppState, claims: &Claims) -> Result<Checked, String> {
+    let access_token = claims.access_token.as_deref().ok_or("no access token")?;
+    let p = provider(state).await?;
+    match userinfo(state, &p, access_token, None).await {
+        Ok(info) => return Ok(Checked { info, renewed: None }),
+        Err(UserinfoError::Failed(e)) => return Err(e),
+        Err(UserinfoError::Refused) => {}
+    }
+    let oidc = state.oidc.as_ref().ok_or("OpenID is not configured")?;
+    let secret = &state.config.secret_key;
+    let refresh_token = claims
+        .encrypted_refresh_token
+        .as_deref()
+        .and_then(|t| unseal(secret, t))
+        .ok_or("the provider refused the access token and there is no refresh token to renew it")?;
+    let tokens =
+        token_request(state, &p, &[("grant_type", "refresh_token"), ("refresh_token", &refresh_token)]).await?;
+    let access_token = tokens["access_token"].as_str().ok_or(format!("no access token in the renewal: {tokens}"))?;
+    let info = userinfo(state, &p, access_token, None).await.map_err(|e| e.to_string())?;
+    let (username, locale, tags) = identity(oidc, &info);
+    // A provider that rotates refresh tokens sends a new one; the others keep the current one valid.
+    let encrypted_refresh_token = match tokens["refresh_token"].as_str() {
+        Some(rotated) => Some(seal(secret, rotated)),
+        None => claims.encrypted_refresh_token.clone(),
+    };
+    let renewed = Claims {
+        access_token: Some(access_token.to_owned()),
+        username,
+        locale,
+        tags,
+        encrypted_refresh_token,
+        ..claims.clone()
+    };
+    Ok(Checked { info, renewed: Some(renewed) })
 }
 
 /// `/profile-callback?token&playUri`: on to the admin's profile screen (OPID_PROFILE_SCREEN_PROVIDER), or to

@@ -509,8 +509,29 @@ async fn me(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQ
     let Ok(claims) = jwt::verify(&state.config.secret_key, token) else {
         return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
     };
+    // A token from an OpenID login is only good while the provider still accepts its access token, renewed if
+    // need be. Checked before the admin, which identifies the member by that access token.
+    let (claims, token, info) = match &claims.access_token {
+        None => (claims, token.to_owned(), None),
+        Some(_) => match crate::oidc::check_with_refresh(&state, &claims).await {
+            Ok(crate::oidc::Checked { info, renewed: Some(renewed) }) => {
+                let token = jwt::create(&state.config.secret_key, renewed.clone());
+                (renewed, token, Some(info))
+            }
+            Ok(crate::oidc::Checked { info, renewed: None }) => (claims, token.to_owned(), Some(info)),
+            Err(e) => {
+                tracing::warn!(error = %e, "the OpenID provider does not accept the token");
+                return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
+            }
+        },
+    };
+    let (token, info) = (token.as_str(), info.as_ref());
     if let Some(admin) = &state.admin {
-        return me_from_admin(&state, admin, &headers, &pairs, token, play_uri, &claims).await;
+        let mut body = me_from_admin(&state, admin, &headers, &pairs, token, play_uri, &claims).await;
+        if body["status"] == "ok" {
+            merge_userinfo(&mut body, info);
+        }
+        return axum::Json(body).into_response();
     }
     let ids: Vec<String> = pairs
         .iter()
@@ -543,25 +564,27 @@ async fn me(State(state): State<AppState>, headers: HeaderMap, RawQuery(q): RawQ
         "matrixUserId": claims.matrix_user_id,
         "matrixServerUrl": state.config.raw.get("MATRIX_PUBLIC_URI"),
     });
-    // A token from an OpenID login is only good while the provider still accepts its access token.
-    if let Some(access_token) = &claims.access_token {
-        let Some(info) = crate::oidc::check_access_token(&state, access_token).await else {
-            return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
-        };
-        if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
-            body["matrixServerUrl"] = url.clone();
-        }
-        if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
-            for (k, v) in i {
-                b.insert(k.clone(), v.clone());
-            }
-        }
+    merge_userinfo(&mut body, info);
+    if let Some(b) = body.as_object_mut() {
+        b.retain(|k, v| !v.is_null() || k == "visitCardUrl");
     }
-    body.as_object_mut().expect("object").retain(|k, v| !v.is_null() || k == "visitCardUrl");
     axum::Json(body).into_response()
 }
 
-/// `GET /me` with the admin (A3), the OpenID userinfo merged over it.
+/// The provider's claims go over the answer of `/me`, its Matrix server first.
+fn merge_userinfo(body: &mut Value, info: Option<&Value>) {
+    let Some(info) = info else { return };
+    if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
+        body["matrixServerUrl"] = url.clone();
+    }
+    if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
+        for (k, v) in i {
+            b.insert(k.clone(), v.clone());
+        }
+    }
+}
+
+/// `GET /me` with the admin (A3), before the OpenID userinfo goes over it.
 async fn me_from_admin(
     state: &AppState,
     admin: &crate::admin_api::AdminApi,
@@ -570,7 +593,7 @@ async fn me_from_admin(
     token: &str,
     play_uri: &str,
     claims: &Claims,
-) -> Response {
+) -> Value {
     let ids: Vec<String> = pairs
         .iter()
         .filter(|(k, _)| k == "localStorageCharacterTextureIds[]" || k == "localStorageCharacterTextureIds")
@@ -595,7 +618,7 @@ async fn me_from_admin(
         })
         .await;
     if body["status"] != "ok" {
-        return axum::Json(body).into_response();
+        return body;
     }
     for (k, v) in [
         ("authToken", json!(token)),
@@ -606,20 +629,7 @@ async fn me_from_admin(
     ] {
         body[k] = v;
     }
-    if let Some(access_token) = &claims.access_token {
-        let Some(info) = crate::oidc::check_access_token(state, access_token).await else {
-            return (StatusCode::UNAUTHORIZED, "Invalid token").into_response();
-        };
-        if let Some(url) = info.get("matrix_url").filter(|u| u.is_string()) {
-            body["matrixServerUrl"] = url.clone();
-        }
-        if let (Some(b), Some(i)) = (body.as_object_mut(), info.as_object()) {
-            for (k, v) in i {
-                b.insert(k.clone(), v.clone());
-            }
-        }
-    }
-    axum::Json(body).into_response()
+    body
 }
 
 async fn data_list(state: &AppState, headers: &HeaderMap, q: Option<&str>, data: &'static str) -> Response {

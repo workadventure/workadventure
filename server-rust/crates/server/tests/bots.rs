@@ -1154,14 +1154,8 @@ async fn the_profile_pages_ask_the_provider_who_the_token_is() {
     assert_eq!(http.get(format!("{server}/profile?accessToken=bad")).send().await.unwrap().status(), 500);
 
     // Without an admin, the callback leads to that page.
-    let claims = wa_server::jwt::Claims {
-        identifier: "a@b.c".into(),
-        access_token: Some("good".into()),
-        username: None,
-        locale: None,
-        tags: None,
-        matrix_user_id: None,
-    };
+    let claims =
+        wa_server::jwt::Claims { identifier: "a@b.c".into(), access_token: Some("good".into()), ..Default::default() };
     let token = wa_server::jwt::create("test", claims);
     let r =
         http.get(format!("{server}/profile-callback?token={token}&playUri=http://play.test/r")).send().await.unwrap();
@@ -1295,6 +1289,140 @@ async fn an_openid_login_needs_a_signed_id_token_with_this_logins_nonce() {
     // Without the state cookie: refused too.
     let no_state: Vec<&str> = cookies.split("; ").filter(|c| !c.starts_with("oidc_state=")).collect();
     assert_eq!(callback(st, no_state.join("; ")).await.status(), 500);
+}
+
+/// A provider whose access tokens expire: only `fresh` is accepted, and the refresh token `r1` gets it, rotated to
+/// `r2`. It records what is revoked.
+async fn expiring_provider() -> (String, std::sync::Arc<parking_lot::Mutex<Vec<String>>>) {
+    let provider = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let issuer = format!("http://{}", provider.local_addr().unwrap());
+    let doc = serde_json::json!({
+        "issuer": issuer, "authorization_endpoint": format!("{issuer}/auth"), "token_endpoint": format!("{issuer}/token"),
+        "userinfo_endpoint": format!("{issuer}/userinfo"), "revocation_endpoint": format!("{issuer}/revoke"),
+    });
+    let revoked = std::sync::Arc::new(parking_lot::Mutex::new(Vec::new()));
+    let log = revoked.clone();
+    let app = axum::Router::new()
+        .route("/.well-known/openid-configuration", axum::routing::get(move || async move { axum::Json(doc) }))
+        .route(
+            "/userinfo",
+            axum::routing::get(|headers: axum::http::HeaderMap| async move {
+                if headers["authorization"] != "Bearer fresh" {
+                    return Err(axum::http::StatusCode::UNAUTHORIZED);
+                }
+                Ok(axum::Json(serde_json::json!({"sub": "s", "email": "a@b.c", "username": "New", "tags": ["member"]})))
+            }),
+        )
+        .route(
+            "/token",
+            axum::routing::post(|body: String| async move {
+                if body != "grant_type=refresh_token&refresh_token=r1" {
+                    return Err(axum::http::StatusCode::BAD_REQUEST);
+                }
+                Ok(axum::Json(
+                    serde_json::json!({"access_token": "fresh", "refresh_token": "r2", "token_type": "Bearer"}),
+                ))
+            }),
+        )
+        .route(
+            "/revoke",
+            axum::routing::post(move |body: String| {
+                let log = log.clone();
+                async move { log.lock().push(body) }
+            }),
+        );
+    tokio::spawn(async move { axum::serve(provider, app).await });
+    (issuer, revoked)
+}
+
+#[tokio::test]
+async fn an_expired_openid_access_token_is_renewed_before_the_admin_call_with_fresh_claims_and_revoked_on_logout() {
+    let (issuer, revoked) = expiring_provider().await;
+    let (admin_url, seen) = fake_admin().await;
+    let vars = [
+        ("SECRET_KEY", "test"),
+        ("OPENID_CLIENT_ID", "c"),
+        ("OPENID_CLIENT_ISSUER", issuer.as_str()),
+        ("OPENID_ACCESS_TYPE", "offline"),
+        ("PUSHER_URL", "http://play.test"),
+    ];
+    let serve = |with_admin: bool| {
+        let config =
+            Config::load(Env::new(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())).collect())).unwrap();
+        let mut state = AppState::new(config);
+        if with_admin {
+            state.admin = Some(wa_server::admin_api::AdminApi::with(
+                &admin_url,
+                "tok",
+                serde_json::json!({}),
+                reqwest::Client::new(),
+            ));
+        }
+        async move {
+            let play = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+            let server = format!("http://{}", play.local_addr().unwrap());
+            tokio::spawn(async move { axum::serve(play, router(state)).await });
+            server
+        }
+    };
+    let http = reqwest::Client::builder().redirect(reqwest::redirect::Policy::none()).build().unwrap();
+    let play_uri = "http://play.test/_/global/maps.test/m.json";
+    let token = |refresh: Option<&str>| {
+        wa_server::jwt::create(
+            "test",
+            wa_server::jwt::Claims {
+                identifier: "a@b.c".into(),
+                access_token: Some("stale".into()),
+                username: Some("Old".into()),
+                tags: Some(vec!["admin".into()]),
+                encrypted_refresh_token: refresh.map(|r| wa_server::oidc::seal("test", r)),
+                ..Default::default()
+            },
+        )
+    };
+    let me = |server: String, token: String| {
+        let http = http.clone();
+        async move {
+            http.get(format!("{server}/me"))
+                .query(&[("token", token.as_str()), ("playUri", play_uri)])
+                .send()
+                .await
+                .unwrap()
+        }
+    };
+
+    // The login asks Google-style providers for a refresh token.
+    let local = serve(false).await;
+    let login = http.get(format!("{local}/login-screen")).query(&[("playUri", play_uri)]).send().await.unwrap();
+    assert!(login.headers()["location"].to_str().unwrap().contains("access_type=offline"));
+
+    // Refused access token, no refresh token: the auth token is no good.
+    assert_eq!(me(local.clone(), token(None)).await.status(), 401);
+    // With one: renewed, and the new auth token carries the provider's current claims, not the old tags.
+    let r: serde_json::Value = me(local.clone(), token(Some("r1"))).await.json().await.unwrap();
+    let renewed = wa_server::jwt::verify("test", r["authToken"].as_str().unwrap()).unwrap();
+    assert_eq!(renewed.access_token.as_deref(), Some("fresh"));
+    assert_eq!((renewed.username.as_deref(), renewed.tags.clone()), (Some("New"), Some(vec!["member".to_owned()])));
+    assert_eq!(r["tags"], serde_json::json!(["member"]));
+    assert!(!renewed.encrypted_refresh_token.as_deref().unwrap().contains("r2"), "sealed, not in clear");
+
+    // With an admin, it gets the renewed access token, not the expired one.
+    let with_admin = serve(true).await;
+    let r = me(with_admin, token(Some("r1"))).await;
+    assert_eq!(r.status(), 200);
+    let asked = seen.lock().last().cloned().unwrap();
+    assert!(asked.contains("accessToken=fresh"), "{asked}");
+
+    // Logout revokes the access token and the (rotated) refresh token.
+    let renewed_token = wa_server::jwt::create("test", renewed);
+    let out = http
+        .get(format!("{local}/logout"))
+        .query(&[("playUri", play_uri), ("token", renewed_token.as_str())])
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(out.status(), 302);
+    assert_eq!(*revoked.lock(), ["token=fresh", "token=r2&token_type_hint=refresh_token"]);
 }
 
 #[tokio::test]
