@@ -141,10 +141,12 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
     return parsed ? Number(parsed[1]) : undefined;
 }
 
-/** Bring the WorkAdventure window to the front. */
+/** Bring the WorkAdventure window to the front, on a user's click (companion button, notification). */
 function focusMainWindow(): void {
     const mainWindow = getWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
+        // macOS: focus() alone leaves another app active, so the window stays behind it.
+        if (process.platform === "darwin") app.focus({ steal: true });
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
         mainWindow.focus();

@@ -9,6 +9,8 @@
     import type { CompanionAgendaMeeting } from "../../../Interfaces/DesktopAppInterfaces";
     import CompactConversation from "../../../Chat/Components/CompactConversation.svelte";
     import FloatingUiPopupList from "../../Util/FloatingUiPopupList.svelte";
+    import DesktopCapturerSourcePicker from "../DesktopCapturerSourcePicker.svelte";
+    import { showDesktopCapturerSourcePicker } from "../../../Stores/ScreenSharingStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import {
         companionAgendaStore,
@@ -754,6 +756,11 @@
         {/if}
     </div>
 </div>
+
+<!-- The share's source is picked here too: no need to come back to the world window to start sharing. -->
+{#if $showDesktopCapturerSourcePicker}
+    <DesktopCapturerSourcePicker />
+{/if}
 
 <!-- Menus opened from this window (a tile's menu) render in this window. -->
 <FloatingUiPopupList targetDocument={ownerDocument} />
