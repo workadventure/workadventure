@@ -478,10 +478,7 @@ pub(super) async fn private_file(
     let Some(wam_rel) = super::wam_key_of_url(&state.config, wam_url) else {
         return refused(StatusCode::BAD_REQUEST, "Invalid token content");
     };
-    let dir = match reqwest::Url::parse(wam_url).ok().and_then(|u| u.host_str().map(str::to_owned)) {
-        Some(host) if state.config.use_domain_name_in_path => super::domain_folder(&host).unwrap_or_default(),
-        _ => String::new(),
-    };
+    let dir = super::world_folder(&state.config, wam_url);
     let raw = request.uri().path().to_owned();
     let path = decode(&raw, false);
     for _ in 0..32 {

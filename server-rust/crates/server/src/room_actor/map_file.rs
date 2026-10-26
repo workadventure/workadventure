@@ -8,6 +8,8 @@ use super::*;
 /// the edits after it wait their turn.
 pub(super) struct MapFile {
     pub(super) rel: String,
+    /// The map's world folder, where the editor's own files go (empty without USE_DOMAIN_NAME_IN_PATH).
+    pub(super) dir: String,
     pub(super) storage: Arc<Storage>,
     pub(super) wam: Option<Wam>,
     /// The storage generation the file was read at.
@@ -70,7 +72,12 @@ impl Drop for MapFile {
 }
 
 impl MapFile {
-    pub(super) async fn open(storage: Arc<Storage>, rel: String, hooks: resource_url::ResourceUrl) -> Self {
+    pub(super) async fn open(
+        storage: Arc<Storage>,
+        rel: String,
+        dir: String,
+        hooks: resource_url::ResourceUrl,
+    ) -> Self {
         let (saves, mut pending) = tokio::sync::watch::channel(None::<(u64, u64, Vec<u8>)>);
         let (store, path) = (storage.clone(), rel.clone());
         // Writes the newest version only; ends after the last one once the room is gone.
@@ -86,6 +93,7 @@ impl MapFile {
         let cached = slot.take();
         let mut map = Self {
             rel,
+            dir,
             storage: storage.clone(),
             wam: None,
             generation: 0,
@@ -158,9 +166,10 @@ impl MapFile {
                     });
                 }
                 Pending::Remove(paths) => {
+                    let dir = self.dir.clone();
                     self.io.spawn(async move {
                         for path in paths {
-                            storage.remove_asset(&path).await;
+                            storage.remove_asset(&format!("{dir}{}", path.trim_start_matches('/'))).await;
                         }
                         Done::Removed
                     });
@@ -270,18 +279,19 @@ impl MapFile {
             let refused = Err(format!("User {} has no editor access and is not allowed to upload", info.user_uuid));
             return Some(self.complete(session, command, refused));
         }
+        let dir = self.dir.clone();
         self.io.spawn(async move {
             let info = &session.info;
             let editor = Editor { uuid: &info.user_uuid, tags: &info.tags, can_edit: info.can_edit };
             let result = match command.edit_map_message.as_mut().and_then(|m| m.message.as_mut()) {
                 Some(M::UploadEntityMessage(m)) => {
                     m.owner_id = Some(info.user_uuid.clone());
-                    custom_entities::upload(&storage, m).await
+                    custom_entities::upload(&storage, &dir, m).await
                 }
-                Some(M::ModifyCustomEntityMessage(m)) => custom_entities::modify(&storage, m, editor).await,
-                Some(M::DeleteCustomEntityMessage(m)) => custom_entities::delete(&storage, &m.id, editor).await,
+                Some(M::ModifyCustomEntityMessage(m)) => custom_entities::modify(&storage, &dir, m, editor).await,
+                Some(M::DeleteCustomEntityMessage(m)) => custom_entities::delete(&storage, &dir, &m.id, editor).await,
                 Some(M::UploadFileMessage(m)) => {
-                    let uploaded = custom_entities::upload_file(&storage, m).await;
+                    let uploaded = custom_entities::upload_file(&storage, &dir, m).await;
                     m.file.clear();
                     uploaded
                 }

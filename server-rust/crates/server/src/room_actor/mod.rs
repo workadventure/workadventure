@@ -335,8 +335,9 @@ async fn run(room: Room, mut mailbox: tokio::sync::mpsc::Receiver<RoomCmd>, app:
     METRICS.nb_rooms.inc();
     // Like GameRoom.create, the WAM is read before anybody joins.
     let details = room_map::details(&app, &url).await;
+    let dir = details["wamUrl"].as_str().map(|u| crate::map_storage::world_folder(&app.config, u)).unwrap_or_default();
     let map = match room_map::wam_key(&app, &url, &details) {
-        Some(rel) => Some(MapFile::open(storage.clone(), rel, resource_url::ResourceUrl::new(app.clone())).await),
+        Some(rel) => Some(MapFile::open(storage.clone(), rel, dir, resource_url::ResourceUrl::new(app.clone())).await),
         None => None,
     };
     // Like getVariableManager: the map is read, then the saved values, before anybody joins.

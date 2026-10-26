@@ -65,6 +65,25 @@ pub struct Applied {
     pub dropped_files: Vec<String>,
 }
 
+/// CustomFileService.getFilePath: where the file `name` of an openFile property is stored, under the map's world
+/// folder. The property id comes from the client (a front-generated UUID): a separator in it would let the path
+/// climb out of the world's folder, into another world's files.
+pub fn uploaded_file_path(name: &str, property_id: &str) -> Result<String, String> {
+    if property_id.contains(['/', '\\']) {
+        return Err(format!("Invalid property id: {property_id}"));
+    }
+    let base = name.rsplit(['/', '\\']).next().unwrap_or(name);
+    let accepted = |ext: &str| {
+        ["pdf", "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"].contains(&ext.to_ascii_lowercase().as_str())
+    };
+    match base.rsplit_once('.') {
+        Some((stem, ext)) if !stem.is_empty() && accepted(ext) => {
+            Ok(format!("private/files/{stem}-{property_id}.{ext}"))
+        }
+        _ => Err(format!("Unsupported file \"{name}\"")),
+    }
+}
+
 /// The links of a property list's files (openFile properties with a link), by property id.
 fn file_links(props: &[Value]) -> Vec<(&str, &str)> {
     props

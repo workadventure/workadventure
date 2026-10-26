@@ -283,6 +283,15 @@ pub fn domain_folder(host: &str) -> Option<String> {
         .then(|| format!("{domain}/"))
 }
 
+/// The world folder of a map (mapPathUsingDomainWithPrefix with the map's host): with USE_DOMAIN_NAME_IN_PATH the
+/// folder of the WAM URL's host, where the editor's files go and are served from; else the root.
+pub fn world_folder(config: &crate::config::Config, wam_url: &str) -> String {
+    if !config.use_domain_name_in_path {
+        return String::new();
+    }
+    reqwest::Url::parse(wam_url).ok().and_then(|u| domain_folder(u.host_str()?)).unwrap_or_default()
+}
+
 /// The storage key of a WAM URL, as the rooms and the private files find it (mapPathUsingUrl): its path
 /// without PATH_PREFIX, under the folder of its host with USE_DOMAIN_NAME_IN_PATH.
 pub fn wam_key_of_url(config: &crate::config::Config, url: &str) -> Option<String> {

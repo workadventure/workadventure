@@ -1,9 +1,10 @@
 //! The map editor's own files: custom entities (CustomEntityCollectionService: images under
 //! `assets/entities/`, listed in `assets/entities/entities.json`, which the front loads) and the files of
-//! openFile properties (CustomFileService: `private/files/`).
+//! openFile properties (CustomFileService: `private/files/`). All of them live in the map's world folder (`dir`,
+//! empty without USE_DOMAIN_NAME_IN_PATH), where map-storage serves them for that world's host.
 
 use serde_json::{Value, json};
-use wa_core::wam::Editor;
+use wa_core::wam::{Editor, uploaded_file_path};
 use wa_proto::messages as pb;
 
 use crate::map_storage::Storage;
@@ -32,12 +33,12 @@ pub fn link_path(link: &str) -> String {
 }
 
 /// `uploadEntityMessage`: anyone may add one; its owner is the sender (set by the caller).
-pub async fn upload(storage: &Storage, m: &pb::UploadEntityMessage) -> Result<(), String> {
+pub async fn upload(storage: &Storage, dir: &str, m: &pb::UploadEntityMessage) -> Result<(), String> {
     let image = basename(&m.image_path).to_owned();
     if !extension_in(&image, &["jpg", "jpeg", "png", "webp"]) {
         return Err(format!("Invalid image extension for {image}"));
     }
-    storage.put_asset(format!("assets/entities/{image}"), m.file.to_vec()).await.map_err(|e| e.to_string())?;
+    storage.put_asset(format!("{dir}assets/entities/{image}"), m.file.to_vec()).await.map_err(|e| e.to_string())?;
     let direction = ["Up", "Right", "Down", "Left"].get(m.direction as usize).copied().unwrap_or("Down");
     let mut entry = json!({
         "id": m.id, "name": m.name, "tags": m.tags, "imagePath": m.image_path,
@@ -50,7 +51,7 @@ pub async fn upload(storage: &Storage, m: &pb::UploadEntityMessage) -> Result<()
         entry["depthOffset"] = depth.into();
     }
     storage
-        .update_json(COLLECTION, empty_collection(), move |c| {
+        .update_json(&format!("{dir}{COLLECTION}"), empty_collection(), move |c| {
             let list = c["collection"].as_array_mut().ok_or("Invalid custom entity collection")?;
             list.retain(|e| e["id"] != entry["id"]);
             list.push(entry);
@@ -68,13 +69,18 @@ fn allowed(entry: &Value, editor: Editor<'_>) -> Result<(), String> {
     }
 }
 
-pub async fn modify(storage: &Storage, m: &pb::ModifyCustomEntityMessage, editor: Editor<'_>) -> Result<(), String> {
+pub async fn modify(
+    storage: &Storage,
+    dir: &str,
+    m: &pb::ModifyCustomEntityMessage,
+    editor: Editor<'_>,
+) -> Result<(), String> {
     let (id, name, tags) = (m.id.clone(), m.name.clone(), m.tags.clone());
     let grid = m.collision_grid.as_ref().map(wire::json_from);
     let depth = m.depth_offset;
     let (can_edit, uuid) = (editor.can_edit, editor.uuid.to_owned());
     storage
-        .update_json(COLLECTION, empty_collection(), move |c| {
+        .update_json(&format!("{dir}{COLLECTION}"), empty_collection(), move |c| {
             let entry = c["collection"]
                 .as_array_mut()
                 .and_then(|l| l.iter_mut().find(|e| e["id"] == id.as_str()))
@@ -97,10 +103,10 @@ pub async fn modify(storage: &Storage, m: &pb::ModifyCustomEntityMessage, editor
 }
 
 /// Removes the entry and its image; the caller removes the map's entities made from it.
-pub async fn delete(storage: &Storage, id: &str, editor: Editor<'_>) -> Result<(), String> {
+pub async fn delete(storage: &Storage, dir: &str, id: &str, editor: Editor<'_>) -> Result<(), String> {
     let (id, can_edit, uuid) = (id.to_owned(), editor.can_edit, editor.uuid.to_owned());
     let image = storage
-        .update_json(COLLECTION, empty_collection(), move |c| {
+        .update_json(&format!("{dir}{COLLECTION}"), empty_collection(), move |c| {
             let list = c["collection"].as_array_mut().ok_or("Invalid custom entity collection")?;
             let i = list.iter().position(|e| e["id"] == id.as_str()).ok_or(format!("Custom entity {id} not found"))?;
             allowed(&list[i], Editor { uuid: &uuid, tags: &[], can_edit })?;
@@ -109,22 +115,15 @@ pub async fn delete(storage: &Storage, id: &str, editor: Editor<'_>) -> Result<(
         })
         .await?;
     if let Some(image) = image {
-        storage.remove_asset(&format!("assets/entities/{image}")).await;
+        storage.remove_asset(&format!("{dir}assets/entities/{image}")).await;
     }
     Ok(())
 }
 
 /// `uploadFileMessage`: the file of an openFile property, as `private/files/<name>-<propertyId><ext>`.
-pub async fn upload_file(storage: &Storage, m: &pb::UploadFileMessage) -> Result<(), String> {
-    let name = basename(&m.name);
-    let (stem, ext) = name.rsplit_once('.').map_or((name, ""), |(s, e)| (s, e));
-    if !extension_in(name, &["pdf", "jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"]) {
-        return Err(format!("Invalid file extension for {name}"));
-    }
-    storage
-        .put_asset(format!("private/files/{stem}-{}.{ext}", m.property_id), m.file.to_vec())
-        .await
-        .map_err(|e| e.to_string())
+pub async fn upload_file(storage: &Storage, dir: &str, m: &pb::UploadFileMessage) -> Result<(), String> {
+    let path = uploaded_file_path(&m.name, &m.property_id)?;
+    storage.put_asset(format!("{dir}{path}"), m.file.to_vec()).await.map_err(|e| e.to_string())
 }
 
 #[cfg(test)]

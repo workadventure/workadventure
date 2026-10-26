@@ -572,6 +572,84 @@ async fn an_upload_without_editor_access_is_refused_to_its_sender_only_and_write
 }
 
 #[tokio::test]
+async fn the_editor_files_of_a_world_stay_in_its_folder() {
+    // 8bc544ce0f, and USE_DOMAIN_NAME_IN_PATH: map-storage serves a world's files from the folder of its host, so
+    // the editor writes and deletes them there, never at the root shared by every world.
+    use pb::edit_map_message::Message as E;
+    let dir = std::env::temp_dir().join(format!("wa-rust-world-files-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    let world = dir.join("acme.maps.test");
+    std::fs::create_dir_all(world.join("maps")).unwrap();
+    let wam = r#"{"version":"2.1.0","mapUrl":"./t.tmj","areas":[],"entities":{},"entityCollections":[]}"#;
+    std::fs::write(world.join("maps/t.wam"), wam).unwrap();
+    let (server, _maps) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("USE_DOMAIN_NAME_IN_PATH", "true"),
+        ("PUBLIC_MAP_STORAGE_URL", "http://acme.maps.test"),
+        ("ENABLE_MAP_EDITOR", "true"),
+    ])
+    .await;
+    let (mut alice, mut ia) = bot(&server, "http://play.test/~/maps/t.wam", "Alice", 100, 100).await;
+    let mut send = async |id: &'static str, message: E| {
+        alice.send(edit(id, message)).await.unwrap();
+        ia.expect(WAIT, |m| {
+            edit_echo(m).filter(|c| c.id == id).map(|c| match c.edit_map_message.as_ref()?.message.as_ref()? {
+                E::ErrorCommandMessage(e) => Some(e.reason.clone()),
+                _ => None,
+            })
+        })
+        .await
+        .unwrap()
+    };
+    let file = |property_id: &str| pb::UploadFileMessage {
+        id: "file".into(),
+        name: "doc.pdf".into(),
+        property_id: property_id.into(),
+        file: vec![1].into(),
+        ..Default::default()
+    };
+    assert_eq!(send("cmd-file", E::UploadFileMessage(file("p"))).await, None);
+    let entity = pb::UploadEntityMessage {
+        file: vec![1].into(),
+        id: "entity-1".into(),
+        name: "Lamp".into(),
+        image_path: "lamp.png".into(),
+        ..Default::default()
+    };
+    assert_eq!(send("cmd-entity", E::UploadEntityMessage(entity)).await, None);
+    assert!(world.join("private/files/doc-p.pdf").exists());
+    assert!(world.join("assets/entities/lamp.png").exists() && world.join("assets/entities/entities.json").exists());
+    assert!(!dir.join("private").exists() && !dir.join("assets").exists());
+
+    // A property id that climbs into another world's folder is refused.
+    let reason = send("cmd-escape", E::UploadFileMessage(file("/../../globex.maps.test/x"))).await;
+    assert!(reason.is_some_and(|r| r.contains("Invalid property id")));
+    assert!(!dir.join("globex.maps.test").exists());
+
+    // Deleting the area that holds the file removes it from the world's folder.
+    let property = serde_json::json!({"id": "p", "type": "openFile", "name": "doc.pdf", "newTab": false,
+        "link": "http://acme.maps.test/private/files/doc-p.pdf"});
+    let area = pb::CreateAreaMessage {
+        id: "library".into(),
+        width: 32,
+        height: 32,
+        properties: vec![wa_server::wire::json_to(&property)],
+        ..Default::default()
+    };
+    assert_eq!(send("cmd-area", E::CreateAreaMessage(area)).await, None);
+    let delete = pb::DeleteAreaMessage { id: "library".into() };
+    assert_eq!(send("cmd-delete", E::DeleteAreaMessage(delete)).await, None);
+    let gone = async {
+        while world.join("private/files/doc-p.pdf").exists() {
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+    };
+    tokio::time::timeout(WAIT, gone).await.unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[tokio::test]
 async fn what_a_player_sent_before_leaving_is_handled_before_it_leaves() {
     // 70d0a91b36: the back closed a joinRoom stream with messages still queued behind a slow handler, and lost
     // them (the last variable write of a player navigating away). Here a session reads its inbox to the end
