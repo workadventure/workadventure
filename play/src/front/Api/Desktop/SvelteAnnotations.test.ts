@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import { mock } from "vitest-mock-extended";
 import type { WorkAdventureDesktopWindowsApi } from "../../Interfaces/DesktopAppInterfaces";
 vi.mock("../../Space/ScreenAnnotation/ScreenAnnotationManager", () => ({
@@ -21,7 +21,12 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
 });
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { localAnnotationTargetStore, screenAnnotationElementsStore } from "../../Stores/ScreenAnnotationStore";
-import { presenterToolStore } from "../../Stores/PresenterEffectStore";
+import {
+    presenterToolStore,
+    presenterEffectsStore,
+    setPresenterEffect,
+    type ActivePresenterTool,
+} from "../../Stores/PresenterEffectStore";
 import { presenterEffectManager } from "../../Space/ScreenAnnotation/PresenterEffectManager";
 import { startSvelteAnnotations } from "./SvelteAnnotations";
 let stop: (() => void) | undefined;
@@ -56,6 +61,22 @@ describe("Svelte annotation window contract", () => {
         localAnnotationTargetStore.set("me");
         expect(setState).not.toHaveBeenCalled();
     });
+    it.each(["laser", "spotlight", "loupe"] satisfies ActivePresenterTool[])(
+        "stops %s when leaving annotation mode",
+        (tool) => {
+            const setState = vi.fn();
+            stop = startSvelteAnnotations(mock<WorkAdventureDesktopWindowsApi>({ setAnnotationState: setState }));
+            requestedScreenSharingState.enableScreenSharing();
+            localAnnotationTargetStore.set("me");
+            presenterToolStore.set(tool);
+            setPresenterEffect("me", { tool, x: 0.5, y: 0.5, scale: 0 });
+            localAnnotationTargetStore.set(undefined);
+            expect(get(presenterToolStore)).toBe("none");
+            expect(get(presenterEffectsStore).has("me")).toBe(false);
+            expect(presenterEffectManager.emitStop).toHaveBeenCalledWith("me");
+            expect(setState).toHaveBeenLastCalledWith({ visible: false, interactive: false, trackCursor: false });
+        },
+    );
     it("stops a presenter effect when screen sharing ends", () => {
         stop = startSvelteAnnotations(mock<WorkAdventureDesktopWindowsApi>());
         requestedScreenSharingState.enableScreenSharing();

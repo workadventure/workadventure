@@ -49,6 +49,11 @@ export function startSvelteAnnotations(windows: WorkAdventureDesktopWindowsApi):
             previousTool = tool;
         }),
     );
+    stops.push(
+        localAnnotationTargetStore.subscribe((target) => {
+            if (target !== screenAnnotationManager.localUserId) presenterToolStore.set("none");
+        }),
+    );
     let sourceId = get(activeScreenShareSourceStore)?.id;
     stops.push(
         activeScreenShareSourceStore.subscribe((source) => {
