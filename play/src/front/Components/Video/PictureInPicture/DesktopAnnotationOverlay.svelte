@@ -19,9 +19,7 @@
         <ScreenAnnotationOverlay targetUserId={me} canDraw={$requestedScreenSharingState} />
         <PresenterEffectsOverlay targetUserId={me} {stream} />
         {#if drawing}
-            <div class="absolute inset-x-0 top-0 h-24 pointer-events-none">
-                <ScreenAnnotationToolbar targetUserId={me} isPresenter={true} presenterEffects={true} />
-            </div>
+            <ScreenAnnotationToolbar targetUserId={me} isPresenter={true} presenterEffects={true} placement="top" />
         {/if}
     {/if}
 </div>

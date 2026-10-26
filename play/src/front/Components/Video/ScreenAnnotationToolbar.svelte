@@ -24,6 +24,8 @@
         IconTrash,
         IconTypography,
         IconUsersGroup,
+        IconFocusCentered,
+        IconSearch,
         IconX,
     } from "@wa-icons";
 
@@ -33,9 +35,10 @@
         // True when the local user is the one sharing this screen.
         isPresenter: boolean;
         presenterEffects?: boolean;
+        placement?: "top" | "bottom";
     }
 
-    let { targetUserId, isPresenter, presenterEffects = false }: Props = $props();
+    let { targetUserId, isPresenter, presenterEffects = false, placement = "bottom" }: Props = $props();
     const presenterTools: ActivePresenterTool[] = ["laser", "spotlight", "loupe"];
 
     let active = $derived($localAnnotationTargetStore === targetUserId);
@@ -81,133 +84,195 @@
     }
 </script>
 
-<div
-    class="absolute bottom-3 left-1/2 -translate-x-1/2 z-[255] flex items-center gap-2 max-w-[95vw] flex-wrap justify-center rounded-lg bg-contrast/80 backdrop-blur p-1 pointer-events-auto"
-    data-testid="annotation-toolbar"
->
-    <!-- Enter / leave drawing mode -->
+<div class="annotation-toolbar" class:at-top={placement === "top"} data-testid="annotation-toolbar">
     <button
-        class="flex items-center justify-center p-2 rounded hover:bg-white/10 {active ? 'bg-secondary text-white' : ''}"
+        type="button"
         data-testid="annotation-toggle"
+        aria-pressed={active}
         title={active ? $LL.screenAnnotation.stopAnnotating() : $LL.screenAnnotation.startAnnotating()}
         aria-label={active ? $LL.screenAnnotation.stopAnnotating() : $LL.screenAnnotation.startAnnotating()}
         onclick={toggleActive}
     >
-        {#if active}
-            <IconX font-size="18" />
-            <span class="ms-1 text-sm whitespace-nowrap">{$LL.screenAnnotation.stopAnnotating()}</span>
-        {:else}
-            <IconPencil font-size="18" />
-        {/if}
+        {#if active}<IconX font-size="20" />{:else}<IconPencil font-size="20" />{/if}
     </button>
-
     {#if active}
-        <div class="w-px h-6 bg-white/20"></div>
-
-        <!-- Tools -->
+        <span class="separator" aria-hidden="true"></span>
         {#each tools as toolItem (toolItem.id)}
             {@const ToolIcon = toolItem.icon}
             <button
-                class="flex items-center justify-center p-2 rounded hover:bg-white/10 {currentTool === toolItem.id
-                    ? 'bg-secondary text-white'
-                    : ''}"
+                type="button"
                 data-testid={`annotation-tool-${toolItem.id}`}
+                aria-pressed={currentTool === toolItem.id}
                 title={toolItem.label}
                 aria-label={toolItem.label}
-                onclick={() => selectTool(toolItem.id)}
+                onclick={() => selectTool(toolItem.id)}><ToolIcon font-size="20" /></button
             >
-                <ToolIcon font-size="18" />
-            </button>
         {/each}
-
-        <div class="w-px h-6 bg-white/20"></div>
-
-        <!-- Colors -->
-        <div class="flex items-center gap-1" data-testid="annotation-colors">
+        <span class="separator" aria-hidden="true"></span>
+        <div class="colors" data-testid="annotation-colors">
             {#each ANNOTATION_COLORS as color (color)}
                 <button
-                    class="h-5 w-5 rounded-full border-2 {currentColor === color
-                        ? 'border-white'
-                        : 'border-transparent'}"
-                    style={`background-color: ${color};`}
+                    type="button"
+                    class="color"
+                    style:background-color={color}
+                    aria-pressed={currentColor === color}
                     title={$LL.screenAnnotation.color()}
-                    aria-label={$LL.screenAnnotation.color()}
+                    aria-label={`${$LL.screenAnnotation.color()} ${color}`}
                     onclick={() => selectColor(color)}
                 ></button>
             {/each}
         </div>
-
-        <div class="w-px h-6 bg-white/20"></div>
-
         {#if isPresenter && presenterEffects}
+            <span class="separator" aria-hidden="true"></span>
             {#each presenterTools as presenterTool (presenterTool)}
                 <button
                     type="button"
-                    class="p-2 rounded hover:bg-white/10"
-                    class:bg-secondary={$presenterToolStore === presenterTool}
+                    aria-pressed={$presenterToolStore === presenterTool}
                     title={$LL.screenAnnotation.presenter[presenterTool]()}
                     aria-label={$LL.screenAnnotation.presenter[presenterTool]()}
                     onclick={() =>
                         presenterToolStore.set($presenterToolStore === presenterTool ? "none" : presenterTool)}
                 >
-                    {$LL.screenAnnotation.presenter[presenterTool]()}
+                    {#if presenterTool === "laser"}<IconPointer font-size="20" />
+                    {:else if presenterTool === "spotlight"}<IconFocusCentered font-size="20" />
+                    {:else}<IconSearch font-size="20" />{/if}
                 </button>
             {/each}
         {/if}
-        <!-- Undo -->
+        <span class="separator" aria-hidden="true"></span>
         <button
-            class="flex items-center justify-center p-2 rounded hover:bg-white/10"
+            type="button"
             data-testid="annotation-undo"
             title={$LL.screenAnnotation.undo()}
             aria-label={$LL.screenAnnotation.undo()}
-            onclick={undo}
+            onclick={undo}><IconArrowBackUp font-size="20" /></button
         >
-            <IconArrowBackUp font-size="18" />
-        </button>
-    {/if}
-
-    {#if active}
         <button
             type="button"
-            class="p-2 rounded hover:bg-white/10"
             title={$LL.desktop.meetingBar.redo()}
+            aria-label={$LL.desktop.meetingBar.redo()}
             onclick={() => screenAnnotationManager.redoLastLocalElement(targetUserId)}
-            ><IconArrowForwardUp font-size="18" /></button
+            ><IconArrowForwardUp font-size="20" /></button
         >
         <button
             type="button"
-            class="p-2 rounded hover:bg-white/10"
             title={$LL.desktop.meetingBar.hideAnnotations()}
+            aria-label={$LL.desktop.meetingBar.hideAnnotations()}
+            aria-pressed={$screenAnnotationLocallyHiddenStore}
             onclick={() => screenAnnotationLocallyHiddenStore.set(!$screenAnnotationLocallyHiddenStore)}
-            ><IconEyeOff font-size="18" /></button
+            ><IconEyeOff font-size="20" /></button
         >
     {/if}
     {#if isPresenter}
-        <div class="w-px h-6 bg-white/20"></div>
-
-        <!-- Presenter controls -->
+        <span class="separator" aria-hidden="true"></span>
         <button
-            class="flex items-center justify-center p-2 rounded hover:bg-white/10 {othersAllowed
-                ? 'bg-secondary text-white'
-                : ''}"
+            type="button"
+            class="permission"
             data-testid="annotation-allow-toggle"
+            aria-pressed={othersAllowed}
             title={othersAllowed ? $LL.screenAnnotation.disallowAnnotations() : $LL.screenAnnotation.allowAnnotations()}
-            aria-label={othersAllowed
-                ? $LL.screenAnnotation.disallowAnnotations()
-                : $LL.screenAnnotation.allowAnnotations()}
             onclick={toggleOthersAllowed}
         >
-            <IconUsersGroup font-size="18" />
+            <IconUsersGroup font-size="20" />
+            <span
+                >{othersAllowed
+                    ? $LL.screenAnnotation.disallowAnnotations()
+                    : $LL.screenAnnotation.allowAnnotations()}</span
+            >
         </button>
-
         <button
-            class="flex items-center justify-center p-2 rounded hover:bg-white/10"
+            type="button"
             data-testid="annotation-clear-all"
             title={$LL.screenAnnotation.clearAll()}
             aria-label={$LL.screenAnnotation.clearAll()}
-            onclick={clearAll}
+            onclick={clearAll}><IconTrash font-size="20" /></button
         >
-            <IconTrash font-size="18" />
-        </button>
     {/if}
 </div>
+
+<style>
+    .annotation-toolbar {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 255;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 4px;
+        width: max-content;
+        max-width: calc(100% - 24px);
+        padding: 8px;
+        border: 1px solid #64748b;
+        border-radius: 12px;
+        background: #0f172af5;
+        color: #f8fafc;
+        box-shadow: 0 4px 16px #0006;
+        pointer-events: auto;
+    }
+    .annotation-toolbar.at-top {
+        top: 12px;
+        bottom: auto;
+    }
+    button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        flex-shrink: 0;
+        min-width: 36px;
+        height: 36px;
+        padding: 6px;
+        border: 1px solid transparent;
+        border-radius: 6px;
+        background: transparent;
+        color: #f8fafc;
+        cursor: pointer;
+    }
+    button:hover {
+        background: #334155;
+    }
+    button[aria-pressed="true"] {
+        background: #4338ca;
+        border-color: #a5b4fc;
+        color: #fff;
+    }
+    button:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+    }
+    .separator {
+        width: 1px;
+        height: 24px;
+        margin: 0 3px;
+        background: #64748b;
+    }
+    .colors {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 0 4px;
+    }
+    button.color {
+        min-width: 22px;
+        width: 22px;
+        height: 22px;
+        padding: 0;
+        border: 2px solid #64748b;
+        border-radius: 50%;
+    }
+    button.color[aria-pressed="true"] {
+        border-color: #fff;
+        outline: 2px solid #a5b4fc;
+        outline-offset: 2px;
+    }
+    .permission {
+        height: auto;
+        min-height: 36px;
+        max-width: 240px;
+        font-size: 12px;
+        text-align: start;
+    }
+</style>
