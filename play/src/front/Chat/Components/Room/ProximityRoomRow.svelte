@@ -20,8 +20,10 @@
     let roomName = $derived(room.name);
     let roomKind = $derived(room.kind);
     let hasUnreadMessages = $derived(room.hasUnreadMessages);
-    let unreadCount = $derived(room.unreadMessagesCount);
+    // unreadMessagesCount only counts while the chat is intentionally closed: it showed 0 next to unread messages.
+    let unreadCount = $derived(room.unreadNotificationCount);
     let areNotificationsMuted = $derived(room.areNotificationsMuted);
+    let hasUnreadMentions = $derived(room.hasUnreadMentions);
 
     let usesDefaultProximityPicture = $derived($roomKind === "default" || $roomKind === "proximity");
     let RoomIcon = $derived(
@@ -93,6 +95,9 @@
         </span>
     </button>
     {#if $hasUnreadMessages}
-        <UnreadCount count={$unreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
+        <UnreadCount
+            count={$unreadCount}
+            variant={$hasUnreadMentions ? "mention" : $areNotificationsMuted ? "muted" : "default"}
+        />
     {/if}
 </div>

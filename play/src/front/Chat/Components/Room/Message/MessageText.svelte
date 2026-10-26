@@ -58,14 +58,15 @@
     let unsubscriber: Unsubscriber | undefined;
     onMount(() => {
         unsubscriber = content.subscribe((value) => {
-            let promiseHtml = getMarked(value.body).then((marked) => marked.parse(value.body));
+            const source = value.formattedBody ?? value.body;
+            let promiseHtml = getMarked(source).then((marked) => marked.parse(source));
             promiseHtml
                 .then((result) => {
                     html = result;
                 })
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
-                    html = $content.body;
+                    html = source;
                 });
         });
     });
@@ -87,6 +88,11 @@
         }
         const anchor = target.closest("a");
         if (!(anchor instanceof HTMLAnchorElement)) {
+            return;
+        }
+        // A mention pill names a user, it is not a page to open.
+        if (anchor.dataset.mention !== undefined || anchor.href.startsWith("https://matrix.to/#/@")) {
+            event.preventDefault();
             return;
         }
 

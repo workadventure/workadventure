@@ -26,6 +26,7 @@
     let roomType = $derived(room.type);
     let hasUnreadMessage = $derived(room.hasUnreadMessages);
     let roomUnreadCount = $derived(room.unreadNotificationCount);
+    let hasUnreadMentions = $derived(room.hasUnreadMentions);
     let roomName = $derived(room.name);
     let isEncrypted = $derived(room.isEncrypted);
     let areNotificationsMuted = $derived(room.areNotificationsMuted);
@@ -98,6 +99,9 @@
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <UnreadCount count={$roomUnreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
+        <UnreadCount
+            count={$roomUnreadCount}
+            variant={$hasUnreadMentions ? "mention" : $areNotificationsMuted ? "muted" : "default"}
+        />
     {/if}
 </div>

@@ -12,6 +12,8 @@ export interface ProximityNotification {
     /** When false, click only opens the chat panel (e.g. for room invitations). Default true. */
     openRoomOnClick?: boolean;
     sidePanelSection?: RoomSidePanelSection;
+    /** The message mentions the current user: shown as such, in the mention color. */
+    isMention?: boolean;
 }
 
 /**
@@ -29,6 +31,7 @@ function createChatNotificationStore() {
             messageId?: string,
             openRoomOnClick = true,
             sidePanelSection?: RoomSidePanelSection,
+            isMention = false,
         ): string => {
             const id = uuidv4();
             update((notifications: ProximityNotification[]) => {
@@ -38,7 +41,7 @@ function createChatNotificationStore() {
                     : notifications;
                 return [
                     ...filteredNotifications,
-                    { id, userName, message, messageId, room, openRoomOnClick, sidePanelSection },
+                    { id, userName, message, messageId, room, openRoomOnClick, sidePanelSection, isMention },
                 ];
             });
             return id;

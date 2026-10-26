@@ -15,6 +15,7 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
+import { MATRIX_HTML_FORMAT, markOwnMentions } from "../../Mentions";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -135,12 +136,18 @@ export class MatrixChatMessage implements ChatMessage {
         // via the MatrixEventEvent.Replaced listener.
         const content = this.event.getContent();
         const quotedMessage = this.getQuotedMessage();
+        const myUserId = this.room.client.getSafeUserId();
+        // Evaluated from the push rules, the way the server counts the unread highlights: this covers m.mentions,
+        // @room and the keywords set up in Element. Recalculated because the cached actions may predate decryption.
+        const mentionsMe =
+            !this.isMyMessage && this.room.client.getPushActionsForEvent(this.event, true)?.tweaks.highlight === true;
 
         if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
             return {
-                body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
+                body: markOwnMentions(content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""), myUserId),
                 url: undefined,
+                mentionsMe,
             };
         }
 
@@ -159,7 +166,18 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
-        return { body: content.body, url: undefined };
+        // A message mentioning someone is rendered from its HTML, where the mentions are pills (whether they come
+        // from our composer or from Element). The other ones keep being rendered from their markdown body.
+        const mentionsSomeone =
+            content.format === MATRIX_HTML_FORMAT &&
+            typeof content.formatted_body === "string" &&
+            (content["m.mentions"]?.user_ids?.length ?? 0) > 0;
+        return {
+            body: content.body,
+            url: undefined,
+            formattedBody: mentionsSomeone ? markOwnMentions(content.formatted_body, myUserId) : undefined,
+            mentionsMe,
+        };
     }
 
     private loadImageMediaIfNeeded() {

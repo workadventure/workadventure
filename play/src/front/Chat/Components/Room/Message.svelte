@@ -206,6 +206,7 @@
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
                     ? 'bg-secondary/90 rounded-br-none'
                     : ''}
+                    {$content.mentionsMe && !$isDeleted && replyDepth === 0 ? 'ring-2 ring-danger' : ''}
                     {!isQuotedMessage ? 'my' : ''}"
             >
                 {#if $isDeleted}

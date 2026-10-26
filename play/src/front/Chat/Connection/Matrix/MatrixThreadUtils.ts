@@ -1,4 +1,5 @@
 import type { IContent, MatrixEvent, Room } from "matrix-js-sdk";
+import { NotificationCountType } from "matrix-js-sdk";
 import type { IThreadBundledRelationship } from "matrix-js-sdk/lib/models/event";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
 import type { ChatThreadSummary } from "../ChatConnection";
@@ -63,6 +64,7 @@ export function getThreadSummary(thread: Thread | null, room: Room, rootEventId:
     const unreadFields = {
         hasUnreadMessages: unreadNotificationCount > 0,
         unreadNotificationCount,
+        hasUnreadMentions: room.getThreadUnreadNotificationCount(rootEventId, NotificationCountType.Highlight) > 0,
     };
     const degradedFields = isDegraded
         ? {

@@ -268,6 +268,20 @@
     text-decoration: underline;
     opacity: 0.75;
 }
+/* Mention pills: as our composer writes them, and as Element sends them. */
+.message-bubble a[data-mention],
+.message-bubble a[href^="https://matrix.to/#/@"],
+.message-input a[data-mention] {
+    @apply inline-block rounded-full bg-white/20 px-1.5 font-bold text-white no-underline opacity-100 cursor-default;
+}
+.message-bubble a[data-mention]::before,
+.message-bubble a[href^="https://matrix.to/#/@"]::before,
+.message-input a[data-mention]::before {
+    content: "@";
+}
+.message-bubble a[data-mention-me] {
+    @apply bg-danger;
+}
 pre {
     margin: 0;
 }

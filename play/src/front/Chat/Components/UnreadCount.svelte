@@ -5,8 +5,7 @@
     interface Props {
         count: number;
         // "muted" is for rooms whose notifications are off: grey, and it never pings.
-        // "mention" is reserved for messages that mention the user; it looks like "default" until the
-        // mention colour is settled with the @mentions work.
+        // "mention" is for unread messages that mention the user: red, even in a muted room.
         variant?: "default" | "muted" | "mention";
         size?: "md" | "sm";
         ariaLabel?: string;
@@ -32,7 +31,11 @@
     class={[
         "relative inline-flex shrink-0 items-center justify-center rounded-full font-bold leading-none tabular-nums",
         size === "sm" ? "h-4 min-w-4 px-1 text-xxs" : "h-5 min-w-5 px-1.5 text-xs",
-        variant === "muted" ? "bg-white/25 text-white" : "bg-success text-contrast",
+        variant === "muted"
+            ? "bg-white/25 text-white"
+            : variant === "mention"
+              ? "bg-danger-1000 text-white"
+              : "bg-success text-contrast",
         className,
     ]}
     data-variant={variant}

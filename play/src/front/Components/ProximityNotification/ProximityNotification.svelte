@@ -50,6 +50,8 @@
 
 <div
     class="proximity-notification bg-contrast/50 rounded backdrop-blur-md flex gap-3 py-3 pl-5 pr-2 shadow-xl pointer-events-auto z-[900] cursor-pointer hover:bg-contrast/90 transition-colors text-white w-[60%] min-w-[300px] max-w-[600px]"
+    class:ring-2={notification.isMention}
+    class:ring-danger={notification.isMention}
     onclick={handleClick}
     role="button"
     tabindex="0"
@@ -61,13 +63,15 @@
     }}
     out:fade={{ duration: 150 }}
 >
-    <div class="mt-1 text-white text-xl flex-shrink-0">💬</div>
+    <div class="mt-1 text-xl flex-shrink-0 {notification.isMention ? 'text-danger' : 'text-white'}">
+        {notification.isMention ? "@" : "💬"}
+    </div>
 
     <div class="flex flex-col text-white flex-1 min-w-0 overflow-hidden">
         <div
-            class="font-bold mb-1 text-base text-white truncate font-['Roboto_Condensed'] tracking-normal align-middle"
+            class="font-bold mb-1 text-base text-white line-clamp-2 font-['Roboto_Condensed'] tracking-normal align-middle"
         >
-            {notification.userName}
+            {notification.isMention ? $LL.notification.mention({ name: notification.userName }) : notification.userName}
             {#if $roomType !== "direct"}
                 {$LL.chat.notification.in()}
                 {$roomName}

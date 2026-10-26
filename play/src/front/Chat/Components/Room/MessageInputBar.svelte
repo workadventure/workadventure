@@ -58,6 +58,7 @@
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
+    import MentionSuggestions from "./MentionSuggestions.svelte";
     import {
         IconAlertTriangle,
         IconHelpCircle,
@@ -82,6 +83,7 @@
 
     let message = $state("");
     let messageInput: HTMLDivElement | undefined = $state();
+    let mentionSuggestions: MentionSuggestions | undefined = $state();
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
     let files: { id: string; file: File }[] = $state([]);
@@ -187,6 +189,10 @@
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        // While members are suggested after an "@", the arrows, Enter, Tab and Escape pick one.
+        if (mentionSuggestions?.handleKeydown(keyDownEvent)) {
+            return;
+        }
         if (!$canSendMessages) {
             return;
         }
@@ -935,6 +941,14 @@
                 </div>
             </div>
         </div>
+    {/if}
+    {#if room.mentionCandidates}
+        <MentionSuggestions
+            bind:this={mentionSuggestions}
+            candidates={room.mentionCandidates}
+            {messageInput}
+            onInsert={() => (message = messageInput?.innerHTML ?? "")}
+        />
     {/if}
     <MessageInput
         onkeydown={sendMessageOrEscapeLine}

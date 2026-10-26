@@ -13,6 +13,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "아직 보낸 메시지가 없습니다!",
     beFirst: "첫 번째로 메시지를 보내보세요",
     enter: "메시지를 입력하세요...",
+    mentionSuggestions: "멘션할 멤버",
     menu: {
         visitCard: "명함 보기",
         addFriend: "친구 추가",

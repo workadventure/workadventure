@@ -16,6 +16,7 @@ import type { ChatMessage } from "../../ChatConnection";
 import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
 import { ProximityChatRoom } from "../ProximityChatRoom";
 import { analyticsClient } from "../../../../Administration/AnalyticsClient";
+import { createMentionPill } from "../../../Mentions";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => ({
     gameManager: {
@@ -417,6 +418,37 @@ describe("ProximityChatRoom file transfers", () => {
         expect(get(room.canSendFiles)).toBe(false);
         await expect(room.sendFiles(createFileList(new File(["hello"], "hello.txt")))).rejects.toThrow();
         expect(createOutgoingOffers).not.toHaveBeenCalled();
+    });
+});
+
+describe("ProximityChatRoom mentions", () => {
+    beforeEach(() => {
+        selectedRoomStore.set(undefined);
+        chatVisibilityStore.set(false);
+    });
+
+    const receive = (room: ProximityChatRoom, message: string) =>
+        Reflect.get(room, "addNewMessage").call(room, message, "sender", [], "Sender");
+
+    it("flags a message mentioning us, and the room until it is read", () => {
+        const room = createRoom();
+        const toUs = createMentionPill({ id: "recipient", name: "Recipient" }).outerHTML;
+        const toSomeoneElse = createMentionPill({ id: "other", name: "Other" }).outerHTML;
+
+        receive(room, `hello ${toSomeoneElse}`);
+        expect(get(room.hasUnreadMentions)).toBe(false);
+
+        receive(room, `hello ${toUs}`);
+        const content = get(get(room.messages)[1].content);
+        expect(content.mentionsMe).toBe(true);
+        expect(content.body).toContain("<a data-mention-me ");
+        expect(get(room.hasUnreadMentions)).toBe(true);
+
+        // Read elsewhere (only hasUnreadMessages is reset): the next unread streak starts without the mention.
+        room.hasUnreadMessages.set(false);
+        receive(room, "no mention");
+        expect(get(room.hasUnreadMessages)).toBe(true);
+        expect(get(room.hasUnreadMentions)).toBe(false);
     });
 });
 

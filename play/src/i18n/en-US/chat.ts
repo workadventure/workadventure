@@ -11,6 +11,7 @@ const chat: BaseTranslation = {
     noMessage: "No message sent yet!",
     beFirst: "Be the first and send a message",
     enter: "Enter your message...",
+    mentionSuggestions: "Members to mention",
     menu: {
         visitCard: "Visit card",
         addFriend: "Add friend",

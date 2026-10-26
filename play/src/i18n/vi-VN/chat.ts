@@ -13,6 +13,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "Chưa có tin nhắn nào!",
     beFirst: "Hãy là người đầu tiên gửi tin nhắn",
     enter: "Nhập tin nhắn của bạn...",
+    mentionSuggestions: "Thành viên để nhắc đến",
     menu: {
         visitCard: "Danh thiếp",
         addFriend: "Kết bạn",

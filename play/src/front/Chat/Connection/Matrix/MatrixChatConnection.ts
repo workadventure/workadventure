@@ -3,10 +3,10 @@ import { derived, get, readable, readonly, writable } from "svelte/store";
 import type {
     ICreateRoomOpts,
     ICreateRoomStateEvent,
-    IPushRule,
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixEvent,
+    PushRuleSet,
     Room,
     SyncStateData,
     User,
@@ -20,7 +20,6 @@ import {
     HttpApiEvent,
     MatrixError,
     PendingEventOrdering,
-    PushRuleActionName,
     RoomEvent,
     RoomStateEvent,
     SetPresence,
@@ -1166,29 +1165,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.refreshRawUnreadRoomKinds();
         }
         if (event.getType() === "m.push_rules") {
-            const content = event.getContent();
             // `global` and its rule-kind arrays (override, room, …) are all optional in a PushRuleSet;
-            // a partial m.push_rules update can omit `override`, so never assume it exists.
-            const overrideRules: IPushRule[] = content?.global?.override ?? [];
-
-            overrideRules.forEach((rule: IPushRule) => {
-                const room = this.roomList.get(rule.rule_id);
-                if (!room) return;
-                if (rule.actions.includes(PushRuleActionName.DontNotify)) {
-                    room.setNotificationSilent(true);
-                }
-            });
-
-            Array.from(this.roomList.values())
-                .filter((room) => {
-                    return !overrideRules.some(
-                        (rule: IPushRule) =>
-                            rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify),
-                    );
-                })
-                .forEach((room) => {
-                    room.setNotificationSilent(false);
-                });
+            // a partial m.push_rules update can omit them, so never assume they exist.
+            const pushRules: PushRuleSet | undefined = event.getContent()?.global;
+            for (const room of this.roomList.values()) {
+                room.setNotificationSilent(MatrixChatRoom.isMutedByPushRules(pushRules, room.id));
+            }
         }
     }
 

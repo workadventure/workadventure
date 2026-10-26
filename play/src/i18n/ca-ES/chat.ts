@@ -13,6 +13,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "Encara no s'ha enviat cap missatge!",
     beFirst: "Sigues el primer a enviar un missatge",
     enter: "Escribiu el vostre missatge...",
+    mentionSuggestions: "Membres a mencionar",
     menu: {
         visitCard: "Targeta de visita",
         addFriend: "Afegir amic",
