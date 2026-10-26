@@ -639,7 +639,6 @@ func frontEnv(v *vars, c *Config, environ map[string]string) FrontEnv {
 		ProximityFileTransferMaxUsers:  v.ProximityFileTransferMaxUsers,
 		MaxDisplayedVideos:             v.MaxDisplayedVideos,
 		LivekitPixelDensity:            v.LivekitPixelDensity,
-		NodeEnv:                        firstNonEmpty(c.NodeEnv, "development"),
 		ContactURL:                     optional(v.ContactURL),
 		PosthogAPIKey:                  optional(v.PosthogAPIKey),
 		PosthogURL:                     optional(v.PosthogURL),
@@ -723,7 +722,6 @@ type FrontEnv struct {
 	ProximityFileTransferMaxUsers  int      `json:"PROXIMITY_FILE_TRANSFER_MAX_USERS"`
 	MaxDisplayedVideos             int      `json:"MAX_DISPLAYED_VIDEOS"`
 	LivekitPixelDensity            float64  `json:"LIVEKIT_PIXEL_DENSITY"`
-	NodeEnv                        string   `json:"NODE_ENV"`
 	ContactURL                     *string  `json:"CONTACT_URL,omitempty"`
 	PosthogAPIKey                  *string  `json:"POSTHOG_API_KEY,omitempty"`
 	PosthogURL                     *string  `json:"POSTHOG_URL,omitempty"`

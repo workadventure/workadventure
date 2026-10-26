@@ -28,8 +28,12 @@ func TestDefaults(t *testing.T) {
 	if _, ok := env["ADMIN_URL"]; ok {
 		t.Fatal("unset optional variables must be left out of window.env")
 	}
-	if env["NODE_ENV"] != "development" || env["ENABLE_CHAT"] != true {
+	if env["ENABLE_CHAT"] != true {
 		t.Fatalf("unexpected front env: %v", c.FrontEnv)
+	}
+	// The front no longer reads NODE_ENV (94fd550008): the server's mode is none of its business.
+	if _, ok := env["NODE_ENV"]; ok {
+		t.Fatal("NODE_ENV is not sent to the front")
 	}
 }
 
