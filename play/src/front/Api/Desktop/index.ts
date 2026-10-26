@@ -27,14 +27,17 @@ import { focusStore } from "../../Stores/FocusStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
-import { startSvelteAnnotations } from "./SvelteAnnotations";
 import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
 import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMeetingBar.svelte";
 import desktopMeetingBarStyles from "../../Components/Video/PictureInPicture/desktopMeetingBar.css?raw";
 
+import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
+import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
+import { startSvelteAnnotations } from "./SvelteAnnotations";
+
 /** The desktop contract this page speaks (see `hello` in DesktopAppInterfaces). */
 const PAGE_CONTRACT = 2;
-const DESKTOP_APP_DOWNLOAD_URL = "https://github.com/workadventure/workadventure/releases/latest";
+const desktopDownload = desktopDownloadUrl(DESKTOP_VERSION_POLICY);
 
 type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
 
@@ -140,11 +143,16 @@ class DesktopApi {
         // app without it is older than this page: it keeps working, the user is told an update exists.
         if (window.WAD.hello) {
             window.WAD.hello({ contract: PAGE_CONTRACT });
-        } else {
-            warningMessageStore.addWarningMessage(
-                get(LL).warning.desktopAppOutdated({ url: DESKTOP_APP_DOWNLOAD_URL }),
-            );
+        } else if (desktopDownload) {
+            warningMessageStore.addWarningMessage(get(LL).warning.desktopAppOutdated({ url: desktopDownload }));
         }
+        window.WAD.getVersion()
+            .then((version) => {
+                if (desktopVersionStatus(version, DESKTOP_VERSION_POLICY) === "belowMinimum") {
+                    warningMessageStore.addWarningMessage(get(LL).desktop.application.status.belowMinimum());
+                }
+            })
+            .catch((error: unknown) => console.warn("Could not read desktop version", error));
 
         window.WAD.onMuteToggle(() => {
             if (this.isSilent) return;

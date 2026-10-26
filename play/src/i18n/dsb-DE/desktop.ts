@@ -2,6 +2,25 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "Desktopowe nałoženje",
+        installed: "Instalěrowana wersija",
+        unknown: "Njepśistupne",
+        browser: "Wužywaśo WorkAdventure we wobglědowaku.",
+        recommendedVersion: "Dopórucona wersija",
+        minimumVersion: "Nejniša pódpěrana wersija",
+        download: "Desktopowe nałoženje ześěgnuś",
+        managed:
+            "Źaržćo se aktualizaciskeje politiki swójeje organizacije. Toś ten bok nałoženje njeinstalěrujo a staršu wersiju njewótnowja.",
+        status: {
+            belowMinimum:
+                "Toś ta desktopowa wersija jo starša ako nejniša pódpěrana wersija toś teje instance. Móžośo pókšacowaś, ale někotare funkcije snaź njefungěruju.",
+            recommended: "Wužywaśo dopóruconu wersiju za toś tu instancu.",
+            different:
+                "Waša wersija se wót dopóruconeje wersije toś teje instance rozeznawa. To njegroni, až jo njekompatibelna.",
+            unconfigured: "Toś ta instanca njejo dopóruconu wersiju pódała.",
+        },
+    },
     sourcePicker: {
         title: "Wašu wobrazowku źěliś",
         subtitle: "Wubjeŕśo, co druge wobźělniki budu wiźeś.",

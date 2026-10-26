@@ -2,6 +2,24 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "デスクトップアプリ",
+        installed: "インストール済みバージョン",
+        unknown: "取得できません",
+        browser: "ブラウザーでWorkAdventureを使用しています。",
+        recommendedVersion: "推奨バージョン",
+        minimumVersion: "サポート対象の最小バージョン",
+        download: "デスクトップアプリをダウンロード",
+        managed: "組織の更新ポリシーに従ってください。このページはアプリのインストールやダウングレードを行いません。",
+        status: {
+            belowMinimum:
+                "このデスクトップバージョンは、このインスタンスがサポートする最小バージョンより古いものです。続行できますが、一部の機能が動作しない場合があります。",
+            recommended: "このインスタンスの推奨バージョンを使用しています。",
+            different:
+                "使用中のバージョンは、このインスタンスの推奨バージョンと異なります。必ずしも互換性がないとは限りません。",
+            unconfigured: "このインスタンスには推奨バージョンが設定されていません。",
+        },
+    },
     sourcePicker: {
         title: "画面を共有",
         subtitle: "他の参加者に表示する内容を選択してください。",

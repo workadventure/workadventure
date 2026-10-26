@@ -10,6 +10,9 @@ Environment variables for the Play service (frontend and pusher).
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `DESKTOP_APP_RECOMMENDED_VERSION` | No | Desktop release validated for this instance (exact X.Y.Z). |
+| `DESKTOP_APP_MINIMUM_VERSION` | No | Minimum supported desktop release; shows a non-blocking warning. |
+| `DESKTOP_APP_DOWNLOAD_URL` | No | Approved desktop download page for this instance. Required when a version is configured. |
 | `SECRET_KEY` | Yes | Secret key used to encode JWT tokens. Set this to a random unguessable string. |
 | `API_URL` | Yes | URL of the back server API |
 | `ADMIN_API_URL` | No | The URL to the admin API. If in the same network, you can use a local name here. |

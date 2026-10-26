@@ -43,6 +43,9 @@ services:
       - "9231:9229"
       - "9235:9235"
     environment:
+      DESKTOP_APP_RECOMMENDED_VERSION: ${DESKTOP_APP_RECOMMENDED_VERSION:-}
+      DESKTOP_APP_MINIMUM_VERSION: ${DESKTOP_APP_MINIMUM_VERSION:-}
+      DESKTOP_APP_DOWNLOAD_URL: ${DESKTOP_APP_DOWNLOAD_URL:-}
       # On startup, we ask the messages container to regenerate the files.
       # Note: we need to use this "messages" container because of ARM64 processors that are not supported with protoc (used in "messages" container)
       STARTUP_COMMAND_1: ../wait-proto.sh

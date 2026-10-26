@@ -57,3 +57,27 @@ La CI doit couvrir :
 Les tests actuels figent la surface historique du preload et vérifient le handshake par page. Ils ne remplacent pas les tests d'intégration avec une vraie ancienne release WA.
 
 Décisions restantes : durée de support des contrats, gouvernance du mode géré et éventuel canal LTS. Un canal LTS crée une obligation de maintenance ; il ne devrait pas être promis avant de définir les correctifs et plateformes couverts.
+
+## Configuration de la recommandation dans WA
+
+Implémentation sur `feat/desktop-companion-chat-annotations` : rubrique **Paramètres → Application desktop**, visible également dans le navigateur. Elle montre la version installée (desktop uniquement), la recommandation de l'instance, son minimum éventuel et son lien de téléchargement approuvé.
+
+L'administrateur du déploiement configure les variables suivantes, transmises au service `play` par les fichiers Compose de développement et de production :
+
+```dotenv
+DESKTOP_APP_RECOMMENDED_VERSION=1.3.0
+DESKTOP_APP_MINIMUM_VERSION=1.2.0
+DESKTOP_APP_DOWNLOAD_URL=https://downloads.example.org/desktop
+```
+
+Ces valeurs sont un exemple. Elles doivent correspondre à une release effectivement validée par l'organisation. Les versions sont des numéros stables exacts `X.Y.Z`, sans plage ni mot-clé `latest`. Le minimum est facultatif. La recommandation ne peut pas être inférieure au minimum. Le lien HTTPS est obligatoire dès qu'une version est configurée ; il peut pointer vers une page présentant les téléchargements par système d'exploitation. Une URL avec identifiants intégrés est refusée.
+
+Les valeurs se règlent ici dans la configuration du déploiement ; aucun formulaire d'édition dans la console d'administration SaaS n'a été ajouté. Un redémarrage de `play` puis un rechargement de la page rendent la nouvelle configuration visible. Les onglets d'autres instances gardent leur propre configuration.
+
+Un desktop sous le minimum reçoit un avertissement non bloquant au démarrage et dans les paramètres. Une version différente de la recommandation est signalée sans être automatiquement déclarée incompatible : elle peut être plus récente. Les versions de développement ou illisibles ne sont pas classées arbitrairement comme obsolètes. Le panneau reste utilisable si la lecture de version échoue.
+
+Aucune méthode native n'est ajoutée : la page réutilise `WAD.getVersion()`. Le handshake reste séparé de la comparaison des versions produit. Le lien du message historique pour un ancien desktop respecte désormais la configuration de l'instance.
+
+Sans configuration, le panneau n'invente pas de recommandation et propose la page officielle de téléchargement. Avec une version configurée, il ne substitue jamais la dernière release publique au lien approuvé. Cette configuration n'affecte ni le flux d'auto-update Electron ni l'installation à la fermeture ; le mode géré décrit plus haut reste un travail distinct.
+
+Validation de cette étape : 49 tests ciblés réussis (comparaison, validation du déploiement, projection existante de configuration et panneau Svelte), contrôle i18n complet et `svelte-check` sans erreur ni avertissement. Les tests du panneau utilisent un DOM simulé ; ils ne constituent pas une validation de l'auto-updater ou d'anciennes releases WA réelles.
