@@ -77,6 +77,15 @@ func TestFrontPage(t *testing.T) {
 	if get(h, "GET", "/static/x.png", nil, nil).Body.String() != "asset /static/x.png" {
 		t.Error("same-origin static files must be proxied to the front container")
 	}
+	if get(h, "GET", "/service-worker-prod.js", nil, nil).Body.String() != "asset /service-worker-prod.js" {
+		t.Error("the page's service worker must be proxied to the front container")
+	}
+	// The front has one service worker left, which also handles chat notifications (576bcb9df6, 7dfe35f327).
+	for _, gone := range []string{"/service-worker-dev.js", "/notification-service-worker.js"} {
+		if w := get(h, "GET", gone, nil, nil); w.Code != http.StatusNotFound {
+			t.Errorf("%s is no longer proxied: %d %s", gone, w.Code, w.Body)
+		}
+	}
 }
 
 func TestAnonymousLoginThenMe(t *testing.T) {

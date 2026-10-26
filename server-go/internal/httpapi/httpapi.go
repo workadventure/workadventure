@@ -117,7 +117,7 @@ func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAsset
 	if cfg.AssetsInternalURL != "" {
 		proxy := assetsProxy(cfg.AssetsInternalURL)
 		for _, p := range []string{"/assets/", "/static/", "/resources/", "/collections/", "/iframe_api.js", "/iframe_api.js.map",
-			"/service-worker-dev.js", "/service-worker-prod.js", "/notification-service-worker.js"} {
+			"/service-worker-prod.js"} {
 			mux.Handle("GET "+p, proxy)
 		}
 	}
