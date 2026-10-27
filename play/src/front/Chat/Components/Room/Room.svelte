@@ -10,9 +10,9 @@
     } from "../../Connection/ChatConnection";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-    import LL from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
+    import UnreadCount from "../UnreadCount.svelte";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
 
@@ -93,18 +93,6 @@
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <div class="relative flex h-7 w-7 items-center justify-center">
-            <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping"></span>
-            <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white"></span>
-            <div
-                class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                aria-label={$LL.chat.a11y.unreadCount({ count: $roomUnreadCount })}
-            >
-                <span>{$roomUnreadCount > 9 ? "9" : $roomUnreadCount}</span>
-                {#if $roomUnreadCount > 9}
-                    <span class="text-xxs">+</span>
-                {/if}
-            </div>
-        </div>
+        <UnreadCount count={$roomUnreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
     {/if}
 </div>
