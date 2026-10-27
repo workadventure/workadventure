@@ -230,6 +230,26 @@ describe("manual camera pan", () => {
         expect(camera.midPoint.y).toBe(player.y);
     });
 
+    it("centres the map in game mode on an axis where it is smaller than the view", () => {
+        const { camera, scene, player } = setup(0.1);
+        camera.preRender();
+        expect(camera.midPoint.x).toBeCloseTo(2000);
+        expect(camera.midPoint.y).toBeCloseTo(1500);
+
+        // Centred in the area the follow offset leaves visible (a side panel, say).
+        camera.setFollowOffset(100, 0);
+        scene.events.emit(Phaser.Scenes.Events.POST_UPDATE);
+        camera.preRender();
+        expect(camera.midPoint.x).toBeCloseTo(1900);
+
+        camera.setFollowOffset(0, 0);
+        camera.setZoom(1);
+        scene.events.emit(Phaser.Scenes.Events.POST_UPDATE);
+        camera.preRender();
+        expect(camera.midPoint.x).toBe(player.x);
+        expect(camera.midPoint.y).toBe(player.y);
+    });
+
     it("ignores cursor zoom-out at minimum zoom", () => {
         const { manager, addCounter, limits } = setup(1, true);
         manager.startManualPan();

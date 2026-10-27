@@ -93,6 +93,8 @@ export class CameraManager extends EventEmitter {
     private readonly KEY_SCROLL_SPEED = 0.6;
     private mapEditorOpen = false;
     private zoomBeforeMapEditor: number | undefined;
+    // The camera bounds last set in game mode (see updateGameBounds).
+    private gameBounds: { x: number; y: number; width: number; height: number } | undefined;
 
     private readonly unsubscribeMapEditorModeStore: () => void;
 
@@ -134,9 +136,10 @@ export class CameraManager extends EventEmitter {
 
         // Subscribe to map editor mode store to change camera bounds when the map editor is opened or closed
         this.unsubscribeMapEditorModeStore = mapEditorModeStore.subscribe((isOpened) => {
-            // Define new bounds for camera if the map editor is opened
+            const changed = isOpened !== this.mapEditorOpen;
+            this.mapEditorOpen = isOpened;
             if (isOpened) {
-                //this.camera.setBounds(0, 0, this.mapSize.width * 2, this.mapSize.height);
+                // The editor lets the view go past the map edges.
                 this.camera.setBounds(
                     -this.mapSize.width,
                     -this.mapSize.height,
@@ -144,27 +147,53 @@ export class CameraManager extends EventEmitter {
                     this.mapSize.height * 3,
                 );
             } else {
-                // We set the bounds back after a call to start following the player
-                this.camera.setBounds(0, 0, this.mapSize.width, this.mapSize.height);
+                this.gameBounds = undefined;
+                this.updateGameBounds();
             }
-            if (isOpened !== this.mapEditorOpen) {
-                this.mapEditorOpen = isOpened;
+            if (changed) {
                 if (isOpened) this.enterMapEditor();
                 else this.leaveMapEditor();
             }
         });
+        this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.updateGameBounds);
 
-        // Set zoom out to the maximum possible value
-        this.waScaleManager.maxZoomOut = this.waScaleManager.getTargetZoomModifierFor(
-            this.mapSize.width,
-            this.mapSize.height,
-        );
+        this.waScaleManager.mapSize = this.mapSize;
 
         this.scene.game.events.on(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }
 
     private readonly onZoomChanged = (): void => {
         this.doUpdateCameraOffset(true);
+    };
+
+    /**
+     * In game mode the view stays on the map. On an axis where the map is smaller than the view, the map is centred
+     * in the area the follow offset leaves visible: the bounds grow to the view's size around that centre, where
+     * Phaser's clamping would otherwise pin the map to the top-left corner.
+     */
+    private readonly updateGameBounds = (): void => {
+        if (this.mapEditorOpen) return;
+        const { displayWidth, displayHeight, followOffset } = this.camera;
+        const { width: mapWidth, height: mapHeight } = this.mapSize;
+        const bounds = {
+            x: displayWidth > mapWidth ? mapWidth / 2 - followOffset.x - displayWidth / 2 : 0,
+            y: displayHeight > mapHeight ? mapHeight / 2 - followOffset.y - displayHeight / 2 : 0,
+            width: Math.max(mapWidth, displayWidth),
+            height: Math.max(mapHeight, displayHeight),
+        };
+        const last = this.gameBounds;
+        if (
+            last &&
+            last.x === bounds.x &&
+            last.y === bounds.y &&
+            last.width === bounds.width &&
+            last.height === bounds.height
+        ) {
+            return;
+        }
+        this.gameBounds = bounds;
+        this.camera.setBounds(bounds.x, bounds.y, bounds.width, bounds.height);
+        this.scene.markDirty();
     };
 
     public destroy(): void {
@@ -175,6 +204,7 @@ export class CameraManager extends EventEmitter {
         this.zoomAnimation?.onInterrupt();
         this.zoomAnimation = undefined;
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
+        this.scene.events.off(Phaser.Scenes.Events.POST_UPDATE, this.updateGameBounds);
 
         this.scene.game.events.off(WaScaleManagerEvent.RefreshFocusOnTarget);
         this.camera.off("followupdate", this.onFollowUpdate);
