@@ -1,4 +1,4 @@
-import { writable, derived, readable } from "svelte/store";
+import { writable, derived, readable, get } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
 import {
     getBackgroundProcessingUnsupportedReason,
@@ -7,6 +7,8 @@ import {
     type BackgroundMode,
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { analyticsClient } from "../Administration/AnalyticsClient";
+import { currentRoomStore } from "./CurrentRoomStore";
+import { getAvailableBackgroundImages } from "./BackgroundPresets";
 
 /**
  * Store for background transformation settings
@@ -73,70 +75,20 @@ export const backgroundProcessingSupportedStore = readable(true, (set) => {
     set(getBackgroundProcessingUnsupportedReason() === null);
 });
 
-/**
- * Predefined background options
- */
-export const backgroundPresets = {
-    images: [
-        {
-            name: "library",
-            url: "./static/images/background/library.jpg",
-            thumbnail: "./static/images/background/thumbnail/library.jpg",
-        },
-        {
-            name: "Office",
-            url: "./static/images/background/office.jpg",
-            thumbnail: "./static/images/background/thumbnail/office.jpg",
-        },
-        {
-            name: "Office 2",
-            url: "./static/images/background/office_2.jpg",
-            thumbnail: "./static/images/background/thumbnail/office_2.jpg",
-        },
-        {
-            name: "Pixel Art",
-            url: "./static/images/background/pixel_art.jpg",
-            thumbnail: "./static/images/background/thumbnail/pixel_art.jpg",
-        },
-        {
-            name: "Paysage",
-            url: "./static/images/background/paysage.jpg",
-            thumbnail: "./static/images/background/thumbnail/paysage.jpg",
-        },
-        {
-            name: "Paysage 2",
-            url: "./static/images/background/paysage_2.jpg",
-            thumbnail: "./static/images/background/thumbnail/paysage_2.jpg",
-        },
-        {
-            name: "Paysage 3",
-            url: "./static/images/background/paysage_3.jpg",
-            thumbnail: "./static/images/background/thumbnail/paysage_3.jpg",
-        },
-        {
-            name: "Paysage 4",
-            url: "./static/images/background/paysage_4.jpg",
-            thumbnail: "./static/images/background/thumbnail/paysage_4.jpg",
-        },
-        {
-            name: "Milkyway",
-            url: "./static/images/background/Milkyway.jpg",
-            thumbnail: "./static/images/background/thumbnail/Milkyway.jpg",
-        },
-        {
-            name: "Chetwode Blue",
-            url: "./static/images/background/ChetwodeBlue.jpg",
-            thumbnail: "./static/images/background/thumbnail/ChetwodeBlue.jpg",
-        },
-        {
-            name: "Fuchsia",
-            url: "./static/images/background/Fuchsia.jpg",
-            thumbnail: "./static/images/background/thumbnail/Fuchsia.jpg",
-        },
-        {
-            name: "Ronchi",
-            url: "./static/images/background/Ronchi.jpg",
-            thumbnail: "./static/images/background/thumbnail/Ronchi.jpg",
-        },
-    ],
-};
+/** The background images offered in the settings panel, as customized by the current world. */
+export const availableBackgroundImagesStore = derived(currentRoomStore, ($room) =>
+    getAvailableBackgroundImages($room?.cameraBackgrounds),
+);
+
+// Once the world's list is known, a selected image the admin hid or deleted falls back to no background.
+// Lives as long as the app, like the store itself.
+// eslint-disable-next-line svelte/no-ignored-unsubscribe
+currentRoomStore.subscribe(($room) => {
+    if (!$room) return;
+    const config = get(backgroundConfigStore);
+    if (config.mode !== "image") return;
+    const images = getAvailableBackgroundImages($room.cameraBackgrounds);
+    if (!images.some((image) => image.url === config.backgroundImage)) {
+        backgroundConfigStore.reset();
+    }
+});

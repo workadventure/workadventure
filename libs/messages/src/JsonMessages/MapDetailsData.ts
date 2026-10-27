@@ -147,6 +147,28 @@ const CustomizeSceneData = z.object({
   }),
 });
 
+const CameraBackgroundsData = z.object({
+  hiddenDefaults: extendApi(z.array(z.string()), {
+    description:
+      'Ids of the built-in camera background images to hide. ["*"] hides all of them.',
+    example: ["office", "pixel-art"],
+  }),
+  custom: extendApi(
+    z.array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        url: z.string(),
+        thumbnailUrl: z.string(),
+      }),
+    ),
+    {
+      description:
+        "Additional camera background images, listed before the built-in ones",
+    },
+  ),
+});
+
 export const isMapDetailsData = z.object({
   mapUrl: extendApi(z.string().optional(), {
     description: "The full URL to the JSON map file",
@@ -335,6 +357,10 @@ export const isMapDetailsData = z.object({
       "Initial value of the 'keep camera enabled when the tab is away' privacy setting, before the user sets their own preference",
     example: false,
   }),
+  cameraBackgrounds: extendApi(CameraBackgroundsData.optional(), {
+    description:
+      "Customizes the camera background image list. When absent, all built-in images are offered.",
+  }),
   defaultMicrophonePrivacySettings: extendApi(z.boolean().optional(), {
     description:
       "Initial value of the 'keep microphone enabled when the tab is away' privacy setting, before the user sets their own preference",
@@ -359,4 +385,5 @@ export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
 export type LegalsData = z.infer<typeof isLegalsData>;
 export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;
 export type RecordingData = z.infer<typeof RecordingData>;
+export type CameraBackgroundsData = z.infer<typeof CameraBackgroundsData>;
 export type RecordingButtonState = z.infer<typeof RecordingButtonState>;

@@ -3,7 +3,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import {
         backgroundConfigStore,
-        backgroundPresets,
+        availableBackgroundImagesStore,
         backgroundProcessingSupportedStore,
     } from "../../../Stores/BackgroundTransformStore";
     import type { BackgroundMode } from "../../../WebRtc/BackgroundProcessor/createBackgroundTransformer";
@@ -120,7 +120,7 @@
         <div class="relative z-10 flex flex-col gap-2">
             <SectionTitle title={$LL.actionbar.background.images()} />
             <div class="grid grid-cols-3 gap-1 px-1">
-                {#each backgroundPresets.images as preset (preset.url)}
+                {#each $availableBackgroundImagesStore as preset (preset.url)}
                     <BackgroundPresetButton
                         thumbnail={preset.thumbnail}
                         name={preset.name}
