@@ -29,16 +29,21 @@ export async function dismissNoBrowserSoundInfoToast(page: Page, timeoutMs: numb
  * it shows up when the detector decides it has heard nothing.
  */
 export async function dismissNoMicrophoneSoundToast(page: Page, timeoutMs: number = 5_000): Promise<void> {
-    await page.addLocatorHandler(page.getByTestId("no-microphone-sound-ignore"), async (ignoreButton) => {
-        try {
-            // The toast auto-dismisses, so do not wait for stable actionability.
-            // eslint-disable-next-line playwright/no-force-option
-            await ignoreButton.click({ force: true, timeout: timeoutMs });
-        } catch (e) {
-            if (page.isClosed() || (await ignoreButton.isHidden().catch(() => true))) {
-                return;
+    await page.addLocatorHandler(
+        page.getByTestId("no-microphone-sound-ignore"),
+        async (ignoreButton) => {
+            try {
+                // Dispatched to the button itself: a modal (the megaphone settings) can cover the toast, and a
+                // click at its coordinates would land on the modal, leaving the toast — and this handler — stuck.
+                await ignoreButton.dispatchEvent("click", undefined, { timeout: timeoutMs });
+            } catch (e) {
+                if (page.isClosed() || (await ignoreButton.isHidden().catch(() => true))) {
+                    return;
+                }
+                throw e;
             }
-            throw e;
-        }
-    });
+        },
+        // Never hold the test up waiting for the toast to go: it can come back at any time.
+        { noWaitAfter: true },
+    );
 }
