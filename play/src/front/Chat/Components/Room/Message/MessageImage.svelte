@@ -1,6 +1,6 @@
 <script lang="ts">
-    import { getChatInteraction } from "../../../ChatInteractionContext";
     import type { Readable } from "svelte/store";
+    import { getChatInteraction } from "../../../ChatInteractionContext";
     import LL from "../../../../../i18n/i18n-svelte";
     import type { ChatMessage, ChatMessageContent } from "../../../Connection/ChatConnection";
     import ChatImagePreviewModal from "../../ChatImagePreviewModal.svelte";

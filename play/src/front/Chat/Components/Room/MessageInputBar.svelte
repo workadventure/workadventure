@@ -13,12 +13,12 @@
 </script>
 
 <script lang="ts">
-    import { getChatInteraction } from "../../ChatInteractionContext";
     import { onDestroy, onMount } from "svelte";
     import { readable } from "svelte/store";
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import {
         hasChatRoomPollCreation,
         hasProximityChatSidePanel,

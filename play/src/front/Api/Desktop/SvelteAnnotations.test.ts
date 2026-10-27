@@ -5,8 +5,9 @@ import type { WorkAdventureDesktopWindowsApi } from "../../Interfaces/DesktopApp
 vi.mock("../../Space/ScreenAnnotation/ScreenAnnotationManager", () => ({
     screenAnnotationManager: { localUserId: "me", clearAll: vi.fn() },
 }));
+const emitStop = vi.hoisted(() => vi.fn());
 vi.mock("../../Space/ScreenAnnotation/PresenterEffectManager", () => ({
-    presenterEffectManager: { emitStop: vi.fn(), emitEffect: vi.fn() },
+    presenterEffectManager: { emitStop, emitEffect: vi.fn() },
 }));
 vi.mock("../../Stores/ScreenSharingStore", () => {
     const sharing = writable(false);
@@ -27,7 +28,6 @@ import {
     setPresenterEffect,
     type ActivePresenterTool,
 } from "../../Stores/PresenterEffectStore";
-import { presenterEffectManager } from "../../Space/ScreenAnnotation/PresenterEffectManager";
 import { startSvelteAnnotations } from "./SvelteAnnotations";
 let stop: (() => void) | undefined;
 beforeEach(() => {
@@ -73,7 +73,7 @@ describe("Svelte annotation window contract", () => {
             localAnnotationTargetStore.set(undefined);
             expect(get(presenterToolStore)).toBe("none");
             expect(get(presenterEffectsStore).has("me")).toBe(false);
-            expect(presenterEffectManager.emitStop).toHaveBeenCalledWith("me");
+            expect(emitStop).toHaveBeenCalledWith("me");
             expect(setState).toHaveBeenLastCalledWith({ visible: false, interactive: false, trackCursor: false });
         },
     );
@@ -82,6 +82,6 @@ describe("Svelte annotation window contract", () => {
         requestedScreenSharingState.enableScreenSharing();
         presenterToolStore.set("laser");
         requestedScreenSharingState.disableScreenSharing();
-        expect(presenterEffectManager.emitStop).toHaveBeenCalledWith("me");
+        expect(emitStop).toHaveBeenCalledWith("me");
     });
 });

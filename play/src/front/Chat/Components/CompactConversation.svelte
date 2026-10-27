@@ -1,7 +1,7 @@
 <script lang="ts">
+    import { onDestroy, onMount } from "svelte";
     import { trackFormFocus } from "../../Utils/trackFormFocus";
     import { inputFormFocusStore } from "../../Stores/UserInputStore";
-    import { onDestroy, onMount } from "svelte";
     import type { ChatRoom, ChatThread } from "../Connection/ChatConnection";
     import { createCompactChatInteraction, provideChatInteraction } from "../ChatInteractionContext";
     import RoomTimeline from "./Room/RoomTimeline.svelte";

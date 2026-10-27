@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { getChatInteraction } from "../../ChatInteractionContext";
     import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import type {
         ChatMessage,
         ChatMessageType,

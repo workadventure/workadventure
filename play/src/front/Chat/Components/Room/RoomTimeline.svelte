@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { getChatInteraction } from "../../ChatInteractionContext";
     import { onDestroy, onMount, tick, untrack } from "svelte";
     import { get, readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import {
         hasProximityChatSidePanel,

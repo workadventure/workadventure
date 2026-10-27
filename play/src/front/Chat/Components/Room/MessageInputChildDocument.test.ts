@@ -4,8 +4,9 @@ import MessageInput from "./MessageInput.svelte";
 
 let component: ReturnType<typeof mount> | undefined;
 afterEach(async () => {
-    if (component) await unmount(component);
+    const mounted = component;
     component = undefined;
+    if (mounted) await unmount(mounted);
     document.body.replaceChildren();
     vi.restoreAllMocks();
 });
