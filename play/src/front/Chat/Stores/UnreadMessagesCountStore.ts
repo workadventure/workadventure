@@ -1,9 +1,15 @@
-import { derived, readable, type Readable } from "svelte/store";
+import { derived, get, readable, type Readable } from "svelte/store";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { hasChatRoomNotificationControl, type ChatConversation } from "../Connection/ChatConnection";
+import {
+    hasChatRoomNotificationControl,
+    type ChatConnectionInterface,
+    type ChatConversation,
+    type RoomFolder,
+} from "../Connection/ChatConnection";
 import { ProximityChatRoom } from "../Connection/Proximity/ProximityChatRoom";
 import {
     countUnreadElsewhere,
+    listUnreadConversations,
     summarizeUnreadCounts,
     type UnreadConversationCount,
     type UnreadSummary,
@@ -31,7 +37,7 @@ export const matrixUnreadMessagesCountStore: Readable<number> = derived(
     0,
 );
 
-function unreadCountOf(conversation: ChatConversation): Readable<UnreadConversationCount> {
+export function unreadCountOf(conversation: ChatConversation): Readable<UnreadConversationCount> {
     const count =
         conversation instanceof ProximityChatRoom
             ? conversation.unreadMessagesCount
@@ -80,5 +86,47 @@ export function createUnreadSummaryStore(
             return derived(list.map(unreadCountOf), summarizeUnreadCounts).subscribe(set);
         },
         summarizeUnreadCounts([]),
+    );
+}
+
+export interface UnreadConversation extends UnreadConversationCount {
+    conversation: ChatConversation;
+    lastMessageTimestamp: number;
+}
+
+function collectLoadedFolderRooms(folders: readonly RoomFolder[]): ChatConversation[] {
+    return folders.flatMap((folder) => [...get(folder.rooms), ...collectLoadedFolderRooms(get(folder.folders))]);
+}
+
+/**
+ * A snapshot of the unread conversations other than the open one, the most recent first.
+ * Rooms of folders that were never opened are not loaded, so they are not listed: their folder shows their count.
+ */
+export function getUnreadConversationsElsewhere(
+    chatConnection: ChatConnectionInterface,
+    proximityRooms: readonly ProximityChatRoom[],
+    openConversation: ChatConversation,
+): UnreadConversation[] {
+    const openRoomId =
+        openConversation.conversationKind === "thread" && openConversation.parentRoom
+            ? openConversation.parentRoom.id
+            : openConversation.id;
+    const conversations = new Map<string, ChatConversation>();
+    for (const conversation of [
+        ...proximityRooms,
+        ...get(chatConnection.directRooms),
+        ...get(chatConnection.rooms),
+        ...collectLoadedFolderRooms(get(chatConnection.folders)),
+    ]) {
+        if (conversation.id !== openRoomId) {
+            conversations.set(conversation.id, conversation);
+        }
+    }
+    return listUnreadConversations(
+        Array.from(conversations.values()).map((conversation) => ({
+            ...get(unreadCountOf(conversation)),
+            conversation,
+            lastMessageTimestamp: conversation.lastMessageTimestamp,
+        })),
     );
 }

@@ -45,3 +45,12 @@ export function countUnreadElsewhere(
             : 0;
     return Math.max(0, matrixTotal - openMatrixCount) + sumUnmutedUnreadCounts(others);
 }
+
+/** Unread, unmuted conversations, the most recently active first. */
+export function listUnreadConversations<T extends UnreadConversationCount & { lastMessageTimestamp: number }>(
+    conversations: readonly T[],
+): T[] {
+    return conversations
+        .filter(({ count, muted }) => count > 0 && !muted)
+        .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+}
