@@ -103,7 +103,7 @@ export async function setAnnotationState(contents: WebContents, raw: unknown): P
             owner.send(
                 "app:windows:annotation-cursor",
                 Math.max(0, Math.min(1, (point.x - x) / width)),
-                Math.max(0, Math.min(1, (point.y - y) / height)),
+                Math.max(0, Math.min(1, (point.y - y) / height))
             );
         }, 50);
         timer.unref();

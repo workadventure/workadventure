@@ -25,7 +25,7 @@ export function resolveDisplay(displayId: number | undefined, label = "HUD"): El
         ElectronLog.warn(
             `${label}: no display matches id ${displayId}; using primary. Available ids: ${all
                 .map((d) => d.id)
-                .join(", ")}`,
+                .join(", ")}`
         );
     } else {
         ElectronLog.warn(`${label}: no displayId resolved; using primary display.`);

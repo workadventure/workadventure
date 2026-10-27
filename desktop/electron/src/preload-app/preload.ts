@@ -13,7 +13,7 @@ const windowsApi: WorkAdventureDesktopWindowsApi = {
     ...(canHideWindowsFromCapture(process.platform)
         ? {
               setAnnotationState: (
-                  state: Parameters<NonNullable<WorkAdventureDesktopWindowsApi["setAnnotationState"]>>[0],
+                  state: Parameters<NonNullable<WorkAdventureDesktopWindowsApi["setAnnotationState"]>>[0]
               ) => ipcRenderer.send("app:windows:annotation-state", state),
               onAnnotationCursor: (callback: (x: number, y: number) => void) =>
                   subscribe("app:windows:annotation-cursor", (x, y) => {
@@ -78,7 +78,7 @@ const api: WorkAdventureDesktopApi = {
         ? {}
         : {
               getDesktopCapturerSources: (
-                  options: Parameters<NonNullable<WorkAdventureDesktopApi["getDesktopCapturerSources"]>>[0],
+                  options: Parameters<NonNullable<WorkAdventureDesktopApi["getDesktopCapturerSources"]>>[0]
               ) => ipcRenderer.invoke("app:getDesktopCapturerSources", options),
               identifyScreens: () => ipcRenderer.invoke("app:screen-identify:start"),
               cancelIdentifyScreens: () => ipcRenderer.send("app:screen-identify:cancel"),

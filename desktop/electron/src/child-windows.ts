@@ -32,8 +32,8 @@ function boundsFor(kind: HudKind, displayId: number | undefined): Electron.Recta
     return kind === "annotation"
         ? display.bounds
         : kind === "companion"
-          ? normalizeCompanionBounds(settings.get("companion_bounds"), display.workArea, HUD_SIZES.companion)
-          : meetingBarBounds(display);
+        ? normalizeCompanionBounds(settings.get("companion_bounds"), display.workArea, HUD_SIZES.companion)
+        : meetingBarBounds(display);
 }
 
 /** Ask the world page that controls the floating windows to open one; resolves once it is adopted. */
@@ -64,7 +64,7 @@ export function openChildWindow(kind: HudKind, displayId: number | undefined): P
 
 function kindOfFrame(frameName: string): HudKind | undefined {
     return (Object.keys(CHILD_WINDOW_FRAME_NAMES) as HudKind[]).find(
-        (kind) => CHILD_WINDOW_FRAME_NAMES[kind] === frameName,
+        (kind) => CHILD_WINDOW_FRAME_NAMES[kind] === frameName
     );
 }
 
