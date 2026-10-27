@@ -138,6 +138,26 @@ describe("selectVideoPreset", () => {
         }
     });
 
+    it("budgets a three-layer SVC camera above what libwebrtc needs to enable its top layer", () => {
+        // VP9 L3T3_KEY: the bitrate at which SvcRateAllocator enables the top spatial layer, from the layer bitrates of
+        // svc_config.cc. Below 960x540 libwebrtc drops the layers smaller than 240x135, leaving two.
+        const topLayerStart: [number, number, number][] = [
+            [640, 360, 299_000],
+            [640, 480, 367_000],
+            [960, 540, 624_000],
+            [1280, 720, 891_000],
+            [1920, 1080, 1_425_000],
+        ];
+        for (const [width, height, start] of topLayerStart) {
+            // The one-layer budget falls short: the stream would stay one layer down
+            expect(selectVideoPreset(height, width, false, "recommended", "vp9").bitrate).toBeLessThan(start);
+            for (const quality of ["recommended", "high"] as const) {
+                const { bitrate } = selectVideoPreset(height, width, false, quality, "vp9", 3);
+                expect(bitrate, `${width}x${height} ${quality}`).toBeGreaterThan(start);
+            }
+        }
+    });
+
     it("keeps the screen share budget: sqrt of the pixel ratio to 1080p, capped there", () => {
         expect(selectVideoPreset(1080, 1920, true, "recommended", "av1").bitrate).toBe(3_000_000);
         expect(selectVideoPreset(720, 1280, true, "recommended", "av1").bitrate).toBe(2_000_000);

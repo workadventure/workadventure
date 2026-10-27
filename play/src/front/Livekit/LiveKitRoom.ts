@@ -268,7 +268,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
-        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare), codec);
+        const quality = this.getQualitySetting(isScreenShare);
+        // livekit-client publishes a VP9 or AV1 camera as one L3T3_KEY stream (a screen share as L1T3, one layer).
+        // ponytail: "low" keeps a one-layer budget. libwebrtc's minimum for each layer is above the low curve at every
+        // size, so its top layer stays off either way; publishing "low" as one layer or as VP8 simulcast would fix it.
+        const spatialLayers = !isScreenShare && (codec === "vp9" || codec === "av1") && quality !== "low" ? 3 : 1;
+        return selectVideoPreset(height, width, isScreenShare, quality, codec, spatialLayers);
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {

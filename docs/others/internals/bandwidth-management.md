@@ -264,6 +264,10 @@ A straight line on a log-log chart: the budget grows with the pixel count at a r
 at one reference size (`anchorPixels`) by three `anchor` values, one per quality setting. Anything larger than 1080p is
 budgeted like 1080p.
 
+This is the budget of one resolution. A stream that carries several in one `maxBitrate` (an SVC camera on LiveKit) is
+budgeted as the sum over its layers, each a quarter of the pixels of the one above (see
+[LiveKit Implementation](#livekit-implementation)).
+
 Two curves exist, one per stream category:
 
 | Parameter | Camera | Screen share |
@@ -344,6 +348,9 @@ Camera, recommended:
 | 1280 × 720 | 700 kbps | 1 Mbps |
 | 1920 × 1080 and above | 1.29 Mbps | 1.84 Mbps |
 
+A VP9 camera on LiveKit adds its two lower layers: 672 kbps at 960 × 540, 1,035 kbps at 1280 × 720, 1.9 Mbps at
+1920 × 1080.
+
 Screen share, recommended:
 
 | Captured size | AV1 | VP9 | H.264 or VP8 |
@@ -407,8 +414,18 @@ times.
 - Computes the budget with `selectVideoPreset()` for the captured size and that codec.
 - Publishes the camera with `videoEncoding.maxBitrate` / `maxFramerate`, and the screen share with
   `screenShareEncoding.maxBitrate` / `maxFramerate` and the user's `degradationPreference`.
-- Simulcast is enabled. Our budget applies to the **top** layer only; `livekit-client` derives the lower layers from
-  its own presets.
+- VP8 and H.264 go out as simulcast: separate streams at 180p, 360p and the captured size. Our budget applies to the
+  **top** stream only; `livekit-client` gives the lower ones its own presets (160 kbps and 450 kbps in 16:9).
+- VP9 and AV1 go out as SVC: one stream, `L3T3_KEY` for a camera and `L1T3` for a screen share. Its `maxBitrate`
+  covers every spatial layer, so the camera budget is the curve summed over its three layers (`spatialLayers` in
+  `selectVideoPreset()`): 1,035 kbps at 720p "recommended" rather than 700. With the one-layer budget, libwebrtc never
+  enables the top layer (a 720p VP9 stream needs 891 kbps for its three layers, a 1080p one 1,425 kbps), and the encoder
+  reports `qualityLimitationReason: "bandwidth"` while the network has room to spare. libwebrtc also pads an SVC stream
+  up to 1.2 × that rate to probe for the top layer, so the one-layer budget saves no upload: a 720p camera capped at
+  700 kbps sends about 1 Mbps either way, 450 kbps of it padding.
+- "low" keeps the one-layer budget. libwebrtc's minimum for each layer is above the low curve at every size, so a VP9
+  camera on "low" stays one layer down whatever its budget; fixing that means publishing it as a single layer or as VP8
+  simulcast.
 - The camera declares VP8 as a backup codec (`backupCodecPolicy: SIMULCAST`): if a subscriber cannot decode VP9,
   LiveKit asks the publisher to also encode VP8, instead of downgrading everyone. When the primary codec is already
   VP8, LiveKit disables the backup itself.
