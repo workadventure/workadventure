@@ -6,7 +6,16 @@ import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
 function setup(zoom = 2, displayScale = 0.5) {
     const graphics = () => {
         const g: Record<string, unknown> = {};
-        for (const method of ["lineStyle", "strokeEllipse", "fillStyle", "fillEllipse"]) g[method] = () => g;
+        for (const method of [
+            "lineStyle",
+            "strokeEllipse",
+            "fillStyle",
+            "fillEllipse",
+            "beginPath",
+            "arc",
+            "strokePath",
+        ])
+            g[method] = () => g;
         return g;
     };
     const container = {
@@ -24,11 +33,12 @@ function setup(zoom = 2, displayScale = 0.5) {
     const markDirty = vi.fn();
     const scene = {
         add: { graphics, container: () => container },
-        tweens: { add: () => ripple },
+        tweens: { addCounter: () => ripple },
         events: new Phaser.Events.EventEmitter(),
         cameras: { main: { zoom } },
         scale: { displayScale: { x: displayScale } },
         markDirty,
+        room: { primaryColor: "#ff8800" },
     } as unknown as GameScene;
     return { marker: new WalkDestinationMarker(scene), container, ripple, scene, markDirty };
 }
