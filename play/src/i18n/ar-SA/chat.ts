@@ -123,6 +123,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         today: "اليوم",
         yesterday: "أمس",
         retry: "إعادة المحاولة",
+        newMessages: "رسائل جديدة: {count}",
+        jumpToLatest: "الانتقال إلى أحدث الرسائل",
     },
     form: {
         placeholder: "أدخل رسالتك...",

@@ -25,6 +25,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { createUnreadElsewhereStore } from "../../Stores/UnreadMessagesCountStore";
     import UnreadCount from "../UnreadCount.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
@@ -33,7 +34,15 @@
     import TypingUsers from "./TypingUsers.svelte";
     import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
-    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
+    import { countIncomingMessagesAfter } from "./RoomTimelineNewMessages";
+    import {
+        IconArrowDown,
+        IconChevronLeft,
+        IconChevronRight,
+        IconLoader,
+        IconMailBox,
+        IconInfoCircle,
+    } from "@wa-icons";
 
     interface Props {
         room: ChatConversation;
@@ -79,6 +88,10 @@
     let messageInputBarRef: MessageInputBar | undefined = $state();
     let lastTimelineFocusSequence = $state(0);
     let initialMessagesLoaded = $state(false);
+    /** Messages from others that arrived while the user was reading history (autoScroll off). */
+    let newMessagesCount = $state(0);
+    /** More than a screen above the bottom: worth offering a way back even with nothing new. */
+    let farFromBottom = $state(false);
 
     // Imperative, deliberately not $state: read and written from DOM handlers, never from the template.
     let scrollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -342,8 +355,15 @@
         }
 
         // False by construction during back-pagination: prepending does not change the last item.
-        const isNewLastItem = lastKey !== undefined && lastKey !== lastSeenLastItemKey;
+        const previousLastKey = lastSeenLastItemKey;
+        const isNewLastItem = lastKey !== undefined && lastKey !== previousLastKey;
         lastSeenLastItemKey = lastKey;
+
+        if (isNewLastItem) {
+            untrack(() => {
+                if (!autoScroll) newMessagesCount += countIncomingMessagesAfter(items, previousLastKey, myChatID);
+            });
+        }
 
         const lastItem = items[items.length - 1];
         const lastMessage =
@@ -365,6 +385,10 @@
         if (isNewLastItem && untrack(() => autoScroll)) {
             scrollToMessageListBottom();
         }
+    });
+
+    $effect(() => {
+        if (autoScroll) newMessagesCount = 0;
     });
 
     function isAtBottom(): boolean {
@@ -482,6 +506,10 @@
     }
 
     function handleScroll() {
+        if (messageListRef) {
+            const { scrollHeight, scrollTop, clientHeight } = messageListRef;
+            farFromBottom = scrollHeight - scrollTop - clientHeight > clientHeight;
+        }
         if (programmaticScrollKind !== undefined) {
             // Keep extending the settle window while our own animation is still emitting events.
             armProgrammaticScrollSettle();
@@ -752,6 +780,28 @@
                 {/each}
             </ul>
         </div>
+
+        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom)}
+            <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
+            <div class="relative h-0">
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full shadow-lg whitespace-nowrap"
+                    dataTestId="jumpToLatestMessages"
+                    title={$LL.chat.timeLine.jumpToLatest()}
+                    aria-label={newMessagesCount > 0 ? undefined : $LL.chat.timeLine.jumpToLatest()}
+                    onclick={() => scrollToMessageListBottom()}
+                >
+                    {#snippet icon()}
+                        <IconArrowDown font-size="16" />
+                    {/snippet}
+                    {#if newMessagesCount > 0}
+                        {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
+                    {/if}
+                </Button>
+            </div>
+        {/if}
 
         {#if $initializationState === "ready" && $typingMembers.length > 0}
             <TypingUsers typingMembers={$typingMembers} />
