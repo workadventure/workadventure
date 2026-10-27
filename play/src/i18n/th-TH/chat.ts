@@ -582,6 +582,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unreadCount: "{count} ยังไม่อ่าน",
         backWithUnreadElsewhere: "กลับ, มีข้อความที่ยังไม่อ่าน {count} ข้อความในที่อื่น",
         showUnreadConversations: "แสดงการสนทนาที่ยังไม่อ่าน",
+        hiddenUnreadCount: "{count} ยังไม่อ่านในการสนทนาที่ซ่อนอยู่",
         userAvatar: "อวาตาร์ผู้ใช้",
         applicationIcon: "แอปพลิเคชัน",
     },

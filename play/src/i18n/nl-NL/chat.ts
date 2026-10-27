@@ -584,6 +584,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unreadCount: "{count} ongelezen",
         backWithUnreadElsewhere: "Terug, {count} {{ongelezen bericht|ongelezen berichten}} elders",
         showUnreadConversations: "Ongelezen gesprekken tonen",
+        hiddenUnreadCount: "{count} ongelezen in de verborgen gesprekken",
         userAvatar: "Gebruikersavatar",
         applicationIcon: "Toepassing",
     },

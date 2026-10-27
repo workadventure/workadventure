@@ -579,6 +579,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unreadCount: "{count} 則未讀",
         backWithUnreadElsewhere: "返回，其他地方有 {count} 則未讀訊息",
         showUnreadConversations: "顯示未讀對話",
+        hiddenUnreadCount: "隱藏的對話中有 {count} 則未讀",
         userAvatar: "使用者頭像",
         applicationIcon: "應用程式",
     },

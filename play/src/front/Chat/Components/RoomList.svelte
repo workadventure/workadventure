@@ -52,6 +52,7 @@
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import UnreadCount from "./UnreadCount.svelte";
+    import { rowUnreadCount } from "./showMoreUnread";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -305,6 +306,8 @@
                                 maxNumber={8}
                                 idKey="id"
                                 showNothingToDisplayMessage={false}
+                                getUnreadCount={(room) =>
+                                    rowUnreadCount(room.hasUnreadMessages, room.unreadMessagesCount)}
                             >
                                 {#snippet children({ item: room })}
                                     <ProximityRoomRow {room} isParentZone={$parentZoneRooms.includes(room)} />
@@ -412,6 +415,8 @@
                                 maxNumber={8}
                                 idKey="id"
                                 showNothingToDisplayMessage={!isSearching}
+                                getUnreadCount={(room) =>
+                                    rowUnreadCount(room.hasUnreadMessages, room.unreadNotificationCount)}
                             >
                                 {#snippet children({ item: room })}
                                     <Room {room} />
@@ -456,6 +461,8 @@
                                 maxNumber={8}
                                 idKey="id"
                                 showNothingToDisplayMessage={!isSearching}
+                                getUnreadCount={(room) =>
+                                    rowUnreadCount(room.hasUnreadMessages, room.unreadNotificationCount)}
                             >
                                 {#snippet children({ item: room })}
                                     <Room {room} />

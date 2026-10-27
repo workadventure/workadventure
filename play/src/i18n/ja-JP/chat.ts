@@ -585,6 +585,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unreadCount: "未読 {count} 件",
         backWithUnreadElsewhere: "戻る（他に未読 {count} 件）",
         showUnreadConversations: "未読の会話を表示",
+        hiddenUnreadCount: "非表示の会話に未読 {count} 件",
         userAvatar: "ユーザーアバター",
         applicationIcon: "アプリ",
     },
