@@ -89,3 +89,28 @@ export class ModeratorTagFinder {
         }
     }
 }
+
+/**
+ * Returns the tag that grants moderation rights in the meeting room (LiveKit area or entity) whose space is
+ * `spaceName`, the slug the front joins (see AreasPropertiesListener.handleLivekitRoomPropertyOnEnter).
+ * Meeting rooms only exist in the WAM file, so unlike Jitsi rooms there is nothing to look for in the Tiled map.
+ */
+export function findLivekitRoomAdminTag(
+    wam: WAMFileFormat | undefined,
+    roomUrl: string,
+    spaceName: string,
+): string | undefined {
+    const items = [...Object.values(wam?.areas ?? {}), ...Object.values(wam?.entities ?? {})];
+    for (const item of items) {
+        for (const property of item.properties ?? []) {
+            if (property.type !== "livekitRoomProperty" || !property.livekitRoomAdminTag) {
+                continue;
+            }
+            const roomId = property.roomName.trim().length === 0 ? property.id : property.roomName;
+            if (slugifyJitsiRoomName(roomId, roomUrl).trim() === spaceName) {
+                return property.livekitRoomAdminTag;
+            }
+        }
+    }
+    return undefined;
+}

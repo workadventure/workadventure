@@ -10,6 +10,12 @@ export const requestVisitCardsStore = writable<string | null>(null);
 export const userIsAdminStore = writable(false);
 export const userIsEditorStore = writable(false);
 
+/**
+ * The meeting rooms (space names) the local user moderates without being an admin: they carry the tag set in the
+ * room's advanced options (`livekitRoomAdminTag`). The back checks the same rule before applying a moderation action.
+ */
+export const moderatedMeetingSpacesStore = writable<ReadonlySet<string>>(new Set());
+
 export const userIsJitsiDominantSpeakerStore = writable(false);
 
 export const jitsiParticipantsCountStore = writable(0);
