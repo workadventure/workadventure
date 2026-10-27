@@ -13,6 +13,7 @@
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import UnreadCount from "../UnreadCount.svelte";
+    import { focusAdjacentRoomRow } from "../roomRowKeyboard";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
 
@@ -59,13 +60,17 @@
             "bg-white/10 rounded": isSelected,
         },
     ]}
-    onclick={() => selectedRoomStore.set(room)}
-    onkeyup={() => selectedRoomStore.set(room)}
-    role="button"
-    tabindex="0"
     data-testid={$roomName}
 >
-    <div class="relative shrink-0">
+    <!-- Stretched over the row so the whole row opens the room; the room menu sits above it. -->
+    <button
+        data-room-row-button
+        class="absolute inset-0 m-0 p-0 rounded bg-transparent border-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
+        aria-label={$roomName}
+        onclick={() => selectedRoomStore.set(room)}
+        onkeydown={focusAdjacentRoomRow}
+    ></button>
+    <div class="relative shrink-0 pointer-events-none">
         <Avatar
             compact
             pictureStore={room.pictureStore}
@@ -93,6 +98,10 @@
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <UnreadCount count={$roomUnreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
+        <UnreadCount
+            count={$roomUnreadCount}
+            variant={$areNotificationsMuted ? "muted" : "default"}
+            class="pointer-events-none"
+        />
     {/if}
 </div>

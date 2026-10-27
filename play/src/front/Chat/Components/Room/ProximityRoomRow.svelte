@@ -6,6 +6,7 @@
     import type { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import UnreadCount from "../UnreadCount.svelte";
+    import { focusAdjacentRoomRow } from "../roomRowKeyboard";
     import WokaFromUserId from "../../../Components/Woka/WokaFromUserId.svelte";
     import { IconEar, IconMapEditor, IconMicrophone, IconUsersGroup } from "@wa-icons";
 
@@ -59,18 +60,17 @@
             "opacity-50 ps-6": isParentZone,
         },
     ]}
-    onclick={selectRoom}
-    onkeydown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            selectRoom();
-        }
-    }}
-    role="button"
-    tabindex="0"
     data-testid={$roomName}
 >
-    <div class="relative shrink-0">
+    <!-- Stretched over the row so the whole row opens the room. -->
+    <button
+        data-room-row-button
+        class="absolute inset-0 m-0 p-0 rounded bg-transparent border-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
+        aria-label={$roomName}
+        onclick={selectRoom}
+        onkeydown={focusAdjacentRoomRow}
+    ></button>
+    <div class="relative shrink-0 pointer-events-none">
         <div
             class="rounded-full bg-white/10 h-7 w-7 border border-solid text-white flex items-center justify-center p-[1px] relative {$hasUnreadMessages
                 ? 'border-white'
@@ -99,6 +99,10 @@
         {/each}
     </div>
     {#if $hasUnreadMessages}
-        <UnreadCount count={$unreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
+        <UnreadCount
+            count={$unreadCount}
+            variant={$areNotificationsMuted ? "muted" : "default"}
+            class="pointer-events-none"
+        />
     {/if}
 </div>
