@@ -34,7 +34,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private draggingMap = false;
     // The current touch gesture involved two fingers or more (a pinch): lifting a finger must not count as a tap.
     private multiTouch = false;
-    private pinchPanning = false;
+    private pinchFreedView = false;
     private readonly pointerCapture: MapDragPointerCapture;
     private readonly panShortcut: MapPanShortcut;
     private readonly spaceKey: Phaser.Input.Keyboard.Key | undefined;
@@ -219,7 +219,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         if (pointer.wasTouch) {
             // A first finger starts a new gesture; a second one turns it into a pinch and ends the one-finger drag.
             this.multiTouch = this.touchPointersDown() > 1;
-            if (!this.multiTouch) this.pinchPanning = false;
+            if (!this.multiTouch) this.pinchFreedView = false;
             if (this.multiTouch) {
                 this.handlePointerCancelEvent();
                 return;
@@ -284,20 +284,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return this.canMoveView() && (!get(mapEditorModeStore) || get(mapExplorationModeStore));
     }
 
-    public handlePinch(
-        zoomFactor: number,
-        centre: { x: number; y: number },
-        pan: { x: number; y: number } | undefined,
-    ): void {
+    public handlePinch(zoomFactor: number, centre: { x: number; y: number }, pan: { x: number; y: number }): void {
         const cameraManager = this.gameScene.getCameraManager();
-        if (pan && this.canMoveView()) {
-            if (!this.pinchPanning) {
+        if (this.canMoveView()) {
+            // As in map apps, a pinch keeps the map under the fingers: its first move frees the view from the avatar.
+            if (!this.pinchFreedView) {
                 cameraManager.startManualPan();
-                this.pinchPanning = true;
+                this.pinchFreedView = true;
             }
             cameraManager.panBy(pan.x, pan.y);
         }
-        // Like the wheel: on the avatar while the camera follows it, around the fingers once the view is free.
         this.gameScene.zoomByFactor(zoomFactor, false, this.gameScene.zoomAnchor(centre));
     }
 

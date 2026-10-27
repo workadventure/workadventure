@@ -18,12 +18,8 @@ export interface UserInputHandlerInterface {
     handlePointerMoveEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
     handlePointerOutEvent?: () => void;
     handlePointerCancelEvent?: () => void;
-    /** A pinch step: `centre` is between the fingers, `pan` is set once both fingers moved together. */
-    handlePinch?: (
-        zoomFactor: number,
-        centre: { x: number; y: number },
-        pan: { x: number; y: number } | undefined,
-    ) => void;
+    /** A pinch step: `centre` is between the fingers, `pan` is how far that point moved (in game pixels). */
+    handlePinch?: (zoomFactor: number, centre: { x: number; y: number }, pan: { x: number; y: number }) => void;
 
     handleKeyUpEvent: (event: KeyboardEvent) => KeyboardEvent;
     handleKeyDownEvent: (event: KeyboardEvent) => KeyboardEvent;
