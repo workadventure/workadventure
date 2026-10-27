@@ -74,7 +74,7 @@
                 {#each QUICK_REACTIONS as emoji (emoji)}
                     <button
                         type="button"
-                        class="m-0 p-2 text-2xl leading-none rounded-lg hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
+                        class="m-0 p-2 text-2xl leading-none rounded-lg [@media(hover:hover)]:hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white"
                         aria-label={$LL.chat.messageActions.reactWith({ emoji })}
                         onclick={() =>
                             run(() => {
@@ -136,8 +136,11 @@
         text-align: start;
         font-size: 1rem;
     }
-    .action:hover {
-        background: rgb(255 255 255 / 0.1);
+    /* Not on touch: the hover would stick under the finger that just opened the sheet. */
+    @media (hover: hover) {
+        .action:hover {
+            background: rgb(255 255 255 / 0.1);
+        }
     }
     .action:focus-visible {
         outline: 2px solid white;
