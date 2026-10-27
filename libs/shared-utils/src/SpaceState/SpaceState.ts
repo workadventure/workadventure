@@ -27,6 +27,15 @@ export const PROXIMITY_QA_ID_MAX_LENGTH = 100;
 export const PROXIMITY_QA_BODY_MAX_LENGTH = 500;
 export const PROXIMITY_QA_SENDER_NAME_MAX_LENGTH = 256;
 
+// Screen-share annotations (see screenAnnotationSchema).
+export const SCREEN_ANNOTATION_TOOLS = ["pen", "line", "arrow", "rect", "text"] as const;
+export const SCREEN_ANNOTATION_ID_MAX_LENGTH = 200;
+export const SCREEN_ANNOTATION_MAX_WIDTH = 0.05;
+export const SCREEN_ANNOTATION_MAX_POINTS = 5000;
+export const SCREEN_ANNOTATION_TEXT_MAX_LENGTH = 500;
+// Per shared screen: past it, the oldest elements are dropped to make room.
+export const SCREEN_ANNOTATION_MAX_ELEMENTS = 500;
+
 export const raisedHandEntrySchema = z.object({
     spaceUserId: z.string().min(1),
     name: z.string(),
@@ -91,6 +100,31 @@ export const proximityQuestionSchema = z.object({
     upvotes: z.record(z.string(), z.number().int()),
 });
 
+// A finished element drawn on a shared screen. Coordinates are normalized (0..1) against the visible shared
+// video, the width against its smallest side. The strokes being drawn are not in the state: they travel as
+// ScreenAnnotationEvent drafts.
+export const screenAnnotationElementSchema = z.object({
+    id: z.string().min(1).max(SCREEN_ANNOTATION_ID_MAX_LENGTH),
+    authorUserId: z.string().min(1),
+    tool: z.enum(SCREEN_ANNOTATION_TOOLS),
+    color: z.string().min(1).max(32),
+    width: z.number().positive().max(SCREEN_ANNOTATION_MAX_WIDTH),
+    points: z
+        .array(z.object({ x: z.number().finite(), y: z.number().finite() }))
+        .min(1)
+        .max(SCREEN_ANNOTATION_MAX_POINTS),
+    text: z.string().max(SCREEN_ANNOTATION_TEXT_MAX_LENGTH).optional(),
+    // When the back stored it: the drawing order, and which elements go first past the limit.
+    at: z.number().int(),
+});
+
+// The annotations of one shared screen, keyed in the state by the spaceUserId of the user sharing it.
+export const screenAnnotationSchema = z.object({
+    // The presenter lets the other members annotate.
+    othersAllowed: z.boolean(),
+    elements: z.record(z.string(), screenAnnotationElementSchema),
+});
+
 export const spaceStateSchema = z.object({
     // What the space is (bubble, meeting area, megaphone...), declared by the clients that join it. Absent until
     // the first one does: a space that never declares a kind is nobody's meeting, so the back measures nothing in it.
@@ -100,6 +134,8 @@ export const spaceStateSchema = z.object({
     recording: recordingStateSchema,
     polls: z.record(z.string(), proximityPollSchema),
     questions: z.record(z.string(), proximityQuestionSchema),
+    // Absent from a state sent before annotations existed: defaults to none.
+    annotations: z.record(z.string(), screenAnnotationSchema).default({}),
 });
 
 export type RaisedHandEntry = z.infer<typeof raisedHandEntrySchema>;
@@ -110,6 +146,8 @@ export type ProximityPollAnswer = z.infer<typeof proximityPollAnswerSchema>;
 export type ProximityPollVote = z.infer<typeof proximityPollVoteSchema>;
 export type ProximityPoll = z.infer<typeof proximityPollSchema>;
 export type ProximityQuestion = z.infer<typeof proximityQuestionSchema>;
+export type ScreenAnnotationElementState = z.infer<typeof screenAnnotationElementSchema>;
+export type ScreenAnnotationState = z.infer<typeof screenAnnotationSchema>;
 export type SpaceState = z.infer<typeof spaceStateSchema>;
 
 export function emptySpaceState(): SpaceState {
@@ -119,5 +157,6 @@ export function emptySpaceState(): SpaceState {
         recording: { recording: false, recorder: null, status: "idle" },
         polls: {},
         questions: {},
+        annotations: {},
     };
 }

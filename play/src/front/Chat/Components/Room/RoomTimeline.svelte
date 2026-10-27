@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount, tick, untrack } from "svelte";
     import { get, readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import {
         hasProximityChatSidePanel,
@@ -11,14 +12,10 @@
         type ChatTimelineItem,
     } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+    import { shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
-    import {
-        roomSidePanelStore,
-        roomTimelineFocusStore,
-        type RoomTimelineFocusRequest,
-    } from "../../Stores/RoomSidePanelStore";
+    import { roomSidePanelStore, type RoomTimelineFocusRequest } from "../../Stores/RoomSidePanelStore";
     import { getMatrixSecurity } from "../../Connection/Matrix/getMatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
@@ -32,12 +29,15 @@
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
 
+    const { reply: selectedChatMessageToReply, timelineFocus: roomTimelineFocusStore, compact } = getChatInteraction();
+
     interface Props {
         room: ChatConversation;
         backAction?: () => void;
         backButtonTestId?: string;
         timelineTestId?: string;
         showRoomSidePanelToggle?: boolean;
+        compactHeader?: boolean;
     }
 
     let {
@@ -46,6 +46,7 @@
         backButtonTestId = "chatBackward",
         timelineTestId = "roomTimeline",
         showRoomSidePanelToggle = false,
+        compactHeader = false,
     }: Props = $props();
 
     const chatConnection = gameManager.chatConnection;
@@ -460,7 +461,7 @@
         selectedChatMessageToReply.set(null);
         if (backAction) {
             backAction();
-            shouldRestoreChatStateStore.set(false);
+            if (!compact) shouldRestoreChatStateStore.set(false);
             return;
         }
         if (room.conversationKind === "thread" && room.parentRoom) {
@@ -578,7 +579,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    class="flex flex-col flex-auto h-full w-full max-w-full"
+    class="flex flex-col flex-auto min-h-0 h-full w-full max-w-full"
     data-testid={timelineTestId}
     ondragover={(event) => event.preventDefault()}
     ondrop={(event) => {
@@ -588,62 +589,64 @@
     }}
 >
     {#if room !== undefined}
-        <div class="flex flex-col gap-2">
-            <div
-                class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
-                    ? 'pe-14'
-                    : ''}"
-            >
-                {#if chatRoomsEnableInAdmin}
-                    <button
-                        class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
-                        data-testid={backButtonTestId}
-                        onclick={goBackAndClearSelectedChatMessage}
-                    >
-                        {#if direction === "rtl"}
-                            <IconChevronRight font-size="20" />
-                        {:else}
-                            <IconChevronLeft font-size="20" />
-                        {/if}
-                    </button>
-                {:else}
-                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
-                {/if}
-                <div class="text-sm font-bold min-w-0 grow text-center px-2 truncate" data-testid="roomName">
-                    {$roomName}
-                </div>
+        {#if !compactHeader}
+            <div class="flex flex-col gap-2">
+                <div
+                    class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
+                        ? 'pe-14'
+                        : ''}"
+                >
+                    {#if chatRoomsEnableInAdmin || (compact && backAction)}
+                        <button
+                            class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
+                            data-testid={backButtonTestId}
+                            onclick={goBackAndClearSelectedChatMessage}
+                        >
+                            {#if direction === "rtl"}
+                                <IconChevronRight font-size="20" />
+                            {:else}
+                                <IconChevronLeft font-size="20" />
+                            {/if}
+                        </button>
+                    {:else}
+                        <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
+                    {/if}
+                    <div class="text-sm font-bold min-w-0 grow text-center px-2 truncate" data-testid="roomName">
+                        {$roomName}
+                    </div>
 
-                {#if showRoomSidePanelToggle}
-                    <button
-                        type="button"
-                        class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {roomSidePanelToggleIsOpen
-                            ? 'bg-white/10'
-                            : ''}"
-                        data-testid="toggleRoomSidePanelButton"
-                        title={roomSidePanelToggleIsOpen
-                            ? $LL.chat.roomPanel.toggleClose()
-                            : $LL.chat.roomPanel.toggleOpen()}
-                        aria-pressed={roomSidePanelToggleIsOpen}
-                        onclick={() => roomSidePanelStore.toggle()}
-                    >
-                        <IconInfoCircle font-size="20" />
-                        {#if unreadSidePanelCount > 0}
-                            <span
-                                class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
-                                data-testid="toggleRoomSidePanelUnreadBadge"
-                            ></span>
-                        {/if}
-                    </button>
-                {:else}
-                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
+                    {#if showRoomSidePanelToggle && !compact}
+                        <button
+                            type="button"
+                            class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {roomSidePanelToggleIsOpen
+                                ? 'bg-white/10'
+                                : ''}"
+                            data-testid="toggleRoomSidePanelButton"
+                            title={roomSidePanelToggleIsOpen
+                                ? $LL.chat.roomPanel.toggleClose()
+                                : $LL.chat.roomPanel.toggleOpen()}
+                            aria-pressed={roomSidePanelToggleIsOpen}
+                            onclick={() => roomSidePanelStore.toggle()}
+                        >
+                            <IconInfoCircle font-size="20" />
+                            {#if unreadSidePanelCount > 0}
+                                <span
+                                    class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
+                                    data-testid="toggleRoomSidePanelUnreadBadge"
+                                ></span>
+                            {/if}
+                        </button>
+                    {:else}
+                        <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
+                    {/if}
+                </div>
+                {#if shouldDisplayLoader}
+                    <div class="flex justify-center items-center w-full pb-1 bg-transparent">
+                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
+                    </div>
                 {/if}
             </div>
-            {#if shouldDisplayLoader}
-                <div class="flex justify-center items-center w-full pb-1 bg-transparent">
-                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
-                </div>
-            {/if}
-        </div>
+        {/if}
         <div
             bind:this={messageListRef}
             class="flex overflow-auto h-full justify-center items-end relative"

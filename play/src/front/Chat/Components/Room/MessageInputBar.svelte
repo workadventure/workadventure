@@ -18,12 +18,13 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import {
         hasChatRoomPollCreation,
         hasProximityChatSidePanel,
         type ChatConversation,
     } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -70,6 +71,9 @@
     } from "@wa-icons";
     import { modals } from "@wa-modals";
 
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply } = chatInteraction;
+
     interface Props {
         room: ChatConversation;
         disabled: boolean;
@@ -80,6 +84,7 @@
     // Room is keyed in the parent component, so it will be re-created when the room changes.
     const room = (() => roomProp)();
 
+    let disposed = false;
     let message = $state("");
     let messageInput: HTMLDivElement | undefined = $state();
     let messageBarRef: HTMLDivElement;
@@ -175,7 +180,7 @@
     );
     const canOpenQuestions = canOpenQuestionsPanel(room);
     let replyMessageId: string | null = null;
-    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
+    const draftId = `${chatInteraction.compact ? "companion-" : ""}${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
@@ -290,16 +295,18 @@
     onMount(async () => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
         const draft = await draftMessageService.loadDraft(draftId);
+        if (disposed) return;
         if (draft) {
             message = draft.message ?? "";
             if (draft.replyingToMessageId) {
                 const loadReplyMessage = await room.getMessageById?.(draft.replyingToMessageId);
-                selectedChatMessageToReply.set(loadReplyMessage ?? null);
+                if (!disposed) selectedChatMessageToReply.set(loadReplyMessage ?? null);
             }
         }
     });
 
     onDestroy(() => {
+        disposed = true;
         draftMessageService.saveDraft({
             id: draftId,
             roomId: room.id,
@@ -316,6 +323,7 @@
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
         selectedChatChatMessageToReplyUnsubscriber();
+        if (chatInteraction.compact) chatInputFocusStore.set(false);
     });
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
@@ -949,18 +957,31 @@
         dataText={$LL.chat.enter()}
         dataTestid="messageInput"
     />
-    <button
-        data-testid="addApplicationButton"
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
-        class:bg-secondary-800={applicationComponentOpened}
-        onclick={toggleApplicationComponent}
-    >
-        <IconX
-            font-size={18}
-            class={applicationComponentOpened ? "rotate-0" : "rotate-45"}
-            style="transition: all .2s ease-out;"
-        />
-    </button>
+    {#if chatInteraction.compact}
+        {#if fileAttachementEnabled && !fileAttachmentComponentOpened}
+            <button
+                type="button"
+                class="p-2 m-0 shrink-0 hover:bg-white/10 rounded-md"
+                aria-label={$LL.chat.fileAttachment.title()}
+                onclick={openFileAttachmentComponent}
+            >
+                <IconPaperclip font-size={18} />
+            </button>
+        {/if}
+    {:else}
+        <button
+            data-testid="addApplicationButton"
+            class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+            class:bg-secondary-800={applicationComponentOpened}
+            onclick={toggleApplicationComponent}
+        >
+            <IconX
+                font-size={18}
+                class={applicationComponentOpened ? "rotate-0" : "rotate-45"}
+                style="transition: all .2s ease-out;"
+            />
+        </button>
+    {/if}
     <button
         class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
         onclick={openCloseEmojiPicker}

@@ -18,7 +18,8 @@
      *
      * It also handles displaying a warning if no video frame is received after 3 seconds.
      *
-     * @slot - The content to display on top of the video.
+     * @slot - The content to display on top of the video. Its parameter tells whether the video image is displayed:
+     * only then does the content area match the image exactly.
      */
     interface Props {
         videoEnabled: boolean;
@@ -37,7 +38,7 @@
         status: VideoBoxStatus;
         // If true, the video box is a megaphone space
         isMegaphoneSpace: boolean;
-        children?: Snippet;
+        children?: Snippet<[boolean]>;
     }
 
     let {
@@ -134,6 +135,9 @@
     let shouldMountVideoElement = $derived(hasVideoLayout && ($visibilityStore || $activePictureInPictureStore));
 
     let displayNoVideoWarning = $state(false);
+    let videoDisplayed = $derived(
+        videoEnabled && !displayNoVideoWarning && !isBlocked && status === "connected" && hasVideoLayout,
+    );
 </script>
 
 <div
@@ -288,7 +292,7 @@
                   (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
                 : ""}
         >
-            {@render children?.()}
+            {@render children?.(videoDisplayed)}
         </div>
     {/if}
 </div>

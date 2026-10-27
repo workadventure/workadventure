@@ -2,6 +2,23 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "تطبيق سطح المكتب",
+        installed: "الإصدار المثبت",
+        unknown: "غير متاح",
+        browser: "أنت تستخدم WorkAdventure في متصفحك.",
+        recommendedVersion: "الإصدار الموصى به",
+        minimumVersion: "الحد الأدنى للإصدار المدعوم",
+        download: "تنزيل تطبيق سطح المكتب",
+        managed: "اتبع سياسة التحديث الخاصة بمؤسستك. لا تثبت هذه الصفحة التطبيق ولا تعيده إلى إصدار أقدم.",
+        status: {
+            belowMinimum:
+                "إصدار سطح المكتب هذا أقدم من الحد الأدنى الذي يدعمه هذا المثيل. يمكنك المتابعة، لكن بعض الميزات قد لا تعمل.",
+            recommended: "أنت تستخدم الإصدار الموصى به لهذا المثيل.",
+            different: "إصدارك يختلف عن الإصدار الموصى به لهذا المثيل. هذا لا يعني بالضرورة أنه غير متوافق.",
+            unconfigured: "لم يحدد هذا المثيل إصدارًا موصى به.",
+        },
+    },
     sourcePicker: {
         title: "مشاركة شاشتك",
         subtitle: "اختر ما سيراه المشاركون الآخرون.",
@@ -18,6 +35,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "إلغاء",
     },
     companion: {
+        annotations: "التعليقات",
+        allowAnnotations: "السماح للآخرين بالتعليق",
+        clearAnnotations: "مسح الكل",
         chat: "الدردشة",
         people: "الأشخاص",
         toggleMic: "تشغيل/إيقاف الميكروفون",
@@ -105,14 +125,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "قلم",
         text: "نص",
         line: "خط",
+        arrow: "سهم",
         rect: "مستطيل",
         eraser: "ممحاة",
         red: "أحمر",
+        yellow: "أصفر",
         green: "أخضر",
         blue: "أزرق",
         white: "أبيض",
         black: "أسود",
         allowOthers: "السماح للآخرين بالتعليق",
+        clearAll: "مسح الكل",
         toggleMic: "تشغيل/إيقاف الميكروفون",
         toggleCamera: "تشغيل/إيقاف الكاميرا",
         stopSharing: "إيقاف مشاركة شاشتك",

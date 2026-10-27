@@ -12,6 +12,7 @@
     import { activePictureInPictureStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
     import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
     import { selectPictureInPictureHighlight } from "../../Video/PictureInPicture/PictureInPictureHighlightPolicy";
+    import { observeElementSize } from "../../Video/PictureInPicture/childWindow";
 
     interface Props {
         inPictureInPicture: boolean;
@@ -23,6 +24,16 @@
     let highlightScreen: HTMLDivElement | undefined = $state();
     let containerWidth = $state(0);
     let containerHeight = $state(0);
+    let layoutElement: HTMLDivElement | undefined = $state();
+
+    // In picture-in-picture the layout lives in another window, where bind:clientWidth no longer reports.
+    $effect(() => {
+        if (!inPictureInPicture || !layoutElement) return;
+        return observeElementSize(layoutElement, (width, height) => {
+            containerWidth = width;
+            containerHeight = height;
+        });
+    });
 
     const windowSize = writable({
         height: window.innerHeight,
@@ -129,6 +140,7 @@
             : ""}
         bind:clientWidth={containerWidth}
         bind:clientHeight={containerHeight}
+        bind:this={layoutElement}
     >
         {#if $streamableCollectionStore.size > 0}
             <div

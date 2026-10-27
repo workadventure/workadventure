@@ -1,6 +1,7 @@
 <script lang="ts">
     import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import type {
         ChatMessage,
         ChatMessageType,
@@ -14,7 +15,7 @@
 
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint } from "../../Utils";
-    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
@@ -32,6 +33,9 @@
     import Message from "./Message.svelte";
     import ThreadSummary from "./ThreadSummary.svelte";
     import { IconTrash } from "@wa-icons";
+
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply, edit: selectedChatMessageToEdit } = chatInteraction;
 
     interface Props {
         message: ChatMessage;
@@ -115,6 +119,10 @@
         }
 
         selectedChatMessageToReply.set(null);
+        if (chatInteraction.openThread) {
+            chatInteraction.openThread(thread);
+            return;
+        }
 
         if ($isThreadPanelEnabledStore) {
             selectedRoomStore.set(thread.parentRoom);

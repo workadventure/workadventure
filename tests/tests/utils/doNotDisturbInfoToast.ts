@@ -19,3 +19,31 @@ export async function dismissNoBrowserSoundInfoToast(page: Page, timeoutMs: numb
         }
     });
 }
+
+/**
+ * The "no microphone sound" warning toast sits at z-999 in the top-right corner and can appear at
+ * any moment once the mic is live — including in the middle of a test, on top of whatever the test
+ * is about to click. It swallowed the shared-screen controls in screenAnnotation.
+ *
+ * Registered as a locator handler rather than dismissed once at login: it is not there at login,
+ * it shows up when the detector decides it has heard nothing.
+ */
+export async function dismissNoMicrophoneSoundToast(page: Page, timeoutMs: number = 5_000): Promise<void> {
+    await page.addLocatorHandler(
+        page.getByTestId("no-microphone-sound-ignore"),
+        async (ignoreButton) => {
+            try {
+                // Dispatched to the button itself: a modal (the megaphone settings) can cover the toast, and a
+                // click at its coordinates would land on the modal, leaving the toast — and this handler — stuck.
+                await ignoreButton.dispatchEvent("click", undefined, { timeout: timeoutMs });
+            } catch (e) {
+                if (page.isClosed() || (await ignoreButton.isHidden().catch(() => true))) {
+                    return;
+                }
+                throw e;
+            }
+        },
+        // Never hold the test up waiting for the toast to go: it can come back at any time.
+        { noWaitAfter: true },
+    );
+}

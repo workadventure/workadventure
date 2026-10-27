@@ -2,6 +2,25 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "Aplicació d’escriptori",
+        installed: "Versió instal·lada",
+        unknown: "No disponible",
+        browser: "Estàs utilitzant WorkAdventure al navegador.",
+        recommendedVersion: "Versió recomanada",
+        minimumVersion: "Versió mínima compatible",
+        download: "Baixa l’aplicació d’escriptori",
+        managed:
+            "Segueix la política d’actualitzacions de la teva organització. Aquesta pàgina no instal·la l’aplicació ni torna a una versió anterior.",
+        status: {
+            belowMinimum:
+                "Aquesta versió és anterior a la mínima compatible amb aquesta instància. Pots continuar, però algunes funcions podrien no funcionar.",
+            recommended: "Estàs utilitzant la versió recomanada per a aquesta instància.",
+            different:
+                "La teva versió difereix de la recomanada per a aquesta instància. Això no vol dir necessàriament que sigui incompatible.",
+            unconfigured: "Aquesta instància no ha especificat cap versió recomanada.",
+        },
+    },
     sourcePicker: {
         title: "Comparteix la pantalla",
         subtitle: "Tria què veuran els altres participants.",
@@ -18,6 +37,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "Cancel·la",
     },
     companion: {
+        annotations: "Anotacions",
+        allowAnnotations: "Permet que altres anotin",
+        clearAnnotations: "Esborra-ho tot",
         chat: "Xat",
         people: "Persones",
         toggleMic: "Activa/desactiva el micròfon",
@@ -105,14 +127,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "Llapis",
         text: "Text",
         line: "Línia",
+        arrow: "Fletxa",
         rect: "Rectangle",
         eraser: "Goma",
         red: "Vermell",
+        yellow: "Groc",
         green: "Verd",
         blue: "Blau",
         white: "Blanc",
         black: "Negre",
         allowOthers: "Permet que altres anotin",
+        clearAll: "Esborra-ho tot",
         toggleMic: "Activa/desactiva el micròfon",
         toggleCamera: "Activa/desactiva la càmera",
         stopSharing: "Deixa de compartir la pantalla",

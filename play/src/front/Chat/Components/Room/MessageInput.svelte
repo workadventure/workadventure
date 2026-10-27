@@ -68,7 +68,7 @@
         event.preventDefault();
     }
     function insertTextAtCursor(text: string) {
-        const selection = window.getSelection();
+        const selection = messageInput?.ownerDocument.defaultView?.getSelection();
         if (!selection || !selection.rangeCount) {
             return;
         }
@@ -80,12 +80,14 @@
         let textNode: Text | undefined;
         let lastBrNode: HTMLBRElement | undefined;
         for (const line of lines) {
-            const br = document.createElement("br");
+            const br = messageInput?.ownerDocument.createElement("br");
+            if (!br) return;
             range.insertNode(br);
             if (textNode === undefined) {
                 lastBrNode = br;
             }
-            textNode = document.createTextNode(line);
+            textNode = messageInput?.ownerDocument.createTextNode(line);
+            if (!textNode) return;
             // Insertion in a range object is done in reverse order.
             range.insertNode(textNode);
         }

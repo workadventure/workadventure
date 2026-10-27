@@ -1,7 +1,7 @@
 import type { FrontConfigurationInterface } from "../../common/FrontConfigurationInterface";
-import { EnvironmentVariables } from "./EnvironmentVariableValidator";
+import { ValidatedEnvironmentVariables } from "./EnvironmentVariableValidator";
 
-const envChecking = EnvironmentVariables.safeParse(process.env);
+const envChecking = ValidatedEnvironmentVariables.safeParse(process.env);
 
 // Will break the process if an error happens
 if (!envChecking.success) {
@@ -194,6 +194,9 @@ export const DRAIN_TIMEOUT_MS: number = env.DRAIN_TIMEOUT_MS;
 
 // Front container:
 export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
+    DESKTOP_APP_RECOMMENDED_VERSION: env.DESKTOP_APP_RECOMMENDED_VERSION,
+    DESKTOP_APP_MINIMUM_VERSION: env.DESKTOP_APP_MINIMUM_VERSION,
+    DESKTOP_APP_DOWNLOAD_URL: env.DESKTOP_APP_DOWNLOAD_URL,
     DEBUG_MODE: env.DEBUG_MODE,
     PUSHER_URL,
     FRONT_URL,

@@ -2,6 +2,25 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "Desktopowe nałoženje",
+        installed: "Instalowana wersija",
+        unknown: "Njedostupne",
+        browser: "Wužiwaće WorkAdventure we wobhladowaku.",
+        recommendedVersion: "Doporučena wersija",
+        minimumVersion: "Najniša podpěrowana wersija",
+        download: "Desktopowe nałoženje sćahnyć",
+        managed:
+            "Dźeržće so aktualizaciskeje politiki swojeje organizacije. Tuta strona nałoženje njeinstaluje a staršu wersiju njewobnowja.",
+        status: {
+            belowMinimum:
+                "Tuta desktopowa wersija je starša hač najniša podpěrowana wersija tuteje instancy. Móžeće pokročować, ale někotre funkcije snano njefunguja.",
+            recommended: "Wužiwaće doporučenu wersiju za tutu instancu.",
+            different:
+                "Waša wersija so wot doporučeneje wersije tuteje instancy rozeznawa. To njerěka, zo je njekompatibelna.",
+            unconfigured: "Tuta instanca njeje doporučenu wersiju podała.",
+        },
+    },
     sourcePicker: {
         title: "Wašu wobrazowku dźělić",
         subtitle: "Wubjerće, štož druzy wobdźělnicy budu widźeć.",
@@ -18,6 +37,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "Přetorhnyć",
     },
     companion: {
+        annotations: "Komentary",
+        allowAnnotations: "Druhim komentowanje dowolić",
+        clearAnnotations: "Wšitko zhašeć",
         chat: "Chat",
         people: "Ludźo",
         toggleMic: "Mikrofon zašaltować/wušaltować",
@@ -105,14 +127,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "Pisak",
         text: "Tekst",
         line: "Linija",
+        arrow: "Šipk",
         rect: "Praworóžk",
         eraser: "Gumij",
         red: "Čerwjeny",
+        yellow: "Žołty",
         green: "Zeleny",
         blue: "Módry",
         white: "Běły",
         black: "Čorny",
         allowOthers: "Druhim komentowanje dowolić",
+        clearAll: "Wšitko zhašeć",
         toggleMic: "Mikrofon zašaltować/wušaltować",
         toggleCamera: "Kameru zašaltować/wušaltować",
         stopSharing: "Dźělenje wobrazowki zastajić",

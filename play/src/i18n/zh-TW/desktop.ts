@@ -2,6 +2,22 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "桌面應用程式",
+        installed: "已安裝版本",
+        unknown: "無法取得",
+        browser: "你正在瀏覽器中使用 WorkAdventure。",
+        recommendedVersion: "建議版本",
+        minimumVersion: "最低支援版本",
+        download: "下載桌面應用程式",
+        managed: "請遵循組織的更新政策。此頁面不會安裝應用程式或降級版本。",
+        status: {
+            belowMinimum: "此桌面版本低於該執行個體支援的最低版本。你可以繼續使用，但某些功能可能無法正常運作。",
+            recommended: "你正在使用該執行個體建議的版本。",
+            different: "你的版本與該執行個體建議的版本不同，但不一定不相容。",
+            unconfigured: "該執行個體尚未指定建議版本。",
+        },
+    },
     sourcePicker: {
         title: "分享螢幕",
         subtitle: "選擇其他參與者將看到的內容。",
@@ -18,6 +34,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "取消",
     },
     companion: {
+        annotations: "標註",
+        allowAnnotations: "允許他人標註",
+        clearAnnotations: "全部清除",
         chat: "聊天",
         people: "成員",
         toggleMic: "開啟/關閉麥克風",
@@ -105,14 +124,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "畫筆",
         text: "文字",
         line: "直線",
+        arrow: "箭頭",
         rect: "矩形",
         eraser: "橡皮擦",
         red: "紅色",
+        yellow: "黃色",
         green: "綠色",
         blue: "藍色",
         white: "白色",
         black: "黑色",
         allowOthers: "允許他人加上註解",
+        clearAll: "全部清除",
         toggleMic: "開啟/關閉麥克風",
         toggleCamera: "開啟/關閉攝影機",
         stopSharing: "停止分享螢幕",

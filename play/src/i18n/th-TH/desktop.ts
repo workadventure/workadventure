@@ -2,6 +2,24 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "แอปเดสก์ท็อป",
+        installed: "เวอร์ชันที่ติดตั้ง",
+        unknown: "ไม่พร้อมใช้งาน",
+        browser: "คุณกำลังใช้ WorkAdventure ในเบราว์เซอร์",
+        recommendedVersion: "เวอร์ชันที่แนะนำ",
+        minimumVersion: "เวอร์ชันขั้นต่ำที่รองรับ",
+        download: "ดาวน์โหลดแอปเดสก์ท็อป",
+        managed: "โปรดทำตามนโยบายการอัปเดตขององค์กร หน้านี้จะไม่ติดตั้งแอปหรือเปลี่ยนกลับเป็นเวอร์ชันเก่า",
+        status: {
+            belowMinimum:
+                "เวอร์ชันเดสก์ท็อปนี้เก่ากว่าเวอร์ชันขั้นต่ำที่อินสแตนซ์นี้รองรับ คุณยังใช้งานต่อได้ แต่บางฟีเจอร์อาจไม่ทำงาน",
+            recommended: "คุณกำลังใช้เวอร์ชันที่แนะนำสำหรับอินสแตนซ์นี้",
+            different:
+                "เวอร์ชันของคุณต่างจากเวอร์ชันที่แนะนำสำหรับอินสแตนซ์นี้ ซึ่งไม่ได้หมายความว่าจะเข้ากันไม่ได้เสมอไป",
+            unconfigured: "อินสแตนซ์นี้ยังไม่ได้ระบุเวอร์ชันที่แนะนำ",
+        },
+    },
     sourcePicker: {
         title: "แชร์หน้าจอของคุณ",
         subtitle: "เลือกสิ่งที่ผู้เข้าร่วมคนอื่นจะเห็น",
@@ -18,6 +36,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "ยกเลิก",
     },
     companion: {
+        annotations: "คำอธิบายประกอบ",
+        allowAnnotations: "อนุญาตให้ผู้อื่นใส่คำอธิบาย",
+        clearAnnotations: "ล้างทั้งหมด",
         chat: "แชท",
         people: "ผู้คน",
         toggleMic: "เปิด/ปิดไมโครโฟน",
@@ -105,14 +126,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "ปากกา",
         text: "ข้อความ",
         line: "เส้นตรง",
+        arrow: "ลูกศร",
         rect: "สี่เหลี่ยม",
         eraser: "ยางลบ",
         red: "แดง",
+        yellow: "เหลือง",
         green: "เขียว",
         blue: "น้ำเงิน",
         white: "ขาว",
         black: "ดำ",
         allowOthers: "อนุญาตให้ผู้อื่นใส่คำอธิบาย",
+        clearAll: "ล้างทั้งหมด",
         toggleMic: "เปิด/ปิดไมโครโฟน",
         toggleCamera: "เปิด/ปิดกล้อง",
         stopSharing: "หยุดแชร์หน้าจอของคุณ",

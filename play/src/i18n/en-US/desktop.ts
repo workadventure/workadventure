@@ -3,6 +3,24 @@ import type { BaseTranslation } from "../i18n-types";
 // Desktop app (Electron) strings: `companion` and `meetingBar` are the companion and the presenter meeting
 // bar, windows of the desktop app that the front renders (Components/Video/PictureInPicture/).
 const desktop: BaseTranslation = {
+    application: {
+        title: "Desktop application",
+        installed: "Installed version",
+        unknown: "Unavailable",
+        browser: "You are using WorkAdventure in your browser.",
+        recommendedVersion: "Recommended version",
+        minimumVersion: "Minimum supported version",
+        download: "Download the desktop application",
+        managed: "Follow your organization’s update policy. This page does not install or downgrade the application.",
+        status: {
+            belowMinimum:
+                "This desktop version is below the minimum supported by this instance. You can continue, but some features may not work.",
+            recommended: "You are using the version recommended for this instance.",
+            different:
+                "Your version differs from the one recommended for this instance. This does not necessarily mean it is incompatible.",
+            unconfigured: "This instance has not specified a recommended version.",
+        },
+    },
     sourcePicker: {
         title: "Share your screen",
         subtitle: "Choose what the other participants will see.",
@@ -19,6 +37,9 @@ const desktop: BaseTranslation = {
         cancel: "Cancel",
     },
     companion: {
+        annotations: "Annotations",
+        allowAnnotations: "Allow others to annotate",
+        clearAnnotations: "Clear all",
         chat: "Chat",
         people: "People",
         toggleMic: "Turn microphone on/off",
@@ -106,14 +127,17 @@ const desktop: BaseTranslation = {
         pen: "Pen",
         text: "Text",
         line: "Line",
+        arrow: "Arrow",
         rect: "Rectangle",
         eraser: "Eraser",
         red: "Red",
+        yellow: "Yellow",
         green: "Green",
         blue: "Blue",
         white: "White",
         black: "Black",
         allowOthers: "Allow others to annotate",
+        clearAll: "Clear all",
         toggleMic: "Turn microphone on/off",
         toggleCamera: "Turn camera on/off",
         stopSharing: "Stop sharing your screen",

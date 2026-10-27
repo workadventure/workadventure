@@ -1,3 +1,4 @@
+import { setAnnotationSource, setAnnotationState } from "./annotation-controller";
 import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import electronIsDev from "electron-is-dev";
@@ -140,10 +141,12 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
     return parsed ? Number(parsed[1]) : undefined;
 }
 
-/** Bring the WorkAdventure window to the front. */
+/** Bring the WorkAdventure window to the front, on a user's click (companion button, notification). */
 function focusMainWindow(): void {
     const mainWindow = getWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
+        // macOS: focus() alone leaves another app active, so the window stays behind it.
+        if (process.platform === "darwin") app.focus({ steal: true });
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
         mainWindow.focus();
@@ -576,6 +579,13 @@ export default () => {
         }
     });
 
+    ipcMain.on("app:windows:annotation-state", (event, state: unknown) => {
+        if (!isFromMainRenderer(event)) return;
+        void setAnnotationState(event.sender, state).catch((error) =>
+            ElectronLog.warn("Annotation window failed", error)
+        );
+    });
+
     // ---- Presenter meeting bar ----
     // A content-protected child window of the world page, placed on the SHARED display: the presenter
     // sees it, the captured stream does not. The page renders it (child-windows.ts).
@@ -590,12 +600,16 @@ export default () => {
 
     // The user's share started, changed source, or stopped (null). The app places what floats during
     // it (share-surfaces-policy): the meeting bar here, the companion through its controller.
+    let shareSourceGeneration = 0;
     ipcMain.on("app:screen-share-source", (event, source: unknown) => {
         if (!isFromMainRenderer(event)) return;
+        const generation = ++shareSourceGeneration;
         const sharing = source !== null && typeof source === "object";
         resolveHudDisplayId(source)
             .then((displayId) => {
+                if (generation !== shareSourceGeneration || !isFromMainRenderer(event)) return undefined;
                 setSharedScreenDisplay(displayId);
+                setAnnotationSource(sharing ? displayId : undefined);
                 const barDisplayId = meetingBarDisplay({
                     canHideFromCapture: canHideWindowsFromCapture(process.platform),
                     sharing,
