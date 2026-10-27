@@ -199,9 +199,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 return;
             }
         }
-        const camera = this.gameScene.getCameraManager().getCamera();
-        const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
-        this.gameScene.getCameraManager().resumePlayerFollow();
+        const cameraManager = this.gameScene.getCameraManager();
+        const worldPoint = cameraManager.getCamera().getWorldPoint(pointer.x, pointer.y);
+        cameraManager.resumePlayerFollow();
+        // Keep the spot the user pointed at in view while walking there.
+        const walkZoom = cameraManager.startWalkZoom();
         this.gameScene
             .moveTo(
                 {
@@ -212,7 +214,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             )
             .catch((reason) => {
                 console.warn(reason);
-            });
+            })
+            .finally(() => cameraManager.endWalkZoom(walkZoom));
     }
 
     public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {

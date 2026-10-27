@@ -25,6 +25,11 @@ import EventEmitter = Phaser.Events.EventEmitter;
 import Camera = Phaser.Cameras.Scene2D.Camera;
 import Tween = Phaser.Tweens.Tween;
 
+/** While walking, the destination stays at least this far (in map pixels, two tiles) from the edge of the view. */
+const WALK_ZOOM_MARGIN = 64;
+/** While walking, the camera zooms out at most this much further than the zoom the walk started from. */
+const WALK_ZOOM_MAX_OUT = 2.5;
+
 export enum CameraManagerEvent {
     CameraUpdate = "CameraUpdate",
 }
@@ -104,6 +109,9 @@ export class CameraManager extends EventEmitter {
     private explorerFocusOn: { x: number; y: number } = { x: 0, y: 0 };
     // What the camera follows, or is gliding towards (a player, a focus zone...). Undefined while the view is free.
     private followTarget: { x: number; y: number } | undefined;
+    // The walk keeping its destination in view (see startWalkZoom), and the zoom it started from.
+    private walkZoom: { id: number; startZoom: number } | undefined;
+    private walkZoomCount = 0;
 
     // The tween for the camera offset
     private cameraOffsetCurrentTween?: Tween;
@@ -197,6 +205,7 @@ export class CameraManager extends EventEmitter {
     };
 
     public destroy(): void {
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateWalkZoom);
         this.setManuallyDetached(false);
         this.cameraAnimation?.onInterrupt();
         this.cameraAnimation = undefined;
@@ -588,10 +597,79 @@ export class CameraManager extends EventEmitter {
     }
 
     /**
+     * While the avatar walks where the user tapped or right-clicked, zooms out just enough to keep the destination in
+     * view, then back in as the avatar gets closer, ending at the zoom the walk started from. Returns the walk's id for
+     * endWalkZoom(), or undefined when a script or a focus zone holds the camera.
+     */
+    public startWalkZoom(): number | undefined {
+        if (this.isZoomLocked() || this.waScaleManager.getFocusTarget()) return undefined;
+        // A tap during a walk keeps the zoom the first walk started from, so repeated taps don't ratchet it out.
+        const startZoom = this.walkZoom?.startZoom ?? this.waScaleManager.zoomModifier;
+        this.walkZoom = { id: ++this.walkZoomCount, startZoom };
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateWalkZoom);
+        this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateWalkZoom);
+        return this.walkZoom.id;
+    }
+
+    /** The walk ended (arrived, cancelled or stuck): back to the zoom it started from, unless a later walk took over. */
+    public endWalkZoom(id: number | undefined): void {
+        if (id === undefined || this.walkZoom?.id !== id) return;
+        const { startZoom } = this.walkZoom;
+        this.walkZoom = undefined;
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateWalkZoom);
+        // The animation also leaves the camera-zoom mode used while walking (see WaScaleManager.applyNewSize).
+        this.animateToZoomLevel(startZoom, 500);
+    }
+
+    /** The user, a script or a focus zone takes over the view or the zoom: leave the zoom where it is. */
+    private stopWalkZoom(): void {
+        if (!this.walkZoom) return;
+        this.walkZoom = undefined;
+        this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateWalkZoom);
+        this.waScaleManager.setZoomModifier(this.waScaleManager.zoomModifier, this.camera, false);
+    }
+
+    private readonly updateWalkZoom = (_time: number, delta: number): void => {
+        const player = this.scene.CurrentPlayer;
+        const destination = player.getCurrentPathDestinationPoint();
+        // Until the path is computed (it's async), there's nothing to keep in view yet.
+        if (!this.walkZoom || !destination || this.manuallyDetached) return;
+
+        // The avatar sits at the centre of the area not covered by panels: how far can the destination be?
+        const visible = this.visibleHalfSize();
+        const zoom = this.waScaleManager.zoomModifier;
+        const fit = Math.min(
+            visible.width / (Math.abs(destination.x - player.x) + WALK_ZOOM_MARGIN),
+            visible.height / (Math.abs(destination.y - player.y) + WALK_ZOOM_MARGIN),
+        );
+        const { startZoom } = this.walkZoom;
+        const target = Clamp(zoom * fit, startZoom / WALK_ZOOM_MAX_OUT, startZoom);
+        if (target < zoom && this.waScaleManager.isMaximumZoomOutReached) return;
+        // Ease towards it (about a quarter of a second), so the zoom never jumps.
+        const next = zoom + (target - zoom) * (1 - Math.exp(-delta / 250));
+        if (Math.abs(next - zoom) < 0.0001) return;
+        // Camera zoom while walking, without resizing the canvas every frame; endWalkZoom settles it.
+        this.waScaleManager.setZoomModifier(next, this.camera, true);
+        this.emit(CameraManagerEvent.CameraUpdate, this.getCameraUpdateEventData());
+    };
+
+    /** Half the size of the area not covered by panels, where the avatar is centred, in map pixels. */
+    private visibleHalfSize(): { width: number; height: number } {
+        const box = this.cameraOffsetBox;
+        if (!box) return { width: this.camera.displayWidth / 2, height: this.camera.displayHeight / 2 };
+        const mapPixelsPerScreenPixel = 1 / this.scene.scale.zoom / this.camera.zoom;
+        return {
+            width: ((box.xEnd - box.xStart) / 2) * mapPixelsPerScreenPixel,
+            height: ((box.yEnd - box.yStart) / 2) * mapPixelsPerScreenPixel,
+        };
+    }
+
+    /**
      * Make the view follow the free point the user drags and zooms. In game mode this detaches the view from the
      * avatar but keeps avatar controls. In the map editor the view is always free, so it never counts as detached.
      */
     public startManualPan(): void {
+        this.stopWalkZoom();
         if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
         // Apply pans made since the last frame (a pinch pans then zooms in one go) before taking the visible centre.
         this.camera.preRender();
@@ -704,6 +782,7 @@ export class CameraManager extends EventEmitter {
         if (this.isZoomLocked()) {
             return;
         }
+        this.stopWalkZoom();
 
         this.smoothButtonZoomTargetModifier = getRetargetedButtonZoomModifier(
             this.waScaleManager.zoomModifier,
@@ -727,6 +806,7 @@ export class CameraManager extends EventEmitter {
         if (this.isZoomLocked()) {
             return;
         }
+        this.stopWalkZoom();
 
         this.smoothButtonZoomTargetModifier = undefined;
         this.smoothButtonZoomStartModifier = undefined;
@@ -759,6 +839,7 @@ export class CameraManager extends EventEmitter {
         callback?: () => void,
         anchor?: CursorZoomAnchor,
     ): void {
+        this.stopWalkZoom();
         this.zoomAnimation?.onInterrupt();
         const applyZoom = (value: number, animating: boolean): void => {
             this.waScaleManager.setZoomModifier(value, this.camera, animating);
