@@ -88,6 +88,19 @@ describe("applyProximityReaction", () => {
         expect(reactions.has("👍")).toBe(false);
     });
 
+    it("adds a new emoji to the map only once it has its first user", () => {
+        // Message.svelte drops reactions without users whenever the map changes.
+        const reactions = new MapStore<string, ChatMessageReaction>();
+        const sizesSeen: number[] = [];
+        const unsubscribe = reactions.subscribe(($reactions) =>
+            $reactions.forEach((reaction) => sizesSeen.push(reaction.users.size)),
+        );
+        applyProximityReaction(reactions, "👍", "alice", user("alice"), true, ME, vi.fn());
+        unsubscribe();
+
+        expect(sizesSeen).toEqual([1]);
+    });
+
     it("ignores the removal of a reaction nobody added", () => {
         const reactions = new MapStore<string, ChatMessageReaction>();
         applyProximityReaction(reactions, "👍", "alice", user("alice"), false, ME, vi.fn());

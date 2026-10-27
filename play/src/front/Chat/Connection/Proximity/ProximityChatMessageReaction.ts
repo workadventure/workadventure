@@ -60,10 +60,11 @@ export function applyProximityReaction(
     if (!reaction) {
         return;
     }
+    reaction.setUser(userId, user, added);
+    // Message.svelte filters out reactions without users when the map changes, so add the user first.
     if (reaction !== existing) {
         reactions.set(key, reaction);
     }
-    reaction.setUser(userId, user, added);
     if (reaction.users.size === 0) {
         reactions.delete(key);
     }
