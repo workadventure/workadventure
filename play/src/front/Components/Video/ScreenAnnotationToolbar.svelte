@@ -235,8 +235,8 @@
         background: #334155;
     }
     button[aria-pressed="true"] {
-        background: #4338ca;
-        border-color: #a5b4fc;
+        background: var(--color-secondary);
+        border-color: var(--color-secondary);
         color: #fff;
     }
     button:focus-visible {
@@ -265,7 +265,7 @@
     }
     button.color[aria-pressed="true"] {
         border-color: #fff;
-        outline: 2px solid #a5b4fc;
+        outline: 2px solid var(--color-secondary);
         outline-offset: 2px;
     }
     .permission {

@@ -349,6 +349,19 @@
 
 <div id="bar" data-testid="desktop-meeting-bar">
     <div class="pill">
+        <span class="bar-handle" aria-hidden="true">
+            <svg viewBox="0 0 24 24"
+                ><circle cx="8" cy="5" r="1.5" /><circle cx="16" cy="5" r="1.5" /><circle
+                    cx="8"
+                    cy="12"
+                    r="1.5"
+                /><circle cx="16" cy="12" r="1.5" /><circle cx="8" cy="19" r="1.5" /><circle
+                    cx="16"
+                    cy="19"
+                    r="1.5"
+                /></svg
+            >
+        </span>
         <button
             type="button"
             class="bar-btn"
@@ -379,19 +392,6 @@
                 /></svg
             >
         </button>
-        <span class="bar-handle" aria-hidden="true">
-            <svg viewBox="0 0 24 24"
-                ><circle cx="8" cy="5" r="1.5" /><circle cx="16" cy="5" r="1.5" /><circle
-                    cx="8"
-                    cy="12"
-                    r="1.5"
-                /><circle cx="16" cy="12" r="1.5" /><circle cx="8" cy="19" r="1.5" /><circle
-                    cx="16"
-                    cy="19"
-                    r="1.5"
-                /></svg
-            >
-        </span>
         <button
             class="bar-btn"
             class:is-forbidden={!micEnabled}
