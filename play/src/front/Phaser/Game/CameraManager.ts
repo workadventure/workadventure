@@ -593,6 +593,8 @@ export class CameraManager extends EventEmitter {
      */
     public startManualPan(): void {
         if (this.cursorZoomAnchor) this.zoomAnimation?.onInterrupt();
+        // Apply pans made since the last frame (a pinch pans then zooms in one go) before taking the visible centre.
+        this.camera.preRender();
         this.setExplorationMode();
         if (!this.mapEditorOpen) this.setManuallyDetached(true);
     }

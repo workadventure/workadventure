@@ -12,7 +12,7 @@ export default {
         title: "이동하기",
         descriptionDesktop:
             "화살표 키 또는 WASD로 캐릭터를 이동할 수 있습니다. 마우스 오른쪽 버튼 클릭으로도 이동할 수 있습니다. 지금 이동해 보세요!",
-        descriptionMobile: "조이스틱이나 지도를 탭하여 캐릭터를 이동합니다. 지금 이동해 보세요!",
+        descriptionTouch: "지도를 탭하면 그곳으로 이동하고, 드래그하면 주변을 둘러볼 수 있습니다. 지금 이동해 보세요!",
         next: "다음",
     },
     communication: {

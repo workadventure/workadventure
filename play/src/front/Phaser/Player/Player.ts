@@ -136,12 +136,11 @@ export class Player extends Character {
         y = y * moveAmount;
 
         // Compute moving state
-        const joystickMovement = activeEvents.get(UserInputEvent.JoystickMove);
-        const moving = x !== 0 || y !== 0 || joystickMovement;
+        const moving = x !== 0 || y !== 0;
 
         // Compute direction
         let direction = this._lastDirection;
-        if (moving && !joystickMovement) {
+        if (moving) {
             if (Math.abs(x) > Math.abs(y)) {
                 direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
             } else {

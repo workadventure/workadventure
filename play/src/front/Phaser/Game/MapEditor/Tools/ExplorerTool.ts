@@ -19,7 +19,7 @@ import { Entity } from "../../../ECS/Entity";
 import type { EntitiesManager } from "../../GameMap/EntitiesManager";
 import { AreaPreview } from "../../../Components/MapEditor/AreaPreview";
 import { waScaleManager } from "../../../Services/WaScaleManager";
-import { MAP_DRAG_THRESHOLD } from "../../../UserInput/MapDragGesture";
+import { mapDragThreshold } from "../../../UserInput/MapDragGesture";
 import type { MapEditorTool } from "./MapEditorTool";
 
 import Pointer = Phaser.Input.Pointer;
@@ -38,7 +38,7 @@ export class ExplorerTool implements MapEditorTool {
     // Dragging, the wheel and the move keys are shared with the rest of the map editor (GameSceneUserInputHandler,
     // CameraManager). The explorer only adds its lists, hover outlines and click-to-select.
     private pointerUpHandler = (pointer: Pointer, gameObjects: GameObject[]) => {
-        if (pointer.getDistance() >= MAP_DRAG_THRESHOLD) return;
+        if (pointer.getDistance() >= mapDragThreshold(pointer)) return;
         const gameObject = gameObjects[0];
         if (gameObject instanceof Entity || gameObject instanceof AreaPreview) {
             mapExplorationObjectSelectedStore.set(gameObject);

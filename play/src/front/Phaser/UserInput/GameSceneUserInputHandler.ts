@@ -32,6 +32,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private controlKeyisPressed: boolean = false;
     private readonly mapDrag = new MapDragGesture();
     private draggingMap = false;
+    // The current touch gesture involved two fingers or more (a pinch): lifting a finger must not count as a tap.
+    private multiTouch = false;
+    private pinchPanning = false;
     private readonly pointerCapture: MapDragPointerCapture;
     private readonly panShortcut: MapPanShortcut;
     private readonly spaceKey: Phaser.Input.Keyboard.Key | undefined;
@@ -145,7 +148,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
-        if (pointer.leftButtonReleased() && this.canDragWith(pointer)) {
+        if (pointer.leftButtonReleased()) {
             const wasDragging = this.draggingMap;
             const dragged = this.mapDrag.end(pointer.id);
             this.restoreDragCursor();
@@ -156,6 +159,9 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 }
                 return;
             }
+        }
+        if (pointer.wasTouch && this.multiTouch) {
+            return;
         }
         if (get(mapEditorModeStore)) {
             return;
@@ -210,7 +216,16 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
-        if (!this.canDragWith(pointer) || !pointer.leftButtonDown() || !this.canDragMap()) {
+        if (pointer.wasTouch) {
+            // A first finger starts a new gesture; a second one turns it into a pinch and ends the one-finger drag.
+            this.multiTouch = this.touchPointersDown() > 1;
+            if (!this.multiTouch) this.pinchPanning = false;
+            if (this.multiTouch) {
+                this.handlePointerCancelEvent();
+                return;
+            }
+        }
+        if (!pointer.leftButtonDown() || !this.canDragMap()) {
             return;
         }
         pointer.motionFactor = 0.35;
@@ -220,7 +235,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     }
 
     public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {
-        if (!this.canDragWith(pointer)) {
+        if (pointer.wasTouch && this.multiTouch) {
             return;
         }
         if (!pointer.leftButtonDown()) {
@@ -269,9 +284,25 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         return this.canMoveView() && (!get(mapEditorModeStore) || get(mapExplorationModeStore));
     }
 
-    /** In game mode a touch drag belongs to the joystick; in the explorer, one finger pans the map. */
-    private canDragWith(pointer: Pointer): boolean {
-        return !pointer.wasTouch || get(mapExplorationModeStore);
+    public handlePinch(
+        zoomFactor: number,
+        centre: { x: number; y: number },
+        pan: { x: number; y: number } | undefined,
+    ): void {
+        const cameraManager = this.gameScene.getCameraManager();
+        if (pan && this.canMoveView()) {
+            if (!this.pinchPanning) {
+                cameraManager.startManualPan();
+                this.pinchPanning = true;
+            }
+            cameraManager.panBy(pan.x, pan.y);
+        }
+        // Like the wheel: on the avatar while the camera follows it, around the fingers once the view is free.
+        this.gameScene.zoomByFactor(zoomFactor, false, this.gameScene.zoomAnchor(centre));
+    }
+
+    private touchPointersDown(): number {
+        return this.gameScene.input.manager.pointers.filter((pointer) => pointer.wasTouch && pointer.isDown).length;
     }
 
     private restoreDragCursor(): void {

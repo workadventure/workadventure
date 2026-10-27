@@ -12,7 +12,8 @@ export default {
         title: "Muoversi",
         descriptionDesktop:
             "Usa i tasti freccia o WASD per muovere il tuo personaggio. Puoi anche fare clic destro per muoverti. Prova a muoverti ora!",
-        descriptionMobile: "Usa il joystick o tocca la mappa per muovere il tuo personaggio. Prova a muoverti ora!",
+        descriptionTouch:
+            "Tocca la mappa per raggiungere quel punto e trascina per guardarti intorno. Prova a muoverti ora!",
         next: "Avanti",
     },
     communication: {

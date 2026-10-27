@@ -70,7 +70,6 @@ import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Play
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
 import { TextUtils } from "../Components/TextUtils";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { PropertyUtils } from "../Map/PropertyUtils";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { stripUrlSensitiveParts } from "../../Administration/CowebsiteAnalyticsProperties";
@@ -510,10 +509,6 @@ export class GameScene extends DirtyScene {
         this.load.image("iconSilent", "/resources/icons/icon_silent.png");
         this.load.image("iconMeeting", "/resources/icons/icon_meeting.png");
 
-        if (touchScreenManager.supportTouchScreen) {
-            this.load.image(joystickBaseKey, joystickBaseImg);
-            this.load.image(joystickThumbKey, joystickThumbImg);
-        }
         // Load the selected bubble sound from bubbleSoundStore
         const selectedBubbleSound = get(bubbleSoundStore);
         this.load.audio(
@@ -4740,11 +4735,14 @@ ${escapedMessage}
 
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
-        // Apply the zoom
+        this.zoomByFactor(zoomFactor, true, this.zoomAnchor(pointer));
+    }
+
+    /** The point a wheel or pinch zoom may keep fixed under the pointer (see CameraManager.zoomByFactorAtPointer). */
+    zoomAnchor(pointer?: { x: number; y: number }): { x: number; y: number } | undefined {
         // The map editor's view is always free (the explorer list sets a focus target only to centre on hovered
         // items). In game mode, focus zones keep zooming on the centre.
-        const cursor = get(mapEditorModeStore) || !waScaleManager.getFocusTarget() ? pointer : undefined;
-        this.zoomByFactor(zoomFactor, true, cursor);
+        return get(mapEditorModeStore) || !waScaleManager.getFocusTarget() ? pointer : undefined;
     }
 
     zoomByFactor(zoomFactor: number, smooth: boolean, pointer?: { x: number; y: number }) {
