@@ -9,7 +9,7 @@
     let { reactions, classes = "" }: Props = $props();
 </script>
 
-<div class="empty:hidden mt-1 flex flex-row flex-wrap gap-1 max-w-full {classes}">
+<div class="reactions-bar empty:hidden mt-1 flex flex-row flex-wrap gap-1 max-w-full {classes}">
     {#each reactions as reaction (reaction.key)}
         <Reaction {reaction} />
     {/each}
