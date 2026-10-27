@@ -141,6 +141,11 @@ const screenShareCurve: BitrateCurve = {
 
 /**
  * Select the most appropriate bandwidth and fps for your resolution and the codec you encode with.
+ *
+ * `spatialLayers` budgets an SVC stream, whose single maxBitrate covers every spatial layer, each half the size of the
+ * next: each layer gets what it would get alone. The curve is a one-resolution budget, and short of the sum libwebrtc
+ * keeps the top layer off: a 720p VP9 stream needs 891 kbps for its three layers, where the 720p layer alone is
+ * budgeted 700 kbps.
  */
 export function selectVideoPreset(
     displayHeight: number,
@@ -148,16 +153,18 @@ export function selectVideoPreset(
     isScreenShare: boolean,
     quality: VideoQualitySetting,
     codec: VideoCodec,
+    spatialLayers = 1,
 ): {
     bitrate: number;
     fps: number;
 } {
     const curve = isScreenShare ? screenShareCurve : cameraCurve;
     const pixels = Math.min(displayWidth * displayHeight, MAX_PIXELS);
-    const bitrate =
-        curve.anchor[quality] *
-        Math.pow(pixels / curve.anchorPixels, curve.exponent) *
-        (BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec]);
+    let bitrate = 0;
+    for (let layer = 0; layer < spatialLayers; layer++) {
+        bitrate += curve.anchor[quality] * Math.pow(pixels / 4 ** layer / curve.anchorPixels, curve.exponent);
+    }
+    bitrate *= BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec];
     return { bitrate: Math.round(bitrate), fps: curve.fps(pixels, quality) };
 }
 
