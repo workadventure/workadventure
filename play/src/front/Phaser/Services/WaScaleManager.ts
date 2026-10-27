@@ -164,8 +164,8 @@ export class WaScaleManager {
         return this.focusTarget;
     }
 
-    public saveZoom(): void {
-        this._saveZoom = this.hdpiManager.zoomModifier;
+    public saveZoom(zoomModifier = this.hdpiManager.zoomModifier): void {
+        this._saveZoom = zoomModifier;
     }
 
     public getSaveZoom(): number {

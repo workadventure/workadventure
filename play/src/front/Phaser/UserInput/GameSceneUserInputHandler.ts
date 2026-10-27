@@ -201,9 +201,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         }
         const cameraManager = this.gameScene.getCameraManager();
         const worldPoint = cameraManager.getCamera().getWorldPoint(pointer.x, pointer.y);
-        cameraManager.resumePlayerFollow();
-        // Keep the spot the user pointed at in view while walking there.
-        const walkZoom = cameraManager.startWalkZoom();
+        // Keep the avatar and the spot the user pointed at in view while walking there.
+        const walk = cameraManager.startWalkFraming({ x: worldPoint.x, y: worldPoint.y });
         this.gameScene
             .moveTo(
                 {
@@ -215,7 +214,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             .catch((reason) => {
                 console.warn(reason);
             })
-            .finally(() => cameraManager.endWalkZoom(walkZoom));
+            .finally(() => cameraManager.endWalkFraming(walk));
     }
 
     public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
