@@ -566,6 +566,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     a11y: {
         menuActions: "操作メニュー",
         unreadCount: "未読 {count} 件",
+        backWithUnreadElsewhere: "戻る（他に未読 {count} 件）",
         userAvatar: "ユーザーアバター",
         applicationIcon: "アプリ",
     },

@@ -560,6 +560,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     a11y: {
         menuActions: "操作選單",
         unreadCount: "{count} 則未讀",
+        backWithUnreadElsewhere: "返回，其他地方有 {count} 則未讀訊息",
         userAvatar: "使用者頭像",
         applicationIcon: "應用程式",
     },
