@@ -87,14 +87,6 @@ test.describe("Touch navigation @nowebkit @nodesktop", () => {
         const viewport = page.viewportSize() ?? { width: 393, height: 727 };
         const centre = { x: viewport.width / 2, y: viewport.height / 2 };
 
-        // Free the view with one finger, away from the map corner where the avatar starts.
-        await touch("touchStart", [centre]);
-        for (let step = 1; step <= 10; step++) {
-            await touch("touchMove", [{ x: centre.x - step * 15, y: centre.y - step * 15 }]);
-        }
-        await touch("touchEnd", []);
-        await expect(page.getByTestId("center-camera-on-player")).toBeAttached();
-
         /** Moves two fingers that start 80 px apart around the centre; each step moves them by `left` and `right`. */
         const twoFingers = async (left: Point, right: Point) => {
             const under = await mapPointAt(page, centre);
@@ -126,13 +118,15 @@ test.describe("Touch navigation @nowebkit @nodesktop", () => {
             };
         };
 
-        // Both fingers moving together: the map follows them.
-        const pan = await twoFingers({ x: -10, y: -5 }, { x: -10, y: -5 });
-        expect(pan.drift).toBeLessThan(5);
-
-        // Pinching apart: the map zooms by the fingers' spread, around the point between them.
+        // Pinching apart while the camera follows the avatar: as in map apps, the map zooms by the fingers' spread,
+        // around the point between them, which frees the view from the avatar.
         const pinch = await twoFingers({ x: -3, y: 0 }, { x: 3, y: 0 });
         expect(pinch.drift).toBeLessThan(5);
         expect(pinch.zoom).toBeCloseTo(pinch.spread, 1);
+        await expect(page.getByTestId("center-camera-on-player")).toBeAttached();
+
+        // Both fingers moving together: the map follows them.
+        const pan = await twoFingers({ x: -10, y: -5 }, { x: -10, y: -5 });
+        expect(pan.drift).toBeLessThan(5);
     });
 });

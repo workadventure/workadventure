@@ -1,7 +1,6 @@
 import type * as Phaser from "phaser";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { GameScene } from "../Game/GameScene";
-import { mapDragThreshold } from "./MapDragGesture";
 
 type Point = { x: number; y: number };
 
@@ -14,9 +13,7 @@ type Point = { x: number; y: number };
  */
 export class PinchManager {
     private pinching = false;
-    private panning = false;
     private distance = 0;
-    private start: Point = { x: 0, y: 0 };
     private last: Point = { x: 0, y: 0 };
 
     constructor(private readonly scene: Phaser.Scene) {
@@ -40,9 +37,7 @@ export class PinchManager {
         const distance = Math.hypot(a.pageX - b.pageX, a.pageY - b.pageY);
         if (!this.pinching) {
             this.pinching = true;
-            this.panning = false;
             this.distance = distance;
-            this.start = centre;
             this.last = centre;
             return;
         }
@@ -56,17 +51,13 @@ export class PinchManager {
             return;
         }
 
-        // Moving both fingers together pans, once the point between them moved as far as a one-finger drag needs.
-        // Like that drag, the first pan catches up with the movement made below the threshold.
-        const wasPanning = this.panning;
-        this.panning ||=
-            Math.hypot(centre.x - this.start.x, centre.y - this.start.y) >= mapDragThreshold({ wasTouch: true });
-        const from = wasPanning ? this.last : this.start;
-        this.last = centre;
+        // The map follows the point between the fingers, which pans when both move together.
         const scale = this.scene.scale;
-        const pan = this.panning
-            ? { x: (from.x - centre.x) * scale.displayScale.x, y: (from.y - centre.y) * scale.displayScale.y }
-            : undefined;
+        const pan = {
+            x: (this.last.x - centre.x) * scale.displayScale.x,
+            y: (this.last.y - centre.y) * scale.displayScale.y,
+        };
+        this.last = centre;
         const centreInGame = { x: scale.transformX(centre.x), y: scale.transformY(centre.y) };
         this.scene.userInputManager.userInputHandler.handlePinch?.(zoomFactor, centreInGame, pan);
     };
