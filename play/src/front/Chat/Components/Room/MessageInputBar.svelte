@@ -143,8 +143,8 @@
         new Set(files.filter(({ file }) => fileValidation.tooLargeFiles.includes(file)).map(({ id }) => id)),
     );
     let fileErrors: { title: string; hint?: string }[] = $derived([
-        // The chat can grow past the limit after the files were picked.
-        ...(tooManyUsersForFiles
+        // The chat can grow past the limit after the files were picked. Without files, text still goes through.
+        ...(tooManyUsersForFiles && files.length > 0
             ? [{ title: $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS }) }]
             : []),
         ...(fileValidation.tooLargeFiles.length > 0
