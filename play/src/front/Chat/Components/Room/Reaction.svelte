@@ -101,7 +101,7 @@
         aria-disabled={!$canReact}
         aria-label={label}
         aria-pressed={$reacted}
-        class="w-[40px] reaction group flex flex-row space-x-1 py-1 px-1.5 m-0 hover:bg-white/20 focus-visible:bg-white/20 text-white rounded-full select-none"
+        class="reaction group flex flex-row items-center gap-1 py-0.5 px-2 m-0 border border-solid border-white/10 hover:bg-white/20 focus-visible:bg-white/20 text-white rounded-full select-none"
         class:opacity-50={!$canReact}
         class:cursor-pointer={$canReact}
         data-testid={`${key}_reactionButton`}

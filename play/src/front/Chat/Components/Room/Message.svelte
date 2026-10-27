@@ -195,7 +195,6 @@
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
                     ? 'bg-secondary/90 rounded-br-none'
                     : ''}
-                    {$reactionsWithUsers.length > 0 && !$isDeleted && replyDepth === 0 ? 'mb-4 p-0.5' : ''}
                     {!isQuotedMessage ? 'my' : ''}"
             >
                 {#if $isDeleted}
@@ -220,12 +219,6 @@
                         <MessageAttachmentRecipients recipients={message.attachment.delivery} />
                     {/if}
 
-                    {#if $reactionsWithUsers.length > 0}
-                        <MessageReactions
-                            classes={isMyMessage ? "bg-secondary/30 right-2" : "bg-contrast/30"}
-                            reactions={$reactionsWithUsers}
-                        />
-                    {/if}
                     {#if $isModified}
                         <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
                             ({$LL.chat.messageEdited()})
@@ -241,6 +234,12 @@
                     </div>
                 {/if}
             </div>
+            {#if $reactionsWithUsers.length > 0 && !$isDeleted}
+                <MessageReactions
+                    classes={isMyMessage ? "justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
+                    reactions={$reactionsWithUsers}
+                />
+            {/if}
             {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
                 <div
                     class="options -top-2 absolute z-50 rounded p-1 {!isMyMessage
