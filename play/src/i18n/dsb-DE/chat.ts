@@ -212,6 +212,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "Toś tu nitku njedajo se wócyniś.",
     },
     react: "Reagěrowaś",
+    messageActions: {
+        label: "Akcije powěsći",
+        edit: "Wobźěłaś",
+        reactWith: "Z {emoji} reagěrowaś",
+        close: "Zacyniś",
+    },
     copy: "Kopěrowaś",
     copied: "Kopěrowane!",
     poll: {

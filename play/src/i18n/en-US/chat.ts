@@ -211,6 +211,12 @@ const chat: BaseTranslation = {
         openError: "Unable to open this thread.",
     },
     react: "React",
+    messageActions: {
+        label: "Message actions",
+        edit: "Edit",
+        reactWith: "React with {emoji}",
+        close: "Close",
+    },
     copy: "Copy",
     copied: "Copied!",
     poll: {

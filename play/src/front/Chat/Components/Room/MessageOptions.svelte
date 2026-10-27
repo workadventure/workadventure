@@ -48,24 +48,27 @@
         <a
             href={$content.url}
             download={$content.body}
-            class="p-0 m-0 text-white/50 hover:text-white transition-all flex"
+            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all flex"
             target="_blank"
         >
             <IconArrowDown font-size={16} class="hover:cursor-pointer" />
         </a>
     {/if}
     <button
-        class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+        class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all hover:cursor-pointer flex"
         data-testid="replyToMessageButton"
+        aria-label={$LL.chat.reply()}
+        title={$LL.chat.reply()}
         onclick={replyToMessage}
     >
         <IconArrowBackUp font-size={16} />
     </button>
     {#if message.openThread}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all hover:cursor-pointer flex"
             data-testid="openThreadButton"
             title={$LL.chat.thread.openThreadButtonTitle()}
+            aria-label={$LL.chat.thread.openThreadButtonTitle()}
             onclick={openThread}
         >
             <IconMessageCircle2 font-size={16} />
@@ -76,8 +79,10 @@
     {/if}
     {#if $canEdit}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all hover:cursor-pointer flex"
             data-testid="editMessageButton"
+            aria-label={$LL.chat.messageActions.edit()}
+            title={$LL.chat.messageActions.edit()}
             onclick={selectMessageToEdit}
         >
             <IconPencil font-size={16} />
@@ -85,8 +90,10 @@
     {/if}
     {#if $canDelete}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white transition-all hover:cursor-pointer flex"
+            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all hover:cursor-pointer flex"
             data-testid="removeMessageButton"
+            aria-label={$LL.chat.delete()}
+            title={$LL.chat.delete()}
             onclick={removeMessage}
         >
             <IconTrash font-size={16} />

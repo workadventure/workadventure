@@ -209,6 +209,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "無法開啟此討論串。",
     },
     react: "反應",
+    messageActions: {
+        label: "訊息動作",
+        edit: "編輯",
+        reactWith: "用 {emoji} 回應",
+        close: "關閉",
+    },
     copy: "複製",
     copied: "已複製！",
     poll: {

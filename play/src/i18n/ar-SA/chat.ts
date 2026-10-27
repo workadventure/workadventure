@@ -210,6 +210,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "تعذر فتح هذا الموضوع.",
     },
     react: "تفاعل",
+    messageActions: {
+        label: "إجراءات الرسالة",
+        edit: "تعديل",
+        reactWith: "التفاعل بـ {emoji}",
+        close: "إغلاق",
+    },
     copy: "نسخ",
     copied: "تم النسخ!",
     poll: {

@@ -211,6 +211,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "No se pudo abrir este hilo.",
     },
     react: "Reaccionar",
+    messageActions: {
+        label: "Acciones del mensaje",
+        edit: "Editar",
+        reactWith: "Reaccionar con {emoji}",
+        close: "Cerrar",
+    },
     copy: "Copiar",
     copied: "¡Copiado!",
     poll: {

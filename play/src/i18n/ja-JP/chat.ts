@@ -212,6 +212,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "このスレッドを開けませんでした。",
     },
     react: "反応する",
+    messageActions: {
+        label: "メッセージの操作",
+        edit: "編集",
+        reactWith: "{emoji} でリアクション",
+        close: "閉じる",
+    },
     copy: "コピーする",
     copied: "コピーしました",
     poll: {
