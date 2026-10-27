@@ -86,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "開啟",
     me: "我",
     you: "您",
+    reactionTooltip: {
+        others: "其他 {count} 人",
+        youReacted: "您以 {emoji} 回應",
+        oneReacted: "{name} 以 {emoji} 回應",
+        reacted: "{names} 以 {emoji} 回應",
+    },
     ban: {
         title: "封鎖",
         content: "從目前世界封鎖使用者 {userName}。這可以從管理介面取消。",

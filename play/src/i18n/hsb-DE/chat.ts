@@ -89,6 +89,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "wočinić",
     me: "ja",
     you: "ty",
+    reactionTooltip: {
+        others: "{count} dalši",
+        youReacted: "Reakcija {emoji}: ty",
+        oneReacted: "Reakcija {emoji}: {name}",
+        reacted: "Reakcija {emoji}: {names}",
+    },
     ban: {
         title: "wuzamknyć",
         content: "Wužiwarja {userName} z tuteho swěta wuzamknyć. To móže so jenož wot administracije cofnyć.",

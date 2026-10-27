@@ -88,6 +88,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "Ouvrir",
     me: "Moi",
     you: "Vous",
+    reactionTooltip: {
+        others: "{count} {{autre|autres}}",
+        youReacted: "Vous avez réagi avec {emoji}",
+        oneReacted: "{name} a réagi avec {emoji}",
+        reacted: "{names} ont réagi avec {emoji}",
+    },
     addNew: "Ajouter un nouveau : ",
     ban: {
         title: "Bannir",

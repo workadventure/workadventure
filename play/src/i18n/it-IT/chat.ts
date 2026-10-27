@@ -89,6 +89,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "Apri",
     me: "Io",
     you: "Tu",
+    reactionTooltip: {
+        others: "{count} {{altro|altri}}",
+        youReacted: "Hai reagito con {emoji}",
+        oneReacted: "{name} ha reagito con {emoji}",
+        reacted: "{names} hanno reagito con {emoji}",
+    },
     ban: {
         title: "Ban",
         content: "Banna l'utente {userName} dal mondo in corso. Questo può essere annullato dall'amministrazione.",

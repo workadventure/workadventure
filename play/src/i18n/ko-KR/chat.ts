@@ -88,6 +88,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "열기",
     me: "나",
     you: "당신",
+    reactionTooltip: {
+        others: "외 {count}명",
+        youReacted: "{emoji}(으)로 반응했습니다",
+        oneReacted: "{name}이(가) {emoji}(으)로 반응했습니다",
+        reacted: "{names}이(가) {emoji}(으)로 반응했습니다",
+    },
     ban: {
         title: "차단",
         content:
