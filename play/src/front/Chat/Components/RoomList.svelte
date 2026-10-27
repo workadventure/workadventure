@@ -49,6 +49,7 @@
         shouldShowRoomTimeline,
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
+    import MessageSearchResults from "./MessageSearchResults.svelte";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -293,6 +294,9 @@
                             </ShowMore>
                         </div>
                     </div>
+                {/if}
+                {#if $chatSearchBarValue.trim() !== ""}
+                    <MessageSearchResults />
                 {/if}
                 {#if $chatConnectionStatus === "ONLINE"}
                     {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}

@@ -73,6 +73,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "Beschikbare discussies",
     joinableRoomsError: "Fout bij het laden van discussies, klik om opnieuw te proberen",
     availableRooms: "Beschikbare discussie(s)",
+    messageSearch: {
+        title: "Berichten",
+        loadedOnly: "Alleen recent geladen berichten worden doorzocht.",
+    },
     proximity: "Gespreksbel",
     role: {
         adminShort: "Admin",

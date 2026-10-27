@@ -72,6 +72,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "참여 가능한 대화",
     joinableRoomsError: "대화 불러오기 오류, 클릭해서 다시 시도",
     availableRooms: "참여 가능한 대화",
+    messageSearch: {
+        title: "메시지",
+        loadedOnly: "최근에 불러온 메시지만 검색됩니다.",
+    },
     proximity: "근접 채팅",
     role: {
         adminShort: "관리자",

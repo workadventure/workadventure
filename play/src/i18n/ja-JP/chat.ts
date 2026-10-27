@@ -73,6 +73,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "利用可能なディスカッション",
     joinableRoomsError: "ディスカッションの読み込みエラー、クリックして再試行",
     availableRooms: "利用可能なディスカッション",
+    messageSearch: {
+        title: "メッセージ",
+        loadedOnly: "最近読み込まれたメッセージのみが検索されます。",
+    },
     proximity: "ディスカッションバブル",
     role: {
         adminShort: "Admin",

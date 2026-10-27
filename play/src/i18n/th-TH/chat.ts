@@ -72,6 +72,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "การสนทนาที่เข้าร่วมได้",
     joinableRoomsError: "เกิดข้อผิดพลาดในการโหลดการสนทนา คลิกเพื่อลองใหม่",
     availableRooms: "การสนทนาที่เข้าร่วมได้",
+    messageSearch: {
+        title: "ข้อความ",
+        loadedOnly: "ค้นหาเฉพาะข้อความที่โหลดล่าสุดเท่านั้น",
+    },
     proximity: "แชทระยะใกล้",
     role: {
         adminShort: "แอดมิน",

@@ -72,6 +72,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "Discussions disponibles",
     joinableRoomsError: "Error en carregar les discussions, feu clic per tornar-ho a provar",
     availableRooms: "Discussion(s) disponible(s)",
+    messageSearch: {
+        title: "Missatges",
+        loadedOnly: "Només es cerquen els missatges carregats recentment.",
+    },
     proximity: "Bombolla de discussió",
     role: {
         adminShort: "Admin",

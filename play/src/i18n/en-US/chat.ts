@@ -71,6 +71,10 @@ const chat: BaseTranslation = {
     joinableRooms: "Available discussions",
     joinableRoomsError: "Error loading discussions click to retry",
     availableRooms: "Available discussions", // used in the search bar for results
+    messageSearch: {
+        title: "Messages",
+        loadedOnly: "Only recently loaded messages are searched.",
+    },
     proximity: "Proximity Chat",
     role: {
         adminShort: "Admin",

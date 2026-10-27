@@ -73,6 +73,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "Dostupne diskusije",
     joinableRoomsError: "Zmólka pśi lodowanju diskusijow, klikni za wopytanje znowa",
     availableRooms: "Dostupna diskusija/diskisije",
+    messageSearch: {
+        title: "Powěsći",
+        loadedOnly: "Pytaju se jano njedawno zacytane powěsći.",
+    },
     proximity: "Rozgronowa buła",
     role: {
         adminShort: "Admin",

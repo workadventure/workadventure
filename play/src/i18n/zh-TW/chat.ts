@@ -70,6 +70,10 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRooms: "可用討論",
     joinableRoomsError: "載入討論時發生錯誤，點選重試",
     availableRooms: "可用討論",
+    messageSearch: {
+        title: "訊息",
+        loadedOnly: "僅搜尋最近載入的訊息。",
+    },
     proximity: "鄰近聊天",
     role: {
         adminShort: "管理員",
