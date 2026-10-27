@@ -114,6 +114,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         today: "Źinsa",
         yesterday: "Wčera",
         retry: "Hyšći wopytaś",
+        newMessages: "Nowe powěsći: {count}",
+        jumpToLatest: "K nejnowšym powěsćam",
     },
     form: {
         placeholder: "Napiš powěsć...",

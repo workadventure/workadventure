@@ -111,6 +111,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         today: "今天",
         yesterday: "昨天",
         retry: "重试",
+        newMessages: "{count} 条新消息",
+        jumpToLatest: "跳到最新消息",
     },
     form: {
         placeholder: "输入您的消息...",

@@ -113,6 +113,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         today: "Hôm nay",
         yesterday: "Hôm qua",
         retry: "Thử lại",
+        newMessages: "{count} tin nhắn mới",
+        jumpToLatest: "Chuyển đến tin nhắn mới nhất",
     },
     form: {
         placeholder: "Nhập tin nhắn của bạn...",
