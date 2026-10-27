@@ -54,6 +54,11 @@ export type PathFollowResult = {
 };
 
 export abstract class Character extends Container implements OutlineableInterface, Movable {
+    // Phaser DOM elements check their parent visibility without passing a camera.
+    public willRender(camera: Phaser.Cameras.Scene2D.Camera = this.scene.cameras.main): boolean {
+        return super.willRender(camera);
+    }
+
     private readonly movedSubject = new Subject<PositionInterface>();
     public readonly moved$ = this.movedSubject.asObservable();
 
