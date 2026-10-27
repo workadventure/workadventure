@@ -17,6 +17,9 @@ import {
     VideoPresets,
     DisconnectReason,
     ConnectionState,
+    LoggerNames,
+    LogLevel,
+    setLogLevel,
     supportsAudioOutputSelection,
     supportsAV1,
     supportsVP9,
@@ -155,6 +158,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             },
             stopLocalTrackOnUnpublish: false,
         });
+        // Each connected room logs a "webrtc stats" console.info every 30 s, which would crowd out the Sentry
+        // breadcrumbs. Set after new Room(): the Room resets that logger to info unless a level is persisted.
+        setLogLevel(LogLevel.warn, LoggerNames.Stats);
 
         // Each track will subscribe to the room events like cleanup, so we want to be ready for a lot of listeners
         this.room.setMaxListeners(10000);
