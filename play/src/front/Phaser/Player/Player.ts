@@ -16,6 +16,7 @@ import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
 import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { WalkDestinationMarker } from "../Components/WalkDestinationMarker";
 
 export const hasMovedEventName = "hasMoved";
 export const startMovingEventName = "startMoving";
@@ -23,6 +24,7 @@ export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private readonly unsubscribeVisibilityStore: Unsubscriber;
+    private readonly destinationMarker: WalkDestinationMarker;
     private isMoving = false;
 
     constructor(
@@ -38,6 +40,7 @@ export class Player extends Character {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+        this.destinationMarker = new WalkDestinationMarker(Scene);
 
         this.unsubscribeVisibilityStore = visibilityStore.subscribe((isVisible) => {
             if (!isVisible) {
@@ -98,8 +101,12 @@ export class Player extends Character {
         }
 
         this.getBody().setDirectControl(true);
+        // Every walk ends here (taps, right-clicks, scripts, reroutes...): mark where it goes until it ends.
+        const destination = path.at(-1);
+        const walk = destination ? this.destinationMarker.show(destination) : undefined;
         return super.setPathToFollow(path, speed).finally(() => {
             this.isMoving = false;
+            if (walk !== undefined) this.destinationMarker.hide(walk);
         });
     }
 
@@ -293,6 +300,7 @@ export class Player extends Character {
 
     destroy(): void {
         this.unsubscribeVisibilityStore();
+        this.destinationMarker.destroy();
         super.destroy();
     }
 }
