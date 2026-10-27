@@ -35,8 +35,8 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     const player = {
         x: 1200,
         y: 1000,
-        destination: undefined as { x: number; y: number } | undefined,
-        getCurrentPathDestinationPoint: () => player.destination,
+        path: [] as { x: number; y: number }[],
+        getPathAhead: () => player.path,
     };
     const sendViewportToServer = vi.fn();
     type TweenConfig = {
@@ -75,10 +75,13 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
         tweens: { addCounter },
     } as unknown as GameScene;
     let modifier = zoom;
+    const saveZoom = vi.fn();
     const limits = { minZoomReached: false, focusTarget: undefined as { x: number; y: number } | undefined };
     const scale = {
         getTargetZoomModifierFor: () => 1,
         getFocusTarget: () => limits.focusTarget,
+        setFocusTarget: vi.fn(),
+        saveZoom,
         get zoomModifier() {
             return modifier;
         },
@@ -97,62 +100,111 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     managers.push(manager);
     camera.startFollow(player, true);
     camera.preRender();
-    return { camera, manager, player, scene, sendViewportToServer, advanceTween, addCounter, limits };
+    return { camera, manager, player, scene, saveZoom, sendViewportToServer, advanceTween, addCounter, limits };
 }
 
-describe("walk zoom", () => {
+describe("walk framing", () => {
     const frames = (scene: GameScene, count: number) => {
         for (let frame = 0; frame < count; frame++) scene.events.emit(Phaser.Scenes.Events.UPDATE, 0, 16);
     };
+    const view = (camera: Phaser.Cameras.Scene2D.Camera) => {
+        camera.preRender();
+        return { x: camera.midPoint.x, y: camera.midPoint.y, zoom: camera.zoom };
+    };
 
-    it("zooms out just enough to keep the destination in view, at most 2.5x, then back in", () => {
+    it("centres between the avatar and its destination, zoomed out just enough, then closes in on arrival", () => {
         const { camera, manager, player, scene, advanceTween } = setup(1, true);
-        const walk = manager.startWalkZoom();
-        player.destination = { x: player.x + 600, y: player.y };
-        frames(scene, 200);
-        // At zoom 1 the edge is 400 map pixels from the avatar; the destination needs 600 plus the 64 px margin.
-        expect(camera.zoom).toBeCloseTo(400 / 664, 2);
+        const destination = { x: player.x + 2000, y: player.y + 600 };
+        const walk = manager.startWalkFraming(destination);
+        player.path = [destination];
+        frames(scene, 100);
+        // The view is 800x600: half of it (400x300 map pixels at zoom 1) must hold half the distance plus 64 px.
+        expect(view(camera)).toEqual({
+            x: player.x + 1000,
+            y: player.y + 300,
+            zoom: expect.closeTo(400 / 1064, 3) as number,
+        });
 
-        player.destination = { x: player.x + 5000, y: player.y };
-        frames(scene, 200);
-        expect(camera.zoom).toBeCloseTo(1 / 2.5, 2);
+        // A short walk centres between the two without zooming in past the zoom the walk started from.
+        player.path = [{ x: player.x + 300, y: player.y }];
+        frames(scene, 1);
+        expect(view(camera)).toEqual({ x: player.x + 150, y: player.y, zoom: 1 });
 
-        // The avatar gets closer: back in, but never past the zoom the walk started from.
-        player.destination = { x: player.x + 100, y: player.y };
-        frames(scene, 200);
-        expect(camera.zoom).toBeCloseTo(1, 2);
-
-        manager.endWalkZoom(walk);
+        // On arrival the view is on the avatar at the starting zoom, and follows it again.
+        player.x += 300;
+        player.path = [];
+        manager.endWalkFraming(walk);
+        frames(scene, 100);
         advanceTween(1);
-        expect(camera.zoom).toBe(1);
+        player.x += 50;
+        expect(view(camera)).toEqual({ x: player.x, y: player.y, zoom: 1 });
+    });
+
+    it("moves the view and the zoom on the same blend, over longer for a longer move", () => {
+        const { camera, manager, player, scene } = setup(1, true);
+        const destination = { x: player.x + 2000, y: player.y + 600 };
+        manager.startWalkFraming(destination);
+        player.path = [destination];
+        const target = { x: player.x + 1000, y: player.y + 300, zoom: 400 / 1064 };
+        frames(scene, 30);
+        const during = view(camera);
+        const moved = (during.x - player.x) / (target.x - player.x);
+        expect(moved).toBeGreaterThan(0.1);
+        expect(moved).toBeLessThan(0.9);
+        expect((during.y - player.y) / (target.y - player.y)).toBeCloseTo(moved, 5);
+        expect(Math.log(during.zoom) / Math.log(target.zoom)).toBeCloseTo(moved, 5);
+
+        // About 1 000 screen pixels to travel: the blend takes the longest, 1.5 s.
+        frames(scene, 62);
+        expect(view(camera).x).toBeLessThan(target.x);
+        frames(scene, 2);
+        expect(view(camera).x).toBe(target.x);
+    });
+
+    it("blends from a dragged view, without jumping", () => {
+        const { camera, manager, player, scene } = setup(1, true);
+        manager.startManualPan();
+        manager.panBy(1500, 0);
+        const dragged = view(camera);
+        const destination = { x: dragged.x + 100, y: dragged.y };
+        manager.startWalkFraming(destination);
+        player.path = [destination];
+        expect(get(cameraDetachedStore)).toBe(false);
+        frames(scene, 1);
+        expect(view(camera).x).toBeCloseTo(dragged.x, 0);
+        frames(scene, 100);
+        expect(view(camera).x).toBeCloseTo((player.x + destination.x) / 2, 5);
     });
 
     it("keeps the first walk's zoom across taps, lets the user take over, and leaves a held camera alone", () => {
-        const { camera, manager, player, scene, limits } = setup(1, true);
-        const first = manager.startWalkZoom();
-        player.destination = { x: player.x + 600, y: player.y };
-        frames(scene, 200);
-
-        // A new tap while zoomed out: it still comes back to the zoom the first walk started from.
-        const second = manager.startWalkZoom();
-        manager.endWalkZoom(first);
-        player.destination = { x: player.x + 100, y: player.y };
-        frames(scene, 200);
-        expect(camera.zoom).toBeCloseTo(1, 2);
-
-        // Dragging the map takes over: the zoom stays where it is, even when the walk ends.
-        player.destination = { x: player.x + 600, y: player.y };
-        frames(scene, 20);
-        const whenDragged = camera.zoom;
-        expect(whenDragged).toBeLessThan(1);
-        manager.startManualPan();
+        const { camera, manager, player, scene, saveZoom, limits } = setup(1, true);
+        const first = manager.startWalkFraming({ x: player.x + 2000, y: player.y });
+        player.path = [{ x: player.x + 2000, y: player.y }];
         frames(scene, 100);
-        manager.endWalkZoom(second);
-        expect(camera.zoom).toBe(whenDragged);
 
-        // A focus zone (or a script) holds the camera: no walk zoom.
+        // A new tap while zoomed out: entering a focus zone still saves the zoom from before the first walk.
+        const second = manager.startWalkFraming({ x: player.x + 100, y: player.y });
+        manager.endWalkFraming(first);
+        expect(view(camera).zoom).toBeLessThan(1);
+        manager.enterFocusMode({ x: 0, y: 0, width: 100, height: 100 });
+        expect(saveZoom).toHaveBeenCalledWith(1);
+
+        // Zooming during a walk frees the view where it is, as a drag does, even when the walk ends.
+        const third = manager.startWalkFraming({ x: player.x + 2000, y: player.y });
+        player.path = [{ x: player.x + 2000, y: player.y }];
+        frames(scene, 20);
+        const whenZoomed = view(camera);
+        manager.zoomByFactorAtPointer(1, 0, { x: 400, y: 300 });
+        expect(get(cameraDetachedStore)).toBe(true);
+        frames(scene, 100);
+        manager.endWalkFraming(second);
+        manager.endWalkFraming(third);
+        frames(scene, 100);
+        expect(view(camera)).toEqual(whenZoomed);
+
+        // A focus zone (or a script) holds the camera: no framing.
         limits.focusTarget = { x: 0, y: 0 };
-        expect(manager.startWalkZoom()).toBeUndefined();
+        expect(manager.startWalkFraming({ x: 0, y: 0 })).toBeUndefined();
     });
 });
 

@@ -110,11 +110,10 @@ export class Player extends Character {
         });
     }
 
-    public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
-        if (!this.pathToFollow) {
-            return undefined;
-        }
-        return this.pathToFollow[this.pathToFollow.length - 1];
+    /** The waypoints still ahead on the current walk, the last one being the destination (empty when not walking). */
+    public getPathAhead(): { x: number; y: number }[] {
+        // The first waypoint is where the current segment started, behind the avatar.
+        return this.pathToFollow?.slice(1) ?? [];
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
