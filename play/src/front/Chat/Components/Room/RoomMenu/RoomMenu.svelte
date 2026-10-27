@@ -224,7 +224,7 @@
         event.stopPropagation();
         toggleRoomOptions();
     }}
-    class="relative z-10 m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
+    class="m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
 >
     <IconDots font-size="16" />
 </button>

@@ -54,7 +54,7 @@
 
 <div
     class={[
-        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full",
+        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer pe-2 cursor-pointer w-full",
         {
             "bg-white/10 rounded": $selectedRoomStore?.id === room.id,
             "opacity-50 ps-6": isParentZone,
@@ -62,47 +62,43 @@
     ]}
     data-testid={$roomName}
 >
-    <!-- Stretched over the row so the whole row opens the room. -->
+    <!-- The room menu cannot sit inside a button: it stays next to it, in the row. -->
     <button
         data-room-row-button
-        class="absolute inset-0 m-0 p-0 rounded bg-transparent border-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
-        aria-label={$roomName}
+        class="flex flex-1 min-w-0 items-center gap-2 self-stretch ps-2 py-2 m-0 rounded bg-transparent border-none text-start cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
         onclick={selectRoom}
         onkeydown={focusAdjacentRoomRow}
-    ></button>
-    <div class="relative shrink-0 pointer-events-none">
-        <div
-            class="rounded-full bg-white/10 h-7 w-7 border border-solid text-white flex items-center justify-center p-[1px] relative {$hasUnreadMessages
-                ? 'border-white'
-                : 'border-white/70'}"
-        >
-            {#if usesDefaultProximityPicture}
-                <div class="absolute overflow-hidden w-full h-full rounded-full">
-                    <div
-                        class="flex items-center justify-center translate-y-[3px] group-hover/chatItem:translate-y-[0] transition-all"
-                    >
-                        <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
-                    </div>
-                </div>
-            {:else}
-                <RoomIcon font-size="18" />
-            {/if}
-        </div>
-    </div>
-    <div class="m-0 flex-1 min-w-0 text-start">
-        {#each chunks as chunk (chunk.key)}
-            <span
-                class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessages
-                    ? 'text-white'
-                    : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
+    >
+        <span class="relative shrink-0">
+            <div
+                class="rounded-full bg-white/10 h-7 w-7 border border-solid text-white flex items-center justify-center p-[1px] relative {$hasUnreadMessages
+                    ? 'border-white'
+                    : 'border-white/70'}"
             >
-        {/each}
-    </div>
+                {#if usesDefaultProximityPicture}
+                    <div class="absolute overflow-hidden w-full h-full rounded-full">
+                        <div
+                            class="flex items-center justify-center translate-y-[3px] group-hover/chatItem:translate-y-[0] transition-all"
+                        >
+                            <WokaFromUserId userId={-1} customWidth="32px" placeholderSrc="" />
+                        </div>
+                    </div>
+                {:else}
+                    <RoomIcon font-size="18" />
+                {/if}
+            </div>
+        </span>
+        <span class="m-0 flex-1 min-w-0">
+            {#each chunks as chunk (chunk.key)}
+                <span
+                    class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessages
+                        ? 'text-white'
+                        : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
+                >
+            {/each}
+        </span>
+    </button>
     {#if $hasUnreadMessages}
-        <UnreadCount
-            count={$unreadCount}
-            variant={$areNotificationsMuted ? "muted" : "default"}
-            class="pointer-events-none"
-        />
+        <UnreadCount count={$unreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
     {/if}
 </div>

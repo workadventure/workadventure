@@ -55,53 +55,49 @@
 
 <div
     class={[
-        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full",
+        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer pe-2 cursor-pointer w-full",
         {
             "bg-white/10 rounded": isSelected,
         },
     ]}
     data-testid={$roomName}
 >
-    <!-- Stretched over the row so the whole row opens the room; the room menu sits above it. -->
+    <!-- The room menu cannot sit inside a button: it stays next to it, in the row. -->
     <button
         data-room-row-button
-        class="absolute inset-0 m-0 p-0 rounded bg-transparent border-none cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
-        aria-label={$roomName}
+        class="flex flex-1 min-w-0 items-center gap-2 self-stretch ps-2 py-2 m-0 rounded bg-transparent border-none text-start cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
         onclick={() => selectedRoomStore.set(room)}
         onkeydown={focusAdjacentRoomRow}
-    ></button>
-    <div class="relative shrink-0 pointer-events-none">
-        <Avatar
-            compact
-            pictureStore={room.pictureStore}
-            fallbackName={$roomName}
-            color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
-        />
+    >
+        <span class="relative shrink-0">
+            <Avatar
+                compact
+                pictureStore={room.pictureStore}
+                fallbackName={$roomName}
+                color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
+            />
 
-        {#if $isEncrypted}
-            <EncryptionBadge />
-        {/if}
-    </div>
-    <div class="m-0 flex-1 min-w-0 text-start">
-        {#each chunks as chunk (chunk.key)}
-            <span
-                class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
-                    ? 'text-white'
-                    : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
-            >
-        {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
-                >({peerWaDisplayNameParens})</span
-            >{/if}
-    </div>
+            {#if $isEncrypted}
+                <EncryptionBadge />
+            {/if}
+        </span>
+        <span class="m-0 flex-1 min-w-0">
+            {#each chunks as chunk (chunk.key)}
+                <span
+                    class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
+                        ? 'text-white'
+                        : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
+                >
+            {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+                    >({peerWaDisplayNameParens})</span
+                >{/if}
+        </span>
+    </button>
     {#if $areNotificationsMuted}
         <IconBellOff font-size="12" class="opacity-50" />
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <UnreadCount
-            count={$roomUnreadCount}
-            variant={$areNotificationsMuted ? "muted" : "default"}
-            class="pointer-events-none"
-        />
+        <UnreadCount count={$roomUnreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
     {/if}
 </div>
