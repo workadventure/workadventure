@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countUnreadElsewhere, formatUnreadCount } from "./unreadCount";
+import { countUnreadElsewhere, formatUnreadCount, summarizeUnreadCounts } from "./unreadCount";
 
 describe("formatUnreadCount", () => {
     it("shows the exact count up to 99", () => {
@@ -36,5 +36,30 @@ describe("countUnreadElsewhere", () => {
 
     it("never goes below zero while the aggregates catch up", () => {
         expect(countUnreadElsewhere(1, [], { id: "!room", count: 3, muted: false })).toBe(0);
+    });
+});
+
+describe("summarizeUnreadCounts", () => {
+    it("counts only unmuted conversations when there are any", () => {
+        expect(
+            summarizeUnreadCounts([
+                { id: "a", count: 2, muted: false },
+                { id: "b", count: 12, muted: true },
+                { id: "c", count: 0, muted: false },
+            ]),
+        ).toEqual({ count: 2, muted: false });
+    });
+
+    it("falls back to the muted count, flagged grey, when only muted conversations have unread messages", () => {
+        expect(
+            summarizeUnreadCounts([
+                { id: "a", count: 0, muted: false },
+                { id: "b", count: 12, muted: true },
+            ]),
+        ).toEqual({ count: 12, muted: true });
+    });
+
+    it("is empty without unread messages", () => {
+        expect(summarizeUnreadCounts([])).toEqual({ count: 0, muted: true });
     });
 });

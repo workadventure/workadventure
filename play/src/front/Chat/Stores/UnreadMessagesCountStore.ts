@@ -2,7 +2,12 @@ import { derived, readable, type Readable } from "svelte/store";
 import { gameManager } from "../../Phaser/Game/GameManager";
 import { hasChatRoomNotificationControl, type ChatConversation } from "../Connection/ChatConnection";
 import { ProximityChatRoom } from "../Connection/Proximity/ProximityChatRoom";
-import { countUnreadElsewhere, type UnreadConversationCount } from "../Components/unreadCount";
+import {
+    countUnreadElsewhere,
+    summarizeUnreadCounts,
+    type UnreadConversationCount,
+    type UnreadSummary,
+} from "../Components/unreadCount";
 
 // The action bar shows with the map, which does not wait for the chat connection: until it exists, it has no
 // unread message. Once it does, follow its unread counters in real time.
@@ -58,5 +63,22 @@ export function createUnreadElsewhereStore(
     return derived(
         [matrixUnreadMessagesCountStore, proximityCounts, unreadCountOf(openRoom)],
         ([matrixTotal, proximity, open]) => countUnreadElsewhere(matrixTotal, proximity, open),
+    );
+}
+
+/** Unread summary of a list of conversations, for the header of a collapsed section. */
+export function createUnreadSummaryStore(
+    conversations: Readable<readonly ChatConversation[]>,
+): Readable<UnreadSummary> {
+    return derived(
+        conversations,
+        (list, set) => {
+            if (list.length === 0) {
+                set(summarizeUnreadCounts([]));
+                return;
+            }
+            return derived(list.map(unreadCountOf), summarizeUnreadCounts).subscribe(set);
+        },
+        summarizeUnreadCounts([]),
     );
 }
