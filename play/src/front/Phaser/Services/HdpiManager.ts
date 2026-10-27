@@ -8,6 +8,7 @@ export class HdpiManager {
     private _maxZoomOut = 1;
     private _optimalZoomLevel = 1;
     private _maxZoomInReached = false;
+    private _mapSize: Size | undefined;
 
     /**
      *
@@ -41,6 +42,14 @@ export class HdpiManager {
         }
 
         this._optimalZoomLevel = this.getOptimalZoomLevel(realPixelNumber);
+        if (this._mapSize) {
+            // Zoom out down to the default zoom, or further if needed to see the whole map, but not beyond.
+            this._maxZoomOut = Math.min(
+                this._optimalZoomLevel,
+                realPixelScreenSize.width / this._mapSize.width,
+                realPixelScreenSize.height / this._mapSize.height,
+            );
+        }
 
         // Has the canvas more pixels than the screen? This is forbidden
         if (this.isMaximumZoomReached) {
@@ -115,8 +124,9 @@ export class HdpiManager {
         this._zoomModifier = zoomModifier;
     }
 
-    public set maxZoomOut(maxZoomOut: number) {
-        this._maxZoomOut = maxZoomOut;
+    /** The map size in game pixels. Once set, it decides how far the user can zoom out (see getOptimalGameSize). */
+    public set mapSize(mapSize: Size) {
+        this._mapSize = mapSize;
     }
 
     public get maxZoomOut(): number {

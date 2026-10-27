@@ -54,4 +54,22 @@ describe("Test HdpiManager", () => {
         expect(result.game.height).toBeLessThanOrEqual(screen.height * 1.1);
         expect(hdpiManager.zoomModifier).toEqual(2 / 3);
     });
+
+    it("stops zooming out once the whole map is visible, or at the default zoom for a small map", () => {
+        const hdpiManager = new HdpiManager(640 * 480, 64 * 64);
+        const screen = { width: 2560, height: 1536 }; // Optimal zoom level 3.
+
+        hdpiManager.mapSize = { width: 4000, height: 1000 };
+        hdpiManager.zoomModifier = 1 / 100;
+        const result = hdpiManager.getOptimalGameSize(screen);
+        // The map's width fills the screen; its height leaves room.
+        expect(result.game.width).toEqual(4000);
+        expect(result.game.height).toBeGreaterThan(1000);
+        expect(hdpiManager.zoomModifier).toBeCloseTo(2560 / 4000 / 3);
+
+        hdpiManager.mapSize = { width: 320, height: 320 };
+        hdpiManager.zoomModifier = 1 / 100;
+        hdpiManager.getOptimalGameSize(screen);
+        expect(hdpiManager.zoomModifier).toEqual(1);
+    });
 });

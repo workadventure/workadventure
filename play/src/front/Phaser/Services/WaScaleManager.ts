@@ -188,13 +188,10 @@ export class WaScaleManager {
         return this.actualZoom > 1 ? 1 : 1.2;
     }
 
-    public set maxZoomOut(maxZoomOut: number) {
-        this.hdpiManager.maxZoomOut = maxZoomOut;
+    /** Zooming out stops at the default zoom, or once the whole map is visible if that comes later. */
+    public set mapSize(mapSize: { width: number; height: number }) {
+        this.hdpiManager.mapSize = mapSize;
     }
-    public get maxZoomOut(): number {
-        return this.hdpiManager.maxZoomOut;
-    }
-
     public get isMaximumZoomOutReached(): boolean {
         return this.hdpiManager.isMaximumZoomReached;
     }
