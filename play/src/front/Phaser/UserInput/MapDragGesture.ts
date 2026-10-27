@@ -1,10 +1,16 @@
-/** How far, in screen pixels, a pointer must move before a press becomes a map drag rather than a click. */
-export const MAP_DRAG_THRESHOLD = 6;
+/**
+ * How far, in game pixels, a pointer must move before a press becomes a map drag rather than a click or tap.
+ * A finger jitters more than a mouse (Android uses 8 dp for the same purpose, iOS about 10 pt).
+ */
+export function mapDragThreshold(pointer: { wasTouch?: boolean }): number {
+    return pointer.wasTouch ? 10 : 6;
+}
 
 interface DragPointer {
     id: number;
     x: number;
     y: number;
+    wasTouch?: boolean;
 }
 
 /** Distinguishes a map drag from a click without tying the gesture to camera or player state. */
@@ -13,10 +19,12 @@ export class MapDragGesture {
     private previous?: DragPointer;
     private dragging = false;
     private cancelled = false;
+    private threshold = 0;
 
     public begin(pointer: DragPointer): void {
         // Phaser exposes x/y as prototype getters, so spreading the pointer loses its coordinates.
         this.origin = { id: pointer.id, x: pointer.x, y: pointer.y };
+        this.threshold = mapDragThreshold(pointer);
         this.previous = { ...this.origin };
         this.dragging = false;
         this.cancelled = false;
@@ -26,7 +34,7 @@ export class MapDragGesture {
         if (!this.origin || !this.previous || pointer.id !== this.origin.id) {
             return;
         }
-        if (!this.dragging && Math.hypot(pointer.x - this.origin.x, pointer.y - this.origin.y) < MAP_DRAG_THRESHOLD) {
+        if (!this.dragging && Math.hypot(pointer.x - this.origin.x, pointer.y - this.origin.y) < this.threshold) {
             return;
         }
         this.dragging = true;

@@ -29,6 +29,19 @@ describe("MapDragGesture", () => {
         expect(gesture.end(0)).toBe(false);
     });
 
+    it("lets a finger move further than a mouse before a tap becomes a drag", () => {
+        const mouse = new MapDragGesture();
+        mouse.begin({ id: 0, x: 100, y: 100 });
+        expect(mouse.move({ id: 0, x: 108, y: 100 })).toEqual({ x: -8, y: 0 });
+
+        const finger = new MapDragGesture();
+        finger.begin({ id: 1, x: 100, y: 100, wasTouch: true });
+        expect(finger.move({ id: 1, x: 108, y: 100, wasTouch: true })).toBeUndefined();
+        expect(finger.end(1)).toBe(false);
+        finger.begin({ id: 1, x: 100, y: 100, wasTouch: true });
+        expect(finger.move({ id: 1, x: 112, y: 100, wasTouch: true })).toEqual({ x: -12, y: 0 });
+    });
+
     it("pans opposite the pointer and consumes release even when returning to the origin", () => {
         const gesture = new MapDragGesture();
         gesture.begin({ id: 0, x: 100, y: 100 });

@@ -12,7 +12,7 @@ export default {
         title: "Move around",
         descriptionDesktop:
             "Use your keyboard arrow keys or WASD to move your character around the map. You can also right-click to move. Try moving now!",
-        descriptionMobile: "Use the joystick or tap on the map to move your character. Try moving now!",
+        descriptionTouch: "Tap on the map to walk there, and drag to look around. Try moving now!",
         next: "Next",
     },
     communication: {
