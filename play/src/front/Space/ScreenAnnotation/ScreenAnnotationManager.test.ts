@@ -9,6 +9,7 @@ import type { Streamable } from "../Streamable";
 import {
     localAnnotationTargetStore,
     screenAnnotationElementsStore,
+    screenAnnotationFinishedCountStore,
     screenAnnotationEnabledStore,
 } from "../../Stores/ScreenAnnotationStore";
 
@@ -127,10 +128,13 @@ describe("ScreenAnnotationManager", () => {
         sendDraft("viewer", element("v", "viewer"));
         expect(elementIds()).toEqual(["v"]);
         expect(get(screenAnnotationElementsStore).get(PRESENTER)?.[0].authorUserId).toBe("viewer");
+        // Shown, but not saved yet: a draft is not counted as a finished element.
+        expect(get(screenAnnotationFinishedCountStore).get(PRESENTER)).toBe(0);
 
         // Finished: the state element replaces the draft, which does not come back once erased.
         setState(true, element("v", "viewer"));
         expect(elementIds()).toEqual(["v"]);
+        expect(get(screenAnnotationFinishedCountStore).get(PRESENTER)).toBe(1);
         setState(true);
         expect(elementIds()).toEqual([]);
     });

@@ -20,6 +20,8 @@ export function isAnnotationTool(tool: string): tool is AnnotationTool {
 
 // Per target screen share: the ordered list of drawable elements (finished ones, then the others' drafts).
 export const screenAnnotationElementsStore = writable<Map<string, ScreenAnnotationElement[]>>(new Map());
+// Per target screen share: how many of those elements are finished (saved in the space), drafts aside.
+export const screenAnnotationFinishedCountStore = writable<Map<string, number>>(new Map());
 
 // Per target screen share: whether the presenter currently allows other users to annotate.
 export const screenAnnotationEnabledStore = writable<Map<string, boolean>>(new Map());
@@ -42,6 +44,7 @@ export const ANNOTATION_COLORS = ["#ff3b30", "#ffcc00", "#34c759", "#0a84ff", "#
 /** Reset every annotation state (called when the proximity space is destroyed). */
 export function resetAllAnnotations(): void {
     screenAnnotationElementsStore.set(new Map());
+    screenAnnotationFinishedCountStore.set(new Map());
     screenAnnotationEnabledStore.set(new Map());
     localAnnotationTargetStore.set(undefined);
     screenAnnotationLocallyHiddenStore.set(false);

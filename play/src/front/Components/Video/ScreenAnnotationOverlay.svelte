@@ -8,6 +8,7 @@
         currentAnnotationWidthStore,
         localAnnotationTargetStore,
         screenAnnotationElementsStore,
+        screenAnnotationFinishedCountStore,
         screenAnnotationLocallyHiddenStore,
     } from "../../Stores/ScreenAnnotationStore";
     import { clamp01, drawElement, hitTest } from "./annotationRender";
@@ -283,7 +284,7 @@
     bind:clientWidth
     bind:clientHeight
     data-testid="annotation-canvas"
-    data-element-count={elements.length}
+    data-element-count={$screenAnnotationFinishedCountStore.get(targetUserId) ?? 0}
     class="absolute inset-0 h-full w-full"
     class:cursor-crosshair={inputEnabled}
     style={`touch-action: none; pointer-events: ${inputEnabled ? "auto" : "none"};`}

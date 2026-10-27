@@ -10,6 +10,7 @@ import {
     resetAllAnnotations,
     screenAnnotationElementsStore,
     screenAnnotationEnabledStore,
+    screenAnnotationFinishedCountStore,
 } from "../../Stores/ScreenAnnotationStore";
 import type { SpaceInterface } from "../SpaceInterface";
 
@@ -216,9 +217,11 @@ class ScreenAnnotationManager {
 
     private publish(): void {
         const elements = new Map<string, ScreenAnnotationElement[]>();
+        const finishedCounts = new Map<string, number>();
         const enabled = new Map<string, boolean>();
         for (const [target, annotations] of Object.entries(this.annotations)) {
             elements.set(target, Object.values(annotations.elements));
+            finishedCounts.set(target, Object.keys(annotations.elements).length);
             enabled.set(target, annotations.othersAllowed);
         }
         for (const [target, drafts] of this.drafts) {
@@ -233,6 +236,7 @@ class ScreenAnnotationManager {
             }
         }
         screenAnnotationElementsStore.set(elements);
+        screenAnnotationFinishedCountStore.set(finishedCounts);
         screenAnnotationEnabledStore.set(enabled);
         this.exitDrawingModeIfNotDrawable();
     }
