@@ -1,5 +1,6 @@
 import { Marked } from "marked";
-import { MsgType } from "matrix-js-sdk";
+// Not "matrix-js-sdk": the proximity chat imports this module, and the SDK must stay out of the startup chunk.
+import { MsgType } from "matrix-js-sdk/lib/@types/event";
 import type { RoomMessageEventContent } from "matrix-js-sdk/lib/@types/events";
 import type { PictureStore } from "../Stores/PictureStore";
 
