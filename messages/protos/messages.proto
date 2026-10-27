@@ -1463,6 +1463,7 @@ message SpaceEvent {
     SpaceIsTyping spaceIsTyping = 2;
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
+    SpaceMessageReaction spaceMessageReaction = 5;
   }
 }
 
@@ -1523,6 +1524,24 @@ message SpaceMessage {
   string message = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+  // Id picked by the sender and kept by every receiver, so that a reply or a reaction can point at this message.
+  optional string id = 4;
+  // Set when this message replies to another message of the same space.
+  optional SpaceMessageQuote quote = 5;
+}
+
+// The message a SpaceMessage replies to. The excerpt is shown when the receiver does not have the quoted message (it joined the bubble later).
+message SpaceMessageQuote {
+  string messageId = 1;
+  string excerpt = 2;
+  optional string senderName = 3;
+}
+
+// A user adds (added = true) or removes their reaction to the SpaceMessage whose id is messageId.
+message SpaceMessageReaction {
+  string messageId = 1;
+  string reaction = 2;
+  bool added = 3;
 }
 
 message SpaceIsTyping {

@@ -240,7 +240,7 @@
                     reactions={$reactionsWithUsers}
                 />
             {/if}
-            {#if !isQuotedMessage && !$isDeleted && message.type !== "proximity" && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+            {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
                 <div
                     class="options -top-2 absolute z-50 rounded p-1 {!isMyMessage
                         ? 'right-2 bg-contrast/80'

@@ -4,7 +4,8 @@
     interface Props {
         // A valid Matrix reaction key is either a Unicode emoji or an mxc URI pointing to an image, or even some text.
         key: string;
-        matrixClient: MatrixClient;
+        // Absent outside Matrix rooms (bubble chat): an mxc key then stays as text.
+        matrixClient?: MatrixClient;
     }
 
     let { key = $bindable(), matrixClient }: Props = $props();
@@ -12,7 +13,7 @@
     let imageUrl: string | null = $state(null);
 
     $effect(() => {
-        if (key.startsWith("mxc://")) {
+        if (matrixClient && key.startsWith("mxc://")) {
             imageUrl = matrixClient.mxcUrlToHttp(key, 40, 40);
         }
     });
