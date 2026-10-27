@@ -116,6 +116,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         retry: "Hyšći wopytaś",
         newMessages: "Nowe powěsći: {count}",
         jumpToLatest: "K nejnowšym powěsćam",
+        unreadDivider: "Nowe powěsći",
     },
     form: {
         placeholder: "Napiš powěsć...",

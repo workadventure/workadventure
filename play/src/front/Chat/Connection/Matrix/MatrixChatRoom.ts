@@ -49,6 +49,7 @@ import Debug from "debug";
 import pLimit from "p-limit";
 import type {
     ChatPollItem,
+    ChatReadMarker,
     ChatRoom,
     ChatRoomInitializationState,
     ChatRoomSidePanelHydrationState,
@@ -1707,6 +1708,17 @@ export class MatrixChatRoom
             }
         }
         return;
+    }
+
+    getReadMarker(): ChatReadMarker | undefined {
+        const userId = this.matrixRoom.client.getUserId();
+        if (!userId) return undefined;
+        // The read receipt rather than m.fully_read: WorkAdventure only ever sends receipts (see
+        // setTimelineAsRead), so m.fully_read is missing or stale. Synthesized receipts are local echoes
+        // of our own sends, not reading.
+        const receipt = this.matrixRoom.getReadReceiptForUserId(userId, true);
+        if (!receipt || receipt.eventId === this.matrixRoom.getLastLiveEvent()?.getId()) return undefined;
+        return { eventId: receipt.eventId, timestamp: receipt.data.ts };
     }
 
     setTimelineAsRead() {

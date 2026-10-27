@@ -152,7 +152,19 @@ export interface ChatConversation {
     readonly lastMessageTimestamp: number;
     readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
     readonly ensureTimelineEventVisible?: (eventId: string) => Promise<boolean>;
+    /**
+     * Where the user stopped reading, or undefined when nothing is unread or the backend has no read
+     * marker (proximity rooms). Must be read before setTimelineAsRead(), which moves it to the end.
+     */
+    readonly getReadMarker?: () => ChatReadMarker | undefined;
 }
+
+export type ChatReadMarker = {
+    /** Last event the user has read. It may be an event the timeline does not display (reaction, join…). */
+    eventId: string;
+    /** When the user read it: every message sent later is unread. Used when eventId is not displayed. */
+    timestamp?: number;
+};
 
 export interface ChatRoom extends ChatConversation {
     readonly conversationKind: "room";
