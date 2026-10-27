@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { WalkDestinationMarker } from "../../../../src/front/Phaser/Components/WalkDestinationMarker";
 import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
 
-function setup() {
+function setup(zoom = 2, displayScale = 0.5) {
     const graphics = () => {
         const g: Record<string, unknown> = {};
         for (const method of ["lineStyle", "strokeEllipse", "fillStyle", "fillEllipse"]) g[method] = () => g;
@@ -26,8 +26,8 @@ function setup() {
         add: { graphics, container: () => container },
         tweens: { add: () => ripple },
         events: new Phaser.Events.EventEmitter(),
-        cameras: { main: { zoom: 2 } },
-        scale: { displayScale: { x: 0.5 } },
+        cameras: { main: { zoom } },
+        scale: { displayScale: { x: displayScale } },
         markDirty,
     } as unknown as GameScene;
     return { marker: new WalkDestinationMarker(scene), container, ripple, scene, markDirty };
@@ -53,12 +53,18 @@ describe("walk destination marker", () => {
         expect(ripple.pause).toHaveBeenCalled();
     });
 
-    it("keeps the same size on screen at every zoom", () => {
-        const { marker, container, scene, markDirty } = setup();
-        marker.show({ x: 0, y: 0 });
-        scene.events.emit(Phaser.Scenes.Events.UPDATE);
-        // 0.5 game pixel per CSS pixel, zoomed x2: one CSS pixel is a quarter of a world pixel.
-        expect(container.scale).toBe(0.25);
-        expect(markDirty).toHaveBeenCalled();
+    it("keeps its size on screen when zoomed out, but never gets narrower than a 32 px map object", () => {
+        // Zoomed out: 2 game pixels per CSS pixel at camera zoom 0.5, so a CSS pixel covers 4 map pixels.
+        const zoomedOut = setup(0.5, 2);
+        zoomedOut.marker.show({ x: 0, y: 0 });
+        zoomedOut.scene.events.emit(Phaser.Scenes.Events.UPDATE);
+        expect(zoomedOut.container.scale).toBe(4);
+        expect(zoomedOut.markDirty).toHaveBeenCalled();
+
+        // Zoomed in: a CSS pixel covers a quarter of a map pixel, so 36 CSS pixels would be 9 map pixels.
+        const zoomedIn = setup(2, 0.5);
+        zoomedIn.marker.show({ x: 0, y: 0 });
+        zoomedIn.scene.events.emit(Phaser.Scenes.Events.UPDATE);
+        expect(zoomedIn.container.scale * 36).toBeCloseTo(32);
     });
 });

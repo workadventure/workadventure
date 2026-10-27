@@ -3,8 +3,10 @@ import type { GameScene } from "../Game/GameScene";
 
 const COLOR = 0x3d5afe;
 const OUTLINE = 0xffffff;
-/** Ring width on screen, in CSS pixels. The marker keeps that size at every zoom, like a pin in a map app. */
+/** Ring width on screen, in CSS pixels: zoomed out, the marker keeps that size so it stays visible. */
 const RING_WIDTH = 36;
+/** Zoomed in, the ring never gets narrower than a 32 px map object (one tile). */
+const MIN_RING_WIDTH_IN_MAP_PIXELS = 32;
 
 /**
  * Ripples on the floor where the local player's avatar is walking to. Other players don't see it.
@@ -76,8 +78,9 @@ export class WalkDestinationMarker {
     }
 
     private readonly onUpdate = (): void => {
-        // World pixels per CSS pixel on screen, so the marker keeps its on-screen size at every zoom.
-        this.container.setScale(this.scene.scale.displayScale.x / this.scene.cameras.main.zoom);
+        // Map pixels per CSS pixel on screen: scaling by it keeps the marker's size on screen.
+        const mapPixelsPerCssPixel = this.scene.scale.displayScale.x / this.scene.cameras.main.zoom;
+        this.container.setScale(Math.max(mapPixelsPerCssPixel, MIN_RING_WIDTH_IN_MAP_PIXELS / RING_WIDTH));
         // The scene only redraws when something marks it dirty, and the rings move every frame.
         this.scene.markDirty();
     };
