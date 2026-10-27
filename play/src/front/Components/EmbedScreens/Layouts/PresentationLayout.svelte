@@ -26,10 +26,9 @@
     let containerHeight = $state(0);
     let layoutElement: HTMLDivElement | undefined = $state();
 
-    // Re-observed when entering or leaving picture-in-picture: the layout then moves to another window.
+    // In picture-in-picture the layout lives in another window, where bind:clientWidth no longer reports.
     $effect(() => {
-        const _exhaustiveCheck = inPictureInPicture;
-        if (!layoutElement) return;
+        if (!inPictureInPicture || !layoutElement) return;
         return observeElementSize(layoutElement, (width, height) => {
             containerWidth = width;
             containerHeight = height;
@@ -139,6 +138,8 @@
         style={inPictureInPicture && pictureInPictureHighlightedScreen != undefined
             ? "height: calc(100vh - 80px);"
             : ""}
+        bind:clientWidth={containerWidth}
+        bind:clientHeight={containerHeight}
         bind:this={layoutElement}
     >
         {#if $streamableCollectionStore.size > 0}
