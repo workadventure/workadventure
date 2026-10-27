@@ -32,7 +32,12 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     Object.defineProperty(camera, "scaleManager", { value: { zoom: 1, width: 800, height: 600 } });
     Object.defineProperty(camera, "sceneManager", { value: { customViewports: 0 } });
     camera.setZoom(zoom);
-    const player = { x: 1200, y: 1000 };
+    const player = {
+        x: 1200,
+        y: 1000,
+        destination: undefined as { x: number; y: number } | undefined,
+        getCurrentPathDestinationPoint: () => player.destination,
+    };
     const sendViewportToServer = vi.fn();
     type TweenConfig = {
         duration: number;
@@ -70,9 +75,10 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
         tweens: { addCounter },
     } as unknown as GameScene;
     let modifier = zoom;
-    const limits = { minZoomReached: false };
+    const limits = { minZoomReached: false, focusTarget: undefined as { x: number; y: number } | undefined };
     const scale = {
         getTargetZoomModifierFor: () => 1,
+        getFocusTarget: () => limits.focusTarget,
         get zoomModifier() {
             return modifier;
         },
@@ -93,6 +99,62 @@ function setup(zoom = 1, animate = false, resizeAtEnd = false) {
     camera.preRender();
     return { camera, manager, player, scene, sendViewportToServer, advanceTween, addCounter, limits };
 }
+
+describe("walk zoom", () => {
+    const frames = (scene: GameScene, count: number) => {
+        for (let frame = 0; frame < count; frame++) scene.events.emit(Phaser.Scenes.Events.UPDATE, 0, 16);
+    };
+
+    it("zooms out just enough to keep the destination in view, at most 2.5x, then back in", () => {
+        const { camera, manager, player, scene, advanceTween } = setup(1, true);
+        const walk = manager.startWalkZoom();
+        player.destination = { x: player.x + 600, y: player.y };
+        frames(scene, 200);
+        // At zoom 1 the edge is 400 map pixels from the avatar; the destination needs 600 plus the 64 px margin.
+        expect(camera.zoom).toBeCloseTo(400 / 664, 2);
+
+        player.destination = { x: player.x + 5000, y: player.y };
+        frames(scene, 200);
+        expect(camera.zoom).toBeCloseTo(1 / 2.5, 2);
+
+        // The avatar gets closer: back in, but never past the zoom the walk started from.
+        player.destination = { x: player.x + 100, y: player.y };
+        frames(scene, 200);
+        expect(camera.zoom).toBeCloseTo(1, 2);
+
+        manager.endWalkZoom(walk);
+        advanceTween(1);
+        expect(camera.zoom).toBe(1);
+    });
+
+    it("keeps the first walk's zoom across taps, lets the user take over, and leaves a held camera alone", () => {
+        const { camera, manager, player, scene, limits } = setup(1, true);
+        const first = manager.startWalkZoom();
+        player.destination = { x: player.x + 600, y: player.y };
+        frames(scene, 200);
+
+        // A new tap while zoomed out: it still comes back to the zoom the first walk started from.
+        const second = manager.startWalkZoom();
+        manager.endWalkZoom(first);
+        player.destination = { x: player.x + 100, y: player.y };
+        frames(scene, 200);
+        expect(camera.zoom).toBeCloseTo(1, 2);
+
+        // Dragging the map takes over: the zoom stays where it is, even when the walk ends.
+        player.destination = { x: player.x + 600, y: player.y };
+        frames(scene, 20);
+        const whenDragged = camera.zoom;
+        expect(whenDragged).toBeLessThan(1);
+        manager.startManualPan();
+        frames(scene, 100);
+        manager.endWalkZoom(second);
+        expect(camera.zoom).toBe(whenDragged);
+
+        // A focus zone (or a script) holds the camera: no walk zoom.
+        limits.focusTarget = { x: 0, y: 0 };
+        expect(manager.startWalkZoom()).toBeUndefined();
+    });
+});
 
 describe("manual camera pan", () => {
     it.each([false, true])(
@@ -345,7 +407,7 @@ describe("manual camera pan", () => {
         camera.preRender();
         expect(camera.worldView.x).toBeCloseTo(before.x - 80 / zoom);
         expect(camera.worldView.y).toBeCloseTo(before.y + 40 / zoom);
-        expect(player).toEqual({ x: 1200, y: 1000 });
+        expect({ x: player.x, y: player.y }).toEqual({ x: 1200, y: 1000 });
         expect(get(cameraDetachedStore)).toBe(true);
         expect(sendViewportToServer).toHaveBeenCalled();
     });
