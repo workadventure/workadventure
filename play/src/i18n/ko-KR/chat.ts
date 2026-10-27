@@ -73,6 +73,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRoomsError: "대화 불러오기 오류, 클릭해서 다시 시도",
     availableRooms: "참여 가능한 대화",
     proximity: "근접 채팅",
+    enteredZone: {
+        title: "{zoneName}에 들어왔습니다",
+        open: "채팅 열기",
+        dismiss: "숨기기",
+    },
     role: {
         adminShort: "관리자",
         admin: "관리자",

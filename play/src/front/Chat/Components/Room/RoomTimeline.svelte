@@ -29,6 +29,7 @@
     import PollCard from "./PollCard.svelte";
     import QuestionCard from "./QuestionCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
+    import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
     import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
 
@@ -638,6 +639,7 @@
                     <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
                 {/if}
             </div>
+            <EnteredZoneBanner {room} />
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">
                     <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />

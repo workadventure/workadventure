@@ -195,7 +195,10 @@ export class AreasPropertiesListener {
     }
 
     public onEnterAreasHandler(areasData: AreaData[], areas?: Area[]): void {
-        for (const areaData of areasData) {
+        // Largest first: when nested zones are entered in the same frame (spawn, teleport), the innermost one is
+        // entered last, as when walking in. The chat relies on it to find the deepest zone (sortRoomsByZoneDepth).
+        const areasFromOutermost = [...areasData].sort((a, b) => b.width * b.height - a.width * a.height);
+        for (const areaData of areasFromOutermost) {
             if (!areaData.properties) {
                 continue;
             }

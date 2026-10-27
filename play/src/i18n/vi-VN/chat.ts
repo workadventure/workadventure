@@ -73,6 +73,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRoomsError: "Lỗi khi tải các cuộc thảo luận, bấm để thử lại",
     availableRooms: "Cuộc thảo luận khả dụng",
     proximity: "Trò chuyện lân cận",
+    enteredZone: {
+        title: "Bạn đã vào {zoneName}",
+        open: "Mở trò chuyện",
+        dismiss: "Ẩn",
+    },
     role: {
         adminShort: "Admin",
         admin: "Quản trị viên",

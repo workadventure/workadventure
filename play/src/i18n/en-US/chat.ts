@@ -72,6 +72,11 @@ const chat: BaseTranslation = {
     joinableRoomsError: "Error loading discussions click to retry",
     availableRooms: "Available discussions", // used in the search bar for results
     proximity: "Proximity Chat",
+    enteredZone: {
+        title: "You entered {zoneName: string}",
+        open: "Open its chat",
+        dismiss: "Dismiss",
+    },
     role: {
         adminShort: "Admin",
         admin: "Administrator",
