@@ -541,6 +541,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "聊天無法使用",
+    connectionErrorDescription: "地圖、視訊和音訊仍可正常使用。",
+    connectionErrorRetry: "重試",
+    connectionErrorReload: "重新載入頁面",
+    searchNoResult: "沒有符合「{search}」的對話",
     unknownError: "未知錯誤",
     matrixUserSelect: {
         userNotFound: "找不到使用者",

@@ -547,6 +547,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "チャットは利用できません",
+    connectionErrorDescription: "マップ、ビデオ、音声は引き続き使えます。",
+    connectionErrorRetry: "再試行",
+    connectionErrorReload: "ページを再読み込み",
+    searchNoResult: "「{search}」に一致する会話はありません",
     unknownError: "不明なエラー",
     matrixUserSelect: {
         userNotFound: "ユーザーが見つかりません",

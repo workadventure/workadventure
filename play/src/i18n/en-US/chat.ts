@@ -545,6 +545,10 @@ const chat: BaseTranslation = {
         },
     },
     connectionError: "Chat not available",
+    connectionErrorDescription: "The map, video and audio keep working.",
+    connectionErrorRetry: "Retry",
+    connectionErrorReload: "Reload the page",
+    searchNoResult: "No conversation matches “{search}”",
     unknownError: "Unknown error",
     matrixUserSelect: {
         userNotFound: "User not found",

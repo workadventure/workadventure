@@ -546,6 +546,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "채팅을 사용할 수 없습니다",
+    connectionErrorDescription: "맵, 비디오, 오디오는 계속 사용할 수 있습니다.",
+    connectionErrorRetry: "다시 시도",
+    connectionErrorReload: "페이지 새로고침",
+    searchNoResult: "“{search}”와(과) 일치하는 대화가 없습니다",
     unknownError: "알 수 없는 오류",
     matrixUserSelect: {
         userNotFound: "사용자를 찾을 수 없습니다",

@@ -544,6 +544,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "الدردشة غير متاحة",
+    connectionErrorDescription: "لا تزال الخريطة والفيديو والصوت تعمل.",
+    connectionErrorRetry: "إعادة المحاولة",
+    connectionErrorReload: "إعادة تحميل الصفحة",
+    searchNoResult: "لا توجد محادثة تطابق «{search}»",
     unknownError: "خطأ غير معروف",
     matrixUserSelect: {
         userNotFound: "المستخدم غير موجود",

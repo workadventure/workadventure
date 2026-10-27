@@ -546,6 +546,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat njestej k dispoziciji",
+    connectionErrorDescription: "Karta, widejo a awdio dale funguja.",
+    connectionErrorRetry: "Hišće raz spytać",
+    connectionErrorReload: "Stronu znowa začitać",
+    searchNoResult: "Žana rozmołwa njewotpowěduje „{search}“",
     unknownError: "Njeznaty zmylk",
     matrixUserSelect: {
         userNotFound: "Wužiwar namakany njeje",

@@ -545,6 +545,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Trò chuyện không khả dụng",
+    connectionErrorDescription: "Bản đồ, video và âm thanh vẫn hoạt động.",
+    connectionErrorRetry: "Thử lại",
+    connectionErrorReload: "Tải lại trang",
+    searchNoResult: "Không có cuộc trò chuyện nào khớp với “{search}”",
     unknownError: "Lỗi không xác định",
     matrixUserSelect: {
         userNotFound: "Không tìm thấy người dùng",

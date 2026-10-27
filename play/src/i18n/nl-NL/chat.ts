@@ -546,6 +546,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Chat niet beschikbaar",
+    connectionErrorDescription: "De kaart, video en audio blijven werken.",
+    connectionErrorRetry: "Opnieuw proberen",
+    connectionErrorReload: "Pagina herladen",
+    searchNoResult: "Geen gesprek komt overeen met ‘{search}’",
     unknownError: "Onbekende fout",
     matrixUserSelect: {
         userNotFound: "Gebruiker niet gevonden",
