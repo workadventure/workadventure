@@ -16,7 +16,16 @@
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
 
-    function togglePicker() {
+    function togglePicker(event: MouseEvent) {
+        // A click from Enter or Space has no pointer position: the picker then takes the focus, and gives it back.
+        const fromKeyboard = event.detail === 0;
+        const close = () => {
+            closeEmojiPicker?.();
+            closeEmojiPicker = undefined;
+            if (fromKeyboard) {
+                trigger.focus();
+            }
+        };
         if (closeEmojiPicker) {
             closeEmojiPicker();
             closeEmojiPicker = undefined;
@@ -27,13 +36,10 @@
                 {
                     onEmojiClick: (event: EmojiClickEvent) => {
                         onchange?.(event.detail.unicode ?? "");
-                        closeEmojiPicker?.();
-                        closeEmojiPicker = undefined;
+                        close();
                     },
-                    onClose: () => {
-                        closeEmojiPicker?.();
-                        closeEmojiPicker = undefined;
-                    },
+                    onClose: close,
+                    keyboardNavigation: fromKeyboard,
                 },
                 {
                     placement: "top-end",
@@ -47,7 +53,7 @@
 
 <button
     data-testid="openEmojiPickerButton"
-    class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all flex"
+    class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all flex"
     aria-label={$LL.chat.react()}
     title={$LL.chat.react()}
     bind:this={trigger}

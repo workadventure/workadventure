@@ -54,10 +54,39 @@ test.describe("Matrix chat message actions @oidc @matrix @nowebkit", () => {
         }).toPass({ timeout: 15000 });
         await expect(options).toHaveCSS("opacity", "1");
         await expect(reply).toHaveAttribute("aria-label", "Reply");
-        await expect(options.getByTestId("openEmojiPickerButton")).toHaveAttribute("aria-label", "React");
+        const react = options.getByTestId("openEmojiPickerButton");
+        await expect(react).toHaveAttribute("aria-label", "React");
         await expect(options.getByTestId("editMessageButton")).toHaveAttribute("aria-label", "Edit");
         await expect(options.getByTestId("removeMessageButton")).toHaveAttribute("aria-label", "Delete");
+        // The focused action is outlined (a ring, drawn as a box-shadow).
+        await expect(reply).not.toHaveCSS("box-shadow", "none");
+        await expect(react).toHaveCSS("box-shadow", "none");
 
+        // Tab walks through the actions of this message, in order.
+        const actions = await options.locator("a, button").all();
+        for (const action of actions.slice(1)) {
+            await page.keyboard.press("Tab");
+            await expect(action).toBeFocused();
+            await expect(action).not.toHaveCSS("box-shadow", "none");
+        }
+
+        // Escape leaves the actions for the message, Enter comes back to the first one.
+        const messageContainer = options.locator("xpath=ancestor::div[@id='message'][1]");
+        await page.keyboard.press("Escape");
+        await expect(messageContainer).toBeFocused();
+        await expect(options).toHaveCSS("opacity", "0");
+        await page.keyboard.press("Enter");
+        await expect(reply).toBeFocused();
+
+        // The emoji picker takes the focus, and gives it back to React when closed.
+        await react.focus();
+        await page.keyboard.press("Enter");
+        await expect(page.locator("emoji-picker #search")).toBeFocused();
+        await page.keyboard.press("Escape");
+        await expect(page.locator("emoji-picker")).toBeHidden();
+        await expect(react).toBeFocused();
+
+        await reply.focus();
         await page.keyboard.press("Enter");
         await expect(page.getByText("Reply to")).toBeVisible();
     });

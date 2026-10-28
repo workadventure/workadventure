@@ -143,16 +143,32 @@
         actionSheetOpen = true;
         return true;
     }
+
+    // Escape leaves the options for the message itself, which hides them; Enter on the message comes back to them.
+    function onMessageKeydown(event: KeyboardEvent) {
+        if (!(event.target instanceof HTMLElement)) {
+            return;
+        }
+        if (event.key === "Escape" && event.target.closest(".options")) {
+            event.stopPropagation();
+            messageRef?.focus();
+        } else if (event.key === "Enter" && event.target === messageRef) {
+            event.preventDefault();
+            messageRef.querySelector<HTMLElement>(".options a, .options button")?.focus();
+        }
+    }
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     id="message"
     tabindex="-1"
     class={`${isMyMessage && "self-end flex-row-reverse relative"} ${
         messageFromSystem && "justify-center"
-    } select-text block-user-action messageContainer items-center`}
+    } select-text block-user-action messageContainer items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70`}
     bind:this={messageRef}
     use:longPress={openActionSheet}
+    onkeydown={onMessageKeydown}
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
@@ -295,7 +311,7 @@
     }
 
     #message:hover .options,
-    #message:focus-within .options {
+    #message:focus-within:not(:focus) .options {
         display: flex;
         flex-direction: row;
         gap: 2px;
