@@ -249,7 +249,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             timeout: 20_000,
         });
 
-        // A starts megaphone again (and screen share if still needed)
+        // A starts megaphone again. A kept sharing their screen with B, who stands in their bubble.
         await Menu.clickSendGlobalMessage(pageMeetingA);
         await expect(pageMeetingA.getByRole("button", { name: "Start live message" })).toBeVisible();
         await pageMeetingA.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
@@ -257,7 +257,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await pageMeetingA.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
         await pageMeetingA.locator(".close-btn").first().click();
 
-        await pageMeetingA.getByTestId("screenShareButton").click();
         await Menu.expectButtonState(pageMeetingA, "screenShareButton", "active");
 
         await expect(pageOutsideC.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeVisible({
