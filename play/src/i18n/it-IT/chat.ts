@@ -21,6 +21,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     typing: "sta scrivendo...",
     users: "Utenti",
     chat: "Chat",
+    resizeChat: "Ridimensiona la chat (frecce per ridimensionare, Invio per lo schermo intero)",
     userList: {
         disconnected: "Non connesso al mondo",
         isHere: "È su questa mappa",

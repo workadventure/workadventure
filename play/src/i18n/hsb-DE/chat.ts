@@ -21,6 +21,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     typing: "tipuje...",
     users: "wužiwar",
     chat: "Chat",
+    resizeChat: "Wulkosć chata změnić (šipki za změnjenje, Enter za połnu wobrazowku)",
     userList: {
         disconnected: "Njepřipojeny k swětej",
         isHere: "Je na tutej karće",
