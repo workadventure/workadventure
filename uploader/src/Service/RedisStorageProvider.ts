@@ -1,4 +1,4 @@
-import {createClient} from "redis";
+import {createClient, RESP_TYPES} from "redis";
 import {REDIS_DB_NUMBER, REDIS_HOST, REDIS_PASSWORD, REDIS_PORT} from "../Enum/EnvironmentVariable";
 import type {StorageProvider} from "./StorageProvider";
 import type {TempStorageProvider} from "./TempStorageProvider";
@@ -36,13 +36,17 @@ export class RedisStorageProvider implements StorageProvider, TempStorageProvide
         await this.redisClient.del(fileId)
     }
 
-    get(fileId: string):Promise<string | null> {
-        return this.redisClient.get(fileId)
+    /**
+     * Files are binary: read them back as Buffers. A plain `get` decodes the stored bytes as UTF-8,
+     * which replaces every invalid sequence with U+FFFD and corrupts audio messages and uploads.
+     */
+    get(fileId: string):Promise<Buffer | null> {
+        return this.redisClient.withTypeMapping({[RESP_TYPES.BLOB_STRING]: Buffer}).get(fileId)
     }
 
     copyFile(fileId: string, target: TargetDevice): void {
-        this.get(fileId).then((buffer: string | null)=> {
-            target.copyFromBuffer(Buffer.from(buffer ?? ""))
+        this.get(fileId).then((buffer: Buffer | null)=> {
+            target.copyFromBuffer(buffer)
         }).catch((err: unknown) => console.error("Could not copy file from Redis", err))
     }
 }

@@ -1,6 +1,7 @@
 // import App from "../src/App";
 import type {ChildProcess} from "child_process"
 import axios from "axios";
+import FormData from "form-data";
 import type {StartedTestContainer} from "testcontainers";
 import {createClient} from "redis";
 import {describe, expect, vi, it, beforeAll, afterAll} from 'vitest';
@@ -149,5 +150,45 @@ describe("Redis Uploader tests", () => {
 
         const tempFileUrl = `${UPLOADER_URL}/download-audio-message/${data.id}`;
         expect(await download(tempFileUrl)).toEqual("temp file contents")
+    })
+
+    // Every byte value, so any text decoding on the way (UTF-8 turns invalid sequences into
+    // U+FFFD) shows up as a different length or content.
+    const BINARY_CONTENTS = Buffer.from(Array.from({length: 512}, (_, i) => i % 256));
+
+    async function uploadBinary<T>(url: string, name: string): Promise<T> {
+        const formData = new FormData();
+        formData.append("file", BINARY_CONTENTS, name);
+        const response = await axios.post<T>(url, formData.getBuffer(), {headers: formData.getHeaders()});
+        expect(response.status).toBe(200)
+        return response.data
+    }
+
+    async function downloadBinary(url: string): Promise<Buffer> {
+        const response = await axios.get<ArrayBuffer>(url, {responseType: "arraybuffer"})
+        return Buffer.from(response.data)
+    }
+
+    it("should return a binary audio message byte for byte", async ()=> {
+        const data = await uploadBinary<UploadedFileResponse>(`${UPLOADER_URL}/upload-audio-message`, "message.mp3");
+
+        const downloaded = await downloadBinary(`${UPLOADER_URL}/download-audio-message/${data.id}`)
+
+        expect(downloaded.length).toEqual(BINARY_CONTENTS.length)
+        expect(downloaded.equals(BINARY_CONTENTS)).toBe(true)
+    })
+
+    it("should return a binary uploaded file byte for byte", async ()=> {
+        const [data] = await uploadBinary<UploadedFileResponse[]>(`${UPLOADER_URL}/upload-file`, "image.png");
+
+        const downloaded = await downloadBinary(data.location)
+
+        expect(downloaded.equals(BINARY_CONTENTS)).toBe(true)
+    })
+
+    it("should answer 404 for an unknown or expired audio message", async ()=> {
+        const response = await axios.get(`${UPLOADER_URL}/download-audio-message/does-not-exist`, {validateStatus: () => true})
+
+        expect(response.status).toBe(404)
     })
 })
