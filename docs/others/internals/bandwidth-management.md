@@ -46,8 +46,8 @@ further here.
     - Location: [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) and
       [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts)
 - **Persistence**: values saved to `localStorage` via `LocalUserStore`
-- **When read**: at track publication (LiveKit) or peer creation and every encoding update (P2P). A change of setting
-  applies to the next stream, not to the running one.
+- **When read**: at track publication (LiveKit) or peer creation and every encoding update (P2P). A change of the
+  camera setting also republishes a LiveKit camera; a change of the screen share setting applies to the next share.
 
 ## Codec Selection
 
@@ -362,6 +362,12 @@ Screen share, recommended:
 These are caps (`maxBitrate`). The encoder uses less when the content allows it, and the browser's congestion control
 lowers the actual bitrate further when the network cannot carry it.
 
+### Capture resolution of cameras
+
+`videoConstraintStore` asks the camera for 1280 × 720, and for 640 × 360 on "low", which therefore never sends more
+than 360p, on either transport. These are `ideal` values cropped and scaled to 16:9 by the browser: a camera can still
+deliver another size (640 × 480 is seen in production), and every budget follows the size actually delivered.
+
 ### Capture resolution of screen shares
 
 Independently of the bitrate, `screenShareMaxResolution` caps the **captured** size of a screen share per quality
@@ -423,9 +429,15 @@ times.
   reports `qualityLimitationReason: "bandwidth"` while the network has room to spare. libwebrtc also pads an SVC stream
   up to 1.2 × that rate to probe for the top layer, so the one-layer budget saves no upload: a 720p camera capped at
   700 kbps sends about 1 Mbps either way, 450 kbps of it padding.
-- "low" keeps the one-layer budget. libwebrtc's minimum for each layer is above the low curve at every size, so a VP9
-  camera on "low" stays one layer down whatever its budget; fixing that means publishing it as a single layer or as VP8
-  simulcast.
+- A camera on "low" is captured at 360p (see Capture resolution of cameras) and published as a single VP9 layer
+  (`scalabilityMode: "L1T3"`) with the one-layer budget, about 140 kbps. libwebrtc's minimum for each SVC layer is
+  above the low curve at every size, so three layers would leave the top one off and pad the stream to about 360 kbps
+  at 360p, 1 Mbps at 720p. Viewers all receive that one stream; the server can still lower its frame rate. At
+  140 kbps libwebrtc sends it at 480 × 270: its minimum to start a single VP9 layer at 640 × 360 is 190 kbps
+  (`GetDefaultSinglecastBitrateLimits`), and it reports the lower size as `qualityLimitationReason: "bandwidth"`.
+- The budget, the codec and the layers are fixed at `publishTrack()`. When the quality setting or the captured size no
+  longer matches the publication, the camera is unpublished and published again (`cameraPublicationKey()`), instead of
+  swapping the new track into the old publication.
 - The camera declares VP8 as a backup codec (`backupCodecPolicy: SIMULCAST`): if a subscriber cannot decode VP9,
   LiveKit asks the publisher to also encode VP8, instead of downgrading everyone. When the primary codec is already
   VP8, LiveKit disables the backup itself.
@@ -447,8 +459,8 @@ times.
 - **Congestion control** still applies on top of every cap: the browser lowers the actual bitrate when the network
   cannot carry it, and libwebrtc lowers resolution or frame rate when the CPU cannot keep up (reported as
   `qualityLimitationReason` in the encoder stats and in the video quality analytics).
-- **Dynamic updates**: the quality setting is applied at publication time on LiveKit, and at every encoding update on
-  P2P. Live changes of the setting reach LiveKit tracks at their next publication.
+- **Dynamic updates**: on P2P the quality setting is applied at every encoding update. On LiveKit a change of the
+  camera setting publishes the camera again; a change of the screen share setting reaches it at its next publication.
 
 ## Future work
 

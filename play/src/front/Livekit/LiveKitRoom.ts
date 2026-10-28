@@ -81,6 +81,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
+    // See cameraPublicationKey()
+    private cameraPublishedWith: string | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     // Encoder health reports of the video tracks we publish (see subscribeToOutboundVideoQualityAnalytics)
     private cameraAnalyticsUnsubscribe: Unsubscriber | undefined;
@@ -264,16 +266,28 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         track: MediaStreamTrack,
         isScreenShare: boolean,
         codec: VideoCodec,
+        spatialLayers = 1,
     ): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
-        const quality = this.getQualitySetting(isScreenShare);
-        // livekit-client publishes a VP9 or AV1 camera as one L3T3_KEY stream (a screen share as L1T3, one layer).
-        // ponytail: "low" keeps a one-layer budget. libwebrtc's minimum for each layer is above the low curve at every
-        // size, so its top layer stays off either way; publishing "low" as one layer or as VP8 simulcast would fix it.
-        const spatialLayers = !isScreenShare && (codec === "vp9" || codec === "av1") && quality !== "low" ? 3 : 1;
-        return selectVideoPreset(height, width, isScreenShare, quality, codec, spatialLayers);
+        return selectVideoPreset(
+            height,
+            width,
+            isScreenShare,
+            this.getQualitySetting(isScreenShare),
+            codec,
+            spatialLayers,
+        );
+    }
+
+    /**
+     * What a camera publication is fixed to at publishTrack(): its codec, budget and layers follow the quality setting
+     * and the captured size. A publication made for other values is published anew rather than reused.
+     */
+    private cameraPublicationKey(track: MediaStreamTrack): string {
+        const { width, height } = track.getSettings();
+        return `${this.getQualitySetting(false)} ${width}x${height}`;
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
@@ -296,6 +310,18 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         if (!videoTrack) {
             await this.unpublishCameraTrack();
             return;
+        }
+
+        if (
+            this.localCameraTrack &&
+            this.isRoomConnected() &&
+            this.cameraPublishedWith !== this.cameraPublicationKey(videoTrack)
+        ) {
+            if (videoTrack.readyState === "ended") {
+                // The camera is reopening for the new setting (videoConstraintStore): its track comes next
+                return;
+            }
+            await this.dropCameraPublication();
         }
 
         // Are we trying to publish the same track again? It happens on every emission of the local stream
@@ -322,24 +348,32 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
             const cameraCodec = this.getVideoCodec(false, videoTrack);
+            // livekit-client publishes VP9 and AV1 as SVC, three spatial layers (L3T3_KEY) under one budget. "low" is
+            // captured at 360p and sent as one layer: libwebrtc's minimum for each SVC layer is above the low budget
+            // at every size, so the top layer would stay off while the stream is padded up to what it needs.
+            const svc = cameraCodec === "vp9" || cameraCodec === "av1";
+            const singleLayer = svc && this.getQualitySetting(false) === "low";
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: cameraCodec,
                 simulcast: true,
+                ...(singleLayer ? { scalabilityMode: "L1T3" } : {}),
                 // Commented out: the default simulcast layers are sufficient for our use case
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
             };
 
-            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec);
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svc && !singleLayer ? 3 : 1);
             publishOptions.videoEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
             };
 
+            const publishedWith = this.cameraPublicationKey(videoTrack);
             await this.localParticipant.publishTrack(cameraTrack, publishOptions);
             // Only keep the reference once published: after a failed publish, later updates must publish again
             // instead of calling replaceTrack() on an unpublished track.
             this.localCameraTrack = cameraTrack;
+            this.cameraPublishedWith = publishedWith;
             this.cameraAnalyticsUnsubscribe = this.subscribeToEncoderAnalytics(cameraTrack, "video");
         } else {
             await this.localCameraTrack.replaceTrack(videoTrack, {
@@ -582,6 +616,19 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             );
         }
 
+        // Between "recommended" and "high" the camera stays open, with the same track: check its publication against
+        // the new setting (see cameraPublicationKey). To or from "low" it reopens, and its new track is checked then.
+        let initialQuality = true;
+        this.unsubscribers.push(
+            videoQualityStore.subscribe(() => {
+                if (initialQuality) {
+                    initialQuality = false;
+                    return;
+                }
+                this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
+            }),
+        );
+
         this.unsubscribers.push(
             bandwidthConstrainedPreferenceStore.subscribe((preference) => {
                 if (!this.localScreenSharingVideoTrack) {
@@ -611,22 +658,25 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      */
     private republishCamera(): void {
         this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
-            .then(async () => {
-                if (!this.localCameraTrack || !this.localParticipant) {
-                    return;
-                }
-                // livekit-client forgets the backup codecs' clones on unpublish, without stopping them
-                this.stopBackupCodecTracks(this.localCameraTrack);
-                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
-                this.cameraAnalyticsUnsubscribe?.();
-                this.cameraAnalyticsUnsubscribe = undefined;
-                this.localCameraTrack = undefined;
-            })
+            .then(() => this.dropCameraPublication())
             .catch((err) => {
                 console.error("An error occurred while unpublishing the camera for a codec change", err);
                 Sentry.captureException(err);
             });
         this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
+    }
+
+    private async dropCameraPublication(): Promise<void> {
+        if (!this.localCameraTrack || !this.localParticipant) {
+            return;
+        }
+        // livekit-client forgets the backup codecs' clones on unpublish, without stopping them
+        this.stopBackupCodecTracks(this.localCameraTrack);
+        await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
+        this.cameraAnalyticsUnsubscribe?.();
+        this.cameraAnalyticsUnsubscribe = undefined;
+        this.localCameraTrack = undefined;
+        this.cameraPublishedWith = undefined;
     }
 
     private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
