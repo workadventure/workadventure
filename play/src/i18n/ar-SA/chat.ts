@@ -39,6 +39,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "تم قبول دعوتك من قبل {name}",
         defaultResponderName: "المستخدم",
         limitReached: "لقد أرسلت الكثير من دعوات الاجتماعات. يرجى المحاولة مرة أخرى لاحقاً.",
+        join: "انضمام",
+        bringHere: "إحضاره إلى هنا",
+        leaveWarning: "الانضمام سيجعلك تغادر محادثتك الحالية.",
+        invitationAcceptedBringingYou: "قبل {name}: أنت في طريقك إلى محادثته",
     },
     imagePreview: {
         close: "إغلاق",

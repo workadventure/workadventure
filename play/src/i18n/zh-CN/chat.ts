@@ -38,6 +38,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "您的邀请已被 {name} 接受",
         defaultResponderName: "该用户",
         limitReached: "您发送的会议邀请过多，请稍后再试。",
+        join: "加入",
+        bringHere: "叫过来",
+        leaveWarning: "加入将使你离开当前的对话。",
+        invitationAcceptedBringingYou: "{name} 已接受：你正在前往对方的对话",
     },
     imagePreview: {
         close: "关闭",

@@ -371,6 +371,58 @@ describe("GameRoom", () => {
         });
     });
 
+    describe("when an invited user in a locked group brings the sender to them", () => {
+        // user1 and user2 form a locked group centered on (150, 100). user3 stands far away and invites user2.
+        async function createLockedGroupAndInviter() {
+            const world = await createWorld();
+            const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 100, 100));
+            const user2 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 200, 100));
+            const inviterSocket = createMockUserSocket();
+            const user3 = await world.join(inviterSocket.socket, createJoinRoomMessage("3", 1000, 100));
+            flushPendingMessages(user3);
+            user1.group?.lock();
+            return { world, user1, user2, user3, inviterSocket };
+        }
+
+        function bring(world: GameRoom, invitee: User, sender: User): void {
+            socketManager.handleMeetingInvitationResponseMessage(
+                world,
+                invitee,
+                MeetingInvitationResponseMessage.fromPartial({
+                    accept: true,
+                    requestSenderUserUuid: sender.uuid,
+                    bringSender: true,
+                }),
+            );
+        }
+
+        it("should walk the sender to the invitee and let them into the locked group", async () => {
+            const { world, user1, user2, user3, inviterSocket } = await createLockedGroupAndInviter();
+            socketManager.handleMeetingInvitationRequestMessage(
+                world,
+                user3,
+                MeetingInvitationRequestMessage.fromPartial({ receiverUserUuid: user2.uuid }),
+            );
+
+            bring(world, user2, user3);
+
+            expect(getWrittenMessageCases(inviterSocket)).toContain("moveToPositionMessage");
+            expect(user2.lockPass).toBeUndefined();
+            world.updatePosition(user3, new Point(150, 140));
+            expect(user3.group).toBe(user1.group);
+        });
+
+        it("should do nothing without an invitation", async () => {
+            const { world, user2, user3, inviterSocket } = await createLockedGroupAndInviter();
+
+            bring(world, user2, user3);
+
+            expect(getWrittenMessageCases(inviterSocket)).not.toContain("moveToPositionMessage");
+            world.updatePosition(user3, new Point(150, 140));
+            expect(user3.group).toBeUndefined();
+        });
+    });
+
     it("should not leave a deleted locked group in the zone of the user who locked it", async () => {
         // What a pusher listening to every zone knows: the groups each zone announced and has not deleted since.
         const groupsByZone = new Map<string, Set<number>>();

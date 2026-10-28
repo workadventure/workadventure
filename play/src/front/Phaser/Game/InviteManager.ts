@@ -57,11 +57,16 @@ export class InviteManager {
                     );
                 }
                 if (payload.accepted) {
+                    // The invitee stays in their bubble: we walk to them, through their locks
+                    if (payload.bringSender) {
+                        this.lockPassExpiresAt = Date.now() + LOCK_PASS_DURATION_MS;
+                    }
                     const toastId = `meeting-invitation-accepted-${Date.now()}`;
                     toastStore.addToast(
                         MeetingInvitationAcceptedToast,
                         {
                             responderName: payload.responderName,
+                            bringingYou: payload.bringSender === true,
                             toastUuid: toastId,
                         },
                         toastId,
@@ -126,6 +131,14 @@ export class InviteManager {
             AskPositionMessage_AskType.MOVE,
             request.senderUserId,
         );
+    }
+
+    /**
+     * Accepts the invitation but stays here (in our bubble): the person who invited us walks to us instead.
+     */
+    public handleBring(request: MeetingInvitationRequestReceivedMessage): void {
+        this.connection.emitMeetingInvitationResponse(true, request.senderUserUuid, true);
+        analyticsClient.trackAdminEvent("invite.accepted", { inviteType: "meeting" });
     }
 
     public handleDecline(request: MeetingInvitationRequestReceivedMessage): void {

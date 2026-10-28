@@ -41,6 +41,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "Waša pśepšosēnje jo wót {name} pśijate",
         defaultResponderName: "Wužywaŕ",
         limitReached: "Sćo pósłali pśewjele pśepšosowanjow. Pšosym wopytajśo pózdźej hyšći raz.",
+        join: "Pśizamknuś se",
+        bringHere: "Sem pśivjasć",
+        leaveWarning: "Gaž se pśizamknjoš, wóstajijoš swójo aktualne rozgrono.",
+        invitationAcceptedBringingYou: "{name} jo akceptěrował: źoš k jogo rozgronoju",
     },
     imagePreview: {
         close: "Zacyniś",

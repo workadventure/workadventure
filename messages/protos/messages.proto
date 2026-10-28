@@ -1401,12 +1401,16 @@ message MeetingInvitationRequestReceivedMessage {
 message MeetingInvitationResponseMessage {
   bool accept = 1;
   string requestSenderUserUuid = 2;
+  /** The invitee stays where they are (in their bubble) and the sender walks to them instead. */
+  optional bool bringSender = 3;
 }
 
 /** Sent by the server to the requester when the invitee has accepted or declined. */
 message MeetingInvitationResponseReceivedMessage {
   bool accepted = 1;
   string responderName = 2;
+  /** The invitee asked the sender to come to them: the server also sends the sender a moveToPositionMessage. */
+  optional bool bringSender = 3;
 }
 
 /** Send by the server to show invitation request limitation. */

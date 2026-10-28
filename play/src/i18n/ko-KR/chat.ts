@@ -40,6 +40,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "{name}님이 초대를 수락했습니다",
         defaultResponderName: "해당 사용자",
         limitReached: "회의 초대를 너무 많이 보냈습니다. 나중에 다시 시도해 주세요.",
+        join: "참여",
+        bringHere: "여기로 부르기",
+        leaveWarning: "참여하면 현재 대화에서 나가게 됩니다.",
+        invitationAcceptedBringingYou: "{name}님이 수락했습니다: 대화로 이동 중입니다",
     },
     imagePreview: {
         close: "닫기",

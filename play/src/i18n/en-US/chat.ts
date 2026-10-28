@@ -39,6 +39,10 @@ const chat: BaseTranslation = {
         invitationAccepted: "Your invitation was accepted by {name}",
         defaultResponderName: "The user",
         limitReached: "You have sent too many meeting invitations. Please try again later.",
+        join: "Join",
+        bringHere: "Bring them here",
+        leaveWarning: "Joining makes you leave your current conversation.",
+        invitationAcceptedBringingYou: "{name} accepted: you are walking to their conversation",
     },
     imagePreview: {
         close: "Close",
