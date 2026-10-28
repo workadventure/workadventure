@@ -27,6 +27,7 @@
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import UnreadConversationsPopover from "../UnreadConversationsPopover.svelte";
     import UnreadCount from "../UnreadCount.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
@@ -35,7 +36,15 @@
     import TypingUsers from "./TypingUsers.svelte";
     import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
-    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
+    import { countIncomingMessagesAfter, findFirstUnreadKey, isReadMarkerLoaded } from "./RoomTimelineNewMessages";
+    import {
+        IconArrowDown,
+        IconChevronLeft,
+        IconChevronRight,
+        IconLoader,
+        IconMailBox,
+        IconInfoCircle,
+    } from "@wa-icons";
 
     interface Props {
         room: ChatConversation;
@@ -61,6 +70,8 @@
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
     const AUTO_SCROLL_THRESHOLD_PX = 20;
+    /** Room left above the "New messages" line when a room opens on it. */
+    const UNREAD_DIVIDER_TOP_MARGIN_PX = 8;
     /** No scroll event for this long means our own smooth animation has landed. */
     const PROGRAMMATIC_SCROLL_SETTLE_MS = 150;
     /** Release the anchor once the content has stopped resizing for this long. */
@@ -81,6 +92,10 @@
     let messageInputBarRef: MessageInputBar | undefined = $state();
     let lastTimelineFocusSequence = $state(0);
     let initialMessagesLoaded = $state(false);
+    /** Messages from others that arrived while the user was reading history (autoScroll off). */
+    let newMessagesCount = $state(0);
+    /** More than a screen above the bottom: worth offering a way back even with nothing new. */
+    let farFromBottom = $state(false);
 
     // Imperative, deliberately not $state: read and written from DOM handlers, never from the template.
     let scrollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -276,6 +291,16 @@
     });
 
     const MAX_INITIAL_FILL_ROUNDS = 5;
+    /**
+     * Extra pages fetched on open to reach the read marker. Bounded because each one is a sequential
+     * round trip: past it the room opens at the bottom, as before.
+     */
+    const MAX_READ_MARKER_ROUNDS = 3;
+
+    // Snapshot on open: setTimelineAsRead() moves the marker to the end as soon as the room is ready,
+    // and the line must stay where the user stopped reading for as long as the room stays open.
+    const readMarker = untrack(() => room.getReadMarker?.());
+    let firstUnreadKey = $derived(readMarker ? findFirstUnreadKey(renderItems, readMarker, myChatID) : undefined);
 
     onMount(() => {
         // Catches every height change: async markdown, lazy-loaded highlight.js, images, edits.
@@ -329,6 +354,14 @@
         }
     }
 
+    async function loadUntilReadMarker(remainingRounds: number) {
+        if (!readMarker || remainingRounds === 0 || !get(room.hasPreviousMessage)) return;
+        if (isReadMarkerLoaded(renderItems, readMarker)) return;
+        await room.loadMorePreviousMessages();
+        await tick();
+        await loadUntilReadMarker(remainingRounds - 1);
+    }
+
     async function initMessages() {
         if (!messageListRef) return;
         initialMessagesLoaded = false;
@@ -340,6 +373,7 @@
             }
 
             await fillViewport(MAX_INITIAL_FILL_ROUNDS);
+            await loadUntilReadMarker(MAX_READ_MARKER_ROUNDS);
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
         } finally {
@@ -366,9 +400,27 @@
             return;
         }
 
+        if (scrollToFirstUnread()) return;
+
         // Instant: a smooth scroll from top to bottom on a fresh room looks wrong, and it opens a
         // ~300ms window where handleScroll's debounce can paginate from scrollTop = 0.
         scrollToMessageListBottom("auto");
+    }
+
+    /** Opens on the "New messages" line when the unread messages do not fit on one screen. */
+    function scrollToFirstUnread(): boolean {
+        const divider = messageListRef?.querySelector<HTMLElement>("[data-testid='unreadMessagesDivider']");
+        if (!messageListRef || !divider) return false;
+        const dividerTop =
+            divider.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top + messageListRef.scrollTop;
+        if (messageListRef.scrollHeight - dividerTop <= messageListRef.clientHeight) return false;
+
+        // Explicit un-pin, as in focusTimelineEvent: the resize observer must not drag us to the bottom.
+        autoScroll = false;
+        releaseScrollAnchor();
+        beginProgrammaticScroll("resync");
+        messageListRef.scrollTop = dividerTop - UNREAD_DIVIDER_TOP_MARGIN_PX;
+        return true;
     }
 
     $effect(() => {
@@ -391,8 +443,15 @@
         }
 
         // False by construction during back-pagination: prepending does not change the last item.
-        const isNewLastItem = lastKey !== undefined && lastKey !== lastSeenLastItemKey;
+        const previousLastKey = lastSeenLastItemKey;
+        const isNewLastItem = lastKey !== undefined && lastKey !== previousLastKey;
         lastSeenLastItemKey = lastKey;
+
+        if (isNewLastItem) {
+            untrack(() => {
+                if (!autoScroll) newMessagesCount += countIncomingMessagesAfter(items, previousLastKey, myChatID);
+            });
+        }
 
         const lastItem = items[items.length - 1];
         const lastMessage =
@@ -414,6 +473,10 @@
         if (isNewLastItem && untrack(() => autoScroll)) {
             scrollToMessageListBottom();
         }
+    });
+
+    $effect(() => {
+        if (autoScroll) newMessagesCount = 0;
     });
 
     function isAtBottom(): boolean {
@@ -531,6 +594,10 @@
     }
 
     function handleScroll() {
+        if (messageListRef) {
+            const { scrollHeight, scrollTop, clientHeight } = messageListRef;
+            farFromBottom = scrollHeight - scrollTop - clientHeight > clientHeight;
+        }
         if (programmaticScrollKind !== undefined) {
             // Keep extending the settle window while our own animation is still emitting events.
             armProgrammaticScrollSettle();
@@ -786,6 +853,16 @@
                 {/if}
                 {#each renderItems as item (item.key)}
                     <li class="last:pb-3" data-event-id={item.kind === "item" ? item.timelineItem.id : undefined}>
+                        {#if item.key === firstUnreadKey}
+                            <div
+                                class="flex items-center gap-2 px-4 pt-2 pb-1 text-xs font-bold uppercase tracking-wider text-danger"
+                                data-testid="unreadMessagesDivider"
+                            >
+                                <span class="h-px flex-1 bg-danger/70"></span>
+                                {$LL.chat.timeLine.unreadDivider()}
+                                <span class="h-px flex-1 bg-danger/70"></span>
+                            </div>
+                        {/if}
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
                                 <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
@@ -810,6 +887,28 @@
                 {/each}
             </ul>
         </div>
+
+        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom)}
+            <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
+            <div class="relative h-0">
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full shadow-lg whitespace-nowrap"
+                    dataTestId="jumpToLatestMessages"
+                    title={$LL.chat.timeLine.jumpToLatest()}
+                    aria-label={newMessagesCount > 0 ? undefined : $LL.chat.timeLine.jumpToLatest()}
+                    onclick={() => scrollToMessageListBottom()}
+                >
+                    {#snippet icon()}
+                        <IconArrowDown font-size="16" />
+                    {/snippet}
+                    {#if newMessagesCount > 0}
+                        {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
+                    {/if}
+                </Button>
+            </div>
+        {/if}
 
         {#if $initializationState === "ready" && $typingMembers.length > 0}
             <TypingUsers typingMembers={$typingMembers} />

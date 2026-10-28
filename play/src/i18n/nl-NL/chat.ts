@@ -126,6 +126,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         today: "Vandaag",
         yesterday: "Gisteren",
         retry: "Opnieuw proberen",
+        newMessages: "{{count:1 nieuw bericht|?? nieuwe berichten}}",
+        jumpToLatest: "Naar de nieuwste berichten",
+        unreadDivider: "Nieuwe berichten",
     },
     form: {
         placeholder: "Voer je bericht in...",

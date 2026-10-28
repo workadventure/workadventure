@@ -124,6 +124,9 @@ const chat: BaseTranslation = {
         today: "Today",
         yesterday: "Yesterday",
         retry: "Retry",
+        newMessages: "{{count:1 new message|?? new messages}}",
+        jumpToLatest: "Jump to latest messages",
+        unreadDivider: "New messages",
     },
     form: {
         placeholder: "Enter your message...",

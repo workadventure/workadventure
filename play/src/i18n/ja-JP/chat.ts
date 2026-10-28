@@ -126,6 +126,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         today: "今日",
         yesterday: "昨日",
         retry: "再試行",
+        newMessages: "{count} 件の新着メッセージ",
+        jumpToLatest: "最新のメッセージへ移動",
+        unreadDivider: "新着メッセージ",
     },
     form: {
         placeholder: "メッセージを入力...",
