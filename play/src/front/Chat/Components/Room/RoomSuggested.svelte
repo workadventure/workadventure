@@ -1,20 +1,29 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
+    import { readable } from "svelte/store";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import type { PictureStore } from "../../../Stores/PictureStore";
+    import type { JoinableRoomInfo } from "../../Connection/ChatConnection";
     import { ignoreSuggestedRoom } from "../../Stores/ChatStore";
     import { IconLoader } from "@wa-icons";
 
     interface Props {
-        roomInformation: { name: string; id: string; pictureStore?: PictureStore };
+        roomInformation: JoinableRoomInfo;
+        /** Suggested rooms can be ignored; other joinable rooms cannot. */
+        suggested?: boolean;
     }
 
-    let { roomInformation }: Props = $props();
+    let { roomInformation, suggested = false }: Props = $props();
     let roomName = $derived(roomInformation.name);
+    let pictureStore = $derived(readable(roomInformation.avatarUrl || undefined));
+    let memberCount = $derived(
+        roomInformation.memberCount === undefined
+            ? undefined
+            : $LL.chat.roomMemberCount({ count: roomInformation.memberCount }),
+    );
     let loadingInvitation = $state(false);
 
     async function joinRoom() {
@@ -52,32 +61,46 @@
     data-testid="userInvitation"
 >
     <div class="relative shrink-0">
-        <Avatar compact pictureStore={roomInformation.pictureStore} fallbackName={roomName} />
+        <Avatar compact {pictureStore} fallbackName={roomName} />
     </div>
-    <div class="m-0 grow text-sm font-bold">
-        {roomName}
+    <div class="m-0 grow min-w-0">
+        <div class="text-sm font-bold truncate" title={roomName}>{roomName}</div>
+        {#if roomInformation.topic || memberCount}
+            <!-- Only the topic is cut: the member count stays readable on narrow chats. -->
+            <div class="flex items-center gap-1 text-xs text-white/60 min-w-0">
+                {#if roomInformation.topic}
+                    <span class="truncate" title={roomInformation.topic}>{roomInformation.topic}</span>
+                {/if}
+                {#if memberCount}
+                    <span class="shrink-0">{roomInformation.topic ? "· " : ""}{memberCount}</span>
+                {/if}
+            </div>
+        {/if}
     </div>
-    {#if loadingInvitation}
-        <div class="min-h-[60px] text-md flex gap-2 justify-center flex-row items-center p-1">
-            <IconLoader class="animate-spin" />
-        </div>
-    {:else}
-        <div class="flex gap-1 flex-wrap justify-end">
+    <div class="flex gap-1 shrink-0">
+        {#if suggested}
             <button
                 type="button"
                 class="border border-solid border-white/35 text-white/80 hover:bg-white/10 rounded text-xs py-1 px-2 m-0"
                 data-testid="ignoreSuggestedRoomButton"
+                disabled={loadingInvitation}
                 onclick={onIgnoreClick}
             >
                 {$LL.chat.ignoreSuggestedRoom()}
             </button>
-            <button
-                class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
-                data-testid="acceptInvitationButton"
-                onclick={() => joinRoom()}
-            >
-                {$LL.chat.join()}
-            </button>
-        </div>
-    {/if}
+        {/if}
+        <button
+            class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0 relative flex items-center justify-center"
+            data-testid="acceptInvitationButton"
+            disabled={loadingInvitation}
+            aria-busy={loadingInvitation}
+            onclick={() => joinRoom()}
+        >
+            <!-- The label stays in place, hidden, so the button keeps its width while the spinner turns. -->
+            <span class:invisible={loadingInvitation}>{$LL.chat.join()}</span>
+            {#if loadingInvitation}
+                <IconLoader class="animate-spin absolute" font-size="1rem" />
+            {/if}
+        </button>
+    </div>
 </div>
