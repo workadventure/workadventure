@@ -126,6 +126,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         retry: "Tornar a intentar",
         newMessages: "{{count:1 missatge nou|?? missatges nous}}",
         jumpToLatest: "Anar als missatges més recents",
+        unreadDivider: "Missatges nous",
     },
     form: {
         placeholder: "Escriu el teu missatge...",

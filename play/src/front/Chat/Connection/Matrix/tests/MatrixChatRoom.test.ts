@@ -91,4 +91,35 @@ describe("MatrixChatRoom", () => {
             expect(get(room.members)).toHaveLength(2);
         });
     });
+
+    describe("getReadMarker", () => {
+        const createRoomStub = (receipt: { eventId: string; data: { ts: number } } | null, lastEventId: string) => {
+            const getReadReceiptForUserId = vi.fn(() => receipt);
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            Object.assign(room, {
+                matrixRoom: {
+                    client: { getUserId: () => "@me:matrix.org" },
+                    getReadReceiptForUserId,
+                    getLastLiveEvent: () => ({ getId: () => lastEventId }),
+                },
+            });
+            return { room, getReadReceiptForUserId };
+        };
+
+        it("returns the event and time of my server-side read receipt", () => {
+            const { room, getReadReceiptForUserId } = createRoomStub({ eventId: "$a", data: { ts: 1000 } }, "$z");
+
+            expect(room.getReadMarker()).toEqual({ eventId: "$a", timestamp: 1000 });
+            // Synthesized receipts are local echoes of my own sends, not reading.
+            expect(getReadReceiptForUserId).toHaveBeenCalledWith("@me:matrix.org", true);
+        });
+
+        it("returns undefined when I have read up to the last event", () => {
+            expect(createRoomStub({ eventId: "$z", data: { ts: 1000 } }, "$z").room.getReadMarker()).toBeUndefined();
+        });
+
+        it("returns undefined when I never sent a receipt", () => {
+            expect(createRoomStub(null, "$z").room.getReadMarker()).toBeUndefined();
+        });
+    });
 });

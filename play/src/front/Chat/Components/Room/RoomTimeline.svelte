@@ -34,7 +34,7 @@
     import TypingUsers from "./TypingUsers.svelte";
     import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
     import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
-    import { countIncomingMessagesAfter } from "./RoomTimelineNewMessages";
+    import { countIncomingMessagesAfter, findFirstUnreadKey, isReadMarkerLoaded } from "./RoomTimelineNewMessages";
     import {
         IconArrowDown,
         IconChevronLeft,
@@ -68,6 +68,8 @@
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
     const AUTO_SCROLL_THRESHOLD_PX = 20;
+    /** Room left above the "New messages" line when a room opens on it. */
+    const UNREAD_DIVIDER_TOP_MARGIN_PX = 8;
     /** No scroll event for this long means our own smooth animation has landed. */
     const PROGRAMMATIC_SCROLL_SETTLE_MS = 150;
     /** Release the anchor once the content has stopped resizing for this long. */
@@ -240,6 +242,16 @@
     });
 
     const MAX_INITIAL_FILL_ROUNDS = 5;
+    /**
+     * Extra pages fetched on open to reach the read marker. Bounded because each one is a sequential
+     * round trip: past it the room opens at the bottom, as before.
+     */
+    const MAX_READ_MARKER_ROUNDS = 3;
+
+    // Snapshot on open: setTimelineAsRead() moves the marker to the end as soon as the room is ready,
+    // and the line must stay where the user stopped reading for as long as the room stays open.
+    const readMarker = untrack(() => room.getReadMarker?.());
+    let firstUnreadKey = $derived(readMarker ? findFirstUnreadKey(renderItems, readMarker, myChatID) : undefined);
 
     onMount(() => {
         // Catches every height change: async markdown, lazy-loaded highlight.js, images, edits.
@@ -293,6 +305,14 @@
         }
     }
 
+    async function loadUntilReadMarker(remainingRounds: number) {
+        if (!readMarker || remainingRounds === 0 || !get(room.hasPreviousMessage)) return;
+        if (isReadMarkerLoaded(renderItems, readMarker)) return;
+        await room.loadMorePreviousMessages();
+        await tick();
+        await loadUntilReadMarker(remainingRounds - 1);
+    }
+
     async function initMessages() {
         if (!messageListRef) return;
         initialMessagesLoaded = false;
@@ -304,6 +324,7 @@
             }
 
             await fillViewport(MAX_INITIAL_FILL_ROUNDS);
+            await loadUntilReadMarker(MAX_READ_MARKER_ROUNDS);
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
         } finally {
@@ -330,9 +351,27 @@
             return;
         }
 
+        if (scrollToFirstUnread()) return;
+
         // Instant: a smooth scroll from top to bottom on a fresh room looks wrong, and it opens a
         // ~300ms window where handleScroll's debounce can paginate from scrollTop = 0.
         scrollToMessageListBottom("auto");
+    }
+
+    /** Opens on the "New messages" line when the unread messages do not fit on one screen. */
+    function scrollToFirstUnread(): boolean {
+        const divider = messageListRef?.querySelector<HTMLElement>("[data-testid='unreadMessagesDivider']");
+        if (!messageListRef || !divider) return false;
+        const dividerTop =
+            divider.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top + messageListRef.scrollTop;
+        if (messageListRef.scrollHeight - dividerTop <= messageListRef.clientHeight) return false;
+
+        // Explicit un-pin, as in focusTimelineEvent: the resize observer must not drag us to the bottom.
+        autoScroll = false;
+        releaseScrollAnchor();
+        beginProgrammaticScroll("resync");
+        messageListRef.scrollTop = dividerTop - UNREAD_DIVIDER_TOP_MARGIN_PX;
+        return true;
     }
 
     $effect(() => {
@@ -756,6 +795,16 @@
                 {/if}
                 {#each renderItems as item (item.key)}
                     <li class="last:pb-3" data-event-id={item.kind === "item" ? item.timelineItem.id : undefined}>
+                        {#if item.key === firstUnreadKey}
+                            <div
+                                class="flex items-center gap-2 px-4 pt-2 pb-1 text-xs font-bold uppercase tracking-wider text-danger"
+                                data-testid="unreadMessagesDivider"
+                            >
+                                <span class="h-px flex-1 bg-danger/70"></span>
+                                {$LL.chat.timeLine.unreadDivider()}
+                                <span class="h-px flex-1 bg-danger/70"></span>
+                            </div>
+                        {/if}
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
                                 <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"

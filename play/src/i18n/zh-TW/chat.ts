@@ -124,6 +124,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         retry: "重試",
         newMessages: "{count} 則新訊息",
         jumpToLatest: "跳到最新訊息",
+        unreadDivider: "新訊息",
     },
     form: {
         placeholder: "輸入您的訊息...",
