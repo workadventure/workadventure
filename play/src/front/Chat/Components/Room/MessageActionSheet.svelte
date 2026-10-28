@@ -16,7 +16,8 @@
     const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👀"];
 
     let { content, canDelete, canReact, canEdit } = $derived(message);
-    let canCopy = $derived(message.type === "text" && $content.body !== "");
+    // Proximity (bubble) messages are plain text too.
+    let canCopy = $derived((message.type === "text" || message.type === "proximity") && $content.body !== "");
     let copied = $state(false);
     let sheet: HTMLDivElement | undefined = $state();
 
