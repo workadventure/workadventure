@@ -19,6 +19,7 @@ const chat: BaseTranslation = {
     typing: "is typing...",
     users: "Users",
     chat: "Chat",
+    resizeChat: "Resize the chat (arrow keys to resize, Enter for full screen)",
     userList: {
         disconnected: "Not connected to the world",
         isHere: "Is on this map",

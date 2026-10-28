@@ -21,6 +21,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     typing: "が入力中...",
     users: "ユーザー",
     chat: "チャット",
+    resizeChat: "チャットのサイズを変更（矢印キーで変更、Enter で全画面）",
     userList: {
         disconnected: "ワールドに接続されていません",
         isHere: "このマップ上",
