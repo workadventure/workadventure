@@ -7,7 +7,12 @@
     import { selectedRoomStore } from "./Stores/SelectRoomStore";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
-    import { clampChatSidebarWidth, CHAT_SIDEBAR_MIN_WIDTH, snapChatSidebarWidth } from "./ChatSidebarWidth";
+    import {
+        clampChatSidebarWidth,
+        CHAT_SIDEBAR_MIN_WIDTH,
+        maxChatSidebarWidth,
+        snapChatSidebarWidth,
+    } from "./ChatSidebarWidth";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement | undefined = $state();
@@ -65,8 +70,7 @@
             const initialWidth = isMediaBreakpointUp("md") ? INITIAL_SIDEBAR_WIDTH_MOBILE : INITIAL_SIDEBAR_WIDTH;
             sideBarWidth = clampChatSidebarWidth(initialWidth, viewportWidth());
         } else {
-            const fullWidth = document.documentElement.clientWidth;
-            sideBarWidth = fullWidth;
+            sideBarWidth = maxChatSidebarWidth(document.documentElement.clientWidth);
         }
         chatSidebarWidthStore.set(sideBarWidth);
     };
@@ -93,7 +97,7 @@
 
     const onresize = () => {
         if (isChatSidebarLargerThanWindow() && container) {
-            sideBarWidth = document.documentElement.clientWidth;
+            sideBarWidth = maxChatSidebarWidth(document.documentElement.clientWidth);
             chatSidebarWidthStore.set(sideBarWidth);
         }
     };
@@ -103,7 +107,7 @@
     };
 
     const isChatBarInFullScreen = () => {
-        return sideBarWidth === document.documentElement.clientWidth;
+        return sideBarWidth === maxChatSidebarWidth(document.documentElement.clientWidth);
     };
 </script>
 
@@ -142,7 +146,7 @@
             aria-label={$LL.chat.resizeChat()}
             aria-valuenow={Math.round(sideBarWidth)}
             aria-valuemin={CHAT_SIDEBAR_MIN_WIDTH}
-            aria-valuemax={document.documentElement.clientWidth}
+            aria-valuemax={maxChatSidebarWidth(document.documentElement.clientWidth)}
             onmousedown={handleMousedown}
             ondblclick={toggleFullScreen}
             ontouchstart={handleTouchStart}
