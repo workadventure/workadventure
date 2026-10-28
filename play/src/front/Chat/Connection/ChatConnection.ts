@@ -164,7 +164,15 @@ export interface ChatConversation {
      * marker (proximity rooms). Must be read before setTimelineAsRead(), which moves it to the end.
      */
     readonly getReadMarker?: () => ChatReadMarker | undefined;
+    /** The last message received, for a preview in a list. Only listens to the room while subscribed. */
+    readonly lastMessagePreview?: Readable<ChatMessagePreview | undefined>;
 }
+
+export type ChatMessagePreview = {
+    body: string;
+    senderName: string | undefined;
+    timestamp: number;
+};
 
 export type ChatReadMarker = {
     /** Last event the user has read. It may be an event the timeline does not display (reaction, join…). */

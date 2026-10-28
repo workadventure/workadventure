@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier is je chatgeschiedenis:",
     adventurers: "Gebruikers",
     getCloserTitle: "Nader tot iemand",
-    noRoomOpen: "Open een gesprek",
     noRoomOpenDescription:
         "Nog niets om te tonen. Begin een discussie of nader tot iemand om je berichten hier te zien verschijnen.",
     getCloserDesc:
@@ -347,6 +346,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Wachten",
     nothingToDisplay: "Niets om weer te geven",
     unreadConversationsTitle: "Ongelezen",
+    catchUpTitle: "Bij te lezen",
+    catchUpEmpty: "Je bent helemaal bij",
     showMore: "Toon {number} meer",
     showLess: "Toon minder",
     addRoomToFolderError: "Kamer kon niet aan de map worden toegevoegd",

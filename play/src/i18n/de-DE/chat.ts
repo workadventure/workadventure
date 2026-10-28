@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier ist dein Nachrichtenverlauf:",
     adventurers: "Benutzer",
     getCloserTitle: "Nähere dich jemandem",
-    noRoomOpen: "Öffne eine Unterhaltung",
     noRoomOpenDescription:
         "Momentan nichts anzuzeigen. Beginne eine Unterhaltung oder nähere dich jemandem, um deine Nachrichten hier zu sehen.",
     getCloserDesc:
@@ -349,6 +348,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Warten",
     nothingToDisplay: "Nichts anzuzeigen",
     unreadConversationsTitle: "Ungelesen",
+    catchUpTitle: "Nachzuholen",
+    catchUpEmpty: "Du bist auf dem neuesten Stand",
     showMore: "{number} weitere anzeigen",
     showLess: "Weniger anzeigen",
     addRoomToFolderError: "Raum konnte nicht zum Ordner hinzugefügt werden",

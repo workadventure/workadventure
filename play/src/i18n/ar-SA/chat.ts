@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "هنا سجل الدردشة الخاص بك:",
     adventurers: "المستخدمون",
     getCloserTitle: "اقترب من شخص ما",
-    noRoomOpen: "افتح محادثة",
     noRoomOpenDescription: "لا يوجد شيء لعرضه حتى الآن. ابدأ دردشة أو اقترب من شخص ما لرؤية رسائلك تظهر هنا.",
     getCloserDesc:
         "عندما تقترب من شخص ما في الفضاء الافتراضي، يتم فتح فقاعة محادثة تلقائيًا، مما يتيح لك التحدث مباشرة كما لو كنت وجهًا لوجه.",
@@ -345,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "في انتظار",
     nothingToDisplay: "لا يوجد شيء لعرضه",
     unreadConversationsTitle: "غير مقروءة",
+    catchUpTitle: "للمتابعة",
+    catchUpEmpty: "أنت مطّلع على كل شيء",
     showMore: "عرض {number} المزيد",
     showLess: "عرض أقل",
     addRoomToFolderError: "لا يمكن إضافة الغرفة إلى المجلد",

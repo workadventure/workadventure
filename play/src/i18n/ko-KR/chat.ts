@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "여기는 당신의 채팅 기록입니다:",
     adventurers: "사용자",
     getCloserTitle: "누군가에게 다가가기",
-    noRoomOpen: "대화 열기",
     noRoomOpenDescription:
         "아직 표시할 내용이 없습니다. 채팅을 시작하거나 누군가에게 다가가면 이곳에 메시지가 표시됩니다.",
     getCloserDesc:
@@ -348,6 +347,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "대기 중",
     nothingToDisplay: "표시할 내용이 없습니다",
     unreadConversationsTitle: "읽지 않음",
+    catchUpTitle: "확인할 대화",
+    catchUpEmpty: "모두 확인했습니다",
     showMore: "메시지 {number}개 더 보기",
     showLess: "적게 보기",
     addRoomToFolderError: "방을 폴더에 추가할 수 없습니다",

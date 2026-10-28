@@ -46,11 +46,22 @@ export function countUnreadElsewhere(
     return Math.max(0, matrixTotal - openMatrixCount) + sumUnmutedUnreadCounts(others);
 }
 
-/** Unread, unmuted conversations, the most recently active first. */
-export function listUnreadConversations<T extends UnreadConversationCount & { lastMessageTimestamp: number }>(
-    conversations: readonly T[],
-): T[] {
+/**
+ * Unread conversations, those that mention me first, then the most recently active first.
+ * Muted ones are left out, unless they mention me: a mention gets through a muted room.
+ */
+export function listUnreadConversations<
+    T extends UnreadConversationCount & { lastMessageTimestamp: number; mention?: boolean },
+>(conversations: readonly T[]): T[] {
     return conversations
-        .filter(({ count, muted }) => count > 0 && !muted)
-        .sort((a, b) => b.lastMessageTimestamp - a.lastMessageTimestamp);
+        .filter(({ count, muted, mention }) => count > 0 && (!muted || mention))
+        .sort((a, b) => Number(!!b.mention) - Number(!!a.mention) || b.lastMessageTimestamp - a.lastMessageTimestamp);
+}
+
+/** When a conversation was last active: the time today, the date before. */
+export function formatLastActivity(timestamp: number, now: Date, locale: string): string {
+    const date = new Date(timestamp);
+    return date.toDateString() === now.toDateString()
+        ? date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })
+        : date.toLocaleDateString(locale, { day: "numeric", month: "short" });
 }

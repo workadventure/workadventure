@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "นี่คือประวัติแชทของคุณ:",
     adventurers: "ผู้ใช้",
     getCloserTitle: "เข้าไปใกล้ใครสักคน",
-    noRoomOpen: "เปิดการสนทนา",
     noRoomOpenDescription: "ยังไม่มีอะไรให้แสดง เริ่มแชทหรือเดินเข้าใกล้ใครสักคน แล้วข้อความของคุณจะปรากฏที่นี่",
     getCloserDesc:
         "เมื่อคุณเข้าใกล้ใครสักคนในพื้นที่เสมือน บับเบิลสนทนาจะเปิดขึ้นโดยอัตโนมัติ ให้คุณพูดคุยกันได้โดยตรงเหมือนอยู่ต่อหน้ากัน",
@@ -346,6 +345,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "กำลังรอ",
     nothingToDisplay: "ไม่มีอะไรให้แสดง",
     unreadConversationsTitle: "ยังไม่อ่าน",
+    catchUpTitle: "ที่ต้องตามอ่าน",
+    catchUpEmpty: "คุณอ่านครบแล้ว",
     showMore: "แสดงเพิ่มอีก {number}",
     showLess: "แสดงน้อยลง",
     addRoomToFolderError: "ไม่สามารถเพิ่มห้องลงในโฟลเดอร์ได้",

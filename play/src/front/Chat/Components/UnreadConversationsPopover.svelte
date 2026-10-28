@@ -1,12 +1,10 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import LL from "../../../i18n/i18n-svelte";
-    import { ProximityChatRoom } from "../Connection/Proximity/ProximityChatRoom";
-    import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import type { UnreadConversation } from "../Stores/UnreadMessagesCountStore";
     import Avatar from "./Avatar.svelte";
     import UnreadCount from "./UnreadCount.svelte";
-    import { selectProximityRoom } from "./Room/selectProximityRoom";
+    import { openConversation } from "./Room/selectProximityRoom";
 
     interface Props {
         conversations: UnreadConversation[];
@@ -16,11 +14,7 @@
     let { conversations, onSelect }: Props = $props();
 
     function open({ conversation }: UnreadConversation) {
-        if (conversation instanceof ProximityChatRoom) {
-            selectProximityRoom(conversation);
-        } else {
-            selectedRoomStore.set(conversation);
-        }
+        openConversation(conversation);
         onSelect();
     }
 </script>
@@ -43,7 +37,7 @@
                 >
                     <Avatar compact pictureStore={item.conversation.pictureStore} fallbackName={name} />
                     <span class="min-w-0 flex-1 truncate text-sm font-bold">{name}</span>
-                    <UnreadCount count={item.count} size="sm" />
+                    <UnreadCount count={item.count} variant={item.mention ? "mention" : "default"} size="sm" />
                 </button>
             </li>
         {/each}

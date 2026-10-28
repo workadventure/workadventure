@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Đây là lịch sử trò chuyện của bạn:",
     adventurers: "Người dùng",
     getCloserTitle: "Lại gần một ai đó",
-    noRoomOpen: "Mở một cuộc trò chuyện",
     noRoomOpenDescription:
         "Chưa có gì để hiển thị. Hãy bắt đầu một cuộc trò chuyện hoặc lại gần ai đó để thấy tin nhắn của bạn xuất hiện tại đây.",
     getCloserDesc:
@@ -346,6 +345,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Đang chờ",
     nothingToDisplay: "Không có gì để hiển thị",
     unreadConversationsTitle: "Chưa đọc",
+    catchUpTitle: "Cần xem lại",
+    catchUpEmpty: "Bạn đã xem hết",
     showMore: "Hiện thêm {number}",
     showLess: "Thu gọn",
     addRoomToFolderError: "Không thể thêm phòng vào thư mục",

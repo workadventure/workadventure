@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Aqui está seu histórico de bate-papo:",
     adventurers: "Usuários",
     getCloserTitle: "Aproxime-se de alguém",
-    noRoomOpen: "Abrir uma conversa",
     noRoomOpenDescription:
         "Nada para exibir ainda. Inicie um chat ou aproxime-se de alguém para ver suas mensagens aparecerem aqui.",
     getCloserDesc:
@@ -347,6 +346,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Aguardando",
     nothingToDisplay: "Nada para exibir",
     unreadConversationsTitle: "Não lidas",
+    catchUpTitle: "Para colocar em dia",
+    catchUpEmpty: "Você está em dia",
     showMore: "Mostrar {number} mais",
     showLess: "Mostrar menos",
     addRoomToFolderError: "Impossível adicionar a sala à pasta",

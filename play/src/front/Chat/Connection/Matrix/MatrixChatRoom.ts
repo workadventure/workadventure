@@ -18,6 +18,7 @@ import {
     PushRuleActionName,
     PushRuleKind,
     ReceiptType,
+    MatrixEventEvent,
     RoomMemberEvent,
     RoomEvent,
     RoomStateEvent,
@@ -48,6 +49,7 @@ import Debug from "debug";
 import pLimit from "p-limit";
 import type {
     ChatPollItem,
+    ChatMessagePreview,
     ChatReadMarker,
     ChatRoom,
     ChatRoomInitializationState,
@@ -94,7 +96,7 @@ import { hasValidViaEntries } from "./MatrixSpaceRelations";
 import { resolveChatUserColor } from "./services/WaMatrixProfileService";
 import { MatrixChatRoomMember } from "./MatrixChatRoomMember";
 import { matrixAvatarProfile } from "./services/MatrixAvatarProfile";
-import { getThreadSummary, shouldDisplayEventInRoomTimeline } from "./MatrixThreadUtils";
+import { getLastMessagePreview, getThreadSummary, shouldDisplayEventInRoomTimeline } from "./MatrixThreadUtils";
 import { buildRoomPowerLevelsContent, getRoomPermissionsState } from "./MatrixRoomPowerLevels";
 
 type EventId = string;
@@ -120,6 +122,7 @@ export class MatrixChatRoom
     readonly hasUnreadMessages: Writable<boolean>;
     readonly unreadNotificationCount: Writable<number>;
     readonly hasUnreadMentions: Writable<boolean>;
+    readonly lastMessagePreview: Readable<ChatMessagePreview | undefined>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
@@ -259,6 +262,23 @@ export class MatrixChatRoom
         // displayed message — which left encrypted messages stuck on "Failed to decrypt" after a key-backup
         // restore. Instances are released together in destroy() at room teardown.
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
+        this.lastMessagePreview = readable<ChatMessagePreview | undefined>(getLastMessagePreview(matrixRoom), (set) => {
+            const update = () => set(getLastMessagePreview(matrixRoom));
+            const updateOnDecrypted = (event: MatrixEvent) => {
+                if (event.getRoomId() === matrixRoom.roomId) update();
+            };
+            update();
+            matrixRoom.on(RoomEvent.Timeline, update);
+            matrixRoom.on(RoomEvent.LocalEchoUpdated, update);
+            matrixRoom.on(RoomEvent.Redaction, update);
+            matrixRoom.client.on(MatrixEventEvent.Decrypted, updateOnDecrypted);
+            return () => {
+                matrixRoom.off(RoomEvent.Timeline, update);
+                matrixRoom.off(RoomEvent.LocalEchoUpdated, update);
+                matrixRoom.off(RoomEvent.Redaction, update);
+                matrixRoom.client.off(MatrixEventEvent.Decrypted, updateOnDecrypted);
+            };
+        });
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
         this.sidePanelPolls = new SearchableArrayStore((item: ChatPollItem) => item.id);
         this.pollItems = this.sidePanelPolls;

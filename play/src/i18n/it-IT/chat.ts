@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Ecco la tua cronologia chat:",
     adventurers: "Utenti",
     getCloserTitle: "Avvicinati a qualcuno",
-    noRoomOpen: "Apri una conversazione",
     noRoomOpenDescription:
         "Niente da mostrare per ora. Inizia una discussione o avvicinati a qualcuno per vedere i tuoi messaggi apparire qui.",
     getCloserDesc:
@@ -347,6 +346,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "In attesa",
     nothingToDisplay: "Niente da visualizzare",
     unreadConversationsTitle: "Non letti",
+    catchUpTitle: "Da recuperare",
+    catchUpEmpty: "Sei in pari",
     showMore: "Mostra {number} di più",
     showLess: "Mostra meno",
     addRoomToFolderError: "Impossibile aggiungere la stanza alla cartella",
