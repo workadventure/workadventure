@@ -271,9 +271,6 @@
                     ? ' h-[calc(100%-2rem)]'
                     : 'h-full'}"
             >
-                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
-                    <RoomListSkeleton />
-                {/if}
                 {#if $chatConnectionStatus === "ON_ERROR" && $userIsConnected && !$loginTokenErrorStore}
                     <ChatError />
                 {/if}
@@ -311,6 +308,10 @@
                             </ShowMore>
                         </div>
                     </div>
+                {/if}
+                <!-- Where the conversations will be: under the bubble, which does not wait for the chat server. -->
+                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
+                    <RoomListSkeleton />
                 {/if}
                 {#if $chatConnectionStatus === "ONLINE"}
                     {#if hasNoSearchResult}
