@@ -7,6 +7,7 @@ import Menu from "../utils/menu";
 import { evaluateScript } from "../utils/scripting";
 import { local_world, map_storage_url } from "../utils/urls";
 import { getPage } from "../utils/auth";
+import { dismissNoMicrophoneSoundToastWhenShown } from "../utils/noMicrophoneSoundToast";
 import { isMobile } from "../utils/isMobile";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
@@ -190,6 +191,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(member, 4 * 32, 3 * 32);
         await using bob = await getPage(browser, "Bob", Map.url("empty"));
         await Map.teleportToPosition(bob, 4 * 32, 3 * 32);
+        // The "no microphone sound" toast sits over the top right corner, where Bob's menu button is.
+        await dismissNoMicrophoneSoundToastWhenShown(member);
+        await dismissNoMicrophoneSoundToastWhenShown(bob);
 
         const bobBox = member.locator("#cameras-container .camera-box").filter({ hasText: "Bob" });
         await expect(bobBox).toBeVisible({ timeout: 30_000 });
