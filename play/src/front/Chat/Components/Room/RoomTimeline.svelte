@@ -28,6 +28,7 @@
     import UnreadConversationsPopover from "../UnreadConversationsPopover.svelte";
     import UnreadCount from "../UnreadCount.svelte";
     import Button from "../../../Components/UI/Button.svelte";
+    import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
@@ -755,8 +756,11 @@
                 {:else}
                     <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
                 {/if}
-                <div class="text-sm font-bold min-w-0 grow text-center px-2 truncate" data-testid="roomName">
-                    {$roomName}
+                <div class="min-w-0 grow text-center px-2">
+                    <div class="text-sm font-bold truncate" data-testid="roomName">
+                        {$roomName}
+                    </div>
+                    <ConversationSubtitle {room} />
                 </div>
 
                 {#if showRoomSidePanelToggle}

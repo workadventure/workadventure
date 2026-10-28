@@ -581,6 +581,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "Avatar utente",
         applicationIcon: "Applicazione",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} {{membro|membri}} · {online} online",
+        with: "Con {names}",
+    },
     requiresLoginForChatModal: {
         title: "Accedi per sbloccare la chat!",
         content_1: "Per godere appieno di questa funzione di chat, devi essere loggato nel tuo account.",

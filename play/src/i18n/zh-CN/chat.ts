@@ -576,6 +576,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "用户头像",
         applicationIcon: "应用",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} 名成员 · {online} 人在线",
+        with: "参与者：{names}",
+    },
     requiresLoginForChatModal: {
         title: "登录以解锁聊天！",
         content_1: "要完全享受此聊天功能，您需要登录到您的账户。",

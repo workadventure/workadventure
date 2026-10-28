@@ -580,6 +580,10 @@ const chat: BaseTranslation = {
         userAvatar: "User avatar",
         applicationIcon: "Application",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} {{member|members}} · {online} online",
+        with: "With {names}",
+    },
     requiresLoginForChatModal: {
         title: "Log in to unlock the chat!",
         content_1: "To fully enjoy this chat feature, you need to be logged into your account.",

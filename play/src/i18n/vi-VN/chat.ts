@@ -580,6 +580,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "Ảnh đại diện người dùng",
         applicationIcon: "Ứng dụng",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} thành viên · {online} trực tuyến",
+        with: "Với {names}",
+    },
     requiresLoginForChatModal: {
         title: "Đăng nhập để mở khóa trò chuyện!",
         content_1: "Để tận hưởng đầy đủ tính năng trò chuyện, bạn cần đăng nhập vào tài khoản của mình.",

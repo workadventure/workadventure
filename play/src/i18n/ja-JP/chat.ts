@@ -582,6 +582,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "ユーザーアバター",
         applicationIcon: "アプリ",
     },
+    conversationSubtitle: {
+        roomMembers: "メンバー {members}人 · オンライン {online}人",
+        with: "参加者: {names}",
+    },
     requiresLoginForChatModal: {
         title: "チャットのロックを解除するにはログインしてください",
         content_1: "チャットを十分に楽しむには、ログインする必要があります。",
