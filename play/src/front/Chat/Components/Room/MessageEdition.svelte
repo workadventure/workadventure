@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { get } from "svelte/store";
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
@@ -14,6 +15,24 @@
 
     let inputValue = $state((() => get(message.content).body)());
     let editError = $state(false);
+    let root: HTMLDivElement | undefined = $state();
+
+    // Edit is often picked from the keyboard: start typing at the end of the text, and once done, land back
+    // on the message rather than nowhere.
+    onMount(() => {
+        if (messageInput) {
+            messageInput.focus();
+            getSelection()?.selectAllChildren(messageInput);
+            getSelection()?.collapseToEnd();
+        }
+        const message = root?.closest<HTMLElement>("#message");
+        return () => {
+            const active = document.activeElement;
+            if (active === null || active === document.body || root?.contains(active)) {
+                message?.focus();
+            }
+        };
+    });
 
     async function editMessage(newContent: string) {
         try {
@@ -29,7 +48,7 @@
     }
 </script>
 
-<div>
+<div bind:this={root}>
     <MessageInput
         bind:message={inputValue}
         bind:messageInput
