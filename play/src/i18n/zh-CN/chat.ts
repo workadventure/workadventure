@@ -5,7 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "这是您的聊天历史:",
     adventurers: "用户",
     getCloserTitle: "接近某人",
-    noRoomOpenDescription: "暂无内容显示。开始聊天或接近某人以查看您的消息出现在这里。",
     getCloserDesc: "当您在虚拟空间中接近某人时，会自动打开一个对话气泡，让您可以直接交谈，就像面对面一样。",
     noMessage: "还没有发送消息！",
     beFirst: "成为第一个发送消息的人",

@@ -138,12 +138,7 @@ export function createUnreadConversationsStore(
     return derived(
         [proximityRooms, chatConnection.directRooms, chatConnection.rooms, chatConnection.folders],
         ([$proximityRooms, $directRooms, $rooms, $folders], set) => {
-            const conversations = [
-                ...$proximityRooms,
-                ...$directRooms,
-                ...$rooms,
-                ...collectFolderRooms($folders),
-            ];
+            const conversations = [...$proximityRooms, ...$directRooms, ...$rooms, ...collectFolderRooms($folders)];
             if (conversations.length === 0) {
                 set([]);
                 return;

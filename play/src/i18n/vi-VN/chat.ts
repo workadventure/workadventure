@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Đây là lịch sử trò chuyện của bạn:",
     adventurers: "Người dùng",
     getCloserTitle: "Lại gần một ai đó",
-    noRoomOpenDescription:
-        "Chưa có gì để hiển thị. Hãy bắt đầu một cuộc trò chuyện hoặc lại gần ai đó để thấy tin nhắn của bạn xuất hiện tại đây.",
     getCloserDesc:
         "Khi bạn lại gần một ai đó trong không gian ảo, một bong bóng trò chuyện tự động mở ra, cho phép bạn nói chuyện trực tiếp như thể đang mặt đối mặt.",
     noMessage: "Chưa có tin nhắn nào!",

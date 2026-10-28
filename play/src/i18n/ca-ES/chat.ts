@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Aquí està el vostre històric del chat:",
     adventurers: "Usuaris",
     getCloserTitle: "Apropa't a algú",
-    noRoomOpenDescription:
-        "Res a mostrar encara. Inicieu una conversa o apropeu-vos a algú per veure els vostres missatges apareixer aquí.",
     getCloserDesc:
         "Quan t'apropes a una persona a l'espai virtual, s'obre automàticament una bombolla de conversa, permetent-te parlar directament com si estiguéssiu cara a cara.",
     noMessage: "Encara no s'ha enviat cap missatge!",

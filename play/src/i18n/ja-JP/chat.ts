@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "チャット履歴",
     adventurers: "ユーザー",
     getCloserTitle: "誰かに近づく",
-    noRoomOpenDescription:
-        "現在表示するものがありません。会話を開始するか、誰かに近づいてメッセージをここに表示してください。",
     getCloserDesc:
         "バーチャル空間で誰かに近づくと、自動的に会話バブルが開き、顔を合わせて話しているかのようにリアルタイムでチャットできます。",
     noMessage: "まだメッセージが送信されていません！",

@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Aquí está su histórico del chat:",
     adventurers: "Usuarios",
     getCloserTitle: "Acércate a alguien",
-    noRoomOpenDescription:
-        "Nada que mostrar todavía. Inicia una conversación o acércate a alguien para ver tus mensajes aparecer aquí.",
     getCloserDesc:
         "Cuando te acercas a una persona en el espacio virtual, se abre automáticamente una burbuja de conversación, permitiéndote hablar directamente como si estuvierais cara a cara.",
     noMessage: "¡Aún no se ha enviado ningún mensaje!",

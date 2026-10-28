@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier ist dein Nachrichtenverlauf:",
     adventurers: "Benutzer",
     getCloserTitle: "Nähere dich jemandem",
-    noRoomOpenDescription:
-        "Momentan nichts anzuzeigen. Beginne eine Unterhaltung oder nähere dich jemandem, um deine Nachrichten hier zu sehen.",
     getCloserDesc:
         "Wenn du dich einer Person im virtuellen Raum näherst, öffnet sich automatisch eine Unterhaltungsblase, sodass du in Echtzeit chatten kannst, als wärt ihr euch gegenübergestanden.",
     noMessage: "Noch keine Nachricht gesendet!",

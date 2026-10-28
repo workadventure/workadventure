@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Ecco la tua cronologia chat:",
     adventurers: "Utenti",
     getCloserTitle: "Avvicinati a qualcuno",
-    noRoomOpenDescription:
-        "Niente da mostrare per ora. Inizia una discussione o avvicinati a qualcuno per vedere i tuoi messaggi apparire qui.",
     getCloserDesc:
         "Quando ti avvicini a una persona nello spazio virtuale, si apre automaticamente una bolla di conversazione, permettendoti di chattare in tempo reale come se foste faccia a faccia.",
     noMessage: "Nessun messaggio inviato per ora!",

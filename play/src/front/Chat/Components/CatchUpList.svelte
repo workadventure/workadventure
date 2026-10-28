@@ -21,9 +21,6 @@
         <div class="text-center px-3 max-w-md">
             <img class="mx-auto" src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
             <div class="text-lg font-bold text-center">{$LL.chat.catchUpEmpty()}</div>
-            <div class="text-sm opacity-50 text-center">
-                {$LL.chat.noRoomOpenDescription()}
-            </div>
         </div>
     </div>
 {:else}

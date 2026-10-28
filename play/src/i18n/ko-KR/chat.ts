@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "여기는 당신의 채팅 기록입니다:",
     adventurers: "사용자",
     getCloserTitle: "누군가에게 다가가기",
-    noRoomOpenDescription:
-        "아직 표시할 내용이 없습니다. 채팅을 시작하거나 누군가에게 다가가면 이곳에 메시지가 표시됩니다.",
     getCloserDesc:
         "가상 공간에서 누군가에게 가까이 다가가면 대화 말풍선이 자동으로 열려 마치 마주 보고 있는 것처럼 직접 대화를 나눌 수 있습니다.",
     noMessage: "아직 보낸 메시지가 없습니다!",

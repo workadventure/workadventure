@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Tu je twój wotběh powěsćow:",
     adventurers: "Wužiwarjo",
     getCloserTitle: "Přizamkni so někomu",
-    noRoomOpenDescription:
-        "Hišće ničo za pokazanje. Zachop rozmołwu abo přizamkni so někomu, zo by widźał swoje powěsće tu.",
     getCloserDesc:
         "Hdyž so přizamkuješ k wužiwarjej we wirtuelnym rumnje, wočini so awtomatisce rozmołwowa bałka, štož ći dowola wotmjeń rozmołwjeć, kaž byštaj so wobličeje wobličo stejeli.",
     noMessage: "Hišće žana powěsć pósłana!",
