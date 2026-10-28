@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { clampChatSidebarWidth, snapChatSidebarWidth } from "../../../src/front/Chat/ChatSidebarWidth";
+import {
+    clampChatSidebarWidth,
+    maxChatSidebarWidth,
+    snapChatSidebarWidth,
+} from "../../../src/front/Chat/ChatSidebarWidth";
 
 describe("clampChatSidebarWidth", () => {
     it("never goes below 320 px", () => {
@@ -7,7 +11,11 @@ describe("clampChatSidebarWidth", () => {
     });
 
     it("keeps 50 px of map visible", () => {
-        expect(clampChatSidebarWidth(5000, 1920)).toBe(1870);
+        expect(clampChatSidebarWidth(5000, 1000)).toBe(950);
+    });
+
+    it("stops at 1200 px on a wide screen", () => {
+        expect(clampChatSidebarWidth(5000, 1920)).toBe(1200);
     });
 
     it("keeps a width in range", () => {
@@ -23,16 +31,29 @@ describe("snapChatSidebarWidth", () => {
 
     it("leaves a free width alone between steps", () => {
         expect(snapChatSidebarWidth(600, 1920)).toBe(600);
-        expect(snapChatSidebarWidth(1200, 1920)).toBe(1200);
+        expect(snapChatSidebarWidth(1100, 1920)).toBe(1100);
     });
 
-    it("snaps to full screen near the right edge", () => {
-        expect(snapChatSidebarWidth(1840, 1920)).toBe(1920);
-        expect(snapChatSidebarWidth(5000, 1920)).toBe(1920);
-        expect(snapChatSidebarWidth(1820, 1920)).toBe(1820);
+    it("snaps to the cap near the top of the range on a wide screen", () => {
+        expect(snapChatSidebarWidth(1170, 1920)).toBe(1200);
+        expect(snapChatSidebarWidth(5000, 1920)).toBe(1200);
+        expect(snapChatSidebarWidth(1150, 1920)).toBe(1150);
+    });
+
+    it("snaps to full screen near the right edge on a narrow screen", () => {
+        expect(snapChatSidebarWidth(910, 1000)).toBe(1000);
+        expect(snapChatSidebarWidth(890, 1000)).toBe(890);
     });
 
     it("clamps before snapping", () => {
         expect(snapChatSidebarWidth(100, 1920)).toBe(320);
+    });
+});
+
+describe("maxChatSidebarWidth", () => {
+    it("is the whole window up to the cap, the cap beyond", () => {
+        expect(maxChatSidebarWidth(1000)).toBe(1000);
+        expect(maxChatSidebarWidth(1250)).toBe(1250);
+        expect(maxChatSidebarWidth(1920)).toBe(1200);
     });
 });

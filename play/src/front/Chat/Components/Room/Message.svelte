@@ -153,11 +153,9 @@
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
-        class="flex gap-2 justify-start overflow-visible relative {replyDepth === 0
-            ? 'max-w-[calc(100% - 100px)]'
-            : ''} {!$isDeleted ? 'group-hover/message:pb-4' : ''} {isMyMessage
-            ? 'justify-end grid-container-inverted pr-4'
-            : 'justify-start pl-3'}"
+        class="flex gap-2 overflow-visible relative {replyDepth === 0 ? 'max-w-[calc(100% - 100px)]' : ''} {!$isDeleted
+            ? 'group-hover/message:pb-4'
+            : ''} {isMyMessage ? 'justify-end grid-container-inverted pr-4' : 'justify-start pl-3'}"
     >
         {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showHeader}
             <AvatarBox class="overflow-hidden mt-4 shrink-0">
@@ -173,11 +171,9 @@
         <!-- Without a header, the avatar is left out: keep its column so the bubble lines up with the one above.
              Our own messages never show an avatar, so they have no column to keep. -->
         <div
-            class="flex flex-col justify-end max-w-full {replyDepth === 0 &&
-            !showHeader &&
-            (!isMyMessage || isQuotedMessage)
-                ? 'ml-12'
-                : ''}"
+            class="flex flex-col justify-end {replyDepth === 0
+                ? 'max-w-[min(100%,65ch)]'
+                : 'max-w-full'} {replyDepth === 0 && !showHeader && (!isMyMessage || isQuotedMessage) ? 'ml-12' : ''}"
         >
             {#if replyDepth <= 0 && showHeader}
                 <div
