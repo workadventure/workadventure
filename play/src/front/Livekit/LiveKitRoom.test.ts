@@ -5,10 +5,12 @@ import { ConnectionState, DisconnectReason, Track } from "livekit-client";
 import type * as LivekitClient from "livekit-client";
 import type { Readable } from "svelte/store";
 import type { LocalStreamStoreValue } from "../Stores/MediaStore";
+import { videoQualityStore } from "../Stores/MediaStore";
 import type { SpaceInterface } from "../Space/SpaceInterface";
 import type { Streamable } from "../Space/Streamable";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
 import { demotedCodecStore } from "../WebRtc/CodecPerformance";
+import { selectVideoPreset } from "../WebRtc/VideoPresets";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { LiveKitRoom } from "./LiveKitRoom";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
@@ -689,6 +691,91 @@ describe("codec demotion", () => {
     });
 });
 
+describe("camera quality setting", () => {
+    beforeEach(() => {
+        window.capabilities = {};
+        demotedCodecStore.video.set(undefined);
+        videoQualityStore.setQuality("recommended");
+    });
+
+    afterEach(() => {
+        videoQualityStore.setQuality("recommended");
+    });
+
+    function connectedRoom() {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        const publishTrack = vi.fn().mockResolvedValue(undefined);
+        const unpublishTrack = vi.fn().mockResolvedValue(undefined);
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack, unpublishTrack } as never;
+        return { room, publishTrack, unpublishTrack };
+    }
+
+    it("publishes a VP9 camera as three spatial layers, budgeted for all of them", async () => {
+        const { room, publishTrack } = connectedRoom();
+
+        await room["handleCameraTrack"](createCameraStream());
+
+        const options = publishTrack.mock.calls[0][1];
+        expect(options.videoCodec).toBe("vp9");
+        expect(options.scalabilityMode).toBeUndefined();
+        expect(options.videoEncoding.maxBitrate).toBe(
+            selectVideoPreset(720, 1280, false, "recommended", "vp9", 3).bitrate,
+        );
+    });
+
+    it("publishes a 'low' camera as a single VP9 layer, budgeted for its captured size", async () => {
+        videoQualityStore.setQuality("low");
+        const { room, publishTrack } = connectedRoom();
+
+        await room["handleCameraTrack"](createCameraStream("camera-track", 640, 360));
+
+        const options = publishTrack.mock.calls[0][1];
+        expect(options.scalabilityMode).toBe("L1T3");
+        expect(options.videoEncoding.maxBitrate).toBe(selectVideoPreset(360, 640, false, "low", "vp9").bitrate);
+    });
+
+    it("publishes the camera again for 'low' once the camera reopened, not with the track it stopped", async () => {
+        const { room, publishTrack, unpublishTrack } = connectedRoom();
+        const before = createCameraStream("camera-720p");
+        await room["handleCameraTrack"](before);
+
+        videoQualityStore.setQuality("low");
+        // The constraint change stops the camera before LiveKitRoom hears of the new setting
+        const stopped = before.type === "success" ? before.stream?.getVideoTracks()[0] : undefined;
+        Object.assign(stopped ?? {}, { readyState: "ended" });
+        await room["handleCameraTrack"](before);
+        expect(unpublishTrack).not.toHaveBeenCalled();
+
+        const after = createCameraStream("camera-360p", 640, 360);
+        await room["handleCameraTrack"](after);
+        expect(unpublishTrack).toHaveBeenCalledOnce();
+        expect(publishTrack).toHaveBeenCalledTimes(2);
+        expect(publishTrack.mock.calls[1][1].scalabilityMode).toBe("L1T3");
+
+        // Any later emission of the same stream (a microphone toggle...) keeps the publication
+        await room["handleCameraTrack"](after);
+        expect(publishTrack).toHaveBeenCalledTimes(2);
+    });
+
+    it("publishes the camera again with the same track between 'recommended' and 'high'", async () => {
+        const { room, publishTrack, unpublishTrack } = connectedRoom();
+        const camera = createCameraStream();
+        await room["handleCameraTrack"](camera);
+
+        videoQualityStore.setQuality("high");
+        await room["handleCameraTrack"](camera);
+
+        expect(unpublishTrack).toHaveBeenCalledOnce();
+        expect(publishTrack.mock.calls[1][1].videoEncoding.maxBitrate).toBe(
+            selectVideoPreset(720, 1280, false, "high", "vp9", 3).bitrate,
+        );
+    });
+});
+
 function createScreenShareStreamWithVideo(): LocalStreamStoreValue {
     const track = {
         id: "screen-track",
@@ -742,20 +829,21 @@ function createSpace(
     } as unknown as SpaceInterface;
 }
 
-function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
-    const track = createCameraTrack(id);
+function createCameraStream(id = "camera-track", width = 1280, height = 720): LocalStreamStoreValue {
+    const track = createCameraTrack(id, width, height);
     return {
         type: "success",
         stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
     };
 }
 
-function createCameraTrack(id: string): MediaStreamTrack {
+function createCameraTrack(id: string, width = 1280, height = 720): MediaStreamTrack {
     return {
         id,
         kind: "video",
-        getSettings: () => ({ width: 1280, height: 720 }),
-        clone: vi.fn(() => createCameraTrack(`${id}-clone`)),
+        readyState: "live",
+        getSettings: () => ({ width, height }),
+        clone: vi.fn(() => createCameraTrack(`${id}-clone`, width, height)),
         stop: vi.fn(),
     } as unknown as MediaStreamTrack;
 }
