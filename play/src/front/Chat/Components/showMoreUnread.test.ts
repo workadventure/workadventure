@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
 import { describe, expect, it } from "vitest";
-import { hiddenUnreadCount, rowUnreadCount } from "./showMoreUnread";
+import { hiddenUnreadCount, rowUnreadCount, unreadFirstOrder } from "./showMoreUnread";
 
 describe("hiddenUnreadCount", () => {
     it("only counts the items after the first maxNumber", () => {
@@ -25,5 +25,24 @@ describe("rowUnreadCount", () => {
         expect(get(count)).toBe(4);
         hasUnreadMessages.set(false);
         expect(get(count)).toBe(0);
+    });
+});
+
+describe("unreadFirstOrder", () => {
+    it("puts unread items first and keeps the order inside each group", () => {
+        expect(unreadFirstOrder([0, 2, 0, 5, 0, 1])).toEqual([1, 3, 5, 0, 2, 4]);
+    });
+
+    it("keeps the order when nothing or everything is unread", () => {
+        expect(unreadFirstOrder([0, 0, 0])).toEqual([0, 1, 2]);
+        expect(unreadFirstOrder([3, 1])).toEqual([0, 1]);
+        expect(unreadFirstOrder([])).toEqual([]);
+    });
+
+    it("leaves hidden only the unread messages that do not fit before Show more", () => {
+        const counts = [0, 0, 0, 4, 2];
+        const sortedCounts = unreadFirstOrder(counts).map((index) => counts[index]);
+        expect(hiddenUnreadCount(sortedCounts, 2)).toBe(0);
+        expect(hiddenUnreadCount(sortedCounts, 1)).toBe(2);
     });
 });

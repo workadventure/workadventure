@@ -4,14 +4,17 @@
     import { derived, readable } from "svelte/store";
     import LL from "../../../i18n/i18n-svelte";
     import UnreadCount from "./UnreadCount.svelte";
-    import { hiddenUnreadCount } from "./showMoreUnread";
+    import { hiddenUnreadCount, unreadFirstOrder } from "./showMoreUnread";
 
     interface Props<T extends object> {
         items: T[];
         maxNumber?: number;
         idKey?: keyof T;
         showNothingToDisplayMessage?: boolean;
-        /** When given, the "Show more" button shows how many unread messages the hidden items hold. */
+        /**
+         * When given, items with unread messages come first so they are not hidden behind "Show more",
+         * and the button shows how many unread messages the items still hidden hold.
+         */
         getUnreadCount?: (item: T) => Readable<number>;
         children?: Snippet<[{ item: T }]>;
     }
@@ -26,11 +29,19 @@
     }: Props<T> = $props();
 
     let showMore = $state(false);
-    let filteredItems = $derived(showMore ? items : items.slice(0, maxNumber));
+    let countsStore: Readable<number[]> = $derived(
+        getUnreadCount && items.length > 0 ? derived(items.map(getUnreadCount), (counts) => counts) : readable([]),
+    );
+    let order = $derived(
+        $countsStore.length === items.length ? unreadFirstOrder($countsStore) : items.map((_, index) => index),
+    );
+    let sortedItems = $derived(order.map((index) => items[index]));
+    let filteredItems = $derived(showMore ? sortedItems : sortedItems.slice(0, maxNumber));
     let hiddenUnread = $derived(
-        getUnreadCount && items.length > maxNumber
-            ? derived(items.map(getUnreadCount), (counts) => hiddenUnreadCount(counts, maxNumber))
-            : readable(0),
+        hiddenUnreadCount(
+            order.map((index) => $countsStore[index] ?? 0),
+            maxNumber,
+        ),
     );
 </script>
 
@@ -44,11 +55,11 @@
             onclick={() => (showMore = !showMore)}
         >
             {showMore ? $LL.chat.showLess() : $LL.chat.showMore({ number: items.length - maxNumber })}
-            {#if !showMore && $hiddenUnread > 0}
+            {#if !showMore && hiddenUnread > 0}
                 <UnreadCount
-                    count={$hiddenUnread}
+                    count={hiddenUnread}
                     size="sm"
-                    ariaLabel={$LL.chat.a11y.hiddenUnreadCount({ count: $hiddenUnread })}
+                    ariaLabel={$LL.chat.a11y.hiddenUnreadCount({ count: hiddenUnread })}
                 />
             {/if}
         </button>
