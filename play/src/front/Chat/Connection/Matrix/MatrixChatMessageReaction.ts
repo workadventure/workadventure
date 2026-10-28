@@ -108,6 +108,10 @@ export class MatrixChatMessageReaction implements ChatMessageReaction {
         }
     }
 
+    public get myChatId(): string {
+        return this.matrixRoom.myUserId;
+    }
+
     public get component(): {
         component: WorkAdventureComponent;
         props: WorkAdventureComponentProps;

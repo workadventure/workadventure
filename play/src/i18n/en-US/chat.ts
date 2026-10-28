@@ -87,6 +87,12 @@ const chat: BaseTranslation = {
     open: "Open",
     me: "Me",
     you: "You",
+    reactionTooltip: {
+        others: "{count:number} {{other|others}}",
+        youReacted: "You reacted with {emoji}",
+        oneReacted: "{name} reacted with {emoji}",
+        reacted: "{names} reacted with {emoji}",
+    },
     ban: {
         title: "Ban",
         content: "Ban user {userName} from the running world. This can be cancelled from the administration.",

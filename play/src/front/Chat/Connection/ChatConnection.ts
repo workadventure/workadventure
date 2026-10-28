@@ -262,6 +262,8 @@ export interface ChatMessage {
 export interface ChatMessageReaction {
     readonly key: string;
     readonly users: MapStore<string, ChatUser>;
+    // Key of the current user in `users`
+    readonly myChatId: string;
     readonly react: () => void;
     readonly reacted: Readable<boolean>;
     readonly canReact: Readable<boolean>;

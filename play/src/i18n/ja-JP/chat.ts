@@ -89,6 +89,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     open: "開く",
     me: "私",
     you: "あなた",
+    reactionTooltip: {
+        others: "他{count}人",
+        youReacted: "あなたが{emoji}でリアクションしました",
+        oneReacted: "{name}が{emoji}でリアクションしました",
+        reacted: "{names}が{emoji}でリアクションしました",
+    },
     ban: {
         title: "アクセス禁止",
         content: "ユーザー {userName} を実行中のワールドから追放する。これは管理画面からキャンセルできます。",
