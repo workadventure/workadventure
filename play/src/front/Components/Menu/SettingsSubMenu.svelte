@@ -57,6 +57,7 @@
 
     let fullscreen: boolean = $state(localUserStore.getFullscreen());
     let notification: boolean = $state(localUserStore.getNotification());
+    let roomMessageNotifications: boolean = $state(localUserStore.getRoomMessageNotifications());
     let allowPictureInPicture: boolean = $state(localUserStore.getAllowPictureInPicture());
     let blockAudio: boolean = $state(localUserStore.getBlockAudio());
     let forceCowebsiteTrigger: boolean = $state(localUserStore.getForceCowebsiteTrigger());
@@ -758,6 +759,16 @@
                 label={$LL.menu.settings.notifications()}
             />
         </div>
+        {#if notification}
+            <div class="flex cursor-pointer items-center relative m-4 ms-12">
+                <InputSwitch
+                    id="room-message-notification-toggle"
+                    bind:value={roomMessageNotifications}
+                    onchange={() => localUserStore.setRoomMessageNotifications(roomMessageNotifications)}
+                    label={$LL.menu.settings.roomMessageNotifications()}
+                />
+            </div>
+        {/if}
         <div class="flex cursor-pointer items-center relative m-4">
             <InputSwitch
                 id="picture-in-picture-toggle"

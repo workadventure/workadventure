@@ -607,6 +607,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "ほか {count} 件の会話",
         dismiss: "閉じる",
     },
+    notificationPrompt: {
+        question: "別のタブにいるときも、メッセージが届いたら通知しますか？",
+        enable: "有効にする",
+        later: "後で",
+    },
     requiresLoginForChatModal: {
         title: "チャットのロックを解除するにはログインしてください",
         content_1: "チャットを十分に楽しむには、ログインする必要があります。",

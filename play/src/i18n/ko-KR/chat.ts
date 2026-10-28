@@ -606,6 +606,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "외 {count}개 대화",
         dismiss: "닫기",
     },
+    notificationPrompt: {
+        question: "다른 탭에 있을 때도 누군가 메시지를 보내면 알림을 받으시겠습니까?",
+        enable: "사용",
+        later: "나중에",
+    },
     requiresLoginForChatModal: {
         title: "채팅을 사용하려면 로그인하세요!",
         content_1: "이 채팅 기능을 온전히 즐기려면 계정에 로그인해야 합니다.",

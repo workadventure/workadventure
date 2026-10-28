@@ -601,6 +601,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "另有 {count} 个对话",
         dismiss: "关闭",
     },
+    notificationPrompt: {
+        question: "有人给你发消息时接收通知，即使你在其他标签页？",
+        enable: "启用",
+        later: "稍后",
+    },
     requiresLoginForChatModal: {
         title: "登录以解锁聊天！",
         content_1: "要完全享受此聊天功能，您需要登录到您的账户。",

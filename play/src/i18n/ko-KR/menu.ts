@@ -82,6 +82,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         otherSettings: "기타 설정",
         fullscreen: "전체 화면",
         notifications: "알림",
+        roomMessageNotifications: "방의 모든 메시지도 알림",
         enablePictureInPicture: "PIP(화면 속 화면) 활성화",
         chatSounds: "채팅 소리",
         cowebsiteTrigger: "웹사이트 및 Jitsi Meet 방을 열기 전에 항상 물어보기",

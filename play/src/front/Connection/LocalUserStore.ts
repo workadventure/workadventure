@@ -27,6 +27,8 @@ const displayVideoQualityStats = "displayVideoQualityStats";
 const lastRoomUrl = "lastRoomUrl";
 const authToken = "authToken";
 const notification = "notificationPermission";
+const roomMessageNotifications = "roomMessageNotifications";
+const notificationPromptDismissed = "notificationPromptDismissed";
 const allowPictureInPicture = "allowPictureInPicture";
 const chatSounds = "chatSounds";
 const preferredVideoInputDevice = "preferredVideoInputDevice";
@@ -414,6 +416,23 @@ class LocalUserStore {
 
     getNotification(): boolean {
         return localStorage.getItem(notification) === "true";
+    }
+
+    /** Browser notifications for every room message; direct messages and mentions only when off (the default). */
+    setRoomMessageNotifications(value: boolean): void {
+        localStorage.setItem(roomMessageNotifications, value.toString());
+    }
+
+    getRoomMessageNotifications(): boolean {
+        return localStorage.getItem(roomMessageNotifications) === "true";
+    }
+
+    setNotificationPromptDismissed(): void {
+        localStorage.setItem(notificationPromptDismissed, "true");
+    }
+
+    getNotificationPromptDismissed(): boolean {
+        return localStorage.getItem(notificationPromptDismissed) === "true";
     }
 
     setAllowPictureInPicture(value: boolean): void {

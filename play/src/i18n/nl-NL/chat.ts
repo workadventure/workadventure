@@ -606,6 +606,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} {{ander gesprek|andere gesprekken}}",
         dismiss: "Sluiten",
     },
+    notificationPrompt: {
+        question: "Een melding krijgen als iemand je schrijft, ook vanuit een ander tabblad?",
+        enable: "Inschakelen",
+        later: "Later",
+    },
     requiresLoginForChatModal: {
         title: "Log in om de chat te ontgrendelen!",
         content_1: "Om volledig van deze chatfunctie te genieten, moet je ingelogd zijn.",

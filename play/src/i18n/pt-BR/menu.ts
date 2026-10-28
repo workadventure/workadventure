@@ -83,6 +83,7 @@ const menu: BaseTranslation = {
         otherSettings: "Outras configurações",
         fullscreen: "Tela cheia",
         notifications: "Notificações",
+        roomMessageNotifications: "Notificar também todas as mensagens das salas",
         enablePictureInPicture: "Habilitar picture-in-picture",
         chatSounds: "Sons do chat",
         cowebsiteTrigger: "Sempre pergunte antes de abrir sites e salas do Jitsi Meet",

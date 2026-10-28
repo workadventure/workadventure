@@ -302,6 +302,7 @@ export class ProximityChatRoom implements ChatRoom {
             muted: get(this.areNotificationsMuted),
             mentionsMe,
             direct: false,
+            roomBrowserNotifications: localUserStore.getRoomMessageNotifications(),
         });
     }
 

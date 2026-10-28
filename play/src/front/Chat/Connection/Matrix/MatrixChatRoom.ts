@@ -210,6 +210,7 @@ export class MatrixChatRoom
                 muted: get(this.areNotificationsMuted),
                 mentionsMe,
                 direct,
+                roomBrowserNotifications: localUserStore.getRoomMessageNotifications(),
             });
             if (plan.sound && localUserStore.getChatSounds()) {
                 try {

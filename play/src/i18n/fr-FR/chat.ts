@@ -607,6 +607,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} {{autre conversation|autres conversations}}",
         dismiss: "Fermer",
     },
+    notificationPrompt: {
+        question: "Être prévenu quand on vous écrit, même dans un autre onglet ?",
+        enable: "Activer",
+        later: "Plus tard",
+    },
     requiresLoginForChatModal: {
         title: "Identifiez-vous pour utiliser le chat !",
         content_1: "Pour profiter pleinement de cette fonctionnalité du chat, vous devez être connecté.",

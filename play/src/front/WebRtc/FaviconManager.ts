@@ -1,5 +1,9 @@
 export class FaviconManager {
     private _faviconsHref: Map<string, string> = new Map();
+    // The dot stays while either reason holds: being in a bubble, or unread chat messages.
+    private inBubble = false;
+    private hasUnreadMessages = false;
+    private dotShown = false;
 
     constructor() {
         const links: NodeListOf<HTMLLinkElement> = document.querySelectorAll("link[rel~='icon']");
@@ -9,6 +13,34 @@ export class FaviconManager {
     }
 
     public pushNotificationFavicon() {
+        this.inBubble = true;
+        this.refresh();
+    }
+
+    public pushOriginalFavicon() {
+        this.inBubble = false;
+        this.refresh();
+    }
+
+    public setUnreadMessages(hasUnreadMessages: boolean) {
+        this.hasUnreadMessages = hasUnreadMessages;
+        this.refresh();
+    }
+
+    private refresh() {
+        const showDot = this.inBubble || this.hasUnreadMessages;
+        if (showDot === this.dotShown) {
+            return;
+        }
+        this.dotShown = showDot;
+        if (showDot) {
+            this.drawDot();
+        } else {
+            this.restoreOriginal();
+        }
+    }
+
+    private drawDot() {
         // Get list of favicon
         const links: NodeListOf<HTMLLinkElement> = document.querySelectorAll("link[rel~='icon']");
         for (const link of links) {
@@ -46,7 +78,7 @@ export class FaviconManager {
         }
     }
 
-    public pushOriginalFavicon() {
+    private restoreOriginal() {
         // Get list of favicon and remove it
         const links = document.querySelectorAll("link[rel~='icon']");
         for (const link of links) {

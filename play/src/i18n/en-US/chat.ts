@@ -605,6 +605,11 @@ const chat: BaseTranslation = {
         others: "+{count} other {{conversation|conversations}}",
         dismiss: "Dismiss",
     },
+    notificationPrompt: {
+        question: "Get notified when someone writes to you, even from another tab?",
+        enable: "Enable",
+        later: "Later",
+    },
     requiresLoginForChatModal: {
         title: "Log in to unlock the chat!",
         content_1: "To fully enjoy this chat feature, you need to be logged into your account.",

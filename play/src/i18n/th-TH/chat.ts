@@ -604,6 +604,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+ อีก {count} การสนทนา",
         dismiss: "ปิด",
     },
+    notificationPrompt: {
+        question: "รับการแจ้งเตือนเมื่อมีคนส่งข้อความถึงคุณ แม้อยู่ในแท็บอื่นหรือไม่?",
+        enable: "เปิดใช้",
+        later: "ภายหลัง",
+    },
     requiresLoginForChatModal: {
         title: "เข้าสู่ระบบเพื่อปลดล็อกแชท!",
         content_1: "หากต้องการใช้ฟีเจอร์แชทอย่างเต็มที่ คุณต้องเข้าสู่ระบบด้วยบัญชีของคุณ",

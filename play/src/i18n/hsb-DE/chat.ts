@@ -606,6 +606,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} dalše rozmołwy",
         dismiss: "Začinić",
     },
+    notificationPrompt: {
+        question: "Chceće zdźělenku dóstać, hdyž wam něchtó piše, tež z druheho rajtarka?",
+        enable: "Zmóžnić",
+        later: "Pozdźišo",
+    },
     requiresLoginForChatModal: {
         title: "Přizjew so, zo by chat wužiwał!",
         content_1: "Zo by dostał połny přistup k tutej chatowej funkciji, dyrbiš přizjewjeny być.",

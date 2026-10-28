@@ -82,6 +82,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         otherSettings: "إعدادات أخرى", // Other settings
         fullscreen: "ملء الشاشة", // Fullscreen
         notifications: "الإشعارات", // Notifications
+        roomMessageNotifications: "الإشعار أيضًا بكل رسائل الغرف",
         enablePictureInPicture: "تمكين صورة داخل صورة",
         chatSounds: "أصوات الدردشة", // Chat sounds
         cowebsiteTrigger: "اسأل في كل مرة قبل فتح مواقع الويب أو غرف Jitsi-Meet", // Ask every time before opening websites or Jitsi-Meet rooms
