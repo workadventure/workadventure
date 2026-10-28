@@ -921,8 +921,8 @@
             </div>
         {/if}
 
-        <!-- Same reading column as the message list, so the input does not stretch across a full-screen chat -->
-        <div class="w-full max-w-3xl self-center">
+        <!-- Full width and never squeezed: a long message list must not shrink the input -->
+        <div class="w-full shrink-0">
             {#if $initializationState === "ready" && $typingMembers.length > 0}
                 <TypingUsers typingMembers={$typingMembers} />
             {/if}
