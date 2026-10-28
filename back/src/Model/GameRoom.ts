@@ -106,9 +106,9 @@ export class GameRoom implements BrothersFinder {
     private eventListeners: Map<string, Set<EventSocket>> = new Map<string, Set<EventSocket>>();
     // They key to limit the number of meeting invitation requests per sender
     private meetingInvitationRequestLogBySender = new Map<string, { at: Date; receiverUserUuid: string }[]>();
-    // Invitations not answered yet: invitee uuid => sender uuid => sent at (ms).
+    // Invitations not answered yet: invitee uuid => sender uuid => when and from which connection it was sent.
     // ponytail: unanswered invitations stay until the room is deleted; they are tiny and capped by the antispam.
-    private pendingMeetingInvitations = new Map<string, Map<string, number>>();
+    private pendingMeetingInvitations = new Map<string, Map<string, { sentAt: number; senderId: number }>>();
 
     private readonly _userLeaveStream = new Subject<User>();
     public readonly userLeaveStream = this._userLeaveStream.asObservable();
@@ -564,6 +564,9 @@ export class GameRoom implements BrothersFinder {
                     this.groups.set(newGroup.getId(), newGroup);
                 } else {
                     this.leaveGroup(user);
+                    // The step that takes the user out may be the one where they stop next to someone else
+                    this.updateUserGroup(user);
+                    return;
                 }
             }
         }
@@ -1605,27 +1608,30 @@ export class GameRoom implements BrothersFinder {
         }
     }
 
-    public recordMeetingInvitation(senderUserUuid: string, receiverUserUuid: string): void {
+    public recordMeetingInvitation(sender: User, receiverUserUuid: string): void {
         let bySender = this.pendingMeetingInvitations.get(receiverUserUuid);
         if (!bySender) {
             bySender = new Map();
             this.pendingMeetingInvitations.set(receiverUserUuid, bySender);
         }
-        bySender.set(senderUserUuid, Date.now());
+        bySender.set(sender.uuid, { sentAt: Date.now(), senderId: sender.id });
     }
 
     /**
      * Removes the invitation sent by the sender to the receiver.
-     * @returns true if such an invitation was sent less than 10 minutes ago
+     * @returns the connection the invitation was sent from, if it was sent less than 10 minutes ago and is still here
      */
-    public takeMeetingInvitation(senderUserUuid: string, receiverUserUuid: string): boolean {
+    public takeMeetingInvitation(senderUserUuid: string, receiverUserUuid: string): User | undefined {
         const bySender = this.pendingMeetingInvitations.get(receiverUserUuid);
-        const sentAt = bySender?.get(senderUserUuid);
+        const invitation = bySender?.get(senderUserUuid);
         bySender?.delete(senderUserUuid);
         if (bySender?.size === 0) {
             this.pendingMeetingInvitations.delete(receiverUserUuid);
         }
-        return sentAt !== undefined && sentAt > Date.now() - MEETING_INVITATION_REQUEST_WINDOW_MS;
+        if (!invitation || invitation.sentAt <= Date.now() - MEETING_INVITATION_REQUEST_WINDOW_MS) {
+            return undefined;
+        }
+        return this.getUserById(invitation.senderId);
     }
 
     // Antispam: clear the meeting invitation request log for a sender (e.g. when an invite is accepted)

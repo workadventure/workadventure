@@ -1374,7 +1374,7 @@ export class SocketManager {
         if (invitees.size === 0) {
             return;
         }
-        room.recordMeetingInvitation(sender.uuid, message.receiverUserUuid);
+        room.recordMeetingInvitation(sender, message.receiverUserUuid);
         for (const invitee of invitees) {
             if (invitee.id === sender.id) {
                 continue;
@@ -1397,7 +1397,12 @@ export class SocketManager {
         message: MeetingInvitationResponseMessage,
     ): void {
         // Only a real invitation opens the locks: the bubble (here) and the locked area (see AreasManager in play).
-        if (room.takeMeetingInvitation(message.requestSenderUserUuid, responder.uuid) && message.accept) {
+        const sender = room.takeMeetingInvitation(message.requestSenderUserUuid, responder.uuid);
+        const bringSender = message.accept && message.bringSender === true && sender !== undefined;
+        if (bringSender) {
+            // The invitee stays in their bubble: the sender comes to them, through the invitee's locks
+            sender.lockPass = { inviterUuid: responder.uuid, expiresAt: Date.now() + LOCK_PASS_DURATION_MS };
+        } else if (sender && message.accept) {
             responder.lockPass = {
                 inviterUuid: message.requestSenderUserUuid,
                 expiresAt: Date.now() + LOCK_PASS_DURATION_MS,
@@ -1416,7 +1421,14 @@ export class SocketManager {
                 meetingInvitationResponseReceivedMessage: {
                     accepted: message.accept,
                     responderName: responder.name,
+                    bringSender: bringSender && requester === sender,
                 },
+            });
+        }
+        if (bringSender) {
+            sender.write({
+                $case: "moveToPositionMessage",
+                moveToPositionMessage: { position: ProtobufUtils.toPositionMessage(responder.getPosition()) },
             });
         }
 

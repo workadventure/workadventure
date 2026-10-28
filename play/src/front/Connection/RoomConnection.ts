@@ -1626,13 +1626,14 @@ export class RoomConnection implements RoomConnection {
         });
     }
 
-    public emitMeetingInvitationResponse(accept: boolean, requestSenderUserUuid: string): void {
+    public emitMeetingInvitationResponse(accept: boolean, requestSenderUserUuid: string, bringSender = false): void {
         this.send({
             message: {
                 $case: "meetingInvitationResponseMessage",
                 meetingInvitationResponseMessage: {
                     accept,
                     requestSenderUserUuid,
+                    bringSender,
                 },
             },
         });

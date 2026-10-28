@@ -40,6 +40,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         invitationAccepted: "Lời mời của bạn đã được {name} chấp nhận",
         defaultResponderName: "Người dùng",
         limitReached: "Bạn đã gửi quá nhiều lời mời họp. Vui lòng thử lại sau.",
+        join: "Tham gia",
+        bringHere: "Gọi tới đây",
+        leaveWarning: "Tham gia sẽ khiến bạn rời cuộc trò chuyện hiện tại.",
+        invitationAcceptedBringingYou: "{name} đã chấp nhận: bạn đang đi tới cuộc trò chuyện",
     },
     imagePreview: {
         close: "Đóng",

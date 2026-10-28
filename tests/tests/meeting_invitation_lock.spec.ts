@@ -32,10 +32,10 @@ test.describe("Meeting invitation through a locked bubble @nomobile @nowebkit", 
     const mapUrl = publicTestMapUrl("tests/E2E/empty.json", "meeting");
 
     // Alice and Bob talk in a bubble that Alice locks. Carol stands in the corner, too far to join.
-    async function formBubble(alice: Page, bob: Page, carol: Page, lock = true): Promise<void> {
+    async function formBubble(alice: Page, bob: Page, carol: Page, lock = true, alicePosition = { x: 160, y: 160 }) {
         await Map.teleportToPosition(carol, 32, 300);
-        await Map.teleportToPosition(alice, 160, 160);
-        await Map.teleportToPosition(bob, 200, 160);
+        await Map.teleportToPosition(alice, alicePosition.x, alicePosition.y);
+        await Map.teleportToPosition(bob, alicePosition.x + 40, alicePosition.y);
         await isInBubbleWith(alice, "Bob");
         if (lock) {
             await alice.getByTestId("lock-button").click();
@@ -84,6 +84,47 @@ test.describe("Meeting invitation through a locked bubble @nomobile @nowebkit", 
         await Map.walkToPosition(carol, 180, 200);
 
         await isNotInBubbleWith(alice, "Carol");
+    });
+
+    test("Invitee in a locked bubble brings the inviter in instead of leaving", async ({ browser }, testInfo) => {
+        await using alice = await getPage(browser, "Alice", mapUrl);
+        await using bob = await getPage(browser, "Bob", mapUrl);
+        await using carol = await getPage(browser, "Carol", mapUrl);
+        await formBubble(alice, bob, carol);
+
+        // Carol, alone, invites Bob, who is talking with Alice in a locked bubble
+        await chatUtils.UL_invite(carol, "Bob");
+        const popup = bob.getByTestId("meeting-invitation-popup");
+        await expect(popup).toBeVisible({ timeout: 15_000 });
+        await expect(popup.getByText("Joining makes you leave your current conversation.")).toBeVisible();
+        await testInfo.attach("invitation-popup-in-bubble", {
+            body: await popup.screenshot(),
+            contentType: "image/png",
+        });
+        await bob.getByTestId("meeting-invitation-bring").click();
+
+        await expect(
+            carol
+                .locator(".toast-container")
+                .filter({ hasText: "Bob accepted: you are walking to their conversation" }),
+        ).toBeVisible({ timeout: 10_000 });
+        await isInBubbleWith(carol, "Alice");
+        await isInBubbleWith(bob, "Carol");
+    });
+
+    test("Invitee in a bubble can still join the inviter, leaving their conversation", async ({ browser }) => {
+        await using alice = await getPage(browser, "Alice", mapUrl);
+        await using bob = await getPage(browser, "Bob", mapUrl);
+        await using carol = await getPage(browser, "Carol", mapUrl);
+        // In the opposite corner: Bob only leaves a bubble of two once more than 2 group radii (320px) away from Alice
+        await formBubble(alice, bob, carol, false, { x: 256, y: 24 });
+
+        await chatUtils.UL_invite(carol, "Bob");
+        await expect(bob.getByTestId("meeting-invitation-popup")).toBeVisible({ timeout: 15_000 });
+        await bob.getByTestId("meeting-invitation-accept").click();
+
+        await isInBubbleWith(carol, "Bob");
+        await expect(alice.locator("#cameras-container").getByText("Bob")).toBeHidden({ timeout: 15_000 });
     });
 
     test("The invitation lets the user in only once", async ({ browser }) => {

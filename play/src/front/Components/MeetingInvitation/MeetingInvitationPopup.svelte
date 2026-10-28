@@ -2,11 +2,24 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
+    import { currentPlayerGroupLockStateStore } from "../../Stores/CurrentPlayerGroupStore";
     import Button from "../UI/Button.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
     import { IconUsersGroup } from "@wa-icons";
 
     let request = $derived($meetingInvitationRequestStore);
+    // Already talking in a bubble: offer to bring the sender here instead of leaving the conversation
+    let inBubble = $derived($currentPlayerGroupLockStateStore !== undefined);
+
+    function onBring() {
+        gameManager.getCurrentGameScene().inviteManager?.handleBring({
+            senderUserUuid: request?.senderUserUuid ?? "",
+            senderPlayUri: request?.senderPlayUri ?? "",
+            senderName: request?.senderName ?? "",
+            senderUserId: request?.senderUserId ?? 0,
+        });
+        meetingInvitationRequestStore.set(null);
+    }
 
     function onAccept() {
         gameManager.getCurrentGameScene().inviteManager?.handleAccept({
@@ -51,6 +64,11 @@
                 <p class="text-sm text-white/95 leading-snug">
                     {$LL.chat.meetingInvitation.title({ name: request?.senderName ?? "" })}
                 </p>
+                {#if inBubble}
+                    <p class="text-xs text-white/60 leading-snug mt-1">
+                        {$LL.chat.meetingInvitation.leaveWarning()}
+                    </p>
+                {/if}
             </div>
         </div>
     </div>
@@ -60,9 +78,21 @@
             appearance="ghost"
             class="text-nowrap my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!bg-white/30"
             onclick={onAccept}
+            data-testid="meeting-invitation-accept"
         >
-            {$LL.chat.accept()}
+            {inBubble ? $LL.chat.meetingInvitation.join() : $LL.chat.accept()}
         </Button>
+        {#if inBubble}
+            <Button
+                variant="light"
+                appearance="ghost"
+                class="text-nowrap my-2 mx-1 min-w-0 !border !border-solid !border-transparent hover:!bg-white/30"
+                onclick={onBring}
+                data-testid="meeting-invitation-bring"
+            >
+                {$LL.chat.meetingInvitation.bringHere()}
+            </Button>
+        {/if}
         <Button
             variant="light"
             appearance="ghost"
