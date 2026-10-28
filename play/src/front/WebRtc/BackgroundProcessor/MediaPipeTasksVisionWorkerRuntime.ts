@@ -282,8 +282,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private transformVideoFrame(frame: VideoFrame, controller: TransformStreamDefaultController<VideoFrame>): void {
         let output: VideoFrame = frame;
         try {
-            // VideoFrame timestamps are microseconds; MediaPipe wants milliseconds.
-            if (this.render(frame, frame.displayWidth, frame.displayHeight, frame.timestamp / 1000)) {
+            // Not frame.timestamp: a camera frame's timestamp can count from boot, and MediaPipe caps timestamps
+            // at 2^31 - 1 ms. After ~25 days of uptime every frame would get the same capped timestamp and the
+            // graph would reject it.
+            if (this.render(frame, frame.displayWidth, frame.displayHeight, performance.now())) {
                 output = new VideoFrame(this.glCanvas!, { timestamp: frame.timestamp, alpha: "discard" });
             }
         } catch (error) {
