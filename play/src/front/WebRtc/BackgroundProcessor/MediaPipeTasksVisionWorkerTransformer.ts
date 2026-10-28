@@ -3,11 +3,11 @@ import { raceAbort } from "@workadventure/shared-utils/src/Abort/raceAbort";
 // Use an emitted URL so the worker type stays explicit in both dev and production.
 import tasksVisionWorkerUrl from "./MediaPipeTasksVisionWorker?worker&url";
 import { TASKS_VISION_ASSET_URLS } from "./tasksVisionAssetUrls";
-import type {
-    SerializedWorkerError,
-    TasksVisionWorkerDelegate,
-    TasksVisionWorkerRequest,
-    TasksVisionWorkerResponse,
+import {
+    deserializeError,
+    type TasksVisionWorkerDelegate,
+    type TasksVisionWorkerRequest,
+    type TasksVisionWorkerResponse,
 } from "./MediaPipeTasksVisionWorkerProtocol";
 import {
     BackgroundProcessingUnsupportedError,
@@ -29,13 +29,6 @@ type PendingRequest = {
     reject: (error: Error) => void;
     timeoutId: ReturnType<typeof setTimeout>;
 };
-
-function deserializeError(error: SerializedWorkerError): Error {
-    const deserialized = new Error(error.message);
-    deserialized.name = error.name;
-    deserialized.stack = error.stack;
-    return deserialized;
-}
 
 /**
  * Chromium exposes insertable streams: the camera track's frames are read and the output track's frames are

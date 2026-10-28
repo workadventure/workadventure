@@ -19,7 +19,30 @@ export type SerializedWorkerError = {
     name: string;
     message: string;
     stack?: string;
+    cause?: SerializedWorkerError;
 };
+
+// Sentry's linked-errors integration reads at most 5 causes.
+const MAX_SERIALIZED_CAUSES = 5;
+
+/** Error objects lose their `cause` in postMessage: the chain is copied by hand so Sentry can show it. */
+export function serializeError(error: unknown, depth = 0): SerializedWorkerError {
+    if (!(error instanceof Error)) {
+        return { name: "Error", message: String(error) };
+    }
+    const serialized: SerializedWorkerError = { name: error.name, message: error.message, stack: error.stack };
+    if (error.cause !== undefined && depth < MAX_SERIALIZED_CAUSES) {
+        serialized.cause = serializeError(error.cause, depth + 1);
+    }
+    return serialized;
+}
+
+export function deserializeError(error: SerializedWorkerError): Error {
+    const deserialized = new Error(error.message, error.cause ? { cause: deserializeError(error.cause) } : undefined);
+    deserialized.name = error.name;
+    deserialized.stack = error.stack;
+    return deserialized;
+}
 
 export type TasksVisionWorkerDelegate = "GPU" | "CPU";
 

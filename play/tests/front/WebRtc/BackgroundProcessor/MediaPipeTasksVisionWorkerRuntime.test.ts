@@ -197,9 +197,25 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         await vi.waitFor(() => expect(posted.some((message) => message.type === "fatal")).toBe(true));
         // Two attempts, each trying GPU then CPU.
         expect(mediaPipeMocks.createFromOptions).toHaveBeenCalledTimes(1 + 2 * 2);
+        // The chain ends with the frame error that started recovery.
         expect(lastPosted()).toMatchObject({
             type: "fatal",
-            error: { message: "MediaPipe Tasks Vision recovery failed" },
+            error: {
+                message: "MediaPipe Tasks Vision recovery failed",
+                cause: {
+                    message: "MediaPipe recovery attempts exhausted",
+                    cause: {
+                        message: "Recovery attempt 2 failed: Error: still broken",
+                        cause: {
+                            message: "Recovery attempt 1 failed: Error: still broken",
+                            cause: {
+                                message: expect.stringMatching(/^Frame processing failed \(webGlContextLost=/),
+                                cause: { message: "GPU context lost" },
+                            },
+                        },
+                    },
+                },
+            },
         });
     });
 
