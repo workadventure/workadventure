@@ -564,6 +564,9 @@ export class GameRoom implements BrothersFinder {
                     this.groups.set(newGroup.getId(), newGroup);
                 } else {
                     this.leaveGroup(user);
+                    // The step that takes the user out may be the one where they stop next to someone else
+                    this.updateUserGroup(user);
+                    return;
                 }
             }
         }

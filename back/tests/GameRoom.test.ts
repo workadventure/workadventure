@@ -271,6 +271,19 @@ describe("GameRoom", () => {
             world.updatePosition(user3, new Point(400, 100));
             expect(user3.group).toBe(user1.group);
         });
+
+        it("should group the member with the user when they leave their group on the step where they stop", async () => {
+            const world = await createWorld();
+            const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 100, 100));
+            const user2 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 200, 100));
+            const user3 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("3", 500, 100));
+
+            world.updatePosition(user2, new Point(490, 100));
+
+            expect(user1.group).toBeUndefined();
+            expect(user2.group).toBeDefined();
+            expect(user2.group).toBe(user3.group);
+        });
     });
 
     describe("when a member of a locked group invites a user", () => {
