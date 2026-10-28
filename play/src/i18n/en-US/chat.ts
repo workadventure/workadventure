@@ -67,6 +67,7 @@ const chat: BaseTranslation = {
         unknownRoom: "A room",
     },
     suggestedRooms: "Suggested rooms",
+    suggestedRoomsToDiscover: "{count:number} to discover",
     ignoreSuggestedRoom: "Ignore",
     joinableRooms: "Available discussions",
     joinableRoomsError: "Error loading discussions click to retry",

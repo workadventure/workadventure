@@ -66,6 +66,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "一個房間",
     },
     suggestedRooms: "推薦房間",
+    suggestedRoomsToDiscover: "{count} 個待發現",
     ignoreSuggestedRoom: "忽略",
     joinableRooms: "可用討論",
     joinableRoomsError: "載入討論時發生錯誤，點選重試",

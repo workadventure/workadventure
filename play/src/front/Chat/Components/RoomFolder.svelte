@@ -13,7 +13,7 @@
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
     import UnreadCount from "./UnreadCount.svelte";
-    import { IconChevronUp, IconLoader } from "@wa-icons";
+    import { IconChevronUp, IconLoader, IconSparkles } from "@wa-icons";
 
     interface Props {
         rootFolder: boolean;
@@ -78,6 +78,8 @@
     onMount(() => {
         if (isOpen) {
             loadOpenedFolderContent();
+        } else {
+            folder.preloadSuggestedRooms();
         }
     });
 </script>
@@ -89,20 +91,25 @@
         }`}
         class:mb-2={isOpen || rootFolder}
     >
-        <div class="flex items-center space-x-2 grow m-0 p-0">
-            <button class="flex items-center space-x-2 grow m-0 p-0" onclick={toggleFolder}>
-                <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
-                    <span class="truncate">{$name}</span>
-                    {#if hasSuggestedRooms}
-                        <span
-                            class="shrink-0 inline-flex items-center rounded-full bg-secondary/50 px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/95 border border-secondary/60"
-                            title={$LL.chat.suggestedRooms()}
-                            aria-label={$LL.chat.suggestedRooms()}
-                        >
-                            {$suggestedRooms.length}
-                        </span>
-                    {/if}
+        <div class="@container flex items-center space-x-2 grow min-w-0 m-0 p-0">
+            <button class="flex items-center space-x-2 grow min-w-0 m-0 p-0" onclick={toggleFolder}>
+                <div class="text-white text-sm font-bold tracking-widest uppercase grow min-w-0 truncate text-start">
+                    {$name}
                 </div>
+                {#if hasSuggestedRooms}
+                    <span
+                        class="shrink-0 inline-flex items-center gap-1 rounded-full border border-solid border-cyan-400/50 bg-cyan-400/15 px-1.5 py-0.5 text-xs font-semibold text-cyan-300"
+                        title={$LL.chat.suggestedRooms()}
+                        aria-label={$LL.chat.suggestedRooms()}
+                        data-testid="folderSuggestedRoomsChip"
+                    >
+                        <IconSparkles class="h-3 w-3" />
+                        <span class="@xs:hidden">{$suggestedRooms.length}</span>
+                        <span class="hidden @xs:inline">
+                            {$LL.chat.suggestedRoomsToDiscover({ count: $suggestedRooms.length })}
+                        </span>
+                    </span>
+                {/if}
             </button>
             {#if collapsedUnreadSummary && collapsedUnreadSummary.count > 0}
                 <UnreadCount

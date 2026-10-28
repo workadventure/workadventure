@@ -68,6 +68,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "Một phòng",
     },
     suggestedRooms: "Phòng gợi ý",
+    suggestedRoomsToDiscover: "{count} để khám phá",
     ignoreSuggestedRoom: "Bỏ qua",
     joinableRooms: "Cuộc thảo luận khả dụng",
     joinableRoomsError: "Lỗi khi tải các cuộc thảo luận, bấm để thử lại",

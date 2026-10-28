@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "Rum",
     },
     suggestedRooms: "Doporucene rědy",
+    suggestedRoomsToDiscover: "{count} k wotkryću",
     ignoreSuggestedRoom: "Ignorować",
     joinableRooms: "Dostupne diskusije",
     joinableRoomsError: "Zmylka při nakładowanju diskusijow, klikń za wopyćeće hišće raz",

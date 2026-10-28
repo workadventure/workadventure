@@ -15,6 +15,9 @@ import { retargetSelectedRoomIfReplaced } from "../../Stores/SelectRoomStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
 
+// Lets the first sync and the opened folders go first: the preload shares matrixRateLimiter with them.
+const SUGGESTED_ROOMS_PRELOAD_DELAY_MS = 3000;
+
 export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     roomList: MapStore<MatrixChatRoom["id"], MatrixChatRoom> = new MapStore<MatrixChatRoom["id"], MatrixChatRoom>();
     folderList: MapStore<MatrixRoomFolder["id"], MatrixRoomFolder> = new MapStore<
@@ -37,6 +40,8 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     private childrenLoaded = false;
     private joinableRoomsLoaded = false;
     private joinableRoomsLoadingPromise: Promise<void> | undefined;
+    private suggestedRoomsPreloadScheduled = false;
+    private suggestedRoomsPreloadTimeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private room: Room) {
         super(room);
@@ -102,6 +107,7 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     }
 
     override destroy(): void {
+        clearTimeout(this.suggestedRoomsPreloadTimeout);
         for (const id of Array.from(this.folderList.keys())) {
             this.folderList.get(id)?.destroy();
             this.folderList.delete(id);
@@ -290,6 +296,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
                     return;
                 }
 
+                // A collapsed folder has not loaded its children, so the suggestedRooms filter cannot see the rooms
+                // already joined there: leave them out here.
+                const membership = chatRoom.getMyMembership();
+                if (membership === "join" || membership === "invite" || membership === "ban") return;
+
                 const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
                 suggestedRooms.push({
                     name: room.name ?? "",
@@ -361,6 +372,25 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             });
 
         return this.joinableRoomsLoadingPromise;
+    }
+
+    // A collapsed folder must still show that it holds suggested rooms, so joined folders load them in the background.
+    public preloadSuggestedRooms(): void {
+        if (this.suggestedRoomsPreloadScheduled) {
+            return;
+        }
+        this.suggestedRoomsPreloadScheduled = true;
+        this.joinRoomDeferred.promise
+            .then(
+                () =>
+                    new Promise<void>((resolve) => {
+                        this.suggestedRoomsPreloadTimeout = setTimeout(resolve, SUGGESTED_ROOMS_PRELOAD_DELAY_MS);
+                    }),
+            )
+            .then(() => this.ensureJoinableRoomsLoaded())
+            .catch((error: unknown) => {
+                console.error("Failed to preload suggested rooms", error);
+            });
     }
 
     protected override onRoomMyMembership(room: Room) {

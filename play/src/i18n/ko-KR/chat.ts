@@ -68,6 +68,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unknownRoom: "방",
     },
     suggestedRooms: "추천 방",
+    suggestedRoomsToDiscover: "{count}개 둘러보기",
     ignoreSuggestedRoom: "무시",
     joinableRooms: "참여 가능한 대화",
     joinableRoomsError: "대화 불러오기 오류, 클릭해서 다시 시도",

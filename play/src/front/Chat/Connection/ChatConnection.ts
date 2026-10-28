@@ -494,6 +494,7 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     hasChildRoomsError: Writable<boolean>;
     ensureChildrenLoaded: () => void;
     ensureJoinableRoomsLoaded: () => Promise<void>;
+    preloadSuggestedRooms: () => void;
     /** Unread messages of every joined room below this folder, sub-folders included, even before they are loaded. */
     getUnreadSummary: () => UnreadSummary;
 }
