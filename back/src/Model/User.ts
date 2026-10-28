@@ -41,6 +41,12 @@ export class User implements Movable, CustomJsonReplacerInterface {
      */
     public readonly queryMessageAbortControllers = new Map<number, AbortController>();
 
+    /**
+     * Set when this user accepts a meeting invitation: lets them into the locked bubble of the person who invited
+     * them, once, until expiresAt (ms timestamp).
+     */
+    public lockPass: { inviterUuid: string; expiresAt: number } | undefined;
+
     public constructor(
         public id: number,
         public readonly uuid: string,
