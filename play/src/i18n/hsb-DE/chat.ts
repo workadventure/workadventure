@@ -583,6 +583,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         unreadCount: "{count} njepřečitane",
         backWithUnreadElsewhere: "Wróćo, {count} njepřečitane powěsće hdźe druhdźe",
         showUnreadConversations: "Njepřečitane rozmołwy pokazać",
+        hiddenUnreadCount: "{count} njepřečitane w schowanych rozmołwach",
         userAvatar: "Awatar wužiwarja",
         applicationIcon: "Nałoženje",
     },

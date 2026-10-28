@@ -13,6 +13,7 @@
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
     import UnreadCount from "./UnreadCount.svelte";
+    import { rowUnreadCount } from "./showMoreUnread";
     import { IconChevronUp, IconLoader } from "@wa-icons";
 
     interface Props {
@@ -194,7 +195,13 @@
                 {#each Array.from($folders.values()) as folder (folder.id)}
                     <RoomSubFolder {folder} rootFolder={false} />
                 {/each}
-                <ShowMore items={filteredRoom} maxNumber={8} idKey="id" showNothingToDisplayMessage={false}>
+                <ShowMore
+                    items={filteredRoom}
+                    maxNumber={8}
+                    idKey="id"
+                    showNothingToDisplayMessage={false}
+                    getUnreadCount={(room) => rowUnreadCount(room.hasUnreadMessages, room.unreadNotificationCount)}
+                >
                     {#snippet children({ item: room })}
                         <Room {room} />
                     {/snippet}

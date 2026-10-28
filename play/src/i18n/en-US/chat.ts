@@ -582,6 +582,7 @@ const chat: BaseTranslation = {
         unreadCount: "{count} unread",
         backWithUnreadElsewhere: "Back, {count} unread {{message|messages}} elsewhere",
         showUnreadConversations: "Show the unread conversations",
+        hiddenUnreadCount: "{count} unread in the hidden conversations",
         userAvatar: "User avatar",
         applicationIcon: "Application",
     },
