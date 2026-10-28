@@ -21,7 +21,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     typing: "입력 중...",
     users: "사용자",
     chat: "채팅",
-    resizeChat: "채팅 크기 조정 (화살표 키로 조정, Enter로 전체 화면)",
+    resizeChat: "채팅 크기 조정 (화살표 키로 조정, Enter로 최대 너비)",
     userList: {
         disconnected: "월드에 연결되어 있지 않음",
         isHere: "이 지도에 있음",

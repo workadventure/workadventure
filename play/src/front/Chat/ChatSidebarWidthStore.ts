@@ -5,9 +5,11 @@ import { localUserStore } from "../Connection/LocalUserStore";
 import { mapEditorSideBarWidthStore } from "../Components/MapEditor/MapEditorSideBarWidthStore";
 import { mapEditorModeStore } from "../Stores/MapEditorStore";
 import { sidePanelWidthStore } from "../Stores/SidePanelStore";
-import { CHAT_SIDEBAR_MIN_WIDTH } from "./ChatSidebarWidth";
+import { clampChatSidebarWidth } from "./ChatSidebarWidth";
 
-export const chatSidebarWidthStore = writable(Math.max(CHAT_SIDEBAR_MIN_WIDTH, localUserStore.getChatSideBarWidth()));
+export const chatSidebarWidthStore = writable(
+    clampChatSidebarWidth(localUserStore.getChatSideBarWidth(), document.documentElement.clientWidth),
+);
 
 // Not unsubscribing is ok, this is a singleton.
 //eslint-disable-next-line svelte/no-ignored-unsubscribe

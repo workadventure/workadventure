@@ -7,7 +7,12 @@
     import { selectedRoomStore } from "./Stores/SelectRoomStore";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
-    import { clampChatSidebarWidth, CHAT_SIDEBAR_MIN_WIDTH, snapChatSidebarWidth } from "./ChatSidebarWidth";
+    import {
+        clampChatSidebarWidth,
+        CHAT_SIDEBAR_MIN_WIDTH,
+        getChatSidebarMaxWidth,
+        snapChatSidebarWidth,
+    } from "./ChatSidebarWidth";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement | undefined = $state();
@@ -60,13 +65,13 @@
         document.addEventListener("touchend", onTouchEnd);
     };
 
-    const toggleFullScreen = () => {
-        if (isChatBarInFullScreen()) {
+    const toggleMaxWidth = () => {
+        const maxWidth = getChatSidebarMaxWidth(viewportWidth());
+        if (sideBarWidth >= maxWidth) {
             const initialWidth = isMediaBreakpointUp("md") ? INITIAL_SIDEBAR_WIDTH_MOBILE : INITIAL_SIDEBAR_WIDTH;
             sideBarWidth = clampChatSidebarWidth(initialWidth, viewportWidth());
         } else {
-            const fullWidth = document.documentElement.clientWidth;
-            sideBarWidth = fullWidth;
+            sideBarWidth = maxWidth;
         }
         chatSidebarWidthStore.set(sideBarWidth);
     };
@@ -75,7 +80,7 @@
 
     const handleKeydown = (e: KeyboardEvent) => {
         if (e.key === "Enter") {
-            toggleFullScreen();
+            toggleMaxWidth();
         } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
             // The arrow follows the handle on screen: it moves left in RTL, where the panel sits on the right.
             const grows = (e.key === "ArrowRight") !== isRTL;
@@ -92,18 +97,10 @@
     });
 
     const onresize = () => {
-        if (isChatSidebarLargerThanWindow() && container) {
-            sideBarWidth = document.documentElement.clientWidth;
+        if (container) {
+            sideBarWidth = clampChatSidebarWidth(sideBarWidth, viewportWidth());
             chatSidebarWidthStore.set(sideBarWidth);
         }
-    };
-
-    const isChatSidebarLargerThanWindow = () => {
-        return sideBarWidth >= document.documentElement.clientWidth;
-    };
-
-    const isChatBarInFullScreen = () => {
-        return sideBarWidth === document.documentElement.clientWidth;
     };
 </script>
 
@@ -142,9 +139,9 @@
             aria-label={$LL.chat.resizeChat()}
             aria-valuenow={Math.round(sideBarWidth)}
             aria-valuemin={CHAT_SIDEBAR_MIN_WIDTH}
-            aria-valuemax={document.documentElement.clientWidth}
+            aria-valuemax={getChatSidebarMaxWidth(viewportWidth())}
             onmousedown={handleMousedown}
-            ondblclick={toggleFullScreen}
+            ondblclick={toggleMaxWidth}
             ontouchstart={handleTouchStart}
             onkeydown={handleKeydown}
         ></div>

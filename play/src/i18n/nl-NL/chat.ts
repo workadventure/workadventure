@@ -21,7 +21,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     typing: "is aan het typen...",
     users: "Gebruikers",
     chat: "Chat",
-    resizeChat: "Chatgrootte wijzigen (pijltjestoetsen om te wijzigen, Enter voor volledig scherm)",
+    resizeChat: "Chatgrootte wijzigen (pijltjestoetsen om te wijzigen, Enter voor maximale breedte)",
     userList: {
         disconnected: "Niet verbonden met de wereld",
         isHere: "Is op deze kaart",

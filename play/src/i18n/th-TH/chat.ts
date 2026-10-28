@@ -20,7 +20,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     typing: "กำลังพิมพ์...",
     users: "ผู้ใช้",
     chat: "แชท",
-    resizeChat: "ปรับขนาดแชท (ปุ่มลูกศรเพื่อปรับขนาด, Enter เพื่อเต็มหน้าจอ)",
+    resizeChat: "ปรับขนาดแชท (ปุ่มลูกศรเพื่อปรับขนาด, Enter เพื่อความกว้างสูงสุด)",
     userList: {
         disconnected: "ไม่ได้เชื่อมต่อกับโลกนี้",
         isHere: "อยู่บนแผนที่นี้",
