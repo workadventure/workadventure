@@ -164,7 +164,7 @@
                                         </span>
                                         <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id">
                                             {#snippet children({ item: room })}
-                                                <RoomSuggested roomInformation={room} />
+                                                <RoomSuggested roomInformation={room} suggested />
                                             {/snippet}
                                         </ShowMore>
                                     </div>

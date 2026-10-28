@@ -69,6 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     suggestedRooms: "الغرف المقترحة",
     ignoreSuggestedRoom: "تجاهل",
+    roomMemberCount: "{count} عضو",
     joinableRooms: "المناقشات المتاحة",
     joinableRoomsError: "خطأ في تحميل المناقشات، انقر لإعادة المحاولة",
     availableRooms: "الغرف المتاحة",

@@ -496,14 +496,23 @@ export type ChatRoomPrivacyState = {
     restrictedRoomId?: string;
 };
 
+/** A room the user can join, with what is known about it before joining. */
+export type JoinableRoomInfo = {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    topic?: string;
+    memberCount?: number;
+};
+
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
     name: Readable<string>;
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     folders: Readable<RoomFolder[]>;
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
-    suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
-    joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    suggestedRooms: Readable<JoinableRoomInfo[]>;
+    joinableRooms: Readable<JoinableRoomInfo[]>;
     joinableRoomsLoading: Readable<boolean>;
     hasChildRoomsError: Writable<boolean>;
     ensureChildrenLoaded: () => void;

@@ -70,6 +70,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     suggestedRooms: "Sales recomanades",
     ignoreSuggestedRoom: "Ignorar",
+    roomMemberCount: "{count} {{membre|membres}}",
     joinableRooms: "Discussions disponibles",
     joinableRoomsError: "Error en carregar les discussions, feu clic per tornar-ho a provar",
     availableRooms: "Discussion(s) disponible(s)",

@@ -70,6 +70,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     suggestedRooms: "Phòng gợi ý",
     ignoreSuggestedRoom: "Bỏ qua",
+    roomMemberCount: "{count} thành viên",
     joinableRooms: "Cuộc thảo luận khả dụng",
     joinableRoomsError: "Lỗi khi tải các cuộc thảo luận, bấm để thử lại",
     availableRooms: "Cuộc thảo luận khả dụng",

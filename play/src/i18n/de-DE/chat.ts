@@ -71,6 +71,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     suggestedRooms: "Empfohlene Räume",
     ignoreSuggestedRoom: "Ignorieren",
+    roomMemberCount: "{count} {{Mitglied|Mitglieder}}",
     joinableRooms: "Verfügbare Diskussionen",
     joinableRoomsError: "Fehler beim Laden der Diskussionen, klicken Sie, um es erneut zu versuchen",
     availableRooms: "Verfügbare Diskussion(en)",
