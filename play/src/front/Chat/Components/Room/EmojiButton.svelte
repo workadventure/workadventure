@@ -2,6 +2,7 @@
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
+    import LL from "../../../../i18n/i18n-svelte";
     import { IconMoodSmile } from "@wa-icons";
 
     interface Props {
@@ -46,7 +47,9 @@
 
 <button
     data-testid="openEmojiPickerButton"
-    class="p-0 m-0 text-white/50 hover:text-white transition-all flex"
+    class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-white rounded-sm transition-all flex"
+    aria-label={$LL.chat.react()}
+    title={$LL.chat.react()}
     bind:this={trigger}
     onclick={togglePicker}
 >

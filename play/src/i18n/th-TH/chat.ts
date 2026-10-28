@@ -222,6 +222,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "ไม่สามารถเปิดเธรดนี้ได้",
     },
     react: "แสดงความรู้สึก",
+    messageActions: {
+        label: "การดำเนินการกับข้อความ",
+        edit: "แก้ไข",
+        reactWith: "แสดงความรู้สึกด้วย {emoji}",
+        close: "ปิด",
+    },
     copy: "คัดลอก",
     copied: "คัดลอกแล้ว!",
     poll: {

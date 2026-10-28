@@ -224,6 +224,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "Impossible d'ouvrir ce fil.",
     },
     react: "Réagir",
+    messageActions: {
+        label: "Actions du message",
+        edit: "Modifier",
+        reactWith: "Réagir avec {emoji}",
+        close: "Fermer",
+    },
     copy: "Copier",
     copied: "Copié !",
     poll: {

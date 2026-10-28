@@ -31,6 +31,8 @@
     import MessageOutcoming from "./Message/MessageOutcoming.svelte";
     import Message from "./Message.svelte";
     import ThreadSummary from "./ThreadSummary.svelte";
+    import MessageActionSheet from "./MessageActionSheet.svelte";
+    import { longPress } from "./longPress";
     import { IconTrash } from "@wa-icons";
 
     interface Props {
@@ -126,6 +128,18 @@
         selectedThreadStore.clear();
         selectedRoomStore.set(thread);
     }
+
+    let actionSheetOpen = $state(false);
+
+    // Touch screens have no hover to reveal the options bar: a long press opens the same actions in a sheet,
+    // for exactly the messages that have that bar (whatever decides it below).
+    function openActionSheet(): boolean {
+        if (!messageRef?.querySelector(".options")) {
+            return false;
+        }
+        actionSheetOpen = true;
+        return true;
+    }
 </script>
 
 <div
@@ -135,6 +149,7 @@
         messageFromSystem && "justify-center"
     } select-text block-user-action messageContainer items-center`}
     bind:this={messageRef}
+    use:longPress={openActionSheet}
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
@@ -255,6 +270,9 @@
             {/if}
         </div>
     </div>
+    {#if actionSheetOpen}
+        <MessageActionSheet {message} onOpenThread={openThread} onClose={() => (actionSheetOpen = false)} />
+    {/if}
 </div>
 
 <style>
@@ -264,7 +282,8 @@
         position: relative;
     }
 
-    #message:hover .options {
+    #message:hover .options,
+    #message:focus-within .options {
         display: flex;
         flex-direction: row;
         gap: 2px;
@@ -275,6 +294,14 @@
     .options {
         transition: all 0.2s ease-in-out;
         opacity: 0;
+    }
+
+    /* A long press opens the action sheet, which can copy the text: native selection would fight it. */
+    @media (pointer: coarse) {
+        #message {
+            -webkit-user-select: none;
+            user-select: none;
+        }
     }
 
     .message {

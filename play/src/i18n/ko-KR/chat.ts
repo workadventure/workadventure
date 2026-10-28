@@ -224,6 +224,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "이 스레드를 열 수 없습니다.",
     },
     react: "반응",
+    messageActions: {
+        label: "메시지 작업",
+        edit: "수정",
+        reactWith: "{emoji}(으)로 반응",
+        close: "닫기",
+    },
     copy: "복사",
     copied: "복사되었습니다!",
     poll: {

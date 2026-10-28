@@ -222,6 +222,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "Không thể mở chuỗi tin nhắn này.",
     },
     react: "Bày tỏ cảm xúc",
+    messageActions: {
+        label: "Thao tác với tin nhắn",
+        edit: "Chỉnh sửa",
+        reactWith: "Bày tỏ cảm xúc bằng {emoji}",
+        close: "Đóng",
+    },
     copy: "Sao chép",
     copied: "Đã sao chép!",
     poll: {

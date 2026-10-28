@@ -223,6 +223,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "Kan deze thread niet openen.",
     },
     react: "Reageren",
+    messageActions: {
+        label: "Berichtacties",
+        edit: "Bewerken",
+        reactWith: "Reageren met {emoji}",
+        close: "Sluiten",
+    },
     copy: "Kopiëren",
     copied: "Gekopieerd!",
     poll: {

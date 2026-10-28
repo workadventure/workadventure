@@ -220,6 +220,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         openError: "无法打开此话题串。",
     },
     react: "反应",
+    messageActions: {
+        label: "消息操作",
+        edit: "编辑",
+        reactWith: "用 {emoji} 回应",
+        close: "关闭",
+    },
     copy: "复制",
     copied: "已复制！",
     poll: {
