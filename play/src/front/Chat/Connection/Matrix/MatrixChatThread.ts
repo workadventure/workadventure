@@ -461,7 +461,8 @@ export class MatrixChatThread implements ChatThread {
         }
 
         const existingEventsBeforePagination = this.timelineWindow.getEvents();
-        await this.timelineWindow.paginate(Direction.Backward, 8);
+        // Same page size as MatrixChatRoom.PAGINATION_PAGE_SIZE: small pages cost one round trip per few events.
+        await this.timelineWindow.paginate(Direction.Backward, 50);
         this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
         const paginatedEvents = this.timelineWindow.getEvents();
         const messages = await Promise.all(

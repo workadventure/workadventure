@@ -1374,8 +1374,12 @@ export class MatrixChatRoom
             this.privacyState.set(this.getMatrixRoomPrivacyState());
         }
     }
+    // Events fetched per backward page (one /messages round trip). Only m.room.message events are displayed,
+    // so in a busy room most events (joins, leaves, reactions, edits) are filtered out: with small pages,
+    // reaching the last messages took dozens of sequential round trips, and the timeline stayed empty meanwhile.
+    private static readonly PAGINATION_PAGE_SIZE = 50;
     // Max consecutive backward pages that yield no displayable message before loadMorePreviousMessages
-    // stops recursing (each page is 8 events).
+    // stops recursing.
     private static readonly MAX_EMPTY_PAGINATION_DEPTH = 10;
 
     /**
@@ -1671,7 +1675,7 @@ export class MatrixChatRoom
         await this.ensureTimelineInitialized();
         if (get(this.hasPreviousMessage)) {
             const existingEventsBeforePagination = this.timelineWindow.getEvents();
-            await this.timelineWindow.paginate(Direction.Backward, 8);
+            await this.timelineWindow.paginate(Direction.Backward, MatrixChatRoom.PAGINATION_PAGE_SIZE);
             this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
             const paginatedEvents = this.timelineWindow.getEvents();
             const tempMatrixChatMessages: Promise<MatrixChatMessage | undefined>[] = [];
