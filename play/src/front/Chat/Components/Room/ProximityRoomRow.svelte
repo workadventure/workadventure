@@ -50,10 +50,12 @@
     class={[
         "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer pe-2 cursor-pointer w-full",
         {
-            "bg-white/10 rounded": $selectedRoomStore?.id === room.id,
+            "bg-white/15 rounded before:absolute before:start-0 before:inset-y-2 before:w-[3px] before:rounded-full before:bg-secondary":
+                $selectedRoomStore?.id === room.id,
             "opacity-50 ps-6": isParentZone,
         },
     ]}
+    aria-current={$selectedRoomStore?.id === room.id ? "true" : undefined}
     data-testid={$roomName}
 >
     <!-- The room menu cannot sit inside a button: it stays next to it, in the row. -->

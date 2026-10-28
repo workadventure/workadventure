@@ -474,7 +474,11 @@
     {#if $selectedRoomStore !== undefined}
         <div class="relative overflow-y-auto min-w-0">
             {#key $selectedRoomStore.id}
-                <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+                <RoomTimeline
+                    room={$selectedRoomStore}
+                    {showRoomSidePanelToggle}
+                    roomListVisible={displayTwoColumnLayout && $navChat.key === "chat"}
+                />
             {/key}
             {#if showRoomSidePanelAsOverlay && selectedRoomWithSidePanel}
                 <div

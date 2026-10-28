@@ -36,7 +36,7 @@
     import QuestionCard from "./QuestionCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
-    import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
+    import { shouldReserveFloatingCloseButtonSpace, shouldShowBackToRoomList } from "./RoomTimelineHeaderLayout";
     import { countIncomingMessagesAfter, findFirstUnreadKey, isReadMarkerLoaded } from "./RoomTimelineNewMessages";
     import {
         IconArrowDown,
@@ -53,6 +53,8 @@
         backButtonTestId?: string;
         timelineTestId?: string;
         showRoomSidePanelToggle?: boolean;
+        /** True when the room list is displayed next to this timeline (two-column layout). */
+        roomListVisible?: boolean;
     }
 
     let {
@@ -61,6 +63,7 @@
         backButtonTestId = "chatBackward",
         timelineTestId = "roomTimeline",
         showRoomSidePanelToggle = false,
+        roomListVisible = false,
     }: Props = $props();
 
     const chatConnection = gameManager.chatConnection;
@@ -183,6 +186,9 @@
     let proximitySidePanelRoom = $derived(hasProximityChatSidePanel(room) ? room : undefined);
     let unreadQuestionCountStore = $derived(proximitySidePanelRoom?.unreadQuestionCount ?? emptyUnreadQuestionCount);
     let unreadSidePanelCount = $derived(unreadThreadCount + $unreadQuestionCountStore);
+    let showBackButton = $derived(
+        shouldShowBackToRoomList(roomListVisible, room.conversationKind === "thread", backAction !== undefined),
+    );
     let shouldReserveHeaderEndSpace = $derived(
         shouldReserveFloatingCloseButtonSpace(
             $hideActionBarStoreBecauseOfChatBar,
@@ -717,7 +723,9 @@
                     ? 'pe-14'
                     : ''}"
             >
-                {#if chatRoomsEnableInAdmin}
+                {#if !showBackButton}
+                    <!-- The room list is beside the timeline: no way back needed, the title starts the header. -->
+                {:else if chatRoomsEnableInAdmin}
                     <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
                     <div class="relative shrink-0">
                         <button

@@ -57,9 +57,11 @@
     class={[
         "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer pe-2 cursor-pointer w-full",
         {
-            "bg-white/10 rounded": isSelected,
+            "bg-white/15 rounded before:absolute before:start-0 before:inset-y-2 before:w-[3px] before:rounded-full before:bg-secondary":
+                isSelected,
         },
     ]}
+    aria-current={isSelected ? "true" : undefined}
     data-testid={$roomName}
 >
     <!-- The room menu cannot sit inside a button: it stays next to it, in the row. -->
