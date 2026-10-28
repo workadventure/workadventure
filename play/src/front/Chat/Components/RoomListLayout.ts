@@ -1,6 +1,9 @@
-export type RoomSidePanelPlacement = "hidden" | "third-column" | "timeline-column";
+export type RoomSidePanelPlacement = "hidden" | "third-column" | "overlay";
 
 export const CHAT_TWO_COLUMN_LAYOUT_LIMIT = 740;
+
+/** Room list (335px) + a conversation that stays readable (480px) + the side panel (360px). */
+export const CHAT_THREE_COLUMN_LAYOUT_LIMIT = 335 + 480 + 360;
 
 export function canDisplayRoomListAndTimeline({
     minimumTwoColumnWidth,
@@ -29,9 +32,5 @@ export function getRoomSidePanelPlacement({
         return "hidden";
     }
 
-    return canDisplayThirdColumn ? "third-column" : "timeline-column";
-}
-
-export function shouldShowRoomTimeline(roomSidePanelPlacement: RoomSidePanelPlacement) {
-    return roomSidePanelPlacement !== "timeline-column";
+    return canDisplayThirdColumn ? "third-column" : "overlay";
 }

@@ -6,6 +6,7 @@ import type { UnreadSummary } from "../Components/unreadCount";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../types/component";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { PictureStore } from "../../Stores/PictureStore";
+import type { ProximityChatRoomKind } from "./Proximity/ProximityChatRoomManager";
 
 export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
 export type ChatUser = {
@@ -218,6 +219,7 @@ export type ProximityChatSidePanelParticipant = {
 };
 
 export interface ProximityChatSidePanelRoom extends ChatRoom, ChatRoomNotificationControl {
+    readonly kind?: Readable<ProximityChatRoomKind>;
     readonly currentMeetingParticipantsStore: Readable<readonly ProximityChatSidePanelParticipant[]>;
     readonly qaItems?: Readable<readonly ChatQuestionItem[]>;
     readonly unreadQuestionCount?: Readable<number>;

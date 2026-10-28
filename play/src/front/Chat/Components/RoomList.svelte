@@ -43,11 +43,11 @@
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
     import {
+        CHAT_THREE_COLUMN_LAYOUT_LIMIT,
         CHAT_TWO_COLUMN_LAYOUT_LIMIT,
         canDisplayRoomListAndTimeline,
         getRoomSidePanelPlacement,
         shouldShowRoomSidePanelToggle,
-        shouldShowRoomTimeline,
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import UnreadCount from "./UnreadCount.svelte";
@@ -71,7 +71,6 @@
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
-    const THREAD_PANEL_LAYOUT_LIMIT = INITIAL_SIDEBAR_WIDTH * 3;
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
@@ -203,7 +202,7 @@
             sideBarWidth,
         }),
     );
-    let displayThreeColumnLayout = $derived(sideBarWidth >= THREAD_PANEL_LAYOUT_LIMIT);
+    let displayThreeColumnLayout = $derived(sideBarWidth >= CHAT_THREE_COLUMN_LAYOUT_LIMIT);
     let selectedRoomWithSidePanel = $derived(getRoomWithSidePanel($selectedRoomStore));
     let hasSelectedRoomWithSidePanel = $derived(selectedRoomWithSidePanel !== undefined);
     let showRoomSidePanelToggle = $derived(shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel));
@@ -215,7 +214,7 @@
         }),
     );
     let showRoomSidePanelInThirdColumn = $derived(roomSidePanelPlacement === "third-column");
-    let showRoomSidePanelInTimelineColumn = $derived(roomSidePanelPlacement === "timeline-column");
+    let showRoomSidePanelAsOverlay = $derived(roomSidePanelPlacement === "overlay");
     $effect(() => {
         isThreadPanelEnabledStore.set(hasSelectedRoomWithSidePanel);
     });
@@ -439,13 +438,16 @@
         </div>
     {/if}
     {#if $selectedRoomStore !== undefined}
-        <div class="overflow-y-auto min-w-0">
-            {#if showRoomSidePanelInTimelineColumn && selectedRoomWithSidePanel}
-                <RoomSidePanel room={selectedRoomWithSidePanel} showCloseButton closeOnTimelineFocus />
-            {:else if shouldShowRoomTimeline(roomSidePanelPlacement)}
-                {#key $selectedRoomStore.id}
-                    <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
-                {/key}
+        <div class="relative overflow-y-auto min-w-0">
+            {#key $selectedRoomStore.id}
+                <RoomTimeline room={$selectedRoomStore} {showRoomSidePanelToggle} />
+            {/key}
+            {#if showRoomSidePanelAsOverlay && selectedRoomWithSidePanel}
+                <div
+                    class="absolute inset-y-0 end-0 z-10 w-[360px] max-w-full overflow-y-auto border border-solid border-y-0 border-e-0 border-white/10 bg-contrast/95 backdrop-blur-md shadow-2xl"
+                >
+                    <RoomSidePanel room={selectedRoomWithSidePanel} showCloseButton closeOnTimelineFocus />
+                </div>
             {/if}
         </div>
     {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}

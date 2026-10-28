@@ -72,6 +72,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRoomsError: "載入討論時發生錯誤，點選重試",
     availableRooms: "可用討論",
     proximity: "鄰近聊天",
+    area: "區域",
     enteredZone: {
         title: "你已進入{zoneName}",
         open: "開啟其聊天",
