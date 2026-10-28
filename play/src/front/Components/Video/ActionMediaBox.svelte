@@ -235,7 +235,7 @@
     {/if}
 
     <!-- Mute audio every body -->
-    {#if $userIsAdminStore}
+    {#if isModerator}
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             onclick={(event) => {
@@ -271,7 +271,7 @@
     {/if}
 
     <!-- Mute video every body -->
-    {#if $userIsAdminStore}
+    {#if isModerator}
         <button
             class="action-button flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white"
             onclick={(event) => {

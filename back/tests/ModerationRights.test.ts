@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import { Jitsi } from "@workadventure/shared-utils";
-import { applyModerationRights, isModerationEvent } from "../src/Model/ModerationRights";
+import { applyModerationRights, isModerationEvent, isModeratorOnlyPublicEvent } from "../src/Model/ModerationRights";
 import { findLivekitRoomAdminTag } from "../src/Services/ModeratorTagFinder";
 
 const roomUrl = "https://play.workadventure.test/@/tcm/workadventure/map";
@@ -76,5 +76,14 @@ describe("applyModerationRights", () => {
     it("only treats the moderation events", () => {
         expect(isModerationEvent({ $case: "kickOffUser", kickOffUser: {} })).toBe(true);
         expect(isModerationEvent(undefined)).toBe(false);
+    });
+
+    it("reserves the mutes for everybody to moderators", () => {
+        expect(isModeratorOnlyPublicEvent({ $case: "muteAudioForEverybody", muteAudioForEverybody: {} })).toBe(true);
+        expect(isModeratorOnlyPublicEvent({ $case: "muteVideoForEverybody", muteVideoForEverybody: {} })).toBe(true);
+        expect(isModeratorOnlyPublicEvent({ $case: "spaceIsTyping", spaceIsTyping: { isTyping: true } } as never)).toBe(
+            false,
+        );
+        expect(isModeratorOnlyPublicEvent(undefined)).toBe(false);
     });
 });

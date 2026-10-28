@@ -81,7 +81,7 @@ import { Space } from "../Model/Space";
 import { findRecording } from "../Model/CommunicationManager";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
-import { applyModerationRights, isModerationEvent } from "../Model/ModerationRights";
+import { applyModerationRights, isModerationEvent, isModeratorOnlyPublicEvent } from "../Model/ModerationRights";
 import type { SessionEndReason } from "../Model/SessionAnalytics";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -1565,7 +1565,16 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent).catch((error) => {
+        const dispatch = isModeratorOnlyPublicEvent(publicEvent.spaceEvent?.event)
+            ? this.canModerateSpace(space, publicEvent.senderUserId).then((canModerate) => {
+                  if (!canModerate) {
+                      debug(`${publicEvent.senderUserId} cannot moderate space ${space.getSpaceName()}, event dropped`);
+                      return;
+                  }
+                  return space.dispatchPublicEvent(publicEvent);
+              })
+            : space.dispatchPublicEvent(publicEvent);
+        dispatch.catch((error) => {
             console.error(error);
             Sentry.captureException(error);
         });

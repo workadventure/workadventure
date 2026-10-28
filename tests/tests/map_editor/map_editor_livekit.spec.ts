@@ -168,7 +168,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
     });
 
-    test("the moderator tag of a meeting room lets a member mute and remove people @nofirefox", async ({
+    test("the moderator tag of a meeting room lets a member mute, mute everybody and remove people @nofirefox", async ({
         browser,
         request,
     }) => {
@@ -202,6 +202,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
             .locator(".user-menu-btn")
             .click();
         await expect(bob.getByRole("button", { name: "Ask to mute audio", exact: true })).toBeVisible();
+        await expect(bob.getByRole("button", { name: "Mute audio for everybody", exact: true })).toBeHidden();
         await bob.keyboard.press("Escape");
 
         // The moderator mutes Bob for real: Bob is not asked.
@@ -209,6 +210,12 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await member.getByRole("button", { name: "Mute audio", exact: true }).click();
         await expect(member.getByTestId("Bob is muted.")).toBeVisible({ timeout: 20_000 });
         await expect(bob.getByText("Can I mute your microphone?")).toBeHidden();
+
+        // The moderator turns off everybody's camera.
+        await bobBox.locator(".user-menu-btn").click();
+        await member.getByRole("button", { name: "Turn off video for everybody", exact: true }).click();
+        await expect(bob.getByText("Can I mute your camera?")).toBeVisible({ timeout: 20_000 });
+        await expect(bobBox.locator("video")).toHaveCount(0, { timeout: 20_000 });
 
         // And removes him from the meeting.
         await bobBox.locator(".user-menu-btn").click();

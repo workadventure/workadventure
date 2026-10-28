@@ -1,6 +1,11 @@
-import type { PrivateSpaceEvent } from "@workadventure/messages";
+import type { PrivateSpaceEvent, SpaceEvent } from "@workadventure/messages";
 
 type CorePrivateEvent = NonNullable<PrivateSpaceEvent["event"]>;
+
+/** The public events only a moderator may send: they mute the whole conversation at once. */
+export function isModeratorOnlyPublicEvent(event: SpaceEvent["event"]): boolean {
+    return event?.$case === "muteAudioForEverybody" || event?.$case === "muteVideoForEverybody";
+}
 
 /**
  * The private events a moderator sends to another user of a conversation (videobox menu, moderation modal).

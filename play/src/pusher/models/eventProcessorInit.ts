@@ -2,22 +2,9 @@ import { EventProcessor } from "./EventProcessor";
 
 export const eventProcessor = new EventProcessor();
 
-eventProcessor.registerPublicEventProcessor("muteAudioForEverybody", (event, sender) => {
-    if (!sender || !sender.tags.includes("admin")) {
-        throw new Error("Only admins can mute everyone");
-    }
-    return event;
-});
-
-eventProcessor.registerPublicEventProcessor("muteVideoForEverybody", (event, sender) => {
-    if (!sender || !sender.tags.includes("admin")) {
-        throw new Error("Only admins can mute everyone");
-    }
-    return event;
-});
-
-// muteAudio, muteVideo and kickOffUser are checked by the back (back/src/Model/ModerationRights.ts): a meeting room
-// can grant moderation rights to a tag of its own (livekitRoomAdminTag), which only the back reads from the WAM.
+// muteAudio, muteVideo, kickOffUser and the two "for everybody" mutes are checked by the back
+// (back/src/Model/ModerationRights.ts): a meeting room can grant moderation rights to a tag of its own
+// (livekitRoomAdminTag), which only the back reads from the WAM.
 
 eventProcessor.registerPrivateEventProcessor("proximityFileTransferOffer", (event, sender) => {
     if (event.$case !== "proximityFileTransferOffer") {
