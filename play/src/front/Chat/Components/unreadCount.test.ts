@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { countUnreadElsewhere, formatUnreadCount, listUnreadConversations, summarizeUnreadCounts } from "./unreadCount";
+import {
+    countUnreadElsewhere,
+    formatLastActivity,
+    formatUnreadCount,
+    listUnreadConversations,
+    summarizeUnreadCounts,
+} from "./unreadCount";
 
 describe("formatUnreadCount", () => {
     it("shows the exact count up to 99", () => {
@@ -73,5 +79,27 @@ describe("listUnreadConversations", () => {
             { id: "recent", count: 2, muted: false, lastMessageTimestamp: 200 },
         ]);
         expect(list.map(({ id }) => id)).toEqual(["recent", "old"]);
+    });
+
+    it("puts the conversations that mention me first, muted or not", () => {
+        const list = listUnreadConversations([
+            { id: "recent", count: 2, muted: false, lastMessageTimestamp: 400 },
+            { id: "mention", count: 1, muted: false, lastMessageTimestamp: 100, mention: true },
+            { id: "mutedMention", count: 1, muted: true, lastMessageTimestamp: 300, mention: true },
+            { id: "muted", count: 5, muted: true, lastMessageTimestamp: 500 },
+        ]);
+        expect(list.map(({ id }) => id)).toEqual(["mutedMention", "mention", "recent"]);
+    });
+});
+
+describe("formatLastActivity", () => {
+    const now = new Date(2026, 9, 28, 18, 30);
+
+    it("shows the time for today", () => {
+        expect(formatLastActivity(new Date(2026, 9, 28, 9, 5).getTime(), now, "fr-FR")).toBe("09:05");
+    });
+
+    it("shows the date before today", () => {
+        expect(formatLastActivity(new Date(2026, 9, 27, 23, 59).getTime(), now, "en-US")).toBe("Oct 27");
     });
 });

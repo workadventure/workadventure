@@ -4,8 +4,6 @@ const chat: BaseTranslation = {
     intro: "Here is your chat history:",
     adventurers: "Users",
     getCloserTitle: "Get closer to someone",
-    noRoomOpen: "Open a conversation",
-    noRoomOpenDescription: "Nothing to display yet. Start a chat or approach someone to see your messages appear here.",
     getCloserDesc:
         "When you approach someone in the virtual space, a conversation bubble automatically opens, allowing you to talk directly as if you were face-to-face.",
     noMessage: "No message sent yet!",
@@ -346,6 +344,8 @@ const chat: BaseTranslation = {
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     unreadConversationsTitle: "Unread",
+    catchUpTitle: "To catch up on",
+    catchUpEmpty: "You're all caught up",
     showMore: "Show {number} more",
     showLess: "Show less",
     addRoomToFolderError: "Impossible to add the room to the folder",

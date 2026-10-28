@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "How su twóje powěsći:",
     adventurers: "Wužywarje",
     getCloserTitle: "Pśizamkni se někomu",
-    noRoomOpen: "Wócyń rozgrono",
-    noRoomOpenDescription:
-        "Hyšći nic za pokazanje. Zachop rozgrono abo pśizamkni se někomu, aby wiźeł swóje powěsći how.",
     getCloserDesc:
         "Gaž se pśizamkujoš k wužiwarjeju we wirtuelnem rumje, wócyni se awtomatiski rozgronowa buła, co śi dowóla wótwobno rozgranowaś, ako byštaj sej woblico woblico stali.",
     noMessage: "Hyšći žedna powěsć pósłana!",
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Cakajucy",
     nothingToDisplay: "Nic za pokazanje",
     unreadConversationsTitle: "Njecytane",
+    catchUpTitle: "K dopóraźenju",
+    catchUpEmpty: "Sy na aktualnem stawje",
     showMore: "Pokazaś {number} wěcej",
     showLess: "Pokazaś mjenjej",
     addRoomToFolderError: "Njejo móžno, śpu k zarědu pśidaś",

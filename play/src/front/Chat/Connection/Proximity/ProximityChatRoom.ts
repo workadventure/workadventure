@@ -22,6 +22,7 @@ import type {
     ChatMessage,
     ChatMessageAttachment,
     ChatMessageContent,
+    ChatMessagePreview,
     ChatMessageReaction,
     ChatPollCreateOptions,
     ChatPollCreationCapability,
@@ -188,6 +189,14 @@ export class ProximityChatRoom implements ChatRoom {
     pictureStore = readable(undefined);
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
+    // Arrivals and departures are not messages.
+    readonly lastMessagePreview: Readable<ChatMessagePreview | undefined> = derived(this.messages, (messages) => {
+        const message = messages.filter(({ type }) => type !== "incoming" && type !== "outcoming").pop();
+        const body = message ? get(message.content).body : "";
+        return message && body
+            ? { body, senderName: message.sender?.username, timestamp: message.date?.getTime() ?? 0 }
+            : undefined;
+    });
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
     readonly mentionCandidates: Readable<readonly MentionCandidate[]> = derived(this.spaceUsersStore, (users) => [

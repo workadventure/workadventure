@@ -26,10 +26,9 @@
     } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
-    import getCloseImg from "../images/get-close.png";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { createUnreadSummaryStore } from "../Stores/UnreadMessagesCountStore";
+    import { createUnreadConversationsStore, createUnreadSummaryStore } from "../Stores/UnreadMessagesCountStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -40,6 +39,7 @@
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import ChatHeader from "./ChatHeader.svelte";
+    import CatchUpList from "./CatchUpList.svelte";
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
@@ -80,6 +80,7 @@
     let roomFolders = chat.folders;
     const directRoomsUnreadSummary = createUnreadSummaryStore(directRooms);
     const roomsUnreadSummary = createUnreadSummaryStore(rooms);
+    const unreadConversations = createUnreadConversationsStore(chat, proximityRooms);
 
     let displayDirectRooms = $state(false);
     let displayRooms = $state(false);
@@ -505,15 +506,7 @@
             {/if}
         </div>
     {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
-        <div class="flex flex-col flex-1 ps-4 items-center pt-8">
-            <div class="text-center px-3 max-w-md">
-                <img class="mx-auto" src={getCloseImg} alt={$LL.chat.getCloserTitle()} draggable="false" />
-                <div class="text-lg font-bold text-center">{$LL.chat.noRoomOpen()}</div>
-                <div class="text-sm opacity-50 text-center">
-                    {$LL.chat.noRoomOpenDescription()}
-                </div>
-            </div>
-        </div>
+        <CatchUpList conversations={$unreadConversations} />
     {/if}
 
     {#if showRoomSidePanelInThirdColumn && selectedRoomWithSidePanel}

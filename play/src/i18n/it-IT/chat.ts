@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Ecco la tua cronologia chat:",
     adventurers: "Utenti",
     getCloserTitle: "Avvicinati a qualcuno",
-    noRoomOpen: "Apri una conversazione",
-    noRoomOpenDescription:
-        "Niente da mostrare per ora. Inizia una discussione o avvicinati a qualcuno per vedere i tuoi messaggi apparire qui.",
     getCloserDesc:
         "Quando ti avvicini a una persona nello spazio virtuale, si apre automaticamente una bolla di conversazione, permettendoti di chattare in tempo reale come se foste faccia a faccia.",
     noMessage: "Nessun messaggio inviato per ora!",
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "In attesa",
     nothingToDisplay: "Niente da visualizzare",
     unreadConversationsTitle: "Non letti",
+    catchUpTitle: "Da recuperare",
+    catchUpEmpty: "Sei in pari",
     showMore: "Mostra {number} di più",
     showLess: "Mostra meno",
     addRoomToFolderError: "Impossibile aggiungere la stanza alla cartella",

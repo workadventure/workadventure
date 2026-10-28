@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "チャット履歴",
     adventurers: "ユーザー",
     getCloserTitle: "誰かに近づく",
-    noRoomOpen: "会話を開く",
-    noRoomOpenDescription:
-        "現在表示するものがありません。会話を開始するか、誰かに近づいてメッセージをここに表示してください。",
     getCloserDesc:
         "バーチャル空間で誰かに近づくと、自動的に会話バブルが開き、顔を合わせて話しているかのようにリアルタイムでチャットできます。",
     noMessage: "まだメッセージが送信されていません！",
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "待機中",
     nothingToDisplay: "表示するものはありません",
     unreadConversationsTitle: "未読",
+    catchUpTitle: "未確認",
+    catchUpEmpty: "すべて確認済みです",
     showMore: "{number} 件をさらに表示",
     showLess: "表示を減らす",
     addRoomToFolderError: "フォルダーにルームを追加できません",

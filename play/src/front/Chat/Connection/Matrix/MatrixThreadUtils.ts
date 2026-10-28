@@ -1,8 +1,8 @@
 import type { IContent, MatrixEvent, Room } from "matrix-js-sdk";
-import { NotificationCountType } from "matrix-js-sdk";
+import { EventType, NotificationCountType, RelationType } from "matrix-js-sdk";
 import type { IThreadBundledRelationship } from "matrix-js-sdk/lib/models/event";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
-import type { ChatThreadSummary } from "../ChatConnection";
+import type { ChatMessagePreview, ChatThreadSummary } from "../ChatConnection";
 import { getEventSenderMember } from "./MatrixChatUser";
 
 type ThreadRelationContent = {
@@ -113,6 +113,26 @@ export function getThreadSummary(thread: Thread | null, room: Room, rootEventId:
         ...degradedFields,
         ...unreadFields,
     };
+}
+
+/** The last message of the room's synced timeline, edits and thread replies aside. */
+export function getLastMessagePreview(room: Room): ChatMessagePreview | undefined {
+    const events = room.getLiveTimeline().getEvents();
+    for (let i = events.length - 1; i >= 0; i--) {
+        const event = events[i];
+        if (
+            event.getType() !== EventType.RoomMessage ||
+            event.isRelation(RelationType.Replace) ||
+            !shouldDisplayEventInRoomTimeline(event)
+        ) {
+            continue;
+        }
+        const body = getEventPreview(event);
+        if (body) {
+            return { body, senderName: getEventSenderName(event, room), timestamp: event.getTs() };
+        }
+    }
+    return undefined;
 }
 
 function getEventPreview(event: MatrixEvent | undefined): string | undefined {

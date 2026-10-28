@@ -92,21 +92,22 @@ export function createUnreadSummaryStore(
 export interface UnreadConversation extends UnreadConversationCount {
     conversation: ChatConversation;
     lastMessageTimestamp: number;
+    mention: boolean;
 }
 
 /**
- * A snapshot of the unread conversations other than the open one, the most recent first.
+ * A snapshot of the unread conversations other than the open one, mentions first, then the most recent first.
  * It covers what the unread total counts: invitations, and rooms of folders that were never opened (loaded here).
  */
 export function getUnreadConversationsElsewhere(
     chatConnection: ChatConnectionInterface,
     proximityRooms: readonly ProximityChatRoom[],
-    openConversation: ChatConversation,
+    openConversation?: ChatConversation,
 ): UnreadConversation[] {
     const openRoomId =
-        openConversation.conversationKind === "thread" && openConversation.parentRoom
+        openConversation?.conversationKind === "thread" && openConversation.parentRoom
             ? openConversation.parentRoom.id
-            : openConversation.id;
+            : openConversation?.id;
     const conversations = new Map<string, ChatConversation>();
     for (const conversation of [
         ...proximityRooms,
@@ -124,6 +125,46 @@ export function getUnreadConversationsElsewhere(
             ...get(unreadCountOf(conversation)),
             conversation,
             lastMessageTimestamp: conversation.lastMessageTimestamp,
+            mention: conversation.hasUnreadMentions ? get(conversation.hasUnreadMentions) : false,
         })),
+    );
+}
+
+/** The unread conversations, kept up to date: what the empty two-column chat offers to catch up on. */
+export function createUnreadConversationsStore(
+    chatConnection: ChatConnectionInterface,
+    proximityRooms: Readable<readonly ProximityChatRoom[]>,
+): Readable<UnreadConversation[]> {
+    return derived(
+        [
+            proximityRooms,
+            chatConnection.directRooms,
+            chatConnection.rooms,
+            chatConnection.invitations,
+            chatConnection.folders,
+        ],
+        ([$proximityRooms, $directRooms, $rooms, $invitations, $folders], set) => {
+            // ponytail: rooms a folder loads later only show at the next change of these stores or of a count.
+            const conversations = [
+                ...$proximityRooms,
+                ...$directRooms,
+                ...$rooms,
+                ...$invitations,
+                ...collectFolderRooms($folders),
+            ];
+            if (conversations.length === 0) {
+                set([]);
+                return;
+            }
+            // Any count or mention change takes a new snapshot.
+            return derived(
+                conversations.flatMap((conversation) => [
+                    unreadCountOf(conversation),
+                    conversation.hasUnreadMentions ?? readable(false),
+                ]),
+                () => getUnreadConversationsElsewhere(chatConnection, $proximityRooms),
+            ).subscribe(set);
+        },
+        [] as UnreadConversation[],
     );
 }

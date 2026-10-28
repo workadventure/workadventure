@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Aquí està el vostre històric del chat:",
     adventurers: "Usuaris",
     getCloserTitle: "Apropa't a algú",
-    noRoomOpen: "Obre una conversa",
-    noRoomOpenDescription:
-        "Res a mostrar encara. Inicieu una conversa o apropeu-vos a algú per veure els vostres missatges apareixer aquí.",
     getCloserDesc:
         "Quan t'apropes a una persona a l'espai virtual, s'obre automàticament una bombolla de conversa, permetent-te parlar directament com si estiguéssiu cara a cara.",
     noMessage: "Encara no s'ha enviat cap missatge!",
@@ -346,6 +343,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Esperant",
     nothingToDisplay: "Res a mostrar",
     unreadConversationsTitle: "Sense llegir",
+    catchUpTitle: "Per posar-se al dia",
+    catchUpEmpty: "Ja estàs al dia",
     showMore: "Mostrar {number} més",
     showLess: "Mostrar menys",
     addRoomToFolderError: "Impossible afegir la sala a la carpeta",
