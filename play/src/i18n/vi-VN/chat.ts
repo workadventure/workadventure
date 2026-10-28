@@ -73,7 +73,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     roomMemberCount: "{count} thành viên",
     joinableRooms: "Cuộc thảo luận khả dụng",
     joinableRoomsError: "Lỗi khi tải các cuộc thảo luận, bấm để thử lại",
-    availableRooms: "Cuộc thảo luận khả dụng",
     proximity: "Trò chuyện lân cận",
     area: "Khu vực",
     enteredZone: {

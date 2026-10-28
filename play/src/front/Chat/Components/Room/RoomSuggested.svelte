@@ -1,23 +1,28 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
+    import highlightWords from "highlight-words";
     import { readable } from "svelte/store";
+    import { asError } from "catch-unknown";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-    import { warningMessageStore } from "../../../Stores/ErrorStore";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { JoinableRoomInfo } from "../../Connection/ChatConnection";
     import { ignoreSuggestedRoom } from "../../Stores/ChatStore";
-    import { IconLoader } from "@wa-icons";
+    import { IconFolder, IconLoader } from "@wa-icons";
 
     interface Props {
         roomInformation: JoinableRoomInfo;
         /** Suggested rooms can be ignored; other joinable rooms cannot. */
         suggested?: boolean;
+        /** Search text to highlight in the room name. */
+        highlight?: string;
+        onJoined?: () => void;
     }
 
-    let { roomInformation, suggested = false }: Props = $props();
+    let { roomInformation, suggested = false, highlight = "", onJoined }: Props = $props();
     let roomName = $derived(roomInformation.name);
+    let nameChunks = $derived(highlightWords({ text: roomName, query: highlight }));
     let pictureStore = $derived(readable(roomInformation.avatarUrl || undefined));
     let memberCount = $derived(
         roomInformation.memberCount === undefined
@@ -25,27 +30,23 @@
             : $LL.chat.roomMemberCount({ count: roomInformation.memberCount }),
     );
     let loadingInvitation = $state(false);
+    // Stays on the row until the next attempt, so it can be read.
+    let joinError: Error | undefined = $state(undefined);
 
     async function joinRoom() {
         loadingInvitation = true;
+        joinError = undefined;
         try {
-            const chatconnection = await gameManager.getChatConnection();
-            chatconnection
-                .joinRoom(roomInformation.id)
-                .then((room) => {
-                    if (room && !room.isRoomFolder) selectedRoomStore.set(room);
-                })
-                .catch(() => {
-                    warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
-                })
-                .finally(() => {
-                    loadingInvitation = false;
-                });
+            const chatConnection = await gameManager.getChatConnection();
+            const room = await chatConnection.joinRoom(roomInformation.id);
+            onJoined?.();
+            if (room && !room.isRoomFolder) selectedRoomStore.set(room);
         } catch (error) {
-            loadingInvitation = false;
             console.error(error);
             Sentry.captureException(error);
-            warningMessageStore.addWarningMessage($LL.chat.failedToJoinRoom());
+            joinError = asError(error);
+        } finally {
+            loadingInvitation = false;
         }
     }
 
@@ -64,16 +65,31 @@
         <Avatar compact {pictureStore} fallbackName={roomName} />
     </div>
     <div class="m-0 grow min-w-0">
-        <div class="text-sm font-bold truncate" title={roomName}>{roomName}</div>
-        {#if roomInformation.topic || memberCount}
-            <!-- Only the topic is cut: the member count stays readable on narrow chats. -->
+        <div class="text-sm font-bold truncate" title={roomName}>
+            {#each nameChunks as chunk (chunk.key)}<span class:text-light-blue={chunk.match}>{chunk.text}</span>{/each}
+        </div>
+        {#if roomInformation.folderName || roomInformation.topic || memberCount}
+            <!-- Only the topic is cut: the folder and the member count stay readable on narrow chats. -->
             <div class="flex items-center gap-1 text-xs text-white/60 min-w-0">
+                {#if roomInformation.folderName}
+                    <span class="flex items-center gap-0.5 shrink-0 max-w-[40%]" data-testid="joinableRoomFolder">
+                        <IconFolder font-size="0.875rem" class="shrink-0" />
+                        <span class="truncate">{roomInformation.folderName}</span>
+                    </span>
+                {/if}
                 {#if roomInformation.topic}
+                    {#if roomInformation.folderName}<span aria-hidden="true">·</span>{/if}
                     <span class="truncate" title={roomInformation.topic}>{roomInformation.topic}</span>
                 {/if}
                 {#if memberCount}
-                    <span class="shrink-0">{roomInformation.topic ? "· " : ""}{memberCount}</span>
+                    {#if roomInformation.folderName || roomInformation.topic}<span aria-hidden="true">·</span>{/if}
+                    <span class="shrink-0">{memberCount}</span>
                 {/if}
+            </div>
+        {/if}
+        {#if joinError}
+            <div class="text-xs text-danger-400" role="alert" title={joinError.message}>
+                {$LL.chat.failedToJoinRoom()}
             </div>
         {/if}
     </div>

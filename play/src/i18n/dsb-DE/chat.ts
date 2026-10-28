@@ -74,7 +74,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     roomMemberCount: "{count} {{cłonk|cłonkow}}",
     joinableRooms: "Dostupne diskusije",
     joinableRoomsError: "Zmólka pśi lodowanju diskusijow, klikni za wopytanje znowa",
-    availableRooms: "Dostupna diskusija/diskisije",
     proximity: "Rozgronowa buła",
     area: "Areal",
     enteredZone: {

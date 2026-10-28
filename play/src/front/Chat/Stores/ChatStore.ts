@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../types/component";
-import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection";
+import type { ChatMessage as NewChatMessage, JoinableRoomInfo } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
@@ -98,7 +98,7 @@ export const selectedChatMessageToReply = writable<NewChatMessage | null>(null);
 
 export const selectedChatMessageToEdit = writable<NewChatMessage | null>(null);
 
-export const joignableRoom = writable<{ id: string; name: string | undefined }[]>([]);
+export const joignableRoom = writable<JoinableRoomInfo[]>([]);
 
 export const shouldRestoreChatStateStore = writable(false);
 

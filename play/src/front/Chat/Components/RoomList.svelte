@@ -33,7 +33,7 @@
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
-    import JoignableRooms from "./Room/JoignableRooms.svelte";
+    import RoomSuggested from "./Room/RoomSuggested.svelte";
     import RoomListSkeleton from "./RoomListSkeleton.svelte";
     import ChatError from "./ChatError.svelte";
     import RoomFolder from "./RoomFolder.svelte";
@@ -145,6 +145,11 @@
 
     function toggleDisplayRooms() {
         displayRooms = !displayRooms;
+    }
+
+    function clearRoomSearch() {
+        joignableRoom.set([]);
+        chatSearchBarValue.set("");
     }
 
     function toggleDisplayRoomInvitations() {
@@ -324,10 +329,14 @@
                         </p>
                     {/if}
                     {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
-                        <p class="p-0 m-0 text-gray-400">{$LL.chat.availableRooms()}</p>
+                        <p class="p-0 m-0 text-gray-400">{$LL.chat.joinableRooms()}</p>
                         <div class="flex flex-col">
                             {#each $joignableRoom as room (room.id)}
-                                <JoignableRooms {room} />
+                                <RoomSuggested
+                                    roomInformation={room}
+                                    highlight={$chatSearchBarValue}
+                                    onJoined={clearRoomSearch}
+                                />
                             {/each}
                         </div>
                     {/if}

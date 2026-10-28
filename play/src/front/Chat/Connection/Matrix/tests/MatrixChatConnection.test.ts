@@ -912,6 +912,7 @@ describe("MatrixChatConnection", () => {
                 startClient: mockStartClient,
                 createRoom: vi.fn().mockResolvedValue(""),
                 getRoom: vi.fn(),
+                getRooms: vi.fn().mockReturnValue([]),
                 publicRooms: mockPublicRoom,
             } as unknown as MatrixClient;
 
@@ -939,9 +940,23 @@ describe("MatrixChatConnection", () => {
                     {
                         room_id: "Other_room",
                         name: "Other_room",
+                        topic: "Weekly sync",
+                        num_joined_members: 3,
                     },
                 ],
             });
+            const joinedSpace = {
+                name: "Team folder",
+                isSpaceRoom: () => true,
+                getMyMembership: () => "join",
+                getLiveTimeline: () => ({
+                    getState: () => ({
+                        getStateEvents: () => [
+                            { getStateKey: () => "Other_room", getContent: () => ({ via: ["example.org"] }) },
+                        ],
+                    }),
+                }),
+            };
 
             const mockMatrixClient = {
                 isGuest: vi.fn(),
@@ -956,6 +971,7 @@ describe("MatrixChatConnection", () => {
                 startClient: mockStartClient,
                 createRoom: vi.fn().mockResolvedValue(""),
                 getRoom: vi.fn(),
+                getRooms: vi.fn().mockReturnValue([joinedSpace]),
                 publicRooms: mockPublicRoom,
             } as unknown as MatrixClient;
 
@@ -974,15 +990,16 @@ describe("MatrixChatConnection", () => {
 
             const result = await matrixChatConnection.searchAccessibleRooms(roomSearchText);
 
-            expect(result).toContainEqual({
-                id: "Other_room",
-                name: "Other_room",
-            });
-
-            expect(result).not.toContainEqual({
-                id: roomSearchText,
-                name: roomSearchText,
-            });
+            expect(result).toEqual([
+                {
+                    id: "Other_room",
+                    name: "Other_room",
+                    avatarUrl: "",
+                    topic: "Weekly sync",
+                    memberCount: 3,
+                    folderName: "Team folder",
+                },
+            ]);
         });
     });
 

@@ -72,7 +72,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     roomMemberCount: "{count} عضو",
     joinableRooms: "المناقشات المتاحة",
     joinableRoomsError: "خطأ في تحميل المناقشات، انقر لإعادة المحاولة",
-    availableRooms: "الغرف المتاحة",
     proximity: "دردشة القرب",
     area: "منطقة",
     enteredZone: {
