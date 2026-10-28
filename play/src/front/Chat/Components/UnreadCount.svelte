@@ -9,10 +9,12 @@
         variant?: "default" | "muted" | "mention";
         size?: "md" | "sm";
         ariaLabel?: string;
+        /** Shown instead of the count. */
+        text?: string;
         class?: string;
     }
 
-    let { count, variant = "default", size = "md", ariaLabel, class: className = "" }: Props = $props();
+    let { count, variant = "default", size = "md", ariaLabel, text, class: className = "" }: Props = $props();
 
     // Ping once when a message arrives, not on mount: opening the list must not light up every row.
     let pingKey = $state(0);
@@ -52,6 +54,6 @@
             ></span>
         {/key}
     {/if}
-    <span class="relative" aria-hidden="true">{formatUnreadCount(count)}</span>
+    <span class="relative" aria-hidden="true">{text ?? formatUnreadCount(count)}</span>
     <span class="sr-only">{ariaLabel ?? $LL.chat.a11y.unreadCount({ count })}</span>
 </span>

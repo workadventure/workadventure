@@ -29,8 +29,10 @@
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import UnreadConversationsPopover from "../UnreadConversationsPopover.svelte";
     import UnreadCount from "../UnreadCount.svelte";
+    import { hasPendingMentionElsewhere } from "../../Stores/ChatMessageBannerStore";
     import Button from "../../../Components/UI/Button.svelte";
     import Avatar from "../Avatar.svelte";
+    import ChatMessageBanner from "./ChatMessageBanner.svelte";
     import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
@@ -754,7 +756,9 @@
                                 : ''}"
                             data-testid={backButtonTestId}
                             aria-label={$unreadElsewhereStore > 0
-                                ? $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
+                                ? $hasPendingMentionElsewhere
+                                    ? $LL.chat.a11y.backWithMentionElsewhere()
+                                    : $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
                                 : $LL.chat.roomPanel.back()}
                             onclick={goBackAndClearSelectedChatMessage}
                         >
@@ -776,7 +780,14 @@
                                 bind:this={unreadElsewhereButton}
                                 onclick={toggleUnreadConversations}
                             >
-                                <UnreadCount count={$unreadElsewhereStore} size="sm" ariaLabel="" />
+                                <!-- "@" until the conversation that mentioned the user is opened. -->
+                                <UnreadCount
+                                    count={$unreadElsewhereStore}
+                                    size="sm"
+                                    ariaLabel=""
+                                    variant={$hasPendingMentionElsewhere ? "mention" : "default"}
+                                    text={$hasPendingMentionElsewhere ? "@" : undefined}
+                                />
                             </button>
                         {/if}
                     </div>
@@ -845,6 +856,7 @@
                 {/if}
             </div>
             <EnteredZoneBanner {room} />
+            <ChatMessageBanner />
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">
                     <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
@@ -970,8 +982,8 @@
             </div>
         {/if}
 
-        <!-- Same reading column as the message list, so the input does not stretch across a full-screen chat -->
-        <div class="w-full max-w-3xl self-center">
+        <!-- Full width and never squeezed: a long message list must not shrink the input -->
+        <div class="w-full shrink-0">
             {#if $initializationState === "ready" && $typingMembers.length > 0}
                 <TypingUsers typingMembers={$typingMembers} />
             {/if}

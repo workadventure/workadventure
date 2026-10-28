@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier ist dein Nachrichtenverlauf:",
     adventurers: "Benutzer",
     getCloserTitle: "Nähere dich jemandem",
-    noRoomOpen: "Öffne eine Unterhaltung",
-    noRoomOpenDescription:
-        "Momentan nichts anzuzeigen. Beginne eine Unterhaltung oder nähere dich jemandem, um deine Nachrichten hier zu sehen.",
     getCloserDesc:
         "Wenn du dich einer Person im virtuellen Raum näherst, öffnet sich automatisch eine Unterhaltungsblase, sodass du in Echtzeit chatten kannst, als wärt ihr euch gegenübergestanden.",
     noMessage: "Noch keine Nachricht gesendet!",
@@ -82,7 +79,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Ignorieren",
     roomMemberCount: "{count} {{Mitglied|Mitglieder}}",
     joinableRooms: "Verfügbare Diskussionen",
-    joinableRoomsError: "Fehler beim Laden der Diskussionen, klicken Sie, um es erneut zu versuchen",
+    joinableRoomsError: "Die Räume dieses Ordners konnten nicht geladen werden.",
     proximity: "Unterhaltungsblase",
     area: "Fläche",
     enteredZone: {
@@ -349,6 +346,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Warten",
     nothingToDisplay: "Nichts anzuzeigen",
     unreadConversationsTitle: "Ungelesen",
+    catchUpTitle: "Nachzuholen",
+    catchUpEmpty: "Du bist auf dem neuesten Stand",
     showMore: "{number} weitere anzeigen",
     showLess: "Weniger anzeigen",
     addRoomToFolderError: "Raum konnte nicht zum Ordner hinzugefügt werden",
@@ -595,6 +594,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Aktionsmenü",
         unreadCount: "{count} ungelesen",
         backWithUnreadElsewhere: "Zurück, {count} {{ungelesene Nachricht|ungelesene Nachrichten}} anderswo",
+        backWithMentionElsewhere: "Zurück, du wurdest anderswo erwähnt",
         showUnreadConversations: "Ungelesene Unterhaltungen anzeigen",
         hiddenUnreadCount: "{count} ungelesen in den ausgeblendeten Unterhaltungen",
         userAvatar: "Benutzeravatar",
@@ -603,6 +603,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{Mitglied|Mitglieder}} · {online} online",
         with: "Mit {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} hat dir geschrieben",
+        others: "+{count} {{weitere Unterhaltung|weitere Unterhaltungen}}",
+        dismiss: "Schließen",
     },
     requiresLoginForChatModal: {
         title: "Melden Sie sich an, um den Chat zu nutzen!",

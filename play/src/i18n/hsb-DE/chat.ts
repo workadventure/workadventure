@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Tu je twój wotběh powěsćow:",
     adventurers: "Wužiwarjo",
     getCloserTitle: "Přizamkni so někomu",
-    noRoomOpen: "Wočiń rozmołwu",
-    noRoomOpenDescription:
-        "Hišće ničo za pokazanje. Zachop rozmołwu abo přizamkni so někomu, zo by widźał swoje powěsće tu.",
     getCloserDesc:
         "Hdyž so přizamkuješ k wužiwarjej we wirtuelnym rumnje, wočini so awtomatisce rozmołwowa bałka, štož ći dowola wotmjeń rozmołwjeć, kaž byštaj so wobličeje wobličo stejeli.",
     noMessage: "Hišće žana powěsć pósłana!",
@@ -82,7 +79,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Ignorować",
     roomMemberCount: "{count} {{čłon|čłonow}}",
     joinableRooms: "Dostupne diskusije",
-    joinableRoomsError: "Zmylka při nakładowanju diskusijow, klikń za wopyćeće hišće raz",
+    joinableRoomsError: "Rumy tutoho rjadowaka njedachu so začitać.",
     proximity: "Rozmołwowa bałka",
     area: "Płonina",
     enteredZone: {
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Čakajucy",
     nothingToDisplay: "Ničo za pokazanje",
     unreadConversationsTitle: "Njepřečitane",
+    catchUpTitle: "K dohonjenju",
+    catchUpEmpty: "Sće na aktualnym stawje",
     showMore: "Pokazać {number} wjace",
     showLess: "Pokazać mjenje",
     addRoomToFolderError: "Njemóžno, rum k zarědej přidać",
@@ -591,6 +590,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menij akcijow",
         unreadCount: "{count} njepřečitane",
         backWithUnreadElsewhere: "Wróćo, {count} njepřečitane powěsće hdźe druhdźe",
+        backWithMentionElsewhere: "Wróćo, sće był hdźe druhdźe naspomnjeny",
         showUnreadConversations: "Njepřečitane rozmołwy pokazać",
         hiddenUnreadCount: "{count} njepřečitane w schowanych rozmołwach",
         userAvatar: "Awatar wužiwarja",
@@ -599,6 +599,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{čłon|čłonow}} · {online} online",
         with: "Z {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} je wam pisał",
+        others: "+{count} dalše rozmołwy",
+        dismiss: "Začinić",
     },
     requiresLoginForChatModal: {
         title: "Přizjew so, zo by chat wužiwał!",

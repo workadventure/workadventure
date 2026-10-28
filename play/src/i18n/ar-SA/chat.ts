@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "هنا سجل الدردشة الخاص بك:",
     adventurers: "المستخدمون",
     getCloserTitle: "اقترب من شخص ما",
-    noRoomOpen: "افتح محادثة",
-    noRoomOpenDescription: "لا يوجد شيء لعرضه حتى الآن. ابدأ دردشة أو اقترب من شخص ما لرؤية رسائلك تظهر هنا.",
     getCloserDesc:
         "عندما تقترب من شخص ما في الفضاء الافتراضي، يتم فتح فقاعة محادثة تلقائيًا، مما يتيح لك التحدث مباشرة كما لو كنت وجهًا لوجه.",
     noMessage: "لم يتم إرسال أي رسالة حتى الآن!",
@@ -80,7 +78,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "تجاهل",
     roomMemberCount: "{count} عضو",
     joinableRooms: "المناقشات المتاحة",
-    joinableRoomsError: "خطأ في تحميل المناقشات، انقر لإعادة المحاولة",
+    joinableRoomsError: "تعذّر تحميل غرف هذا المجلد.",
     proximity: "دردشة القرب",
     area: "منطقة",
     enteredZone: {
@@ -345,6 +343,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "في انتظار",
     nothingToDisplay: "لا يوجد شيء لعرضه",
     unreadConversationsTitle: "غير مقروءة",
+    catchUpTitle: "للمتابعة",
+    catchUpEmpty: "أنت مطّلع على كل شيء",
     showMore: "عرض {number} المزيد",
     showLess: "عرض أقل",
     addRoomToFolderError: "لا يمكن إضافة الغرفة إلى المجلد",
@@ -589,6 +589,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "قائمة الإجراءات",
         unreadCount: "{count} غير مقروء",
         backWithUnreadElsewhere: "رجوع، {count} رسائل غير مقروءة في مكان آخر",
+        backWithMentionElsewhere: "رجوع، تمت الإشارة إليك في مكان آخر",
         showUnreadConversations: "عرض المحادثات غير المقروءة",
         hiddenUnreadCount: "{count} غير مقروء في المحادثات المخفية",
         userAvatar: "صورة المستخدم",
@@ -597,6 +598,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{عضو|أعضاء}} · {online} متصل",
         with: "مع {names}",
+    },
+    messageBanner: {
+        wroteToYou: "أرسل لك {name} رسالة",
+        others: "+{count} محادثات أخرى",
+        dismiss: "إغلاق",
     },
     requiresLoginForChatModal: {
         title: "قم بتسجيل الدخول لفتح الدردشة!",

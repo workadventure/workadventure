@@ -6,6 +6,8 @@
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { matrixUnreadMessagesCountStore } from "../Stores/UnreadMessagesCountStore";
+    import Alert from "../../Components/UI/Alert.svelte";
+    import Button from "../../Components/UI/Button.svelte";
     import RoomSubFolder from "./RoomFolder.svelte";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
@@ -14,7 +16,7 @@
     import RoomSuggested from "./Room/RoomSuggested.svelte";
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
-    import { IconChevronUp, IconLoader } from "@wa-icons";
+    import { IconChevronUp, IconExclamation, IconLoader } from "@wa-icons";
 
     interface Props {
         rootFolder: boolean;
@@ -23,8 +25,17 @@
 
     let { rootFolder, folder }: Props = $props();
 
-    let { name, folders, invitations, rooms, id, suggestedRooms, joinableRooms, joinableRoomsLoading } =
-        $derived(folder);
+    let {
+        name,
+        folders,
+        invitations,
+        rooms,
+        id,
+        suggestedRooms,
+        joinableRooms,
+        joinableRoomsLoading,
+        hasChildRoomsError,
+    } = $derived(folder);
     let isOpen: boolean = $state((() => localUserStore.hasFolderOpened(folder.id) ?? false)());
     let joinableRoomsOpen = $state(false);
     const isFoldersOpen: { [key: string]: boolean } = {};
@@ -71,6 +82,10 @@
 
     function loadOpenedFolderContent() {
         folder.ensureChildrenLoaded();
+        loadJoinableRooms();
+    }
+
+    function loadJoinableRooms() {
         folder.ensureJoinableRoomsLoaded().catch((error) => {
             console.error("Failed to load joinable rooms", error);
         });
@@ -126,6 +141,26 @@
     <div class="flex flex-col">
         {#if isOpen}
             <div class="flex flex-col">
+                {#if $hasChildRoomsError}
+                    <div class="px-2 pb-2" role="alert" data-testid="joinableRoomsError">
+                        <Alert variant="danger" class="w-full">
+                            <div class="flex gap-2 items-center">
+                                <IconExclamation font-size="20" class="shrink-0" />
+                                <span class="grow min-w-0 text-white">{$LL.chat.joinableRoomsError()}</span>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    class="shrink-0"
+                                    dataTestId="joinableRoomsRetry"
+                                    disabled={$joinableRoomsLoading}
+                                    onclick={loadJoinableRooms}
+                                >
+                                    {$LL.chat.connectionErrorRetry()}
+                                </Button>
+                            </div>
+                        </Alert>
+                    </div>
+                {/if}
                 {#if $joinableRoomsLoading || $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
                     <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div

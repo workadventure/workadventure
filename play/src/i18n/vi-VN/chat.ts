@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Đây là lịch sử trò chuyện của bạn:",
     adventurers: "Người dùng",
     getCloserTitle: "Lại gần một ai đó",
-    noRoomOpen: "Mở một cuộc trò chuyện",
-    noRoomOpenDescription:
-        "Chưa có gì để hiển thị. Hãy bắt đầu một cuộc trò chuyện hoặc lại gần ai đó để thấy tin nhắn của bạn xuất hiện tại đây.",
     getCloserDesc:
         "Khi bạn lại gần một ai đó trong không gian ảo, một bong bóng trò chuyện tự động mở ra, cho phép bạn nói chuyện trực tiếp như thể đang mặt đối mặt.",
     noMessage: "Chưa có tin nhắn nào!",
@@ -81,7 +78,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Bỏ qua",
     roomMemberCount: "{count} thành viên",
     joinableRooms: "Cuộc thảo luận khả dụng",
-    joinableRoomsError: "Lỗi khi tải các cuộc thảo luận, bấm để thử lại",
+    joinableRoomsError: "Không thể tải các phòng của thư mục này.",
     proximity: "Trò chuyện lân cận",
     area: "Khu vực",
     enteredZone: {
@@ -346,6 +343,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Đang chờ",
     nothingToDisplay: "Không có gì để hiển thị",
     unreadConversationsTitle: "Chưa đọc",
+    catchUpTitle: "Cần xem lại",
+    catchUpEmpty: "Bạn đã xem hết",
     showMore: "Hiện thêm {number}",
     showLess: "Thu gọn",
     addRoomToFolderError: "Không thể thêm phòng vào thư mục",
@@ -590,6 +589,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Thao tác menu",
         unreadCount: "{count} chưa đọc",
         backWithUnreadElsewhere: "Quay lại, {count} tin nhắn chưa đọc ở nơi khác",
+        backWithMentionElsewhere: "Quay lại, bạn được nhắc đến ở nơi khác",
         showUnreadConversations: "Hiển thị các cuộc trò chuyện chưa đọc",
         hiddenUnreadCount: "{count} chưa đọc trong các cuộc trò chuyện bị ẩn",
         userAvatar: "Ảnh đại diện người dùng",
@@ -598,6 +598,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} thành viên · {online} trực tuyến",
         with: "Với {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} đã nhắn tin cho bạn",
+        others: "+{count} cuộc trò chuyện khác",
+        dismiss: "Đóng",
     },
     requiresLoginForChatModal: {
         title: "Đăng nhập để mở khóa trò chuyện!",

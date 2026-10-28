@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "여기는 당신의 채팅 기록입니다:",
     adventurers: "사용자",
     getCloserTitle: "누군가에게 다가가기",
-    noRoomOpen: "대화 열기",
-    noRoomOpenDescription:
-        "아직 표시할 내용이 없습니다. 채팅을 시작하거나 누군가에게 다가가면 이곳에 메시지가 표시됩니다.",
     getCloserDesc:
         "가상 공간에서 누군가에게 가까이 다가가면 대화 말풍선이 자동으로 열려 마치 마주 보고 있는 것처럼 직접 대화를 나눌 수 있습니다.",
     noMessage: "아직 보낸 메시지가 없습니다!",
@@ -81,7 +78,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "무시",
     roomMemberCount: "멤버 {count}명",
     joinableRooms: "참여 가능한 대화",
-    joinableRoomsError: "대화 불러오기 오류, 클릭해서 다시 시도",
+    joinableRoomsError: "이 폴더의 방을 불러올 수 없습니다.",
     proximity: "근접 채팅",
     area: "영역",
     enteredZone: {
@@ -348,6 +345,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "대기 중",
     nothingToDisplay: "표시할 내용이 없습니다",
     unreadConversationsTitle: "읽지 않음",
+    catchUpTitle: "확인할 대화",
+    catchUpEmpty: "모두 확인했습니다",
     showMore: "메시지 {number}개 더 보기",
     showLess: "적게 보기",
     addRoomToFolderError: "방을 폴더에 추가할 수 없습니다",
@@ -591,6 +590,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "작업 메뉴",
         unreadCount: "읽지 않음 {count}개",
         backWithUnreadElsewhere: "뒤로, 다른 곳에 읽지 않은 메시지 {count}개",
+        backWithMentionElsewhere: "뒤로, 다른 곳에서 멘션되었습니다",
         showUnreadConversations: "읽지 않은 대화 보기",
         hiddenUnreadCount: "숨겨진 대화에 읽지 않음 {count}개",
         userAvatar: "사용자 아바타",
@@ -599,6 +599,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "멤버 {members}명 · 온라인 {online}명",
         with: "참여자: {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name}님이 메시지를 보냈습니다",
+        others: "외 {count}개 대화",
+        dismiss: "닫기",
     },
     requiresLoginForChatModal: {
         title: "채팅을 사용하려면 로그인하세요!",

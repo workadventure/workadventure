@@ -4,8 +4,6 @@ const chat: BaseTranslation = {
     intro: "Here is your chat history:",
     adventurers: "Users",
     getCloserTitle: "Get closer to someone",
-    noRoomOpen: "Open a conversation",
-    noRoomOpenDescription: "Nothing to display yet. Start a chat or approach someone to see your messages appear here.",
     getCloserDesc:
         "When you approach someone in the virtual space, a conversation bubble automatically opens, allowing you to talk directly as if you were face-to-face.",
     noMessage: "No message sent yet!",
@@ -80,7 +78,7 @@ const chat: BaseTranslation = {
     ignoreSuggestedRoom: "Ignore",
     roomMemberCount: "{count:number} {{member|members}}",
     joinableRooms: "Rooms you can join",
-    joinableRoomsError: "Error loading rooms, click to retry",
+    joinableRoomsError: "Couldn't load the rooms of this folder.",
     proximity: "Proximity Chat",
     area: "Area",
     enteredZone: {
@@ -346,6 +344,8 @@ const chat: BaseTranslation = {
     waiting: "Waiting",
     nothingToDisplay: "Nothing to display",
     unreadConversationsTitle: "Unread",
+    catchUpTitle: "To catch up on",
+    catchUpEmpty: "You're all caught up",
     showMore: "Show {number} more",
     showLess: "Show less",
     addRoomToFolderError: "Impossible to add the room to the folder",
@@ -590,6 +590,7 @@ const chat: BaseTranslation = {
         menuActions: "Menu actions",
         unreadCount: "{count} unread",
         backWithUnreadElsewhere: "Back, {count} unread {{message|messages}} elsewhere",
+        backWithMentionElsewhere: "Back, you were mentioned elsewhere",
         showUnreadConversations: "Show the unread conversations",
         hiddenUnreadCount: "{count} unread in the hidden conversations",
         userAvatar: "User avatar",
@@ -598,6 +599,11 @@ const chat: BaseTranslation = {
     conversationSubtitle: {
         roomMembers: "{members} {{member|members}} · {online} online",
         with: "With {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} sent you a message",
+        others: "+{count} other {{conversation|conversations}}",
+        dismiss: "Dismiss",
     },
     requiresLoginForChatModal: {
         title: "Log in to unlock the chat!",

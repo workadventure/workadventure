@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Aquí està el vostre històric del chat:",
     adventurers: "Usuaris",
     getCloserTitle: "Apropa't a algú",
-    noRoomOpen: "Obre una conversa",
-    noRoomOpenDescription:
-        "Res a mostrar encara. Inicieu una conversa o apropeu-vos a algú per veure els vostres missatges apareixer aquí.",
     getCloserDesc:
         "Quan t'apropes a una persona a l'espai virtual, s'obre automàticament una bombolla de conversa, permetent-te parlar directament com si estiguéssiu cara a cara.",
     noMessage: "Encara no s'ha enviat cap missatge!",
@@ -81,7 +78,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Ignorar",
     roomMemberCount: "{count} {{membre|membres}}",
     joinableRooms: "Discussions disponibles",
-    joinableRoomsError: "Error en carregar les discussions, feu clic per tornar-ho a provar",
+    joinableRoomsError: "No s'han pogut carregar les sales d'aquesta carpeta.",
     proximity: "Bombolla de discussió",
     area: "Àrea",
     enteredZone: {
@@ -346,6 +343,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Esperant",
     nothingToDisplay: "Res a mostrar",
     unreadConversationsTitle: "Sense llegir",
+    catchUpTitle: "Per posar-se al dia",
+    catchUpEmpty: "Ja estàs al dia",
     showMore: "Mostrar {number} més",
     showLess: "Mostrar menys",
     addRoomToFolderError: "Impossible afegir la sala a la carpeta",
@@ -590,6 +589,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menú d’accions",
         unreadCount: "{count} sense llegir",
         backWithUnreadElsewhere: "Tornar, {count} {{missatge sense llegir|missatges sense llegir}} en altres llocs",
+        backWithMentionElsewhere: "Tornar, t'han esmentat en un altre lloc",
         showUnreadConversations: "Mostra les converses sense llegir",
         hiddenUnreadCount: "{count} sense llegir a les converses amagades",
         userAvatar: "Avatar d’usuari",
@@ -598,6 +598,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{membre|membres}} · {online} en línia",
         with: "Amb {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} t'ha escrit",
+        others: "+{count} {{conversa més|converses més}}",
+        dismiss: "Tancar",
     },
     requiresLoginForChatModal: {
         title: "Inicieu sessió per desbloquejar el xat!",

@@ -22,6 +22,7 @@ import type {
     ChatMessage,
     ChatMessageAttachment,
     ChatMessageContent,
+    ChatMessagePreview,
     ChatMessageReaction,
     ChatPollCreateOptions,
     ChatPollCreationCapability,
@@ -46,6 +47,8 @@ import {
 } from "../../Stores/ChatStore";
 import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { addPendingMention, chatMessageBannerStore } from "../../Stores/ChatMessageBannerStore";
+import { planMessageNotification, type MessageNotificationPlan } from "../../MessageNotificationPolicy";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
@@ -186,6 +189,14 @@ export class ProximityChatRoom implements ChatRoom {
     pictureStore = readable(undefined);
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
+    // Arrivals and departures are not messages.
+    readonly lastMessagePreview: Readable<ChatMessagePreview | undefined> = derived(this.messages, (messages) => {
+        const message = messages.filter(({ type }) => type !== "incoming" && type !== "outcoming").pop();
+        const body = message ? get(message.content).body : "";
+        return message && body
+            ? { body, senderName: message.sender?.username, timestamp: message.date?.getTime() ?? 0 }
+            : undefined;
+    });
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
     readonly mentionCandidates: Readable<readonly MentionCandidate[]> = derived(this.spaceUsersStore, (users) => [
@@ -291,6 +302,18 @@ export class ProximityChatRoom implements ChatRoom {
         return this.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
     }
 
+    private planNotification(mentionsMe: boolean): MessageNotificationPlan {
+        const chatVisible = get(chatVisibilityStore);
+        return planMessageNotification({
+            chatVisible,
+            roomDisplayed: chatVisible && get(selectedRoomStore)?.id === this.id,
+            // Like in Matrix rooms, a mention gets through a muted chat.
+            muted: get(this.areNotificationsMuted),
+            mentionsMe,
+            direct: false,
+        });
+    }
+
     private get unknownUserName(): string {
         return this.unknownUser.username ?? get(LL).chat.question.unknownAuthor();
     }
@@ -327,16 +350,13 @@ export class ProximityChatRoom implements ChatRoom {
         private tags: string[],
         private notifyNewMessage = (message: ProximityChatMessage) => {
             const { body, mentionsMe = false } = get(message.content);
-            const canPlaySound = localUserStore.getChatSounds();
-            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
-            // Like in Matrix rooms, a mention gets through a muted chat.
-            const isNotificationIsMuted = get(this.areNotificationsMuted) && !mentionsMe;
+            const plan = this.planNotification(mentionsMe);
 
-            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
+            if (plan.sound && localUserStore.getChatSounds()) {
                 gameManager.getCurrentGameScene().playSound("new-message");
             }
 
-            if (isNotificationIsMuted || isRoomIsDisplayed) {
+            if (!plan.browser) {
                 return;
             }
 
@@ -1447,11 +1467,23 @@ export class ProximityChatRoom implements ChatRoom {
             }
             if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
 
-            // Show proximity notification when unread count increases, and for a mention whenever the chat shows
-            // another conversation.
+            // Over the map while the chat is closed; in the chat, a banner for a mention only.
             const mentionsMe = lastMessage !== undefined && get(lastMessage.content).mentionsMe === true;
-            const isRoomDisplayed = !intentionallyClosed && get(selectedRoomStore) === this;
-            if (lastMessage?.sender && (intentionallyClosed || (mentionsMe && !isRoomDisplayed))) {
+            const plan = this.planNotification(mentionsMe);
+            if (lastMessage?.sender && plan.banner) {
+                if (mentionsMe) {
+                    addPendingMention(this.id);
+                }
+                chatMessageBannerStore.show({
+                    room: this,
+                    message: lastMessage,
+                    senderName: lastMessage.sender.username ?? this.unknownUserName,
+                    body: get(lastMessage.content).body,
+                    mentionsMe,
+                    roomName: get(this.name),
+                    author: { pictureStore: lastMessage.sender.pictureStore, color: lastMessage.sender.color },
+                });
+            } else if (lastMessage?.sender && plan.toast) {
                 const userName = lastMessage.sender.username ?? this.unknownUserName;
                 const messageBody = mentionsToPlainText(get(lastMessage.content).body);
                 const numberOfChar = 60;

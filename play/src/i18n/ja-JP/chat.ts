@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "チャット履歴",
     adventurers: "ユーザー",
     getCloserTitle: "誰かに近づく",
-    noRoomOpen: "会話を開く",
-    noRoomOpenDescription:
-        "現在表示するものがありません。会話を開始するか、誰かに近づいてメッセージをここに表示してください。",
     getCloserDesc:
         "バーチャル空間で誰かに近づくと、自動的に会話バブルが開き、顔を合わせて話しているかのようにリアルタイムでチャットできます。",
     noMessage: "まだメッセージが送信されていません！",
@@ -82,7 +79,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "非表示",
     roomMemberCount: "{count} 人のメンバー",
     joinableRooms: "利用可能なディスカッション",
-    joinableRoomsError: "ディスカッションの読み込みエラー、クリックして再試行",
+    joinableRoomsError: "このフォルダーのルームを読み込めませんでした。",
     proximity: "ディスカッションバブル",
     area: "エリア",
     enteredZone: {
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "待機中",
     nothingToDisplay: "表示するものはありません",
     unreadConversationsTitle: "未読",
+    catchUpTitle: "未確認",
+    catchUpEmpty: "すべて確認済みです",
     showMore: "{number} 件をさらに表示",
     showLess: "表示を減らす",
     addRoomToFolderError: "フォルダーにルームを追加できません",
@@ -592,6 +591,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "操作メニュー",
         unreadCount: "未読 {count} 件",
         backWithUnreadElsewhere: "戻る（他に未読 {count} 件）",
+        backWithMentionElsewhere: "戻る（他の場所でメンションされました）",
         showUnreadConversations: "未読の会話を表示",
         hiddenUnreadCount: "非表示の会話に未読 {count} 件",
         userAvatar: "ユーザーアバター",
@@ -600,6 +600,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "メンバー {members}人 · オンライン {online}人",
         with: "参加者: {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} さんからメッセージが届きました",
+        others: "ほか {count} 件の会話",
+        dismiss: "閉じる",
     },
     requiresLoginForChatModal: {
         title: "チャットのロックを解除するにはログインしてください",

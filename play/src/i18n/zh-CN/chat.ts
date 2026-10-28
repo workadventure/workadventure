@@ -5,8 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "这是您的聊天历史:",
     adventurers: "用户",
     getCloserTitle: "接近某人",
-    noRoomOpen: "打开对话",
-    noRoomOpenDescription: "暂无内容显示。开始聊天或接近某人以查看您的消息出现在这里。",
     getCloserDesc: "当您在虚拟空间中接近某人时，会自动打开一个对话气泡，让您可以直接交谈，就像面对面一样。",
     noMessage: "还没有发送消息！",
     beFirst: "成为第一个发送消息的人",
@@ -79,7 +77,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "忽略",
     roomMemberCount: "{count} 位成员",
     joinableRooms: "可用讨论",
-    joinableRoomsError: "加载讨论时出错，点击重试",
+    joinableRoomsError: "无法加载此文件夹中的房间。",
     proximity: "邻近聊天",
     area: "区域",
     enteredZone: {
@@ -344,6 +342,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "等待中",
     nothingToDisplay: "无内容显示",
     unreadConversationsTitle: "未读",
+    catchUpTitle: "待查看",
+    catchUpEmpty: "已全部查看",
     showMore: "显示更多 {number} 条",
     showLess: "显示更少",
     addRoomToFolderError: "无法将房间添加到文件夹",
@@ -586,6 +586,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "操作菜单",
         unreadCount: "{count} 条未读",
         backWithUnreadElsewhere: "返回，其他地方有 {count} 条未读消息",
+        backWithMentionElsewhere: "返回，有人在其他地方提到了你",
         showUnreadConversations: "显示未读会话",
         hiddenUnreadCount: "隐藏的对话中有 {count} 条未读",
         userAvatar: "用户头像",
@@ -594,6 +595,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} 名成员 · {online} 人在线",
         with: "参与者：{names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} 给你发了一条消息",
+        others: "另有 {count} 个对话",
+        dismiss: "关闭",
     },
     requiresLoginForChatModal: {
         title: "登录以解锁聊天！",

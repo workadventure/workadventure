@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "How su twóje powěsći:",
     adventurers: "Wužywarje",
     getCloserTitle: "Pśizamkni se někomu",
-    noRoomOpen: "Wócyń rozgrono",
-    noRoomOpenDescription:
-        "Hyšći nic za pokazanje. Zachop rozgrono abo pśizamkni se někomu, aby wiźeł swóje powěsći how.",
     getCloserDesc:
         "Gaž se pśizamkujoš k wužiwarjeju we wirtuelnem rumje, wócyni se awtomatiski rozgronowa buła, co śi dowóla wótwobno rozgranowaś, ako byštaj sej woblico woblico stali.",
     noMessage: "Hyšći žedna powěsć pósłana!",
@@ -82,7 +79,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Ignorěrowaś",
     roomMemberCount: "{count} {{cłonk|cłonkow}}",
     joinableRooms: "Dostupne diskusije",
-    joinableRoomsError: "Zmólka pśi lodowanju diskusijow, klikni za wopytanje znowa",
+    joinableRoomsError: "Rumy toś togo zarědnika njejsu se dali zacytaś.",
     proximity: "Rozgronowa buła",
     area: "Areal",
     enteredZone: {
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Cakajucy",
     nothingToDisplay: "Nic za pokazanje",
     unreadConversationsTitle: "Njecytane",
+    catchUpTitle: "K dopóraźenju",
+    catchUpEmpty: "Sy na aktualnem stawje",
     showMore: "Pokazaś {number} wěcej",
     showLess: "Pokazaś mjenjej",
     addRoomToFolderError: "Njejo móžno, śpu k zarědu pśidaś",
@@ -591,6 +590,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menij akcijow",
         unreadCount: "{count} njecytane",
         backWithUnreadElsewhere: "Slědk, {count} njecytane powěsći hynźej",
+        backWithMentionElsewhere: "Slědk, wy sćo był hynźej naspomnjony",
         showUnreadConversations: "Njecytane rozgrona pokazaś",
         hiddenUnreadCount: "{count} njecytane w schowanych rozgronach",
         userAvatar: "Awatar wužywarja",
@@ -599,6 +599,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{cłonk|cłonkow}} · {online} online",
         with: "Z {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} jo wam pisał",
+        others: "+{count} dalšne rozgrona",
+        dismiss: "Zacyniś",
     },
     requiresLoginForChatModal: {
         title: "Zaloguj se, aby chat wužywał!",

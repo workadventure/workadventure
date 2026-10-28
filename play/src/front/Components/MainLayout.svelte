@@ -130,8 +130,9 @@
             event.target instanceof HTMLSelectElement ||
             (event.target instanceof HTMLDivElement &&
                 (event.target.getAttribute("role") === "textbox" ||
-                    event.target.classList.contains("block-user-action") ||
-                    event.target.getAttribute("contenteditable") === "true"))
+                    event.target.getAttribute("contenteditable") === "true")) ||
+            // A chat message and its action buttons: Enter or Space there must not reach the game shortcuts.
+            (event.target instanceof Element && event.target.closest(".block-user-action") !== null)
         ) {
             inputFormFocusStore.set(true);
         }
@@ -144,8 +145,9 @@
             event.target instanceof HTMLSelectElement ||
             (event.target instanceof HTMLDivElement &&
                 (event.target.getAttribute("role") === "textbox" ||
-                    event.target.classList.contains("block-user-action") ||
-                    event.target.getAttribute("contenteditable") === "true"))
+                    event.target.getAttribute("contenteditable") === "true")) ||
+            // A chat message and its action buttons: Enter or Space there must not reach the game shortcuts.
+            (event.target instanceof Element && event.target.closest(".block-user-action") !== null)
         ) {
             inputFormFocusStore.set(false);
         }

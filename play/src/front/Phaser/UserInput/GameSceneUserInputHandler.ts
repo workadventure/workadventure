@@ -18,6 +18,7 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { isKeyFromInteractiveElement } from "../../Utils/isKeyFromInteractiveElement";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
@@ -468,6 +469,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             // SPACE
             case " ": {
+                if (isKeyFromInteractiveElement(event)) break;
                 this.handleActivableEntity();
                 break;
             }
@@ -476,7 +478,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
             case "Enter": {
-                this.openSayPopup();
+                if (!isKeyFromInteractiveElement(event)) this.openSayPopup();
                 this.controlKeyisPressed = false;
                 break;
             }

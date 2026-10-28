@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Aquí está su histórico del chat:",
     adventurers: "Usuarios",
     getCloserTitle: "Acércate a alguien",
-    noRoomOpen: "Abre una conversación",
-    noRoomOpenDescription:
-        "Nada que mostrar todavía. Inicia una conversación o acércate a alguien para ver tus mensajes aparecer aquí.",
     getCloserDesc:
         "Cuando te acercas a una persona en el espacio virtual, se abre automáticamente una burbuja de conversación, permitiéndote hablar directamente como si estuvierais cara a cara.",
     noMessage: "¡Aún no se ha enviado ningún mensaje!",
@@ -81,7 +78,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Ignorar",
     roomMemberCount: "{count} {{miembro|miembros}}",
     joinableRooms: "Discusiones disponibles",
-    joinableRoomsError: "Error al cargar las discusiones, haga clic para reintentar",
+    joinableRoomsError: "No se pudieron cargar las salas de esta carpeta.",
     proximity: "Burbuja de discusión",
     area: "Zona",
     enteredZone: {
@@ -346,6 +343,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Esperando",
     nothingToDisplay: "Nada que mostrar",
     unreadConversationsTitle: "Sin leer",
+    catchUpTitle: "Para ponerte al día",
+    catchUpEmpty: "Estás al día",
     showMore: "Mostrar {number} más",
     showLess: "Mostrar menos",
     addRoomToFolderError: "Imposible añadir la sala a la carpeta",
@@ -590,6 +589,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menú de acciones",
         unreadCount: "{count} sin leer",
         backWithUnreadElsewhere: "Volver, {count} {{mensaje sin leer|mensajes sin leer}} en otro lugar",
+        backWithMentionElsewhere: "Volver, te han mencionado en otro lugar",
         showUnreadConversations: "Mostrar las conversaciones sin leer",
         hiddenUnreadCount: "{count} sin leer en las conversaciones ocultas",
         userAvatar: "Avatar de usuario",
@@ -598,6 +598,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{miembro|miembros}} · {online} en línea",
         with: "Con {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} te ha escrito",
+        others: "+{count} {{conversación más|conversaciones más}}",
+        dismiss: "Cerrar",
     },
     requiresLoginForChatModal: {
         title: "¡Inicie sesión para desbloquear el chat!",

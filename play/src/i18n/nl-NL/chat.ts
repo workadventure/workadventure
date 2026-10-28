@@ -5,9 +5,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     intro: "Hier is je chatgeschiedenis:",
     adventurers: "Gebruikers",
     getCloserTitle: "Nader tot iemand",
-    noRoomOpen: "Open een gesprek",
-    noRoomOpenDescription:
-        "Nog niets om te tonen. Begin een discussie of nader tot iemand om je berichten hier te zien verschijnen.",
     getCloserDesc:
         "Wanneer je je tot een persoon in de virtuele ruimte nadert, opent zich automatisch een gespreksbel, waardoor je in realtime kunt chatten alsof je elkaar tegenover stond.",
     noMessage: "Nog geen bericht verzonden!",
@@ -82,7 +79,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Negeren",
     roomMemberCount: "{count} {{lid|leden}}",
     joinableRooms: "Beschikbare discussies",
-    joinableRoomsError: "Fout bij het laden van discussies, klik om opnieuw te proberen",
+    joinableRoomsError: "De ruimtes van deze map konden niet worden geladen.",
     proximity: "Gespreksbel",
     area: "Gebied",
     enteredZone: {
@@ -347,6 +344,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     waiting: "Wachten",
     nothingToDisplay: "Niets om weer te geven",
     unreadConversationsTitle: "Ongelezen",
+    catchUpTitle: "Bij te lezen",
+    catchUpEmpty: "Je bent helemaal bij",
     showMore: "Toon {number} meer",
     showLess: "Toon minder",
     addRoomToFolderError: "Kamer kon niet aan de map worden toegevoegd",
@@ -591,6 +590,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Actiemenu",
         unreadCount: "{count} ongelezen",
         backWithUnreadElsewhere: "Terug, {count} {{ongelezen bericht|ongelezen berichten}} elders",
+        backWithMentionElsewhere: "Terug, je bent elders genoemd",
         showUnreadConversations: "Ongelezen gesprekken tonen",
         hiddenUnreadCount: "{count} ongelezen in de verborgen gesprekken",
         userAvatar: "Gebruikersavatar",
@@ -599,6 +599,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{lid|leden}} · {online} online",
         with: "Met {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} heeft je een bericht gestuurd",
+        others: "+{count} {{ander gesprek|andere gesprekken}}",
+        dismiss: "Sluiten",
     },
     requiresLoginForChatModal: {
         title: "Log in om de chat te ontgrendelen!",
