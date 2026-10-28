@@ -801,7 +801,7 @@
             <ul
                 class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$timelineItems.length === 0
                     ? 'items-center justify-center pb-4'
-                    : 'max-w-6xl'}"
+                    : 'max-w-3xl'}"
             >
                 {#if $initializationState === "loading" || $initializationState === "idle"}
                     <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
@@ -910,16 +910,19 @@
             </div>
         {/if}
 
-        {#if $initializationState === "ready" && $typingMembers.length > 0}
-            <TypingUsers typingMembers={$typingMembers} />
-        {/if}
-        {#key room}
-            <MessageInputBar
-                disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}
-                {room}
-                bind:this={messageInputBarRef}
-            />
-        {/key}
+        <!-- Same reading column as the message list, so the input does not stretch across a full-screen chat -->
+        <div class="w-full max-w-3xl self-center">
+            {#if $initializationState === "ready" && $typingMembers.length > 0}
+                <TypingUsers typingMembers={$typingMembers} />
+            {/if}
+            {#key room}
+                <MessageInputBar
+                    disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}
+                    {room}
+                    bind:this={messageInputBarRef}
+                />
+            {/key}
+        </div>
     {/if}
 </div>
 

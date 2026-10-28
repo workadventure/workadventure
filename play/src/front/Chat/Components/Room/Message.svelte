@@ -173,11 +173,9 @@
         <!-- Without a header, the avatar is left out: keep its column so the bubble lines up with the one above.
              Our own messages never show an avatar, so they have no column to keep. -->
         <div
-            class="flex flex-col justify-end max-w-full {replyDepth === 0 &&
-            !showHeader &&
-            (!isMyMessage || isQuotedMessage)
-                ? 'ml-12'
-                : ''}"
+            class="flex flex-col justify-end {replyDepth === 0
+                ? 'max-w-[min(100%,65ch)]'
+                : 'max-w-full'} {replyDepth === 0 && !showHeader && (!isMyMessage || isQuotedMessage) ? 'ml-12' : ''}"
         >
             {#if replyDepth <= 0 && showHeader}
                 <div
