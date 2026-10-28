@@ -39,7 +39,9 @@
 {#if $chatMessageBannerStore}
     {@const banner = $chatMessageBannerStore}
     <div
-        class="mx-2 flex items-start gap-2 rounded-lg border border-solid border-danger/60 bg-contrast/80 p-2 text-sm text-white shadow-lg"
+        class="mx-2 flex items-start gap-2 rounded-lg border border-solid bg-contrast/80 p-2 text-sm text-white shadow-lg {banner.mentionsMe
+            ? 'border-danger/60'
+            : 'border-white/20'}"
         role="status"
         data-testid="chatMessageBanner"
         onmouseenter={() => (hovered = true)}
