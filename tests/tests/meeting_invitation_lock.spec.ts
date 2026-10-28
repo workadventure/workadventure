@@ -112,6 +112,20 @@ test.describe("Meeting invitation through a locked bubble @nomobile @nowebkit", 
         await isInBubbleWith(bob, "Carol");
     });
 
+    test("Invitee in a bubble can still join the inviter, leaving their conversation", async ({ browser }) => {
+        await using alice = await getPage(browser, "Alice", mapUrl);
+        await using bob = await getPage(browser, "Bob", mapUrl);
+        await using carol = await getPage(browser, "Carol", mapUrl);
+        await formBubble(alice, bob, carol, false);
+
+        await chatUtils.UL_invite(carol, "Bob");
+        await expect(bob.getByTestId("meeting-invitation-popup")).toBeVisible({ timeout: 15_000 });
+        await bob.getByTestId("meeting-invitation-accept").click();
+
+        await isInBubbleWith(carol, "Bob");
+        await expect(alice.locator("#cameras-container").getByText("Bob")).toBeHidden({ timeout: 15_000 });
+    });
+
     test("The invitation lets the user in only once", async ({ browser }) => {
         await using alice = await getPage(browser, "Alice", mapUrl);
         await using bob = await getPage(browser, "Bob", mapUrl);
