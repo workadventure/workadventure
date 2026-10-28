@@ -77,6 +77,7 @@ import type { GameScene } from "../GameScene";
 import { mapEditorAskToClaimPersonalAreaStore } from "../../../Stores/MapEditorStore";
 import {
     canRequestVisitCardsStore,
+    moderatedMeetingSpacesStore,
     requestVisitCardsStore,
     selectedChatIDRemotePlayerStore,
 } from "../../../Stores/GameStore";
@@ -1081,6 +1082,11 @@ export class AreasPropertiesListener {
 
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl).trim();
 
+        const adminTag = property.livekitRoomAdminTag;
+        if (adminTag && this.scene.connection?.hasTag(adminTag)) {
+            moderatedMeetingSpacesStore.update((spaces) => new Set(spaces).add(roomName));
+        }
+
         const livekitRoomConfig = property.livekitRoomConfig ?? {
             startWithAudioMuted: false,
             startWithVideoMuted: false,
@@ -1385,6 +1391,12 @@ export class AreasPropertiesListener {
     private async handleLivekitRoomPropertyOnLeave(property: LivekitRoomPropertyData): Promise<void> {
         const roomID = property.roomName.trim().length === 0 ? property.id : property.roomName;
         const roomName = Jitsi.slugifyJitsiRoomName(roomID, this.scene.roomUrl, false);
+
+        moderatedMeetingSpacesStore.update((spaces) => {
+            const remaining = new Set(spaces);
+            remaining.delete(roomName.trim());
+            return remaining;
+        });
 
         await this.scene.proximityChatRoomManager.leaveSpace(roomName, true);
 

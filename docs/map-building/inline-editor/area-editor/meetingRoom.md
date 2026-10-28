@@ -32,7 +32,7 @@ Click **More Options** to configure the meeting room:
 - **Disable chat**: turns off the chat of the meeting room. If the area also has a [Matrix chat room](matrix-chat-zone.md), this switch is greyed out and the meeting room chat is off: people use the Matrix room instead.
 - **Allow raising hands**: Turn this off so that participants can no longer [raise their hand](/user/raise-hand) in this meeting room. It is on by default. Participants can still lower a hand they already raised, and raise their hand in another conversation, such as a discussion bubble.
 
-The **Moderator tag for the meeting room** field is not used yet: users with the `admin` tag moderate meeting rooms.
+The **Moderator tag for the meeting room** field gives moderator rights in this meeting room to the users who carry that tag, in addition to users with the `admin` tag. A moderator turns off a participant's microphone or camera directly, turns off everybody's microphone or camera at once, and can remove a participant from the meeting. Other participants can only ask someone to turn off their microphone or camera.
 
 The first two options help when many people come and go during a meeting: arrivals do not interrupt the speaker. For large events where only a few people speak, use a [podium](broadcast.md) instead.
 

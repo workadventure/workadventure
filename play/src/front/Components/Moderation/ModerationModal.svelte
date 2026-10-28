@@ -9,7 +9,7 @@
     import { blackListManager } from "../../WebRtc/BlackListManager";
     import { connectionManager } from "../../Connection/ConnectionManager";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { moderatedMeetingSpacesStore, userIsAdminStore } from "../../Stores/GameStore";
     import { hasCapability } from "../../Connection/Capabilities";
     import { mediaSynchronizedSpacesStore } from "../../Stores/PeerStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
@@ -49,6 +49,12 @@
      */
     const sharedSpaces = $derived(
         $mediaSynchronizedSpacesStore.filter((space) => space.getSpaceUserByUuid(userUuid) !== undefined),
+    );
+    /** The shared conversations the moderator may remove the user from: all of them for an admin, else the meeting rooms they moderate. */
+    const removableSpaces = $derived(
+        $userIsAdminStore
+            ? sharedSpaces
+            : sharedSpaces.filter((space) => $moderatedMeetingSpacesStore.has(space.getName())),
     );
 
     /** A ban locks out the account only, unless the moderator also bans the IP it connected from. */
@@ -101,7 +107,7 @@
     }
 
     function removeFromConversation() {
-        for (const space of sharedSpaces) {
+        for (const space of removableSpaces) {
             const spaceUser = space.getSpaceUserByUuid(userUuid);
             if (spaceUser === undefined) {
                 continue;
@@ -214,13 +220,22 @@
                         "moderation-report-action",
                     )}
                 {/if}
+                {#if !$userIsAdminStore && removableSpaces.length > 0}
+                    {@render actionRow(
+                        $LL.report.moderate.remove.title(),
+                        $LL.report.moderate.hint.remove(),
+                        removeIcon,
+                        () => pick("remove"),
+                        "moderation-remove-action",
+                    )}
+                {/if}
                 {#if $userIsAdminStore}
                     <div class="flex flex-row items-center gap-3 text-xs uppercase opacity-50">
                         <span class="h-px grow bg-white/20"></span>
                         {$LL.report.moderate.adminOnly()}
                         <span class="h-px grow bg-white/20"></span>
                     </div>
-                    {#if sharedSpaces.length > 0}
+                    {#if removableSpaces.length > 0}
                         {@render actionRow(
                             $LL.report.moderate.remove.title(),
                             $LL.report.moderate.hint.remove(),
