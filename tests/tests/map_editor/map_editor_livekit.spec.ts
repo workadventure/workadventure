@@ -167,4 +167,57 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await expect(page2.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
         await expect(page2.locator("#cameras-container").getByText("Admin1")).toBeVisible({ timeout: 30_000 });
     });
+
+    test("the moderator tag of a meeting room lets a member mute and remove people @nofirefox", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        {
+            await using admin = await getPage(browser, "Admin1", Map.url("empty"));
+            await Menu.openMapEditor(admin);
+            await MapEditor.openAreaEditor(admin);
+            await AreaEditor.drawArea(admin, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
+            await AreaEditor.addProperty(admin, "livekitRoomProperty");
+            await admin.getByTestId("livekitRoomMoreOptionsButton").click();
+            // Member1 logs in with the OpenID user that has the "member" tag.
+            await admin.locator("#livekitRoomAdminTag").fill("member");
+            await admin.getByTestId("livekitRoomConfigValidateButton").click();
+            await Menu.closeMapEditor(admin);
+        }
+
+        await using member = await getPage(browser, "Member1", Map.url("empty"));
+        await Map.teleportToPosition(member, 4 * 32, 3 * 32);
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 4 * 32, 3 * 32);
+
+        const bobBox = member.locator("#cameras-container .camera-box").filter({ hasText: "Bob" });
+        await expect(bobBox).toBeVisible({ timeout: 30_000 });
+        await expect(bob.locator("#cameras-container").getByText("Member1")).toBeVisible({ timeout: 30_000 });
+
+        // Bob has no tag: he can only ask the moderator to mute.
+        await bob
+            .locator("#cameras-container .camera-box")
+            .filter({ hasText: "Member1" })
+            .locator(".user-menu-btn")
+            .click();
+        await expect(bob.getByRole("button", { name: "Ask to mute audio", exact: true })).toBeVisible();
+        await bob.keyboard.press("Escape");
+
+        // The moderator mutes Bob for real: Bob is not asked.
+        await bobBox.locator(".user-menu-btn").click();
+        await member.getByRole("button", { name: "Mute audio", exact: true }).click();
+        await expect(member.getByTestId("Bob is muted.")).toBeVisible({ timeout: 20_000 });
+        await expect(bob.getByText("Can I mute your microphone?")).toBeHidden();
+
+        // And removes him from the meeting.
+        await bobBox.locator(".user-menu-btn").click();
+        await member.getByRole("button", { name: "Moderation", exact: true }).click();
+        await member.getByTestId("moderation-remove-action").click();
+        await member.getByTestId("moderation-submit").click();
+        await expect(bob.getByText("A moderator removed you from the conversation")).toBeVisible({
+            timeout: 20_000,
+        });
+        await expect(bob.locator("#cameras-container").getByText("Member1")).toBeHidden({ timeout: 20_000 });
+    });
 });
