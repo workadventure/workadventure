@@ -173,18 +173,18 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         request,
     }) => {
         await resetWamMaps(request);
-        {
-            await using admin = await getPage(browser, "Admin1", Map.url("empty"));
-            await Menu.openMapEditor(admin);
-            await MapEditor.openAreaEditor(admin);
-            await AreaEditor.drawArea(admin, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
-            await AreaEditor.addProperty(admin, "livekitRoomProperty");
-            await admin.getByTestId("livekitRoomMoreOptionsButton").click();
-            // Member1 logs in with the OpenID user that has the "member" tag.
-            await admin.locator("#livekitRoomAdminTag").fill("member");
-            await admin.getByTestId("livekitRoomConfigValidateButton").click();
-            await Menu.closeMapEditor(admin);
-        }
+        // The admin stays connected: the back keeps the room, edits included, instead of reloading the WAM
+        // from the map storage, which may not have saved the moderator tag yet.
+        await using admin = await getPage(browser, "Admin1", Map.url("empty"));
+        await Menu.openMapEditor(admin);
+        await MapEditor.openAreaEditor(admin);
+        await AreaEditor.drawArea(admin, { x: 1 * 32, y: 2 * 32 }, { x: 9 * 32, y: 4 * 32 });
+        await AreaEditor.addProperty(admin, "livekitRoomProperty");
+        await admin.getByTestId("livekitRoomMoreOptionsButton").click();
+        // Member1 logs in with the OpenID user that has the "member" tag.
+        await admin.locator("#livekitRoomAdminTag").fill("member");
+        await admin.getByTestId("livekitRoomConfigValidateButton").click();
+        await Menu.closeMapEditor(admin);
 
         await using member = await getPage(browser, "Member1", Map.url("empty"));
         await Map.teleportToPosition(member, 4 * 32, 3 * 32);
