@@ -5,7 +5,7 @@ import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
-import type { CharacterTextureMessage } from "@workadventure/messages";
+import type { CharacterTextureMessage, SpaceMessageQuote } from "@workadventure/messages";
 import { AvailabilityStatus, FilterType, type SpaceKind } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -38,7 +38,12 @@ import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInte
 import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+import {
+    isAChatRoomIsVisible,
+    navChat,
+    selectedChatMessageToReply,
+    shouldRestoreChatStateStore,
+} from "../../Stores/ChatStore";
 import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
@@ -80,16 +85,20 @@ import {
     type ProximityFileTransferUpdate,
 } from "./ProximityFileTransferService";
 import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
+import { applyProximityReaction } from "./ProximityChatMessageReaction";
 
 const debug = Debug("ProximityChatRoom");
 
+// Long enough to recognise the quoted message, short enough to keep the reply event small.
+const QUOTE_EXCERPT_MAX_LENGTH = 200;
+
 export class ProximityChatMessage implements ChatMessage {
-    isQuotedMessage = undefined;
-    quotedMessage = undefined;
+    isQuotedMessage: boolean | undefined = undefined;
+    quotedMessage: ChatMessage | undefined = undefined;
     isDeleted = writable(false);
     isModified = writable(false);
     canEdit = writable(false);
-    canReact = writable(false);
+    canReact: Readable<boolean>;
     canDelete = writable(false);
     reactions: MapStore<string, ChatMessageReaction> = new MapStore();
     constructor(
@@ -100,7 +109,11 @@ export class ProximityChatMessage implements ChatMessage {
         public isMyMessage: boolean,
         public type: ChatMessageType,
         public attachment?: ChatMessageAttachment,
-    ) {}
+        // Only messages every participant knows under the same id can be reacted to.
+        private readonly toggleReaction?: (messageId: string, key: string) => void,
+    ) {
+        this.canReact = readable(toggleReaction !== undefined);
+    }
 
     remove(): void {
         console.info("Function not implemented.");
@@ -110,7 +123,7 @@ export class ProximityChatMessage implements ChatMessage {
         return Promise.resolve();
     }
     addReaction(reaction: string): Promise<void> {
-        console.info("Function not implemented.", reaction);
+        this.toggleReaction?.(this.id, reaction);
         return Promise.resolve();
     }
 }
@@ -190,6 +203,7 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: SpaceInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private spaceMessageReactionSubscription: Subscription | undefined;
     private spaceStateUnsubscriber: Unsubscriber | undefined;
     private roomSidePanelUnsubscriber: Unsubscriber;
     private selectedRoomUnsubscriber: Unsubscriber;
@@ -355,7 +369,15 @@ export class ProximityChatRoom implements ChatRoom {
             new Date(),
             true,
             action,
+            undefined,
+            action === "proximity" ? this.toggleReaction : undefined,
         );
+
+        const quote = action === "proximity" && broadcast ? this.quoteOfSelectedReply() : undefined;
+        if (quote) {
+            newMessage.quotedMessage = this.createQuotedMessage(quote);
+            selectedChatMessageToReply.set(null);
+        }
 
         // Add message to the list
         this.messages.push(newMessage);
@@ -373,6 +395,8 @@ export class ProximityChatRoom implements ChatRoom {
                     message: message,
                     characterTextures: spaceUser?.characterTextures ?? [],
                     name: chatUser.username ?? this.unknownUserName,
+                    id: newMessage.id,
+                    quote,
                 },
             });
         }
@@ -421,6 +445,8 @@ export class ProximityChatRoom implements ChatRoom {
         senderUserId: string,
         characterTextures: CharacterTextureMessage[],
         name: string,
+        messageId?: string,
+        quote?: SpaceMessageQuote,
     ): void {
         // Ignore messages from the current user
         if (senderUserId === this._spaceUserId) {
@@ -456,15 +482,21 @@ export class ProximityChatRoom implements ChatRoom {
             chatUser.username = name;
         }
 
-        // Create message
+        // Create message. Older clients send no id: such a message cannot be reacted to, the others would not find it.
+        const isNewId = messageId !== undefined && messageId !== "" && !this.messages.has(messageId);
         const newMessage = new ProximityChatMessage(
-            uuidv4(),
+            isNewId ? messageId : uuidv4(),
             chatUser,
             writable(newChatMessageContent),
             new Date(),
             false,
             "proximity",
+            undefined,
+            isNewId ? this.toggleReaction : undefined,
         );
+        if (quote) {
+            newMessage.quotedMessage = this.createQuotedMessage(quote);
+        }
 
         // Add message to the list
         this.messages.push(newMessage);
@@ -534,6 +566,7 @@ export class ProximityChatRoom implements ChatRoom {
                     size: offer.file.size,
                     delivery: attachmentRecipients,
                 },
+                this.toggleReaction,
             );
             this.messages.push(message);
             this.lastMessageTimestamp = message.date.getTime();
@@ -898,6 +931,7 @@ export class ProximityChatRoom implements ChatRoom {
                     decline: () => this.refuseIncomingFileOffer(offer.transferId),
                 },
             },
+            this.toggleReaction,
         );
 
         this.fileTransfers.set(offer.transferId, { message, content, status, decision, sizeBytes: offer.size });
@@ -1008,6 +1042,79 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
+    /**
+     * Adds or removes my reaction locally, then tells the other participants.
+     * The pusher does not echo a public event back to its sender.
+     */
+    private readonly toggleReaction = (messageId: string, key: string): void => {
+        const message = this.messages.get(messageId);
+        if (!message) {
+            return;
+        }
+        const added = !message.reactions.get(key)?.users.has(this._spaceUserId);
+        this.applyReaction(message, key, this._spaceUserId, added);
+        this._space?.emitPublicMessage({
+            $case: "spaceMessageReaction",
+            spaceMessageReaction: { messageId, reaction: key, added },
+        });
+    };
+
+    private applyRemoteReaction(
+        senderUserId: string,
+        { messageId, reaction, added }: { messageId: string; reaction: string; added: boolean },
+    ): void {
+        if (senderUserId === this._spaceUserId || this.isBlackListedSpaceUser(senderUserId)) {
+            return;
+        }
+        const message = this.messages.get(messageId);
+        if (!message || !get(message.canReact)) {
+            return;
+        }
+        this.applyReaction(message, reaction, senderUserId, added);
+    }
+
+    private applyReaction(message: ChatMessage, key: string, spaceUserId: string, added: boolean): void {
+        const spaceUser = this.users?.get(spaceUserId);
+        const user = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : { ...this.unknownUser, spaceUserId };
+        // Anonymous users have no chat id.
+        const chatUser = { ...user, chatId: user.chatId || spaceUserId };
+        applyProximityReaction(message.reactions, key, spaceUserId, chatUser, added, this._spaceUserId, (reactionKey) =>
+            this.toggleReaction(message.id, reactionKey),
+        );
+    }
+
+    /** The quote to send with my next message, if a message of this room is selected for a reply. */
+    private quoteOfSelectedReply(): SpaceMessageQuote | undefined {
+        const selected = get(selectedChatMessageToReply);
+        const message = selected ? this.messages.get(selected.id) : undefined;
+        if (!message || message !== selected) {
+            return undefined;
+        }
+        return {
+            messageId: message.id,
+            excerpt: get(message.content).body.slice(0, QUOTE_EXCERPT_MAX_LENGTH),
+            senderName: message.sender?.username,
+        };
+    }
+
+    /**
+     * The quoted copy shown inside a reply: the original message when it is still in the timeline,
+     * otherwise the excerpt carried by the reply (the receiver joined the bubble after the original).
+     */
+    private createQuotedMessage(quote: SpaceMessageQuote): ProximityChatMessage {
+        const original = this.messages.get(quote.messageId);
+        const quoted = new ProximityChatMessage(
+            quote.messageId,
+            original?.sender ?? { ...this.unknownUser, username: quote.senderName || this.unknownUserName },
+            original?.content ?? writable({ body: quote.excerpt.slice(0, QUOTE_EXCERPT_MAX_LENGTH), url: undefined }),
+            original?.date ?? new Date(),
+            original?.isMyMessage ?? false,
+            "proximity",
+        );
+        quoted.isQuotedMessage = true;
+        return quoted;
+    }
+
     private isBlackListedSpaceUser(spaceUserId: string): boolean {
         const uuid = this.users?.get(spaceUserId)?.uuid;
         return uuid !== undefined && blackListManager.isBlackListed(uuid);
@@ -1056,6 +1163,8 @@ export class ProximityChatRoom implements ChatRoom {
             new Date(),
             false,
             "proximity",
+            undefined,
+            type === "bubble" ? this.toggleReaction : undefined,
         );
 
         // Add message to the list
@@ -1069,6 +1178,7 @@ export class ProximityChatRoom implements ChatRoom {
                 spaceMessage: {
                     message: message,
                     characterTextures: [],
+                    id: newMessage.id,
                 },
             });
         }
@@ -1271,6 +1381,8 @@ export class ProximityChatRoom implements ChatRoom {
                 event.sender,
                 event.spaceMessage.characterTextures ?? [],
                 event.spaceMessage.name ?? "",
+                event.spaceMessage.id,
+                event.spaceMessage.quote,
             );
 
             // Get the last message to use for notification
@@ -1296,6 +1408,11 @@ export class ProximityChatRoom implements ChatRoom {
             }
             if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
         });
+
+        this.spaceMessageReactionSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription = this._space
+            .observePublicEvent("spaceMessageReaction")
+            .subscribe((event) => this.applyRemoteReaction(event.sender, event.spaceMessageReaction));
 
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = this._space.observePublicEvent("spaceIsTyping").subscribe((event) => {
@@ -1525,6 +1642,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMessageSubscription = undefined;
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = undefined;
+        this.spaceMessageReactionSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription = undefined;
         this.spaceStateUnsubscriber?.();
         this.spaceStateUnsubscriber = undefined;
         this.cleanupFileTransferService();
@@ -1775,6 +1894,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription?.unsubscribe();
         this.spaceStateUnsubscriber?.();
         this.spaceStateUnsubscriber = undefined;
         this.cleanupFileTransferService();
@@ -1879,6 +1999,7 @@ export class ProximityChatRoom implements ChatRoom {
     public destroy(): void {
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription?.unsubscribe();
         this.spaceStateUnsubscriber?.();
         this.roomSidePanelUnsubscriber();
         this.selectedRoomUnsubscriber();
