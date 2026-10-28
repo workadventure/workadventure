@@ -579,6 +579,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "صورة المستخدم",
         applicationIcon: "تطبيق",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} {{عضو|أعضاء}} · {online} متصل",
+        with: "مع {names}",
+    },
     requiresLoginForChatModal: {
         title: "قم بتسجيل الدخول لفتح الدردشة!",
         content_1: "للاستمتاع الكامل بميزة الدردشة هذه، تحتاج إلى تسجيل الدخول إلى حسابك.",

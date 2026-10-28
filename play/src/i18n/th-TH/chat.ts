@@ -579,6 +579,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "อวาตาร์ผู้ใช้",
         applicationIcon: "แอปพลิเคชัน",
     },
+    conversationSubtitle: {
+        roomMembers: "สมาชิก {members} คน · ออนไลน์ {online} คน",
+        with: "กับ {names}",
+    },
     requiresLoginForChatModal: {
         title: "เข้าสู่ระบบเพื่อปลดล็อกแชท!",
         content_1: "หากต้องการใช้ฟีเจอร์แชทอย่างเต็มที่ คุณต้องเข้าสู่ระบบด้วยบัญชีของคุณ",

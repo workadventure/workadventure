@@ -581,6 +581,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "사용자 아바타",
         applicationIcon: "애플리케이션",
     },
+    conversationSubtitle: {
+        roomMembers: "멤버 {members}명 · 온라인 {online}명",
+        with: "참여자: {names}",
+    },
     requiresLoginForChatModal: {
         title: "채팅을 사용하려면 로그인하세요!",
         content_1: "이 채팅 기능을 온전히 즐기려면 계정에 로그인해야 합니다.",

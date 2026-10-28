@@ -580,6 +580,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "Avatar d’usuari",
         applicationIcon: "Aplicació",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} {{membre|membres}} · {online} en línia",
+        with: "Amb {names}",
+    },
     requiresLoginForChatModal: {
         title: "Inicieu sessió per desbloquejar el xat!",
         content_1: "Per gaudir plenament d'aquesta funcionalitat del xat, necessiteu iniciar sessió al vostre compte.",

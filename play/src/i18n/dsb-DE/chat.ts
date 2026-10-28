@@ -581,6 +581,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         userAvatar: "Awatar wužywarja",
         applicationIcon: "Nałoženje",
     },
+    conversationSubtitle: {
+        roomMembers: "{members} {{cłonk|cłonkow}} · {online} online",
+        with: "Z {names}",
+    },
     requiresLoginForChatModal: {
         title: "Zaloguj se, aby chat wužywał!",
         content_1: "Aby dostał pólny pśistup k toś tej chatowej funkciji, musyš zalogowany byś.",
