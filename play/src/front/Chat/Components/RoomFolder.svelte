@@ -5,12 +5,14 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { matrixUnreadMessagesCountStore } from "../Stores/UnreadMessagesCountStore";
     import RoomSubFolder from "./RoomFolder.svelte";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
+    import UnreadCount from "./UnreadCount.svelte";
     import { IconChevronUp, IconLoader } from "@wa-icons";
 
     interface Props {
@@ -43,6 +45,14 @@
     );
 
     let hasSuggestedRooms = $derived($suggestedRooms.length > 0);
+
+    // A shown folder has no summary: its rows carry their own counts.
+    let collapsedUnreadSummary = $derived(isOpen ? undefined : readUnreadSummary($matrixUnreadMessagesCountStore));
+
+    // Takes the Matrix total only so the summary is recomputed whenever an unread counter changes anywhere.
+    function readUnreadSummary(_matrixUnreadTotal: number) {
+        return folder.getUnreadSummary();
+    }
 
     function toggleFolder() {
         isOpen = !isOpen;
@@ -94,6 +104,13 @@
                     {/if}
                 </div>
             </button>
+            {#if collapsedUnreadSummary && collapsedUnreadSummary.count > 0}
+                <UnreadCount
+                    count={collapsedUnreadSummary.count}
+                    variant={collapsedUnreadSummary.muted ? "muted" : "default"}
+                    size="sm"
+                />
+            {/if}
             <CreateRoomOrFolderOption {folder} parentID={id} parentName={$name} />
         </div>
 

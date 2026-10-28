@@ -10,6 +10,7 @@ import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
 import type { RoomFolder } from "../ChatConnection";
+import { summarizeUnreadCounts, type UnreadConversationCount, type UnreadSummary } from "../../Components/unreadCount";
 import { retargetSelectedRoomIfReplaced } from "../../Stores/SelectRoomStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
@@ -374,6 +375,45 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             return;
         }
         this.getChildren();
+    }
+
+    // Reads the space hierarchy straight from the Matrix SDK: a collapsed folder has not loaded its children,
+    // and creating them only to count unread messages would undo that laziness.
+    public getUnreadSummary(): UnreadSummary {
+        const client = this.room.client;
+        const mutedRoomIds = new Set(client.pushRules?.global.override?.map((rule) => rule.rule_id) ?? []);
+        const visitedSpaceIds = new Set<string>();
+        const conversations: UnreadConversationCount[] = [];
+        const visit = (space: Room) => {
+            if (visitedSpaceIds.has(space.roomId)) {
+                return;
+            }
+            visitedSpaceIds.add(space.roomId);
+            const childEvents =
+                space.getLiveTimeline()?.getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceChild) ?? [];
+            for (const event of childEvents) {
+                const stateKey = event.getStateKey();
+                if (!stateKey || !hasValidViaEntries(event.getContent())) {
+                    continue;
+                }
+                const history = client.getRoomUpgradeHistory(stateKey);
+                const child = history[history.length - 1];
+                if (!child || child.getMyMembership() !== KnownMembership.Join) {
+                    continue;
+                }
+                if (child.isSpaceRoom()) {
+                    visit(child);
+                } else {
+                    conversations.push({
+                        id: child.roomId,
+                        count: child.getUnreadNotificationCount(),
+                        muted: mutedRoomIds.has(child.roomId),
+                    });
+                }
+            }
+        };
+        visit(this.room);
+        return summarizeUnreadCounts(conversations);
     }
 
     public hasLoadedChildren(): boolean {

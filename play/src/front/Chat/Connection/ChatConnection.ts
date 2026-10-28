@@ -2,6 +2,7 @@ import type { Readable, Writable } from "svelte/store";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
 import type { MatrixClient, StateEvents } from "matrix-js-sdk";
+import type { UnreadSummary } from "../Components/unreadCount";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../types/component";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { PictureStore } from "../../Stores/PictureStore";
@@ -493,6 +494,8 @@ export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, Chat
     hasChildRoomsError: Writable<boolean>;
     ensureChildrenLoaded: () => void;
     ensureJoinableRoomsLoaded: () => Promise<void>;
+    /** Unread messages of every joined room below this folder, sub-folders included, even before they are loaded. */
+    getUnreadSummary: () => UnreadSummary;
 }
 
 export interface CreateRoomOptions {

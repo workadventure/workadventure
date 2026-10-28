@@ -28,6 +28,7 @@
     import getCloseImg from "../images/get-close.png";
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
+    import { createUnreadSummaryStore } from "../Stores/UnreadMessagesCountStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -49,6 +50,7 @@
         shouldShowRoomTimeline,
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
+    import UnreadCount from "./UnreadCount.svelte";
     import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -75,6 +77,8 @@
     let rooms = chat.rooms;
     let roomInvitations = chat.invitations;
     let roomFolders = chat.folders;
+    const directRoomsUnreadSummary = createUnreadSummaryStore(directRooms);
+    const roomsUnreadSummary = createUnreadSummaryStore(rooms);
 
     let displayDirectRooms = $state(false);
     let displayRooms = $state(false);
@@ -343,6 +347,13 @@
                                 {$LL.chat.people()}
                             </div>
                         </button>
+                        {#if !displayDirectRooms && $directRoomsUnreadSummary.count > 0}
+                            <UnreadCount
+                                count={$directRoomsUnreadSummary.count}
+                                variant={$directRoomsUnreadSummary.muted ? "muted" : "default"}
+                                size="sm"
+                            />
+                        {/if}
                         {#if showDirectMessageUserListButton}
                             <button
                                 type="button"
@@ -395,6 +406,13 @@
                                     {$LL.chat.rooms()}
                                 </div>
                             </div>
+                            {#if !displayRooms && $roomsUnreadSummary.count > 0}
+                                <UnreadCount
+                                    count={$roomsUnreadSummary.count}
+                                    variant={$roomsUnreadSummary.muted ? "muted" : "default"}
+                                    size="sm"
+                                />
+                            {/if}
                             <CreateRoomOrFolderOption parentID={undefined} parentName="" folder={undefined} />
                             <button
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
