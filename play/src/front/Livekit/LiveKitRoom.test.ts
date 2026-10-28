@@ -444,6 +444,7 @@ describe("LiveKitRoom", () => {
         }
 
         it("should tear the room down and ask for a new invitation when livekit-client gives up reconnecting", () => {
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
             const { room, decrement, emitBackEvent } = createDisconnectedRoom();
 
             room["handleDisconnected"](undefined);
@@ -452,10 +453,16 @@ describe("LiveKitRoom", () => {
             expect(emitBackEvent).toHaveBeenCalledWith({
                 event: { $case: "meetingConnectionRestartMessage", meetingConnectionRestartMessage: {} },
             });
+            expect(trackAdminEvent).toHaveBeenCalledWith("media.connection_retry", {
+                meetingProvider: "livekit",
+                disconnectReason: "UNKNOWN",
+                wasConnected: true,
+            });
         });
 
         it("should delay the new invitation request when the room never connected", () => {
             vi.useFakeTimers();
+            const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent");
             const { room, decrement, emitBackEvent } = createDisconnectedRoom();
             room["everConnected"] = false;
 
@@ -465,6 +472,11 @@ describe("LiveKitRoom", () => {
             expect(emitBackEvent).not.toHaveBeenCalled();
             vi.advanceTimersByTime(5000);
             expect(emitBackEvent).toHaveBeenCalledOnce();
+            expect(trackAdminEvent).toHaveBeenCalledWith("media.connection_retry", {
+                meetingProvider: "livekit",
+                disconnectReason: "JOIN_FAILURE",
+                wasConnected: false,
+            });
         });
 
         it("should tear the room down without restarting on a duplicate identity", () => {
