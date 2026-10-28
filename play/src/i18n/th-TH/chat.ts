@@ -81,7 +81,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "ไม่สนใจ",
     roomMemberCount: "สมาชิก {count} คน",
     joinableRooms: "การสนทนาที่เข้าร่วมได้",
-    joinableRoomsError: "เกิดข้อผิดพลาดในการโหลดการสนทนา คลิกเพื่อลองใหม่",
+    joinableRoomsError: "ไม่สามารถโหลดห้องของโฟลเดอร์นี้ได้",
     proximity: "แชทระยะใกล้",
     area: "พื้นที่",
     enteredZone: {

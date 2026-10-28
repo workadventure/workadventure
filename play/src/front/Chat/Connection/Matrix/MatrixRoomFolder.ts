@@ -304,8 +304,9 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             }
         } catch (error) {
             console.error("Failed to refresh rooms:", error);
-            this.hasChildRoomsError.set(true);
             Sentry.captureException(error);
+            // Rethrown so that ensureJoinableRoomsLoaded does not mark the rooms as loaded and a retry runs again.
+            throw error;
         }
     }
 
@@ -332,10 +333,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         }
 
         this.joinableRoomsLoading.set(true);
-        this.hasChildRoomsError.set(false);
+        // The error stays shown during a retry, until a load succeeds.
         this.joinableRoomsLoadingPromise = this.refreshRooms()
             .then(() => {
                 this.joinableRoomsLoaded = true;
+                this.hasChildRoomsError.set(false);
             })
             .catch((error: unknown) => {
                 this.hasChildRoomsError.set(true);

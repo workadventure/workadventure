@@ -80,7 +80,7 @@ const chat: BaseTranslation = {
     ignoreSuggestedRoom: "Ignore",
     roomMemberCount: "{count:number} {{member|members}}",
     joinableRooms: "Rooms you can join",
-    joinableRoomsError: "Error loading rooms, click to retry",
+    joinableRoomsError: "Couldn't load the rooms of this folder.",
     proximity: "Proximity Chat",
     area: "Area",
     enteredZone: {

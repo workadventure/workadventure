@@ -82,7 +82,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "非表示",
     roomMemberCount: "{count} 人のメンバー",
     joinableRooms: "利用可能なディスカッション",
-    joinableRoomsError: "ディスカッションの読み込みエラー、クリックして再試行",
+    joinableRoomsError: "このフォルダーのルームを読み込めませんでした。",
     proximity: "ディスカッションバブル",
     area: "エリア",
     enteredZone: {

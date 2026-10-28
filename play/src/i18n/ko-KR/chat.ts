@@ -81,7 +81,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "무시",
     roomMemberCount: "멤버 {count}명",
     joinableRooms: "참여 가능한 대화",
-    joinableRoomsError: "대화 불러오기 오류, 클릭해서 다시 시도",
+    joinableRoomsError: "이 폴더의 방을 불러올 수 없습니다.",
     proximity: "근접 채팅",
     area: "영역",
     enteredZone: {
