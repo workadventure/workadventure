@@ -591,6 +591,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Actiemenu",
         unreadCount: "{count} ongelezen",
         backWithUnreadElsewhere: "Terug, {count} {{ongelezen bericht|ongelezen berichten}} elders",
+        backWithMentionElsewhere: "Terug, je bent elders genoemd",
         showUnreadConversations: "Ongelezen gesprekken tonen",
         hiddenUnreadCount: "{count} ongelezen in de verborgen gesprekken",
         userAvatar: "Gebruikersavatar",
@@ -599,6 +600,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{lid|leden}} · {online} online",
         with: "Met {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} heeft je een bericht gestuurd",
+        others: "+{count} {{ander gesprek|andere gesprekken}}",
+        dismiss: "Sluiten",
     },
     requiresLoginForChatModal: {
         title: "Log in om de chat te ontgrendelen!",

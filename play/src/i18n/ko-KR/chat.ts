@@ -591,6 +591,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "작업 메뉴",
         unreadCount: "읽지 않음 {count}개",
         backWithUnreadElsewhere: "뒤로, 다른 곳에 읽지 않은 메시지 {count}개",
+        backWithMentionElsewhere: "뒤로, 다른 곳에서 멘션되었습니다",
         showUnreadConversations: "읽지 않은 대화 보기",
         hiddenUnreadCount: "숨겨진 대화에 읽지 않음 {count}개",
         userAvatar: "사용자 아바타",
@@ -599,6 +600,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "멤버 {members}명 · 온라인 {online}명",
         with: "참여자: {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name}님이 메시지를 보냈습니다",
+        others: "외 {count}개 대화",
+        dismiss: "닫기",
     },
     requiresLoginForChatModal: {
         title: "채팅을 사용하려면 로그인하세요!",

@@ -592,6 +592,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "操作メニュー",
         unreadCount: "未読 {count} 件",
         backWithUnreadElsewhere: "戻る（他に未読 {count} 件）",
+        backWithMentionElsewhere: "戻る（他の場所でメンションされました）",
         showUnreadConversations: "未読の会話を表示",
         hiddenUnreadCount: "非表示の会話に未読 {count} 件",
         userAvatar: "ユーザーアバター",
@@ -600,6 +601,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "メンバー {members}人 · オンライン {online}人",
         with: "参加者: {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} さんからメッセージが届きました",
+        others: "ほか {count} 件の会話",
+        dismiss: "閉じる",
     },
     requiresLoginForChatModal: {
         title: "チャットのロックを解除するにはログインしてください",

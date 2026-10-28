@@ -73,6 +73,8 @@ import type {
 import { ChatPermissionLevel, ChatRoomSettingsError } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { addPendingMention, chatMessageBannerStore } from "../../Stores/ChatMessageBannerStore";
+import { planMessageNotification } from "../../MessageNotificationPolicy";
 import { getMatrixMessageContent, type MentionCandidate, ROOM_MENTION } from "../../Mentions";
 import { gameManager, GameSceneNotFoundError } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -200,11 +202,16 @@ export class MatrixChatRoom
         private matrixRoom: Room,
         private notifyNewMessage = (message: MatrixChatMessage) => {
             const { body: messageBody, mentionsMe = false } = get(message.content);
-            const canPlaySound = localUserStore.getChatSounds();
-            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
-            // A mention gets through a room muted to mentions only.
-            const isNotificationIsMuted = get(this.areNotificationsMuted) && !mentionsMe;
-            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
+            const direct = get(this.type) === "direct";
+            const plan = planMessageNotification({
+                chatVisible: get(chatVisibilityStore),
+                roomDisplayed: get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore),
+                // A mention gets through a room muted to mentions only.
+                muted: get(this.areNotificationsMuted),
+                mentionsMe,
+                direct,
+            });
+            if (plan.sound && localUserStore.getChatSounds()) {
                 try {
                     gameManager.getCurrentGameScene().playSound("new-message");
                 } catch (e) {
@@ -216,30 +223,45 @@ export class MatrixChatRoom
                 }
             }
 
-            if (isNotificationIsMuted || isRoomIsDisplayed) {
-                return;
-            }
-
             const username = message.sender?.username ?? "unknown";
             const roomName = get(this.name);
+            const author = { pictureStore: message.sender?.pictureStore, color: message.sender?.color };
 
-            notificationManager.createNotification(
-                new MessageNotification(username, messageBody, this.id, roomName, mentionsMe),
-            );
+            if (plan.browser) {
+                notificationManager.createNotification(
+                    new MessageNotification(username, messageBody, this.id, roomName, mentionsMe),
+                );
+            }
 
-            // Show proximity notification when unread count increases
-            const numberOfChar = 60;
-            const messageToDisplay =
-                messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
-            chatNotificationStore.addNotification(
-                username,
-                messageToDisplay,
-                this,
-                message.id,
-                true,
-                undefined,
-                mentionsMe ? { pictureStore: message.sender?.pictureStore, color: message.sender?.color } : undefined,
-            );
+            if (plan.banner) {
+                if (mentionsMe) {
+                    addPendingMention(this.id);
+                }
+                chatMessageBannerStore.show({
+                    room: this,
+                    message,
+                    senderName: username,
+                    body: messageBody,
+                    mentionsMe,
+                    roomName: direct ? undefined : roomName,
+                    author,
+                });
+            }
+
+            if (plan.toast) {
+                const numberOfChar = 60;
+                const messageToDisplay =
+                    messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+                chatNotificationStore.addNotification(
+                    username,
+                    messageToDisplay,
+                    this,
+                    message.id,
+                    true,
+                    undefined,
+                    mentionsMe ? author : undefined,
+                );
+            }
         },
     ) {
         this.id = matrixRoom.roomId;

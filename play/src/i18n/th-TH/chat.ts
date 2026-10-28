@@ -589,6 +589,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "เมนูการดำเนินการ",
         unreadCount: "{count} ยังไม่อ่าน",
         backWithUnreadElsewhere: "กลับ, มีข้อความที่ยังไม่อ่าน {count} ข้อความในที่อื่น",
+        backWithMentionElsewhere: "กลับ, มีคนกล่าวถึงคุณในที่อื่น",
         showUnreadConversations: "แสดงการสนทนาที่ยังไม่อ่าน",
         hiddenUnreadCount: "{count} ยังไม่อ่านในการสนทนาที่ซ่อนอยู่",
         userAvatar: "อวาตาร์ผู้ใช้",
@@ -597,6 +598,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "สมาชิก {members} คน · ออนไลน์ {online} คน",
         with: "กับ {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} ส่งข้อความถึงคุณ",
+        others: "+ อีก {count} การสนทนา",
+        dismiss: "ปิด",
     },
     requiresLoginForChatModal: {
         title: "เข้าสู่ระบบเพื่อปลดล็อกแชท!",

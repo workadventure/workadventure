@@ -586,6 +586,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "操作菜单",
         unreadCount: "{count} 条未读",
         backWithUnreadElsewhere: "返回，其他地方有 {count} 条未读消息",
+        backWithMentionElsewhere: "返回，有人在其他地方提到了你",
         showUnreadConversations: "显示未读会话",
         hiddenUnreadCount: "隐藏的对话中有 {count} 条未读",
         userAvatar: "用户头像",
@@ -594,6 +595,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} 名成员 · {online} 人在线",
         with: "参与者：{names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} 给你发了一条消息",
+        others: "另有 {count} 个对话",
+        dismiss: "关闭",
     },
     requiresLoginForChatModal: {
         title: "登录以解锁聊天！",

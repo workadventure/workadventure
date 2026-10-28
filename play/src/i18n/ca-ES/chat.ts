@@ -590,6 +590,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menú d’accions",
         unreadCount: "{count} sense llegir",
         backWithUnreadElsewhere: "Tornar, {count} {{missatge sense llegir|missatges sense llegir}} en altres llocs",
+        backWithMentionElsewhere: "Tornar, t'han esmentat en un altre lloc",
         showUnreadConversations: "Mostra les converses sense llegir",
         hiddenUnreadCount: "{count} sense llegir a les converses amagades",
         userAvatar: "Avatar d’usuari",
@@ -598,6 +599,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{membre|membres}} · {online} en línia",
         with: "Amb {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} t'ha escrit",
+        others: "+{count} {{conversa més|converses més}}",
+        dismiss: "Tancar",
     },
     requiresLoginForChatModal: {
         title: "Inicieu sessió per desbloquejar el xat!",

@@ -590,6 +590,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Thao tác menu",
         unreadCount: "{count} chưa đọc",
         backWithUnreadElsewhere: "Quay lại, {count} tin nhắn chưa đọc ở nơi khác",
+        backWithMentionElsewhere: "Quay lại, bạn được nhắc đến ở nơi khác",
         showUnreadConversations: "Hiển thị các cuộc trò chuyện chưa đọc",
         hiddenUnreadCount: "{count} chưa đọc trong các cuộc trò chuyện bị ẩn",
         userAvatar: "Ảnh đại diện người dùng",
@@ -598,6 +599,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} thành viên · {online} trực tuyến",
         with: "Với {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} đã nhắn tin cho bạn",
+        others: "+{count} cuộc trò chuyện khác",
+        dismiss: "Đóng",
     },
     requiresLoginForChatModal: {
         title: "Đăng nhập để mở khóa trò chuyện!",

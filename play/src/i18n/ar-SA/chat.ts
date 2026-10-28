@@ -589,6 +589,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "قائمة الإجراءات",
         unreadCount: "{count} غير مقروء",
         backWithUnreadElsewhere: "رجوع، {count} رسائل غير مقروءة في مكان آخر",
+        backWithMentionElsewhere: "رجوع، تمت الإشارة إليك في مكان آخر",
         showUnreadConversations: "عرض المحادثات غير المقروءة",
         hiddenUnreadCount: "{count} غير مقروء في المحادثات المخفية",
         userAvatar: "صورة المستخدم",
@@ -597,6 +598,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{عضو|أعضاء}} · {online} متصل",
         with: "مع {names}",
+    },
+    messageBanner: {
+        wroteToYou: "أرسل لك {name} رسالة",
+        others: "+{count} محادثات أخرى",
+        dismiss: "إغلاق",
     },
     requiresLoginForChatModal: {
         title: "قم بتسجيل الدخول لفتح الدردشة!",
