@@ -46,4 +46,10 @@ describe("isScreenSharingPickerCancelled", () => {
         );
         expect(isScreenSharingPickerCancelled(new Error("Your browser does not support sharing screen"))).toBe(false);
     });
+
+    it("treats the desktop app's refusal of a closed system dialog as a cancel, in the desktop app only", () => {
+        const refused = domError("AbortError", "Request was aborted.");
+        expect(isScreenSharingPickerCancelled(refused, true)).toBe(true);
+        expect(isScreenSharingPickerCancelled(refused)).toBe(false);
+    });
 });

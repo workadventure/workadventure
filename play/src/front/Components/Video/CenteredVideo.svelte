@@ -4,7 +4,7 @@
     import MegaphoneIcon from "../Icons/MegaphoneIcon.svelte";
     import type { Streamable } from "../../Space/Streamable";
     import type { VideoBoxStatus } from "../../Space/VideoBox";
-    import { activePictureInPictureStore } from "../../Stores/PeerStore";
+    import { activePictureInPictureStore, pictureInPictureLayoutStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
@@ -18,7 +18,8 @@
      *
      * It also handles displaying a warning if no video frame is received after 3 seconds.
      *
-     * @slot - The content to display on top of the video.
+     * @slot - The content to display on top of the video. Its parameter tells whether the video image is displayed:
+     * only then does the content area match the image exactly.
      */
     interface Props {
         videoEnabled: boolean;
@@ -37,7 +38,7 @@
         status: VideoBoxStatus;
         // If true, the video box is a megaphone space
         isMegaphoneSpace: boolean;
-        children?: Snippet;
+        children?: Snippet<[boolean]>;
     }
 
     let {
@@ -134,18 +135,21 @@
     let shouldMountVideoElement = $derived(hasVideoLayout && ($visibilityStore || $activePictureInPictureStore));
 
     let displayNoVideoWarning = $state(false);
+    let videoDisplayed = $derived(
+        videoEnabled && !displayNoVideoWarning && !isBlocked && status === "connected" && hasVideoLayout,
+    );
 </script>
 
 <div
     class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
-    class:flex={$activePictureInPictureStore}
-    class:flex-col={$activePictureInPictureStore}
-    class:justify-center={$activePictureInPictureStore}
-    class:transition-all={$activePictureInPictureStore}
-    class:duration-100={$activePictureInPictureStore}
-    class:ease-out={$activePictureInPictureStore}
+    class:flex={$pictureInPictureLayoutStore}
+    class:flex-col={$pictureInPictureLayoutStore}
+    class:justify-center={$pictureInPictureLayoutStore}
+    class:transition-all={$pictureInPictureLayoutStore}
+    class:duration-100={$pictureInPictureLayoutStore}
+    class:ease-out={$pictureInPictureLayoutStore}
 >
     {#if media?.type === "component"}
         <div class="group/centered-video absolute inset-0 flex justify-center items-center overflow-hidden">
@@ -166,9 +170,9 @@
             class:border-secondary={isTalking}
             class:border-yellow-200={isMegaphoneSpace}
             class:border-4={isMegaphoneSpace}
-            class:transition-all={$activePictureInPictureStore}
-            class:duration-100={$activePictureInPictureStore}
-            class:ease-out={$activePictureInPictureStore}
+            class:transition-all={$pictureInPictureLayoutStore}
+            class:duration-100={$pictureInPictureLayoutStore}
+            class:ease-out={$pictureInPictureLayoutStore}
             style={videoEnabled
                 ? "width: " +
                   overlayWidth +
@@ -274,9 +278,9 @@
             class:border-transparent={(!videoEnabled && !isTalking) || videoEnabled || isBlocked}
             class:border-secondary={(!videoEnabled && isTalking) || isBlocked}
             class:hidden={videoEnabled && !overlayHeight && !isBlocked && status !== "connected"}
-            class:transition-all={$activePictureInPictureStore}
-            class:duration-100={$activePictureInPictureStore}
-            class:ease-out={$activePictureInPictureStore}
+            class:transition-all={$pictureInPictureLayoutStore}
+            class:duration-100={$pictureInPictureLayoutStore}
+            class:ease-out={$pictureInPictureLayoutStore}
             style={videoEnabled && !displayNoVideoWarning
                 ? "width: " +
                   overlayWidth +
@@ -288,7 +292,7 @@
                   (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
                 : ""}
         >
-            {@render children?.()}
+            {@render children?.(videoDisplayed)}
         </div>
     {/if}
 </div>
