@@ -597,6 +597,11 @@ export interface ChatConnectionInterface {
     getRoomByID(roomId: string): ChatRoom;
     retrySendingEvents: () => Promise<void>;
     shouldRetrySendingEvents: Readable<boolean>;
+    /**
+     * Retries the backed-off connection to the chat server right away, for a user who explicitly asks to.
+     * Returns false when there is no connection attempt to retry (the chat never started): only a reload helps then.
+     */
+    retryConnection: () => boolean;
     nbUnreadRoomsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadInvitationsMessages: Readable<number>;

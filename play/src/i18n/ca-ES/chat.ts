@@ -568,6 +568,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "Xat no disponible",
+    connectionErrorDescription: "El mapa, el vídeo i l'àudio continuen funcionant.",
+    connectionErrorRetry: "Torna-ho a provar",
+    connectionErrorReload: "Torna a carregar la pàgina",
+    searchNoResult: "Cap conversa coincideix amb «{search}»",
     unknownError: "Error desconegut",
     matrixUserSelect: {
         userNotFound: "Usuari no trobat",

@@ -567,6 +567,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "แชทไม่พร้อมใช้งาน",
+    connectionErrorDescription: "แผนที่ วิดีโอ และเสียงยังใช้งานได้ตามปกติ",
+    connectionErrorRetry: "ลองอีกครั้ง",
+    connectionErrorReload: "โหลดหน้าใหม่",
+    searchNoResult: "ไม่มีการสนทนาที่ตรงกับ “{search}”",
     unknownError: "ข้อผิดพลาดที่ไม่ทราบสาเหตุ",
     matrixUserSelect: {
         userNotFound: "ไม่พบผู้ใช้",

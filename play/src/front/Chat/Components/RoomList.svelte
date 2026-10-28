@@ -22,6 +22,7 @@
         type ChatRoomSettingsManagement,
         type ChatThread,
         type ProximityChatSidePanelRoom,
+        type RoomFolder as ChatRoomFolder,
     } from "../Connection/ChatConnection";
     import { INITIAL_SIDEBAR_WIDTH, loginTokenErrorStore } from "../../Stores/ChatStore";
     import { userIsConnected } from "../../Stores/MenuStore";
@@ -33,7 +34,7 @@
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import JoignableRooms from "./Room/JoignableRooms.svelte";
-    import ChatLoader from "./ChatLoader.svelte";
+    import RoomListSkeleton from "./RoomListSkeleton.svelte";
     import ChatError from "./ChatError.svelte";
     import RoomFolder from "./RoomFolder.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
@@ -196,6 +197,23 @@
             .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
     );
 
+    // ponytail: get() does not track the folders, so one that loads its rooms mid-search only counts at the next keystroke.
+    function folderHasSearchMatch(folder: ChatRoomFolder, search: string): boolean {
+        return (
+            get(folder.rooms).some(({ name }) => get(name).toLocaleLowerCase().includes(search)) ||
+            get(folder.folders).some((subFolder) => folderHasSearchMatch(subFolder, search))
+        );
+    }
+
+    let isSearching = $derived($chatSearchBarValue.trim() !== "");
+    let hasNoSearchResult = $derived(
+        isSearching &&
+            filteredDirectRoom.length === 0 &&
+            filteredRooms.length === 0 &&
+            filteredRoomInvitations.length === 0 &&
+            !$roomFolders.some((folder) => folderHasSearchMatch(folder, $chatSearchBarValue.toLocaleLowerCase())),
+    );
+
     let displayTwoColumnLayout = $derived(
         canDisplayRoomListAndTimeline({
             minimumTwoColumnWidth: CHAT_TWO_COLUMN_LAYOUT_LIMIT,
@@ -257,10 +275,7 @@
                     ? ' h-[calc(100%-2rem)]'
                     : 'h-full'}"
             >
-                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
-                    <ChatLoader label={$LL.chat.connecting()} />
-                {/if}
-                {#if $chatConnectionStatus === "ON_ERROR" && $userIsConnected}
+                {#if $chatConnectionStatus === "ON_ERROR" && $userIsConnected && !$loginTokenErrorStore}
                     <ChatError />
                 {/if}
 
@@ -298,7 +313,16 @@
                         </div>
                     </div>
                 {/if}
+                <!-- Where the conversations will be: under the bubble, which does not wait for the chat server. -->
+                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
+                    <RoomListSkeleton />
+                {/if}
                 {#if $chatConnectionStatus === "ONLINE"}
+                    {#if hasNoSearchResult}
+                        <p class="px-3 py-2 m-0 text-sm text-center text-white/50" data-testid="chatSearchNoResult">
+                            {$LL.chat.searchNoResult({ search: $chatSearchBarValue.trim() })}
+                        </p>
+                    {/if}
                     {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
                         <p class="p-0 m-0 text-gray-400">{$LL.chat.availableRooms()}</p>
                         <div class="flex flex-col">
@@ -383,7 +407,12 @@
 
                     {#if displayDirectRooms}
                         <div class="flex flex-col px-2 pb-2">
-                            <ShowMore items={filteredDirectRoom} maxNumber={8} idKey="id">
+                            <ShowMore
+                                items={filteredDirectRoom}
+                                maxNumber={8}
+                                idKey="id"
+                                showNothingToDisplayMessage={!isSearching}
+                            >
                                 {#snippet children({ item: room })}
                                     <Room {room} />
                                 {/snippet}
@@ -422,7 +451,12 @@
                     </div>
                     {#if displayRooms}
                         <div class="px-2 pb-2">
-                            <ShowMore items={filteredRooms} maxNumber={8} idKey="id">
+                            <ShowMore
+                                items={filteredRooms}
+                                maxNumber={8}
+                                idKey="id"
+                                showNothingToDisplayMessage={!isSearching}
+                            >
                                 {#snippet children({ item: room })}
                                     <Room {room} />
                                 {/snippet}

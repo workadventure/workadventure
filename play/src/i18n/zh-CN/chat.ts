@@ -564,6 +564,10 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     connectionError: "聊天不可用",
+    connectionErrorDescription: "地图、视频和音频仍可正常使用。",
+    connectionErrorRetry: "重试",
+    connectionErrorReload: "重新加载页面",
+    searchNoResult: "没有与“{search}”匹配的对话",
     unknownError: "未知错误",
     matrixUserSelect: {
         userNotFound: "未找到用户",

@@ -2166,6 +2166,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     };
 
+    retryConnection = () => this.client?.retryImmediately() ?? false;
+
     clearListener() {
         this.matrixClientRoomManageQueue.length = 0;
         this.clearRoomPlacementRetries();
