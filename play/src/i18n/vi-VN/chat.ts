@@ -81,7 +81,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Bỏ qua",
     roomMemberCount: "{count} thành viên",
     joinableRooms: "Cuộc thảo luận khả dụng",
-    joinableRoomsError: "Lỗi khi tải các cuộc thảo luận, bấm để thử lại",
+    joinableRoomsError: "Không thể tải các phòng của thư mục này.",
     proximity: "Trò chuyện lân cận",
     area: "Khu vực",
     enteredZone: {

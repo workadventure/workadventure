@@ -82,7 +82,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Ignorěrowaś",
     roomMemberCount: "{count} {{cłonk|cłonkow}}",
     joinableRooms: "Dostupne diskusije",
-    joinableRoomsError: "Zmólka pśi lodowanju diskusijow, klikni za wopytanje znowa",
+    joinableRoomsError: "Rumy toś togo zarědnika njejsu se dali zacytaś.",
     proximity: "Rozgronowa buła",
     area: "Areal",
     enteredZone: {

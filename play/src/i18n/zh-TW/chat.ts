@@ -79,7 +79,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "忽略",
     roomMemberCount: "{count} 位成員",
     joinableRooms: "可用討論",
-    joinableRoomsError: "載入討論時發生錯誤，點選重試",
+    joinableRoomsError: "無法載入此資料夾中的聊天室。",
     proximity: "鄰近聊天",
     area: "區域",
     enteredZone: {

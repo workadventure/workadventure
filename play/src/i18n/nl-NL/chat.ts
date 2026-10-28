@@ -82,7 +82,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     ignoreSuggestedRoom: "Negeren",
     roomMemberCount: "{count} {{lid|leden}}",
     joinableRooms: "Beschikbare discussies",
-    joinableRoomsError: "Fout bij het laden van discussies, klik om opnieuw te proberen",
+    joinableRoomsError: "De ruimtes van deze map konden niet worden geladen.",
     proximity: "Gespreksbel",
     area: "Gebied",
     enteredZone: {
