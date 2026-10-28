@@ -2,6 +2,7 @@ import { writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import type { ChatRoom } from "../Chat/Connection/ChatConnection";
 import type { RoomSidePanelSection } from "../Chat/Stores/RoomSidePanelStore";
+import type { PictureStore } from "./PictureStore";
 
 export interface ProximityNotification {
     id: string;
@@ -12,6 +13,13 @@ export interface ProximityNotification {
     /** When false, click only opens the chat panel (e.g. for room invitations). Default true. */
     openRoomOnClick?: boolean;
     sidePanelSection?: RoomSidePanelSection;
+    /** Set when the message mentions the current user: the toast then shows its author's avatar. */
+    mention?: MentionAuthor;
+}
+
+export interface MentionAuthor {
+    pictureStore?: PictureStore;
+    color?: string;
 }
 
 /**
@@ -29,6 +37,7 @@ function createChatNotificationStore() {
             messageId?: string,
             openRoomOnClick = true,
             sidePanelSection?: RoomSidePanelSection,
+            mention?: MentionAuthor,
         ): string => {
             const id = uuidv4();
             update((notifications: ProximityNotification[]) => {
@@ -38,7 +47,7 @@ function createChatNotificationStore() {
                     : notifications;
                 return [
                     ...filteredNotifications,
-                    { id, userName, message, messageId, room, openRoomOnClick, sidePanelSection },
+                    { id, userName, message, messageId, room, openRoomOnClick, sidePanelSection, mention },
                 ];
             });
             return id;

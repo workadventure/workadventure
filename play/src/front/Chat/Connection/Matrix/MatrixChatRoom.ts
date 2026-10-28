@@ -1,15 +1,14 @@
 import type {
     IContent,
-    IPushRule,
     IRoomTimelineData,
     MatrixEvent,
+    PushRuleSet,
     Room,
     RoomMember,
     RoomState,
     StateEvents,
 } from "matrix-js-sdk";
 import {
-    ConditionKind,
     Direction,
     EventStatus,
     EventType,
@@ -74,6 +73,7 @@ import type {
 import { ChatPermissionLevel, ChatRoomSettingsError } from "../ChatConnection";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { getMatrixMessageContent, type MentionCandidate, ROOM_MENTION } from "../../Mentions";
 import { gameManager, GameSceneNotFoundError } from "../../../Phaser/Game/GameManager";
 import { localUserStore } from "../../../Connection/LocalUserStore";
 import { MessageNotification } from "../../../Notification/MessageNotification";
@@ -119,6 +119,7 @@ export class MatrixChatRoom
     readonly type: Readable<"multiple" | "direct">;
     readonly hasUnreadMessages: Writable<boolean>;
     readonly unreadNotificationCount: Writable<number>;
+    readonly hasUnreadMentions: Writable<boolean>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
@@ -137,6 +138,7 @@ export class MatrixChatRoom
     members: Writable<MatrixChatRoomMember[]>;
     /** Same stores as {@link members}, for {@link ChatRoom.membersForMessageAvatars} (timeline avatars). */
     readonly membersForMessageAvatars: Readable<readonly ChatRoomMember[]>;
+    readonly mentionCandidates: Readable<readonly MentionCandidate[]>;
     readonly peerWaDisplayNameIfDifferent: Readable<string | undefined>;
     myMembership: Writable<ChatRoomMembership>;
     hasPreviousMessage: Writable<boolean>;
@@ -197,9 +199,11 @@ export class MatrixChatRoom
     constructor(
         private matrixRoom: Room,
         private notifyNewMessage = (message: MatrixChatMessage) => {
+            const { body: messageBody, mentionsMe = false } = get(message.content);
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
-            const isNotificationIsMuted = get(this.areNotificationsMuted);
+            // A mention gets through a room muted to mentions only.
+            const isNotificationIsMuted = get(this.areNotificationsMuted) && !mentionsMe;
             if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
                 try {
                     gameManager.getCurrentGameScene().playSound("new-message");
@@ -216,17 +220,26 @@ export class MatrixChatRoom
                 return;
             }
 
-            const messageBody = get(message.content).body;
             const username = message.sender?.username ?? "unknown";
             const roomName = get(this.name);
 
-            notificationManager.createNotification(new MessageNotification(username, messageBody, this.id, roomName));
+            notificationManager.createNotification(
+                new MessageNotification(username, messageBody, this.id, roomName, mentionsMe),
+            );
 
             // Show proximity notification when unread count increases
             const numberOfChar = 60;
             const messageToDisplay =
                 messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
-            chatNotificationStore.addNotification(username, messageToDisplay, this, message.id);
+            chatNotificationStore.addNotification(
+                username,
+                messageToDisplay,
+                this,
+                message.id,
+                true,
+                undefined,
+                mentionsMe ? { pictureStore: message.sender?.pictureStore, color: message.sender?.color } : undefined,
+            );
         },
     ) {
         this.id = matrixRoom.roomId;
@@ -235,6 +248,7 @@ export class MatrixChatRoom
         this.type = readonly(this.roomTypeStore);
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
+        this.hasUnreadMentions = writable(matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight) > 0);
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
@@ -300,6 +314,65 @@ export class MatrixChatRoom
         this.members = writable([]);
         this.joinedMemberCount = readonly(this.joinedMemberCountStore);
         this.membersForMessageAvatars = this.members;
+        this.mentionCandidates = readable<readonly MentionCandidate[]>([], (set) => {
+            let members: MatrixChatRoomMember[] = [];
+            // Chat ids of the users connected to the world: the others are shown as away.
+            let onlineChatIds = new Set<string>();
+            const update = () =>
+                set([
+                    // Same check as Element before offering @room: the power level for notifications.room.
+                    ...(this.matrixRoom
+                        .getLiveTimeline()
+                        .getState(EventTimeline.FORWARDS)
+                        ?.mayTriggerNotifOfType("room", this.matrixRoom.myUserId)
+                        ? [ROOM_MENTION]
+                        : []),
+                    ...members
+                        .filter(
+                            (member) =>
+                                member.id !== this.matrixRoom.myUserId &&
+                                get(member.membership) === KnownMembership.Join,
+                        )
+                        .map((member) => ({
+                            id: member.id,
+                            name: get(member.name),
+                            pictureStore: member.pictureStore,
+                            color: get(member.avatarFallbackColor),
+                            online: onlineChatIds.has(member.id),
+                        }))
+                        .sort((a, b) => Number(b.online) - Number(a.online)),
+                ]);
+
+            // With lazy loading, only the members seen in the timeline are known: fetch them all once an "@" is typed.
+            this.ensureMembersInitialized().catch((error) => console.error(error));
+            const unsubscribeMembers = this.members.subscribe((value) => {
+                members = value;
+                update();
+            });
+            let unsubscribeOnline: (() => void) | undefined;
+            let stopped = false;
+            this.userProviderMergerPromise
+                .then((merger) => {
+                    if (stopped || !merger) {
+                        return;
+                    }
+                    unsubscribeOnline = merger.usersByRoomStore.subscribe((usersByRoom) => {
+                        // A user with no play URI is known to the world but not connected to it.
+                        onlineChatIds = new Set(
+                            Array.from(usersByRoom.entries())
+                                .filter(([playUri]) => playUri !== undefined)
+                                .flatMap(([, room]) => room.users.flatMap((user) => user.chatId ?? [])),
+                        );
+                        update();
+                    });
+                })
+                .catch((error) => console.error(error));
+            return () => {
+                stopped = true;
+                unsubscribeMembers();
+                unsubscribeOnline?.();
+            };
+        });
         this.directRoomPeerAvatarMember = this.getDirectRoomPeerRoomMember();
         if (this.directRoomPeerAvatarMember) {
             this.directRoomPeerAvatarStore = matrixAvatarProfile.createLazyAvatarStore(
@@ -443,15 +516,10 @@ export class MatrixChatRoom
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
         this.areNotificationsMuted.set(
-            this.matrixRoom.client
-                .getAccountData(EventType.PushRules)
-                ?.getContent()
-                .global.override.some((rule: IPushRule) => {
-                    if (rule.actions.includes(PushRuleActionName.DontNotify) && rule.rule_id === this.id) {
-                        return true;
-                    }
-                    return false;
-                }),
+            MatrixChatRoom.isMutedByPushRules(
+                this.matrixRoom.client.getAccountData(EventType.PushRules)?.getContent().global,
+                this.id,
+            ),
         );
 
         this.startHandlingChatRoomShellEvents();
@@ -1421,8 +1489,7 @@ export class MatrixChatRoom
                 if (event.isEncrypted()) {
                     await this.matrixRoom.client.decryptEventIfNeeded(event);
                 }
-                this.hasUnreadMessages.set(room.getUnreadNotificationCount() > 0);
-                this.unreadNotificationCount.set(room.getUnreadNotificationCount());
+                this.refreshUnreadCounts();
                 if (event.getType() === "m.room.message") {
                     const threadRootId = event.threadRootId;
                     const eventId = event.getId();
@@ -1479,11 +1546,18 @@ export class MatrixChatRoom
         unreadNotifications?: Partial<Record<NotificationCountType, number>>,
         threadId?: string,
     ) {
-        this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
-        this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
+        this.refreshUnreadCounts();
         if (threadId) {
             this.refreshThreadSummary(threadId);
         }
+    }
+
+    private refreshUnreadCounts(): void {
+        this.hasUnreadMessages.set(this.matrixRoom.getUnreadNotificationCount() > 0);
+        this.unreadNotificationCount.set(this.matrixRoom.getUnreadNotificationCount());
+        // The server counts the messages that highlight us (mentions, @room) apart: that count also covers the
+        // threads and, unlike the total, survives a room muted to mentions only.
+        this.hasUnreadMentions.set(this.matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight) > 0);
     }
 
     public async retrySendingEvents(): Promise<void> {
@@ -1542,7 +1616,10 @@ export class MatrixChatRoom
                 return;
             }
         }
-        if (senderID !== this.matrixRoom.client.getSafeUserId() && !get(this.areNotificationsMuted)) {
+        if (
+            senderID !== this.matrixRoom.client.getSafeUserId() &&
+            (!get(this.areNotificationsMuted) || get(message.content).mentionsMe)
+        ) {
             // Only notify for "live" messages (after initial sync) that arrived fresh. A live event
             // delivered late by a delayed sync is still rendered above, but must not notify / auto-open.
             if (isFreshLiveEvent && this.matrixRoom.client.isInitialSyncComplete()) {
@@ -1730,6 +1807,7 @@ export class MatrixChatRoom
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
         this.hasUnreadMessages.set(false);
         this.unreadNotificationCount.set(0);
+        this.hasUnreadMentions.set(false);
         // Read receipt must target the live timeline; getLastLiveEvent() matches the data.liveEvent semantics used in onRoomTimeline.
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)
@@ -1793,7 +1871,7 @@ export class MatrixChatRoom
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content = getMatrixMessageContent(message);
         this.applyReplyContentIfReplyTo(content);
         return content;
     }
@@ -2103,6 +2181,17 @@ export class MatrixChatRoom
     private removeEventContentInMemory(eventId: string) {
         this.inMemoryEventsContent.delete(eventId);
     }
+    /**
+     * Muted is the room rule we set (mentions still notify), or the override rule older versions set and Element
+     * still sets for "Mute" (nothing notifies): a rule that does not notify, with dont_notify or, the way recent
+     * Element versions write it, no action at all.
+     */
+    static isMutedByPushRules(pushRules: PushRuleSet | undefined, roomId: string): boolean {
+        return [...(pushRules?.override ?? []), ...(pushRules?.room ?? [])].some(
+            (rule) => rule.rule_id === roomId && !rule.actions.includes(PushRuleActionName.Notify),
+        );
+    }
+
     setNotificationSilent(isSilent: boolean) {
         if (get(this.areNotificationsMuted) === isSilent) return;
         this.areNotificationsMuted.set(isSilent);
@@ -2110,19 +2199,10 @@ export class MatrixChatRoom
 
     async muteNotification() {
         try {
-            const roomRule = this.matrixRoom.client.getRoomPushRule("global", this.id);
-            if (roomRule) {
-                await this.matrixRoom.client.deletePushRule("global", PushRuleKind.RoomSpecific, this.id);
-            }
-
-            await this.matrixRoom.client.addPushRule("global", PushRuleKind.Override, this.id, {
-                conditions: [
-                    {
-                        kind: ConditionKind.EventMatch,
-                        key: "room_id",
-                        pattern: this.id,
-                    },
-                ],
+            await this.deleteMutePushRules();
+            // A room rule, like Element's "Mentions & keywords": the messages of the room no longer notify, but the
+            // override rules (mentions, @room) are evaluated first, so a mention still does.
+            await this.matrixRoom.client.addPushRule("global", PushRuleKind.RoomSpecific, this.id, {
                 actions: [PushRuleActionName.DontNotify],
             });
             this.areNotificationsMuted.set(true);
@@ -2133,15 +2213,20 @@ export class MatrixChatRoom
 
     async unmuteNotification() {
         try {
-            const overrideMuteRule = this.matrixRoom.client.pushRules?.global.override?.find(
-                (rule) => rule.rule_id === this.id,
-            );
-            if (overrideMuteRule) {
-                await this.matrixRoom.client.deletePushRule("global", PushRuleKind.Override, overrideMuteRule.rule_id);
-            }
+            await this.deleteMutePushRules();
             this.areNotificationsMuted.set(false);
         } catch (error) {
             console.error("failed to mute notification", error);
+        }
+    }
+
+    private async deleteMutePushRules(): Promise<void> {
+        const client = this.matrixRoom.client;
+        if (client.getRoomPushRule("global", this.id)) {
+            await client.deletePushRule("global", PushRuleKind.RoomSpecific, this.id);
+        }
+        if (client.pushRules?.global.override?.some((rule) => rule.rule_id === this.id)) {
+            await client.deletePushRule("global", PushRuleKind.Override, this.id);
         }
     }
 

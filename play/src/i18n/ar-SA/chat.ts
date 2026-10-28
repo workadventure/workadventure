@@ -12,6 +12,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "لم يتم إرسال أي رسالة حتى الآن!",
     beFirst: "كن الأول وأرسل رسالة",
     enter: "أدخل رسالتك...",
+    mention: {
+        suggestions: "أعضاء للإشارة إليهم",
+        notify: "إشعار",
+        members: "الأعضاء",
+        room: "كل المشاركين في المحادثة · {count}",
+        online: "متصل",
+        offline: "غير متصل",
+        mentionedYou: "أشار إليك",
+    },
     menu: {
         visitCard: "بطاقة الزيارة",
         addFriend: "إضافة صديق",

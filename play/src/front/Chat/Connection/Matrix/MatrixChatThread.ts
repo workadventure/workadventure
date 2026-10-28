@@ -26,6 +26,7 @@ import type {
 import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { getMatrixMessageContent, type MentionCandidate } from "../../Mentions";
 import type { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
@@ -42,6 +43,7 @@ export class MatrixChatThread implements ChatThread {
     readonly pictureStore: PictureStore;
     readonly avatarFallbackColor: Readable<string | undefined>;
     readonly membersForMessageAvatars: Readable<readonly ChatRoomMember[]> | undefined;
+    readonly mentionCandidates: Readable<readonly MentionCandidate[]>;
     readonly peerWaDisplayNameIfDifferent: Readable<string | undefined> | undefined;
     readonly canSendMessages: Readable<boolean>;
     readonly canSendReactions: Readable<boolean>;
@@ -103,6 +105,7 @@ export class MatrixChatThread implements ChatThread {
         this.pictureStore = parentRoom.pictureStore;
         this.avatarFallbackColor = parentRoom.avatarFallbackColor;
         this.membersForMessageAvatars = parentRoom.membersForMessageAvatars;
+        this.mentionCandidates = parentRoom.mentionCandidates;
         this.peerWaDisplayNameIfDifferent = parentRoom.peerWaDisplayNameIfDifferent;
         this.canSendMessages = parentRoom.canSendMessages;
         this.canSendReactions = parentRoom.canSendReactions;
@@ -556,7 +559,7 @@ export class MatrixChatThread implements ChatThread {
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content = getMatrixMessageContent(message);
         this.applyThreadRelationContent(content);
         return content;
     }

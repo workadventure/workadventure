@@ -70,6 +70,15 @@ import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerMana
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 import { iceServersManager } from "../../../WebRtc/IceServersManager";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
+import {
+    getMentionedIds,
+    markOwnMentions,
+    type MentionCandidate,
+    mentionsToPlainText,
+    ROOM_MENTION,
+    ROOM_MENTION_ID,
+    withoutRoomMention,
+} from "../../Mentions";
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
 import { ProximityChatQuestion } from "./ProximityChatQuestion";
 import { canCreateProximityContent } from "./ProximityCreationPermissions";
@@ -165,6 +174,13 @@ export class ProximityChatRoom implements ChatRoom {
     hasUnreadMessages = writable(false);
     unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);
+    // Set when an unread message mentions us, cleared when a new unread streak starts: whoever marks the room as
+    // read only resets hasUnreadMessages.
+    private readonly unreadMention = writable(false);
+    readonly hasUnreadMentions = derived(
+        [this.hasUnreadMessages, this.unreadMention],
+        ([hasUnreadMessages, unreadMention]) => hasUnreadMessages && unreadMention,
+    );
     initializationState = readable<"ready">("ready");
     initializationError = readable<Error | undefined>(undefined);
     pictureStore = readable(undefined);
@@ -172,6 +188,19 @@ export class ProximityChatRoom implements ChatRoom {
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
+    readonly mentionCandidates: Readable<readonly MentionCandidate[]> = derived(this.spaceUsersStore, (users) => [
+        ...(this.isCurrentUserAdmin(this.getCurrentSpaceUser(users)) ? [ROOM_MENTION] : []),
+        ...Array.from(users.values())
+            .filter((user) => user.spaceUserId !== this._spaceUserId)
+            .map((user) => ({
+                id: user.spaceUserId,
+                name: user.name,
+                pictureStore: user.pictureStore,
+                color: user.color,
+                // Everyone in the bubble is here.
+                online: true,
+            })),
+    ]);
     // The polls and questions of the space state (owned by the back).
     // One store per slice, set only when the slice changed: a raised hand must not rebuild the polls.
     private readonly pollsStore = writable<SpaceState["polls"]>({});
@@ -297,9 +326,11 @@ export class ProximityChatRoom implements ChatRoom {
         private wamSettings: WAMSettings | undefined,
         private tags: string[],
         private notifyNewMessage = (message: ProximityChatMessage) => {
+            const { body, mentionsMe = false } = get(message.content);
             const canPlaySound = localUserStore.getChatSounds();
             const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
-            const isNotificationIsMuted = get(this.areNotificationsMuted);
+            // Like in Matrix rooms, a mention gets through a muted chat.
+            const isNotificationIsMuted = get(this.areNotificationsMuted) && !mentionsMe;
 
             if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
                 gameManager.getCurrentGameScene().playSound("new-message");
@@ -312,9 +343,10 @@ export class ProximityChatRoom implements ChatRoom {
             notificationManager.createNotification(
                 new MessageNotification(
                     message.sender.username ?? this.unknownUserName,
-                    get(message.content).body,
+                    mentionsToPlainText(body),
                     this.id,
                     get(this.name),
+                    mentionsMe,
                 ),
             );
         },
@@ -404,7 +436,7 @@ export class ProximityChatRoom implements ChatRoom {
         if (action === "proximity") {
             // Send local message to WorkAdventure scripting API
             try {
-                iframeListener.sendUserInputChat(message, undefined);
+                iframeListener.sendUserInputChat(mentionsToPlainText(message), undefined);
             } catch (e) {
                 console.error("Error while sending message to WorkAdventure scripting API", e);
             }
@@ -453,13 +485,23 @@ export class ProximityChatRoom implements ChatRoom {
             return;
         }
 
+        const spaceUser = this.users?.get(senderUserId);
+
         // Create content message
+        const mentionedIds = getMentionedIds(message);
+        // Only an admin of the map may mention everyone. The message comes straight from a peer, with no server to
+        // enforce it: check the sender here (an unknown sender is not an admin), and leave a plain "@room" otherwise.
+        const roomMention = mentionedIds.includes(ROOM_MENTION_ID) && (spaceUser?.tags ?? []).includes("admin");
+        const mentionsMe = roomMention || mentionedIds.includes(this._spaceUserId);
         const newChatMessageContent = {
-            body: message,
+            body: markOwnMentions(roomMention ? message : withoutRoomMention(message), [
+                this._spaceUserId,
+                ROOM_MENTION_ID,
+            ]),
             url: undefined,
+            mentionsMe,
         };
 
-        const spaceUser = this.users?.get(senderUserId);
         let chatUser: AnyKindOfUser = { ...this.unknownUser, spaceUserId: senderUserId };
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
@@ -507,12 +549,18 @@ export class ProximityChatRoom implements ChatRoom {
         this.notifyNewMessage(newMessage);
 
         if (get(selectedRoomStore) !== this) {
+            if (!get(this.hasUnreadMessages)) {
+                this.unreadMention.set(false);
+            }
             this.hasUnreadMessages.set(true);
             this.unreadNotificationCount.set(get(this.unreadNotificationCount) + 1);
+            if (mentionsMe) {
+                this.unreadMention.set(true);
+            }
         }
         // Send bubble message to WorkAdventure scripting API
         try {
-            iframeListener.sendUserInputChat(message, senderUserId);
+            iframeListener.sendUserInputChat(mentionsToPlainText(message), senderUserId);
         } catch (e) {
             console.error("Error while sending message to WorkAdventure scripting API", e);
         }
@@ -1389,24 +1437,38 @@ export class ProximityChatRoom implements ChatRoom {
             const lastMessage = this.messages.length > 0 ? this.messages[this.messages.length - 1] : undefined;
 
             // if the proximity chat is not open, open it to see the message
-            if (!get(this.intentionallyClosed)) {
+            const intentionallyClosed = get(this.intentionallyClosed);
+            if (!intentionallyClosed) {
                 chatVisibilityStore.set(true);
                 chatNotificationStore.clearRoom(this.id);
             } else {
                 const previousCount = get(this.unreadMessagesCount);
                 this.unreadMessagesCount.set(previousCount + 1);
-
-                // Show proximity notification when unread count increases
-                if (lastMessage && lastMessage.sender) {
-                    const userName = lastMessage.sender.username ?? this.unknownUserName;
-                    const messageBody = get(lastMessage.content).body;
-                    const numberOfChar = 60;
-                    const messageToDisplay =
-                        messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
-                    chatNotificationStore.addNotification(userName, messageToDisplay, this, lastMessage.id);
-                }
             }
             if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
+
+            // Show proximity notification when unread count increases, and for a mention whenever the chat shows
+            // another conversation.
+            const mentionsMe = lastMessage !== undefined && get(lastMessage.content).mentionsMe === true;
+            const isRoomDisplayed = !intentionallyClosed && get(selectedRoomStore) === this;
+            if (lastMessage?.sender && (intentionallyClosed || (mentionsMe && !isRoomDisplayed))) {
+                const userName = lastMessage.sender.username ?? this.unknownUserName;
+                const messageBody = mentionsToPlainText(get(lastMessage.content).body);
+                const numberOfChar = 60;
+                const messageToDisplay =
+                    messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+                chatNotificationStore.addNotification(
+                    userName,
+                    messageToDisplay,
+                    this,
+                    lastMessage.id,
+                    true,
+                    undefined,
+                    mentionsMe
+                        ? { pictureStore: lastMessage.sender.pictureStore, color: lastMessage.sender.color }
+                        : undefined,
+                );
+            }
         });
 
         this.spaceMessageReactionSubscription?.unsubscribe();
