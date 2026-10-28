@@ -723,9 +723,8 @@
                     ? 'pe-14'
                     : ''}"
             >
-                {#if !showBackButton}
-                    <!-- The room list is beside the timeline: no way back needed, the title starts the header. -->
-                {:else if chatRoomsEnableInAdmin}
+                <!-- No arrow while the room list is beside the timeline; the placeholder below keeps the title centered. -->
+                {#if chatRoomsEnableInAdmin && showBackButton}
                     <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
                     <div class="relative shrink-0">
                         <button
