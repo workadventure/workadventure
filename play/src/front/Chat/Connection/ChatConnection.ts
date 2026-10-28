@@ -503,6 +503,8 @@ export type JoinableRoomInfo = {
     avatarUrl: string;
     topic?: string;
     memberCount?: number;
+    /** Name of a joined folder that lists the room, when one does. */
+    folderName?: string;
 };
 
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
@@ -585,12 +587,7 @@ export interface ChatConnectionInterface {
     createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     roomCreationInProgress: Readable<boolean>;
     getDirectRoomFor(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
-    searchAccessibleRooms(searchText: string): Promise<
-        {
-            id: string;
-            name: string | undefined;
-        }[]
-    >;
+    searchAccessibleRooms(searchText: string): Promise<JoinableRoomInfo[]>;
 
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
 

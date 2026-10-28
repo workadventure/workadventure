@@ -70,9 +70,8 @@ const chat: BaseTranslation = {
     suggestedRooms: "Suggested rooms",
     ignoreSuggestedRoom: "Ignore",
     roomMemberCount: "{count:number} {{member|members}}",
-    joinableRooms: "Available discussions",
-    joinableRoomsError: "Error loading discussions click to retry",
-    availableRooms: "Available discussions", // used in the search bar for results
+    joinableRooms: "Rooms you can join",
+    joinableRoomsError: "Error loading rooms, click to retry",
     proximity: "Proximity Chat",
     area: "Area",
     enteredZone: {

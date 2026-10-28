@@ -6,6 +6,7 @@ import type {
     ChatRoom,
     CreateRoomOptions,
     RoomFolder,
+    JoinableRoomInfo,
     ConnectionStatus,
     ChatUser,
     ChatRoomMembershipManagement,
@@ -51,7 +52,7 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve(undefined);
     }
 
-    searchAccessibleRooms(searchText: string): Promise<{ id: string; name: string | undefined }[]> {
+    searchAccessibleRooms(searchText: string): Promise<JoinableRoomInfo[]> {
         return Promise.resolve([]);
     }
 

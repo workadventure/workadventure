@@ -47,6 +47,7 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
+    JoinableRoomInfo,
     MatrixChatCapabilities,
     MatrixPeerProfileDiagnostics,
     MatrixUserSettingsDiagnostics,
@@ -1972,51 +1973,52 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return;
     }
 
-    async searchAccessibleRooms(searchText = ""): Promise<
-        {
-            id: string;
-            name: string | undefined;
-        }[]
-    > {
+    async searchAccessibleRooms(searchText = ""): Promise<JoinableRoomInfo[]> {
+        const client = this.client;
+        if (!client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
         const isGuestUser = get(this.isGuest);
-        return new Promise((res, rej) => {
-            if (!this.client) {
-                rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
-                return;
-            }
-
-            const searchOption: IRoomDirectoryOptions = {
-                include_all_networks: true,
-                filter: {
-                    generic_search_term: searchText,
-                },
-            };
-            this.client
-                .publicRooms(searchOption)
-                .then(({ chunk }) => {
-                    const publicRoomsChunkRoom = chunk
-                        .filter(({ room_id, guest_can_join }) => {
-                            if (this.roomList.has(room_id)) {
-                                return false;
-                            }
-                            if (!isGuestUser) {
-                                return true;
-                            } else {
-                                return guest_can_join;
-                            }
-                        })
-                        .map((chunkRoom) => {
-                            return {
-                                id: chunkRoom.room_id,
-                                name: chunkRoom.name,
-                            };
-                        });
-                    res(publicRoomsChunkRoom);
-                })
-                .catch((error) => {
-                    rej(asError(error));
-                });
+        const searchOption: IRoomDirectoryOptions = {
+            include_all_networks: true,
+            filter: {
+                generic_search_term: searchText,
+            },
+        };
+        const { chunk } = await client.publicRooms(searchOption).catch((error: unknown) => {
+            throw asError(error);
         });
+        const folderNames = this.getFolderNamesByChildId(client);
+        return chunk
+            .filter(({ room_id, guest_can_join }) => !this.roomList.has(room_id) && (!isGuestUser || guest_can_join))
+            .map((chunkRoom) => ({
+                id: chunkRoom.room_id,
+                name: chunkRoom.name ?? chunkRoom.canonical_alias ?? "",
+                avatarUrl: chunkRoom.avatar_url
+                    ? (client.mxcUrlToHttp(chunkRoom.avatar_url, 24, 24, "scale") ?? "")
+                    : "",
+                topic: chunkRoom.topic,
+                memberCount: chunkRoom.num_joined_members,
+                folderName: folderNames.get(chunkRoom.room_id),
+            }));
+    }
+
+    // The public directory does not say which space a room belongs to; the joined spaces' m.space.child
+    // events, already synced, do.
+    private getFolderNamesByChildId(client: MatrixClient): Map<string, string> {
+        const folderNames = new Map<string, string>();
+        for (const space of client.getRooms()) {
+            if (!space.isSpaceRoom() || space.getMyMembership() !== KnownMembership.Join) continue;
+            const childEvents =
+                space.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceChild) ?? [];
+            for (const event of childEvents) {
+                const childId = event.getStateKey();
+                if (childId && hasValidViaEntries(event.getContent())) {
+                    folderNames.set(childId, space.name);
+                }
+            }
+        }
+        return folderNames;
     }
 
     async joinRoom(roomId: string): Promise<ChatRoom> {
