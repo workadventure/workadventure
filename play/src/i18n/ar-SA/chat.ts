@@ -563,6 +563,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     a11y: {
         menuActions: "قائمة الإجراءات",
         unreadCount: "{count} غير مقروء",
+        backWithUnreadElsewhere: "رجوع، {count} رسائل غير مقروءة في مكان آخر",
         userAvatar: "صورة المستخدم",
         applicationIcon: "تطبيق",
     },

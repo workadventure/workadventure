@@ -564,6 +564,7 @@ const chat: BaseTranslation = {
     a11y: {
         menuActions: "Menu actions",
         unreadCount: "{count} unread",
+        backWithUnreadElsewhere: "Back, {count} unread {{message|messages}} elsewhere",
         userAvatar: "User avatar",
         applicationIcon: "Application",
     },

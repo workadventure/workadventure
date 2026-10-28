@@ -566,6 +566,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     a11y: {
         menuActions: "Menu d’actions",
         unreadCount: "{count} non lu(s)",
+        backWithUnreadElsewhere: "Retour, {count} {{message non lu|messages non lus}} ailleurs",
         userAvatar: "Avatar utilisateur",
         applicationIcon: "Application",
     },
