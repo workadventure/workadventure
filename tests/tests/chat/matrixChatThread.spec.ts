@@ -57,15 +57,6 @@ async function openSelectedThreadPanelOnMobile(page: Page) {
     await expect(page.getByTestId("threadPanelTimeline")).toBeVisible();
 }
 
-async function expectMainTimelinePlacementWhileThreadPanelOpen(page: Page, mainTimeline: Locator) {
-    if (isMobile(page)) {
-        await expect(mainTimeline).toBeHidden();
-        return;
-    }
-
-    await expect(mainTimeline.locator("li[data-event-id]")).toHaveCount(1);
-}
-
 test.describe("Matrix chat threads @oidc @matrix @nowebkit", () => {
     test.beforeEach(async ({ request, browserName }) => {
         test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
@@ -101,7 +92,8 @@ test.describe("Matrix chat threads @oidc @matrix @nowebkit", () => {
 
         const threadTimeline = page.getByTestId("threadPanelTimeline");
         await expect(threadTimeline).toBeVisible();
-        await expectMainTimelinePlacementWhileThreadPanelOpen(page, mainTimeline);
+        // The side panel opens next to the timeline, or over it when the chat is too narrow: it stays mounted.
+        await expect(mainTimeline.locator("li[data-event-id]")).toHaveCount(1);
         await expect(threadTimeline.locator("li[data-event-id]")).toHaveCount(1);
 
         await sendMessageToTimeline(threadTimeline, "Thread reply");
