@@ -75,6 +75,8 @@ export class MatrixChatThread implements ChatThread {
 
     private initializationPromise: Promise<void> | undefined;
 
+    // Max consecutive backward pages that yield no displayable message before loadMorePreviousMessages stops.
+    private static readonly MAX_EMPTY_PAGINATION_DEPTH = 10;
     private readonly replyMessages = new SearchableArrayStore(
         (item: MatrixChatMessage) => item.id,
         (item: MatrixChatMessage) => {
@@ -455,7 +457,7 @@ export class MatrixChatThread implements ChatThread {
         return eventRelation?.rel_type === "m.replace";
     }
 
-    async loadMorePreviousMessages() {
+    async loadMorePreviousMessages(depth = 0) {
         if (!get(this.hasPreviousMessage)) {
             return;
         }
@@ -465,16 +467,15 @@ export class MatrixChatThread implements ChatThread {
         await this.timelineWindow.paginate(Direction.Backward, 50);
         this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
         const paginatedEvents = this.timelineWindow.getEvents();
-        const messages = await Promise.all(
-            paginatedEvents.map((event) => this.readEventsToAddMessagesAndReactions(event)),
-        );
-        this.replyMessages.unshift(
-            ...messages.filter((message): message is MatrixChatMessage => message !== undefined),
-        );
+        const messages = (
+            await Promise.all(paginatedEvents.map((event) => this.readEventsToAddMessagesAndReactions(event)))
+        ).filter((message): message is MatrixChatMessage => message !== undefined);
+        this.replyMessages.unshift(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
 
-        if (messages.length === 0) {
-            await this.loadMorePreviousMessages();
+        // Same cap as MatrixChatRoom: skip pages with no displayable message, but bound the recursion.
+        if (messages.length === 0 && depth < MatrixChatThread.MAX_EMPTY_PAGINATION_DEPTH) {
+            await this.loadMorePreviousMessages(depth + 1);
         }
     }
 
