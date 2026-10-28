@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { countUnreadElsewhere, formatUnreadCount, summarizeUnreadCounts } from "./unreadCount";
+import { countUnreadElsewhere, formatUnreadCount, listUnreadConversations, summarizeUnreadCounts } from "./unreadCount";
 
 describe("formatUnreadCount", () => {
     it("shows the exact count up to 99", () => {
@@ -61,5 +61,17 @@ describe("summarizeUnreadCounts", () => {
 
     it("is empty without unread messages", () => {
         expect(summarizeUnreadCounts([])).toEqual({ count: 0, muted: true });
+    });
+});
+
+describe("listUnreadConversations", () => {
+    it("keeps unread, unmuted conversations, the most recent first", () => {
+        const list = listUnreadConversations([
+            { id: "old", count: 1, muted: false, lastMessageTimestamp: 100 },
+            { id: "read", count: 0, muted: false, lastMessageTimestamp: 400 },
+            { id: "muted", count: 5, muted: true, lastMessageTimestamp: 300 },
+            { id: "recent", count: 2, muted: false, lastMessageTimestamp: 200 },
+        ]);
+        expect(list.map(({ id }) => id)).toEqual(["recent", "old"]);
     });
 });

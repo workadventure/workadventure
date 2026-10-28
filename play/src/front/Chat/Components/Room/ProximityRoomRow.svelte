@@ -1,13 +1,12 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import type { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
-    import { gameManager } from "../../../Phaser/Game/GameManager";
     import UnreadCount from "../UnreadCount.svelte";
     import { focusAdjacentRoomRow } from "../roomRowKeyboard";
     import WokaFromUserId from "../../../Components/Woka/WokaFromUserId.svelte";
+    import { selectProximityRoom } from "./selectProximityRoom";
     import { IconEar, IconMapEditor, IconMicrophone, IconUsersGroup } from "@wa-icons";
 
     interface Props {
@@ -36,12 +35,7 @@
     );
 
     function selectRoom() {
-        selectedRoomStore.set(room);
-        gameManager.getCurrentGameScene().proximityChatRoomManager.selectRoom(room);
-        room.hasUnreadMessages.set(false);
-        room.unreadMessagesCount.set(0);
-        room.unreadNotificationCount.set(0);
-        chatNotificationStore.clearRoom(room.id);
+        selectProximityRoom(room);
     }
 
     let chunks = $derived(

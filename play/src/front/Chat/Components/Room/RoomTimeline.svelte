@@ -23,7 +23,9 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import LL from "../../../../i18n/i18n-svelte";
-    import { createUnreadElsewhereStore } from "../../Stores/UnreadMessagesCountStore";
+    import { createUnreadElsewhereStore, getUnreadConversationsElsewhere } from "../../Stores/UnreadMessagesCountStore";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import UnreadConversationsPopover from "../UnreadConversationsPopover.svelte";
     import UnreadCount from "../UnreadCount.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
@@ -102,9 +104,56 @@
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
     const emptyUnreadQuestionCount = readable(0);
 
+    let unreadElsewhereButton: HTMLButtonElement | undefined = $state();
+    let closeUnreadConversations: (() => void) | undefined = $state();
+
+    function hideUnreadConversations(): void {
+        const close = closeUnreadConversations;
+        closeUnreadConversations = undefined;
+        close?.();
+    }
+
+    function toggleUnreadConversations(): void {
+        if (closeUnreadConversations !== undefined) {
+            hideUnreadConversations();
+            return;
+        }
+        if (!unreadElsewhereButton) {
+            return;
+        }
+        closeUnreadConversations = showFloatingUi(
+            unreadElsewhereButton,
+            UnreadConversationsPopover,
+            {
+                conversations: getUnreadConversationsElsewhere(
+                    chatConnection,
+                    get(gameScene.proximityChatRoomManager.roomsStore),
+                    room,
+                ),
+                onSelect: hideUnreadConversations,
+            },
+            { placement: direction === "rtl" ? "bottom-end" : "bottom-start" },
+            6,
+            false,
+            true,
+            () => {
+                closeUnreadConversations = undefined;
+            },
+        );
+    }
+
+    // The popup lives at the app root: it must not outlive this timeline (room switch, chat closed)…
+    onDestroy(hideUnreadConversations);
+
     let unreadElsewhereStore = $derived(
         createUnreadElsewhereStore(gameScene.proximityChatRoomManager.roomsStore, room),
     );
+    // …nor the count it was opened from.
+    $effect(() => {
+        if ($unreadElsewhereStore === 0) {
+            untrack(hideUnreadConversations);
+        }
+    });
     let roomSidePanelToggleIsOpen = $derived($roomSidePanelStore.isOpen ?? false);
     let roomName = $derived(room?.name);
     let typingMembers = $derived(room.typingMembers);
@@ -602,31 +651,40 @@
             >
                 {#if chatRoomsEnableInAdmin}
                     <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
-                    <button
-                        class="back-roomlist relative p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0 {$unreadElsewhereStore >
-                        0
-                            ? 'bg-white/10'
-                            : ''}"
-                        data-testid={backButtonTestId}
-                        aria-label={$unreadElsewhereStore > 0
-                            ? $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
-                            : $LL.chat.roomPanel.back()}
-                        onclick={goBackAndClearSelectedChatMessage}
-                    >
-                        {#if direction === "rtl"}
-                            <IconChevronRight font-size="20" />
-                        {:else}
-                            <IconChevronLeft font-size="20" />
-                        {/if}
+                    <div class="relative shrink-0">
+                        <button
+                            class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white {$unreadElsewhereStore >
+                            0
+                                ? 'bg-white/10'
+                                : ''}"
+                            data-testid={backButtonTestId}
+                            aria-label={$unreadElsewhereStore > 0
+                                ? $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
+                                : $LL.chat.roomPanel.back()}
+                            onclick={goBackAndClearSelectedChatMessage}
+                        >
+                            {#if direction === "rtl"}
+                                <IconChevronRight font-size="20" />
+                            {:else}
+                                <IconChevronLeft font-size="20" />
+                            {/if}
+                        </button>
                         {#if $unreadElsewhereStore > 0}
-                            <UnreadCount
-                                count={$unreadElsewhereStore}
-                                size="sm"
-                                class="absolute top-0.5 end-0.5"
-                                ariaLabel=""
-                            />
+                            <!-- A target of its own: the arrow always goes back to the list, the count jumps to a conversation. -->
+                            <button
+                                type="button"
+                                class="absolute top-0 end-0 rounded-full p-0.5"
+                                data-testid="unreadElsewhereButton"
+                                aria-label={$LL.chat.a11y.showUnreadConversations()}
+                                aria-haspopup="true"
+                                aria-expanded={closeUnreadConversations !== undefined}
+                                bind:this={unreadElsewhereButton}
+                                onclick={toggleUnreadConversations}
+                            >
+                                <UnreadCount count={$unreadElsewhereStore} size="sm" ariaLabel="" />
+                            </button>
                         {/if}
-                    </button>
+                    </div>
                 {:else}
                     <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
                 {/if}
