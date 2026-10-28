@@ -136,9 +136,22 @@ export function createUnreadConversationsStore(
     proximityRooms: Readable<readonly ProximityChatRoom[]>,
 ): Readable<UnreadConversation[]> {
     return derived(
-        [proximityRooms, chatConnection.directRooms, chatConnection.rooms, chatConnection.folders],
-        ([$proximityRooms, $directRooms, $rooms, $folders], set) => {
-            const conversations = [...$proximityRooms, ...$directRooms, ...$rooms, ...collectFolderRooms($folders)];
+        [
+            proximityRooms,
+            chatConnection.directRooms,
+            chatConnection.rooms,
+            chatConnection.invitations,
+            chatConnection.folders,
+        ],
+        ([$proximityRooms, $directRooms, $rooms, $invitations, $folders], set) => {
+            // ponytail: rooms a folder loads later only show at the next change of these stores or of a count.
+            const conversations = [
+                ...$proximityRooms,
+                ...$directRooms,
+                ...$rooms,
+                ...$invitations,
+                ...collectFolderRooms($folders),
+            ];
             if (conversations.length === 0) {
                 set([]);
                 return;

@@ -13,7 +13,6 @@
 
 {#if $preview}
     <span class="block truncate text-sm font-normal text-white/60">
-        {#if showSender && $preview.senderName}<span class="text-white/80">{$preview.senderName}</span
-            >{" · "}{/if}{$preview.body}
+        {#if showSender && $preview.senderName}<span class="text-white/80">{$preview.senderName}</span> ·&#32;{/if}{$preview.body}
     </span>
 {/if}
