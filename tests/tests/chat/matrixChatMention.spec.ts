@@ -31,20 +31,11 @@ async function getMyUserId(page: Page): Promise<string> {
 }
 
 /** A public room created by `owner`, that `members` join right away. */
-async function createRoom(
-    owner: MatrixUser,
-    name: string,
-    members: string[],
-    powerLevels?: Record<string, number>,
-): Promise<string> {
+async function createRoom(owner: MatrixUser, name: string, members: string[]): Promise<string> {
     const roomId = (
         await axios.post<{ room_id: string }>(
             `${matrix_server_url}/_matrix/client/v3/createRoom`,
-            {
-                name,
-                preset: "public_chat",
-                ...(powerLevels && { power_level_content_override: { users: powerLevels } }),
-            },
+            { name, preset: "public_chat" },
             authHeaders(owner.token),
         )
     ).data.room_id;
@@ -155,8 +146,18 @@ test.describe("Matrix chat mentions @oidc @matrix @nowebkit", () => {
         await using page = await getPage(browser, "Alice", Map.url("empty"));
         const myUserId = await openMatrixChat(page);
         await createRoom(bob, memberRoom, [myUserId]);
-        // notifications.room asks for 50 by default, a moderator.
-        const moderatorRoomId = await createRoom(bob, moderatorRoom, [myUserId], { [myUserId]: 50 });
+        const moderatorRoomId = await createRoom(bob, moderatorRoom, [myUserId]);
+        // notifications.room asks for 50 by default, a moderator. Set before the room is opened: the suggestions
+        // read the power levels when the composer shows.
+        const powerLevels = await matrixApi.getRoomStateEvent<{ users?: Record<string, number> }>(
+            bob.token,
+            moderatorRoomId,
+            "m.room.power_levels",
+        );
+        await matrixApi.setRoomStateEvent(bob.token, moderatorRoomId, "m.room.power_levels", {
+            ...powerLevels,
+            users: { ...powerLevels.users, [myUserId]: 50 },
+        });
 
         const suggestions = page.getByTestId("mentionSuggestions");
         const roomOption = suggestions.getByRole("option").filter({ hasText: /^\s*@\s*room/ });
