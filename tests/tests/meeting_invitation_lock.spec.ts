@@ -32,10 +32,10 @@ test.describe("Meeting invitation through a locked bubble @nomobile @nowebkit", 
     const mapUrl = publicTestMapUrl("tests/E2E/empty.json", "meeting");
 
     // Alice and Bob talk in a bubble that Alice locks. Carol stands in the corner, too far to join.
-    async function formBubble(alice: Page, bob: Page, carol: Page, lock = true): Promise<void> {
+    async function formBubble(alice: Page, bob: Page, carol: Page, lock = true, alicePosition = { x: 160, y: 160 }) {
         await Map.teleportToPosition(carol, 32, 300);
-        await Map.teleportToPosition(alice, 160, 160);
-        await Map.teleportToPosition(bob, 200, 160);
+        await Map.teleportToPosition(alice, alicePosition.x, alicePosition.y);
+        await Map.teleportToPosition(bob, alicePosition.x + 40, alicePosition.y);
         await isInBubbleWith(alice, "Bob");
         if (lock) {
             await alice.getByTestId("lock-button").click();
@@ -116,7 +116,8 @@ test.describe("Meeting invitation through a locked bubble @nomobile @nowebkit", 
         await using alice = await getPage(browser, "Alice", mapUrl);
         await using bob = await getPage(browser, "Bob", mapUrl);
         await using carol = await getPage(browser, "Carol", mapUrl);
-        await formBubble(alice, bob, carol, false);
+        // In the opposite corner: Bob only leaves a bubble of two once more than 2 group radii (320px) away from Alice
+        await formBubble(alice, bob, carol, false, { x: 256, y: 24 });
 
         await chatUtils.UL_invite(carol, "Bob");
         await expect(bob.getByTestId("meeting-invitation-popup")).toBeVisible({ timeout: 15_000 });
