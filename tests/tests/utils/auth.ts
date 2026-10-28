@@ -1,5 +1,5 @@
 import fs from "fs";
-import type { Browser, BrowserContext, Page } from "playwright/test";
+import type { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright/test";
 import { expect } from "playwright/test";
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc";
 import Menu from "./menu";
@@ -211,10 +211,15 @@ export async function getPage(
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void | Promise<void>;
+        /** Extra options for the page's context, e.g. a phone viewport with touch for one test. */
+        contextOptions?: BrowserContextOptions;
     } = {},
 ): Promise<Page> {
     await createUser(name, browser, url);
-    const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
+    const newBrowser: BrowserContext = await browser.newContext({
+        ...options.contextOptions,
+        storageState: "./.auth/" + name + ".json",
+    });
     // Noise suppression is on by default: turn it off so that each page does not load the noise suppression models.
     // Only when unset, so a test that turns it on keeps its choice across reloads.
     await newBrowser.addInitScript(() => {
