@@ -4,7 +4,6 @@ import {
     hasChatRoomNotificationControl,
     type ChatConnectionInterface,
     type ChatConversation,
-    type RoomFolder,
 } from "../Connection/ChatConnection";
 import { ProximityChatRoom } from "../Connection/Proximity/ProximityChatRoom";
 import {
@@ -14,6 +13,7 @@ import {
     type UnreadConversationCount,
     type UnreadSummary,
 } from "../Components/unreadCount";
+import { collectFolderRooms } from "../Components/unreadFolderRooms";
 
 // The action bar shows with the map, which does not wait for the chat connection: until it exists, it has no
 // unread message. Once it does, follow its unread counters in real time.
@@ -94,13 +94,9 @@ export interface UnreadConversation extends UnreadConversationCount {
     lastMessageTimestamp: number;
 }
 
-function collectLoadedFolderRooms(folders: readonly RoomFolder[]): ChatConversation[] {
-    return folders.flatMap((folder) => [...get(folder.rooms), ...collectLoadedFolderRooms(get(folder.folders))]);
-}
-
 /**
  * A snapshot of the unread conversations other than the open one, the most recent first.
- * Rooms of folders that were never opened are not loaded, so they are not listed: their folder shows their count.
+ * It covers what the unread total counts: invitations, and rooms of folders that were never opened (loaded here).
  */
 export function getUnreadConversationsElsewhere(
     chatConnection: ChatConnectionInterface,
@@ -116,7 +112,8 @@ export function getUnreadConversationsElsewhere(
         ...proximityRooms,
         ...get(chatConnection.directRooms),
         ...get(chatConnection.rooms),
-        ...collectLoadedFolderRooms(get(chatConnection.folders)),
+        ...get(chatConnection.invitations),
+        ...collectFolderRooms(get(chatConnection.folders)),
     ]) {
         if (conversation.id !== openRoomId) {
             conversations.set(conversation.id, conversation);
