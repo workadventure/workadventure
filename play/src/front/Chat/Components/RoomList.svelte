@@ -64,6 +64,7 @@
 
     const proximityChatRoomManager = gameScene.proximityChatRoomManager;
     const proximityRooms = proximityChatRoomManager.roomsStore;
+    const parentZoneRooms = proximityChatRoomManager.parentZoneRoomsStore;
     const chat = gameManager.chatConnection;
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
@@ -288,7 +289,7 @@
                                 showNothingToDisplayMessage={false}
                             >
                                 {#snippet children({ item: room })}
-                                    <ProximityRoomRow {room} />
+                                    <ProximityRoomRow {room} isParentZone={$parentZoneRooms.includes(room)} />
                                 {/snippet}
                             </ShowMore>
                         </div>
