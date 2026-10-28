@@ -801,7 +801,7 @@
                 </div>
 
                 {#if roomListVisible && showRoomSidePanelToggle}
-                    <div class="hidden @xl:flex items-center gap-1 shrink-0" data-testid="roomHeaderSections">
+                    <div class="hidden @min-[600px]:flex items-center gap-1 shrink-0" data-testid="roomHeaderSections">
                         {#each headerSections as { section, label } (section)}
                             {@const isActive =
                                 roomSidePanelToggleIsOpen && $roomSidePanelStore.activeSection === section}
