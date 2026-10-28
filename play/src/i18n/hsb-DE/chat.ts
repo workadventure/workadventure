@@ -591,6 +591,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menij akcijow",
         unreadCount: "{count} njepřečitane",
         backWithUnreadElsewhere: "Wróćo, {count} njepřečitane powěsće hdźe druhdźe",
+        backWithMentionElsewhere: "Wróćo, sće był hdźe druhdźe naspomnjeny",
         showUnreadConversations: "Njepřečitane rozmołwy pokazać",
         hiddenUnreadCount: "{count} njepřečitane w schowanych rozmołwach",
         userAvatar: "Awatar wužiwarja",
@@ -599,6 +600,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{čłon|čłonow}} · {online} online",
         with: "Z {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} je wam pisał",
+        others: "+{count} dalše rozmołwy",
+        dismiss: "Začinić",
     },
     requiresLoginForChatModal: {
         title: "Přizjew so, zo by chat wužiwał!",

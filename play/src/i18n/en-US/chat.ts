@@ -590,6 +590,7 @@ const chat: BaseTranslation = {
         menuActions: "Menu actions",
         unreadCount: "{count} unread",
         backWithUnreadElsewhere: "Back, {count} unread {{message|messages}} elsewhere",
+        backWithMentionElsewhere: "Back, you were mentioned elsewhere",
         showUnreadConversations: "Show the unread conversations",
         hiddenUnreadCount: "{count} unread in the hidden conversations",
         userAvatar: "User avatar",
@@ -598,6 +599,11 @@ const chat: BaseTranslation = {
     conversationSubtitle: {
         roomMembers: "{members} {{member|members}} · {online} online",
         with: "With {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} sent you a message",
+        others: "+{count} other {{conversation|conversations}}",
+        dismiss: "Dismiss",
     },
     requiresLoginForChatModal: {
         title: "Log in to unlock the chat!",

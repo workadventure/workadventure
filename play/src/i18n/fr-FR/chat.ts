@@ -592,6 +592,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menu d’actions",
         unreadCount: "{count} non lu(s)",
         backWithUnreadElsewhere: "Retour, {count} {{message non lu|messages non lus}} ailleurs",
+        backWithMentionElsewhere: "Retour, on vous a mentionné ailleurs",
         showUnreadConversations: "Afficher les conversations non lues",
         hiddenUnreadCount: "{count} non lu(s) dans les conversations masquées",
         userAvatar: "Avatar utilisateur",
@@ -600,6 +601,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{membre|membres}} · {online} en ligne",
         with: "Avec {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} vous a écrit",
+        others: "+{count} {{autre conversation|autres conversations}}",
+        dismiss: "Fermer",
     },
     requiresLoginForChatModal: {
         title: "Identifiez-vous pour utiliser le chat !",

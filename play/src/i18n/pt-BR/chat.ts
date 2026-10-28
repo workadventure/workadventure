@@ -591,6 +591,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         menuActions: "Menu de ações",
         unreadCount: "{count} não lidas",
         backWithUnreadElsewhere: "Voltar, {count} {{mensagem não lida|mensagens não lidas}} em outro lugar",
+        backWithMentionElsewhere: "Voltar, você foi mencionado em outro lugar",
         showUnreadConversations: "Mostrar as conversas não lidas",
         hiddenUnreadCount: "{count} não lidas nas conversas ocultas",
         userAvatar: "Avatar do usuário",
@@ -599,6 +600,11 @@ const chat: DeepPartial<Translation["chat"]> = {
     conversationSubtitle: {
         roomMembers: "{members} {{membro|membros}} · {online} online",
         with: "Com {names}",
+    },
+    messageBanner: {
+        wroteToYou: "{name} enviou uma mensagem para você",
+        others: "+{count} {{outra conversa|outras conversas}}",
+        dismiss: "Fechar",
     },
     requiresLoginForChatModal: {
         title: "Faça login para desbloquear o chat!",
