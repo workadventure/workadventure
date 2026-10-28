@@ -27,6 +27,7 @@ const chat: BaseTranslation = {
     users: "Users",
     chat: "Chat",
     resizeChat: "Resize the chat (arrow keys to resize, Enter for full screen)",
+    resizeRoomList: "Resize the room list (arrow keys to resize, double-click to reset)",
     userList: {
         disconnected: "Not connected to the world",
         isHere: "Is on this map",

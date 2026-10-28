@@ -1,7 +1,8 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { defaultColor } from "@workadventure/shared-utils";
-    import { onDestroy, onMount } from "svelte";
+    import { getContext, onDestroy, onMount } from "svelte";
+    import { locale } from "../../../../i18n/i18n-svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -13,6 +14,9 @@
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import UnreadCount from "../UnreadCount.svelte";
+    import LastMessagePreview from "../LastMessagePreview.svelte";
+    import { ROOM_ROW_PREVIEW_CONTEXT } from "../RoomListLayout";
+    import { formatLastActivity } from "../unreadCount";
     import { focusAdjacentRoomRow } from "../roomRowKeyboard";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
@@ -39,6 +43,9 @@
     );
 
     let isSelected = $derived($selectedRoomStore?.id === room.id);
+    const rowPreview = getContext<{ shown: boolean } | undefined>(ROOM_ROW_PREVIEW_CONTEXT);
+    // Only listened to while shown.
+    let lastMessagePreview = $derived(rowPreview?.shown ? room.lastMessagePreview : undefined);
     let peerAvatarColorStore = $derived(room.avatarFallbackColor);
     let peerWaParensStore = $derived(room.peerWaDisplayNameIfDifferent);
     let peerWaDisplayNameParens = $derived(peerWaParensStore ? $peerWaParensStore : undefined);
@@ -53,6 +60,18 @@
         deactivateVisibleProfileSync?.();
     });
 </script>
+
+{#snippet nameChunks()}
+    {#each chunks as chunk (chunk.key)}
+        <span
+            class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
+                ? 'text-white'
+                : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
+        >
+    {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+            >({peerWaDisplayNameParens})</span
+        >{/if}
+{/snippet}
 
 <div
     class={[
@@ -85,15 +104,19 @@
             {/if}
         </span>
         <span class="m-0 flex-1 min-w-0">
-            {#each chunks as chunk (chunk.key)}
-                <span
-                    class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
-                        ? 'text-white'
-                        : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
-                >
-            {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
-                    >({peerWaDisplayNameParens})</span
-                >{/if}
+            {#if lastMessagePreview}
+                <span class="flex items-baseline gap-2">
+                    <span class="min-w-0 truncate">{@render nameChunks()}</span>
+                    {#if $lastMessagePreview}
+                        <span class="ms-auto shrink-0 text-xs text-white/50">
+                            {formatLastActivity($lastMessagePreview.timestamp, new Date(), $locale)}
+                        </span>
+                    {/if}
+                </span>
+                <LastMessagePreview preview={lastMessagePreview} showSender={$roomType !== "direct"} />
+            {:else}
+                {@render nameChunks()}
+            {/if}
         </span>
     </button>
     {#if $areNotificationsMuted}
