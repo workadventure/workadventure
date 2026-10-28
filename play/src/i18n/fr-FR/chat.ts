@@ -74,6 +74,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     joinableRoomsError: "Erreur de chargement des discussions, cliquez pour réessayer",
     availableRooms: "Discussion(s) disponible(s)",
     proximity: "Bulle de discussion",
+    area: "Zone",
     enteredZone: {
         title: "Vous êtes entré dans {zoneName}",
         open: "Ouvrir son chat",
