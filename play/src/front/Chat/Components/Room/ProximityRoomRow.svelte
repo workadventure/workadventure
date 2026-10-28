@@ -1,11 +1,11 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
-    import LL from "../../../../i18n/i18n-svelte";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import type { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import { gameManager } from "../../../Phaser/Game/GameManager";
+    import UnreadCount from "../UnreadCount.svelte";
     import WokaFromUserId from "../../../Components/Woka/WokaFromUserId.svelte";
     import { IconEar, IconMapEditor, IconMicrophone, IconUsersGroup } from "@wa-icons";
 
@@ -21,6 +21,7 @@
     let roomKind = $derived(room.kind);
     let hasUnreadMessages = $derived(room.hasUnreadMessages);
     let unreadCount = $derived(room.unreadMessagesCount);
+    let areNotificationsMuted = $derived(room.areNotificationsMuted);
 
     let usesDefaultProximityPicture = $derived($roomKind === "default" || $roomKind === "proximity");
     let RoomIcon = $derived(
@@ -98,18 +99,6 @@
         {/each}
     </div>
     {#if $hasUnreadMessages}
-        <div class="relative flex h-7 w-7 items-center justify-center">
-            <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping"></span>
-            <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white"></span>
-            <div
-                class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                aria-label={$LL.chat.a11y.unreadCount({ count: $unreadCount })}
-            >
-                <span>{$unreadCount > 9 ? "9" : $unreadCount}</span>
-                {#if $unreadCount > 9}
-                    <span class="text-xxs">+</span>
-                {/if}
-            </div>
-        </div>
+        <UnreadCount count={$unreadCount} variant={$areNotificationsMuted ? "muted" : "default"} />
     {/if}
 </div>
