@@ -4,6 +4,7 @@
     import type { VideoBox } from "../../Space/VideoBox";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
+    import { camerasInCompanionStore } from "../../Stores/PeerStore";
     import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
     import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
     import { pipTileStyle } from "./PictureInPicture/pictureInPictureGridLayout";
@@ -17,6 +18,11 @@
     }
 
     let { videoBox, layout, intersectionObserver }: Props = $props();
+
+    let streamableStore = $derived(videoBox.streamable);
+    // Transparent, NOT unmounted: the companion mirrors the tracks this tile keeps alive, and a tile
+    // out of view would stop receiving them (the intersection observer ignores the opacity).
+    let shownInCompanion = $derived($camerasInCompanionStore && $streamableStore?.videoType !== "screenSharing");
 
     let isVisible = $state((() => !intersectionObserver)());
     let videoBoxElement: HTMLDivElement | undefined = $state();
@@ -161,7 +167,10 @@
 <div
     bind:this={videoBoxElement}
     style={layoutStyle}
-    class={`pointer-events-auto overflow-hidden camera-box ${layoutClass}`}
+    class={`overflow-hidden camera-box ${layoutClass} ${
+        shownInCompanion ? "opacity-0 pointer-events-none" : "pointer-events-auto"
+    }`}
+    aria-hidden={shownInCompanion}
 >
     {#if isVisible}
         <MediaBox {videoBox} />
