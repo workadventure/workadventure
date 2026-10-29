@@ -100,6 +100,8 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Invited");
 
         await page.getByTestId("@admin:matrix.workadventure.localhost-banButton").click();
+        // Banning asks first.
+        await page.getByTestId("confirmDialogConfirm").click();
 
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Banned");
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-unbanButton")).toBeAttached();
