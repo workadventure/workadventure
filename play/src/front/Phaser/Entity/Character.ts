@@ -79,6 +79,8 @@ export abstract class Character extends Container implements OutlineableInterfac
     private wokaEmoteSounds: Phaser.Sound.BaseSound[] = [];
     /** What playArrival() hid around the Woka, shown again however the arrival ends. */
     private hiddenUntilEmoteEnds: Phaser.GameObjects.Components.Visible[] = [];
+    /** The name too, which may only be created once the arrival has started. */
+    private nameHiddenUntilEmoteEnds = false;
     private texts: Map<string, DOMElement> = new Map();
     private textsToBuild = new Map();
     scene: GameScene;
@@ -207,6 +209,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true);
             this.usernameDisplay.setRaisedHand(this.raisedHand, true);
             this.usernameDisplay.setPlayerDepth(this.depth);
+            this.usernameDisplay.setVisible(!this.nameHiddenUntilEmoteEnds);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
@@ -684,6 +687,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         const hidden = this.hideAllButLayers();
         this.playWokaEmote(definition);
         this.hiddenUntilEmoteEnds = hidden;
+        this.nameHiddenUntilEmoteEnds = true;
+        this.usernameDisplay?.setVisible(false);
     }
 
     /** Hides everything drawn around the Woka but its own layers, and returns what was visible. */
@@ -734,6 +739,10 @@ export abstract class Character extends Container implements OutlineableInterfac
             child.setVisible(true);
         }
         this.hiddenUntilEmoteEnds = [];
+        if (this.nameHiddenUntilEmoteEnds) {
+            this.nameHiddenUntilEmoteEnds = false;
+            this.usernameDisplay?.setVisible(true);
+        }
         if (!this.wokaEmote) return;
         this.wokaEmote.destroy();
         this.wokaEmote = null;
