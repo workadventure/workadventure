@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { readable } from "svelte/store";
     import { onMount } from "svelte";
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
@@ -16,6 +17,7 @@
     const QUICK_REACTIONS = ["👍", "❤️", "😂", "🎉", "👀"];
 
     let { content, canDelete, canReact, canEdit } = $derived(message);
+    let canReply = $derived(message.canReply ?? readable(true));
     // Proximity (bubble) messages are plain text too.
     let canCopy = $derived((message.type === "text" || message.type === "proximity") && $content.body !== "");
     let copied = $state(false);
@@ -87,14 +89,16 @@
                 {/each}
             </div>
         {/if}
-        <button
-            type="button"
-            class="action"
-            data-testid="messageActionReply"
-            onclick={() => run(() => selectedChatMessageToReply.set(message))}
-        >
-            <IconArrowBackUp font-size={20} />{$LL.chat.reply()}
-        </button>
+        {#if $canReply}
+            <button
+                type="button"
+                class="action"
+                data-testid="messageActionReply"
+                onclick={() => run(() => selectedChatMessageToReply.set(message))}
+            >
+                <IconArrowBackUp font-size={20} />{$LL.chat.reply()}
+            </button>
+        {/if}
         {#if message.openThread && onOpenThread}
             <button
                 type="button"
