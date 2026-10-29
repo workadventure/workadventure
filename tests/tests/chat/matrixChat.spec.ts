@@ -444,7 +444,9 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByText(privateChatRoom).click();
         //await page.getByTestId("VerifyWithPassphraseButton").click();
         await page.getByText("Cancel").click();
-        await expect(page.getByText("Failed to decrypt")).toBeAttached();
+        await expect(
+            page.getByText("This message is encrypted and can't be read on this device.", { exact: false }),
+        ).toBeAttached();
         await page.getByTestId("chatBackward").click();
         await ChatUtils.restoreEncryptionFromButton(page);
         await page.getByText(privateChatRoom).click();
