@@ -77,6 +77,7 @@
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
     import RaisedHandsDock from "./Video/RaisedHandsDock.svelte";
     import ExplorerMenu from "./ActionsMenu/ExplorerMenu.svelte";
+    import Minimap from "./Minimap/Minimap.svelte";
     import RecordingsListModal from "./PopUp/Recording/RecordingsListModal.svelte";
     import Calendar from "./Calendar/Calendar.svelte";
     import CalendarReminders from "./Calendar/CalendarReminders.svelte";
@@ -482,6 +483,7 @@
             <ExternalComponents zone="centeredPopup" />
 
             <ExplorerMenu mapEditorRightOffset={mapEditorPanelVisible ? $mapEditorSideBarWidthStore : 0} />
+            <Minimap />
         </section>
         <div class="">
             <!--<ActionBar />-->

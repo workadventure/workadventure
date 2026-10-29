@@ -19,6 +19,7 @@ export class WaScaleManager {
     private scaleManager: ScaleManager | undefined;
     private game!: Game;
     private actualZoom = 1;
+    private fullResolutionUsers = 0;
     private _saveZoom = 1;
     private lastEmittedZoomModifier: number | undefined;
     private lastEmittedActualZoom: number | undefined;
@@ -53,6 +54,19 @@ export class WaScaleManager {
         this.lastEmittedZoomModifier = this.hdpiManager.zoomModifier;
     }
 
+    /** Keep small overlays sharp even when gameplay zoom would otherwise shrink the shared canvas. */
+    public requireFullResolution(camera: Camera): () => void {
+        this.fullResolutionUsers++;
+        this.applyNewSize(camera);
+        let released = false;
+        return () => {
+            if (released) return;
+            released = true;
+            this.fullResolutionUsers--;
+            this.applyNewSize(camera);
+        };
+    }
+
     public applyNewSize(camera?: Camera, animating = false): void {
         if (this.scaleManager === undefined) {
             return;
@@ -76,7 +90,12 @@ export class WaScaleManager {
         // One exception: during camera zoom animations. The this.scaleManager.resize costs a lot of resources. So we don't
         // want to do this in a loop when zooming. If we are in the middle of an animation, we scale the canvas number of pixels
         // to the browser viewport and we use the Phaser camera zoom.
-        if (gameSize.width <= realSize.width && gameSize.height <= realSize.height && !animating) {
+        if (
+            gameSize.width <= realSize.width &&
+            gameSize.height <= realSize.height &&
+            !animating &&
+            this.fullResolutionUsers === 0
+        ) {
             this.scaleManager.resize(gameSize.width, gameSize.height);
             this.scaleManager.setZoom(this.actualZoom);
             camera?.setZoom(1);
