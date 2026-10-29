@@ -451,9 +451,13 @@
         return true;
     }
 
+    // The read receipt clears the unread count and the "new messages" line: send one for what is on screen.
+    // On opening, on every new message while the room stays open, and on coming back to a hidden tab.
+    let pageVisible = $state(document.visibilityState === "visible");
+    let lastRenderedKey = $derived(renderItems[renderItems.length - 1]?.key);
     $effect(() => {
-        if ($initializationState === "ready") {
-            room.setTimelineAsRead();
+        if ($initializationState === "ready" && pageVisible && lastRenderedKey !== undefined) {
+            untrack(() => room.setTimelineAsRead());
         }
     });
 
@@ -725,6 +729,8 @@
         target.classList.add("highlight-message");
     }
 </script>
+
+<svelte:document onvisibilitychange={() => (pageVisible = document.visibilityState === "visible")} />
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
