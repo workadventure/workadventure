@@ -18,14 +18,14 @@
 
     import {
         createMediaToggleAvailableStore,
-        mediaToggleStatusBlockedStore,
+        createMediaToggleStatusBlockedStore,
         toggleMedia,
     } from "../../../Stores/MediaToggleStore";
 
     const microphoneToggleAvailableStore = createMediaToggleAvailableStore("microphone");
 
     const disabledByStatusStore = derived(
-        [mediaToggleStatusBlockedStore, silentStore],
+        [createMediaToggleStatusBlockedStore(), silentStore],
         ([$mediaToggleStatusBlocked, $silentStore]) => $mediaToggleStatusBlocked || $silentStore,
     );
 

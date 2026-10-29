@@ -22,7 +22,11 @@ function isStatusBlocked(status: AvailabilityStatus): boolean {
     ].includes(status);
 }
 
-export const mediaToggleStatusBlockedStore = derived(availabilityStatusStore, (status) => isStatusBlocked(status));
+// Created lazily: this module is reachable from MediaStore through a circular import chain,
+// so MediaStore's exports may still be undefined when this module is evaluated.
+export function createMediaToggleStatusBlockedStore() {
+    return derived(availabilityStatusStore, (status) => isStatusBlocked(status));
+}
 
 export function isMediaDeviceListAvailable(deviceList: readonly unknown[] | undefined): boolean {
     return deviceList === undefined || deviceList.length > 0;
@@ -31,14 +35,14 @@ export function isMediaDeviceListAvailable(deviceList: readonly unknown[] | unde
 export function createMediaToggleAvailableStore(action: MediaToggleAction) {
     const deviceListStore = action === "camera" ? cameraListStore : microphoneListStore;
     return derived(
-        [mediaToggleStatusBlockedStore, silentStore, deviceListStore],
+        [createMediaToggleStatusBlockedStore(), silentStore, deviceListStore],
         ([statusBlocked, silent, deviceList]) => !silent && !statusBlocked && isMediaDeviceListAvailable(deviceList),
     );
 }
 
 export function isMediaToggleAvailable(action: MediaToggleAction): boolean {
     const deviceList = get(action === "camera" ? cameraListStore : microphoneListStore);
-    return !get(silentStore) && !get(mediaToggleStatusBlockedStore) && isMediaDeviceListAvailable(deviceList);
+    return !get(silentStore) && !isStatusBlocked(get(availabilityStatusStore)) && isMediaDeviceListAvailable(deviceList);
 }
 
 export function toggleMedia(action: MediaToggleAction): void {

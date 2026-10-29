@@ -20,7 +20,7 @@
     import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import {
         createMediaToggleAvailableStore,
-        mediaToggleStatusBlockedStore,
+        createMediaToggleStatusBlockedStore,
         toggleMedia,
     } from "../../../Stores/MediaToggleStore";
 
@@ -31,7 +31,7 @@
     const cameraToggleAvailableStore = createMediaToggleAvailableStore("camera");
 
     const disabledByStatusStore = derived(
-        [mediaToggleStatusBlockedStore, silentStore],
+        [createMediaToggleStatusBlockedStore(), silentStore],
         ([$mediaToggleStatusBlocked, $silentStore]) => $mediaToggleStatusBlocked || $silentStore,
     );
 
