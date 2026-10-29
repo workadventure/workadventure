@@ -42,7 +42,9 @@ export function createMediaToggleAvailableStore(action: MediaToggleAction) {
 
 export function isMediaToggleAvailable(action: MediaToggleAction): boolean {
     const deviceList = get(action === "camera" ? cameraListStore : microphoneListStore);
-    return !get(silentStore) && !isStatusBlocked(get(availabilityStatusStore)) && isMediaDeviceListAvailable(deviceList);
+    return (
+        !get(silentStore) && !isStatusBlocked(get(availabilityStatusStore)) && isMediaDeviceListAvailable(deviceList)
+    );
 }
 
 export function toggleMedia(action: MediaToggleAction): void {
