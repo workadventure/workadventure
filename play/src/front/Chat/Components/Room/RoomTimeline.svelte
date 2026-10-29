@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount, tick, untrack } from "svelte";
     import { get, readable } from "svelte/store";
+    import { defaultColor } from "@workadventure/shared-utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import {
         hasProximityChatSidePanel,
@@ -17,6 +18,7 @@
     import {
         roomSidePanelStore,
         roomTimelineFocusStore,
+        type RoomSidePanelSection,
         type RoomTimelineFocusRequest,
     } from "../../Stores/RoomSidePanelStore";
     import { getMatrixSecurity } from "../../Connection/Matrix/getMatrixSecurity";
@@ -29,6 +31,7 @@
     import UnreadCount from "../UnreadCount.svelte";
     import { hasPendingMentionElsewhere } from "../../Stores/ChatMessageBannerStore";
     import Button from "../../../Components/UI/Button.svelte";
+    import Avatar from "../Avatar.svelte";
     import ChatMessageBanner from "./ChatMessageBanner.svelte";
     import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
@@ -177,6 +180,8 @@
     });
     let roomSidePanelToggleIsOpen = $derived($roomSidePanelStore.isOpen ?? false);
     let roomName = $derived(room?.name);
+    let roomTypeStore = $derived(room.type);
+    let avatarColorStore = $derived(room.avatarFallbackColor);
     let typingMembers = $derived(room.typingMembers);
     let timelineItems = $derived(room.timelineItems);
     let initializationState = $derived(room.initializationState);
@@ -188,6 +193,20 @@
     let proximitySidePanelRoom = $derived(hasProximityChatSidePanel(room) ? room : undefined);
     let unreadQuestionCountStore = $derived(proximitySidePanelRoom?.unreadQuestionCount ?? emptyUnreadQuestionCount);
     let unreadSidePanelCount = $derived(unreadThreadCount + $unreadQuestionCountStore);
+    /** Side panel sections promoted to text buttons when the header is wide enough. */
+    let headerSections = $derived<{ section: RoomSidePanelSection; label: string }[]>(
+        proximitySidePanelRoom
+            ? [
+                  { section: "participants", label: $LL.chat.roomPanel.sections.participants() },
+                  { section: "polls", label: $LL.chat.roomPanel.sections.polls() },
+                  { section: "questions", label: $LL.chat.question.title() },
+              ]
+            : [
+                  { section: "participants", label: $LL.chat.roomPanel.sections.participants() },
+                  { section: "threads", label: $LL.chat.roomPanel.sections.threads() },
+                  { section: "polls", label: $LL.chat.roomPanel.sections.polls() },
+              ],
+    );
     let showBackButton = $derived(
         shouldShowBackToRoomList(roomListVisible, room.conversationKind === "thread", backAction !== undefined),
     );
@@ -719,13 +738,14 @@
     }}
 >
     {#if room !== undefined}
-        <div class="flex flex-col gap-2">
+        <!-- A container, so the header can show more once the conversation itself is wide enough. -->
+        <div class="@container flex flex-col gap-2">
             <div
                 class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
                     ? 'pe-14'
                     : ''}"
             >
-                <!-- No arrow while the room list is beside the timeline; the placeholder below keeps the title centered. -->
+                <!-- No arrow while the room list is beside the timeline: the title then sits on the left, by its avatar. -->
                 {#if chatRoomsEnableInAdmin && showBackButton}
                     <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
                     <div class="relative shrink-0">
@@ -771,15 +791,44 @@
                             </button>
                         {/if}
                     </div>
-                {:else}
+                {:else if !roomListVisible}
                     <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
                 {/if}
-                <div class="min-w-0 grow text-center px-2">
+                {#if roomListVisible}
+                    <span class="shrink-0 ps-2">
+                        <Avatar
+                            compact
+                            pictureStore={room.pictureStore}
+                            fallbackName={$roomName}
+                            color={$roomTypeStore === "direct" ? ($avatarColorStore ?? defaultColor) : null}
+                        />
+                    </span>
+                {/if}
+                <div class="min-w-0 grow px-2 {roomListVisible ? 'text-start' : 'text-center'}">
                     <div class="text-sm font-bold truncate" data-testid="roomName">
                         {$roomName}
                     </div>
-                    <ConversationSubtitle {room} />
+                    <ConversationSubtitle {room} centered={!roomListVisible} />
                 </div>
+
+                {#if roomListVisible && showRoomSidePanelToggle}
+                    <div class="hidden @min-[600px]:flex items-center gap-1 shrink-0" data-testid="roomHeaderSections">
+                        {#each headerSections as { section, label } (section)}
+                            {@const isActive =
+                                roomSidePanelToggleIsOpen && $roomSidePanelStore.activeSection === section}
+                            <button
+                                type="button"
+                                class="px-3 h-9 rounded text-sm font-bold whitespace-nowrap !text-white hover:bg-white/10 {isActive
+                                    ? 'bg-white/10'
+                                    : ''}"
+                                aria-pressed={isActive}
+                                onclick={() => roomSidePanelStore.setActiveSection(section)}
+                            >
+                                {label}
+                            </button>
+                        {/each}
+                    </div>
+                {/if}
 
                 {#if showRoomSidePanelToggle}
                     <button
@@ -802,7 +851,7 @@
                             ></span>
                         {/if}
                     </button>
-                {:else}
+                {:else if !roomListVisible}
                     <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
                 {/if}
             </div>

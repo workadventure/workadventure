@@ -18,9 +18,10 @@
 
     interface Props {
         room: ChatConversation;
+        centered?: boolean;
     }
 
-    let { room }: Props = $props();
+    let { room, centered = true }: Props = $props();
 
     let merger = $state<UserProviderMerger | undefined>(undefined);
 
@@ -97,7 +98,7 @@
 
 {#if subtitle}
     <div
-        class="text-xs font-normal opacity-75 truncate flex items-center justify-center gap-1"
+        class="text-xs font-normal opacity-75 truncate flex items-center gap-1 {centered ? 'justify-center' : ''}"
         data-testid="roomSubtitle"
     >
         {#if peer && peerIsConnected && $roomTypeStore === "direct"}
