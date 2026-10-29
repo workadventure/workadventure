@@ -1698,17 +1698,18 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
     /**
      * The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s.
-     * A room created in a folder can also show up at the root for a while: take the one inside the folder,
-     * the one the user sees in the list.
+     * A room created in a folder can also show up at the root for a while, and that copy is dropped
+     * when it moves into its folder: take the one inside the folder.
      */
     private async waitForPlacedRoom(
         roomId: string,
         parentSpaceID: string | undefined,
         deadline = Date.now() + 10_000,
     ): Promise<ChatRoom | undefined> {
-        const room = parentSpaceID
-            ? await (await this.findParentFolder(parentSpaceID))?.getNode(roomId)
-            : await this.findRoomOrFolder(roomId);
+        const folder = parentSpaceID ? await this.findParentFolder(parentSpaceID) : undefined;
+        // A closed folder has not built its rooms yet: build them, as opening it would.
+        folder?.ensureChildrenLoaded();
+        const room = parentSpaceID ? await folder?.getNode(roomId) : await this.findRoomOrFolder(roomId);
         if (room instanceof MatrixChatRoom) {
             return room;
         }
