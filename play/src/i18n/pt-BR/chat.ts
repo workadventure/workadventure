@@ -388,6 +388,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Criação da sala em andamento",
         creationSuccessNotification: "Sala criada",
         restrictedDescription: "Esta sala será visível apenas para membros da pasta pai: {folderName}",
+        errors: {
+            forbidden: "Você não tem permissão para criar uma sala aqui.",
+            rateLimited: "Muitas solicitações. Aguarde um momento e tente novamente.",
+            generic: "Não foi possível criar a sala. Tente novamente.",
+        },
     },
     createFolder: {
         title: "Criar nova pasta",
@@ -420,9 +425,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Criar",
             cancel: "Cancelar",
         },
-        error: "Erro na criação da sala",
         loadingCreation: "Criação da sala em andamento",
         creationSuccessNotification: "Sala criada",
+        errors: {
+            generic: "Não foi possível criar a pasta. Tente novamente.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Participantes",

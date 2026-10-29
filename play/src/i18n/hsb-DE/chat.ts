@@ -388,6 +388,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Rum so naporuje",
         creationSuccessNotification: "Rum naporowany",
         restrictedDescription: "Widźomny jenož za čłonkow nadzarěda: {folderName}",
+        errors: {
+            forbidden: "Njesměš tu žanu rumnosć wutworić.",
+            rateLimited: "Přewjele naprašowanjow. Počakaj wokomik a spytaj hišće raz.",
+            generic: "Rumnosć njeda so wutworić. Spytaj hišće raz.",
+        },
     },
     createFolder: {
         title: "Nowy zarěd napořeć",
@@ -420,9 +425,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Napořeć",
             cancel: "Přetorhnyć",
         },
-        error: "Zmylka při naporěwanju ruma",
         loadingCreation: "Rum so naporuje",
         creationSuccessNotification: "Rum naporowany",
+        errors: {
+            generic: "Rjadowak njeda so wutworić. Spytaj hišće raz.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Wobdźělnicy",

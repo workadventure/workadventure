@@ -386,6 +386,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "正在建立房間",
         creationSuccessNotification: "房間已建立",
         restrictedDescription: "此房間僅對上層資料夾的成員可見：{folderName}",
+        errors: {
+            forbidden: "你無權在此建立聊天室。",
+            rateLimited: "請求過多。請稍候再試。",
+            generic: "無法建立聊天室。請重試。",
+        },
     },
     createFolder: {
         title: "建立新資料夾",
@@ -418,9 +423,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "建立",
             cancel: "取消",
         },
-        error: "建立房間時發生錯誤",
         loadingCreation: "正在建立房間",
         creationSuccessNotification: "房間已建立",
+        errors: {
+            generic: "無法建立資料夾。請重試。",
+        },
     },
     manageRoomUsers: {
         roomOption: "參與者",

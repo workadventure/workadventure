@@ -388,6 +388,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Kamer aanmaken in uitvoering",
         creationSuccessNotification: "Kamer gemaakt",
         restrictedDescription: "Alleen zichtbaar voor leden van de bovenliggende map: {folderName}",
+        errors: {
+            forbidden: "Je mag hier geen ruimte aanmaken.",
+            rateLimited: "Te veel verzoeken. Wacht even en probeer het opnieuw.",
+            generic: "De ruimte kon niet worden aangemaakt. Probeer het opnieuw.",
+        },
     },
     createFolder: {
         title: "Nieuwe map maken",
@@ -420,9 +425,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Maken",
             cancel: "Annuleren",
         },
-        error: "Fout bij het maken van de kamer",
         loadingCreation: "Kamer aanmaken in uitvoering",
         creationSuccessNotification: "Kamer gemaakt",
+        errors: {
+            generic: "De map kon niet worden aangemaakt. Probeer het opnieuw.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Deelnemers",

@@ -390,6 +390,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Raum wird erstellt",
         creationSuccessNotification: "Raum erstellt",
         restrictedDescription: "Nur für Mitglieder des übergeordneten Ordners sichtbar: {folderName}",
+        errors: {
+            forbidden: "Du darfst hier keinen Raum erstellen.",
+            rateLimited: "Zu viele Anfragen. Warte einen Moment und versuche es erneut.",
+            generic: "Der Raum konnte nicht erstellt werden. Versuche es erneut.",
+        },
     },
     createFolder: {
         title: "Neuen Ordner erstellen",
@@ -422,9 +427,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Erstellen",
             cancel: "Abbrechen",
         },
-        error: "Fehler beim Erstellen des Raums",
         loadingCreation: "Raum wird erstellt",
         creationSuccessNotification: "Raum erstellt",
+        errors: {
+            generic: "Der Ordner konnte nicht erstellt werden. Versuche es erneut.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Teilnehmer",

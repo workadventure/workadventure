@@ -54,7 +54,8 @@ class ChatUtils {
 
         // await page.waitForTimeout(1000);
 
-        await page.getByText(roomName).click();
+        // The new room opens by itself; its encryption setup shows up over it.
+        await expect(page.getByTestId("roomName")).toHaveText(roomName);
 
         // await page.getByTestId("VerifyWithPassphraseButton").click();
 
@@ -83,6 +84,12 @@ class ChatUtils {
         await page.getByText("Generate").click();
         await page.getByTestId("downloadRecoveryKeyButton").click();
         await page.getByText("Continue").click();
+    }
+
+    /** A new room opens by itself: check it is the one just created, then go back to the room list. */
+    public async backToRoomListAfterCreation(page: Page, roomName: string) {
+        await expect(page.getByTestId("roomName")).toHaveText(roomName);
+        await page.getByTestId("chatBackward").click();
     }
 
     public async cancelledContinueWithSSO(page: Page, context: BrowserContext) {

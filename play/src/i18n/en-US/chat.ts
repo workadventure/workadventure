@@ -388,6 +388,11 @@ const chat: BaseTranslation = {
         loadingCreation: "Room creation in progress",
         creationSuccessNotification: "Room created",
         restrictedDescription: "This room will be visible only to members of the parent folder: {folderName}",
+        errors: {
+            forbidden: "You are not allowed to create a room here.",
+            rateLimited: "Too many requests. Wait a moment, then try again.",
+            generic: "The room could not be created. Try again.",
+        },
     },
     createFolder: {
         title: "Create new folder",
@@ -420,9 +425,11 @@ const chat: BaseTranslation = {
             create: "Create",
             cancel: "Cancel",
         },
-        error: "Error on room creation",
-        loadingCreation: "Room creation in progress",
-        creationSuccessNotification: "Room created",
+        loadingCreation: "Folder creation in progress",
+        creationSuccessNotification: "Folder created",
+        errors: {
+            generic: "The folder could not be created. Try again.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Participants",

@@ -12,6 +12,8 @@
     import Input from "../../../Components/Input/Input.svelte";
     import InputGroupLabel from "../../../Components/Input/InputGroupLabel.svelte";
     import Button from "../../../Components/UI/Button.svelte";
+    import Alert from "../../../Components/UI/Alert.svelte";
+    import { creationErrorMessage } from "./creationErrorMessage";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -46,11 +48,12 @@
             notifyUserForFolderCreation();
         } catch (error) {
             console.error(error);
-            if (error instanceof Error) {
-                createFolderError = error.message;
-            } else {
-                createFolderError = get(LL).chat.unknownError();
-            }
+            createFolderError = creationErrorMessage(error, {
+                forbidden: get(LL).chat.createFolder.errors.generic(),
+                rateLimited: get(LL).chat.createRoom.errors.rateLimited(),
+                generic: get(LL).chat.createFolder.errors.generic(),
+                addToFolder: get(LL).chat.addRoomToFolderError(),
+            });
         } finally {
             loadingFolderCreation = false;
         }
@@ -67,6 +70,13 @@
     function unfocusChatInput() {
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
+    }
+
+    function submitOnEnter(event: KeyboardEvent) {
+        if (event.key === "Enter" && createFolderOptions.name?.trim()) {
+            event.preventDefault();
+            createNewFolder(createFolderOptions).catch((error) => console.error(error));
+        }
     }
 
     function handleSelectMatrixUserError(error: string) {
@@ -86,9 +96,7 @@
                 </div>
             {:else}
                 {#if createFolderError !== undefined}
-                    <div class="bg-red-500 p-2 rounded">
-                        {$LL.chat.createFolder.error()} : <b><i>{createFolderError}</i></b>
-                    </div>
+                    <Alert variant="danger" class="w-full">{createFolderError}</Alert>
                 {/if}
                 <Input
                     data-testid="createFolderName"
@@ -97,6 +105,7 @@
                     bind:value={createFolderOptions.name}
                     onfocusin={focusChatInput}
                     onfocusout={unfocusChatInput}
+                    onkeydown={submitOnEnter}
                 />
 
                 {#if parentID}

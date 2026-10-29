@@ -388,6 +388,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "ルームの作成中",
         creationSuccessNotification: "ルームが作成されました",
         restrictedDescription: "親フォルダーのメンバーのみ表示: {folderName}",
+        errors: {
+            forbidden: "ここにルームを作成する権限がありません。",
+            rateLimited: "リクエストが多すぎます。少し待ってから再試行してください。",
+            generic: "ルームを作成できませんでした。もう一度お試しください。",
+        },
     },
     createFolder: {
         title: "新しいフォルダーの作成",
@@ -420,9 +425,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "作成",
             cancel: "キャンセル",
         },
-        error: "ルーム作成時のエラー",
         loadingCreation: "ルームの作成中",
         creationSuccessNotification: "ルームが作成されました",
+        errors: {
+            generic: "フォルダーを作成できませんでした。もう一度お試しください。",
+        },
     },
     manageRoomUsers: {
         roomOption: "参加者",

@@ -386,6 +386,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "正在创建房间",
         creationSuccessNotification: "房间已创建",
         restrictedDescription: "此房间仅对父文件夹的成员可见: {folderName}",
+        errors: {
+            forbidden: "你无权在此创建聊天室。",
+            rateLimited: "请求过多。请稍候再试。",
+            generic: "无法创建聊天室。请重试。",
+        },
     },
     createFolder: {
         title: "创建新文件夹",
@@ -418,9 +423,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "创建",
             cancel: "取消",
         },
-        error: "创建房间时出错",
         loadingCreation: "正在创建房间",
         creationSuccessNotification: "房间已创建",
+        errors: {
+            generic: "无法创建文件夹。请重试。",
+        },
     },
     manageRoomUsers: {
         roomOption: "参与者",

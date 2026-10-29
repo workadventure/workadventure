@@ -15,17 +15,8 @@ async function openFreshMatrixRoom(page: Page, roomName: string) {
     await page.getByPlaceholder("Users").click();
     await page.getByPlaceholder("Users").press("Enter");
     await page.getByTestId("createRoomButton").click();
-    if (
-        isMobile(page) &&
-        (await page
-            .getByTestId("roomTimeline")
-            .isVisible({ timeout: 10_000 })
-            .catch(() => false))
-    ) {
-        return;
-    }
-
-    await page.getByTestId(roomName).click({ timeout: 60_000 });
+    // The new room opens by itself.
+    await expect(page.getByTestId("roomName")).toHaveText(roomName);
 }
 
 async function sendMessageToTimeline(timeline: Locator, message: string) {

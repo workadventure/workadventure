@@ -602,7 +602,8 @@ export interface ChatConnectionInterface {
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     folders: Readable<RoomFolder[]>;
-    createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+    /** Resolves once the room is created and, when it shows up in time, with the room as placed in the room list. */
+    createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string; room?: ChatRoom }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     roomCreationInProgress: Readable<boolean>;

@@ -21,6 +21,7 @@ async function createRoom(page: Page): Promise<CreatedRoom> {
     const roomName = ChatUtils.getRandomName();
     await page.getByTestId("createRoomName").fill(roomName);
     await page.getByTestId("createRoomButton").click();
+    await ChatUtils.backToRoomListAfterCreation(page, roomName);
 
     await expect(page.getByText(roomName)).toBeAttached();
 
