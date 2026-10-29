@@ -1807,6 +1807,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     .filter((invitation) => invitation !== undefined && invitation !== this.client?.getSafeUserId()) ??
                 [],
             is_direct: roomOptions.is_direct,
+            topic: roomOptions.description,
             initial_state: this.computeInitialState(roomOptions),
             // No power_level_content_override: `suggested` is not an m.room.power_levels field (hence the
             // suppressed type error). The real "suggested" flag is set on the m.space.child event in

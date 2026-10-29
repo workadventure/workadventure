@@ -20,6 +20,12 @@ type NavChatTab =
           key: "settings";
       }
     | {
+          key: "create";
+          kind: "room" | "folder";
+          parentID?: string;
+          parentName?: string;
+      }
+    | {
           key: "externalModule";
           component: WorkAdventureComponent;
           props?: WorkAdventureComponentProps;
@@ -47,6 +53,9 @@ function createNavChatStore() {
         },
         switchToSettings() {
             set({ key: "settings" });
+        },
+        switchToCreate(kind: "room" | "folder", parentID?: string, parentName?: string) {
+            set({ key: "create", kind, parentID, parentName });
         },
         switchToCustomComponent(component: WorkAdventureComponent, props?: WorkAdventureComponentProps) {
             set({ key: "externalModule", component, props });

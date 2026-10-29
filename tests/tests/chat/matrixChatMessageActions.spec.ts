@@ -15,8 +15,8 @@ async function openRoomWithAMessage(page: Page, message: string) {
     await ChatUtils.openCreateRoomDialog(page);
     const roomName = ChatUtils.getRandomName();
     await page.getByTestId("createRoomName").fill(roomName);
-    await page.getByPlaceholder("Users").click();
-    await page.getByPlaceholder("Users").press("Enter");
+    await page.getByPlaceholder("Search for people…").click();
+    await page.getByPlaceholder("Search for people…").press("Enter");
     await page.getByTestId("createRoomButton").click();
     await page.getByText(roomName).click();
     await page.getByTestId("messageInput").fill(message);
