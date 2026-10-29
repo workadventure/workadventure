@@ -596,6 +596,7 @@ const chat: BaseTranslation = {
         failedToLoadUsers: "Failed to load users",
     },
     a11y: {
+        optionsFor: "Options for {name}",
         menuActions: "Menu actions",
         unreadCount: "{count} unread",
         backWithUnreadElsewhere: "Back, {count} unread {{message|messages}} elsewhere",

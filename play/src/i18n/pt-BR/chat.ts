@@ -596,6 +596,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "Falha ao carregar usuários",
     },
     a11y: {
+        optionsFor: "Opções de {name}",
         menuActions: "Menu de ações",
         unreadCount: "{count} não lidas",
         backWithUnreadElsewhere: "Voltar, {count} {{mensagem não lida|mensagens não lidas}} em outro lugar",

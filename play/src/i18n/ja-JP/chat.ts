@@ -597,6 +597,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "ユーザーの読み込みに失敗しました",
     },
     a11y: {
+        optionsFor: "{name} のオプション",
         menuActions: "操作メニュー",
         unreadCount: "未読 {count} 件",
         backWithUnreadElsewhere: "戻る（他に未読 {count} 件）",

@@ -595,6 +595,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "Không tải được danh sách người dùng",
     },
     a11y: {
+        optionsFor: "Tùy chọn cho {name}",
         menuActions: "Thao tác menu",
         unreadCount: "{count} chưa đọc",
         backWithUnreadElsewhere: "Quay lại, {count} tin nhắn chưa đọc ở nơi khác",

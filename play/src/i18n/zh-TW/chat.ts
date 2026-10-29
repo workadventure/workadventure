@@ -592,6 +592,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "載入使用者失敗",
     },
     a11y: {
+        optionsFor: "{name} 的選項",
         menuActions: "操作選單",
         unreadCount: "{count} 則未讀",
         backWithUnreadElsewhere: "返回，其他地方有 {count} 則未讀訊息",
