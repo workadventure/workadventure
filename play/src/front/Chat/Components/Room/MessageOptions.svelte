@@ -37,6 +37,7 @@
     }
 
     let { content, canDelete, canReact, canEdit } = $derived(message);
+    let canReply = $derived(message.canReply ?? readable(true));
     const noAttachment = readable<ChatAttachmentStatus>({ state: "ready" });
     let attachmentStatus = $derived(message.attachment?.status ?? noAttachment);
     // A file offered but not accepted, or still downloading or decrypting, has nothing to save yet.
@@ -56,15 +57,17 @@
             <IconArrowDown font-size={16} class="hover:cursor-pointer" />
         </a>
     {/if}
-    <button
-        class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
-        data-testid="replyToMessageButton"
-        aria-label={$LL.chat.reply()}
-        title={$LL.chat.reply()}
-        onclick={replyToMessage}
-    >
-        <IconArrowBackUp font-size={16} />
-    </button>
+    {#if $canReply}
+        <button
+            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
+            data-testid="replyToMessageButton"
+            aria-label={$LL.chat.reply()}
+            title={$LL.chat.reply()}
+            onclick={replyToMessage}
+        >
+            <IconArrowBackUp font-size={16} />
+        </button>
+    {/if}
     {#if message.openThread}
         <button
             class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"

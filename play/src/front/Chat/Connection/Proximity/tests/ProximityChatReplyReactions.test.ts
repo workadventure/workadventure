@@ -8,7 +8,7 @@ import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
 import { blackListManager } from "../../../../WebRtc/BlackListManager";
 import type { SpaceUserExtended } from "../../../../Space/SpaceInterface";
 import type { ChatMessage, ChatMessageReaction, ChatUser } from "../../ChatConnection";
-import { ProximityChatRoom } from "../ProximityChatRoom";
+import { ProximityChatMessage, ProximityChatRoom } from "../ProximityChatRoom";
 import { applyProximityReaction } from "../ProximityChatMessageReaction";
 
 vi.mock("../../../../Phaser/Game/GameManager", () => ({
@@ -173,6 +173,25 @@ describe("ProximityChatRoom reactions and replies", () => {
         expect(get(message.canReact)).toBe(false);
         receiveReaction(room, "bob", message.id, "👍");
         expect(message.reactions.size).toBe(0);
+    });
+
+    it("offers neither reactions nor replies on a message once I left its bubble", () => {
+        const { room, emitPublicMessage } = createRoom();
+        receive(room, "alice", "Lunch at noon?", "message-1");
+        const message = get(room.messages)[0];
+        message.addReaction("👍").catch(() => undefined);
+        emitPublicMessage.mockClear();
+
+        if (!(message instanceof ProximityChatMessage)) throw new Error("not a bubble message");
+        message.leaveConversation();
+
+        expect(get(message.canReact)).toBe(false);
+        expect(get(message.canReply!)).toBe(false);
+        expect(get(message.reactions.get("👍")!.canReact)).toBe(false);
+        message.addReaction("🎉").catch(() => undefined);
+        message.reactions.get("👍")!.react();
+        expect(emitPublicMessage).not.toHaveBeenCalled();
+        expect(reactionUsers(message, "👍")).toEqual([ME]);
     });
 
     it("sends the quoted message's id and excerpt with a reply, and shows the quote", () => {
