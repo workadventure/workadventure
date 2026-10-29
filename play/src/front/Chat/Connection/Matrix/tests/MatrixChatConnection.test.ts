@@ -593,6 +593,13 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
+            // No sync in this mock: the room never shows up in the room list.
+            vi.spyOn(
+                matrixChatConnection as unknown as {
+                    waitForPlacedRoom: (roomId: string) => Promise<undefined>;
+                },
+                "waitForPlacedRoom",
+            ).mockResolvedValue(undefined);
             expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
         });
     });

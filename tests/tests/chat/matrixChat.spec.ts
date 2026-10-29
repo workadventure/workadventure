@@ -464,7 +464,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
-        await page.getByText(privateChatRoom).click();
+        await expect(page.getByTestId("roomName")).toHaveText(privateChatRoom);
         await ChatUtils.cancelledContinueWithSSO(page, page.context());
         await page.getByTestId("chatBackward").click();
 
@@ -552,8 +552,9 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomName").fill(room);
         // await page.getByTestId("createRoomVisibility").selectOption("public");
         await page.getByTestId("createRoomButton").click();
-        //eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(1000);
+        // The new room opens by itself: go back to the list to find it in its folder.
+        await expect(page.getByTestId("roomName")).toHaveText(room);
+        await page.getByTestId("chatBackward").click();
         await page.getByText(privateFolder1).click();
         await expect(page.getByText(room)).toBeAttached();
     });
@@ -577,6 +578,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("createRoomName").fill(room);
         // await page.getByTestId("createRoomVisibility").selectOption("restricted");
         await page.getByTestId("createRoomButton").click();
+        await expect(page.getByTestId("roomName")).toHaveText(room);
+        await page.getByTestId("chatBackward").click();
         await page.getByTestId(`toggleFolder${privateFolder1}`).click();
 
         await expect(page.getByText(room)).toBeAttached();

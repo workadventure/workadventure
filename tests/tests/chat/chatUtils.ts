@@ -54,7 +54,8 @@ class ChatUtils {
 
         // await page.waitForTimeout(1000);
 
-        await page.getByText(roomName).click();
+        // The new room opens by itself; its encryption setup shows up over it.
+        await expect(page.getByTestId("roomName")).toHaveText(roomName);
 
         // await page.getByTestId("VerifyWithPassphraseButton").click();
 
