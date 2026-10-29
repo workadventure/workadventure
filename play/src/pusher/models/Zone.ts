@@ -17,6 +17,7 @@ import type {
     UserMovedMessage,
     UserLeftZoneMessage,
     GroupLeftZoneMessage,
+    UserEjection,
 } from "@workadventure/messages";
 import { AvailabilityStatus } from "@workadventure/messages";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
@@ -24,7 +25,7 @@ import type { PusherWebSocket } from "../services/PusherWebSocket";
 export interface ZoneEventListener {
     onUserEnters(user: UserDescriptor, listener: PusherWebSocket): void;
     onUserMoves(user: UserDescriptor, listener: PusherWebSocket): void;
-    onUserLeaves(userId: number, listener: PusherWebSocket): void;
+    onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: UserEjection): void;
     onGroupEnters(group: GroupDescriptor, listener: PusherWebSocket): void;
     onGroupMoves(group: GroupDescriptor, listener: PusherWebSocket): void;
     onGroupLeaves(groupId: number, listener: PusherWebSocket): void;
@@ -241,7 +242,7 @@ export class Zone {
 
     public handleUserLeftZone(message: UserLeftZoneMessage): void {
         this.users.delete(message.userId);
-        this.notifyUserLeft(message.userId, message.toZone);
+        this.notifyUserLeft(message.userId, message.toZone, message.ejection);
     }
 
     public handleGroupLeftZone(message: GroupLeftZoneMessage): void {
@@ -327,13 +328,13 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user left
      */
-    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined): void {
+    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined, ejection?: UserEjection): void {
         for (const listener of this.listeners) {
             if (listener.getUserData().userId === userId) {
                 continue;
             }
             if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
-                this.socketListener.onUserLeaves(userId, listener);
+                this.socketListener.onUserLeaves(userId, listener, ejection);
             } else {
                 // Do not send a signal. The move event will be triggered when joining the new room.
             }
