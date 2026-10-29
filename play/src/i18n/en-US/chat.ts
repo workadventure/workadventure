@@ -438,11 +438,12 @@ const chat: BaseTranslation = {
         actions: "Actions",
         buttons: {
             sendInvitations: "Send invitations",
-            cancel: "Cancel",
             ban: "Ban",
             kick: "Kick",
             unban: "Unban",
             invite: "Invite",
+            cancelInvitation: "Cancel invitation",
+            close: "Close",
         },
         roles: {
             USER: "User",
@@ -450,6 +451,10 @@ const chat: BaseTranslation = {
             MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Invitations sent successfully",
+        invitationsFailed: "Could not invite: {names}",
+        sectionJoined: "Members",
+        sectionInvited: "Invited",
+        sectionLeft: "Left or banned",
     },
     roomPanel: {
         toggleOpen: "Open room panel",

@@ -439,11 +439,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "작업",
         buttons: {
             sendInvitations: "초대 보내기",
-            cancel: "취소",
             ban: "차단",
             kick: "내보내기",
             unban: "차단 해제",
             invite: "초대",
+            cancelInvitation: "초대 취소",
+            close: "닫기",
         },
         roles: {
             USER: "사용자",
@@ -451,6 +452,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "중재자",
         },
         sendInvitationsSuccessNotification: "초대가 성공적으로 전송되었습니다",
+        invitationsFailed: "초대하지 못했습니다: {names}",
+        sectionJoined: "멤버",
+        sectionInvited: "초대됨",
+        sectionLeft: "나감 또는 차단됨",
     },
     roomPanel: {
         toggleOpen: "방 패널 열기",

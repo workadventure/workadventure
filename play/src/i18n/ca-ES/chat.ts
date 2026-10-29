@@ -437,11 +437,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "Accions",
         buttons: {
             sendInvitations: "Enviar invitacions",
-            cancel: "Cancel·lar",
             ban: "Bannejar",
             kick: "Expulsar",
             unban: "Desbannejar",
             invite: "Convidar",
+            cancelInvitation: "Cancel·la la invitació",
+            close: "Tanca",
         },
         roles: {
             USER: "Usuari",
@@ -449,6 +450,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderador",
         },
         sendInvitationsSuccessNotification: "Invitacions enviades correctament",
+        invitationsFailed: "No s'ha pogut convidar: {names}",
+        sectionJoined: "Membres",
+        sectionInvited: "Convidats",
+        sectionLeft: "Han marxat o vetats",
     },
     roomPanel: {
         toggleOpen: "Obre el tauler de la sala",

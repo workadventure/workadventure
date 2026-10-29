@@ -8,6 +8,7 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import Button from "../../../Components/UI/Button.svelte";
+    import Alert from "../../../Components/UI/Alert.svelte";
     import RoomParticipant from "./RoomParticipant.svelte";
     import { IconLoader, IconLink } from "@wa-icons";
     import { modals } from "@wa-modals";
@@ -19,12 +20,12 @@
 
     let { isOpen, room }: Props = $props();
     let members = $derived(room.members);
-    let isRoomAdmin = $derived(room.isCurrentUserRoomAdmin);
 
     let invitations: { value: string; label: string }[] = $state([]);
     let sendingInvitationsToRoom = $state(false);
     let loadingMembers = $state(true);
     let invitationToRoomError: string | undefined = $state(undefined);
+    let roomIdCopied = $state(false);
     let membersLoadingError: string | undefined = $state(undefined);
 
     let hasPermissionToInvite = $derived(room.hasPermissionTo("invite"));
@@ -45,20 +46,36 @@
         }
     }
 
-    async function inviteUsersAndCloseModalOnSuccess() {
-        try {
-            sendingInvitationsToRoom = true;
-            await room.inviteUsers(invitations.map((invitation) => invitation.value));
+    // One request per person, so that one failure does not hide who was invited: those who could not be
+    // invited stay selected, named in an error that stays until the next try.
+    async function sendInvitations() {
+        sendingInvitationsToRoom = true;
+        invitationToRoomError = undefined;
+        const results = await Promise.allSettled(invitations.map((invitation) => room.inviteUsers([invitation.value])));
+        const failed = invitations.filter((_, index) => results[index].status === "rejected");
+        results.forEach((result) => {
+            if (result.status === "rejected") console.error(result.reason);
+        });
+        if (failed.length < invitations.length) {
             notificationPlayingStore.playNotification($LL.chat.manageRoomUsers.sendInvitationsSuccessNotification());
-        } catch (error) {
-            console.error(error);
-            if (error instanceof Error) {
-                invitationToRoomError = error.message;
-            }
-        } finally {
-            sendingInvitationsToRoom = false;
-            setTimeout(() => (invitationToRoomError = undefined), 2000);
         }
+        if (failed.length > 0) {
+            invitationToRoomError = $LL.chat.manageRoomUsers.invitationsFailed({
+                names: failed.map((invitation) => invitation.label).join(", "),
+            });
+        }
+        invitations = failed;
+        sendingInvitationsToRoom = false;
+    }
+
+    function copyRoomId() {
+        navigator.clipboard
+            .writeText(room.id)
+            .then(() => {
+                roomIdCopied = true;
+                setTimeout(() => (roomIdCopied = false), 2000);
+            })
+            .catch((error) => console.error(error));
     }
 
     function handleSelectMatrixUserError(error: string) {
@@ -66,6 +83,18 @@
     }
 
     let sortedMembers = $derived([...$members].sort((a, b) => get(a.name).localeCompare(get(b.name))));
+    let memberSections = $derived(
+        [
+            { title: $LL.chat.manageRoomUsers.sectionJoined(), memberships: ["join"] },
+            { title: $LL.chat.manageRoomUsers.sectionInvited(), memberships: ["invite", "knock"] },
+            { title: $LL.chat.manageRoomUsers.sectionLeft(), memberships: ["leave", "ban"] },
+        ]
+            .map((section) => ({
+                ...section,
+                members: sortedMembers.filter((member) => section.memberships.includes(get(member.membership))),
+            }))
+            .filter((section) => section.members.length > 0),
+    );
 </script>
 
 <Popup {isOpen}>
@@ -78,10 +107,12 @@
                 type="button"
                 data-testid="roomID"
                 class="group flex w-full max-w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-left text-xs text-white/70 transition hover:border-white/20 hover:bg-white/[0.07]"
-                onclick={() => navigator.clipboard.writeText(room.id)}
+                onclick={copyRoomId}
             >
                 <span class="line-clamp-2 flex-1 text-center"
-                    >{$LL.chat.manageRoomUsers.roomID({ roomId: room.id })}</span
+                    >{roomIdCopied
+                        ? $LL.chat.matrixSettings.copied()
+                        : $LL.chat.manageRoomUsers.roomID({ roomId: room.id })}</span
                 >
                 <IconLink class="h-4 w-4 shrink-0 opacity-50 transition group-hover:opacity-90" aria-hidden="true" />
             </button>
@@ -109,16 +140,12 @@
                 </div>
             {:else}
                 {#if invitationToRoomError}
-                    <div
-                        transition:fade
-                        class="rounded-xl border border-red-400/40 bg-red-500/15 px-3 py-2 text-sm text-red-100"
-                    >
-                        {$LL.chat.manageRoomUsers.error()} :
-                        <span class="font-medium italic">{invitationToRoomError}</span>
+                    <div transition:fade>
+                        <Alert variant="danger" class="w-full">{invitationToRoomError}</Alert>
                     </div>
                 {/if}
 
-                {#if $isRoomAdmin}
+                {#if $hasPermissionToInvite}
                     <section class="flex flex-col gap-2">
                         <h2 class="text-xs font-medium uppercase tracking-wide text-white/45">
                             {$LL.chat.manageRoomUsers.invitations()}
@@ -131,22 +158,24 @@
                     </section>
                 {/if}
 
-                <section class="flex min-h-0 flex-col gap-2">
-                    <h2 class="text-xs font-medium uppercase tracking-wide text-white/45">
-                        {$LL.chat.manageRoomUsers.participants()}
-                    </h2>
-                    <div
-                        class="manage-participants-scroll max-h-[min(22rem,55vh)] overflow-y-auto rounded-2xl border border-white/10 bg-transparent"
-                    >
-                        <ul class="list-none divide-y divide-white/10 p-0 m-0">
-                            {#each sortedMembers as member (member.id)}
-                                <li class="px-1 py-0.5 sm:px-2">
-                                    <RoomParticipant {member} {room} />
-                                </li>
-                            {/each}
-                        </ul>
-                    </div>
-                </section>
+                <div class="manage-participants-scroll flex max-h-[min(22rem,55vh)] flex-col gap-4 overflow-y-auto">
+                    {#each memberSections as section (section.title)}
+                        <section class="flex min-h-0 flex-col gap-2">
+                            <h2 class="m-0 text-xs font-medium uppercase tracking-wide text-white/45">
+                                {section.title} · {section.members.length}
+                            </h2>
+                            <ul
+                                class="list-none divide-y divide-white/10 rounded-2xl border border-white/10 bg-transparent p-0 m-0"
+                            >
+                                {#each section.members as member (member.id)}
+                                    <li class="px-1 py-0.5 sm:px-2">
+                                        <RoomParticipant {member} {room} />
+                                    </li>
+                                {/each}
+                            </ul>
+                        </section>
+                    {/each}
+                </div>
             {/if}
         </div>
     {/snippet}
@@ -155,14 +184,14 @@
             <p class="text-sm text-white/70">{$LL.chat.loading()}</p>
         {:else}
             <Button variant="secondary" class="flex-1" onclick={() => modals.close()}>
-                {$LL.chat.manageRoomUsers.buttons.cancel()}
+                {$LL.chat.manageRoomUsers.buttons.close()}
             </Button>
-            {#if $isRoomAdmin}
+            {#if $hasPermissionToInvite}
                 <Button
                     dataTestId="createRoomButton"
                     class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
-                    disabled={invitations === undefined || invitations.length === 0 || !$hasPermissionToInvite}
-                    onclick={inviteUsersAndCloseModalOnSuccess}
+                    disabled={invitations === undefined || invitations.length === 0}
+                    onclick={sendInvitations}
                     >{$LL.chat.manageRoomUsers.buttons.sendInvitations()}
                 </Button>
             {/if}

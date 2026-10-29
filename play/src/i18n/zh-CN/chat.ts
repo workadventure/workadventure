@@ -436,11 +436,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "操作",
         buttons: {
             sendInvitations: "发送邀请",
-            cancel: "取消",
             ban: "封禁",
             kick: "踢出",
             unban: "解除封禁",
             invite: "邀请",
+            cancelInvitation: "取消邀请",
+            close: "关闭",
         },
         roles: {
             USER: "用户",
@@ -448,6 +449,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "版主",
         },
         sendInvitationsSuccessNotification: "邀请发送成功",
+        invitationsFailed: "无法邀请：{names}",
+        sectionJoined: "成员",
+        sectionInvited: "已邀请",
+        sectionLeft: "已离开或被封禁",
     },
     roomPanel: {
         toggleOpen: "打开房间面板",

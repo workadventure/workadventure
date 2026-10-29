@@ -438,11 +438,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "アクション",
         buttons: {
             sendInvitations: "招待を送信",
-            cancel: "キャンセル",
             ban: "禁止",
             kick: "削除",
             unban: "禁止解除",
             invite: "招待",
+            cancelInvitation: "招待を取り消す",
+            close: "閉じる",
         },
         roles: {
             USER: "ユーザー",
@@ -450,6 +451,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "モデレーター",
         },
         sendInvitationsSuccessNotification: "招待を送信しました",
+        invitationsFailed: "招待できませんでした：{names}",
+        sectionJoined: "メンバー",
+        sectionInvited: "招待中",
+        sectionLeft: "退出・BAN 済み",
     },
     roomPanel: {
         toggleOpen: "ルームパネルを開く",
