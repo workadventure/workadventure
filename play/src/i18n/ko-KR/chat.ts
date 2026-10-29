@@ -588,6 +588,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "사용자를 불러오지 못했습니다",
     },
     a11y: {
+        optionsFor: "{name} 옵션",
         menuActions: "작업 메뉴",
         unreadCount: "읽지 않음 {count}개",
         backWithUnreadElsewhere: "뒤로, 다른 곳에 읽지 않은 메시지 {count}개",

@@ -587,6 +587,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "تعذّر تحميل المستخدمين",
     },
     a11y: {
+        optionsFor: "خيارات {name}",
         menuActions: "قائمة الإجراءات",
         unreadCount: "{count} غير مقروء",
         backWithUnreadElsewhere: "رجوع، {count} رسائل غير مقروءة في مكان آخر",

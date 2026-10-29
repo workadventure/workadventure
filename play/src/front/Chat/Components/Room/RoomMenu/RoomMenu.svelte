@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onDestroy, onMount } from "svelte";
+    import { onMount } from "svelte";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
     import { hasMatrixChatCapabilities } from "../../../Connection/ChatConnection";
@@ -23,9 +23,9 @@
     import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
     import { DEBUG_MODE } from "../../../../Enum/EnvironmentVariable";
     import MatrixPeerProfileDebugModal from "../../MatrixPeerProfileDebugModal.svelte";
+    import ChatMenu from "../../ChatMenu.svelte";
     import RoomOption from "./RoomOption.svelte";
     import {
-        IconDots,
         IconLogout,
         IconUserEdit,
         IconMute,
@@ -45,8 +45,7 @@
     let roomType = $derived(room.type);
     let areNotificationsMuted = $derived(room.areNotificationsMuted);
     let roomMembers = $derived(room.members);
-    let optionButtonRef: HTMLButtonElement | undefined = $state(undefined);
-    let hideOptions = $state(true);
+    let roomName = $derived(room.name);
     let usersByRoomStore:
         | Readable<Map<string | undefined, { roomName: string | undefined; users: ChatUser[] }>>
         | undefined = $state(undefined);
@@ -66,7 +65,6 @@
     const shouldDisplayManageParticipantButton = true;
 
     onMount(() => {
-        document.addEventListener("click", closeRoomOptionsOnClickOutside);
         // Initialize usersByRoomStore
         gameManager
             .getCurrentGameScene()
@@ -78,31 +76,7 @@
             });
     });
 
-    onDestroy(() => {
-        document.removeEventListener("click", closeRoomOptionsOnClickOutside);
-    });
-
-    function toggleRoomOptions() {
-        if (optionButtonRef === undefined) {
-            return;
-        }
-        if (hideOptions) {
-            room.ensureMembersInitialized().catch((error) => console.error(error));
-        }
-        hideOptions = !hideOptions;
-    }
-
-    function closeRoomOptionsOnClickOutside(e: MouseEvent) {
-        if (optionButtonRef === undefined) {
-            return;
-        }
-        if (e.target instanceof HTMLElement && !optionButtonRef.contains(e.target)) {
-            hideOptions = true;
-        }
-    }
-
     function closeMenuAndLeaveRoom() {
-        toggleRoomOptions();
         const roomId = room.id;
         room.leaveRoom()
             .then(() => {
@@ -117,7 +91,6 @@
     }
 
     function closeMenuAndSetMuteStatus() {
-        toggleRoomOptions();
         if ($areNotificationsMuted) {
             room.unmuteNotification().catch(() => {
                 console.error("Failed to unmute room");
@@ -168,14 +141,12 @@
             const remotePlayer = currentScerne.MapPlayersByKey.get(remotePlayerData.userId);
             if (remotePlayer != undefined) {
                 remotePlayer.activate();
-                toggleRoomOptions();
                 return;
             }
         }
 
         // If the user isn't in the view port, emit the ask position message to the server
         connection?.emitAskPosition(chatUser.uuid ?? "", chatUser.playUri ?? "", AskPositionMessage_AskType.LOCATE);
-        toggleRoomOptions();
     }
 
     function talkToUser() {
@@ -188,7 +159,6 @@
         } else {
             scriptUtils.goToPage(`${chatUser.playUri}#moveToUser=${chatUser.uuid}`);
         }
-        toggleRoomOptions();
     }
 
     function inviteUserToMeeting() {
@@ -212,28 +182,15 @@
             matrixUserId: matrixChatUser.id,
             label: chatUser?.username,
         });
-        toggleRoomOptions();
     }
 </script>
 
-<button
-    data-testid="toggleRoomMenu"
-    bind:this={optionButtonRef}
-    onclick={(event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        toggleRoomOptions();
-    }}
-    class="m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
->
-    <IconDots font-size="16" />
-</button>
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div
-    onmouseleave={toggleRoomOptions}
-    class="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[99] w-max end-2 top-10 p-1"
-    class:absolute={optionButtonRef !== undefined}
-    class:hidden={hideOptions}
+<ChatMenu
+    label={$LL.chat.a11y.optionsFor({ name: $roomName })}
+    dataTestId="toggleRoomMenu"
+    onopen={() => room.ensureMembersInitialized().catch((error) => console.error(error))}
+    buttonClass="m-0 p-0 flex items-center justify-center h-7 w-7 hover:bg-white/10 rounded"
+    menuClass="bg-contrast/50 backdrop-blur-md rounded-md overflow-hidden z-[99] w-max end-2 top-10 p-1"
 >
     {#if $roomType === "direct"}
         <!-- Create Room Option to talk to the user -->
@@ -288,4 +245,4 @@
         bg="bg-danger-900 hover:bg-danger"
         onclick={closeMenuAndLeaveRoom}
     />
-</div>
+</ChatMenu>

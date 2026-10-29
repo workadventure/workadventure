@@ -588,6 +588,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         failedToLoadUsers: "Wužiwarjow njeda so čitać",
     },
     a11y: {
+        optionsFor: "Opcije za {name}",
         menuActions: "Menij akcijow",
         unreadCount: "{count} njepřečitane",
         backWithUnreadElsewhere: "Wróćo, {count} njepřečitane powěsće hdźe druhdźe",
