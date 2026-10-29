@@ -172,6 +172,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 return;
             }
             for (const object of gameObjects) {
+                // Clicking your own woka brings the view back on it, as the "show my location" button does.
+                if (object instanceof Player) {
+                    this.gameScene.getCameraManager().resumePlayerFollow();
+                    return;
+                }
                 if (isActivatable(object)) {
                     this.gameScene.getActivatablesManager().handlePointerDownEvent(object);
                     return;
