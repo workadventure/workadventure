@@ -11,6 +11,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     enter: "輸入訊息...",
     cannotSendHere: "您沒有在此傳送訊息的權限",
     cannotSendNow: "您目前無法在此傳送訊息",
+    getCloserToWrite: "靠近某人才能在這裡發訊息",
     mention: {
         suggestions: "可提及的成員",
         notify: "通知",

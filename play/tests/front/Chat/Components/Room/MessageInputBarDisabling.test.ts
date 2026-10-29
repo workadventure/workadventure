@@ -5,11 +5,10 @@ import {
 } from "../../../../../src/front/Chat/Components/Room/MessageInputBarDisabling";
 
 describe("shouldDisableMessageInput", () => {
-    it("disables non-default proximity room input while left and enables it after rejoin", () => {
+    it("disables a proximity room input while left and enables it after rejoin", () => {
         expect(
             shouldDisableMessageInput({
                 isProximityChatRoom: true,
-                isDefaultProximityRoom: false,
                 isProximityChatDisabled: false,
                 isProximityRoomJoined: false,
                 disabled: false,
@@ -19,7 +18,6 @@ describe("shouldDisableMessageInput", () => {
         expect(
             shouldDisableMessageInput({
                 isProximityChatRoom: true,
-                isDefaultProximityRoom: false,
                 isProximityChatDisabled: false,
                 isProximityRoomJoined: true,
                 disabled: false,
@@ -27,16 +25,15 @@ describe("shouldDisableMessageInput", () => {
         ).toBe(false);
     });
 
-    it("keeps the default proximity room input governed by the legacy disabled flags", () => {
+    it("disables the default proximity room input once the bubble is left: nobody would receive the message", () => {
         expect(
             shouldDisableMessageInput({
                 isProximityChatRoom: true,
-                isDefaultProximityRoom: true,
                 isProximityChatDisabled: false,
                 isProximityRoomJoined: false,
                 disabled: false,
             }),
-        ).toBe(false);
+        ).toBe(true);
     });
 
     it("disables the send button when the message input is disabled", () => {

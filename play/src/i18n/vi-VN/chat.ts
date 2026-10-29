@@ -12,6 +12,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     enter: "Nhập tin nhắn của bạn...",
     cannotSendHere: "Bạn không có quyền gửi tin nhắn ở đây",
     cannotSendNow: "Hiện tại bạn không thể gửi tin nhắn ở đây",
+    getCloserToWrite: "Hãy lại gần ai đó để viết ở đây",
     mention: {
         suggestions: "Thành viên để nhắc đến",
         notify: "Thông báo",
