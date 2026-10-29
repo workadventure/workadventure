@@ -12,6 +12,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     enter: "Escriba su mensaje...",
     cannotSendHere: "No tiene permiso para enviar mensajes aquí",
     cannotSendNow: "No puede enviar mensajes aquí en este momento",
+    getCloserToWrite: "Acércate a alguien para escribir aquí",
     mention: {
         suggestions: "Miembros para mencionar",
         notify: "Notificar",
