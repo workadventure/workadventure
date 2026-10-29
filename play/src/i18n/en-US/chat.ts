@@ -344,6 +344,13 @@ const chat: BaseTranslation = {
     disabledByAdmin: "This feature is disabled by the administrator.",
     anAdmin: "an administrator",
     messageDeletedByYou: "You deleted this message",
+    readReceipts: {
+        sent: "Sent",
+        read: "Read",
+        seenBy: "Seen by",
+        seenByCount: "Seen by {count}",
+        notReadYet: "Not read yet · {count}",
+    },
     messageEdited: "Modified",
     messageEditedError: "Unable to edit message. Try again.",
     waiting: "Waiting",

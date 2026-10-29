@@ -343,6 +343,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "Tính năng này bị quản trị viên tắt.",
     anAdmin: "một quản trị viên",
     messageDeletedByYou: "Bạn đã xóa tin nhắn này",
+    readReceipts: {
+        sent: "Đã gửi",
+        read: "Đã đọc",
+        seenBy: "Đã xem",
+        seenByCount: "{count} người đã xem",
+        notReadYet: "Chưa đọc · {count}",
+    },
     messageEdited: "Đã chỉnh sửa",
     messageEditedError: "Không thể chỉnh sửa tin nhắn. Hãy thử lại.",
     waiting: "Đang chờ",

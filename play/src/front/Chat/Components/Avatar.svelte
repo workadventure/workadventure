@@ -15,17 +15,28 @@
          * Default: 40×40px, `rounded-sm` — message thread avatars.
          */
         compact?: boolean;
+        /** Tiny: 16×16px round, for read receipts. */
+        tiny?: boolean;
     }
 
-    let { pictureStore, fallbackName = "A", color = null, isChatAvatar = false, compact = false }: Props = $props();
+    let {
+        pictureStore,
+        fallbackName = "A",
+        color = null,
+        isChatAvatar = false,
+        compact = false,
+        tiny = false,
+    }: Props = $props();
 
     let forceFallback = $state(false);
     let previousPictureUrl: string | undefined = $state();
 
     let sizeClass = $derived(
-        compact
-            ? "h-7 w-7 min-h-[1.75rem] min-w-[1.75rem] shrink-0 rounded-md overflow-hidden"
-            : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden",
+        tiny
+            ? "h-4 w-4 min-h-4 min-w-4 shrink-0 rounded-full overflow-hidden text-[8px]"
+            : compact
+              ? "h-7 w-7 min-h-[1.75rem] min-w-[1.75rem] shrink-0 rounded-md overflow-hidden"
+              : "h-10 w-10 min-h-10 min-w-10 shrink-0 rounded-sm overflow-hidden",
     );
 
     $effect(() => {

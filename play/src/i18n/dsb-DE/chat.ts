@@ -344,6 +344,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "Tu funkciju jo administrator deaktiwěrował.",
     anAdmin: "administrator",
     messageDeletedByYou: "Wy sćo tu powěsć wulašowali",
+    readReceipts: {
+        sent: "Pósłane",
+        read: "Pśecytane",
+        seenBy: "Pśecytane wót",
+        seenByCount: "Pśecytane wót {count}",
+        notReadYet: "Hyšći njepśecytane · {count}",
+    },
     messageEdited: "Změnjony",
     messageEditedError: "Njejo móžno, powěsć změniś. Wopytajśo znowa.",
     waiting: "Cakajucy",

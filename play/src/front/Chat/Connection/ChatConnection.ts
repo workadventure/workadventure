@@ -177,12 +177,32 @@ export interface ChatConversation {
     readonly getReadMarker?: () => ChatReadMarker | undefined;
     /** The last message received, for a preview in a list. Only listens to the room while subscribed. */
     readonly lastMessagePreview?: Readable<ChatMessagePreview | undefined>;
+    /** Who has read what, from the other members' read receipts. Only listens to the room while subscribed. */
+    readonly readReceipts?: Readable<ChatReadReceipts>;
 }
 
 export type ChatMessagePreview = {
     body: string;
     senderName: string | undefined;
     timestamp: number;
+    /** Only when I wrote it. */
+    readState?: ChatReadState;
+};
+
+/** "read": everyone else has read it, which is only ever known in a direct or small room. */
+export type ChatReadState = "sent" | "read";
+
+export type ChatReader = {
+    userId: string;
+    /** When they read it, or when they wrote something after it. */
+    readAt: number | undefined;
+};
+
+export type ChatReadReceipts = {
+    /** Who has read this message or a later one, the most recent reader first. */
+    readersOf: (messageId: string) => readonly ChatReader[];
+    /** The other members, when the room is small enough to wait for all of them; undefined otherwise. */
+    otherMemberIds: readonly string[] | undefined;
 };
 
 export type ChatReadMarker = {
