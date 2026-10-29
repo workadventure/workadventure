@@ -503,6 +503,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "กำลังบันทึก...",
             saveSuccess: "บันทึกการตั้งค่าแล้ว",
             saveError: "ไม่สามารถบันทึกการตั้งค่าได้",
+            whoCanJoin: "ใครเข้าร่วมได้",
+            joinFolderMembers: "สมาชิกของ {folder}",
+            suggestedIn: "แนะนำใน {folder}",
+            whoCanWrite: "ใครเขียนได้",
+            changeAvatar: "เปลี่ยนรูป",
+            lostRightsWarning: "เมื่อบันทึกแล้ว คุณจะทำบางอย่างเหล่านี้เองไม่ได้อีก",
             errors: {
                 roomNameEmpty: "ชื่อห้องต้องไม่ว่างเปล่า",
                 restrictedAccessNeedsParentSpace: "การเข้าถึงแบบจำกัดต้องมีโฟลเดอร์หรือสเปซที่เชื่อมโยงอยู่",
@@ -513,8 +519,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "จำกัด",
                 knock: "ขอสิทธิ์เข้าถึง",
             },
+            writePresets: {
+                everyone: "ทุกคน",
+                moderators: "เฉพาะผู้ดูแล (ประกาศ)",
+                custom: "กำหนดเอง",
+            },
             permissions: {
                 title: "สิทธิ์",
+                detailed: "สิทธิ์โดยละเอียด",
                 sendMessages: "ส่งข้อความ",
                 sendReactions: "ส่งการแสดงความรู้สึก",
                 redactOwnMessages: "ลบข้อความของตนเอง",

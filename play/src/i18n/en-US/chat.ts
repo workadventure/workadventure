@@ -503,6 +503,12 @@ const chat: BaseTranslation = {
             saving: "Saving...",
             saveSuccess: "Settings saved",
             saveError: "Unable to save settings",
+            whoCanJoin: "Who can join",
+            joinFolderMembers: "The members of {folder}",
+            suggestedIn: "Suggested in {folder}",
+            whoCanWrite: "Who can write",
+            changeAvatar: "Change picture",
+            lostRightsWarning: "Once saved, you will no longer be able to do some of these things yourself.",
             errors: {
                 roomNameEmpty: "Room name cannot be empty",
                 restrictedAccessNeedsParentSpace: "Restricted access requires a linked folder or space.",
@@ -513,8 +519,14 @@ const chat: BaseTranslation = {
                 restricted: "Restricted",
                 knock: "Request access",
             },
+            writePresets: {
+                everyone: "Everyone",
+                moderators: "Moderators only (announcements)",
+                custom: "Custom",
+            },
             permissions: {
                 title: "Permissions",
+                detailed: "Detailed permissions",
                 sendMessages: "Send messages",
                 sendReactions: "Send reactions",
                 redactOwnMessages: "Delete own messages",

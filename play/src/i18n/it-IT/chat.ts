@@ -503,6 +503,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Salvataggio...",
             saveSuccess: "Impostazioni salvate",
             saveError: "Impossibile salvare le impostazioni",
+            whoCanJoin: "Chi può entrare",
+            joinFolderMembers: "I membri di {folder}",
+            suggestedIn: "In evidenza in {folder}",
+            whoCanWrite: "Chi può scrivere",
+            changeAvatar: "Cambia immagine",
+            lostRightsWarning: "Una volta salvato, non potrai più fare tu stesso alcune di queste azioni.",
             errors: {
                 roomNameEmpty: "Il nome della stanza non può essere vuoto",
                 restrictedAccessNeedsParentSpace: "L'accesso limitato richiede una cartella o uno spazio collegato.",
@@ -513,8 +519,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Limitata",
                 knock: "Richiedi accesso",
             },
+            writePresets: {
+                everyone: "Tutti",
+                moderators: "Solo moderatori (annunci)",
+                custom: "Personalizzato",
+            },
             permissions: {
                 title: "Autorizzazioni",
+                detailed: "Autorizzazioni dettagliate",
                 sendMessages: "Invia messaggi",
                 sendReactions: "Invia reazioni",
                 redactOwnMessages: "Elimina i propri messaggi",

@@ -64,6 +64,7 @@ import type {
     ChatPollCreationCapability,
     ChatPollKind,
     ChatPollContext,
+    ChatRoomFolderPlacement,
     ChatRoomPermissionsState,
     ChatRoomPrivacyState,
     ChatRoomSettingsManagement,
@@ -199,6 +200,7 @@ export class MatrixChatRoom
     // power level before a room is opened, so we only observe the Matrix SDK RoomMember without avatar/profile work.
     private currentUserRoomMember: RoomMember | undefined;
     private currentUserPermissionLevel: Writable<ChatPermissionLevel | undefined> = writable(undefined);
+    readonly myPermissionLevel: Readable<ChatPermissionLevel | undefined> = readonly(this.currentUserPermissionLevel);
     private handleCurrentUserRoomMemberPowerLevel = this.onCurrentUserRoomMemberPowerLevel.bind(this);
 
     constructor(
@@ -2440,7 +2442,56 @@ export class MatrixChatRoom
             );
         }
 
+        if (settings.avatar !== undefined) {
+            const avatar = settings.avatar;
+            updates.push(
+                this.matrixRoom.client
+                    .uploadContent(avatar, { type: avatar.type })
+                    .then(({ content_uri }) =>
+                        this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomAvatar, { url: content_uri }),
+                    ),
+            );
+        }
+
+        if (settings.suggested !== undefined && settings.restrictedRoomId) {
+            const folderId = settings.restrictedRoomId;
+            // Keep the "via" servers of the existing link: only the suggested flag changes.
+            const content = this.getSpaceChildEvent(folderId)?.getContent() ?? {};
+            updates.push(
+                this.matrixRoom.client.sendStateEvent(
+                    folderId,
+                    EventType.SpaceChild,
+                    { ...content, suggested: settings.suggested },
+                    this.id,
+                ),
+            );
+        }
+
         await Promise.all(updates);
+    }
+
+    private getSpaceChildEvent(folderId: string): MatrixEvent | null | undefined {
+        return this.matrixRoom.client
+            .getRoom(folderId)
+            ?.getLiveTimeline()
+            .getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(EventType.SpaceChild, this.id);
+    }
+
+    public getFolderPlacement(): ChatRoomFolderPlacement | undefined {
+        const folderId = get(this.privacyState).restrictedRoomId;
+        const folder = folderId ? this.matrixRoom.client.getRoom(folderId) : null;
+        const childEvent = folderId ? this.getSpaceChildEvent(folderId) : undefined;
+        if (!folder || !childEvent) return undefined;
+        return {
+            folderName: folder.name,
+            suggested: childEvent.getContent().suggested === true,
+            canChangeSuggested:
+                folder
+                    .getLiveTimeline()
+                    .getState(EventTimeline.FORWARDS)
+                    ?.maySendStateEvent(EventType.SpaceChild, this.matrixRoom.client.getSafeUserId()) ?? false,
+        };
     }
 
     public async updateRoomPowerLevels(permissions: ChatRoomPermissionsState): Promise<void> {

@@ -502,6 +502,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "S'està desant...",
             saveSuccess: "Configuració desada",
             saveError: "No s'ha pogut desar la configuració",
+            whoCanJoin: "Qui s'hi pot unir",
+            joinFolderMembers: "Els membres de {folder}",
+            suggestedIn: "Destacada a {folder}",
+            whoCanWrite: "Qui hi pot escriure",
+            changeAvatar: "Canvia la imatge",
+            lostRightsWarning: "Un cop desat, ja no podràs fer tu mateix algunes d'aquestes accions.",
             errors: {
                 roomNameEmpty: "El nom de la sala no pot estar buit",
                 restrictedAccessNeedsParentSpace: "L'accés restringit requereix una carpeta o un espai enllaçat.",
@@ -512,8 +518,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Restringida",
                 knock: "Sol·licita accés",
             },
+            writePresets: {
+                everyone: "Tothom",
+                moderators: "Només moderadors (avisos)",
+                custom: "Personalitzat",
+            },
             permissions: {
                 title: "Permisos",
+                detailed: "Permisos detallats",
                 sendMessages: "Enviar missatges",
                 sendReactions: "Enviar reaccions",
                 redactOwnMessages: "Eliminar missatges propis",

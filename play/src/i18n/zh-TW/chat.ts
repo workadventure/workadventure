@@ -501,6 +501,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "儲存中…",
             saveSuccess: "設定已儲存",
             saveError: "無法儲存設定",
+            whoCanJoin: "誰可以加入",
+            joinFolderMembers: "{folder} 的成員",
+            suggestedIn: "在 {folder} 中推薦",
+            whoCanWrite: "誰可以發言",
+            changeAvatar: "更換圖片",
+            lostRightsWarning: "儲存後，您將無法再親自執行其中某些操作。",
             errors: {
                 roomNameEmpty: "房間名稱不可為空白",
                 restrictedAccessNeedsParentSpace: "受限存取需要連結的資料夾或空間。",
@@ -511,8 +517,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "受限",
                 knock: "要求存取",
             },
+            writePresets: {
+                everyone: "所有人",
+                moderators: "僅限管理員（公告）",
+                custom: "自訂",
+            },
             permissions: {
                 title: "權限",
+                detailed: "詳細權限",
                 sendMessages: "傳送訊息",
                 sendReactions: "傳送回應",
                 redactOwnMessages: "刪除自己的訊息",

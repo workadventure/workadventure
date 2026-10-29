@@ -504,6 +504,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "저장 중...",
             saveSuccess: "설정이 저장되었습니다",
             saveError: "설정을 저장할 수 없습니다",
+            whoCanJoin: "참여할 수 있는 사람",
+            joinFolderMembers: "{folder}의 멤버",
+            suggestedIn: "{folder}에서 추천",
+            whoCanWrite: "글을 쓸 수 있는 사람",
+            changeAvatar: "사진 변경",
+            lostRightsWarning: "저장하면 이 중 일부 작업을 직접 할 수 없게 됩니다.",
             errors: {
                 roomNameEmpty: "룸 이름은 비워 둘 수 없습니다",
                 restrictedAccessNeedsParentSpace: "제한된 접근에는 연결된 폴더 또는 스페이스가 필요합니다.",
@@ -514,8 +520,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "제한됨",
                 knock: "접근 요청",
             },
+            writePresets: {
+                everyone: "모두",
+                moderators: "운영자만 (공지)",
+                custom: "사용자 지정",
+            },
             permissions: {
                 title: "권한",
+                detailed: "세부 권한",
                 sendMessages: "메시지 보내기",
                 sendReactions: "반응 보내기",
                 redactOwnMessages: "내 메시지 삭제",
