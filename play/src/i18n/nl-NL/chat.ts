@@ -441,11 +441,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "Acties",
         buttons: {
             sendInvitations: "Uitnodigingen verzenden",
-            cancel: "Annuleren",
             ban: "Verbannen",
             kick: "Verwijderen",
             unban: "Opheffen van verbanning",
             invite: "Uitnodigen",
+            cancelInvitation: "Uitnodiging intrekken",
+            close: "Sluiten",
         },
         roles: {
             USER: "Gebruiker",
@@ -453,6 +454,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Uitnodiging(en) verzonden",
+        invitationsFailed: "Uitnodigen mislukt: {names}",
+        sectionJoined: "Leden",
+        sectionInvited: "Uitgenodigd",
+        sectionLeft: "Vertrokken of verbannen",
     },
     roomPanel: {
         toggleOpen: "Kamerpaneel openen",

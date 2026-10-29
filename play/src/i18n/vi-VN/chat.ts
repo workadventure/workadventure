@@ -440,11 +440,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "Thao tác",
         buttons: {
             sendInvitations: "Gửi lời mời",
-            cancel: "Hủy",
             ban: "Cấm",
             kick: "Đuổi",
             unban: "Bỏ cấm",
             invite: "Mời",
+            cancelInvitation: "Hủy lời mời",
+            close: "Đóng",
         },
         roles: {
             USER: "Người dùng",
@@ -452,6 +453,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Người điều hành",
         },
         sendInvitationsSuccessNotification: "Đã gửi lời mời thành công",
+        invitationsFailed: "Không thể mời: {names}",
+        sectionJoined: "Thành viên",
+        sectionInvited: "Đã mời",
+        sectionLeft: "Đã rời hoặc bị cấm",
     },
     roomPanel: {
         toggleOpen: "Mở bảng thông tin phòng",

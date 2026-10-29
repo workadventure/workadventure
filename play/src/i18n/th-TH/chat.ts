@@ -441,11 +441,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "การดำเนินการ",
         buttons: {
             sendInvitations: "ส่งคำเชิญ",
-            cancel: "ยกเลิก",
             ban: "แบน",
             kick: "เชิญออก",
             unban: "เลิกแบน",
             invite: "เชิญ",
+            cancelInvitation: "ยกเลิกคำเชิญ",
+            close: "ปิด",
         },
         roles: {
             USER: "ผู้ใช้",
@@ -453,6 +454,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "ผู้ควบคุม",
         },
         sendInvitationsSuccessNotification: "ส่งคำเชิญเรียบร้อยแล้ว",
+        invitationsFailed: "เชิญไม่สำเร็จ: {names}",
+        sectionJoined: "สมาชิก",
+        sectionInvited: "ได้รับเชิญ",
+        sectionLeft: "ออกไปหรือถูกแบน",
     },
     roomPanel: {
         toggleOpen: "เปิดแผงห้อง",

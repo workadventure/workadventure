@@ -213,6 +213,9 @@
                 >
                     {#if kickInProgress}
                         <IconLoader class="animate-spin" />
+                    {:else if $membership === "invite"}
+                        <!-- Kicking an invited user withdraws the invitation: say so. -->
+                        {$LL.chat.manageRoomUsers.buttons.cancelInvitation()}
                     {:else}
                         {$LL.chat.manageRoomUsers.buttons.kick()}
                     {/if}

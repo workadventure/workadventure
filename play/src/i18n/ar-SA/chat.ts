@@ -440,11 +440,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "الإجراءات",
         buttons: {
             sendInvitations: "إرسال الدعوات",
-            cancel: "إلغاء",
             ban: "حظر",
             kick: "طرد",
             unban: "إلغاء الحظر",
             invite: "دعوة",
+            cancelInvitation: "إلغاء الدعوة",
+            close: "إغلاق",
         },
         roles: {
             USER: "مستخدم",
@@ -452,6 +453,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "مشرف",
         },
         sendInvitationsSuccessNotification: "تم إرسال الدعوات بنجاح",
+        invitationsFailed: "تعذّرت دعوة: {names}",
+        sectionJoined: "الأعضاء",
+        sectionInvited: "مدعوون",
+        sectionLeft: "غادروا أو محظورون",
     },
     roomPanel: {
         toggleOpen: "فتح لوحة الغرفة",

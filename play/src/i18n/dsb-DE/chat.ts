@@ -441,11 +441,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "Akcije",
         buttons: {
             sendInvitations: "Pśepšosynki pósłaś",
-            cancel: "Pśetergnuś",
             ban: "Blokěrowaś",
             kick: "Wugnaś",
             unban: "Deblokěrowaś",
             invite: "Pśepšosyś",
+            cancelInvitation: "Pśepšosenje anulěrowaś",
+            close: "Zacyniś",
         },
         roles: {
             USER: "Wužywaŕ",
@@ -453,6 +454,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderator",
         },
         sendInvitationsSuccessNotification: "Pśepšosynka/pśepšosynki pósłana/pósłane",
+        invitationsFailed: "Pśepšosenje njejo se raźiło: {names}",
+        sectionJoined: "Cłonki",
+        sectionInvited: "Pśepšoseni",
+        sectionLeft: "Wótšli abo zakazane",
     },
     roomPanel: {
         toggleOpen: "Panel śpy wócyniś",
