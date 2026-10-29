@@ -113,6 +113,9 @@ export class ProximityChatMessage implements ChatMessage {
     canReact: Readable<boolean>;
     canDelete = writable(false);
     reactions: MapStore<string, ChatMessageReaction> = new MapStore();
+    // False once I left the bubble the message was sent in: its participants would never see a reaction or a reply.
+    private readonly inConversation = writable(true);
+    readonly canReply: Readable<boolean> = { subscribe: this.inConversation.subscribe };
     constructor(
         public id: string,
         public sender: AnyKindOfUser,
@@ -124,7 +127,14 @@ export class ProximityChatMessage implements ChatMessage {
         // Only messages every participant knows under the same id can be reacted to.
         private readonly toggleReaction?: (messageId: string, key: string) => void,
     ) {
-        this.canReact = readable(toggleReaction !== undefined);
+        this.canReact = derived(
+            this.inConversation,
+            (inConversation) => inConversation && toggleReaction !== undefined,
+        );
+    }
+
+    leaveConversation(): void {
+        this.inConversation.set(false);
     }
 
     remove(): void {
@@ -1116,7 +1126,7 @@ export class ProximityChatRoom implements ChatRoom {
      */
     private readonly toggleReaction = (messageId: string, key: string): void => {
         const message = this.messages.get(messageId);
-        if (!message) {
+        if (!message || !get(message.canReact)) {
             return;
         }
         const added = !message.reactions.get(key)?.users.has(this._spaceUserId);
@@ -1146,8 +1156,15 @@ export class ProximityChatRoom implements ChatRoom {
         const user = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : { ...this.unknownUser, spaceUserId };
         // Anonymous users have no chat id.
         const chatUser = { ...user, chatId: user.chatId || spaceUserId };
-        applyProximityReaction(message.reactions, key, spaceUserId, chatUser, added, this._spaceUserId, (reactionKey) =>
-            this.toggleReaction(message.id, reactionKey),
+        applyProximityReaction(
+            message.reactions,
+            key,
+            spaceUserId,
+            chatUser,
+            added,
+            this._spaceUserId,
+            (reactionKey) => this.toggleReaction(message.id, reactionKey),
+            message.canReact,
         );
     }
 
@@ -1915,6 +1932,17 @@ export class ProximityChatRoom implements ChatRoom {
                 "Trying to leave a space different from the one joined : " + space.getName() + " !== " + spaceName,
             );
             return false;
+        }
+
+        // The messages stay readable, but the people they were sent to are gone: no more reactions or replies.
+        for (const message of get(this.messages)) {
+            if (message instanceof ProximityChatMessage) {
+                message.leaveConversation();
+            }
+        }
+        const replyTo = get(selectedChatMessageToReply);
+        if (replyTo && this.messages.get(replyTo.id) === replyTo) {
+            selectedChatMessageToReply.set(null);
         }
 
         this.isChatDisabled.set(false);

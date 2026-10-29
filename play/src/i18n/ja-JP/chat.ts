@@ -10,6 +10,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "まだメッセージが送信されていません！",
     beFirst: "最初にメッセージを送信する人になる",
     enter: "メッセージを入力してください",
+    cannotSendHere: "ここでメッセージを送信する権限がありません",
+    cannotSendNow: "現在ここではメッセージを送信できません",
     mention: {
         suggestions: "メンションするメンバー",
         notify: "通知",

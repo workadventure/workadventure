@@ -9,6 +9,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "還沒有傳送任何訊息！",
     beFirst: "成為第一個傳送訊息的人",
     enter: "輸入訊息...",
+    cannotSendHere: "您沒有在此傳送訊息的權限",
+    cannotSendNow: "您目前無法在此傳送訊息",
     mention: {
         suggestions: "可提及的成員",
         notify: "通知",

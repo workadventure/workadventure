@@ -9,6 +9,8 @@ const chat: BaseTranslation = {
     noMessage: "No message sent yet!",
     beFirst: "Be the first and send a message",
     enter: "Enter your message...",
+    cannotSendHere: "You don't have permission to send messages here",
+    cannotSendNow: "You can't send messages here right now",
     mention: {
         suggestions: "Members to mention",
         notify: "Notify",

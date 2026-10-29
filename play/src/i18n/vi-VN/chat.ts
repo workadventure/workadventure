@@ -10,6 +10,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "Chưa có tin nhắn nào!",
     beFirst: "Hãy là người đầu tiên gửi tin nhắn",
     enter: "Nhập tin nhắn của bạn...",
+    cannotSendHere: "Bạn không có quyền gửi tin nhắn ở đây",
+    cannotSendNow: "Hiện tại bạn không thể gửi tin nhắn ở đây",
     mention: {
         suggestions: "Thành viên để nhắc đến",
         notify: "Thông báo",
