@@ -29,6 +29,8 @@ export interface MessageUserJoined {
     variables: Map<string, unknown>;
     chatID?: string;
     sayMessage?: SayMessage;
+    /** The user has just joined the room, rather than come into view. */
+    arrived?: boolean;
     activate?: () => void;
 }
 

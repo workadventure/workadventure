@@ -391,6 +391,62 @@ describe("GameRoom", () => {
         expect(getWrittenMessageCases(secondSocket)).not.toContain("duplicateUserConnectedMessage");
     });
 
+    describe("arrivals and departures", () => {
+        // What SocketManager reads when it tells the other players: arrived on enter, departed on leave.
+        async function watchRoom() {
+            const entries: { name: string; arriving: boolean; fromZone: boolean }[] = [];
+            const exits: { name: string; replaced: boolean; toZone: boolean }[] = [];
+            const world = await GameRoom.create(
+                "https://play.workadventu.re/_/global/localhost/test.json",
+                () => {},
+                () => {},
+                160,
+                160,
+                (thing, _zone, fromZone) => {
+                    const user = thing as User;
+                    entries.push({ name: user.uuid, arriving: user.arriving, fromZone: fromZone !== null });
+                },
+                () => {},
+                (thing, _zone, toZone) => {
+                    const user = thing as User;
+                    exits.push({ name: user.uuid, replaced: user.replaced, toZone: toZone !== null });
+                },
+                emote,
+                () => {},
+                () => {},
+                () => {},
+            );
+            world.addZoneListener({} as RoomSocket, 0, 0);
+            world.addZoneListener({} as RoomSocket, 1, 0);
+            return { world, entries, exits };
+        }
+
+        it("marks the entry of a user joining the room as an arrival, and nothing else", async () => {
+            const { world, entries } = await watchRoom();
+            const user = await world.join(createMockUserSocket().socket, createJoinRoomMessage("alice", 100, 100));
+            expect(entries).toEqual([{ name: "alice", arriving: true, fromZone: false }]);
+
+            // Walking into the next zone (zones are 320px wide) is not an arrival.
+            world.updatePosition(user, new Point(400, 100));
+            expect(entries.at(-1)).toEqual({ name: "alice", arriving: false, fromZone: true });
+        });
+
+        it("marks neither an arrival nor a departure when a tab reconnects", async () => {
+            const { world, entries, exits } = await watchRoom();
+            await world.join(createMockUserSocket().socket, createJoinRoomMessage("alice", 100, 100, "tab-1"));
+            const reconnected = await world.join(
+                createMockUserSocket().socket,
+                createJoinRoomMessage("alice", 100, 100, "tab-1"),
+            );
+            expect(exits).toEqual([{ name: "alice", replaced: true, toZone: false }]);
+            expect(entries.at(-1)).toEqual({ name: "alice", arriving: false, fromZone: false });
+
+            // Leaving for good afterwards is a departure.
+            world.leave(reconnected);
+            expect(exits.at(-1)).toEqual({ name: "alice", replaced: false, toZone: false });
+        });
+    });
+
     it("should notify duplicate user when connecting from another tab", async () => {
         const world = await GameRoom.create(
             "https://play.workadventu.re/_/global/localhost/test.json",

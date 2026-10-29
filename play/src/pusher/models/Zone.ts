@@ -23,9 +23,11 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import type { PusherWebSocket } from "../services/PusherWebSocket";
 
 export interface ZoneEventListener {
-    onUserEnters(user: UserDescriptor, listener: PusherWebSocket): void;
+    /** `arrived`: the user has just joined the room, as opposed to coming into view. */
+    onUserEnters(user: UserDescriptor, listener: PusherWebSocket, arrived?: boolean): void;
     onUserMoves(user: UserDescriptor, listener: PusherWebSocket): void;
-    onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: UserEjection): void;
+    /** `departed`: the user has left the room on their own, as opposed to going out of view. */
+    onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: UserEjection, departed?: boolean): void;
     onGroupEnters(group: GroupDescriptor, listener: PusherWebSocket): void;
     onGroupMoves(group: GroupDescriptor, listener: PusherWebSocket): void;
     onGroupLeaves(groupId: number, listener: PusherWebSocket): void;
@@ -114,7 +116,7 @@ export class UserDescriptor {
         }
     }
 
-    public toUserJoinedMessage(): UserJoinedMessage {
+    public toUserJoinedMessage(arrived = false): UserJoinedMessage {
         const userJoinedMessage: UserJoinedMessage = {
             userId: this.userId,
             name: this.name,
@@ -129,6 +131,7 @@ export class UserDescriptor {
             variables: this.variables,
             chatID: this.chatID,
             sayMessage: this.sayMessage,
+            arrived,
         };
         return userJoinedMessage;
     }
@@ -209,7 +212,7 @@ export class Zone {
         this.users.set(message.userId, userDescriptor);
 
         const fromZone = message.fromZone;
-        this.notifyUserEnter(userDescriptor, fromZone);
+        this.notifyUserEnter(userDescriptor, fromZone, message.arrived);
     }
 
     public handleGroupUpdateZone(message: GroupUpdateZoneMessage): void {
@@ -242,7 +245,7 @@ export class Zone {
 
     public handleUserLeftZone(message: UserLeftZoneMessage): void {
         this.users.delete(message.userId);
-        this.notifyUserLeft(message.userId, message.toZone, message.ejection);
+        this.notifyUserLeft(message.userId, message.toZone, message.ejection, message.departed);
     }
 
     public handleGroupLeftZone(message: GroupLeftZoneMessage): void {
@@ -299,13 +302,13 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user entered
      */
-    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined): void {
+    private notifyUserEnter(user: UserDescriptor, oldZone: ZoneDescriptor | undefined, arrived?: boolean): void {
         for (const listener of this.listeners) {
             if (listener.getUserData().userId === user.userId) {
                 continue;
             }
             if (oldZone === undefined || !this.isListeningZone(listener, oldZone.x, oldZone.y)) {
-                this.socketListener.onUserEnters(user, listener);
+                this.socketListener.onUserEnters(user, listener, arrived);
             } else {
                 this.socketListener.onUserMoves(user, listener);
             }
@@ -328,13 +331,18 @@ export class Zone {
     /**
      * Notify listeners of this zone that this user left
      */
-    private notifyUserLeft(userId: number, newZone: ZoneDescriptor | undefined, ejection?: UserEjection): void {
+    private notifyUserLeft(
+        userId: number,
+        newZone: ZoneDescriptor | undefined,
+        ejection?: UserEjection,
+        departed?: boolean,
+    ): void {
         for (const listener of this.listeners) {
             if (listener.getUserData().userId === userId) {
                 continue;
             }
             if (newZone === undefined || !this.isListeningZone(listener, newZone.x, newZone.y)) {
-                this.socketListener.onUserLeaves(userId, listener, ejection);
+                this.socketListener.onUserLeaves(userId, listener, ejection, departed);
             } else {
                 // Do not send a signal. The move event will be triggered when joining the new room.
             }

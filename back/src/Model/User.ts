@@ -37,6 +37,13 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public disconnected = false;
     /** Set just before a moderator removes the user, so the other players can see why it left. */
     public ejection: UserEjection | undefined;
+    /** Set when a new connection from the same browser tab takes over: the player has not gone anywhere. */
+    public replaced = false;
+    /**
+     * True only while the constructor puts the user in the room: that first entry is an arrival, the
+     * later ones come from zones the user walks into. Never true for a same-tab reconnection.
+     */
+    public arriving = false;
     private isRoomJoinedMessage = false;
     private pendingMessages: NonNullable<ServerToClientMessage["message"]>[] = [];
     /**
@@ -70,10 +77,13 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private sayMessage?: SayMessage,
         // Unique identifier for the browser tab, used to detect reconnections from the same tab
         public readonly tabId?: string,
+        arrival = true,
     ) {
         this.listenedZones = new Set<Zone>();
 
+        this.arriving = arrival;
         this.positionNotifier.enter(this);
+        this.arriving = false;
     }
 
     public static async create(
@@ -101,6 +111,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         chatID?: string,
         sayMessage?: SayMessage,
         tabId?: string,
+        arrival = true,
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -130,6 +141,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
             chatID,
             sayMessage,
             tabId,
+            arrival,
         );
     }
 

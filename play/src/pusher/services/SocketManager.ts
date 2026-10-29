@@ -1065,11 +1065,11 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserEnters(user: UserDescriptor, listener: PusherWebSocket): void {
+    public onUserEnters(user: UserDescriptor, listener: PusherWebSocket, arrived?: boolean): void {
         listener.emitInBatch({
             message: {
                 $case: "userJoinedMessage",
-                userJoinedMessage: user.toUserJoinedMessage(),
+                userJoinedMessage: user.toUserJoinedMessage(arrived),
             },
         });
     }
@@ -1083,13 +1083,14 @@ export class SocketManager implements ZoneEventListener {
         });
     }
 
-    public onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: UserEjection): void {
+    public onUserLeaves(userId: number, listener: PusherWebSocket, ejection?: UserEjection, departed?: boolean): void {
         listener.emitInBatch({
             message: {
                 $case: "userLeftMessage",
                 userLeftMessage: {
                     userId,
                     ejection,
+                    departed: departed ?? false,
                 },
             },
         });
