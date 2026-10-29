@@ -384,6 +384,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Đang tạo phòng",
         creationSuccessNotification: "Đã tạo phòng",
         restrictedDescription: "Phòng này chỉ hiển thị với thành viên của thư mục cha: {folderName}",
+        errors: {
+            forbidden: "Bạn không có quyền tạo phòng ở đây.",
+            rateLimited: "Quá nhiều yêu cầu. Chờ một chút rồi thử lại.",
+            generic: "Không thể tạo phòng. Hãy thử lại.",
+        },
     },
     createFolder: {
         title: "Tạo thư mục mới",
@@ -416,9 +421,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Tạo",
             cancel: "Hủy",
         },
-        error: "Lỗi khi tạo phòng",
         loadingCreation: "Đang tạo phòng",
         creationSuccessNotification: "Đã tạo phòng",
+        errors: {
+            generic: "Không thể tạo thư mục. Hãy thử lại.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Người tham gia",

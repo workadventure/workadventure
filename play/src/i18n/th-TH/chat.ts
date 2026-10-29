@@ -385,6 +385,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "กำลังสร้างห้อง",
         creationSuccessNotification: "สร้างห้องแล้ว",
         restrictedDescription: "ห้องนี้จะมองเห็นได้เฉพาะสมาชิกของโฟลเดอร์แม่: {folderName}",
+        errors: {
+            forbidden: "คุณไม่มีสิทธิ์สร้างห้องที่นี่",
+            rateLimited: "มีคำขอมากเกินไป รอสักครู่แล้วลองอีกครั้ง",
+            generic: "ไม่สามารถสร้างห้องได้ ลองอีกครั้ง",
+        },
     },
     createFolder: {
         title: "สร้างโฟลเดอร์ใหม่",
@@ -417,9 +422,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "สร้าง",
             cancel: "ยกเลิก",
         },
-        error: "เกิดข้อผิดพลาดในการสร้างห้อง",
         loadingCreation: "กำลังสร้างห้อง",
         creationSuccessNotification: "สร้างห้องแล้ว",
+        errors: {
+            generic: "ไม่สามารถสร้างโฟลเดอร์ได้ ลองอีกครั้ง",
+        },
     },
     manageRoomUsers: {
         roomOption: "ผู้เข้าร่วม",

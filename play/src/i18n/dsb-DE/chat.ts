@@ -385,6 +385,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Śpa se napórajo",
         creationSuccessNotification: "Śpa napórana",
         restrictedDescription: "Widobny jano za cłonkow nadzarěda: {folderName}",
+        errors: {
+            forbidden: "Njesmějoš how žednu rumnosć napóraś.",
+            rateLimited: "Pśewjele napšašowanjow. Pócakaj wokognuśe a wopytaj hyšći raz.",
+            generic: "Rumnosć njedajo se napóraś. Wopytaj hyšći raz.",
+        },
     },
     createFolder: {
         title: "Nowy zarěd napóraś",
@@ -417,9 +422,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Napóraś",
             cancel: "Pśetergnuś",
         },
-        error: "Zmólka pśi napóranju śpy",
         loadingCreation: "Śpa se napórajo",
         creationSuccessNotification: "Śpa napórana",
+        errors: {
+            generic: "Zarědnik njedajo se napóraś. Wopytaj hyšći raz.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Wobźělniki",

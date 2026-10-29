@@ -386,6 +386,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "방을 생성하는 중입니다",
         creationSuccessNotification: "방이 생성되었습니다",
         restrictedDescription: "이 방은 상위 폴더의 멤버에게만 보입니다: {folderName}",
+        errors: {
+            forbidden: "여기에 방을 만들 권한이 없습니다.",
+            rateLimited: "요청이 너무 많습니다. 잠시 후 다시 시도하세요.",
+            generic: "방을 만들 수 없습니다. 다시 시도하세요.",
+        },
     },
     createFolder: {
         title: "새 폴더 만들기",
@@ -418,9 +423,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "만들기",
             cancel: "취소",
         },
-        error: "폴더 생성 중 오류가 발생했습니다",
         loadingCreation: "폴더를 생성하는 중입니다",
         creationSuccessNotification: "폴더가 생성되었습니다",
+        errors: {
+            generic: "폴더를 만들 수 없습니다. 다시 시도하세요.",
+        },
     },
     manageRoomUsers: {
         roomOption: "참가자",

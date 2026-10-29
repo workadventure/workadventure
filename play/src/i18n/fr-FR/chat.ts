@@ -386,6 +386,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Salon en cours de création",
         creationSuccessNotification: "Salon créé",
         restrictedDescription: "Visible seulement pour les membres du dossier parent : {folderName}",
+        errors: {
+            forbidden: "Vous n'avez pas le droit de créer un salon ici.",
+            rateLimited: "Trop de demandes. Patientez un instant, puis réessayez.",
+            generic: "Le salon n'a pas pu être créé. Réessayez.",
+        },
     },
     createFolder: {
         title: "Créer un nouveau dossier",
@@ -418,9 +423,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Créer",
             cancel: "Annuler",
         },
-        error: "Erreur lors de la création du salon",
-        loadingCreation: "Salon en cours de création",
-        creationSuccessNotification: "Salon créé",
+        loadingCreation: "Dossier en cours de création",
+        creationSuccessNotification: "Dossier créé",
+        errors: {
+            generic: "Le dossier n'a pas pu être créé. Réessayez.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Participants",

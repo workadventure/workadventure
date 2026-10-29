@@ -385,6 +385,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "Creazione della stanza in corso",
         creationSuccessNotification: "Stanza creata",
         restrictedDescription: "Visibile solo ai membri della cartella padre: {folderName}",
+        errors: {
+            forbidden: "Non hai il permesso di creare una stanza qui.",
+            rateLimited: "Troppe richieste. Attendi un momento e riprova.",
+            generic: "Non è stato possibile creare la stanza. Riprova.",
+        },
     },
     createFolder: {
         title: "Crea nuova cartella",
@@ -417,9 +422,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "Crea",
             cancel: "Annulla",
         },
-        error: "Errore nella creazione della stanza",
         loadingCreation: "Creazione della stanza in corso",
         creationSuccessNotification: "Stanza creata",
+        errors: {
+            generic: "Non è stato possibile creare la cartella. Riprova.",
+        },
     },
     manageRoomUsers: {
         roomOption: "Partecipanti",

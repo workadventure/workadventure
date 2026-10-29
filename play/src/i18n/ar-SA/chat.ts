@@ -384,6 +384,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         loadingCreation: "جار إنشاء الغرفة",
         creationSuccessNotification: "تم إنشاء الغرفة",
         restrictedDescription: "ستكون هذه الغرفة مرئية فقط لأعضاء المجلد الأب: {folderName}",
+        errors: {
+            forbidden: "ليس لديك إذن لإنشاء غرفة هنا.",
+            rateLimited: "طلبات كثيرة جدًا. انتظر قليلًا ثم حاول مجددًا.",
+            generic: "تعذّر إنشاء الغرفة. حاول مجددًا.",
+        },
     },
     createFolder: {
         title: "إنشاء مجلد جديد",
@@ -416,9 +421,11 @@ const chat: DeepPartial<Translation["chat"]> = {
             create: "إنشاء",
             cancel: "إلغاء",
         },
-        error: "خطأ في إنشاء الغرفة",
         loadingCreation: "جار إنشاء الغرفة",
         creationSuccessNotification: "تم إنشاء الغرفة",
+        errors: {
+            generic: "تعذّر إنشاء المجلد. حاول مجددًا.",
+        },
     },
     manageRoomUsers: {
         roomOption: "المشاركون",

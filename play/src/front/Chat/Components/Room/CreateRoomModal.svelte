@@ -15,6 +15,9 @@
     import InputRadio from "../../../Components/Input/InputRadio.svelte";
     import Spinner from "../../../Components/Icons/Spinner.svelte";
     import Button from "../../../Components/UI/Button.svelte";
+    import Alert from "../../../Components/UI/Alert.svelte";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { creationErrorMessage } from "./creationErrorMessage";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -46,16 +49,19 @@
         try {
             createRoomError = undefined;
             loadingRoomCreation = true;
-            await chat.createRoom(createRoomOptions);
+            const { room } = await chat.createRoom(createRoomOptions);
             modals.close();
             notifyUserForRoomCreation();
+            // Open the new room right away instead of leaving the user to find it (maybe in a closed folder).
+            if (room) selectedRoomStore.set(room);
         } catch (error) {
             console.error(error);
-            if (error instanceof Error) {
-                createRoomError = error.message;
-            } else {
-                createRoomError = get(LL).chat.unknownError();
-            }
+            createRoomError = creationErrorMessage(error, {
+                forbidden: get(LL).chat.createRoom.errors.forbidden(),
+                rateLimited: get(LL).chat.createRoom.errors.rateLimited(),
+                generic: get(LL).chat.createRoom.errors.generic(),
+                addToFolder: get(LL).chat.addRoomToFolderError(),
+            });
         } finally {
             loadingRoomCreation = false;
         }
@@ -83,6 +89,13 @@
     function unfocusChatInput() {
         // Enable input manager to allow the game to receive the input
         chatInputFocusStore.set(false);
+    }
+
+    function submitOnEnter(event: KeyboardEvent) {
+        if (event.key === "Enter" && createRoomOptions.name?.trim()) {
+            event.preventDefault();
+            createNewRoom(createRoomOptions).catch((error) => console.error(error));
+        }
     }
 
     function handleSelectMatrixUserError(error: string) {
@@ -114,9 +127,7 @@
                 </div>
             {:else}
                 {#if createRoomError !== undefined}
-                    <div class="bg-red-500 p-2 rounded">
-                        {$LL.chat.createRoom.error()} : <b><i>{createRoomError}</i></b>
-                    </div>
+                    <Alert variant="danger" class="w-full">{createRoomError}</Alert>
                 {/if}
                 <div class="flex flex-col items-start gap-1">
                     <Input
@@ -126,6 +137,7 @@
                         bind:value={createRoomOptions.name}
                         onfocusin={focusChatInput}
                         onfocusout={unfocusChatInput}
+                        onkeydown={submitOnEnter}
                     />
 
                     {#if parentID}
