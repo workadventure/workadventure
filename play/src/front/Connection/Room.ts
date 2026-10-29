@@ -1,5 +1,5 @@
 import { isAxiosError } from "axios";
-import type { CameraBackgroundsData, LegalsData, OpidWokaNamePolicy, RecordingData } from "@workadventure/messages";
+import type { CameraBackgroundData, LegalsData, OpidWokaNamePolicy, RecordingData } from "@workadventure/messages";
 import { isMapDetailsData, isRoomRedirect, ErrorApiData } from "@workadventure/messages";
 import {
     CONTACT_URL,
@@ -84,7 +84,7 @@ export class Room {
     private _defaultCameraPrivacySettings: boolean = Room.DEFAULT_CAMERA_PRIVACY_SETTINGS;
     private _defaultMicrophonePrivacySettings: boolean = Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS;
     private _recording: RecordingData | undefined;
-    private _cameraBackgrounds: CameraBackgroundsData | undefined;
+    private _cameraBackgrounds: CameraBackgroundData[] | undefined;
 
     private constructor(private roomUrl: URL) {
         this.id = roomUrl.pathname;
@@ -523,8 +523,8 @@ export class Room {
         return this._recording;
     }
 
-    /** Admin customization of the camera background images; undefined means all built-in images. */
-    get cameraBackgrounds(): CameraBackgroundsData | undefined {
+    /** The camera background images sent by the admin; undefined means the built-in images. */
+    get cameraBackgrounds(): CameraBackgroundData[] | undefined {
         return this._cameraBackgrounds;
     }
 }

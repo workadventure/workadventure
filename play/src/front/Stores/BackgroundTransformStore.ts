@@ -1,4 +1,5 @@
 import { writable, derived, readable, get } from "svelte/store";
+import type { CameraBackgroundData } from "@workadventure/messages";
 import { localUserStore } from "../Connection/LocalUserStore";
 import {
     getBackgroundProcessingUnsupportedReason,
@@ -8,7 +9,6 @@ import {
 } from "../WebRtc/BackgroundProcessor/createBackgroundTransformer";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { currentRoomStore } from "./CurrentRoomStore";
-import { getAvailableBackgroundImages } from "./BackgroundPresets";
 
 /**
  * Store for background transformation settings
@@ -75,19 +75,39 @@ export const backgroundProcessingSupportedStore = readable(true, (set) => {
     set(getBackgroundProcessingUnsupportedReason() === null);
 });
 
-/** The background images offered in the settings panel, as customized by the current world. */
-export const availableBackgroundImagesStore = derived(currentRoomStore, ($room) =>
-    getAvailableBackgroundImages($room?.cameraBackgrounds),
+/** Offered when the admin sends no list. An admin may list these paths too, so don't rename the files. */
+const defaultBackgroundImages: CameraBackgroundData[] = [
+    "library.jpg",
+    "office.jpg",
+    "office_2.jpg",
+    "pixel_art.jpg",
+    "paysage.jpg",
+    "paysage_2.jpg",
+    "paysage_3.jpg",
+    "paysage_4.jpg",
+    "Milkyway.jpg",
+    "ChetwodeBlue.jpg",
+    "Fuchsia.jpg",
+    "Ronchi.jpg",
+].map((file) => ({
+    url: `./static/images/background/${file}`,
+    thumbnailUrl: `./static/images/background/thumbnail/${file}`,
+}));
+
+/** The background images offered in the settings panel: the world's list, or the built-in images without one. */
+export const availableBackgroundImagesStore = derived(
+    currentRoomStore,
+    ($room) => $room?.cameraBackgrounds ?? defaultBackgroundImages,
 );
 
-// Once the world's list is known, a selected image the admin hid or deleted falls back to no background.
+// Once the world's list is known, a selected image the world no longer offers falls back to no background.
 // Lives as long as the app, like the store itself.
 // eslint-disable-next-line svelte/no-ignored-unsubscribe
 currentRoomStore.subscribe(($room) => {
     if (!$room) return;
     const config = get(backgroundConfigStore);
     if (config.mode !== "image") return;
-    const images = getAvailableBackgroundImages($room.cameraBackgrounds);
+    const images = $room.cameraBackgrounds ?? defaultBackgroundImages;
     if (!images.some((image) => image.url === config.backgroundImage)) {
         backgroundConfigStore.reset();
     }

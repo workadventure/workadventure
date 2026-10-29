@@ -84,6 +84,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Desenfoque medio",
         blurHigh: "Desenfoque alto",
         images: "Imágenes",
+        image: "Imagen de fondo {index}",
     },
     help: {
         chat: {
