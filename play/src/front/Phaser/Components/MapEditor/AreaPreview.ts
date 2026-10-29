@@ -8,6 +8,7 @@ import type {
     AtLeast,
 } from "@workadventure/map-editor";
 import { get } from "svelte/store";
+import { withNewPropertyIds } from "@workadventure/map-editor/src/Utils";
 import { DEPTH_MAP_EDITOR_AREAS_INDEX } from "../../Game/DepthIndexes";
 import { GameScene } from "../../Game/GameScene";
 import { SpeechDomElement } from "../../Entity/SpeechDomElement";
@@ -355,7 +356,7 @@ export class AreaPreview extends Rectangle {
                         width: this.areaData.width,
                         height: this.areaData.height,
                         name: this.areaData.name,
-                        properties: structuredClone(this.areaData.properties),
+                        properties: withNewPropertyIds(this.areaData.properties),
                     });
                 }
                 this.updateAreaDataWithSquaresAdjustments();

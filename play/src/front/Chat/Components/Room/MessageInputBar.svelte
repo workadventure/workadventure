@@ -961,12 +961,14 @@
         disabled={messageInputDisabled}
         inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
+        disabledText={$canSendMessages ? $LL.chat.cannotSendNow() : $LL.chat.cannotSendHere()}
         dataTestid="messageInput"
     />
     <button
         data-testid="addApplicationButton"
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
         class:bg-secondary-800={applicationComponentOpened}
+        disabled={messageInputDisabled}
         onclick={toggleApplicationComponent}
     >
         <IconX
@@ -976,7 +978,8 @@
         />
     </button>
     <button
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+        disabled={messageInputDisabled}
         onclick={openCloseEmojiPicker}
     >
         <IconMoodSmile font-size={18} />

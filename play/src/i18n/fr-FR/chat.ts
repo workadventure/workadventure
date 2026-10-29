@@ -10,6 +10,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "Aucun message envoyé pour l’instant !",
     beFirst: "Soyez le premier à envoyer un message",
     enter: "Entrez votre message...",
+    cannotSendHere: "Vous n'avez pas la permission d'envoyer des messages ici",
+    cannotSendNow: "Vous ne pouvez pas envoyer de messages ici pour le moment",
     mention: {
         suggestions: "Membres à mentionner",
         notify: "Notifier",

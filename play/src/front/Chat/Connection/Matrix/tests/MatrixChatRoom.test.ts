@@ -122,4 +122,37 @@ describe("MatrixChatRoom", () => {
             expect(createRoomStub(null, "$z").room.getReadMarker()).toBeUndefined();
         });
     });
+    describe("room type", () => {
+        // A bare instance with only what getMatrixRoomType reads: a room of two members, not marked as a
+        // direct message anywhere, with or without an m.room.name.
+        const createRoomStub = (name: string | undefined) => {
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            const nameEvent = name === undefined ? null : { getContent: () => ({ name }) };
+            Object.assign(room, {
+                id: "!room:matrix.org",
+                matrixRoom: {
+                    getDMInviter: () => undefined,
+                    getJoinedMemberCount: () => 1,
+                    getInvitedMemberCount: () => 1,
+                    getMembers: () => [],
+                    currentState: { getStateEvents: () => [] },
+                    client: { getAccountData: () => undefined },
+                    getLiveTimeline: () => ({
+                        getState: () => ({
+                            getStateEvents: (type: string) => (type === "m.room.name" ? nameEvent : []),
+                        }),
+                    }),
+                },
+            });
+            return room as unknown as { getMatrixRoomType: () => "direct" | "multiple" };
+        };
+
+        it("keeps a named group room with two members a group room", () => {
+            expect(createRoomStub("Budget 2027").getMatrixRoomType()).toBe("multiple");
+        });
+
+        it("still files an unnamed, unmarked two-person room as a direct message", () => {
+            expect(createRoomStub(undefined).getMatrixRoomType()).toBe("direct");
+        });
+    });
 });

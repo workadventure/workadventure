@@ -414,6 +414,9 @@ message CreateAreaMessage {
   // AreaDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
   // See ModifyAreaMessage.properties for where they are checked.
   repeated google.protobuf.Value properties = 7;
+  // Set by the map-storage when its property hooks changed `properties` (a new chat room, the copy of
+  // an uploaded file...): the client that created the area must then apply them too.
+  optional bool modifyServerData = 8;
 }
 
 message CreateEntityMessage {
@@ -428,6 +431,8 @@ message CreateEntityMessage {
   optional string name = 7;
   uint32 width = 8;
   uint32 height = 9;
+  // See CreateAreaMessage.modifyServerData.
+  optional bool modifyServerData = 10;
 }
 
 message DeleteEntityMessage {

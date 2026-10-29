@@ -2153,11 +2153,23 @@ export class MatrixChatRoom
             (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id),
         );
 
-        if (isDirectBasedOnRoomData || memberCount === 2 || this.isRoomCreatedAsDirect()) {
+        // Two people alone is a direct message only for an unnamed room (old DMs that were never marked in
+        // m.direct): a group room someone created and named stays a group room, even with two members.
+        const looksLikeUnmarkedDirectRoom = memberCount === 2 && !this.hasRoomName();
+        if (isDirectBasedOnRoomData || looksLikeUnmarkedDirectRoom || this.isRoomCreatedAsDirect()) {
             return "direct";
         }
 
         return "multiple";
+    }
+
+    private hasRoomName(): boolean {
+        const nameEvent = this.matrixRoom
+            .getLiveTimeline()
+            ?.getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(EventType.RoomName, "");
+        const name: unknown = nameEvent?.getContent()?.name;
+        return typeof name === "string" && name.trim() !== "";
     }
 
     private refreshRoomType(): void {
