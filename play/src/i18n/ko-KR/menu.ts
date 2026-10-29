@@ -157,8 +157,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "취소",
             continue: "계속하기",
         },
-        openChatSettings: "채팅 설정 열기",
-        movedToChat: "채팅 설정은 이제 채팅 안에 있습니다. 채팅을 열고 톱니바퀴를 클릭하세요.",
     },
     sub: {
         profile: "프로필",
@@ -167,7 +165,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "전역 메시지",
         contact: "연락처",
         report: "문제 신고",
-        chat: "채팅",
         help: "도움말 및 튜토리얼",
         contextualActions: "컨텍스트 작업",
         shortcuts: "단축키",

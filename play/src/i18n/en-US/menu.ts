@@ -157,8 +157,6 @@ const menu: BaseTranslation = {
             cancel: "Cancel",
             continue: "Continue",
         },
-        openChatSettings: "Open chat settings",
-        movedToChat: "Chat settings are now in the chat itself: open it and click the gear icon.",
     },
     sub: {
         profile: "Profile",
@@ -167,7 +165,6 @@ const menu: BaseTranslation = {
         globalMessages: "Global Messages",
         contact: "Contact",
         report: "Report Issues",
-        chat: "Chat",
         help: "Help & tutorials",
         contextualActions: "Contextual actions",
         shortcuts: "Shortcuts",

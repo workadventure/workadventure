@@ -160,8 +160,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Cancel·lar",
             continue: "Continuar",
         },
-        openChatSettings: "Obre la configuració del xat",
-        movedToChat: "La configuració del xat ara és al xat: obre'l i fes clic a l'engranatge.",
     },
     sub: {
         profile: "Perfil",
@@ -170,7 +168,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Missatges Globals",
         contact: "Contacte",
         report: "Reportar problemes",
-        chat: "Xat",
         help: "Ajuda i tutorials",
         contextualActions: "Accions contextuals",
         shortcuts: "Dreceres",

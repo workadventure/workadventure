@@ -158,8 +158,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "ยกเลิก",
             continue: "ดำเนินการต่อ",
         },
-        openChatSettings: "เปิดการตั้งค่าแชท",
-        movedToChat: "การตั้งค่าแชทย้ายไปอยู่ในแชทแล้ว: เปิดแชทแล้วคลิกไอคอนเฟือง",
     },
     sub: {
         profile: "โปรไฟล์",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "ข้อความทั่วถึง",
         contact: "ติดต่อ",
         report: "รายงานปัญหา",
-        chat: "แชท",
         help: "ความช่วยเหลือและบทแนะนำ",
         contextualActions: "การดำเนินการตามบริบท",
         shortcuts: "ปุ่มลัด",

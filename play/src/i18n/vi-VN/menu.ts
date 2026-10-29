@@ -159,8 +159,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Hủy",
             continue: "Tiếp tục",
         },
-        openChatSettings: "Mở cài đặt trò chuyện",
-        movedToChat: "Cài đặt trò chuyện giờ nằm trong khung chat: mở chat và nhấn biểu tượng bánh răng.",
     },
     sub: {
         profile: "Hồ sơ",
@@ -169,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Thông báo toàn cầu",
         contact: "Liên hệ",
         report: "Báo lỗi",
-        chat: "Trò chuyện",
         help: "Trợ giúp & hướng dẫn",
         contextualActions: "Thao tác theo ngữ cảnh",
         shortcuts: "Phím tắt",

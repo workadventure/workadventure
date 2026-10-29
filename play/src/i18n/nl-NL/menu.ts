@@ -159,8 +159,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Annuleren",
             continue: "Doorgaan",
         },
-        openChatSettings: "Chatinstellingen openen",
-        movedToChat: "De chatinstellingen staan nu in de chat: open hem en klik op het tandwiel.",
     },
     sub: {
         profile: "Profiel",
@@ -169,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Wereldwijde berichten",
         contact: "Contact",
         report: "Problemen melden",
-        chat: "Chat",
         help: "Help & tutorials",
         contextualActions: "Contextuele acties",
         shortcuts: "Sneltoetsen",

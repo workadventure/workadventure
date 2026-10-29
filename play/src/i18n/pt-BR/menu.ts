@@ -159,8 +159,6 @@ const menu: BaseTranslation = {
             cancel: "Cancelar",
             continue: "Continuar",
         },
-        openChatSettings: "Abrir configurações do chat",
-        movedToChat: "As configurações do chat agora ficam no chat: abra-o e clique na engrenagem.",
     },
     sub: {
         profile: "Perfil",
@@ -169,7 +167,6 @@ const menu: BaseTranslation = {
         globalMessages: "Mensagens globais",
         contact: "Contato",
         report: "Relatar problemas",
-        chat: "Chat",
         help: "Ajuda e tutoriais",
         contextualActions: "Ações contextuais",
         shortcuts: "Atalhos",

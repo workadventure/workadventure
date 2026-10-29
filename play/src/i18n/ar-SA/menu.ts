@@ -140,8 +140,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "إلغاء",
             continue: "متابعة",
         },
-        openChatSettings: "فتح إعدادات الدردشة",
-        movedToChat: "أصبحت إعدادات الدردشة داخل الدردشة: افتحها وانقر على رمز الترس.",
     },
     about: {
         mapInfo: "معلومات عن هذه الخريطة", // Information about this map
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
-        chat: "الدردشة",
         help: "مساعدة وشروحات",
         contextualActions: "إجراءات سياقية",
         shortcuts: "اختصارات",

@@ -154,8 +154,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "取消",
             continue: "繼續",
         },
-        openChatSettings: "開啟聊天設定",
-        movedToChat: "聊天設定現在位於聊天中：開啟聊天並點擊齒輪圖示。",
     },
     sub: {
         profile: "個人資料",
@@ -164,7 +162,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "全域訊息",
         contact: "聯絡",
         report: "回報問題",
-        chat: "聊天",
         help: "說明和教學",
         contextualActions: "情境操作",
         shortcuts: "快捷鍵",

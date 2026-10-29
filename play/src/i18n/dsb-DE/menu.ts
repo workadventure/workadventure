@@ -159,8 +159,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Pśetergnuś",
             continue: "Dalej",
         },
-        openChatSettings: "Nastajenja chata wócyniś",
-        movedToChat: "Nastajenja chata su něnto w chaśe: wócyń jen a klikni na zubate kólasko.",
     },
     sub: {
         profile: "Profil",
@@ -169,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Globalne powěsći",
         contact: "Kontakt",
         report: "Zmólku pśipowěźeś",
-        chat: "Chat",
         help: "Pomoc a tutorials",
         contextualActions: "Kontekstowe akcije",
         shortcuts: "Tastowe skrotconki",

@@ -158,8 +158,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "キャンセル",
             continue: "続行",
         },
-        openChatSettings: "チャット設定を開く",
-        movedToChat: "チャット設定はチャット内に移動しました。チャットを開いて歯車アイコンをクリックしてください。",
     },
     sub: {
         profile: "プロファイル",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "グローバルメッセージ",
         contact: "コンタクト",
         report: "問題の報告",
-        chat: "チャット",
         help: "ヘルプとチュートリアル",
         contextualActions: "コンテキストアクション",
         shortcuts: "ショートカット",

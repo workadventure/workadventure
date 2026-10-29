@@ -161,8 +161,6 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Abbrechen",
             continue: "Fortfahren",
         },
-        openChatSettings: "Chat-Einstellungen öffnen",
-        movedToChat: "Die Chat-Einstellungen sind jetzt im Chat: Öffne ihn und klicke auf das Zahnrad.",
     },
     sub: {
         profile: "Profil",
@@ -171,7 +169,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Globale Nachrichten",
         contact: "Kontakt",
         report: "Einen Fehler melden",
-        chat: "Chat",
         help: "Hilfe & Tutorials",
         contextualActions: "Kontextuelle Aktionen",
         shortcuts: "Tastenkürzel",
