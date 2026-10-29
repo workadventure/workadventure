@@ -151,8 +151,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Su ID Matrix",
-        settings: "Ajustes",
         resetKeyStorageUpButtonLabel: "Restablecer el almacenamiento de claves",
         resetKeyStorageConfirmationModal: {
             title: "Confirmación de restablecimiento del almacenamiento de claves",
@@ -162,6 +160,8 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Cancelar",
             continue: "Continuar",
         },
+        openChatSettings: "Abrir los ajustes del chat",
+        movedToChat: "Los ajustes del chat ahora están en el chat: ábrelo y haz clic en el engranaje.",
     },
     sub: {
         profile: "Perfil",

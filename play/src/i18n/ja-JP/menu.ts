@@ -149,8 +149,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "あなたの Matrix ID",
-        settings: "設定",
         resetKeyStorageUpButtonLabel: "キーストレージをリセット",
         resetKeyStorageConfirmationModal: {
             title: "キーストレージリセットの確認",
@@ -160,6 +158,8 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "キャンセル",
             continue: "続行",
         },
+        openChatSettings: "チャット設定を開く",
+        movedToChat: "チャット設定はチャット内に移動しました。チャットを開いて歯車アイコンをクリックしてください。",
     },
     sub: {
         profile: "プロファイル",

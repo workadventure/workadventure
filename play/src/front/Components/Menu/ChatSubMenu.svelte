@@ -1,23 +1,16 @@
 <script lang="ts">
-    import { userIsConnected } from "../../Stores/MenuStore";
-    import { localUserStore } from "../../Connection/LocalUserStore";
+    import { userIsConnected, menuVisiblilityStore } from "../../Stores/MenuStore";
+    import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { navChat } from "../../Chat/Stores/ChatStore";
     import { LL } from "../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import InputCheckbox from "../Input/InputCheckbox.svelte";
     import Button from "../UI/Button.svelte";
-    import resetKeyStorageConfirmationModal from "./ResetKeyStorageConfirmationModal.svelte";
-    import { modals } from "@wa-modals";
 
-    let chatSounds: boolean = $state(localUserStore.getChatSounds());
-    let mychatID = localUserStore.getChatId();
-
-    function changeChatSounds() {
-        localUserStore.setChatSounds(chatSounds);
-    }
-
-    function openResetKeyStorage() {
-        modals.open(resetKeyStorageConfirmationModal);
+    function openChatSettings() {
+        menuVisiblilityStore.set(false);
+        navChat.switchToSettings();
+        chatVisibilityStore.set(true);
     }
 </script>
 
@@ -25,26 +18,12 @@
     <div class="submenu p-4">
         {#if gameManager.getCurrentGameScene().room.isChatEnabled}
             {#if $userIsConnected}
-                <div class="flex w-full justify-start flex-row gap-4 items-center pb-4">
-                    <span class="text-xl">{$LL.menu.chat.matrixIDLabel()} :</span>
-                    <div class="flex justify-center p-2 bg-white text-secondary rounded">
-                        {mychatID}
-                    </div>
+                <div class="flex flex-col items-start gap-3">
+                    <p class="m-0 text-white/80">{$LL.menu.chat.movedToChat()}</p>
+                    <Button variant="secondary" dataTestId="openChatSettingsButton" onclick={openChatSettings}>
+                        {$LL.menu.chat.openChatSettings()}
+                    </Button>
                 </div>
-                <div class="flex flex-col w-full h-full items-start justify-start pb-4">
-                    <span class="font-xl blue-title text-lg">{$LL.menu.chat.settings()}</span>
-                    <InputCheckbox
-                        data-testid="chatSounds"
-                        bind:value={chatSounds}
-                        onchange={changeChatSounds}
-                        label={$LL.menu.settings.chatSounds()}
-                    />
-                </div>
-                <section class="centered-column resizing-width m-auto resizing-text">
-                    <Button class="p-2 bg-danger-900 min-w-[220px] flex items-center" onclick={openResetKeyStorage}
-                        >{$LL.menu.chat.resetKeyStorageUpButtonLabel()}</Button
-                    >
-                </section>
             {:else}
                 <div class="flex flex-col gap-2 w-full h-full items-center">
                     <p class="text-gray-400 w-full text-center pt-2">

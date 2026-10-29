@@ -148,8 +148,6 @@ const menu: BaseTranslation = {
         },
     },
     chat: {
-        matrixIDLabel: "Your Matrix ID",
-        settings: "Settings",
         resetKeyStorageUpButtonLabel: "Reset your key storage",
         resetKeyStorageConfirmationModal: {
             title: "Key storage reset confirmation",
@@ -159,6 +157,8 @@ const menu: BaseTranslation = {
             cancel: "Cancel",
             continue: "Continue",
         },
+        openChatSettings: "Open chat settings",
+        movedToChat: "Chat settings are now in the chat itself: open it and click the gear icon.",
     },
     sub: {
         profile: "Profile",

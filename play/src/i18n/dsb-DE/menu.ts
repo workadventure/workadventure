@@ -150,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Waš Matrix ID",
-        settings: "Nastajenja",
         resetKeyStorageUpButtonLabel: "Wašu klucowu składarnju slědk stajiś",
         resetKeyStorageConfirmationModal: {
             title: "Wobkšuśenje slědk stajenja klucoweje składarnje",
@@ -161,6 +159,8 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Pśetergnuś",
             continue: "Dalej",
         },
+        openChatSettings: "Nastajenja chata wócyniś",
+        movedToChat: "Nastajenja chata su něnto w chaśe: wócyń jen a klikni na zubate kólasko.",
     },
     sub: {
         profile: "Profil",

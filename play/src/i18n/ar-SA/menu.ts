@@ -131,8 +131,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "معرّف Matrix الخاص بك",
-        settings: "الإعدادات",
         resetKeyStorageUpButtonLabel: "إعادة تعيين مخزن المفاتيح",
         resetKeyStorageConfirmationModal: {
             title: "تأكيد إعادة تعيين مخزن المفاتيح",
@@ -142,6 +140,8 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "إلغاء",
             continue: "متابعة",
         },
+        openChatSettings: "فتح إعدادات الدردشة",
+        movedToChat: "أصبحت إعدادات الدردشة داخل الدردشة: افتحها وانقر على رمز الترس.",
     },
     about: {
         mapInfo: "معلومات عن هذه الخريطة", // Information about this map

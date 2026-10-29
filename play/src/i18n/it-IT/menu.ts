@@ -151,8 +151,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Il tuo ID Matrix",
-        settings: "Impostazioni",
         resetKeyStorageUpButtonLabel: "Reimposta il tuo archivio chiavi",
         resetKeyStorageConfirmationModal: {
             title: "Conferma reimpostazione archivio chiavi",
@@ -162,6 +160,8 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Annulla",
             continue: "Continua",
         },
+        openChatSettings: "Apri le impostazioni della chat",
+        movedToChat: "Le impostazioni della chat ora sono nella chat: aprila e fai clic sull'ingranaggio.",
     },
     sub: {
         profile: "Profilo",

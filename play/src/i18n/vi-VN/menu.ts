@@ -150,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID của bạn",
-        settings: "Cài đặt",
         resetKeyStorageUpButtonLabel: "Đặt lại kho khóa của bạn",
         resetKeyStorageConfirmationModal: {
             title: "Xác nhận đặt lại kho khóa",
@@ -161,6 +159,8 @@ const menu: DeepPartial<Translation["menu"]> = {
             cancel: "Hủy",
             continue: "Tiếp tục",
         },
+        openChatSettings: "Mở cài đặt trò chuyện",
+        movedToChat: "Cài đặt trò chuyện giờ nằm trong khung chat: mở chat và nhấn biểu tượng bánh răng.",
     },
     sub: {
         profile: "Hồ sơ",
