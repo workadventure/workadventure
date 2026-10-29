@@ -733,6 +733,7 @@ const chat: BaseTranslation = {
     },
     fileAttachment: {
         title: "File attachment",
+        cancel: "Cancel the attachment",
         description: "Upload and share a file",
         proximityTitle: "Direct file transfer",
         proximityDescription: "Only people here now receive it",
@@ -814,6 +815,14 @@ const chat: BaseTranslation = {
         promoteTitle: "Make {name} an admin?",
         promoteMessage: "An admin can never be demoted, not even by you.",
         promote: "Make admin",
+        deleteMessageTitle: "Delete this message?",
+        deleteMessageMessage: "It disappears for everyone in the room.",
+        delete: "Delete",
+        deletePollTitle: "Delete this poll?",
+        deletePollMessage: "It disappears for everyone, with its votes.",
+        endPollTitle: "Close this poll?",
+        endPollMessage: "Nobody will be able to vote anymore. The results stay visible.",
+        save: "Save",
     },
 };
 

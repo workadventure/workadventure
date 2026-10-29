@@ -1,7 +1,10 @@
 <script lang="ts">
     import LL, { locale } from "../../../../i18n/i18n-svelte";
     import type { ChatPollAnswer, ChatPollItem } from "../../Connection/ChatConnection";
+    import ConfirmDialog from "../ConfirmDialog.svelte";
+    import { confirmDelete } from "./confirmDeleteMessage";
     import { IconCheck, IconLoader, IconTrash } from "@wa-icons";
+    import { modals } from "@wa-modals";
 
     interface Props {
         poll: ChatPollItem;
@@ -84,6 +87,17 @@
             // eslint-disable-next-line require-atomic-updates
             isSubmittingVote = false;
         }
+    }
+
+    // Closing and deleting cannot be undone: both ask first. The poll's own error line still reports a failure.
+    function confirmEndPoll() {
+        modals.open(ConfirmDialog, {
+            heading: $LL.chat.confirm.endPollTitle(),
+            message: $LL.chat.confirm.endPollMessage(),
+            confirmLabel: $LL.chat.poll.end.cta(),
+            danger: true,
+            onConfirm: endPoll,
+        });
     }
 
     async function endPoll() {
@@ -255,7 +269,7 @@
                         data-testid="endPollButton"
                         class="m-0 rounded-lg border border-solid border-danger-900/40 bg-danger-900/20 px-3 py-2 text-xs font-semibold text-white/85 transition-colors hover:bg-danger-900/30"
                         disabled={isEndingPoll}
-                        onclick={endPoll}
+                        onclick={confirmEndPoll}
                     >
                         {#if isEndingPoll}
                             <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />
@@ -269,7 +283,7 @@
                         data-testid="deletePollButton"
                         class="m-0 rounded-lg border border-solid border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/75 transition-colors hover:bg-white/10 hover:text-white"
                         disabled={isDeletingPoll}
-                        onclick={deletePoll}
+                        onclick={() => confirmDelete("poll", deletePoll)}
                     >
                         {#if isDeletingPoll}
                             <IconLoader class="animate-[spin_2s_linear_infinite] mr-2" font-size={16} />

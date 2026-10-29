@@ -734,6 +734,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "Bestandsbijlage",
+        cancel: "Bijlage annuleren",
         description: "Upload een bestand om het te delen",
         proximityTitle: "Directe bestandsoverdracht",
         proximityDescription: "Alleen wie nu hier is ontvangt het",
@@ -816,6 +817,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "{name} beheerder maken?",
         promoteMessage: "Een beheerder kan nooit worden teruggezet, ook niet door jou.",
         promote: "Beheerder maken",
+        deleteMessageTitle: "Dit bericht verwijderen?",
+        deleteMessageMessage: "Het verdwijnt voor iedereen in de kamer.",
+        delete: "Verwijderen",
+        deletePollTitle: "Deze peiling verwijderen?",
+        deletePollMessage: "Ze verdwijnt voor iedereen, met de stemmen.",
+        endPollTitle: "Deze peiling sluiten?",
+        endPollMessage: "Niemand kan dan nog stemmen. De resultaten blijven zichtbaar.",
+        save: "Opslaan",
     },
 };
 

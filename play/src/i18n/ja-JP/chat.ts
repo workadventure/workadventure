@@ -734,6 +734,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "ファイル添付",
+        cancel: "添付を取り消す",
         description: "ファイルをアップロードして共有する",
         proximityTitle: "ファイルを直接送信",
         proximityDescription: "今ここにいる人だけが受け取ります",
@@ -815,6 +816,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "{name} を管理者にしますか？",
         promoteMessage: "管理者は、あなたであっても降格できません。",
         promote: "管理者にする",
+        deleteMessageTitle: "このメッセージを削除しますか？",
+        deleteMessageMessage: "ルームの全員の画面から消えます。",
+        delete: "削除",
+        deletePollTitle: "この投票を削除しますか？",
+        deletePollMessage: "投票内容とともに全員の画面から消えます。",
+        endPollTitle: "この投票を締め切りますか？",
+        endPollMessage: "これ以降は誰も投票できません。結果は表示されたままです。",
+        save: "保存",
     },
 };
 

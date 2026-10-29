@@ -733,6 +733,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "Anexo de arquivo",
+        cancel: "Cancelar o anexo",
         description: "Enviar e compartilhar um arquivo",
         proximityTitle: "Transferência direta de arquivo",
         proximityDescription: "Só quem está aqui agora recebe",
@@ -818,6 +819,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "Tornar {name} administrador?",
         promoteMessage: "Um administrador nunca pode ser rebaixado, nem por você.",
         promote: "Tornar administrador",
+        deleteMessageTitle: "Excluir esta mensagem?",
+        deleteMessageMessage: "Ela some para todos na sala.",
+        delete: "Excluir",
+        deletePollTitle: "Excluir esta enquete?",
+        deletePollMessage: "Ela some para todos, com os votos.",
+        endPollTitle: "Encerrar esta enquete?",
+        endPollMessage: "Ninguém poderá mais votar. Os resultados continuam visíveis.",
+        save: "Salvar",
     },
 };
 

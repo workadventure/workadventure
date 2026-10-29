@@ -734,6 +734,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "Datajowy zbytny zapis",
+        cancel: "Pśiwěšk pśetergnuś",
         description: "Nagraś dataju, aby ju źělił",
         proximityTitle: "Direktne pśenjasenje dataje",
         proximityDescription: "Jano wósoby, kótarež su něnto how, ju dostanu",
@@ -815,6 +816,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "{name} k administratoroju cyniś?",
         promoteMessage: "Administrator njedajo se nigdy pónižyś, ani wót tebje.",
         promote: "K administratoroju cyniś",
+        deleteMessageTitle: "Toś tu powěsć wulašowaś?",
+        deleteMessageMessage: "Zgubijo se za wšych w śpě.",
+        delete: "Wulašowaś",
+        deletePollTitle: "Toś to napšašowanje wulašowaś?",
+        deletePollMessage: "Zgubijo se za wšych, gromaźe z głosami.",
+        endPollTitle: "Toś to napšašowanje skóńcyś?",
+        endPollMessage: "Nichten njamóžo pótom wěcej wótgłosowaś. Wuslědki wóstanu widobne.",
+        save: "Składowaś",
     },
 };
 

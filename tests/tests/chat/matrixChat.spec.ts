@@ -260,6 +260,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByTestId("messageInput").fill(chatMessageContent);
         await page.getByTestId("sendMessageButton").click();
         await page.getByTestId("removeMessageButton").click();
+        await page.getByTestId("confirmDialogConfirm").click();
         await expect(page.getByText(chatMessageContent)).not.toBeAttached();
     });
 

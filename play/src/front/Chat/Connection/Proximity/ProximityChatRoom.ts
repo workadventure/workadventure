@@ -137,8 +137,9 @@ export class ProximityChatMessage implements ChatMessage {
         this.inConversation.set(false);
     }
 
-    remove(): void {
+    remove(): Promise<void> {
         console.info("Function not implemented.");
+        return Promise.resolve();
     }
     edit(newContent: string): Promise<void> {
         console.info("Function not implemented.", newContent);
