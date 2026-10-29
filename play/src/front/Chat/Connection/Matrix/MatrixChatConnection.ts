@@ -1687,7 +1687,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
             return {
                 room_id: result.room_id,
-                room: await this.waitForPlacedRoom(result.room_id, roomOptions.parentSpaceID !== undefined),
+                room: await this.waitForPlacedRoom(result.room_id, roomOptions.parentSpaceID),
             };
         } catch (error) {
             throw this.handleMatrixError(error);
@@ -1698,16 +1698,18 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
     /**
      * The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s.
-     * A room created in a folder can show up at the root first; that wrapper is destroyed when the room
-     * moves into its folder, so only the one inside the folder counts.
+     * A room created in a folder can also show up at the root for a while: take the one inside the folder,
+     * the one the user sees in the list.
      */
     private async waitForPlacedRoom(
         roomId: string,
-        inFolder: boolean,
+        parentSpaceID: string | undefined,
         deadline = Date.now() + 10_000,
     ): Promise<ChatRoom | undefined> {
-        const room = await this.findRoomOrFolder(roomId);
-        if (room instanceof MatrixChatRoom && !(inFolder && this.roomList.has(roomId))) {
+        const room = parentSpaceID
+            ? await (await this.findParentFolder(parentSpaceID))?.getNode(roomId)
+            : await this.findRoomOrFolder(roomId);
+        if (room instanceof MatrixChatRoom) {
             return room;
         }
         if (Date.now() >= deadline) {
@@ -1716,7 +1718,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         await new Promise<void>((resolve) => {
             setTimeout(resolve, 200);
         });
-        return this.waitForPlacedRoom(roomId, inFolder, deadline);
+        return this.waitForPlacedRoom(roomId, parentSpaceID, deadline);
     }
 
     private async waitForNextSync() {
