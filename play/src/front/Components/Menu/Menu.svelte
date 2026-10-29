@@ -24,7 +24,6 @@
     import ContactSubMenu from "./ContactSubMenu.svelte";
     import CustomSubMenu from "./CustomSubMenu.svelte";
     import ReportSubMenu from "./ReportSubMenu.svelte";
-    import ChatSubMenu from "./ChatSubMenu.svelte";
     import ShortcutSubMenu from "./ShortcutSubMenu.svelte";
     import HelpSubMenu from "./HelpSubMenu.svelte";
 
@@ -101,10 +100,6 @@
                 case SubMenusInterface.report:
                     activeComponent = ReportSubMenu;
                     analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });
-                    break;
-                case SubMenusInterface.chat:
-                    activeComponent = ChatSubMenu;
-                    analyticsClient.trackAdminEvent("menu.chat.opened");
                     break;
                 case SubMenusInterface.shortcuts:
                     activeComponent = ShortcutSubMenu;

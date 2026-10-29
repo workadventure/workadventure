@@ -1285,17 +1285,6 @@
       }
     },
     {
-      "title": "menu.chat.opened",
-      "properties": {
-        "eventName": {
-          "const": "menu.chat.opened"
-        },
-        "properties": {
-          "$ref": "#/$defs/menu.chat.opened"
-        }
-      }
-    },
-    {
       "title": "menu.contact.opened",
       "properties": {
         "eventName": {
@@ -2110,7 +2099,6 @@
               "meeting.video.muted",
               "meeting.video.muted_for_everybody",
               "megaphone.opened",
-              "menu.chat.opened",
               "menu.contact.opened",
               "menu.credit.opened",
               "menu.custom.opened",
@@ -4575,13 +4563,6 @@
       "additionalProperties": true,
       "description": "The user opened the megaphone.",
       "title": "megaphone.opened"
-    },
-    "menu.chat.opened": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": true,
-      "description": "The user opened the chat from the menu.",
-      "title": "menu.chat.opened"
     },
     "menu.contact.opened": {
       "type": "object",

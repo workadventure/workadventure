@@ -12,6 +12,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     enter: "Entrez votre message...",
     cannotSendHere: "Vous n'avez pas la permission d'envoyer des messages ici",
     cannotSendNow: "Vous ne pouvez pas envoyer de messages ici pour le moment",
+    getCloserToWrite: "Rapprochez-vous de quelqu'un pour écrire ici",
     mention: {
         suggestions: "Membres à mentionner",
         notify: "Notifier",
@@ -441,11 +442,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "Actions",
         buttons: {
             sendInvitations: "Envoyer les invitations",
-            cancel: "Annuler",
             ban: "Bannir",
             kick: "Expulser",
             unban: "Débannir",
             invite: "Inviter",
+            cancelInvitation: "Annuler l'invitation",
+            close: "Fermer",
         },
         roles: {
             USER: "Utilisateur",
@@ -453,6 +455,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Modérateur",
         },
         sendInvitationsSuccessNotification: "Invitation(s) envoyée(s)",
+        invitationsFailed: "Impossible d'inviter : {names}",
+        sectionJoined: "Membres",
+        sectionInvited: "Invités",
+        sectionLeft: "Partis ou bannis",
     },
     roomPanel: {
         toggleOpen: "Ouvrir le panneau du salon",
@@ -736,8 +742,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     remoteUserNotConnected: "Utilisateur non connecté. Impossible d'envoyer un message.",
     matrixSettings: {
-        title: "Matrix & WorkAdventure",
-        subtitle: "Votre identité de chat et votre profil Matrix",
+        title: "Paramètres du chat",
         close: "Fermer",
         identitySection: "Identité",
         matrixUserId: "Identifiant Matrix",
@@ -745,35 +750,24 @@ const chat: DeepPartial<Translation["chat"]> = {
         copy: "Copier",
         copied: "Copié",
         profileSection: "Profil Matrix",
-        accountDataSection: "WorkAdventure (dans le jeu)",
         displayName: "Nom d’affichage",
-        avatar: "Avatar (MXC)",
-        localName: "Nom dans le jeu",
-        waDisplayName: "Nom WA (fr.workadventure.wa_display_name)",
-        waAvatar: "Avatar WA (fr.workadventure.wa_avatar)",
+        avatar: "Avatar",
         needsSyncHint:
             "Le nom local ou le WOKA peut ne pas correspondre à votre profil Matrix. Utilisez Synchroniser pour mettre à jour.",
         upToDateHint: "Votre profil Matrix est aligné avec votre nom et votre WOKA (ou rien à synchroniser).",
-        syncButton: "Synchroniser le profil Matrix (nom + image WOKA)",
+        syncButton: "Mettre à jour depuis mon nom et mon Woka",
         syncing: "Synchronisation…",
-        removeProfileImagesButton: "Supprimer les images de profil",
-        removingProfileImages: "Suppression…",
-        removeProfileImagesHint:
-            "Supprime la photo de profil Matrix. Votre WOKA en jeu ne change pas ; utilisez Synchroniser pour le publier à nouveau.",
         loadError: "Impossible de charger les paramètres Matrix.",
         notConnected: "Matrix n’est pas connecté ou vous êtes invité.",
         clearSuggestedRoomsHint:
-            "Réinitialise la liste des salles Matrix masquées dans les suggestions et les listes joignables (stockée dans ce navigateur).",
-        clearSuggestedRoomsButton: "Réafficher les salles suggérées masquées",
-        publishWokaToMatrixProfileHint:
-            "Définit le nom d’affichage et l’avatar du profil Matrix à partir de votre nom en jeu et de votre WOKA (visible dans Element et les autres clients Matrix).",
-        publishWokaToMatrixProfileButton: "Appliquer le nom et l’image WOKA au profil Matrix",
-        publishWokaToMatrixProfilePublishing: "Mise à jour du profil…",
-        publishWokaToMatrixProfileConfirmWarning:
-            "Cette action remplace le nom d’affichage et l’avatar de votre profil Matrix sur le serveur. Un nom ou une photo définis ailleurs (par ex. dans Element) seront écrasés. Ne continuez que si vous acceptez que votre nom WorkAdventure et votre WOKA deviennent votre profil Matrix public.",
-        publishWokaToMatrixProfileCancelButton: "Annuler",
-        publishWokaToMatrixProfileConfirmActionButton: "Écraser et appliquer",
+            "Réinitialise la liste des salons masqués dans les suggestions et les listes joignables (stockée dans ce navigateur).",
+        clearSuggestedRoomsButton: "Réafficher les salons recommandés masqués",
         actionDone: "Terminé",
+        notificationsSection: "Notifications",
+        browserNotificationsHint: "Les notifications du navigateur se règlent dans le menu du jeu, onglet Paramètres.",
+        securitySection: "Sécurité",
+        securityHint: "Votre clé de sauvegarde déverrouille vos messages chiffrés sur un nouvel appareil.",
+        advancedSection: "Avancé",
     },
     matrixPeerProfileDebug: {
         menuItemTitle: "Profil Matrix",
@@ -782,6 +776,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle:
             "Vue en lecture seule du profil Matrix de cet utilisateur. Visible uniquement si DEBUG_MODE est activé.",
         loadError: "Impossible de charger le profil Matrix de cet utilisateur.",
+    },
+    confirm: {
+        cancel: "Annuler",
+        failed: "Ça n'a pas fonctionné. Réessayez.",
+        leaveRoomTitle: "Quitter « {name} » ?",
+        leaveRoomMessage: "Vous ne recevrez plus ses messages.",
+        lastAdminWarning:
+            "Vous êtes le seul admin. Une fois parti, personne ne pourra plus renommer ce salon ni gérer ses membres.",
+        leaveRoom: "Quitter",
+        leaveFolderTitle: "Quitter le dossier « {name} » ?",
+        leaveFolderMessage:
+            "Vous restez dans les salons que vous avez rejoints, mais vous ne verrez plus le dossier ni ses salons recommandés.",
+        leaveFolder: "Quitter le dossier",
+        kickTitle: "Retirer {name} du salon ?",
+        kickMessage: "Cette personne pourra revenir si elle est réinvitée ou si le salon lui est ouvert.",
+        kick: "Retirer",
+        banTitle: "Bannir {name} ?",
+        banMessage: "Cette personne quitte le salon et ne pourra plus revenir tant que vous ne l'aurez pas débannie.",
+        ban: "Bannir",
+        reasonLabel: "Motif, visible par {name} (facultatif)",
+        promoteTitle: "Nommer {name} admin ?",
+        promoteMessage: "Un admin ne peut jamais être rétrogradé, même par vous.",
+        promote: "Nommer admin",
     },
 };
 

@@ -4,6 +4,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import type { RoomFolder, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import ConfirmDialog from "../ConfirmDialog.svelte";
     import ChatMenu from "../ChatMenu.svelte";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import CreateFolderModal from "./CreateFolderModal.svelte";
@@ -42,12 +43,18 @@
         });
     }
     function closeMenuAndLeaveFolder() {
-        folder
-            ?.leaveRoom()
-            .then(() => {
-                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
-            })
-            .catch(() => console.error("Failed to leave room"));
+        if (!folder) return;
+        const leavingFolder = folder;
+        modals.open(ConfirmDialog, {
+            heading: $LL.chat.confirm.leaveFolderTitle({ name: parentName }),
+            message: $LL.chat.confirm.leaveFolderMessage(),
+            confirmLabel: $LL.chat.confirm.leaveFolder(),
+            danger: true,
+            onConfirm: async () => {
+                await leavingFolder.leaveRoom();
+                notificationPlayingStore.playNotification($LL.chat.folderMenu.leaveFolder.notification());
+            },
+        });
     }
 
     function openManageParticipantsModal() {

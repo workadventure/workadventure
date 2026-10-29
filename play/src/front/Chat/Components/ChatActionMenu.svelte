@@ -1,16 +1,15 @@
 <script lang="ts">
     import type { MatrixChatConnectionLike } from "../Connection/ChatConnection";
     import { chatVisibilityStore } from "../../Stores/ChatStore";
+    import { navChat } from "../Stores/ChatStore";
     import { LL } from "../../../i18n/i18n-svelte";
-    import MatrixChatSettingsModal from "./MatrixChatSettingsModal.svelte";
     import { IconX, IconSearch, IconSettings } from "@wa-icons";
-    import { modals } from "@wa-modals";
 
     interface Props {
         hasSearch: boolean;
         hasCloseChat: boolean;
         searchActive: boolean;
-        /** When set, shows a Matrix account / settings control next to search. */
+        /** When set, shows the chat settings button next to search. */
         matrixChatConnection?: MatrixChatConnectionLike;
         onToggleSearch?: () => void;
     }
@@ -40,9 +39,7 @@
     }
 
     function openMatrixSettings() {
-        if (matrixChatConnection) {
-            modals.open(MatrixChatSettingsModal, { connection: matrixChatConnection });
-        }
+        navChat.switchToSettings();
         menuOpen = false;
     }
 </script>

@@ -4,8 +4,6 @@
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
     import LL from "../../../../i18n/i18n-svelte";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import type {
@@ -18,9 +16,9 @@
         ChatRoomSidePanelHydrationState,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
-    import { draftMessageService } from "../../Services/DraftMessageService";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
+    import { confirmLeaveRoom } from "./confirmLeaveRoom";
     import {
         IconBellOff,
         IconCheckList,
@@ -80,7 +78,6 @@
     let unreadThreadCount = $derived($threads.filter((thread) => thread.hasUnreadMessages).length);
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
     let avatarColorStore = $derived(room.avatarFallbackColor);
-    let leaveRoomNotification = $derived($LL.chat.roomMenu.leaveRoom.notification());
     let threadWarnings = $derived($threadsHydrationState.warnings ?? []);
     let hasUnsupportedThreadHistory = $derived(
         threadWarnings.some((warning) => warning.reason === "server_unsupported"),
@@ -140,13 +137,7 @@
     }
 
     function leaveRoom() {
-        const roomId = room.id;
-        room.leaveRoom()
-            .then(() => {
-                draftMessageService.deleteDraft(`${roomId}-${localUserStore.getChatId() ?? "0"}`);
-                notificationPlayingStore.playNotification(leaveRoomNotification);
-            })
-            .catch(() => console.error("Failed to leave room"));
+        confirmLeaveRoom(room);
     }
 </script>
 

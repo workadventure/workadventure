@@ -35,7 +35,6 @@
         PROXIMITY_FILE_TRANSFER_MAX_FILES,
         validateProximityFiles,
     } from "../../Connection/Proximity/ProximityFileTransferService";
-    import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../Connection/Proximity/ProximityChatRoomManager";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -106,7 +105,6 @@
     // values below derived purely from `room` are computed once and never recompute. They are plain consts,
     // not `$derived`. The stores they hold (e.g. canSendMessages) are still auto-subscribed with `$` at use sites.
     const isProximityChatRoom = room instanceof ProximityChatRoom;
-    const isDefaultProximityRoom = room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
     const proximityChatDisabled = room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState;
     const proximityRoomJoined = room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState;
     const proximityFilesAllowed = room instanceof ProximityChatRoom ? room.canSendFiles : readable(true);
@@ -127,7 +125,6 @@
         shouldDisableMessageInput({
             disabled,
             isProximityChatRoom,
-            isDefaultProximityRoom,
             isProximityChatDisabled: $proximityChatDisabled,
             isProximityRoomJoined: $proximityRoomJoined,
         }) || !$canSendMessages,
@@ -961,7 +958,11 @@
         disabled={messageInputDisabled}
         inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
-        disabledText={$canSendMessages ? $LL.chat.cannotSendNow() : $LL.chat.cannotSendHere()}
+        disabledText={isProximityChatRoom && !$proximityRoomJoined
+            ? $LL.chat.getCloserToWrite()
+            : $canSendMessages
+              ? $LL.chat.cannotSendNow()
+              : $LL.chat.cannotSendHere()}
         dataTestid="messageInput"
     />
     <button

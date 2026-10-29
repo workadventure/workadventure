@@ -148,8 +148,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID",
-        settings: "설정",
         resetKeyStorageUpButtonLabel: "키 저장소 재설정",
         resetKeyStorageConfirmationModal: {
             title: "키 저장소 재설정 확인",
@@ -167,7 +165,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "전역 메시지",
         contact: "연락처",
         report: "문제 신고",
-        chat: "채팅",
         help: "도움말 및 튜토리얼",
         contextualActions: "컨텍스트 작업",
         shortcuts: "단축키",

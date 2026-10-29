@@ -12,6 +12,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     enter: "Digite sua mensagem...",
     cannotSendHere: "Você não tem permissão para enviar mensagens aqui",
     cannotSendNow: "Você não pode enviar mensagens aqui no momento",
+    getCloserToWrite: "Aproxime-se de alguém para escrever aqui",
     mention: {
         suggestions: "Membros para mencionar",
         notify: "Notificar",
@@ -440,11 +441,12 @@ const chat: DeepPartial<Translation["chat"]> = {
         actions: "Ações",
         buttons: {
             sendInvitations: "Enviar convites",
-            cancel: "Cancelar",
             ban: "Banir",
             kick: "Expulsar",
             unban: "Desbanir",
             invite: "Convidar",
+            cancelInvitation: "Cancelar convite",
+            close: "Fechar",
         },
         roles: {
             USER: "Usuário",
@@ -452,6 +454,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             MODERATOR: "Moderador",
         },
         sendInvitationsSuccessNotification: "Convites enviados com sucesso",
+        invitationsFailed: "Não foi possível convidar: {names}",
+        sectionJoined: "Membros",
+        sectionInvited: "Convidados",
+        sectionLeft: "Saíram ou banidos",
     },
     roomPanel: {
         toggleOpen: "Abrir painel da sala",
@@ -734,8 +740,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     remoteUserNotConnected: "Usuário não autenticado. Não é possível enviar mensagem.",
     matrixSettings: {
-        title: "Matrix & WorkAdventure",
-        subtitle: "Sua identidade de chat e perfil Matrix",
+        title: "Configurações do chat",
         close: "Fechar",
         identitySection: "Identidade",
         matrixUserId: "ID de usuário Matrix",
@@ -743,36 +748,25 @@ const chat: DeepPartial<Translation["chat"]> = {
         copy: "Copiar",
         copied: "Copiado",
         profileSection: "Perfil Matrix",
-        accountDataSection: "WorkAdventure (no jogo)",
         displayName: "Nome de exibição",
-        avatar: "Avatar (MXC)",
-        localName: "Nome local no jogo",
-        waDisplayName: "Nome WA (fr.workadventure.wa_display_name)",
-        waAvatar: "WA avatar (fr.workadventure.wa_avatar)",
+        avatar: "Avatar",
         needsSyncHint:
             "Seu nome local ou WOKA pode ser diferente do seu perfil Matrix. Use Sincronizar para atualizar.",
         upToDateHint:
             "Seu perfil Matrix corresponde ao nome local no jogo e ao WOKA (ou não há nada para sincronizar).",
-        syncButton: "Sincronizar perfil Matrix (nome + imagem WOKA)",
+        syncButton: "Atualizar com meu nome e Woka do jogo",
         syncing: "Sincronizando…",
-        removeProfileImagesButton: "Remover imagens de perfil",
-        removingProfileImages: "Removendo…",
-        removeProfileImagesHint:
-            "Remove a foto do seu perfil Matrix. Seu WOKA no jogo não muda; use Sincronizar para publicá-lo novamente.",
         loadError: "Não foi possível carregar as configurações Matrix.",
         notConnected: "Matrix não está conectado ou você é um convidado.",
         clearSuggestedRoomsHint:
             "Limpa a lista de salas Matrix que você ocultou das listas sugeridas ou disponíveis para entrar (armazenada neste navegador).",
         clearSuggestedRoomsButton: "Redefinir salas sugeridas ocultas",
-        publishWokaToMatrixProfileHint:
-            "Define o nome de exibição e o avatar do seu perfil Matrix a partir do seu nome no jogo e do WOKA (visível em clientes Matrix como Element).",
-        publishWokaToMatrixProfileButton: "Aplicar nome e imagem WOKA ao perfil Matrix",
-        publishWokaToMatrixProfilePublishing: "Atualizando perfil…",
-        publishWokaToMatrixProfileConfirmWarning:
-            "Isso substitui o nome de exibição e o avatar do seu perfil Matrix no servidor. Qualquer nome ou foto definidos em outro lugar (por exemplo, no Element) será substituído. Continue apenas se quiser que seu nome WorkAdventure e seu WOKA se tornem seu perfil Matrix público.",
-        publishWokaToMatrixProfileCancelButton: "Cancelar",
-        publishWokaToMatrixProfileConfirmActionButton: "Substituir e aplicar",
         actionDone: "Concluído",
+        notificationsSection: "Notificações",
+        browserNotificationsHint: "As notificações do navegador são ajustadas no menu do jogo, em Configurações.",
+        securitySection: "Segurança",
+        securityHint: "Sua chave de backup desbloqueia suas mensagens criptografadas em um novo dispositivo.",
+        advancedSection: "Avançado",
     },
     matrixPeerProfileDebug: {
         menuItemTitle: "Perfil Matrix",
@@ -781,6 +775,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle:
             "Visualização somente leitura do perfil Matrix deste usuário. Exibida apenas quando DEBUG_MODE está ativo.",
         loadError: "Não foi possível carregar o perfil Matrix deste usuário.",
+    },
+    confirm: {
+        cancel: "Cancelar",
+        failed: "Não funcionou. Tente novamente.",
+        leaveRoomTitle: "Sair de “{name}”?",
+        leaveRoomMessage: "Você deixará de receber as mensagens.",
+        lastAdminWarning:
+            "Você é o único administrador. Depois, ninguém poderá renomear esta sala nem gerenciar os membros.",
+        leaveRoom: "Sair",
+        leaveFolderTitle: "Sair da pasta “{name}”?",
+        leaveFolderMessage:
+            "Você continua nas salas em que entrou, mas não verá mais a pasta nem as salas recomendadas.",
+        leaveFolder: "Sair da pasta",
+        kickTitle: "Remover {name} da sala?",
+        kickMessage: "Essa pessoa poderá voltar se for convidada de novo ou se a sala estiver aberta para ela.",
+        kick: "Remover",
+        banTitle: "Banir {name}?",
+        banMessage: "Essa pessoa sai da sala e não poderá voltar até você remover o banimento.",
+        ban: "Banir",
+        reasonLabel: "Motivo, visível para {name} (opcional)",
+        promoteTitle: "Tornar {name} administrador?",
+        promoteMessage: "Um administrador nunca pode ser rebaixado, nem por você.",
+        promote: "Tornar administrador",
     },
 };
 

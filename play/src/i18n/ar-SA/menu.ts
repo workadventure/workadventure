@@ -131,8 +131,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "معرّف Matrix الخاص بك",
-        settings: "الإعدادات",
         resetKeyStorageUpButtonLabel: "إعادة تعيين مخزن المفاتيح",
         resetKeyStorageConfirmationModal: {
             title: "تأكيد إعادة تعيين مخزن المفاتيح",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
-        chat: "الدردشة",
         help: "مساعدة وشروحات",
         contextualActions: "إجراءات سياقية",
         shortcuts: "اختصارات",
