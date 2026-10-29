@@ -963,9 +963,15 @@
         {#if !autoScroll && (newMessagesCount > 0 || farFromBottom)}
             <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
             <div class="relative h-0">
+                {#snippet newMessagesLabel()}
+                    {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
+                {/snippet}
+                <!-- Without a label, no empty label span: it would push the arrow off-center. -->
                 <Button
                     variant="secondary"
                     size="sm"
+                    square={newMessagesCount === 0}
+                    children={newMessagesCount > 0 ? newMessagesLabel : undefined}
                     class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full shadow-lg whitespace-nowrap"
                     dataTestId="jumpToLatestMessages"
                     title={$LL.chat.timeLine.jumpToLatest()}
@@ -975,9 +981,6 @@
                     {#snippet icon()}
                         <IconArrowDown font-size="16" />
                     {/snippet}
-                    {#if newMessagesCount > 0}
-                        {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
-                    {/if}
                 </Button>
             </div>
         {/if}
