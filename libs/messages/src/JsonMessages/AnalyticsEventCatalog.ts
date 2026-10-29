@@ -2111,7 +2111,6 @@ export const ANALYTICS_EVENTS = {
   // A click, not a broadcast: it means the panel was opened, not that anything went
   // on air. Time on air is meeting.participation.ended, measured by the back.
   "megaphone.opened": signal("The user opened the megaphone."),
-  "menu.chat.opened": signal("The user opened the chat from the menu."),
   "menu.contact.opened": signal("The user opened the contact page."),
   "menu.credit.opened": signal("The user opened the credits."),
   "menu.opened": signal("The user opened the main menu."),
