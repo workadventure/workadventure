@@ -722,12 +722,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "เชื่อมต่อใหม่",
     failedToJoinRoom: "ไม่สามารถเข้าร่วมห้องได้",
     failedToLeaveRoom: "ไม่สามารถออกจากห้องได้",
-    refreshChat: "รีเฟรชแชท",
-    dismiss: "ปิด",
-    whoops: "อุ๊ปส์! มีบางอย่างผิดพลาด",
     failedToOpenRoom: "ไม่สามารถเปิดห้องได้ : {roomId}",
-    failedToSendAttachments: "ไม่สามารถส่งไฟล์แนบได้ กรุณาลองใหม่อีกครั้ง",
     refreshChatError: "ไม่สามารถรีเฟรชแชทได้",
+    unsentMessages: "ส่งข้อความบางส่วนไม่ได้",
+    retrySending: "ลองอีกครั้ง",
+    failedToSendNamedAttachments: "ส่งไม่ได้: {names} ไฟล์ยังอยู่ในช่องข้อความ ลองอีกครั้ง",
+    reconnecting: "กำลังเชื่อมต่อใหม่… ข้อความจะถูกส่งเมื่อเครือข่ายกลับมา",
     discord: {
         chatBand: {
             configure: "ตั้งค่า",

@@ -60,7 +60,7 @@
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
-    import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
+    import { IconChevronUp, IconCloudLock, IconLoader, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
         sideBarWidth?: number;
@@ -80,6 +80,13 @@
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
+    // Once the list has been shown, a reconnection (network blip, laptop waking up) keeps it on screen under a
+    // banner instead of swapping every room for a loading skeleton.
+    let hasBeenOnline = $state(false);
+    $effect(() => {
+        if ($chatConnectionStatus === "ONLINE") hasBeenOnline = true;
+    });
+    let isReconnecting = $derived($chatConnectionStatus === "CONNECTING" && hasBeenOnline);
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
@@ -377,10 +384,20 @@
                     </div>
                 {/if}
                 <!-- Where the conversations will be: under the bubble, which does not wait for the chat server. -->
-                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
+                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected && !isReconnecting}
                     <RoomListSkeleton />
                 {/if}
-                {#if $chatConnectionStatus === "ONLINE"}
+                {#if isReconnecting}
+                    <div
+                        class="mx-2 mb-2 flex items-center gap-2 rounded border border-solid border-warning-900/50 bg-warning-900/20 px-3 py-2 text-xs text-white"
+                        role="status"
+                        data-testid="chatReconnecting"
+                    >
+                        <IconLoader class="animate-spin shrink-0" font-size="14" />
+                        {$LL.chat.reconnecting()}
+                    </div>
+                {/if}
+                {#if $chatConnectionStatus === "ONLINE" || isReconnecting}
                     {#if hasNoSearchResult}
                         <p class="px-3 py-2 m-0 text-sm text-center text-white/50" data-testid="chatSearchNoResult">
                             {$LL.chat.searchNoResult({ search: $chatSearchBarValue.trim() })}

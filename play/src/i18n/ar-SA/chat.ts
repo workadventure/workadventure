@@ -722,12 +722,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "إعادة الاتصال", // Reconnect
     failedToJoinRoom: "فشل في الانضمام إلى الغرفة", // Failed to join room
     failedToLeaveRoom: "فشل في مغادرة الغرفة", // Failed to leave room
-    refreshChat: "تحديث الدردشة", // Refresh Chat
-    dismiss: "رفض", // Dismiss
-    whoops: "عذرًا! حدث خطأ ما", // Whoops! Something went wrong
     failedToOpenRoom: "فشل في فتح الغرفة: {roomId}", // Failed to open room: {roomId}
-    failedToSendAttachments: "فشل إرسال المرفقات. يرجى المحاولة مرة أخرى.", // Failed to send attachments. Please try again.
     refreshChatError: "فشل في تحديث الدردشة", // Failed to refresh chat
+    unsentMessages: "تعذّر إرسال بعض الرسائل.",
+    retrySending: "إعادة المحاولة",
+    failedToSendNamedAttachments: "تعذّر الإرسال: {names}. تبقى الملفات في خانة الرسالة، حاول مجددًا.",
+    reconnecting: "جارٍ إعادة الاتصال… ستُرسل رسائلك فور عودة الشبكة.",
     discord: {
         chatBand: {
             configure: "تكوين", // Configure

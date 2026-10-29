@@ -723,12 +723,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "다시 연결",
     failedToJoinRoom: "방 참가 실패",
     failedToLeaveRoom: "방 나가기 실패",
-    refreshChat: "채팅 새로고침",
-    dismiss: "닫기",
-    whoops: "앗! 문제가 발생했습니다",
     failedToOpenRoom: "방 열기 실패: {roomId}",
-    failedToSendAttachments: "첨부파일을 보낼 수 없습니다. 다시 시도해 주세요.",
     refreshChatError: "채팅 새로고침 실패",
+    unsentMessages: "일부 메시지를 보내지 못했습니다.",
+    retrySending: "다시 시도",
+    failedToSendNamedAttachments: "보내지 못했습니다: {names}. 파일은 입력창에 남아 있으니 다시 시도하세요.",
+    reconnecting: "다시 연결하는 중… 네트워크가 돌아오면 메시지가 전송됩니다.",
     discord: {
         chatBand: {
             configure: "구성",

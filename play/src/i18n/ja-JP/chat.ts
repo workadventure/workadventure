@@ -724,12 +724,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "再接続",
     failedToJoinRoom: "ルームに参加できませんでした",
     failedToLeaveRoom: "ルームを退出できませんでした",
-    refreshChat: "チャットを更新",
-    dismiss: "無視",
-    whoops: "おっと！エラーが発生しました",
     failedToOpenRoom: "ルームを開けませんでした: {roomId}",
-    failedToSendAttachments: "添付ファイルを送信できませんでした。もう一度お試しください。",
     refreshChatError: "チャットを更新できませんでした",
+    unsentMessages: "一部のメッセージを送信できませんでした。",
+    retrySending: "再試行",
+    failedToSendNamedAttachments:
+        "送信できませんでした：{names}。ファイルは入力欄に残っています。もう一度お試しください。",
+    reconnecting: "再接続中… ネットワークが戻りしだいメッセージが送信されます。",
     discord: {
         chatBand: {
             configure: "設定",

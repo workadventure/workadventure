@@ -32,6 +32,7 @@
     import { hasPendingMentionElsewhere } from "../../Stores/ChatMessageBannerStore";
     import Button from "../../../Components/UI/Button.svelte";
     import Avatar from "../Avatar.svelte";
+    import RefreshChat from "../RefreshChat.svelte";
     import ChatMessageBanner from "./ChatMessageBanner.svelte";
     import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
@@ -993,6 +994,10 @@
 
         <!-- Full width and never squeezed: a long message list must not shrink the input -->
         <div class="w-full shrink-0">
+            {#if $shouldRetrySendingEvents}
+                <!-- The input is disabled until the unsent messages are retried: say so here, where the user is. -->
+                <RefreshChat />
+            {/if}
             {#if $initializationState === "ready" && $typingMembers.length > 0}
                 <TypingUsers typingMembers={$typingMembers} />
             {/if}

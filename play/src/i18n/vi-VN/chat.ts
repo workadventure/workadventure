@@ -722,12 +722,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Kết nối lại",
     failedToJoinRoom: "Không thể tham gia phòng",
     failedToLeaveRoom: "Không thể rời phòng",
-    refreshChat: "Tải lại trò chuyện",
-    dismiss: "Bỏ qua",
-    whoops: "Ối! Đã có lỗi xảy ra",
     failedToOpenRoom: "Không thể mở phòng : {roomId}",
-    failedToSendAttachments: "Không thể gửi tệp đính kèm. Vui lòng thử lại.",
     refreshChatError: "Không thể tải lại trò chuyện",
+    unsentMessages: "Một số tin nhắn chưa gửi được.",
+    retrySending: "Thử lại",
+    failedToSendNamedAttachments: "Không gửi được: {names}. Tệp vẫn còn trong ô soạn tin, hãy thử lại.",
+    reconnecting: "Đang kết nối lại… Tin nhắn sẽ được gửi ngay khi có mạng.",
     discord: {
         chatBand: {
             configure: "Cấu hình",

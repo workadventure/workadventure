@@ -724,12 +724,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Opnieuw verbinden",
     failedToJoinRoom: "Kon niet deelnemen aan de kamer",
     failedToLeaveRoom: "Kon de kamer niet verlaten",
-    refreshChat: "Chat vernieuwen",
-    dismiss: "Negeren",
-    whoops: "Oeps! Er is een fout opgetreden",
     failedToOpenRoom: "Kon kamer niet openen: {roomId}",
-    failedToSendAttachments: "Bijlagen verzenden is mislukt. Probeer het opnieuw.",
     refreshChatError: "Kon chat niet vernieuwen",
+    unsentMessages: "Sommige berichten konden niet worden verzonden.",
+    retrySending: "Opnieuw",
+    failedToSendNamedAttachments:
+        "Kon niet worden verzonden: {names}. De bestanden blijven in het berichtvak, probeer het opnieuw.",
+    reconnecting: "Opnieuw verbinden… Je berichten worden verzonden zodra het netwerk terug is.",
     discord: {
         chatBand: {
             configure: "Configureren",

@@ -722,12 +722,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Tornar a connectar",
     failedToJoinRoom: "No s'ha pogut unir a la sala",
     failedToLeaveRoom: "No s'ha pogut sortir de la sala",
-    refreshChat: "Actualitzar xat",
-    dismiss: "Descartar",
-    whoops: "Vaja! S'ha produït un error",
     failedToOpenRoom: "No s'ha pogut obrir la sala: {roomId}",
-    failedToSendAttachments: "No s'han pogut enviar els fitxers adjunts. Torna-ho a provar.",
     refreshChatError: "No s'ha pogut actualitzar el xat",
+    unsentMessages: "Alguns missatges no s'han pogut enviar.",
+    retrySending: "Torna-ho a provar",
+    failedToSendNamedAttachments:
+        "No s'ha pogut enviar: {names}. Els fitxers es queden al quadre del missatge, torna-ho a provar.",
+    reconnecting: "Reconnectant… Els missatges s'enviaran quan torni la xarxa.",
     discord: {
         chatBand: {
             configure: "Configurar",
