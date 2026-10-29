@@ -145,8 +145,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "您的 Matrix ID",
-        settings: "設定",
         resetKeyStorageUpButtonLabel: "重設您的金鑰儲存",
         resetKeyStorageConfirmationModal: {
             title: "金鑰儲存重設確認",
@@ -164,7 +162,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "全域訊息",
         contact: "聯絡",
         report: "回報問題",
-        chat: "聊天",
         help: "說明和教學",
         contextualActions: "情境操作",
         shortcuts: "快捷鍵",

@@ -149,8 +149,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID ของคุณ",
-        settings: "การตั้งค่า",
         resetKeyStorageUpButtonLabel: "รีเซ็ตที่เก็บกุญแจของคุณ",
         resetKeyStorageConfirmationModal: {
             title: "ยืนยันการรีเซ็ตที่เก็บกุญแจ",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "ข้อความทั่วถึง",
         contact: "ติดต่อ",
         report: "รายงานปัญหา",
-        chat: "แชท",
         help: "ความช่วยเหลือและบทแนะนำ",
         contextualActions: "การดำเนินการตามบริบท",
         shortcuts: "ปุ่มลัด",

@@ -17,6 +17,9 @@ type NavChatTab =
           key: "users";
       }
     | {
+          key: "settings";
+      }
+    | {
           key: "externalModule";
           component: WorkAdventureComponent;
           props?: WorkAdventureComponentProps;
@@ -41,6 +44,9 @@ function createNavChatStore() {
                 set({ key: "users" });
                 analyticsClient.trackAdminEvent("user_list.opened");
             }
+        },
+        switchToSettings() {
+            set({ key: "settings" });
         },
         switchToCustomComponent(component: WorkAdventureComponent, props?: WorkAdventureComponentProps) {
             set({ key: "externalModule", component, props });

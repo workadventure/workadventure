@@ -151,8 +151,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "El vostre ID Matrix",
-        settings: "Configuració",
         resetKeyStorageUpButtonLabel: "Restablir l'emmagatzematge de claus",
         resetKeyStorageConfirmationModal: {
             title: "Confirmació de restabliment de l'emmagatzematge de claus",
@@ -170,7 +168,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Missatges Globals",
         contact: "Contacte",
         report: "Reportar problemes",
-        chat: "Xat",
         help: "Ajuda i tutorials",
         contextualActions: "Accions contextuals",
         shortcuts: "Dreceres",
