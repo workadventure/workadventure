@@ -186,7 +186,7 @@ describe("ProximityChatRoom reactions and replies", () => {
         message.leaveConversation();
 
         expect(get(message.canReact)).toBe(false);
-        expect(get(message.canReply!)).toBe(false);
+        expect(get(message.canReply)).toBe(false);
         expect(get(message.reactions.get("👍")!.canReact)).toBe(false);
         message.addReaction("🎉").catch(() => undefined);
         message.reactions.get("👍")!.react();
