@@ -10,6 +10,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     noMessage: "Hišće žana powěsć pósłana!",
     beFirst: "Buž prěni, kotryž pósćele powěsć",
     enter: "Spisaj swoju powěsć...",
+    cannotSendHere: "Nimaš prawo, tu powěsće pósłać",
+    cannotSendNow: "Tuchwilu njemóžeš tu powěsće pósłać",
     mention: {
         suggestions: "Čłonojo k naspomnjenju",
         notify: "Zdźělić",
