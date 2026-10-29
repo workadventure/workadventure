@@ -17,7 +17,6 @@
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
-    import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
     import { confirmLeaveRoom } from "./confirmLeaveRoom";
     import {
         IconBellOff,
@@ -30,7 +29,6 @@
         IconUserPlus,
         IconUsersGroup,
     } from "@wa-icons";
-    import { modals } from "@wa-modals";
 
     interface Props {
         room: ChatRoom &
@@ -124,8 +122,9 @@
         roomSidePanelStore.setActiveSection(section);
     }
 
+    // Members are managed in the panel's Members section, next to the conversation, not in a popup.
     function openManageParticipantsModal() {
-        modals.open(ManageParticipantsModal, { room });
+        openSection("participants");
     }
 
     function toggleMute() {

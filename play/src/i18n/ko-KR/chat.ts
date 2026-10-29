@@ -459,6 +459,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "멤버",
         sectionInvited: "초대됨",
         sectionLeft: "나감 또는 차단됨",
+        setRole: "{role}(으)로 지정",
+        invitePlaceholder: "이름 또는 이메일로 초대…",
     },
     roomPanel: {
         toggleOpen: "방 패널 열기",

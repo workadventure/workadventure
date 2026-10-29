@@ -456,6 +456,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "成員",
         sectionInvited: "已邀請",
         sectionLeft: "已離開或被封鎖",
+        setRole: "設為{role}",
+        invitePlaceholder: "依姓名或電子郵件邀請…",
     },
     roomPanel: {
         toggleOpen: "開啟房間面板",

@@ -458,6 +458,8 @@ const chat: BaseTranslation = {
         sectionJoined: "Members",
         sectionInvited: "Invited",
         sectionLeft: "Left or banned",
+        setRole: "Make {role}",
+        invitePlaceholder: "Invite by name or e-mail…",
     },
     roomPanel: {
         toggleOpen: "Open room panel",

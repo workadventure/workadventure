@@ -457,6 +457,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "Thành viên",
         sectionInvited: "Đã mời",
         sectionLeft: "Đã rời hoặc bị cấm",
+        setRole: "Đặt làm {role}",
+        invitePlaceholder: "Mời theo tên hoặc email…",
     },
     roomPanel: {
         toggleOpen: "Mở bảng thông tin phòng",

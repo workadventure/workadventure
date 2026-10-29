@@ -460,6 +460,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "Mitglieder",
         sectionInvited: "Eingeladen",
         sectionLeft: "Gegangen oder gesperrt",
+        setRole: "Zu {role} machen",
+        invitePlaceholder: "Per Name oder E-Mail einladen…",
     },
     roomPanel: {
         toggleOpen: "Raumpanel öffnen",

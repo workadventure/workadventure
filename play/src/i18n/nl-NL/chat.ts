@@ -458,6 +458,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "Leden",
         sectionInvited: "Uitgenodigd",
         sectionLeft: "Vertrokken of verbannen",
+        setRole: "{role} maken",
+        invitePlaceholder: "Uitnodigen op naam of e-mail…",
     },
     roomPanel: {
         toggleOpen: "Kamerpaneel openen",
