@@ -773,6 +773,28 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "Annulla",
+        failed: "Non ha funzionato. Riprova.",
+        leaveRoomTitle: "Uscire da «{name}»?",
+        leaveRoomMessage: "Non riceverai più i suoi messaggi.",
+        lastAdminWarning: "Sei l'unico amministratore. Dopo, nessuno potrà rinominare la stanza o gestirne i membri.",
+        leaveRoom: "Esci",
+        leaveFolderTitle: "Uscire dalla cartella «{name}»?",
+        leaveFolderMessage:
+            "Resti nelle stanze in cui sei entrato, ma non vedrai più la cartella né le sue stanze consigliate.",
+        leaveFolder: "Esci dalla cartella",
+        kickTitle: "Rimuovere {name} dalla stanza?",
+        kickMessage: "Potrà tornare se viene invitata di nuovo o se la stanza le è aperta.",
+        kick: "Rimuovi",
+        banTitle: "Bannare {name}?",
+        banMessage: "Lascia la stanza e non potrà tornare finché non revochi il ban.",
+        ban: "Banna",
+        reasonLabel: "Motivo, visibile a {name} (facoltativo)",
+        promoteTitle: "Rendere {name} amministratore?",
+        promoteMessage: "Un amministratore non può mai essere declassato, nemmeno da te.",
+        promote: "Rendi amministratore",
+    },
 };
 
 export default chat;

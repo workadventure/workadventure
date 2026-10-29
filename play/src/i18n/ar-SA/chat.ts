@@ -771,6 +771,27 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "إلغاء",
+        failed: "لم تنجح العملية. حاول مجددًا.",
+        leaveRoomTitle: "مغادرة «{name}»؟",
+        leaveRoomMessage: "لن تصلك رسائلها بعد الآن.",
+        lastAdminWarning: "أنت المشرف الوحيد. بعد مغادرتك لن يستطيع أحد إعادة تسمية الغرفة أو إدارة أعضائها.",
+        leaveRoom: "مغادرة",
+        leaveFolderTitle: "مغادرة المجلد «{name}»؟",
+        leaveFolderMessage: "ستبقى في الغرف التي انضممت إليها، لكنك لن ترى المجلد ولا غرفه المقترحة بعد الآن.",
+        leaveFolder: "مغادرة المجلد",
+        kickTitle: "إخراج {name} من الغرفة؟",
+        kickMessage: "يمكنه العودة إذا دُعي مجددًا أو إذا كانت الغرفة مفتوحة له.",
+        kick: "إخراج",
+        banTitle: "حظر {name}؟",
+        banMessage: "سيغادر الغرفة ولن يستطيع العودة حتى ترفع الحظر.",
+        ban: "حظر",
+        reasonLabel: "السبب، يظهر لـ {name} (اختياري)",
+        promoteTitle: "تعيين {name} مشرفًا؟",
+        promoteMessage: "لا يمكن خفض رتبة المشرف أبدًا، ولا حتى من قبلك.",
+        promote: "تعيين مشرفًا",
+    },
 };
 
 export default chat;

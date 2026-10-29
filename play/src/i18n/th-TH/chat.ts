@@ -771,6 +771,27 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "มุมมองอ่านอย่างเดียวของโปรไฟล์ Matrix ของผู้ใช้นี้ แสดงเฉพาะเมื่อเปิด DEBUG_MODE",
         loadError: "ไม่สามารถโหลดโปรไฟล์ Matrix ของผู้ใช้นี้ได้",
     },
+    confirm: {
+        cancel: "ยกเลิก",
+        failed: "ไม่สำเร็จ ลองอีกครั้ง",
+        leaveRoomTitle: "ออกจาก “{name}” ไหม?",
+        leaveRoomMessage: "คุณจะไม่ได้รับข้อความจากห้องนี้อีก",
+        lastAdminWarning: "คุณเป็นแอดมินคนเดียว หลังออกไปจะไม่มีใครเปลี่ยนชื่อห้องหรือจัดการสมาชิกได้อีก",
+        leaveRoom: "ออก",
+        leaveFolderTitle: "ออกจากโฟลเดอร์ “{name}” ไหม?",
+        leaveFolderMessage: "คุณยังอยู่ในห้องที่เข้าร่วมแล้ว แต่จะไม่เห็นโฟลเดอร์และห้องแนะนำอีก",
+        leaveFolder: "ออกจากโฟลเดอร์",
+        kickTitle: "นำ {name} ออกจากห้องไหม?",
+        kickMessage: "บุคคลนี้กลับมาได้หากได้รับเชิญอีกครั้งหรือห้องเปิดให้",
+        kick: "นำออก",
+        banTitle: "แบน {name} ไหม?",
+        banMessage: "บุคคลนี้จะออกจากห้องและกลับมาไม่ได้จนกว่าคุณจะยกเลิกการแบน",
+        ban: "แบน",
+        reasonLabel: "เหตุผล ({name} มองเห็นได้ ไม่บังคับ)",
+        promoteTitle: "ตั้ง {name} เป็นแอดมินไหม?",
+        promoteMessage: "แอดมินไม่สามารถถูกลดระดับได้ แม้แต่โดยคุณ",
+        promote: "ตั้งเป็นแอดมิน",
+    },
 };
 
 export default chat;

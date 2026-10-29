@@ -775,6 +775,29 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Visualização somente leitura do perfil Matrix deste usuário. Exibida apenas quando DEBUG_MODE está ativo.",
         loadError: "Não foi possível carregar o perfil Matrix deste usuário.",
     },
+    confirm: {
+        cancel: "Cancelar",
+        failed: "Não funcionou. Tente novamente.",
+        leaveRoomTitle: "Sair de “{name}”?",
+        leaveRoomMessage: "Você deixará de receber as mensagens.",
+        lastAdminWarning:
+            "Você é o único administrador. Depois, ninguém poderá renomear esta sala nem gerenciar os membros.",
+        leaveRoom: "Sair",
+        leaveFolderTitle: "Sair da pasta “{name}”?",
+        leaveFolderMessage:
+            "Você continua nas salas em que entrou, mas não verá mais a pasta nem as salas recomendadas.",
+        leaveFolder: "Sair da pasta",
+        kickTitle: "Remover {name} da sala?",
+        kickMessage: "Essa pessoa poderá voltar se for convidada de novo ou se a sala estiver aberta para ela.",
+        kick: "Remover",
+        banTitle: "Banir {name}?",
+        banMessage: "Essa pessoa sai da sala e não poderá voltar até você remover o banimento.",
+        ban: "Banir",
+        reasonLabel: "Motivo, visível para {name} (opcional)",
+        promoteTitle: "Tornar {name} administrador?",
+        promoteMessage: "Um administrador nunca pode ser rebaixado, nem por você.",
+        promote: "Tornar administrador",
+    },
 };
 
 export default chat;

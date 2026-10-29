@@ -776,6 +776,29 @@ const chat: DeepPartial<Translation["chat"]> = {
             "Vue en lecture seule du profil Matrix de cet utilisateur. Visible uniquement si DEBUG_MODE est activé.",
         loadError: "Impossible de charger le profil Matrix de cet utilisateur.",
     },
+    confirm: {
+        cancel: "Annuler",
+        failed: "Ça n'a pas fonctionné. Réessayez.",
+        leaveRoomTitle: "Quitter « {name} » ?",
+        leaveRoomMessage: "Vous ne recevrez plus ses messages.",
+        lastAdminWarning:
+            "Vous êtes le seul admin. Une fois parti, personne ne pourra plus renommer ce salon ni gérer ses membres.",
+        leaveRoom: "Quitter",
+        leaveFolderTitle: "Quitter le dossier « {name} » ?",
+        leaveFolderMessage:
+            "Vous restez dans les salons que vous avez rejoints, mais vous ne verrez plus le dossier ni ses salons recommandés.",
+        leaveFolder: "Quitter le dossier",
+        kickTitle: "Retirer {name} du salon ?",
+        kickMessage: "Cette personne pourra revenir si elle est réinvitée ou si le salon lui est ouvert.",
+        kick: "Retirer",
+        banTitle: "Bannir {name} ?",
+        banMessage: "Cette personne quitte le salon et ne pourra plus revenir tant que vous ne l'aurez pas débannie.",
+        ban: "Bannir",
+        reasonLabel: "Motif, visible par {name} (facultatif)",
+        promoteTitle: "Nommer {name} admin ?",
+        promoteMessage: "Un admin ne peut jamais être rétrogradé, même par vous.",
+        promote: "Nommer admin",
+    },
 };
 
 export default chat;

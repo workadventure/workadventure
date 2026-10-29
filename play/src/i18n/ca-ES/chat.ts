@@ -771,6 +771,28 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "Cancel·la",
+        failed: "No ha funcionat. Torna-ho a provar.",
+        leaveRoomTitle: "Vols sortir de «{name}»?",
+        leaveRoomMessage: "Deixaràs de rebre'n els missatges.",
+        lastAdminWarning:
+            "Ets l'únic administrador. Després, ningú no podrà canviar el nom de la sala ni gestionar-ne els membres.",
+        leaveRoom: "Surt",
+        leaveFolderTitle: "Vols sortir de la carpeta «{name}»?",
+        leaveFolderMessage: "Continues a les sales on ets, però ja no veuràs la carpeta ni les sales recomanades.",
+        leaveFolder: "Surt de la carpeta",
+        kickTitle: "Vols treure {name} de la sala?",
+        kickMessage: "Podrà tornar si se la torna a convidar o si la sala li és oberta.",
+        kick: "Treu",
+        banTitle: "Vols vetar {name}?",
+        banMessage: "Surt de la sala i no hi podrà tornar fins que no li treguis el veto.",
+        ban: "Veta",
+        reasonLabel: "Motiu, visible per a {name} (opcional)",
+        promoteTitle: "Vols fer administrador {name}?",
+        promoteMessage: "Un administrador no es pot degradar mai, ni tan sols tu.",
+        promote: "Fes-lo administrador",
+    },
 };
 
 export default chat;

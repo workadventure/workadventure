@@ -12,9 +12,7 @@
         MatrixChatConnectionLike,
     } from "../../../Connection/ChatConnection";
     import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
-    import { notificationPlayingStore } from "../../../../Stores/NotificationStore";
     import { localUserStore } from "../../../../Connection/LocalUserStore";
-    import { draftMessageService } from "../../../Services/DraftMessageService";
     import LL from "../../../../../i18n/i18n-svelte";
     import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
@@ -23,6 +21,7 @@
     import type { UserProviderMerger } from "../../../UserProviderMerger/UserProviderMerger";
     import { DEBUG_MODE } from "../../../../Enum/EnvironmentVariable";
     import MatrixPeerProfileDebugModal from "../../MatrixPeerProfileDebugModal.svelte";
+    import { confirmLeaveRoom } from "../confirmLeaveRoom";
     import RoomOption from "./RoomOption.svelte";
     import {
         IconDots,
@@ -103,13 +102,7 @@
 
     function closeMenuAndLeaveRoom() {
         toggleRoomOptions();
-        const roomId = room.id;
-        room.leaveRoom()
-            .then(() => {
-                draftMessageService.deleteDraft(`${roomId}-${localUserStore.getChatId() ?? "0"}`);
-                notificationPlayingStore.playNotification($LL.chat.roomMenu.leaveRoom.notification());
-            })
-            .catch(() => console.error("Failed to leave room"));
+        confirmLeaveRoom(room);
     }
 
     function openManageParticipantsModal() {
