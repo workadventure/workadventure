@@ -198,6 +198,10 @@ const menu: BaseTranslation = {
         openSayPopup: "Abrir Popup de Fala",
         openThinkPopup: "Abrir Popup de Pensamento",
         walkMyDesk: "Ir para Minha Mesa",
+        toggleMicrophone: "Enable/disable your microphone",
+        toggleCamera: "Enable/disable your camera",
+        setShortcut: "Set shortcut",
+        pressKey: "Press a key combination…",
     },
 };
 

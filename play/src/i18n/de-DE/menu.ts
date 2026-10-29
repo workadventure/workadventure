@@ -200,6 +200,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Sprech-Popup öffnen",
         openThinkPopup: "Denk-Popup öffnen",
         walkMyDesk: "Zu meinem Schreibtisch gehen",
+        toggleMicrophone: "Mikrofon ein-/ausschalten",
+        toggleCamera: "Kamera ein-/ausschalten",
+        setShortcut: "Tastenkürzel festlegen",
+        pressKey: "Tastenkombination drücken …",
     },
 };
 

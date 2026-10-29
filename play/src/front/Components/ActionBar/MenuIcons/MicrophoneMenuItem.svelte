@@ -1,8 +1,6 @@
 <script lang="ts">
-    import { AvailabilityStatus } from "@workadventure/messages";
     import type { Readable } from "svelte/store";
     import { derived } from "svelte/store";
-    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarButton from "../ActionBarButton.svelte";
     import {
         availabilityStatusStore,
@@ -15,25 +13,26 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
-
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
 
+    import {
+        createMediaToggleAvailableStore,
+        mediaToggleStatusBlockedStore,
+        toggleMedia,
+    } from "../../../Stores/MediaToggleStore";
+
+    const microphoneToggleAvailableStore = createMediaToggleAvailableStore("microphone");
+
     const disabledByStatusStore = derived(
-        [availabilityStatusStore, silentStore],
-        ([$availabilityStatusStore, $silentStore]) =>
-            $availabilityStatusStore === AvailabilityStatus.BUSY ||
-            $availabilityStatusStore === AvailabilityStatus.AWAY ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $silentStore,
+        [mediaToggleStatusBlockedStore, silentStore],
+        ([$mediaToggleStatusBlocked, $silentStore]) => $mediaToggleStatusBlocked || $silentStore,
     );
 
     const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [disabledByStatusStore, requestedMicrophoneState, microphoneListStore],
-        ([$disabledByStatusStore, $requestedMicrophoneState, $microphoneListStore]) => {
-            if ($disabledByStatusStore || ($microphoneListStore !== undefined && $microphoneListStore.length === 0)) {
+        [microphoneToggleAvailableStore, requestedMicrophoneState],
+        ([$microphoneToggleAvailable, $requestedMicrophoneState]) => {
+            if (!$microphoneToggleAvailable) {
                 return "disabled";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
@@ -90,13 +89,7 @@
     );
 
     function microphoneClick(): void {
-        analyticsClient.trackAdminEvent("media.microphone.toggled");
-        if ($silentStore) return;
-        if ($requestedMicrophoneState === true) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
-        }
+        toggleMedia("microphone");
     }
 </script>
 

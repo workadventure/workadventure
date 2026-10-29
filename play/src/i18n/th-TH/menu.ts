@@ -197,6 +197,10 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "เปิดป็อปอัปพูด",
         openThinkPopup: "เปิดป็อปอัปคิด",
         walkMyDesk: "เดินไปยังโต๊ะของฉัน",
+        toggleMicrophone: "Enable/disable your microphone",
+        toggleCamera: "Enable/disable your camera",
+        setShortcut: "Set shortcut",
+        pressKey: "Press a key combination…",
     },
 };
 

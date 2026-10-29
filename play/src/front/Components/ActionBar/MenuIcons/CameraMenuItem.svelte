@@ -2,7 +2,6 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import type { Readable } from "svelte/store";
     import { derived } from "svelte/store";
-    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import CamOnIcon from "../../Icons/CamOnIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import CamOffIcon from "../../Icons/CamOffIcon.svelte";
@@ -19,22 +18,27 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import {
+        createMediaToggleAvailableStore,
+        mediaToggleStatusBlockedStore,
+        toggleMedia,
+    } from "../../../Stores/MediaToggleStore";
+
+    function isAvailabilityStatusOnline(status: AvailabilityStatus): boolean {
+        return status === AvailabilityStatus.ONLINE;
+    }
+
+    const cameraToggleAvailableStore = createMediaToggleAvailableStore("camera");
 
     const disabledByStatusStore = derived(
-        [availabilityStatusStore, silentStore],
-        ([$availabilityStatusStore, $silentStore]) =>
-            $availabilityStatusStore === AvailabilityStatus.BUSY ||
-            $availabilityStatusStore === AvailabilityStatus.AWAY ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $silentStore,
+        [mediaToggleStatusBlockedStore, silentStore],
+        ([$mediaToggleStatusBlocked, $silentStore]) => $mediaToggleStatusBlocked || $silentStore,
     );
 
     const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [disabledByStatusStore, requestedCameraState, cameraListStore],
-        ([$disabledByStatusStore, $requestedCameraState, $cameraListStore]) => {
-            if ($disabledByStatusStore || ($cameraListStore !== undefined && $cameraListStore.length === 0)) {
+        [cameraToggleAvailableStore, requestedCameraState],
+        ([$cameraToggleAvailable, $requestedCameraState]) => {
+            if (!$cameraToggleAvailable) {
                 return "disabled";
             }
             return $requestedCameraState ? "normal" : "forbidden";
@@ -91,13 +95,7 @@
     );
 
     function cameraClick(): void {
-        analyticsClient.trackAdminEvent("media.camera.toggled");
-        if ($silentStore) return;
-        if ($requestedCameraState === true) {
-            requestedCameraState.disableWebcam();
-        } else {
-            requestedCameraState.enableWebcam();
-        }
+        toggleMedia("camera");
     }
 </script>
 
@@ -111,7 +109,7 @@
     desc={$cameraActionBarTooltipStore.desc}
     media={$cameraActionBarTooltipStore.media}
     onmouseenter={() => {
-        if ($availabilityStatusStore === AvailabilityStatus.ONLINE) mouseIsHoveringCameraButton.set(true);
+        if (isAvailabilityStatusOnline($availabilityStatusStore)) mouseIsHoveringCameraButton.set(true);
         else mouseIsHoveringCameraButton.set(false);
     }}
     onmouseleave={() => mouseIsHoveringCameraButton.set(false)}
