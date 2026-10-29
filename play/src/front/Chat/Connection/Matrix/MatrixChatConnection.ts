@@ -1685,7 +1685,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 }
             }
 
-            return { room_id: result.room_id, room: await this.waitForPlacedRoom(result.room_id) };
+            return {
+                room_id: result.room_id,
+                room: await this.waitForPlacedRoom(result.room_id, roomOptions.parentSpaceID !== undefined),
+            };
         } catch (error) {
             throw this.handleMatrixError(error);
         } finally {
@@ -1693,10 +1696,18 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         }
     }
 
-    /** The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s. */
-    private async waitForPlacedRoom(roomId: string, deadline = Date.now() + 10_000): Promise<ChatRoom | undefined> {
+    /**
+     * The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s.
+     * A room created in a folder can show up at the root first; that wrapper is destroyed when the room
+     * moves into its folder, so only the one inside the folder counts.
+     */
+    private async waitForPlacedRoom(
+        roomId: string,
+        inFolder: boolean,
+        deadline = Date.now() + 10_000,
+    ): Promise<ChatRoom | undefined> {
         const room = await this.findRoomOrFolder(roomId);
-        if (room instanceof MatrixChatRoom) {
+        if (room instanceof MatrixChatRoom && !(inFolder && this.roomList.has(roomId))) {
             return room;
         }
         if (Date.now() >= deadline) {
@@ -1705,7 +1716,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         await new Promise<void>((resolve) => {
             setTimeout(resolve, 200);
         });
-        return this.waitForPlacedRoom(roomId, deadline);
+        return this.waitForPlacedRoom(roomId, inFolder, deadline);
     }
 
     private async waitForNextSync() {

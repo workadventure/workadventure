@@ -86,6 +86,12 @@ class ChatUtils {
         await page.getByText("Continue").click();
     }
 
+    /** A new room opens by itself: check it is the one just created, then go back to the room list. */
+    public async backToRoomListAfterCreation(page: Page, roomName: string) {
+        await expect(page.getByTestId("roomName")).toHaveText(roomName);
+        await page.getByTestId("chatBackward").click();
+    }
+
     public async cancelledContinueWithSSO(page: Page, context: BrowserContext) {
         // await page.getByTestId("VerifyWithPassphraseButton").click();
         await page.getByTestId("cancelSSO").click();

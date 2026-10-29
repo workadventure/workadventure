@@ -33,6 +33,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
         await page.getByTestId("createRoomButton").click();
+        await ChatUtils.backToRoomListAfterCreation(page, publicChatRoomName);
 
         await expect(page.getByText(publicChatRoomName)).toBeAttached();
 
@@ -67,6 +68,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
         await page.getByTestId("createRoomButton").click();
+        await ChatUtils.backToRoomListAfterCreation(page, publicChatRoomName);
 
         await matrixApi.overrideRateLimitForUser("@john.doe:matrix.workadventure.localhost");
 
