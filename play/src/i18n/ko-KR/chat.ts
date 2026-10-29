@@ -776,6 +776,28 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "취소",
+        failed: "실패했습니다. 다시 시도하세요.",
+        leaveRoomTitle: "“{name}”에서 나가시겠습니까?",
+        leaveRoomMessage: "더 이상 이 방의 메시지를 받지 않습니다.",
+        lastAdminWarning:
+            "당신이 유일한 관리자입니다. 나가면 아무도 이 방의 이름을 바꾸거나 멤버를 관리할 수 없습니다.",
+        leaveRoom: "나가기",
+        leaveFolderTitle: "폴더 “{name}”에서 나가시겠습니까?",
+        leaveFolderMessage: "참여한 방에는 남지만 폴더와 추천 방은 더 이상 보이지 않습니다.",
+        leaveFolder: "폴더에서 나가기",
+        kickTitle: "{name}님을 방에서 내보내시겠습니까?",
+        kickMessage: "다시 초대되거나 방이 열려 있으면 돌아올 수 있습니다.",
+        kick: "내보내기",
+        banTitle: "{name}님을 차단하시겠습니까?",
+        banMessage: "방에서 나가게 되며 차단을 해제할 때까지 돌아올 수 없습니다.",
+        ban: "차단",
+        reasonLabel: "사유 ({name}님에게 표시, 선택)",
+        promoteTitle: "{name}님을 관리자로 지정하시겠습니까?",
+        promoteMessage: "관리자는 당신조차도 강등할 수 없습니다.",
+        promote: "관리자로 지정",
+    },
 };
 
 export default chat;

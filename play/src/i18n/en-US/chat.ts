@@ -776,6 +776,29 @@ const chat: BaseTranslation = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "Cancel",
+        failed: "This didn't work. Try again.",
+        leaveRoomTitle: "Leave “{name}”?",
+        leaveRoomMessage: "You will no longer receive its messages.",
+        lastAdminWarning:
+            "You are the only admin. Once you leave, nobody will be able to rename this room or manage its members.",
+        leaveRoom: "Leave",
+        leaveFolderTitle: "Leave the folder “{name}”?",
+        leaveFolderMessage:
+            "You stay in the rooms you joined, but you will no longer see the folder or its suggested rooms.",
+        leaveFolder: "Leave folder",
+        kickTitle: "Remove {name} from the room?",
+        kickMessage: "They can come back if they are invited again or if the room is open to them.",
+        kick: "Remove",
+        banTitle: "Ban {name}?",
+        banMessage: "They leave the room and cannot come back until you unban them.",
+        ban: "Ban",
+        reasonLabel: "Reason, visible to {name} (optional)",
+        promoteTitle: "Make {name} an admin?",
+        promoteMessage: "An admin can never be demoted, not even by you.",
+        promote: "Make admin",
+    },
 };
 
 export default chat;

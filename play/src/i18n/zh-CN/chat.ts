@@ -772,6 +772,27 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "取消",
+        failed: "操作失败。请重试。",
+        leaveRoomTitle: "退出“{name}”？",
+        leaveRoomMessage: "你将不再收到其中的消息。",
+        lastAdminWarning: "你是唯一的管理员。退出后，没有人能再重命名此聊天室或管理成员。",
+        leaveRoom: "退出",
+        leaveFolderTitle: "退出文件夹“{name}”？",
+        leaveFolderMessage: "你会留在已加入的聊天室中，但不再看到该文件夹及其推荐的聊天室。",
+        leaveFolder: "退出文件夹",
+        kickTitle: "将 {name} 移出聊天室？",
+        kickMessage: "如果再次被邀请或聊天室对其开放，此人可以回来。",
+        kick: "移出",
+        banTitle: "封禁 {name}？",
+        banMessage: "此人将离开聊天室，在你解除封禁前无法回来。",
+        ban: "封禁",
+        reasonLabel: "原因（{name} 可见，可选）",
+        promoteTitle: "将 {name} 设为管理员？",
+        promoteMessage: "管理员无法被降级，你也不行。",
+        promote: "设为管理员",
+    },
 };
 
 export default chat;

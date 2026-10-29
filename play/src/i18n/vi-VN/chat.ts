@@ -775,6 +775,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Chế độ xem chỉ đọc hồ sơ Matrix của người dùng này. Chỉ hiển thị khi DEBUG_MODE bật.",
         loadError: "Không thể tải hồ sơ Matrix của người dùng này.",
     },
+    confirm: {
+        cancel: "Hủy",
+        failed: "Không thành công. Hãy thử lại.",
+        leaveRoomTitle: "Rời “{name}”?",
+        leaveRoomMessage: "Bạn sẽ không nhận tin nhắn từ đây nữa.",
+        lastAdminWarning:
+            "Bạn là quản trị viên duy nhất. Sau khi rời, không ai có thể đổi tên phòng hay quản lý thành viên.",
+        leaveRoom: "Rời",
+        leaveFolderTitle: "Rời thư mục “{name}”?",
+        leaveFolderMessage:
+            "Bạn vẫn ở trong các phòng đã tham gia, nhưng sẽ không thấy thư mục và các phòng gợi ý nữa.",
+        leaveFolder: "Rời thư mục",
+        kickTitle: "Mời {name} ra khỏi phòng?",
+        kickMessage: "Người này có thể quay lại nếu được mời lại hoặc phòng mở cho họ.",
+        kick: "Mời ra",
+        banTitle: "Cấm {name}?",
+        banMessage: "Người này rời phòng và không thể quay lại cho đến khi bạn bỏ cấm.",
+        ban: "Cấm",
+        reasonLabel: "Lý do, {name} sẽ thấy (không bắt buộc)",
+        promoteTitle: "Đặt {name} làm quản trị viên?",
+        promoteMessage: "Quản trị viên không bao giờ bị hạ cấp, kể cả bởi bạn.",
+        promote: "Đặt làm quản trị viên",
+    },
 };
 
 export default chat;

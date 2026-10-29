@@ -776,6 +776,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "Přetorhnyć",
+        failed: "To njeje so poradźiło. Spytaj hišće raz.",
+        leaveRoomTitle: "„{name}“ wopušćić?",
+        leaveRoomMessage: "Njedóstanješ potom žane powěsće wot njeje.",
+        lastAdminWarning:
+            "Sy jeničky administrator. Potom nichtó rumnosć přemjenować abo jeje čłonow rjadować njemóže.",
+        leaveRoom: "Wopušćić",
+        leaveFolderTitle: "Rjadowak „{name}“ wopušćić?",
+        leaveFolderMessage:
+            "Wostanješ w rumnosćach, do kotrychž sy zastupił, ale rjadowak a jeho doporučene rumnosće hižo njewidźiš.",
+        leaveFolder: "Rjadowak wopušćić",
+        kickTitle: "{name} z rumnosće wotstronić?",
+        kickMessage: "Wona móže wróćo přińć, hdyž so znowa přeprosy abo hdyž je jej rumnosć wotewrjena.",
+        kick: "Wotstronić",
+        banTitle: "{name} zakazać?",
+        banMessage: "Wona rumnosć wopušći a njemóže wróćo, doniž zakaz njewotstroniš.",
+        ban: "Zakazać",
+        reasonLabel: "Přičina, widźomna za {name} (opcionalna)",
+        promoteTitle: "{name} k administratorej činić?",
+        promoteMessage: "Administrator njeda so ženje ponižić, ani wot tebje.",
+        promote: "K administratorej činić",
+    },
 };
 
 export default chat;

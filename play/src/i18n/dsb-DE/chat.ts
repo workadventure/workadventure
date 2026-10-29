@@ -777,6 +777,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "Pśetergnuś",
+        failed: "To njejo se raźiło. Wopytaj hyšći raz.",
+        leaveRoomTitle: "„{name}“ spušćiś?",
+        leaveRoomMessage: "Njedostanjoš pótom žedne powěsći wót njeje.",
+        lastAdminWarning:
+            "Sy jadnučki administrator. Pótom njamóžo nichten rumnosć pśemjeniś abo jeje cłonki zastojaś.",
+        leaveRoom: "Spušćiś",
+        leaveFolderTitle: "Zarědnik „{name}“ spušćiś?",
+        leaveFolderMessage:
+            "Wóstanjoš w rumnosćach, ku kótarymž sy pśistupił, ale zarědnik a jogo dopórucone rumnosći wěcej njewiźiš.",
+        leaveFolder: "Zarědnik spušćiś",
+        kickTitle: "{name} z rumnosći wótpóraś?",
+        kickMessage: "Wóna móžo slědk pśiś, gaž se znowego pśepšosy abo gaž jej rumnosć wótwórjona jo.",
+        kick: "Wótpóraś",
+        banTitle: "{name} zakazaś?",
+        banMessage: "Wóna spušćijo rumnosć a njamóžo slědk, daniž zakaz njewótpórajoš.",
+        ban: "Zakazaś",
+        reasonLabel: "Pśicyna, widobna za {name} (opcionalna)",
+        promoteTitle: "{name} k administratoroju cyniś?",
+        promoteMessage: "Administrator njedajo se nigdy pónižyś, ani wót tebje.",
+        promote: "K administratoroju cyniś",
+    },
 };
 
 export default chat;

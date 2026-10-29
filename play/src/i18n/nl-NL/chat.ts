@@ -777,6 +777,29 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "Read-only view of this user’s Matrix profile. Shown only when DEBUG_MODE is on.",
         loadError: "Could not load this user’s Matrix profile.",
     },
+    confirm: {
+        cancel: "Annuleren",
+        failed: "Dat is niet gelukt. Probeer het opnieuw.",
+        leaveRoomTitle: "“{name}” verlaten?",
+        leaveRoomMessage: "Je ontvangt er dan geen berichten meer van.",
+        lastAdminWarning: "Je bent de enige beheerder. Daarna kan niemand de ruimte nog hernoemen of de leden beheren.",
+        leaveRoom: "Verlaten",
+        leaveFolderTitle: "Map “{name}” verlaten?",
+        leaveFolderMessage:
+            "Je blijft in de ruimtes waar je lid van bent, maar je ziet de map en de aanbevolen ruimtes niet meer.",
+        leaveFolder: "Map verlaten",
+        kickTitle: "{name} uit de ruimte verwijderen?",
+        kickMessage:
+            "Deze persoon kan terugkomen als die opnieuw wordt uitgenodigd of als de ruimte voor haar openstaat.",
+        kick: "Verwijderen",
+        banTitle: "{name} verbannen?",
+        banMessage: "Deze persoon verlaat de ruimte en kan pas terug als je de verbanning opheft.",
+        ban: "Verbannen",
+        reasonLabel: "Reden, zichtbaar voor {name} (optioneel)",
+        promoteTitle: "{name} beheerder maken?",
+        promoteMessage: "Een beheerder kan nooit worden teruggezet, ook niet door jou.",
+        promote: "Beheerder maken",
+    },
 };
 
 export default chat;

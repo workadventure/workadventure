@@ -770,6 +770,27 @@ const chat: DeepPartial<Translation["chat"]> = {
         subtitle: "此使用者 Matrix 個人資料的唯讀檢視。僅在 DEBUG_MODE 開啟時顯示。",
         loadError: "無法載入此使用者的 Matrix 個人資料。",
     },
+    confirm: {
+        cancel: "取消",
+        failed: "操作失敗。請重試。",
+        leaveRoomTitle: "退出「{name}」？",
+        leaveRoomMessage: "你將不再收到其中的訊息。",
+        lastAdminWarning: "你是唯一的管理員。退出後，沒有人能再重新命名此聊天室或管理成員。",
+        leaveRoom: "退出",
+        leaveFolderTitle: "退出資料夾「{name}」？",
+        leaveFolderMessage: "你會留在已加入的聊天室中，但不再看到該資料夾及其推薦的聊天室。",
+        leaveFolder: "退出資料夾",
+        kickTitle: "將 {name} 移出聊天室？",
+        kickMessage: "如果再次被邀請或聊天室對其開放，此人可以回來。",
+        kick: "移出",
+        banTitle: "封鎖 {name}？",
+        banMessage: "此人將離開聊天室，在你解除封鎖前無法回來。",
+        ban: "封鎖",
+        reasonLabel: "原因（{name} 可見，選填）",
+        promoteTitle: "將 {name} 設為管理員？",
+        promoteMessage: "管理員無法被降級，你也不行。",
+        promote: "設為管理員",
+    },
 };
 
 export default chat;
