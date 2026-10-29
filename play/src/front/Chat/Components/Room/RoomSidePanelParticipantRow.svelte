@@ -54,9 +54,14 @@
     }
 </script>
 
+<!-- One Tab stop for the whole list (rovingFocus in the panel): ↑ ↓ move, → or Shift+F10 open the "...". -->
 <div
-    class="flex items-center gap-3 rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-2"
+    class="flex items-center gap-3 rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
     data-testid="roomSidePanelParticipantRow"
+    data-member-row
+    data-roving-row
+    tabindex="-1"
+    aria-label={$memberNameStore || "?"}
 >
     <Avatar
         compact

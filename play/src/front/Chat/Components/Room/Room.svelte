@@ -17,7 +17,6 @@
     import LastMessagePreview from "../LastMessagePreview.svelte";
     import { ROOM_ROW_PREVIEW_CONTEXT } from "../RoomListLayout";
     import { formatLastActivity } from "../unreadCount";
-    import { focusAdjacentRoomRow } from "../roomRowKeyboard";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
 
@@ -82,6 +81,7 @@
         },
     ]}
     aria-current={isSelected ? "true" : undefined}
+    data-roving-row
     data-testid={$roomName}
 >
     <!-- The room menu cannot sit inside a button: it stays next to it, in the row. -->
@@ -89,7 +89,6 @@
         data-room-row-button
         class="flex flex-1 min-w-0 items-center gap-2 self-stretch ps-2 py-2 m-0 rounded bg-transparent border-none text-start cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
         onclick={() => selectedRoomStore.set(room)}
-        onkeydown={focusAdjacentRoomRow}
     >
         <span class="relative shrink-0">
             <Avatar

@@ -8,6 +8,7 @@
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
+    import { rovingFocus } from "../roomRowKeyboard";
     import RoomSidePanelParticipantRow from "./RoomSidePanelParticipantRow.svelte";
     import MemberActionsMenu from "./MemberActionsMenu.svelte";
     import { IconLoader } from "@wa-icons";
@@ -114,7 +115,10 @@
         </div>
     {/if}
 
-    <div class="flex-1 overflow-y-auto px-3 py-3">
+    <div
+        class="flex-1 overflow-y-auto px-3 py-3"
+        use:rovingFocus={{ items: "[data-member-row]", arrowRightOpensMenu: true }}
+    >
         {#if loadingMembers}
             <div
                 class="flex flex-col items-center justify-center gap-3 py-10"
