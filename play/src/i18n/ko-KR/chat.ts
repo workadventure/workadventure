@@ -28,6 +28,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "사용자",
     chat: "채팅",
     resizeChat: "채팅 크기 조정 (화살표 키로 조정, Enter로 전체 화면)",
+    resizeRoomList: "방 목록 너비 조정 (화살표 키로 조정, 더블 클릭으로 초기화)",
     userList: {
         disconnected: "월드에 연결되어 있지 않음",
         isHere: "이 지도에 있음",

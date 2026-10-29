@@ -28,6 +28,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "Usuaris",
     chat: "Xat",
     resizeChat: "Redimensiona el xat (fletxes per redimensionar, Retorn per a pantalla completa)",
+    resizeRoomList: "Redimensiona la llista de sales (fletxes per redimensionar, doble clic per restablir)",
     userList: {
         disconnected: "No connectat al món",
         isHere: "Està en aquest mapa",

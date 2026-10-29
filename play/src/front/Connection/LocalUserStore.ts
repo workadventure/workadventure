@@ -54,6 +54,7 @@ const foldersOpened = "foldersOpened";
 const ignoredSuggestedRoomIdsKey = "ignoredSuggestedRoomIds";
 const cameraContainerHeightKey = "cameraContainerHeight";
 const chatSideBarWidthKey = "chatSideBarWidth";
+const chatRoomListWidthKey = "chatRoomListWidth";
 const mapEditorSideBarWidthKey = "mapEditorSideBarWidthKey";
 const bubbleSound = "bubbleSound";
 const notAskAgainHelpWebRtcSettingsPopup = "notAskAgainHelpWebRtcSettingsPopup";
@@ -1062,6 +1063,15 @@ class LocalUserStore {
         }
         const floatValue = parseFloat(value);
         return isNaN(floatValue) ? INITIAL_SIDEBAR_WIDTH : floatValue;
+    }
+
+    setChatRoomListWidth(width: number): void {
+        localStorage.setItem(chatRoomListWidthKey, width.toString());
+    }
+
+    getChatRoomListWidth(): number | undefined {
+        const floatValue = parseFloat(localStorage.getItem(chatRoomListWidthKey) ?? "");
+        return isNaN(floatValue) ? undefined : floatValue;
     }
 
     setMapEditorSideBarWidth(width: number): void {

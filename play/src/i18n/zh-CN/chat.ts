@@ -27,6 +27,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "用户",
     chat: "聊天",
     resizeChat: "调整聊天大小（方向键调整，Enter 切换全屏）",
+    resizeRoomList: "调整房间列表宽度（方向键调整，双击重置）",
     userList: {
         disconnected: "未连接到世界",
         isHere: "在此地图上",

@@ -6,6 +6,7 @@ import { mapEditorSideBarWidthStore } from "../Components/MapEditor/MapEditorSid
 import { mapEditorModeStore } from "../Stores/MapEditorStore";
 import { sidePanelWidthStore } from "../Stores/SidePanelStore";
 import { CHAT_SIDEBAR_MAX_WIDTH, CHAT_SIDEBAR_MIN_WIDTH } from "./ChatSidebarWidth";
+import { clampRoomListWidth, ROOM_LIST_DEFAULT_WIDTH } from "./Components/RoomListLayout";
 
 // A full-screen width stored before the cap existed comes back capped.
 export const chatSidebarWidthStore = writable(
@@ -16,6 +17,17 @@ export const chatSidebarWidthStore = writable(
 //eslint-disable-next-line svelte/no-ignored-unsubscribe
 chatSidebarWidthStore.subscribe((value) => {
     localUserStore.setChatSideBarWidth(value);
+});
+
+// The room list beside the conversation, in the two-column layout.
+export const roomListWidthStore = writable(
+    clampRoomListWidth(localUserStore.getChatRoomListWidth() ?? ROOM_LIST_DEFAULT_WIDTH),
+);
+
+// Not unsubscribing is ok, this is a singleton.
+//eslint-disable-next-line svelte/no-ignored-unsubscribe
+roomListWidthStore.subscribe((value) => {
+    localUserStore.setChatRoomListWidth(value);
 });
 
 // The agenda / tasks panel alone always leaves enough room (it only takes room from md up): it counts with the

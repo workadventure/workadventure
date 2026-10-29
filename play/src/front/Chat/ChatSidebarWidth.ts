@@ -8,7 +8,8 @@ export const CHAT_SIDEBAR_SNAP_DISTANCE = 40;
 const DRAG_MAX_MARGIN = 50;
 
 // Past this width the chat only adds empty space beside the conversation: it stops here and the map stays visible.
-// 335 px of room list + a ~865 px conversation, wide enough for the reading column and the three-column layout.
+// The room list (260-400 px) + an 800-940 px conversation, wide enough for the reading column and the three-column
+// layout.
 export const CHAT_SIDEBAR_MAX_WIDTH = 1200;
 
 export function clampChatSidebarWidth(width: number, viewportWidth: number): number {

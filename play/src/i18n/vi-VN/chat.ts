@@ -28,6 +28,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "Người dùng",
     chat: "Trò chuyện",
     resizeChat: "Thay đổi kích thước trò chuyện (phím mũi tên để thay đổi, Enter để toàn màn hình)",
+    resizeRoomList: "Thay đổi độ rộng danh sách phòng (phím mũi tên để thay đổi, nhấp đúp để đặt lại)",
     userList: {
         disconnected: "Chưa kết nối vào thế giới",
         isHere: "Đang ở bản đồ này",

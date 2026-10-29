@@ -28,6 +28,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "wužiwar",
     chat: "Chat",
     resizeChat: "Wulkosć chata změnić (šipki za změnjenje, Enter za połnu wobrazowku)",
+    resizeRoomList: "Šěrokosć lisćiny rumow změnić (šipki za změnjenje, dwójne kliknjenje za wróćostajenje)",
     userList: {
         disconnected: "Njepřipojeny k swětej",
         isHere: "Je na tutej karće",

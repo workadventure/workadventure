@@ -28,6 +28,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     users: "ユーザー",
     chat: "チャット",
     resizeChat: "チャットのサイズを変更（矢印キーで変更、Enter で全画面）",
+    resizeRoomList: "ルーム一覧の幅を変更（矢印キーで変更、ダブルクリックでリセット）",
     userList: {
         disconnected: "ワールドに接続されていません",
         isHere: "このマップ上",

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { get } from "svelte/store";
 
-    import { onDestroy, onMount } from "svelte";
+    import { onDestroy, onMount, setContext } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
@@ -29,6 +29,7 @@
     import ExternalComponents from "../../Components/ExternalModules/ExternalComponents.svelte";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import { createUnreadConversationsStore, createUnreadSummaryStore } from "../Stores/UnreadMessagesCountStore";
+    import { roomListWidthStore } from "../ChatSidebarWidthStore";
     import Room from "./Room/Room.svelte";
     import RoomTimeline from "./Room/RoomTimeline.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
@@ -44,11 +45,17 @@
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
     import {
-        CHAT_THREE_COLUMN_LAYOUT_LIMIT,
         CHAT_TWO_COLUMN_LAYOUT_LIMIT,
         canDisplayRoomListAndTimeline,
+        clampRoomListWidth,
         getRoomSidePanelPlacement,
+        ROOM_LIST_DEFAULT_WIDTH,
+        ROOM_LIST_MAX_WIDTH,
+        ROOM_LIST_MIN_WIDTH,
+        ROOM_LIST_PREVIEW_MIN_WIDTH,
+        ROOM_ROW_PREVIEW_CONTEXT,
         shouldShowRoomSidePanelToggle,
+        threeColumnLayoutLimit,
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import UnreadCount from "./UnreadCount.svelte";
@@ -227,7 +234,49 @@
             sideBarWidth,
         }),
     );
-    let displayThreeColumnLayout = $derived(sideBarWidth >= CHAT_THREE_COLUMN_LAYOUT_LIMIT);
+    let displayThreeColumnLayout = $derived(sideBarWidth >= threeColumnLayoutLimit($roomListWidthStore));
+    let roomListBesideConversation = $derived(displayTwoColumnLayout && $navChat.key === "chat");
+    // ponytail: only beside a conversation, so the default one-column list keeps its compact rows.
+    let showRoomRowPreview = $derived(roomListBesideConversation && $roomListWidthStore > ROOM_LIST_PREVIEW_MIN_WIDTH);
+    setContext(ROOM_ROW_PREVIEW_CONTEXT, {
+        get shown() {
+            return showRoomRowPreview;
+        },
+    });
+
+    const isRTL = document.documentElement.dir === "rtl";
+    const ROOM_LIST_KEYBOARD_STEP = 20;
+
+    function startRoomListResize(event: PointerEvent) {
+        const handle = event.currentTarget as HTMLElement;
+        const startX = event.clientX;
+        const startWidth = $roomListWidthStore;
+        handle.setPointerCapture(event.pointerId);
+        const onMove = (moveEvent: PointerEvent) => {
+            const diff = moveEvent.clientX - startX;
+            roomListWidthStore.set(clampRoomListWidth(isRTL ? startWidth - diff : startWidth + diff));
+        };
+        const onEnd = () => {
+            handle.removeEventListener("pointermove", onMove);
+            handle.removeEventListener("pointerup", onEnd);
+            handle.removeEventListener("pointercancel", onEnd);
+        };
+        handle.addEventListener("pointermove", onMove);
+        handle.addEventListener("pointerup", onEnd);
+        handle.addEventListener("pointercancel", onEnd);
+    }
+
+    function resizeRoomListWithKeyboard(event: KeyboardEvent) {
+        if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") {
+            return;
+        }
+        // The arrow follows the handle on screen: it moves left in RTL, where the list sits on the right.
+        const grows = (event.key === "ArrowRight") !== isRTL;
+        roomListWidthStore.set(
+            clampRoomListWidth($roomListWidthStore + (grows ? ROOM_LIST_KEYBOARD_STEP : -ROOM_LIST_KEYBOARD_STEP)),
+        );
+        event.preventDefault();
+    }
     let selectedRoomWithSidePanel = $derived(getRoomWithSidePanel($selectedRoomStore));
     let hasSelectedRoomWithSidePanel = $derived(selectedRoomWithSidePanel !== undefined);
     let showRoomSidePanelToggle = $derived(shouldShowRoomSidePanelToggle(hasSelectedRoomWithSidePanel));
@@ -260,18 +309,23 @@
     });
     let roomListGridClass = $derived(
         showRoomSidePanelInThirdColumn
-            ? "grid-cols-[335px_minmax(0,1fr)_360px]"
-            : displayTwoColumnLayout && $navChat.key === "chat"
+            ? ""
+            : roomListBesideConversation
               ? "grid-cols-[auto_minmax(0,1fr)]"
               : "grid-cols-[1fr]",
     );
 </script>
 
-<div class="overflow-auto h-full grid grid-rows-[1fr_auto] {roomListGridClass}">
+<div
+    class="relative overflow-auto h-full grid grid-rows-[1fr_auto] {roomListGridClass}"
+    style={showRoomSidePanelInThirdColumn
+        ? `grid-template-columns: ${$roomListWidthStore}px minmax(0, 1fr) 360px`
+        : undefined}
+>
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
-            style={displayTwoColumnLayout ? `width:335px ;flex : 0 0 auto` : ``}
+            style={displayTwoColumnLayout ? `width:${$roomListWidthStore}px ;flex : 0 0 auto` : ``}
         >
             {#if $shouldRetrySendingEvents}
                 <RefreshChat />
@@ -507,6 +561,30 @@
         </div>
     {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
         <CatchUpList conversations={$unreadConversations} />
+    {/if}
+
+    {#if roomListBesideConversation}
+        <!-- A focusable separator is the WAI-ARIA window splitter pattern, which Svelte's a11y rules don't know. -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+        <div
+            class="group absolute top-0 bottom-0 z-20 w-3 -ms-1.5 flex items-center justify-center cursor-col-resize touch-none select-none focus-visible:outline-none"
+            style="inset-inline-start: {$roomListWidthStore}px"
+            role="separator"
+            tabindex="0"
+            aria-orientation="vertical"
+            aria-label={$LL.chat.resizeRoomList()}
+            aria-valuenow={$roomListWidthStore}
+            aria-valuemin={ROOM_LIST_MIN_WIDTH}
+            aria-valuemax={ROOM_LIST_MAX_WIDTH}
+            data-testid="roomListResizeHandle"
+            onpointerdown={startRoomListResize}
+            ondblclick={() => roomListWidthStore.set(ROOM_LIST_DEFAULT_WIDTH)}
+            onkeydown={resizeRoomListWithKeyboard}
+        >
+            <span
+                class="w-1 h-32 rounded bg-white/20 transition-colors group-hover:bg-white group-focus-visible:bg-white"
+            ></span>
+        </div>
     {/if}
 
     {#if showRoomSidePanelInThirdColumn && selectedRoomWithSidePanel}
