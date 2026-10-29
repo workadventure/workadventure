@@ -282,6 +282,8 @@ export interface ChatMessage {
     canEdit: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
     canReact: Readable<boolean>;
+    /** Absent: replying is always possible. */
+    canReply?: Readable<boolean>;
     canDelete: Readable<boolean>;
     threadSummary?: Readable<ChatThreadSummary | null>;
     openThread?: () => Promise<ChatThread | undefined>;

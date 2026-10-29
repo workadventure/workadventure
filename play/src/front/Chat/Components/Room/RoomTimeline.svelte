@@ -451,9 +451,13 @@
         return true;
     }
 
+    // The read receipt clears the unread count and the "new messages" line: send one for what is on screen.
+    // On opening, on every new message while the room stays open, and on coming back to a hidden tab.
+    let pageVisible = $state(document.visibilityState === "visible");
+    let lastRenderedKey = $derived(renderItems[renderItems.length - 1]?.key);
     $effect(() => {
-        if ($initializationState === "ready") {
-            room.setTimelineAsRead();
+        if ($initializationState === "ready" && pageVisible && lastRenderedKey !== undefined) {
+            untrack(() => room.setTimelineAsRead());
         }
     });
 
@@ -726,6 +730,8 @@
     }
 </script>
 
+<svelte:document onvisibilitychange={() => (pageVisible = document.visibilityState === "visible")} />
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
@@ -963,9 +969,15 @@
         {#if !autoScroll && (newMessagesCount > 0 || farFromBottom)}
             <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
             <div class="relative h-0">
+                {#snippet newMessagesLabel()}
+                    {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
+                {/snippet}
+                <!-- Without a label, no empty label span: it would push the arrow off-center. -->
                 <Button
                     variant="secondary"
                     size="sm"
+                    square={newMessagesCount === 0}
+                    children={newMessagesCount > 0 ? newMessagesLabel : undefined}
                     class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full shadow-lg whitespace-nowrap"
                     dataTestId="jumpToLatestMessages"
                     title={$LL.chat.timeLine.jumpToLatest()}
@@ -975,9 +987,6 @@
                     {#snippet icon()}
                         <IconArrowDown font-size="16" />
                     {/snippet}
-                    {#if newMessagesCount > 0}
-                        {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
-                    {/if}
                 </Button>
             </div>
         {/if}

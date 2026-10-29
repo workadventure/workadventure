@@ -86,6 +86,13 @@
         onInsert();
     }
 
+    let listElement: HTMLUListElement | undefined = $state();
+
+    // The options are already rendered: keep the one the keyboard reached visible in a long list.
+    function scrollActiveIntoView() {
+        listElement?.querySelectorAll('[role="option"]')[activeIndex]?.scrollIntoView({ block: "nearest" });
+    }
+
     /** Called by the input before its own handling: returns true when the key drove the suggestions. */
     export function handleKeydown(event: KeyboardEvent): boolean {
         if (matches.length === 0) {
@@ -94,9 +101,11 @@
         switch (event.key) {
             case "ArrowDown":
                 activeIndex = (activeIndex + 1) % matches.length;
+                scrollActiveIntoView();
                 break;
             case "ArrowUp":
                 activeIndex = (activeIndex - 1 + matches.length) % matches.length;
+                scrollActiveIntoView();
                 break;
             case "Enter":
             case "Tab":
@@ -147,6 +156,7 @@
         data-testid="mentionSuggestions"
     >
         <ul
+            bind:this={listElement}
             class="m-0 max-h-80 list-none overflow-y-auto p-1"
             role="listbox"
             aria-label={$LL.chat.mention.suggestions()}
