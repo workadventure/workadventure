@@ -26,6 +26,7 @@
     let loadError: string | undefined = $state();
     let data: MatrixUserSettingsDiagnostics | undefined = $state();
     let copiedField: string | undefined = $state();
+    let avatarFailed = $state(false);
 
     function flashSuccess(action: FooterAction) {
         if (successFlashTimer) {
@@ -154,11 +155,12 @@
                     {$LL.chat.matrixSettings.profileSection()}
                 </h3>
                 <div class="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2">
-                    {#if snapshot.profileAvatarPreviewUrl}
+                    {#if snapshot.profileAvatarPreviewUrl && !avatarFailed}
                         <img
                             src={snapshot.profileAvatarPreviewUrl}
                             alt={$LL.chat.matrixSettings.avatar()}
                             class="h-10 w-10 shrink-0 rounded-lg object-cover"
+                            onerror={() => (avatarFailed = true)}
                         />
                     {/if}
                     <span class="min-w-0 flex-1 truncate font-medium">{snapshot.profileDisplayName ?? "—"}</span>
@@ -222,18 +224,18 @@
                     {#each [{ key: "id", label: $LL.chat.matrixSettings.matrixUserId(), value: snapshot.matrixUserId }, { key: "hs", label: $LL.chat.matrixSettings.homeserver(), value: snapshot.homeserverUrl }] as row (row.key)}
                         <button
                             type="button"
-                            class="group flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left transition hover:border-white/20 hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-white/60"
+                            class="group flex w-full flex-col gap-1 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-left transition hover:border-white/20 hover:bg-white/[0.07] focus-visible:ring-2 focus-visible:ring-white/60"
                             onclick={() => copyText(row.key, row.value)}
                         >
-                            <span class="shrink-0 text-white/60">{row.label}</span>
-                            <span class="line-clamp-2 min-w-0 break-all text-right text-xs text-white/90"
-                                >{row.value}</span
-                            >
-                            <span class="shrink-0 text-xs text-light-blue opacity-80 group-hover:opacity-100">
-                                {copiedField === row.key
-                                    ? $LL.chat.matrixSettings.copied()
-                                    : $LL.chat.matrixSettings.copy()}
+                            <span class="flex w-full justify-between gap-2 text-xs">
+                                <span class="text-white/60">{row.label}</span>
+                                <span class="text-light-blue opacity-80 group-hover:opacity-100">
+                                    {copiedField === row.key
+                                        ? $LL.chat.matrixSettings.copied()
+                                        : $LL.chat.matrixSettings.copy()}
+                                </span>
                             </span>
+                            <span class="w-full break-all text-xs text-white/90">{row.value}</span>
                         </button>
                     {/each}
                     <p class="m-0 text-xs text-white/55">{$LL.chat.matrixSettings.clearSuggestedRoomsHint()}</p>
