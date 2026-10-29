@@ -32,6 +32,7 @@ import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
 import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
+import { UpdateEntityFrontCommand } from "./Commands/Entity/UpdateEntityFrontCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -376,6 +377,8 @@ export class MapEditorModeManager {
                         ) {
                             command.setNewConfig(message.modifyAreaMessage);
                             await command.execute();
+                        } else {
+                            await this.applyServerChangesToCreatedProperties(message);
                         }
 
                         return;
@@ -390,6 +393,41 @@ export class MapEditorModeManager {
                 }
             }).catch((e) => console.error(e));
         });
+    }
+
+    /**
+     * The map-storage may change the properties of an area or entity this client created (a new chat room, its own
+     * copy of an uploaded file for a copied property): apply what it sent back, without sending it again.
+     */
+    private async applyServerChangesToCreatedProperties(
+        message: NonNullable<EditMapCommandMessage["editMapMessage"]>["message"],
+    ): Promise<void> {
+        const wamFile = this.scene.getGameMap().getWamFile();
+        if (!wamFile) {
+            return;
+        }
+        if (message?.$case === "createAreaMessage" && message.createAreaMessage.modifyServerData === true) {
+            const { id, properties } = message.createAreaMessage;
+            await new UpdateAreaFrontCommand(
+                wamFile,
+                { id, properties },
+                undefined,
+                undefined,
+                this.editorTools.AreaEditor as AreaEditorTool,
+                this.scene.getGameMapFrontWrapper(),
+            ).execute();
+        } else if (message?.$case === "createEntityMessage" && message.createEntityMessage.modifyServerData === true) {
+            const { id, properties } = message.createEntityMessage;
+            await new UpdateEntityFrontCommand(
+                wamFile,
+                id,
+                { properties },
+                undefined,
+                undefined,
+                this.scene.getGameMapFrontWrapper().getEntitiesManager(),
+                this.scene,
+            ).execute();
+        }
     }
 
     private async revertPendingCommands(): Promise<void> {
