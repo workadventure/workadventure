@@ -914,7 +914,7 @@
     />
 {/if}
 <div
-    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
+    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative pr-2"
     bind:this={messageBarRef}
 >
     {#if $selectedChatMessageToReply !== null}
@@ -984,7 +984,7 @@
     {#if message.trim().length !== 0 || files.length !== 0 || (applicationProperty && applicationProperty.link.length !== 0)}
         <button
             data-testid="sendMessageButton"
-            class="disabled:opacity-30 disabled:!cursor-not-allowed disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
+            class="disabled:opacity-30 disabled:!cursor-not-allowed disabled:text-white p-0 m-0 h-11 w-11 shrink-0 flex items-center justify-center bg-secondary rounded-md"
             disabled={sendingFiles ||
                 shouldDisableSendButton({
                     applicationPropertyInProcessing,
