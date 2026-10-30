@@ -255,6 +255,59 @@ func (s *Session) moderatorTag(parse func(props map[string]any) (room, tag strin
 	return out
 }
 
+// canModerate says whether the session moderates the conversation of space local: an admin moderates every one, and
+// a meeting room can name a moderator tag in its advanced options (livekitRoomAdminTag, ModerationRights.ts).
+func (s *Session) canModerate(local string) bool {
+	if s.isAdmin() {
+		return true
+	}
+	tag := s.livekitRoomAdminTag(local[strings.LastIndex(local, ".")+1:])
+	return tag != "" && slices.Contains(s.info.member.Tags, tag)
+}
+
+// livekitRoomAdminTag is findLivekitRoomAdminTag: the moderator tag of the meeting room (LiveKit area or entity of the
+// WAM) whose space is spaceName, the slug the front joins. A meeting room only exists in the WAM.
+func (s *Session) livekitRoomAdminTag(spaceName string) string {
+	key := s.srv.mapKey(s.info.roomID)
+	if key == "" {
+		return ""
+	}
+	data, err := s.srv.maps.Read(key)
+	if err != nil {
+		return ""
+	}
+	var doc struct {
+		Areas    []struct{ Properties []map[string]any }          `json:"areas"`
+		Entities map[string]struct{ Properties []map[string]any } `json:"entities"`
+	}
+	if json.Unmarshal(data, &doc) != nil {
+		return ""
+	}
+	var all [][]map[string]any
+	for _, a := range doc.Areas {
+		all = append(all, a.Properties)
+	}
+	for _, e := range doc.Entities {
+		all = append(all, e.Properties)
+	}
+	for _, props := range all {
+		for _, p := range props {
+			tag, _ := p["livekitRoomAdminTag"].(string)
+			if p["type"] != "livekitRoomProperty" || tag == "" {
+				continue
+			}
+			room, _ := p["roomName"].(string)
+			if strings.TrimSpace(room) == "" {
+				room, _ = p["id"].(string)
+			}
+			if strings.TrimSpace(slugifyJitsiRoomName(room, s.info.roomID, false)) == spaceName {
+				return tag
+			}
+		}
+	}
+	return ""
+}
+
 var notSlug = regexp.MustCompile(`[^a-z0-9-_ ]`)
 var spaces = regexp.MustCompile(`\s+`)
 

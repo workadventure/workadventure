@@ -44,43 +44,72 @@ func (c *client) privateEvent(space, to string, e *pb.PrivateSpaceEvent) {
 		SpaceName: space, ReceiverUserId: to, SpaceEvent: e}}})
 }
 
-// Kicking someone off a space, forcing a mute, muting everybody: the admin's alone. And the receiver is told who
-// sent an event by the server, never by the sender.
-func TestOnlyAnAdminForcesAMuteOrKicksOff(t *testing.T) {
+// Kicking someone off a space, forcing a mute, muting everybody: the moderator's alone, and anybody else's is dropped
+// (ModerationRights.ts). The receiver is told who sent an event by the server, never by the sender.
+func TestOnlyAModeratorForcesAMuteOrKicksOff(t *testing.T) {
 	h := newHarness(t)
 	admin := h.dialAs(auth.Token{Identifier: "admin", Tags: []string{"admin"}}, "c-admin")
 	bob := h.dialAs(auth.Token{Identifier: "bob"}, "c-bob")
 	adminID, bobID := admin.joinSpace(1, "meeting"), bob.joinSpace(1, "meeting")
+	assertModeration(t, admin, bob, "meeting", adminID, bobID)
+}
 
-	bob.privateEvent("meeting", adminID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_KickOffUser{KickOffUser: &pb.KickOffUserPrivateMessage{}}})
-	bob.waitFor("the refusal", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
-		return strings.HasSuffix(d.GetErrorMessage().GetMessage(), "Only admins can kick off a user")
+// The moderator tag of a meeting room (livekitRoomAdminTag) gives its holders the moderator's rights in that room.
+func TestTheMeetingRoomTagModeratesTheMeeting(t *testing.T) {
+	h := editorHarness(t)
+	if err := h.srv.maps.Put("maps/office.wam", []byte(`{"version":"2.0.0","mapUrl":"./office.tmj","entities":{},"entityCollections":[],
+		"areas":[{"id":"a1","name":"","x":0,"y":0,"width":32,"height":32,"visible":true,"properties":[
+		{"id":"p1","type":"livekitRoomProperty","roomName":"Board","livekitRoomAdminTag":"chair"}]}]}`)); err != nil {
+		t.Fatal(err)
+	}
+	chair := h.dialWAM(auth.Token{Identifier: "chair", Tags: []string{"chair"}})
+	bob := h.dialWAM(auth.Token{Identifier: "bob", Tags: []string{"other"}})
+	space := slugifyJitsiRoomName("Board", wamRoom, false)
+	chairID, bobID := chair.joinSpace(1, space), bob.joinSpace(1, space)
+	assertModeration(t, chair, bob, space, chairID, bobID)
+
+	// In another space, the tag is nobody's moderator.
+	chairID, bobID = chair.joinSpace(2, "elsewhere"), bob.joinSpace(2, "elsewhere")
+	chair.privateEvent("elsewhere", bobID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_MuteAudio{MuteAudio: &pb.MuteAudioPrivateMessage{Force: true}}})
+	bob.waitFor("the chair's request", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		m := s.GetPrivateEvent().GetSpaceEvent().GetMuteAudio()
+		if m != nil && m.GetForce() {
+			t.Fatal("the chair forced a mute outside its meeting room")
+		}
+		return m != nil && s.GetPrivateEvent().GetSender().GetSpaceUserId() == chairID
 	})
+}
+
+// assertModeration checks that bob's kick off and mute of everybody are dropped and his mute is only a request,
+// while the moderator's mute is forced.
+func assertModeration(t *testing.T, moderator, bob *client, space, moderatorID, bobID string) {
+	t.Helper()
+	bob.privateEvent(space, moderatorID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_KickOffUser{KickOffUser: &pb.KickOffUserPrivateMessage{}}})
 	bob.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_PublicEvent{PublicEvent: &pb.PublicEventFrontToPusher{
-		SpaceName: "meeting", SpaceEvent: &pb.SpaceEvent{Event: &pb.SpaceEvent_MuteAudioForEverybody{MuteAudioForEverybody: &pb.MuteAudioForEverybodyPublicMessage{}}}}}})
-	bob.waitFor("the refusal", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
-		return strings.HasSuffix(d.GetErrorMessage().GetMessage(), "Only admins can mute everyone")
-	})
+		SpaceName: space, SpaceEvent: &pb.SpaceEvent{Event: &pb.SpaceEvent_MuteAudioForEverybody{MuteAudioForEverybody: &pb.MuteAudioForEverybodyPublicMessage{}}}}}})
 
-	// Bob asks the admin to mute, and claims to force it: only a request reaches the admin, signed with Bob's id.
-	bob.privateEvent("meeting", adminID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_MuteAudio{MuteAudio: &pb.MuteAudioPrivateMessage{Force: true}}})
-	admin.waitFor("bob's request", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+	// Bob asks to mute, and claims to force it: only a request reaches the moderator, signed with Bob's id.
+	bob.privateEvent(space, moderatorID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_MuteAudio{MuteAudio: &pb.MuteAudioPrivateMessage{Force: true}}})
+	moderator.waitFor("bob's request", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+		if s.GetPublicEvent().GetSpaceEvent().GetMuteAudioForEverybody() != nil {
+			t.Fatal("bob muted everybody")
+		}
 		e := s.GetPrivateEvent()
+		if e.GetSpaceEvent().GetKickOffUser() != nil {
+			t.Fatal("bob's kick off reached the moderator")
+		}
 		if m := e.GetSpaceEvent().GetMuteAudio(); m != nil {
 			if m.GetForce() || e.GetSender().GetSpaceUserId() != bobID {
 				t.Fatalf("forced %v, sender %q", m.GetForce(), e.GetSender().GetSpaceUserId())
 			}
 			return true
 		}
-		if e.GetSpaceEvent().GetKickOffUser() != nil {
-			t.Fatal("bob's kick off reached the admin")
-		}
 		return false
 	})
-	admin.privateEvent("meeting", bobID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_MuteAudio{MuteAudio: &pb.MuteAudioPrivateMessage{}}})
-	bob.waitFor("the admin's forced mute", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
+	moderator.privateEvent(space, bobID, &pb.PrivateSpaceEvent{Event: &pb.PrivateSpaceEvent_MuteAudio{MuteAudio: &pb.MuteAudioPrivateMessage{}}})
+	bob.waitFor("the moderator's forced mute", func(_ *pb.ServerToClientMessage, s *pb.SubMessage) bool {
 		m := s.GetPrivateEvent().GetSpaceEvent().GetMuteAudio()
-		return m != nil && m.GetForce() && s.GetPrivateEvent().GetSender().GetSpaceUserId() == adminID
+		return m != nil && m.GetForce() && s.GetPrivateEvent().GetSender().GetSpaceUserId() == moderatorID
 	})
 }
 

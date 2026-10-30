@@ -241,7 +241,7 @@ func (s *Session) onWatch(local string) {
 	}
 }
 
-// onPublicEvent relays an event to the space; muting everybody is the admin's.
+// onPublicEvent relays an event to the space; muting everybody is the moderator's (canModerate).
 func (s *Session) onPublicEvent(e *pb.PublicEventFrontToPusher) {
 	space := s.joinedSpace(e.GetSpaceName())
 	if space == nil {
@@ -250,8 +250,8 @@ func (s *Session) onPublicEvent(e *pb.PublicEventFrontToPusher) {
 	}
 	switch e.GetSpaceEvent().GetEvent().(type) {
 	case *pb.SpaceEvent_MuteAudioForEverybody, *pb.SpaceEvent_MuteVideoForEverybody:
-		if !s.isAdmin() {
-			s.sendError("Only admins can mute everyone")
+		if !s.canModerate(e.GetSpaceName()) {
+			slog.Debug("cannot moderate the space, event dropped", "space", e.GetSpaceName())
 			return
 		}
 	}
@@ -259,8 +259,8 @@ func (s *Session) onPublicEvent(e *pb.PublicEventFrontToPusher) {
 	metrics.Ignore("space.PublicEvent", space.PublicEvent(s.ctx, s.spaceUserID(), payload, s.notPartOf(e.GetSpaceName())))
 }
 
-// onPrivateEvent relays an event to one member, after the server's own rules: kicking off is the admin's, a mute is
-// forced only by an admin, a file offer carries the sender's real name and woka.
+// onPrivateEvent relays an event to one member, after the server's own rules: kicking off is the moderator's (canModerate), a mute is
+// forced only by a moderator whatever force the client sent, a file offer carries the sender's real name and woka.
 func (s *Session) onPrivateEvent(e *pb.PrivateEventFrontToPusher) {
 	space := s.joinedSpace(e.GetSpaceName())
 	if space == nil {
@@ -270,14 +270,14 @@ func (s *Session) onPrivateEvent(e *pb.PrivateEventFrontToPusher) {
 	ev := e.GetSpaceEvent()
 	switch v := ev.GetEvent().(type) {
 	case *pb.PrivateSpaceEvent_KickOffUser:
-		if !s.isAdmin() {
-			s.sendError("Only admins can kick off a user")
+		if !s.canModerate(e.GetSpaceName()) {
+			slog.Debug("cannot moderate the space, event dropped", "space", e.GetSpaceName())
 			return
 		}
 	case *pb.PrivateSpaceEvent_MuteAudio:
-		v.MuteAudio.Force = s.isAdmin()
+		v.MuteAudio.Force = s.canModerate(e.GetSpaceName())
 	case *pb.PrivateSpaceEvent_MuteVideo:
-		v.MuteVideo.Force = s.isAdmin()
+		v.MuteVideo.Force = s.canModerate(e.GetSpaceName())
 	case *pb.PrivateSpaceEvent_ProximityFileTransferOffer:
 		u := s.spaceUser()
 		v.ProximityFileTransferOffer.CharacterTextures, v.ProximityFileTransferOffer.Name = characterTextures(u.Textures), proto.String(u.Name)
