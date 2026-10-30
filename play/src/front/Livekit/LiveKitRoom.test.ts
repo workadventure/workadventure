@@ -765,15 +765,31 @@ describe("camera quality setting", () => {
         );
     });
 
-    it("publishes a 'low' camera as a single VP9 layer, budgeted for its captured size", async () => {
+    it("publishes a 'low' camera as 360p + 180p simulcast, each layer budgeted on the low curve", async () => {
         videoQualityStore.setQuality("low");
         const { room, publishTrack } = connectedRoom("1.13.7");
 
         await room["handleCameraTrack"](createCameraStream("camera-track", 640, 360));
 
         const options = publishTrack.mock.calls[0][1];
+        expect(options.simulcast).toBe(true);
+        expect(options.scalabilityMode).toBe("L1T3");
+        expect(options.videoEncoding.maxBitrate).toBe(selectVideoPreset(360, 640, false, "low", "vp9").bitrate);
+        const [layer] = options.videoSimulcastLayers;
+        expect([layer.width, layer.height]).toEqual([320, 180]);
+        expect(layer.encoding.maxBitrate).toBe(selectVideoPreset(180, 320, false, "low", "vp9").bitrate);
+    });
+
+    it("publishes a 'low' camera as a single VP9 layer on an older server", async () => {
+        videoQualityStore.setQuality("low");
+        const { room, publishTrack } = connectedRoom();
+
+        await room["handleCameraTrack"](createCameraStream("camera-track", 640, 360));
+
+        const options = publishTrack.mock.calls[0][1];
         expect(options.simulcast).toBe(false);
         expect(options.scalabilityMode).toBe("L1T3");
+        expect(options.videoSimulcastLayers).toBeUndefined();
         expect(options.videoEncoding.maxBitrate).toBe(selectVideoPreset(360, 640, false, "low", "vp9").bitrate);
     });
 
