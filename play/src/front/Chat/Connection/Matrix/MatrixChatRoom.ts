@@ -174,6 +174,7 @@ export class MatrixChatRoom
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
+    private handleCurrentStateUpdated = this.onCurrentStateUpdated.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
     private readonly openThreadConversations = new Map<string, MatrixChatThread>();
@@ -1206,6 +1207,20 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
         this.matrixRoom.currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+        this.matrixRoom.on(RoomEvent.CurrentStateUpdated, this.handleCurrentStateUpdated);
+    }
+
+    /** A new live timeline (refreshLiveTimeline, a gappy sync) comes with a new state and new RoomMember objects. */
+    private onCurrentStateUpdated(_room: Room, previousState: RoomState, currentState: RoomState): void {
+        previousState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
+        currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+        for (const member of get(this.members)) {
+            const roomMember = currentState.getMember(member.id);
+            if (roomMember) {
+                member.rebind(roomMember);
+            }
+        }
+        this.setCurrentUserRoomMember(currentState.getMember(this.matrixRoom.client.getSafeUserId()) ?? undefined);
     }
 
     private startHandlingChatRoomInitializedEvents() {
@@ -2352,6 +2367,7 @@ export class MatrixChatRoom
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
+        this.matrixRoom.off(RoomEvent.CurrentStateUpdated, this.handleCurrentStateUpdated);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);

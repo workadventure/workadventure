@@ -6,6 +6,9 @@ import { getPage } from "../utils/auth";
 import ChatUtils from "./chatUtils";
 import matrixApi from "./matrixApi";
 
+const JOHN = "@john.doe:matrix.workadventure.localhost";
+const ADMIN = "@admin:matrix.workadventure.localhost";
+
 test.setTimeout(120000);
 
 test.describe("chat moderation @matrix @nowebkit", () => {
@@ -42,20 +45,14 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         await page.getByTestId(publicChatRoomName).hover();
         await page.getByTestId(publicChatRoomName).getByTestId("toggleRoomMenu").click();
 
-        await page.getByTestId(publicChatRoomName).getByTestId("manageParticipantOption").click();
+        await page.getByTestId(publicChatRoomName).getByTestId("roomMembersOption").click();
 
-        await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant")).toBeAttached();
-
+        const members = page.getByTestId("roomSidePanelParticipants");
+        await expect(members).toBeVisible();
         await expect(
-            page
-                .getByTestId("@john.doe:matrix.workadventure.localhost-participant")
-                .getByTestId("@john.doe:matrix.workadventure.localhost-permissionLevel"),
-        ).toHaveText("Admin");
-        await expect(
-            page
-                .getByTestId("@john.doe:matrix.workadventure.localhost-participant")
-                .getByTestId("@john.doe:matrix.workadventure.localhost-membership"),
-        ).toHaveText("Joined");
+            members.getByTestId("roomSidePanelMembers-joined").getByTestId(`${JOHN}-panel-row`),
+        ).toBeAttached();
+        await expect(members.getByTestId(`${JOHN}-panel-status`)).toHaveText("Admin");
     });
 
     test("should manage participants and permissions in public chat room", async ({ browser }, testInfo) => {
@@ -79,60 +76,58 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         await page.getByTestId(publicChatRoomName).hover();
         await page.getByTestId(publicChatRoomName).getByTestId("toggleRoomMenu").click();
 
-        await page.getByTestId(publicChatRoomName).getByTestId("manageParticipantOption").click();
+        await page.getByTestId(publicChatRoomName).getByTestId("roomMembersOption").click();
 
-        await expect(page.getByTestId("@john.doe:matrix.workadventure.localhost-participant")).toBeAttached();
+        const members = page.getByTestId("roomSidePanelParticipants");
+        await expect(members.getByTestId(`${JOHN}-panel-row`)).toBeAttached();
 
-        await expect(page.getByTestId("inviteParticipantsModalContent").getByPlaceholder("Users")).toBeAttached();
+        // Opened from the menu by an admin: the focus is in the invite field.
+        const inviteField = members.getByPlaceholder("Invite by name or e-mail…");
+        await expect(inviteField).toBeFocused();
+        await inviteField.fill(ADMIN);
+        await members.getByText(`${ADMIN} (${ADMIN})`).click();
 
-        await page
-            .getByTestId("inviteParticipantsModalContent")
-            .getByPlaceholder("Users")
-            .fill("@admin:matrix.workadventure.localhost");
-
-        await page
-            .getByTestId("inviteParticipantsModalContent")
-            .getByText("@admin:matrix.workadventure.localhost (@admin:matrix.workadventure.localhost)")
-            .click();
-
-        await page.getByTestId("createRoomButton").click();
+        await members.getByTestId("roomSidePanelSendInvitations").click();
         // Those invited leave the selection
-        await expect(page.getByTestId("inviteParticipantsModalContent").locator(".clear-select")).toBeHidden();
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-kickButton")).toBeAttached();
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-banButton")).toBeAttached();
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Invited");
+        await expect(members.locator(".clear-select")).toBeHidden();
+        await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("Invited");
 
-        await page.getByTestId("@admin:matrix.workadventure.localhost-banButton").click();
+        const memberAction = async (action: string) => {
+            await members.getByTestId(`${ADMIN}-panel-memberMenu`).click();
+            await members.getByTestId(`${ADMIN}-panel-${action}`).click();
+        };
+
+        await members.getByTestId(`${ADMIN}-panel-memberMenu`).click();
+        await expect(members.getByTestId(`${ADMIN}-panel-cancelInvitationButton`)).toBeVisible();
+        await members.getByTestId(`${ADMIN}-panel-banButton`).click();
         // Banning asks first.
         await page.getByTestId("confirmDialogConfirm").click();
 
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Banned");
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-unbanButton")).toBeAttached();
+        // Left and banned people are folded under their own section.
+        await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("Banned");
+        await members.getByTestId("roomSidePanelMembers-left").locator("summary").click();
+        await memberAction("unbanButton");
 
-        await page.getByTestId("@admin:matrix.workadventure.localhost-unbanButton").click();
+        await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("Left");
+        await memberAction("inviteButton");
+        await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("Invited");
 
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Left");
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton")).toBeAttached();
-        await page.getByTestId("@admin:matrix.workadventure.localhost-inviteButton").click();
-
+        // The room id sits in the panel's overview.
+        await page.getByTestId("roomSidePanelBackButton").click();
         const roomId = ChatUtils.parseMatrixRoomIdFromRoomLabelText(
             (await page.getByTestId("roomID").textContent())?.trim() ?? "",
         );
 
         await matrixApi.acceptRoomInvitations(roomId);
 
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Joined");
+        await page.getByTestId("roomSidePanelHomeParticipants").click();
+        await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("User");
 
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-kickButton")).toBeAttached();
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-banButton")).toBeAttached();
-
-        await expect(page.getByTestId("@admin:matrix.workadventure.localhost-permissionLevel")).toBeEnabled();
-
-        await page.getByTestId("@admin:matrix.workadventure.localhost-permissionLevel").selectOption("MODERATOR");
-
-        // Wait for power level update to be reflected in the Matrix API
-        // eslint-disable-next-line playwright/no-wait-for-timeout
-        await page.waitForTimeout(1000);
+        await members.getByTestId(`${ADMIN}-panel-memberMenu`).click();
+        await expect(members.getByTestId(`${ADMIN}-panel-kickButton`)).toBeVisible();
+        await expect(members.getByTestId(`${ADMIN}-panel-banButton`)).toBeVisible();
+        await members.getByTestId(`${ADMIN}-panel-role-MODERATOR`).click();
+        await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("Moderator");
 
         const powerLevel = await matrixApi.getMemberPowerLevel(roomId);
 

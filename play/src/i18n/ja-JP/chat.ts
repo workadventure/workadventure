@@ -380,7 +380,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "推奨ルーム",
         suggestedDescription: "このルームは同じスペースに参加するユーザーに推奨されます。",
-        users: "ユーザー",
         historyVisibility: {
             label: "誰が履歴を見ることができますか？",
             world_readable: "誰でも",
@@ -457,13 +456,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "参加者",
         error: "招待を送信できません",
-        title: "参加者の管理",
-        invitations: "招待",
         participants: "参加者",
         roomID: "ルームID: {roomId}",
-        join: "参加中",
         invite: "招待済み",
         ban: "禁止",
         kick: "削除",
@@ -478,7 +473,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "禁止解除",
             invite: "招待",
             cancelInvitation: "招待を取り消す",
-            close: "閉じる",
         },
         roles: {
             USER: "ユーザー",
@@ -514,6 +508,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "暗号化済み",
             notEncrypted: "未暗号化",
             readOnly: "読み取り専用",
+            copyRoomId: "ルームIDをコピー",
         },
         settings: {
             roomType: "ルームタイプ",
@@ -575,6 +570,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "投票を読み込めませんでした。もう一度お試しください。",
         pollsPartial: "一部の投票で詳細な結果を読み込めませんでした。",
         pollFocusError: "タイムラインでこの投票を開けませんでした。",
+        closeFolderMembers: "フォルダーのメンバーを閉じる",
+        folderMembersHint: "フォルダーのメンバーは、メンバーに公開されているそのルームに参加できます。",
     },
     roomMenu: {
         leaveRoom: {

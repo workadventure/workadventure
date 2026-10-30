@@ -379,7 +379,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Phòng gợi ý",
         suggestedDescription: "Phòng này sẽ được gợi ý cho người dùng trong cùng không gian.",
-        users: "Người dùng",
         historyVisibility: {
             label: "Hiển thị của tin nhắn cũ",
             world_readable: "Tất cả tin nhắn đều hiển thị",
@@ -456,12 +455,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Người tham gia",
         error: "Không thể gửi lời mời",
-        title: "Quản lý người tham gia",
-        invitations: "Lời mời",
         participants: "Người tham gia",
-        join: "Đã tham gia",
         invite: "Đã mời",
         ban: "Bị cấm",
         kick: "Bị đuổi",
@@ -477,7 +472,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Bỏ cấm",
             invite: "Mời",
             cancelInvitation: "Hủy lời mời",
-            close: "Đóng",
         },
         roles: {
             USER: "Người dùng",
@@ -513,6 +507,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Đã mã hóa",
             notEncrypted: "Không mã hóa",
             readOnly: "Chỉ đọc",
+            copyRoomId: "Sao chép ID phòng",
         },
         settings: {
             roomType: "Loại phòng",
@@ -573,6 +568,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Không thể tải các cuộc bình chọn. Hãy thử lại.",
         pollsPartial: "Một số cuộc bình chọn không tải được kết quả chi tiết.",
         pollFocusError: "Không thể mở cuộc bình chọn này trong dòng thời gian.",
+        closeFolderMembers: "Đóng danh sách thành viên thư mục",
+        folderMembersHint: "Thành viên thư mục có thể tham gia các phòng của thư mục mở cho thành viên.",
     },
     roomMenu: {
         leaveRoom: {

@@ -379,7 +379,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "الغرفة المقترحة",
         suggestedDescription: "سيتم اقتراح هذه الغرفة للمستخدمين الذين في نفس المساحة.",
-        users: "المستخدمون",
         historyVisibility: {
             label: "من يمكنه قراءة السجل؟",
             world_readable: "أي شخص",
@@ -456,12 +455,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "المشاركون",
         error: "تعذر إرسال الدعوات",
-        title: "إدارة المشاركين",
-        invitations: "الدعوات",
         participants: "المشاركون",
-        join: "انضم",
         invite: "مدعو",
         ban: "محظور",
         kick: "تم طرده",
@@ -477,7 +472,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "إلغاء الحظر",
             invite: "دعوة",
             cancelInvitation: "إلغاء الدعوة",
-            close: "إغلاق",
         },
         roles: {
             USER: "مستخدم",
@@ -513,6 +507,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "مشفرة",
             notEncrypted: "غير مشفرة",
             readOnly: "للقراءة فقط",
+            copyRoomId: "نسخ معرّف الغرفة",
         },
         settings: {
             roomType: "نوع الغرفة",
@@ -573,6 +568,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "تعذر تحميل الاستطلاعات. حاول مرة أخرى.",
         pollsPartial: "تعذر على بعض الاستطلاعات تحميل نتائجها التفصيلية.",
         pollFocusError: "تعذر فتح هذا الاستطلاع في الخط الزمني.",
+        closeFolderMembers: "إغلاق أعضاء المجلد",
+        folderMembersHint: "يمكن لأعضاء المجلد الانضمام إلى غرفه المفتوحة للأعضاء.",
     },
     roomMenu: {
         leaveRoom: {

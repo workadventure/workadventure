@@ -14,7 +14,8 @@
     import { isMatrixChatEnabledStore } from "../../../../Stores/ChatStore";
     import { localUserStore } from "../../../../Connection/LocalUserStore";
     import LL from "../../../../../i18n/i18n-svelte";
-    import ManageParticipantsModal from "../ManageParticipantsModal.svelte";
+    import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
+    import { membersFocusRequestStore, roomSidePanelStore } from "../../../Stores/RoomSidePanelStore";
     import { gameManager } from "../../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../../Administration/AnalyticsClient";
     import { scriptUtils } from "../../../../Api/ScriptUtils";
@@ -26,7 +27,7 @@
     import RoomOption from "./RoomOption.svelte";
     import {
         IconLogout,
-        IconUserEdit,
+        IconUsersGroup,
         IconMute,
         IconUnMute,
         IconMapPin,
@@ -60,9 +61,6 @@
         }
     }
 
-    /** Everyone can open the participant list; only admins can invite / change roles / kick / ban (enforced in the modal). */
-    const shouldDisplayManageParticipantButton = true;
-
     onMount(() => {
         // Initialize usersByRoomStore
         gameManager
@@ -79,8 +77,11 @@
         confirmLeaveRoom(room);
     }
 
-    function openManageParticipantsModal() {
-        modals.open(ManageParticipantsModal, { room });
+    // Everyone can open the member list; inviting, roles, kick and ban are offered there to those allowed.
+    function openMembers() {
+        selectedRoomStore.set(room);
+        roomSidePanelStore.setActiveSection("participants");
+        membersFocusRequestStore.set(true);
     }
 
     function closeMenuAndSetMuteStatus() {
@@ -217,14 +218,12 @@
             />
         {/if}
     {/if}
-    {#if shouldDisplayManageParticipantButton}
-        <RoomOption
-            dataTestId="manageParticipantOption"
-            IconComponent={IconUserEdit}
-            title={$LL.chat.manageRoomUsers.roomOption()}
-            onclick={openManageParticipantsModal}
-        />
-    {/if}
+    <RoomOption
+        dataTestId="roomMembersOption"
+        IconComponent={IconUsersGroup}
+        title={$LL.chat.manageRoomUsers.sectionJoined()}
+        onclick={openMembers}
+    />
 
     <RoomOption
         IconComponent={$areNotificationsMuted ? IconUnMute : IconMute}

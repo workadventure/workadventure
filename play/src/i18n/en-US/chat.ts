@@ -380,7 +380,6 @@ const chat: BaseTranslation = {
         },
         suggested: "Suggested room",
         suggestedDescription: "This room will be suggested to users who in the same space.",
-        users: "Users",
         historyVisibility: {
             label: "Visibility of previous messages",
             world_readable: "All messages are visible",
@@ -457,12 +456,8 @@ const chat: BaseTranslation = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participants",
         error: "Unable send invitations",
-        title: "Manage participants",
-        invitations: "Invitations",
         participants: "Participants",
-        join: "Joined",
         invite: "Invited",
         ban: "Banned",
         kick: "Kicked",
@@ -478,7 +473,6 @@ const chat: BaseTranslation = {
             unban: "Unban",
             invite: "Invite",
             cancelInvitation: "Cancel invitation",
-            close: "Close",
         },
         roles: {
             USER: "User",
@@ -514,6 +508,7 @@ const chat: BaseTranslation = {
             encrypted: "Encrypted",
             notEncrypted: "Not encrypted",
             readOnly: "Read-only",
+            copyRoomId: "Copy the room ID",
         },
         settings: {
             roomType: "Room type",
@@ -574,6 +569,8 @@ const chat: BaseTranslation = {
         pollsLoadError: "Unable to load polls. Try again.",
         pollsPartial: "Some polls couldn't load their detailed results.",
         pollFocusError: "Unable to open this poll in the timeline.",
+        closeFolderMembers: "Close the folder members",
+        folderMembersHint: "Folder members can join its rooms that are open to members.",
     },
     roomMenu: {
         leaveRoom: {

@@ -8,7 +8,7 @@
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
-    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import { folderPanelStore, roomSidePanelStore } from "../Stores/RoomSidePanelStore";
     import {
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
@@ -45,6 +45,7 @@
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import FolderMembersPanel from "./Room/FolderMembersPanel.svelte";
     import {
         CHAT_TWO_COLUMN_LAYOUT_LIMIT,
         canDisplayRoomListAndTimeline,
@@ -337,7 +338,7 @@
         ? `grid-template-columns: ${$roomListWidthStore}px minmax(0, 1fr) 360px`
         : undefined}
 >
-    {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
+    {#if ($selectedRoomStore === undefined && $folderPanelStore === undefined) || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
             use:rovingFocus={{ items: "[data-room-row-button]" }}
@@ -594,7 +595,13 @@
                 </div>
             {/if}
         </div>
-    {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
+    {:else if $folderPanelStore !== undefined}
+        <div class="relative overflow-y-auto min-w-0">
+            {#key $folderPanelStore.id}
+                <FolderMembersPanel folder={$folderPanelStore} />
+            {/key}
+        </div>
+    {:else if displayTwoColumnLayout}
         <CatchUpList conversations={$unreadConversations} />
     {/if}
 

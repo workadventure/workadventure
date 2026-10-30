@@ -380,7 +380,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Aanbevolen kamer",
         suggestedDescription: "Deze kamer zal worden aanbevolen aan gebruikers die deelnemen aan dezelfde ruimte.",
-        users: "Gebruikers",
         historyVisibility: {
             label: "Wie kan de geschiedenis lezen?",
             world_readable: "Iedereen",
@@ -457,13 +456,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Deelnemers",
         error: "Uitnodigingen konden niet worden verzonden",
-        title: "Deelnemers beheren",
-        invitations: "Uitnodigingen",
         participants: "Deelnemers",
         roomID: "Kamer-ID: {roomId}",
-        join: "Aanwezig",
         invite: "Uitgenodigd",
         ban: "Verbannen",
         kick: "Verwijderd",
@@ -478,7 +473,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Opheffen van verbanning",
             invite: "Uitnodigen",
             cancelInvitation: "Uitnodiging intrekken",
-            close: "Sluiten",
         },
         roles: {
             USER: "Gebruiker",
@@ -514,6 +508,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Versleuteld",
             notEncrypted: "Niet versleuteld",
             readOnly: "Alleen-lezen",
+            copyRoomId: "Kamer-ID kopiëren",
         },
         settings: {
             roomType: "Kamertype",
@@ -574,6 +569,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Kan peilingen niet laden. Probeer het opnieuw.",
         pollsPartial: "Voor sommige peilingen konden de gedetailleerde resultaten niet worden geladen.",
         pollFocusError: "Kan deze peiling niet openen in de tijdlijn.",
+        closeFolderMembers: "Mapleden sluiten",
+        folderMembersHint: "Mapleden kunnen deelnemen aan de kamers ervan die open zijn voor leden.",
     },
     roomMenu: {
         leaveRoom: {
