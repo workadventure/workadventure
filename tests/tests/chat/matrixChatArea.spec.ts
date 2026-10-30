@@ -150,8 +150,8 @@ test.describe("matrix chat area property @matrix @nowebkit @nomobile", () => {
         await page.getByTestId("chatBackward").click();
         await page.getByTestId("name of new room").hover();
         await page.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
-        await page.getByTestId("manageParticipantOption").click();
-        await expect(page.getByText("Manage participants")).toBeVisible({
+        await page.getByTestId("roomMembersOption").click();
+        await expect(page.getByTestId("roomSidePanelParticipants")).toBeVisible({
             timeout: 60000,
         });
     });
@@ -193,7 +193,14 @@ test.describe("matrix chat area property @matrix @nowebkit @nomobile", () => {
         await page2.getByTestId("chatBackward").click();
         await page2.getByTestId("name of new room").hover();
         await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
-        await page2.getByTestId("manageParticipantOption").click();
-        await expect(page2.getByTestId("@john.doe:matrix.workadventure.localhost-kickButton")).not.toBeAttached();
+        await page2.getByTestId("roomMembersOption").click();
+        const members = page2.getByTestId("roomSidePanelParticipants");
+        await expect(members.getByTestId("@john.doe:matrix.workadventure.localhost-panel-row")).toBeAttached({
+            timeout: 60000,
+        });
+        // Without moderation rights, no "…" menu on anyone.
+        await expect(
+            members.getByTestId("@john.doe:matrix.workadventure.localhost-panel-memberMenu"),
+        ).not.toBeAttached();
     });
 });

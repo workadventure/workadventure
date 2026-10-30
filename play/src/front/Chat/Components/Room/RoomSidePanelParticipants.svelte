@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { get } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import type { ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
@@ -9,6 +9,7 @@
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import { rovingFocus } from "../roomRowKeyboard";
+    import { membersFocusRequestStore } from "../../Stores/RoomSidePanelStore";
     import RoomSidePanelParticipantRow from "./RoomSidePanelParticipantRow.svelte";
     import MemberActionsMenu from "./MemberActionsMenu.svelte";
     import { IconLoader } from "@wa-icons";
@@ -28,6 +29,18 @@
     let sendingInvitations = $state(false);
     let invitationError: string | undefined = $state(undefined);
     const myId = localUserStore.getChatId();
+    let container: HTMLDivElement | undefined = $state();
+
+    // Opened from a "…" menu: the invite field if one may invite, otherwise the first member.
+    $effect(() => {
+        if (!$membersFocusRequestStore || loadingMembers || !container) return;
+        membersFocusRequestStore.set(false);
+        const target = $canInvite ? "input" : "[data-member-row]";
+        const panel = container;
+        tick()
+            .then(() => panel.querySelector<HTMLElement>(target)?.focus())
+            .catch((error) => console.error(error));
+    });
 
     onMount(() => {
         loadMembers().catch((error) => console.error(error));
@@ -86,7 +99,7 @@
     }
 </script>
 
-<div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelParticipants">
+<div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelParticipants" bind:this={container}>
     {#if $canInvite}
         <div class="flex flex-col gap-2 border border-solid border-x-0 border-t-0 border-white/10 px-3 py-3">
             <SelectMatrixUser

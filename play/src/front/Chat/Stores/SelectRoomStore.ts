@@ -3,7 +3,7 @@ import type { ChatConversation } from "../Connection/ChatConnection";
 import { getMatrixSecurity } from "../Connection/Matrix/getMatrixSecurity";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { selectedThreadStore } from "./SelectedThreadStore";
-import { roomSidePanelStore } from "./RoomSidePanelStore";
+import { folderPanelStore, roomSidePanelStore } from "./RoomSidePanelStore";
 
 const createSelectedRoomStore = () => {
     const { subscribe, update } = writable<ChatConversation | undefined>(undefined);
@@ -26,6 +26,7 @@ const createSelectedRoomStore = () => {
                     });
             }
 
+            if (value) folderPanelStore.set(undefined);
             roomSidePanelStore.syncWithRoom(value);
             selectedThreadStore.syncWithRoom(value);
             return value;
