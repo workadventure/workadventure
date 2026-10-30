@@ -530,6 +530,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         // await page.getByTestId("createFolderVisibility").selectOption("private");
         await page.getByTestId("createFolderButton").click();
 
+        // The creation view closes once the sub-folder exists (its title also names the parent folder).
+        await expect(page.getByTestId("createRoomView")).toBeHidden({ timeout: 60000 });
         await expect(page.getByText(privateFolder2)).toBeHidden({
             timeout: 60000,
         });
