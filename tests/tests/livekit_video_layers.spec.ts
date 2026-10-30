@@ -16,12 +16,11 @@ import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoun
  *
  * Four users, so that the bubble is on LiveKit (MAX_USERS_FOR_WEBRTC is 3 in dev and CI): Alice and Bob in the
  * Chromium project, Carol and Dave in a Firefox it launches. One camera at a time, to spare the runner's CPU: Alice's
- * first (VP9 simulcast), then Carol's (Firefox publishes VP8; it cannot switch a layer off, livekit-client sends it
- * at 2 fps instead).
+ * first (VP9 simulcast), then Carol's (Firefox publishes VP8 simulcast).
  */
 
 const MAP_URL = publicTestMapUrl("tests/E2E/empty.json", "livekit-video-layers");
-// A layer below this frame rate is off: Chromium stops it, Firefox sends it at 2 fps
+// A layer below this frame rate counts as off: a paused layer sends no frame, a resumed one takes a moment to get going
 const ON_FPS = 5;
 const LAYER_TIMEOUT = 45_000;
 
