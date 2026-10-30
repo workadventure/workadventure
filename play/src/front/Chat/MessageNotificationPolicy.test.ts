@@ -7,6 +7,7 @@ const roomMessage: IncomingMessage = {
     muted: false,
     mentionsMe: false,
     direct: false,
+    roomBrowserNotifications: false,
 };
 
 describe("planMessageNotification", () => {
@@ -21,7 +22,7 @@ describe("planMessageNotification", () => {
             sound: true,
             toast: true,
             banner: false,
-            browser: true,
+            browser: false,
         });
     });
 
@@ -30,7 +31,7 @@ describe("planMessageNotification", () => {
             sound: false,
             toast: false,
             banner: false,
-            browser: true,
+            browser: false,
         });
     });
 
@@ -56,5 +57,13 @@ describe("planMessageNotification", () => {
         expect(
             planMessageNotification({ ...roomMessage, muted: true, mentionsMe: true, chatVisible: true }).banner,
         ).toBe(true);
+    });
+
+    it.each([
+        ["a direct message", { direct: true }],
+        ["a mention", { mentionsMe: true }],
+        ["a room message, once the user asked for them", { roomBrowserNotifications: true }],
+    ])("notifies the browser for %s", (_, message) => {
+        expect(planMessageNotification({ ...roomMessage, ...message }).browser).toBe(true);
     });
 });

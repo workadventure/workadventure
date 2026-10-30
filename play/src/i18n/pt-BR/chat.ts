@@ -606,6 +606,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} {{outra conversa|outras conversas}}",
         dismiss: "Fechar",
     },
+    notificationPrompt: {
+        question: "Ser avisado quando alguém escrever para você, mesmo em outra aba?",
+        enable: "Ativar",
+        later: "Mais tarde",
+    },
     requiresLoginForChatModal: {
         title: "Faça login para desbloquear o chat!",
         content_1: "Para aproveitar totalmente este recurso de chat, você precisa estar logado em sua conta.",

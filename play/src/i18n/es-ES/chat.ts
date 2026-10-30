@@ -605,6 +605,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} {{conversación más|conversaciones más}}",
         dismiss: "Cerrar",
     },
+    notificationPrompt: {
+        question: "¿Recibir un aviso cuando alguien te escriba, incluso desde otra pestaña?",
+        enable: "Activar",
+        later: "Más tarde",
+    },
     requiresLoginForChatModal: {
         title: "¡Inicie sesión para desbloquear el chat!",
         content_1: "Para disfrutar plenamente de esta función del chat, necesita iniciar sesión en su cuenta.",

@@ -36,6 +36,8 @@ export class MessageNotification implements NotificationWA {
                 ...this.options,
                 body,
                 data,
+                // One notification per conversation: the next message replaces it instead of piling up.
+                tag: this.chatRoomId,
             });
         } catch (error) {
             console.error("Error while sending message notification", error);

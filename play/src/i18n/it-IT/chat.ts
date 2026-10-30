@@ -606,6 +606,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} {{altra conversazione|altre conversazioni}}",
         dismiss: "Chiudi",
     },
+    notificationPrompt: {
+        question: "Ricevere un avviso quando qualcuno ti scrive, anche da un'altra scheda?",
+        enable: "Attiva",
+        later: "Più tardi",
+    },
     requiresLoginForChatModal: {
         title: "Accedi per sbloccare la chat!",
         content_1: "Per godere appieno di questa funzione di chat, devi essere loggato nel tuo account.",

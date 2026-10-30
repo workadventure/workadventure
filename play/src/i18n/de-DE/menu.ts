@@ -85,6 +85,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         otherSettings: "Andere Einstellungen",
         fullscreen: "Vollbild",
         notifications: "Benachrichtigungen",
+        roomMessageNotifications: "Auch bei jeder Nachricht in Räumen benachrichtigen",
         enablePictureInPicture: "Bild-in-Bild aktivieren",
         chatSounds: "Chat-Sounds",
         cowebsiteTrigger: "Jedes Mal nachfragen, bevor Webseiten oder Jitsi-Meet-Räume geöffnet werden",

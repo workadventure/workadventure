@@ -604,6 +604,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} محادثات أخرى",
         dismiss: "إغلاق",
     },
+    notificationPrompt: {
+        question: "هل تريد أن يتم إعلامك عندما يراسلك أحد، حتى من علامة تبويب أخرى؟",
+        enable: "تفعيل",
+        later: "لاحقًا",
+    },
     requiresLoginForChatModal: {
         title: "قم بتسجيل الدخول لفتح الدردشة!",
         content_1: "للاستمتاع الكامل بميزة الدردشة هذه، تحتاج إلى تسجيل الدخول إلى حسابك.",

@@ -30,6 +30,7 @@
     import { hasPendingMentionElsewhere } from "../../Stores/ChatMessageBannerStore";
     import Button from "../../../Components/UI/Button.svelte";
     import ChatMessageBanner from "./ChatMessageBanner.svelte";
+    import BrowserNotificationPrompt from "./BrowserNotificationPrompt.svelte";
     import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
@@ -808,6 +809,7 @@
             </div>
             <EnteredZoneBanner {room} />
             <ChatMessageBanner />
+            <BrowserNotificationPrompt />
             {#if shouldDisplayLoader}
                 <div class="flex justify-center items-center w-full pb-1 bg-transparent">
                     <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />

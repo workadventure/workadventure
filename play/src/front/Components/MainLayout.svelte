@@ -38,6 +38,9 @@
     import { toastStore } from "../Stores/ToastStoreSingleton";
     import { meetingInvitationRequestStore } from "../Stores/MeetingInvitationStore";
     import { gameManager } from "../Phaser/Game/GameManager";
+    import { matrixUnreadMessagesCountStore } from "../Chat/Stores/UnreadMessagesCountStore";
+    import { withUnreadCount } from "../Chat/unreadTabTitle";
+    import { faviconManager } from "../WebRtc/FaviconManager";
     import { navChat } from "../Chat/Stores/ChatStore";
     import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../Stores/ProximityNotificationStore";
@@ -173,6 +176,14 @@
     }
 
     let stopCalendarReminders: (() => void) | undefined;
+
+    // The unread count of the chat button also shows in the tab title and the favicon, to be seen from another tab.
+    const proximityUnreadCount = gameManager.getCurrentGameScene().proximityChatRoomManager.unreadMessagesCount;
+    let totalUnreadCount = $derived($matrixUnreadMessagesCountStore + $proximityUnreadCount);
+    $effect(() => {
+        document.title = withUnreadCount(document.title, totalUnreadCount);
+        faviconManager.setUnreadMessages(totalUnreadCount > 0);
+    });
 
     onMount(() => {
         document.addEventListener("focusin", handleFocusInEvent);

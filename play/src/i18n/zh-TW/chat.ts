@@ -601,6 +601,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "另有 {count} 個對話",
         dismiss: "關閉",
     },
+    notificationPrompt: {
+        question: "有人傳訊息給你時接收通知，即使你在其他分頁？",
+        enable: "啟用",
+        later: "稍後",
+    },
     requiresLoginForChatModal: {
         title: "登入以解鎖聊天！",
         content_1: "要完整享受此聊天功能，您需要登入您的帳戶。",

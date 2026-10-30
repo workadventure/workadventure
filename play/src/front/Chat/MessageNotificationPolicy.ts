@@ -9,6 +9,8 @@ export interface IncomingMessage {
     mentionsMe: boolean;
     /** The message is in a direct conversation. */
     direct: boolean;
+    /** Browser notifications for every room message, not only direct messages and mentions. */
+    roomBrowserNotifications: boolean;
 }
 
 export interface MessageNotificationPlan {
@@ -27,14 +29,16 @@ const NOTHING: MessageNotificationPlan = { sound: false, toast: false, banner: f
  * How to signal a new message from someone else.
  * Chat closed: sound and toast over the map. Chat open on another conversation: a room message only raises the unread
  * count, a mention or a direct message shows a banner in the chat, with a sound.
+ * The browser (for a hidden tab) is told about direct messages and mentions, and about room messages only on request.
  */
 export function planMessageNotification(message: IncomingMessage): MessageNotificationPlan {
     if (message.roomDisplayed || (message.muted && !message.mentionsMe)) {
         return NOTHING;
     }
-    if (!message.chatVisible) {
-        return { sound: true, toast: true, banner: false, browser: true };
-    }
     const important = message.mentionsMe || message.direct;
-    return { sound: important, toast: false, banner: important, browser: true };
+    const browser = important || message.roomBrowserNotifications;
+    if (!message.chatVisible) {
+        return { sound: true, toast: true, banner: false, browser };
+    }
+    return { sound: important, toast: false, banner: important, browser };
 }

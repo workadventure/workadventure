@@ -8,6 +8,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { selectedRoomStore } from "../Chat/Stores/SelectRoomStore";
 import { proximityMeetingStore } from "../Stores/MyMediaStore";
 import { chatVisibilityStore } from "../Stores/ChatStore";
+import { offerBrowserNotifications } from "../Stores/BrowserNotificationStore";
 import type { NotificationWA } from "./Notification";
 
 type SelectedRoomStore = {
@@ -43,6 +44,8 @@ class NotificationManager {
                 Sentry.captureException(error);
                 console.error("Error while sending notification", error);
             });
+        } else {
+            offerBrowserNotifications();
         }
     }
 

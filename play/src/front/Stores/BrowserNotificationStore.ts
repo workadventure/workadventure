@@ -19,3 +19,19 @@ export function createBrowserNotificationStore() {
 }
 
 export const browserNotificationStore = createBrowserNotificationStore();
+
+/**
+ * Offers browser notifications in the chat after a message was missed in a hidden tab, rather than on page load.
+ * Only while the browser has not been asked yet and the offer was not declined.
+ */
+export const notificationPromptStore = writable(false);
+
+export function offerBrowserNotifications(): void {
+    if (
+        typeof Notification !== "undefined" &&
+        Notification.permission === "default" &&
+        !localUserStore.getNotificationPromptDismissed()
+    ) {
+        notificationPromptStore.set(true);
+    }
+}

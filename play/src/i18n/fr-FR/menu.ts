@@ -83,6 +83,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         save: "Sauvegarder",
         fullscreen: "Plein écran",
         notifications: "Notifications",
+        roomMessageNotifications: "Notifier aussi tous les messages des salons",
         enablePictureInPicture: "Activer le picture-in-picture",
         chatSounds: "Sons du chat",
         cowebsiteTrigger: "Demander toujours avant d'ouvrir des sites web et des salles de conférence Jitsi",

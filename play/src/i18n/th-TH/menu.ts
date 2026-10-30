@@ -82,6 +82,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         otherSettings: "การตั้งค่าอื่นๆ",
         fullscreen: "เต็มหน้าจอ",
         notifications: "การแจ้งเตือน",
+        roomMessageNotifications: "แจ้งเตือนทุกข้อความในห้องด้วย",
         enablePictureInPicture: "เปิดใช้ภาพซ้อนภาพ",
         chatSounds: "เสียงแชท",
         cowebsiteTrigger: "ถามทุกครั้งก่อนเปิดเว็บไซต์และห้อง Jitsi Meet",

@@ -610,6 +610,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} {{weitere Unterhaltung|weitere Unterhaltungen}}",
         dismiss: "Schließen",
     },
+    notificationPrompt: {
+        question: "Benachrichtigt werden, wenn dir jemand schreibt, auch in einem anderen Tab?",
+        enable: "Aktivieren",
+        later: "Später",
+    },
     requiresLoginForChatModal: {
         title: "Melden Sie sich an, um den Chat zu nutzen!",
         content_1: "Um diese Chat-Funktion vollständig nutzen zu können, müssen Sie angemeldet sein.",

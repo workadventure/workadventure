@@ -605,6 +605,11 @@ const chat: DeepPartial<Translation["chat"]> = {
         others: "+{count} cuộc trò chuyện khác",
         dismiss: "Đóng",
     },
+    notificationPrompt: {
+        question: "Nhận thông báo khi có người nhắn cho bạn, kể cả khi ở tab khác?",
+        enable: "Bật",
+        later: "Để sau",
+    },
     requiresLoginForChatModal: {
         title: "Đăng nhập để mở khóa trò chuyện!",
         content_1: "Để tận hưởng đầy đủ tính năng trò chuyện, bạn cần đăng nhập vào tài khoản của mình.",

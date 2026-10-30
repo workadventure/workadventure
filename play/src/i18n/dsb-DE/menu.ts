@@ -83,6 +83,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         otherSettings: "Druge nastajenja",
         fullscreen: "Połny wobraz",
         notifications: "Powěźeńki",
+        roomMessageNotifications: "Teke wšykne powěsći w rumach powěźeś",
         enablePictureInPicture: "Wobraz-we-wobrazu aktiwěrowaś",
         chatSounds: "Zwuki chata",
         cowebsiteTrigger: "Kuždy raz se pšašaś, pjerwjej nježli webboki abo Jitsi-Meet-śpy se wótcyniju",
