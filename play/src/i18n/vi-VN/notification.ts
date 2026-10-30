@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} muốn trò chuyện với bạn",
     message: "{name} đã gửi một tin nhắn",
-    chatRoom: "trong phòng trò chuyện",
+    mention: "{name} đã nhắc đến bạn",
     askToMuteMicrophone: "Tôi có thể tắt micrô của bạn không?",
     askToMuteCamera: "Tôi có thể tắt camera của bạn không?",
     microphoneMuted: "Micrô của bạn đã bị người điều hành tắt",
@@ -14,11 +14,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "Bạn không còn quyền phát biểu",
     floorGivenBack: "Bạn đã trả lại quyền phát biểu",
     handLowered: "Người điều hành đã hạ tay của bạn",
+    removedFromConversation: "Một người điều hành đã cho bạn rời cuộc trò chuyện.",
     actionFailed: "Không thể hoàn tất thao tác này",
-    notificationSentToMuteMicrophone: "Đã gửi thông báo yêu cầu {name} tắt micrô",
-    notificationSentToMuteCamera: "Đã gửi thông báo yêu cầu {name} tắt camera",
     announcement: "Thông báo chung",
-    open: "Mở",
     help: {
         title: "Quyền thông báo bị từ chối",
         permissionDenied: "Quyền bị từ chối",
@@ -29,9 +27,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Tải lại",
         continue: "Tiếp tục không cần thông báo",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Cho phép thông báo từ thanh địa chỉ trong Chrome",
     },
     addNewTag: "thêm nhãn mới: '{tag}'",
     screenSharingError: "Không thể bắt đầu chia sẻ màn hình",

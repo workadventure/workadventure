@@ -29,3 +29,7 @@ dist
 /public/es.js
 /svelte-check-watch/public/iframe_api.js
 /coverage/
+# External modules are copied or symlinked in at build time. Ignore the directory itself, not its
+# children: Tailwind's @source (style/index.css) only overrides an ignore on the registered directory.
+# The .gitkeep is force-tracked so the directory exists on checkout.
+/src/front/external-modules/

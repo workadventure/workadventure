@@ -65,6 +65,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "Gebruik de ingebouwde ruisonderdrukking van je browser.",
             voiceIsolation: "Stemisolatie",
             voiceIsolationDescription: "Gebruik stemisolatie van je browser en besturingssysteem wanneer beschikbaar.",
+            noiseSuppressionEngine: "Ruisonderdrukkingsengine",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nieuw, volledige spraakband)",
+            noiseSuppressionEngineDtln: "DTLN (vorige engine)",
         },
         language: {
             title: "Taal",
@@ -72,7 +75,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Afwezigheidsmodus",
             explanation:
-                'Wanneer het WorkAdventure-tabblad in je browser niet zichtbaar is, schakelt WorkAdventure over naar de "afwezigheidsmodus"',
+                'Wanneer je naar een ander venster of tabblad gaat, schakelt WorkAdventure over naar de "afwezigheidsmodus", behalve tijdens een gesprek of een uitzending.',
             cameraToggle: 'Houd camera actief in "afwezigheidsmodus"',
             microphoneToggle: 'Houd microfoon actief in "afwezigheidsmodus"',
         },
@@ -147,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Je Matrix ID",
-        settings: "Instellingen",
         resetKeyStorageUpButtonLabel: "Reset je sleutelopslag",
         resetKeyStorageConfirmationModal: {
             title: "Bevestiging van reset van sleutelopslag",
@@ -166,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Wereldwijde berichten",
         contact: "Contact",
         report: "Problemen melden",
-        chat: "Chat",
         help: "Help & tutorials",
         contextualActions: "Contextuele acties",
         shortcuts: "Sneltoetsen",

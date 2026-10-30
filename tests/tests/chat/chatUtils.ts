@@ -8,6 +8,18 @@ class ChatUtils {
         await page.getByTestId("chat-btn").click();
     }
 
+    public async openProximityRoom(page: Page) {
+        await this.openChat(page);
+
+        const roomName = page.getByTestId("roomName");
+        if ((await roomName.count()) > 0 && (await roomName.textContent())?.trim() === "Proximity Chat") {
+            return;
+        }
+
+        await page.getByTestId("toggleDisplayProximityChat").click();
+        await expect(roomName).toHaveText("Proximity Chat", { timeout: 60_000 });
+    }
+
     public async openCreateRoomDialog(page: Page, folderName = "") {
         await page.getByTestId(`openOptionToCreateRoomOrFolder${folderName}`).click();
         await page.getByTestId(`openCreateRoomModalButton${folderName}`).click();
@@ -42,7 +54,8 @@ class ChatUtils {
 
         // await page.waitForTimeout(1000);
 
-        await page.getByText(roomName).click();
+        // The new room opens by itself; its encryption setup shows up over it.
+        await expect(page.getByTestId("roomName")).toHaveText(roomName);
 
         // await page.getByTestId("VerifyWithPassphraseButton").click();
 
@@ -68,9 +81,16 @@ class ChatUtils {
         }
 
         await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
+        await page.getByTestId("passphraseConfirmInput").fill(DEFAULT_PASSPHRASE);
         await page.getByText("Generate").click();
         await page.getByTestId("downloadRecoveryKeyButton").click();
         await page.getByText("Continue").click();
+    }
+
+    /** A new room opens by itself: check it is the one just created, then go back to the room list. */
+    public async backToRoomListAfterCreation(page: Page, roomName: string) {
+        await expect(page.getByTestId("roomName")).toHaveText(roomName);
+        await page.getByTestId("chatBackward").click();
     }
 
     public async cancelledContinueWithSSO(page: Page, context: BrowserContext) {

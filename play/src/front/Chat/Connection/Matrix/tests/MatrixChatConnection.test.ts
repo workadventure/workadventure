@@ -1,5 +1,15 @@
 import type { MatrixClient, Room } from "matrix-js-sdk";
-import { ClientEvent, EventType, MatrixError, PendingEventOrdering, RoomEvent, SyncState } from "matrix-js-sdk";
+import {
+    ClientEvent,
+    ConnectionError,
+    HttpApiEvent,
+    EventType,
+    MatrixError,
+    PendingEventOrdering,
+    RoomEvent,
+    SyncState,
+} from "matrix-js-sdk";
+import * as Sentry from "@sentry/svelte";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { KnownMembership } from "matrix-js-sdk/lib/types";
 import type { Readable } from "svelte/store";
@@ -13,6 +23,8 @@ import { MatrixChatRoom as MatrixChatRoomClass } from "../MatrixChatRoom";
 import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
 import type { MatrixSecurity } from "../MatrixSecurity";
 import type { RequestedStatus } from "../../../../Rules/StatusRules/statusRules";
+
+vi.mock("@sentry/svelte", () => ({ captureException: vi.fn() }));
 
 vi.mock("../../../../Phaser/Game/GameManager", () => {
     return {
@@ -239,6 +251,55 @@ describe("MatrixChatConnection", () => {
 
             await expect(clientPromise).rejects.toThrow();
             expect(startMatrixClientSpy).not.toHaveBeenCalled();
+        });
+    });
+
+    describe("init", () => {
+        it("should not put the chat on error when the profile sync with the Woka fails", async () => {
+            const getProfileInfo = vi.fn().mockRejectedValue(new Error("profile sync failed"));
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo,
+                on: vi.fn(),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+                isInitialSyncComplete: vi.fn().mockReturnValue(true),
+            } as unknown as MatrixClient;
+
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(getProfileInfo).toHaveBeenCalled();
+            expect(get(matrixChatConnection.connectionStatus)).not.toBe("ON_ERROR");
+        });
+
+        it("should not wait for the initial sync once the session is logged out", async () => {
+            const handlers = new Map<string, (error: MatrixError) => void>();
+            const mockMatrixClient = {
+                isGuest: vi.fn().mockReturnValue(false),
+                getSafeUserId: vi.fn().mockReturnValue("@alice:matrix.example"),
+                getProfileInfo: vi.fn().mockResolvedValue({}),
+                on: vi.fn((event: string, handler: (error: MatrixError) => void) => handlers.set(event, handler)),
+                store: {
+                    startup: vi.fn(),
+                },
+                initRustCrypto: vi.fn(),
+                // The homeserver rejects the access token as soon as the client starts: the sync never completes.
+                startClient: vi.fn(() => {
+                    handlers.get(HttpApiEvent.SessionLoggedOut)?.(
+                        new MatrixError({ errcode: "M_UNKNOWN_TOKEN", error: "Invalid access token passed." }, 401),
+                    );
+                }),
+                isInitialSyncComplete: vi.fn().mockReturnValue(false),
+            } as unknown as MatrixClient;
+
+            // Without the early exit, init() would poll for the 30s initial sync timeout, far past this test's.
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            expect(get(matrixChatConnection.connectionStatus)).toBe("ON_ERROR");
         });
     });
 
@@ -532,7 +593,51 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
+            // No sync in this mock: the room never shows up in the room list.
+            vi.spyOn(
+                matrixChatConnection as unknown as {
+                    waitForPlacedRoom: (roomId: string) => Promise<undefined>;
+                },
+                "waitForPlacedRoom",
+            ).mockResolvedValue(undefined);
             expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
+        });
+
+        it("should not hand back an encrypted room before its encryption event has synced", async () => {
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                on: vi.fn(),
+                store: { startup: vi.fn() },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            // The server sent the room with its creator only: the encryption event comes on a later sync.
+            const isEncrypted = writable(false);
+            const placedRoom = Object.assign(Object.create(MatrixChatRoomClass.prototype) as MatrixChatRoom, {
+                isEncrypted,
+            });
+            vi.spyOn(
+                matrixChatConnection as unknown as { findRoomOrFolder: (roomId: string) => Promise<MatrixChatRoom> },
+                "findRoomOrFolder",
+            ).mockResolvedValue(placedRoom);
+            const waitForPlacedRoom = (encrypted: boolean) =>
+                (
+                    matrixChatConnection as unknown as {
+                        waitForPlacedRoom: (
+                            roomId: string,
+                            parentSpaceID: string | undefined,
+                            encrypted: boolean,
+                            deadline: number,
+                        ) => Promise<MatrixChatRoom | undefined>;
+                    }
+                ).waitForPlacedRoom("!room:server", undefined, encrypted, Date.now());
+
+            expect(await waitForPlacedRoom(false)).toBe(placedRoom);
+            expect(await waitForPlacedRoom(true)).toBeUndefined();
+            isEncrypted.set(true);
+            expect(await waitForPlacedRoom(true)).toBe(placedRoom);
         });
     });
     describe("createDirectRoom", () => {
@@ -851,6 +956,7 @@ describe("MatrixChatConnection", () => {
                 startClient: mockStartClient,
                 createRoom: vi.fn().mockResolvedValue(""),
                 getRoom: vi.fn(),
+                getRooms: vi.fn().mockReturnValue([]),
                 publicRooms: mockPublicRoom,
             } as unknown as MatrixClient;
 
@@ -878,9 +984,23 @@ describe("MatrixChatConnection", () => {
                     {
                         room_id: "Other_room",
                         name: "Other_room",
+                        topic: "Weekly sync",
+                        num_joined_members: 3,
                     },
                 ],
             });
+            const joinedSpace = {
+                name: "Team folder",
+                isSpaceRoom: () => true,
+                getMyMembership: () => "join",
+                getLiveTimeline: () => ({
+                    getState: () => ({
+                        getStateEvents: () => [
+                            { getStateKey: () => "Other_room", getContent: () => ({ via: ["example.org"] }) },
+                        ],
+                    }),
+                }),
+            };
 
             const mockMatrixClient = {
                 isGuest: vi.fn(),
@@ -895,6 +1015,7 @@ describe("MatrixChatConnection", () => {
                 startClient: mockStartClient,
                 createRoom: vi.fn().mockResolvedValue(""),
                 getRoom: vi.fn(),
+                getRooms: vi.fn().mockReturnValue([joinedSpace]),
                 publicRooms: mockPublicRoom,
             } as unknown as MatrixClient;
 
@@ -913,15 +1034,16 @@ describe("MatrixChatConnection", () => {
 
             const result = await matrixChatConnection.searchAccessibleRooms(roomSearchText);
 
-            expect(result).toContainEqual({
-                id: "Other_room",
-                name: "Other_room",
-            });
-
-            expect(result).not.toContainEqual({
-                id: roomSearchText,
-                name: roomSearchText,
-            });
+            expect(result).toEqual([
+                {
+                    id: "Other_room",
+                    name: "Other_room",
+                    avatarUrl: "",
+                    topic: "Weekly sync",
+                    memberCount: 3,
+                    folderName: "Team folder",
+                },
+            ]);
         });
     });
 
@@ -1892,6 +2014,22 @@ describe("MatrixChatConnection", () => {
 
             expect(existingChildFolder.refreshRooms).not.toHaveBeenCalled();
             expect(existingChildFolder.init).toHaveBeenCalledOnce();
+        });
+    });
+
+    describe("onSyncStateChange", () => {
+        it("should report sync errors to Sentry, except when the homeserver cannot be reached", async () => {
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve({} as unknown as MatrixClient));
+            vi.mocked(Sentry.captureException).mockClear();
+
+            matrixChatConnection["onSyncStateChange"](SyncState.Error, SyncState.Reconnecting, {
+                error: new ConnectionError("fetch failed", new TypeError("Failed to fetch")),
+            });
+            expect(Sentry.captureException).not.toHaveBeenCalled();
+
+            const error = new MatrixError({ errcode: "M_UNKNOWN" }, 500);
+            matrixChatConnection["onSyncStateChange"](SyncState.Error, SyncState.Syncing, { error });
+            expect(Sentry.captureException).toHaveBeenCalledWith(error);
         });
     });
 });

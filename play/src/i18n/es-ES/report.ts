@@ -32,8 +32,16 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "Dejar de verlo y oírlo. Solo para ti, y reversible.",
             report: "Avisar a los administradores.",
+            remove: "Sacarlo de esta conversación. Sigue en el mapa.",
             kick: "Desconectarlo ahora. Podrá volver.",
             ban: "Desconectarlo definitivamente.",
+        },
+        remove: {
+            title: "Retirar",
+            content:
+                "{userName} sale de esta conversación de inmediato y, si está en directo, su emisión se detiene. Sigue en el mapa.",
+            submit: "Retirar",
+            confirmTitle: "Retirar a {userName}",
         },
         kick: {
             title: "Expulsar",

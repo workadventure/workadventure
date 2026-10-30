@@ -1,8 +1,14 @@
 import { Track, type LocalVideoTrack, type RemoteTrack } from "livekit-client";
 import { derived, readable, type Readable } from "svelte/store";
-import type { WebRtcQualityLimitationReason, WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
+import type {
+    VideoPlaybackCounters,
+    WebRtcQualityLimitationReason,
+    WebRtcSenderStats,
+    WebRtcStats,
+} from "../Components/Video/WebRtcStats";
 import type { RemotePeer } from "./RemotePeer";
 import { FpsVariabilityTracker } from "./FpsVariabilityTracker";
+import { getSelectedIceRoute } from "./SelectedIceRoute";
 
 const WEBRTC_STATS_DISPLAY_INTERVAL_MS = 1_000;
 
@@ -39,7 +45,12 @@ export function createPeerWebRtcStats(remotePeer: RemotePeer): PeerWebRtcStats {
             getExpectedFps: () => remotePeer.expectedFps,
             measureFpsVariability: remotePeer.videoType === "video",
         }),
-        sender: createSenderStatsStore(reportStore, "P2P"),
+        sender: createSenderStatsStore(reportStore, "P2P", () =>
+            (remotePeer._pc as RTCPeerConnection | undefined)
+                ?.getSenders()
+                .find((sender) => sender.track?.kind === "video")
+                ?.track?.getSettings(),
+        ),
     };
 }
 
@@ -68,8 +79,9 @@ export function createLivekitWebRtcStats(
             return trackWithMedia.mediaStreamTrack?.id;
         },
         includeRelayDetails: false,
-        // The SFU pauses the track when we do not display it (adaptiveStream); the target frame rate is unknown
-        getExpectedFps: () => (track?.streamState === Track.StreamState.Paused ? 0 : undefined),
+        // The SFU pauses the track when we do not display it (adaptiveStream), and a muted camera keeps its track but
+        // sends nothing: both are deliberate. Otherwise the target frame rate is unknown.
+        getExpectedFps: () => (track?.streamState === Track.StreamState.Paused || track?.isMuted ? 0 : undefined),
         measureFpsVariability: videoType === "video",
     });
 }
@@ -81,7 +93,7 @@ export function createLivekitSenderStats(track: LocalVideoTrack): Readable<WebRt
     const reportStore = createStatsReportStore(() => track.getRTCStatsReport(), {
         onError: (e) => console.error("getRTCStatsReport error for local livekit track", e),
     });
-    return createSenderStatsStore(reportStore, "Livekit");
+    return createSenderStatsStore(reportStore, "Livekit", () => track.mediaStreamTrack?.getSettings());
 }
 
 type StatsReportStoreOptions = {
@@ -183,6 +195,8 @@ function createReceiverStatsStore(
 function createSenderStatsStore(
     reportStore: Readable<RTCStatsReport | undefined>,
     source: string,
+    // Settings of the video track being sent: the stats do not say what rate the capture is configured at
+    getCaptureSettings: () => MediaTrackSettings | undefined,
 ): Readable<WebRtcSenderStats | undefined> {
     const prev = new Map<string, SenderLayerPrev>();
 
@@ -193,7 +207,9 @@ function createSenderStatsStore(
                 set(undefined);
                 return;
             }
-            set(buildWebRtcSenderStatsFromReport($report, prev, source));
+            const stats = buildWebRtcSenderStatsFromReport($report, prev, source);
+            const captureTargetFps = getCaptureSettings()?.frameRate;
+            set(stats && isCounter(captureTargetFps) && captureTargetFps > 0 ? { ...stats, captureTargetFps } : stats);
         },
         undefined,
     );
@@ -220,10 +236,6 @@ function buildWebRtcStatsFromReport(
     let codecID = "";
     /* eslint-disable @typescript-eslint/no-explicit-any */
     const codecs = new Map<string, any>();
-    const transports = new Map<string, any>();
-    const candidatePairs = new Map<string, any>();
-    const localCandidates = new Map<string, any>();
-    const remoteCandidates = new Map<string, any>();
     let bytesReceived = 0;
     let framesDecoded = 0;
     let timestamp = 0;
@@ -234,7 +246,14 @@ function buildWebRtcStatsFromReport(
         const matchesMedia = isVideo || !videoTrackId;
         if (isInboundRtp && matchesTrack && matchesMedia) {
             codecID = v.codecId;
-            const timeDiffSeconds = prev.timestampPrev > 0 ? (v.timestamp - prev.timestampPrev) / 1000 : 0;
+            bytesReceived = v.bytesReceived ?? 0;
+            framesDecoded = v.framesDecoded ?? 0;
+            timestamp = v.timestamp ?? 0;
+            // The first report has no previous one to compute rates from: reporting it would read as 0 fps
+            if (prev.timestampPrev <= 0) {
+                return;
+            }
+            const timeDiffSeconds = (v.timestamp - prev.timestampPrev) / 1000;
             const bandwidth =
                 timeDiffSeconds > 0 && v.bytesReceived !== undefined
                     ? (v.bytesReceived - prev.bytesReceivedPrev) / timeDiffSeconds
@@ -250,58 +269,23 @@ function buildWebRtcStatsFromReport(
                 bandwidth: bandwidth,
                 fps: fps,
                 source: options.source,
+                playback: toPlaybackCounters(v),
             };
-            bytesReceived = v.bytesReceived ?? 0;
-            framesDecoded = v.framesDecoded ?? 0;
-            timestamp = v.timestamp ?? 0;
         } else if (v.type === "codec") {
             codecs.set(v.id, v);
-        } else if (v.type === "transport") {
-            transports.set(v.id, v);
-        } else if (v.type === "candidate-pair") {
-            candidatePairs.set(v.id, v);
-        } else if (v.type === "local-candidate") {
-            localCandidates.set(v.id, v);
-        } else if (v.type === "remote-candidate") {
-            remoteCandidates.set(v.id, v);
         }
     });
     // Enrich receiverStats with TURN routing information when possible
-    if (receiverStats) {
-        let selectedPair: any | undefined;
-        for (const t of transports.values()) {
-            if (t.selectedCandidatePairId && candidatePairs.has(t.selectedCandidatePairId)) {
-                selectedPair = candidatePairs.get(t.selectedCandidatePairId);
-                break;
-            }
+    const route = receiverStats ? getSelectedIceRoute(stats) : undefined;
+    if (receiverStats && route) {
+        if (route.roundTripTimeMs !== undefined) {
+            receiverStats.roundTripTimeMs = route.roundTripTimeMs;
         }
-        if (!selectedPair) {
-            for (const p of candidatePairs.values()) {
-                if (p.selected === true || (p.nominated === true && p.state === "succeeded")) {
-                    selectedPair = p;
-                    break;
-                }
-            }
-        }
-        if (selectedPair) {
-            const local = localCandidates.get(selectedPair.localCandidateId);
-            const remote = remoteCandidates.get(selectedPair.remoteCandidateId);
-            const isRelay = (local && local.candidateType === "relay") || (remote && remote.candidateType === "relay");
-            let proto: string | undefined =
-                (local && (local.relayProtocol || local.protocol)) || (remote && remote.protocol) || undefined;
-            proto = proto?.toLowerCase();
-            receiverStats.relay = !!isRelay;
-            if (proto === "udp" || proto === "tcp" || proto === "tls") {
-                receiverStats.relayProtocol = proto;
-                if (receiverStats.relay && options.includeRelayDetails) {
-                    if (proto === "tcp") {
-                        receiverStats.source = `${options.source} (via TURN/TCP)`;
-                    } else if (proto === "tls") {
-                        receiverStats.source = `${options.source} (via TURN/TLS)`;
-                    } else {
-                        receiverStats.source = `${options.source} (via TURN/UDP)`;
-                    }
-                }
+        receiverStats.relay = route.relay;
+        if (route.protocol) {
+            receiverStats.relayProtocol = route.protocol;
+            if (route.relay && options.includeRelayDetails) {
+                receiverStats.source = `${options.source} (via TURN/${route.protocol.toUpperCase()})`;
             }
         }
     }
@@ -316,16 +300,65 @@ function buildWebRtcStatsFromReport(
     };
 }
 
+function toPlaybackCounters(inboundRtp: any): VideoPlaybackCounters | undefined {
+    if (typeof inboundRtp.id !== "string" || !isCounter(inboundRtp.timestamp) || !isCounter(inboundRtp.framesDecoded)) {
+        return undefined;
+    }
+    const optional = (value: unknown): number | undefined => (isCounter(value) ? value : undefined);
+    return {
+        statsId: inboundRtp.id,
+        timestampMs: inboundRtp.timestamp,
+        framesDecoded: inboundRtp.framesDecoded,
+        framesDropped: optional(inboundRtp.framesDropped),
+        freezeCount: optional(inboundRtp.freezeCount),
+        totalFreezesDuration: optional(inboundRtp.totalFreezesDuration),
+        pauseCount: optional(inboundRtp.pauseCount),
+        totalPausesDuration: optional(inboundRtp.totalPausesDuration),
+        totalInterFrameDelay: optional(inboundRtp.totalInterFrameDelay),
+        totalSquaredInterFrameDelay: optional(inboundRtp.totalSquaredInterFrameDelay),
+        totalDecodeTime: optional(inboundRtp.totalDecodeTime),
+        packetsReceived: optional(inboundRtp.packetsReceived),
+        packetsLost: optional(inboundRtp.packetsLost),
+    };
+}
+
+/**
+ * The ICE candidate pair the connection uses, from a stats report's transport and candidate-pair entries.
+ */
+function findSelectedCandidatePair(transports: Map<string, any>, candidatePairs: Map<string, any>): any | undefined {
+    for (const transport of transports.values()) {
+        if (transport.selectedCandidatePairId && candidatePairs.has(transport.selectedCandidatePairId)) {
+            return candidatePairs.get(transport.selectedCandidatePairId);
+        }
+    }
+    for (const pair of candidatePairs.values()) {
+        if (pair.selected === true || (pair.nominated === true && pair.state === "succeeded")) {
+            return pair;
+        }
+    }
+    return undefined;
+}
+
+function isCounter(value: unknown): value is number {
+    return typeof value === "number" && Number.isFinite(value) && value >= 0;
+}
+
 export type SenderLayerPrev = {
     bytesSent: number;
     framesEncoded: number;
     timestamp: number;
+    totalEncodeTime?: number;
+    cpuLimitedSeconds?: number;
+    bandwidthLimitedSeconds?: number;
+    // Captured frames, on the entry of the media source (RTCVideoSourceStats) the layers encode
+    frames?: number;
 };
 
 /**
  * Builds the sender-side statistics from a stats report containing our outbound video RTP stream(s).
  * With simulcast or SVC there is one outbound-rtp entry per layer: the frame size, fps and limitation reason come
- * from the largest layer, the bandwidth is the sum of all layers.
+ * from the largest layer, the bandwidth and the encoding time are the sum of all layers. The capture rate comes from
+ * the media source the layers encode.
  *
  * Returns undefined when the report has no outbound video stream or when no previous sample allows computing rates.
  * `prev` is updated in place with the counters of this report.
@@ -337,13 +370,27 @@ export function buildWebRtcSenderStatsFromReport(
 ): WebRtcSenderStats | undefined {
     const layers: any[] = [];
     const codecs = new Map<string, any>();
+    const mediaSources = new Map<string, any>();
+    // The receiver reports of the other end, by the outbound-rtp entry they are about
+    const remoteInbound = new Map<string, any>();
+    const transports = new Map<string, any>();
+    const candidatePairs = new Map<string, any>();
     stats.forEach((v: any) => {
         if (v.type === "outbound-rtp" && (v.kind === "video" || v.mediaType === "video")) {
             layers.push(v);
+        } else if (v.type === "media-source" && v.kind === "video") {
+            mediaSources.set(v.id, v);
+        } else if (v.type === "remote-inbound-rtp" && v.kind === "video") {
+            remoteInbound.set(v.localId, v);
+        } else if (v.type === "transport") {
+            transports.set(v.id, v);
+        } else if (v.type === "candidate-pair") {
+            candidatePairs.set(v.id, v);
         } else if (v.type === "codec") {
             codecs.set(v.id, v);
         }
     });
+    const selectedPair = findSelectedCandidatePair(transports, candidatePairs);
     /* eslint-enable @typescript-eslint/no-explicit-any */
     if (layers.length === 0) {
         prev.clear();
@@ -359,19 +406,59 @@ export function buildWebRtcSenderStatsFromReport(
     const timeDiffSeconds = topPrev ? (topLayer.timestamp - topPrev.timestamp) / 1000 : 0;
 
     let bytesSentDelta = 0;
+    // Only the layers that report their encoding time on both sides count, frames and time alike
+    let encodeSecondsDelta = 0;
+    let timedFramesDelta = 0;
+    // `active` is false on the layers the sender switched off (dynacast, a P2P peer hiding our tile)
+    const reportsActive = layers.every((layer) => typeof layer.active === "boolean");
+    let activeLayers = 0;
+    let activeFps = 0;
     for (const layer of layers) {
         const layerPrev = prev.get(layer.id);
         if (layerPrev) {
             bytesSentDelta += (layer.bytesSent ?? 0) - layerPrev.bytesSent;
+            if (isCounter(layer.totalEncodeTime) && layerPrev.totalEncodeTime !== undefined) {
+                encodeSecondsDelta += layer.totalEncodeTime - layerPrev.totalEncodeTime;
+                timedFramesDelta += (layer.framesEncoded ?? 0) - layerPrev.framesEncoded;
+            }
+        }
+        if (layer.active === true) {
+            activeLayers++;
+            const layerSeconds = layerPrev ? ((layer.timestamp ?? 0) - layerPrev.timestamp) / 1000 : 0;
+            if (layerPrev && layerSeconds > 0) {
+                const layerFps = ((layer.framesEncoded ?? 0) - layerPrev.framesEncoded) / layerSeconds;
+                activeFps = Math.max(activeFps, layerFps);
+            }
         }
         prev.set(layer.id, {
             bytesSent: layer.bytesSent ?? 0,
             framesEncoded: layer.framesEncoded ?? 0,
             timestamp: layer.timestamp ?? 0,
+            totalEncodeTime: isCounter(layer.totalEncodeTime) ? layer.totalEncodeTime : undefined,
+            cpuLimitedSeconds: limitationSeconds(layer.qualityLimitationDurations, "cpu"),
+            bandwidthLimitedSeconds: limitationSeconds(layer.qualityLimitationDurations, "bandwidth"),
         });
     }
+
+    // The capture the layers encode: its rate does not depend on what the encoder keeps
+    const mediaSource = mediaSources.get(topLayer.mediaSourceId) ?? mediaSources.values().next().value;
+    const sourcePrev = mediaSource ? prev.get(mediaSource.id) : undefined;
+    let captureFps: number | undefined;
+    if (mediaSource && isCounter(mediaSource.frames)) {
+        const sourceSeconds = sourcePrev ? ((mediaSource.timestamp ?? 0) - sourcePrev.timestamp) / 1000 : 0;
+        if (sourcePrev?.frames !== undefined && sourceSeconds > 0) {
+            captureFps = Math.max(0, mediaSource.frames - sourcePrev.frames) / sourceSeconds;
+        }
+        prev.set(mediaSource.id, {
+            bytesSent: 0,
+            framesEncoded: 0,
+            timestamp: mediaSource.timestamp ?? 0,
+            frames: mediaSource.frames,
+        });
+    }
+
     for (const id of Array.from(prev.keys())) {
-        if (!layers.some((layer) => layer.id === id)) {
+        if (!layers.some((layer) => layer.id === id) && id !== mediaSource?.id) {
             prev.delete(id);
         }
     }
@@ -387,10 +474,67 @@ export function buildWebRtcSenderStatsFromReport(
         mimeType: codecs.get(topLayer.codecId)?.mimeType,
         bandwidth: Math.max(0, bytesSentDelta) / timeDiffSeconds,
         fps: Math.max(0, (topLayer.framesEncoded ?? 0) - topPrev.framesEncoded) / timeDiffSeconds,
+        activeLayers: reportsActive ? activeLayers : undefined,
+        activeFps: reportsActive ? activeFps : undefined,
         qualityLimitationReason: toQualityLimitationReason(topLayer.qualityLimitationReason),
         encoderImplementation:
             typeof topLayer.encoderImplementation === "string" ? topLayer.encoderImplementation : undefined,
+        captureFps,
+        encodeMsPerFrame:
+            timedFramesDelta > 0 ? (Math.max(0, encodeSecondsDelta) / timedFramesDelta) * 1000 : undefined,
+        cpuLimitedRatio: limitationRatio(
+            topLayer.qualityLimitationDurations,
+            topPrev.cpuLimitedSeconds,
+            "cpu",
+            timeDiffSeconds,
+        ),
+        bandwidthLimitedRatio: limitationRatio(
+            topLayer.qualityLimitationDurations,
+            topPrev.bandwidthLimitedSeconds,
+            "bandwidth",
+            timeDiffSeconds,
+        ),
+        ...uploadNetwork(remoteInbound.get(topLayer.id), selectedPair),
     };
+}
+
+/**
+ * What the network does to what we send: the latest receiver report of the other end about the largest layer, and
+ * the bandwidth the browser estimates it can send.
+ */
+function uploadNetwork(
+    remoteInbound: { roundTripTime?: unknown; fractionLost?: unknown } | undefined,
+    selectedPair: { availableOutgoingBitrate?: unknown } | undefined,
+): Pick<WebRtcSenderStats, "uploadRoundTripTimeMs" | "uploadLossRatio" | "availableOutgoingBitrate"> {
+    return {
+        uploadRoundTripTimeMs: isCounter(remoteInbound?.roundTripTime) ? remoteInbound.roundTripTime * 1000 : undefined,
+        uploadLossRatio: isCounter(remoteInbound?.fractionLost) ? Math.min(1, remoteInbound.fractionLost) : undefined,
+        availableOutgoingBitrate: isCounter(selectedPair?.availableOutgoingBitrate)
+            ? selectedPair.availableOutgoingBitrate
+            : undefined,
+    };
+}
+
+// RTCOutboundRtpStreamStats.qualityLimitationDurations: seconds spent in each limitation state
+function limitationSeconds(durations: unknown, reason: "cpu" | "bandwidth"): number | undefined {
+    if (typeof durations !== "object" || durations === null) {
+        return undefined;
+    }
+    const seconds = (durations as Record<string, unknown>)[reason];
+    return isCounter(seconds) ? seconds : undefined;
+}
+
+function limitationRatio(
+    durations: unknown,
+    previousSeconds: number | undefined,
+    reason: "cpu" | "bandwidth",
+    elapsedSeconds: number,
+): number | undefined {
+    const seconds = limitationSeconds(durations, reason);
+    if (seconds === undefined || previousSeconds === undefined || elapsedSeconds <= 0) {
+        return undefined;
+    }
+    return Math.min(1, Math.max(0, (seconds - previousSeconds) / elapsedSeconds));
 }
 
 function toQualityLimitationReason(reason: unknown): WebRtcQualityLimitationReason {

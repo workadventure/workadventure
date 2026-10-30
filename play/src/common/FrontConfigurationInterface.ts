@@ -8,16 +8,15 @@ export interface FrontConfigurationInterface {
     UPLOADER_URL: string;
     ICON_URL: string;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
-    DISABLE_NOTIFICATIONS: boolean;
     JITSI_URL: string | undefined;
     JITSI_PRIVATE_MODE: boolean;
     ENABLE_MAP_EDITOR: boolean;
     PUBLIC_MAP_STORAGE_PREFIX: string | undefined;
     MAX_USERNAME_LENGTH: number;
     MAX_PER_GROUP: number;
+    PROXIMITY_FILE_TRANSFER_MAX_USERS: number;
     MAX_DISPLAYED_VIDEOS: number;
     LIVEKIT_PIXEL_DENSITY: number;
-    NODE_ENV: string;
     CONTACT_URL: string | undefined;
     POSTHOG_API_KEY: string | undefined;
     POSTHOG_URL: string | undefined;

@@ -3,7 +3,6 @@ import type { DeepPartial } from "../DeepPartial";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Camera bewerken",
-    editMic: "Microfoon bewerken",
     editSpeaker: "Audio-uitvoer bewerken",
     active: "Actief",
     disabled: "Uitgeschakeld",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Camera / Microfoon toegang nodig",
         cameraTitle: "Cameratoegang nodig",
         microphoneTitle: "Microfoontoegang nodig",
-        permissionDenied: "Toegang geweigerd",
         cameraPermissionDenied: "Cameratoestemming geweigerd",
         microphonePermissionDenied: "Microfoontoestemming geweigerd",
         cameraMicrophonePermissionDenied: "Camera- en microfoontoestemming geweigerd",
@@ -86,7 +84,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Stille zone",
         silentZoneDesc:
-            "Je bevindt je in een stille zone. Je kunt alleen de mensen zien en horen met wie je samen bent. Je kunt de andere mensen in de ruimte niet zien of horen.",
+            "Je bevindt je in een stille zone. Niemand kan hier met je praten, en je microfoon en camera staan uit.",
         nameTag: "Jij",
         loading: "Je camera wordt geladen...",
     },
@@ -95,7 +93,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Meer acties",
         closeMenu: "Sluit menu",
         senPrivateMessage: "Stuur een privébericht (binnenkort beschikbaar)",
-        kickoffUser: "Gebruiker verwijderen",
         giveFloor: "Het woord geven",
         revokeFloor: "Het woord ontnemen",
         muteAudioUser: "Audio dempen",
@@ -105,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Vragen om video te dempen",
         muteVideoEveryBody: "Video dempen voor iedereen",
         blockOrReportUser: "Gebruiker blokkeren of rapporteren",
-    },
-    backgroundEffects: {
-        imageTitle: "Achtergrondafbeeldingen",
-        blurTitle: "Achtergrondvervaging",
-        resetTitle: "Achtergrondeffecten uitschakelen",
-        title: "Achtergrondeffecten",
-        close: "Sluiten",
-        blurAmount: "Vervagingshoeveelheid",
     },
 };
 

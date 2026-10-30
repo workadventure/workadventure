@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Editar càmera",
-    editMic: "Editar micròfon",
     editSpeaker: "Editar sortida d'àudio",
     active: "Actiu",
     disabled: "Desactivat",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Es necessita accéss a la càmera/micròfon",
         cameraTitle: "Es necessita accés a la càmera",
         microphoneTitle: "Es necessita accés al micròfon",
-        permissionDenied: "Permís denegat",
         cameraPermissionDenied: "Permís de càmera denegat",
         microphonePermissionDenied: "Permís de micròfon denegat",
         cameraMicrophonePermissionDenied: "Permisos de càmera i micròfon denegats",
@@ -86,7 +84,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Zona silenciosa",
         silentZoneDesc:
-            "Esteu en una zona silenciosa. Només podeu veure i sentir les persones amb qui esteu. No podeu veure ni sentir les altres persones a la sala.",
+            "Esteu en una zona silenciosa. Ningú no us pot parlar aquí, i el vostre micròfon i la vostra càmera estan desactivats.",
         nameTag: "Vós",
         loading: "Carregant la vostra càmera...",
     },
@@ -95,7 +93,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Més accions",
         closeMenu: "Tancar el menú",
         senPrivateMessage: "Enviar un missatge privat (pròximament)",
-        kickoffUser: "Expulsar usuari",
         giveFloor: "Donar la paraula",
         revokeFloor: "Retirar la paraula",
         muteAudioUser: "Silenciar audio",
@@ -105,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Demanar de silenciar el vídeo",
         muteVideoEveryBody: "Silenciar vídeo per a tothom",
         blockOrReportUser: "Bloquejar o informar d'usuari",
-    },
-    backgroundEffects: {
-        imageTitle: "Imatges de fons",
-        blurTitle: "Desenfocament de fons",
-        resetTitle: "Desactivar els efectes de fons",
-        title: "Efectes de fons",
-        close: "Tancar",
-        blurAmount: "Quantitat de desenfocament",
     },
 };
 

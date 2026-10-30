@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "볼륨",
             audioLinkLabel: "오디오 링크",
             audioLinkPlaceholder: "https://xxx.yyy/something.mp3",
+            sourceUpload: "파일 업로드",
+            sourceUrl: "URL 사용",
             defaultButtonLabel: "음악 재생",
             error: "사운드를 불러오지 못했습니다",
             actionButtonLabel: "음악 재생",
@@ -460,7 +462,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "강당 모드",
                 audienceVideoFeedbackActivatedDisabled: "강당 모드",
                 audienceVideoFeedbackActivatedHelper:
-                    "강당 모드 활성화: 룸/월드의 모든 사용자(카메라 및 마이크가 활성화된)의 카메라 및 마이크 스트림을 수신합니다. 하지만 참석자는 다른 참석자를 볼 수 없습니다. 기본적으로 비활성화됩니다.",
+                    "강당 모드 활성화: 룸/월드의 모든 사용자(카메라가 활성화된)의 카메라 스트림을 오디오 없이 수신합니다. 하지만 참석자는 다른 참석자를 볼 수 없습니다. 기본적으로 비활성화됩니다.",
                 error: {
                     title: "제목을 입력하세요",
                     save: {

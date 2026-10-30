@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "音量",
             audioLinkLabel: "オーディオリンク",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "ファイルをアップロード",
+            sourceUrl: "URLを使用",
             defaultButtonLabel: "ミュージックの再生",
             error: "サウンドを読み込めませんでした",
             actionButtonLabel: "ミュージックを再生",
@@ -461,7 +463,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedDisabled: "オーディトリアムモード",
                 audienceVideoFeedbackActivatedHelper:
-                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラとマイクが有効化されている）のカメラとマイクストリームを受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
+                    "オーディトリアムモードが有効化されました：ルーム/ワールド内のすべてのユーザー（カメラが有効化されている）のカメラストリームを、音声なしで受信します。ただし、参加者は他の参加者を見ることができません。デフォルトでは無効です。",
                 error: {
                     title: "タイトルを入力してください",
                     save: {

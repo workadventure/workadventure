@@ -39,6 +39,7 @@
     let inputSendTextActive = $state(false);
     let uploadAudioActive = $state(false);
     let broadcastToWorld = $state(false);
+    let sending = $state(false);
     let handleSendText: TextGlobalMessageHandle | undefined = $state();
     let handleSendAudio: AudioGlobalMessageHandle | undefined = $state();
     let stream: MediaStream | undefined = $state();
@@ -95,14 +96,22 @@
         uploadAudioActive = false;
     }
 
-    function send(): void {
+    async function send(): Promise<void> {
         if (inputSendTextActive) {
             analyticsClient.trackAdminEvent("global_message.text_sent");
             handleSendText?.sendTextMessage(broadcastToWorld);
         }
         if (uploadAudioActive) {
             analyticsClient.trackAdminEvent("global_message.sound_sent");
-            handleSendAudio?.sendAudioMessage(broadcastToWorld);
+            sending = true;
+            try {
+                // On failure, stay open: the error is shown under the upload area.
+                if (!(await handleSendAudio?.sendAudioMessage(broadcastToWorld))) {
+                    return;
+                }
+            } finally {
+                sending = false;
+            }
         }
         close();
     }
@@ -395,9 +404,10 @@
                         <section class="centered-column">
                             <Button
                                 variant="light"
+                                disabled={sending}
                                 onclick={(event) => {
                                     event.preventDefault();
-                                    send();
+                                    send().catch((e) => console.error(e));
                                 }}
                             >
                                 {$LL.menu.globalMessage.send()}

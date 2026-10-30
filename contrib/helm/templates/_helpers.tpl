@@ -124,6 +124,13 @@ https://{{ .Values.domainName }}/map-storage
 {{- end -}}
 {{- end }}
 
+{{- define "workadventure.assetsDomainName" -}}
+{{- coalesce .Values.front.ingress.domainName (printf "assets%s%s" .Values.domainNamePrefix .Values.domainName) }}
+{{- end -}}
+{{- define "workadventure.assetsUrl" -}}
+{{- printf "https://%s" (include "workadventure.assetsDomainName" .) }}
+{{- end -}}
+
 {{- define "workadventure.iconDomainName" -}}
 {{- coalesce .Values.icon.ingress.domainName (printf "icon%s%s" .Values.domainNamePrefix .Values.domainName) }}
 {{- end -}}

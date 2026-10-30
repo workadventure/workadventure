@@ -3,10 +3,10 @@ import { derived, get, readable, readonly, writable } from "svelte/store";
 import type {
     ICreateRoomOpts,
     ICreateRoomStateEvent,
-    IPushRule,
     IRoomDirectoryOptions,
     MatrixClient,
     MatrixEvent,
+    PushRuleSet,
     Room,
     SyncStateData,
     User,
@@ -14,12 +14,12 @@ import type {
 } from "matrix-js-sdk";
 import {
     ClientEvent,
+    ConnectionError,
     EventTimeline,
     EventType,
     HttpApiEvent,
     MatrixError,
     PendingEventOrdering,
-    PushRuleActionName,
     RoomEvent,
     RoomStateEvent,
     SetPresence,
@@ -46,6 +46,7 @@ import type {
     ChatUser,
     ConnectionStatus,
     CreateRoomOptions,
+    JoinableRoomInfo,
     MatrixChatCapabilities,
     MatrixPeerProfileDiagnostics,
     MatrixUserSettingsDiagnostics,
@@ -103,6 +104,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     private displayNameMatrixSyncUnsubscriber: (() => void) | undefined;
     private displayNameMatrixSyncDebounceTimer: ReturnType<typeof setTimeout> | undefined;
     private isClientReady = false;
+    private isSessionLoggedOut = false;
     // Per-user availability store, shared with the rendered ChatUser and kept live by
     // onUserPresenceEvent. Persistent across directRoomsUsers recomputes so the UI subscription survives.
     private readonly userAvailabilityStores = new Map<string, Writable<AvailabilityStatus>>();
@@ -584,7 +586,10 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 });
             }
             this.rebuildSpaceHierarchy();
-            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false);
+            // Best effort, like the later syncs below: a failed avatar upload (or crypto.subtle, which hashes the
+            // Woka, missing on a non-secure origin) is already logged and reported, and must not take the whole
+            // chat down with it. Whether the Woka is there yet when the init gets here is only a matter of timing.
+            await this.syncMatrixGlobalProfileFromLocalWokaAndName(false).catch(() => undefined);
             this.attachWokaAvatarMatrixSync();
             this.attachDisplayNameMatrixSync();
         } catch (error) {
@@ -789,7 +794,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 this.connectionStatus.set("ON_ERROR");
                 if (res?.error) {
                     console.error("Matrix sync error (previous state: ", prevState, "): ", res?.error);
-                    Sentry.captureException(res?.error);
+                    // A ConnectionError means the homeserver could not be reached (network down, laptop waking up...).
+                    // The SDK keeps polling /versions every few seconds and resumes the sync once it answers.
+                    if (!(res.error instanceof ConnectionError)) {
+                        Sentry.captureException(res.error);
+                    }
                 }
                 break;
             case SyncState.Reconnecting:
@@ -868,6 +877,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * the only place a fresh Matrix login token is minted.
      */
     private onSessionLoggedOut(error: MatrixError): void {
+        this.isSessionLoggedOut = true;
         console.error("The Matrix session is no longer valid: ", error);
         Sentry.captureException(error);
         localUserStore.clearMatrixSession();
@@ -932,6 +942,9 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             const checkSync = () => {
                 if (this.client?.isInitialSyncComplete()) {
                     resolve();
+                } else if (this.isSessionLoggedOut) {
+                    // A dead session never syncs: don't keep the chat (and its button) waiting for the timeout.
+                    reject(new Error("Failed to wait initial sync : the Matrix session is no longer valid"));
                 } else {
                     if (Date.now() - startTime >= timeout) {
                         reject(new Error(`Failed to wait initial sync : timeout ${timeout} ms`));
@@ -1152,29 +1165,12 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             this.refreshRawUnreadRoomKinds();
         }
         if (event.getType() === "m.push_rules") {
-            const content = event.getContent();
             // `global` and its rule-kind arrays (override, room, …) are all optional in a PushRuleSet;
-            // a partial m.push_rules update can omit `override`, so never assume it exists.
-            const overrideRules: IPushRule[] = content?.global?.override ?? [];
-
-            overrideRules.forEach((rule: IPushRule) => {
-                const room = this.roomList.get(rule.rule_id);
-                if (!room) return;
-                if (rule.actions.includes(PushRuleActionName.DontNotify)) {
-                    room.setNotificationSilent(true);
-                }
-            });
-
-            Array.from(this.roomList.values())
-                .filter((room) => {
-                    return !overrideRules.some(
-                        (rule: IPushRule) =>
-                            rule.rule_id === room.id && rule.actions.includes(PushRuleActionName.DontNotify),
-                    );
-                })
-                .forEach((room) => {
-                    room.setNotificationSilent(false);
-                });
+            // a partial m.push_rules update can omit them, so never assume they exist.
+            const pushRules: PushRuleSet | undefined = event.getContent()?.global;
+            for (const room of this.roomList.values()) {
+                room.setNotificationSilent(MatrixChatRoom.isMutedByPushRules(pushRules, room.id));
+            }
         }
     }
 
@@ -1663,6 +1659,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     //TODO createOptions only on matrix size
     async createRoom(roomOptions?: CreateRoomOptions): Promise<{
         room_id: string;
+        room?: ChatRoom;
     }> {
         if (roomOptions === undefined) {
             return Promise.reject(new Error("CreateRoomOptions is empty"));
@@ -1679,15 +1676,58 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             );
 
             if (roomOptions.parentSpaceID && result) {
-                await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id, roomOptions.suggested);
+                try {
+                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id, roomOptions.suggested);
+                } catch (error) {
+                    // Without its folder the room would land at the root, and a new try would create a second one.
+                    await this.client.leave(result.room_id).catch((e) => console.error(e));
+                    throw error;
+                }
             }
 
-            return result;
+            return {
+                room_id: result.room_id,
+                room: await this.waitForPlacedRoom(
+                    result.room_id,
+                    roomOptions.parentSpaceID,
+                    roomOptions.encrypt === true,
+                ),
+            };
         } catch (error) {
             throw this.handleMatrixError(error);
         } finally {
             this.roomCreationInProgress.set(false);
         }
+    }
+
+    /**
+     * The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s.
+     * A room created in a folder can also show up at the root for a while, and that copy is dropped
+     * when it moves into its folder: take the one inside the folder.
+     * The server can also split the creation state over two syncs (the room first comes down with only
+     * its creator): an encrypted room waits for its encryption event, or opening it would skip the
+     * encryption setup, which only shows up for a room already known to be encrypted.
+     */
+    private async waitForPlacedRoom(
+        roomId: string,
+        parentSpaceID: string | undefined,
+        encrypted: boolean,
+        deadline = Date.now() + 10_000,
+    ): Promise<ChatRoom | undefined> {
+        const folder = parentSpaceID ? await this.findParentFolder(parentSpaceID) : undefined;
+        // A closed folder has not built its rooms yet: build them, as opening it would.
+        folder?.ensureChildrenLoaded();
+        const room = parentSpaceID ? await folder?.getNode(roomId) : await this.findRoomOrFolder(roomId);
+        if (room instanceof MatrixChatRoom && (!encrypted || get(room.isEncrypted))) {
+            return room;
+        }
+        if (Date.now() >= deadline) {
+            return undefined;
+        }
+        await new Promise<void>((resolve) => {
+            setTimeout(resolve, 200);
+        });
+        return this.waitForPlacedRoom(roomId, parentSpaceID, encrypted, deadline);
     }
 
     private async waitForNextSync() {
@@ -1775,6 +1815,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     .filter((invitation) => invitation !== undefined && invitation !== this.client?.getSafeUserId()) ??
                 [],
             is_direct: roomOptions.is_direct,
+            topic: roomOptions.description,
             initial_state: this.computeInitialState(roomOptions),
             // No power_level_content_override: `suggested` is not an m.room.power_levels field (hence the
             // suppressed type error). The real "suggested" flag is set on the m.space.child event in
@@ -1959,51 +2000,52 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         return;
     }
 
-    async searchAccessibleRooms(searchText = ""): Promise<
-        {
-            id: string;
-            name: string | undefined;
-        }[]
-    > {
+    async searchAccessibleRooms(searchText = ""): Promise<JoinableRoomInfo[]> {
+        const client = this.client;
+        if (!client) {
+            throw new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG);
+        }
         const isGuestUser = get(this.isGuest);
-        return new Promise((res, rej) => {
-            if (!this.client) {
-                rej(new Error(CLIENT_NOT_INITIALIZED_ERROR_MSG));
-                return;
-            }
-
-            const searchOption: IRoomDirectoryOptions = {
-                include_all_networks: true,
-                filter: {
-                    generic_search_term: searchText,
-                },
-            };
-            this.client
-                .publicRooms(searchOption)
-                .then(({ chunk }) => {
-                    const publicRoomsChunkRoom = chunk
-                        .filter(({ room_id, guest_can_join }) => {
-                            if (this.roomList.has(room_id)) {
-                                return false;
-                            }
-                            if (!isGuestUser) {
-                                return true;
-                            } else {
-                                return guest_can_join;
-                            }
-                        })
-                        .map((chunkRoom) => {
-                            return {
-                                id: chunkRoom.room_id,
-                                name: chunkRoom.name,
-                            };
-                        });
-                    res(publicRoomsChunkRoom);
-                })
-                .catch((error) => {
-                    rej(asError(error));
-                });
+        const searchOption: IRoomDirectoryOptions = {
+            include_all_networks: true,
+            filter: {
+                generic_search_term: searchText,
+            },
+        };
+        const { chunk } = await client.publicRooms(searchOption).catch((error: unknown) => {
+            throw asError(error);
         });
+        const folderNames = this.getFolderNamesByChildId(client);
+        return chunk
+            .filter(({ room_id, guest_can_join }) => !this.roomList.has(room_id) && (!isGuestUser || guest_can_join))
+            .map((chunkRoom) => ({
+                id: chunkRoom.room_id,
+                name: chunkRoom.name ?? chunkRoom.canonical_alias ?? "",
+                avatarUrl: chunkRoom.avatar_url
+                    ? (client.mxcUrlToHttp(chunkRoom.avatar_url, 24, 24, "scale") ?? "")
+                    : "",
+                topic: chunkRoom.topic,
+                memberCount: chunkRoom.num_joined_members,
+                folderName: folderNames.get(chunkRoom.room_id),
+            }));
+    }
+
+    // The public directory does not say which space a room belongs to; the joined spaces' m.space.child
+    // events, already synced, do.
+    private getFolderNamesByChildId(client: MatrixClient): Map<string, string> {
+        const folderNames = new Map<string, string>();
+        for (const space of client.getRooms()) {
+            if (!space.isSpaceRoom() || space.getMyMembership() !== KnownMembership.Join) continue;
+            const childEvents =
+                space.getLiveTimeline().getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceChild) ?? [];
+            for (const event of childEvents) {
+                const childId = event.getStateKey();
+                if (childId && hasValidViaEntries(event.getContent())) {
+                    folderNames.set(childId, space.name);
+                }
+            }
+        }
+        return folderNames;
     }
 
     async joinRoom(roomId: string): Promise<ChatRoom> {
@@ -2152,6 +2194,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             Sentry.captureException(error);
         }
     };
+
+    retryConnection = () => this.client?.retryImmediately() ?? false;
 
     clearListener() {
         this.matrixClientRoomManageQueue.length = 0;

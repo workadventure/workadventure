@@ -48,6 +48,8 @@ export const PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES = env.PUSHER_ADMIN_WS_MAX_BA
 export const ALLOWED_CORS_ORIGIN = env.ALLOWED_CORS_ORIGIN; // Use "*" to allow any domain
 export const PUSHER_URL = env.PUSHER_URL || "";
 export const FRONT_URL = env.FRONT_URL || "";
+export const ASSETS_URL = env.ASSETS_URL?.replace(/\/$/, "");
+export const ASSETS_INTERNAL_URL = (env.ASSETS_INTERNAL_URL ?? env.ASSETS_URL)?.replace(/\/$/, "");
 export const PUBLIC_MAP_STORAGE_URL = env.PUBLIC_MAP_STORAGE_URL || "";
 export const INTERNAL_MAP_STORAGE_URL = env.INTERNAL_MAP_STORAGE_URL;
 export const REDIS_HOST = env.REDIS_HOST;
@@ -82,6 +84,7 @@ const isUsingDeprecatedOpenIdVariables =
 export const OPID_SCOPE = env.OPENID_SCOPE || env.OPID_SCOPE || "openid email profile ";
 export const OPID_PROMPT =
     env.OPENID_PROMPT || env.OPID_PROMPT || (isUsingDeprecatedOpenIdVariables ? "login" : undefined);
+export const OPID_ACCESS_TYPE = env.OPENID_ACCESS_TYPE || undefined;
 export const OPID_USERNAME_CLAIM = env.OPENID_USERNAME_CLAIM || env.OPID_USERNAME_CLAIM || "username";
 export const OPID_LOCALE_CLAIM = env.OPENID_LOCALE_CLAIM || env.OPID_LOCALE_CLAIM || "locale";
 export const OPID_WOKA_NAME_POLICY = env.OPENID_WOKA_NAME_POLICY || env.OPID_WOKA_NAME_POLICY || "user_input";
@@ -171,7 +174,7 @@ export const MATRIX_ADMIN_USER: string | undefined = env.MATRIX_ADMIN_USER;
 export const MATRIX_ADMIN_PASSWORD: string | undefined = env.MATRIX_ADMIN_PASSWORD;
 export const MATRIX_DOMAIN: string | undefined = env.MATRIX_DOMAIN;
 
-export const ENABLE_SAY: boolean = env.ENABLE_SAY || true;
+export const ENABLE_SAY: boolean = env.ENABLE_SAY;
 
 export const LIVEKIT_RECORDING_S3_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_ENDPOINT;
 export const LIVEKIT_RECORDING_S3_CDN_ENDPOINT: string | undefined = env.LIVEKIT_RECORDING_S3_CDN_ENDPOINT;
@@ -180,7 +183,7 @@ export const LIVEKIT_RECORDING_S3_SECRET_KEY: string | undefined = env.LIVEKIT_R
 export const LIVEKIT_RECORDING_S3_BUCKET: string | undefined = env.LIVEKIT_RECORDING_S3_BUCKET;
 export const LIVEKIT_RECORDING_S3_REGION: string | undefined = env.LIVEKIT_RECORDING_S3_REGION;
 export const LIVEKIT_PIXEL_DENSITY: number = env.LIVEKIT_PIXEL_DENSITY;
-export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT || true;
+export const ENABLE_ISSUE_REPORT: boolean = env.ENABLE_ISSUE_REPORT;
 // Tutorial settings
 export const ENABLE_TUTORIAL: boolean = env.ENABLE_TUTORIAL ?? true;
 export const ANALYTICS_FLUSH_INTERVAL_MS: number = env.ANALYTICS_FLUSH_INTERVAL_MS;
@@ -198,16 +201,15 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     UPLOADER_URL: env.UPLOADER_URL,
     ICON_URL: env.ICON_URL,
     SKIP_RENDER_OPTIMIZATIONS: env.SKIP_RENDER_OPTIMIZATIONS,
-    DISABLE_NOTIFICATIONS: env.DISABLE_NOTIFICATIONS,
     JITSI_URL: env.JITSI_URL,
     JITSI_PRIVATE_MODE: env.JITSI_PRIVATE_MODE,
     ENABLE_MAP_EDITOR: env.ENABLE_MAP_EDITOR,
     PUBLIC_MAP_STORAGE_PREFIX: env.PUBLIC_MAP_STORAGE_URL ? new URL(env.PUBLIC_MAP_STORAGE_URL).pathname : undefined,
     MAX_USERNAME_LENGTH: env.MAX_USERNAME_LENGTH,
     MAX_PER_GROUP: env.MAX_PER_GROUP,
+    PROXIMITY_FILE_TRANSFER_MAX_USERS: env.PROXIMITY_FILE_TRANSFER_MAX_USERS,
     MAX_DISPLAYED_VIDEOS: env.MAX_DISPLAYED_VIDEOS,
     LIVEKIT_PIXEL_DENSITY: env.LIVEKIT_PIXEL_DENSITY,
-    NODE_ENV: env.NODE_ENV || "development",
     CONTACT_URL: env.CONTACT_URL,
     POSTHOG_API_KEY: env.POSTHOG_API_KEY,
     POSTHOG_URL: env.POSTHOG_URL,
@@ -248,8 +250,8 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     ENABLE_CHAT_DISCONNECTED_LIST,
     MATRIX_ADMIN_USER,
     MATRIX_DOMAIN,
-    ENABLE_SAY: env.ENABLE_SAY || true,
-    ENABLE_ISSUE_REPORT: env.ENABLE_ISSUE_REPORT || true,
+    ENABLE_SAY,
+    ENABLE_ISSUE_REPORT,
     GRPC_MAX_MESSAGE_SIZE: env.GRPC_MAX_MESSAGE_SIZE,
     TURN_CREDENTIALS_RENEWAL_TIME: env.TURN_CREDENTIALS_RENEWAL_TIME,
     // Woka settings

@@ -55,7 +55,7 @@ import { adminApi } from "../Services/AdminApi";
 import { MapLoadingError } from "../Services/MapLoadingError";
 import { getMapStorageClient } from "../Services/MapStorageClient";
 import { emitError, emitErrorOnRoomSocket, endUserConnectionWithReason } from "../Services/MessageHelpers";
-import { ModeratorTagFinder } from "../Services/ModeratorTagFinder";
+import { findLivekitRoomAdminTag, ModeratorTagFinder } from "../Services/ModeratorTagFinder";
 import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
@@ -1000,8 +1000,8 @@ export class GameRoom implements BrothersFinder {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
     }
 
-    public emitLockGroupEvent(user: User, groupId: number) {
-        this.positionNotifier.emitLockGroupEvent(user, groupId);
+    public emitLockGroupEvent(group: Group) {
+        this.positionNotifier.emitLockGroupEvent(group);
     }
 
     public addRoomListener(socket: RoomSocket) {
@@ -1293,6 +1293,14 @@ export class GameRoom implements BrothersFinder {
             }
             throw e;
         }
+    }
+
+    /**
+     * Returns the moderator tag of the meeting room whose space is `spaceName` (the space name without the world prefix).
+     * The WAM is kept up to date by the map editor commands, so there is nothing to cache or invalidate.
+     */
+    public getModeratorTagForLivekitRoom(spaceName: string): string | undefined {
+        return findLivekitRoomAdminTag(this.getWam(), this._roomUrl, spaceName);
     }
 
     private bbbModeratorTagFinderPromise: Promise<ModeratorTagFinder> | undefined;

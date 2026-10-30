@@ -1,11 +1,9 @@
 <script lang="ts">
-    import { EventType } from "matrix-js-sdk";
+    import { EventType } from "matrix-js-sdk/lib/@types/event";
     import { onMount } from "svelte";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
     import LL from "../../../../i18n/i18n-svelte";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
-    import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import type {
@@ -18,9 +16,8 @@
         ChatRoomSidePanelHydrationState,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
-    import { draftMessageService } from "../../Services/DraftMessageService";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
-    import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
+    import { confirmLeaveRoom } from "./confirmLeaveRoom";
     import {
         IconBellOff,
         IconCheckList,
@@ -32,7 +29,6 @@
         IconUserPlus,
         IconUsersGroup,
     } from "@wa-icons";
-    import { modals } from "@wa-modals";
 
     interface Props {
         room: ChatRoom &
@@ -80,7 +76,6 @@
     let unreadThreadCount = $derived($threads.filter((thread) => thread.hasUnreadMessages).length);
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
     let avatarColorStore = $derived(room.avatarFallbackColor);
-    let leaveRoomNotification = $derived($LL.chat.roomMenu.leaveRoom.notification());
     let threadWarnings = $derived($threadsHydrationState.warnings ?? []);
     let hasUnsupportedThreadHistory = $derived(
         threadWarnings.some((warning) => warning.reason === "server_unsupported"),
@@ -107,12 +102,12 @@
     );
     let pollCardValue = $derived(
         room.pollCatalogueHydrationState == null
-            ? `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`
+            ? `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.status.open()}`
             : $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle"
               ? $LL.chat.loading()
               : $pollCatalogueHydrationState.status === "error"
                 ? $LL.chat.roomPanel.status.retry()
-                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`,
+                : `${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.status.open()}`,
     );
     let pollCardHint = $derived(
         room.pollCatalogueHydrationState != null && $pollCatalogueHydrationState.status === "error"
@@ -127,8 +122,9 @@
         roomSidePanelStore.setActiveSection(section);
     }
 
+    // Members are managed in the panel's Members section, next to the conversation, not in a popup.
     function openManageParticipantsModal() {
-        modals.open(ManageParticipantsModal, { room });
+        openSection("participants");
     }
 
     function toggleMute() {
@@ -140,13 +136,7 @@
     }
 
     function leaveRoom() {
-        const roomId = room.id;
-        room.leaveRoom()
-            .then(() => {
-                draftMessageService.deleteDraft(`${roomId}-${localUserStore.getChatId() ?? "0"}`);
-                notificationPlayingStore.playNotification(leaveRoomNotification);
-            })
-            .catch(() => console.error("Failed to leave room"));
+        confirmLeaveRoom(room);
     }
 </script>
 

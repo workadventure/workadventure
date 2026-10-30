@@ -1,16 +1,29 @@
 import { z } from "zod";
 import { MapStore } from "@workadventure/store-utils";
-import type { LocalParticipant, Participant, RemoteParticipant, TrackPublishOptions } from "livekit-client";
+import type {
+    LocalParticipant,
+    LocalTrackPublication,
+    Participant,
+    RemoteParticipant,
+    TrackPublishOptions,
+} from "livekit-client";
 import {
     BackupCodecPolicy,
+    compareVersions,
+    getBrowser,
     LocalAudioTrack,
     LocalVideoTrack,
     Room,
     RoomEvent,
     Track,
+    VideoPreset,
     VideoPresets,
     DisconnectReason,
     ConnectionState,
+    LoggerNames,
+    LogLevel,
+    setLogLevel,
+    supportsAudioOutputSelection,
     supportsAV1,
     supportsVP9,
 } from "livekit-client";
@@ -24,7 +37,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
+import { registerLivekitRoom, unregisterLivekitRoom, type E2ELivekitRoom } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import {
     preferredVideoCodecs,
@@ -39,6 +52,7 @@ import { registerLocalEncoderStats } from "../WebRtc/LocalEncoderStats";
 import { subscribeToOutboundVideoQualityAnalytics } from "../WebRtc/VideoQualityAnalytics";
 import { LIVEKIT_PIXEL_DENSITY } from "../Enum/EnvironmentVariable";
 import { audioPlaybackStore } from "../Stores/AudioPlaybackStore";
+import { effectiveNoiseSuppressionProviderStore, noiseSuppressionEnabledStore } from "../Stores/NoiseSuppressionStore";
 import { SCRIPTING_AUDIO_TRACK_NAME } from "./LivekitConstants";
 import { LiveKitParticipant } from "./LivekitParticipant";
 import type { LiveKitRoomInterface } from "./LiveKitRoomInterface";
@@ -50,8 +64,8 @@ const ParticipantMetadataSchema = z.object({
 type ParticipantMetadata = z.infer<typeof ParticipantMetadataSchema>;
 
 type LivekitRoomCounter = {
-    increment: () => void;
-    decrement: () => void;
+    increment: (room: E2ELivekitRoom) => void;
+    decrement: (room: E2ELivekitRoom) => void;
 };
 
 // ponytail: fixed delay before asking for a new invitation when the room never managed to connect (the LiveKit
@@ -59,8 +73,10 @@ type LivekitRoomCounter = {
 // backoff if it ever matters.
 const RESTART_DELAY_WHEN_NEVER_CONNECTED_MS = 5000;
 
-export class LiveKitRoom implements LiveKitRoomInterface {
+export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
     private room: Room | undefined;
+    // Keyed by identity, like livekit-client: it keeps the same RemoteParticipant across a full reconnection and
+    // changes its sid in place, so a sid key would no longer find the participant when it leaves
     private participants: MapStore<string, LiveKitParticipant> = new MapStore<string, LiveKitParticipant>();
     // Stores LiveKit participants that connected before their corresponding spaceUser was available
     private pendingParticipants: Map<string, RemoteParticipant> = new Map();
@@ -71,6 +87,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private localScreenSharingVideoTrack: LocalVideoTrack | undefined;
     private localScreenSharingAudioTrack: LocalAudioTrack | undefined;
     private localCameraTrack: LocalVideoTrack | undefined;
+    // See cameraPublicationKey()
+    private cameraPublishedWith: string | undefined;
     private localMicrophoneTrack: LocalAudioTrack | undefined;
     // Encoder health reports of the video tracks we publish (see subscribeToOutboundVideoQualityAnalytics)
     private cameraAnalyticsUnsubscribe: Unsubscriber | undefined;
@@ -82,6 +100,11 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private unregisterAudioPlaybackRetry: Unsubscriber | undefined;
     private destroyed = false;
     private everConnected = false;
+    private connectedAt: number | undefined;
+    // Set while livekit-client is reconnecting by itself, reported as media.livekit.reconnected once it is back
+    private reconnecting:
+        | { startedAt: number; kind: "resume" | "full"; previousRegion: string | undefined }
+        | undefined;
     // Kept so that publications skipped while the room was reconnecting can be replayed on RoomEvent.Reconnected
     private cameraStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
     private microphoneStreamStore: Readable<LocalStreamStoreValue | undefined> | undefined;
@@ -93,7 +116,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     private readonly boundHandleActiveSpeakersChanged = this.handleActiveSpeakersChanged.bind(this);
     private readonly boundHandleDisconnected = this.handleDisconnected.bind(this);
     private readonly boundHandleReconnected = this.handleReconnected.bind(this);
+    private readonly boundHandleSignalReconnecting = () => this.handleReconnecting("resume");
+    private readonly boundHandleReconnecting = () => this.handleReconnecting("full");
     private readonly boundHandleAudioPlaybackStatusChanged = this.handleAudioPlaybackStatusChanged.bind(this);
+    private readonly boundHandleLocalTrackPublished = this.handleLocalTrackPublished.bind(this);
 
     constructor(
         private serverUrl: string,
@@ -105,12 +131,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
         private _livekitRoomCounter: LivekitRoomCounter = {
-            increment: incrementLivekitRoomCount,
-            decrement: decrementLivekitRoomCount,
+            increment: registerLivekitRoom,
+            decrement: unregisterLivekitRoom,
         },
         private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing,
     ) {
-        this._livekitRoomCounter.increment();
+        this._livekitRoomCounter.increment(this);
+    }
+
+    /** [E2E] The camera this page publishes and the cameras it receives, for E2E tests to read their statistics. */
+    public getE2EVideoTracks(): ReturnType<E2ELivekitRoom["getE2EVideoTracks"]> {
+        const received = Array.from(this.room?.remoteParticipants.values() ?? []).flatMap((participant) => {
+            const track = participant.getTrackPublication(Track.Source.Camera)?.videoTrack;
+            return track ? [{ from: participant.name || participant.identity, track }] : [];
+        });
+        return { sent: this.localCameraTrack, received };
     }
 
     public async prepareConnection(): Promise<Room> {
@@ -137,6 +172,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             },
             stopLocalTrackOnUnpublish: false,
         });
+        // Each connected room logs a "webrtc stats" console.info every 30 s, which would crowd out the Sentry
+        // breadcrumbs. Set after new Room(): the Room resets that logger to info unless a level is persisted.
+        setLogLevel(LogLevel.warn, LoggerNames.Stats);
 
         // Each track will subscribe to the room events like cleanup, so we want to be ready for a lot of listeners
         this.room.setMaxListeners(10000);
@@ -162,15 +200,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const room = this.room ?? (await this.prepareConnection());
 
         this.handleRoomEvents();
+        const connectStartedAt = performance.now();
         await room.connect(this.serverUrl, this.token, {
             autoSubscribe: false,
         });
         this.everConnected = true;
+        this.connectedAt = Date.now();
         this.handleAudioPlaybackStatusChanged();
         if (this.abortSignal.aborted) {
             await room.disconnect();
             return;
         }
+        analyticsClient.trackAdminEvent("media.livekit.connected", {
+            ...this.connectionProperties(),
+            connectMs: Math.round(performance.now() - connectStartedAt),
+        });
 
         this.synchronizeMediaState();
         this.flushPendingScriptingStream();
@@ -222,8 +266,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
      */
     private getVideoCodec(isScreenShare: boolean, track: MediaStreamTrack): VideoCodec {
         const { width = 1280, height = 720 } = track.getSettings();
-        // H.264 is mandatory in WebRTC and always ends the list; the rare browser without it (Firefox with the
-        // OpenH264 download blocked) is rewritten to VP8 by LiveKit, at the same bitrate budget.
+        // VP8 always ends the list. The rare browser without H.264 (Firefox with the OpenH264 download blocked) is
+        // rewritten to VP8 by LiveKit, at the same bitrate budget.
         const supported: Partial<Record<VideoCodec, () => boolean>> = { av1: supportsAV1, vp9: supportsVP9 };
         return (
             preferredVideoCodecs(
@@ -231,19 +275,64 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this.getQualitySetting(isScreenShare),
                 "encode",
                 width * height,
-            ).find((codec) => supported[codec]?.() ?? true) ?? "h264"
+                "Livekit",
+            ).find((codec) => supported[codec]?.() ?? true) ?? "vp8"
         );
+    }
+
+    /**
+     * The layer a "low" camera sends under its captured one, for thumbnails: half the captured size, budgeted on our
+     * curve like the captured one. Otherwise livekit-client adds its own 180p preset, sized for VP8 (160 kbps) and at
+     * 20 fps, above the frame rate of "low".
+     */
+    private lowCameraLowerLayer(track: MediaStreamTrack, codec: VideoCodec): VideoPreset {
+        const { width = 640, height = 360 } = track.getSettings();
+        const { bitrate, fps } = selectVideoPreset(height / 2, width / 2, false, "low", codec);
+        return new VideoPreset(width / 2, height / 2, bitrate, fps);
     }
 
     private getPresetForTrack(
         track: MediaStreamTrack,
         isScreenShare: boolean,
         codec: VideoCodec,
+        spatialLayers = 1,
     ): { bitrate: number; fps: number } {
         const settings = track.getSettings();
         const width = settings.width || 1280;
         const height = settings.height || 720;
-        return selectVideoPreset(height, width, isScreenShare, this.getQualitySetting(isScreenShare), codec);
+        return selectVideoPreset(
+            height,
+            width,
+            isScreenShare,
+            this.getQualitySetting(isScreenShare),
+            codec,
+            spatialLayers,
+        );
+    }
+
+    /**
+     * Whether livekit-client publishes VP9 and AV1 as simulcast when asked to (simulcast + L1T3). It mirrors the
+     * client's own check, which otherwise keeps L1T3 and sends a single layer: Safari and every iOS browser read
+     * several VP9 encodings as SVC, and LiveKit servers up to 1.13.6 do not take VP9/AV1 simulcast.
+     */
+    private supportsSvcSimulcast(): boolean {
+        const browser = getBrowser();
+        const serverVersion = this.room?.engine?.serverVersion;
+        return (
+            browser?.name !== "Safari" &&
+            browser?.os !== "iOS" &&
+            serverVersion !== undefined &&
+            compareVersions(serverVersion, "1.13.6") > 0
+        );
+    }
+
+    /**
+     * What a camera publication is fixed to at publishTrack(): its codec, budget and layers follow the quality setting
+     * and the captured size. A publication made for other values is published anew rather than reused.
+     */
+    private cameraPublicationKey(track: MediaStreamTrack): string {
+        const { width, height } = track.getSettings();
+        return `${this.getQualitySetting(false)} ${width}x${height}`;
     }
 
     private queueCameraTrackUpdate(localStream: LocalStreamStoreValue | undefined): void {
@@ -268,12 +357,27 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        // Are we trying to publish the same track again?
-        // Note: in practice, we never reach this point with the same track, because we get a new track
-        // each time we stop and restart the camera.
+        if (
+            this.localCameraTrack &&
+            this.isRoomConnected() &&
+            this.cameraPublishedWith !== this.cameraPublicationKey(videoTrack)
+        ) {
+            if (videoTrack.readyState === "ended") {
+                // The camera is reopening for the new setting (videoConstraintStore): its track comes next
+                return;
+            }
+            await this.dropCameraPublication();
+        }
+
+        // Are we trying to publish the same track again? It happens on every emission of the local stream
+        // (a microphone toggle, handleReconnected()...), not only when the camera restarts.
+        // A muted track is a camera that delivers no frames: livekit-client paused its upstream so that the
+        // room sees a muted camera. Resuming it would announce a camera that sends nothing, and every tile
+        // mounted afterwards would show "No video stream received". livekit-client resumes it on "unmute".
         if (this.localCameraTrack && this.localCameraTrack.mediaStreamTrack.id === videoTrack.id) {
-            if (this.localCameraTrack.isUpstreamPaused) {
+            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
+                await this.cloneCameraForBackupCodecs(this.localCameraTrack, videoTrack);
             }
             return;
         }
@@ -289,33 +393,84 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
             const cameraCodec = this.getVideoCodec(false, videoTrack);
+            // VP9 and AV1 are published as simulcast (L1T3 on each layer) where livekit-client can, like VP8: dynacast
+            // then pauses the layers nobody watches. Elsewhere livekit-client sends them as SVC (L3T3_KEY): one stream
+            // that always carries its three layers, under one budget.
+            // "low" is captured at 360p and sent as 360p + 180p (see lowCameraLowerLayer). On the SVC fallback it stays a
+            // single layer: its 360p budget is below what libwebrtc needs to turn the second SVC layer on.
+            const svc = cameraCodec === "vp9" || cameraCodec === "av1";
+            const low = this.getQualitySetting(false) === "low";
+            const svcFallback = svc && !this.supportsSvcSimulcast();
+            const singleLayer = svcFallback && low;
+            const svcLayers = svcFallback && !low;
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svcLayers ? 3 : 1);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: cameraCodec,
-                simulcast: true,
-                // Commented out: the default simulcast layers are sufficient for our use case
-                //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
+                simulcast: !singleLayer,
+                ...(svc && !svcLayers ? { scalabilityMode: "L1T3" } : {}),
+                ...(low && !singleLayer
+                    ? { videoSimulcastLayers: [this.lowCameraLowerLayer(videoTrack, cameraCodec)] }
+                    : {}),
+                videoEncoding: { maxBitrate: preset.bitrate, maxFramerate: preset.fps },
             };
 
-            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec);
-            publishOptions.videoEncoding = {
-                maxBitrate: preset.bitrate,
-                maxFramerate: preset.fps,
-            };
-
+            const publishedWith = this.cameraPublicationKey(videoTrack);
             await this.localParticipant.publishTrack(cameraTrack, publishOptions);
             // Only keep the reference once published: after a failed publish, later updates must publish again
             // instead of calling replaceTrack() on an unpublished track.
             this.localCameraTrack = cameraTrack;
+            this.cameraPublishedWith = publishedWith;
             this.cameraAnalyticsUnsubscribe = this.subscribeToEncoderAnalytics(cameraTrack, "video");
         } else {
             await this.localCameraTrack.replaceTrack(videoTrack, {
                 userProvidedTrack: true,
             });
+            await this.cloneCameraForBackupCodecs(this.localCameraTrack, videoTrack);
 
-            if (this.localCameraTrack.isUpstreamPaused) {
+            // livekit-client mutes a camera track that ended (unplugged, killed by the system), and replaceTrack()
+            // keeps the new one disabled while muted: we never mute the camera ourselves, the new track is the cure.
+            if (this.localCameraTrack.isMuted) {
+                await this.localCameraTrack.unmute();
+            }
+
+            if (this.localCameraTrack.isUpstreamPaused && !videoTrack.muted) {
                 await this.localCameraTrack.resumeUpstream();
             }
+        }
+    }
+
+    /**
+     * The subscribers that cannot decode the camera's codec (VP9) get the backup codec (VP8), which livekit-client
+     * sends from its own clone of the camera track, taken when the first of them arrived. Only its restartTrack()
+     * clones the camera again: replaceTrack() and resumeUpstream() keep sending that first clone. After a camera
+     * off/on, those subscribers got the camera of before, still captured by the clone, or nothing once it had ended
+     * (a camera behind a background effect). Do what restartTrack() does.
+     *
+     * Upstream fix: https://github.com/livekit/client-sdk-js/pull/2152. Once a livekit-client release includes it,
+     * remove this, stopBackupCodecTracks() and their calls.
+     */
+    private async cloneCameraForBackupCodecs(
+        cameraTrack: LocalVideoTrack,
+        videoTrack: MediaStreamTrack,
+    ): Promise<void> {
+        this.stopBackupCodecTracks(cameraTrack);
+        await Promise.all(
+            Array.from(cameraTrack.simulcastCodecs.values(), async (backup) => {
+                backup.mediaStreamTrack = videoTrack.clone();
+                if (backup.sender && backup.sender.transport?.state !== "closed") {
+                    await backup.sender.replaceTrack(backup.mediaStreamTrack);
+                }
+            }),
+        );
+    }
+
+    /**
+     * A clone of the camera keeps it on, even once the camera track itself is stopped.
+     */
+    private stopBackupCodecTracks(cameraTrack: LocalVideoTrack): void {
+        for (const backup of cameraTrack.simulcastCodecs.values()) {
+            backup.mediaStreamTrack.stop();
         }
     }
 
@@ -372,6 +527,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 userProvidedTrack: true,
             });
 
+            // Same as the camera: livekit-client mutes a microphone track that ended (headset unplugged, Bluetooth
+            // or audio driver switch), and replaceTrack() keeps the new one disabled while muted. The room then hears
+            // nothing while the space still says the microphone is on (PLAY-439). We never mute it ourselves.
+            if (this.localMicrophoneTrack.isMuted) {
+                await this.localMicrophoneTrack.unmute();
+            }
+
             if (this.localMicrophoneTrack.isUpstreamPaused) {
                 await this.localMicrophoneTrack.resumeUpstream();
             }
@@ -387,7 +549,39 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         return this.room?.state === ConnectionState.Connected;
     }
 
+    /**
+     * Region of the LiveKit server we are connected to (LiveKit Cloud sets it). From the latest join response: the
+     * room's serverInfo keeps the region of the first join, while a full reconnection can land on another server.
+     */
+    public getRegion(): string | undefined {
+        return this.room?.engine?.latestJoinResponse?.serverInfo?.region || undefined;
+    }
+
+    private connectionProperties(): { livekitServerUrl: string; livekitRegion: string | null } {
+        return { livekitServerUrl: this.serverUrl, livekitRegion: this.getRegion() ?? null };
+    }
+
+    private handleReconnecting(kind: "resume" | "full") {
+        if (this.reconnecting) {
+            // A resume that fails goes on with a full reconnection: one episode, counted as full
+            if (kind === "full") {
+                this.reconnecting.kind = "full";
+            }
+            return;
+        }
+        this.reconnecting = { startedAt: performance.now(), kind, previousRegion: this.getRegion() };
+    }
+
     private handleReconnected() {
+        if (this.reconnecting) {
+            analyticsClient.trackAdminEvent("media.livekit.reconnected", {
+                ...this.connectionProperties(),
+                previousLivekitRegion: this.reconnecting.previousRegion ?? null,
+                reconnectKind: this.reconnecting.kind,
+                durationMs: Math.round(performance.now() - this.reconnecting.startedAt),
+            });
+            this.reconnecting = undefined;
+        }
         // Handlers are no-ops for tracks that are already published, so replaying the whole media state is safe.
         if (this.cameraStreamStore) {
             this.queueCameraTrackUpdate(get(this.cameraStreamStore));
@@ -440,7 +634,9 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         this.unsubscribers.push(
             this.speakerDeviceIdStore.subscribe((deviceId) => {
-                if (!deviceId) return;
+                // livekit-client throws on Safari. Nothing is lost: our own <audio> elements (AudioStream.svelte)
+                // play LiveKit voices and follow the selection.
+                if (!deviceId || !supportsAudioOutputSelection()) return;
 
                 this.room?.switchActiveDevice("audiooutput", deviceId).catch((err) => {
                     console.error("An error occurred while switching active device", err);
@@ -467,6 +663,19 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             );
         }
 
+        // Between "recommended" and "high" the camera stays open, with the same track: check its publication against
+        // the new setting (see cameraPublicationKey). To or from "low" it reopens, and its new track is checked then.
+        let initialQuality = true;
+        this.unsubscribers.push(
+            videoQualityStore.subscribe(() => {
+                if (initialQuality) {
+                    initialQuality = false;
+                    return;
+                }
+                this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
+            }),
+        );
+
         this.unsubscribers.push(
             bandwidthConstrainedPreferenceStore.subscribe((preference) => {
                 if (!this.localScreenSharingVideoTrack) {
@@ -491,24 +700,30 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
     /**
      * Same for the camera, except that unpublishCameraTrack() only pauses the publication (see the note there): a
-     * real unpublish, once per session at most, so that the next publication picks the codec anew.
+     * real unpublish, once per demotion (twice per session at most), so that the next publication picks the
+     * codec anew.
      */
     private republishCamera(): void {
         this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
-            .then(async () => {
-                if (!this.localCameraTrack || !this.localParticipant) {
-                    return;
-                }
-                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
-                this.cameraAnalyticsUnsubscribe?.();
-                this.cameraAnalyticsUnsubscribe = undefined;
-                this.localCameraTrack = undefined;
-            })
+            .then(() => this.dropCameraPublication())
             .catch((err) => {
                 console.error("An error occurred while unpublishing the camera for a codec change", err);
                 Sentry.captureException(err);
             });
         this.queueCameraTrackUpdate(this.cameraStreamStore && get(this.cameraStreamStore));
+    }
+
+    private async dropCameraPublication(): Promise<void> {
+        if (!this.localCameraTrack || !this.localParticipant) {
+            return;
+        }
+        // livekit-client forgets the backup codecs' clones on unpublish, without stopping them
+        this.stopBackupCodecTracks(this.localCameraTrack);
+        await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
+        this.cameraAnalyticsUnsubscribe?.();
+        this.cameraAnalyticsUnsubscribe = undefined;
+        this.localCameraTrack = undefined;
+        this.cameraPublishedWith = undefined;
     }
 
     private queueScreenShareUpdate(stream: LocalStreamStoreValue | undefined): void {
@@ -685,6 +900,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
 
         if (this.localCameraTrack) {
             await this.localCameraTrack.pauseUpstream();
+            // Or the camera stays on once turned off. cloneCameraForBackupCodecs() clones it again on resume.
+            this.stopBackupCodecTracks(this.localCameraTrack);
             // Note: for some reason, unpublishing / publishing a new track causes memory leaks.
             // Instead, we just pause the upstream of the track when unpublishing, and "replaceTrack" when publishing a new one.
             // await this.localParticipant?.unpublishTrack(this.localCameraTrack, false);
@@ -704,7 +921,33 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         this.room.on(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
         this.room.on(RoomEvent.Disconnected, this.boundHandleDisconnected);
         this.room.on(RoomEvent.Reconnected, this.boundHandleReconnected);
+        this.room.on(RoomEvent.SignalReconnecting, this.boundHandleSignalReconnecting);
+        this.room.on(RoomEvent.Reconnecting, this.boundHandleReconnecting);
         this.room.on(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+        this.room.on(RoomEvent.LocalTrackPublished, this.boundHandleLocalTrackPublished);
+    }
+
+    /**
+     * Names our microphone to the back, which records each microphone separately when the space is recorded
+     * automatically. Every publication counts: a reconnection republishes under a new track id. The scripting
+     * audio is published as a microphone too, so it is told apart by its name.
+     */
+    private handleLocalTrackPublished(publication: LocalTrackPublication): void {
+        if (publication.source !== Track.Source.Microphone || publication.trackName === SCRIPTING_AUDIO_TRACK_NAME) {
+            return;
+        }
+        this.space.emitBackEvent({
+            event: {
+                $case: "microphoneTrackPublishedMessage",
+                microphoneTrackPublishedMessage: {
+                    trackSid: publication.trackSid,
+                    language: navigator.language,
+                    noiseSuppression: get(noiseSuppressionEnabledStore)
+                        ? get(effectiveNoiseSuppressionProviderStore)
+                        : "none",
+                },
+            },
+        });
     }
 
     private handleAudioPlaybackStatusChanged() {
@@ -739,6 +982,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         }
 
         const disconnectReasonLabel = this.getDisconnectReasonLabel(reason);
+        // Another connection took our place, or the back removed us on purpose: restarting would fight it
+        const restart =
+            reason !== DisconnectReason.DUPLICATE_IDENTITY && reason !== DisconnectReason.PARTICIPANT_REMOVED;
+        analyticsClient.trackAdminEvent("media.livekit.disconnected", {
+            ...this.connectionProperties(),
+            disconnectReason: disconnectReasonLabel,
+            connectedSeconds:
+                this.connectedAt === undefined ? null : Math.round((Date.now() - this.connectedAt) / 1000),
+            whileReconnecting: this.reconnecting !== undefined,
+            restart,
+        });
         Sentry.captureMessage(`Room disconnected without a valid reason: ${disconnectReasonLabel}`, {
             level: "warning",
             tags: {
@@ -750,8 +1004,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         // media stores stop feeding a dead engine (each publish would otherwise hang 15s and stop the user's track).
         this.destroy();
 
-        if (reason === DisconnectReason.DUPLICATE_IDENTITY || reason === DisconnectReason.PARTICIPANT_REMOVED) {
-            // Another connection took our place, or the back removed us on purpose: restarting would fight it.
+        if (!restart) {
             return;
         }
 
@@ -855,7 +1108,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         const id = this.getParticipantId(participant);
 
         // Skip if already registered
-        if (this.participants.has(participant.sid)) {
+        if (this.participants.has(participant.identity)) {
             return;
         }
 
@@ -886,12 +1139,12 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             return;
         }
 
-        if (this.participants.has(participant.sid)) {
+        if (this.participants.has(participant.identity)) {
             return;
         }
 
         this.participants.set(
-            participant.sid,
+            participant.identity,
             new LiveKitParticipant(
                 participant,
                 spaceUser,
@@ -900,6 +1153,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 this._streamableSubjects,
                 this._blockedUsersStore,
                 this.abortSignal,
+                () => this.getRegion(),
             ),
         );
     }
@@ -930,13 +1184,13 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     private handleParticipantDisconnected(participant: Participant) {
-        const localParticipant = this.participants.get(participant.sid);
+        const localParticipant = this.participants.get(participant.identity);
 
         if (localParticipant) {
             localParticipant.destroy();
         }
 
-        this.participants.delete(participant.sid);
+        this.participants.delete(participant.identity);
         // Also remove from pending participants if present
         const id = this.getParticipantId(participant);
         this.pendingParticipants.delete(id);
@@ -968,6 +1222,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 remoteSpaceUserId: "",
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.serverUrl,
+                getLivekitRegion: () => this.getRegion(),
             },
             (message) => this.space.emitVideoQualityReport(message),
         );
@@ -993,7 +1248,10 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.room?.off(RoomEvent.ActiveSpeakersChanged, this.boundHandleActiveSpeakersChanged);
             this.room?.off(RoomEvent.Disconnected, this.boundHandleDisconnected);
             this.room?.off(RoomEvent.Reconnected, this.boundHandleReconnected);
+            this.room?.off(RoomEvent.SignalReconnecting, this.boundHandleSignalReconnecting);
+            this.room?.off(RoomEvent.Reconnecting, this.boundHandleReconnecting);
             this.room?.off(RoomEvent.AudioPlaybackStatusChanged, this.boundHandleAudioPlaybackStatusChanged);
+            this.room?.off(RoomEvent.LocalTrackPublished, this.boundHandleLocalTrackPublished);
             this.unregisterAudioPlaybackRetry?.();
             this.unregisterAudioPlaybackRetry = undefined;
             this.cameraAnalyticsUnsubscribe?.();
@@ -1002,7 +1260,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.screenShareAnalyticsUnsubscribe = undefined;
             this.leaveRoom();
         } finally {
-            this._livekitRoomCounter.decrement();
+            this._livekitRoomCounter.decrement(this);
         }
     }
 

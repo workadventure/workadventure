@@ -9,17 +9,23 @@ export class MessageNotification implements NotificationWA {
         private message: string,
         private chatRoomId: string,
         private chatRoomName: string,
+        private isMention = false,
         private options = defaultOptions,
     ) {}
 
     public async sendNotification() {
         try {
-            const registration = await navigator.serviceWorker.register("/notification-service-worker.js");
+            // The page-wide service worker (Network/ServiceWorker.ts) owns the "/" scope and the notificationclick
+            // handler. Registering another script here would replace it.
+            const registration = await navigator.serviceWorker.ready;
 
             const numberOfChar = 60;
             const messageToDisplay =
                 this.message.length > numberOfChar ? this.message.slice(0, numberOfChar) + "..." : this.message;
-            const body = `${get(LL).notification.message({ name: this.userName })} : ${messageToDisplay}`;
+            const title = this.isMention
+                ? get(LL).notification.mention({ name: this.userName })
+                : get(LL).notification.message({ name: this.userName });
+            const body = `${title} : ${messageToDisplay}`;
 
             const data = {
                 chatRoomId: this.chatRoomId,

@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} 想与您讨论",
     message: "{name} 发送了一条消息",
-    chatRoom: "在聊天室中",
+    mention: "{name} 提及了你",
     askToMuteMicrophone: "我可以将您的麦克风静音吗？",
     askToMuteCamera: "我可以将您的摄像头静音吗？",
     microphoneMuted: "您的麦克风已被管理员静音",
@@ -14,11 +14,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "你不再拥有发言权",
     floorGivenBack: "你已交回发言权",
     handLowered: "主持人放下了你的手",
+    removedFromConversation: "管理员已将你移出对话。",
     actionFailed: "无法完成此操作",
-    notificationSentToMuteMicrophone: "已向 {name} 发送通知以静音其麦克风",
-    notificationSentToMuteCamera: "已向 {name} 发送通知以静音其摄像头",
     announcement: "公告",
-    open: "打开",
     help: {
         title: "通知访问被拒绝",
         permissionDenied: "权限被拒绝",
@@ -27,9 +25,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "刷新",
         continue: "继续而不使用通知",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "在 Chrome 地址栏中允许通知",
     },
     addNewTag: '添加新标签: "{tag}"',
     screenSharingError: "无法开始屏幕共享",

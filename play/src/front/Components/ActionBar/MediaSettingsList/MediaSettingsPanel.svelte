@@ -18,6 +18,8 @@
         mediaStreamConstraintsStore,
     } from "../../../Stores/MediaStore";
     import { cameraPermissionStateStore, microphonePermissionStateStore } from "../../../Stores/MediaStatusStore";
+    import { speakerSelectionSupported } from "../../../Stores/AudioOutputStore";
+    import { playSpeakerTestSound } from "../../../WebRtc/AudioOutputManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { noiseSuppressionEnabledStore, noiseSuppressionStateStore } from "../../../Stores/NoiseSuppressionStore";
@@ -29,7 +31,7 @@
     import SectionDivider from "./SectionDivider.svelte";
     import SectionTitle from "./SectionTitle.svelte";
     import DeviceListItem from "./DeviceListItem.svelte";
-    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings } from "@wa-icons";
+    import { IconCamera, IconHeadphones, IconMicrophoneOn, IconSettings, IconUnMute } from "@wa-icons";
 
     interface Props {
         oncameraselected?: () => void;
@@ -207,6 +209,11 @@
                 />
             {/each}
             <div class="group flex flex-col relative z-10 py-1 px-2 overflow-hidden">
+                {#snippet noiseSuppressionActive()}
+                    <span data-testid="noise-suppression-active" class="text-success">
+                        {$LL.actionbar.microphone.noiseSuppressionActive()}
+                    </span>
+                {/snippet}
                 <InputSwitch
                     id="noise-suppression-toggle"
                     value={$noiseSuppressionEnabledStore}
@@ -214,6 +221,9 @@
                     margin=""
                     spacing=""
                     alignLabel="center"
+                    description={$noiseSuppressionStateStore.status === "ready" && $noiseSuppressionEnabledStore
+                        ? noiseSuppressionActive
+                        : undefined}
                 >
                     <span class:text-pop-red={isNoiseSuppressionErrorState}>
                         {$LL.actionbar.microphone.advancedNoiseReduction()}
@@ -277,38 +287,55 @@
         {/if}
     </div>
 
-    <SectionDivider />
+    <!-- Hidden on Safari and iOS, where the output always follows the system -->
+    {#if speakerSelectionSupported}
+        <SectionDivider />
 
-    <!-- Speaker Section -->
-    <div class="flex flex-col gap-1">
-        <SectionTitle>
-            <div class="flex items-center gap-1">
-                <IconHeadphones font-size="14" />
-                {$LL.actionbar.subtitle.speaker()}
-            </div>
-        </SectionTitle>
-        {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
-            {#each $speakerListStore as speaker, index (index)}
-                <DeviceListItem
-                    label={speaker.label}
-                    isSelected={$speakerSelectedStore === speaker.deviceId}
-                    onclick={() => {
-                        analyticsClient.trackAdminEvent("settings.speaker.selected");
-                        selectSpeaker(speaker.deviceId);
-                    }}
-                />
-            {/each}
-        {:else if $speakerListStore !== undefined}
-            <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
-                <div class="text-sm italic text-center">
-                    {#if $speakerListStore.length === 0}
-                        <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
-                        <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
-                    {:else}
-                        {$LL.actionbar.speaker.disabled()}
-                    {/if}
+        <!-- Speaker Section -->
+        <div class="flex flex-col gap-1">
+            <SectionTitle>
+                <div class="flex items-center gap-1">
+                    <IconHeadphones font-size="14" />
+                    {$LL.actionbar.subtitle.speaker()}
                 </div>
-            </div>
-        {/if}
-    </div>
+                {#snippet actions()}
+                    {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                        <button
+                            type="button"
+                            data-testid="speaker-test-button"
+                            class="flex h-7 w-7 items-center justify-center rounded text-white/50 hover:bg-white/10 hover:text-white"
+                            aria-label={$LL.actionbar.speaker.test()}
+                            title={$LL.actionbar.speaker.test()}
+                            onclick={() => playSpeakerTestSound().catch((e) => console.error(e))}
+                        >
+                            <IconUnMute font-size="14" />
+                        </button>
+                    {/if}
+                {/snippet}
+            </SectionTitle>
+            {#if $speakerSelectedStore != undefined && $speakerListStore && $speakerListStore.length > 0}
+                {#each $speakerListStore as speaker, index (index)}
+                    <DeviceListItem
+                        label={speaker.label}
+                        isSelected={$speakerSelectedStore === speaker.deviceId}
+                        onclick={() => {
+                            analyticsClient.trackAdminEvent("settings.speaker.selected");
+                            selectSpeaker(speaker.deviceId);
+                        }}
+                    />
+                {/each}
+            {:else if $speakerListStore !== undefined}
+                <div class="cursor-pointer group flex items-center relative z-10 py-1 px-2 font-sm justify-center">
+                    <div class="text-sm italic text-center">
+                        {#if $speakerListStore.length === 0}
+                            <p class="text-sm p-0 m-0">{$LL.actionbar.speaker.noDevices()}</p>
+                            <span class="text-xs text-white/55">{$LL.actionbar.speaker.noDevicesDesc()}</span>
+                        {:else}
+                            {$LL.actionbar.speaker.disabled()}
+                        {/if}
+                    </div>
+                </div>
+            {/if}
+        </div>
+    {/if}
 </div>

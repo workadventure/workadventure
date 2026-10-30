@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "編輯攝影機",
-    editMic: "編輯麥克風",
     editSpeaker: "編輯音訊輸出",
     active: "使用中",
     disabled: "已停用",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "需要攝影機/麥克風權限",
         cameraTitle: "需要攝影機權限",
         microphoneTitle: "需要麥克風權限",
-        permissionDenied: "拒絕存取",
         cameraPermissionDenied: "攝影機權限被拒絕",
         microphonePermissionDenied: "麥克風權限被拒絕",
         cameraMicrophonePermissionDenied: "攝影機和麥克風權限被拒絕",
@@ -82,7 +80,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     my: {
         silentZone: "安靜區",
-        silentZoneDesc: "您在安靜區。您只能看到和聽到與您在一起的人。您無法看到或聽到房間中的其他人。",
+        silentZoneDesc: "您在安靜區。這裡沒有人可以和您交談，您的麥克風和攝影機已關閉。",
         nameTag: "你",
         loading: "正在載入您的攝影機...",
     },
@@ -91,7 +89,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "更多操作",
         closeMenu: "關閉選單",
         senPrivateMessage: "傳送私訊（即將推出）",
-        kickoffUser: "踢出使用者",
         giveFloor: "給予發言權",
         revokeFloor: "收回發言權",
         muteAudioUser: "靜音",
@@ -101,14 +98,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "要求關閉視訊",
         muteVideoEveryBody: "關閉所有人的視訊",
         blockOrReportUser: "管理",
-    },
-    backgroundEffects: {
-        imageTitle: "背景圖片",
-        blurTitle: "背景模糊",
-        resetTitle: "停用背景效果",
-        title: "背景效果",
-        close: "關閉",
-        blurAmount: "模糊程度",
     },
 };
 

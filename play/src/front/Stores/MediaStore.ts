@@ -11,7 +11,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
 import { createHeldIntervalTracker } from "../Administration/HeldIntervalTracker";
-import { isIOS, isSafari } from "../WebRtc/DeviceUtils";
+import { isIOS } from "../WebRtc/DeviceUtils";
 import { SoundMeter } from "../Phaser/Components/SoundMeter";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
@@ -47,6 +47,7 @@ import {
     microphoneBrowserNoiseSuppressionStore,
     microphoneEchoCancellationStore,
     noiseSuppressionEnabledStore,
+    noiseSuppressionEngineStore,
     noiseSuppressionStateStore,
     voiceIsolationSupportedStore,
 } from "./NoiseSuppressionStore";
@@ -57,7 +58,8 @@ import {
     type LocalTrackStoreValue,
 } from "./LocalStreamTypes";
 import { NoiseSuppressionController } from "./NoiseSuppressionController";
-import { buildMicrophoneAudioConstraints } from "./MicrophoneSettings";
+import { buildMicrophoneAudioConstraints, isVoiceIsolationSupported } from "./MicrophoneSettings";
+import { speakerSelectedStore, speakerSelectionSupported } from "./AudioOutputStore";
 import { audioPlaybackStore } from "./AudioPlaybackStore";
 import { browserNotificationStore } from "./BrowserNotificationStore";
 
@@ -279,14 +281,21 @@ export const usedMicrophoneDeviceIdStore: Writable<string | undefined> = writabl
 export const inOpenWebsite = writable(false);
 
 /**
+ * A store containing the video quality setting.
+ */
+export const videoQualityStore = createVideoQualityStore();
+
+/**
  * A store that contains video constraints.
  */
 export const videoConstraintStore = derived(
-    [requestedCameraDeviceIdStore, frameRateStore],
-    ([$cameraDeviceIdStore, $frameRateStore]) => {
+    [requestedCameraDeviceIdStore, frameRateStore, videoQualityStore],
+    ([$cameraDeviceIdStore, $frameRateStore, $videoQualityStore]) => {
+        // "low" never sends more than 360p, on LiveKit as in P2P: capturing more would only be thrown away
+        const low = $videoQualityStore === "low";
         const constraints = {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: low ? 640 : 1280 },
+            height: { ideal: low ? 360 : 720 },
             frameRate: { ideal: 30 },
             facingMode: "user",
             resizeMode: "crop-and-scale",
@@ -322,6 +331,7 @@ export const audioConstraintStore = derived(
         microphoneBrowserNoiseSuppressionStore,
         noiseSuppressionEnabledStore,
         effectiveNoiseSuppressionProviderStore,
+        noiseSuppressionEngineStore,
         browserNoiseSuppressionSupportedStore,
         customNoiseSuppressionActiveStore,
         noiseSuppressionStateStore,
@@ -333,6 +343,7 @@ export const audioConstraintStore = derived(
         $microphoneBrowserNoiseSuppressionStore,
         $noiseSuppressionEnabledStore,
         $effectiveNoiseSuppressionProviderStore,
+        $noiseSuppressionEngineStore,
         $browserNoiseSuppressionSupportedStore,
         $customNoiseSuppressionActiveStore,
         $noiseSuppressionStateStore,
@@ -345,6 +356,7 @@ export const audioConstraintStore = derived(
             noiseSuppressionEnabled: $noiseSuppressionEnabledStore,
             browserNoiseSuppressionEnabled: $microphoneBrowserNoiseSuppressionStore,
             effectiveNoiseSuppressionProvider: $effectiveNoiseSuppressionProviderStore,
+            noiseSuppressionEngine: $noiseSuppressionEngineStore,
             browserNoiseSuppressionSupported: $browserNoiseSuppressionSupportedStore,
             workAdventureNoiseSuppressionFailed:
                 $noiseSuppressionStateStore.status === "error" || $noiseSuppressionStateStore.status === "unsupported",
@@ -689,6 +701,10 @@ let oldConstraints: { video: MediaTrackConstraints | false; audio: MediaTrackCon
 let backgroundTransformer: BackgroundTransformer | undefined = undefined;
 // Track the last background config to detect if we need to recreate or just update
 let lastBackgroundConfig: BackgroundConfig | undefined = undefined;
+// The running background pipe: the camera track it reads and the track it outputs. The raw stream is rebuilt
+// whenever the microphone changes; when it still carries the same camera track, the pipe is kept instead of
+// being torn down and rebuilt for nothing.
+let backgroundPipe: { input: MediaStreamTrack; output: MediaStreamTrack | undefined } | undefined = undefined;
 // AbortController for the in-flight transform; aborted when a new run is scheduled
 let currentTransformAbortController: AbortController | null = null;
 // AbortController for the in-flight noise suppression transform; aborted when a new run is scheduled
@@ -942,11 +958,11 @@ async function runRawStreamUpdate(
                 usedCameraDeviceIdStore.set(currentStream.getVideoTracks()[0]?.getSettings().deviceId);
             }
             if (currentStream.getAudioTracks().length > 0) {
-                const audioTrackSettings = currentStream.getAudioTracks()[0]?.getSettings();
+                const audioTrack = currentStream.getAudioTracks()[0];
+                const audioTrackSettings = audioTrack?.getSettings();
                 usedMicrophoneDeviceIdStore.set(audioTrackSettings?.deviceId);
                 voiceIsolationSupportedStore.setSupported(
-                    navigator.mediaDevices?.getSupportedConstraints().voiceIsolation === true &&
-                        audioTrackSettings?.voiceIsolation !== undefined,
+                    isVoiceIsolationSupported(audioTrackSettings, audioTrack?.getCapabilities?.()),
                 );
             } else {
                 voiceIsolationSupportedStore.setSupported(false);
@@ -977,12 +993,11 @@ async function runRawStreamUpdate(
                 emitCurrentStreamOrError(setIfCurrent, e);
                 const classified = classifyMediaAccessError(e);
                 trackMediaAccessIssue(mustRequestNewAudio ? "camera_microphone" : "camera", classified);
+                // Only the camera: turning it off asks for the microphone alone, which turns the microphone off in
+                // its own turn if it fails too. A camera taken by another application (NotReadableError on Windows)
+                // must not cost the microphone.
                 requestedCameraState.disableWebcam();
                 cameraAccessIssueStore.set(classified);
-                if (mustRequestNewAudio) {
-                    requestedMicrophoneState.disableMicrophone();
-                    microphoneAccessIssueStore.set(classified);
-                }
             } else if (!constraints.video && !constraints.audio) {
                 console.error("Error. getUserMedia called with no audio and no video.");
                 setIfCurrent({
@@ -1085,11 +1100,11 @@ let audioProcessedStreamUpdateQueue: Promise<void> = Promise.resolve();
 type SetAudioProcessedTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
 export const audioProcessedLocalAudioTrackStore = derived<
-    [typeof rawLocalAudioTrackStore, typeof customNoiseSuppressionActiveStore],
+    [typeof rawLocalAudioTrackStore, typeof customNoiseSuppressionActiveStore, typeof noiseSuppressionEngineStore],
     LocalTrackStoreValue
 >(
-    [rawLocalAudioTrackStore, customNoiseSuppressionActiveStore],
-    ([$rawLocalAudioTrackStore, $customNoiseSuppressionActiveStore], set) => {
+    [rawLocalAudioTrackStore, customNoiseSuppressionActiveStore, noiseSuppressionEngineStore],
+    ([$rawLocalAudioTrackStore, $customNoiseSuppressionActiveStore, $noiseSuppressionEngineStore], set) => {
         const myGen = ++audioProcessedStreamGeneration;
         const setIfCurrent: SetAudioProcessedTrackIfCurrent = (value) => {
             if (myGen === audioProcessedStreamGeneration) {
@@ -1111,14 +1126,24 @@ export const audioProcessedLocalAudioTrackStore = derived<
                     return;
                 }
 
-                setIfCurrent({
-                    type: "success",
-                    track: await noiseSuppressionController.transform(
-                        $rawLocalAudioTrackStore.track,
-                        $customNoiseSuppressionActiveStore,
-                        controller.signal,
-                    ),
-                });
+                const processedTrack = noiseSuppressionController.transform(
+                    $rawLocalAudioTrackStore.track,
+                    $customNoiseSuppressionActiveStore,
+                    $noiseSuppressionEngineStore,
+                    controller.signal,
+                );
+                // Loading a noise suppression model takes up to a second or two: send the raw microphone meanwhile
+                // rather than nothing. An already running pipeline answers at once and skips this.
+                const settled = await Promise.race([
+                    processedTrack.then(() => true),
+                    new Promise<false>((resolve) => {
+                        setTimeout(() => resolve(false), 50);
+                    }),
+                ]);
+                if (!settled) {
+                    setIfCurrent($rawLocalAudioTrackStore);
+                }
+                setIfCurrent({ type: "success", track: await processedTrack });
             })
             .catch((e) => {
                 const isAbort = e instanceof AbortError || (e instanceof DOMException && e.name === "AbortError");
@@ -1146,6 +1171,11 @@ let localStreamUpdateQueue: Promise<void> = Promise.resolve();
 
 type SetLocalVideoTrackIfCurrent = (value: LocalTrackStoreValue) => void;
 
+function stopBackgroundPipe(): void {
+    backgroundTransformer?.stop();
+    backgroundPipe = undefined;
+}
+
 async function runLocalVideoTrackUpdate(
     videoTrackValue: LocalTrackStoreValue,
     backgroundProcessingEnabled: boolean,
@@ -1153,17 +1183,13 @@ async function runLocalVideoTrackUpdate(
     signal: AbortSignal,
 ): Promise<void> {
     if (videoTrackValue.type === "error") {
-        if (backgroundTransformer) {
-            backgroundTransformer.stop();
-        }
+        stopBackgroundPipe();
         setIfCurrent(videoTrackValue);
         return;
     }
 
     if (videoTrackValue.track === undefined || !backgroundProcessingEnabled) {
-        if (backgroundTransformer) {
-            backgroundTransformer.stop();
-        }
+        stopBackgroundPipe();
         setIfCurrent(videoTrackValue);
         return;
     }
@@ -1182,6 +1208,7 @@ async function runLocalVideoTrackUpdate(
                 warningMessageStore.addWarningMessage(get(LL).warning.backgroundProcessing.failedToApply());
                 transformer.close();
                 backgroundTransformer = undefined;
+                backgroundPipe = undefined;
                 lastBackgroundConfig = undefined;
                 backgroundConfigStore.reset();
             },
@@ -1195,12 +1222,22 @@ async function runLocalVideoTrackUpdate(
         return;
     }
 
+    if (videoTrackValue.track === backgroundPipe?.input && backgroundPipe.output?.readyState === "live") {
+        setIfCurrent({ type: "success", track: backgroundPipe.output });
+        return;
+    }
+
     try {
         const finalStream = await backgroundTransformer.transform(new MediaStream([videoTrackValue.track]), signal);
         lastBackgroundConfig = { ...get(backgroundConfigStore) };
+        const output = finalStream.getVideoTracks()[0];
+        // Runs are serialized by localStreamUpdateQueue. A terminal failure in the meantime ends `output`, which
+        // the reuse check above looks at.
+        // eslint-disable-next-line require-atomic-updates
+        backgroundPipe = { input: videoTrackValue.track, output };
         setIfCurrent({
             type: "success",
-            track: finalStream.getVideoTracks()[0],
+            track: output,
         });
     } catch (error) {
         const isAbort = error instanceof AbortError || (error instanceof DOMException && error.name === "AbortError");
@@ -1613,12 +1650,8 @@ export const speakerListStore = derived(deviceListStore, ($deviceListStore) => {
         return undefined;
     }
 
-    // Livekit does not support audio output device selection on Safari
-    // Code: https://github.com/livekit/client-sdk-js/blob/dbaf7a9b784114728857a447734bc5d5453345b4/src/room/utils.ts#L144C1-L153C2
-    // And it seems there is no plan to support it. Issue: https://github.com/livekit/components-js/issues/1216
-    // Because the audio output selector should work in full-mesh WebRTC AND in Livekit, we have to support the same
-    // features in both modes. So we disable audio output device selection on Safari here.
-    if (isSafari() || isIOS()) {
+    // Hidden wherever speakerSelectedStore ignores a selection (Safari, iOS): see AudioOutputStore
+    if (!speakerSelectionSupported) {
         return;
     }
 
@@ -1648,7 +1681,7 @@ speakerListStore.subscribe((devices) => {
     }
 });
 
-export const speakerSelectedStore = writable<string | undefined>(localUserStore.getSpeakerDeviceId() ?? undefined);
+export { speakerSelectedStore };
 
 let previousMediaDevices: MediaDeviceInfo[] | undefined = undefined;
 
@@ -1770,11 +1803,6 @@ function createVideoQualityStore() {
         },
     };
 }
-
-/**
- * A store containing the video quality setting.
- */
-export const videoQualityStore = createVideoQualityStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 

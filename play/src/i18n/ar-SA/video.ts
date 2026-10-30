@@ -6,8 +6,6 @@ const video: DeepPartial<Translation["video"]> = {
     no_video_stream_received: "لم يتم استقبال تدفق الفيديو.", // No video stream received.
     user_is_muted: "{name} صامت.",
     reduce: "تقليل",
-    toggle_fullscreen: "تبديل ملء الشاشة",
-    exit_fullscreen: "الخروج من ملء الشاشة",
     connecting: "جاري الاتصال...",
     reconnecting: "جاري إعادة الاتصال...",
     persistent_connection_issue: "جاري إعادة الاتصال... اتصال غير مستقر...",

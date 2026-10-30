@@ -158,13 +158,16 @@ export class MatrixSecurity {
                 .then((keyBackupInfo) => {
                     if (keyBackupInfo !== null && keyBackupInfo !== undefined) {
                         this.restoreBackupMessages(keyBackupInfo).catch((error) => {
-                            throw new Error(error);
+                            console.error("Unable to restore backup messages: ", error);
                         });
                     }
                     resolve();
                 })
                 .catch((error) => {
-                    throw new Error(error);
+                    // A key-backup failure must not block showing messages: settle, and let a later call retry.
+                    console.error("Unable to get key backup info: ", error);
+                    this.restoreRoomMessagesPromise = undefined;
+                    resolve();
                 });
         });
 

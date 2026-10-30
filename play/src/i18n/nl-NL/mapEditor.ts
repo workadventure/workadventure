@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "Volume",
             audioLinkLabel: "Audiolink",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Bestand uploaden",
+            sourceUrl: "URL gebruiken",
             defaultButtonLabel: "Speel muziek af",
             error: "Kon geluid niet laden",
             actionButtonLabel: "Speel muziek",
@@ -465,7 +467,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Auditoriummodus geactiveerd",
                 audienceVideoFeedbackActivatedDisabled: "Auditoriummodus gedeactiveerd",
                 audienceVideoFeedbackActivatedHelper:
-                    "Auditoriummodus geactiveerd: Ontvang de camera- en microfoonstream van alle gebruikers (met camera en microfoon geactiveerd) in de ruimte/wereld. Maar de deelnemer kan de andere deelnemers niet zien. Standaard uitgeschakeld.",
+                    "Auditoriummodus geactiveerd: Ontvang de camerastream van alle gebruikers (met camera geactiveerd) in de ruimte/wereld, zonder hun geluid. Maar de deelnemer kan de andere deelnemers niet zien. Standaard uitgeschakeld.",
                 error: {
                     title: "Voer een titel in",
                     save: {

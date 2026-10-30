@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "مستوى الصوت",
             audioLinkLabel: "رابط الصوت",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "رفع ملف",
+            sourceUrl: "استخدام عنوان URL",
             defaultButtonLabel: "تشغيل الموسيقى",
             error: "تعذر تحميل الصوت",
             actionButtonLabel: "تشغيل الموسيقى",
@@ -455,7 +457,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "وضع القاعة مفعّل",
                 audienceVideoFeedbackActivatedDisabled: "وضع القاعة معطّل",
                 audienceVideoFeedbackActivatedHelper:
-                    "وضع القاعة مفعّل: استقبل تدفق الكاميرا والميكروفون لجميع المستخدمين (مع تفعيل الكاميرا والميكروفون) في الغرفة/العالم. لكن الحاضر لن يتمكن من رؤية الحاضرين الآخرين. معطّل افتراضيًا.",
+                    "وضع القاعة مفعّل: استقبل تدفق الكاميرا لجميع المستخدمين (مع تفعيل الكاميرا) في الغرفة/العالم، بدون صوتهم. لكن الحاضر لن يتمكن من رؤية الحاضرين الآخرين. معطّل افتراضيًا.",
                 error: {
                     title: "يرجى إدخال عنوان",
                     save: {

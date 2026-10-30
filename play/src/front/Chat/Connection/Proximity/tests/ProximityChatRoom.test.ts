@@ -1,0 +1,514 @@
+import { get, writable } from "svelte/store";
+import { Subject } from "rxjs";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { loadLocale } from "../../../../../i18n/i18n-util.sync";
+import { setLocale } from "../../../../../i18n/i18n-svelte";
+import { chatVisibilityStore } from "../../../../Stores/ChatStore";
+import { chatNotificationStore } from "../../../../Stores/ProximityNotificationStore";
+import { selectedRoomStore } from "../../../Stores/SelectRoomStore";
+import type {
+    IncomingProximityFileTransferOffer,
+    OutgoingProximityFileTransferUpdate,
+    ProximityFileTransferUpdate,
+} from "../ProximityFileTransferService";
+import type { SpaceUserExtended } from "../../../../Space/SpaceInterface";
+import type { ChatMessage } from "../../ChatConnection";
+import { formatProximityFileTransferRemainingTime } from "../ProximityFileTransferEta";
+import { ProximityChatRoom } from "../ProximityChatRoom";
+import { analyticsClient } from "../../../../Administration/AnalyticsClient";
+import { createMentionPill, ROOM_MENTION } from "../../../Mentions";
+
+vi.mock("../../../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: () => ({
+            playSound: vi.fn(),
+        }),
+    },
+}));
+vi.mock("../../../Phaser/Game/GameManager", () => ({
+    gameManager: {
+        getCurrentGameScene: () => ({
+            playSound: vi.fn(),
+        }),
+    },
+}));
+vi.mock("../../../../Phaser/Game/GameScene", () => ({}));
+vi.mock("../../../Phaser/Game/GameScene", () => ({}));
+
+function createRoom() {
+    return new ProximityChatRoom(
+        "recipient",
+        "Recipient",
+        "default",
+        "recipient",
+        {
+            leaveSpace: vi.fn().mockResolvedValue(undefined),
+        } as never,
+        {
+            newChatMessageWritingStatusStream: new Subject(),
+        },
+        {
+            getPlayers: () => new Map(),
+        } as never,
+        {
+            playBubbleInSound: vi.fn(),
+            playBubbleOutSound: vi.fn(),
+            playMeetingInSound: vi.fn(),
+            playMeetingOutSound: vi.fn(),
+        },
+        undefined,
+        [],
+        vi.fn(),
+    );
+}
+
+function remainingSeconds(message: ChatMessage): number | undefined {
+    const status = get(message.attachment!.status);
+    return status.state === "loading" ? status.remainingSeconds : undefined;
+}
+
+function createOffer(): IncomingProximityFileTransferOffer {
+    return {
+        transferId: "transfer-1",
+        fileName: "hello.txt",
+        mimeType: "text/plain",
+        size: 5,
+        characterTextures: [],
+        name: "Sender",
+        senderSpaceUserId: "sender",
+    };
+}
+
+describe("ProximityChatRoom file transfers", () => {
+    beforeEach(() => {
+        loadLocale("en-US");
+        setLocale("en-US");
+        selectedRoomStore.set(undefined);
+        chatVisibilityStore.set(false);
+        chatNotificationStore.clearAll();
+    });
+
+    it("should notify an incoming file transfer request without opening the chat", () => {
+        const room = createRoom();
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+
+        expect(get(room.messages)).toHaveLength(1);
+        expect(get(room.hasUnreadMessages)).toBe(true);
+        expect(get(room.unreadNotificationCount)).toBe(1);
+        expect(get(room.unreadMessagesCount)).toBe(1);
+        expect(get(chatNotificationStore)).toMatchObject([
+            {
+                userName: "Sender",
+                message: "sent a file: hello.txt",
+                messageId: "transfer-1",
+                room,
+            },
+        ]);
+        expect(get(chatVisibilityStore)).toBe(false);
+    });
+
+    it("should show an inline-unsafe mime type as a plain file, never as an image", () => {
+        const room = createRoom();
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, { ...createOffer(), mimeType: "image/svg+xml" });
+
+        const [message] = get(room.messages);
+        expect(message.type).toBe("file");
+    });
+
+    it("should not count or notify an incoming file transfer request when the room is visible", () => {
+        const room = createRoom();
+        selectedRoomStore.set(room);
+        chatVisibilityStore.set(true);
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+
+        expect(get(room.messages)).toHaveLength(1);
+        expect(get(room.hasUnreadMessages)).toBe(false);
+        expect(get(room.unreadNotificationCount)).toBe(0);
+        expect(get(room.unreadMessagesCount)).toBe(0);
+        expect(get(chatNotificationStore)).toHaveLength(0);
+        expect(get(chatVisibilityStore)).toBe(true);
+    });
+
+    it("should count an incoming file transfer request without an in-game notification when notifications are muted", () => {
+        const room = createRoom();
+        room.areNotificationsMuted.set(true);
+
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+
+        expect(get(room.hasUnreadMessages)).toBe(true);
+        expect(get(room.unreadNotificationCount)).toBe(1);
+        expect(get(room.unreadMessagesCount)).toBe(1);
+        expect(get(chatNotificationStore)).toHaveLength(0);
+        expect(get(chatVisibilityStore)).toBe(false);
+    });
+
+    it("should keep a received file available when a later transfer error is received", () => {
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        const readyUpdate: ProximityFileTransferUpdate = {
+            transferId: "transfer-1",
+            state: "ready",
+            progress: 1,
+            url: "blob:received-file",
+            durationMs: 1000,
+            route: undefined,
+        };
+        const unavailableUpdate: ProximityFileTransferUpdate = {
+            transferId: "transfer-1",
+            state: "error",
+            progress: 1,
+            error: "unavailable",
+        };
+
+        Reflect.get(room, "applyFileTransferUpdate").call(room, readyUpdate);
+        Reflect.get(room, "applyFileTransferUpdate").call(room, unavailableUpdate);
+
+        const [message] = get(room.messages);
+        expect(get(message.content).url).toBe("blob:received-file");
+        expect(get(message.attachment!.status)).toEqual({ state: "ready" });
+    });
+
+    it("should estimate remaining time only after download progress is stable enough", () => {
+        vi.useFakeTimers();
+        try {
+            const room = createRoom();
+            Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+            vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0,
+            } satisfies ProximityFileTransferUpdate);
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.5,
+            } satisfies ProximityFileTransferUpdate);
+
+            const [message] = get(room.messages);
+            expect(remainingSeconds(message)).toBeUndefined();
+
+            vi.setSystemTime(new Date("2024-01-01T00:00:02.000Z"));
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.04,
+            } satisfies ProximityFileTransferUpdate);
+            expect(remainingSeconds(message)).toBeUndefined();
+
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.5,
+            } satisfies ProximityFileTransferUpdate);
+
+            expect(get(message.attachment!.status)).toEqual({ state: "loading", progress: 0.5, remainingSeconds: 2 });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("should clear estimated remaining time when a transfer stops loading", () => {
+        vi.useFakeTimers();
+        try {
+            const room = createRoom();
+            Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+            vi.setSystemTime(new Date("2024-01-01T00:00:00.000Z"));
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0,
+            } satisfies ProximityFileTransferUpdate);
+            vi.setSystemTime(new Date("2024-01-01T00:00:02.000Z"));
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "downloading",
+                progress: 0.5,
+            } satisfies ProximityFileTransferUpdate);
+
+            const [message] = get(room.messages);
+            expect(remainingSeconds(message)).toBe(2);
+
+            Reflect.get(room, "applyFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                state: "error",
+                progress: 0.5,
+                error: "unavailable",
+            } satisfies ProximityFileTransferUpdate);
+
+            expect(get(message.attachment!.status)).toEqual({ state: "error", error: "unavailable" });
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it("should ask for consent, then follow the download once accepted", () => {
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        const [message] = get(room.messages);
+        const consent = message.attachment!.consent!;
+        expect(get(consent.decision)).toBe("pending");
+
+        Reflect.get(room, "applyFileTransferUpdate").call(room, {
+            transferId: "transfer-1",
+            state: "connecting",
+            progress: 0,
+        } satisfies ProximityFileTransferUpdate);
+
+        expect(get(consent.decision)).toBe("accepted");
+        expect(get(message.attachment!.status)).toMatchObject({ state: "loading", progress: 0 });
+    });
+
+    it("should mark every incoming file unavailable when we leave, except the declined ones", () => {
+        const room = createRoom();
+        for (const transferId of ["offered", "downloading", "received", "declined"]) {
+            Reflect.get(room, "addIncomingFileOffer").call(room, { ...createOffer(), transferId });
+        }
+        const apply = (update: ProximityFileTransferUpdate) =>
+            Reflect.get(room, "applyFileTransferUpdate").call(room, update);
+        apply({ transferId: "downloading", state: "downloading", progress: 0.5 });
+        apply({
+            transferId: "received",
+            state: "ready",
+            progress: 1,
+            url: "blob:received",
+            durationMs: 10,
+            route: undefined,
+        });
+        const messages = new Map(get(room.messages).map((message) => [message.id, message]));
+        messages.get("declined")!.attachment!.consent!.decline();
+
+        Reflect.get(room, "cleanupFileTransferService").call(room);
+
+        for (const id of ["offered", "downloading", "received"]) {
+            const message = messages.get(id)!;
+            expect(get(message.attachment!.status), id).toEqual({ state: "error", error: "unavailable" });
+            expect(get(message.content).url, id).toBeUndefined();
+        }
+        expect(get(messages.get("declined")!.attachment!.consent!.decision)).toBe("declined");
+    });
+
+    it("should mark an incoming file transfer request as declined locally", () => {
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        const [message] = get(room.messages);
+
+        message.attachment?.consent?.decline();
+
+        expect(get(message.attachment!.consent!.decision)).toBe("declined");
+    });
+
+    it("should report sent and fully received files to analytics, with how the transfer went", async () => {
+        const trackAdminEvent = vi.spyOn(analyticsClient, "trackAdminEvent").mockImplementation(() => {});
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-2") });
+        const room = createRoom();
+        Reflect.get(room, "addIncomingFileOffer").call(room, createOffer());
+        Reflect.get(room, "applyFileTransferUpdate").call(room, {
+            transferId: "transfer-1",
+            state: "downloading",
+            progress: 0.5,
+        } satisfies ProximityFileTransferUpdate);
+        expect(trackAdminEvent).not.toHaveBeenCalled();
+
+        Reflect.get(room, "applyFileTransferUpdate").call(room, {
+            transferId: "transfer-1",
+            state: "ready",
+            progress: 1,
+            url: "blob:received-file",
+            durationMs: 1200,
+            route: { relay: true, protocol: "tcp" },
+        } satisfies ProximityFileTransferUpdate);
+        expect(trackAdminEvent).toHaveBeenCalledWith("chat.proximity_file.received", {
+            sizeBytes: 5,
+            durationMs: 1200,
+            relay: true,
+            relayProtocol: "tcp",
+        });
+
+        const file = new File(["hello world"], "hello.txt", { type: "text/plain" });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => [{ transferId: "transfer-2", file, recipients: [] }],
+        });
+        await room.sendFiles(createFileList(file));
+        expect(trackAdminEvent).toHaveBeenCalledWith("chat.proximity_file.sent", { sizeBytes: 11, recipientCount: 0 });
+
+        trackAdminEvent.mockRestore();
+        vi.unstubAllGlobals();
+    });
+
+    it("should show sent files right away under their transfer id", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        const room = createRoom();
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => [{ transferId: "transfer-1", file, recipients: [] }],
+        });
+
+        await room.sendFiles(createFileList(file));
+
+        const [message] = get(room.messages);
+        expect(message.id).toBe("transfer-1");
+        expect(get(message.content)).toMatchObject({ body: "hello.txt", url: "blob:transfer-1" });
+        expect(get(message.attachment!.status)).toEqual({ state: "ready" });
+        expect(message.attachment!.consent).toBeUndefined();
+        vi.unstubAllGlobals();
+    });
+
+    it("should show the sender one row per recipient, keeping received and declined as final", async () => {
+        vi.stubGlobal("URL", { createObjectURL: vi.fn().mockReturnValue("blob:transfer-1") });
+        const room = createRoom();
+        const user = (spaceUserId: string, name: string) =>
+            [spaceUserId, { spaceUserId, uuid: spaceUserId, name } as SpaceUserExtended] as const;
+        Reflect.set(room, "users", new Map([user("bob", "Bob"), user("eve", "Eve"), user("joe", "Joe")]));
+        const file = new File(["hello"], "hello.txt", { type: "text/plain" });
+        Reflect.set(room, "fileTransferService", {
+            createOutgoingOffers: () => [{ transferId: "transfer-1", file, recipients: ["bob", "eve", "joe"] }],
+        });
+        const apply = (
+            recipientSpaceUserId: string,
+            state: OutgoingProximityFileTransferUpdate["state"],
+            progress = 0,
+        ) =>
+            Reflect.get(room, "applyOutgoingFileTransferUpdate").call(room, {
+                transferId: "transfer-1",
+                recipientSpaceUserId,
+                state,
+                progress,
+            } satisfies OutgoingProximityFileTransferUpdate);
+
+        await room.sendFiles(createFileList(file));
+        const [message] = get(room.messages);
+        expect(get(message.attachment!.delivery!).map(({ name, state }) => [name, state])).toEqual([
+            ["Bob", "waiting"],
+            ["Eve", "waiting"],
+            ["Joe", "waiting"],
+        ]);
+
+        apply("bob", "sending", 0.5);
+        apply("bob", "received", 1);
+        apply("eve", "declined");
+        apply("joe", "sending", 0.25);
+        // We leave the bubble: whoever has not got the file by now will not get it.
+        Reflect.get(room, "failUnfinishedOutgoingRecipients").call(room);
+
+        expect(get(message.attachment!.delivery!).map(({ name, state }) => [name, state])).toEqual([
+            ["Bob", "received"],
+            ["Eve", "declined"],
+            ["Joe", "failed"],
+        ]);
+        vi.unstubAllGlobals();
+    });
+
+    it("should refuse to send files once the chat has more users than the limit (10 in tests)", async () => {
+        const room = createRoom();
+        const createOutgoingOffers = vi.fn();
+        Reflect.set(room, "fileTransferService", { createOutgoingOffers });
+        const usersOf = (count: number) =>
+            new Map(Array.from({ length: count }, (_, i) => [`user-${i}`, {} as SpaceUserExtended]));
+        const users = writable(usersOf(10));
+        room.spaceUsersStore.forward(users);
+        expect(get(room.canSendFiles)).toBe(true);
+
+        users.set(usersOf(11));
+
+        expect(get(room.canSendFiles)).toBe(false);
+        await expect(room.sendFiles(createFileList(new File(["hello"], "hello.txt")))).rejects.toThrow();
+        expect(createOutgoingOffers).not.toHaveBeenCalled();
+    });
+});
+
+describe("ProximityChatRoom mentions", () => {
+    beforeEach(() => {
+        selectedRoomStore.set(undefined);
+        chatVisibilityStore.set(false);
+    });
+
+    const receive = (room: ProximityChatRoom, message: string) =>
+        Reflect.get(room, "addNewMessage").call(room, message, "sender", [], "Sender");
+
+    it("flags a message mentioning us, and the room until it is read", () => {
+        const room = createRoom();
+        const toUs = createMentionPill({ id: "recipient", name: "Recipient" }).outerHTML;
+        const toSomeoneElse = createMentionPill({ id: "other", name: "Other" }).outerHTML;
+
+        receive(room, `hello ${toSomeoneElse}`);
+        expect(get(room.hasUnreadMentions)).toBe(false);
+
+        receive(room, `hello ${toUs}`);
+        const content = get(get(room.messages)[1].content);
+        expect(content.mentionsMe).toBe(true);
+        expect(content.body).toContain("<a data-mention-me ");
+        expect(get(room.hasUnreadMentions)).toBe(true);
+
+        // Read elsewhere (only hasUnreadMessages is reset): the next unread streak starts without the mention.
+        room.hasUnreadMessages.set(false);
+        receive(room, "no mention");
+        expect(get(room.hasUnreadMessages)).toBe(true);
+        expect(get(room.hasUnreadMentions)).toBe(false);
+    });
+
+    it("only honors @room from an admin of the map", () => {
+        const room = createRoom();
+        const toEveryone = `${createMentionPill(ROOM_MENTION).outerHTML} réunion`;
+        const sender = (tags: string[]) =>
+            new Map([
+                [
+                    "sender",
+                    { spaceUserId: "sender", name: "Sender", tags, reactiveUser: { availabilityStatus: writable(0) } },
+                ],
+            ]);
+        const lastContent = () => get(get(room.messages).at(-1)!.content);
+
+        // Unknown sender, then a known one without the admin tag: a plain "@room".
+        receive(room, toEveryone);
+        expect(lastContent()).toMatchObject({ mentionsMe: false, body: "@room réunion" });
+        Reflect.set(room, "users", sender(["member"]));
+        receive(room, toEveryone);
+        expect(lastContent()).toMatchObject({ mentionsMe: false, body: "@room réunion" });
+
+        Reflect.set(room, "users", sender(["admin"]));
+        receive(room, toEveryone);
+        expect(lastContent().mentionsMe).toBe(true);
+        expect(lastContent().body).toContain("<a data-mention-me ");
+        expect(get(room.hasUnreadMentions)).toBe(true);
+    });
+});
+
+describe("formatProximityFileTransferRemainingTime", () => {
+    it("should format valid remaining times with stable short units", () => {
+        expect(formatProximityFileTransferRemainingTime(45)).toBe("45 s");
+        expect(formatProximityFileTransferRemainingTime(61)).toBe("2 min");
+        expect(formatProximityFileTransferRemainingTime(3_601)).toBe("2 h");
+    });
+
+    it("should ignore invalid remaining times", () => {
+        expect(formatProximityFileTransferRemainingTime(0)).toBeUndefined();
+        expect(formatProximityFileTransferRemainingTime(Number.NaN)).toBeUndefined();
+        expect(formatProximityFileTransferRemainingTime(Number.POSITIVE_INFINITY)).toBeUndefined();
+    });
+});
+
+function createFileList(file: File): FileList {
+    return new SingleFileList(file);
+}
+
+class SingleFileList implements FileList {
+    [index: number]: File;
+    readonly length = 1;
+
+    constructor(file: File) {
+        this[0] = file;
+    }
+
+    item(index: number): File | null {
+        return index === 0 ? this[0] : null;
+    }
+
+    [Symbol.iterator](): ArrayIterator<File> {
+        return [this[0]][Symbol.iterator]();
+    }
+}

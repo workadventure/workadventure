@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "Âm lượng",
             audioLinkLabel: "Liên kết âm thanh",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Tải tệp lên",
+            sourceUrl: "Dùng URL",
             defaultButtonLabel: "Phát nhạc",
             error: "Không thể tải âm thanh",
             actionButtonLabel: "Phát nhạc",
@@ -460,7 +462,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Chế độ hội trường",
                 audienceVideoFeedbackActivatedDisabled: "Chế độ hội trường",
                 audienceVideoFeedbackActivatedHelper:
-                    "Chế độ hội trường bật: Nhận luồng camera và micrô của tất cả người dùng (đang bật camera và micrô) trong phòng/thế giới. Nhưng người tham dự sẽ không thấy những người tham dự khác. Mặc định tắt.",
+                    "Chế độ hội trường bật: Nhận luồng camera của tất cả người dùng (đang bật camera) trong phòng/thế giới, không kèm âm thanh. Nhưng người tham dự sẽ không thấy những người tham dự khác. Mặc định tắt.",
                 error: {
                     title: "Vui lòng nhập tiêu đề",
                     save: {

@@ -15,8 +15,6 @@
     import { forceRefreshChatStore } from "../Stores/ChatStore";
     import { loaderVisibleStore } from "../Stores/LoaderStore";
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
-    import { isActivatedStore as calendarIsActivatedStore, isCalendarVisibleStore } from "../Stores/CalendarStore";
-    import { isActivatedStore as todoListIsActivatedStore, isTodoListVisibleStore } from "../Stores/TodoListStore";
     import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
     import LoginScene from "./Login/LoginScene.svelte";
@@ -30,11 +28,7 @@
     import MapDeletedPrompt from "./MapDeletedPrompt.svelte";
     import LoaderScene from "./Loader/LoaderScene.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
-    import bgMap from "./images/map-exemple.png";
-    import defaultLoader from "./images/Workadventure.gif";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
-    import Calendar from "./Calendar/Calendar.svelte";
-    import TodoList from "./TodoList/TodoList.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
@@ -48,10 +42,6 @@
 
     let { game }: Props = $props();
 </script>
-
-<!-- Preload image loader TODO HUGO : Better way ? -->
-<link rel="preload" as="image" href={bgMap} />
-<link rel="preload" as="image" href={defaultLoader} />
 
 {#if $loaderVisibleStore}
     <div class="bg-contrast">
@@ -114,13 +104,6 @@
         <MainLayout />
     {/key}
     <MainModal />
-
-    {#if $calendarIsActivatedStore && $isCalendarVisibleStore}
-        <Calendar />
-    {/if}
-    {#if $todoListIsActivatedStore && $isTodoListVisibleStore}
-        <TodoList />
-    {/if}
 {/if}
 
 <FloatingUiPopupList />

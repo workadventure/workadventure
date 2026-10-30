@@ -144,10 +144,15 @@ export class PositionNotifier {
         zone.emitEmoteEvent(emoteEventMessage);
     }
 
-    public emitLockGroupEvent(user: User, groupId: number) {
-        const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
+    public emitLockGroupEvent(group: Group) {
+        // The lock state must go to the zone holding the group: in any other zone, the pusher would cache a copy of
+        // the group that its deletion never reaches. A group out of bounds is in no zone (it re-enters one later).
+        if (group.getOutOfBounds) {
+            return;
+        }
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(group.getPosition().x, group.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
-        zone.emitLockGroupEvent(groupId);
+        zone.emitLockGroupEvent(group.getId());
     }
 
     public emitGroupUsersUpdatedEvent(group: Group) {

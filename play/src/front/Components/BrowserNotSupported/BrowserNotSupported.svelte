@@ -2,7 +2,7 @@
     import { getBrowserInfo, getBrowserDisplayName } from "../../Utils/BrowserCompatibility";
     import { LL } from "../../../i18n/i18n-svelte";
     import Button from "../UI/Button.svelte";
-    import bgMap from "../images/map-exemple.png";
+    import bgMap from "../images/map-exemple.webp";
 
     let browserInfo = getBrowserInfo();
     let browserName = getBrowserDisplayName();

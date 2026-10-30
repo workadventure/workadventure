@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Kameru wobdźěłać",
-    editMic: "Mikrofon wobdźěłać",
     editSpeaker: "Audiowyjadowanje wobdźěłać",
     active: "Aktiwny",
     disabled: "Deaktiwěrowany",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "přistup ke kamerje/mikrofonje trěbny",
         cameraTitle: "Přistup ke kamerje trěbny",
         microphoneTitle: "Přistup k mikrofonej trěbny",
-        permissionDenied: "přistup zapowědźeny",
         cameraPermissionDenied: "Dowolnosć za kameru zapowědźena",
         microphonePermissionDenied: "Dowolnosć za mikrofon zapowědźena",
         cameraMicrophonePermissionDenied: "Dowolnosć za kameru a mikrofon zapowědźena",
@@ -84,7 +82,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "ćichi wobłuk",
         silentZoneDesc:
-            "Sće w ćichim wobłuku. Móžeće jenož ludźi widźeć a słyšeć, z kotrymiž sće. Móžeće druhich ludźi w rumnje nje widźeć abo nje słyšeć.",
+            "Sće w ćichim wobłuku. Tu njemóže nichtó z wami rěčeć, a waš mikrofon a waša kamera staj deaktiwěrowanej.",
         nameTag: "Wy",
         loading: "Waša kamera so začituje...",
     },
@@ -93,7 +91,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "dalše akcije",
         closeMenu: "meny začinić",
         senPrivateMessage: "pśewatne powěsće posłaś (pśichadźe)",
-        kickoffUser: "wužiwarja wotmětować",
         giveFloor: "Słowo dać",
         revokeFloor: "Słowo wotewzać",
         muteAudioUser: "audio stummschalten",
@@ -103,14 +100,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "prosyć, zo by video stummschalten",
         muteVideoEveryBody: "video za wšěch stummschalten",
         blockOrReportUser: "wužiwarja blokować abo pśihłasować",
-    },
-    backgroundEffects: {
-        imageTitle: "Wobrazki pozadka",
-        blurTitle: "Pozadk njewjasnosć",
-        resetTitle: "Pozadk efekty deaktiwěrowaś",
-        title: "Pozadk efekty",
-        close: "Zacyniś",
-        blurAmount: "Njewjasnosć měra",
     },
 };
 

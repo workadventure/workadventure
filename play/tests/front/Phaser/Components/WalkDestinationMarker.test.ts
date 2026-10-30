@@ -1,0 +1,80 @@
+import * as Phaser from "phaser";
+import { describe, expect, it, vi } from "vitest";
+import { WalkDestinationMarker } from "../../../../src/front/Phaser/Components/WalkDestinationMarker";
+import type { GameScene } from "../../../../src/front/Phaser/Game/GameScene";
+
+function setup(zoom = 2, displayScale = 0.5) {
+    const graphics = () => {
+        const g: Record<string, unknown> = {};
+        for (const method of [
+            "lineStyle",
+            "strokeEllipse",
+            "fillStyle",
+            "fillEllipse",
+            "beginPath",
+            "arc",
+            "strokePath",
+        ])
+            g[method] = () => g;
+        return g;
+    };
+    const container = {
+        visible: true,
+        x: 0,
+        y: 0,
+        scale: 1,
+        setDepth: () => container,
+        setVisible: (visible: boolean) => ((container.visible = visible), container),
+        setPosition: (x: number, y: number) => ((container.x = x), (container.y = y), container),
+        setScale: (scale: number) => ((container.scale = scale), container),
+        destroy: vi.fn(),
+    };
+    const ripple = { restart: vi.fn(), pause: vi.fn(), remove: vi.fn() };
+    const markDirty = vi.fn();
+    const scene = {
+        add: { graphics, container: () => container },
+        tweens: { addCounter: () => ripple },
+        events: new Phaser.Events.EventEmitter(),
+        cameras: { main: { zoom } },
+        scale: { displayScale: { x: displayScale } },
+        markDirty,
+        room: { primaryColor: "#ff8800" },
+    } as unknown as GameScene;
+    return { marker: new WalkDestinationMarker(scene), container, ripple, scene, markDirty };
+}
+
+describe("walk destination marker", () => {
+    it("stays while a later walk uses it, and goes when the last walk ends", () => {
+        const { marker, container, ripple } = setup();
+        expect(container.visible).toBe(false);
+
+        const first = marker.show({ x: 100, y: 50 });
+        expect(container.visible).toBe(true);
+        expect(ripple.restart).toHaveBeenCalled();
+
+        // A new tap before arrival: the first walk ends after the second one started.
+        const second = marker.show({ x: 300, y: 80 });
+        marker.hide(first);
+        expect(container.visible).toBe(true);
+        expect({ x: container.x, y: container.y }).toEqual({ x: 300, y: 80 });
+
+        marker.hide(second);
+        expect(container.visible).toBe(false);
+        expect(ripple.pause).toHaveBeenCalled();
+    });
+
+    it("keeps its size on screen when zoomed out, but never gets narrower than a 32 px map object", () => {
+        // Zoomed out: 2 game pixels per CSS pixel at camera zoom 0.5, so a CSS pixel covers 4 map pixels.
+        const zoomedOut = setup(0.5, 2);
+        zoomedOut.marker.show({ x: 0, y: 0 });
+        zoomedOut.scene.events.emit(Phaser.Scenes.Events.UPDATE);
+        expect(zoomedOut.container.scale).toBe(4);
+        expect(zoomedOut.markDirty).toHaveBeenCalled();
+
+        // Zoomed in: a CSS pixel covers a quarter of a map pixel, so 36 CSS pixels would be 9 map pixels.
+        const zoomedIn = setup(2, 0.5);
+        zoomedIn.marker.show({ x: 0, y: 0 });
+        zoomedIn.scene.events.emit(Phaser.Scenes.Events.UPDATE);
+        expect(zoomedIn.container.scale * 36).toBeCloseTo(32);
+    });
+});

@@ -5,7 +5,7 @@ import { Player } from "../Player/Player";
 import { RemotePlayer } from "../Entity/RemotePlayer";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 import type { GameScene } from "../Game/GameScene";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
+import { mapEditorModeStore, mapExplorationModeStore } from "../../Stores/MapEditorStore";
 import { isActivatable } from "../Game/ActivatableInterface";
 import { mapManagerActivated } from "../../Stores/MenuStore";
 import { displayEmote, isEmoteIndex } from "../../Stores/EmoteStore";
@@ -18,6 +18,11 @@ import { isPopupJustClosed } from "../Game/Say/SayManager";
 import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { isKeyFromInteractiveElement } from "../../Utils/isKeyFromInteractiveElement";
+import { waScaleManager } from "../Services/WaScaleManager";
+import { MapDragPointerCapture } from "./MapDragPointerCapture";
+import { MapDragGesture } from "./MapDragGesture";
+import { MapPanShortcut } from "./MapPanShortcut";
 import type { Shortcut } from "./UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
@@ -26,10 +31,42 @@ import GameObject = Phaser.GameObjects.GameObject;
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
     private controlKeyisPressed: boolean = false;
+    private readonly mapDrag = new MapDragGesture();
+    private draggingMap = false;
+    // The current touch gesture involved two fingers or more (a pinch): lifting a finger must not count as a tap.
+    private multiTouch = false;
+    private pinchFreedView = false;
+    private readonly pointerCapture: MapDragPointerCapture;
+    private readonly panShortcut: MapPanShortcut;
+    private readonly spaceKey: Phaser.Input.Keyboard.Key | undefined;
     public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
+        this.pointerCapture = new MapDragPointerCapture(
+            gameScene.game.canvas,
+            () => this.canDragMap(),
+            () => this.handlePointerCancelEvent(),
+        );
+        // Same Key object as the "interact" key: addKey returns the existing one.
+        this.spaceKey = gameScene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false);
+        this.panShortcut = new MapPanShortcut(gameScene.game.canvas, {
+            // Middle button everywhere. Space + left button only in the map editor: in game mode, Space interacts.
+            canStart: (event) =>
+                (event.button === 1 ||
+                    (event.button === 0 && this.spaceKey?.isDown === true && get(mapEditorModeStore))) &&
+                this.canMoveView(),
+            start: () => this.gameScene.getCameraManager().startManualPan(),
+            pan: (deltaX, deltaY) => {
+                // CSS pixels to game pixels, the unit Phaser pointers (and so panBy) use.
+                const scale = this.gameScene.scale.displayScale;
+                this.gameScene.getCameraManager().panBy(deltaX * scale.x, deltaY * scale.y);
+            },
+        });
+        gameScene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+            this.pointerCapture.destroy();
+            this.panShortcut.destroy();
+        });
 
         this.initShortcuts();
     }
@@ -108,12 +145,38 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         deltaY: number,
         deltaZ: number,
     ): void {
-        this.gameScene.handleMouseWheel(deltaY);
+        this.gameScene.handleMouseWheel(deltaY, pointer);
     }
 
     public handlePointerUpEvent(pointer: Pointer, gameObjects: GameObject[]): void {
+        if (pointer.leftButtonReleased()) {
+            const wasDragging = this.draggingMap;
+            const dragged = this.mapDrag.end(pointer.id);
+            this.restoreDragCursor();
+            this.pointerCapture.release();
+            if (dragged) {
+                if (wasDragging && this.canDragMap() && pointer.velocity) {
+                    this.gameScene.getCameraManager().releaseManualPan(pointer.velocity);
+                }
+                return;
+            }
+        }
+        if (pointer.wasTouch && this.multiTouch) {
+            return;
+        }
+        if (get(mapEditorModeStore)) {
+            return;
+        }
         if (pointer.wasTouch || pointer.leftButtonReleased()) {
+            if (!this.gameScene.userInputManager.isControlsEnabled) {
+                return;
+            }
             for (const object of gameObjects) {
+                // Clicking your own woka brings the view back on it, as the "show my location" button does.
+                if (object instanceof Player) {
+                    this.gameScene.getCameraManager().resumePlayerFollow();
+                    return;
+                }
                 if (isActivatable(object)) {
                     this.gameScene.getActivatablesManager().handlePointerDownEvent(object);
                     return;
@@ -142,8 +205,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 return;
             }
         }
-        const camera = this.gameScene.getCameraManager().getCamera();
-        const worldPoint = camera.getWorldPoint(pointer.x, pointer.y);
+        const cameraManager = this.gameScene.getCameraManager();
+        const worldPoint = cameraManager.getCamera().getWorldPoint(pointer.x, pointer.y);
+        // Keep the avatar and the spot the user pointed at in view while walking there.
+        const walk = cameraManager.startWalkFraming({ x: worldPoint.x, y: worldPoint.y });
         this.gameScene
             .moveTo(
                 {
@@ -154,12 +219,102 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             )
             .catch((reason) => {
                 console.warn(reason);
-            });
+            })
+            .finally(() => cameraManager.endWalkFraming(walk));
     }
 
-    public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
+    public handlePointerDownEvent(pointer: Pointer, gameObjects: GameObject[]): void {
+        if (pointer.wasTouch) {
+            // A first finger starts a new gesture; a second one turns it into a pinch and ends the one-finger drag.
+            this.multiTouch = this.touchPointersDown() > 1;
+            if (!this.multiTouch) this.pinchFreedView = false;
+            if (this.multiTouch) {
+                this.handlePointerCancelEvent();
+                return;
+            }
+        }
+        if (!pointer.leftButtonDown() || !this.canDragMap()) {
+            return;
+        }
+        pointer.motionFactor = 0.35;
+        this.gameScene.getCameraManager().stopManualPanInertia();
+        this.restoreDragCursor();
+        this.mapDrag.begin(pointer);
+    }
 
-    public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {}
+    public handlePointerMoveEvent(pointer: Pointer, gameObjects: GameObject[]): void {
+        if (pointer.wasTouch && this.multiTouch) {
+            return;
+        }
+        if (!pointer.leftButtonDown()) {
+            if (this.draggingMap) this.handlePointerCancelEvent();
+            return;
+        }
+        if (!this.canDragMap()) {
+            this.handlePointerCancelEvent();
+            return;
+        }
+        const delta = this.mapDrag.move(pointer);
+        if (!delta) {
+            return;
+        }
+        const cameraManager = this.gameScene.getCameraManager();
+        if (!this.draggingMap) {
+            cameraManager.startManualPan();
+            this.draggingMap = true;
+            this.gameScene.input.setDefaultCursor("grabbing");
+        }
+        cameraManager.panBy(delta.x, delta.y);
+    }
+
+    public handlePointerOutEvent(): void {
+        if (this.draggingMap && !this.pointerCapture.active) this.handlePointerCancelEvent();
+    }
+
+    public handlePointerCancelEvent(): void {
+        this.pointerCapture.release();
+        this.gameScene.getCameraManager().stopManualPanInertia();
+        this.mapDrag.cancel();
+        this.restoreDragCursor();
+    }
+
+    /** Whether the user may move the view: not behind a modal or a zoom lock, nor (in game mode) in a focus zone. */
+    private canMoveView(): boolean {
+        if (!this.gameScene.userInputManager.isControlsEnabled || this.gameScene.getCameraManager().isZoomLocked()) {
+            return false;
+        }
+        // The explorer list sets a focus target on hover, which must not hold the editor's view like a focus zone.
+        return get(mapEditorModeStore) || !waScaleManager.getFocusTarget();
+    }
+
+    private canDragMap(): boolean {
+        // The other editor tools use the left drag themselves; they pan with MapPanShortcut instead.
+        return this.canMoveView() && (!get(mapEditorModeStore) || get(mapExplorationModeStore));
+    }
+
+    public handlePinch(zoomFactor: number, centre: { x: number; y: number }, pan: { x: number; y: number }): void {
+        const cameraManager = this.gameScene.getCameraManager();
+        if (this.canMoveView()) {
+            // As in map apps, a pinch keeps the map under the fingers: its first move frees the view from the avatar.
+            if (!this.pinchFreedView) {
+                cameraManager.startManualPan();
+                this.pinchFreedView = true;
+            }
+            cameraManager.panBy(pan.x, pan.y);
+        }
+        this.gameScene.zoomByFactor(zoomFactor, false, this.gameScene.zoomAnchor(centre));
+    }
+
+    private touchPointersDown(): number {
+        return this.gameScene.input.manager.pointers.filter((pointer) => pointer.wasTouch && pointer.isDown).length;
+    }
+
+    private restoreDragCursor(): void {
+        if (this.draggingMap) {
+            this.gameScene.input.setDefaultCursor(get(mapExplorationModeStore) ? "grab" : "auto");
+            this.draggingMap = false;
+        }
+    }
 
     private handleKeyF() {
         const state = get(followStateStore);
@@ -319,6 +474,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             // SPACE
             case " ": {
+                if (isKeyFromInteractiveElement(event)) break;
                 this.handleActivableEntity();
                 break;
             }
@@ -327,7 +483,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
             case "Enter": {
-                this.openSayPopup();
+                if (!isKeyFromInteractiveElement(event)) this.openSayPopup();
                 this.controlKeyisPressed = false;
                 break;
             }

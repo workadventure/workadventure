@@ -31,8 +31,15 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "더 이상 보거나 듣지 않습니다. 나에게만 적용되며 되돌릴 수 있습니다.",
             report: "관리자에게 알립니다.",
+            remove: "이 대화에서 제외합니다. 지도에는 남아 있습니다.",
             kick: "지금 연결을 끊습니다. 다시 들어올 수 있습니다.",
             ban: "영구적으로 연결을 끊습니다.",
+        },
+        remove: {
+            title: "대화에서 제외",
+            content: "{userName}님은 즉시 이 대화에서 나가며, 방송 중이면 방송이 중지됩니다. 지도에는 남아 있습니다.",
+            submit: "제외",
+            confirmTitle: "{userName} 대화에서 제외",
         },
         kick: {
             title: "내보내기",

@@ -3,6 +3,8 @@
         message: string;
         inputClass: string;
         dataText: string;
+        // Placeholder shown while disabled, saying why nothing can be typed.
+        disabledText?: string;
         dataTestid: string;
         messageInput?: HTMLDivElement;
         onkeydown?: (event: KeyboardEvent) => void;
@@ -17,6 +19,7 @@
         message = $bindable(),
         inputClass = "",
         dataText = "",
+        disabledText = "",
         dataTestid = "",
         messageInput = $bindable(),
         onkeydown = undefined,
@@ -128,7 +131,9 @@
         bind:innerHTML={message}
         contenteditable="false"
         bind:this={messageInput}
-        class={`${inputClass} opacity-70/50 cursor-not-allowed`}
+        class={`${inputClass} opacity-50 cursor-not-allowed`}
+        data-text={disabledText}
+        aria-disabled="true"
     ></div>
 {/if}
 

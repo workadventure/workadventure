@@ -53,8 +53,19 @@ class EntityEditor {
     }
 
     async moveAndClick(page: Page, x: number, y: number) {
-        await this.wait2Frames(page);
         const coordinates = { x, y };
+        // Opening the map editor resizes the game, and the camera follows: wait for the target to stop moving on the
+        // canvas, or the click lands where it was a few frames ago.
+        let lastPosition = "";
+        await expect
+            .poll(async () => {
+                await this.wait2Frames(page);
+                const position = JSON.stringify(await gameToBrowserCanvasCoordinates(page, coordinates));
+                const stable = position === lastPosition;
+                lastPosition = position;
+                return stable;
+            })
+            .toBe(true);
         const browserCoordinates = await gameToBrowserCanvasCoordinates(page, coordinates);
         await page.locator("#game canvas").click({
             position: browserCoordinates,

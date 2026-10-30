@@ -494,6 +494,7 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         canEdit: false,
         spaceUserId: "space-user-id",
         backConnection: undefined,
+        joinedRoom: false,
         listenedZones: new Set(),
         pusherRoom: undefined,
         spaces: new Set(),

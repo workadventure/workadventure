@@ -31,8 +31,16 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "Diese Person nicht mehr sehen und hören. Nur für dich, und umkehrbar.",
             report: "Die Administratoren benachrichtigen.",
+            remove: "Aus diesem Gespräch nehmen. Die Person bleibt auf der Karte.",
             kick: "Jetzt trennen. Die Person kann zurückkommen.",
             ban: "Endgültig trennen.",
+        },
+        remove: {
+            title: "Aus Gespräch nehmen",
+            content:
+                "{userName} verlässt dieses Gespräch sofort. Falls die Person gerade sendet, wird ihre Übertragung beendet. Die Person bleibt auf der Karte.",
+            submit: "Aus Gespräch nehmen",
+            confirmTitle: "{userName} aus dem Gespräch nehmen",
         },
         kick: {
             title: "Entfernen",

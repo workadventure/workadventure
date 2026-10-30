@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Tornar a seleccionar comunicació",
-        selectCommunication: "Seleccionar comunicació",
         title: "Comunicació global",
-        selectCamera: "Selecciona una càmera 📹",
-        selectMicrophone: "Selecciona un micròfon 🎙️",
         liveMessage: {
             startMegaphone: "Iniciar megàfon",
             stopMegaphone: "Aturar megàfon",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Iniciar missatge en directe",
             and: "i",
             toAll: "a tots els participants",
-            confirm: "Confirmar",
-            cancel: "Cancel·lar",
             notice: `
             El missatge en directe o "Megàfon" et permet enviar un missatge en directe amb la teva càmera i micròfon a totes les persones connectades a la sala o el món.
 

@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Nachricht senden",
     participantInviteUser: "Benutzer einladen",
     participantExitFullscreen: "Vollbild beenden",
+    participantShowList: "Teilnehmerliste anzeigen",
+    participantHideList: "Teilnehmerliste ausblenden",
     profil: "Ihren Namen bearbeiten",
-    startScreenSharing: "Bildschirmfreigabe starten",
-    stopScreenSharing: "Bildschirmfreigabe beenden",
-    screenSharingMode: "Bildschirmfreigabemodus",
     calendar: "Kalender",
     todoList: "Aufgabenliste",
     woka: "Ihr Avatar anpassen",
     companion: "Begleiter hinzufügen",
-    test: "Meine Einstellungen testen",
     editCamMic: "Kamera / Mikrofon bearbeiten",
     allSettings: "Alle Einstellungen",
     installPwa: "Web-App installieren",
@@ -32,35 +30,30 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Ihre Kamera ist deaktiviert",
         activate: "Kamera aktivieren",
-        noDevices: "Kein Kameragerät gefunden",
-        setBackground: "Hintergrund festlegen",
-        blurEffects: "Unschärfeeffekte",
-        disableBackgroundEffects: "Hintergrundeffekte deaktivieren",
-        close: "Schließen",
     },
     microphone: {
         disabled: "Ihr Mikrofon ist deaktiviert",
         activate: "Mikrofon aktivieren",
-        noDevices: "Kein Mikrofon gefunden",
         noSoundWarning:
             "Kein Ton von Ihrem Mikrofon erkannt. Möglicherweise liegt ein Problem vor; versuchen Sie, Ihr Mikrofon in den Einstellungen zu wechseln.",
-        noSoundWarningPressEnter:
-            "Kein Ton von Ihrem Mikrofon erkannt. Drücken Sie Enter, um die Einstellungen zu öffnen.",
         advancedNoiseReduction: "Erweiterte Geräuschreduzierung",
+        loudEnvironmentWarning: "An Ihrem Mikrofon wurden anhaltende Hintergrundgeräusche erkannt.",
+        enableNoiseSuppression: "Geräuschunterdrückung aktivieren",
         noiseSuppressionInitializing: "Benutzerdefinierte Geräuschunterdrückung wird initialisiert...",
         noiseSuppressionUnsupported:
             "Dieser Browser kann die benutzerdefinierte Geräuschunterdrückung nicht ausführen.",
         noiseSuppressionError:
             "Benutzerdefinierte Geräuschunterdrückung fehlgeschlagen. Es wird auf die native Geräuschunterdrückung des Browsers zurückgegriffen.",
+        noiseSuppressionActive: "Aktiv",
         openSettings: "Einstellungen öffnen",
         ignore: "Ignorieren",
     },
     speaker: {
         disabled: "Ihr Lautsprecher ist deaktiviert",
-        activate: "Lautsprecher aktivieren",
+        test: "Audioausgabe testen",
         noDevices: "Kein Lautsprecher gefunden",
         noDevicesDesc:
-            "Ihr Browser listet keine auswählbare Audioausgabe auf. Einige Browser schränken das ein (z. B. Safari). Versuchen Sie einen anderen Browser, schließen Sie Kopfhörer oder Lautsprecher erneut an, prüfen Sie die Systemtöne und die Konfiguration des Computers (Datenschutz, Geräte).",
+            "Ihr Browser listet keine auswählbare Audioausgabe auf. Einige Browser schränken das ein. Versuchen Sie einen anderen Browser, schließen Sie Kopfhörer oder Lautsprecher erneut an, prüfen Sie die Systemtöne und die Konfiguration des Computers (Datenschutz, Geräte).",
     },
     status: {
         ONLINE: "Online",
@@ -92,6 +85,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Mittlere Unschärfe",
         blurHigh: "Starke Unschärfe",
         images: "Bilder",
+        image: "Hintergrundbild {index}",
     },
     help: {
         chat: {
@@ -162,7 +156,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Ihren Bildschirm teilen",
-            desc: "Möchten Sie Ihren Bildschirm mit anderen Benutzern teilen? Sie können! Sie können Ihren Bildschirm allen im Chat zeigen, und Sie können wählen, ob Sie Ihren gesamten Bildschirm oder nur ein bestimmtes Fenster teilen möchten.",
+            desc: "Möchten Sie Ihren Bildschirm mit anderen Benutzern teilen? Sie können! Sie können Ihren Bildschirm den Personen in Ihrer Blase oder Ihrem Besprechungsraum zeigen, und Sie können wählen, ob Sie Ihren gesamten Bildschirm oder nur ein bestimmtes Fenster teilen möchten.",
         },
         apps: {
             title: "Drittanbieter-Anwendungen",
@@ -172,19 +166,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Raumliste",
             desc: "Durchsuchen Sie die Liste der Räume, um zu sehen, wer anwesend ist, und treten Sie mit einem Klick einer Unterhaltung bei.",
         },
-        calendar: {
-            title: "Kalender",
-            desc: "Sehen Sie sich Ihre bevorstehenden Besprechungen an und treten Sie ihnen direkt von WorkAdventure aus bei.",
-        },
-        todolist: {
-            title: "Aufgabenliste",
-            desc: "Verwalten Sie Ihre Aufgaben des Tages, ohne Ihren Arbeitsbereich zu verlassen.",
-        },
         pictureInPicture: {
             title: "Bild-im-Bild",
-            descDisabled:
-                "Leider ist diese Funktion auf Ihrem Gerät nicht verfügbar ❌. Bitte versuchen Sie, ein anderes Gerät oder einen anderen Browser wie Chrome oder Edge zu verwenden, um auf diese Funktion zuzugreifen.",
-            desc: "Sie können die Bild-im-Bild-Funktion verwenden, um ein Video oder eine Präsentation anzusehen, während Sie sich in einer Unterhaltung befinden. Klicken Sie einfach auf das Bild-im-Bild-Symbol und genießen Sie Ihren Inhalt.",
+            desc: "Zeigt die Videos Ihrer Unterhaltung in einem kleinen schwebenden Fenster an, damit Sie Ihre Gesprächspartner weiterhin sehen, während Sie in einem anderen Tab oder einer anderen App arbeiten.",
         },
         videoNotSupported: "Ihr Browser unterstützt das Video-Tag nicht.",
     },

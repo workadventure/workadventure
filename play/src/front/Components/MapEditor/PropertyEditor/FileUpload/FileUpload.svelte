@@ -1,7 +1,7 @@
 <script lang="ts">
     import { v4 as uuidv4 } from "uuid";
-    import type { OpenFilePropertyData } from "@workadventure/map-editor";
-    import { FILE_UPLOAD_SUPPORTED_FORMATS_FRONT } from "@workadventure/map-editor";
+    import type { UploadableFileKind } from "@workadventure/map-editor";
+    import { UPLOADED_FILE_FORMATS } from "@workadventure/map-editor";
     import type { UploadFileMessage } from "@workadventure/messages";
     import { get } from "svelte/store";
     import * as Sentry from "@sentry/svelte";
@@ -14,12 +14,16 @@
     import { IconCloudUpload } from "@wa-icons";
 
     interface Props {
-        property: OpenFilePropertyData;
-        onchange?: () => void;
+        propertyId: string;
+        /** Name of the uploaded file. Empty while there is none, which shows the drop zone. */
+        name: string | null | undefined;
+        /** What the file is for, which decides the formats offered and where map-storage stores it. */
+        kind: UploadableFileKind;
+        onupload: (name: string, link: string) => void;
         ondeleteFile?: () => void;
     }
 
-    let { property = $bindable(), onchange, ondeleteFile }: Props = $props();
+    let { propertyId, name, kind, onupload, ondeleteFile }: Props = $props();
 
     let files: FileList | undefined = $state(undefined);
     let dropZoneRef: HTMLDivElement | undefined = $state();
@@ -27,14 +31,13 @@
     let fileToUpload: UploadFileMessage | undefined = undefined;
     const BYTES_TO_MB = 1024 * 1024;
 
-    const filesUploadFormat = FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.split(",").map(
-        (format) => format.trim().split("/")[1],
-    );
+    const format = $derived(UPLOADED_FILE_FORMATS[kind]);
+    const acceptedFormats = $derived(format.accept.split(",").map((accepted) => accepted.trim()));
 
     $effect(() => {
         if (files) {
             const file = files.item(0);
-            if (file && isASupportedFormat(file.type)) {
+            if (file && isASupportedFormat(file)) {
                 handleFileChange(file).catch((error) => {
                     console.error("Error in handleFileChange:", error);
                     Sentry.captureException(error);
@@ -61,7 +64,8 @@
             id: generatedId,
             file: fileAsUint8Array,
             name: file.name,
-            propertyId: property.id,
+            propertyId,
+            kind,
         };
 
         const roomConnection = gameManager.getCurrentGameScene()?.connection;
@@ -79,15 +83,17 @@
         const fileName = file.name.slice(0, lastDot);
         const fileExt = file.name.slice(lastDot + 1);
 
-        const fileUrl = new URL(`private/files/${fileName}-${property.id}.${fileExt}`, mapStorageUrl).toString();
+        const fileUrl = new URL(`${format.folder}/${fileName}-${propertyId}.${fileExt}`, mapStorageUrl).toString();
 
-        property.name = file.name;
-        property.link = fileUrl;
-        onchange?.();
+        onupload(file.name, fileUrl);
     }
 
-    function isASupportedFormat(format: string): boolean {
-        return format.trim().length > 0 && FILE_UPLOAD_SUPPORTED_FORMATS_FRONT.includes(format);
+    function isASupportedFormat(file: File): boolean {
+        const accepted = acceptedFormats.some((accepted) =>
+            accepted.startsWith(".") ? file.name.toLowerCase().endsWith(accepted) : accepted === file.type,
+        );
+        // map-storage refuses the others.
+        return accepted && format.extensions.test(file.name);
     }
 
     function dropHandler(event: DragEvent) {
@@ -97,7 +103,8 @@
                 console.error("Only one file is permitted");
                 errorOnFile = $LL.mapEditor.properties.openFile.uploadFile.errorOnFileNumber();
             } else {
-                if (isASupportedFormat(filesFromDropEvent.item(0)?.type ?? "")) {
+                const file = filesFromDropEvent.item(0);
+                if (file && isASupportedFormat(file)) {
                     files = filesFromDropEvent;
                 } else {
                     console.error("File format not supported");
@@ -111,7 +118,7 @@
 </script>
 
 <div class="p-1 bg-white/10 rounded-md flex flex-col gap-2">
-    {#if !property.link}
+    {#if !name}
         <p class="m-0">{$LL.mapEditor.properties.openFile.uploadFile.title()}</p>
         <p class="opacity-50">{$LL.mapEditor.properties.openFile.uploadFile.description()}</p>
         <!-- svelte-ignore a11y_no_static_element_interactions -->
@@ -132,9 +139,9 @@
             bind:this={dropZoneRef}
             class="hover:cursor-pointer h-32 flex flex-col border border-dashed rounded-md items-center justify-center bg-white/10"
         >
-            <input id="upload" class="hidden" type="file" accept={FILE_UPLOAD_SUPPORTED_FORMATS_FRONT} bind:files />
+            <input id="upload-{propertyId}" class="hidden" type="file" accept={format.accept} bind:files />
 
-            <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload">
+            <label class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-center" for="upload-{propertyId}">
                 <IconCloudUpload font-size={32} />
                 <span class="flex flex-col">
                     <span class="hover:cursor-pointer">
@@ -143,7 +150,9 @@
                             >{$LL.mapEditor.properties.openFile.uploadFile.chooseFile()}</span
                         >
                     </span>
-                    <span class="text-xs m-0 opacity-50">{filesUploadFormat.join(", ")}</span>
+                    <span class="text-xs m-0 opacity-50"
+                        >{acceptedFormats.map((accepted) => accepted.replace(/^.*[./]/, "")).join(", ")}</span
+                    >
                     {#if errorOnFile}
                         <span class="text-xx text-red-500">{errorOnFile}</span>
                     {/if}
@@ -152,7 +161,7 @@
         </div>
     {:else}
         <div class="flex flex-row gap-2 min-w-full p-2 m-0 items-center justify-between">
-            <div>{property.name}</div>
+            <div>{name}</div>
             <ButtonClose
                 dataTestId="closeFileUpload"
                 bgColor="bg-white/10"
@@ -162,7 +171,6 @@
                 onclick={() => {
                     files = undefined;
                     ondeleteFile?.();
-                    onchange?.();
                 }}
             />
         </div>

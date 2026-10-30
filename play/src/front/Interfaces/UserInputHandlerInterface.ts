@@ -16,6 +16,10 @@ export interface UserInputHandlerInterface {
     handlePointerUpEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
     handlePointerDownEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
     handlePointerMoveEvent: (pointer: Pointer, gameObjects: GameObject[]) => void;
+    handlePointerOutEvent?: () => void;
+    handlePointerCancelEvent?: () => void;
+    /** A pinch step: `centre` is between the fingers, `pan` is how far that point moved (in game pixels). */
+    handlePinch?: (zoomFactor: number, centre: { x: number; y: number }, pan: { x: number; y: number }) => void;
 
     handleKeyUpEvent: (event: KeyboardEvent) => KeyboardEvent;
     handleKeyDownEvent: (event: KeyboardEvent) => KeyboardEvent;

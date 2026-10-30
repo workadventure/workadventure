@@ -19,18 +19,6 @@ async function joinSameProximityChat(adminPage: Page, memberPage: Page) {
     });
 }
 
-async function openProximityRoom(page: Page) {
-    await ChatUtils.openChat(page);
-
-    const roomName = page.getByTestId("roomName");
-    if ((await roomName.count()) > 0 && (await roomName.textContent())?.trim() === "Proximity Chat") {
-        return;
-    }
-
-    await page.getByTestId("toggleDisplayProximityChat").click();
-    await expect(roomName).toHaveText("Proximity Chat", { timeout: 60_000 });
-}
-
 async function createPoll(
     page: Page,
     options: {
@@ -119,8 +107,8 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
         await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
         await joinSameProximityChat(adminPage, memberPage);
-        await openProximityRoom(adminPage);
-        await openProximityRoom(memberPage);
+        await ChatUtils.openProximityRoom(adminPage);
+        await ChatUtils.openProximityRoom(memberPage);
 
         // When Admin1 creates a poll and both participants vote.
         await createPoll(adminPage, {
@@ -146,10 +134,12 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await expect(memberPage.getByTestId("deletePollButton")).toBeHidden();
 
         await adminPage.getByTestId("endPollButton").click();
+        await adminPage.getByTestId("confirmDialogConfirm").click();
         await expect(adminPage.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(memberPage.getByTestId("pollClosedNotice")).toBeVisible({ timeout: 60_000 });
 
         await adminPage.getByTestId("deletePollButton").click();
+        await adminPage.getByTestId("confirmDialogConfirm").click();
         await expect(adminPage.getByTestId("pollQuestion")).toBeHidden();
         await expect(memberPage.getByTestId("pollQuestion")).toBeHidden({ timeout: 60_000 });
     });
@@ -159,8 +149,8 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await using adminPage = await getPage(browser, "Admin1", Map.url("empty"));
         await using memberPage = await getPage(browser, "Member1", Map.url("empty"));
         await joinSameProximityChat(adminPage, memberPage);
-        await openProximityRoom(adminPage);
-        await openProximityRoom(memberPage);
+        await ChatUtils.openProximityRoom(adminPage);
+        await ChatUtils.openProximityRoom(memberPage);
 
         // When Admin1 creates a closed poll and Member1 votes.
         await createPoll(adminPage, {
@@ -180,6 +170,7 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await expect(memberPage.getByTestId("pollCard")).not.toContainText("1 (100%)");
 
         await adminPage.getByTestId("endPollButton").click();
+        await adminPage.getByTestId("confirmDialogConfirm").click();
         await expect(adminPage.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(memberPage.getByTestId("pollClosedNotice")).toBeVisible({ timeout: 60_000 });
         await expect(adminPage.getByTestId("pollCard")).toContainText("1 (100%)");
@@ -206,9 +197,9 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
                 timeout: 60_000,
             },
         );
-        await openProximityRoom(memberPage);
-        await openProximityRoom(voterPage);
-        await openProximityRoom(adminPage);
+        await ChatUtils.openProximityRoom(memberPage);
+        await ChatUtils.openProximityRoom(voterPage);
+        await ChatUtils.openProximityRoom(adminPage);
 
         // When Member1 asks a question from the composer shortcut.
         const question = "Can we share the recording after the session?";

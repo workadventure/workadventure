@@ -33,6 +33,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
         await page.getByTestId("createRoomButton").click();
+        await ChatUtils.backToRoomListAfterCreation(page, publicChatRoomName);
 
         await expect(page.getByText(publicChatRoomName)).toBeAttached();
 
@@ -67,6 +68,7 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
         await page.getByTestId("createRoomButton").click();
+        await ChatUtils.backToRoomListAfterCreation(page, publicChatRoomName);
 
         await matrixApi.overrideRateLimitForUser("@john.doe:matrix.workadventure.localhost");
 
@@ -94,12 +96,15 @@ test.describe("chat moderation @matrix @nowebkit", () => {
             .click();
 
         await page.getByTestId("createRoomButton").click();
-        await page.getByTestId("inviteParticipantsModalContent").locator(".clear-select").click();
+        // Those invited leave the selection
+        await expect(page.getByTestId("inviteParticipantsModalContent").locator(".clear-select")).toBeHidden();
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-kickButton")).toBeAttached();
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-banButton")).toBeAttached();
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Invited");
 
         await page.getByTestId("@admin:matrix.workadventure.localhost-banButton").click();
+        // Banning asks first.
+        await page.getByTestId("confirmDialogConfirm").click();
 
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-membership")).toHaveText("Banned");
         await expect(page.getByTestId("@admin:matrix.workadventure.localhost-unbanButton")).toBeAttached();

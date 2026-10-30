@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Powěsć pósłać",
     participantInviteUser: "Wužiwarja přeprosyć",
     participantExitFullscreen: "Połny wobraz skónčić",
+    participantShowList: "Lisćinu wobdźělnikow pokazać",
+    participantHideList: "Lisćinu wobdźělnikow schować",
     profil: "Waše mjeno wobdźěłać",
-    startScreenSharing: "Dźělenje wobrazowki startować",
-    stopScreenSharing: "Dźělenje wobrazowki zastajić",
-    screenSharingMode: "Modus dźělenja wobrazowki",
     calendar: "Kalender",
     todoList: "Lisćina nadawkow",
     woka: "Waš avatar přiměrić",
     companion: "Towaršiće přidać",
-    test: "Moje nastajenja testować",
     editCamMic: "Kameru / mikrofon wobdźěłać",
     allSettings: "Wšě nastajenja",
     installPwa: "Web-App instalować",
@@ -32,33 +30,29 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Waša kamera je deaktiwowana",
         activate: "Wašu kameru aktiwěrować",
-        noDevices: "Žane kamerowe graty namakane",
-        setBackground: "Pozadk nastajić",
-        blurEffects: "Rozmazanske efekty",
-        disableBackgroundEffects: "Pozadkowe efekty deaktiwěrować",
-        close: "Začinić",
     },
     microphone: {
         disabled: "Waš mikrofon je deaktiwowany",
         activate: "Waš mikrofon aktiwěrować",
-        noDevices: "Žane mikrofonowe graty namakane",
         noSoundWarning:
             "Žadyn zwuk z wašeho mikrofona namakany. Móže problem być; spytajće mikrofon w nastajenjach změnić.",
-        noSoundWarningPressEnter: "Žadyn zwuk z wašeho mikrofona namakany. Tłóčće Enter, zo byšte nastajenja wočinili.",
         advancedNoiseReduction: "Rozšěrjene potłóčowanje šuma",
+        loudEnvironmentWarning: "Na wašim mikrofonje je so trajny pozadkowy šum zwěsćił.",
+        enableNoiseSuppression: "Potłóčowanje šuma zmóžnić",
         noiseSuppressionInitializing: "Swójske potłóčowanje šuma so inicializuje...",
         noiseSuppressionUnsupported: "Tutón wobhladowak njemóže swójske potłóčowanje šuma wuwjesć.",
         noiseSuppressionError:
             "Swójske potłóčowanje šuma njeje so poradźiło. Wužije so natiwne potłóčowanje šuma wobhladowaka.",
+        noiseSuppressionActive: "Aktiwne",
         openSettings: "Nastajenja wočinić",
         ignore: "Ignorować",
     },
     speaker: {
         disabled: "Waš wótřerěčak je deaktiwowany",
-        activate: "Waš wótřerěčak aktiwěrować",
+        test: "Awdijowu wudaću testować",
         noDevices: "Žane wótřerěčakowe graty namakane",
         noDevicesDesc:
-            "Waš wobhladowak naliči žanu wuběrabnu awdijowu wudaću. Někotre wobhladowaki to wobmjezuja (na př. Safari). Spytajće druhi wobhladowak, zaso zwjazajće fejšniki abo wótřerěčaki, přepruwujće systemowe awdijowe nastajenja a konfiguraciju kompjutra (datowy škit, graty).",
+            "Waš wobhladowak naliči žanu wuběrabnu awdijowu wudaću. Někotre wobhladowaki to wobmjezuja. Spytajće druhi wobhladowak, zaso zwjazajće fejšniki abo wótřerěčaki, přepruwujće systemowe awdijowe nastajenja a konfiguraciju kompjutra (datowy škit, graty).",
     },
     status: {
         ONLINE: "Online",
@@ -90,6 +84,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Srědna njewjasnosć",
         blurHigh: "Wysoka njewjasnosć",
         images: "Wobrazki",
+        image: "Wobraz pozadka {index}",
     },
     help: {
         chat: {
@@ -160,7 +155,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Wašu wobrazowku dźělić",
-            desc: "Chceće wašu wobrazowku z druhimi wužiwarjemi dźělić? Móžeće! Móžeće wašu wobrazowku wšěm w chatu pokazać, a móžeće wubrać, zo byšće cyłu wobrazowku abo jenož wěsty wokno dźělili.",
+            desc: "Chceće wašu wobrazowku z druhimi wužiwarjemi dźělić? Móžeće! Móžeće wašu wobrazowku ludźom we wašej bublinje abo wašej wobdźělnej rumnosći pokazać, a móžeće wubrać, zo byšće cyłu wobrazowku abo jenož wěsty wokno dźělili.",
         },
         apps: {
             title: "Třeće nałoženja",
@@ -170,19 +165,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Lisćina rumow",
             desc: "Přepytajće lisćinu rumow, zo byšće widźeli, štó je přitomny, a přidajće so z jednym klikom rozmołwje.",
         },
-        calendar: {
-            title: "Kalender",
-            desc: "Hlejće swoje přichodne zetkanja a přidajće so jim direktnje z WorkAdventure.",
-        },
-        todolist: {
-            title: "Lisćina nadawkow",
-            desc: "Rjadujće swoje nadawki dnja, bjezto zo byšće swój dźěłowy rum wopušćili.",
-        },
         pictureInPicture: {
             title: "Wobraz we wobrazu",
-            descDisabled:
-                "Bohužel tuta funkcija njeje na wašim gratu k dispoziciji ❌. Prošu spytajće druhi grat abo wobhladowak wužiwać, na přikład Chrome abo Edge, zo byšće přistup k tutej funkciji dóstał.",
-            desc: "Móžeće funkciju wobraz we wobrazu wužiwać, zo byšće widejo abo prezentaciju woglědowali, mjeztym zo sće w rozmołwje. Klikńće jenož na symbol wobraz we wobrazu a wužiwajće swój wobsah.",
+            desc: "Pokazuje wideja wašeje rozmołwy w małym pławacym woknje, zo byšće ludźi, z kotrymiž rěčiće, dale widźał, mjeztym zo w druhim rajtarku abo druhim nałoženju dźěłaće.",
         },
         videoNotSupported: "Waš wobhladowak wideo-tag njepodpěruje.",
     },

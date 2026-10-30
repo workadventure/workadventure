@@ -6,8 +6,6 @@ const video: DeepPartial<Translation["video"]> = {
     no_video_stream_received: "未收到视频流。",
     user_is_muted: "{name} 已静音。",
     reduce: "缩小",
-    toggle_fullscreen: "切换全屏",
-    exit_fullscreen: "退出全屏",
     connecting: "连接中...",
     reconnecting: "重新连接中...",
     persistent_connection_issue: "重新连接中... 连接不稳定...",

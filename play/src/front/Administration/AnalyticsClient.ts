@@ -132,7 +132,10 @@ class AnalyticsClient {
         // the number of meetings: PostHog counts the action, not where it happened.
         const postHogKey = postHogEventKey(eventName, given);
         if (postHogKey) {
-            this.posthog?.capture(postHogKey, given);
+            // PostHog is not gated by the world's consent policy: it never gets another participant's identifier.
+            const postHogProperties: Record<string, unknown> = { ...given };
+            delete postHogProperties.remoteSpaceUserId;
+            this.posthog?.capture(postHogKey, postHogProperties);
         }
 
         if (!this.canSendAdminAnalytics()) {

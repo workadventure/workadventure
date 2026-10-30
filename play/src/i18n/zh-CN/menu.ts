@@ -62,19 +62,21 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "使用浏览器内置的噪声抑制。",
             voiceIsolation: "语音隔离",
             voiceIsolationDescription: "可用时使用浏览器和操作系统的语音隔离。",
+            noiseSuppressionEngine: "降噪引擎",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet（新版，全频带语音）",
+            noiseSuppressionEngineDtln: "DTLN（旧版引擎）",
         },
         language: {
             title: "语言",
         },
         privacySettings: {
             title: "离开模式设置",
-            explanation:
-                '当WorkAdventure标签页在后台时, 会切换到"离开模式"。在该模式中，你可以选择自动禁用摄像头 和/或 麦克风 直到标签页显示。',
+            explanation: '当你切换到其他窗口或标签页时，WorkAdventure 会切换到"离开模式"（对话或直播期间除外）。',
             cameraToggle: '在"离开模式"中保持摄像头活动',
             microphoneToggle: '在"离开模式"中保持麦克风活动',
         },
         save: "保存",
-        otherSettings: "所有设置",
+        otherSettings: "其他设置",
         fullscreen: "全屏",
         notifications: "通知",
         enablePictureInPicture: "启用画中画",
@@ -143,8 +145,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "您的 Matrix ID",
-        settings: "设置",
         resetKeyStorageUpButtonLabel: "重置您的密钥存储",
         resetKeyStorageConfirmationModal: {
             title: "密钥存储重置确认",
@@ -162,7 +162,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "全局消息",
         contact: "联系",
         report: "报告问题",
-        chat: "聊天",
         help: "帮助和教程",
         contextualActions: "上下文操作",
         shortcuts: "快捷键",

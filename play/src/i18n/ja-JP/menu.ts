@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "ブラウザー内蔵のノイズ抑制を使用します。",
             voiceIsolation: "声の分離",
             voiceIsolationDescription: "利用できる場合、ブラウザーと OS の声の分離を使用します。",
+            noiseSuppressionEngine: "ノイズ抑制エンジン",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet（新規、全帯域の音声）",
+            noiseSuppressionEngineDtln: "DTLN（以前のエンジン）",
         },
         language: {
             title: "言語",
@@ -71,7 +74,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "離席モード",
             explanation:
-                "ブラウザの WorkAdventure タブが表示されていない間、WorkAdventure は離席モードに切り替わります。",
+                "別のウィンドウやタブに切り替えると、WorkAdventure は離席モードに切り替わります（会話中や配信中を除く）。",
             cameraToggle: "離席モードでカメラをアクティブに保つ",
             microphoneToggle: "離席モードでマイクをアクティブに保つ",
         },
@@ -146,8 +149,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "あなたの Matrix ID",
-        settings: "設定",
         resetKeyStorageUpButtonLabel: "キーストレージをリセット",
         resetKeyStorageConfirmationModal: {
             title: "キーストレージリセットの確認",
@@ -165,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "グローバルメッセージ",
         contact: "コンタクト",
         report: "問題の報告",
-        chat: "チャット",
         help: "ヘルプとチュートリアル",
         contextualActions: "コンテキストアクション",
         shortcuts: "ショートカット",

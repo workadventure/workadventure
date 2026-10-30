@@ -10,8 +10,8 @@ const say: DeepPartial<Translation["say"]> = {
     button: "Tạo bong bóng",
     tooltip: {
         description: {
-            say: "Hiển thị bong bóng thoại phía trên nhân vật của bạn. Mọi người trên bản đồ đều thấy, và nó hiển thị trong 5 giây.",
-            think: "Hiển thị bong bóng suy nghĩ phía trên nhân vật của bạn. Mọi người chơi trên bản đồ đều thấy, và nó hiển thị chừng nào bạn chưa di chuyển.",
+            say: "Hiển thị bong bóng thoại phía trên nhân vật của bạn. Bất kỳ ai nhìn thấy nhân vật của bạn đều thấy, và nó hiển thị trong 5 giây.",
+            think: "Hiển thị bong bóng suy nghĩ phía trên nhân vật của bạn. Bất kỳ ai nhìn thấy nhân vật của bạn đều thấy, và nó hiển thị chừng nào bạn chưa di chuyển.",
         },
     },
 };

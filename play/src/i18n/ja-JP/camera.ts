@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "カメラを編集",
-    editMic: "マイクを編集",
     editSpeaker: "オーディオ出力を編集",
     active: "アクティブ",
     disabled: "無効",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "カメラとマイクへのアクセスが必要です",
         cameraTitle: "カメラへのアクセスが必要です",
         microphoneTitle: "マイクへのアクセスが必要です",
-        permissionDenied: "拒否されました。",
         cameraPermissionDenied: "カメラの権限が拒否されました",
         microphonePermissionDenied: "マイクの権限が拒否されました",
         cameraMicrophonePermissionDenied: "カメラとマイクの権限が拒否されました",
@@ -85,7 +83,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "サイレントゾーン",
         silentZoneDesc:
-            "あなたはサイレントゾーンにいます。一緒にいる人だけを見たり聞いたりできます。部屋の他の人を見たり聞いたりすることはできません。",
+            "あなたはサイレントゾーンにいます。ここでは誰もあなたと話すことができず、マイクとカメラはオフになっています。",
         nameTag: "あなた",
         loading: "カメラを読み込んでいます...",
     },
@@ -94,7 +92,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "その他のアクション",
         closeMenu: "メニューを閉じる",
         senPrivateMessage: "プライベートメッセージを送る (近日公開)",
-        kickoffUser: "ユーザーを蹴とばす",
         giveFloor: "発言を許可する",
         revokeFloor: "発言を取り消す",
         muteAudioUser: "音声をミュート",
@@ -104,14 +101,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "ビデオをミュートするよう依頼",
         muteVideoEveryBody: "全員のビデオをミュート",
         blockOrReportUser: "ユーザーをブロックまたは報告",
-    },
-    backgroundEffects: {
-        imageTitle: "背景画像",
-        blurTitle: "背景ぼかし",
-        resetTitle: "背景効果を無効化",
-        title: "背景効果",
-        close: "閉じる",
-        blurAmount: "ぼかしの量",
     },
 };
 

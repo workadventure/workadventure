@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} quiere discutir contigo",
     message: "{name} te envía un mensaje",
-    chatRoom: "en la sala de chat",
+    mention: "{name} te ha mencionado",
     askToMuteMicrophone: "¿Puedo silenciar tu micrófono?",
     askToMuteCamera: "¿Puedo silenciar tu cámara?",
     microphoneMuted: "Tu micrófono ha sido silenciado por un moderador",
@@ -14,11 +14,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "Ya no tienes la palabra",
     floorGivenBack: "Has devuelto la palabra",
     handLowered: "Un moderador ha bajado tu mano",
+    removedFromConversation: "Un moderador te ha retirado de la conversación.",
     actionFailed: "No se ha podido completar esta acción",
-    notificationSentToMuteMicrophone: "Se ha enviado una notificación a {name} para silenciar su micrófono",
-    notificationSentToMuteCamera: "Se ha enviado una notificación a {name} para silenciar su cámara",
     announcement: "Anuncio",
-    open: "Abrir",
     help: {
         title: "Acceso a las notificaciones denegado",
         permissionDenied: "Permiso denegado",
@@ -29,9 +27,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Actualizar",
         continue: "Continuar sin notificaciones",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Permitir las notificaciones desde la barra de direcciones en Chrome",
     },
     addNewTag: 'añadir un nuevo tag: "{tag}"',
     screenSharingError: "No se puede iniciar el compartir de pantalla",

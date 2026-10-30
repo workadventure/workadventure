@@ -4,10 +4,7 @@ import type { DeepPartial } from "../DeepPartial";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Terug naar communicatie selecteren",
-        selectCommunication: "Selecteer communicatie",
         title: "Globale communicatie",
-        selectCamera: "Kies een camera 📹",
-        selectMicrophone: "Kies een microfoon 🎙️",
         liveMessage: {
             startMegaphone: "Start megaphone",
             stopMegaphone: "Stop megaphone",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Start live bericht",
             and: "en",
             toAll: "naar alle deelnemers",
-            confirm: "Bevestigen",
-            cancel: "Annuleren",
             notice: `
             Het live bericht of "Megaphone" stelt je in staat om een live bericht te verzenden met je camera en microfoon naar alle mensen die zijn verbonden in de kamer of de wereld.
 

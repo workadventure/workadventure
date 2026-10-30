@@ -87,7 +87,8 @@ spec:
               port: http
           readinessProbe:
             httpGet:
-              path: /ping
+              # /ready waits for the index.html template of the front container
+              path: {{ if .Values.front.enabled }}/ready{{ else }}/ping{{ end }}
               port: http
           resources:
             {{- toYaml .Values.play.resources | nindent 12 }}

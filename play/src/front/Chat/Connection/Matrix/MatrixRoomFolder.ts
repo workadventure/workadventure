@@ -1,4 +1,5 @@
 import type { Room } from "matrix-js-sdk";
+import type { IHierarchyRoom } from "matrix-js-sdk/lib/@types/spaces";
 import { EventType, EventTimeline } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, writable } from "svelte/store";
@@ -9,7 +10,8 @@ import { MapStore } from "@workadventure/store-utils";
 import { Deferred } from "@workadventure/shared-utils";
 import { matrixRateLimiter } from "../../Services/MatrixRateLimiter";
 import { ignoredSuggestedRoomIdsStore } from "../../Stores/ChatStore";
-import type { RoomFolder } from "../ChatConnection";
+import type { JoinableRoomInfo, RoomFolder } from "../ChatConnection";
+import { summarizeUnreadCounts, type UnreadConversationCount, type UnreadSummary } from "../../Components/unreadCount";
 import { retargetSelectedRoomIfReplaced } from "../../Stores/SelectRoomStore";
 import { MatrixChatRoom } from "./MatrixChatRoom";
 import { hasValidViaEntries } from "./MatrixSpaceRelations";
@@ -24,11 +26,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
     readonly rooms: Readable<MatrixChatRoom[]>;
     readonly invitations: Readable<MatrixChatRoom[]>;
     readonly folders: Readable<RoomFolder[]>;
-    readonly availableRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
+    readonly availableRooms: Writable<JoinableRoomInfo[]> = writable([]);
     readonly hasChildRoomsError: Writable<boolean> = writable(false);
-    readonly allSuggestedRooms: Writable<{ name: string; id: string; avatarUrl: string }[]> = writable([]);
-    readonly suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
-    readonly joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    readonly allSuggestedRooms: Writable<JoinableRoomInfo[]> = writable([]);
+    readonly suggestedRooms: Readable<JoinableRoomInfo[]>;
+    readonly joinableRooms: Readable<JoinableRoomInfo[]>;
     readonly joinableRoomsLoading: Writable<boolean> = writable(false);
 
     private loadRoomsAndFolderPromise = new Deferred<void>();
@@ -271,55 +273,26 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             const { rooms: suggestedRoomsData } = await matrixRateLimiter.getRoomHierarchy(this.room, 100, 2, true);
             const localRooms = this.room.client.getRooms();
 
-            const suggestedRooms: { name: string; id: string; avatarUrl: string }[] = [];
-            const availableRooms: { name: string; id: string; avatarUrl: string }[] = [];
+            const suggestedRooms: JoinableRoomInfo[] = [];
+            const availableRooms: JoinableRoomInfo[] = [];
 
             suggestedRoomsData.forEach((room) => {
-                const roomId = room.room_id;
-                if (this.id === roomId) return;
-
-                const chatRoom = localRooms.find((r) => r.roomId === roomId);
-
-                if (!chatRoom) {
-                    suggestedRooms.push({
-                        name: room.name ?? "",
-                        id: roomId,
-                        avatarUrl: "",
-                    });
-                    return;
-                }
-
-                const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
-                suggestedRooms.push({
-                    name: room.name ?? "",
-                    id: roomId,
-                    avatarUrl,
-                });
+                if (this.id === room.room_id) return;
+                suggestedRooms.push(
+                    this.toJoinableRoomInfo(
+                        room,
+                        localRooms.find((r) => r.roomId === room.room_id),
+                    ),
+                );
             });
 
             allRooms.forEach((room) => {
-                const roomId = room.room_id;
-                if (this.id === roomId) return;
+                if (this.id === room.room_id) return;
 
-                const chatRoom = localRooms.find((r) => r.roomId === roomId);
-                if (!chatRoom) {
-                    availableRooms.push({
-                        name: room.name ?? "",
-                        id: roomId,
-                        avatarUrl: "",
-                    });
-                    return;
-                }
-
-                const membership = chatRoom.getMyMembership();
-
+                const chatRoom = localRooms.find((r) => r.roomId === room.room_id);
+                const membership = chatRoom?.getMyMembership();
                 if (membership !== "join" && membership !== "invite" && membership !== "ban") {
-                    const avatarUrl = chatRoom.getAvatarUrl(chatRoom.client.baseUrl, 24, 24, "scale") ?? "";
-                    availableRooms.push({
-                        name: room.name ?? "",
-                        id: roomId,
-                        avatarUrl,
-                    });
+                    availableRooms.push(this.toJoinableRoomInfo(room, chatRoom));
                 }
             });
 
@@ -331,9 +304,24 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             }
         } catch (error) {
             console.error("Failed to refresh rooms:", error);
-            this.hasChildRoomsError.set(true);
             Sentry.captureException(error);
+            // Rethrown so that ensureJoinableRoomsLoaded does not mark the rooms as loaded and a retry runs again.
+            throw error;
         }
+    }
+
+    private toJoinableRoomInfo(room: IHierarchyRoom, chatRoom: Room | undefined): JoinableRoomInfo {
+        const client = this.room.client;
+        return {
+            name: room.name ?? "",
+            id: room.room_id,
+            avatarUrl:
+                chatRoom?.getAvatarUrl(client.baseUrl, 24, 24, "scale") ??
+                (room.avatar_url ? client.mxcUrlToHttp(room.avatar_url, 24, 24, "scale") : null) ??
+                "",
+            topic: room.topic,
+            memberCount: room.num_joined_members,
+        };
     }
 
     async ensureJoinableRoomsLoaded(): Promise<void> {
@@ -345,10 +333,11 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
         }
 
         this.joinableRoomsLoading.set(true);
-        this.hasChildRoomsError.set(false);
+        // The error stays shown during a retry, until a load succeeds.
         this.joinableRoomsLoadingPromise = this.refreshRooms()
             .then(() => {
                 this.joinableRoomsLoaded = true;
+                this.hasChildRoomsError.set(false);
             })
             .catch((error: unknown) => {
                 this.hasChildRoomsError.set(true);
@@ -374,6 +363,45 @@ export class MatrixRoomFolder extends MatrixChatRoom implements RoomFolder {
             return;
         }
         this.getChildren();
+    }
+
+    // Reads the space hierarchy straight from the Matrix SDK: a collapsed folder has not loaded its children,
+    // and creating them only to count unread messages would undo that laziness.
+    public getUnreadSummary(): UnreadSummary {
+        const client = this.room.client;
+        const mutedRoomIds = new Set(client.pushRules?.global.override?.map((rule) => rule.rule_id) ?? []);
+        const visitedSpaceIds = new Set<string>();
+        const conversations: UnreadConversationCount[] = [];
+        const visit = (space: Room) => {
+            if (visitedSpaceIds.has(space.roomId)) {
+                return;
+            }
+            visitedSpaceIds.add(space.roomId);
+            const childEvents =
+                space.getLiveTimeline()?.getState(EventTimeline.FORWARDS)?.getStateEvents(EventType.SpaceChild) ?? [];
+            for (const event of childEvents) {
+                const stateKey = event.getStateKey();
+                if (!stateKey || !hasValidViaEntries(event.getContent())) {
+                    continue;
+                }
+                const history = client.getRoomUpgradeHistory(stateKey);
+                const child = history[history.length - 1];
+                if (!child || child.getMyMembership() !== KnownMembership.Join) {
+                    continue;
+                }
+                if (child.isSpaceRoom()) {
+                    visit(child);
+                } else {
+                    conversations.push({
+                        id: child.roomId,
+                        count: child.getUnreadNotificationCount(),
+                        muted: mutedRoomIds.has(child.roomId),
+                    });
+                }
+            }
+        };
+        visit(this.room);
+        return summarizeUnreadCounts(conversations);
     }
 
     public hasLoadedChildren(): boolean {

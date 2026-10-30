@@ -12,8 +12,8 @@ export default {
         title: "移動する",
         descriptionDesktop:
             "矢印キーまたはWASDでキャラクターを移動できます。右クリックでも移動できます。今すぐ移動してみてください！",
-        descriptionMobile:
-            "ジョイスティックまたはマップをタップしてキャラクターを移動します。今すぐ移動してみてください！",
+        descriptionTouch:
+            "マップをタップするとその場所へ移動し、ドラッグすると周りを見渡せます。今すぐ移動してみてください！",
         next: "次へ",
     },
     communication: {

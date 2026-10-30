@@ -2,17 +2,16 @@ import { ImageSegmenter, type MPMask } from "@mediapipe/tasks-vision";
 import { ResegmentController } from "./ResegmentController";
 import { TasksVisionCompositor } from "./TasksVisionCompositor";
 import {
-    SEGMENTER_MODEL_URLS,
-    TASKS_VISION_WORKER_FILESET,
     installTasksVisionModuleFactory,
     selectSegmenterModel,
     type SegmenterModel,
+    type TasksVisionAssetUrls,
 } from "./tasksVisionAssets";
-import type {
-    SerializedWorkerError,
-    TasksVisionWorkerDelegate,
-    TasksVisionWorkerRequest,
-    TasksVisionWorkerResponse,
+import {
+    serializeError,
+    type TasksVisionWorkerDelegate,
+    type TasksVisionWorkerRequest,
+    type TasksVisionWorkerResponse,
 } from "./MediaPipeTasksVisionWorkerProtocol";
 import type { BackgroundConfig } from "./createBackgroundTransformer";
 
@@ -26,13 +25,6 @@ type FrameSource = ImageBitmap | VideoFrame;
 export type PostToMainThread = (message: TasksVisionWorkerResponse, transfer?: Transferable[]) => void;
 
 class UnsupportedError extends Error {}
-
-function serializeError(error: unknown): SerializedWorkerError {
-    if (error instanceof Error) {
-        return { name: error.name, message: error.message, stack: error.stack };
-    }
-    return { name: "Error", message: String(error) };
-}
 
 function closeQuietly(name: string, resource: { close(): void } | null): void {
     try {
@@ -77,6 +69,7 @@ export class MediaPipeTasksVisionWorkerRuntime {
     private fatal = false;
     private activeStream: { streamId: number; abortController: AbortController } | null = null;
     private messageQueue: Promise<void> = Promise.resolve();
+    private assets: TasksVisionAssetUrls | null = null;
 
     constructor(private readonly post: PostToMainThread) {}
 
@@ -94,7 +87,7 @@ export class MediaPipeTasksVisionWorkerRuntime {
         this.messageQueue = this.messageQueue
             .then(async () => {
                 if (message.type === "initialize") {
-                    await this.initialize(message.config);
+                    await this.initialize(message.config, message.assets);
                 } else if (message.type === "update-config") {
                     await this.updateConfig(message.requestId, message.config);
                 } else {
@@ -106,8 +99,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
             });
     }
 
-    private async initialize(config: BackgroundConfig): Promise<void> {
+    private async initialize(config: BackgroundConfig, assets: TasksVisionAssetUrls): Promise<void> {
         this.config = { ...config };
+        this.assets = assets;
         try {
             const delegate = await this.initializeMediaPipe();
             await this.updateBackgroundImage();
@@ -151,14 +145,21 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (!this.glCanvas) {
             throw new Error("The WebGL canvas is unavailable");
         }
-        await installTasksVisionModuleFactory();
-        return ImageSegmenter.createFromOptions(TASKS_VISION_WORKER_FILESET, {
-            baseOptions: { modelAssetPath: SEGMENTER_MODEL_URLS[model], delegate: this.delegate },
-            canvas: this.glCanvas,
-            runningMode: "VIDEO",
-            outputCategoryMask: false,
-            outputConfidenceMasks: true,
-        });
+        const assets = this.assets;
+        if (!assets) {
+            throw new Error("The asset URLs were not received");
+        }
+        await installTasksVisionModuleFactory(assets.wasmLoaderPath);
+        return ImageSegmenter.createFromOptions(
+            { wasmLoaderPath: assets.wasmLoaderPath, wasmBinaryPath: assets.wasmBinaryPath },
+            {
+                baseOptions: { modelAssetPath: assets.models[model], delegate: this.delegate },
+                canvas: this.glCanvas,
+                runningMode: "VIDEO",
+                outputCategoryMask: false,
+                outputConfidenceMasks: true,
+            },
+        );
     }
 
     /**
@@ -259,7 +260,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
                 if (abortController.signal.aborted) {
                     return;
                 }
-                this.reportFatal(new Error("Background video pipe failed", { cause: error }));
+                // Not fatal: the segmenter is fine, and the main thread may have stopped this pipe's generator
+                // before its "stop-stream" got here. It knows whether the pipe was still in use.
+                this.post({ type: "stream-failed", streamId, error: serializeError(error) });
             })
             .finally(() => {
                 if (this.activeStream?.streamId === streamId) {
@@ -446,11 +449,13 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (this.recovery || this.fatal) {
             return;
         }
-        console.error(
-            `[MediaPipe Tasks Vision Worker] Frame processing failed (webGlContextLost=${this.gl?.isContextLost() ?? true}):`,
-            error,
+        // Root of the cause chain reported if recovery fails.
+        const renderError = new Error(
+            `Frame processing failed (webGlContextLost=${this.gl?.isContextLost() ?? true})`,
+            { cause: error },
         );
-        this.recovery = this.recover()
+        console.error(`[MediaPipe Tasks Vision Worker] ${renderError.message}:`, error);
+        this.recovery = this.recover(renderError)
             .catch((recoveryError: unknown) => {
                 this.reportFatal(new Error("MediaPipe Tasks Vision recovery failed", { cause: recoveryError }));
             })
@@ -459,9 +464,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
             });
     }
 
-    private async recover(): Promise<void> {
+    /** `cause` is what made this attempt necessary: the failed frame, or the previous attempt. */
+    private async recover(cause: Error): Promise<void> {
         if (this.consecutiveRecoveryAttempts >= MAX_CONSECUTIVE_RECOVERY_ATTEMPTS) {
-            throw new Error("MediaPipe recovery attempts exhausted");
+            throw new Error("MediaPipe recovery attempts exhausted", { cause });
         }
         this.consecutiveRecoveryAttempts++;
         this.successfulFramesSinceRecovery = 0;
@@ -471,7 +477,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
             await this.updateBackgroundImage();
         } catch (error) {
             console.error("[MediaPipe Tasks Vision Worker] Recovery attempt failed:", error);
-            return this.recover();
+            return this.recover(
+                new Error(`Recovery attempt ${this.consecutiveRecoveryAttempts} failed: ${String(error)}`, { cause }),
+            );
         }
         console.info(
             `[MediaPipe Tasks Vision Worker] Recovered after attempt ${this.consecutiveRecoveryAttempts}/${MAX_CONSECUTIVE_RECOVERY_ATTEMPTS}`,

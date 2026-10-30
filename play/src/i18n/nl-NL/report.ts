@@ -32,8 +32,16 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "Deze persoon niet meer zien en horen. Alleen voor jou, en omkeerbaar.",
             report: "De beheerders waarschuwen.",
+            remove: "Uit dit gesprek halen. De persoon blijft op de kaart.",
             kick: "Nu verbinding verbreken. De persoon kan terugkomen.",
             ban: "Definitief verbinding verbreken.",
+        },
+        remove: {
+            title: "Uit gesprek halen",
+            content:
+                "{userName} verlaat dit gesprek meteen. Als deze persoon live uitzendt, stopt die uitzending. De persoon blijft op de kaart.",
+            submit: "Uit gesprek halen",
+            confirmTitle: "{userName} uit het gesprek halen",
         },
         kick: {
             title: "Verwijderen",

@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "Gửi tin nhắn",
     participantInviteUser: "Mời người dùng",
     participantExitFullscreen: "Thoát toàn màn hình",
+    participantShowList: "Hiện danh sách người tham gia",
+    participantHideList: "Ẩn danh sách người tham gia",
     profil: "Sửa tên của bạn",
-    startScreenSharing: "Bắt đầu chia sẻ màn hình",
-    stopScreenSharing: "Dừng chia sẻ màn hình",
-    screenSharingMode: "Chế độ chia sẻ màn hình",
     calendar: "Lịch",
     todoList: "Danh sách việc cần làm",
     woka: "Tùy chỉnh nhân vật của bạn",
     companion: "Thêm thú đồng hành",
-    test: "Kiểm tra cài đặt của tôi",
     editCamMic: "Cài đặt cam / mic",
     allSettings: "Tất cả cài đặt",
     installPwa: "Cài đặt ứng dụng web",
@@ -32,32 +30,28 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "Camera của bạn đang tắt",
         activate: "Bật camera của bạn",
-        noDevices: "Không tìm thấy camera",
-        setBackground: "Đặt ảnh nền",
-        blurEffects: "Hiệu ứng làm mờ",
-        disableBackgroundEffects: "Tắt hiệu ứng nền",
-        close: "Đóng",
     },
     microphone: {
         disabled: "Micrô của bạn đang tắt",
         activate: "Bật micrô của bạn",
-        noDevices: "Không tìm thấy micrô",
         noSoundWarning:
             "Không phát hiện âm thanh từ micrô của bạn. Có thể đang có sự cố; hãy thử đổi micrô trong phần cài đặt.",
-        noSoundWarningPressEnter: "Không phát hiện âm thanh từ micrô của bạn. Nhấn Enter để mở cài đặt.",
         advancedNoiseReduction: "Khử tiếng ồn nâng cao",
+        loudEnvironmentWarning: "Đã phát hiện tiếng ồn nền liên tục trên micrô của bạn.",
+        enableNoiseSuppression: "Bật khử tiếng ồn",
         noiseSuppressionInitializing: "Đang khởi tạo bộ khử tiếng ồn tùy chỉnh...",
         noiseSuppressionUnsupported: "Trình duyệt này không chạy được bộ khử tiếng ồn tùy chỉnh.",
         noiseSuppressionError: "Bộ khử tiếng ồn tùy chỉnh gặp lỗi. Chuyển về bộ khử tiếng ồn tích hợp của trình duyệt.",
+        noiseSuppressionActive: "Đang bật",
         openSettings: "Mở cài đặt",
         ignore: "Bỏ qua",
     },
     speaker: {
         disabled: "Loa của bạn đang tắt",
-        activate: "Bật loa của bạn",
+        test: "Kiểm tra đầu ra âm thanh",
         noDevices: "Không tìm thấy thiết bị loa",
         noDevicesDesc:
-            "Trình duyệt của bạn không liệt kê đầu ra âm thanh nào có thể chọn. Một số trình duyệt hạn chế điều này (ví dụ Safari). Hãy thử trình duyệt khác, cắm lại tai nghe hoặc loa, kiểm tra cài đặt âm thanh hệ thống và cấu hình máy tính của bạn (quyền riêng tư, thiết bị).",
+            "Trình duyệt của bạn không liệt kê đầu ra âm thanh nào có thể chọn. Một số trình duyệt hạn chế điều này. Hãy thử trình duyệt khác, cắm lại tai nghe hoặc loa, kiểm tra cài đặt âm thanh hệ thống và cấu hình máy tính của bạn (quyền riêng tư, thiết bị).",
     },
     status: {
         ONLINE: "Trực tuyến",
@@ -89,6 +83,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "Mờ vừa",
         blurHigh: "Mờ mạnh",
         images: "Hình ảnh",
+        image: "Hình nền {index}",
     },
     help: {
         chat: {
@@ -159,7 +154,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "Chia sẻ màn hình của bạn",
-            desc: "Muốn chia sẻ màn hình với những người dùng khác? Hoàn toàn được! Bạn có thể cho mọi người trong cuộc trò chuyện xem màn hình của mình, và có thể chọn chia sẻ toàn bộ màn hình hoặc chỉ một cửa sổ cụ thể.",
+            desc: "Muốn chia sẻ màn hình với những người dùng khác? Hoàn toàn được! Bạn có thể cho những người trong bong bóng hoặc phòng họp của bạn xem màn hình của mình, và có thể chọn chia sẻ toàn bộ màn hình hoặc chỉ một cửa sổ cụ thể.",
         },
         apps: {
             title: "Ứng dụng bên thứ ba",
@@ -169,19 +164,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Danh sách phòng",
             desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         },
-        calendar: {
-            title: "Lịch",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
-        todolist: {
-            title: "Danh sách việc cần làm",
-            desc: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-        },
         pictureInPicture: {
             title: "Hình trong hình",
-            descDisabled:
-                "Rất tiếc, tính năng này không khả dụng trên thiết bị của bạn ❌. Hãy thử thiết bị hoặc trình duyệt khác, như Chrome hoặc Edge, để dùng tính năng này.",
-            desc: "Bạn có thể dùng chế độ hình trong hình để xem video hoặc bài thuyết trình trong khi đang trò chuyện. Chỉ cần bấm vào biểu tượng hình trong hình và tận hưởng nội dung của bạn.",
+            desc: "Hiển thị video của cuộc trò chuyện trong một cửa sổ nổi nhỏ, để bạn vẫn thấy những người đang nói chuyện cùng khi làm việc ở thẻ hoặc ứng dụng khác.",
         },
         videoNotSupported: "Trình duyệt của bạn không hỗ trợ thẻ video.",
     },

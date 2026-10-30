@@ -5,13 +5,18 @@
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../Stores/ChatStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
+    import { matrixUnreadMessagesCountStore } from "../Stores/UnreadMessagesCountStore";
+    import Alert from "../../Components/UI/Alert.svelte";
+    import Button from "../../Components/UI/Button.svelte";
     import RoomSubFolder from "./RoomFolder.svelte";
     import Room from "./Room/Room.svelte";
     import CreateRoomOrFolderOption from "./Room/CreateRoomOrFolderOption.svelte";
     import ShowMore from "./ShowMore.svelte";
     import RoomInvitation from "./Room/RoomInvitation.svelte";
     import RoomSuggested from "./Room/RoomSuggested.svelte";
-    import { IconChevronUp, IconLoader } from "@wa-icons";
+    import UnreadCount from "./UnreadCount.svelte";
+    import { rowUnreadCount } from "./showMoreUnread";
+    import { IconChevronUp, IconExclamation, IconLoader } from "@wa-icons";
 
     interface Props {
         rootFolder: boolean;
@@ -20,8 +25,17 @@
 
     let { rootFolder, folder }: Props = $props();
 
-    let { name, folders, invitations, rooms, id, suggestedRooms, joinableRooms, joinableRoomsLoading } =
-        $derived(folder);
+    let {
+        name,
+        folders,
+        invitations,
+        rooms,
+        id,
+        suggestedRooms,
+        joinableRooms,
+        joinableRoomsLoading,
+        hasChildRoomsError,
+    } = $derived(folder);
     let isOpen: boolean = $state((() => localUserStore.hasFolderOpened(folder.id) ?? false)());
     let joinableRoomsOpen = $state(false);
     const isFoldersOpen: { [key: string]: boolean } = {};
@@ -44,6 +58,14 @@
 
     let hasSuggestedRooms = $derived($suggestedRooms.length > 0);
 
+    // A shown folder has no summary: its rows carry their own counts.
+    let collapsedUnreadSummary = $derived(isOpen ? undefined : readUnreadSummary($matrixUnreadMessagesCountStore));
+
+    // Takes the Matrix total only so the summary is recomputed whenever an unread counter changes anywhere.
+    function readUnreadSummary(_matrixUnreadTotal: number) {
+        return folder.getUnreadSummary();
+    }
+
     function toggleFolder() {
         isOpen = !isOpen;
         if (isOpen) {
@@ -60,6 +82,10 @@
 
     function loadOpenedFolderContent() {
         folder.ensureChildrenLoaded();
+        loadJoinableRooms();
+    }
+
+    function loadJoinableRooms() {
         folder.ensureJoinableRoomsLoaded().catch((error) => {
             console.error("Failed to load joinable rooms", error);
         });
@@ -72,15 +98,21 @@
     });
 </script>
 
-<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
+<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`} data-roving-group>
     <div
         class={`group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
             rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10 rounded-none" : "rounded-md"
         }`}
         class:mb-2={isOpen || rootFolder}
+        data-roving-row
     >
         <div class="flex items-center space-x-2 grow m-0 p-0">
-            <button class="flex items-center space-x-2 grow m-0 p-0" onclick={toggleFolder}>
+            <button
+                class="flex items-center space-x-2 grow m-0 p-0 focus-visible:ring-2 focus-visible:ring-white/70"
+                data-room-row-button
+                aria-expanded={isOpen}
+                onclick={toggleFolder}
+            >
                 <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                     <span class="truncate">{$name}</span>
                     {#if hasSuggestedRooms}
@@ -94,12 +126,21 @@
                     {/if}
                 </div>
             </button>
+            {#if collapsedUnreadSummary && collapsedUnreadSummary.count > 0}
+                <UnreadCount
+                    count={collapsedUnreadSummary.count}
+                    variant={collapsedUnreadSummary.muted ? "muted" : "default"}
+                    size="sm"
+                />
+            {/if}
             <CreateRoomOrFolderOption {folder} parentID={id} parentName={$name} />
         </div>
 
         <button
             class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
             data-testid={`toggleFolder${$name}`}
+            tabindex="-1"
+            aria-hidden="true"
             onclick={toggleFolder}
         >
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />
@@ -108,6 +149,26 @@
     <div class="flex flex-col">
         {#if isOpen}
             <div class="flex flex-col">
+                {#if $hasChildRoomsError}
+                    <div class="px-2 pb-2" role="alert" data-testid="joinableRoomsError">
+                        <Alert variant="danger" class="w-full">
+                            <div class="flex gap-2 items-center">
+                                <IconExclamation font-size="20" class="shrink-0" />
+                                <span class="grow min-w-0 text-white">{$LL.chat.joinableRoomsError()}</span>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    class="shrink-0"
+                                    dataTestId="joinableRoomsRetry"
+                                    disabled={$joinableRoomsLoading}
+                                    onclick={loadJoinableRooms}
+                                >
+                                    {$LL.chat.connectionErrorRetry()}
+                                </Button>
+                            </div>
+                        </Alert>
+                    </div>
+                {/if}
                 {#if $joinableRoomsLoading || $suggestedRooms.length > 0 || filteredJoinableRooms.length > 0}
                     <div class="mx-2 p-1 bg-secondary/30 rounded-lg mb-4 border border-solid border-secondary/80">
                         <div
@@ -147,7 +208,7 @@
                                         </span>
                                         <ShowMore items={$suggestedRooms} maxNumber={8} idKey="id">
                                             {#snippet children({ item: room })}
-                                                <RoomSuggested roomInformation={room} />
+                                                <RoomSuggested roomInformation={room} suggested />
                                             {/snippet}
                                         </ShowMore>
                                     </div>
@@ -177,7 +238,13 @@
                 {#each Array.from($folders.values()) as folder (folder.id)}
                     <RoomSubFolder {folder} rootFolder={false} />
                 {/each}
-                <ShowMore items={filteredRoom} maxNumber={8} idKey="id" showNothingToDisplayMessage={false}>
+                <ShowMore
+                    items={filteredRoom}
+                    maxNumber={8}
+                    idKey="id"
+                    showNothingToDisplayMessage={false}
+                    getUnreadCount={(room) => rowUnreadCount(room.hasUnreadMessages, room.unreadNotificationCount)}
+                >
                     {#snippet children({ item: room })}
                         <Room {room} />
                     {/snippet}

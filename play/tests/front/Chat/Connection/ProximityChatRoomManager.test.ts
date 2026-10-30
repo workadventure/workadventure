@@ -1,16 +1,21 @@
 import { get, writable } from "svelte/store";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import * as Sentry from "@sentry/svelte";
 import { FilterType } from "@workadventure/messages";
+import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import { loadLocaleAsync } from "../../../../src/i18n/i18n-util.async";
 import { setLocale } from "../../../../src/i18n/i18n-svelte";
 import {
     DEFAULT_PROXIMITY_SPACE_NAME,
     getProximityAreaRoomDisplayName,
     ProximityChatRoomManager,
+    sortRoomsByZoneDepth,
     type ProximityChatRoomKind,
 } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoomManager";
 import type { ProximityChatRoom } from "../../../../src/front/Chat/Connection/Proximity/ProximityChatRoom";
 import type { SpaceInterface } from "../../../../src/front/Space/SpaceInterface";
+
+vi.mock("@sentry/svelte", () => ({ captureException: vi.fn() }));
 
 function createFakeSpace(spaceName: string): SpaceInterface {
     return {
@@ -33,6 +38,7 @@ type FakeProximityChatRoom = Pick<
     | "name"
     | "kind"
     | "isJoined"
+    | "isChatDisabled"
     | "hasUserMessages"
     | "unreadMessagesCount"
     | "unreadNotificationCount"
@@ -52,6 +58,7 @@ function createFakeRoom(spaceName: string, displayName: string, kind: ProximityC
         name,
         kind: writable(kind),
         isJoined: writable(false),
+        isChatDisabled: writable(false),
         hasUserMessages: writable(false),
         unreadMessagesCount: writable(0),
         unreadNotificationCount: writable(0),
@@ -148,7 +155,8 @@ describe("ProximityChatRoomManager", () => {
         await manager.joinSpace("space-a", "Space A", [], false, FilterType.ALL_USERS, false);
         await manager.joinSpace("space-b", "Space B", [], false, FilterType.ALL_USERS, false);
 
-        expect(get(manager.roomsStore).map((room) => room.spaceName)).toEqual(["space-a", "space-b"]);
+        // Zone rooms are listed from the last entered (see sortRoomsByZoneDepth).
+        expect(get(manager.roomsStore).map((room) => room.spaceName)).toEqual(["space-b", "space-a"]);
         expect(roomByName.get("space-a")?.leaveSpace.mock.calls).toHaveLength(0);
         expect(roomByName.get("space-b")?.leaveSpace.mock.calls).toHaveLength(0);
     });
@@ -328,6 +336,23 @@ describe("ProximityChatRoomManager", () => {
         );
     });
 
+    it("does not report an aborted join to Sentry, but reports other failures", async () => {
+        const manager = createManager();
+        manager.getOrCreateRoom("space-a", "Space A");
+        const fakeRoom = roomByName.get("space-a")!;
+        vi.mocked(Sentry.captureException).mockClear();
+
+        fakeRoom.joinSpace.mockRejectedValueOnce(new AbortError());
+        await expect(manager.joinSpace("space-a", "Space A", [])).rejects.toThrow(AbortError);
+        fakeRoom.joinSpace.mockRejectedValueOnce(new DOMException("signal is aborted without reason", "AbortError"));
+        await expect(manager.joinSpace("space-a", "Space A", [])).rejects.toThrow("signal is aborted");
+        expect(Sentry.captureException).not.toHaveBeenCalled();
+
+        fakeRoom.joinSpace.mockRejectedValueOnce(new Error("Space user id not found"));
+        await expect(manager.joinSpace("space-a", "Space A", [])).rejects.toThrow("Space user id not found");
+        expect(Sentry.captureException).toHaveBeenCalledOnce();
+    });
+
     it("resolves legacy targets from selected joined room then most recent joined room", async () => {
         const manager = createManager();
 
@@ -338,5 +363,101 @@ describe("ProximityChatRoomManager", () => {
 
         manager.selectRoom(olderRoom);
         expect(manager.resolveTargetRoom()).toBe(olderRoom);
+    });
+
+    describe("nested zones", () => {
+        const joinZone = (manager: ProximityChatRoomManager, spaceName: string) =>
+            manager.joinSpace(spaceName, spaceName, [], true, FilterType.ALL_USERS, false, undefined, "meeting");
+        const names = (rooms: ProximityChatRoom[]) => rooms.map((room) => room.spaceName);
+
+        it("sorts the bubble first, then joined zones from the last entered, then rooms kept for their history", () => {
+            const room = (spaceName: string, kind: ProximityChatRoomKind, isJoined: boolean) => ({
+                spaceName,
+                kind: writable(kind),
+                isJoined: writable(isJoined),
+            });
+            const rooms = [
+                room("left-zone", "meeting", false),
+                room("building", "meeting", true),
+                room("floor", "listener", true),
+                room(DEFAULT_PROXIMITY_SPACE_NAME, "default", true),
+                room("classroom", "area", true),
+            ];
+            const entryOrder = new Map([
+                ["left-zone", 4],
+                ["building", 1],
+                ["floor", 2],
+                ["classroom", 3],
+            ]);
+
+            expect(sortRoomsByZoneDepth(rooms, entryOrder).map((room) => room.spaceName)).toEqual([
+                DEFAULT_PROXIMITY_SPACE_NAME,
+                "classroom",
+                "floor",
+                "building",
+                "left-zone",
+            ]);
+        });
+
+        it("makes the zone entered last the only active one, and falls back to its parent when it is left", async () => {
+            const manager = createManager();
+            await joinZone(manager, "building");
+            await joinZone(manager, "floor");
+            const classroom = await joinZone(manager, "classroom");
+
+            expect(names(get(manager.roomsStore))).toEqual(["classroom", "floor", "building"]);
+            expect(get(manager.deepestZoneRoomStore)).toBe(classroom);
+            expect(names(get(manager.parentZoneRoomsStore))).toEqual(["floor", "building"]);
+            expect(get(manager.enteredZoneRoomStore)).toBe(classroom);
+
+            await manager.leaveSpace("classroom", true);
+
+            expect(get(manager.deepestZoneRoomStore)?.spaceName).toBe("floor");
+            expect(names(get(manager.parentZoneRoomsStore))).toEqual(["building"]);
+            // Leaving the announced zone removes the banner; walking back out does not announce the parent.
+            expect(get(manager.enteredZoneRoomStore)).toBeUndefined();
+        });
+
+        it("announces the deepest zone even when the joins of zones entered together complete in reverse order", async () => {
+            const manager = createManager();
+            const pendingJoins = new Map<string, ReturnType<typeof deferred<SpaceInterface>>>();
+            for (const spaceName of ["building", "classroom"]) {
+                manager.getOrCreateRoom(spaceName, spaceName, "meeting");
+                const pendingJoin = deferred<SpaceInterface>();
+                roomByName.get(spaceName)!.joinSpace.mockReturnValueOnce(pendingJoin.promise);
+                pendingJoins.set(spaceName, pendingJoin);
+            }
+
+            const buildingJoin = joinZone(manager, "building");
+            const classroomJoin = joinZone(manager, "classroom");
+            pendingJoins.get("classroom")!.resolve(createFakeSpace("classroom"));
+            const classroom = await classroomJoin;
+            pendingJoins.get("building")!.resolve(createFakeSpace("building"));
+            await buildingJoin;
+
+            expect(get(manager.deepestZoneRoomStore)).toBe(classroom);
+            expect(get(manager.enteredZoneRoomStore)).toBe(classroom);
+        });
+
+        it("does not announce a zone whose chat is disabled, and forgets a dismissed announcement", async () => {
+            const manager = createManager();
+            await joinZone(manager, "building");
+            manager.dismissEnteredZoneRoom();
+            expect(get(manager.enteredZoneRoomStore)).toBeUndefined();
+
+            manager.getOrCreateRoom("silent-room", "silent-room", "meeting").isChatDisabled.set(true);
+            await joinZone(manager, "silent-room");
+            expect(get(manager.deepestZoneRoomStore)?.spaceName).toBe("silent-room");
+            expect(get(manager.enteredZoneRoomStore)).toBeUndefined();
+        });
+
+        it("does not treat the bubble as a zone", async () => {
+            const manager = createManager();
+            await joinZone(manager, "building");
+            await manager.joinDefaultSpace("bubble-space", []);
+
+            expect(get(manager.deepestZoneRoomStore)?.spaceName).toBe("building");
+            expect(get(manager.parentZoneRoomsStore)).toEqual([]);
+        });
     });
 });

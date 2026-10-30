@@ -13,26 +13,44 @@ export type VideoCodec = "av1" | "vp9" | "h264" | "vp8";
  * AV1 and VP9 are software encoders on most machines. A weak laptop cannot afford them at 720p, and the "low"
  * quality setting is the user telling us so; but the browser knows better than a rule: it remembers whether each
  * codec ran smoothly at that size on this machine (see CodecPerformance). A phone only gets a codec its hardware
- * handles. H.264 is the floor: a hardware encoder nearly everywhere (VideoToolbox, MediaFoundation, MediaCodec), and
- * always negotiated. VP8 is not listed: every browser negotiates it anyway, and it is only ever software.
+ * handles.
  *
- * A codec that could not keep up during this session (demotedCodecStore) is out, with every codec above it.
+ * H.264 has a hardware encoder nearly everywhere (VideoToolbox, MediaFoundation, MediaCodec), but not in every
+ * profile. P2P negotiates Baseline, which Chrome encodes in hardware from 360p up: there H.264 is the floor, and VP8
+ * is left out. LiveKit only takes Constrained Baseline, which Chrome never encodes in hardware on macOS, nor by
+ * default on Windows: that is OpenH264, run by libwebrtc on a single thread for every simulcast layer. So on LiveKit
+ * the floor is VP8, software everywhere too but multithreaded, for the same bandwidth, and H.264 above it is only
+ * kept where the browser reports a hardware encoder (the probe asks for Constrained Baseline) or says nothing.
+ * Viewers lose their hardware decoder for it, which costs them little: they rarely receive more than one H.264 stream.
+ *
+ * A codec that could not keep up during this session (demotedCodecStore) is out, with every codec above it. The floor
+ * stays: P2P keeps H.264, which only LiveKit demotes.
  */
 export function preferredVideoCodecs(
     category: "video" | "screenSharing",
     quality: VideoQualitySetting,
     direction: CodecDirection,
     pixels: number,
+    transport: "P2P" | "Livekit",
 ): VideoCodec[] {
     const mobile = isAndroid() || isIOS();
     const candidates: VideoCodec[] =
         category === "screenSharing" && quality !== "low" ? ["av1", "vp9", "h264"] : ["vp9", "h264"];
+    if (transport === "Livekit") {
+        candidates.push("vp8");
+    }
+    const floor = candidates[candidates.length - 1];
     const demoted = get(demotedCodecStore[category]);
-    return candidates.slice(demoted ? candidates.indexOf(demoted) + 1 : 0).filter((codec) => {
-        if (codec === "h264") {
+    const start = demoted ? Math.min(candidates.indexOf(demoted) + 1, candidates.length - 1) : 0;
+    return candidates.slice(start).filter((codec) => {
+        if (codec === floor) {
             return true;
         }
         const performance = codecPerformance(direction, codec, pixels);
+        if (codec === "h264") {
+            // Above the floor, so on LiveKit: hardware, or nothing known (kept, as it always was), else VP8
+            return !performance || performance.powerEfficient;
+        }
         if (!performance) {
             // No verdict (probe pending, or a browser without the API): a desktop tries, a phone does not
             return !mobile;
@@ -60,8 +78,10 @@ export function videoCodecFromMimeType(mimeType: string | undefined): VideoCodec
  * An iPhone decodes VP9 in hardware but encodes it in software: this gives H.264 only, both ways.
  */
 export function negotiableVideoCodecs(category: "video" | "screenSharing", quality: VideoQualitySetting): VideoCodec[] {
-    const encodable = preferredVideoCodecs(category, quality, "encode", 1280 * 720);
-    return preferredVideoCodecs(category, quality, "decode", 1280 * 720).filter((codec) => encodable.includes(codec));
+    const encodable = preferredVideoCodecs(category, quality, "encode", 1280 * 720, "P2P");
+    return preferredVideoCodecs(category, quality, "decode", 1280 * 720, "P2P").filter((codec) =>
+        encodable.includes(codec),
+    );
 }
 
 // Bitrate needed for the same visual quality, relative to AV1. Each codec generation saves roughly 30 %; WebRTC
@@ -87,11 +107,14 @@ interface BitrateCurve {
     fps: (pixels: number, quality: VideoQualitySetting) => number;
 }
 
-// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide): within 20 % of its table up to 1080p
+// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide), within 20 % of its tables up to 1080p:
+// "recommended" on the webcam one, "high" on the gaming one. "low" gets the bitrate of "recommended" at each size, and
+// saves by capturing 360p (videoConstraintStore) and by its frame rate. Below what libwebrtc wants for a size (190 kbps
+// for VP9 at 360p, 300 kbps for VP8), the encoder sends a smaller picture than the one we ask for.
 const cameraCurve: BitrateCurve = {
     anchorCodec: "vp9",
     anchorPixels: 1280 * 720,
-    anchor: { low: 400_000, recommended: 700_000, high: 1_800_000 },
+    anchor: { low: 700_000, recommended: 700_000, high: 1_800_000 },
     exponent: 0.75,
     // Small tiles are cheaper to watch at a lower frame rate
     fps: (pixels, quality) => {
@@ -121,6 +144,11 @@ const screenShareCurve: BitrateCurve = {
 
 /**
  * Select the most appropriate bandwidth and fps for your resolution and the codec you encode with.
+ *
+ * `spatialLayers` budgets an SVC stream, whose single maxBitrate covers every spatial layer, each half the size of the
+ * next: each layer gets what it would get alone. The curve is a one-resolution budget, and short of the sum libwebrtc
+ * keeps the top layer off: a 720p VP9 stream needs 891 kbps for its three layers, where the 720p layer alone is
+ * budgeted 700 kbps.
  */
 export function selectVideoPreset(
     displayHeight: number,
@@ -128,16 +156,18 @@ export function selectVideoPreset(
     isScreenShare: boolean,
     quality: VideoQualitySetting,
     codec: VideoCodec,
+    spatialLayers = 1,
 ): {
     bitrate: number;
     fps: number;
 } {
     const curve = isScreenShare ? screenShareCurve : cameraCurve;
     const pixels = Math.min(displayWidth * displayHeight, MAX_PIXELS);
-    const bitrate =
-        curve.anchor[quality] *
-        Math.pow(pixels / curve.anchorPixels, curve.exponent) *
-        (BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec]);
+    let bitrate = 0;
+    for (let layer = 0; layer < spatialLayers; layer++) {
+        bitrate += curve.anchor[quality] * Math.pow(pixels / 4 ** layer / curve.anchorPixels, curve.exponent);
+    }
+    bitrate *= BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec];
     return { bitrate: Math.round(bitrate), fps: curve.fps(pixels, quality) };
 }
 

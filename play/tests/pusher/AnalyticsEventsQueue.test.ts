@@ -74,6 +74,7 @@ describe("AnalyticsEventsQueue", () => {
                         world: "world",
                         roomId: "https://play.test/@/team/world/room",
                         tabId: "tab-id",
+                        tags: ["admin", "member"],
                         properties: {
                             connectionId: "connection-id",
                             connectedAt: "2026-04-24T12:00:05.000Z",
@@ -396,10 +397,13 @@ describe("AnalyticsEventsQueue", () => {
                         remoteSpaceUserId: "",
                         qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
                         encoderImplementation: "libaom",
+                        livekitRegion: "ojohannesburg1a",
                     }),
                     videoQualitySample({
                         qualityLimitationReason: VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_CPU,
                         encoderImplementation: "libaom",
+                        // A self-hosted LiveKit server names no region
+                        livekitRegion: "",
                     }),
                 ],
             },
@@ -413,6 +417,7 @@ describe("AnalyticsEventsQueue", () => {
             remoteSpaceUserId: null,
             qualityLimitationReason: "cpu",
             encoderImplementation: "libaom",
+            livekitRegion: "ojohannesburg1a",
         });
         // An inbound sample measures a stream someone else encodes, so the browser
         // reports nothing about our encoder: a client claiming otherwise is ignored.
@@ -420,7 +425,136 @@ describe("AnalyticsEventsQueue", () => {
             direction: "inbound",
             qualityLimitationReason: null,
             encoderImplementation: null,
+            livekitRegion: null,
         });
+    });
+
+    it("keeps the playback counters of inbound samples, all of them or none", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        const playback = {
+            windowSeconds: 5.2,
+            framesDecoded: 150,
+            framesDropped: 1,
+            freezeCount: 2,
+            freezeSeconds: 0.9,
+            pauseCount: 0,
+            pauseSeconds: 0,
+            interFrameDelaySumSeconds: 5.1,
+            interFrameDelaySquaredSumSeconds: 0.2,
+            decodeSeconds: 0.3,
+        };
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample(playback),
+                    // A counter the browser does not expose stays null, without hiding the others
+                    videoQualitySample({ ...playback, freezeCount: undefined, freezeSeconds: Number.NaN }),
+                    // A counter is worthless without a plausible window
+                    videoQualitySample({ ...playback, windowSeconds: 3_600 }),
+                    // Our own encoder has no playback
+                    videoQualitySample({
+                        ...playback,
+                        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+                    }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
+        expect(events[0].properties).toMatchObject(playback);
+        expect(events[1].properties).toMatchObject({ framesDecoded: 150, freezeCount: null, freezeSeconds: null });
+        expect(events[2].properties).toMatchObject({ windowSeconds: null, framesDecoded: null, decodeSeconds: null });
+        expect(events[3].properties).toMatchObject({ windowSeconds: null, framesDecoded: null, decodeSeconds: null });
+    });
+
+    it("keeps the capture and encoder load of outbound samples only, dropping implausible values", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        const encoderLoad = {
+            captureFps: 24,
+            captureTargetFps: 30,
+            encodeMsPerFrame: 12.5,
+            cpuLimitedRatio: 0.4,
+            bandwidthLimitedRatio: 0,
+        };
+        const outbound = {
+            direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+            remoteSpaceUserId: "",
+        };
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample({ ...outbound, ...encoderLoad }),
+                    videoQualitySample({ ...outbound, ...encoderLoad, cpuLimitedRatio: 1.5, captureFps: Number.NaN }),
+                    // A stream we receive tells nothing about our encoder
+                    videoQualitySample(encoderLoad),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
+        expect(events[0].properties).toMatchObject(encoderLoad);
+        expect(events[1].properties).toMatchObject({ captureFps: null, cpuLimitedRatio: null, encodeMsPerFrame: 12.5 });
+        expect(events[2].properties).toMatchObject({ captureFps: null, encodeMsPerFrame: null, cpuLimitedRatio: null });
+    });
+
+    it("keeps the network of each direction where it belongs", async () => {
+        const post = vi.fn().mockResolvedValue(undefined);
+        const queue = new AnalyticsEventsQueue(baseConfig, post);
+        queue.setEnabled(true);
+        const network = {
+            windowSeconds: 5,
+            packetsReceived: 400,
+            packetsLost: 4,
+            roundTripTimeMs: 120,
+            uploadRoundTripTimeMs: 180,
+            uploadLossRatio: 0.04,
+            availableOutgoingBitrate: 1_200_000,
+        };
+
+        queue.enqueueVideoQualityReport(
+            {
+                samples: [
+                    videoQualitySample(network),
+                    videoQualitySample({
+                        ...network,
+                        direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
+                        remoteSpaceUserId: "",
+                    }),
+                    // Packets are counted over the window: without one, they mean nothing
+                    videoQualitySample({ ...network, windowSeconds: undefined, roundTripTimeMs: 90_000 }),
+                ],
+            },
+            socketData(),
+        );
+        await queue.flush();
+
+        const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
+        expect(events[0].properties).toMatchObject({
+            packetsReceived: 400,
+            packetsLost: 4,
+            roundTripTimeMs: 120,
+            uploadRoundTripTimeMs: null,
+            uploadLossRatio: null,
+            availableOutgoingBitrate: null,
+        });
+        expect(events[1].properties).toMatchObject({
+            packetsReceived: null,
+            roundTripTimeMs: null,
+            uploadRoundTripTimeMs: 180,
+            uploadLossRatio: 0.04,
+            availableOutgoingBitrate: 1_200_000,
+        });
+        expect(events[2].properties).toMatchObject({ packetsReceived: null, packetsLost: null, roundTripTimeMs: null });
     });
 
     it("drops video quality samples for a space the socket has not joined", async () => {
@@ -484,6 +618,7 @@ function socketData(overrides: Partial<SocketData> & { analyticsEventsEnabled?: 
         world: "world",
         spaces: new Set(["world.space"]),
         tabId: "tab-id",
+        tags: ["admin", "member"],
         analyticsEventsEnabled: true,
         ...overrides,
     } as SocketData;

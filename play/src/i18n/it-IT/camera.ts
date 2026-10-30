@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Modifica fotocamera",
-    editMic: "Modifica microfono",
     editSpeaker: "Modifica uscita audio",
     active: "Attivo",
     disabled: "Disabilitato",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Accesso a fotocamera / microfono necessario",
         cameraTitle: "Accesso alla fotocamera necessario",
         microphoneTitle: "Accesso al microfono necessario",
-        permissionDenied: "Permesso negato",
         cameraPermissionDenied: "Permesso fotocamera negato",
         microphonePermissionDenied: "Permesso microfono negato",
         cameraMicrophonePermissionDenied: "Permessi fotocamera e microfono negati",
@@ -86,7 +84,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Zona silenziosa",
         silentZoneDesc:
-            "Ti trovi in una zona silenziosa. Puoi vedere e sentire solo le persone con cui sei. Non puoi vedere o sentire le altre persone nella stanza.",
+            "Ti trovi in una zona silenziosa. Qui nessuno può parlarti, e il tuo microfono e la tua fotocamera sono disattivati.",
         nameTag: "Tu",
         loading: "Caricamento della tua fotocamera...",
     },
@@ -95,7 +93,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Altre azioni",
         closeMenu: "Chiudi menu",
         senPrivateMessage: "Invia un messaggio privato (prossimamente)",
-        kickoffUser: "Espelli utente",
         giveFloor: "Dare la parola",
         revokeFloor: "Togliere la parola",
         muteAudioUser: "Disattiva audio",
@@ -105,14 +102,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Chiedi di disattivare il video",
         muteVideoEveryBody: "Disattiva video per tutti",
         blockOrReportUser: "Blocca o segnala utente",
-    },
-    backgroundEffects: {
-        imageTitle: "Immagini di sfondo",
-        blurTitle: "Sfocatura di sfondo",
-        resetTitle: "Disattiva effetti di sfondo",
-        title: "Effetti di sfondo",
-        close: "Chiudi",
-        blurAmount: "Quantità di sfocatura",
     },
 };
 

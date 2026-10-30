@@ -226,6 +226,11 @@ livekit-server:
 ```
 
 > [!NOTE]
+> Since LiveKit 1.12, TURN does not relay to private IP addresses. If your LiveKit nodes only have private IPs (an
+> on-premise cluster for instance), list them in `livekit-server.livekit.turn.allow_restricted_peer_cidrs`
+> (e.g. `["10.0.0.0/8"]`), or users that can only reach LiveKit through TURN will not connect.
+
+> [!NOTE]
 > The LiveKit TURN server is only used internally by LiveKit. It cannot be used as a TURN server for WorkAdventure (for conversations where there are less than 4 people). The TURN variables used by WorkAdventure (`TURN_SERVER`, `TURN_USER`, `TURN_PASSWORD`, `TURN_STATIC_AUTH_SECRET`) still need to point to a valid Coturn server.
 
 ### Enabling meeting recording (LiveKit Egress)
@@ -269,3 +274,21 @@ commonSecretEnv:
   LIVEKIT_RECORDING_S3_BUCKET: "workadventure-recordings"
   LIVEKIT_RECORDING_S3_REGION: "eu-west-1"
 ```
+
+### Serving the assets from a separate "front" container
+
+By default, the `play` container serves the web page, the WebSocket API and all the JS/CSS assets. With `front.enabled=true`,
+the assets are served by a dedicated nginx container on `assets.<domainName>` (or `front.ingress.domainName`). You can then
+upgrade the front alone by changing `front.image.tag`: the `play` pods are not restarted, so nobody is disconnected.
+
+See [Separate assets container](../../docs/others/self-hosting/assets-container.md) for how it works and its limits.
+
+```yaml
+front:
+  enabled: true
+  # Optional: defaults to assets.<domainName>
+  ingress:
+    domainName: "assets.example.com"
+```
+
+`front.enabled` is not supported in `singleDomain` mode.

@@ -78,8 +78,10 @@ import type { EventSocket, RoomSocket, VariableSocket } from "../RoomManager";
 import type { Zone, ZonePosition } from "../Model/Zone";
 import type { Admin } from "../Model/Admin";
 import { Space } from "../Model/Space";
+import { findRecording } from "../Model/CommunicationManager";
 import type { SpacesWatcher } from "../Model/SpacesWatcher";
 import { eventProcessor } from "../Model/EventProcessorInit";
+import { applyModerationRights, isModerationEvent, isModeratorOnlyPublicEvent } from "../Model/ModerationRights";
 import type { SessionEndReason } from "../Model/SessionAnalytics";
 import { gaugeManager } from "./GaugeManager";
 import { clientEventsEmitter } from "./ClientEventsEmitter";
@@ -171,6 +173,7 @@ export class SocketManager {
                                 editMapCommands: commandsToApply,
                             },
                             tag: connectToRoomMessage.tag,
+                            canEdit: connectToRoomMessage.canEdit,
                         },
                     },
                 },
@@ -1255,7 +1258,7 @@ export class SocketManager {
             return;
         }
         group.lock(message.lock);
-        room.emitLockGroupEvent(user, group.getId());
+        room.emitLockGroupEvent(group);
     }
 
     handleUpdateMapToNewestMessage(room: GameRoom, user: User, message: UpdateMapToNewestWithKeyMessage) {
@@ -1562,7 +1565,16 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${publicEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPublicEvent(publicEvent).catch((error) => {
+        const dispatch = isModeratorOnlyPublicEvent(publicEvent.spaceEvent?.event)
+            ? this.canModerateSpace(space, publicEvent.senderUserId).then((canModerate) => {
+                  if (!canModerate) {
+                      debug(`${publicEvent.senderUserId} cannot moderate space ${space.getSpaceName()}, event dropped`);
+                      return;
+                  }
+                  return space.dispatchPublicEvent(publicEvent);
+              })
+            : space.dispatchPublicEvent(publicEvent);
+        dispatch.catch((error) => {
             console.error(error);
             Sentry.captureException(error);
         });
@@ -1573,7 +1585,43 @@ export class SocketManager {
         if (!space) {
             throw new Error(`Could not find space ${privateEvent.spaceName} to dispatch public event`);
         }
-        space.dispatchPrivateEvent(privateEvent);
+        const event = privateEvent.spaceEvent?.event;
+        if (!isModerationEvent(event)) {
+            space.dispatchPrivateEvent(privateEvent);
+            return;
+        }
+        this.canModerateSpace(space, privateEvent.senderUserId)
+            .then((canModerate) => {
+                const moderatedEvent = applyModerationRights(event, canModerate);
+                if (moderatedEvent === undefined) {
+                    debug(`${privateEvent.senderUserId} cannot moderate space ${space.getSpaceName()}, event dropped`);
+                    return;
+                }
+                space.dispatchPrivateEvent({ ...privateEvent, spaceEvent: { event: moderatedEvent } });
+            })
+            .catch((error) => {
+                console.error(error);
+                Sentry.captureException(error);
+            });
+    }
+
+    /**
+     * An admin moderates every conversation; a meeting room can also name a moderator tag in its advanced options
+     * (`livekitRoomAdminTag`).
+     */
+    private async canModerateSpace(space: Space, spaceUserId: string): Promise<boolean> {
+        const sender = space.getUser(spaceUserId);
+        if (!sender) {
+            return false;
+        }
+        if (sender.tags.includes("admin")) {
+            return true;
+        }
+        const room = await this.roomsPromises.get(sender.playUri);
+        // The pusher names the space "<world>.<name>", and a meeting room name is a slug: it holds no dot.
+        const spaceName = space.getSpaceName();
+        const moderatorTag = room?.getModeratorTagForLivekitRoom(spaceName.slice(spaceName.lastIndexOf(".") + 1));
+        return moderatorTag !== undefined && sender.tags.includes(moderatorTag);
     }
 
     handleBackEvent(pusher: SpacesWatcher, backEvent: BackEventMessage) {
@@ -1748,14 +1796,16 @@ export class SocketManager {
     }
 
     async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
-        const space = this.spaces.get(request.spaceName);
-        if (!space) {
-            // Retrying cannot recreate a space that is already gone, so the pusher should acknowledge this as ignored.
-            console.warn(`Received LiveKit webhook for missing space ${request.spaceName}. Ignoring.`);
+        const recording = findRecording(request.recordingSessionId);
+        if (!recording) {
+            // Retrying cannot recreate a recording session that is already gone, so the pusher should acknowledge this as ignored.
+            console.warn(
+                `Received LiveKit webhook for missing recording session ${request.recordingSessionId}. Ignoring.`,
+            );
             return;
         }
 
-        await space.handleLivekitWebhook(request);
+        await recording.handleLivekitWebhook(request);
     }
 
     handleAddSpaceUserToNotifyMessage(pusher: SpacesWatcher, addSpaceUserToNotifyMessage: AddSpaceUserToNotifyMessage) {

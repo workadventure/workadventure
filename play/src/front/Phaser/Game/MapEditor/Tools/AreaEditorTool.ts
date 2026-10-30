@@ -144,10 +144,8 @@ export class AreaEditorTool extends MapEditorTool {
             }
             case "createAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
-                const config: AreaData = {
-                    ...data,
-                    visible: true,
-                };
+                const { id, x, y, width, height, name, properties } = data;
+                const config: AreaData = { id, x, y, width, height, name, properties, visible: true };
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new CreateAreaFrontCommand(
@@ -246,6 +244,7 @@ export class AreaEditorTool extends MapEditorTool {
         };
 
         this.scene.input.on(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.pointerUpOutsideEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
@@ -272,6 +271,7 @@ export class AreaEditorTool extends MapEditorTool {
 
     private unbindEventHandlers(): void {
         this.scene.input.off(Phaser.Input.Events.POINTER_UP, this.pointerUpEventHandler);
+        this.scene.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.pointerUpOutsideEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_DOWN, this.pointerDownEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_OVER, this.pointerHoverEventHandler);
         this.scene.input.off(Phaser.Input.Events.POINTER_MOVE, this.pointerMoveEventHandler);
@@ -287,6 +287,14 @@ export class AreaEditorTool extends MapEditorTool {
             if (this.isAreaPreview(areaEditorToolObjects[0])) {
                 this.scene.input.setDefaultCursor("grab");
             }
+        }
+    };
+
+    // Releasing the button over something laid over the canvas (the editor toolbar, the zoom buttons) emits
+    // POINTER_UP_OUTSIDE, not POINTER_UP: finish the area being drawn instead of leaving the drawing stuck.
+    private pointerUpOutsideEventHandler = (pointer: Pointer) => {
+        if (this.drawinNewAreaStartPos) {
+            this.handlePointerUpEvent(pointer, []);
         }
     };
 

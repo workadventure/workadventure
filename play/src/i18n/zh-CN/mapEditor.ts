@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "音量",
             audioLinkLabel: "音频链接",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "上传文件",
+            sourceUrl: "使用 URL",
             defaultButtonLabel: "播放音乐",
             error: "无法加载声音",
             actionButtonLabel: "播放音乐",
@@ -452,7 +454,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "礼堂模式",
                 audienceVideoFeedbackActivatedDisabled: "礼堂模式",
                 audienceVideoFeedbackActivatedHelper:
-                    "礼堂模式已激活：接收房间/世界中所有用户（已激活摄像头和麦克风）的摄像头和麦克风流。但参与者将无法看到其他参与者。默认禁用。",
+                    "礼堂模式已激活：接收房间/世界中所有用户（已激活摄像头）的摄像头流，不含声音。但参与者将无法看到其他参与者。默认禁用。",
                 error: {
                     title: "请输入标题",
                     save: {

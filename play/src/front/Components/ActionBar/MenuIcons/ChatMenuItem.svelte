@@ -9,6 +9,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
+    import { matrixUnreadMessagesCountStore } from "../../../Chat/Stores/UnreadMessagesCountStore";
 
     interface Props {
         last?: boolean;
@@ -43,15 +44,8 @@
             console.error("Could not get chat", e);
         });
 
-    // Create derived stores that subscribe to all unreadNotificationCount stores for real-time updates
-    const nbUnreadRoomsMessages = gameManager.chatConnection.nbUnreadRoomsMessages;
-    const nbUnreadDirectRoomsMessages = gameManager.chatConnection.nbUnreadDirectRoomsMessages;
-    const nbUnreadInvitationsMessages = gameManager.chatConnection.nbUnreadInvitationsMessages;
-
     // Calculate total unread count and format it (max 99+)
-    let totalUnreadCount = $derived(
-        $nbUnreadRoomsMessages + $nbUnreadDirectRoomsMessages + $nbUnreadInvitationsMessages + $unreadMessagesCount,
-    );
+    let totalUnreadCount = $derived($matrixUnreadMessagesCountStore + $unreadMessagesCount);
     let displayCount = $derived(totalUnreadCount > 99 ? "99" : totalUnreadCount.toString());
 </script>
 

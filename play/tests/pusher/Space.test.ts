@@ -204,6 +204,69 @@ describe("Space", () => {
 
             expect(mockNotifyMeAddUser).not.toHaveBeenCalled();
         });
+
+        // notifyMeInit waits for the back's init message. If the user leaves or unwatches during that wait,
+        // the back has already dropped them: forwarding the addUserToNotify would resurrect them in the
+        // back's "users to notify" list until this pusher disconnects.
+        describe("when the init is still pending", () => {
+            const setup = () => {
+                const spaceUser = {
+                    ...SpaceUser.fromPartial({ spaceUserId: "foo_1" }),
+                    lowercaseName: "foo_1",
+                };
+
+                let resolveInit: () => void = () => {};
+                const initPromise = new Promise<void>((resolve) => {
+                    resolveInit = resolve;
+                });
+
+                const mockAddUserToNotify = vi.fn();
+                const space = new Space(
+                    "test",
+                    "test",
+                    new EventProcessor(),
+                    FilterType.ALL_USERS,
+                    vi.fn(),
+                    mock<SpaceConnectionInterface>(),
+                    "world",
+                    [],
+                    () => ({ addUserToNotify: mockAddUserToNotify }) as unknown as SpaceToBackForwarder,
+                    () =>
+                        ({
+                            notifyMeInit: vi.fn().mockReturnValue(initPromise),
+                        }) as unknown as SpaceToFrontDispatcher,
+                );
+
+                const mockSocket = mock<PusherWebSocket>({
+                    getUserData: vi.fn().mockReturnValue({ spaceUser }),
+                });
+                space._localConnectedUserWithSpaceUser.set(mockSocket, spaceUser);
+
+                return { space, mockSocket, mockAddUserToNotify, resolveInit };
+            };
+
+            it("should not register the watcher in the back if the user left in the meantime", async () => {
+                const { space, mockSocket, mockAddUserToNotify, resolveInit } = setup();
+
+                const watching = space.handleWatch(mockSocket);
+                // unregisterUser / handleUnwatch / cleanup all clear _localWatchers
+                space._localWatchers.delete("foo_1");
+                resolveInit();
+                await watching;
+
+                expect(mockAddUserToNotify).not.toHaveBeenCalled();
+            });
+
+            it("should register the watcher in the back if the user is still watching", async () => {
+                const { space, mockSocket, mockAddUserToNotify, resolveInit } = setup();
+
+                const watching = space.handleWatch(mockSocket);
+                resolveInit();
+                await watching;
+
+                expect(mockAddUserToNotify).toHaveBeenCalledOnce();
+            });
+        });
     });
 });
 

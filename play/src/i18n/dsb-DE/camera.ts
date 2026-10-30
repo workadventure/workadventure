@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Kameru wobźěłaś",
-    editMic: "Mikrofon wobźěłaś",
     editSpeaker: "Audiowyjadowanje wobźěłaś",
     active: "Aktiwny",
     disabled: "Deaktiwěrowany",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Pśistup ku kamerje a mikrofonoju jo trjebny",
         cameraTitle: "Pśistup ku kamerje jo trjebny",
         microphoneTitle: "Pśistup ku mikrofonoju jo trjebny",
-        permissionDenied: "Pśistup njejo zwólony",
         cameraPermissionDenied: "Zwólenje kamery jo wótpokazane",
         microphonePermissionDenied: "Zwólenje mikrofona jo wótpokazane",
         cameraMicrophonePermissionDenied: "Zwólenje kamery a mikrofona jo wótpokazane",
@@ -84,7 +82,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Śichy wobceŕk",
         silentZoneDesc:
-            "Sćo w śichym wobcerku. Móžośo jano luźe wiźeś a słyšaś, z kótarymiž sćo. Móžośo drugich luźi w rumnje nje wiźeś abo nje słyšaś.",
+            "Sćo w śichym wobcerku. How njamóžo nichten z wami powědaś, a waš mikrofon a waša kamera stej deaktiwěrowanej.",
         nameTag: "Wy",
         loading: "Waša kamera se zacytujo...",
     },
@@ -93,7 +91,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Dalše akcije",
         closeMenu: "Meny zacyniś",
         senPrivateMessage: "Pśewatne powěsće posłaś (Pśichadźe)",
-        kickoffUser: "Wužiwarja wotmětowaś",
         giveFloor: "Słowo daś",
         revokeFloor: "Słowo wótewześ",
         muteAudioUser: "Audio stummschalten",
@@ -103,14 +100,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Pšosyś, aby video stummschalten",
         muteVideoEveryBody: "Video za wšěch stummschalten",
         blockOrReportUser: "Wužiwarja blokěrowaś abo pśihłasowaś",
-    },
-    backgroundEffects: {
-        imageTitle: "Wobrazki slězynka",
-        blurTitle: "Slězynk njewjasnosć",
-        resetTitle: "Slězynk efekty deaktiwěrowaś",
-        title: "Slězynk efekty",
-        close: "Zacyniś",
-        blurAmount: "Njewjasnosć měra",
     },
 };
 

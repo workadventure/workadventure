@@ -1,12 +1,14 @@
 <script lang="ts">
+    import { get } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
-    import { EventType } from "matrix-js-sdk";
+    import { EventType } from "matrix-js-sdk/lib/@types/event";
     import LL from "../../../../i18n/i18n-svelte";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import type { ChatRoomMember, ChatRoomMembership, ChatRoomModeration } from "../../Connection/ChatConnection";
     import { ChatPermissionLevel } from "../../Connection/ChatConnection";
     import Select from "../../../Components/Input/Select.svelte";
     import Avatar from "../Avatar.svelte";
+    import { cancelInvitation, changeRole, confirmBan, confirmKick, inviteAgain, unban } from "./memberModeration";
     import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     interface Props {
         member: ChatRoomMember;
@@ -38,50 +40,14 @@
         }
     }
 
-    const banUser = () => {
-        banInProgress = true;
-        room.ban(id)
-            .catch((e) => {
-                console.error("Failed to ban user:", e);
-            })
-            .finally(() => {
-                banInProgress = false;
-            });
-    };
-
-    const unbanUser = () => {
-        unbanInProgress = true;
-
-        room.unban(id)
-            .catch((e) => {
-                console.error("Failed to unban user:", e);
-            })
-            .finally(() => {
-                unbanInProgress = false;
-            });
-    };
-
-    const kickUser = () => {
-        kickInProgress = true;
-        room.kick(id)
-            .catch((e) => {
-                console.error("Failed to kick user:", e);
-            })
-            .finally(() => {
-                kickInProgress = false;
-            });
-    };
-
-    const inviteUser = () => {
-        inviteInProgress = true;
-        room.inviteUsers([id])
-            .catch((e) => {
-                console.error("Failed to invite user:", e);
-            })
-            .finally(() => {
-                inviteInProgress = false;
-            });
-    };
+    // Kicking, banning and making someone admin ask first (memberModeration.ts).
+    const banUser = () => confirmBan(room, member, (busy) => (banInProgress = busy));
+    const unbanUser = () => unban(room, member, (busy) => (unbanInProgress = busy));
+    const kickUser = () =>
+        $membership === "invite"
+            ? cancelInvitation(room, member, (busy) => (kickInProgress = busy))
+            : confirmKick(room, member, (busy) => (kickInProgress = busy));
+    const inviteUser = () => inviteAgain(room, member, (busy) => (inviteInProgress = busy));
 
     const getIconForMembership = (membership: ChatRoomMembership) => {
         switch (membership) {
@@ -114,10 +80,11 @@
 
     function onPermissionLevelChange(event: Event) {
         const target = event.target as HTMLSelectElement;
-
         if (!target) return;
-
-        room.changePermissionLevelFor(member, target.value as ChatPermissionLevel).catch((e) => console.error(e));
+        const nextLevel = target.value as ChatPermissionLevel;
+        // An admin promotion waits for its confirmation: show the current role until then.
+        if (nextLevel === ChatPermissionLevel.ADMIN) target.value = get(permissionLevel);
+        changeRole(room, member, nextLevel);
     }
 
     let hasPermissionToInvite = $derived(room.hasPermissionTo("invite", member));
@@ -213,6 +180,9 @@
                 >
                     {#if kickInProgress}
                         <IconLoader class="animate-spin" />
+                    {:else if $membership === "invite"}
+                        <!-- Kicking an invited user withdraws the invitation: say so. -->
+                        {$LL.chat.manageRoomUsers.buttons.cancelInvitation()}
                     {:else}
                         {$LL.chat.manageRoomUsers.buttons.kick()}
                     {/if}

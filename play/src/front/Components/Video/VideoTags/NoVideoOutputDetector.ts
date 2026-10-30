@@ -1,5 +1,4 @@
 import type { Readable, Unsubscriber } from "svelte/store";
-import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { activePictureInPictureStore } from "../../../Stores/PeerStore";
 
 /**
@@ -39,7 +38,6 @@ export class NoVideoOutputDetector {
             this.noVideoTimeout = setTimeout(() => {
                 this.onNoVideo();
                 this.noVideoTimeout = undefined;
-                analyticsClient.trackAdminEvent("media.video_stream_missing");
             }, 5000);
 
             if (this.callbackId !== undefined) {

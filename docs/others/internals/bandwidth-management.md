@@ -46,14 +46,14 @@ further here.
     - Location: [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) and
       [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts)
 - **Persistence**: values saved to `localStorage` via `LocalUserStore`
-- **When read**: at track publication (LiveKit) or peer creation and every encoding update (P2P). A change of setting
-  applies to the next stream, not to the running one.
+- **When read**: at track publication (LiveKit) or peer creation and every encoding update (P2P). A change of the
+  camera setting also republishes a LiveKit camera; a change of the screen share setting applies to the next share.
 
 ## Codec Selection
 
-`preferredVideoCodecs(category, quality, direction, pixels)` returns the codecs we are willing to encode (or, for
-the P2P receive preference, decode) with at a given frame size, best first. The transport keeps the first one the
-browser can use.
+`preferredVideoCodecs(category, quality, direction, pixels, transport)` returns the codecs we are willing to encode
+(or, for the P2P receive preference, decode) with at a given frame size, best first. The transport keeps the first
+one the browser can use.
 
 It starts from a static order and filters it with what the browser knows about this machine:
 
@@ -62,7 +62,9 @@ It starts from a static order and filters it with what the browser knows about t
 | Quality recommended or high | VP9, H.264 | AV1, VP9, H.264 |
 | Quality low | VP9, H.264 | VP9, H.264 |
 
-Then, for every codec except H.264, which always stays:
+LiveKit appends VP8. The last codec of the list is the floor and always stays: H.264 in P2P, VP8 on LiveKit (see
+"H.264 is not hardware on LiveKit" below). On LiveKit, H.264 above the floor stays only when the browser reports it as
+hardware or says nothing, whatever its history. Then, for every other codec:
 
 - **Desktop**: the codec is kept unless the browser remembers it as *not smooth* at that frame size (see below). With
   no verdict, it is kept.
@@ -71,7 +73,7 @@ Then, for every codec except H.264, which always stays:
 - A codec dropped for smoothness gets **one retry per week**, so a single bad session cannot demote it forever.
 
 So a Pixel with a hardware VP9 encoder keeps VP9; a phone without one encodes H.264; a weak laptop that struggled with
-VP9 at 720p last week gets H.264.
+VP9 at 720p last week gets H.264 in P2P, and on LiveKit gets VP8 unless its H.264 is hardware.
 
 ### What the browser knows: `CodecPerformance.ts`
 
@@ -83,7 +85,8 @@ cached and read synchronously afterwards; until they arrive, the lists behave as
 In Chromium (verified in the source):
 
 - `powerEfficient` is true when a hardware encoder or decoder exists for the codec. There is no small-size heuristic
-  on the WebRTC path.
+  on the WebRTC path. The probe gives H.264 no `profile-level-id`, which libwebrtc reads as Constrained Baseline:
+  LiveKit's profile, not P2P's.
 - `smooth` comes from the browser's WebRTC performance history: per codec, frame size bucket, hardware flag and
   direction, the 99th percentile of the processing time per frame measured in real sessions on this profile, on any
   site. A stream is smooth when that percentile stays under the frame duration. The history is only written while a
@@ -114,13 +117,29 @@ Why these choices:
   some machines.
 - **H.264 as the fallback**: it is the only codec with a hardware encoder nearly everywhere (VideoToolbox on macOS,
   MediaFoundation on Windows, MediaCodec on Android). macOS in particular has no hardware encoder for VP8, VP9 or AV1,
-  so H.264 is the only rung that actually frees the CPU there. It costs bandwidth: WebRTC negotiates constrained
-  baseline H.264, which is VP8-class, so about 40 % more than VP9 for the same quality, which is why it is not the
-  default on desktop.
+  so in P2P H.264 is the only rung that actually frees the CPU there. It costs bandwidth: H.264 as WebRTC encodes it
+  is VP8-class, so about 40 % more than VP9 for the same quality, which is why it is not the default on desktop.
+- **H.264 is not hardware on LiveKit**: a default LiveKit server registers H.264 as Constrained Baseline (`42e01f`),
+  then High, and that is what gets negotiated. Chrome's hardware encoder factory only advertises Constrained Baseline
+  on Android, ChromeOS and Linux; on
+  Windows it is behind `kPlatformH264CbpEncoding`, off by default, and on macOS it is never there
+  (`IsH264ConstrainedBaselineProfileAvailableForAcceleratedEncoder()`). The format then has no hardware candidate,
+  and every simulcast layer is OpenH264, at every resolution. P2P is different: Chrome lists Baseline (`42001f`)
+  first, which VideoToolbox does encode. libwebrtc runs OpenH264 on a single thread for all the layers
+  (multithreading is behind a field trial), so it hits the overuse detector while other cores idle. In production
+  (7 days, frames ≥ 540p), OpenH264 was CPU-limited in 2.6 % of LiveKit camera samples and 14 % of screen share
+  samples, against 0.5 % at most for libvpx and libaom. So on LiveKit a software H.264 (the Constrained Baseline
+  probe says `powerEfficient: false`) is skipped for VP8: software everywhere too, but 2 or 3 threads from 720p up,
+  for the same bandwidth budget. Viewers decode it in software instead of in hardware, a small cost: a LiveKit
+  viewer received at most one H.264 stream at the 90th percentile, at about 200p. Phones and Safari report a
+  hardware H.264 and keep it.
 - **VP8 is never preferred**: it is mandatory in WebRTC, so every browser negotiates it anyway, and it is software
-  everywhere. It remains the floor when H.264 is missing (a Firefox whose OpenH264 download is blocked by policy,
-  Chromium builds without proprietary codecs). LiveKit rewrites an unsupported codec to VP8 on its own, and in P2P
-  the browser's remaining codecs are appended after our list.
+  everywhere. It is LiveKit's floor, and the codec LiveKit rewrites an unsupported one to. P2P leaves it out of the
+  negotiation: H.264 is always there.
+- **Below 360p, Chrome uses software anyway**: `RTCVideoEncoder` hands H.264, VP8 and VP9 frames under 360p (AV1:
+  270p) to the software encoder (`kForceSoftwareForRtcLowResolutions`, on by default on desktop). A small P2P tile, or
+  the lowest simulcast layer, is software whatever the codec. `describeEncoder()` calls a simulcast adapter that mixes
+  both hardware.
 
 This choice is made once per session, from what the browser remembers of past ones. What happens when the encoder
 cannot keep up with it *during* a stream is in "When the encoder cannot keep up" below.
@@ -174,7 +193,9 @@ are tolerated, a lone spike is ignored.
   samples after a stream starts are ignored: keyframes and rate-control ramp-up look like overload.
 - The window starts over when the stream stops, the transport changes (P2P ↔ LiveKit) or the codec changes.
 - One decision per full window, then a full window of cooldown.
-- Never for H.264 (nothing below it), never for a hardware encoder (a cheaper codec gains it nothing).
+- Never for VP8 (nothing below it), never for a hardware encoder (a cheaper codec gains it nothing). H.264 only on
+  LiveKit, and only when every encoder is named software (OpenH264): elsewhere it is hardware until named otherwise
+  (Safari names nothing), and in P2P it is the floor, where the relief is the move to LiveKit.
 - The camera holds back while a screen share is being sent: the screen share is the heavy encoder and goes first;
   demoting the camera in the meantime would mark the wrong codec.
 
@@ -196,8 +217,10 @@ the next window falls through to the codec.
 
 **Then the codec.** Otherwise the decision **demotes** the codec for the rest of the session: `demotedCodecStore`
 in `CodecPerformance.ts` records it per category, and `preferredVideoCodecs()` leaves it out together with every
-codec above it (screen share AV1 → VP9 → H.264, camera VP9 → H.264). Nothing is persisted, the browser's own smooth
-history is the memory across sessions, and nothing goes back up before the page is reloaded. The publishers
+codec above it (screen share AV1 → VP9 → H.264, camera VP9 → H.264, then → VP8 on LiveKit only: P2P ignores a
+demoted H.264, its floor, so a LiveKit demotion does not take hardware Baseline away from the next bubble). Nothing
+is persisted, the browser's own smooth history is the memory across sessions, and nothing goes back up before the
+page is reloaded. The publishers
 subscribe to the store:
 
 - **LiveKit**: the codec of a publication is fixed at `publishTrack()`, so `LiveKitRoom` unpublishes and publishes
@@ -221,7 +244,8 @@ AV1), enable the video quality stats overlay: the tile reports `Limited by: cpu`
 changes. The end-to-end test `tests/webrtc_cpu_limitation.spec.ts` (opt-in, `RUN_CPU_LIMITATION_E2E=1`, a few
 minutes) drives the whole chain on a deployment by making one page report every outbound video stream as
 CPU-limited: three users in a bubble, the flag, the switch to LiveKit, the bubble staying there when a member
-leaves, then the camera republished in H.264; with `CPU_LIMITATION_EXPECT=demote` it checks the codec
+leaves, then the camera republished in VP8 (Chromium on Linux has no hardware H.264 for LiveKit); with
+`CPU_LIMITATION_EXPECT=demote` it checks the codec
 renegotiation with both peers instead.
 
 ## Bitrate Budget
@@ -240,12 +264,16 @@ A straight line on a log-log chart: the budget grows with the pixel count at a r
 at one reference size (`anchorPixels`) by three `anchor` values, one per quality setting. Anything larger than 1080p is
 budgeted like 1080p.
 
+This is the budget of one resolution. A stream that carries several in one `maxBitrate` (an SVC camera on LiveKit) is
+budgeted as the sum over its layers, each a quarter of the pixels of the one above (see
+[LiveKit Implementation](#livekit-implementation)).
+
 Two curves exist, one per stream category:
 
 | Parameter | Camera | Screen share |
 |---|---|---|
 | `anchorPixels` | 1280 × 720 | 1920 × 1080 |
-| `anchor.low` | 400 kbps | 1 Mbps |
+| `anchor.low` | 700 kbps | 1 Mbps |
 | `anchor.recommended` | 700 kbps | 3 Mbps |
 | `anchor.high` | 1.8 Mbps | 4.5 Mbps |
 | `exponent` | 0.75 | 0.5 |
@@ -259,10 +287,16 @@ At equal perceived quality, the bitrate a codec needs does not grow linearly wit
 `pixels ^ 0.5`: most of its cost is in edges and keyframes, not in the area. This is the only real difference between
 the two curves. Nothing in VP9 or AV1 requires discrete resolution steps.
 
-The camera curve is fitted on the [LiveKit bitrate guide](https://livekit.io/webrtc/bitrate-guide), which is the
-table WorkAdventure used before. The fit is within 20 % of that table at every standard size up to 1080p, and a unit
-test in [`VideoPresets.test.ts`](../../../play/src/front/WebRtc/VideoPresets.test.ts) keeps it there: retuning the
-exponent or an anchor makes the test fail if the curve drifts away from the reference.
+The camera curve is fitted on the [LiveKit bitrate guide](https://livekit.io/webrtc/bitrate-guide): "recommended" on
+its webcam table (VMAF 90), "high" on its gaming table (VMAF 85). The fit is within 20 % at every standard size up to
+1080p, and a unit test in [`VideoPresets.test.ts`](../../../play/src/front/WebRtc/VideoPresets.test.ts) keeps it there:
+retuning the exponent or an anchor makes the test fail if the curve drifts away from the reference.
+
+A camera on "low" gets the bitrate of "recommended" at each size. It saves by capturing 360p (see Capture resolution of
+cameras) and by its lower frame rate, not by paying each size less: libwebrtc has a minimum bitrate per size (190 kbps
+for VP9 at 640 × 360, 300 kbps for VP8, `GetDefaultSinglecastBitrateLimits`), and below it the encoder sends a smaller
+picture than the one we ask for, reporting `qualityLimitationReason: "bandwidth"`. The guide's numbers are for 30 fps,
+so at 15 fps "low" gets about twice the bits per frame.
 
 ### Why a curve rather than a table
 
@@ -320,6 +354,9 @@ Camera, recommended:
 | 1280 × 720 | 700 kbps | 1 Mbps |
 | 1920 × 1080 and above | 1.29 Mbps | 1.84 Mbps |
 
+A VP9 camera sent as SVC on LiveKit (see LiveKit Implementation) adds its two lower layers to its budget: 672 kbps at
+960 × 540, 1,035 kbps at 1280 × 720, 1.9 Mbps at 1920 × 1080.
+
 Screen share, recommended:
 
 | Captured size | AV1 | VP9 | H.264 or VP8 |
@@ -330,6 +367,12 @@ Screen share, recommended:
 
 These are caps (`maxBitrate`). The encoder uses less when the content allows it, and the browser's congestion control
 lowers the actual bitrate further when the network cannot carry it.
+
+### Capture resolution of cameras
+
+`videoConstraintStore` asks the camera for 1280 × 720, and for 640 × 360 on "low", which therefore never sends more
+than 360p, on either transport. These are `ideal` values cropped and scaled to 16:9 by the browser: a camera can still
+deliver another size (640 × 480 is seen in production), and every budget follows the size actually delivered.
 
 ### Capture resolution of screen shares
 
@@ -383,8 +426,27 @@ times.
 - Computes the budget with `selectVideoPreset()` for the captured size and that codec.
 - Publishes the camera with `videoEncoding.maxBitrate` / `maxFramerate`, and the screen share with
   `screenShareEncoding.maxBitrate` / `maxFramerate` and the user's `degradationPreference`.
-- Simulcast is enabled. Our budget applies to the **top** layer only; `livekit-client` derives the lower layers from
-  its own presets.
+- Cameras go out as simulcast: separate streams at 180p, 360p and the captured size, so that dynacast pauses the ones
+  nobody watches. Our budget applies to the **top** stream; `livekit-client` gives the lower ones its own presets
+  (160 kbps and 450 kbps in 16:9). VP9 and AV1 cameras do it with `scalabilityMode: "L1T3"` on each stream, which
+  `livekit-client` only honours on a LiveKit server newer than 1.13.6 and outside Safari and iOS
+  (`supportsSvcSimulcast()`).
+- Elsewhere, VP9 and AV1 cameras go out as SVC: one stream, `L3T3_KEY`, that always carries its three layers. A screen
+  share is always one `L1T3` stream. The SVC `maxBitrate`
+  covers every spatial layer, so the camera budget is the curve summed over its three layers (`spatialLayers` in
+  `selectVideoPreset()`): 1,035 kbps at 720p "recommended" rather than 700. With the one-layer budget, libwebrtc never
+  enables the top layer (a 720p VP9 stream needs 891 kbps for its three layers, a 1080p one 1,425 kbps), and the encoder
+  reports `qualityLimitationReason: "bandwidth"` while the network has room to spare. libwebrtc also pads an SVC stream
+  up to 1.2 × that rate to probe for the top layer, so the one-layer budget saves no upload: a 720p camera capped at
+  700 kbps sends about 1 Mbps either way, 450 kbps of it padding.
+- A camera on "low" is captured at 360p (see Capture resolution of cameras) and sent as 360p + 180p simulcast:
+  thumbnails take the 180p stream and dynacast pauses the 360p one while nobody highlights the camera. The 180p stream
+  is budgeted on our curve too (`lowCameraLowerLayer()`): `livekit-client`'s own 180p preset is sized for VP8 and runs
+  at 20 fps, above the frame rate of "low". On the SVC fallback, "low" is a single `L1T3` stream: its 360p budget
+  (247 kbps for VP9) is below the 299 kbps libwebrtc needs to turn the second SVC layer on at that size.
+- The budget, the codec and the layers are fixed at `publishTrack()`. When the quality setting or the captured size no
+  longer matches the publication, the camera is unpublished and published again (`cameraPublicationKey()`), instead of
+  swapping the new track into the old publication.
 - The camera declares VP8 as a backup codec (`backupCodecPolicy: SIMULCAST`): if a subscriber cannot decode VP9,
   LiveKit asks the publisher to also encode VP8, instead of downgrading everyone. When the primary codec is already
   VP8, LiveKit disables the backup itself.
@@ -406,8 +468,8 @@ times.
 - **Congestion control** still applies on top of every cap: the browser lowers the actual bitrate when the network
   cannot carry it, and libwebrtc lowers resolution or frame rate when the CPU cannot keep up (reported as
   `qualityLimitationReason` in the encoder stats and in the video quality analytics).
-- **Dynamic updates**: the quality setting is applied at publication time on LiveKit, and at every encoding update on
-  P2P. Live changes of the setting reach LiveKit tracks at their next publication.
+- **Dynamic updates**: on P2P the quality setting is applied at every encoding update. On LiveKit a change of the
+  camera setting publishes the camera again; a change of the screen share setting reaches it at its next publication.
 
 ## Future work
 

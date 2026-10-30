@@ -1,0 +1,36 @@
+{{- if and .Values.front.enabled (or .Values.ingress.enabled .Values.play.ingress.enabled) (not .Values.singleDomain) -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-front
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $ingressClassName := coalesce .Values.front.ingress.className .Values.ingress.className -}}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  {{- $tls := coalesce .Values.front.ingress.tls .Values.ingress.tls false -}}
+  {{- if $tls }}
+  tls:
+    - hosts:
+        - {{ (include "workadventure.assetsDomainName" .) | quote }}
+      secretName: {{ .Values.front.ingress.secretName | default .Values.ingress.secretName | default (printf "%s-front-cert" $fullName) }}
+  {{- end }}
+  rules:
+    - host: {{ (include "workadventure.assetsDomainName" .) | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $fullName }}-front
+                port:
+                  number: {{ .Values.front.service.port }}
+{{- end }}

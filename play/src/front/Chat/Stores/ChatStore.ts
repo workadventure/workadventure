@@ -1,10 +1,10 @@
 import { get, writable } from "svelte/store";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../types/component";
-import type { ChatMessage as NewChatMessage } from "../Connection/ChatConnection";
+import type { ChatMessage as NewChatMessage, JoinableRoomInfo } from "../Connection/ChatConnection";
 import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { ENABLE_CHAT } from "../../Enum/EnvironmentVariable";
 import { gameManager } from "../../Phaser/Game/GameManager";
-import { matrixSecurity } from "../Connection/Matrix/MatrixSecurity";
+import { getMatrixSecurity } from "../Connection/Matrix/getMatrixSecurity";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { selectedRoomStore } from "./SelectRoomStore";
@@ -15,6 +15,15 @@ type NavChatTab =
       }
     | {
           key: "users";
+      }
+    | {
+          key: "settings";
+      }
+    | {
+          key: "create";
+          kind: "room" | "folder";
+          parentID?: string;
+          parentName?: string;
       }
     | {
           key: "externalModule";
@@ -41,6 +50,12 @@ function createNavChatStore() {
                 set({ key: "users" });
                 analyticsClient.trackAdminEvent("user_list.opened");
             }
+        },
+        switchToSettings() {
+            set({ key: "settings" });
+        },
+        switchToCreate(kind: "room" | "folder", parentID?: string, parentName?: string) {
+            set({ key: "create", kind, parentID, parentName });
         },
         switchToCustomComponent(component: WorkAdventureComponent, props?: WorkAdventureComponentProps) {
             set({ key: "externalModule", component, props });
@@ -81,9 +96,11 @@ export function initializeChatVisibilitySubscription() {
         const isEncrypted = get(selectedRoom.isEncrypted);
 
         if (visible && isEncrypted) {
-            matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal().catch((error) => {
-                console.error(error);
-            });
+            getMatrixSecurity()
+                .then((matrixSecurity) => matrixSecurity.openAutomaticChooseDeviceVerificationMethodModal())
+                .catch((error) => {
+                    console.error(error);
+                });
         }
     });
 
@@ -96,7 +113,7 @@ export const selectedChatMessageToReply = writable<NewChatMessage | null>(null);
 
 export const selectedChatMessageToEdit = writable<NewChatMessage | null>(null);
 
-export const joignableRoom = writable<{ id: string; name: string | undefined }[]>([]);
+export const joignableRoom = writable<JoinableRoomInfo[]>([]);
 
 export const shouldRestoreChatStateStore = writable(false);
 

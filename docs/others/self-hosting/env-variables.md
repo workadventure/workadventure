@@ -27,6 +27,8 @@ Environment variables for the Play service (frontend and pusher).
 | `ALLOWED_CORS_ORIGIN` | No | Allowed CORS origin for API requests. Use '*' to allow any domain |
 | `PUSHER_URL` | No | Public URL of the pusher service |
 | `FRONT_URL` | No | Public URL of the frontend application |
+| `ASSETS_URL` | No | Public URL of the 'front' container serving the JS/CSS assets (for instance https://assets.example.com). If empty, the pusher serves the assets itself. |
+| `ASSETS_INTERNAL_URL` | No | URL the pusher uses to fetch the index.html template and proxy the static files from the 'front' container, for instance http://front. Defaults to ASSETS_URL. |
 | `MAP_STORAGE_API_TOKEN` | Yes | API token for authenticating with the map-storage service |
 | `REDIS_HOST` | No | Redis server hostname or IP address |
 | `REDIS_PORT` | No | Redis server port. Defaults to 6379 |
@@ -41,6 +43,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_PROFILE_SCREEN_PROVIDER` | No | URL of the 'profile' page (typically part of the optionnal Admin component) |
 | `OPENID_SCOPE` | No | OAuth2 scopes to request (space-separated). Defaults to 'openid email profile' |
 | `OPENID_PROMPT` | No | OpenID Connect prompt parameter (e.g., 'login', 'consent') |
+| `OPENID_ACCESS_TYPE` | No | OAuth2 'access_type' parameter sent on the authorization request (e.g. 'offline') |
 | `OPENID_USERNAME_CLAIM` | No | JWT claim to use as the username. Defaults to 'preferred_username' |
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
 | `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
@@ -60,7 +63,7 @@ Environment variables for the Play service (frontend and pusher).
 | `BYPASS_PWA` | No | When true, LocalAdmin map details set bypassPwa so the client never shows the Web App install flow. Defaults to false. |
 | `PROVIDE_DEFAULT_WOKA_NAME` | No | How woka names are assigned: 'no' (manual input), 'random' (random name), 'fix' (use DEFAULT_WOKA_NAME), 'fix-plus-random-numbers' (use DEFAULT_WOKA_NAME with random numbers appended). |
 | `PROVIDE_DEFAULT_WOKA_TEXTURE` | No | How woka textures/avatars are assigned: 'no' (manual selection), 'random' (random texture), 'fix' (use DEFAULT_WOKA_TEXTURE). |
-| `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. |
+| `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. Defaults to true. |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
@@ -76,7 +79,6 @@ Environment variables for the Play service (frontend and pusher).
 | `STUN_SERVER` | No | Comma separated list of STUN server URLs for WebRTC NAT traversal (format: 'stun:hostname:port') |
 | `TURN_SERVER` | No | Comma separated list of TURN server URLs for WebRTC relay (format: 'turn:hostname:port') |
 | `SKIP_RENDER_OPTIMIZATIONS` | No | Skip rendering optimizations (useful for debugging). Defaults to false |
-| `DISABLE_NOTIFICATIONS` | No | Disable browser notifications. Defaults to false |
 | `TURN_USER` | No | Username for TURN server authentication |
 | `TURN_PASSWORD` | No | Password for TURN server authentication |
 | `TURN_STATIC_AUTH_SECRET` | No | The auth secret to generate TURN credentials on the fly (enabled by the --use-auth-secret and --auth-secret in Coturn). |
@@ -85,6 +87,7 @@ Environment variables for the Play service (frontend and pusher).
 | `JITSI_PRIVATE_MODE` | No | If true, Jitsi rooms are private and require authentication. Defaults to false |
 | `MAX_USERNAME_LENGTH` | No | Maximum allowed length for usernames. Defaults to 10 |
 | `MAX_PER_GROUP` | No | Maximum number of users in a bubble/group. Defaults to 4 |
+| `PROXIMITY_FILE_TRANSFER_MAX_USERS` | No | Maximum number of users (sender included) in a proximity chat for files to be shared in it. Files travel peer to peer, so the sender uploads a copy to every recipient. Defaults to 10 |
 | `MAX_DISPLAYED_VIDEOS` | No | An approximation of the maximum number of videos displayed at once. If there are more videos to display, the user will have to scroll. The number of videos can sometimes be slightly greater (MAX_DISPLAYED_VIDEOS + number of videos to display % number of videos per row). This is useful to avoid overloading the Livekit server when a lot of people are in the same room. |
 | `NODE_ENV` | No | Node.js environment: 'development', 'production', or 'test' |
 | `CONTACT_URL` | No | URL for users to contact support or administrators |

@@ -32,6 +32,9 @@ services:
       MAP_EDITOR_ALLOWED_USERS: ""
       MAP_EDITOR_ALLOW_ALL_USERS: "false"
       OPID_SCOPE: profile openid email tags-scope
+      # The production image serves its own assets (no Vite dev server here)
+      ASSETS_URL: ""
+      ASSETS_INTERNAL_URL: ""
       # Increasing Woka speed to make tests faster
       WOKA_SPEED: 27
       # Disable tutorial

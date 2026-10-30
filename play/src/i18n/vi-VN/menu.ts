@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "Dùng bộ khử tiếng ồn tích hợp của trình duyệt.",
             voiceIsolation: "Tách giọng nói",
             voiceIsolationDescription: "Dùng tính năng tách giọng nói của trình duyệt và hệ điều hành khi khả dụng.",
+            noiseSuppressionEngine: "Công cụ khử tiếng ồn",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (mới, giọng nói toàn dải)",
+            noiseSuppressionEngineDtln: "DTLN (công cụ cũ)",
         },
         language: {
             title: "Ngôn ngữ",
@@ -71,12 +74,12 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Chế độ vắng mặt",
             explanation:
-                'Khi thẻ WorkAdventure trong trình duyệt không hiển thị, WorkAdventure chuyển sang "chế độ vắng mặt"',
+                'Khi bạn chuyển sang cửa sổ hoặc thẻ khác, WorkAdventure chuyển sang "chế độ vắng mặt", trừ khi đang trò chuyện hoặc phát sóng.',
             cameraToggle: 'Giữ camera hoạt động trong "chế độ vắng mặt"',
             microphoneToggle: 'Giữ micrô hoạt động trong "chế độ vắng mặt"',
         },
         save: "Lưu",
-        otherSettings: "Tất cả cài đặt",
+        otherSettings: "Cài đặt khác",
         fullscreen: "Toàn màn hình",
         notifications: "Thông báo",
         enablePictureInPicture: "Bật hình trong hình",
@@ -147,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID của bạn",
-        settings: "Cài đặt",
         resetKeyStorageUpButtonLabel: "Đặt lại kho khóa của bạn",
         resetKeyStorageConfirmationModal: {
             title: "Xác nhận đặt lại kho khóa",
@@ -166,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Thông báo toàn cầu",
         contact: "Liên hệ",
         report: "Báo lỗi",
-        chat: "Trò chuyện",
         help: "Trợ giúp & hướng dẫn",
         contextualActions: "Thao tác theo ngữ cảnh",
         shortcuts: "Phím tắt",

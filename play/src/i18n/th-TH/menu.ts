@@ -64,6 +64,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "ใช้ระบบตัดเสียงรบกวนในตัวของเบราว์เซอร์",
             voiceIsolation: "แยกเสียงพูด",
             voiceIsolationDescription: "ใช้ระบบแยกเสียงพูดของเบราว์เซอร์และระบบปฏิบัติการเมื่อรองรับ",
+            noiseSuppressionEngine: "เอนจินลดเสียงรบกวน",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (ใหม่, เสียงเต็มแบนด์)",
+            noiseSuppressionEngineDtln: "DTLN (เอนจินเดิม)",
         },
         language: {
             title: "ภาษา",
@@ -71,12 +74,12 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "โหมดไม่อยู่",
             explanation:
-                'เมื่อแท็บ WorkAdventure ในเบราว์เซอร์ของคุณไม่ได้แสดงอยู่ WorkAdventure จะสลับเป็น "โหมดไม่อยู่"',
+                'เมื่อคุณสลับไปยังหน้าต่างหรือแท็บอื่น WorkAdventure จะสลับเป็น "โหมดไม่อยู่" ยกเว้นระหว่างการสนทนาหรือการถ่ายทอดสด',
             cameraToggle: 'เปิดกล้องต่อไปใน "โหมดไม่อยู่"',
             microphoneToggle: 'เปิดไมโครโฟนต่อไปใน "โหมดไม่อยู่"',
         },
         save: "บันทึก",
-        otherSettings: "การตั้งค่าทั้งหมด",
+        otherSettings: "การตั้งค่าอื่นๆ",
         fullscreen: "เต็มหน้าจอ",
         notifications: "การแจ้งเตือน",
         enablePictureInPicture: "เปิดใช้ภาพซ้อนภาพ",
@@ -146,8 +149,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID ของคุณ",
-        settings: "การตั้งค่า",
         resetKeyStorageUpButtonLabel: "รีเซ็ตที่เก็บกุญแจของคุณ",
         resetKeyStorageConfirmationModal: {
             title: "ยืนยันการรีเซ็ตที่เก็บกุญแจ",
@@ -165,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "ข้อความทั่วถึง",
         contact: "ติดต่อ",
         report: "รายงานปัญหา",
-        chat: "แชท",
         help: "ความช่วยเหลือและบทแนะนำ",
         contextualActions: "การดำเนินการตามบริบท",
         shortcuts: "ปุ่มลัด",

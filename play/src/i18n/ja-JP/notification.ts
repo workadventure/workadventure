@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} と話し合いたい",
     message: "{name} からメッセージを送信",
-    chatRoom: "チャットルームで",
+    mention: "{name} さんがあなたをメンションしました",
     askToMuteMicrophone: "マイクのミュートを依頼します 🙏",
     askToMuteCamera: "カメラのミュートを依頼します 🙏",
     microphoneMuted: "マイクがモデレーターによってミュートされました",
@@ -14,11 +14,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "発言権がなくなりました",
     floorGivenBack: "発言権を返しました",
     handLowered: "モデレーターがあなたの手を下げました",
+    removedFromConversation: "モデレーターによって会話から外されました。",
     actionFailed: "この操作を完了できませんでした",
-    notificationSentToMuteMicrophone: "{name} にマイクをミュートする通知が送信されました",
-    notificationSentToMuteCamera: "{name} にカメラをミュートする通知が送信されました",
     announcement: "お知らせ",
-    open: "開く",
     help: {
         title: "通知へのアクセス拒否",
         permissionDenied: "拒否されました",
@@ -29,9 +27,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "更新",
         continue: "通知なしで続行",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Chrome のアドレスバーから通知を許可する",
     },
     addNewTag: '新しいタグを追加する : "{tag}"',
     screenSharingError: "画面共有を開始できません",

@@ -2,6 +2,7 @@
     import { v4 as uuidv4 } from "uuid";
     import { get } from "svelte/store";
     import type { EntityPrefab, OpenFilePropertyData } from "@workadventure/map-editor";
+    import { UploadedFileKind } from "@workadventure/messages";
     import Input from "../Input/Input.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { UploadFileFrontCommand } from "../../Phaser/Game/MapEditor/Commands/File/UploadFileFrontCommand";
@@ -85,6 +86,7 @@
             file: fileAsUint8Array,
             name: file.name,
             propertyId,
+            kind: UploadedFileKind.Document,
         };
 
         const roomConnection = scene.connection;

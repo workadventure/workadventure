@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "통신 선택으로 돌아가기",
-        selectCommunication: "통신 선택",
         title: "전역 통신",
-        selectCamera: "카메라 선택 📹",
-        selectMicrophone: "마이크 선택 🎙️",
         liveMessage: {
             startMegaphone: "확성기 시작",
             stopMegaphone: "확성기 중지",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "실시간 메시지 시작",
             and: "및",
             toAll: "모든 참가자에게",
-            confirm: "확인",
-            cancel: "취소",
             notice: `
             실시간 메시지 또는 "확성기"를 사용하면 카메라와 마이크를 사용하여 방이나 월드에 연결된 모든 사람들에게 실시간 메시지를 보낼 수 있습니다.
 

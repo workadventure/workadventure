@@ -9,6 +9,7 @@
         ChatRoomSidePanelHydrationState,
         ProximityChatSidePanelRoom,
     } from "../../Connection/ChatConnection";
+    import type { ProximityChatRoomKind } from "../../Connection/Proximity/ProximityChatRoomManager";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
     import Avatar from "../Avatar.svelte";
     import { createQuestionStateRowsStore } from "./QuestionStateRowsStore";
@@ -34,6 +35,18 @@
     const readyHydrationState = readable<ChatRoomSidePanelHydrationState>({ status: "ready" });
 
     let roomName = $derived(room.name);
+    let roomKind = $derived(room.kind ?? readable<ProximityChatRoomKind>("proximity"));
+    let roomKindLabel = $derived(
+        $roomKind === "meeting"
+            ? $LL.mapEditor.properties.livekitRoomProperty.label()
+            : $roomKind === "speaker"
+              ? $LL.mapEditor.properties.speakerMegaphone.label()
+              : $roomKind === "listener"
+                ? $LL.mapEditor.properties.listenerMegaphone.label()
+                : $roomKind === "area"
+                  ? $LL.chat.area()
+                  : $LL.chat.proximity(),
+    );
     let participants = $derived(room.currentMeetingParticipantsStore);
     let pollItems = $derived(room.pollItems ?? emptyPollItems);
     let questionItems = $derived(room.qaItems ?? emptyQuestionItems);
@@ -45,7 +58,7 @@
     let avatarColorStore = $derived(room.avatarFallbackColor);
     let openPollCount = $derived($pollItems.filter((poll) => !get(poll.state).isEnded).length);
     let openQuestionCount = $derived(questionRows.filter(({ state }) => !state.isAnswered).length);
-    let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.kind.open()}`);
+    let pollCardValue = $derived(`${$pollItems.length} · ${openPollCount} ${$LL.chat.poll.status.open()}`);
     let questionCardValue = $derived(`${questionRows.length} · ${openQuestionCount} ${$LL.chat.question.openStatus()}`);
     let isPollCatalogueLoading = $derived(
         $pollCatalogueHydrationState.status === "loading" || $pollCatalogueHydrationState.status === "idle",
@@ -85,7 +98,7 @@
                 <div class="truncate text-lg font-bold text-white">{$roomName}</div>
                 <div class="mt-1 flex flex-wrap gap-1.5 text-xs text-white/65">
                     <span class="rounded-full bg-white/10 px-2 py-0.5">
-                        {$LL.chat.proximity()}
+                        {roomKindLabel}
                     </span>
                 </div>
             </div>

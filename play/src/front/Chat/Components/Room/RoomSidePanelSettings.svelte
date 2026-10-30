@@ -1,16 +1,24 @@
 <script lang="ts">
-    import { EventType } from "matrix-js-sdk";
+    import { EventType } from "matrix-js-sdk/lib/@types/event";
     import { readable } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import Button from "../../../Components/UI/Button.svelte";
+    import Alert from "../../../Components/UI/Alert.svelte";
+    import Input from "../../../Components/Input/Input.svelte";
+    import Select from "../../../Components/Input/Select.svelte";
+    import InputCheckbox from "../../../Components/Input/InputCheckbox.svelte";
+    import InputRadio from "../../../Components/Input/InputRadio.svelte";
+    import { chatInputFocusStore } from "../../../Stores/ChatStore";
+    import Avatar from "../Avatar.svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
         ChatRoomModeration,
         ChatRoomPermissionsState,
         ChatRoomPrivacyState,
-        ChatRoomSettingsAccess,
+        ChatRoomFolderPlacement,
+        ChatRoomJoinRule,
         ChatRoomSettingsManagement,
         historyVisibility,
     } from "../../Connection/ChatConnection";
@@ -19,6 +27,7 @@
         ChatRoomSettingsError,
         historyVisibilityOptions,
     } from "../../Connection/ChatConnection";
+    import { applyWritePreset, permissionsLostBy, writePresetOf, type WritePreset } from "./roomPermissionPresets";
 
     interface Props {
         room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomSettingsManagement;
@@ -61,7 +70,9 @@
     let saveError: string | undefined = $state();
     let editableName = $state("");
     let editableTopic = $state("");
-    let editableAccess: ChatRoomSettingsAccess = $state("invite");
+    // Public and on-request rooms keep their real value here: they show it, even if only "invite" and
+    // "restricted" can be picked.
+    let editableAccess: ChatRoomJoinRule = $state("invite");
     let editableHistoryVisibility: historyVisibility = $state("joined");
     let editablePermissions: ChatRoomPermissionsState = $state({
         sendMessages: ChatPermissionLevel.USER,
@@ -81,8 +92,19 @@
 
     let restrictedRoomId = $derived($privacyState.restrictedRoomId);
     let canUseRestrictedAccess = $derived(restrictedRoomId !== undefined);
+    // Read again when the room's folder changes.
+    let folderPlacement: ChatRoomFolderPlacement | undefined = $derived(
+        $privacyState.restrictedRoomId !== undefined ? room.getFolderPlacement() : undefined,
+    );
+    let canEditAvatar = $derived(room.hasPermissionForRoomStateEvent(EventType.RoomAvatar));
     let hasAnyEditableField = $derived(
-        $canEditName || $canEditTopic || $canEditAccess || $canEditHistory || $canEditPermissions,
+        $canEditName ||
+            $canEditTopic ||
+            $canEditAccess ||
+            $canEditHistory ||
+            $canEditPermissions ||
+            $canEditAvatar ||
+            folderPlacement?.canChangeSuggested === true,
     );
 
     // The access/history <select>s can only represent a subset of the possible Matrix values, so we
@@ -91,8 +113,9 @@
     // saveSettings() reuses these helpers to detect whether the user actually changed the control, so
     // that editing an unrelated field never rewrites join_rules / history_visibility with the lossy
     // collapsed value.
-    function currentAccessValue(): ChatRoomSettingsAccess {
-        return $privacyState.joinRule === "restricted" ? "restricted" : "invite";
+    function currentAccessValue(): ChatRoomJoinRule {
+        const joinRule = $privacyState.joinRule;
+        return joinRule === "restricted" || joinRule === "public" || joinRule === "knock" ? joinRule : "invite";
     }
     function currentHistoryValue(): historyVisibility {
         return historyVisibilityOptions.includes($privacyState.historyVisibility as historyVisibility)
@@ -100,10 +123,21 @@
             : "joined";
     }
 
+    let editableSuggested = $state(false);
+    let avatarFile: File | undefined = $state();
+    let avatarPreview: string | undefined = $state();
+    let myPermissionLevel = $derived(room.myPermissionLevel);
+    let writePreset: WritePreset = $state("everyone");
+    let detailsOpen = $state(false);
+    let lostPermissions = $derived(
+        permissionsDirty ? permissionsLostBy($myPermissionLevel, $roomPermissions, editablePermissions) : [],
+    );
+
     $effect.pre(() => {
         if (settingsDirty) {
             return;
         }
+        editableSuggested = folderPlacement?.suggested ?? false;
         editableName = $roomName;
         editableTopic = $roomTopic;
         editableAccess = currentAccessValue();
@@ -114,8 +148,50 @@
         if (permissionsDirty) {
             return;
         }
-        editablePermissions = { ...$roomPermissions };
+        const current = { ...$roomPermissions };
+        editablePermissions = current;
+        writePreset = writePresetOf(current);
     });
+
+    $effect(() => {
+        const url = avatarPreview;
+        return () => {
+            if (url) URL.revokeObjectURL(url);
+        };
+    });
+
+    function pickAvatar(event: Event) {
+        const file = (event.currentTarget as HTMLInputElement).files?.[0];
+        if (!file) return;
+        avatarFile = file;
+        avatarPreview = URL.createObjectURL(file);
+        markSettingsDirty();
+    }
+
+    function pickWritePreset() {
+        if (writePreset === "custom") {
+            detailsOpen = true;
+            return;
+        }
+        editablePermissions = applyWritePreset(editablePermissions, writePreset);
+        markPermissionsDirty();
+    }
+
+    function forgetPickedAvatar() {
+        avatarFile = undefined;
+        avatarPreview = undefined;
+    }
+
+    function cancel() {
+        settingsDirty = false;
+        permissionsDirty = false;
+        forgetPickedAvatar();
+        saveError = undefined;
+    }
+
+    // Keys typed in the fields must not move the Woka.
+    const focusChatInput = () => chatInputFocusStore.set(true);
+    const unfocusChatInput = () => chatInputFocusStore.set(false);
 
     function markSettingsDirty() {
         settingsDirty = true;
@@ -156,10 +232,18 @@
         // "shared" history being reset to "joined".
         const nameChanged = $canEditName && editableName !== $roomName;
         const topicChanged = $canEditTopic && editableTopic !== $roomTopic;
-        const accessChanged = $canEditAccess && editableAccess !== currentAccessValue();
+        const accessChanged =
+            $canEditAccess &&
+            editableAccess !== currentAccessValue() &&
+            (editableAccess === "invite" || editableAccess === "restricted");
+        const suggestedChanged =
+            folderPlacement?.canChangeSuggested === true && editableSuggested !== folderPlacement.suggested;
+        const avatarChanged = $canEditAvatar && avatarFile !== undefined;
         const historyChanged = $canEditHistory && editableHistoryVisibility !== currentHistoryValue();
 
-        const shouldSaveSettings = settingsDirty && (nameChanged || topicChanged || accessChanged || historyChanged);
+        const shouldSaveSettings =
+            settingsDirty &&
+            (nameChanged || topicChanged || accessChanged || historyChanged || suggestedChanged || avatarChanged);
         const shouldSavePermissions = permissionsDirty && $canEditPermissions;
 
         if (!shouldSaveSettings && !shouldSavePermissions) {
@@ -174,15 +258,18 @@
                 await room.updateRoomSettings({
                     name: nameChanged ? editableName : undefined,
                     topic: topicChanged ? editableTopic : undefined,
-                    access: accessChanged ? editableAccess : undefined,
+                    access: accessChanged ? (editableAccess as "invite" | "restricted") : undefined,
                     restrictedRoomId,
                     historyVisibility: historyChanged ? editableHistoryVisibility : undefined,
+                    suggested: suggestedChanged ? editableSuggested : undefined,
+                    avatar: avatarChanged ? avatarFile : undefined,
                 });
             }
             if (shouldSavePermissions) {
                 await room.updateRoomPowerLevels(editablePermissions);
             }
             clearDirtyFlagsAfterSave(shouldSaveSettings, shouldSavePermissions);
+            if (avatarChanged) forgetPickedAvatar();
             notificationPlayingStore.playNotification($LL.chat.roomPanel.settings.saveSuccess());
         } catch (error) {
             console.error("Failed to save Matrix room settings", error);
@@ -195,7 +282,7 @@
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelSettings">
     <div class="flex-1 overflow-y-auto px-3 py-3">
-        <div class="flex flex-col gap-2 text-sm">
+        <div class="flex flex-col gap-3 text-sm">
             <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
                 <div class="text-xs font-semibold uppercase text-white/45">
                     {$LL.chat.roomPanel.settings.roomType()}
@@ -217,138 +304,149 @@
             </div>
 
             {#if hasAnyEditableField}
-                <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                    <div class="text-xs font-semibold uppercase text-white/45">{$LL.chat.createRoom.name()}</div>
-                    <input
-                        class="mt-2 w-full rounded border border-solid border-white/10 bg-black/20 px-3 py-2 text-sm text-white disabled:opacity-60"
-                        data-testid="roomSettingsNameInput"
-                        bind:value={editableName}
-                        disabled={!$canEditName || settingsSaving}
-                        oninput={markSettingsDirty}
-                    />
-                </div>
-
-                <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                    <div class="text-xs font-semibold uppercase text-white/45">
-                        {$LL.chat.roomPanel.settings.topic()}
-                    </div>
-                    <input
-                        class="mt-2 w-full rounded border border-solid border-white/10 bg-black/20 px-3 py-2 text-sm text-white disabled:opacity-60"
-                        data-testid="roomSettingsTopicInput"
-                        bind:value={editableTopic}
-                        disabled={!$canEditTopic || settingsSaving}
-                        oninput={markSettingsDirty}
-                    />
-                </div>
-
-                <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                    <div class="text-xs font-semibold uppercase text-white/45">
-                        {$LL.chat.roomPanel.settings.joinRule()}
-                    </div>
-                    <select
-                        class="mt-2 w-full rounded border border-solid border-white/10 bg-black/20 px-3 py-2 text-sm text-white disabled:opacity-60"
-                        data-testid="roomSettingsAccessSelect"
-                        bind:value={editableAccess}
-                        disabled={!$canEditAccess || settingsSaving}
-                        onchange={markSettingsDirty}
-                    >
-                        <option value="invite">{$LL.chat.roomPanel.settings.joinRules.invite()}</option>
-                        <option value="restricted" disabled={!canUseRestrictedAccess}>
-                            {$LL.chat.roomPanel.settings.joinRules.restricted()}
-                        </option>
-                    </select>
-                    {#if !canUseRestrictedAccess}
-                        <div class="mt-2 text-xs text-white/45">
-                            {$LL.chat.roomPanel.settings.restrictedUnavailable()}
-                        </div>
+                <div class="flex items-center gap-3 rounded-lg border border-solid border-white/10 bg-white/[0.04] p-3">
+                    {#if avatarPreview}
+                        <img src={avatarPreview} alt="" class="h-10 w-10 shrink-0 rounded-sm object-cover" />
+                    {:else}
+                        <Avatar pictureStore={room.pictureStore} fallbackName={$roomName} />
+                    {/if}
+                    {#if $canEditAvatar}
+                        <label
+                            class="btn btn-sm btn-ghost m-0 cursor-pointer focus-within:ring-2 focus-within:ring-white/60"
+                            data-testid="roomSettingsAvatarButton"
+                        >
+                            {$LL.chat.roomPanel.settings.changeAvatar()}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                class="sr-only"
+                                data-testid="roomSettingsAvatarInput"
+                                disabled={settingsSaving}
+                                onchange={pickAvatar}
+                            />
+                        </label>
                     {/if}
                 </div>
 
-                <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                    <div class="text-xs font-semibold uppercase text-white/45">
-                        {$LL.chat.createRoom.historyVisibility.label()}
-                    </div>
-                    <select
-                        class="mt-2 w-full rounded border border-solid border-white/10 bg-black/20 px-3 py-2 text-sm text-white disabled:opacity-60"
-                        data-testid="roomSettingsHistoryVisibilitySelect"
-                        bind:value={editableHistoryVisibility}
-                        disabled={!$canEditHistory || settingsSaving}
-                        onchange={markSettingsDirty}
-                    >
-                        <option value="joined">{$LL.chat.createRoom.historyVisibility.joined()}</option>
-                        <option value="invited">{$LL.chat.createRoom.historyVisibility.invited()}</option>
-                        <option value="world_readable">
-                            {$LL.chat.createRoom.historyVisibility.world_readable()}
-                        </option>
-                    </select>
-                </div>
+                <Input
+                    data-testid="roomSettingsNameInput"
+                    label={$LL.chat.createRoom.name()}
+                    bind:value={editableName}
+                    disabled={!$canEditName || settingsSaving}
+                    oninput={markSettingsDirty}
+                    onfocusin={focusChatInput}
+                    onfocusout={unfocusChatInput}
+                />
 
-                {#if restrictedRoomId}
-                    <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                        <div class="text-xs font-semibold uppercase text-white/45">
-                            {$LL.chat.roomPanel.settings.restrictedTo()}
-                        </div>
-                        <div class="mt-1 break-all text-white">{restrictedRoomId}</div>
+                <Input
+                    data-testid="roomSettingsTopicInput"
+                    label={$LL.chat.roomPanel.settings.topic()}
+                    bind:value={editableTopic}
+                    disabled={!$canEditTopic || settingsSaving}
+                    oninput={markSettingsDirty}
+                    onfocusin={focusChatInput}
+                    onfocusout={unfocusChatInput}
+                />
+
+                <Select
+                    dataTestId="roomSettingsAccessSelect"
+                    label={$LL.chat.roomPanel.settings.whoCanJoin()}
+                    bind:value={editableAccess}
+                    disabled={!$canEditAccess || settingsSaving}
+                    onchange={markSettingsDirty}
+                >
+                    {#if editableAccess === "public"}
+                        <option value="public" disabled>{$LL.chat.roomPanel.settings.joinRules.public()}</option>
+                    {:else if editableAccess === "knock"}
+                        <option value="knock" disabled>{$LL.chat.roomPanel.settings.joinRules.knock()}</option>
+                    {/if}
+                    <option value="invite">{$LL.chat.roomPanel.settings.joinRules.invite()}</option>
+                    <option value="restricted" disabled={!canUseRestrictedAccess}>
+                        {folderPlacement
+                            ? $LL.chat.roomPanel.settings.joinFolderMembers({ folder: folderPlacement.folderName })
+                            : $LL.chat.roomPanel.settings.joinRules.restricted()}
+                    </option>
+                </Select>
+                {#if !canUseRestrictedAccess}
+                    <div class="-mt-1 text-xs text-white/45">
+                        {$LL.chat.roomPanel.settings.restrictedUnavailable()}
                     </div>
                 {/if}
 
-                <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                    <div class="text-xs font-semibold uppercase text-white/45">
-                        {$LL.chat.roomPanel.settings.permissions.title()}
-                    </div>
-                    <div class="mt-3 flex flex-col gap-2">
+                {#if folderPlacement}
+                    <InputCheckbox
+                        data-testid="roomSettingsSuggested"
+                        label={$LL.chat.roomPanel.settings.suggestedIn({ folder: folderPlacement.folderName })}
+                        bind:value={editableSuggested}
+                        disabled={!folderPlacement.canChangeSuggested || settingsSaving}
+                        onchange={markSettingsDirty}
+                    />
+                {/if}
+
+                <Select
+                    dataTestId="roomSettingsHistoryVisibilitySelect"
+                    label={$LL.chat.createRoom.historyVisibility.label()}
+                    bind:value={editableHistoryVisibility}
+                    disabled={!$canEditHistory || settingsSaving}
+                    onchange={markSettingsDirty}
+                >
+                    <option value="joined">{$LL.chat.createRoom.historyVisibility.joined()}</option>
+                    <option value="invited">{$LL.chat.createRoom.historyVisibility.invited()}</option>
+                    <option value="world_readable">
+                        {$LL.chat.createRoom.historyVisibility.world_readable()}
+                    </option>
+                </Select>
+
+                <fieldset class="m-0 flex flex-col border-0 p-0">
+                    <legend class="p-0 pb-1 text-sm font-bold">{$LL.chat.roomPanel.settings.whoCanWrite()}</legend>
+                    {#each ["everyone", "moderators", "custom"] as const as preset (preset)}
+                        <InputRadio
+                            id={`roomSettingsWritePreset-${preset}`}
+                            name="roomSettingsWritePreset"
+                            bind:group={writePreset}
+                            value={preset}
+                            disabled={!$canEditPermissions || settingsSaving}
+                            onchange={pickWritePreset}
+                            label={preset === "everyone"
+                                ? $LL.chat.roomPanel.settings.writePresets.everyone()
+                                : preset === "moderators"
+                                  ? $LL.chat.roomPanel.settings.writePresets.moderators()
+                                  : $LL.chat.roomPanel.settings.writePresets.custom()}
+                        />
+                    {/each}
+                </fieldset>
+
+                <details
+                    class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3"
+                    bind:open={detailsOpen}
+                >
+                    <summary class="cursor-pointer py-3 font-bold" data-testid="roomSettingsDetailedPermissions">
+                        {$LL.chat.roomPanel.settings.permissions.detailed()}
+                    </summary>
+                    <div class="flex flex-col gap-2 pb-3">
                         {#each permissionRows as permissionRow (permissionRow.key)}
-                            <label class="flex items-center justify-between gap-3 text-white/80">
-                                <span class="min-w-0 flex-1">
-                                    {#if permissionRow.key === "sendMessages"}
-                                        {$LL.chat.roomPanel.settings.permissions.sendMessages()}
-                                    {:else if permissionRow.key === "sendReactions"}
-                                        {$LL.chat.roomPanel.settings.permissions.sendReactions()}
-                                    {:else if permissionRow.key === "redactOwnMessages"}
-                                        {$LL.chat.roomPanel.settings.permissions.redactOwnMessages()}
-                                    {:else if permissionRow.key === "redactOtherMessages"}
-                                        {$LL.chat.roomPanel.settings.permissions.redactOtherMessages()}
-                                    {:else if permissionRow.key === "kickUsers"}
-                                        {$LL.chat.roomPanel.settings.permissions.kickUsers()}
-                                    {:else if permissionRow.key === "banUsers"}
-                                        {$LL.chat.roomPanel.settings.permissions.banUsers()}
-                                    {:else if permissionRow.key === "inviteUsers"}
-                                        {$LL.chat.roomPanel.settings.permissions.inviteUsers()}
-                                    {:else if permissionRow.key === "changeSettings"}
-                                        {$LL.chat.roomPanel.settings.permissions.changeSettings()}
-                                    {:else if permissionRow.key === "changeRoomName"}
-                                        {$LL.chat.roomPanel.settings.permissions.changeRoomName()}
-                                    {:else if permissionRow.key === "changeRoomTopic"}
-                                        {$LL.chat.roomPanel.settings.permissions.changeRoomTopic()}
-                                    {:else if permissionRow.key === "changeHistoryVisibility"}
-                                        {$LL.chat.roomPanel.settings.permissions.changeHistoryVisibility()}
-                                    {:else if permissionRow.key === "changeAccess"}
-                                        {$LL.chat.roomPanel.settings.permissions.changeAccess()}
-                                    {:else if permissionRow.key === "changePermissions"}
-                                        {$LL.chat.roomPanel.settings.permissions.changePermissions()}
-                                    {/if}
-                                </span>
-                                <select
-                                    class="w-36 rounded border border-solid border-white/10 bg-black/20 px-2 py-1.5 text-sm text-white disabled:opacity-60"
-                                    data-testid={`roomPermission-${permissionRow.key}`}
-                                    bind:value={editablePermissions[permissionRow.key]}
-                                    disabled={!$canEditPermissions || settingsSaving}
-                                    onchange={markPermissionsDirty}
+                            <Select
+                                dataTestId={`roomPermission-${permissionRow.key}`}
+                                label={$LL.chat.roomPanel.settings.permissions[permissionRow.key]()}
+                                bind:value={editablePermissions[permissionRow.key]}
+                                disabled={!$canEditPermissions || settingsSaving}
+                                onchange={() => {
+                                    writePreset = writePresetOf(editablePermissions);
+                                    markPermissionsDirty();
+                                }}
+                            >
+                                <option value={ChatPermissionLevel.USER}>{$LL.chat.manageRoomUsers.roles.USER()}</option
                                 >
-                                    <option value={ChatPermissionLevel.USER}>
-                                        {$LL.chat.manageRoomUsers.roles.USER()}
-                                    </option>
-                                    <option value={ChatPermissionLevel.MODERATOR}>
-                                        {$LL.chat.manageRoomUsers.roles.MODERATOR()}
-                                    </option>
-                                    <option value={ChatPermissionLevel.ADMIN}>
-                                        {$LL.chat.manageRoomUsers.roles.ADMIN()}
-                                    </option>
-                                </select>
-                            </label>
+                                <option value={ChatPermissionLevel.MODERATOR}>
+                                    {$LL.chat.manageRoomUsers.roles.MODERATOR()}
+                                </option>
+                                <option value={ChatPermissionLevel.ADMIN}
+                                    >{$LL.chat.manageRoomUsers.roles.ADMIN()}</option
+                                >
+                            </Select>
                         {/each}
                     </div>
-                </div>
+                </details>
             {:else}
                 <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
                     <div class="text-xs font-semibold uppercase text-white/45">
@@ -360,7 +458,9 @@
                         {:else if $privacyState.joinRule === "invite"}
                             {$LL.chat.roomPanel.settings.joinRules.invite()}
                         {:else if $privacyState.joinRule === "restricted"}
-                            {$LL.chat.roomPanel.settings.joinRules.restricted()}
+                            {folderPlacement
+                                ? $LL.chat.roomPanel.settings.joinFolderMembers({ folder: folderPlacement.folderName })
+                                : $LL.chat.roomPanel.settings.joinRules.restricted()}
                         {:else if $privacyState.joinRule === "knock"}
                             {$LL.chat.roomPanel.settings.joinRules.knock()}
                         {:else}
@@ -386,15 +486,6 @@
                     </div>
                 </div>
 
-                {#if restrictedRoomId}
-                    <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
-                        <div class="text-xs font-semibold uppercase text-white/45">
-                            {$LL.chat.roomPanel.settings.restrictedTo()}
-                        </div>
-                        <div class="mt-1 break-all text-white">{restrictedRoomId}</div>
-                    </div>
-                {/if}
-
                 <div
                     class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3 text-xs text-white/60"
                 >
@@ -415,17 +506,33 @@
                     {saveError}
                 </div>
             {/if}
-            <Button
-                variant="secondary"
-                class="m-0 w-full disabled:opacity-50"
-                dataTestId="roomSettingsSaveButton"
-                disabled={settingsSaving ||
-                    (!settingsDirty && !permissionsDirty) ||
-                    ($canEditName && editableName.trim().length === 0)}
-                onclick={saveSettings}
-            >
-                {settingsSaving ? $LL.chat.roomPanel.settings.saving() : $LL.chat.roomPanel.settings.save()}
-            </Button>
+            {#if lostPermissions.length > 0}
+                <div class="mb-3" data-testid="roomSettingsLostRightsWarning">
+                    <Alert variant="warning" class="w-full">{$LL.chat.roomPanel.settings.lostRightsWarning()}</Alert>
+                </div>
+            {/if}
+            <div class="flex gap-2">
+                <Button
+                    variant="contrast"
+                    class="m-0 flex-1"
+                    dataTestId="roomSettingsCancelButton"
+                    disabled={settingsSaving || (!settingsDirty && !permissionsDirty)}
+                    onclick={cancel}
+                >
+                    {$LL.chat.confirm.cancel()}
+                </Button>
+                <Button
+                    variant="secondary"
+                    class="m-0 flex-1 disabled:opacity-50"
+                    dataTestId="roomSettingsSaveButton"
+                    disabled={settingsSaving ||
+                        (!settingsDirty && !permissionsDirty) ||
+                        ($canEditName && editableName.trim().length === 0)}
+                    onclick={saveSettings}
+                >
+                    {settingsSaving ? $LL.chat.roomPanel.settings.saving() : $LL.chat.roomPanel.settings.save()}
+                </Button>
+            </div>
         </div>
     {/if}
 </div>

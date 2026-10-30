@@ -1,7 +1,8 @@
 <script lang="ts">
     import highlightWords from "highlight-words";
     import { defaultColor } from "@workadventure/shared-utils";
-    import { onDestroy, onMount } from "svelte";
+    import { getContext, onDestroy, onMount } from "svelte";
+    import { locale } from "../../../../i18n/i18n-svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -10,9 +11,12 @@
     } from "../../Connection/ChatConnection";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
-    import LL from "../../../../i18n/i18n-svelte";
     import Avatar from "../Avatar.svelte";
     import EncryptionBadge from "../EncryptionBadge.svelte";
+    import UnreadCount from "../UnreadCount.svelte";
+    import LastMessagePreview from "../LastMessagePreview.svelte";
+    import { ROOM_ROW_PREVIEW_CONTEXT } from "../RoomListLayout";
+    import { formatLastActivity } from "../unreadCount";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
     import { IconBellOff } from "@wa-icons";
 
@@ -25,6 +29,7 @@
     let roomType = $derived(room.type);
     let hasUnreadMessage = $derived(room.hasUnreadMessages);
     let roomUnreadCount = $derived(room.unreadNotificationCount);
+    let hasUnreadMentions = $derived(room.hasUnreadMentions);
     let roomName = $derived(room.name);
     let isEncrypted = $derived(room.isEncrypted);
     let areNotificationsMuted = $derived(room.areNotificationsMuted);
@@ -37,6 +42,9 @@
     );
 
     let isSelected = $derived($selectedRoomStore?.id === room.id);
+    const rowPreview = getContext<{ shown: boolean } | undefined>(ROOM_ROW_PREVIEW_CONTEXT);
+    // Only listened to while shown.
+    let lastMessagePreview = $derived(rowPreview?.shown ? room.lastMessagePreview : undefined);
     let peerAvatarColorStore = $derived(room.avatarFallbackColor);
     let peerWaParensStore = $derived(room.peerWaDisplayNameIfDifferent);
     let peerWaDisplayNameParens = $derived(peerWaParensStore ? $peerWaParensStore : undefined);
@@ -52,59 +60,72 @@
     });
 </script>
 
+{#snippet nameChunks()}
+    {#each chunks as chunk (chunk.key)}
+        <span
+            class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
+                ? 'text-white'
+                : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
+        >
+    {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+            >({peerWaDisplayNameParens})</span
+        >{/if}
+{/snippet}
+
 <div
     class={[
-        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer w-full",
+        "wa-chat-item group/chatItem relative mb-[1px] text-md m-0 flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer pe-2 cursor-pointer w-full",
         {
-            "bg-white/10 rounded": isSelected,
+            "bg-white/15 rounded before:absolute before:start-0 before:inset-y-2 before:w-[3px] before:rounded-full before:bg-secondary":
+                isSelected,
         },
     ]}
-    onclick={() => selectedRoomStore.set(room)}
-    onkeyup={() => selectedRoomStore.set(room)}
-    role="button"
-    tabindex="0"
+    aria-current={isSelected ? "true" : undefined}
+    data-roving-row
     data-testid={$roomName}
 >
-    <div class="relative shrink-0">
-        <Avatar
-            compact
-            pictureStore={room.pictureStore}
-            fallbackName={$roomName}
-            color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
-        />
+    <!-- The room menu cannot sit inside a button: it stays next to it, in the row. -->
+    <button
+        data-room-row-button
+        class="flex flex-1 min-w-0 items-center gap-2 self-stretch ps-2 py-2 m-0 rounded bg-transparent border-none text-start cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
+        onclick={() => selectedRoomStore.set(room)}
+    >
+        <span class="relative shrink-0">
+            <Avatar
+                compact
+                pictureStore={room.pictureStore}
+                fallbackName={$roomName}
+                color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
+            />
 
-        {#if $isEncrypted}
-            <EncryptionBadge />
-        {/if}
-    </div>
-    <div class="m-0 flex-1 min-w-0 text-start">
-        {#each chunks as chunk (chunk.key)}
-            <span
-                class="{chunk.match ? 'text-light-blue' : ''} {$hasUnreadMessage
-                    ? 'text-white'
-                    : 'text-white/75'} cursor-default text-sm font-bold">{chunk.text}</span
-            >
-        {/each}{#if peerWaDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
-                >({peerWaDisplayNameParens})</span
-            >{/if}
-    </div>
+            {#if $isEncrypted}
+                <EncryptionBadge />
+            {/if}
+        </span>
+        <span class="m-0 flex-1 min-w-0">
+            {#if lastMessagePreview}
+                <span class="flex items-baseline gap-2">
+                    <span class="min-w-0 truncate">{@render nameChunks()}</span>
+                    {#if $lastMessagePreview}
+                        <span class="ms-auto shrink-0 text-xs text-white/50">
+                            {formatLastActivity($lastMessagePreview.timestamp, new Date(), $locale)}
+                        </span>
+                    {/if}
+                </span>
+                <LastMessagePreview preview={lastMessagePreview} showSender={$roomType !== "direct"} />
+            {:else}
+                {@render nameChunks()}
+            {/if}
+        </span>
+    </button>
     {#if $areNotificationsMuted}
         <IconBellOff font-size="12" class="opacity-50" />
     {/if}
     <RoomMenu {room} />
     {#if $hasUnreadMessage}
-        <div class="relative flex h-7 w-7 items-center justify-center">
-            <span class="absolute top-2 start-2 block h-4 w-4 rounded-full bg-white animate-ping"></span>
-            <span class="absolute top-2.5 start-2.5 block h-3 w-3 rounded-full bg-white"></span>
-            <div
-                class="flex aspect-square h-5 w-5 items-center justify-center rounded-full bg-success text-sm font-bold leading-none text-contrast z-10"
-                aria-label={$LL.chat.a11y.unreadCount({ count: $roomUnreadCount })}
-            >
-                <span>{$roomUnreadCount > 9 ? "9" : $roomUnreadCount}</span>
-                {#if $roomUnreadCount > 9}
-                    <span class="text-xxs">+</span>
-                {/if}
-            </div>
-        </div>
+        <UnreadCount
+            count={$roomUnreadCount}
+            variant={$hasUnreadMentions ? "mention" : $areNotificationsMuted ? "muted" : "default"}
+        />
     {/if}
 </div>

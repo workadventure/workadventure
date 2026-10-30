@@ -1,5 +1,5 @@
 // If this changes, also update the matching CSS breakpoints.
-const breakpoints = {
+export const breakpoints = {
     xs: 0,
     sm: 576,
     md: 768,

@@ -1,7 +1,8 @@
 import type { IContent, MatrixEvent, Room } from "matrix-js-sdk";
+import { EventType, NotificationCountType, RelationType } from "matrix-js-sdk";
 import type { IThreadBundledRelationship } from "matrix-js-sdk/lib/models/event";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
-import type { ChatThreadSummary } from "../ChatConnection";
+import type { ChatMessagePreview, ChatReadState, ChatThreadSummary } from "../ChatConnection";
 import { getEventSenderMember } from "./MatrixChatUser";
 
 type ThreadRelationContent = {
@@ -63,6 +64,7 @@ export function getThreadSummary(thread: Thread | null, room: Room, rootEventId:
     const unreadFields = {
         hasUnreadMessages: unreadNotificationCount > 0,
         unreadNotificationCount,
+        hasUnreadMentions: room.getThreadUnreadNotificationCount(rootEventId, NotificationCountType.Highlight) > 0,
     };
     const degradedFields = isDegraded
         ? {
@@ -111,6 +113,36 @@ export function getThreadSummary(thread: Thread | null, room: Room, rootEventId:
         ...degradedFields,
         ...unreadFields,
     };
+}
+
+/** The last message of the room's synced timeline, edits and thread replies aside. */
+export function getLastMessagePreview(
+    room: Room,
+    readStateOf?: (eventId: string) => ChatReadState,
+): ChatMessagePreview | undefined {
+    const events = room.getLiveTimeline().getEvents();
+    for (let i = events.length - 1; i >= 0; i--) {
+        const event = events[i];
+        if (
+            event.getType() !== EventType.RoomMessage ||
+            event.isRelation(RelationType.Replace) ||
+            !shouldDisplayEventInRoomTimeline(event)
+        ) {
+            continue;
+        }
+        const body = getEventPreview(event);
+        if (body) {
+            const eventId = event.getId();
+            const isMine = readStateOf !== undefined && event.getSender() === room.client.getUserId();
+            return {
+                body,
+                senderName: getEventSenderName(event, room),
+                timestamp: event.getTs(),
+                readState: isMine && eventId ? readStateOf(eventId) : undefined,
+            };
+        }
+    }
+    return undefined;
 }
 
 function getEventPreview(event: MatrixEvent | undefined): string | undefined {

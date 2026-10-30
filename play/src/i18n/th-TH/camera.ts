@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "แก้ไขกล้อง",
-    editMic: "แก้ไขไมโครโฟน",
     editSpeaker: "แก้ไขเอาต์พุตเสียง",
     active: "เปิดใช้งาน",
     disabled: "ปิดใช้งาน",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "ต้องการสิทธิ์เข้าถึงกล้อง / ไมโครโฟน",
         cameraTitle: "ต้องการสิทธิ์เข้าถึงกล้อง",
         microphoneTitle: "ต้องการสิทธิ์เข้าถึงไมโครโฟน",
-        permissionDenied: "ไม่ได้รับอนุญาต",
         cameraPermissionDenied: "การเข้าถึงกล้องถูกปฏิเสธ",
         microphonePermissionDenied: "การเข้าถึงไมโครโฟนถูกปฏิเสธ",
         cameraMicrophonePermissionDenied: "การเข้าถึงกล้องและไมโครโฟนถูกปฏิเสธ",
@@ -82,8 +80,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     },
     my: {
         silentZone: "โซนเงียบ",
-        silentZoneDesc:
-            "คุณอยู่ในโซนเงียบ คุณจะเห็นและได้ยินเฉพาะคนที่อยู่กับคุณเท่านั้น และจะไม่เห็นหรือได้ยินคนอื่น ๆ ในห้อง",
+        silentZoneDesc: "คุณอยู่ในโซนเงียบ ไม่มีใครพูดคุยกับคุณได้ที่นี่ และไมโครโฟนกับกล้องของคุณถูกปิดอยู่",
         nameTag: "คุณ",
         loading: "กำลังโหลดกล้องของคุณ...",
     },
@@ -92,7 +89,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "การดำเนินการเพิ่มเติม",
         closeMenu: "ปิดเมนู",
         senPrivateMessage: "ส่งข้อความส่วนตัว (เร็ว ๆ นี้)",
-        kickoffUser: "เชิญผู้ใช้ออก",
         giveFloor: "ให้สิทธิ์การพูด",
         revokeFloor: "เรียกคืนสิทธิ์การพูด",
         muteAudioUser: "ปิดเสียง",
@@ -102,14 +98,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "ขอให้ปิดวิดีโอ",
         muteVideoEveryBody: "ปิดวิดีโอสำหรับทุกคน",
         blockOrReportUser: "การจัดการ",
-    },
-    backgroundEffects: {
-        imageTitle: "ภาพพื้นหลัง",
-        blurTitle: "เบลอพื้นหลัง",
-        resetTitle: "ปิดเอฟเฟกต์พื้นหลัง",
-        title: "เอฟเฟกต์พื้นหลัง",
-        close: "ปิด",
-        blurAmount: "ระดับความเบลอ",
     },
 };
 

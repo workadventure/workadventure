@@ -4,10 +4,7 @@ import type { Translation } from "../i18n-types";
 const megaphone: DeepPartial<Translation["megaphone"]> = {
     modal: {
         backToSelectCommunication: "Quay lại chọn hình thức truyền thông",
-        selectCommunication: "Chọn hình thức truyền thông",
         title: "Truyền thông toàn cầu",
-        selectCamera: "Chọn camera 📹",
-        selectMicrophone: "Chọn micrô 🎙️",
         liveMessage: {
             startMegaphone: "Bật loa phóng thanh",
             stopMegaphone: "Tắt loa phóng thanh",
@@ -19,8 +16,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Bắt đầu thông điệp trực tiếp",
             and: "và",
             toAll: "tới tất cả người tham gia",
-            confirm: "Xác nhận",
-            cancel: "Hủy",
             notice: `
             Thông điệp trực tiếp hay "Loa phóng thanh" cho phép bạn gửi một thông điệp trực tiếp bằng camera và micrô tới tất cả những người đang kết nối trong phòng hoặc trong thế giới.
 

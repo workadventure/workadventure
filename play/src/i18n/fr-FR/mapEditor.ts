@@ -83,6 +83,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Jouer un audio avec un volume réglable.",
             audioLinkLabel: "Lien vers l'audio",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Importer un fichier",
+            sourceUrl: "Utiliser une URL",
             defaultButtonLabel: "Jouer de la musique",
             volumeLabel: "Volume",
             error: "Impossible de charger le son",
@@ -465,7 +467,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Mode auditorium activé",
                 audienceVideoFeedbackActivatedDisabled: "Mode auditorium désactivé",
                 audienceVideoFeedbackActivatedHelper:
-                    "Mode auditorium activé : Recevez le flux caméra et microphone de tous les utilisateurs (avec caméra et microphone activés) dans la salle/monde. Mais le participant ne pourra pas voir les autres participants. Désactivé par défaut.",
+                    "Mode auditorium activé : Recevez le flux caméra de tous les utilisateurs (avec caméra activée) dans la salle/monde, sans leur son. Mais le participant ne pourra pas voir les autres participants. Désactivé par défaut.",
                 error: {
                     title: "Veuillez entrer un nom",
                     save: {

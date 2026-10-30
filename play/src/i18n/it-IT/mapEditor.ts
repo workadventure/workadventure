@@ -85,6 +85,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "Volume",
             audioLinkLabel: "Link Audio",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Carica un file",
+            sourceUrl: "Usa un URL",
             defaultButtonLabel: "Riproduci musica",
             error: "Impossibile caricare il suono",
             actionButtonLabel: "Riproduci musica",
@@ -462,7 +464,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 audienceVideoFeedbackActivated: "Modalità auditorium",
                 audienceVideoFeedbackActivatedDisabled: "Modalità auditorium",
                 audienceVideoFeedbackActivatedHelper:
-                    "Modalità auditorium attivata: Ricevi il flusso di camera e microfono di tutti gli utenti (con camera e microfono attivati) nella stanza/mondo. Ma il partecipante non sarà in grado di vedere gli altri partecipanti. Disattivato per impostazione predefinita.",
+                    "Modalità auditorium attivata: Ricevi il flusso della camera di tutti gli utenti (con camera attivata) nella stanza/mondo, senza il loro audio. Ma il partecipante non sarà in grado di vedere gli altri partecipanti. Disattivato per impostazione predefinita.",
                 error: {
                     title: "Per favore inserisci un titolo",
                     save: {

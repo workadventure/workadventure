@@ -4,7 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} co z tobu diskutěrowaś",
     message: "{name} sćelo śi powěsć",
-    chatRoom: "we forumje",
+    mention: "{name} jo śi naspomnjeł",
     askToMuteMicrophone: "Mógu waš mikrofon němy cyniś?",
     askToMuteCamera: "Mógu wašu kameru němy cyniś?",
     microphoneMuted: "Waš mikrofon jo se wót moderatora němy cynił",
@@ -14,11 +14,9 @@ const notification: DeepPartial<Translation["notification"]> = {
     floorRevoked: "Njamaš wěcej słowo",
     floorGivenBack: "Sy słowo slědk dał",
     handLowered: "Moderator jo twoju ruku spušćił",
+    removedFromConversation: "Moderator jo śi z rozgrona wótpórał.",
     actionFailed: "Toś ta akcija njejo se raźiła",
-    notificationSentToMuteMicrophone: "Powěźeńka jo se na {name} pósłała, aby jogo mikrofon němy cynił",
-    notificationSentToMuteCamera: "Powěźeńka jo se na {name} pósłała, aby jogo kameru němy cyniła",
     announcement: "Připowěźeńka",
-    open: "Wócyniś",
     help: {
         title: "Pśistup k powěźeńkam wótpokazany",
         permissionDenied: "Pśistup wótpokazany",
@@ -29,9 +27,9 @@ const notification: DeepPartial<Translation["notification"]> = {
         refresh: "Aktualizěrowaś",
         continue: "Bźez powěźeńkow pókšacowaś",
         screen: {
-            firefox: "/resources/help-setting-notification-permission/en-US-chrome.png",
             chrome: "/resources/help-setting-notification-permission/en-US-chrome.png",
         },
+        screenAlt: "Powěźeńki pśez adresowe pólo w Chrome zwóliś",
     },
     addNewTag: 'nowy tag pśidaś: "{tag}"',
     screenSharingError: "Źělenje wobrazowki njedajo se startowaś",

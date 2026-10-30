@@ -66,6 +66,9 @@ const menu: DeepPartial<Translation["menu"]> = {
             voiceIsolation: "Aïllament de veu",
             voiceIsolationDescription:
                 "Utilitza l'aïllament de veu del navegador i del sistema operatiu quan estigui disponible.",
+            noiseSuppressionEngine: "Motor de supressió de soroll",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (nou, veu de banda completa)",
+            noiseSuppressionEngineDtln: "DTLN (motor anterior)",
         },
         language: {
             title: "Idioma",
@@ -73,12 +76,12 @@ const menu: DeepPartial<Translation["menu"]> = {
         privacySettings: {
             title: "Mode no present",
             explanation:
-                'Quan la pestanya de WorkAdventure al seu navegador no és visible, WorkAdventure cambia al "mode no present"',
+                'En canviar a una altra finestra o pestanya, WorkAdventure passa al "mode no present", excepte durant una conversa o una emissió.',
             cameraToggle: 'Mantenir la càmera activa en "mode no present"',
             microphoneToggle: 'Mantenir el micròfon actiu en "mode no present"',
         },
         save: "Guardar",
-        otherSettings: "Totes les configuracions",
+        otherSettings: "Altres configuracions",
         fullscreen: "Pantalla completa",
         notifications: "Notificacions",
         enablePictureInPicture: "Activar picture-in-picture",
@@ -148,8 +151,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "El vostre ID Matrix",
-        settings: "Configuració",
         resetKeyStorageUpButtonLabel: "Restablir l'emmagatzematge de claus",
         resetKeyStorageConfirmationModal: {
             title: "Confirmació de restabliment de l'emmagatzematge de claus",
@@ -167,7 +168,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Missatges Globals",
         contact: "Contacte",
         report: "Reportar problemes",
-        chat: "Xat",
         help: "Ajuda i tutorials",
         contextualActions: "Accions contextuals",
         shortcuts: "Dreceres",

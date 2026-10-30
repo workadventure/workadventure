@@ -12,7 +12,7 @@ export default {
         title: "Bewegen",
         descriptionDesktop:
             "Gebruik de pijltjestoetsen of WASD om je personage te bewegen. Je kunt ook rechtsklikken om te bewegen. Probeer nu te bewegen!",
-        descriptionMobile: "Gebruik de joystick of tik op de kaart om je personage te bewegen. Probeer nu te bewegen!",
+        descriptionTouch: "Tik op de kaart om erheen te lopen en sleep om rond te kijken. Probeer nu te bewegen!",
         next: "Volgende",
     },
     communication: {

@@ -42,7 +42,12 @@ export interface IRecordingManager {
         egressId: string,
         roomName: string,
     ): { processed: boolean; recorder: SpaceUser | null; unexpected: boolean; hasActiveSessions: boolean };
-    hasRecordingSession(recordingSessionId: string): boolean;
+    /** The sessions still waiting for LiveKit to report the end of their egress. */
+    getRecordingSessionIds(): string[];
+    /** Called when a session starts waiting for its egress, before LiveKit is even asked to start it. */
+    onSessionAdded?: (recordingSessionId: string) => void;
+    /** Called when a session no longer waits for its egress. */
+    onSessionRemoved?: (recordingSessionId: string) => void;
     handleAddUser(user: SpaceUser): void;
     isRecording: boolean;
     destroy(): void;
@@ -52,6 +57,8 @@ export class RecordingManager implements IRecordingManager {
     private readonly sessions = new Map<string, RecordingSession>();
     private readonly sessionIdsByEgressId = new Map<string, string>();
     private primarySessionId: string | undefined;
+    public onSessionAdded?: (recordingSessionId: string) => void;
+    public onSessionRemoved?: (recordingSessionId: string) => void;
 
     constructor(
         private readonly _space: ICommunicationSpace,
@@ -132,8 +139,8 @@ export class RecordingManager implements IRecordingManager {
         // Intentionally empty. Kept for symmetry with deletion hooks.
     }
 
-    public hasRecordingSession(recordingSessionId: string): boolean {
-        return this.sessions.has(recordingSessionId);
+    public getRecordingSessionIds(): string[] {
+        return Array.from(this.sessions.keys());
     }
 
     public getRecordingState(): ManagedRecordingState {
@@ -231,6 +238,7 @@ export class RecordingManager implements IRecordingManager {
 
         this.sessions.set(session.recordingSessionId, session);
         this.primarySessionId = session.recordingSessionId;
+        this.onSessionAdded?.(session.recordingSessionId);
         return session;
     }
 
@@ -256,6 +264,7 @@ export class RecordingManager implements IRecordingManager {
         }
 
         this.sessions.delete(recordingSessionId);
+        this.onSessionRemoved?.(recordingSessionId);
         if (this.primarySessionId === recordingSessionId) {
             this.primarySessionId = undefined;
         }

@@ -57,7 +57,9 @@
             try {
                 const sentryOptions: Sentry.BrowserOptions = {
                     dsn: SENTRY_DSN_FRONT,
-                    release: SENTRY_RELEASE,
+                    // Prefer the release injected at build time by sentryVitePlugin: the front can be deployed
+                    // without the pusher, so the pusher's SENTRY_RELEASE may be older than this bundle.
+                    release: (globalThis as { SENTRY_RELEASE?: { id?: string } }).SENTRY_RELEASE?.id ?? SENTRY_RELEASE,
                     environment: SENTRY_ENVIRONMENT,
                     // Keep Sentry's default `browserApiErrors` integration but disable its
                     // requestAnimationFrame wrapping: it re-wraps the rAF callback on every frame,

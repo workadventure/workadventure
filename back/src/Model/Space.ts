@@ -4,7 +4,6 @@ import * as Sentry from "@sentry/node";
 import type {
     BackEventMessage,
     BackToPusherSpaceMessage,
-    HandleLivekitWebhookRequest,
     PrivateEvent,
     PublicEvent,
     SpaceAnswerMessage,
@@ -594,8 +593,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 );
                 break;
             }
+            case "microphoneTrackPublishedMessage": {
+                this.communicationManager.handleMicrophoneTrackPublished(
+                    backEvent.senderUserId,
+                    event.microphoneTrackPublishedMessage,
+                );
+                break;
+            }
             default: {
-                const _exhaustiveCheck: never = event as never;
+                const _exhaustiveCheck: never = event;
             }
         }
     }
@@ -857,9 +863,6 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
     public async stopRecordingByServer(): Promise<void> {
         await this.communicationManager.handleServerStopRecording();
-    }
-    public async handleLivekitWebhook(request: HandleLivekitWebhookRequest): Promise<void> {
-        await this.communicationManager.handleLivekitWebhook(request);
     }
     public getRecordingState(): ManagedRecordingState {
         return this.communicationManager.getRecordingState();

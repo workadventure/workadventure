@@ -14,6 +14,10 @@ data:
   UPLOADER_URL: {{ include "workadventure.uploaderUrl" . | quote }}
   PUSHER_URL: {{ include "workadventure.pusherUrl" . | quote }}
   FRONT_URL: {{ include "workadventure.playUrl" . | quote }}
+  {{- if .Values.front.enabled }}
+  ASSETS_URL: {{ include "workadventure.assetsUrl" . | quote }}
+  ASSETS_INTERNAL_URL: "http://{{ include "workadventure.fullname" . }}-front:{{ .Values.front.service.port }}"
+  {{- end }}
   # The PUBLIC_MAP_STORAGE_URL is only used when no admin is connected
   PUBLIC_MAP_STORAGE_URL: {{ include "workadventure.mapStorageUrl" . | quote }}
   INTERNAL_MAP_STORAGE_URL: "http://{{ include "workadventure.fullname" . }}-mapstorage:3000"

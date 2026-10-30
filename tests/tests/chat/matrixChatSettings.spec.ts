@@ -21,6 +21,7 @@ async function createRoom(page: Page): Promise<CreatedRoom> {
     const roomName = ChatUtils.getRandomName();
     await page.getByTestId("createRoomName").fill(roomName);
     await page.getByTestId("createRoomButton").click();
+    await ChatUtils.backToRoomListAfterCreation(page, roomName);
 
     await expect(page.getByText(roomName)).toBeAttached();
 
@@ -123,6 +124,7 @@ test.describe("chat room settings @matrix @nowebkit", () => {
         await page.getByTestId("roomSettingsNameInput").fill(newName);
         await page.getByTestId("roomSettingsTopicInput").fill(newTopic);
         await page.getByTestId("roomSettingsHistoryVisibilitySelect").selectOption("invited");
+        await page.getByTestId("roomSettingsDetailedPermissions").click();
         await page.getByTestId("roomPermission-sendReactions").selectOption("MODERATOR");
 
         await page.getByTestId("roomSettingsSaveButton").click();

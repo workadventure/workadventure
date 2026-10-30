@@ -1,6 +1,15 @@
+import { createHash } from "node:crypto";
 import type { AnalyticsStoredEvent, SpaceKind } from "@workadventure/messages";
 import type { AnalyticsEventsQueue } from "@workadventure/shared-utils";
 import { analyticsEventsQueue } from "../Services/AnalyticsEventsQueue";
+
+/**
+ * The parts carry the room URL two or three times (the space name, the spaceUserId), and
+ * a URL-encoded slug takes them to 480 characters: past MAX_EVENT_ID_LENGTH, so the admin
+ * would 422 the row. A hash keeps the id short and deterministic, which is what lets a
+ * retried batch collapse in ClickHouse.
+ */
+const eventIdOf = (...parts: (string | number)[]): string => createHash("sha256").update(parts.join(":")).digest("hex");
 
 /** Why a session or a participation ended. */
 export type SessionEndReason = "closed" | "back_shutdown";
@@ -13,6 +22,8 @@ export type SessionMember = {
     uuid: string;
     spaceUserId: string;
     roomId: string;
+    /** As the admin returned them at connection: what the dashboards filter people by. */
+    tags: string[];
 };
 
 /**
@@ -33,6 +44,16 @@ type Participation = {
     onAirSinceMs?: number;
     airtimeMs: number;
     spoke: boolean;
+};
+
+/** A session as it opens, for whoever acts on the same meeting the analytics count (see `onSessionChanged`). */
+export type OpenedSession = {
+    /** The meeting.ended row's eventId: what joins anything filed under it to the analytics. */
+    eventId: string;
+    kind: SpaceKind;
+    openedAtMs: number;
+    /** The room of whoever arrived first in the space. */
+    roomId: string;
 };
 
 /** Which media transport carried the space from `fromMs` on. */
@@ -86,6 +107,8 @@ export class SessionAnalytics {
      * adds nothing there.
      */
     private readonly meetingId: string;
+    /** Told when a session opens (with it) and when it closes (with undefined). */
+    public onSessionChanged?: (session: OpenedSession | undefined) => void;
 
     public constructor(
         private readonly id: string,
@@ -194,6 +217,7 @@ export class SessionAnalytics {
             return false;
         }
         this.session = undefined;
+        this.onSessionChanged?.(undefined);
 
         // Every kind emits the same two rows; `meetingKind` is what tells a broadcast
         // from a conversation, and the admin filters on it where the business does.
@@ -219,7 +243,7 @@ export class SessionAnalytics {
                     eventName: "meeting.participation.ended",
                     member: participation.member,
                     atMs,
-                    eventId: `${this.id}:${session.openedAtMs}:${participation.member.spaceUserId}`,
+                    eventId: eventIdOf(this.id, session.openedAtMs, participation.member.spaceUserId),
                     properties: {
                         meetingId: this.meetingId,
                         meetingKind: session.kind,
@@ -244,7 +268,7 @@ export class SessionAnalytics {
                 // whole thing as that person's.
                 member: undefined,
                 atMs: endedAtMs,
-                eventId: `${this.id}:${session.openedAtMs}`,
+                eventId: eventIdOf(this.id, session.openedAtMs),
                 properties: {
                     meetingId: this.meetingId,
                     meetingKind: session.kind,
@@ -284,6 +308,12 @@ export class SessionAnalytics {
         for (const key of this.members.keys()) {
             this.addParticipation(key);
         }
+        this.onSessionChanged?.({
+            eventId: eventIdOf(this.id, this.session.openedAtMs),
+            kind,
+            openedAtMs: this.session.openedAtMs,
+            roomId: this.roomId,
+        });
     }
 
     private addParticipation(key: string): void {
@@ -371,6 +401,7 @@ export class SessionAnalytics {
             world: this.world,
             roomId: input.member?.roomId ?? this.roomId,
             tabId: null,
+            tags: input.member?.tags ?? [],
             properties: input.properties,
         };
     }

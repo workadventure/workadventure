@@ -11,10 +11,9 @@ const actionbar: BaseTranslation = {
     participantSendMessage: "Enviar mensagem",
     participantInviteUser: "Convidar usuário",
     participantExitFullscreen: "Sair da tela cheia",
+    participantShowList: "Mostrar a lista de participantes",
+    participantHideList: "Ocultar a lista de participantes",
     profil: "Editar seu nome",
-    startScreenSharing: "Iniciar compartilhamento de tela",
-    stopScreenSharing: "Parar compartilhamento de tela",
-    screenSharingMode: "Modo de compartilhamento de tela",
     focusMode: "Modo foco",
     rightMode: "Modo direito",
     hideMode: "Modo oculto",
@@ -24,7 +23,6 @@ const actionbar: BaseTranslation = {
     woka: "Personalizar seu avatar",
     companion: "Adicionar companheiro",
     //megaphone: "Usar megafone",
-    test: "Testar minhas configurações",
     editCamMic: "Editar câmera / microfone",
     allSettings: "Todas as configurações",
     installPwa: "Instalar aplicativo web",
@@ -36,33 +34,29 @@ const actionbar: BaseTranslation = {
     camera: {
         disabled: "Sua câmera está desabilitada",
         activate: "Ativar sua câmera",
-        noDevices: "Nenhum dispositivo de câmera encontrado",
-        setBackground: "Definir fundo",
-        blurEffects: "Efeitos de desfoque",
-        disableBackgroundEffects: "Desabilitar efeitos de fundo",
-        close: "Fechar",
     },
     microphone: {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
-        noDevices: "Nenhum dispositivo de microfone encontrado",
         noSoundWarning:
             "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
-        noSoundWarningPressEnter: "Nenhum som detectado do seu microfone. Pressione Enter para abrir as configurações.",
         advancedNoiseReduction: "Redução de ruído avançada",
+        loudEnvironmentWarning: "Foi detectado ruído de fundo contínuo no seu microfone.",
+        enableNoiseSuppression: "Ativar supressão de ruído",
         noiseSuppressionInitializing: "Inicializando a supressão de ruído personalizada...",
         noiseSuppressionUnsupported: "Este navegador não pode executar a supressão de ruído personalizada.",
         noiseSuppressionError:
             "A supressão de ruído personalizada falhou. Voltando para a supressão de ruído nativa do navegador.",
+        noiseSuppressionActive: "Ativa",
         openSettings: "Abrir configurações",
         ignore: "Ignorar",
     },
     speaker: {
         disabled: "Seu alto-falante está desabilitado",
-        activate: "Ativar seu alto-falante",
+        test: "Testar saída de áudio",
         noDevices: "Nenhum dispositivo de alto-falante encontrado",
         noDevicesDesc:
-            "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso (por exemplo Safari). Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",
+            "O navegador não lista nenhuma saída de áudio selecionável. Alguns navegadores limitam isso. Tente outro navegador, reconecte fones ou alto-falantes, verifique as configurações de som do sistema e as configurações do computador (privacidade, dispositivos).",
     },
     status: {
         ONLINE: "Online",
@@ -94,6 +88,7 @@ const actionbar: BaseTranslation = {
         blurMiddle: "Desfoque médio",
         blurHigh: "Desfoque alto",
         images: "Imagens",
+        image: "Imagem de fundo {index}",
     },
     help: {
         chat: {
@@ -164,7 +159,7 @@ const actionbar: BaseTranslation = {
         },
         share: {
             title: "Compartilhar sua tela",
-            desc: "Quer compartilhar sua tela com outros usuários? Você pode! Você pode mostrar sua tela para todos no chat, e pode escolher compartilhar sua tela inteira ou apenas uma janela específica.",
+            desc: "Quer compartilhar sua tela com outros usuários? Você pode! Você pode mostrar sua tela para as pessoas na sua bolha ou sala de reunião, e pode escolher compartilhar sua tela inteira ou apenas uma janela específica.",
         },
         apps: {
             title: "Aplicações de terceiros",
@@ -174,19 +169,9 @@ const actionbar: BaseTranslation = {
             title: "Lista de salas",
             desc: "Explore e navegue entre diferentes salas disponíveis para encontrar o espaço perfeito para suas atividades.",
         },
-        calendar: {
-            title: "Calendário",
-            desc: "Gerencie seus eventos e compromissos diretamente integrados à sua experiência no workspace.",
-        },
-        todolist: {
-            title: "Lista de tarefas",
-            desc: "Organize e acompanhe suas tarefas e projetos de forma eficiente dentro do ambiente virtual.",
-        },
         pictureInPicture: {
             title: "Picture in picture",
-            descDisabled:
-                "Infelizmente, este recurso não está disponível no seu dispositivo ❌. Tente usar outro dispositivo ou navegador, como Chrome ou Edge, para acessar este recurso.",
-            desc: "Você pode usar o recurso picture in picture para assistir a um vídeo ou uma apresentação enquanto está em uma conversa. Basta clicar no ícone picture in picture e aproveitar seu conteúdo.",
+            desc: "Mostra os vídeos da sua conversa em uma pequena janela flutuante, para você continuar vendo as pessoas com quem fala enquanto trabalha em outra aba ou aplicativo.",
         },
         videoNotSupported: "Seu navegador não suporta a tag de vídeo.",
     },

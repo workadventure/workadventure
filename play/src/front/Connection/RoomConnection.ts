@@ -549,6 +549,7 @@ export class RoomConnection implements RoomConnection {
                         throw new Error("Received multiple roomConnectedMessage, this should never happen");
                     }
                     this.tags = message.roomConnectedMessage.tag;
+                    this.canEdit = message.roomConnectedMessage.canEdit;
                     this._roomConnectedPromise.resolve({
                         connection: this,
                         roomConnectedMessage: message.roomConnectedMessage,
@@ -824,20 +825,25 @@ export class RoomConnection implements RoomConnection {
         // If the socket closes after connection but before the room is joined,
         // reject the roomJoined promise to avoid leaving callers hanging.
         if (!this.userId && !this._closed) {
+            // GameScene awaits roomJoinedPromise only once the map and scripts are loaded, and never if the scene is
+            // torn down first. Callers awaiting it still get the rejection; this only stops an unhandled rejection
+            // when nobody awaits for the error yet. The lost socket is handled by the reconnection flow.
+            this.roomJoinedPromise.catch(() => undefined);
             this._roomJoinedPromise.reject(event);
         }
         if (event.code !== 1000) {
             analyticsClient.trackAdminEvent("websocket.connection_lost", {
                 reason: event.reason || String(event.code),
             });
-            Sentry.captureMessage(
-                "WebSocket closed by remote side. Code: " +
-                    event.code +
-                    ", reason: " +
-                    event.reason +
-                    "wasClean: " +
-                    event.wasClean,
-            );
+            // Like the ping timeout below, a lost socket is a network condition handled by the reconnection flow,
+            // and analytics already counts it. As a Sentry event it cost ~60k events a month (mostly failed resumes,
+            // code 1008). A breadcrumb keeps it in the timeline of a real error.
+            Sentry.addBreadcrumb({
+                category: "room-connection",
+                level: "info",
+                message: "WebSocket closed by remote side",
+                data: { code: event.code, reason: event.reason, wasClean: event.wasClean },
+            });
         }
         this.cleanupConnection(event.code === 1000);
     };

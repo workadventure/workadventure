@@ -3,7 +3,6 @@ import type { Translation } from "../i18n-types";
 
 const camera: DeepPartial<Translation["camera"]> = {
     editCam: "Cài đặt camera",
-    editMic: "Cài đặt micrô",
     editSpeaker: "Cài đặt đầu ra âm thanh",
     active: "Đang hoạt động",
     disabled: "Đã tắt",
@@ -16,7 +15,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         title: "Cần quyền truy cập camera / micrô",
         cameraTitle: "Cần quyền truy cập camera",
         microphoneTitle: "Cần quyền truy cập micrô",
-        permissionDenied: "Quyền bị từ chối",
         cameraPermissionDenied: "Quyền truy cập camera bị từ chối",
         microphonePermissionDenied: "Quyền truy cập micrô bị từ chối",
         cameraMicrophonePermissionDenied: "Quyền truy cập camera và micrô bị từ chối",
@@ -85,7 +83,7 @@ const camera: DeepPartial<Translation["camera"]> = {
     my: {
         silentZone: "Khu vực yên lặng",
         silentZoneDesc:
-            "Bạn đang ở trong khu vực yên lặng. Bạn chỉ có thể nhìn và nghe những người đi cùng mình, không thể nhìn hoặc nghe những người khác trong phòng.",
+            "Bạn đang ở trong khu vực yên lặng. Không ai có thể nói chuyện với bạn ở đây, và micrô cùng camera của bạn đã bị tắt.",
         nameTag: "Bạn",
         loading: "Đang tải camera của bạn...",
     },
@@ -94,7 +92,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         moreAction: "Thao tác khác",
         closeMenu: "Đóng menu",
         senPrivateMessage: "Gửi tin nhắn riêng (sắp ra mắt)",
-        kickoffUser: "Mời người dùng ra khỏi phòng",
         giveFloor: "Trao quyền phát biểu",
         revokeFloor: "Thu hồi quyền phát biểu",
         muteAudioUser: "Tắt tiếng",
@@ -104,14 +101,6 @@ const camera: DeepPartial<Translation["camera"]> = {
         askToMuteVideoUser: "Yêu cầu tắt video",
         muteVideoEveryBody: "Tắt video của tất cả mọi người",
         blockOrReportUser: "Kiểm duyệt",
-    },
-    backgroundEffects: {
-        imageTitle: "Ảnh nền",
-        blurTitle: "Làm mờ nền",
-        resetTitle: "Tắt hiệu ứng nền",
-        title: "Hiệu ứng nền",
-        close: "Đóng",
-        blurAmount: "Mức độ mờ",
     },
 };
 

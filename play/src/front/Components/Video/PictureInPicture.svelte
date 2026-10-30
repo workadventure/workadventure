@@ -28,6 +28,7 @@
     let pipWindow: Window | undefined;
     let mapImage: string | undefined = $state(undefined);
     let pipRequested = false;
+    let unloading = false;
     let stopPictureInPictureEventDelegation: Array<() => void> = [];
 
     const delegatedPictureInPictureEvents = [
@@ -110,7 +111,7 @@
         stopPictureInPictureEventDelegation = [];
     }
 
-    function destroyPictureInPictureComponent() {
+    function destroyPictureInPictureComponent(keepRequest = false) {
         detachPictureInPictureEventDelegation();
 
         if (!parentDivElement) {
@@ -119,12 +120,27 @@
         // eslint-disable-next-line svelte/no-dom-manipulating
         parentDivElement.append(divElement);
 
-        if (pipWindow) pipWindow.removeEventListener("pagehide", destroyPictureInPictureComponent);
+        if (pipWindow) pipWindow.removeEventListener("pagehide", onPictureInPictureWindowPageHide);
         if (pipWindow) pipWindow.close();
         pipWindow = undefined;
         pipRequested = false;
         activePictureInPictureStore.set(false);
+        // The window is closed, so the next click on the picture-in-picture button opens it again
+        if (!keepRequest) askPictureInPictureActivatingStore.set(false);
         debug("Exiting Picture in Picture mode");
+    }
+
+    function onPictureInPictureWindowPageHide() {
+        destroyPictureInPictureComponent();
+    }
+
+    function onBeforeUnload() {
+        // beforeunload fires before the page is hidden, unlike pagehide
+        unloading = true;
+    }
+
+    function forgetPictureInPictureRequest() {
+        askPictureInPictureActivatingStore.set(false);
     }
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
@@ -143,6 +159,12 @@
         }
 
         if (pipWindow !== undefined || pipRequested) return;
+
+        // Closing the tab or the window hides the page, which would open a picture-in-picture window that outlives it
+        if (unloading) {
+            debug("Request Picture in Picture mode but the page is unloading");
+            return;
+        }
 
         debug("Entering Picture in Picture mode");
         if (!localUserStore.getAllowPictureInPicture()) {
@@ -201,7 +223,7 @@
                 activePictureInPictureStore.set(true);
                 await tick();
 
-                pipWindow.addEventListener("pagehide", destroyPictureInPictureComponent);
+                pipWindow.addEventListener("pagehide", onPictureInPictureWindowPageHide);
             })
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
@@ -252,10 +274,18 @@
         }
 
         const onFocus = () => {
-            destroyPictureInPictureComponent();
+            // The picture-in-picture window takes the focus when it opens, so a click on the picture-in-picture
+            // button first focuses this window, which closes the picture-in-picture window. If the button opened it,
+            // forget its request only after that click: forgetting it now would make the click open the window again.
+            const keepRequest = $askPictureInPictureActivatingStore;
+            destroyPictureInPictureComponent(keepRequest);
+            if (keepRequest) {
+                window.addEventListener("click", forgetPictureInPictureRequest, { once: true });
+            }
         };
 
         window.addEventListener("focus", onFocus);
+        window.addEventListener("beforeunload", onBeforeUnload);
 
         return () => {
             askPictureInPictureActivatingSubscriber();
@@ -268,6 +298,8 @@
                 debug("PictureInPicture enterpictureinpicture handler is not supported", e);
             }
             window.removeEventListener("focus", onFocus);
+            window.removeEventListener("beforeunload", onBeforeUnload);
+            window.removeEventListener("click", forgetPictureInPictureRequest);
         };
     });
 

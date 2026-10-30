@@ -12,7 +12,7 @@ export default {
         title: "Moverse",
         descriptionDesktop:
             "Usa las teclas de flecha o WASD para mover tu personaje. También puedes hacer clic derecho para moverte. ¡Prueba a moverte ahora!",
-        descriptionMobile: "Usa el joystick o toca el mapa para mover tu personaje. ¡Prueba a moverte ahora!",
+        descriptionTouch: "Toca el mapa para ir allí y arrastra para mirar a tu alrededor. ¡Prueba a moverte ahora!",
         next: "Siguiente",
     },
     communication: {

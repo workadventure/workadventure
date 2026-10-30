@@ -11,13 +11,14 @@ import {
     ListObjectsV2Command,
     NoSuchKey,
     PutObjectCommand,
+    S3ServiceException,
 } from "@aws-sdk/client-s3";
 import type { NextFunction, Response } from "express";
-import mime from "mime";
 import type * as unzipper from "unzipper";
 import pLimit from "p-limit";
 import type ZipStream from "zip-stream";
 import { MapListService } from "../Services/MapListService";
+import { mime } from "../Services/Mime";
 import { s3UploadConcurrencyLimit } from "../Services/S3Client";
 import { FileNotFoundError } from "./FileNotFoundError";
 import type { FileSystemInterface } from "./FileSystemInterface";
@@ -284,15 +285,25 @@ export class S3FileSystem implements FileSystemInterface {
         res.on("close", onClose);
 
         this.s3
-            .getObject({ Bucket: this.bucketName, Key: virtualPath }, { abortSignal: controller.signal })
+            .getObject(
+                {
+                    Bucket: this.bucketName,
+                    Key: virtualPath,
+                    // When the browser already holds this version, S3 answers 304 and the file is not even read.
+                    // S3 compares ETags strictly: drop the "W/" a CDN adds to the ETag once it compressed the file.
+                    IfNoneMatch: res.req.get("If-None-Match")?.replaceAll("W/", ""),
+                },
+                { abortSignal: controller.signal },
+            )
             .then((result) => {
                 if (res.destroyed) {
                     controller.abort(new ClientDisconnectedError());
                     return;
                 }
 
-                // Set the content type and content length headers
-                res.set("Content-Type", result.ContentType);
+                // Set the content type and content length headers. The type comes from the extension first: maps
+                // uploaded before `.tmj`/`.wam` were known are stored in S3 as application/octet-stream.
+                res.set("Content-Type", mime.getType(virtualPath) ?? result.ContentType);
 
                 if (result.ContentLength) {
                     res.set("Content-Length", result.ContentLength.toString());
@@ -304,6 +315,15 @@ export class S3FileSystem implements FileSystemInterface {
 
                 if (result.Expires) {
                     res.set("Expires", result.Expires.toString());
+                }
+
+                // Fallback for S3 servers that ignored IfNoneMatch (or a list of ETags, on MinIO): the browser already
+                // holds this version, answer 304 instead of sending the file again.
+                if (res.req.fresh) {
+                    // Aborting releases the S3 socket without reading the body (see above).
+                    controller.abort();
+                    res.status(304).end();
+                    return;
                 }
 
                 // TODO assess this idea: REDIRECT TO THE BUCKET PUBLIC URL FOR MOST FILES EXCEPT .html files
@@ -333,6 +353,11 @@ export class S3FileSystem implements FileSystemInterface {
                 if (isClientDisconnectedAbort(err)) {
                     // The client went away before/while we were fetching; the request was aborted and
                     // its socket released. Nothing to respond to.
+                    return;
+                }
+                // S3 matched the IfNoneMatch above (the SDK has no dedicated error class for it).
+                if (err instanceof S3ServiceException && err.$metadata.httpStatusCode === 304) {
+                    res.status(304).end();
                     return;
                 }
                 if (err instanceof Error && err.constructor.name === "NoSuchKey") {

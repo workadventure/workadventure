@@ -55,6 +55,21 @@ export /**
  * outgrows WebRTC switches to LiveKit mid-way, so one field naming "the" provider would
  * be wrong for exactly the meetings that cost server capacity.
  */
+/** What every media.livekit.* connection event says about where the client was connected. */
+const livekitConnectionProperties = {
+  livekitServerUrl: z
+    .string()
+    .max(2048)
+    .describe("LiveKit server of the room."),
+  livekitRegion: z
+    .string()
+    .max(255)
+    .nullable()
+    .describe(
+      "Region of the LiveKit server the client was connected to (serverInfo.region): set by LiveKit Cloud, usually null on a self-hosted server.",
+    ),
+};
+
 const transportSecondsProperties = {
   webrtcSeconds: z
     .number()
@@ -408,6 +423,18 @@ const mediaDeviceKind = z
   .enum(["camera", "microphone", "camera_microphone"])
   .describe("Which device the user was asked for.");
 
+const noiseSuppressionProviderField = z
+  .enum(["workadventure", "voiceIsolation"])
+  .describe(
+    "workadventure: our own AudioWorklet model. voiceIsolation: the browser and OS voice isolation.",
+  );
+
+const noiseSuppressionEngineField = z
+  .enum(["deepfilternet", "dtln"])
+  .describe(
+    "The model behind the workadventure mode: DeepFilterNet3 at 48 kHz, or the legacy DTLN at 16 kHz.",
+  );
+
 const feedbackSourceField = z
   .enum(["sentry", "external_report_url"])
   .describe("Which feedback channel was used.");
@@ -693,6 +720,13 @@ export const ANALYTICS_EVENTS = {
         .string()
         .nullable()
         .describe("LiveKit server that carried the stream, when applicable."),
+      livekitRegion: z
+        .string()
+        .max(255)
+        .nullable()
+        .describe(
+          "Region of the LiveKit server the client was connected to: set by LiveKit Cloud, null on P2P streams and usually on a self-hosted server.",
+        ),
       fps: z
         .number()
         .describe("Frames per second observed over the sample window."),
@@ -723,6 +757,136 @@ export const ANALYTICS_EVENTS = {
         .nullable()
         .describe(
           'Outbound only: encoder the browser picked, e.g. "libaom", "libvpx", "ExternalEncoder".',
+        ),
+      windowSeconds: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: time covered by the playback counters below, i.e. since this stream's previous sample. Null when the window is not measurable (first sample, counters restarted, right after a deliberate pause), which nulls every counter below. Divide summed counters by summed windows, never average per-sample ratios.",
+        ),
+      framesDecoded: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only: frames decoded during the window. 0 while video was expected means the stream stalled; a stall that never resumes shows only here, since the browser counts freezes and pauses when the next frame arrives.",
+        ),
+      framesDropped: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only: frames the receiver dropped during the window (before decoding, or too late to display).",
+        ),
+      freezeCount: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only: freezes during the window, as the browser defines them: a gap between two rendered frames of max(3 × the average frame duration, average + 150 ms), up to 5 s. Counted when the next frame is rendered. Null when the browser does not report it.",
+        ),
+      freezeSeconds: z
+        .number()
+        .nullable()
+        .describe("Inbound only: total duration of those freezes, in seconds."),
+      pauseCount: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only: gaps longer than 5 s between two rendered frames (never counted as freezes). Pauses we caused are excluded: no sample is sent while we pause a stream on purpose, nor right after.",
+        ),
+      pauseSeconds: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: total duration of those pauses. Counted when the video resumes, so it can exceed windowSeconds.",
+        ),
+      interFrameDelaySumSeconds: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: sum of the delays between consecutive rendered frames during the window. With the squared sum and framesDecoded, gives the per-frame delay variance: Σd²/n − (Σd/n)².",
+        ),
+      interFrameDelaySquaredSumSeconds: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: sum of the squared delays between consecutive rendered frames during the window.",
+        ),
+      decodeSeconds: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: time spent decoding during the window. Divided by framesDecoded: the receiver's decode cost per frame, which depends on codec and resolution.",
+        ),
+      captureFps: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second like fps: frames per second the camera or screen capture delivered to the encoder (RTCVideoSourceStats). Against captureTargetFps, tells a camera that starves the encoder (dim light, overloaded machine) from an encoder dropping frames. A screen capture only delivers frames when the content changes.",
+        ),
+      captureTargetFps: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate).",
+        ),
+      encodeMsPerFrame: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second: encoding time per encoded frame, all simulcast/SVC layers together, in milliseconds.",
+        ),
+      cpuLimitedRatio: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of CPU (qualityLimitationDurations), where qualityLimitationReason is only a snapshot.",
+        ),
+      bandwidthLimitedRatio: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only, over the last second: share of the time (0 to 1) the browser degraded the stream for lack of bandwidth.",
+        ),
+      packetsReceived: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only, over windowSeconds like the playback counters: RTP packets of the video received.",
+        ),
+      packetsLost: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Inbound only, over windowSeconds: RTP packets of the video lost on the way to us. Loss share = Σ packetsLost / Σ (packetsLost + packetsReceived). A packet counted as lost then received late is taken back, never below 0.",
+        ),
+      roundTripTimeMs: z
+        .number()
+        .nullable()
+        .describe(
+          "Inbound only: round-trip time of the connection the stream arrives on (selected ICE candidate pair) when the sample was taken: to the peer or its TURN relay in P2P, to the SFU otherwise.",
+        ),
+      uploadRoundTripTimeMs: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: round-trip time to the other end (peer or SFU), from its latest receiver report about the largest layer.",
+        ),
+      uploadLossRatio: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: share of the packets (0 to 1) the other end reported lost in its latest receiver report about the largest layer.",
+        ),
+      availableOutgoingBitrate: z
+        .number()
+        .nullable()
+        .describe(
+          "Outbound only: the browser's estimate of the bandwidth it can send on this connection, in bits per second.",
         ),
       sampleSeq: z
         .number()
@@ -919,6 +1083,48 @@ export const ANALYTICS_EVENTS = {
         ),
     }),
     description: "The user sent a chat message. Content is never collected.",
+  }),
+
+  "chat.proximity_file.sent": event({
+    properties: z.object({
+      sizeBytes: z.number().int().nonnegative().describe("Size of the file."),
+      recipientCount: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "How many people in the proximity chat were offered the file. Each one who accepts gets a full copy from the sender's browser.",
+        ),
+    }),
+    description:
+      "The user sent a file in the proximity chat, peer to peer. One event per file, so a send of several files reports several. The file name and content are never collected.",
+  }),
+
+  "chat.proximity_file.received": event({
+    properties: z.object({
+      sizeBytes: z.number().int().nonnegative().describe("Size of the file."),
+      durationMs: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "From the first byte received to the last. Leaves out the time the recipient took to accept and the connection setup, so sizeBytes / durationMs is the transfer speed.",
+        ),
+      relay: z
+        .boolean()
+        .optional()
+        .describe(
+          "Whether the transfer went through a TURN relay. Absent when the browser did not report the connection path.",
+        ),
+      relayProtocol: z
+        .enum(["udp", "tcp", "tls"])
+        .optional()
+        .describe(
+          "Transport to the TURN relay, only when relayed. TCP and TLS relays are much slower than UDP.",
+        ),
+    }),
+    description:
+      "The user accepted a file sent in the proximity chat and received all of it. Declined or interrupted transfers are not reported.",
   }),
 
   "invite.sent": event({
@@ -1133,6 +1339,73 @@ export const ANALYTICS_EVENTS = {
       "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload.",
   }),
 
+  "media.livekit.connected": event({
+    properties: z.object({
+      ...livekitConnectionProperties,
+      connectMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "From the start of room.connect() to the room being connected, signalling and media.",
+        ),
+    }),
+    description:
+      "This client joined a LiveKit room: the denominator of media.livekit.disconnected, and where LiveKit routed it.",
+  }),
+
+  "media.livekit.reconnected": event({
+    properties: z.object({
+      ...livekitConnectionProperties,
+      previousLivekitRegion: z
+        .string()
+        .max(255)
+        .nullable()
+        .describe(
+          "Region before the reconnection. A different one means LiveKit moved the client to another region.",
+        ),
+      reconnectKind: z
+        .enum(["resume", "full"])
+        .describe(
+          "resume: only the signalling connection came back. full: the media connections were rebuilt too, possibly on another server.",
+        ),
+      durationMs: z
+        .number()
+        .nonnegative()
+        .describe("How long the room was reconnecting."),
+    }),
+    description:
+      "livekit-client lost its connection to the LiveKit server and recovered it by itself: the user saw the media stall, not a disconnection.",
+  }),
+
+  "media.livekit.disconnected": event({
+    properties: z.object({
+      ...livekitConnectionProperties,
+      disconnectReason: z
+        .string()
+        .max(64)
+        .describe(
+          "livekit-client DisconnectReason name: SIGNAL_CLOSE, CONNECTION_TIMEOUT, STATE_MISMATCH, JOIN_FAILURE, DUPLICATE_IDENTITY, PARTICIPANT_REMOVED, MEDIA_FAILURE... UNKNOWN when it gave none (it gave up reconnecting).",
+        ),
+      connectedSeconds: z
+        .number()
+        .nonnegative()
+        .nullable()
+        .describe(
+          "How long the room had been connected. Null when it never connected: the LiveKit server could not be reached or refused the join.",
+        ),
+      whileReconnecting: z
+        .boolean()
+        .describe("livekit-client was trying to reconnect when it gave up."),
+      restart: z
+        .boolean()
+        .describe(
+          "Whether WorkAdventure asks the back for a new invitation. It does not when another connection took this one's place or the back removed it.",
+        ),
+    }),
+    description:
+      "This client lost its LiveKit room for a reason it did not choose: not its own leave, nor the back closing the room. The media stop until a new invitation arrives.",
+  }),
+
   "media.livekit_switch.requested": event({
     properties: z.object({
       streamCategory: z
@@ -1269,6 +1542,168 @@ export const ANALYTICS_EVENTS = {
         .describe("The background effect selected, e.g. blur."),
     }),
     description: "The user changed their video background.",
+  }),
+
+  "settings.noise_suppression.changed": event({
+    properties: z.object({
+      enabled: z
+        .boolean()
+        .describe("Whether advanced noise reduction is on after the change."),
+      provider: noiseSuppressionProviderField,
+      engine: noiseSuppressionEngineField,
+    }),
+    description:
+      "The user changed advanced noise reduction: the switch, the mode or the engine. Carries the whole resulting setting, so the latest row per user is their current choice.",
+  }),
+
+  "media.noise_suppression.started": event({
+    properties: z.object({
+      engine: noiseSuppressionEngineField,
+      initMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "From the start of initialization to the worklet reporting ready, model download and wasm compilation included.",
+        ),
+      hardwareConcurrency: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "navigator.hardwareConcurrency, 0 when the browser hides it.",
+        ),
+    }),
+    description:
+      "WorkAdventure noise suppression is processing the microphone. Read against media.noise_suppression.failed for each engine's failure rate, the figure that decides whether DeepFilterNet3 can become the default.",
+  }),
+
+  "media.noise_suppression.load": event({
+    properties: z.object({
+      engine: noiseSuppressionEngineField,
+      windows: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("2 s windows measured (30 for the default minute)."),
+      medianLoad: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Median share of real time the worklet spent denoising, per 2 s window. 0.05 = 5 %.",
+        ),
+      p95Load: z
+        .number()
+        .nonnegative()
+        .describe("95th percentile of the per-window load."),
+      maxLoad: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Worst window. Above 0.7 twice in a row, the overload fallback kicks in.",
+        ),
+      slowFrames: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "Frames measured at 3 ms or more, i.e. that took 2 ms or more, close to the 2.67 ms render quantum: the ones that can crackle. Worklets only have Date.now() (1 ms steps), so shorter frames cannot be timed one by one.",
+        ),
+      frames: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("10 ms frames processed during the measurement."),
+      hardwareConcurrency: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "navigator.hardwareConcurrency, 0 when the browser hides it.",
+        ),
+    }),
+    description:
+      "How heavy WorkAdventure noise suppression really is on this device: sent once per pipeline, after a minute of processing (DeepFilterNet3 only). The data that decides whether noise suppression can be on by default — the overload fallback only says when it is too heavy.",
+  }),
+
+  "media.audio_quality.sample": event({
+    properties: z.object({
+      transportType: z
+        .enum(["P2P", "SFU"])
+        .describe("Direct peer connections, or LiveKit."),
+      windowSeconds: z
+        .number()
+        .positive()
+        .describe("Length of the window the counters were taken over."),
+      streams: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe(
+          "Remote microphones whose audio the window counts: only the time each one was on counts.",
+        ),
+      concealedRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .describe(
+          "Share of the received audio the browser had to invent because packets were late or missing — what a listener hears as robotic or choppy. Excludes the silence Opus DTX fills during pauses.",
+        ),
+      concealmentEvents: z
+        .number()
+        .int()
+        .nonnegative()
+        .describe("How many separate concealment episodes the window had."),
+      deceleratedRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .describe(
+          "Share of the received audio the jitter buffer added by slowing the voice down, to wait for late packets (insertedSamplesForDeceleration). Missing when the browser does not report it, or from older clients.",
+        ),
+      acceleratedRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .optional()
+        .describe(
+          "Share of the received audio the jitter buffer dropped by speeding the voice up, to catch up after a burst (removedSamplesForAcceleration). Missing when the browser does not report it, or from older clients.",
+        ),
+      packetLossRatio: z
+        .number()
+        .min(0)
+        .max(1)
+        .describe("Packets lost over packets expected."),
+      maxJitterMs: z
+        .number()
+        .nonnegative()
+        .describe(
+          "Highest jitter estimate among the streams, at the end of the window.",
+        ),
+      jitterBufferDelayMs: z
+        .number()
+        .nonnegative()
+        .nullable()
+        .describe(
+          "Mean time audio waited in the jitter buffer: the latency the network's irregularity costs.",
+        ),
+    }),
+    description:
+      "How the voices this client received survived the network over the last minute, aggregated over every remote microphone of one transport. Only the time a microphone was on counts: muted time (and the fade-out of each mute) would otherwise read as invented audio. No event for a window in which no audio was received. The counterpart of media.noise_suppression.*: those tell whether the sender's audio was clean, this tells whether it arrived intact.",
+  }),
+
+  "media.noise_suppression.failed": event({
+    properties: z.object({
+      engine: noiseSuppressionEngineField,
+      status: z
+        .enum(["error", "unsupported"])
+        .describe(
+          "unsupported: the browser lacks AudioWorklet. error: loading, the worklet or the AudioContext failed.",
+        ),
+      reason: z.string().max(200).describe("The failure message, truncated."),
+    }),
+    description:
+      "WorkAdventure noise suppression gave up; the microphone falls back to the browser's own processing.",
   }),
 
   "cowebsite.opened": event({
@@ -1517,9 +1952,63 @@ export const ANALYTICS_EVENTS = {
   "media.turn_test.timeout": signal(
     "The TURN connectivity test timed out. Counted as an experience issue.",
   ),
-  "media.video_stream_missing": signal(
-    "A video stream was expected but never arrived. Counted as an experience issue.",
-  ),
+  "media.video_stream_missing": event({
+    // Every field is optional: tabs loaded before this event had properties keep sending it bare.
+    properties: z.object({
+      meetingProvider: z
+        .enum(["webrtc", "livekit"])
+        .optional()
+        .describe(
+          "Which backend the missing stream was coming over. Absent for the user's own previews.",
+        ),
+      local: z
+        .boolean()
+        .optional()
+        .describe(
+          "The missing stream was the user's own camera or screen-share preview, which comes over no backend.",
+        ),
+      streamCategory: z
+        .enum(["video", "screenSharing", "scripting", "component"])
+        .optional()
+        .describe("Whether the missing stream was a camera or a screen share."),
+      remoteSpaceUserId: z
+        .string()
+        .optional()
+        .describe(
+          "The space user whose video never arrived. Never sent to PostHog.",
+        ),
+      pending: z
+        .boolean()
+        .optional()
+        .describe(
+          "The stream was replacing one already on screen (a switch between backends or a reconnection) and was not shown yet.",
+        ),
+      trackMuted: z
+        .boolean()
+        .optional()
+        .describe(
+          "The video track was muted: no frame was arriving, from the network for a remote stream, from the camera or capture for a local one.",
+        ),
+      trackEnded: z
+        .boolean()
+        .optional()
+        .describe(
+          "The video track (the receiving one, or the capture track when local) had ended.",
+        ),
+      remoteMuted: z
+        .boolean()
+        .optional()
+        .describe("LiveKit only: the publisher's track was marked as muted."),
+      pictureInPicture: z
+        .boolean()
+        .optional()
+        .describe(
+          "The video was in the Picture-in-Picture window, a known source of false alarms. A hidden tab without Picture-in-Picture unmounts the video and never reports this event.",
+        ),
+    }),
+    description:
+      "A video stream was expected but no frame was rendered within 5 seconds.",
+  }),
   "meeting.actions.opened": event({
     properties: meetingActionProperties,
     description: "The user opened the meeting actions menu.",
@@ -1622,7 +2111,6 @@ export const ANALYTICS_EVENTS = {
   // A click, not a broadcast: it means the panel was opened, not that anything went
   // on air. Time on air is meeting.participation.ended, measured by the back.
   "megaphone.opened": signal("The user opened the megaphone."),
-  "menu.chat.opened": signal("The user opened the chat from the menu."),
   "menu.contact.opened": signal("The user opened the contact page."),
   "menu.credit.opened": signal("The user opened the credits."),
   "menu.opened": signal("The user opened the main menu."),

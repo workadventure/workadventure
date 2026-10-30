@@ -6,8 +6,6 @@ const video: DeepPartial<Translation["video"]> = {
     no_video_stream_received: "Žane widejowe póćahi dóstane.",
     user_is_muted: "{name} je němy.",
     reduce: "Pomjeńšić",
-    toggle_fullscreen: "Do połneje wobrazowki přeć",
-    exit_fullscreen: "Połnu wobrazowku wopušćić",
     connecting: "Zwjazujo so...",
     reconnecting: "Znowu zwjazujo so...",
     persistent_connection_issue: "Znowu zwjazujo so... Njestabilny zwjazk...",

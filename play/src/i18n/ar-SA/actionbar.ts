@@ -12,15 +12,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     participantSendMessage: "إرسال رسالة",
     participantInviteUser: "دعوة مستخدم",
     participantExitFullscreen: "الخروج من وضع ملء الشاشة",
+    participantShowList: "إظهار قائمة المشاركين",
+    participantHideList: "إخفاء قائمة المشاركين",
     profil: "تحرير اسمك",
-    startScreenSharing: "بدء مشاركة الشاشة",
-    stopScreenSharing: "إيقاف مشاركة الشاشة",
-    screenSharingMode: "وضع مشاركة الشاشة",
     calendar: "التقويم",
     todoList: "قائمة المهام",
     woka: "تخصيص صورتك الرمزية",
     companion: "إضافة رفيق",
-    test: "اختبر إعداداتي",
     editCamMic: "تحرير الكاميرا / الميكروفون",
     allSettings: "جميع الإعدادات",
     installPwa: "تثبيت تطبيق الويب",
@@ -32,31 +30,27 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     camera: {
         disabled: "الكاميرا معطلة",
         activate: "قم بتنشيط الكاميرا",
-        noDevices: "لم يتم العثور على جهاز كاميرا",
-        setBackground: "تعيين الخلفية",
-        blurEffects: "تأثيرات الضبابية",
-        disableBackgroundEffects: "تعطيل تأثيرات الخلفية",
-        close: "إغلاق",
     },
     microphone: {
         disabled: "الميكروفون معطل",
         activate: "قم بتنشيط الميكروفون",
-        noDevices: "لم يتم العثور على جهاز ميكروفون",
         noSoundWarning: "لم يتم اكتشاف أي صوت من الميكروفون. قد تكون هناك مشكلة — جرب تغيير الميكروفون في الإعدادات.",
-        noSoundWarningPressEnter: "لم يتم اكتشاف أي صوت من الميكروفون. اضغط على Enter لفتح الإعدادات.",
         advancedNoiseReduction: "تقليل الضوضاء المتقدم",
+        loudEnvironmentWarning: "تم اكتشاف ضوضاء خلفية مستمرة في الميكروفون.",
+        enableNoiseSuppression: "تفعيل تقليل الضوضاء",
         noiseSuppressionInitializing: "جارٍ تهيئة تقليل الضوضاء المخصص...",
         noiseSuppressionUnsupported: "لا يمكن لهذا المتصفح تشغيل تقليل الضوضاء المخصص.",
         noiseSuppressionError: "فشل تقليل الضوضاء المخصص. يتم الرجوع إلى تقليل الضوضاء الأصلي في المتصفح.",
+        noiseSuppressionActive: "نشط",
         openSettings: "فتح الإعدادات",
         ignore: "تجاهل",
     },
     speaker: {
         disabled: "مكبر الصوت معطل",
-        activate: "قم بتنشيط مكبر الصوت",
+        test: "اختبار مخرج الصوت",
         noDevices: "لم يتم العثور على جهاز مكبر صوت",
         noDevicesDesc:
-            "لا يعرض المتصفح أي مخرجات صوت يمكن اختيارها. بعض المتصفحات تقتصر على ذلك (مثل Safari). جرّب متصفحًا آخر، أو أعد توصيل سماعات الرأس أو السماعات، أو تحقق من إعدادات صوت النظام وإعدادات الجهاز (الخصوصية، الأجهزة).",
+            "لا يعرض المتصفح أي مخرجات صوت يمكن اختيارها. بعض المتصفحات تقتصر على ذلك. جرّب متصفحًا آخر، أو أعد توصيل سماعات الرأس أو السماعات، أو تحقق من إعدادات صوت النظام وإعدادات الجهاز (الخصوصية، الأجهزة).",
     },
     status: {
         ONLINE: "متصل",
@@ -88,6 +82,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "ضبابية متوسطة",
         blurHigh: "ضبابية عالية",
         images: "الصور",
+        image: "صورة الخلفية {index}",
     },
     help: {
         chat: {
@@ -158,7 +153,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         },
         share: {
             title: "مشاركة الشاشة",
-            desc: "هل تريد مشاركة شاشتك مع مستخدمين آخرين؟ يمكنك ذلك! يمكنك عرض شاشتك للجميع في الدردشة، ويمكنك اختيار مشاركة الشاشة بالكامل أو نافذة معينة فقط.",
+            desc: "هل تريد مشاركة شاشتك مع مستخدمين آخرين؟ يمكنك ذلك! يمكنك عرض شاشتك للأشخاص الموجودين في فقاعتك أو غرفة اجتماعك، ويمكنك اختيار مشاركة الشاشة بالكامل أو نافذة معينة فقط.",
         },
         apps: {
             title: "التطبيقات الخارجية",
@@ -168,19 +163,9 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "قائمة الغرف",
             desc: "عرض قائمة الغرف المتاحة.",
         },
-        calendar: {
-            title: "التقويم",
-            desc: "عرض التقويم الخاص بك.",
-        },
-        todolist: {
-            title: "قائمة المهام",
-            desc: "إدارة قائمة المهام الخاصة بك بسهولة.",
-        },
         pictureInPicture: {
             title: "صورة داخل صورة",
-            descDisabled:
-                "للأسف، هذه الميزة غير متوفرة على جهازك ❌. يرجى تجربة استخدام جهاز أو متصفح آخر، مثل Chrome أو Edge، للوصول إلى هذه الميزة.",
-            desc: "يمكنك استخدام ميزة صورة داخل صورة لمشاهدة فيديو أو عرض تقديمي أثناء وجودك في محادثة. ما عليك سوى النقر على أيقونة صورة داخل صورة والاستمتاع بمحتواك.",
+            desc: "يعرض مقاطع الفيديو الخاصة بمحادثتك في نافذة عائمة صغيرة، لتواصل رؤية الأشخاص الذين تتحدث معهم أثناء العمل في علامة تبويب أو تطبيق آخر.",
         },
         videoNotSupported: "متصفحك لا يدعم وسم الفيديو.",
     },

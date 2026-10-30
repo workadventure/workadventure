@@ -283,6 +283,31 @@ describe("MatrixSecurity", () => {
         });
     });
 
+    describe("restoreRoomsMessages", () => {
+        it("settles when getKeyBackupInfo rejects, and retries on the next call", async () => {
+            const crypto = {
+                getKeyBackupInfo: vi
+                    .fn()
+                    .mockRejectedValueOnce(new Error("backup lookup failed"))
+                    .mockResolvedValue(null),
+            };
+            const mockMatrixClient = { getCrypto: () => crypto } as unknown as MatrixClient;
+            vi.spyOn(console, "error").mockImplementation(() => {});
+
+            const matrixSecurity = new MatrixSecurity(undefined, undefined, vi.fn());
+            matrixSecurity.updateMatrixClientStore(mockMatrixClient);
+
+            // Before the fix the memoized promise never settled, so every room timeline waited forever.
+            const timeout = new Promise((resolve) => {
+                setTimeout(() => resolve("timeout"), 100);
+            });
+            await expect(Promise.race([matrixSecurity.restoreRoomsMessages(), timeout])).resolves.toBeUndefined();
+
+            await matrixSecurity.restoreRoomsMessages();
+            expect(crypto.getKeyBackupInfo).toHaveBeenCalledTimes(2);
+        });
+    });
+
     describe("initClientCryptoConfiguration", () => {
         const basicMockClient = {
             isGuest: vi.fn().mockReturnValue(null),

@@ -69,6 +69,24 @@ export const EnvironmentVariables = z.object({
         .describe("Allowed CORS origin for API requests. Use '*' to allow any domain"),
     PUSHER_URL: AbsoluteOrRelativeUrl.optional().describe("Public URL of the pusher service"),
     FRONT_URL: AbsoluteOrRelativeUrl.optional().describe("Public URL of the frontend application"),
+    ASSETS_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "Public URL of the 'front' container serving the JS/CSS assets (for instance https://assets.example.com). If empty, the pusher serves the assets itself.",
+        ),
+    ASSETS_INTERNAL_URL: z
+        .string()
+        .url()
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe(
+            "URL the pusher uses to fetch the index.html template and proxy the static files from the 'front' container, for instance http://front. Defaults to ASSETS_URL.",
+        ),
     MAP_STORAGE_API_TOKEN: z.string().describe("API token for authenticating with the map-storage service"),
     REDIS_HOST: z.string().optional().transform(emptyStringToUndefined).describe("Redis server hostname or IP address"),
     REDIS_PORT: PositiveIntAsString.optional()
@@ -212,6 +230,10 @@ export const EnvironmentVariables = z.object({
         .optional()
         .describe("OAuth2 scopes to request (space-separated). Defaults to 'openid email profile'"),
     OPENID_PROMPT: z.string().optional().describe("OpenID Connect prompt parameter (e.g., 'login', 'consent')"),
+    OPENID_ACCESS_TYPE: z
+        .string()
+        .optional()
+        .describe("OAuth2 'access_type' parameter sent on the authorization request (e.g. 'offline')"),
     OPENID_USERNAME_CLAIM: z
         .string()
         .optional()
@@ -280,7 +302,7 @@ export const EnvironmentVariables = z.object({
         ),
     ENABLE_SAY: BoolAsString.optional()
         .transform((val) => toBool(val, true))
-        .describe("Whether the users can communicate via comics-style bubbles."),
+        .describe("Whether the users can communicate via comics-style bubbles. Defaults to true."),
     ENABLE_ISSUE_REPORT: BoolAsString.optional()
         .transform((val) => toBool(val, true))
         .describe("Whether the feature 'issue report' is enabled or not on this room. Defaults to true."),
@@ -335,9 +357,6 @@ export const EnvironmentVariables = z.object({
     SKIP_RENDER_OPTIMIZATIONS: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Skip rendering optimizations (useful for debugging). Defaults to false"),
-    DISABLE_NOTIFICATIONS: BoolAsString.optional()
-        .transform((val) => toBool(val, false))
-        .describe("Disable browser notifications. Defaults to false"),
     TURN_USER: z.string().optional().describe("Username for TURN server authentication"),
     TURN_PASSWORD: z.string().optional().describe("Password for TURN server authentication"),
     TURN_STATIC_AUTH_SECRET: z
@@ -362,6 +381,11 @@ export const EnvironmentVariables = z.object({
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 4))
         .describe("Maximum number of users in a bubble/group. Defaults to 4"),
+    PROXIMITY_FILE_TRANSFER_MAX_USERS: PositiveIntAsString.optional()
+        .transform((val) => toNumber(val, 10))
+        .describe(
+            "Maximum number of users (sender included) in a proximity chat for files to be shared in it. Files travel peer to peer, so the sender uploads a copy to every recipient. Defaults to 10",
+        ),
     MAX_DISPLAYED_VIDEOS: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 16))
         .describe(

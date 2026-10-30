@@ -1,4 +1,3 @@
-import fs from "fs";
 import type { Application } from "express";
 import express from "express";
 import cookieParser from "cookie-parser";
@@ -24,6 +23,7 @@ import {
 import { PingController } from "./controllers/PingController";
 import { CompanionListController } from "./controllers/CompanionListController";
 import { FrontController } from "./controllers/FrontController";
+import { createFrontAssets } from "./services/FrontAssets";
 import { globalErrorHandler } from "./services/GlobalErrorHandler";
 import { jwtTokenManager } from "./services/JWTTokenManager";
 import { CompanionService } from "./services/CompanionService";
@@ -75,17 +75,6 @@ class App {
 
         //this.app.set_error_handler(globalErrorHandler);
 
-        let path: string;
-        if (fs.existsSync("dist/public")) {
-            // In prod mode
-            path = "dist/public";
-        } else if (fs.existsSync("public")) {
-            // In dev mode
-            path = "public";
-        } else {
-            throw new Error("Could not find public folder");
-        }
-
         // Socket controllers
         new IoSocketController(this.websocketApp);
 
@@ -101,77 +90,18 @@ class App {
         new DebugController(this.app);
         new AdminController(this.app, GRPC_MAX_MESSAGE_SIZE);
         new OpenIdProfileController(this.app);
-        new PingController(this.app);
+        const frontAssets = createFrontAssets();
+        new PingController(this.app, frontAssets);
         new LocalScriptController(this.app);
 
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.app);
         }
-        new FrontController(this.app);
+        new FrontController(this.app, frontAssets);
         new UserController(this.app);
         new MatrixRoomAreaController(this.app);
 
-        const staticOptions = {
-            extensions: [
-                ".css",
-                ".js",
-                ".png",
-                ".svg",
-                ".ico",
-                ".xml",
-                ".mp3",
-                ".json",
-                ".html",
-                ".ttf",
-                ".woff2",
-                ".map",
-                ".gif",
-                ".odf",
-            ],
-            etag: true,
-            maxAge: "15d",
-        };
-
-        this.app.use(
-            "assets",
-            express.static(path + "/assets", {
-                ...staticOptions,
-                // Vite content-hashes everything under /assets, so the CDN edge may keep it forever.
-                maxAge: "1y",
-                immutable: true,
-            }),
-        );
-
-        this.app.use(
-            "resources",
-            express.static(path + "/resources", {
-                ...staticOptions,
-                maxAge: "1d",
-            }),
-        );
-
-        this.app.use(
-            "static",
-            express.static(path + "/static", {
-                ...staticOptions,
-                maxAge: "1d",
-            }),
-        );
-
-        this.app.use(
-            "collections",
-            express.static(path + "/collections", {
-                ...staticOptions,
-                maxAge: "1d",
-            }),
-        );
-
-        this.app.use(
-            express.static(path, {
-                ...staticOptions,
-                maxAge: "1h",
-            }),
-        );
+        frontAssets.registerStaticRoutes(this.app);
     }
 
     public async init() {

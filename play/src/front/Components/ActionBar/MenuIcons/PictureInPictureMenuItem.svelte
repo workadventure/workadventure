@@ -4,11 +4,7 @@
 
     import PictureInPictureIcon from "../../Icons/PictureInPictureIcon.svelte";
     import PictureInPictureOffIcon from "../../Icons/PictureInPictureOffIcon.svelte";
-    import {
-        activePictureInPictureStore,
-        askPictureInPictureActivatingStore,
-        pictureInPictureSupportedStore,
-    } from "../../../Stores/PeerStore";
+    import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../../Stores/PeerStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -41,11 +37,9 @@
     classList="group/btn-picture-in-picture"
     disabledHelp={$openedMenuStore !== undefined}
     state={$activePictureInPictureStore ? "active" : "normal"}
-    dataTestId={$pictureInPictureSupportedStore ? "pictureInPictureButton" : "pictureInPictureButtonDisabled"}
+    dataTestId="pictureInPictureButton"
     tooltipTitle={$LL.actionbar.help.pictureInPicture.title()}
-    desc={$pictureInPictureSupportedStore
-        ? $LL.actionbar.help.pictureInPicture.desc()
-        : $LL.actionbar.help.pictureInPicture.descDisabled()}
+    desc={$LL.actionbar.help.pictureInPicture.desc()}
     media="./static/Videos/PictureInPicture.mp4"
     onclick={pictureInPictureClick}
 >

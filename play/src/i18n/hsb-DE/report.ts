@@ -31,8 +31,15 @@ const report: DeepPartial<Translation["report"]> = {
         hint: {
             block: "wužiwarja wjace njewidźeć a njesłyšeć. Jenož za tebje, a wotwołajomne.",
             report: "administratorow informować.",
+            remove: "Z tuteje rozmołwy wotstronić. Wostanje na karće.",
             kick: "nětko dźělić. Wužiwar móže so wróćić.",
             ban: "na přeco dźělić.",
+        },
+        remove: {
+            title: "Z rozmołwy wotstronić",
+            content: "{userName} hnydom tutu rozmołwu wopušći, a wusyłanje so skónči, jeli běži. Wostanje na karće.",
+            submit: "Wotstronić",
+            confirmTitle: "{userName} z rozmołwy wotstronić",
         },
         kick: {
             title: "wotstronić",

@@ -196,17 +196,31 @@ export class AuthenticateController extends BaseHttpController {
             try {
                 const authTokenData: AuthTokenData = await jwtTokenManager.verifyJWTToken(token, false);
 
+                // Check the OpenID access token (renewing it if expired) before calling the admin, which uses it to
+                // identify the member
+                const checkResult =
+                    authTokenData.accessToken === undefined
+                        ? undefined
+                        : await openIDClient
+                              .checkTokenAuthWithRefresh(authTokenData.accessToken, authTokenData.encryptedRefreshToken)
+                              .catch((err) => {
+                                  console.warn("Error while checking token auth", err);
+                                  throw new errors.JWTInvalid("Invalid token");
+                              });
+                // A renewal stands for a new login: use the current claims so that removed tags are not carried over
+                const { username, locale, tags } = checkResult?.refreshed ? checkResult.claims : authTokenData;
+
                 //Get user data from Admin Back Office
                 //This is very important to create User Local in LocalStorage in WorkAdventure
                 const resUserData = await adminService.fetchMemberDataByUuid(
                     authTokenData.identifier,
-                    authTokenData.accessToken,
+                    checkResult?.accessToken,
                     playUri,
                     IPAddress,
                     localStorageCharacterTextureIds ?? [],
                     localStorageCompanionTextureId,
                     req.header("accept-language"),
-                    authTokenData.tags,
+                    tags,
                     chatID,
                 );
 
@@ -215,13 +229,13 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                if (authTokenData.accessToken == undefined) {
+                if (checkResult === undefined) {
                     //if not nonce and code, anonymous user connected
                     //get data with identifier and return token
                     res.json({
                         authToken: token,
-                        username: authTokenData?.username,
-                        locale: authTokenData?.locale,
+                        username,
+                        locale,
                         // TODO: replace ... with each property
                         ...resUserData,
                         matrixUserId: authTokenData?.matrixUserId,
@@ -230,22 +244,28 @@ export class AuthenticateController extends BaseHttpController {
                     return;
                 }
 
-                try {
-                    const resCheckTokenAuth = await openIDClient.checkTokenAuth(authTokenData.accessToken);
-                    res.json({
-                        username: authTokenData?.username,
-                        authToken: token,
-                        locale: authTokenData?.locale,
-                        matrixUserId: authTokenData?.matrixUserId,
-                        matrixServerUrl: (resCheckTokenAuth.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
-                        // TODO: replace ... with each property
-                        ...resUserData,
-                        ...resCheckTokenAuth,
-                    } satisfies MeResponse);
-                } catch (err) {
-                    console.warn("Error while checking token auth", err);
-                    throw new errors.JWTInvalid("Invalid token");
-                }
+                const authToken = checkResult.refreshed
+                    ? await jwtTokenManager.createAuthToken(
+                          authTokenData.identifier,
+                          checkResult.accessToken,
+                          username,
+                          locale,
+                          tags,
+                          authTokenData.matrixUserId,
+                          checkResult.encryptedRefreshToken,
+                      )
+                    : token;
+
+                res.json({
+                    username,
+                    authToken,
+                    locale,
+                    matrixUserId: authTokenData?.matrixUserId,
+                    matrixServerUrl: (checkResult.userInfo.matrix_url as string | undefined) ?? MATRIX_PUBLIC_URI,
+                    // TODO: replace ... with each property
+                    ...resUserData,
+                    ...checkResult.userInfo,
+                } satisfies MeResponse);
                 return;
             } catch (err) {
                 if (err instanceof errors.JWTInvalid || err instanceof errors.JWTExpired) {
@@ -320,6 +340,7 @@ export class AuthenticateController extends BaseHttpController {
                 userInfo?.locale,
                 userInfo?.tags,
                 email ? matrixProvider.getBareMatrixIdFromEmail(email) : undefined,
+                userInfo?.encrypted_refresh_token,
             );
 
             const matrixPublicUri = userInfo.matrix_url ?? MATRIX_PUBLIC_URI;
@@ -569,7 +590,7 @@ export class AuthenticateController extends BaseHttpController {
             // TODO: change that to use end session endpoint
             // Use post logout redirect and id token hint to redirect on the logut session endpoint of the OpenId provider
             // https://openid.net/specs/openid-connect-session-1_0.html#RPLogout
-            await openIDClient.logoutUser(authTokenData.accessToken);
+            await openIDClient.logoutUser(authTokenData.accessToken, authTokenData.encryptedRefreshToken);
 
             // if no redirect, redirect to playUri and connect user to the world
             // if the world is with authentication mandatory, the user will be redirected to the login screen

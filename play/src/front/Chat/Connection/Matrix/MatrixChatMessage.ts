@@ -1,11 +1,13 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
-import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
+import { Direction, EventTimeline, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { MapStore } from "@workadventure/store-utils";
 import type {
+    ChatAttachmentStatus,
     ChatMessage,
+    ChatMessageAttachment,
     ChatMessageContent,
     ChatMessageType,
     ChatThread,
@@ -13,6 +15,8 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
+import LL from "../../../../i18n/i18n-svelte";
+import { MATRIX_HTML_FORMAT, markOwnMentions, pillRoomMention, ROOM_MENTION_ID } from "../../Mentions";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -37,6 +41,8 @@ export class MatrixChatMessage implements ChatMessage {
     readonly canDelete: Writable<boolean>;
     threadSummary = writable<ChatThreadSummary | null>(null);
     openThread: (() => Promise<ChatThread | undefined>) | undefined;
+    readonly attachment: ChatMessageAttachment | undefined;
+    private readonly attachmentStatus = writable<ChatAttachmentStatus>({ state: "ready" });
     private imageMediaCleanup: () => void = () => undefined;
     private imageMediaAbortController: AbortController | undefined;
     private attachmentMediaCleanup: () => void = () => undefined;
@@ -62,6 +68,11 @@ export class MatrixChatMessage implements ChatMessage {
     ) {
         this.id = event.getId() ?? uuidv4();
         this.type = this.mapMatrixMessageTypeToChatMessage();
+        const size: unknown = event.getOriginalContent().info?.size;
+        this.attachment =
+            this.type === "text"
+                ? undefined
+                : { status: this.attachmentStatus, size: typeof size === "number" ? size : undefined };
         this.date = event.getDate();
         this.sender = this.getSender();
         this.isMyMessage = this.room.client.getUserId() === event.getSender();
@@ -116,7 +127,7 @@ export class MatrixChatMessage implements ChatMessage {
 
     private getMessageContent(): ChatMessageContent {
         if (this.event.isDecryptionFailure()) {
-            return { body: "🔐 Failed to decrypt", url: undefined };
+            return { body: `🔐 ${get(LL).chat.e2ee.undecryptable()}`, url: undefined };
         }
 
         // getContent() returns the effective content: the latest edit's `m.new_content` when the event has
@@ -126,12 +137,26 @@ export class MatrixChatMessage implements ChatMessage {
         // via the MatrixEventEvent.Replaced listener.
         const content = this.event.getContent();
         const quotedMessage = this.getQuotedMessage();
+        const myUserId = this.room.client.getSafeUserId();
+        // Evaluated from the push rules, the way the server counts the unread highlights: this covers m.mentions,
+        // @room and the keywords set up in Element. Recalculated because the cached actions may predate decryption.
+        const mentionsMe =
+            !this.isMyMessage && this.room.client.getPushActionsForEvent(this.event, true)?.tweaks.highlight === true;
+        // An @room counts, and is drawn as a pill, only when its sender may notify the whole room: the server checks
+        // the same power level before notifying anyone.
+        const roomMention = content["m.mentions"]?.room === true && this.senderMayNotifyRoom();
+        const withPills = (html: string) =>
+            markOwnMentions(
+                roomMention ? pillRoomMention(html) : html,
+                mentionsMe ? [myUserId, ROOM_MENTION_ID] : [myUserId],
+            );
 
         if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
             return {
-                body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
+                body: withPills(content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, "")),
                 url: undefined,
+                mentionsMe,
             };
         }
 
@@ -140,7 +165,6 @@ export class MatrixChatMessage implements ChatMessage {
                 body: content.body,
                 url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
                 thumbnailUrl: this.room.client.mxcUrlToHttp(content.info?.thumbnail_url) ?? undefined,
-                mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
 
@@ -148,11 +172,33 @@ export class MatrixChatMessage implements ChatMessage {
             return {
                 body: content.body,
                 url: this.room.client.mxcUrlToHttp(content.url ?? content.file?.url) ?? undefined,
-                mediaState: content.file !== undefined ? "loading" : "ready",
             };
         }
 
-        return { body: content.body, url: undefined };
+        // A message mentioning someone is rendered from its HTML, where the mentions are pills (whether they come
+        // from our composer or from Element). The other ones keep being rendered from their markdown body.
+        const html =
+            content.format === MATRIX_HTML_FORMAT && typeof content.formatted_body === "string"
+                ? content.formatted_body
+                : undefined;
+        const mentionsUsers = (content["m.mentions"]?.user_ids?.length ?? 0) > 0;
+        let formattedBody: string | undefined;
+        if (roomMention) {
+            // Element sends a lone @room without any HTML.
+            formattedBody = withPills(html ?? content.body);
+        } else if (mentionsUsers && html !== undefined) {
+            formattedBody = withPills(html);
+        }
+        return { body: content.body, url: undefined, formattedBody, mentionsMe };
+    }
+
+    private senderMayNotifyRoom(): boolean {
+        const sender = this.event.getSender();
+        return (
+            sender !== undefined &&
+            (this.room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.mayTriggerNotifOfType("room", sender) ??
+                false)
+        );
     }
 
     private loadImageMediaIfNeeded() {
@@ -169,7 +215,7 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private async resolveImageMedia(signal: AbortSignal): Promise<void> {
-        this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
+        this.attachmentStatus.set({ state: "loading" });
 
         try {
             const media = await resolveImageMediaFromEvent(this.event, this.room.client, signal);
@@ -183,18 +229,13 @@ export class MatrixChatMessage implements ChatMessage {
                 ...content,
                 url: media.sourceUrl,
                 thumbnailUrl: media.thumbnailUrl ?? media.sourceUrl,
-                mediaErrorKind: media.error,
-                mediaState: media.error ? "error" : "ready",
             }));
+            this.attachmentStatus.set(media.error ? { state: "error", error: media.error } : { state: "ready" });
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") {
                 return;
             }
-            this.content.update((content) => ({
-                ...content,
-                mediaState: "error",
-                mediaErrorKind: "download",
-            }));
+            this.attachmentStatus.set({ state: "error", error: "download" });
         }
     }
 
@@ -216,7 +257,7 @@ export class MatrixChatMessage implements ChatMessage {
     }
 
     private async resolveAttachmentMedia(signal: AbortSignal): Promise<void> {
-        this.content.update((content) => ({ ...content, mediaState: "loading", mediaErrorKind: undefined }));
+        this.attachmentStatus.set({ state: "loading" });
 
         try {
             const media = await resolveAttachmentMediaFromEvent(this.event, this.room.client, signal);
@@ -226,21 +267,13 @@ export class MatrixChatMessage implements ChatMessage {
             }
 
             this.attachmentMediaCleanup = media.cleanup;
-            this.content.update((content) => ({
-                ...content,
-                url: media.sourceUrl,
-                mediaErrorKind: media.error,
-                mediaState: media.error ? "error" : "ready",
-            }));
+            this.content.update((content) => ({ ...content, url: media.sourceUrl }));
+            this.attachmentStatus.set(media.error ? { state: "error", error: media.error } : { state: "ready" });
         } catch (error) {
             if (error instanceof DOMException && error.name === "AbortError") {
                 return;
             }
-            this.content.update((content) => ({
-                ...content,
-                mediaState: "error",
-                mediaErrorKind: "download",
-            }));
+            this.attachmentStatus.set({ state: "error", error: "download" });
         }
     }
 
@@ -341,8 +374,8 @@ export class MatrixChatMessage implements ChatMessage {
         return "text";
     }
 
-    remove() {
-        this.room.client.redactEvent(this.room.roomId, this.id).catch((error) => console.error(error));
+    async remove(): Promise<void> {
+        await this.room.client.redactEvent(this.room.roomId, this.id);
     }
 
     async edit(newContent: string): Promise<void> {

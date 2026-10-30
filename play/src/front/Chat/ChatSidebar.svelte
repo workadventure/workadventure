@@ -3,9 +3,16 @@
     import { chatVisibilityStore, INITIAL_SIDEBAR_WIDTH, INITIAL_SIDEBAR_WIDTH_MOBILE } from "../Stores/ChatStore";
     import { isMediaBreakpointUp } from "../Utils/BreakpointsUtils";
     import { blocker } from "../Utils/screenBlocker";
+    import LL from "../../i18n/i18n-svelte";
     import { selectedRoomStore } from "./Stores/SelectRoomStore";
     import Chat from "./Components/Chat.svelte";
     import { chatSidebarWidthStore, hideActionBarStoreBecauseOfChatBar } from "./ChatSidebarWidthStore";
+    import {
+        clampChatSidebarWidth,
+        CHAT_SIDEBAR_MIN_WIDTH,
+        maxChatSidebarWidth,
+        snapChatSidebarWidth,
+    } from "./ChatSidebarWidth";
     import { IconX } from "@wa-icons";
 
     let container: HTMLElement | undefined = $state();
@@ -20,23 +27,20 @@
 
     const isRTL: boolean = document.documentElement.dir === "rtl";
 
+    const viewportWidth = () => Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
+
     const handleMousedown = (e: MouseEvent) => {
         let dragX = e.clientX;
         const initialWidth = sideBarWidth;
 
         document.onmousemove = (e) => {
-            const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
             const diff = e.clientX - dragX;
-
-            const newWidth = isRTL ? initialWidth - diff : initialWidth + diff;
-            const minWidth = 200;
-            const maxWidth = vw - 50;
-            const clampedWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-
-            sideBarWidth = clampedWidth;
+            sideBarWidth = clampChatSidebarWidth(isRTL ? initialWidth - diff : initialWidth + diff, viewportWidth());
         };
         document.onmouseup = () => {
             document.onmousemove = null;
+            document.onmouseup = null;
+            sideBarWidth = snapChatSidebarWidth(sideBarWidth, viewportWidth());
             chatSidebarWidthStore.set(sideBarWidth);
         };
     };
@@ -44,14 +48,8 @@
         let dragX = e.targetTouches[0].pageX;
 
         function onTouchMove(e: TouchEvent) {
-            const vw = Math.max(document.documentElement.clientWidth, window.innerWidth || 0);
             const diff = e.targetTouches[0].pageX - dragX;
-            const newWidth = Math.min(isRTL ? sideBarWidth - diff : sideBarWidth + diff, vw);
-            const minWidth = 200;
-            const maxWidth = vw - 50;
-            const clampedWidth = Math.max(minWidth, Math.min(newWidth, maxWidth));
-
-            sideBarWidth = clampedWidth;
+            sideBarWidth = clampChatSidebarWidth(isRTL ? sideBarWidth - diff : sideBarWidth + diff, viewportWidth());
 
             dragX = e.targetTouches[0].pageX;
         }
@@ -59,6 +57,7 @@
         function onTouchEnd() {
             document.removeEventListener("touchmove", onTouchMove);
             document.removeEventListener("touchend", onTouchEnd);
+            sideBarWidth = snapChatSidebarWidth(sideBarWidth, viewportWidth());
             chatSidebarWidthStore.set(sideBarWidth);
         }
 
@@ -66,15 +65,30 @@
         document.addEventListener("touchend", onTouchEnd);
     };
 
-    const handleDbClick = () => {
+    const toggleFullScreen = () => {
         if (isChatBarInFullScreen()) {
             const initialWidth = isMediaBreakpointUp("md") ? INITIAL_SIDEBAR_WIDTH_MOBILE : INITIAL_SIDEBAR_WIDTH;
-            sideBarWidth = initialWidth;
+            sideBarWidth = clampChatSidebarWidth(initialWidth, viewportWidth());
         } else {
-            const fullWidth = document.documentElement.clientWidth;
-            sideBarWidth = fullWidth;
+            sideBarWidth = maxChatSidebarWidth(document.documentElement.clientWidth);
         }
         chatSidebarWidthStore.set(sideBarWidth);
+    };
+
+    const KEYBOARD_RESIZE_STEP = 20;
+
+    const handleKeydown = (e: KeyboardEvent) => {
+        if (e.key === "Enter") {
+            toggleFullScreen();
+        } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+            // The arrow follows the handle on screen: it moves left in RTL, where the panel sits on the right.
+            const grows = (e.key === "ArrowRight") !== isRTL;
+            const step = grows ? KEYBOARD_RESIZE_STEP : -KEYBOARD_RESIZE_STEP;
+            sideBarWidth = clampChatSidebarWidth(sideBarWidth + step, viewportWidth());
+        } else {
+            return;
+        }
+        e.preventDefault();
     };
 
     $effect(() => {
@@ -83,7 +97,7 @@
 
     const onresize = () => {
         if (isChatSidebarLargerThanWindow() && container) {
-            sideBarWidth = document.documentElement.clientWidth;
+            sideBarWidth = maxChatSidebarWidth(document.documentElement.clientWidth);
             chatSidebarWidthStore.set(sideBarWidth);
         }
     };
@@ -93,7 +107,7 @@
     };
 
     const isChatBarInFullScreen = () => {
-        return sideBarWidth === document.documentElement.clientWidth;
+        return sideBarWidth === maxChatSidebarWidth(document.documentElement.clientWidth);
     };
 </script>
 
@@ -106,7 +120,7 @@
         transition:fly={{ duration: 200, x: isRTL ? sideBarWidth : -sideBarWidth }}
         style="width: {sideBarWidth}px; max-width: {sideBarWidth}px;"
         {@attach blocker}
-        class=" chatWindow !min-w-[150px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0"
+        class=" chatWindow !min-w-[320px] max-sm:!min-w-[150px] bg-contrast/50 backdrop-blur-md p-0"
     >
         {#if $hideActionBarStoreBecauseOfChatBar && isInSpecificDiscussion}
             <div class="close-window absolute end-2 top-3 rounded-sm p-1 bg-contrast/80 z-50">
@@ -121,13 +135,22 @@
         {/if}
 
         <Chat {sideBarWidth} />
-        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- A focusable separator is the WAI-ARIA window splitter pattern, which Svelte's a11y rules don't know. -->
+        <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
         <div
-            class="!absolute !end-1 !top-0 !bottom-0 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize select-none"
+            class="!absolute !end-1 !top-0 !bottom-0 !z-20 !m-auto !w-1 !h-32 !bg-white !rounded !cursor-col-resize select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             id="resize-bar"
+            role="separator"
+            tabindex="0"
+            aria-orientation="vertical"
+            aria-label={$LL.chat.resizeChat()}
+            aria-valuenow={Math.round(sideBarWidth)}
+            aria-valuemin={CHAT_SIDEBAR_MIN_WIDTH}
+            aria-valuemax={maxChatSidebarWidth(document.documentElement.clientWidth)}
             onmousedown={handleMousedown}
-            ondblclick={handleDbClick}
+            ondblclick={toggleFullScreen}
             ontouchstart={handleTouchStart}
+            onkeydown={handleKeydown}
         ></div>
     </section>
 {/if}

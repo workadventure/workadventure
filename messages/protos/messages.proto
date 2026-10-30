@@ -196,6 +196,47 @@ message VideoQualitySampleMessage {
   optional VideoQualityLimitationReason qualityLimitationReason = 22;
   // Outbound streams only: encoder implementation reported by the browser (e.g. "libaom", "libvpx", "ExternalEncoder").
   optional string encoderImplementation = 23;
+  // Inbound streams only: what the browser counted since the previous sample of this stream (the difference of the
+  // cumulative RTCInboundRtpStreamStats counters), over windowSeconds. Absent when the window is not measurable (first
+  // sample, counters restarted, right after a deliberate pause); each counter is also absent when the browser does
+  // not expose it.
+  optional double windowSeconds = 24;
+  optional uint32 framesDecoded = 25;
+  optional uint32 framesDropped = 26;
+  // Gaps between two rendered frames longer than max(3 x the average frame duration, average + 150 ms), up to 5 s
+  optional uint32 freezeCount = 27;
+  optional double freezeSeconds = 28;
+  // Gaps longer than 5 s, never counted as freezes
+  optional uint32 pauseCount = 29;
+  optional double pauseSeconds = 30;
+  optional double interFrameDelaySumSeconds = 31;
+  optional double interFrameDelaySquaredSumSeconds = 32;
+  optional double decodeSeconds = 33;
+  // Outbound streams only, over the last second like fps: frames per second the capture delivered
+  // (RTCVideoSourceStats.frames), and the rate it is configured at (MediaTrackSettings.frameRate).
+  optional double captureFps = 34;
+  optional double captureTargetFps = 35;
+  // Outbound streams only, over the last second: encoding time per encoded frame (all layers), and the share of the
+  // time (0 to 1) the encoder degraded the stream for lack of CPU / of bandwidth (qualityLimitationDurations).
+  optional double encodeMsPerFrame = 36;
+  optional double cpuLimitedRatio = 37;
+  optional double bandwidthLimitedRatio = 38;
+  // Inbound streams only, over windowSeconds like the playback counters: packets received and lost (a packet counted
+  // as lost then received late is taken back, never below 0).
+  optional uint32 packetsReceived = 39;
+  optional uint32 packetsLost = 40;
+  // Inbound streams only: round-trip time of the connection the stream arrives on (selected ICE candidate pair), when
+  // the sample was taken.
+  optional double roundTripTimeMs = 41;
+  // Outbound streams only, from the latest receiver report of the other end about the largest layer: round-trip time,
+  // and the share of the packets lost on the way (0 to 1).
+  optional double uploadRoundTripTimeMs = 42;
+  optional double uploadLossRatio = 43;
+  // Outbound streams only: the browser's estimate of the bandwidth it can send, in bits per second.
+  optional double availableOutgoingBitrate = 44;
+  // LiveKit streams only: region of the LiveKit server the client is connected to (serverInfo.region). Set by
+  // LiveKit Cloud, usually empty on a self-hosted server.
+  optional string livekitRegion = 45;
 }
 
 message VideoQualityReportMessage {
@@ -373,6 +414,9 @@ message CreateAreaMessage {
   // AreaDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
   // See ModifyAreaMessage.properties for where they are checked.
   repeated google.protobuf.Value properties = 7;
+  // Set by the map-storage when its property hooks changed `properties` (a new chat room, the copy of
+  // an uploaded file...): the client that created the area must then apply them too.
+  optional bool modifyServerData = 8;
 }
 
 message CreateEntityMessage {
@@ -387,6 +431,8 @@ message CreateEntityMessage {
   optional string name = 7;
   uint32 width = 8;
   uint32 height = 9;
+  // See CreateAreaMessage.modifyServerData.
+  optional bool modifyServerData = 10;
 }
 
 message DeleteEntityMessage {
@@ -424,6 +470,14 @@ message UploadEntityMessage {
   optional string ownerId = 10;
 }
 
+// What an uploaded file is for, which decides where map-storage stores it and which formats it accepts.
+enum UploadedFileKind {
+  // A file of the "open file" property, stored privately.
+  Document = 0;
+  // A sound of the "play audio" property, stored as a public map asset.
+  Sound = 1;
+}
+
 message UploadFileMessage {
   bytes file = 1;
   string id = 2;
@@ -431,6 +485,7 @@ message UploadFileMessage {
   string propertyId = 4;
   optional string areaId = 5;
   optional string entityId = 6;  
+  UploadedFileKind kind = 7;
 }
 
 message ModifyCustomEntityMessage {
@@ -1235,6 +1290,9 @@ message GroupUsersUpdateMessage {
 message RoomConnectedMessage {
   EditMapCommandsArrayMessage editMapCommandsArrayMessage = 13;
   repeated string tag = 5;
+  // Also in RoomJoinedMessage, but the start position (which must avoid the areas the user cannot enter, unless they
+  // can edit the map) is chosen before the room is joined.
+  bool canEdit = 14;
 }
 
 message RoomJoinedMessage {
@@ -1419,6 +1477,7 @@ message SpaceEvent {
     SpaceIsTyping spaceIsTyping = 2;
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
+    SpaceMessageReaction spaceMessageReaction = 5;
   }
 }
 
@@ -1443,10 +1502,13 @@ message PrivateSpaceEvent {
     UnblockUserMessage unblockUserMessage = 21;
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 22;
     RecordingUnexpectedlyStoppedPrivateMessage recordingUnexpectedlyStoppedMessage = 23;
+    ProximityFileTransferOfferMessage proximityFileTransferOffer = 24;
+    ProximityFileTransferSignalMessage proximityFileTransferSignal = 25;
+    ProximityFileTransferDeclineMessage proximityFileTransferDecline = 26;
     // Sent in the world space, to invite a user on another map (on the same map, MeetingInvitationRequestMessage goes through the room)
-    MeetingInvitationPrivateMessage meetingInvitationRequest = 24;
+    MeetingInvitationPrivateMessage meetingInvitationRequest = 27;
     // Sent in the world space by the invitee, back to the user who invited them from another map
-    MeetingInvitationResponsePrivateMessage meetingInvitationResponse = 25;
+    MeetingInvitationResponsePrivateMessage meetingInvitationResponse = 28;
   }
 }
 
@@ -1480,12 +1542,49 @@ message SpaceMessage {
   string message = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+  // Id picked by the sender and kept by every receiver, so that a reply or a reaction can point at this message.
+  optional string id = 4;
+  // Set when this message replies to another message of the same space.
+  optional SpaceMessageQuote quote = 5;
+}
+
+// The message a SpaceMessage replies to. The excerpt is shown when the receiver does not have the quoted message (it joined the bubble later).
+message SpaceMessageQuote {
+  string messageId = 1;
+  string excerpt = 2;
+  optional string senderName = 3;
+}
+
+// A user adds (added = true) or removes their reaction to the SpaceMessage whose id is messageId.
+message SpaceMessageReaction {
+  string messageId = 1;
+  string reaction = 2;
+  bool added = 3;
 }
 
 message SpaceIsTyping {
   bool isTyping = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+}
+
+message ProximityFileTransferOfferMessage {
+  string transferId = 1;
+  string fileName = 2;
+  string mimeType = 3;
+  uint64 size = 4;
+  repeated CharacterTextureMessage characterTextures = 6;
+  optional string name = 7;
+}
+
+message ProximityFileTransferDeclineMessage {
+  string transferId = 1;
+}
+
+message ProximityFileTransferSignalMessage {
+  string transferId = 1;
+  string connectionId = 2;
+  string signal = 3;
 }
 
 message BackEventMessage {
@@ -1497,7 +1596,18 @@ message BackEventMessage {
 message BackEvent {
   oneof event {
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 2;
+    MicrophoneTrackPublishedMessage microphoneTrackPublishedMessage = 3;
   }
+}
+
+// Names the sender's microphone among its LiveKit publications (the scripting audio is published as a microphone
+// too). Sent on every microphone publication; the back uses it when the space is recorded automatically.
+message MicrophoneTrackPublishedMessage {
+  string trackSid = 1;
+  // The browser's language (navigator.language).
+  string language = 2;
+  // The noise suppression applied before publishing: "workadventure", "voiceIsolation" or "none".
+  string noiseSuppression = 3;
 }
 
 message PrivateEvent {
@@ -1608,6 +1718,7 @@ message ConnectToRoomMessage {
   string roomId = 1;
   google.protobuf.StringValue lastCommandId = 2;
   repeated string tag = 3;
+  bool canEdit = 4;
 }
 
 /**

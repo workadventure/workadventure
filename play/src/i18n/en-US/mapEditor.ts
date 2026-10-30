@@ -83,6 +83,8 @@ const mapEditor: BaseTranslation = {
             volumeLabel: "Volume",
             audioLinkLabel: "Audio Link",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Upload a file",
+            sourceUrl: "Use a URL",
             defaultButtonLabel: "Play music",
             error: "Could not load sound",
             actionButtonLabel: "Play music",
@@ -458,7 +460,7 @@ const mapEditor: BaseTranslation = {
                 audienceVideoFeedbackActivated: "Auditorium mode",
                 audienceVideoFeedbackActivatedDisabled: "Auditorium mode",
                 audienceVideoFeedbackActivatedHelper:
-                    "Auditorium mode activated: Receive the camera and microphone stream of all users (with camera and microphone activated) in the room/world. But the attendee will not be able to see the other attendees. Disabled by default.",
+                    "Auditorium mode activated: Receive the camera stream of all users (with camera activated) in the room/world, without their audio. But the attendee will not be able to see the other attendees. Disabled by default.",
                 error: {
                     title: "Please enter a title",
                     save: {

@@ -4,14 +4,15 @@ import { readable } from "svelte/store";
  * A store containing whether the current page has the focus or not.
  */
 export const focusStore = readable(document.hasFocus(), function start(set) {
-    // Create a blur event listener
+    // The browser fires "focus" / "blur" synchronously when Svelte removes the focused element (e.g. an iframe)
+    // while it is rendering. Setting the store at that moment throws "state_unsafe_mutation", so we defer it.
+    // Both listeners are deferred so that their order is kept.
     const onBlur = () => {
-        set(false);
+        queueMicrotask(() => set(false));
     };
 
-    // Create a focus event listener
     const onFocus = () => {
-        set(true);
+        queueMicrotask(() => set(true));
     };
 
     window.addEventListener("blur", onBlur);

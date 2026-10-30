@@ -64,13 +64,17 @@ const menu: DeepPartial<Translation["menu"]> = {
             browserNoiseSuppressionDescription: "استخدام تقليل الضوضاء المدمج في المتصفح.",
             voiceIsolation: "عزل الصوت",
             voiceIsolationDescription: "استخدام عزل الصوت في المتصفح ونظام التشغيل عند توفره.",
+            noiseSuppressionEngine: "محرك إلغاء الضوضاء",
+            noiseSuppressionEngineDeepFilterNet: "DeepFilterNet (جديد، صوت كامل النطاق)",
+            noiseSuppressionEngineDtln: "DTLN (المحرك السابق)",
         },
         language: {
             title: "اللغة", // Language
         },
         privacySettings: {
             title: "وضع الغياب", // Absence mode
-            explanation: 'إذا لم يكن تبويب WorkAdventure نشطًا، سيتم التبديل إلى "وضع الغياب".', // If the WorkAdventure tab is not active, it will switch to "absence mode".
+            explanation:
+                'عند الانتقال إلى نافذة أو تبويب آخر، ينتقل WorkAdventure إلى "وضع الغياب"، إلا أثناء محادثة أو بث.', // When you switch to another window or tab, WorkAdventure switches to "absence mode", except during a conversation or a broadcast.
             cameraToggle: 'اترك الكاميرا مفعلة في "وضع الغياب".', // Keep camera active in "absence mode".
             microphoneToggle: 'اترك الميكروفون مفعلاً في "وضع الغياب".', // Keep microphone active in "absence mode".
         },
@@ -127,8 +131,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "معرّف Matrix الخاص بك",
-        settings: "الإعدادات",
         resetKeyStorageUpButtonLabel: "إعادة تعيين مخزن المفاتيح",
         resetKeyStorageConfirmationModal: {
             title: "تأكيد إعادة تعيين مخزن المفاتيح",
@@ -164,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
-        chat: "الدردشة",
         help: "مساعدة وشروحات",
         contextualActions: "إجراءات سياقية",
         shortcuts: "اختصارات",

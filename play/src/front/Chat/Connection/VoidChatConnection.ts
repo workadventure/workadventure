@@ -6,6 +6,7 @@ import type {
     ChatRoom,
     CreateRoomOptions,
     RoomFolder,
+    JoinableRoomInfo,
     ConnectionStatus,
     ChatUser,
     ChatRoomMembershipManagement,
@@ -33,6 +34,7 @@ export class VoidChatConnection implements ChatConnectionInterface {
     nbUnreadDirectRoomsMessages: Readable<number> = writable(0);
     nbUnreadInvitationsMessages: Readable<number> = writable(0);
     retrySendingEvents: () => Promise<void> = () => Promise.resolve();
+    retryConnection: () => boolean = () => false;
 
     createRoom(roomOptions: CreateRoomOptions): Promise<{ room_id: string }> {
         throw new Error("VoidChatConnection: createRoom is not implemented.");
@@ -50,7 +52,7 @@ export class VoidChatConnection implements ChatConnectionInterface {
         return Promise.resolve(undefined);
     }
 
-    searchAccessibleRooms(searchText: string): Promise<{ id: string; name: string | undefined }[]> {
+    searchAccessibleRooms(searchText: string): Promise<JoinableRoomInfo[]> {
         return Promise.resolve([]);
     }
 
