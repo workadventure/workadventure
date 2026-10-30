@@ -25,6 +25,9 @@ export async function launchOtherBrowser(engine: string): Promise<Browser> {
                 firefox.launch({
                     firefoxUserPrefs: {
                         "media.navigator.streams.fake": true,
+                        // Without it, getUserMedia() never resolves on a page that is not the front one, e.g.
+                        // turning the camera on in a page opened before another
+                        "media.navigator.permission.disabled": true,
                         "permissions.default.microphone": 1,
                         "permissions.default.camera": 1,
                     },
