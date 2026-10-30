@@ -134,8 +134,12 @@
                 refresh();
             }
         };
+        // Chrome also fires blur when the focused input is removed or disabled, which happens while Svelte updates
+        // the DOM: writing state there throws state_unsafe_mutation, so close once that update is over.
         const close = () => {
-            query = undefined;
+            queueMicrotask(() => {
+                query = undefined;
+            });
         };
         input.addEventListener("input", refresh);
         input.addEventListener("keyup", onKeyup);
