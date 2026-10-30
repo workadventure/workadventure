@@ -1,6 +1,7 @@
 import type { Readable, Unsubscriber } from "svelte/store";
 import type { VideoQualityReportMessage, VideoQualitySampleMessage } from "@workadventure/messages";
 import {
+    VideoQualityLevel,
     VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -99,7 +100,7 @@ export function subscribeToOutboundVideoQualityAnalytics(
             captureTargetFps: stats.captureTargetFps,
             captureWidth: stats.captureWidth,
             captureHeight: stats.captureHeight,
-            qualitySetting: context.getQualitySetting?.(),
+            qualitySetting: toQualityLevel(context.getQualitySetting?.()),
             encodeMsPerFrame: stats.encodeMsPerFrame,
             cpuLimitedRatio: stats.cpuLimitedRatio,
             bandwidthLimitedRatio: stats.bandwidthLimitedRatio,
@@ -230,6 +231,19 @@ function toRelayProtocol(relayProtocol: WebRtcStats["relayProtocol"]): VideoQual
         return VideoQualityRelayProtocol.VIDEO_QUALITY_RELAY_PROTOCOL_TLS;
     }
     return undefined;
+}
+
+function toQualityLevel(setting: VideoQualitySetting | undefined): VideoQualityLevel | undefined {
+    switch (setting) {
+        case "low":
+            return VideoQualityLevel.VIDEO_QUALITY_LEVEL_LOW;
+        case "recommended":
+            return VideoQualityLevel.VIDEO_QUALITY_LEVEL_RECOMMENDED;
+        case "high":
+            return VideoQualityLevel.VIDEO_QUALITY_LEVEL_HIGH;
+        default:
+            return undefined;
+    }
 }
 
 function toLimitationReason(reason: WebRtcSenderStats["qualityLimitationReason"]): VideoQualityLimitationReason {

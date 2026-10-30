@@ -1,4 +1,5 @@
 import {
+    VideoQualityLevel,
     VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -315,12 +316,6 @@ function toSenderProperties(sample: VideoQualitySampleMessage, direction: "inbou
     };
 }
 
-const QUALITY_SETTINGS = ["low", "recommended", "high"] as const;
-
-function toQualitySetting(value: string | undefined): (typeof QUALITY_SETTINGS)[number] | null {
-    return QUALITY_SETTINGS.find((setting) => setting === value) ?? null;
-}
-
 function plausible(value: number | undefined, max: number): number | null {
     return value !== undefined && Number.isFinite(value) && value >= 0 && value <= max ? value : null;
 }
@@ -399,6 +394,19 @@ function toLimitationReason(
             return "bandwidth";
         case VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_OTHER:
             return "other";
+        default:
+            return null;
+    }
+}
+
+function toQualitySetting(level: VideoQualityLevel | undefined): "low" | "recommended" | "high" | null {
+    switch (level) {
+        case VideoQualityLevel.VIDEO_QUALITY_LEVEL_LOW:
+            return "low";
+        case VideoQualityLevel.VIDEO_QUALITY_LEVEL_RECOMMENDED:
+            return "recommended";
+        case VideoQualityLevel.VIDEO_QUALITY_LEVEL_HIGH:
+            return "high";
         default:
             return null;
     }

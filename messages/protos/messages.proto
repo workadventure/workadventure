@@ -170,6 +170,13 @@ enum VideoQualityLimitationReason {
   VIDEO_QUALITY_LIMITATION_REASON_OTHER = 3;
 }
 
+// The sender's video quality setting.
+enum VideoQualityLevel {
+  VIDEO_QUALITY_LEVEL_LOW = 0;
+  VIDEO_QUALITY_LEVEL_RECOMMENDED = 1;
+  VIDEO_QUALITY_LEVEL_HIGH = 2;
+}
+
 message VideoQualitySampleMessage {
   uint64 clientEventTimeMs = 1;
   optional uint64 sampleSeq = 2;
@@ -237,9 +244,9 @@ message VideoQualitySampleMessage {
   // LiveKit streams only: region of the LiveKit server the client is connected to (serverInfo.region). Set by
   // LiveKit Cloud, usually empty on a self-hosted server.
   optional string livekitRegion = 45;
-  // Outbound streams only: the sender's quality setting ("low", "recommended" or "high"), the camera's for a camera,
-  // the screen share's for a screen share.
-  optional string qualitySetting = 46;
+  // Outbound streams only: the sender's quality setting, the camera's for a camera, the screen share's for a screen
+  // share.
+  optional VideoQualityLevel qualitySetting = 46;
   // Outbound streams only: size the camera or screen capture delivers (MediaTrackSettings), where frameWidth and
   // frameHeight are the largest layer the encoder sends.
   optional uint32 captureWidth = 47;

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
 import {
+    VideoQualityLevel,
     VideoQualityLimitationReason,
     VideoQualityStreamCategory,
     VideoQualityStreamDirection,
@@ -167,7 +168,7 @@ describe("subscribeToOutboundVideoQualityAnalytics", () => {
                     captureTargetFps: 30,
                     captureWidth: 1920,
                     captureHeight: 1080,
-                    qualitySetting: "low",
+                    qualitySetting: VideoQualityLevel.VIDEO_QUALITY_LEVEL_LOW,
                     encodeMsPerFrame: 12.5,
                     cpuLimitedRatio: 0.4,
                     bandwidthLimitedRatio: 0,

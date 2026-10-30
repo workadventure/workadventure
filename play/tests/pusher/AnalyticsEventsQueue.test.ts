@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+    VideoQualityLevel,
     VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -481,7 +482,6 @@ describe("AnalyticsEventsQueue", () => {
             captureTargetFps: 30,
             captureWidth: 1280,
             captureHeight: 720,
-            qualitySetting: "low",
             encodeMsPerFrame: 12.5,
             cpuLimitedRatio: 0.4,
             bandwidthLimitedRatio: 0,
@@ -490,21 +490,22 @@ describe("AnalyticsEventsQueue", () => {
             direction: VideoQualityStreamDirection.VIDEO_QUALITY_STREAM_DIRECTION_OUTBOUND,
             remoteSpaceUserId: "",
         };
+        const low = VideoQualityLevel.VIDEO_QUALITY_LEVEL_LOW;
 
         queue.enqueueVideoQualityReport(
             {
                 samples: [
-                    videoQualitySample({ ...outbound, ...encoderLoad }),
+                    videoQualitySample({ ...outbound, ...encoderLoad, qualitySetting: low }),
                     videoQualitySample({
                         ...outbound,
                         ...encoderLoad,
                         cpuLimitedRatio: 1.5,
                         captureFps: Number.NaN,
                         captureWidth: 100_000,
-                        qualitySetting: "ultra",
+                        qualitySetting: VideoQualityLevel.UNRECOGNIZED,
                     }),
                     // A stream we receive tells nothing about our encoder
-                    videoQualitySample(encoderLoad),
+                    videoQualitySample({ ...encoderLoad, qualitySetting: low }),
                 ],
             },
             socketData(),
@@ -512,7 +513,7 @@ describe("AnalyticsEventsQueue", () => {
         await queue.flush();
 
         const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
-        expect(events[0].properties).toMatchObject(encoderLoad);
+        expect(events[0].properties).toMatchObject({ ...encoderLoad, qualitySetting: "low" });
         expect(events[1].properties).toMatchObject({
             captureFps: null,
             cpuLimitedRatio: null,
