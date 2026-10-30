@@ -273,7 +273,7 @@ export interface ChatMessage {
     quotedMessage: ChatMessage | undefined;
     type: ChatMessageType;
     reactions: MapStore<string, ChatMessageReaction>;
-    remove: () => void;
+    remove: () => Promise<void>;
     edit: (newContent: string) => Promise<void>;
     /** Only on messages carrying a file (image, file, audio, video). */
     attachment?: ChatMessageAttachment;

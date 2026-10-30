@@ -4,6 +4,7 @@
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { confirmDelete } from "./confirmDeleteMessage";
     import { IconArrowBackUp, IconCopy, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -122,7 +123,11 @@
             </button>
         {/if}
         {#if $canDelete}
-            <button type="button" class="action text-danger-400" onclick={() => run(() => message.remove())}>
+            <button
+                type="button"
+                class="action text-danger-400"
+                onclick={() => run(() => confirmDelete("message", () => message.remove()))}
+            >
                 <IconTrash font-size={20} />{$LL.chat.delete()}
             </button>
         {/if}

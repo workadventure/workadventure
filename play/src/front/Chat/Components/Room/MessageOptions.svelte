@@ -4,6 +4,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import EmojiButton from "./EmojiButton.svelte";
+    import { confirmDelete } from "./confirmDeleteMessage";
     import { IconArrowBackUp, IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -23,9 +24,11 @@
     }
 
     function removeMessage() {
-        message.remove();
-        // The options go away with the message content: keep the focus on what is left of it.
-        messageRef?.focus();
+        confirmDelete("message", async () => {
+            await message.remove();
+            // The options go away with the message content: keep the focus on what is left of it.
+            messageRef?.focus();
+        });
     }
 
     function selectMessageToEdit() {

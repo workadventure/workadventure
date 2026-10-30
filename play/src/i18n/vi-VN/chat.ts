@@ -750,6 +750,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "Tệp đính kèm",
+        cancel: "Hủy tệp đính kèm",
         description: "Tải lên và chia sẻ một tệp",
         proximityTitle: "Truyền tệp trực tiếp",
         proximityDescription: "Chỉ những người đang ở đây mới nhận được",
@@ -832,6 +833,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "Đặt {name} làm quản trị viên?",
         promoteMessage: "Quản trị viên không bao giờ bị hạ cấp, kể cả bởi bạn.",
         promote: "Đặt làm quản trị viên",
+        deleteMessageTitle: "Xóa tin nhắn này?",
+        deleteMessageMessage: "Nó sẽ biến mất với mọi người trong phòng.",
+        delete: "Xóa",
+        deletePollTitle: "Xóa cuộc thăm dò này?",
+        deletePollMessage: "Nó sẽ biến mất với mọi người, cùng các phiếu bầu.",
+        endPollTitle: "Đóng cuộc thăm dò này?",
+        endPollMessage: "Không ai có thể bỏ phiếu nữa. Kết quả vẫn hiển thị.",
+        save: "Lưu",
     },
 };
 

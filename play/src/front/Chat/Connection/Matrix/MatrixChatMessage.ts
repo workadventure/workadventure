@@ -374,8 +374,8 @@ export class MatrixChatMessage implements ChatMessage {
         return "text";
     }
 
-    remove() {
-        this.room.client.redactEvent(this.room.roomId, this.id).catch((error) => console.error(error));
+    async remove(): Promise<void> {
+        await this.room.client.redactEvent(this.room.roomId, this.id);
     }
 
     async edit(newContent: string): Promise<void> {

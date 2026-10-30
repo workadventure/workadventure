@@ -243,7 +243,7 @@
                 {#if $isDeleted}
                     <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
                         <IconTrash font-size={12} />
-                        {$LL.chat.messageDeleted()}
+                        {isMyMessage ? $LL.chat.messageDeletedByYou() : $LL.chat.messageDeleted()}
                     </p>
                 {:else if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
                     <MessageEdition message={$selectedChatMessageToEdit} />

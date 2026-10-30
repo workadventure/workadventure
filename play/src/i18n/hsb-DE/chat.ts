@@ -751,6 +751,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "Datajowy přiwěšk",
+        cancel: "Přiwěšk přetorhnyć",
         description: "Nakładować dataju, zo by ju dźělił",
         proximityTitle: "Direktne přenjesenje dataje",
         proximityDescription: "Jenož wosoby, kotrež su nětko tu, ju dóstanu",
@@ -833,6 +834,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "{name} k administratorej činić?",
         promoteMessage: "Administrator njeda so ženje ponižić, ani wot tebje.",
         promote: "K administratorej činić",
+        deleteMessageTitle: "Tutu zdźělenku zhašeć?",
+        deleteMessageMessage: "Zhubi so za wšěch w rumje.",
+        delete: "Zhašeć",
+        deletePollTitle: "Tute naprašowanje zhašeć?",
+        deletePollMessage: "Zhubi so za wšěch, hromadźe z hłosami.",
+        endPollTitle: "Tute naprašowanje skónčić?",
+        endPollMessage: "Nichtó njemóže potom hižo hłosować. Wuslědki wostanu widźomne.",
+        save: "Składować",
     },
 };
 

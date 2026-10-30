@@ -750,6 +750,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     fileAttachment: {
         title: "Adjunt de fitxer",
+        cancel: "Cancel·la l'adjunt",
         description: "Puja i comparteix un fitxer",
         proximityTitle: "Transferència directa de fitxer",
         proximityDescription: "Només el reben les persones presents ara",
@@ -832,6 +833,14 @@ const chat: DeepPartial<Translation["chat"]> = {
         promoteTitle: "Vols fer administrador {name}?",
         promoteMessage: "Un administrador no es pot degradar mai, ni tan sols tu.",
         promote: "Fes-lo administrador",
+        deleteMessageTitle: "Vols suprimir aquest missatge?",
+        deleteMessageMessage: "Desapareix per a tothom a la sala.",
+        delete: "Suprimeix",
+        deletePollTitle: "Vols suprimir aquesta enquesta?",
+        deletePollMessage: "Desapareix per a tothom, amb els vots.",
+        endPollTitle: "Vols tancar aquesta enquesta?",
+        endPollMessage: "Ningú no hi podrà votar. Els resultats continuen visibles.",
+        save: "Desa",
     },
 };
 

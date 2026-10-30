@@ -134,10 +134,12 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await expect(memberPage.getByTestId("deletePollButton")).toBeHidden();
 
         await adminPage.getByTestId("endPollButton").click();
+        await adminPage.getByTestId("confirmDialogConfirm").click();
         await expect(adminPage.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(memberPage.getByTestId("pollClosedNotice")).toBeVisible({ timeout: 60_000 });
 
         await adminPage.getByTestId("deletePollButton").click();
+        await adminPage.getByTestId("confirmDialogConfirm").click();
         await expect(adminPage.getByTestId("pollQuestion")).toBeHidden();
         await expect(memberPage.getByTestId("pollQuestion")).toBeHidden({ timeout: 60_000 });
     });
@@ -168,6 +170,7 @@ test.describe("Proximity chat polls and questions @oidc @nomobile @nowebkit", ()
         await expect(memberPage.getByTestId("pollCard")).not.toContainText("1 (100%)");
 
         await adminPage.getByTestId("endPollButton").click();
+        await adminPage.getByTestId("confirmDialogConfirm").click();
         await expect(adminPage.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(memberPage.getByTestId("pollClosedNotice")).toBeVisible({ timeout: 60_000 });
         await expect(adminPage.getByTestId("pollCard")).toContainText("1 (100%)");
