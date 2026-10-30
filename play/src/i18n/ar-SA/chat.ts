@@ -39,6 +39,7 @@ const chat: DeepPartial<Translation["chat"]> = {
         TalkTo: "تحدث إلى",
         businessCard: "بطاقة العمل",
         sendMessage: "إرسال رسالة",
+        openingDirectChat: "جارٍ الفتح…",
         follow: "تحديد الموقع",
         invite: "دعوة",
     },
@@ -68,7 +69,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     waitingInit: "في انتظار تهيئة الخادم ...",
     waitingData: "في انتظار بيانات المستخدم ...",
     searchUser: "ابحث عن مستخدم...",
-    searchChat: "ابحث عن قناة، رسالة، إلخ ...",
+    searchChat: "ابحث عن غرفة أو شخص",
     people: "رسالة مباشرة",
     rooms: "محادثات المجموعة",
     addNew: "إضافة جديد : ",
@@ -759,7 +760,8 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "إعادة الاتصال", // Reconnect
     failedToJoinRoom: "فشل في الانضمام إلى الغرفة", // Failed to join room
     failedToLeaveRoom: "فشل في مغادرة الغرفة", // Failed to leave room
-    failedToOpenRoom: "فشل في فتح الغرفة: {roomId}", // Failed to open room: {roomId}
+    failedToOpenRoom: "تعذّر فتح هذه الغرفة.",
+    failedToOpenDirectChat: "تعذّر فتح المحادثة مع {name}.",
     refreshChatError: "فشل في تحديث الدردشة", // Failed to refresh chat
     unsentMessages: "تعذّر إرسال بعض الرسائل.",
     retrySending: "إعادة المحاولة",
@@ -773,7 +775,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             discordNotConfigured: "اتصل بـ Discord", // Connect to Discord
         },
     },
-    remoteUserNotConnected: "المستخدم غير مصدق. لا يمكن إرسال الرسالة.", // User not authenticated. Cannot send message.
+    remoteUserNotConnected: "بلا حساب: لا يمكنك مراسلته",
     matrixSettings: {
         title: "إعدادات الدردشة",
         close: "Close",

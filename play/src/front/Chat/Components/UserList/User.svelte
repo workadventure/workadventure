@@ -10,7 +10,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
-    import { getMatrixClientForChatTint, openDirectChatRoom } from "../../Utils";
+    import { getMatrixClientForChatTint, openDirectChatRoom, openingDirectChatIdsStore } from "../../Utils";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
@@ -53,7 +53,8 @@
         }),
     );
 
-    let loadingDirectRoomAccess = false;
+    let canSendMessage = $derived(chatId !== undefined && chatId !== "");
+    let openingDirectChat = $derived(chatId !== undefined && $openingDirectChatIdsStore.has(chatId));
 
     function openWokaMenu() {
         const currentScene = gameManager.getCurrentGameScene();
@@ -79,154 +80,155 @@
     }
 </script>
 
-{#if loadingDirectRoomAccess}
-    <div class="min-h-[60px] text-md flex gap-2 justify-center flex-row items-center p-1">
-        <IconLoader class="animate-spin" />
-    </div>
-{:else}
-    <div class="flex flex-col px-2 pb-2 user">
+<div class="flex flex-col px-2 pb-2 user">
+    <div
+        class="wa-chat-item {isAdmin
+            ? 'admin'
+            : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
+    >
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
-            class="wa-chat-item {isAdmin
-                ? 'admin'
-                : 'user'} group/chatItem relative mb-[1px] text-md flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 cursor-pointer"
+            class="relative shrink-0 wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer"
+            onclick={(event) => {
+                event.stopPropagation();
+                openWokaMenu();
+            }}
         >
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-                class="relative shrink-0 wa-avatar {!$userStatus ? 'opacity-50' : ''} cursor-pointer"
-                onclick={(event) => {
-                    event.stopPropagation();
-                    openWokaMenu();
-                }}
-            >
-                <Avatar compact {pictureStore} fallbackName={username || "?"} color={resolvedAvatarColor} />
-            </div>
-            <!-- svelte-ignore a11y_click_events_have_key_events -->
-            <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-                class={`flex-auto ms-1 ${!$userStatus && "opacity-50"} cursor-pointer`}
-                onclick={(event) => {
-                    event.stopPropagation();
-                    openWokaMenu();
-                }}
-            >
-                <div class="flex items-center h-4">
-                    <div class="text-sm font-bold mb-0 flex items-center text-nowrap">
-                        {#each chunks as chunk (chunk.key)}
-                            <div class={`${chunk.match ? "text-light-blue" : ""}`}>
-                                {chunk.text}
-                            </div>
-                        {/each}
-                        {#if username && username.match(/\[\d*]/)}
-                            <div class="font-light text-xs text-gray">
-                                #{username
-                                    .match(/\[\d*]/)
-                                    ?.join()
-                                    ?.replace("[", "")
-                                    ?.replace("]", "")}
-                            </div>
-                        {/if}
-                        {#if isAdmin}
-                            <div
-                                class="text-xxs bg-secondary rounded-sm px-1 py-0.5 ms-1"
-                                title={$LL.chat.role.admin()}
-                            >
-                                {$LL.chat.role.adminShort()}
-                            </div>
-                        {/if}
-                    </div>
-                </div>
-                <div class="text-xs mb-0 font-condensed opacity-75 self-end">
-                    {#if isMe}
-                        {$LL.chat.you()}
-                    {:else if $userStatus}
-                        <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
-                            <div
-                                class="rounded-full me-1 h-1.5 w-1.5"
-                                style="background:{getColorHexOfStatus($userStatus)}"
-                            ></div>
-                            {getStatusLabel($userStatus)}
+            <Avatar compact {pictureStore} fallbackName={username || "?"} color={resolvedAvatarColor} />
+        </div>
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <div
+            class={`flex-auto ms-1 ${!$userStatus && "opacity-50"} cursor-pointer`}
+            onclick={(event) => {
+                event.stopPropagation();
+                openWokaMenu();
+            }}
+        >
+            <div class="flex items-center h-4">
+                <div class="text-sm font-bold mb-0 flex items-center text-nowrap">
+                    {#each chunks as chunk (chunk.key)}
+                        <div class={`${chunk.match ? "text-light-blue" : ""}`}>
+                            {chunk.text}
                         </div>
-                    {:else}
-                        {$LL.chat.userList.disconnected()}
+                    {/each}
+                    {#if username && username.match(/\[\d*]/)}
+                        <div class="font-light text-xs text-gray">
+                            #{username
+                                .match(/\[\d*]/)
+                                ?.join()
+                                ?.replace("[", "")
+                                ?.replace("]", "")}
+                        </div>
+                    {/if}
+                    {#if isAdmin}
+                        <div class="text-xxs bg-secondary rounded-sm px-1 py-0.5 ms-1" title={$LL.chat.role.admin()}>
+                            {$LL.chat.role.adminShort()}
+                        </div>
                     {/if}
                 </div>
             </div>
-            <div class="flex flex-wrap justify-start items-start content-start">
-                <div class="transition-all">
-                    {#if !isMe && $userStatus != 0}
-                        <UserActionButton {user} />
-                    {/if}
-                </div>
-                {#if !isMe && isMatrixChatEnabled}
-                    <!-- svelte-ignore a11y_no_static_element_interactions -->
-                    <div
-                        class="relative"
-                        use:sendButtonFloatingRef
-                        onmouseenter={() => (sendButtonTooltipVisible = true)}
-                        onmouseleave={() => (sendButtonTooltipVisible = false)}
-                    >
-                        <button
-                            class="transition-all hover:bg-white/10 p-2 rounded-md aspect-square flex items-center justify-center m-0"
-                            class:text-white={user.chatId !== undefined}
-                            class:text-gray-400={user.chatId === undefined}
-                            data-testId={`send-message-${user.username}`}
-                            disabled={user.chatId === undefined}
-                            onclick={(event) => {
-                                event.stopPropagation();
-                                openDirectChatRoom(chatId).catch((error) => {
-                                    console.error("Error opening direct chat room:", error);
-                                    Sentry.captureException(error, {
-                                        extra: {
-                                            userId: user.uuid,
-                                            chatId: chatId,
-                                            playUri: user.playUri,
-                                            username: user.username,
-                                        },
-                                    });
-                                });
-                                analyticsClient.trackAdminEvent("chat.message_from_user_list_clicked");
-                            }}
-                        >
-                            <IconSend font-size="16" />
-                        </button>
-                        {#if sendButtonTooltipVisible}
-                            <div
-                                use:sendButtonFloatingContent
-                                class="send-button-tooltip absolute z-50 bg-contrast/90 backdrop-blur-xl text-white text-nowrap p-2 rounded text-sm"
-                            >
-                                <div class="!top-[30%] !-translate-x-1/2" use:sendButtonArrowAction></div>
-                                {#if user.chatId === undefined}
-                                    {$LL.chat.remoteUserNotConnected()}
-                                {:else}
-                                    {$LL.chat.userList.sendMessage()}
-                                {/if}
-                            </div>
-                        {/if}
+            <div class="text-xs mb-0 font-condensed opacity-75 self-end">
+                {#if isMe}
+                    {$LL.chat.you()}
+                {:else if $userStatus}
+                    <div class="flex items-center brightness-150" style="color:{getColorHexOfStatus($userStatus)}">
+                        <div
+                            class="rounded-full me-1 h-1.5 w-1.5"
+                            style="background:{getColorHexOfStatus($userStatus)}"
+                        ></div>
+                        {getStatusLabel($userStatus)}
                     </div>
+                {:else}
+                    {$LL.chat.userList.disconnected()}
                 {/if}
             </div>
+            {#if !isMe && isMatrixChatEnabled && !canSendMessage}
+                <div class="text-xxs text-white/60" data-testid="send-message-unavailable-reason">
+                    {$LL.chat.remoteUserNotConnected()}
+                </div>
+            {/if}
+        </div>
+        <div class="flex flex-wrap justify-start items-start content-start">
+            <div class="transition-all">
+                {#if !isMe && $userStatus != 0}
+                    <UserActionButton {user} />
+                {/if}
+            </div>
+            {#if !isMe && isMatrixChatEnabled}
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div
+                    class="relative"
+                    use:sendButtonFloatingRef
+                    onmouseenter={() => (sendButtonTooltipVisible = true)}
+                    onmouseleave={() => (sendButtonTooltipVisible = false)}
+                >
+                    <button
+                        class="transition-all hover:bg-white/10 p-2 rounded-md flex items-center justify-center m-0"
+                        class:text-white={canSendMessage}
+                        class:text-gray-400={!canSendMessage}
+                        class:aspect-square={!openingDirectChat}
+                        data-testId={`send-message-${user.username}`}
+                        disabled={!canSendMessage || openingDirectChat}
+                        aria-label={canSendMessage
+                            ? $LL.chat.userList.sendMessage()
+                            : $LL.chat.remoteUserNotConnected()}
+                        onclick={(event) => {
+                            event.stopPropagation();
+                            openDirectChatRoom(chatId, username).catch((error) => {
+                                console.error("Error opening direct chat room:", error);
+                                Sentry.captureException(error, {
+                                    extra: {
+                                        userId: user.uuid,
+                                        chatId: chatId,
+                                        playUri: user.playUri,
+                                        username: user.username,
+                                    },
+                                });
+                            });
+                            analyticsClient.trackAdminEvent("chat.message_from_user_list_clicked");
+                        }}
+                    >
+                        {#if openingDirectChat}
+                            <IconLoader class="animate-spin" font-size="16" />
+                            <span class="text-xs ms-1">{$LL.chat.userList.openingDirectChat()}</span>
+                        {:else}
+                            <IconSend font-size="16" />
+                        {/if}
+                    </button>
+                    {#if sendButtonTooltipVisible && canSendMessage && !openingDirectChat}
+                        <div
+                            use:sendButtonFloatingContent
+                            class="send-button-tooltip absolute z-50 bg-contrast/90 backdrop-blur-xl text-white text-nowrap p-2 rounded text-sm"
+                        >
+                            <div class="!top-[30%] !-translate-x-1/2" use:sendButtonArrowAction></div>
+                            {$LL.chat.userList.sendMessage()}
+                        </div>
+                    {/if}
+                </div>
+            {/if}
         </div>
     </div>
+</div>
 
-    <style>
-        .status {
-            background-color: var(--color);
-        }
+<style>
+    .status {
+        background-color: var(--color);
+    }
 
-        .send-button-tooltip {
+    .send-button-tooltip {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+        animation: sendButtonTooltipFadeIn 0.2s forwards;
+    }
+
+    @keyframes sendButtonTooltipFadeIn {
+        from {
             opacity: 0;
-            transition: opacity 0.2s ease-in-out;
-            animation: sendButtonTooltipFadeIn 0.2s forwards;
         }
-
-        @keyframes sendButtonTooltipFadeIn {
-            from {
-                opacity: 0;
-            }
-            to {
-                opacity: 1;
-            }
+        to {
+            opacity: 1;
         }
-    </style>
-{/if}
+    }
+</style>
