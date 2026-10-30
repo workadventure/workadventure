@@ -33,6 +33,37 @@ pub fn link_path(link: &str) -> String {
     percent_encoding::percent_decode_str(path).decode_utf8_lossy().into_owned()
 }
 
+/// copySharedFile: a copied property still links to the file uploaded for the property it was copied from (files
+/// are named after the property id). Gives it its own copy of that file, so that deleting or replacing one of them
+/// leaves the other alone, and returns the property with the link to the copy; None when it already owns its file.
+pub async fn copy_shared_file(storage: &Storage, dir: &str, property: &Value) -> Option<Value> {
+    let (name, kind) = wa_core::wam::uploaded_file(property)?;
+    let field = if property["type"] == "openFile" { "link" } else { "audioLink" };
+    let link = property[field].as_str().filter(|l| !l.is_empty())?;
+    let id = property["id"].as_str()?;
+    let (stem, ext) = basename(name).rsplit_once('.')?;
+    let linked = basename(&link_path(link)).to_owned();
+    let linked_id = linked.strip_prefix(&format!("{stem}-"))?.strip_suffix(&format!(".{ext}"))?;
+    if linked_id == id {
+        return None;
+    }
+    let from = wa_core::wam::uploaded_file_path(name, linked_id, kind).ok()?;
+    let to = wa_core::wam::uploaded_file_path(name, id, kind).ok()?;
+    let mut url = reqwest::Url::parse(link).ok()?;
+    url.path_segments_mut().ok()?.pop().push(&format!("{stem}-{id}.{ext}"));
+    let Some(bytes) = storage.read(&format!("{dir}{from}")).await else {
+        tracing::warn!(%from, "the file of a copied property is missing");
+        return None;
+    };
+    if let Err(e) = storage.put_asset(format!("{dir}{to}"), bytes).await {
+        tracing::error!(%to, error = %e, "could not copy the file of a copied property");
+        return None;
+    }
+    let mut copied = property.clone();
+    copied[field] = Value::String(url.to_string());
+    Some(copied)
+}
+
 /// `uploadEntityMessage`: anyone may add one; its owner is the sender (set by the caller).
 pub async fn upload(storage: &Storage, dir: &str, m: &pb::UploadEntityMessage) -> Result<(), String> {
     let image = basename(&m.image_path).to_owned();

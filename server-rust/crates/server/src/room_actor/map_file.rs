@@ -202,6 +202,45 @@ impl MapFile {
                     | M::UploadFileMessage(_)
             )
         );
+        // CreateAreaMapStorageCommand and CreateEntityMapStorageCommand: the "property added" hooks of the new
+        // area or entity first. A copy gets its own chat room and its own copy of an uploaded file.
+        let created = match command.edit_map_message.as_ref().and_then(|m| m.message.as_ref()) {
+            Some(M::CreateAreaMessage(m)) => Some((true, &m.properties)),
+            Some(M::CreateEntityMessage(m)) => Some((false, &m.properties)),
+            _ => None,
+        };
+        if let Some((area, properties)) = created
+            && !properties.is_empty()
+        {
+            let sent: Vec<serde_json::Value> = properties.iter().map(wire::json_from).collect();
+            let (hooks, dir) = (self.hooks.clone(), self.dir.clone());
+            self.io.spawn(async move {
+                let mut stored = sent.clone();
+                for p in &mut stored {
+                    if area && p["resourceUrl"].as_str().is_some_and(|u| !u.is_empty()) {
+                        *p = hooks.added(p.clone()).await;
+                    }
+                    if let Some(copied) = custom_entities::copy_shared_file(&storage, &dir, p).await {
+                        *p = copied;
+                    }
+                }
+                if stored != sent {
+                    // The client that created it does not know what the hooks changed: modifyServerData.
+                    let properties = stored.iter().map(wire::json_to).collect();
+                    match command.edit_map_message.as_mut().and_then(|m| m.message.as_mut()) {
+                        Some(M::CreateAreaMessage(m)) => {
+                            (m.properties, m.modify_server_data) = (properties, Some(true))
+                        }
+                        Some(M::CreateEntityMessage(m)) => {
+                            (m.properties, m.modify_server_data) = (properties, Some(true));
+                        }
+                        _ => {}
+                    }
+                }
+                Done::Edit { session, command, result: Ok(()) }
+            });
+            return None;
+        }
         // UpdateAreaMapStorageCommand and DeleteAreaMapStorageCommand: the property hooks first.
         let old_properties = |wam: &Option<Wam>, id: &str| -> Vec<serde_json::Value> {
             let area = wam.as_ref().and_then(|w| w.areas().iter().find(|a| a["id"] == id).cloned());

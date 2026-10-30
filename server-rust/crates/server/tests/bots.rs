@@ -386,6 +386,7 @@ async fn map_edits_reach_the_room_and_the_file_and_an_upload_resets_them() {
         height: 64,
         name: String::new(),
         properties: vec![],
+        modify_server_data: None,
     };
     alice.send(edit("cmd-1", E::CreateAreaMessage(area.clone()))).await.unwrap();
     for inbox in [&mut ia, &mut ib] {
@@ -1746,6 +1747,135 @@ async fn only_an_admin_kicks_and_forces_a_mute_in_a_space() {
     assert!(mute.is_ok());
     let kick = ib.expect(WAIT, |m| matches!(private_event(m), Some((_, P::KickOffUser(_)))).then_some(())).await;
     assert!(kick.is_ok());
+}
+
+/// The moderator tag of a meeting room (livekitRoomAdminTag of the WAM) gives its holders the admin's rights in that
+/// room's space: a mute forced, a removal relayed (#6858).
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn the_meeting_room_tag_moderates_the_meeting() {
+    use pb::private_space_event::Event as P;
+    let dir = std::env::temp_dir().join(format!("wa-rust-moderator-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    let wam = r#"{"version":"1.0.0","mapUrl":"./t.tmj","entities":{},"entityCollections":[],
+        "areas":[{"id":"a1","name":"","x":0,"y":0,"width":32,"height":32,"visible":true,"properties":[
+        {"id":"p1","type":"livekitRoomProperty","roomName":"Board","livekitRoomAdminTag":"chair"}]}]}"#;
+    std::fs::write(dir.join("maps/m.wam"), wam).unwrap();
+    let (server, _) = start_with(&[("SECRET_KEY", "test"), ("STORAGE_DIRECTORY", dir.to_str().unwrap())]).await;
+    let room = "http://play.test/~/maps/m.wam";
+    let space = wa_core::wam::slugify_jitsi_room_name("Board", room);
+    let token = |tag: &str| {
+        Some(wa_server::jwt::create(
+            "test",
+            wa_server::jwt::Claims {
+                identifier: format!("{tag}@test"),
+                tags: Some(vec![tag.into()]),
+                ..Default::default()
+            },
+        ))
+    };
+    let connect = |name: &str, token: Option<String>, x: i32| {
+        Bot::connect(Options {
+            server: server.clone(),
+            room_url: room.into(),
+            name: name.into(),
+            x,
+            y: 100,
+            viewport: SCREEN,
+            availability: 1,
+            token,
+        })
+    };
+    let (mut chair, sc) = connect("Chair", token("chair"), 100).await.unwrap();
+    let (mut bob, sb) = connect("Bob", token("other"), 3000).await.unwrap();
+    let (mut ic, mut ib) = (Inbox::spawn(sc), Inbox::spawn(sb));
+    for (bot, inbox) in [(&mut chair, &mut ic), (&mut bob, &mut ib)] {
+        for name in [space.as_str(), "elsewhere"] {
+            let q = bot.join_space(name, &[]).await.unwrap();
+            inbox.expect(WAIT, answer_to(q)).await.unwrap();
+        }
+    }
+    let private = |space: &str, to: String, e: P| {
+        pb::client_to_server_message::Message::PrivateEvent(pb::PrivateEventFrontToPusher {
+            space_name: space.into(),
+            receiver_user_id: to,
+            space_event: Some(pb::PrivateSpaceEvent { event: Some(e) }),
+        })
+    };
+    let mute = |force| P::MuteAudio(pb::MuteAudioPrivateMessage { force });
+    // Outside its meeting room, the tag is nobody's moderator: a request.
+    chair.send(private("elsewhere", bob.space_user_id(), mute(true))).await.unwrap();
+    let outside = ib.expect(WAIT, |m| match private_event(m) {
+        Some((_, P::MuteAudio(a))) => Some(a.force),
+        _ => None,
+    });
+    assert!(!outside.await.unwrap());
+    // In it: the mute is forced and the removal reaches Bob.
+    chair.send(private(&space, bob.space_user_id(), mute(false))).await.unwrap();
+    chair.send(private(&space, bob.space_user_id(), P::KickOffUser(pb::KickOffUserPrivateMessage {}))).await.unwrap();
+    let forced =
+        ib.expect(WAIT, |m| matches!(private_event(m), Some((_, P::MuteAudio(a))) if a.force).then_some(())).await;
+    assert!(forced.is_ok());
+    let kick = ib.expect(WAIT, |m| matches!(private_event(m), Some((_, P::KickOffUser(_)))).then_some(())).await;
+    assert!(kick.is_ok());
+}
+
+/// A copied area gets its own copy of the file its original uploaded (files are named after the property id), and the
+/// creation comes back with the stored properties and modifyServerData (a8fad3e5a).
+#[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+async fn a_copied_area_gets_its_own_uploaded_file() {
+    use pb::edit_map_message::Message as E;
+    let dir = std::env::temp_dir().join(format!("wa-rust-copy-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(dir.join("maps")).unwrap();
+    std::fs::create_dir_all(dir.join("private/files")).unwrap();
+    let wam = r#"{"version":"1.0.0","mapUrl":"./t.tmj","areas":[],"entities":{},"entityCollections":[]}"#;
+    std::fs::write(dir.join("maps/c.wam"), wam).unwrap();
+    std::fs::write(dir.join("private/files/report-orig.pdf"), "pdf").unwrap();
+    let (server, _) = start_with(&[
+        ("SECRET_KEY", "test"),
+        ("STORAGE_DIRECTORY", dir.to_str().unwrap()),
+        ("ENABLE_MAP_EDITOR", "true"),
+    ])
+    .await;
+    let (mut alice, mut ia) = bot(&server, "http://play.test/~/maps/c.wam", "Alice", 100, 100).await;
+    let file = |id: &str| {
+        wa_server::wire::json_to(&serde_json::json!({"id": id, "type": "openFile", "name": "report.pdf",
+            "link": "http://maps.test/private/files/report-orig.pdf", "newTab": true, "hideButtonLabel": true}))
+    };
+    let area = pb::CreateAreaMessage {
+        id: "copy".into(),
+        x: 0,
+        y: 0,
+        width: 32,
+        height: 32,
+        name: String::new(),
+        properties: vec![file("copied"), file("orig")],
+        modify_server_data: None,
+    };
+    alice.send(edit("cmd-copy", E::CreateAreaMessage(area))).await.unwrap();
+    let echo = ia
+        .expect(WAIT, |m| {
+            edit_echo(m).filter(|c| c.id == "cmd-copy").and_then(|c| {
+                match c.edit_map_message.as_ref()?.message.as_ref()? {
+                    E::CreateAreaMessage(a) => Some(a.clone()),
+                    _ => None,
+                }
+            })
+        })
+        .await
+        .unwrap();
+    assert_eq!(echo.modify_server_data, Some(true));
+    let links: Vec<String> = echo
+        .properties
+        .iter()
+        .map(|p| wa_server::wire::json_from(p)["link"].as_str().unwrap_or_default().to_owned())
+        .collect();
+    assert_eq!(
+        links,
+        ["http://maps.test/private/files/report-copied.pdf", "http://maps.test/private/files/report-orig.pdf"]
+    );
+    assert_eq!(std::fs::read(dir.join("private/files/report-copied.pdf")).unwrap(), b"pdf");
 }
 
 /// A Synapse that answers the admin's calls and keeps them, as "METHOD path [body]".
