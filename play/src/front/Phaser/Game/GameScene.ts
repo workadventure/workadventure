@@ -2662,6 +2662,7 @@ export class GameScene extends DirtyScene {
                     defaultExtensionModule.init(this._room.metadata, {
                         workadventureStatusStore: availabilityStatusStore,
                         userAccessToken: authToken,
+                        accessTokens: this._room.extensionModuleAccessTokens,
                         roomId: this.roomUrl,
                         externalModuleMessage: connection.externalModuleMessage,
                         onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
