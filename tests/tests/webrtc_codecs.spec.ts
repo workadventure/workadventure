@@ -1,11 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
-import { chromium, firefox, webkit } from "playwright-core";
 import Map from "./utils/map";
 import { getPage } from "./utils/auth";
 import { evaluateScript } from "./utils/scripting";
 import { expectWebRtcConnectionsCountToBe } from "./utils/webRtc";
 import { play_url, publicTestMapUrl } from "./utils/urls";
-import { launchOtherBrowser, withoutProjectDefaults } from "./utils/otherBrowser";
+import { launchOtherBrowser, otherBrowserContextOptions } from "./utils/otherBrowser";
 
 /**
  * Which codec each side of a P2P bubble ends up encoding, read from the "video quality statistics" box of the
@@ -91,12 +90,12 @@ test.describe("P2P video codecs @nomobile", () => {
         await using alice = await getPage(browser, "Alice", new URL(MAP_URL, play_url).toString(), {
             pageCreatedHook: prepare,
         });
-        const bobType = { webkit, firefox }[BOB_BROWSER] ?? chromium;
         const bobBrowser = await launchOtherBrowser(BOB_BROWSER);
         try {
-            await using bob = await withoutProjectDefaults(bobType, () =>
-                getPage(bobBrowser, "Bob", new URL(MAP_URL, play_url).toString(), { pageCreatedHook: prepare }),
-            );
+            await using bob = await getPage(bobBrowser, "Bob", new URL(MAP_URL, play_url).toString(), {
+                pageCreatedHook: prepare,
+                contextOptions: otherBrowserContextOptions(BOB_BROWSER),
+            });
 
             const position = await evaluateScript(alice, async () => WA.player.getPosition());
             await Map.teleportToPosition(bob, position.x, position.y);

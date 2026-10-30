@@ -1,19 +1,17 @@
-import type { Browser } from "@playwright/test";
+import { devices, type Browser, type BrowserContextOptions } from "@playwright/test";
 import { chromium, firefox, webkit, type BrowserType } from "playwright-core";
 
-// The test runner stores the project's launch flags and context options (camera permissions...) on the shared
-// Playwright object, and every browser type applies them; another engine rejects them. They are cleared while `run`
-// creates a browser of another engine and its pages, and restored afterwards for the project's own browser.
-export async function withoutProjectDefaults<T>(type: BrowserType, run: () => Promise<T>): Promise<T> {
+// The test runner stores the project's launch flags on the shared Playwright object, and every browser type applies
+// them; another engine rejects them. They are cleared while `run` launches a browser of another engine, and restored
+// afterwards for the project's own browser.
+async function withoutProjectLaunchOptions<T>(type: BrowserType, run: () => Promise<T>): Promise<T> {
     const playwright = (type as unknown as { _playwright: Record<string, unknown> })._playwright;
-    const saved = { launch: playwright._defaultLaunchOptions, context: playwright._defaultContextOptions };
+    const saved = playwright._defaultLaunchOptions;
     playwright._defaultLaunchOptions = undefined;
-    playwright._defaultContextOptions = undefined;
     try {
         return await run();
     } finally {
-        playwright._defaultLaunchOptions = saved.launch;
-        playwright._defaultContextOptions = saved.context;
+        playwright._defaultLaunchOptions = saved;
     }
 }
 
@@ -21,9 +19,9 @@ export async function withoutProjectDefaults<T>(type: BrowserType, run: () => Pr
 export async function launchOtherBrowser(engine: string): Promise<Browser> {
     switch (engine) {
         case "webkit":
-            return withoutProjectDefaults(webkit, () => webkit.launch());
+            return withoutProjectLaunchOptions(webkit, () => webkit.launch());
         case "firefox":
-            return withoutProjectDefaults(firefox, () =>
+            return withoutProjectLaunchOptions(firefox, () =>
                 firefox.launch({
                     firefoxUserPrefs: {
                         "media.navigator.streams.fake": true,
@@ -33,8 +31,23 @@ export async function launchOtherBrowser(engine: string): Promise<Browser> {
                 }),
             );
         default:
-            return withoutProjectDefaults(chromium, () =>
+            return withoutProjectLaunchOptions(chromium, () =>
                 chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] }),
             );
     }
+}
+
+/**
+ * Context options for the pages of a browser from `launchOtherBrowser`. The test runner gives every context the
+ * project's options it does not set itself: the Chromium project's user agent (livekit-client would take Firefox for
+ * Chrome) and its camera permissions, which Firefox rejects. Firefox gets its camera through its preferences instead.
+ */
+export function otherBrowserContextOptions(engine: string): BrowserContextOptions {
+    const device = { firefox: "Desktop Firefox", webkit: "Desktop Safari" }[engine] ?? "Desktop Chrome";
+    const options: BrowserContextOptions & { defaultBrowserType?: string } = {
+        ...devices[device],
+        permissions: engine === "chromium" ? ["microphone", "camera"] : [],
+    };
+    delete options.defaultBrowserType;
+    return options;
 }

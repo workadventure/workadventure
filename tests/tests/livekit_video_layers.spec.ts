@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { firefox } from "playwright-core";
 import Map from "./utils/map";
@@ -6,7 +7,7 @@ import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import { publicTestMapUrl } from "./utils/urls";
 import { expectLivekitConnectionsCountToBe } from "./utils/webRtc";
-import { launchOtherBrowser, withoutProjectDefaults } from "./utils/otherBrowser";
+import { launchOtherBrowser, otherBrowserContextOptions } from "./utils/otherBrowser";
 import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoundToast";
 
 /**
@@ -168,6 +169,8 @@ test.describe("LiveKit video layers @nomobile @nowebkit @nofirefox", () => {
             browserName !== "chromium" || isMobile(page),
             "Runs in the desktop Chromium project, which launches Firefox for Carol and Dave",
         );
+        // Only the main E2E jobs install Firefox next to Chromium
+        test.skip(!fs.existsSync(firefox.executablePath()), "Firefox is not installed");
     });
 
     test("each viewer gets the layer of the tile it displays, the publisher only sends the layers watched", async ({
@@ -178,12 +181,9 @@ test.describe("LiveKit video layers @nomobile @nowebkit @nofirefox", () => {
         await using bob = await getPage(browser, "Bob", MAP_URL, withoutPictureInPicture);
         const firefoxBrowser = await launchOtherBrowser("firefox");
         try {
-            await using carol = await withoutProjectDefaults(firefox, () =>
-                getPage(firefoxBrowser, "Carol", MAP_URL, withoutPictureInPicture),
-            );
-            await using dave = await withoutProjectDefaults(firefox, () =>
-                getPage(firefoxBrowser, "Dave", MAP_URL, withoutPictureInPicture),
-            );
+            const inFirefox = { ...withoutPictureInPicture, contextOptions: otherBrowserContextOptions("firefox") };
+            await using carol = await getPage(firefoxBrowser, "Carol", MAP_URL, inFirefox);
+            await using dave = await getPage(firefoxBrowser, "Dave", MAP_URL, inFirefox);
             const users = [
                 { name: "Alice", page: alice },
                 { name: "Bob", page: bob },
