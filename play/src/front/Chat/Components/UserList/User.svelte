@@ -144,11 +144,6 @@
                     {$LL.chat.userList.disconnected()}
                 {/if}
             </div>
-            {#if !isMe && isMatrixChatEnabled && !canSendMessage}
-                <div class="text-xxs text-white/60" data-testid="send-message-unavailable-reason">
-                    {$LL.chat.remoteUserNotConnected()}
-                </div>
-            {/if}
         </div>
         <div class="flex flex-wrap justify-start items-start content-start">
             <div class="transition-all">
@@ -197,13 +192,15 @@
                             <IconSend font-size="16" />
                         {/if}
                     </button>
-                    {#if sendButtonTooltipVisible && canSendMessage && !openingDirectChat}
+                    <!-- The wrapper, not the button, listens: a disabled button gets no mouse events, and its
+                         tooltip is where we say why nobody can write to this person. -->
+                    {#if sendButtonTooltipVisible && !openingDirectChat}
                         <div
                             use:sendButtonFloatingContent
                             class="send-button-tooltip absolute z-50 bg-contrast/90 backdrop-blur-xl text-white text-nowrap p-2 rounded text-sm"
                         >
                             <div class="!top-[30%] !-translate-x-1/2" use:sendButtonArrowAction></div>
-                            {$LL.chat.userList.sendMessage()}
+                            {canSendMessage ? $LL.chat.userList.sendMessage() : $LL.chat.remoteUserNotConnected()}
                         </div>
                     {/if}
                 </div>
