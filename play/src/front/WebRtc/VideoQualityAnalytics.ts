@@ -1,6 +1,7 @@
 import type { Readable, Unsubscriber } from "svelte/store";
 import type { VideoQualityReportMessage, VideoQualitySampleMessage } from "@workadventure/messages";
 import {
+    VideoQualityLevel,
     VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -10,6 +11,7 @@ import {
 import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import { hasCapability } from "../Connection/Capabilities";
 import { VideoPlaybackWindow } from "./VideoPlaybackWindow";
+import type { VideoQualitySetting } from "./VideoPresets";
 
 const VIDEO_ANALYTICS_SEND_INTERVAL_MS = 5_000;
 
@@ -25,6 +27,8 @@ export type VideoQualityAnalyticsContext = {
     livekitServerUrl?: string;
     // Read at each sample: LiveKit can move the client to another region when it reconnects
     getLivekitRegion?: () => string | undefined;
+    // Outbound streams only, read at each sample: the user can change it during the call
+    getQualitySetting?: () => VideoQualitySetting;
 };
 
 const sessionId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -94,6 +98,9 @@ export function subscribeToOutboundVideoQualityAnalytics(
             encoderImplementation: stats.encoderImplementation,
             captureFps: stats.captureFps,
             captureTargetFps: stats.captureTargetFps,
+            captureWidth: stats.captureWidth,
+            captureHeight: stats.captureHeight,
+            qualitySetting: toQualityLevel(context.getQualitySetting?.()),
             encodeMsPerFrame: stats.encodeMsPerFrame,
             cpuLimitedRatio: stats.cpuLimitedRatio,
             bandwidthLimitedRatio: stats.bandwidthLimitedRatio,
@@ -224,6 +231,19 @@ function toRelayProtocol(relayProtocol: WebRtcStats["relayProtocol"]): VideoQual
         return VideoQualityRelayProtocol.VIDEO_QUALITY_RELAY_PROTOCOL_TLS;
     }
     return undefined;
+}
+
+function toQualityLevel(setting: VideoQualitySetting | undefined): VideoQualityLevel | undefined {
+    switch (setting) {
+        case "low":
+            return VideoQualityLevel.VIDEO_QUALITY_LEVEL_LOW;
+        case "recommended":
+            return VideoQualityLevel.VIDEO_QUALITY_LEVEL_RECOMMENDED;
+        case "high":
+            return VideoQualityLevel.VIDEO_QUALITY_LEVEL_HIGH;
+        default:
+            return undefined;
+    }
 }
 
 function toLimitationReason(reason: WebRtcSenderStats["qualityLimitationReason"]): VideoQualityLimitationReason {

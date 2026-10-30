@@ -1,4 +1,5 @@
 import {
+    VideoQualityLevel,
     VideoQualityLimitationReason,
     VideoQualityRelayProtocol,
     VideoQualityStreamCategory,
@@ -301,6 +302,10 @@ function toSenderProperties(sample: VideoQualitySampleMessage, direction: "inbou
     return {
         captureFps: outbound(sample.captureFps, 240),
         captureTargetFps: outbound(sample.captureTargetFps, 240),
+        // The largest size a browser captures, and what the warehouse column holds
+        captureWidth: outbound(sample.captureWidth, 65_535),
+        captureHeight: outbound(sample.captureHeight, 65_535),
+        qualitySetting: direction === "outbound" ? toQualitySetting(sample.qualitySetting) : null,
         encodeMsPerFrame: outbound(sample.encodeMsPerFrame, 10_000),
         cpuLimitedRatio: outbound(sample.cpuLimitedRatio, 1),
         bandwidthLimitedRatio: outbound(sample.bandwidthLimitedRatio, 1),
@@ -389,6 +394,19 @@ function toLimitationReason(
             return "bandwidth";
         case VideoQualityLimitationReason.VIDEO_QUALITY_LIMITATION_REASON_OTHER:
             return "other";
+        default:
+            return null;
+    }
+}
+
+function toQualitySetting(level: VideoQualityLevel | undefined): "low" | "recommended" | "high" | null {
+    switch (level) {
+        case VideoQualityLevel.VIDEO_QUALITY_LEVEL_LOW:
+            return "low";
+        case VideoQualityLevel.VIDEO_QUALITY_LEVEL_RECOMMENDED:
+            return "recommended";
+        case VideoQualityLevel.VIDEO_QUALITY_LEVEL_HIGH:
+            return "high";
         default:
             return null;
     }

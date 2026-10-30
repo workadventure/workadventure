@@ -832,6 +832,26 @@ export const ANALYTICS_EVENTS = {
         .describe(
           "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate).",
         ),
+      captureWidth: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Outbound only: width the camera or screen capture delivers (MediaTrackSettings.width), where frameWidth is the largest layer the encoder sends. A capture larger than what is sent was scaled down by the encoder or by its layer setup.",
+        ),
+      captureHeight: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Outbound only: height the camera or screen capture delivers (MediaTrackSettings.height).",
+        ),
+      qualitySetting: z
+        .enum(["low", "recommended", "high"])
+        .nullable()
+        .describe(
+          "Outbound only: the sender's quality setting when the sample was taken: the camera's for a camera, the screen share's for a screen share.",
+        ),
       encodeMsPerFrame: z
         .number()
         .nullable()

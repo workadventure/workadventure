@@ -1223,6 +1223,8 @@ export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.serverUrl,
                 getLivekitRegion: () => this.getRegion(),
+                getQualitySetting: () =>
+                    get(streamCategory === "screenSharing" ? screenShareQualityStore : videoQualityStore),
             },
             (message) => this.space.emitVideoQualityReport(message),
         );
