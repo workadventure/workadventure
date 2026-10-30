@@ -520,6 +520,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "جارٍ الحفظ...",
             saveSuccess: "تم حفظ الإعدادات",
             saveError: "تعذر حفظ الإعدادات",
+            whoCanJoin: "من يمكنه الانضمام",
+            joinFolderMembers: "أعضاء {folder}",
+            suggestedIn: "مقترحة في {folder}",
+            whoCanWrite: "من يمكنه الكتابة",
+            changeAvatar: "تغيير الصورة",
+            lostRightsWarning: "بعد الحفظ، لن تتمكن من القيام ببعض هذه الإجراءات بنفسك.",
             errors: {
                 roomNameEmpty: "لا يمكن أن يكون اسم الغرفة فارغًا",
                 restrictedAccessNeedsParentSpace: "يتطلب الوصول المقيد مجلدًا أو مساحة مرتبطة.",
@@ -530,8 +536,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "مقيد",
                 knock: "طلب الوصول",
             },
+            writePresets: {
+                everyone: "الجميع",
+                moderators: "المشرفون فقط (إعلانات)",
+                custom: "مخصص",
+            },
             permissions: {
                 title: "الأذونات",
+                detailed: "الأذونات التفصيلية",
                 sendMessages: "إرسال الرسائل",
                 sendReactions: "إرسال التفاعلات",
                 redactOwnMessages: "حذف رسائلك",

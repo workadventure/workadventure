@@ -521,6 +521,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "保存中...",
             saveSuccess: "設定を保存しました",
             saveError: "設定を保存できません",
+            whoCanJoin: "参加できる人",
+            joinFolderMembers: "{folder} のメンバー",
+            suggestedIn: "{folder} でおすすめ",
+            whoCanWrite: "書き込める人",
+            changeAvatar: "画像を変更",
+            lostRightsWarning: "保存すると、これらの操作の一部をあなた自身が行えなくなります。",
             errors: {
                 roomNameEmpty: "ルーム名を空にすることはできません",
                 restrictedAccessNeedsParentSpace:
@@ -532,8 +538,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "制限付き",
                 knock: "アクセスをリクエスト",
             },
+            writePresets: {
+                everyone: "全員",
+                moderators: "モデレーターのみ（お知らせ）",
+                custom: "カスタム",
+            },
             permissions: {
                 title: "権限",
+                detailed: "詳細な権限",
                 sendMessages: "メッセージを送信",
                 sendReactions: "リアクションを送信",
                 redactOwnMessages: "自分のメッセージを削除",

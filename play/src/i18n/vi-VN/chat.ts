@@ -520,6 +520,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Đang lưu...",
             saveSuccess: "Đã lưu cài đặt",
             saveError: "Không thể lưu cài đặt",
+            whoCanJoin: "Ai có thể tham gia",
+            joinFolderMembers: "Thành viên của {folder}",
+            suggestedIn: "Được đề xuất trong {folder}",
+            whoCanWrite: "Ai có thể viết",
+            changeAvatar: "Đổi ảnh",
+            lostRightsWarning: "Sau khi lưu, bạn sẽ không thể tự làm một số việc này nữa.",
             errors: {
                 roomNameEmpty: "Tên phòng không được để trống",
                 restrictedAccessNeedsParentSpace: "Truy cập giới hạn cần một thư mục hoặc không gian liên kết.",
@@ -530,8 +536,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Giới hạn",
                 knock: "Xin quyền vào",
             },
+            writePresets: {
+                everyone: "Mọi người",
+                moderators: "Chỉ người kiểm duyệt (thông báo)",
+                custom: "Tùy chỉnh",
+            },
             permissions: {
                 title: "Quyền",
+                detailed: "Quyền chi tiết",
                 sendMessages: "Gửi tin nhắn",
                 sendReactions: "Bày tỏ cảm xúc",
                 redactOwnMessages: "Xóa tin nhắn của mình",

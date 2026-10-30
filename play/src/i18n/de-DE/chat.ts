@@ -523,6 +523,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Speichern...",
             saveSuccess: "Einstellungen gespeichert",
             saveError: "Einstellungen konnten nicht gespeichert werden",
+            whoCanJoin: "Wer beitreten kann",
+            joinFolderMembers: "Die Mitglieder von {folder}",
+            suggestedIn: "In {folder} empfohlen",
+            whoCanWrite: "Wer schreiben kann",
+            changeAvatar: "Bild ändern",
+            lostRightsWarning: "Nach dem Speichern kannst du einige dieser Dinge selbst nicht mehr tun.",
             errors: {
                 roomNameEmpty: "Der Raumname darf nicht leer sein",
                 restrictedAccessNeedsParentSpace:
@@ -534,8 +540,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Eingeschränkt",
                 knock: "Zugriff anfragen",
             },
+            writePresets: {
+                everyone: "Alle",
+                moderators: "Nur Moderatoren (Ankündigungen)",
+                custom: "Benutzerdefiniert",
+            },
             permissions: {
                 title: "Berechtigungen",
+                detailed: "Detaillierte Berechtigungen",
                 sendMessages: "Nachrichten senden",
                 sendReactions: "Reaktionen senden",
                 redactOwnMessages: "Eigene Nachrichten löschen",

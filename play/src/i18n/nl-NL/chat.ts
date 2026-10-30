@@ -521,6 +521,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Opslaan...",
             saveSuccess: "Instellingen opgeslagen",
             saveError: "Kan instellingen niet opslaan",
+            whoCanJoin: "Wie mag deelnemen",
+            joinFolderMembers: "De leden van {folder}",
+            suggestedIn: "Aanbevolen in {folder}",
+            whoCanWrite: "Wie mag schrijven",
+            changeAvatar: "Afbeelding wijzigen",
+            lostRightsWarning: "Na het opslaan kun je sommige van deze dingen zelf niet meer doen.",
             errors: {
                 roomNameEmpty: "Kamernaam mag niet leeg zijn",
                 restrictedAccessNeedsParentSpace: "Beperkte toegang vereist een gekoppelde map of space.",
@@ -531,8 +537,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Beperkt",
                 knock: "Toegang aanvragen",
             },
+            writePresets: {
+                everyone: "Iedereen",
+                moderators: "Alleen moderators (aankondigingen)",
+                custom: "Aangepast",
+            },
             permissions: {
                 title: "Rechten",
+                detailed: "Gedetailleerde rechten",
                 sendMessages: "Berichten sturen",
                 sendReactions: "Reacties sturen",
                 redactOwnMessages: "Eigen berichten verwijderen",

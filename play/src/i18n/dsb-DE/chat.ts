@@ -521,6 +521,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Składujo se...",
             saveSuccess: "Nastajenja skłaźone",
             saveError: "Nastajenja njedaju se składowaś",
+            whoCanJoin: "Chto móžo pśistupiś",
+            joinFolderMembers: "Cłonki {folder}",
+            suggestedIn: "Dopórucona w {folder}",
+            whoCanWrite: "Chto móžo pisaś",
+            changeAvatar: "Wobraz změniś",
+            lostRightsWarning: "Pó składowanju njamóžoš někotare z toś tych wěcow wěcej sam cyniś.",
             errors: {
                 roomNameEmpty: "Mě ruma njesmějo prozne byś",
                 restrictedAccessNeedsParentSpace: "Wobgranicowany pśistup trjeba zwězany zarědnik abo rum.",
@@ -531,8 +537,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Wobgranicowany",
                 knock: "Pśistup pominaś",
             },
+            writePresets: {
+                everyone: "Wšykne",
+                moderators: "Jano moderatory (pśipowěźeńki)",
+                custom: "Swójski",
+            },
             permissions: {
                 title: "Pšawa",
+                detailed: "Dokradne pšawa",
                 sendMessages: "Powěsći pósłaś",
                 sendReactions: "Reakcije pósłaś",
                 redactOwnMessages: "Swójske powěsći wulašowaś",

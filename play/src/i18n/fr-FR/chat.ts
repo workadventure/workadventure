@@ -522,6 +522,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Enregistrement...",
             saveSuccess: "Paramètres enregistrés",
             saveError: "Impossible d'enregistrer les paramètres",
+            whoCanJoin: "Qui peut rejoindre",
+            joinFolderMembers: "Les membres de {folder}",
+            suggestedIn: "Mis en avant dans {folder}",
+            whoCanWrite: "Qui peut écrire",
+            changeAvatar: "Changer l'image",
+            lostRightsWarning: "Une fois enregistré, vous ne pourrez plus faire vous-même certaines de ces actions.",
             errors: {
                 roomNameEmpty: "Le nom du salon ne peut pas être vide",
                 restrictedAccessNeedsParentSpace: "L'accès restreint nécessite un dossier ou un espace lié.",
@@ -532,8 +538,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Restreint",
                 knock: "Demander l'accès",
             },
+            writePresets: {
+                everyone: "Tout le monde",
+                moderators: "Modérateurs seulement (annonces)",
+                custom: "Personnalisé",
+            },
             permissions: {
                 title: "Autorisations",
+                detailed: "Autorisations détaillées",
                 sendMessages: "Envoyer des messages",
                 sendReactions: "Envoyer des réactions",
                 redactOwnMessages: "Supprimer ses propres messages",

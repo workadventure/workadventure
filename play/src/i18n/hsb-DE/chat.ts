@@ -521,6 +521,12 @@ const chat: DeepPartial<Translation["chat"]> = {
             saving: "Składuje so...",
             saveSuccess: "Nastajenja składowane",
             saveError: "Nastajenja njedadźa so składować",
+            whoCanJoin: "Štó móže přistupić",
+            joinFolderMembers: "Čłonojo {folder}",
+            suggestedIn: "Doporučena w {folder}",
+            whoCanWrite: "Štó móže pisać",
+            changeAvatar: "Wobraz změnić",
+            lostRightsWarning: "Po składowanju njemóžeš někotre z tutych wěcow hižo sam činić.",
             errors: {
                 roomNameEmpty: "Mjeno rumnosće njesmě prózdne być",
                 restrictedAccessNeedsParentSpace: "Wobmjezowany přistup trjeba zwjazany rjadowak abo rum.",
@@ -531,8 +537,14 @@ const chat: DeepPartial<Translation["chat"]> = {
                 restricted: "Wobmjezowany",
                 knock: "Přistup požadać",
             },
+            writePresets: {
+                everyone: "Wšitcy",
+                moderators: "Jenož moderatorojo (připowědźenki)",
+                custom: "Swójski",
+            },
             permissions: {
                 title: "Prawa",
+                detailed: "Dokładne prawa",
                 sendMessages: "Powěsće pósłać",
                 sendReactions: "Reakcije pósłać",
                 redactOwnMessages: "Swójske powěsće zhašeć",

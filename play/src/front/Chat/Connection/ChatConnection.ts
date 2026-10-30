@@ -90,6 +90,17 @@ export type ChatRoomSettingsUpdate = {
     access?: ChatRoomSettingsAccess;
     historyVisibility?: historyVisibility;
     restrictedRoomId?: string;
+    /** A new picture for the room. */
+    avatar?: File;
+    /** Whether the folder in `restrictedRoomId` suggests this room to its members. */
+    suggested?: boolean;
+};
+
+/** The folder holding a room, as its settings show it. */
+export type ChatRoomFolderPlacement = {
+    folderName: string;
+    suggested: boolean;
+    canChangeSuggested: boolean;
 };
 export type ChatRoomSettingsErrorCode = "roomNameEmpty" | "restrictedAccessNeedsParentSpace";
 
@@ -260,6 +271,8 @@ export interface ChatRoomSettingsManagement {
     readonly permissionsState: Readable<ChatRoomPermissionsState>;
     readonly updateRoomSettings: (settings: ChatRoomSettingsUpdate) => Promise<void>;
     readonly updateRoomPowerLevels: (permissions: ChatRoomPermissionsState) => Promise<void>;
+    readonly myPermissionLevel: Readable<ChatPermissionLevel | undefined>;
+    readonly getFolderPlacement: () => ChatRoomFolderPlacement | undefined;
 }
 
 //Readonly attributes
