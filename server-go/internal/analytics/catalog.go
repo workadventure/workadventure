@@ -146,7 +146,6 @@ var catalog = map[string]string{
 	"meeting.video.muted":                          "front",
 	"meeting.video.muted_for_everybody":            "front",
 	"megaphone.opened":                             "front",
-	"menu.chat.opened":                             "front",
 	"menu.contact.opened":                          "front",
 	"menu.credit.opened":                           "front",
 	"menu.opened":                                  "front",

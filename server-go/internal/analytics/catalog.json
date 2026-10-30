@@ -3188,14 +3188,6 @@
    "additionalProperties": true
   }
  },
- "menu.chat.opened": {
-  "source": "front",
-  "properties": {
-   "type": "object",
-   "properties": {},
-   "additionalProperties": true
-  }
- },
  "menu.contact.opened": {
   "source": "front",
   "properties": {

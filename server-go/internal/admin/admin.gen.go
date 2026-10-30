@@ -179,6 +179,9 @@ type MapDetailsData struct {
 	// BypassPwa corresponds to the JSON schema field "bypassPwa".
 	BypassPwa *bool `json:"bypassPwa,omitempty,omitzero"`
 
+	// CameraBackgrounds corresponds to the JSON schema field "cameraBackgrounds".
+	CameraBackgrounds []MapDetailsDataCameraBackgroundsElem `json:"cameraBackgrounds,omitempty,omitzero"`
+
 	// CanReport corresponds to the JSON schema field "canReport".
 	CanReport *bool `json:"canReport,omitempty,omitzero"`
 
@@ -313,6 +316,14 @@ type MapDetailsDataAuthenticationMandatory *bool
 type MapDetailsDataBackgroundColor *string
 
 type MapDetailsDataBackgroundSceneImage *string
+
+type MapDetailsDataCameraBackgroundsElem struct {
+	// ThumbnailURL corresponds to the JSON schema field "thumbnailUrl".
+	ThumbnailURL string `json:"thumbnailUrl"`
+
+	// URL corresponds to the JSON schema field "url".
+	URL string `json:"url"`
+}
 
 type MapDetailsDataContactPage *string
 
@@ -709,11 +720,11 @@ type MemberAccessGrantedCompanionTexture struct {
 	URL string `json:"url"`
 }
 
-type MemberAccessGrantedCompanionTexture_0 = CompanionDetail
-
 type MemberAccessGrantedEmail *string
 
 type MemberAccessGrantedUsername *string
+
+type MemberAccessGrantedCompanionTexture_0 = CompanionDetail
 
 type MemberAccessGrantedVisitCardURL *string
 
