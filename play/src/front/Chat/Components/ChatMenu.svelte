@@ -1,3 +1,9 @@
+<script lang="ts" module>
+    // One chat menu open at a time. The "…" button stops its click, so an open menu never sees that click as
+    // outside: opening a menu closes the other one itself.
+    let closeOpenMenu: (() => void) | undefined;
+</script>
+
 <script lang="ts">
     import { tick, type Snippet } from "svelte";
     import { IconDots } from "@wa-icons";
@@ -24,7 +30,11 @@
         return menu ? Array.from(menu.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])')) : [];
     }
 
+    const closeThisMenu = () => close(false);
+
     async function openMenu(focusFirstItem: boolean) {
+        if (closeOpenMenu !== closeThisMenu) closeOpenMenu?.();
+        closeOpenMenu = closeThisMenu;
         open = true;
         onopen?.();
         await tick();
@@ -32,6 +42,7 @@
     }
 
     function close(focusButton: boolean) {
+        if (closeOpenMenu === closeThisMenu) closeOpenMenu = undefined;
         open = false;
         if (focusButton) button?.focus();
     }
@@ -94,7 +105,11 @@
             }
         };
         document.addEventListener("click", closeOnClickOutside);
-        return () => document.removeEventListener("click", closeOnClickOutside);
+        return () => {
+            document.removeEventListener("click", closeOnClickOutside);
+            // A menu removed while open (its row scrolled away, its room left) must not stay the open one.
+            if (closeOpenMenu === closeThisMenu) closeOpenMenu = undefined;
+        };
     });
 </script>
 

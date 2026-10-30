@@ -64,3 +64,41 @@ describe("ChatMenu keyboard", () => {
         expect(document.activeElement).toBe(button);
     });
 });
+
+describe("ChatMenu, several menus", () => {
+    it("closes the open menu when another one opens", async () => {
+        const targets = [document.createElement("div"), document.createElement("div")];
+        const menus = targets.map((menuTarget, index) => {
+            document.body.appendChild(menuTarget);
+            return mount(ChatMenu, {
+                target: menuTarget,
+                props: { label: `Options for room ${index}`, buttonClass: "", menuClass: "", children: items },
+            });
+        });
+        flushSync();
+        const [first, second] = targets.map((menuTarget) => {
+            const button = menuTarget.querySelector<HTMLButtonElement>('button[aria-haspopup="menu"]');
+            if (button === null) throw new Error("The menu button was not rendered");
+            return button;
+        });
+
+        first.click();
+        flushSync();
+        expect(first.getAttribute("aria-expanded")).toBe("true");
+
+        // The button stops its click: the first menu never sees it as a click outside.
+        second.click();
+        flushSync();
+        expect(second.getAttribute("aria-expanded")).toBe("true");
+        expect(first.getAttribute("aria-expanded")).toBe("false");
+
+        second.click();
+        flushSync();
+        first.click();
+        flushSync();
+        expect(first.getAttribute("aria-expanded")).toBe("true");
+
+        await Promise.all(menus.map((menu) => unmount(menu)));
+        targets.forEach((menuTarget) => menuTarget.remove());
+    });
+});
