@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { onMount, tick, untrack } from "svelte";
+    import { onMount, tick } from "svelte";
     import { get } from "svelte/store";
+    import { SvelteMap } from "svelte/reactivity";
     import LL from "../../../../i18n/i18n-svelte";
     import type {
         ChatRoom,
@@ -87,12 +88,10 @@
 
     // A ban, a kick or an accepted invitation changes a member's membership without changing the member list:
     // follow each membership, so that the person moves to the right section and shows the right status.
-    let memberships: Map<string, string> = $state(new Map());
+    const memberships = new SvelteMap<string, string>();
     $effect(() => {
         const unsubscribers = $members.map((member) =>
-            member.membership.subscribe((membership) => {
-                memberships = new Map(untrack(() => memberships)).set(member.id, membership);
-            }),
+            member.membership.subscribe((membership) => memberships.set(member.id, membership)),
         );
         return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
     });
