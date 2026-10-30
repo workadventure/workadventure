@@ -20,6 +20,9 @@ import {
     VideoPresets,
     DisconnectReason,
     ConnectionState,
+    LoggerNames,
+    LogLevel,
+    setLogLevel,
     supportsAudioOutputSelection,
     supportsAV1,
     supportsVP9,
@@ -702,17 +705,7 @@ export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
      */
     private republishCamera(): void {
         this.mediaTrackUpdateQueue = this.mediaTrackUpdateQueue
-            .then(async () => {
-                if (!this.localCameraTrack || !this.localParticipant) {
-                    return;
-                }
-                // livekit-client forgets the backup codecs' clones on unpublish, without stopping them
-                this.stopBackupCodecTracks(this.localCameraTrack);
-                await this.localParticipant.unpublishTrack(this.localCameraTrack, false);
-                this.cameraAnalyticsUnsubscribe?.();
-                this.cameraAnalyticsUnsubscribe = undefined;
-                this.localCameraTrack = undefined;
-            })
+            .then(() => this.dropCameraPublication())
             .catch((err) => {
                 console.error("An error occurred while unpublishing the camera for a codec change", err);
                 Sentry.captureException(err);

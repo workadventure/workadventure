@@ -9,8 +9,8 @@ case "$mode" in ts|go|rust) ;; *) echo "usage: deploy.sh ts|go|rust" >&2; exit 2
 cd "$HERE"
 
 k create namespace "$NS" --dry-run=client -o yaml | k apply -f - >/dev/null
-# Certificate for the candidates' SSL_CERT_FILE (harmless in TS mode).
-k -n "$NS" create secret generic rehearsal-tls --from-file=tls.crt=.certs/tls.crt \
+# The CA for the candidates' SSL_CERT_FILE, under the key the values mount (harmless in TS mode).
+k -n "$NS" create secret generic rehearsal-tls --from-file=tls.crt=.certs/ca.crt \
   --dry-run=client -o yaml | k apply -f - >/dev/null
 
 start=$SECONDS

@@ -101,6 +101,8 @@ vi.mock("livekit-client", async (importOriginal) => {
         // Codec support is probed through RTCRtpSender, which jsdom does not have
         supportsAV1: () => false,
         supportsVP9: () => true,
+        // jsdom's user agent reads as Safari
+        getBrowser: () => ({ name: "Chrome", version: "141.0.0.0", os: "Linux" }),
         // As on Safari, where switching the audio output throws
         supportsAudioOutputSelection: () => false,
     };
@@ -407,6 +409,27 @@ describe("LiveKitRoom", () => {
         const backupTrack = cameraTrack.simulcastCodecs.get("vp8")?.mediaStreamTrack;
         expect(backupTrack).not.toBe(oldBackupTrack);
         expect(backupSender.replaceTrack).toHaveBeenLastCalledWith(backupTrack);
+    });
+
+    it("should unmute the microphone livekit-client muted when its track ended, once a new microphone replaces it", async () => {
+        const room = createLiveKitRoom({
+            screenSharingLocalStreamStore: writable(undefined),
+            shouldPublishScreenShareStore: writable(false),
+        });
+        room["room"] = { state: ConnectionState.Connected } as never;
+        room["localParticipant"] = { publishTrack: vi.fn().mockResolvedValue(undefined) } as never;
+        await room["handleMicrophoneTrack"](createMicrophoneStream());
+        const microphoneTrack = room["localMicrophoneTrack"];
+        if (!microphoneTrack) {
+            throw new Error("The microphone was not published");
+        }
+        // The headset was unplugged: livekit-client muted the publication, the room hears nothing (PLAY-439)
+        Object.assign(microphoneTrack, { isMuted: true });
+        const unmute = vi.spyOn(microphoneTrack, "unmute");
+
+        await room["handleMicrophoneTrack"](createMicrophoneStream("new-microphone-track"));
+
+        expect(unmute).toHaveBeenCalledOnce();
     });
 
     it("should defer a scripting stream while the room is not connected and publish it once reconnected", async () => {
@@ -861,22 +884,31 @@ function createSpace(
     } as unknown as SpaceInterface;
 }
 
-function createCameraStream(id = "camera-track"): LocalStreamStoreValue {
-    const track = createCameraTrack(id);
+function createCameraStream(id = "camera-track", width = 1280, height = 720): LocalStreamStoreValue {
+    const track = createCameraTrack(id, width, height);
     return {
         type: "success",
         stream: { getVideoTracks: () => [track], getAudioTracks: () => [] } as unknown as MediaStream,
     };
 }
 
-function createCameraTrack(id: string): MediaStreamTrack {
+function createCameraTrack(id: string, width = 1280, height = 720): MediaStreamTrack {
     return {
         id,
         kind: "video",
-        getSettings: () => ({ width: 1280, height: 720 }),
-        clone: vi.fn(() => createCameraTrack(`${id}-clone`)),
+        readyState: "live",
+        getSettings: () => ({ width, height }),
+        clone: vi.fn(() => createCameraTrack(`${id}-clone`, width, height)),
         stop: vi.fn(),
     } as unknown as MediaStreamTrack;
+}
+
+function createMicrophoneStream(id = "microphone-track"): LocalStreamStoreValue {
+    const track = { id, kind: "audio" } as unknown as MediaStreamTrack;
+    return {
+        type: "success",
+        stream: { getVideoTracks: () => [], getAudioTracks: () => [track] } as unknown as MediaStream,
+    };
 }
 
 function createStreamableSubjects(): StreamableSubjects {

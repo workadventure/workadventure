@@ -316,21 +316,13 @@ const mapStorageServer: MapStorageServer = {
                     case "createEntityMessage": {
                         const message = editMapMessage.createEntityMessage;
                         assertCanEditEntityAt(message, "create an entity");
-                        await mapsManager.executeCommand(
-                            mapKey,
-                            mapUrl.host,
-                            new CreateEntityCommand(
-                                wamFile,
-                                message.id,
-                                {
-                                    prefabRef: {
-                                        id: message.prefabId,
-                                        collectionName: message.collectionName,
-                                    },
-                                    x: message.x,
-                                    y: message.y,
-                                    properties: message.properties as EntityDataProperties,
-                                    name: message.name,
+                        const command = new CreateEntityMapStorageCommand(
+                            wamFile,
+                            message.id,
+                            {
+                                prefabRef: {
+                                    id: message.prefabId,
+                                    collectionName: message.collectionName,
                                 },
                                 x: message.x,
                                 y: message.y,

@@ -442,6 +442,8 @@ impl RoomActor {
                         edit_map_commands: commands,
                     }),
                     tag: session.info.tags.clone(),
+                    // The front keeps a player out of the areas it may not enter unless it edits the map (93fe50b5d7).
+                    can_edit: session.info.can_edit,
                 })));
             }
             RoomCmd::Edit { session, command } => {
