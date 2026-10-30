@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -136,14 +137,17 @@ func (s *Session) editMap(m *pb.EditMapCommandMessage) {
 		maps, mapKey = worldMaps{store: s.srv.maps, folder: folder}, rest
 	}
 	err = s.srv.edits.Run(key, func() {
-		cmd, after := mapedit.Resources(maps, mapKey, ed, cmd, s.srv.resource)
-		res, err := mapedit.Apply(maps, mapKey, ed, m.GetId(), cmd)
+		hooked, after := mapedit.Resources(maps, mapKey, ed, cmd, s.srv.resource)
+		res, err := mapedit.Apply(maps, mapKey, ed, m.GetId(), hooked)
 		if err != nil {
 			refuse(err)
 			return
 		}
 		after()
 		done := &pb.EditMapCommandMessage{Id: m.GetId(), EditMapMessage: echo(m.GetEditMapMessage(), res, ed)}
+		if created := createdByHooks(m.GetEditMapMessage(), hooked); created != nil {
+			done.EditMapMessage = created
+		}
 		// The room is held for the announcement: the editor may have left meanwhile.
 		room := s.srv.rooms.Acquire(roomURL)
 		defer s.srv.rooms.Release(roomURL)
@@ -262,6 +266,48 @@ func echo(e *pb.EditMapMessage, res mapedit.Result, ed mapedit.Editor) *pb.EditM
 		return &pb.EditMapMessage{Message: &pb.EditMapMessage_UploadFileMessage{UploadFileMessage: c}}
 	}
 	return e
+}
+
+// createdByHooks is the creation of an area or entity with its properties as stored, and modifyServerData, when the
+// "property added" hooks changed them (a new Matrix room, the copy of an uploaded file): the client that created it
+// does not know them. nil when they did not.
+func createdByHooks(e *pb.EditMapMessage, hooked any) *pb.EditMapMessage {
+	var props []any
+	switch c := hooked.(type) {
+	case wam.CreateArea:
+		props = c.Properties
+	case wam.CreateEntity:
+		props = c.Properties
+	default:
+		return nil
+	}
+	var sent []*structpb.Value
+	switch v := e.GetMessage().(type) {
+	case *pb.EditMapMessage_CreateAreaMessage:
+		sent = v.CreateAreaMessage.GetProperties()
+	case *pb.EditMapMessage_CreateEntityMessage:
+		sent = v.CreateEntityMessage.GetProperties()
+	}
+	if reflect.DeepEqual(jsonNumbers(values(sent)), jsonNumbers(props)) {
+		return nil
+	}
+	pv := make([]*structpb.Value, 0, len(props))
+	for _, p := range props {
+		if v, err := structpb.NewValue(jsonNumbers(p)); err == nil {
+			pv = append(pv, v)
+		}
+	}
+	switch v := e.GetMessage().(type) {
+	case *pb.EditMapMessage_CreateAreaMessage:
+		c := proto.Clone(v.CreateAreaMessage).(*pb.CreateAreaMessage)
+		c.Properties, c.ModifyServerData = pv, proto.Bool(true)
+		return &pb.EditMapMessage{Message: &pb.EditMapMessage_CreateAreaMessage{CreateAreaMessage: c}}
+	case *pb.EditMapMessage_CreateEntityMessage:
+		c := proto.Clone(v.CreateEntityMessage).(*pb.CreateEntityMessage)
+		c.Properties, c.ModifyServerData = pv, proto.Bool(true)
+		return &pb.EditMapMessage{Message: &pb.EditMapMessage_CreateEntityMessage{CreateEntityMessage: c}}
+	}
+	return nil
 }
 
 func opt64(v *int32) *int64 {

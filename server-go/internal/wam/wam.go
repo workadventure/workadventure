@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"path"
 	"regexp"
 	"slices"
@@ -338,6 +339,44 @@ func UploadedFile(kind FileKind, name, propertyID string) (string, error) {
 		return "", fmt.Errorf("Unsupported file %q for kind %d", name, kind)
 	}
 	return format.folder + "/" + strings.TrimSuffix(base, ext) + "-" + propertyID + ext, nil
+}
+
+// SharedFile is, for a property copied with the file uploaded for its original (files are named after the property
+// id), the file it still links to, its own file and the link to it (copySharedFile of CustomFileService); ok is
+// false when the property owns its file or has none.
+func SharedFile(p map[string]any) (from, to, link string, ok bool) {
+	name, kind := uploadedFile(p)
+	field := "link"
+	if p["type"] == "playAudio" {
+		field = "audioLink"
+	}
+	raw, _ := p[field].(string)
+	id, _ := p["id"].(string)
+	if name == "" || raw == "" {
+		return "", "", "", false
+	}
+	u, err := url.Parse(raw)
+	if err != nil {
+		return "", "", "", false
+	}
+	ext := path.Ext(path.Base(name))
+	stem := strings.TrimSuffix(path.Base(name), ext)
+	linked, err := url.PathUnescape(path.Base(u.Path))
+	if err != nil || len(linked) < len(stem)+1+len(ext) || !strings.HasPrefix(linked, stem+"-") || !strings.HasSuffix(linked, ext) {
+		return "", "", "", false
+	}
+	linkedID := linked[len(stem)+1 : len(linked)-len(ext)]
+	if linkedID == id {
+		return "", "", "", false
+	}
+	if from, err = UploadedFile(kind, name, linkedID); err != nil {
+		return "", "", "", false
+	}
+	if to, err = UploadedFile(kind, name, id); err != nil {
+		return "", "", "", false
+	}
+	u.Path = path.Join(path.Dir(u.Path), stem+"-"+id+ext)
+	return from, to, u.String(), true
 }
 
 // uploadedFile is the name of the file a property uploaded, "" when it has none, and its kind, which follows from the

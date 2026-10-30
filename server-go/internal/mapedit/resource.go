@@ -20,6 +20,14 @@ type Resource func(method, url string, property map[string]any) (map[string]any,
 // properties of a deleted area. Only a map editor's edits call them: a claim never touches a resourceUrl.
 func Resources(maps Maps, key string, ed Editor, cmd any, call Resource) (out any, after func()) {
 	after = func() {}
+	switch c := cmd.(type) {
+	case wam.CreateArea:
+		c.Properties = added(maps, call, c.Properties, true)
+		return c, after
+	case wam.CreateEntity:
+		c.Properties = added(maps, call, c.Properties, false)
+		return c, after
+	}
 	if call == nil || !ed.CanEdit {
 		return cmd, after
 	}
@@ -66,6 +74,41 @@ func Resources(maps Maps, key string, ed Editor, cmd any, call Resource) (out an
 		}
 	}
 	return cmd, after
+}
+
+// added runs the "property added" hooks of a new area or entity (CreateAreaMapStorageCommand), as ModifyArea does
+// for the properties it adds: a copied area gets its own resource (a Matrix room), and a copied property its own
+// copy of the uploaded file. Only an area has resourceUrl properties.
+func added(store Maps, call Resource, props []any, area bool) []any {
+	out := make([]any, len(props))
+	for i, p := range props {
+		out[i] = p
+		np, _ := p.(map[string]any)
+		if np == nil {
+			continue
+		}
+		if url, _ := np["resourceUrl"].(string); area && call != nil && url != "" {
+			delete(np, "serverData")
+			np, _ = hook(call, "POST", url, np).(map[string]any)
+			out[i] = np
+		}
+		if from, to, link, ok := wam.SharedFile(np); ok {
+			file, err := store.Read(from)
+			if err == nil {
+				err = store.Put(to, file)
+			}
+			if err != nil {
+				slog.Warn("could not copy the file of a copied property", "file", from, "error", err)
+				continue
+			}
+			field := "link"
+			if np["type"] == "playAudio" {
+				field = "audioLink"
+			}
+			np[field] = link
+		}
+	}
+	return out
 }
 
 // hook calls the service and returns the property to keep.

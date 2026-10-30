@@ -60,3 +60,38 @@ func TestTheResourceOfAPropertyHearsOfItAndNamesIt(t *testing.T) {
 		after()
 	}
 }
+
+// A copied area gets its own Matrix room (the hooks run at creation too) and its own copy of the uploaded file, which
+// is named after the property id; a property that already owns its file is left alone (CreateAreaMapStorageCommand).
+func TestACopiedAreaGetsItsOwnRoomAndFile(t *testing.T) {
+	maps := newMaps(t)
+	if err := maps.Put("private/files/report-orig.pdf", []byte("pdf")); err != nil {
+		t.Fatal(err)
+	}
+	call := func(method, _ string, p map[string]any) (map[string]any, error) {
+		out := map[string]any{"serverData": map[string]any{"matrixRoomId": "!new:matrix"}}
+		for k, v := range p {
+			out[k] = v
+		}
+		return out, nil
+	}
+	cmd, _ := Resources(maps, office, admin, wam.CreateArea{ID: "copy", Properties: []any{
+		map[string]any{"id": "chat", "type": "matrixRoomPropertyData", "resourceUrl": "http://play/roomArea",
+			"serverData": map[string]any{"matrixRoomId": "!original:matrix"}},
+		map[string]any{"id": "copied", "type": "openFile", "name": "report.pdf", "link": "http://ms.test/files/report-orig.pdf"},
+		map[string]any{"id": "orig", "type": "openFile", "name": "report.pdf", "link": "http://ms.test/files/report-orig.pdf"},
+	}}, call)
+	props := cmd.(wam.CreateArea).Properties
+	if sd := props[0].(map[string]any)["serverData"].(map[string]any); sd["matrixRoomId"] != "!new:matrix" {
+		t.Fatalf("the copy keeps the original's room: %v", sd)
+	}
+	if link := props[1].(map[string]any)["link"]; link != "http://ms.test/files/report-copied.pdf" {
+		t.Fatalf("link of the copy: %v", link)
+	}
+	if b, err := maps.Read("private/files/report-copied.pdf"); err != nil || string(b) != "pdf" {
+		t.Fatalf("the file was not copied: %q %v", b, err)
+	}
+	if link := props[2].(map[string]any)["link"]; link != "http://ms.test/files/report-orig.pdf" {
+		t.Fatalf("the original's link changed: %v", link)
+	}
+}
