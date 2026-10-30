@@ -13,6 +13,7 @@ serde.workspace = true
 serde_json.workspace = true
 # EmoteValidator's Unicode properties (Extended_Pictographic, Emoji_Component).
 regex = { version = "1", default-features = false, features = ["std", "unicode-bool"] }
+unicode-normalization = "0.1.25"
 
 [lints]
 workspace = true

@@ -59,14 +59,18 @@ pub enum SpaceCmd {
         query_id: i32,
         query: Option<pb::space_state_query::Query>,
     },
+    /// `moderator`: the sender moderates this space (an admin, or a holder of its meeting room's tag), as the
+    /// session found out before sending (ModerationRights.ts).
     Public {
         id: String,
         event: pb::SpaceEvent,
+        moderator: bool,
     },
     Private {
         id: String,
         receiver: String,
         event: pb::PrivateSpaceEvent,
+        moderator: bool,
     },
     Restart {
         id: String,
@@ -606,7 +610,7 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     media.stop_egress(&stop);
                 }
             }
-            SpaceCmd::Public { id, mut event } => {
+            SpaceCmd::Public { id, mut event, moderator } => {
                 use pb::space_event::Event as E;
                 let Some(sender) = space.member(&id) else { continue };
                 match &mut event.event {
@@ -619,10 +623,11 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                         m.character_textures = wire::textures_to(&sender.textures);
                     }
                     Some(E::MuteAudioForEverybody(_) | E::MuteVideoForEverybody(_)) => {
-                        if !sender.tags.iter().any(|t| t == "admin") {
+                        if !moderator {
                             continue;
                         }
                     }
+                    Some(E::SpaceMessageReaction(_)) => {}
                     None => continue,
                 }
                 let frame = wire::sub(pb::sub_message::Message::PublicEvent(pb::PublicEvent {
@@ -636,14 +641,14 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     }
                 }
             }
-            SpaceCmd::Private { id, receiver, mut event } => {
+            SpaceCmd::Private { id, receiver, mut event, moderator } => {
                 use pb::private_space_event::Event as P;
                 let Some(sender) = space.member(&id) else { continue };
-                let admin = sender.tags.iter().any(|t| t == "admin");
+                // force is always overwritten: a client cannot force a mute by sending force: true itself.
                 match &mut event.event {
-                    Some(P::MuteAudio(m)) => m.force = admin,
-                    Some(P::MuteVideo(m)) => m.force = admin,
-                    Some(P::KickOffUser(_)) if !admin => continue,
+                    Some(P::MuteAudio(m)) => m.force = moderator,
+                    Some(P::MuteVideo(m)) => m.force = moderator,
+                    Some(P::KickOffUser(_)) if !moderator => continue,
                     None => continue,
                     _ => {}
                 }

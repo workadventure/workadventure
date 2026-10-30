@@ -111,7 +111,7 @@ pub fn uploaded_file_path(name: &str, property_id: &str, kind: FileKind) -> Resu
 
 /// uploadedFile: the file a property uploaded, if any, its kind following from the property type (the `name` of an
 /// openFile, the `audioName` of a playAudio; a playAudio with only a typed URL has none).
-fn uploaded_file(p: &Value) -> Option<(&str, FileKind)> {
+pub fn uploaded_file(p: &Value) -> Option<(&str, FileKind)> {
     let (name, kind) = match p["type"].as_str()? {
         "openFile" => (&p["name"], FileKind::Document),
         "playAudio" => (&p["audioName"], FileKind::Sound),
@@ -275,6 +275,21 @@ impl Wam {
 
     pub fn settings(&self) -> Option<&Value> {
         self.doc.get("settings")
+    }
+
+    /// findLivekitRoomAdminTag: the tag that grants moderation rights in the meeting room (LiveKit area or entity)
+    /// whose space is `space_name`, the slug the front joins. A meeting room only exists in the WAM.
+    pub fn livekit_room_admin_tag(&self, room_url: &str, space_name: &str) -> Option<String> {
+        let entities = self.doc.get("entities").and_then(Value::as_object).into_iter().flat_map(|e| e.values());
+        let properties = self.areas().iter().chain(entities).filter_map(|i| i.get("properties")?.as_array()).flatten();
+        properties
+            .filter(|p| p["type"] == "livekitRoomProperty")
+            .filter_map(|p| {
+                let tag = p["livekitRoomAdminTag"].as_str().filter(|t| !t.is_empty())?;
+                let room = p["roomName"].as_str().filter(|r| !r.trim().is_empty()).or_else(|| p["id"].as_str())?;
+                (slugify_jitsi_room_name(room, room_url).trim() == space_name).then(|| tag.to_owned())
+            })
+            .next()
     }
 
     /// Applies an editor command, with map-storage's rights. A refused or invalid command changes nothing.
@@ -581,4 +596,51 @@ impl<T> History<T> {
         let start = known.and_then(|k| self.items.iter().position(|(_, id, _)| id == k)).map_or(0, |i| i + 1);
         self.items.iter().skip(start).map(|(_, _, t)| t).collect()
     }
+}
+
+/// shared-utils' slugify: accents dropped, lower case, dashes for spaces.
+pub fn slugify(value: &str) -> String {
+    use unicode_normalization::UnicodeNormalization;
+    let plain: String = value.nfd().filter(|c| !('\u{300}'..='\u{36f}').contains(c)).collect();
+    let kept: String = plain
+        .to_lowercase()
+        .trim()
+        .chars()
+        .filter(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || matches!(c, '-' | '_' | ' '))
+        .collect();
+    // Every run of spaces becomes one dash, at the ends too: the trim came before the filter.
+    let mut out = String::with_capacity(kept.len());
+    for c in kept.chars() {
+        match c {
+            ' ' if out.ends_with(' ') => {}
+            c => out.push(c),
+        }
+    }
+    out.replace(' ', "-")
+}
+
+/// slugifyJitsiRoomName, with the room's prefix (the space name of a meeting room).
+pub fn slugify_jitsi_room_name(room_name: &str, room_id: &str) -> String {
+    slugify(&format!("{}-{room_name}", short_hash(room_id)))
+}
+
+/// shared-utils' shortHash: Java's String.hashCode, over UTF-16 units, in base 36.
+pub fn short_hash(s: &str) -> String {
+    if s.is_empty() {
+        return String::new();
+    }
+    let mut hash: i32 = 0;
+    for unit in s.encode_utf16() {
+        hash = (hash << 5).wrapping_sub(hash).wrapping_add(i32::from(unit));
+    }
+    let mut n = i64::from(hash).unsigned_abs();
+    let mut digits = Vec::new();
+    loop {
+        digits.push(char::from_digit((n % 36) as u32, 36).unwrap_or('0'));
+        n /= 36;
+        if n == 0 {
+            break;
+        }
+    }
+    digits.iter().rev().collect()
 }

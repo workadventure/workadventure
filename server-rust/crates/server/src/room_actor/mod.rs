@@ -128,6 +128,12 @@ pub enum RoomCmd {
     Describe {
         reply: tokio::sync::oneshot::Sender<(String, usize)>,
     },
+    /// The moderator tag of the meeting room whose space is `space` (the slug the front joins): GameRoom's
+    /// getModeratorTagForLivekitRoom, from the WAM the room keeps.
+    ModeratorTag {
+        space: String,
+        reply: tokio::sync::oneshot::Sender<Option<String>>,
+    },
     /// variableMessage: a room variable (WA.state).
     Variable {
         session: Arc<Session>,
@@ -471,6 +477,10 @@ impl RoomActor {
             | RoomCmd::WorldFull
             | RoomCmd::ExternalModule(_)
             | RoomCmd::Describe { .. }) => self.admin(cmd).await,
+            RoomCmd::ModeratorTag { space, reply } => {
+                let wam = self.map.as_ref().and_then(|m| m.wam.as_ref());
+                let _ = reply.send(wam.and_then(|w| w.livekit_room_admin_tag(&self.url, &space)));
+            }
             RoomCmd::MapFiles(change) => {
                 let Some(m) = self.map.as_mut().filter(|m| change.concerns(&m.rel)) else { return };
                 match change {

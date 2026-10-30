@@ -123,3 +123,39 @@ fn a_late_client_gets_the_commands_its_file_misses() {
     h.push(40_000, "d".into(), "d");
     assert_eq!(h.after(None, Some("d")), vec![&"d"]);
 }
+
+// The space of a meeting room is slugifyJitsiRoomName(roomName, roomUrl) (the property id for an unnamed room), and
+// its livekitRoomAdminTag moderates it.
+#[test]
+fn the_meeting_room_admin_tag_is_found_by_space_name() {
+    use wa_core::wam::{Wam, short_hash, slugify, slugify_jitsi_room_name};
+    // The values of shared-utils, as the Go candidate checks them.
+    assert_eq!(slugify("  Réunion d'équipe !  "), "reunion-dequipe-");
+    assert_eq!(short_hash(""), "");
+    let url = "http://play.test/~/maps/office.wam";
+    let wam = Wam::parse(
+        br#"{"version":"2.1.0","mapUrl":"./office.tmj","entityCollections":[],
+        "areas":[{"id":"a1","name":"","x":0,"y":0,"width":32,"height":32,"visible":true,"properties":[
+            {"id":"p1","type":"livekitRoomProperty","roomName":"Board","livekitRoomAdminTag":"chair"},
+            {"id":"p2","type":"livekitRoomProperty","roomName":" ","livekitRoomAdminTag":"host"}]}],
+        "entities":{"e1":{"x":0,"y":0,"prefabRef":{"id":"t","collectionName":"c"},"properties":[
+            {"id":"p3","type":"livekitRoomProperty","roomName":"Desk","livekitRoomAdminTag":"owner"}]}}}"#,
+    )
+    .unwrap();
+    let tag = |room: &str| wam.livekit_room_admin_tag(url, &slugify_jitsi_room_name(room, url));
+    assert_eq!(tag("Board").as_deref(), Some("chair"));
+    assert_eq!(tag("p2").as_deref(), Some("host"));
+    assert_eq!(tag("Desk").as_deref(), Some("owner"));
+    assert_eq!(tag("Elsewhere"), None);
+}
+
+#[test]
+fn the_meeting_room_slugs_are_the_ts_ones() {
+    use wa_core::wam::slugify_jitsi_room_name;
+    for (url, want) in [
+        ("http://play.test/~/maps/office.wam", "c85ern-reunion-equipe-"),
+        ("https://play.workadventu.re/@/tcm/workadventure/wa-village", "433ydk-reunion-equipe-"),
+    ] {
+        assert_eq!(slugify_jitsi_room_name("Réunion Équipe 😀", url), want);
+    }
+}
