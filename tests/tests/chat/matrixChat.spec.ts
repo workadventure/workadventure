@@ -371,8 +371,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByPlaceholder("Search for people…").click();
         await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
-        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomMoreOptions").click();
+        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
         await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -414,8 +414,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByPlaceholder("Search for people…").click();
         await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
-        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomMoreOptions").click();
+        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
         await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -465,8 +465,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByPlaceholder("Search for people…").click();
         await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
-        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomMoreOptions").click();
+        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
         await expect(page.getByTestId("roomName")).toHaveText(privateChatRoom);
@@ -601,8 +601,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByPlaceholder("Search for people…").click();
         await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
-        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomMoreOptions").click();
+        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
         await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
@@ -638,8 +638,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await page.getByPlaceholder("Search for people…").click();
         await page.getByPlaceholder("Search for people…").press("Enter");
 
-        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomMoreOptions").click();
+        await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
         await ChatUtils.initEndToEndEncryption(privateChatRoom, page, page.context());
