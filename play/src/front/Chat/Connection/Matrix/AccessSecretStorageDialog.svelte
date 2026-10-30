@@ -33,11 +33,11 @@
     }
 
     async function checkAndSubmitRecoveryOrPassphraseIfValid() {
-        isCheckingPassphrase = true;
         if (recoveryKeyInput.trim().length === 0 && passphraseInput.trim().length === 0) {
             error = true;
             return;
         }
+        isCheckingPassphrase = true;
 
         try {
             const inputToKey = MatrixSecurity.makeInputToKey(keyInfo);
@@ -111,7 +111,7 @@
                     autocomplete="new-password"
                     data-testid="passphraseInput"
                     class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
-                    placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.passphrase()}`}
+                    placeholder={$LL.chat.e2ee.accessSecretStorage.enterPassphrase()}
                     bind:value={passphraseInput}
                     onkeydown={(key) => {
                         if (key.key === "Enter") {
@@ -140,7 +140,7 @@
                 </label>
                 <input
                     id="recoveryKey"
-                    placeholder={`${$LL.chat.e2ee.accessSecretStorage.placeholder()} ${$LL.chat.e2ee.accessSecretStorage.recoveryKey()}`}
+                    placeholder={$LL.chat.e2ee.accessSecretStorage.enterRecoveryKey()}
                     type="password"
                     autocomplete="new-password"
                     data-testid="recoveryKeyInput"
@@ -164,8 +164,10 @@
             {/if}
 
             {#if error}
-                <p class="text-red-500">
-                    {`${accessSecretStorageMethod === "passphrase" ? "Passphrase" : "RecoveryKey"}  is wrong !`}
+                <p class="text-red-500" role="alert">
+                    {accessSecretStorageMethod === "passphrase"
+                        ? $LL.chat.e2ee.accessSecretStorage.passphraseWrong()
+                        : $LL.chat.e2ee.accessSecretStorage.recoveryKeyWrong()}
                 </p>
             {/if}
         </div>

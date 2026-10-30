@@ -3,6 +3,7 @@
 
     import { onDestroy, onMount, setContext } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
@@ -620,6 +621,7 @@
                         event.stopPropagation();
                         initChatConnectionEncryption().catch((error) => {
                             console.error("Failed to initialize chat encryption", error);
+                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), { closable: true });
                         });
                     }}
                     class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"

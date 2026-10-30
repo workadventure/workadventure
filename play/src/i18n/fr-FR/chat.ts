@@ -557,41 +557,51 @@ const chat: DeepPartial<Translation["chat"]> = {
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
             description:
-                "Afin d'utiliser le cryptage de bout en bout dans le chat, vous devez créer une clé de récupération. Veuillez entrer votre phrase de sécurité ci-dessous, une clé de récupération sera créée.",
+                "Afin d'utiliser le chiffrement de bout en bout dans le chat, vous devez créer une clé de récupération. Veuillez entrer votre phrase de sécurité ci-dessous, une clé de récupération sera créée.",
             privateKeyDescription:
-                "Il s'agit de votre clé privée, conservez-la quelque part pour retrouver les discussions cryptées après la déconnexion.",
+                "Il s'agit de votre clé privée, conservez-la quelque part pour retrouver les discussions chiffrées après la déconnexion.",
             error: "Une erreur est survenue lors de la génération de la clé de récupération",
             buttons: {
                 generate: "Générer",
                 continue: "Continuer",
                 cancel: "Annuler",
             },
+            passphraseLabel: "Choisissez une phrase secrète",
+            confirmLabel: "Saisissez-la à nouveau",
+            mismatch: "Les deux phrases sont différentes.",
+            download: "Télécharger la clé (elle est aussi copiée)",
+            downloadedAndCopied: "Clé téléchargée et copiée dans le presse-papiers. Gardez-la en lieu sûr.",
         },
         interactiveAuth: {
             title: "Chiffrement de bout en bout",
             description:
                 "Pour des raisons de sécurité, une clé doit être téléchargée sur notre serveur pour vérifier votre identité. En confirmant votre identité, vous enregistrerez cette clé, ce qui vous permettra de lire les messages chiffrés provenant de WA et d'autres clients.",
-            instruction: "Veillez à confirmer la connexion SSO avant de cliquer sur le bouton Terminer.",
+            instruction: "Confirmez la connexion dans la fenêtre qui s'ouvre, puis cliquez sur Terminer.",
             buttons: {
                 cancel: "Annuler",
-                continueSSO: "Continuer avec le SSO",
+                continueSSO: "Confirmer mon identité",
                 finish: "Terminer",
             },
         },
         accessSecretStorage: {
             title: "Vérification de la session du chat",
             description:
-                "Afin de vérifier votre session et récupérer vos messages cryptés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
+                "Afin de vérifier votre session et récupérer vos messages chiffrés, vous devez saisir votre clé de récupération ou votre phrase de sécurité.",
             passphrase: "Phrase de sécurité",
             recoveryKey: "Clé de récupération",
-            placeholder: "Entrer votre",
             buttons: {
                 cancel: "Annuler",
                 usePassphrase: "Utiliser la phrase de sécurité",
                 useRecoveryKey: "Utiliser la clé de récupération",
                 confirm: "Confirmer",
             },
+            enterPassphrase: "Saisissez votre phrase secrète",
+            enterRecoveryKey: "Saisissez votre clé de récupération",
+            passphraseWrong: "Cette phrase ne correspond pas. Vérifiez-la et réessayez.",
+            recoveryKeyWrong: "Cette clé de récupération ne correspond pas. Vérifiez-la et réessayez.",
         },
+        undecryptable: "Ce message est chiffré et ne peut pas être lu sur cet appareil.",
+        configureFailed: "Le chiffrement n'a pas pu être configuré. Réessayez.",
     },
     connectionError: "Chat indisponible",
     connectionErrorDescription: "La carte, la vidéo et l'audio fonctionnent toujours.",

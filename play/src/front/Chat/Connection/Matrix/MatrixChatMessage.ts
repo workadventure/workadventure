@@ -15,6 +15,7 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
+import LL from "../../../../i18n/i18n-svelte";
 import { MATRIX_HTML_FORMAT, markOwnMentions, pillRoomMention, ROOM_MENTION_ID } from "../../Mentions";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
@@ -126,7 +127,7 @@ export class MatrixChatMessage implements ChatMessage {
 
     private getMessageContent(): ChatMessageContent {
         if (this.event.isDecryptionFailure()) {
-            return { body: "🔐 Failed to decrypt", url: undefined };
+            return { body: `🔐 ${get(LL).chat.e2ee.undecryptable()}`, url: undefined };
         }
 
         // getContent() returns the effective content: the latest edit's `m.new_content` when the event has
