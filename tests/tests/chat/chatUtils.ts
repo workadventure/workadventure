@@ -34,7 +34,7 @@ class ChatUtils {
     }
 
     /**
-     * Extracts a Matrix room id (`!opaque:server`) from the manage-participants room label text.
+     * Extracts a Matrix room id (`!opaque:server`) from the room ID shown in the room settings.
      */
     public parseMatrixRoomIdFromRoomLabelText(text: string): string {
         const match = text.match(/![^\s]+:[^\s]+/);
