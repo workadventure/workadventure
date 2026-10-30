@@ -54,6 +54,7 @@
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
     import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
+    import { messageInputText } from "./messageInputText";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
@@ -271,8 +272,9 @@
         }
 
         // send message
-        if (messageToSend.trim().length !== 0) {
-            room?.sendMessage(messageToSend);
+        const text = messageInputText(messageToSend);
+        if (text !== undefined) {
+            room?.sendMessage(text);
             analyticsClient.trackAdminEvent("chat.message_sent", {
                 chatContext: room instanceof ProximityChatRoom ? "proximity" : "room",
             });
