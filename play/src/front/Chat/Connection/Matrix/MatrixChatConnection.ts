@@ -1687,7 +1687,11 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
 
             return {
                 room_id: result.room_id,
-                room: await this.waitForPlacedRoom(result.room_id, roomOptions.parentSpaceID),
+                room: await this.waitForPlacedRoom(
+                    result.room_id,
+                    roomOptions.parentSpaceID,
+                    roomOptions.encrypt === true,
+                ),
             };
         } catch (error) {
             throw this.handleMatrixError(error);
@@ -1700,17 +1704,21 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      * The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s.
      * A room created in a folder can also show up at the root for a while, and that copy is dropped
      * when it moves into its folder: take the one inside the folder.
+     * The server can also split the creation state over two syncs (the room first comes down with only
+     * its creator): an encrypted room waits for its encryption event, or opening it would skip the
+     * encryption setup, which only shows up for a room already known to be encrypted.
      */
     private async waitForPlacedRoom(
         roomId: string,
         parentSpaceID: string | undefined,
+        encrypted: boolean,
         deadline = Date.now() + 10_000,
     ): Promise<ChatRoom | undefined> {
         const folder = parentSpaceID ? await this.findParentFolder(parentSpaceID) : undefined;
         // A closed folder has not built its rooms yet: build them, as opening it would.
         folder?.ensureChildrenLoaded();
         const room = parentSpaceID ? await folder?.getNode(roomId) : await this.findRoomOrFolder(roomId);
-        if (room instanceof MatrixChatRoom) {
+        if (room instanceof MatrixChatRoom && (!encrypted || get(room.isEncrypted))) {
             return room;
         }
         if (Date.now() >= deadline) {
@@ -1719,7 +1727,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
         await new Promise<void>((resolve) => {
             setTimeout(resolve, 200);
         });
-        return this.waitForPlacedRoom(roomId, parentSpaceID, deadline);
+        return this.waitForPlacedRoom(roomId, parentSpaceID, encrypted, deadline);
     }
 
     private async waitForNextSync() {
