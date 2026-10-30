@@ -449,6 +449,24 @@
         "defaultCameraPrivacySettings": {
           "type": "boolean"
         },
+        "cameraBackgrounds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string"
+              },
+              "thumbnailUrl": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "url",
+              "thumbnailUrl"
+            ]
+          }
+        },
         "defaultMicrophonePrivacySettings": {
           "type": "boolean"
         },
@@ -1061,6 +1079,9 @@
         },
         "livekitApiSecret": {
           "type": "string"
+        },
+        "autoRecording": {
+          "type": "boolean"
         }
       },
       "required": [

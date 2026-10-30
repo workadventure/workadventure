@@ -489,9 +489,6 @@
  "megaphone.opened": {
   "source": "front"
  },
- "menu.chat.opened": {
-  "source": "front"
- },
  "menu.contact.opened": {
   "source": "front"
  },

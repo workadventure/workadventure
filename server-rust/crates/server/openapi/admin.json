@@ -10478,62 +10478,6 @@
                 "string"
               ],
               "enum": [
-                "menu.chat.opened"
-              ]
-            },
-            "source": {
-              "type": [
-                "string"
-              ],
-              "enum": [
-                "front"
-              ],
-              "description": "Reported by the client."
-            },
-            "clientEventTimeMs": {
-              "type": [
-                "integer"
-              ],
-              "minimum": 0,
-              "maximum": 8640000000000000,
-              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
-            },
-            "eventId": {
-              "type": [
-                "string"
-              ],
-              "minLength": 1,
-              "maxLength": 255,
-              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
-            },
-            "properties": {
-              "type": [
-                "object"
-              ],
-              "properties": {},
-              "additionalProperties": true,
-              "description": "This event carries no properties of its own."
-            }
-          },
-          "required": [
-            "eventName",
-            "source",
-            "clientEventTimeMs",
-            "eventId",
-            "properties"
-          ],
-          "description": "The user opened the chat from the menu."
-        },
-        {
-          "type": [
-            "object"
-          ],
-          "properties": {
-            "eventName": {
-              "type": [
-                "string"
-              ],
-              "enum": [
                 "menu.contact.opened"
               ]
             },
@@ -14564,6 +14508,37 @@
           ],
           "description": "Initial value of the 'keep camera enabled when the tab is away' privacy setting, before the user sets their own preference",
           "example": false
+        },
+        "cameraBackgrounds": {
+          "type": [
+            "array"
+          ],
+          "items": {
+            "type": [
+              "object"
+            ],
+            "properties": {
+              "url": {
+                "type": [
+                  "string"
+                ],
+                "description": "The URL of the background image",
+                "example": "https://example.com/office.jpg"
+              },
+              "thumbnailUrl": {
+                "type": [
+                  "string"
+                ],
+                "description": "The URL of a small preview of the image (150×100)",
+                "example": "https://example.com/office-thumbnail.jpg"
+              }
+            },
+            "required": [
+              "url",
+              "thumbnailUrl"
+            ]
+          },
+          "description": "The complete, ordered list of camera background images offered to users. When absent, WorkAdventure's built-in images are offered. An empty list offers no image."
         },
         "defaultMicrophonePrivacySettings": {
           "type": [

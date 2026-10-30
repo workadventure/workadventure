@@ -96,6 +96,8 @@ impl ::std::convert::TryFrom<::std::string::String> for IceServerCredentialType 
 #[doc = "`LivekitCredentials`"]
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
 pub struct LivekitCredentials {
+    #[serde(rename = "autoRecording", skip_serializing_if = "::std::option::Option::is_none")]
+    pub auto_recording: ::std::option::Option<bool>,
     #[serde(rename = "livekitApiKey")]
     pub livekit_api_key: ::std::string::String,
     #[serde(rename = "livekitApiSecret")]
@@ -114,6 +116,8 @@ pub struct MapDetailsData {
     pub background_scene_image: ::std::option::Option<::std::string::String>,
     #[serde(rename = "bypassPwa", skip_serializing_if = "::std::option::Option::is_none")]
     pub bypass_pwa: ::std::option::Option<bool>,
+    #[serde(rename = "cameraBackgrounds", default, skip_serializing_if = "::std::vec::Vec::is_empty")]
+    pub camera_backgrounds: ::std::vec::Vec<MapDetailsDataCameraBackgroundsItem>,
     #[serde(rename = "canReport", skip_serializing_if = "::std::option::Option::is_none")]
     pub can_report: ::std::option::Option<bool>,
     #[serde(rename = "contactPage", skip_serializing_if = "::std::option::Option::is_none")]
@@ -194,6 +198,13 @@ pub struct MapDetailsData {
     pub third_party: ::std::option::Option<MapDetailsDataThirdParty>,
     #[serde(rename = "wamUrl", skip_serializing_if = "::std::option::Option::is_none")]
     pub wam_url: ::std::option::Option<::std::string::String>,
+}
+#[doc = "`MapDetailsDataCameraBackgroundsItem`"]
+#[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]
+pub struct MapDetailsDataCameraBackgroundsItem {
+    #[serde(rename = "thumbnailUrl")]
+    pub thumbnail_url: ::std::string::String,
+    pub url: ::std::string::String,
 }
 #[doc = "`MapDetailsDataCustomizeWokaScene`"]
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, Default, PartialEq)]
