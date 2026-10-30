@@ -101,6 +101,8 @@ vi.mock("livekit-client", async (importOriginal) => {
         // Codec support is probed through RTCRtpSender, which jsdom does not have
         supportsAV1: () => false,
         supportsVP9: () => true,
+        // jsdom's user agent reads as Safari
+        getBrowser: () => ({ name: "Chrome", version: "141.0.0.0", os: "Linux" }),
         // As on Safari, where switching the audio output throws
         supportsAudioOutputSelection: () => false,
     };
@@ -723,25 +725,40 @@ describe("camera quality setting", () => {
         videoQualityStore.setQuality("recommended");
     });
 
-    function connectedRoom() {
+    function connectedRoom(serverVersion = "1.13.6") {
         const room = createLiveKitRoom({
             screenSharingLocalStreamStore: writable(undefined),
             shouldPublishScreenShareStore: writable(false),
         });
         const publishTrack = vi.fn().mockResolvedValue(undefined);
         const unpublishTrack = vi.fn().mockResolvedValue(undefined);
-        room["room"] = { state: ConnectionState.Connected } as never;
+        room["room"] = { state: ConnectionState.Connected, engine: { serverVersion } } as never;
         room["localParticipant"] = { publishTrack, unpublishTrack } as never;
         return { room, publishTrack, unpublishTrack };
     }
 
-    it("publishes a VP9 camera as three spatial layers, budgeted for all of them", async () => {
+    it("publishes a VP9 camera as simulcast where the server takes it, the top layer budgeted alone", async () => {
+        const { room, publishTrack } = connectedRoom("1.13.7");
+
+        await room["handleCameraTrack"](createCameraStream());
+
+        const options = publishTrack.mock.calls[0][1];
+        expect(options.videoCodec).toBe("vp9");
+        expect(options.simulcast).toBe(true);
+        expect(options.scalabilityMode).toBe("L1T3");
+        expect(options.videoEncoding.maxBitrate).toBe(
+            selectVideoPreset(720, 1280, false, "recommended", "vp9").bitrate,
+        );
+    });
+
+    it("publishes a VP9 camera as three spatial layers on an older server, budgeted for all of them", async () => {
         const { room, publishTrack } = connectedRoom();
 
         await room["handleCameraTrack"](createCameraStream());
 
         const options = publishTrack.mock.calls[0][1];
         expect(options.videoCodec).toBe("vp9");
+        expect(options.simulcast).toBe(true);
         expect(options.scalabilityMode).toBeUndefined();
         expect(options.videoEncoding.maxBitrate).toBe(
             selectVideoPreset(720, 1280, false, "recommended", "vp9", 3).bitrate,
@@ -750,11 +767,12 @@ describe("camera quality setting", () => {
 
     it("publishes a 'low' camera as a single VP9 layer, budgeted for its captured size", async () => {
         videoQualityStore.setQuality("low");
-        const { room, publishTrack } = connectedRoom();
+        const { room, publishTrack } = connectedRoom("1.13.7");
 
         await room["handleCameraTrack"](createCameraStream("camera-track", 640, 360));
 
         const options = publishTrack.mock.calls[0][1];
+        expect(options.simulcast).toBe(false);
         expect(options.scalabilityMode).toBe("L1T3");
         expect(options.videoEncoding.maxBitrate).toBe(selectVideoPreset(360, 640, false, "low", "vp9").bitrate);
     });
