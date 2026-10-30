@@ -4,7 +4,6 @@
     import { chatSearchBarValue } from "../../Stores/ChatStore";
     import type { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import UnreadCount from "../UnreadCount.svelte";
-    import { focusAdjacentRoomRow } from "../roomRowKeyboard";
     import WokaFromUserId from "../../../Components/Woka/WokaFromUserId.svelte";
     import { selectProximityRoom } from "./selectProximityRoom";
     import { IconEar, IconMapEditor, IconMicrophone, IconUsersGroup } from "@wa-icons";
@@ -65,7 +64,6 @@
         data-room-row-button
         class="flex flex-1 min-w-0 items-center gap-2 self-stretch ps-2 py-2 m-0 rounded bg-transparent border-none text-start cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
         onclick={selectRoom}
-        onkeydown={focusAdjacentRoomRow}
     >
         <span class="relative shrink-0">
             <div

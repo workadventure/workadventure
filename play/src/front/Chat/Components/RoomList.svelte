@@ -61,6 +61,7 @@
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
+    import { rovingFocus } from "./roomRowKeyboard";
     import { IconChevronUp, IconCloudLock, IconLoader, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -334,6 +335,7 @@
     {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
+            use:rovingFocus={{ items: "[data-room-row-button]" }}
             style={displayTwoColumnLayout ? `width:${$roomListWidthStore}px ;flex : 0 0 auto` : ``}
         >
             {#if $shouldRetrySendingEvents}
@@ -425,6 +427,8 @@
                     {#if filteredRoomInvitations.length > 0}
                         <button
                             class="group relative m-0 px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
+                            data-room-row-button
+                            aria-expanded={displayRoomInvitations}
                             onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
@@ -455,6 +459,8 @@
                         <button
                             type="button"
                             class="flex items-center min-w-0 flex-1 text-start m-0 p-0 h-full bg-transparent border-0 cursor-pointer text-inherit rounded-none appearance-none"
+                            data-room-row-button
+                            aria-expanded={displayDirectRooms}
                             onclick={toggleDisplayDirectRooms}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase truncate">

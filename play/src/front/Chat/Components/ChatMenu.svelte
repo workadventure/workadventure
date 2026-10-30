@@ -101,6 +101,7 @@
 <button
     type="button"
     data-testid={dataTestId}
+    data-chat-menu-button
     bind:this={button}
     aria-label={label}
     title={label}
