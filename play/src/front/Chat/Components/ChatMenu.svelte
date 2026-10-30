@@ -74,9 +74,10 @@
             case "Escape":
                 close(true);
                 break;
+            // Tab cycles through the items instead of leaving: Escape is the way out, back to "…".
             case "Tab":
-                close(false);
-                return;
+                list[(index + (event.shiftKey ? -1 : 1) + list.length) % list.length]?.focus();
+                break;
             default:
                 return;
         }
