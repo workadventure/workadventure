@@ -13,52 +13,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-play:
+  # The Rust server (server-rust/) replaces the play/pusher, back, map-storage and uploader services. It still needs the
+  # compiled front (it renders its index.html template from ASSETS_INTERNAL_URL), served by the "front" image.
+  build-front:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/play-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/play'
-      dockerio-image-name: 'thecodingmachine/workadventure-play'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/front-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/front'
+      dockerio-image-name: 'thecodingmachine/workadventure-front'
       # FIXME: Final build should only build on master or tags
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
       dockerfile: play/Dockerfile
-      short_name: play
-      # sentry_project: play
+      target: front
+      short_name: front
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
-
-  build-back:
+  # The Rust server reads the apiVersionHash from the front it serves (GET /api-version): no build argument.
+  build-server:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/back-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/back'
-      dockerio-image-name: 'thecodingmachine/workadventure-back'
-      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
-      dockerfile: back/Dockerfile
-      short_name: back
-      sentry_project: back
-      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/server-rust-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/server-rust'
+      dockerio-image-name: 'thecodingmachine/workadventure-server-rust'
+      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
+      dockerfile: server-rust/Dockerfile
+      target: prod
+      # The .proto files and the pusher's data files are named build contexts (server-rust/Dockerfile).
+      build-contexts: |
+        protos=./messages/protos
+        pusherdata=./play/src/pusher/data
+      short_name: server-rust
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
-      context: ./
-
-  build-uploader:
-    uses: ./.github/workflows/build-multi-arch-image.yml
-    secrets: inherit
-    with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/uploader-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/uploader'
-      dockerio-image-name: 'thecodingmachine/workadventure-uploader'
-      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
-      dockerfile: uploader/Dockerfile
-      short_name: uploader
-      sentry_project: uploader
-      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
-      context: ./
+      context: ./server-rust
 
   build-maps:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -74,21 +64,6 @@ jobs:
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./maps
-
-  build-map-storage:
-    uses: ./.github/workflows/build-multi-arch-image.yml
-    secrets: inherit
-    with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/map-storage-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/map-storage'
-      dockerio-image-name: 'thecodingmachine/workadventure-map-storage'
-      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
-      dockerfile: map-storage/Dockerfile
-      short_name: map-storage
-      sentry_project: map-storage
-      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
-      context: ./
 
   end-to-end-tests:
     name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
@@ -206,11 +181,9 @@ jobs:
             renderer: headless
             ignoreTags: "@nomobile|@nowebkit"
     needs:
-      - build-play
-      - build-back
+      - build-front
+      - build-server
       - build-maps
-      - build-uploader
-      - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
     steps:
@@ -270,13 +243,13 @@ jobs:
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         uses: actions/download-artifact@v4
         with:
-          name: play
+          name: front
           path: /tmp
       - name: Download artifact
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         uses: actions/download-artifact@v4
         with:
-          name: back
+          name: server-rust
           path: /tmp
       - name: Download artifact
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
@@ -284,29 +257,15 @@ jobs:
         with:
           name: maps
           path: /tmp
-      - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
-        uses: actions/download-artifact@v4
-        with:
-          name: map-storage
-          path: /tmp
-      - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
-        uses: actions/download-artifact@v4
-        with:
-          name: uploader
-          path: /tmp
       - name: Load image
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         run: |
-          docker image load --input /tmp/play.tar.gz
-          docker image load --input /tmp/back.tar.gz
+          docker image load --input /tmp/front.tar.gz
+          docker image load --input /tmp/server-rust.tar.gz
           docker image load --input /tmp/maps.tar.gz
-          docker image load --input /tmp/map-storage.tar.gz
-          docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up -d --scale egress=2
 
         
       - name: Upload test-map
@@ -329,10 +288,19 @@ jobs:
           else
             echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
           fi
+      # Tests recreate the play container (rebootBack, rebootPlay), which drops its logs from `compose logs`: follow
+      # each successive container into a file, side-loaded in the report on failure.
+      - name: Keep the server logs across container recreations
+        run: nohup sh -c 'while :; do docker logs -f $(docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml ps -q play) >> /tmp/play-all.log 2>&1; sleep 1; done' > /dev/null 2>&1 &
       - name: Run Playwright tests
-        run: npm run test-prod-like -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
+        run: npm run test -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
         working-directory: tests
         env:
+          # `npm run test-prod-like` forces a single override file, hence `npm run test`. The tests restart containers
+          # with these same files (tests/tests/utils/containers.ts).
+          OVERRIDE_DOCKER_COMPOSE: docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml
+          # The "back" no longer exists on its own: restarting it means restarting the server (the play service).
+          DEV_REBOOT_BACK: cd .. && docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up --force-recreate -d --wait play
           RENDERER_MODE: ${{ matrix.renderer }}
           # Playwright's --shard balances by TEST COUNT, which left shards 3.5x apart in wall time
           # (1249s vs 362s on chromium 4-way). PWTEST_SHARD_WEIGHTS sets each shard's test count
@@ -344,13 +312,15 @@ jobs:
           # Secrets are withheld from forks AND from Dependabot PRs, so test for the secret itself.
           NO_KLAXOON_SECRET: ${{ secrets.KLAXOON_CLIENT_ID == '' }}
       - name: Display docker compose logs on failure
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml logs
         if: failure()
       - name: Display containers state
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml ps
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml ps
         if: failure()
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs > tests/playwright-report/docker-compose.log
+        run: |
+          docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml logs > tests/playwright-report/docker-compose.log
+          cp /tmp/play-all.log tests/playwright-report/server.log || true
         if: failure()
       - uses: actions/upload-artifact@v4
         if: always()
@@ -519,11 +489,9 @@ jobs:
             nbShards: 2
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
     needs:
-      - build-play
-      - build-back
+      - build-front
+      - build-server
       - build-maps
-      - build-uploader
-      - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
     steps:
@@ -580,8 +548,22 @@ jobs:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
           KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
         working-directory: contrib/docker
+      - name: Generate the certificates
+        # Traefik serves cert.pem (default certificate); the Rust server trusts ca.crt only (SSL_CERT_FILE). rustls
+        # (webpki) refuses a CA certificate used as the server's, hence a small CA that signs a server certificate,
+        # and refuses *.workadventure.localhost for workadventure.localhost itself, hence the hosts listed by name.
+        run: |
+          mkdir -p tests/certs
+          cd tests/certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=wa-test CA" -keyout ca.key -out ca.crt
+          openssl req -newkey rsa:2048 -nodes -subj "/CN=workadventure.localhost" -keyout key.pem -out server.csr
+          sans=$(printf 'DNS:workadventure.localhost,'; for h in play maps livekit egress rustfs-livekit cdn-livekit; do printf 'DNS:%s.workadventure.localhost,' "$h"; done)
+          printf 'basicConstraints=critical,CA:FALSE\nextendedKeyUsage=serverAuth\nsubjectAltName=%sDNS:*.workadventure.localhost\n' "$sans" > ext.cnf
+          openssl x509 -req -in server.csr -CA ca.crt -CAkey ca.key -CAcreateserial -days 2 -extfile ext.cnf -out cert.pem
+          chmod a+r key.pem
+        working-directory: contrib/docker
       - name: Start WorkAdventure
-        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml up -d --scale egress=2
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml up -d --scale egress=2
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
@@ -617,19 +599,19 @@ jobs:
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
       - name: Display docker compose logs on failure
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml logs
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Display containers state
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml ps
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml ps
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
         working-directory: contrib/docker
       - name: Side-load docker compose logs in the playwright report
-        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml logs > ../../tests/playwright-report/docker-compose.log
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml logs > ../../tests/playwright-report/docker-compose.log
         if: failure()
         env:
           DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
@@ -644,11 +626,9 @@ jobs:
   helm-deploy:
     name: "Deploy in Kubernetes"
     needs:
-      - build-play
-      - build-back
+      - build-front
+      - build-server
       - build-maps
-      - build-uploader
-      - build-map-storage
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
 
@@ -727,8 +707,18 @@ jobs:
           appVersion: "${DEPLOY_REF}"
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
+          # The Rust server runs in the play Deployment and answers for the pusher, back, map-storage and uploader
+          # (the map-storage and uploader Services point at its pods). No separate back, map-storage or uploader pod.
+          server:
+            enabled: true
+          # The server renders the index.html template of the front: the front container is always needed.
+          front:
+            enabled: true
           play:
-            replicaCount: 2
+            # One replica: the server keeps rooms, spaces and variables in memory (the TypeScript back was a single pod per room set too).
+            replicaCount: 1
+            image:
+              repository: thecodingmachine/workadventure-server-rust
             env:
               PROMETHEUS_PORT: "9090"
             secretEnv:
@@ -742,17 +732,17 @@ jobs:
                 cookie:
                   # The affinity cookie needs to be set to "None" for cross-domain cookies to work (pusher vs play/custom domains)
                   sameSite: "None"
-          back:
-            env:
-              PROMETHEUS_PORT: "9090"
-        
-            podAnnotations:
-              prometheus.io/scrape: 'true'
-              prometheus.io/path: '/metrics'
-              prometheus.io/port: '9090'
-          
+            # The maps uploaded to the map-storage live in /maps (STORAGE_DIRECTORY). They are uploaded again after each deploy.
+            extraVolumes:
+              - name: maps
+                emptyDir: {}
+            extraVolumeMounts:
+              - name: maps
+                mountPath: /maps
           mapstorage:
             env:
+              # The server only checks the basic authentication when it is enabled explicitly.
+              ENABLE_BASIC_AUTHENTICATION: "true"
               AUTHENTICATION_USER: "john.doe"
             secretEnv:
               AUTHENTICATION_PASSWORD: "password"
@@ -978,6 +968,15 @@ jobs:
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
+      # The server's own logs, to read what happened on its side when a spec fails (they are not in the trace).
+      - name: Dump the server's logs
+        if: failure()
+        run: |
+          mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
+          kubectl logs -n "${NAMESPACE}" deployment/test-workadventure-play --all-containers --since=2h > tests/playwright-report/server.log 2>&1 || true
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -996,36 +995,24 @@ jobs:
     if: always() && ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure'))
     continue-on-error: true
     steps:
-      - name: Prune play
+      - name: Prune front
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: workadventure
-          container: play-dev-build
+          container: front-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5
           prune-untagged: true
           prune-tags-regexes: ".*"
 
-      - name: Prune back
+      - name: Prune server-rust
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: workadventure
-          dry-run: false # Dry-run first, then change to `false`
-          container: back-dev-build
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"
-
-      - name: Prune map-storage
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: map-storage-dev-build
+          container: server-rust-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5
@@ -1038,19 +1025,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: workadventure
           container: maps-dev-build
-          dry-run: false # Dry-run first, then change to `false`
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"
-
-
-      - name: Prune uploader
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: uploader-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5

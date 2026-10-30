@@ -520,6 +520,88 @@ jobs:
         run: yarn pretty-check
         working-directory: "desktop/local-app"
 
+  continuous-integration-server-rust:
+    name: "Continuous Integration server-rust"
+
+    runs-on: "ubuntu-latest"
+
+    defaults:
+      run:
+        working-directory: "server-rust"
+
+    steps:
+      - name: "Checkout"
+        uses: "actions/checkout@v5"
+
+      # The toolchain of the Dockerfile (rust:1.93).
+      - name: "Setup Rust"
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.93"
+          components: "rustfmt, clippy, llvm-tools-preview"
+
+      - name: "Cache cargo"
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "server-rust"
+
+      - name: "Install cargo-llvm-cov and cargo-deny"
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-llvm-cov,cargo-deny
+
+      - name: "Format"
+        run: cargo fmt --all --check
+
+      - name: "Lint"
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: "Test"
+        run: cargo test
+
+      - name: "Coverage of the core"
+        run: |
+          {
+            echo "### server-rust: coverage of wa-core (by every test of the workspace)"
+            echo '```'
+            cargo llvm-cov --workspace --summary-only --ignore-filename-regex 'crates/(bot|proto|server)/'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "Licences, advisories, duplicates"
+        run: cargo deny check
+
+      # The Rust protobuf code is generated at build time from messages/protos (crates/proto/build.rs): it cannot
+      # drift. What is generated and committed comes from the TypeScript sources: the analytics catalog and the
+      # OpenAPI documents. Both are regenerated and compared.
+      - name: "Setup NodeJS"
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: "Install play dependencies"
+        run: npm ci --workspace=workadventure-play
+        working-directory: "."
+
+      - name: "Install messages dependencies"
+        run: npm ci
+        working-directory: "messages"
+
+      - name: "Build proto messages"
+        run: npm run ts-proto
+        working-directory: "messages"
+
+      - name: "Install cargo-typify"
+        run: cargo install --locked cargo-typify --version 0.8.0
+
+      - name: "Generated files match their sources"
+        run: |
+          ./tools/gen-analytics-catalog.sh
+          ./tools/gen-openapi.sh
+          ./tools/gen-admin-types.sh
+          git diff --exit-code -- crates/server/analytics-catalog.json crates/server/openapi crates/server/src/admin_types
+
   continuous-integration-end-to-end-tests:
     name: "Continuous Integration checking End To End tests"
 

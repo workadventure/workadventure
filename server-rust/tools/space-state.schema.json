@@ -1,0 +1,303 @@
+{
+  "$ref": "#/definitions/SpaceState",
+  "definitions": {
+    "RaisedHandEntry": {
+      "type": "object",
+      "properties": {
+        "spaceUserId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "at": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spaceUserId",
+        "name",
+        "at"
+      ],
+      "additionalProperties": false
+    },
+    "FloorHolderEntry": {
+      "type": "object",
+      "properties": {
+        "spaceUserId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "spaceUserId",
+        "name"
+      ],
+      "additionalProperties": false
+    },
+    "RecordingStatus": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "starting",
+        "recording",
+        "stopping"
+      ]
+    },
+    "RecordingState": {
+      "type": "object",
+      "properties": {
+        "recording": {
+          "type": "boolean"
+        },
+        "recorder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/definitions/RecordingStatus"
+        }
+      },
+      "required": [
+        "recording",
+        "recorder",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "ProximityPollAnswer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 240
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "ProximityPollVote": {
+      "type": "object",
+      "properties": {
+        "answerIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "maxItems": 20
+        },
+        "updatedAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "answerIds",
+        "updatedAt"
+      ],
+      "additionalProperties": false
+    },
+    "ProximityPoll": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "question": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 340
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "open",
+            "closed"
+          ]
+        },
+        "answers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProximityPollAnswer"
+          },
+          "minItems": 2,
+          "maxItems": 20
+        },
+        "maxSelections": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "senderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "senderName": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "createdAt": {
+          "type": "integer"
+        },
+        "end": {
+          "type": "object",
+          "properties": {
+            "closingMessage": {
+              "type": "string",
+              "maxLength": 500
+            },
+            "closedAt": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "closedAt"
+          ],
+          "additionalProperties": false
+        },
+        "votes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProximityPollVote"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "kind",
+        "answers",
+        "maxSelections",
+        "senderId",
+        "createdAt",
+        "votes"
+      ],
+      "additionalProperties": false
+    },
+    "ProximityQuestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "senderId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "senderName": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "createdAt": {
+          "type": "integer"
+        },
+        "answer": {
+          "type": "object",
+          "properties": {
+            "moderatorId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "answeredAt": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "moderatorId",
+            "answeredAt"
+          ],
+          "additionalProperties": false
+        },
+        "upvotes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "body",
+        "senderId",
+        "createdAt",
+        "upvotes"
+      ],
+      "additionalProperties": false
+    },
+    "SpaceState": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "bubble",
+            "area",
+            "megaphone",
+            "speaker_zone"
+          ]
+        },
+        "raisedHands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RaisedHandEntry"
+          }
+        },
+        "floorHolders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FloorHolderEntry"
+          }
+        },
+        "recording": {
+          "$ref": "#/definitions/RecordingState"
+        },
+        "polls": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProximityPoll"
+          }
+        },
+        "questions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProximityQuestion"
+          }
+        }
+      },
+      "required": [
+        "raisedHands",
+        "floorHolders",
+        "recording",
+        "polls",
+        "questions"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
