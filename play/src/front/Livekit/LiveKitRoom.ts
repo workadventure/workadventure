@@ -280,6 +280,17 @@ export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
         );
     }
 
+    /**
+     * The layer a "low" camera sends under its captured one, for thumbnails: half the captured size, budgeted on our
+     * curve like the captured one. Otherwise livekit-client adds its own 180p preset, sized for VP8 (160 kbps) and at
+     * 20 fps, above the frame rate of "low".
+     */
+    private lowCameraLowerLayer(track: MediaStreamTrack, codec: VideoCodec): VideoPreset {
+        const { width = 640, height = 360 } = track.getSettings();
+        const { bitrate, fps } = selectVideoPreset(height / 2, width / 2, false, "low", codec);
+        return new VideoPreset(width / 2, height / 2, bitrate, fps);
+    }
+
     private getPresetForTrack(
         track: MediaStreamTrack,
         isScreenShare: boolean,
@@ -385,28 +396,21 @@ export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
             // VP9 and AV1 are published as simulcast (L1T3 on each layer) where livekit-client can, like VP8: dynacast
             // then pauses the layers nobody watches. Elsewhere livekit-client sends them as SVC (L3T3_KEY): one stream
             // that always carries its three layers, under one budget.
-            // "low" is captured at 360p and sent as 360p + 180p, thumbnails taking the 180p one. That layer is budgeted
-            // on our curve: livekit-client's default 180p layer gets more than our 360p one. On the SVC fallback "low"
-            // is a single layer: libwebrtc's minimum for each SVC layer is above the low budget at every size.
+            // "low" is captured at 360p and sent as 360p + 180p (see lowCameraLowerLayer). On the SVC fallback it stays a
+            // single layer: its 360p budget is below what libwebrtc needs to turn the second SVC layer on.
             const svc = cameraCodec === "vp9" || cameraCodec === "av1";
             const low = this.getQualitySetting(false) === "low";
             const svcFallback = svc && !this.supportsSvcSimulcast();
             const singleLayer = svcFallback && low;
             const svcLayers = svcFallback && !low;
             const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svcLayers ? 3 : 1);
-            const { width = 640, height = 360 } = videoTrack.getSettings();
-            const halfSize = selectVideoPreset(height / 2, width / 2, false, "low", cameraCodec);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: cameraCodec,
                 simulcast: !singleLayer,
                 ...(svc && !svcLayers ? { scalabilityMode: "L1T3" } : {}),
                 ...(low && !singleLayer
-                    ? {
-                          videoSimulcastLayers: [
-                              new VideoPreset(width / 2, height / 2, halfSize.bitrate, halfSize.fps),
-                          ],
-                      }
+                    ? { videoSimulcastLayers: [this.lowCameraLowerLayer(videoTrack, cameraCodec)] }
                     : {}),
                 videoEncoding: { maxBitrate: preset.bitrate, maxFramerate: preset.fps },
             };
