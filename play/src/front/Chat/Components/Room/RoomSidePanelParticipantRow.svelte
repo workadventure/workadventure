@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import { defaultColor } from "@workadventure/shared-utils";
     import LL from "../../../../i18n/i18n-svelte";
     import { DEBUG_MODE } from "../../../Enum/EnvironmentVariable";
@@ -17,9 +18,13 @@
 
     interface Props {
         member: ChatRoomMember;
+        /** Replaces the role line, e.g. "Invited" for a pending invitation. */
+        status?: string;
+        /** Row actions, e.g. the member's "..." menu. */
+        actions?: Snippet;
     }
 
-    let { member }: Props = $props();
+    let { member, status, actions }: Props = $props();
 
     let memberNameStore = $derived(member.name);
     let memberPermissionLevelStore = $derived(member.permissionLevel);
@@ -63,7 +68,9 @@
     <div class="min-w-0 flex-1">
         <div class="truncate text-sm font-semibold text-white">{$memberNameStore || "?"}</div>
         <div class="truncate text-xs opacity-70">
-            {#if $memberPermissionLevelStore === ChatPermissionLevel.ADMIN}
+            {#if status}
+                {status}
+            {:else if $memberPermissionLevelStore === ChatPermissionLevel.ADMIN}
                 {$LL.chat.manageRoomUsers.roles.ADMIN()}
             {:else if $memberPermissionLevelStore === ChatPermissionLevel.MODERATOR}
                 {$LL.chat.manageRoomUsers.roles.MODERATOR()}
@@ -73,6 +80,7 @@
         </div>
     </div>
 
+    {@render actions?.()}
     {#if showMatrixPeerProfileDebug}
         <button
             type="button"

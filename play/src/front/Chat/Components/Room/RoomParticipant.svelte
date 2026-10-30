@@ -8,9 +8,7 @@
     import { ChatPermissionLevel } from "../../Connection/ChatConnection";
     import Select from "../../../Components/Input/Select.svelte";
     import Avatar from "../Avatar.svelte";
-    import ConfirmDialog from "../ConfirmDialog.svelte";
-    import { warningMessageStore } from "../../../Stores/ErrorStore";
-    import { modals } from "@wa-modals";
+    import { cancelInvitation, changeRole, confirmBan, confirmKick, inviteAgain, unban } from "./memberModeration";
     import { IconLoader, IconCheck, IconForbid, IconClock, IconPoint, IconMail, IconDoorExit } from "@wa-icons";
     interface Props {
         member: ChatRoomMember;
@@ -42,69 +40,14 @@
         }
     }
 
-    // Kicking, banning and making someone admin ask first; a failure stays in the confirmation popup.
-    const banUser = () => {
-        const memberName = get(name);
-        modals.open(ConfirmDialog, {
-            heading: $LL.chat.confirm.banTitle({ name: memberName }),
-            message: $LL.chat.confirm.banMessage(),
-            reasonLabel: $LL.chat.confirm.reasonLabel({ name: memberName }),
-            confirmLabel: $LL.chat.confirm.ban(),
-            danger: true,
-            onConfirm: async (reason?: string) => {
-                banInProgress = true;
-                try {
-                    await room.ban(id, reason);
-                } finally {
-                    banInProgress = false;
-                }
-            },
-        });
-    };
-
-    const unbanUser = () => {
-        unbanInProgress = true;
-
-        room.unban(id)
-            .catch((e) => {
-                console.error("Failed to unban user:", e);
-                warningMessageStore.addWarningMessage($LL.chat.confirm.failed());
-            })
-            .finally(() => {
-                unbanInProgress = false;
-            });
-    };
-
-    const kickUser = () => {
-        const memberName = get(name);
-        modals.open(ConfirmDialog, {
-            heading: $LL.chat.confirm.kickTitle({ name: memberName }),
-            message: $LL.chat.confirm.kickMessage(),
-            reasonLabel: $LL.chat.confirm.reasonLabel({ name: memberName }),
-            confirmLabel: $LL.chat.confirm.kick(),
-            danger: true,
-            onConfirm: async (reason?: string) => {
-                kickInProgress = true;
-                try {
-                    await room.kick(id, reason);
-                } finally {
-                    kickInProgress = false;
-                }
-            },
-        });
-    };
-
-    const inviteUser = () => {
-        inviteInProgress = true;
-        room.inviteUsers([id])
-            .catch((e) => {
-                console.error("Failed to invite user:", e);
-                warningMessageStore.addWarningMessage($LL.chat.confirm.failed());
-            })
-            .finally(() => {
-                inviteInProgress = false;
-            });
-    };
+    // Kicking, banning and making someone admin ask first (memberModeration.ts).
+    const banUser = () => confirmBan(room, member, (busy) => (banInProgress = busy));
+    const unbanUser = () => unban(room, member, (busy) => (unbanInProgress = busy));
+    const kickUser = () =>
+        $membership === "invite"
+            ? cancelInvitation(room, member, (busy) => (kickInProgress = busy))
+            : confirmKick(room, member, (busy) => (kickInProgress = busy));
+    const inviteUser = () => inviteAgain(room, member, (busy) => (inviteInProgress = busy));
 
     const getIconForMembership = (membership: ChatRoomMembership) => {
         switch (membership) {
@@ -137,26 +80,11 @@
 
     function onPermissionLevelChange(event: Event) {
         const target = event.target as HTMLSelectElement;
-
         if (!target) return;
         const nextLevel = target.value as ChatPermissionLevel;
-        const change = () => room.changePermissionLevelFor(member, nextLevel);
-
-        if (nextLevel !== ChatPermissionLevel.ADMIN) {
-            change().catch((e) => {
-                console.error(e);
-                warningMessageStore.addWarningMessage($LL.chat.confirm.failed());
-            });
-            return;
-        }
-        // Matrix never lets anyone demote an admin, not even the one who promoted them: ask first.
-        target.value = get(permissionLevel);
-        modals.open(ConfirmDialog, {
-            heading: $LL.chat.confirm.promoteTitle({ name: get(name) }),
-            message: $LL.chat.confirm.promoteMessage(),
-            confirmLabel: $LL.chat.confirm.promote(),
-            onConfirm: change,
-        });
+        // An admin promotion waits for its confirmation: show the current role until then.
+        if (nextLevel === ChatPermissionLevel.ADMIN) target.value = get(permissionLevel);
+        changeRole(room, member, nextLevel);
     }
 
     let hasPermissionToInvite = $derived(room.hasPermissionTo("invite", member));

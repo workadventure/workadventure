@@ -465,6 +465,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "Cłonki",
         sectionInvited: "Pśepšoseni",
         sectionLeft: "Wótšli abo zakazane",
+        setRole: "K {role} cyniś",
+        invitePlaceholder: "Pó mjenju abo e-mailu pśepšosyś…",
     },
     roomPanel: {
         toggleOpen: "Panel śpy wócyniś",

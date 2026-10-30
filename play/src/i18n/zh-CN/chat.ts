@@ -463,6 +463,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "成员",
         sectionInvited: "已邀请",
         sectionLeft: "已离开或被封禁",
+        setRole: "设为{role}",
+        invitePlaceholder: "按姓名或邮箱邀请…",
     },
     roomPanel: {
         toggleOpen: "打开房间面板",

@@ -465,6 +465,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         sectionJoined: "メンバー",
         sectionInvited: "招待中",
         sectionLeft: "退出・BAN 済み",
+        setRole: "{role} にする",
+        invitePlaceholder: "名前またはメールで招待…",
     },
     roomPanel: {
         toggleOpen: "ルームパネルを開く",
