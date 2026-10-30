@@ -84,6 +84,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         blurMiddle: "중간 블러",
         blurHigh: "강한 블러",
         images: "이미지",
+        image: "배경 이미지 {index}",
     },
     help: {
         chat: {
