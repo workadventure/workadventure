@@ -104,7 +104,8 @@ async function createUser(
         | "John"
         | "UserMatrix2"
         | "User1"
-        | "Carol",
+        | "Carol"
+        | "Dave",
     browser: Browser,
     url: string,
 ): Promise<void> {
@@ -207,7 +208,8 @@ export async function getPage(
         | "John"
         | "UserMatrix2"
         | "User1"
-        | "Carol",
+        | "Carol"
+        | "Dave",
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void | Promise<void>;

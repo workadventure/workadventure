@@ -222,10 +222,11 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts)
+        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.browser == 'chromium' && 'firefox' || '' }}
         working-directory: tests
       - name: Set up virtual audio output for Firefox
-        if: ${{ contains(matrix.project, 'firefox') }}
+        if: ${{ contains(matrix.project, 'firefox') || matrix.project == 'chromium' }}
         run: |
           sudo apt-get install --yes pulseaudio pulseaudio-utils
           pulseaudio --start --exit-idle-time=-1

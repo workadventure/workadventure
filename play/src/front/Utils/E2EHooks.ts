@@ -8,7 +8,28 @@ import Camera = Phaser.Cameras.Scene2D.Camera;
 
 let webRtcConnectionsCount = 0;
 let livekitConnectionsCount = 0;
-let livekitRoomCount = 0;
+
+type StatsSource = { getRTCStatsReport(): Promise<RTCStatsReport | undefined> };
+
+/** What a LiveKit room of this page shows E2E tests: the camera it publishes and the cameras it receives. */
+export interface E2ELivekitRoom {
+    getE2EVideoTracks(): { sent: StatsSource | undefined; received: { from: string; track: StatsSource }[] };
+}
+
+const livekitRooms = new Set<E2ELivekitRoom>();
+
+/** A video stream as the browser reports it, measured over one second. */
+export interface E2EVideoStream {
+    // Whose camera it is, for a stream we receive
+    from?: string;
+    // Simulcast layer ("q", "h", "f"), for a stream we send
+    rid?: string;
+    mimeType?: string;
+    width: number;
+    height: number;
+    fps: number;
+    kbps: number;
+}
 
 interface Coordinates {
     x: number;
@@ -304,12 +325,57 @@ export function decrementLivekitConnectionsCount() {
     livekitConnectionsCount--;
 }
 
-export function incrementLivekitRoomCount() {
-    livekitRoomCount++;
+export function registerLivekitRoom(room: E2ELivekitRoom) {
+    livekitRooms.add(room);
 }
 
-export function decrementLivekitRoomCount() {
-    livekitRoomCount--;
+export function unregisterLivekitRoom(room: E2ELivekitRoom) {
+    livekitRooms.delete(room);
+}
+
+function videoStreams(before: RTCStatsReport | undefined, after: RTCStatsReport | undefined, from?: string) {
+    const streams: E2EVideoStream[] = [];
+    after?.forEach((stat) => {
+        if ((stat.type !== "outbound-rtp" && stat.type !== "inbound-rtp") || stat.kind !== "video") {
+            return;
+        }
+        const previous = before?.get(stat.id);
+        const bytes = (report: { bytesSent?: number; bytesReceived?: number }) =>
+            report.bytesSent ?? report.bytesReceived ?? 0;
+        // Counted rather than read from framesPerSecond, which not every browser reports
+        const frames = (report: { framesEncoded?: number; framesDecoded?: number }) =>
+            report.framesEncoded ?? report.framesDecoded ?? 0;
+        const elapsedMs = previous ? stat.timestamp - previous.timestamp : 0;
+        streams.push({
+            from,
+            rid: stat.rid,
+            mimeType: after.get(stat.codecId)?.mimeType,
+            width: stat.frameWidth ?? 0,
+            height: stat.frameHeight ?? 0,
+            fps: elapsedMs > 0 ? Math.round(((frames(stat) - frames(previous)) * 1000) / elapsedMs) : 0,
+            kbps: elapsedMs > 0 ? Math.round(((bytes(stat) - bytes(previous)) * 8) / elapsedMs) : 0,
+        });
+    });
+    return streams;
+}
+
+/** The camera layers this page sends on LiveKit and the cameras it receives, each measured over one second. */
+async function getLivekitVideoStreams(): Promise<{ sent: E2EVideoStream[]; received: E2EVideoStream[] }> {
+    const sources = [...livekitRooms].flatMap((room) => {
+        const { sent, received } = room.getE2EVideoTracks();
+        return [...(sent ? [{ from: undefined, track: sent }] : []), ...received];
+    });
+    const sample = () => Promise.all(sources.map((source) => source.track.getRTCStatsReport()));
+    const before = await sample();
+    await new Promise<void>((resolve) => {
+        setTimeout(resolve, 1000);
+    });
+    const after = await sample();
+    const streams = sources.flatMap((source, index) => videoStreams(before[index], after[index], source.from));
+    return {
+        sent: streams.filter((stream) => stream.from === undefined),
+        received: streams.filter((stream) => stream.from !== undefined),
+    };
 }
 
 const FRAME_SAMPLE_SIDE = 16;
@@ -377,8 +443,9 @@ export const e2eHooks = {
         return livekitConnectionsCount;
     },
     getLivekitRoomsCount(): number {
-        return livekitRoomCount;
+        return livekitRooms.size;
     },
+    getLivekitVideoStreams,
     gameToBrowserCoordinates,
     /**
      * [DEBUG] Forces a WebRTC peer failure to test the retry mechanism.

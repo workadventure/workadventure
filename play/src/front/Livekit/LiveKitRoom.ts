@@ -36,7 +36,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
+import { registerLivekitRoom, unregisterLivekitRoom, type E2ELivekitRoom } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import {
     preferredVideoCodecs,
@@ -63,8 +63,8 @@ const ParticipantMetadataSchema = z.object({
 type ParticipantMetadata = z.infer<typeof ParticipantMetadataSchema>;
 
 type LivekitRoomCounter = {
-    increment: () => void;
-    decrement: () => void;
+    increment: (room: E2ELivekitRoom) => void;
+    decrement: (room: E2ELivekitRoom) => void;
 };
 
 // ponytail: fixed delay before asking for a new invitation when the room never managed to connect (the LiveKit
@@ -72,7 +72,7 @@ type LivekitRoomCounter = {
 // backoff if it ever matters.
 const RESTART_DELAY_WHEN_NEVER_CONNECTED_MS = 5000;
 
-export class LiveKitRoom implements LiveKitRoomInterface {
+export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
     private room: Room | undefined;
     // Keyed by identity, like livekit-client: it keeps the same RemoteParticipant across a full reconnection and
     // changes its sid in place, so a sid key would no longer find the participant when it leaves
@@ -130,12 +130,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
         private _livekitRoomCounter: LivekitRoomCounter = {
-            increment: incrementLivekitRoomCount,
-            decrement: decrementLivekitRoomCount,
+            increment: registerLivekitRoom,
+            decrement: unregisterLivekitRoom,
         },
         private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing,
     ) {
-        this._livekitRoomCounter.increment();
+        this._livekitRoomCounter.increment(this);
+    }
+
+    /** [E2E] The camera this page publishes and the cameras it receives, for E2E tests to read their statistics. */
+    public getE2EVideoTracks(): ReturnType<E2ELivekitRoom["getE2EVideoTracks"]> {
+        const received = Array.from(this.room?.remoteParticipants.values() ?? []).flatMap((participant) => {
+            const track = participant.getTrackPublication(Track.Source.Camera)?.videoTrack;
+            return track ? [{ from: participant.name || participant.identity, track }] : [];
+        });
+        return { sent: this.localCameraTrack, received };
     }
 
     public async prepareConnection(): Promise<Room> {
@@ -1240,7 +1249,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.screenShareAnalyticsUnsubscribe = undefined;
             this.leaveRoom();
         } finally {
-            this._livekitRoomCounter.decrement();
+            this._livekitRoomCounter.decrement(this);
         }
     }
 
