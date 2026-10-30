@@ -107,7 +107,6 @@ export class GameRoom implements BrothersFinder {
     // They key to limit the number of meeting invitation requests per sender
     private meetingInvitationRequestLogBySender = new Map<string, { at: Date; receiverUserUuid: string }[]>();
     // Invitations not answered yet: invitee uuid => sender uuid => sent at (ms).
-    // ponytail: unanswered invitations stay until the room is deleted; they are tiny and capped by the antispam.
     private pendingMeetingInvitations = new Map<string, Map<string, number>>();
 
     private readonly _userLeaveStream = new Subject<User>();
