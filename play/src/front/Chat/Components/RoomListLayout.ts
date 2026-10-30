@@ -15,6 +15,22 @@ const SIDE_PANEL_WIDTH = 360;
 /** Room rows read it to know whether to show their last message: `{ shown: boolean }`. */
 export const ROOM_ROW_PREVIEW_CONTEXT = Symbol("roomRowPreview");
 
+/**
+ * The room list is as wide as its column beside a conversation, or as the whole chat on its own: only that width
+ * decides whether the rows have room for their last message.
+ */
+export function showsRoomRowPreview({
+    besideConversation,
+    roomListWidth,
+    sideBarWidth,
+}: {
+    besideConversation: boolean;
+    roomListWidth: number;
+    sideBarWidth: number;
+}): boolean {
+    return (besideConversation ? roomListWidth : sideBarWidth) > ROOM_LIST_PREVIEW_MIN_WIDTH;
+}
+
 export function clampRoomListWidth(width: number): number {
     return Math.max(ROOM_LIST_MIN_WIDTH, Math.min(width, ROOM_LIST_MAX_WIDTH));
 }

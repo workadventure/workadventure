@@ -53,9 +53,9 @@
         ROOM_LIST_DEFAULT_WIDTH,
         ROOM_LIST_MAX_WIDTH,
         ROOM_LIST_MIN_WIDTH,
-        ROOM_LIST_PREVIEW_MIN_WIDTH,
         ROOM_ROW_PREVIEW_CONTEXT,
         shouldShowRoomSidePanelToggle,
+        showsRoomRowPreview,
         threeColumnLayoutLimit,
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
@@ -246,8 +246,13 @@
     );
     let displayThreeColumnLayout = $derived(sideBarWidth >= threeColumnLayoutLimit($roomListWidthStore));
     let roomListBesideConversation = $derived(displayTwoColumnLayout && $navChat.key === "chat");
-    // ponytail: only beside a conversation, so the default one-column list keeps its compact rows.
-    let showRoomRowPreview = $derived(roomListBesideConversation && $roomListWidthStore > ROOM_LIST_PREVIEW_MIN_WIDTH);
+    let showRoomRowPreview = $derived(
+        showsRoomRowPreview({
+            besideConversation: displayTwoColumnLayout,
+            roomListWidth: $roomListWidthStore,
+            sideBarWidth,
+        }),
+    );
     setContext(ROOM_ROW_PREVIEW_CONTEXT, {
         get shown() {
             return showRoomRowPreview;
