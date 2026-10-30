@@ -87,6 +87,21 @@ class ChatUtils {
         await page.getByText("Continue").click();
     }
 
+    /** Reads the open room's real Matrix id from its side panel settings, then closes the panel on its home. */
+    public async readOpenRoomId(page: Page): Promise<string> {
+        await page.getByTestId("toggleRoomSidePanelButton").click();
+        await page.getByTestId("roomSidePanelHomeSettings").click();
+        await expect(page.getByTestId("roomID")).toBeVisible();
+        const roomId = this.parseMatrixRoomIdFromRoomLabelText(
+            (await page.getByTestId("roomID").textContent())?.trim() ?? "",
+        );
+        await page.getByTestId("roomSidePanelBackButton").click();
+        // On a narrow chat the panel covers the conversation header and has its own close button.
+        const closePanel = page.getByTestId("closeRoomSidePanelButton");
+        await ((await closePanel.isVisible()) ? closePanel : page.getByTestId("toggleRoomSidePanelButton")).click();
+        return roomId;
+    }
+
     /** A new room opens by itself: check it is the one just created, then go back to the room list. */
     public async backToRoomListAfterCreation(page: Page, roomName: string) {
         await expect(page.getByTestId("roomName")).toHaveText(roomName);

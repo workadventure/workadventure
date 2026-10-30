@@ -458,7 +458,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         error: "Njemóžno, přeprošenja pósłać",
         participants: "Wobdźělnicy",
-        roomID: "ID ruma: {roomId}",
         invite: "Přeprošeny",
         ban: "Zablokowany",
         kick: "Wuzamknyć",
@@ -508,10 +507,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Zaklučowany",
             notEncrypted: "Njezaklučowany",
             readOnly: "Jenož čitać",
-            copyRoomId: "ID rumy kopěrować",
         },
         settings: {
             roomType: "Družina rumnosće",
+            roomId: "ID ruma",
             encryption: "Zaklučowanje",
             topic: "Tema",
             joinRule: "Přistup",

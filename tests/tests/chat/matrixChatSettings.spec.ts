@@ -21,19 +21,11 @@ async function createRoom(page: Page): Promise<CreatedRoom> {
     const roomName = ChatUtils.getRandomName();
     await page.getByTestId("createRoomName").fill(roomName);
     await page.getByTestId("createRoomButton").click();
-
-    // The new room opens by itself: read its real Matrix id from the room panel's overview.
-    // Going through the UI guarantees the room exists server-side before we query it via the admin API.
     await expect(page.getByTestId("roomName")).toHaveText(roomName);
-    await page.getByTestId("toggleRoomSidePanelButton").click();
-    await expect(page.getByTestId("roomID")).toBeVisible();
-    const roomId = ChatUtils.parseMatrixRoomIdFromRoomLabelText(
-        (await page.getByTestId("roomID").textContent())?.trim() ?? "",
-    );
-    // On a narrow chat the panel covers the conversation header: close it, then back to the list.
-    const closePanel = page.getByTestId("closeRoomSidePanelButton");
-    await ((await closePanel.isVisible()) ? closePanel.click() : page.getByTestId("toggleRoomSidePanelButton").click());
-    await page.getByTestId("chatBackward").click();
+
+    // Going through the UI guarantees the room exists server-side before we query it via the admin API.
+    const roomId = await ChatUtils.readOpenRoomId(page);
+    await ChatUtils.backToRoomListAfterCreation(page, roomName);
     await expect(page.getByText(roomName)).toBeAttached();
 
     const token = await matrixApi.getRoomCreatorToken(roomId);

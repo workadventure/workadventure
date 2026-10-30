@@ -458,7 +458,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         error: "招待を送信できません",
         participants: "参加者",
-        roomID: "ルームID: {roomId}",
         invite: "招待済み",
         ban: "禁止",
         kick: "削除",
@@ -508,10 +507,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "暗号化済み",
             notEncrypted: "未暗号化",
             readOnly: "読み取り専用",
-            copyRoomId: "ルームIDをコピー",
         },
         settings: {
             roomType: "ルームタイプ",
+            roomId: "ルームID",
             encryption: "暗号化",
             topic: "トピック",
             joinRule: "アクセス",

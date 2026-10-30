@@ -458,7 +458,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         error: "Uitnodigingen konden niet worden verzonden",
         participants: "Deelnemers",
-        roomID: "Kamer-ID: {roomId}",
         invite: "Uitgenodigd",
         ban: "Verbannen",
         kick: "Verwijderd",
@@ -508,10 +507,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Versleuteld",
             notEncrypted: "Niet versleuteld",
             readOnly: "Alleen-lezen",
-            copyRoomId: "Kamer-ID kopiëren",
         },
         settings: {
             roomType: "Kamertype",
+            roomId: "Kamer-ID",
             encryption: "Versleuteling",
             topic: "Onderwerp",
             joinRule: "Toegang",
