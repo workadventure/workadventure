@@ -30,7 +30,9 @@ async function createRoom(page: Page): Promise<CreatedRoom> {
     const roomId = ChatUtils.parseMatrixRoomIdFromRoomLabelText(
         (await page.getByTestId("roomID").textContent())?.trim() ?? "",
     );
-    // Back to the list closes the panel with the room.
+    // On a narrow chat the panel covers the conversation header: close it, then back to the list.
+    const closePanel = page.getByTestId("closeRoomSidePanelButton");
+    await ((await closePanel.isVisible()) ? closePanel.click() : page.getByTestId("toggleRoomSidePanelButton").click());
     await page.getByTestId("chatBackward").click();
     await expect(page.getByText(roomName)).toBeAttached();
 

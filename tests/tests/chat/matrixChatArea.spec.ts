@@ -195,12 +195,10 @@ test.describe("matrix chat area property @matrix @nowebkit @nomobile", () => {
         await page2.getByTestId("name of new room").getByTestId("toggleRoomMenu").click();
         await page2.getByTestId("roomMembersOption").click();
         const members = page2.getByTestId("roomSidePanelParticipants");
-        await expect(members.getByTestId("@john.doe:matrix.workadventure.localhost-panel-row")).toBeAttached({
+        await expect(members.getByTestId("@admin:matrix.workadventure.localhost-panel-row")).toBeAttached({
             timeout: 60000,
         });
-        // Without moderation rights, no "…" menu on anyone.
-        await expect(
-            members.getByTestId("@john.doe:matrix.workadventure.localhost-panel-memberMenu"),
-        ).not.toBeAttached();
+        // The area room belongs to the admin bot: without moderation rights, no "…" menu on it.
+        await expect(members.getByTestId("@admin:matrix.workadventure.localhost-panel-memberMenu")).not.toBeAttached();
     });
 });
