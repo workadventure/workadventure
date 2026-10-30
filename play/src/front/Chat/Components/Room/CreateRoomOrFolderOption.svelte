@@ -4,11 +4,10 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import type { RoomFolder, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import { navChat } from "../../Stores/ChatStore";
     import ConfirmDialog from "../ConfirmDialog.svelte";
     import ChatMenu from "../ChatMenu.svelte";
     import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
-    import CreateFolderModal from "./CreateFolderModal.svelte";
-    import CreateRoomModal from "./CreateRoomModal.svelte";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
     import { IconFolder, IconLogout, IconMessage, IconUserEdit } from "@wa-icons";
     import { modals } from "@wa-modals";
@@ -33,14 +32,10 @@
     );
 
     function openCreateSpace() {
-        modals.open(CreateFolderModal, {
-            parentID,
-        });
+        navChat.switchToCreate("folder", parentID, parentName);
     }
     function closeMenuAndOpenCreateRoom() {
-        modals.open(CreateRoomModal, {
-            parentID,
-        });
+        navChat.switchToCreate("room", parentID, parentName);
     }
     function closeMenuAndLeaveFolder() {
         if (!folder) return;

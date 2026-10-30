@@ -12,8 +12,8 @@ async function openFreshMatrixRoom(page: Page, roomName: string) {
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     await page.getByTestId("createRoomName").fill(roomName);
-    await page.getByPlaceholder("Users").click();
-    await page.getByPlaceholder("Users").press("Enter");
+    await page.getByPlaceholder("Search for people…").click();
+    await page.getByPlaceholder("Search for people…").press("Enter");
     await page.getByTestId("createRoomButton").click();
     // The new room opens by itself.
     await expect(page.getByTestId("roomName")).toHaveText(roomName);

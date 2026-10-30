@@ -40,8 +40,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await expect(page.getByText(publicChatRoomName)).toBeAttached();
     });
@@ -53,8 +53,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -70,8 +70,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -88,8 +88,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
 
@@ -149,8 +149,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
 
@@ -211,8 +211,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -231,8 +231,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -252,8 +252,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -270,8 +270,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -292,8 +292,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createRoomButton").click();
         await page.getByText(publicChatRoomName).click();
         const chatMessageContent = "This is a test message";
@@ -368,9 +368,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
         await page.getByTestId("createRoomName").fill(privateChatRoom);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
+        await page.getByTestId("createRoomMoreOptions").click();
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
@@ -410,9 +411,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
         await page.getByTestId("createRoomName").fill(privateChatRoom);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
+        await page.getByTestId("createRoomMoreOptions").click();
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
@@ -460,9 +462,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
         await page.getByTestId("createRoomName").fill(privateChatRoom);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
+        await page.getByTestId("createRoomMoreOptions").click();
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
@@ -482,8 +485,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         const publicFolder = ChatUtils.getRandomName();
         await page.getByTestId("createFolderName").fill(publicFolder);
         // await page.getByTestId("createFolderVisibility").selectOption("public");
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(publicFolder)).toBeAttached();
@@ -497,8 +500,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         const privateFolder = ChatUtils.getRandomName();
         await page.getByTestId("createFolderName").fill(privateFolder);
         // await page.getByTestId("createFolderVisibility").selectOption("private");
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(privateFolder)).toBeAttached();
@@ -513,8 +516,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         const privateFolder1 = ChatUtils.getRandomName();
         await page.getByTestId("createFolderName").fill(privateFolder1);
         // await page.getByTestId("createFolderVisibility").selectOption("private");
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(privateFolder1)).toBeAttached();
@@ -527,6 +530,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         // await page.getByTestId("createFolderVisibility").selectOption("private");
         await page.getByTestId("createFolderButton").click();
 
+        // The creation view closes once the sub-folder exists (its title also names the parent folder).
+        await expect(page.getByTestId("createRoomView")).toBeHidden({ timeout: 60000 });
         await expect(page.getByText(privateFolder2)).toBeHidden({
             timeout: 60000,
         });
@@ -543,8 +548,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         const privateFolder1 = ChatUtils.getRandomName();
         await page.getByTestId("createFolderName").fill(privateFolder1);
         // await page.getByTestId("createFolderVisibility").selectOption("private");
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(privateFolder1)).toBeAttached();
@@ -570,8 +575,8 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         const privateFolder1 = ChatUtils.getRandomName();
         await page.getByTestId("createFolderName").fill(privateFolder1);
         // await page.getByTestId("createFolderVisibility").selectOption("private");
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         await page.getByTestId("createFolderButton").click();
         await page.getByTestId("roomAccordeon").click();
         await expect(page.getByText(privateFolder1)).toBeAttached();
@@ -595,9 +600,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
         await page.getByTestId("createRoomName").fill(privateChatRoom);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
         // await page.getByTestId("createRoomVisibility").selectOption("private");
+        await page.getByTestId("createRoomMoreOptions").click();
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();
@@ -631,9 +637,10 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.openCreateRoomDialog(page);
         const privateChatRoom = `Encrypted_${ChatUtils.getRandomName()}`;
         await page.getByTestId("createRoomName").fill(privateChatRoom);
-        await page.getByPlaceholder("Users").click();
-        await page.getByPlaceholder("Users").press("Enter");
+        await page.getByPlaceholder("Search for people…").click();
+        await page.getByPlaceholder("Search for people…").press("Enter");
 
+        await page.getByTestId("createRoomMoreOptions").click();
         await page.getByText("Activate end to end encryption").click();
         await page.getByTestId("createRoomEncryption").check();
         await page.getByTestId("createRoomButton").click();

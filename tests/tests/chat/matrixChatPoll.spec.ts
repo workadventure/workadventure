@@ -15,7 +15,7 @@ async function openFreshMatrixRoom(page: Page, roomName: string, invitedUsers: s
     await ChatUtils.openCreateRoomDialog(page);
     await page.getByTestId("createRoomName").fill(roomName);
 
-    const usersInput = page.getByPlaceholder("Users");
+    const usersInput = page.getByPlaceholder("Search for people…");
     if (invitedUsers.length === 0) {
         await usersInput.click();
         await usersInput.press("Enter");
