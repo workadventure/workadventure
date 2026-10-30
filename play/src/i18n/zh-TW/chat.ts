@@ -342,6 +342,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "此功能已被管理員停用。",
     anAdmin: "管理員",
     messageDeletedByYou: "您已刪除此訊息",
+    readReceipts: {
+        sent: "已傳送",
+        read: "已讀",
+        seenBy: "已讀",
+        seenByCount: "{count} 人已讀",
+        notReadYet: "未讀 · {count}",
+    },
     messageEdited: "已編輯",
     messageEditedError: "無法編輯訊息。請重試。",
     waiting: "等待中",

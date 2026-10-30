@@ -344,6 +344,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "Deze functie is uitgeschakeld door de beheerder.",
     anAdmin: "een beheerder",
     messageDeletedByYou: "Je hebt dit bericht verwijderd",
+    readReceipts: {
+        sent: "Verzonden",
+        read: "Gelezen",
+        seenBy: "Gezien door",
+        seenByCount: "Gezien door {count}",
+        notReadYet: "Nog niet gelezen · {count}",
+    },
     messageEdited: "Aangepast",
     messageEditedError: "Bericht kon niet worden bewerkt. Probeer het opnieuw.",
     waiting: "Wachten",

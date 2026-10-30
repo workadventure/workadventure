@@ -344,6 +344,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "ฟีเจอร์นี้ถูกปิดใช้งานโดยผู้ดูแลระบบ",
     anAdmin: "ผู้ดูแลระบบ",
     messageDeletedByYou: "คุณลบข้อความนี้แล้ว",
+    readReceipts: {
+        sent: "ส่งแล้ว",
+        read: "อ่านแล้ว",
+        seenBy: "อ่านโดย",
+        seenByCount: "อ่านโดย {count}",
+        notReadYet: "ยังไม่อ่าน · {count}",
+    },
     messageEdited: "แก้ไขแล้ว",
     messageEditedError: "ไม่สามารถแก้ไขข้อความได้ ลองใหม่อีกครั้ง",
     waiting: "กำลังรอ",

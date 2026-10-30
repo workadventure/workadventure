@@ -4,6 +4,7 @@
     import type {
         ChatMessage,
         ChatMessageType,
+        ChatReadReceipts,
         ChatRoomMember,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
@@ -25,6 +26,7 @@
     import MessageAudioFile from "./Message/MessageAudioFile.svelte";
     import MessageVideoFile from "./Message/MessageVideoFile.svelte";
     import MessageAttachmentRecipients from "./Message/MessageAttachmentRecipients.svelte";
+    import MessageReadReceipt from "./Message/MessageReadReceipt.svelte";
     import MessageEdition from "./MessageEdition.svelte";
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
@@ -43,6 +45,9 @@
         membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
         /** Root message reply preview; hide inside an open thread timeline (main room only). */
         showThreadSummary?: boolean;
+        /** Under my own messages: who has read them. */
+        readReceipts?: ChatReadReceipts;
+        showReaders?: boolean;
     }
 
     let {
@@ -51,6 +56,8 @@
         showHeader = true,
         membersForMessageAvatars = undefined,
         showThreadSummary = true,
+        readReceipts = undefined,
+        showReaders = false,
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -282,6 +289,9 @@
                     classes={isMyMessage ? "justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
                     reactions={$reactionsWithUsers}
                 />
+            {/if}
+            {#if readReceipts && isMyMessage && replyDepth === 0 && !isQuotedMessage && !$isDeleted && !messageFromSystem}
+                <MessageReadReceipt messageId={id} receipts={readReceipts} {showReaders} members={roomMembersList} />
             {/if}
             {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
                 <div

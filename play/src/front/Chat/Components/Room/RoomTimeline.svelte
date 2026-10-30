@@ -456,6 +456,19 @@
     // On opening, on every new message while the room stays open, and on coming back to a hidden tab.
     let pageVisible = $state(document.visibilityState === "visible");
     let lastRenderedKey = $derived(renderItems[renderItems.length - 1]?.key);
+
+    let readReceipts = $derived(room.readReceipts);
+    let roomType = $derived(room.type);
+    // In a group, the readers' faces go under my last message only; the others keep their tick.
+    let lastOwnMessageId = $derived.by(() => {
+        for (let i = renderItems.length - 1; i >= 0; i--) {
+            const item = renderItems[i];
+            if (item.kind === "item" && item.timelineItem.kind === "message" && item.timelineItem.message.isMyMessage) {
+                return item.timelineItem.message.id;
+            }
+        }
+        return undefined;
+    });
     $effect(() => {
         if ($initializationState === "ready" && pageVisible && lastRenderedKey !== undefined) {
             untrack(() => room.setTimelineAsRead());
@@ -960,6 +973,9 @@
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
                                 showThreadSummary={room.conversationKind === "room"}
+                                readReceipts={$readReceipts}
+                                showReaders={$roomType === "multiple" &&
+                                    item.timelineItem.message.id === lastOwnMessageId}
                             />
                         {/if}
                     </li>

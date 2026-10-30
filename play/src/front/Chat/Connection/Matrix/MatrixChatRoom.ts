@@ -69,11 +69,13 @@ import type {
     ChatRoomPrivacyState,
     ChatRoomSettingsManagement,
     ChatRoomSettingsUpdate,
+    ChatReadReceipts,
     ChatTimelineItem,
     ChatThreadSummary,
     memberTypingInformation,
 } from "../ChatConnection";
 import { ChatPermissionLevel, ChatRoomSettingsError } from "../ChatConnection";
+import { computeReadReceipts, getReadState } from "../ReadReceipts";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { addPendingMention, chatMessageBannerStore } from "../../Stores/ChatMessageBannerStore";
@@ -126,6 +128,7 @@ export class MatrixChatRoom
     readonly unreadNotificationCount: Writable<number>;
     readonly hasUnreadMentions: Writable<boolean>;
     readonly lastMessagePreview: Readable<ChatMessagePreview | undefined>;
+    readonly readReceipts: Readable<ChatReadReceipts>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
@@ -286,8 +289,10 @@ export class MatrixChatRoom
         // displayed message — which left encrypted messages stuck on "Failed to decrypt" after a key-backup
         // restore. Instances are released together in destroy() at room teardown.
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
-        this.lastMessagePreview = readable<ChatMessagePreview | undefined>(getLastMessagePreview(matrixRoom), (set) => {
-            const update = () => set(getLastMessagePreview(matrixRoom));
+        const getPreview = () =>
+            getLastMessagePreview(matrixRoom, (eventId) => getReadState(this.computeReadReceipts(), eventId));
+        this.lastMessagePreview = readable<ChatMessagePreview | undefined>(getPreview(), (set) => {
+            const update = () => set(getPreview());
             const updateOnDecrypted = (event: MatrixEvent) => {
                 if (event.getRoomId() === matrixRoom.roomId) update();
             };
@@ -295,12 +300,30 @@ export class MatrixChatRoom
             matrixRoom.on(RoomEvent.Timeline, update);
             matrixRoom.on(RoomEvent.LocalEchoUpdated, update);
             matrixRoom.on(RoomEvent.Redaction, update);
+            matrixRoom.on(RoomEvent.Receipt, update);
             matrixRoom.client.on(MatrixEventEvent.Decrypted, updateOnDecrypted);
             return () => {
                 matrixRoom.off(RoomEvent.Timeline, update);
                 matrixRoom.off(RoomEvent.LocalEchoUpdated, update);
                 matrixRoom.off(RoomEvent.Redaction, update);
+                matrixRoom.off(RoomEvent.Receipt, update);
                 matrixRoom.client.off(MatrixEventEvent.Decrypted, updateOnDecrypted);
+            };
+        });
+        this.readReceipts = readable<ChatReadReceipts>(this.computeReadReceipts(), (set) => {
+            // Receipts come in bursts (a sync carries several): recompute once per burst.
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            const update = () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => set(this.computeReadReceipts()), 250);
+            };
+            update();
+            matrixRoom.on(RoomEvent.Receipt, update);
+            matrixRoom.on(RoomEvent.Timeline, update);
+            return () => {
+                clearTimeout(timer);
+                matrixRoom.off(RoomEvent.Receipt, update);
+                matrixRoom.off(RoomEvent.Timeline, update);
             };
         });
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
@@ -1844,6 +1867,40 @@ export class MatrixChatRoom
         const receipt = this.matrixRoom.getReadReceiptForUserId(userId, true);
         if (!receipt || receipt.eventId === this.matrixRoom.getLastLiveEvent()?.getId()) return undefined;
         return { eventId: receipt.eventId, timestamp: receipt.data.ts };
+    }
+
+    private computeReadReceipts(): ChatReadReceipts {
+        const myUserId = this.matrixRoom.client.getUserId() ?? "";
+        const events = this.matrixRoom.getLiveTimeline().getEvents();
+        const receipts = events.flatMap((event) =>
+            this.matrixRoom
+                .getReceiptsForEvent(event)
+                .filter((receipt) => receipt.type === ReceiptType.Read)
+                .map((receipt) => ({
+                    userId: receipt.userId,
+                    eventId: event.getId() ?? "",
+                    timestamp: receipt.data.ts,
+                })),
+        );
+        const otherMembers = this.matrixRoom
+            .getJoinedMembers()
+            .map((member) => member.userId)
+            .filter((userId) => userId !== myUserId);
+        // Lazy-loaded members: while some are missing, nobody can be said to be the last to read.
+        const everyoneKnown = otherMembers.length === this.matrixRoom.getJoinedMemberCount() - 1;
+        return computeReadReceipts(
+            events.map((event) => ({
+                id: event.getId(),
+                // Writing or reacting means reading; joining or a settings change does not.
+                sender: [EventType.RoomMessage, EventType.Reaction].includes(event.getType() as EventType)
+                    ? event.getSender()
+                    : undefined,
+                timestamp: event.getTs(),
+            })),
+            receipts,
+            myUserId,
+            everyoneKnown ? otherMembers : [],
+        );
     }
 
     setTimelineAsRead() {

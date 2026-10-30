@@ -343,6 +343,13 @@ const chat: DeepPartial<Translation["chat"]> = {
     disabledByAdmin: "تم تعطيل هذه الميزة بواسطة المسؤول.",
     anAdmin: "مسؤول",
     messageDeletedByYou: "لقد حذفت هذه الرسالة",
+    readReceipts: {
+        sent: "أُرسلت",
+        read: "قُرئت",
+        seenBy: "شاهدها",
+        seenByCount: "شاهدها {count}",
+        notReadYet: "لم تُقرأ بعد · {count}",
+    },
     messageEdited: "تم التعديل",
     messageEditedError: "تعذر تعديل الرسالة. حاول مرة أخرى.",
     waiting: "في انتظار",
