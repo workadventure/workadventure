@@ -9,6 +9,8 @@ import type {
 } from "livekit-client";
 import {
     BackupCodecPolicy,
+    compareVersions,
+    getBrowser,
     LocalAudioTrack,
     LocalVideoTrack,
     Room,
@@ -288,6 +290,22 @@ export class LiveKitRoom implements LiveKitRoomInterface {
     }
 
     /**
+     * Whether livekit-client publishes VP9 and AV1 as simulcast when asked to (simulcast + L1T3). It mirrors the
+     * client's own check, which otherwise keeps L1T3 and sends a single layer: Safari and every iOS browser read
+     * several VP9 encodings as SVC, and LiveKit servers up to 1.13.6 do not take VP9/AV1 simulcast.
+     */
+    private supportsSvcSimulcast(): boolean {
+        const browser = getBrowser();
+        const serverVersion = this.room?.engine?.serverVersion;
+        return (
+            browser?.name !== "Safari" &&
+            browser?.os !== "iOS" &&
+            serverVersion !== undefined &&
+            compareVersions(serverVersion, "1.13.6") > 0
+        );
+    }
+
+    /**
      * What a camera publication is fixed to at publishTrack(): its codec, budget and layers follow the quality setting
      * and the captured size. A publication made for other values is published anew rather than reused.
      */
@@ -354,21 +372,24 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
             const cameraCodec = this.getVideoCodec(false, videoTrack);
-            // livekit-client publishes VP9 and AV1 as SVC, three spatial layers (L3T3_KEY) under one budget. "low" is
-            // captured at 360p and sent as one layer: libwebrtc's minimum for each SVC layer is above the low budget
-            // at every size, so the top layer would stay off while the stream is padded up to what it needs.
+            // VP9 and AV1 are published as simulcast (L1T3 on each layer) where livekit-client can, like VP8: dynacast
+            // then pauses the layers nobody watches. Elsewhere livekit-client sends them as SVC (L3T3_KEY): one stream
+            // that always carries its three layers, under one budget. "low" is captured at 360p and sent as one layer:
+            // libwebrtc's minimum for each SVC layer is above the low budget at every size, and the default 180p
+            // simulcast layer would get more than the 360p one.
             const svc = cameraCodec === "vp9" || cameraCodec === "av1";
             const singleLayer = svc && this.getQualitySetting(false) === "low";
+            const svcLayers = svc && !singleLayer && !this.supportsSvcSimulcast();
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: cameraCodec,
-                simulcast: true,
-                ...(singleLayer ? { scalabilityMode: "L1T3" } : {}),
+                simulcast: !singleLayer,
+                ...(svc && !svcLayers ? { scalabilityMode: "L1T3" } : {}),
                 // Commented out: the default simulcast layers are sufficient for our use case
                 //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
             };
 
-            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svc && !singleLayer ? 3 : 1);
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svcLayers ? 3 : 1);
             publishOptions.videoEncoding = {
                 maxBitrate: preset.bitrate,
                 maxFramerate: preset.fps,
