@@ -135,8 +135,10 @@ async function checkLayers(
     for (const highlighter of highlighters) {
         const thumbnailHeight = await receivedHeight(highlighter.page, name);
         await tileOf(highlighter.page, name).locator("button.full-screen-button").click();
+        // Kept from the poll: a later one-second sample can dip under ON_FPS while the layout settles
+        let highlightedHeight = 0;
         await expect
-            .poll(() => receivedHeight(highlighter.page, name), {
+            .poll(async () => (highlightedHeight = await receivedHeight(highlighter.page, name)), {
                 timeout: LAYER_TIMEOUT,
                 message: `${highlighter.name} receives a larger layer once ${name} is highlighted`,
             })
@@ -147,7 +149,6 @@ async function checkLayers(
                 message: `${name} turns a larger layer on for ${highlighter.name}`,
             })
             .toBeGreaterThan(thumbnailLayers);
-        const highlightedHeight = await receivedHeight(highlighter.page, name);
         const other = watchers.find((watcher) => watcher !== highlighter) ?? watchers[0];
         expect(
             await receivedHeight(other.page, name),
