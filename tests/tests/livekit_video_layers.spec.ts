@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 import { firefox } from "playwright-core";
 import Map from "./utils/map";
 import Menu from "./utils/menu";
@@ -62,6 +62,25 @@ const withoutPictureInPicture = {
             localStorage.setItem("allowPictureInPicture", "false");
         }),
 };
+
+/**
+ * Opens the user's page, then turns its microphone off, and its camera unless asked to keep it: everybody spawns at
+ * the same spot, so each newcomer is in a call with the others at once. One camera at a time, to spare the runner's CPU.
+ */
+async function join(
+    browser: Browser,
+    name: Parameters<typeof getPage>[1],
+    options: Parameters<typeof getPage>[3],
+    { camera = false } = {},
+): Promise<Page> {
+    const page = await getPage(browser, name, MAP_URL, options);
+    await dismissNoMicrophoneSoundToastWhenShown(page);
+    await Menu.turnOffMicrophone(page);
+    if (!camera) {
+        await Menu.turnOffCamera(page);
+    }
+    return page;
+}
 
 async function setTabHidden(page: Page, hidden: boolean): Promise<void> {
     // Headless browsers never hide a page: emulate what the browser does when the tab goes to the background
@@ -177,13 +196,13 @@ test.describe("LiveKit video layers @nomobile @nowebkit @nofirefox", () => {
         browser,
     }) => {
         test.setTimeout(480_000);
-        await using alice = await getPage(browser, "Alice", MAP_URL, withoutPictureInPicture);
-        await using bob = await getPage(browser, "Bob", MAP_URL, withoutPictureInPicture);
+        await using alice = await join(browser, "Alice", withoutPictureInPicture, { camera: true });
+        await using bob = await join(browser, "Bob", withoutPictureInPicture);
         const firefoxBrowser = await launchOtherBrowser("firefox");
         try {
             const inFirefox = { ...withoutPictureInPicture, contextOptions: otherBrowserContextOptions("firefox") };
-            await using carol = await getPage(firefoxBrowser, "Carol", MAP_URL, inFirefox);
-            await using dave = await getPage(firefoxBrowser, "Dave", MAP_URL, inFirefox);
+            await using carol = await join(firefoxBrowser, "Carol", inFirefox);
+            await using dave = await join(firefoxBrowser, "Dave", inFirefox);
             const users = [
                 { name: "Alice", page: alice },
                 { name: "Bob", page: bob },
@@ -193,13 +212,6 @@ test.describe("LiveKit video layers @nomobile @nowebkit @nofirefox", () => {
             const user = (name: string) => users.filter((candidate) => candidate.name === name);
             const othersThan = (name: string) => users.filter((candidate) => candidate.name !== name);
 
-            for (const { page } of users) {
-                await dismissNoMicrophoneSoundToastWhenShown(page);
-            }
-            // One camera at a time
-            for (const { page } of othersThan("Alice")) {
-                await Menu.turnOffCamera(page);
-            }
             for (const { page } of users) {
                 await Map.teleportToPosition(page, 160, 160);
             }
