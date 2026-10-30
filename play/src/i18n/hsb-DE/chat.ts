@@ -731,12 +731,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Hišće raz zwězać",
     failedToJoinRoom: "Njemóžno, so k rumej přizamknyć",
     failedToLeaveRoom: "Njemóžno, rum woteć",
-    refreshChat: "Chat aktualizować",
-    dismiss: "Ignorować",
-    whoops: "Ups! Zmylka je nastała",
     failedToOpenRoom: "Njemóžno, rum wočinić: {roomId}",
-    failedToSendAttachments: "Njemóžno, přiwěški pósłać. Prošu wopytajće hišće raz.",
     refreshChatError: "Njemóžno, chat aktualizować",
+    unsentMessages: "Někotre powěsće njejsu so dali pósłać.",
+    retrySending: "Hišće raz",
+    failedToSendNamedAttachments: "Njeda so pósłać: {names}. Dataje wostanu w zapodawanskim polu, spytaj hišće raz.",
+    reconnecting: "Zwisk so wobnowja… Twoje powěsće so pósćelu, hdyž syć zaso funguje.",
     discord: {
         chatBand: {
             configure: "Konfigurować",

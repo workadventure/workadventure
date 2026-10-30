@@ -732,12 +732,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Riconnetti",
     failedToJoinRoom: "Impossibile unirsi alla stanza",
     failedToLeaveRoom: "Impossibile lasciare la stanza",
-    refreshChat: "Aggiorna chat",
-    dismiss: "Ignora",
-    whoops: "Ops! Si è verificato un errore",
     failedToOpenRoom: "Impossibile aprire la stanza: {roomId}",
-    failedToSendAttachments: "Impossibile inviare gli allegati. Riprova.",
     refreshChatError: "Impossibile aggiornare la chat",
+    unsentMessages: "Alcuni messaggi non sono stati inviati.",
+    retrySending: "Riprova",
+    failedToSendNamedAttachments: "Impossibile inviare: {names}. I file restano nella casella del messaggio, riprova.",
+    reconnecting: "Riconnessione… I tuoi messaggi partiranno appena torna la rete.",
     discord: {
         chatBand: {
             configure: "Configura",

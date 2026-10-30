@@ -727,12 +727,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "重新连接",
     failedToJoinRoom: "加入房间失败",
     failedToLeaveRoom: "离开房间失败",
-    refreshChat: "刷新聊天",
-    dismiss: "关闭",
-    whoops: "哎呀！出错了",
     failedToOpenRoom: "打开房间失败: {roomId}",
-    failedToSendAttachments: "发送附件失败。请重试。",
     refreshChatError: "刷新聊天失败",
+    unsentMessages: "部分消息未能发送。",
+    retrySending: "重试",
+    failedToSendNamedAttachments: "无法发送：{names}。文件仍在输入框中，请重试。",
+    reconnecting: "正在重新连接… 网络恢复后消息会立即发送。",
     discord: {
         chatBand: {
             configure: "配置",

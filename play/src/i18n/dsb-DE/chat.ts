@@ -732,12 +732,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     reconnect: "Znowa zwězaś",
     failedToJoinRoom: "Njejo móžno, se k śpy pśizamknuś",
     failedToLeaveRoom: "Njejo móžno, śpu wóteś",
-    refreshChat: "Chat aktualizěrowaś",
-    dismiss: "Ignorěrowaś",
-    whoops: "Ups! Zmólka jo nastała",
     failedToOpenRoom: "Njejo móžno, śpu wócyniś: {roomId}",
-    failedToSendAttachments: "Njejo móžno, pśidanki pósłaś. Pšosym wopytaj hyšći raz.",
     refreshChatError: "Njejo móžno, chat aktualizěrowaś",
+    unsentMessages: "Někotare powěsći njejsu se dali pósłaś.",
+    retrySending: "Hyšći raz",
+    failedToSendNamedAttachments: "Njedajo se pósłaś: {names}. Dataje wóstanu w zapódawańskem pólu, wopytaj hyšći raz.",
+    reconnecting: "Zwisk se wótnowjujo… Twóje powěsći se pósćelu, gaž seś zasej funkcioněrujo.",
     discord: {
         chatBand: {
             configure: "Konfigurěrowaś",

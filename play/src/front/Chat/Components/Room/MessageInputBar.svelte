@@ -240,24 +240,34 @@
         // send files
         if (files && files.length > 0) {
             const idsToSend = files.map((f) => f.id);
-            const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                fileListAcc.items.add(currentFile.file);
-                return fileListAcc;
-            }, new DataTransfer()).files;
-
             sendingFiles = true;
-            try {
-                await room.sendFiles(fileList);
-                files = files.filter((f) => !idsToSend.includes(f.id));
-                filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-            } catch (error) {
-                console.error(error);
-                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), { closable: true });
-            } finally {
-                // A second send cannot start while this guarded upload is in progress.
-                // eslint-disable-next-line require-atomic-updates
-                sendingFiles = false;
+            // One file at a time: those that fail stay in the preview, named in the warning, so nothing is lost.
+            const sentFiles = files.filter((file) => idsToSend.includes(file.id));
+            const results = await Promise.allSettled(
+                sentFiles.map((file) => {
+                    const single = new DataTransfer();
+                    single.items.add(file.file);
+                    return room.sendFiles(single.files);
+                }),
+            );
+            const sentIds = sentFiles.filter((_, index) => results[index].status === "fulfilled").map((f) => f.id);
+            const failedNames = sentFiles
+                .filter((_, index) => results[index].status === "rejected")
+                .map((file) => file.file.name);
+            files = files.filter((f) => !sentIds.includes(f.id));
+            filesPreview = filesPreview.filter((p) => !sentIds.includes(p.id));
+            if (failedNames.length > 0) {
+                results.forEach((result) => {
+                    if (result.status === "rejected") console.error(result.reason);
+                });
+                warningMessageStore.addWarningMessage(
+                    $LL.chat.failedToSendNamedAttachments({ names: failedNames.join(", ") }),
+                    { closable: true },
+                );
             }
+            // A second send cannot start while this guarded upload is in progress.
+            // eslint-disable-next-line require-atomic-updates
+            sendingFiles = false;
         }
 
         // send message

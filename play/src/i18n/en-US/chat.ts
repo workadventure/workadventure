@@ -731,12 +731,12 @@ const chat: BaseTranslation = {
     reconnect: "Reconnect",
     failedToJoinRoom: "Failed to join room",
     failedToLeaveRoom: "Failed to leave room",
-    refreshChat: "Refresh Chat",
-    dismiss: "Dismiss",
-    whoops: "Whoops ! something went wrong",
     failedToOpenRoom: "Failed to open room : {roomId}",
-    failedToSendAttachments: "Failed to send attachments. Please try again.",
     refreshChatError: "Failed to refresh chat",
+    unsentMessages: "Some messages could not be sent.",
+    retrySending: "Retry",
+    failedToSendNamedAttachments: "Could not send: {names}. The files stay in the message box, try again.",
+    reconnecting: "Reconnecting… Your messages will go out as soon as the network is back.",
     discord: {
         chatBand: {
             configure: "Configure",

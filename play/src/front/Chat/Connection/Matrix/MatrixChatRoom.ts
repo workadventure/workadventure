@@ -2179,11 +2179,15 @@ export class MatrixChatRoom
         }
     }
 
+    /** Rejects when any file could not be sent, so the input bar can keep it instead of dropping it. */
     async sendFiles(files: FileList) {
-        try {
-            await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
-        } catch (error) {
-            console.error(error);
+        const results = await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
+        const failures = results.filter((result) => result.status === "rejected");
+        if (failures.length > 0) {
+            throw new AggregateError(
+                failures.map((failure) => failure.reason),
+                `${failures.length} of ${results.length} file(s) could not be sent`,
+            );
         }
     }
 
@@ -2209,10 +2213,10 @@ export class MatrixChatRoom
             };
             this.applyReplyContentIfReplyTo(content);
 
-            return this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
+            return await this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
         } catch (error) {
             console.error(error);
-            return;
+            throw error;
         }
     }
 
