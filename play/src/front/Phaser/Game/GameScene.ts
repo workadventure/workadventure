@@ -2822,16 +2822,6 @@ export class GameScene extends DirtyScene {
         );
 
         this.unsubscribers.push(
-            mapExplorationModeStore.subscribe((exploration) => {
-                if (exploration) {
-                    this.cameraManager.setExplorationMode();
-                } else {
-                    this.input.keyboard?.enableGlobalCapture();
-                }
-            }),
-        );
-
-        this.unsubscribers.push(
             lastNewMediaDeviceDetectedStore.subscribe((newDevices) => {
                 // Filtered first: the click handler below picks devices by label from this same list
                 const devices = devicesToOffer(newDevices);

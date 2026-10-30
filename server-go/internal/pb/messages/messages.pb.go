@@ -448,6 +448,55 @@ func (CustomEntityDirection) EnumDescriptor() ([]byte, []int) {
 	return file_messages_proto_rawDescGZIP(), []int{7}
 }
 
+// What an uploaded file is for, which decides where map-storage stores it and which formats it accepts.
+type UploadedFileKind int32
+
+const (
+	// A file of the "open file" property, stored privately.
+	UploadedFileKind_Document UploadedFileKind = 0
+	// A sound of the "play audio" property, stored as a public map asset.
+	UploadedFileKind_Sound UploadedFileKind = 1
+)
+
+// Enum value maps for UploadedFileKind.
+var (
+	UploadedFileKind_name = map[int32]string{
+		0: "Document",
+		1: "Sound",
+	}
+	UploadedFileKind_value = map[string]int32{
+		"Document": 0,
+		"Sound":    1,
+	}
+)
+
+func (x UploadedFileKind) Enum() *UploadedFileKind {
+	p := new(UploadedFileKind)
+	*p = x
+	return p
+}
+
+func (x UploadedFileKind) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (UploadedFileKind) Descriptor() protoreflect.EnumDescriptor {
+	return file_messages_proto_enumTypes[8].Descriptor()
+}
+
+func (UploadedFileKind) Type() protoreflect.EnumType {
+	return &file_messages_proto_enumTypes[8]
+}
+
+func (x UploadedFileKind) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use UploadedFileKind.Descriptor instead.
+func (UploadedFileKind) EnumDescriptor() ([]byte, []int) {
+	return file_messages_proto_rawDescGZIP(), []int{8}
+}
+
 type RecordingWebhookPhase int32
 
 const (
@@ -481,11 +530,11 @@ func (x RecordingWebhookPhase) String() string {
 }
 
 func (RecordingWebhookPhase) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[8].Descriptor()
+	return file_messages_proto_enumTypes[9].Descriptor()
 }
 
 func (RecordingWebhookPhase) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[8]
+	return &file_messages_proto_enumTypes[9]
 }
 
 func (x RecordingWebhookPhase) Number() protoreflect.EnumNumber {
@@ -494,7 +543,7 @@ func (x RecordingWebhookPhase) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RecordingWebhookPhase.Descriptor instead.
 func (RecordingWebhookPhase) EnumDescriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{8}
+	return file_messages_proto_rawDescGZIP(), []int{9}
 }
 
 type FilterType int32
@@ -530,11 +579,11 @@ func (x FilterType) String() string {
 }
 
 func (FilterType) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[9].Descriptor()
+	return file_messages_proto_enumTypes[10].Descriptor()
 }
 
 func (FilterType) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[9]
+	return &file_messages_proto_enumTypes[10]
 }
 
 func (x FilterType) Number() protoreflect.EnumNumber {
@@ -543,7 +592,7 @@ func (x FilterType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FilterType.Descriptor instead.
 func (FilterType) EnumDescriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{9}
+	return file_messages_proto_rawDescGZIP(), []int{10}
 }
 
 type PositionMessage_Direction int32
@@ -582,11 +631,11 @@ func (x PositionMessage_Direction) String() string {
 }
 
 func (PositionMessage_Direction) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[10].Descriptor()
+	return file_messages_proto_enumTypes[11].Descriptor()
 }
 
 func (PositionMessage_Direction) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[10]
+	return &file_messages_proto_enumTypes[11]
 }
 
 func (x PositionMessage_Direction) Number() protoreflect.EnumNumber {
@@ -628,11 +677,11 @@ func (x SetPlayerVariableMessage_Scope) String() string {
 }
 
 func (SetPlayerVariableMessage_Scope) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[11].Descriptor()
+	return file_messages_proto_enumTypes[12].Descriptor()
 }
 
 func (SetPlayerVariableMessage_Scope) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[11]
+	return &file_messages_proto_enumTypes[12]
 }
 
 func (x SetPlayerVariableMessage_Scope) Number() protoreflect.EnumNumber {
@@ -674,11 +723,11 @@ func (x AskPositionMessage_AskType) String() string {
 }
 
 func (AskPositionMessage_AskType) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[12].Descriptor()
+	return file_messages_proto_enumTypes[13].Descriptor()
 }
 
 func (AskPositionMessage_AskType) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[12]
+	return &file_messages_proto_enumTypes[13]
 }
 
 func (x AskPositionMessage_AskType) Number() protoreflect.EnumNumber {
@@ -4041,6 +4090,7 @@ type UploadFileMessage struct {
 	PropertyId    string                 `protobuf:"bytes,4,opt,name=propertyId,proto3" json:"propertyId,omitempty"`
 	AreaId        *string                `protobuf:"bytes,5,opt,name=areaId,proto3,oneof" json:"areaId,omitempty"`
 	EntityId      *string                `protobuf:"bytes,6,opt,name=entityId,proto3,oneof" json:"entityId,omitempty"`
+	Kind          UploadedFileKind       `protobuf:"varint,7,opt,name=kind,proto3,enum=UploadedFileKind" json:"kind,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4115,6 +4165,13 @@ func (x *UploadFileMessage) GetEntityId() string {
 		return *x.EntityId
 	}
 	return ""
+}
+
+func (x *UploadFileMessage) GetKind() UploadedFileKind {
+	if x != nil {
+		return x.Kind
+	}
+	return UploadedFileKind_Document
 }
 
 type ModifyCustomEntityMessage struct {
@@ -12346,8 +12403,11 @@ type RoomConnectedMessage struct {
 	state                       protoimpl.MessageState       `protogen:"open.v1"`
 	EditMapCommandsArrayMessage *EditMapCommandsArrayMessage `protobuf:"bytes,13,opt,name=editMapCommandsArrayMessage,proto3" json:"editMapCommandsArrayMessage,omitempty"`
 	Tag                         []string                     `protobuf:"bytes,5,rep,name=tag,proto3" json:"tag,omitempty"`
-	unknownFields               protoimpl.UnknownFields
-	sizeCache                   protoimpl.SizeCache
+	// Also in RoomJoinedMessage, but the start position (which must avoid the areas the user cannot enter, unless they
+	// can edit the map) is chosen before the room is joined.
+	CanEdit       bool `protobuf:"varint,14,opt,name=canEdit,proto3" json:"canEdit,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *RoomConnectedMessage) Reset() {
@@ -12392,6 +12452,13 @@ func (x *RoomConnectedMessage) GetTag() []string {
 		return x.Tag
 	}
 	return nil
+}
+
+func (x *RoomConnectedMessage) GetCanEdit() bool {
+	if x != nil {
+		return x.CanEdit
+	}
+	return false
 }
 
 type RoomJoinedMessage struct {
@@ -15168,6 +15235,7 @@ type BackEvent struct {
 	// Types that are valid to be assigned to Event:
 	//
 	//	*BackEvent_MeetingConnectionRestartMessage
+	//	*BackEvent_MicrophoneTrackPublishedMessage
 	Event         isBackEvent_Event `protobuf_oneof:"event"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -15219,6 +15287,15 @@ func (x *BackEvent) GetMeetingConnectionRestartMessage() *MeetingConnectionResta
 	return nil
 }
 
+func (x *BackEvent) GetMicrophoneTrackPublishedMessage() *MicrophoneTrackPublishedMessage {
+	if x != nil {
+		if x, ok := x.Event.(*BackEvent_MicrophoneTrackPublishedMessage); ok {
+			return x.MicrophoneTrackPublishedMessage
+		}
+	}
+	return nil
+}
+
 type isBackEvent_Event interface {
 	isBackEvent_Event()
 }
@@ -15227,7 +15304,77 @@ type BackEvent_MeetingConnectionRestartMessage struct {
 	MeetingConnectionRestartMessage *MeetingConnectionRestartMessage `protobuf:"bytes,2,opt,name=meetingConnectionRestartMessage,proto3,oneof"`
 }
 
+type BackEvent_MicrophoneTrackPublishedMessage struct {
+	MicrophoneTrackPublishedMessage *MicrophoneTrackPublishedMessage `protobuf:"bytes,3,opt,name=microphoneTrackPublishedMessage,proto3,oneof"`
+}
+
 func (*BackEvent_MeetingConnectionRestartMessage) isBackEvent_Event() {}
+
+func (*BackEvent_MicrophoneTrackPublishedMessage) isBackEvent_Event() {}
+
+// Names the sender's microphone among its LiveKit publications (the scripting audio is published as a microphone
+// too). Sent on every microphone publication; the back uses it when the space is recorded automatically.
+type MicrophoneTrackPublishedMessage struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	TrackSid string                 `protobuf:"bytes,1,opt,name=trackSid,proto3" json:"trackSid,omitempty"`
+	// The browser's language (navigator.language).
+	Language string `protobuf:"bytes,2,opt,name=language,proto3" json:"language,omitempty"`
+	// The noise suppression applied before publishing: "workadventure", "voiceIsolation" or "none".
+	NoiseSuppression string `protobuf:"bytes,3,opt,name=noiseSuppression,proto3" json:"noiseSuppression,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *MicrophoneTrackPublishedMessage) Reset() {
+	*x = MicrophoneTrackPublishedMessage{}
+	mi := &file_messages_proto_msgTypes[205]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MicrophoneTrackPublishedMessage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MicrophoneTrackPublishedMessage) ProtoMessage() {}
+
+func (x *MicrophoneTrackPublishedMessage) ProtoReflect() protoreflect.Message {
+	mi := &file_messages_proto_msgTypes[205]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MicrophoneTrackPublishedMessage.ProtoReflect.Descriptor instead.
+func (*MicrophoneTrackPublishedMessage) Descriptor() ([]byte, []int) {
+	return file_messages_proto_rawDescGZIP(), []int{205}
+}
+
+func (x *MicrophoneTrackPublishedMessage) GetTrackSid() string {
+	if x != nil {
+		return x.TrackSid
+	}
+	return ""
+}
+
+func (x *MicrophoneTrackPublishedMessage) GetLanguage() string {
+	if x != nil {
+		return x.Language
+	}
+	return ""
+}
+
+func (x *MicrophoneTrackPublishedMessage) GetNoiseSuppression() string {
+	if x != nil {
+		return x.NoiseSuppression
+	}
+	return ""
+}
 
 type PrivateEvent struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
@@ -15241,7 +15388,7 @@ type PrivateEvent struct {
 
 func (x *PrivateEvent) Reset() {
 	*x = PrivateEvent{}
-	mi := &file_messages_proto_msgTypes[205]
+	mi := &file_messages_proto_msgTypes[206]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15253,7 +15400,7 @@ func (x *PrivateEvent) String() string {
 func (*PrivateEvent) ProtoMessage() {}
 
 func (x *PrivateEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[205]
+	mi := &file_messages_proto_msgTypes[206]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15266,7 +15413,7 @@ func (x *PrivateEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrivateEvent.ProtoReflect.Descriptor instead.
 func (*PrivateEvent) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{205}
+	return file_messages_proto_rawDescGZIP(), []int{206}
 }
 
 func (x *PrivateEvent) GetSpaceName() string {
@@ -15309,7 +15456,7 @@ type PrivateEventBackToPusher struct {
 
 func (x *PrivateEventBackToPusher) Reset() {
 	*x = PrivateEventBackToPusher{}
-	mi := &file_messages_proto_msgTypes[206]
+	mi := &file_messages_proto_msgTypes[207]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15321,7 +15468,7 @@ func (x *PrivateEventBackToPusher) String() string {
 func (*PrivateEventBackToPusher) ProtoMessage() {}
 
 func (x *PrivateEventBackToPusher) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[206]
+	mi := &file_messages_proto_msgTypes[207]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15334,7 +15481,7 @@ func (x *PrivateEventBackToPusher) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrivateEventBackToPusher.ProtoReflect.Descriptor instead.
 func (*PrivateEventBackToPusher) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{206}
+	return file_messages_proto_rawDescGZIP(), []int{207}
 }
 
 func (x *PrivateEventBackToPusher) GetSpaceName() string {
@@ -15377,7 +15524,7 @@ type PrivateEventPusherToFront struct {
 
 func (x *PrivateEventPusherToFront) Reset() {
 	*x = PrivateEventPusherToFront{}
-	mi := &file_messages_proto_msgTypes[207]
+	mi := &file_messages_proto_msgTypes[208]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15389,7 +15536,7 @@ func (x *PrivateEventPusherToFront) String() string {
 func (*PrivateEventPusherToFront) ProtoMessage() {}
 
 func (x *PrivateEventPusherToFront) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[207]
+	mi := &file_messages_proto_msgTypes[208]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15402,7 +15549,7 @@ func (x *PrivateEventPusherToFront) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrivateEventPusherToFront.ProtoReflect.Descriptor instead.
 func (*PrivateEventPusherToFront) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{207}
+	return file_messages_proto_rawDescGZIP(), []int{208}
 }
 
 func (x *PrivateEventPusherToFront) GetSpaceName() string {
@@ -15444,7 +15591,7 @@ type PrivateEventFrontToPusher struct {
 
 func (x *PrivateEventFrontToPusher) Reset() {
 	*x = PrivateEventFrontToPusher{}
-	mi := &file_messages_proto_msgTypes[208]
+	mi := &file_messages_proto_msgTypes[209]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15456,7 +15603,7 @@ func (x *PrivateEventFrontToPusher) String() string {
 func (*PrivateEventFrontToPusher) ProtoMessage() {}
 
 func (x *PrivateEventFrontToPusher) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[208]
+	mi := &file_messages_proto_msgTypes[209]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15469,7 +15616,7 @@ func (x *PrivateEventFrontToPusher) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrivateEventFrontToPusher.ProtoReflect.Descriptor instead.
 func (*PrivateEventFrontToPusher) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{208}
+	return file_messages_proto_rawDescGZIP(), []int{209}
 }
 
 func (x *PrivateEventFrontToPusher) GetSpaceName() string {
@@ -15505,7 +15652,7 @@ type JoinSpaceRequestMessage struct {
 
 func (x *JoinSpaceRequestMessage) Reset() {
 	*x = JoinSpaceRequestMessage{}
-	mi := &file_messages_proto_msgTypes[209]
+	mi := &file_messages_proto_msgTypes[210]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15517,7 +15664,7 @@ func (x *JoinSpaceRequestMessage) String() string {
 func (*JoinSpaceRequestMessage) ProtoMessage() {}
 
 func (x *JoinSpaceRequestMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[209]
+	mi := &file_messages_proto_msgTypes[210]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15530,7 +15677,7 @@ func (x *JoinSpaceRequestMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinSpaceRequestMessage.ProtoReflect.Descriptor instead.
 func (*JoinSpaceRequestMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{209}
+	return file_messages_proto_rawDescGZIP(), []int{210}
 }
 
 func (x *JoinSpaceRequestMessage) GetSpaceName() string {
@@ -15558,7 +15705,7 @@ type LeaveSpaceRequestMessage struct {
 
 func (x *LeaveSpaceRequestMessage) Reset() {
 	*x = LeaveSpaceRequestMessage{}
-	mi := &file_messages_proto_msgTypes[210]
+	mi := &file_messages_proto_msgTypes[211]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15570,7 +15717,7 @@ func (x *LeaveSpaceRequestMessage) String() string {
 func (*LeaveSpaceRequestMessage) ProtoMessage() {}
 
 func (x *LeaveSpaceRequestMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[210]
+	mi := &file_messages_proto_msgTypes[211]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15583,7 +15730,7 @@ func (x *LeaveSpaceRequestMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveSpaceRequestMessage.ProtoReflect.Descriptor instead.
 func (*LeaveSpaceRequestMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{210}
+	return file_messages_proto_rawDescGZIP(), []int{211}
 }
 
 func (x *LeaveSpaceRequestMessage) GetSpaceName() string {
@@ -15604,7 +15751,7 @@ type DuplicateUserConnectedMessage struct {
 
 func (x *DuplicateUserConnectedMessage) Reset() {
 	*x = DuplicateUserConnectedMessage{}
-	mi := &file_messages_proto_msgTypes[211]
+	mi := &file_messages_proto_msgTypes[212]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15616,7 +15763,7 @@ func (x *DuplicateUserConnectedMessage) String() string {
 func (*DuplicateUserConnectedMessage) ProtoMessage() {}
 
 func (x *DuplicateUserConnectedMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[211]
+	mi := &file_messages_proto_msgTypes[212]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15629,7 +15776,7 @@ func (x *DuplicateUserConnectedMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DuplicateUserConnectedMessage.ProtoReflect.Descriptor instead.
 func (*DuplicateUserConnectedMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{211}
+	return file_messages_proto_rawDescGZIP(), []int{212}
 }
 
 // *
@@ -15645,7 +15792,7 @@ type BackConnectionCloseReasonMessage struct {
 
 func (x *BackConnectionCloseReasonMessage) Reset() {
 	*x = BackConnectionCloseReasonMessage{}
-	mi := &file_messages_proto_msgTypes[212]
+	mi := &file_messages_proto_msgTypes[213]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15657,7 +15804,7 @@ func (x *BackConnectionCloseReasonMessage) String() string {
 func (*BackConnectionCloseReasonMessage) ProtoMessage() {}
 
 func (x *BackConnectionCloseReasonMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[212]
+	mi := &file_messages_proto_msgTypes[213]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15670,7 +15817,7 @@ func (x *BackConnectionCloseReasonMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackConnectionCloseReasonMessage.ProtoReflect.Descriptor instead.
 func (*BackConnectionCloseReasonMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{212}
+	return file_messages_proto_rawDescGZIP(), []int{213}
 }
 
 func (x *BackConnectionCloseReasonMessage) GetReason() string {
@@ -15723,7 +15870,7 @@ type ServerToClientMessage struct {
 
 func (x *ServerToClientMessage) Reset() {
 	*x = ServerToClientMessage{}
-	mi := &file_messages_proto_msgTypes[213]
+	mi := &file_messages_proto_msgTypes[214]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15735,7 +15882,7 @@ func (x *ServerToClientMessage) String() string {
 func (*ServerToClientMessage) ProtoMessage() {}
 
 func (x *ServerToClientMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[213]
+	mi := &file_messages_proto_msgTypes[214]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15748,7 +15895,7 @@ func (x *ServerToClientMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerToClientMessage.ProtoReflect.Descriptor instead.
 func (*ServerToClientMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{213}
+	return file_messages_proto_rawDescGZIP(), []int{214}
 }
 
 func (x *ServerToClientMessage) GetMessage() isServerToClientMessage_Message {
@@ -16225,13 +16372,14 @@ type ConnectToRoomMessage struct {
 	RoomId        string                  `protobuf:"bytes,1,opt,name=roomId,proto3" json:"roomId,omitempty"`
 	LastCommandId *wrapperspb.StringValue `protobuf:"bytes,2,opt,name=lastCommandId,proto3" json:"lastCommandId,omitempty"`
 	Tag           []string                `protobuf:"bytes,3,rep,name=tag,proto3" json:"tag,omitempty"`
+	CanEdit       bool                    `protobuf:"varint,4,opt,name=canEdit,proto3" json:"canEdit,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *ConnectToRoomMessage) Reset() {
 	*x = ConnectToRoomMessage{}
-	mi := &file_messages_proto_msgTypes[214]
+	mi := &file_messages_proto_msgTypes[215]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16243,7 +16391,7 @@ func (x *ConnectToRoomMessage) String() string {
 func (*ConnectToRoomMessage) ProtoMessage() {}
 
 func (x *ConnectToRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[214]
+	mi := &file_messages_proto_msgTypes[215]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16256,7 +16404,7 @@ func (x *ConnectToRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectToRoomMessage.ProtoReflect.Descriptor instead.
 func (*ConnectToRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{214}
+	return file_messages_proto_rawDescGZIP(), []int{215}
 }
 
 func (x *ConnectToRoomMessage) GetRoomId() string {
@@ -16280,6 +16428,13 @@ func (x *ConnectToRoomMessage) GetTag() []string {
 	return nil
 }
 
+func (x *ConnectToRoomMessage) GetCanEdit() bool {
+	if x != nil {
+		return x.CanEdit
+	}
+	return false
+}
+
 // *
 // Message sent by the client to the pusher when joining a room
 type JoinRoomFrontMessage struct {
@@ -16294,7 +16449,7 @@ type JoinRoomFrontMessage struct {
 
 func (x *JoinRoomFrontMessage) Reset() {
 	*x = JoinRoomFrontMessage{}
-	mi := &file_messages_proto_msgTypes[215]
+	mi := &file_messages_proto_msgTypes[216]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16306,7 +16461,7 @@ func (x *JoinRoomFrontMessage) String() string {
 func (*JoinRoomFrontMessage) ProtoMessage() {}
 
 func (x *JoinRoomFrontMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[215]
+	mi := &file_messages_proto_msgTypes[216]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16319,7 +16474,7 @@ func (x *JoinRoomFrontMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinRoomFrontMessage.ProtoReflect.Descriptor instead.
 func (*JoinRoomFrontMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{215}
+	return file_messages_proto_rawDescGZIP(), []int{216}
 }
 
 func (x *JoinRoomFrontMessage) GetPositionMessage() *PositionMessage {
@@ -16379,7 +16534,7 @@ type JoinRoomMessage struct {
 
 func (x *JoinRoomMessage) Reset() {
 	*x = JoinRoomMessage{}
-	mi := &file_messages_proto_msgTypes[216]
+	mi := &file_messages_proto_msgTypes[217]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16391,7 +16546,7 @@ func (x *JoinRoomMessage) String() string {
 func (*JoinRoomMessage) ProtoMessage() {}
 
 func (x *JoinRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[216]
+	mi := &file_messages_proto_msgTypes[217]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16404,7 +16559,7 @@ func (x *JoinRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinRoomMessage.ProtoReflect.Descriptor instead.
 func (*JoinRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{216}
+	return file_messages_proto_rawDescGZIP(), []int{217}
 }
 
 func (x *JoinRoomMessage) GetPositionMessage() *PositionMessage {
@@ -16541,7 +16696,7 @@ type UserJoinedZoneMessage struct {
 
 func (x *UserJoinedZoneMessage) Reset() {
 	*x = UserJoinedZoneMessage{}
-	mi := &file_messages_proto_msgTypes[217]
+	mi := &file_messages_proto_msgTypes[218]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16553,7 +16708,7 @@ func (x *UserJoinedZoneMessage) String() string {
 func (*UserJoinedZoneMessage) ProtoMessage() {}
 
 func (x *UserJoinedZoneMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[217]
+	mi := &file_messages_proto_msgTypes[218]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16566,7 +16721,7 @@ func (x *UserJoinedZoneMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserJoinedZoneMessage.ProtoReflect.Descriptor instead.
 func (*UserJoinedZoneMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{217}
+	return file_messages_proto_rawDescGZIP(), []int{218}
 }
 
 func (x *UserJoinedZoneMessage) GetUserId() int32 {
@@ -16677,7 +16832,7 @@ type UserLeftZoneMessage struct {
 
 func (x *UserLeftZoneMessage) Reset() {
 	*x = UserLeftZoneMessage{}
-	mi := &file_messages_proto_msgTypes[218]
+	mi := &file_messages_proto_msgTypes[219]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16689,7 +16844,7 @@ func (x *UserLeftZoneMessage) String() string {
 func (*UserLeftZoneMessage) ProtoMessage() {}
 
 func (x *UserLeftZoneMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[218]
+	mi := &file_messages_proto_msgTypes[219]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16702,7 +16857,7 @@ func (x *UserLeftZoneMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserLeftZoneMessage.ProtoReflect.Descriptor instead.
 func (*UserLeftZoneMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{218}
+	return file_messages_proto_rawDescGZIP(), []int{219}
 }
 
 func (x *UserLeftZoneMessage) GetUserId() int32 {
@@ -16733,7 +16888,7 @@ type GroupUpdateZoneMessage struct {
 
 func (x *GroupUpdateZoneMessage) Reset() {
 	*x = GroupUpdateZoneMessage{}
-	mi := &file_messages_proto_msgTypes[219]
+	mi := &file_messages_proto_msgTypes[220]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16745,7 +16900,7 @@ func (x *GroupUpdateZoneMessage) String() string {
 func (*GroupUpdateZoneMessage) ProtoMessage() {}
 
 func (x *GroupUpdateZoneMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[219]
+	mi := &file_messages_proto_msgTypes[220]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16758,7 +16913,7 @@ func (x *GroupUpdateZoneMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GroupUpdateZoneMessage.ProtoReflect.Descriptor instead.
 func (*GroupUpdateZoneMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{219}
+	return file_messages_proto_rawDescGZIP(), []int{220}
 }
 
 func (x *GroupUpdateZoneMessage) GetGroupId() int32 {
@@ -16813,7 +16968,7 @@ type GroupLeftZoneMessage struct {
 
 func (x *GroupLeftZoneMessage) Reset() {
 	*x = GroupLeftZoneMessage{}
-	mi := &file_messages_proto_msgTypes[220]
+	mi := &file_messages_proto_msgTypes[221]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16825,7 +16980,7 @@ func (x *GroupLeftZoneMessage) String() string {
 func (*GroupLeftZoneMessage) ProtoMessage() {}
 
 func (x *GroupLeftZoneMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[220]
+	mi := &file_messages_proto_msgTypes[221]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16838,7 +16993,7 @@ func (x *GroupLeftZoneMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GroupLeftZoneMessage.ProtoReflect.Descriptor instead.
 func (*GroupLeftZoneMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{220}
+	return file_messages_proto_rawDescGZIP(), []int{221}
 }
 
 func (x *GroupLeftZoneMessage) GetGroupId() int32 {
@@ -16865,7 +17020,7 @@ type PlayerDetailsUpdatedMessage struct {
 
 func (x *PlayerDetailsUpdatedMessage) Reset() {
 	*x = PlayerDetailsUpdatedMessage{}
-	mi := &file_messages_proto_msgTypes[221]
+	mi := &file_messages_proto_msgTypes[222]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16877,7 +17032,7 @@ func (x *PlayerDetailsUpdatedMessage) String() string {
 func (*PlayerDetailsUpdatedMessage) ProtoMessage() {}
 
 func (x *PlayerDetailsUpdatedMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[221]
+	mi := &file_messages_proto_msgTypes[222]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16890,7 +17045,7 @@ func (x *PlayerDetailsUpdatedMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PlayerDetailsUpdatedMessage.ProtoReflect.Descriptor instead.
 func (*PlayerDetailsUpdatedMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{221}
+	return file_messages_proto_rawDescGZIP(), []int{222}
 }
 
 func (x *PlayerDetailsUpdatedMessage) GetUserId() int32 {
@@ -16917,7 +17072,7 @@ type Zone struct {
 
 func (x *Zone) Reset() {
 	*x = Zone{}
-	mi := &file_messages_proto_msgTypes[222]
+	mi := &file_messages_proto_msgTypes[223]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16929,7 +17084,7 @@ func (x *Zone) String() string {
 func (*Zone) ProtoMessage() {}
 
 func (x *Zone) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[222]
+	mi := &file_messages_proto_msgTypes[223]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16942,7 +17097,7 @@ func (x *Zone) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Zone.ProtoReflect.Descriptor instead.
 func (*Zone) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{222}
+	return file_messages_proto_rawDescGZIP(), []int{223}
 }
 
 func (x *Zone) GetX() int32 {
@@ -16969,7 +17124,7 @@ type SubscribeZoneMessage struct {
 
 func (x *SubscribeZoneMessage) Reset() {
 	*x = SubscribeZoneMessage{}
-	mi := &file_messages_proto_msgTypes[223]
+	mi := &file_messages_proto_msgTypes[224]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16981,7 +17136,7 @@ func (x *SubscribeZoneMessage) String() string {
 func (*SubscribeZoneMessage) ProtoMessage() {}
 
 func (x *SubscribeZoneMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[223]
+	mi := &file_messages_proto_msgTypes[224]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16994,7 +17149,7 @@ func (x *SubscribeZoneMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubscribeZoneMessage.ProtoReflect.Descriptor instead.
 func (*SubscribeZoneMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{223}
+	return file_messages_proto_rawDescGZIP(), []int{224}
 }
 
 func (x *SubscribeZoneMessage) GetX() int32 {
@@ -17021,7 +17176,7 @@ type UnsubscribeZoneMessage struct {
 
 func (x *UnsubscribeZoneMessage) Reset() {
 	*x = UnsubscribeZoneMessage{}
-	mi := &file_messages_proto_msgTypes[224]
+	mi := &file_messages_proto_msgTypes[225]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17033,7 +17188,7 @@ func (x *UnsubscribeZoneMessage) String() string {
 func (*UnsubscribeZoneMessage) ProtoMessage() {}
 
 func (x *UnsubscribeZoneMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[224]
+	mi := &file_messages_proto_msgTypes[225]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17046,7 +17201,7 @@ func (x *UnsubscribeZoneMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnsubscribeZoneMessage.ProtoReflect.Descriptor instead.
 func (*UnsubscribeZoneMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{224}
+	return file_messages_proto_rawDescGZIP(), []int{225}
 }
 
 func (x *UnsubscribeZoneMessage) GetX() int32 {
@@ -17072,7 +17227,7 @@ type RoomMessage struct {
 
 func (x *RoomMessage) Reset() {
 	*x = RoomMessage{}
-	mi := &file_messages_proto_msgTypes[225]
+	mi := &file_messages_proto_msgTypes[226]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17084,7 +17239,7 @@ func (x *RoomMessage) String() string {
 func (*RoomMessage) ProtoMessage() {}
 
 func (x *RoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[225]
+	mi := &file_messages_proto_msgTypes[226]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17097,7 +17252,7 @@ func (x *RoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoomMessage.ProtoReflect.Descriptor instead.
 func (*RoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{225}
+	return file_messages_proto_rawDescGZIP(), []int{226}
 }
 
 func (x *RoomMessage) GetRoomId() string {
@@ -17121,7 +17276,7 @@ type PusherToBackRoomMessage struct {
 
 func (x *PusherToBackRoomMessage) Reset() {
 	*x = PusherToBackRoomMessage{}
-	mi := &file_messages_proto_msgTypes[226]
+	mi := &file_messages_proto_msgTypes[227]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17133,7 +17288,7 @@ func (x *PusherToBackRoomMessage) String() string {
 func (*PusherToBackRoomMessage) ProtoMessage() {}
 
 func (x *PusherToBackRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[226]
+	mi := &file_messages_proto_msgTypes[227]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17146,7 +17301,7 @@ func (x *PusherToBackRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PusherToBackRoomMessage.ProtoReflect.Descriptor instead.
 func (*PusherToBackRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{226}
+	return file_messages_proto_rawDescGZIP(), []int{227}
 }
 
 func (x *PusherToBackRoomMessage) GetMessage() isPusherToBackRoomMessage_Message {
@@ -17214,7 +17369,7 @@ type InitRoomMessage struct {
 
 func (x *InitRoomMessage) Reset() {
 	*x = InitRoomMessage{}
-	mi := &file_messages_proto_msgTypes[227]
+	mi := &file_messages_proto_msgTypes[228]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17226,7 +17381,7 @@ func (x *InitRoomMessage) String() string {
 func (*InitRoomMessage) ProtoMessage() {}
 
 func (x *InitRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[227]
+	mi := &file_messages_proto_msgTypes[228]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17239,7 +17394,7 @@ func (x *InitRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InitRoomMessage.ProtoReflect.Descriptor instead.
 func (*InitRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{227}
+	return file_messages_proto_rawDescGZIP(), []int{228}
 }
 
 func (x *InitRoomMessage) GetRoomId() string {
@@ -17282,7 +17437,7 @@ type PusherToBackMessage struct {
 
 func (x *PusherToBackMessage) Reset() {
 	*x = PusherToBackMessage{}
-	mi := &file_messages_proto_msgTypes[228]
+	mi := &file_messages_proto_msgTypes[229]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17294,7 +17449,7 @@ func (x *PusherToBackMessage) String() string {
 func (*PusherToBackMessage) ProtoMessage() {}
 
 func (x *PusherToBackMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[228]
+	mi := &file_messages_proto_msgTypes[229]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17307,7 +17462,7 @@ func (x *PusherToBackMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PusherToBackMessage.ProtoReflect.Descriptor instead.
 func (*PusherToBackMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{228}
+	return file_messages_proto_rawDescGZIP(), []int{229}
 }
 
 func (x *PusherToBackMessage) GetMessage() isPusherToBackMessage_Message {
@@ -17660,7 +17815,7 @@ type BatchToPusherRoomMessage struct {
 
 func (x *BatchToPusherRoomMessage) Reset() {
 	*x = BatchToPusherRoomMessage{}
-	mi := &file_messages_proto_msgTypes[229]
+	mi := &file_messages_proto_msgTypes[230]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17672,7 +17827,7 @@ func (x *BatchToPusherRoomMessage) String() string {
 func (*BatchToPusherRoomMessage) ProtoMessage() {}
 
 func (x *BatchToPusherRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[229]
+	mi := &file_messages_proto_msgTypes[230]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17685,7 +17840,7 @@ func (x *BatchToPusherRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BatchToPusherRoomMessage.ProtoReflect.Descriptor instead.
 func (*BatchToPusherRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{229}
+	return file_messages_proto_rawDescGZIP(), []int{230}
 }
 
 func (x *BatchToPusherRoomMessage) GetPayload() []*SubToPusherRoomMessage {
@@ -17713,7 +17868,7 @@ type SubToPusherRoomMessage struct {
 
 func (x *SubToPusherRoomMessage) Reset() {
 	*x = SubToPusherRoomMessage{}
-	mi := &file_messages_proto_msgTypes[230]
+	mi := &file_messages_proto_msgTypes[231]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17725,7 +17880,7 @@ func (x *SubToPusherRoomMessage) String() string {
 func (*SubToPusherRoomMessage) ProtoMessage() {}
 
 func (x *SubToPusherRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[230]
+	mi := &file_messages_proto_msgTypes[231]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17738,7 +17893,7 @@ func (x *SubToPusherRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SubToPusherRoomMessage.ProtoReflect.Descriptor instead.
 func (*SubToPusherRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{230}
+	return file_messages_proto_rawDescGZIP(), []int{231}
 }
 
 func (x *SubToPusherRoomMessage) GetMessage() isSubToPusherRoomMessage_Message {
@@ -17870,7 +18025,7 @@ type UserJoinedRoomMessage struct {
 
 func (x *UserJoinedRoomMessage) Reset() {
 	*x = UserJoinedRoomMessage{}
-	mi := &file_messages_proto_msgTypes[231]
+	mi := &file_messages_proto_msgTypes[232]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17882,7 +18037,7 @@ func (x *UserJoinedRoomMessage) String() string {
 func (*UserJoinedRoomMessage) ProtoMessage() {}
 
 func (x *UserJoinedRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[231]
+	mi := &file_messages_proto_msgTypes[232]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17895,7 +18050,7 @@ func (x *UserJoinedRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserJoinedRoomMessage.ProtoReflect.Descriptor instead.
 func (*UserJoinedRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{231}
+	return file_messages_proto_rawDescGZIP(), []int{232}
 }
 
 func (x *UserJoinedRoomMessage) GetUuid() string {
@@ -17928,7 +18083,7 @@ type UserLeftRoomMessage struct {
 
 func (x *UserLeftRoomMessage) Reset() {
 	*x = UserLeftRoomMessage{}
-	mi := &file_messages_proto_msgTypes[232]
+	mi := &file_messages_proto_msgTypes[233]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17940,7 +18095,7 @@ func (x *UserLeftRoomMessage) String() string {
 func (*UserLeftRoomMessage) ProtoMessage() {}
 
 func (x *UserLeftRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[232]
+	mi := &file_messages_proto_msgTypes[233]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17953,7 +18108,7 @@ func (x *UserLeftRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserLeftRoomMessage.ProtoReflect.Descriptor instead.
 func (*UserLeftRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{232}
+	return file_messages_proto_rawDescGZIP(), []int{233}
 }
 
 func (x *UserLeftRoomMessage) GetUuid() string {
@@ -17977,7 +18132,7 @@ type ServerToAdminClientMessage struct {
 
 func (x *ServerToAdminClientMessage) Reset() {
 	*x = ServerToAdminClientMessage{}
-	mi := &file_messages_proto_msgTypes[233]
+	mi := &file_messages_proto_msgTypes[234]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17989,7 +18144,7 @@ func (x *ServerToAdminClientMessage) String() string {
 func (*ServerToAdminClientMessage) ProtoMessage() {}
 
 func (x *ServerToAdminClientMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[233]
+	mi := &file_messages_proto_msgTypes[234]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18002,7 +18157,7 @@ func (x *ServerToAdminClientMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerToAdminClientMessage.ProtoReflect.Descriptor instead.
 func (*ServerToAdminClientMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{233}
+	return file_messages_proto_rawDescGZIP(), []int{234}
 }
 
 func (x *ServerToAdminClientMessage) GetMessage() isServerToAdminClientMessage_Message {
@@ -18073,7 +18228,7 @@ type AdminPusherToBackMessage struct {
 
 func (x *AdminPusherToBackMessage) Reset() {
 	*x = AdminPusherToBackMessage{}
-	mi := &file_messages_proto_msgTypes[234]
+	mi := &file_messages_proto_msgTypes[235]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18085,7 +18240,7 @@ func (x *AdminPusherToBackMessage) String() string {
 func (*AdminPusherToBackMessage) ProtoMessage() {}
 
 func (x *AdminPusherToBackMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[234]
+	mi := &file_messages_proto_msgTypes[235]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18098,7 +18253,7 @@ func (x *AdminPusherToBackMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminPusherToBackMessage.ProtoReflect.Descriptor instead.
 func (*AdminPusherToBackMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{234}
+	return file_messages_proto_rawDescGZIP(), []int{235}
 }
 
 func (x *AdminPusherToBackMessage) GetMessage() isAdminPusherToBackMessage_Message {
@@ -18136,7 +18291,7 @@ type MapStorageRefreshMessage struct {
 
 func (x *MapStorageRefreshMessage) Reset() {
 	*x = MapStorageRefreshMessage{}
-	mi := &file_messages_proto_msgTypes[235]
+	mi := &file_messages_proto_msgTypes[236]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18148,7 +18303,7 @@ func (x *MapStorageRefreshMessage) String() string {
 func (*MapStorageRefreshMessage) ProtoMessage() {}
 
 func (x *MapStorageRefreshMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[235]
+	mi := &file_messages_proto_msgTypes[236]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18161,7 +18316,7 @@ func (x *MapStorageRefreshMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MapStorageRefreshMessage.ProtoReflect.Descriptor instead.
 func (*MapStorageRefreshMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{235}
+	return file_messages_proto_rawDescGZIP(), []int{236}
 }
 
 func (x *MapStorageRefreshMessage) GetComment() string {
@@ -18183,7 +18338,7 @@ type MapStorageToBackMessage struct {
 
 func (x *MapStorageToBackMessage) Reset() {
 	*x = MapStorageToBackMessage{}
-	mi := &file_messages_proto_msgTypes[236]
+	mi := &file_messages_proto_msgTypes[237]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18195,7 +18350,7 @@ func (x *MapStorageToBackMessage) String() string {
 func (*MapStorageToBackMessage) ProtoMessage() {}
 
 func (x *MapStorageToBackMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[236]
+	mi := &file_messages_proto_msgTypes[237]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18208,7 +18363,7 @@ func (x *MapStorageToBackMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MapStorageToBackMessage.ProtoReflect.Descriptor instead.
 func (*MapStorageToBackMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{236}
+	return file_messages_proto_rawDescGZIP(), []int{237}
 }
 
 func (x *MapStorageToBackMessage) GetMessage() isMapStorageToBackMessage_Message {
@@ -18247,7 +18402,7 @@ type MapStorageUrlMessage struct {
 
 func (x *MapStorageUrlMessage) Reset() {
 	*x = MapStorageUrlMessage{}
-	mi := &file_messages_proto_msgTypes[237]
+	mi := &file_messages_proto_msgTypes[238]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18259,7 +18414,7 @@ func (x *MapStorageUrlMessage) String() string {
 func (*MapStorageUrlMessage) ProtoMessage() {}
 
 func (x *MapStorageUrlMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[237]
+	mi := &file_messages_proto_msgTypes[238]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18272,7 +18427,7 @@ func (x *MapStorageUrlMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MapStorageUrlMessage.ProtoReflect.Descriptor instead.
 func (*MapStorageUrlMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{237}
+	return file_messages_proto_rawDescGZIP(), []int{238}
 }
 
 func (x *MapStorageUrlMessage) GetMapUrl() string {
@@ -18298,7 +18453,7 @@ type MapStorageClearAfterUploadMessage struct {
 
 func (x *MapStorageClearAfterUploadMessage) Reset() {
 	*x = MapStorageClearAfterUploadMessage{}
-	mi := &file_messages_proto_msgTypes[238]
+	mi := &file_messages_proto_msgTypes[239]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18310,7 +18465,7 @@ func (x *MapStorageClearAfterUploadMessage) String() string {
 func (*MapStorageClearAfterUploadMessage) ProtoMessage() {}
 
 func (x *MapStorageClearAfterUploadMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[238]
+	mi := &file_messages_proto_msgTypes[239]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18323,7 +18478,7 @@ func (x *MapStorageClearAfterUploadMessage) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use MapStorageClearAfterUploadMessage.ProtoReflect.Descriptor instead.
 func (*MapStorageClearAfterUploadMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{238}
+	return file_messages_proto_rawDescGZIP(), []int{239}
 }
 
 func (x *MapStorageClearAfterUploadMessage) GetWamUrl() string {
@@ -18342,7 +18497,7 @@ type MapStorageDeleteMessage struct {
 
 func (x *MapStorageDeleteMessage) Reset() {
 	*x = MapStorageDeleteMessage{}
-	mi := &file_messages_proto_msgTypes[239]
+	mi := &file_messages_proto_msgTypes[240]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18354,7 +18509,7 @@ func (x *MapStorageDeleteMessage) String() string {
 func (*MapStorageDeleteMessage) ProtoMessage() {}
 
 func (x *MapStorageDeleteMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[239]
+	mi := &file_messages_proto_msgTypes[240]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18367,7 +18522,7 @@ func (x *MapStorageDeleteMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MapStorageDeleteMessage.ProtoReflect.Descriptor instead.
 func (*MapStorageDeleteMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{239}
+	return file_messages_proto_rawDescGZIP(), []int{240}
 }
 
 func (x *MapStorageDeleteMessage) GetWamUrl() string {
@@ -18389,7 +18544,7 @@ type AdminRoomMessage struct {
 
 func (x *AdminRoomMessage) Reset() {
 	*x = AdminRoomMessage{}
-	mi := &file_messages_proto_msgTypes[240]
+	mi := &file_messages_proto_msgTypes[241]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18401,7 +18556,7 @@ func (x *AdminRoomMessage) String() string {
 func (*AdminRoomMessage) ProtoMessage() {}
 
 func (x *AdminRoomMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[240]
+	mi := &file_messages_proto_msgTypes[241]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18414,7 +18569,7 @@ func (x *AdminRoomMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminRoomMessage.ProtoReflect.Descriptor instead.
 func (*AdminRoomMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{240}
+	return file_messages_proto_rawDescGZIP(), []int{241}
 }
 
 func (x *AdminRoomMessage) GetMessage() string {
@@ -18448,7 +18603,7 @@ type AdminGlobalMessage struct {
 
 func (x *AdminGlobalMessage) Reset() {
 	*x = AdminGlobalMessage{}
-	mi := &file_messages_proto_msgTypes[241]
+	mi := &file_messages_proto_msgTypes[242]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18460,7 +18615,7 @@ func (x *AdminGlobalMessage) String() string {
 func (*AdminGlobalMessage) ProtoMessage() {}
 
 func (x *AdminGlobalMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[241]
+	mi := &file_messages_proto_msgTypes[242]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18473,7 +18628,7 @@ func (x *AdminGlobalMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminGlobalMessage.ProtoReflect.Descriptor instead.
 func (*AdminGlobalMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{241}
+	return file_messages_proto_rawDescGZIP(), []int{242}
 }
 
 func (x *AdminGlobalMessage) GetMessage() string {
@@ -18495,7 +18650,7 @@ type BanMessage struct {
 
 func (x *BanMessage) Reset() {
 	*x = BanMessage{}
-	mi := &file_messages_proto_msgTypes[242]
+	mi := &file_messages_proto_msgTypes[243]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18507,7 +18662,7 @@ func (x *BanMessage) String() string {
 func (*BanMessage) ProtoMessage() {}
 
 func (x *BanMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[242]
+	mi := &file_messages_proto_msgTypes[243]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18520,7 +18675,7 @@ func (x *BanMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BanMessage.ProtoReflect.Descriptor instead.
 func (*BanMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{242}
+	return file_messages_proto_rawDescGZIP(), []int{243}
 }
 
 func (x *BanMessage) GetRecipientUuid() string {
@@ -18561,7 +18716,7 @@ type RoomDescription struct {
 
 func (x *RoomDescription) Reset() {
 	*x = RoomDescription{}
-	mi := &file_messages_proto_msgTypes[243]
+	mi := &file_messages_proto_msgTypes[244]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18573,7 +18728,7 @@ func (x *RoomDescription) String() string {
 func (*RoomDescription) ProtoMessage() {}
 
 func (x *RoomDescription) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[243]
+	mi := &file_messages_proto_msgTypes[244]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18586,7 +18741,7 @@ func (x *RoomDescription) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoomDescription.ProtoReflect.Descriptor instead.
 func (*RoomDescription) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{243}
+	return file_messages_proto_rawDescGZIP(), []int{244}
 }
 
 func (x *RoomDescription) GetRoomId() string {
@@ -18612,7 +18767,7 @@ type RoomsList struct {
 
 func (x *RoomsList) Reset() {
 	*x = RoomsList{}
-	mi := &file_messages_proto_msgTypes[244]
+	mi := &file_messages_proto_msgTypes[245]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18624,7 +18779,7 @@ func (x *RoomsList) String() string {
 func (*RoomsList) ProtoMessage() {}
 
 func (x *RoomsList) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[244]
+	mi := &file_messages_proto_msgTypes[245]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18637,7 +18792,7 @@ func (x *RoomsList) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RoomsList.ProtoReflect.Descriptor instead.
 func (*RoomsList) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{244}
+	return file_messages_proto_rawDescGZIP(), []int{245}
 }
 
 func (x *RoomsList) GetRoomDescription() []*RoomDescription {
@@ -18657,7 +18812,7 @@ type WorldUsersQuery struct {
 
 func (x *WorldUsersQuery) Reset() {
 	*x = WorldUsersQuery{}
-	mi := &file_messages_proto_msgTypes[245]
+	mi := &file_messages_proto_msgTypes[246]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18669,7 +18824,7 @@ func (x *WorldUsersQuery) String() string {
 func (*WorldUsersQuery) ProtoMessage() {}
 
 func (x *WorldUsersQuery) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[245]
+	mi := &file_messages_proto_msgTypes[246]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18682,7 +18837,7 @@ func (x *WorldUsersQuery) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorldUsersQuery.ProtoReflect.Descriptor instead.
 func (*WorldUsersQuery) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{245}
+	return file_messages_proto_rawDescGZIP(), []int{246}
 }
 
 func (x *WorldUsersQuery) GetWorld() string {
@@ -18705,7 +18860,7 @@ type WorldUser struct {
 
 func (x *WorldUser) Reset() {
 	*x = WorldUser{}
-	mi := &file_messages_proto_msgTypes[246]
+	mi := &file_messages_proto_msgTypes[247]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18717,7 +18872,7 @@ func (x *WorldUser) String() string {
 func (*WorldUser) ProtoMessage() {}
 
 func (x *WorldUser) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[246]
+	mi := &file_messages_proto_msgTypes[247]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18730,7 +18885,7 @@ func (x *WorldUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorldUser.ProtoReflect.Descriptor instead.
 func (*WorldUser) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{246}
+	return file_messages_proto_rawDescGZIP(), []int{247}
 }
 
 func (x *WorldUser) GetUuid() string {
@@ -18770,7 +18925,7 @@ type WorldUsersAnswer struct {
 
 func (x *WorldUsersAnswer) Reset() {
 	*x = WorldUsersAnswer{}
-	mi := &file_messages_proto_msgTypes[247]
+	mi := &file_messages_proto_msgTypes[248]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18782,7 +18937,7 @@ func (x *WorldUsersAnswer) String() string {
 func (*WorldUsersAnswer) ProtoMessage() {}
 
 func (x *WorldUsersAnswer) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[247]
+	mi := &file_messages_proto_msgTypes[248]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18795,7 +18950,7 @@ func (x *WorldUsersAnswer) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorldUsersAnswer.ProtoReflect.Descriptor instead.
 func (*WorldUsersAnswer) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{247}
+	return file_messages_proto_rawDescGZIP(), []int{248}
 }
 
 func (x *WorldUsersAnswer) GetUsers() []*WorldUser {
@@ -18816,7 +18971,7 @@ type DispatchGlobalEventRequest struct {
 
 func (x *DispatchGlobalEventRequest) Reset() {
 	*x = DispatchGlobalEventRequest{}
-	mi := &file_messages_proto_msgTypes[248]
+	mi := &file_messages_proto_msgTypes[249]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18828,7 +18983,7 @@ func (x *DispatchGlobalEventRequest) String() string {
 func (*DispatchGlobalEventRequest) ProtoMessage() {}
 
 func (x *DispatchGlobalEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[248]
+	mi := &file_messages_proto_msgTypes[249]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18841,7 +18996,7 @@ func (x *DispatchGlobalEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DispatchGlobalEventRequest.ProtoReflect.Descriptor instead.
 func (*DispatchGlobalEventRequest) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{248}
+	return file_messages_proto_rawDescGZIP(), []int{249}
 }
 
 func (x *DispatchGlobalEventRequest) GetName() string {
@@ -18874,7 +19029,7 @@ type ExternalModuleMessage struct {
 
 func (x *ExternalModuleMessage) Reset() {
 	*x = ExternalModuleMessage{}
-	mi := &file_messages_proto_msgTypes[249]
+	mi := &file_messages_proto_msgTypes[250]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18886,7 +19041,7 @@ func (x *ExternalModuleMessage) String() string {
 func (*ExternalModuleMessage) ProtoMessage() {}
 
 func (x *ExternalModuleMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[249]
+	mi := &file_messages_proto_msgTypes[250]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18899,7 +19054,7 @@ func (x *ExternalModuleMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExternalModuleMessage.ProtoReflect.Descriptor instead.
 func (*ExternalModuleMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{249}
+	return file_messages_proto_rawDescGZIP(), []int{250}
 }
 
 func (x *ExternalModuleMessage) GetModuleId() string {
@@ -18957,7 +19112,7 @@ type PusherToBackSpaceMessage struct {
 
 func (x *PusherToBackSpaceMessage) Reset() {
 	*x = PusherToBackSpaceMessage{}
-	mi := &file_messages_proto_msgTypes[250]
+	mi := &file_messages_proto_msgTypes[251]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18969,7 +19124,7 @@ func (x *PusherToBackSpaceMessage) String() string {
 func (*PusherToBackSpaceMessage) ProtoMessage() {}
 
 func (x *PusherToBackSpaceMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[250]
+	mi := &file_messages_proto_msgTypes[251]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18982,7 +19137,7 @@ func (x *PusherToBackSpaceMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PusherToBackSpaceMessage.ProtoReflect.Descriptor instead.
 func (*PusherToBackSpaceMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{250}
+	return file_messages_proto_rawDescGZIP(), []int{251}
 }
 
 func (x *PusherToBackSpaceMessage) GetMessage() isPusherToBackSpaceMessage_Message {
@@ -19216,7 +19371,7 @@ type BackToPusherSpaceMessage struct {
 
 func (x *BackToPusherSpaceMessage) Reset() {
 	*x = BackToPusherSpaceMessage{}
-	mi := &file_messages_proto_msgTypes[251]
+	mi := &file_messages_proto_msgTypes[252]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19228,7 +19383,7 @@ func (x *BackToPusherSpaceMessage) String() string {
 func (*BackToPusherSpaceMessage) ProtoMessage() {}
 
 func (x *BackToPusherSpaceMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[251]
+	mi := &file_messages_proto_msgTypes[252]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19241,7 +19396,7 @@ func (x *BackToPusherSpaceMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BackToPusherSpaceMessage.ProtoReflect.Descriptor instead.
 func (*BackToPusherSpaceMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{251}
+	return file_messages_proto_rawDescGZIP(), []int{252}
 }
 
 func (x *BackToPusherSpaceMessage) GetMessage() isBackToPusherSpaceMessage_Message {
@@ -19435,7 +19590,7 @@ type JoinSpaceMessage struct {
 
 func (x *JoinSpaceMessage) Reset() {
 	*x = JoinSpaceMessage{}
-	mi := &file_messages_proto_msgTypes[252]
+	mi := &file_messages_proto_msgTypes[253]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19447,7 +19602,7 @@ func (x *JoinSpaceMessage) String() string {
 func (*JoinSpaceMessage) ProtoMessage() {}
 
 func (x *JoinSpaceMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[252]
+	mi := &file_messages_proto_msgTypes[253]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19460,7 +19615,7 @@ func (x *JoinSpaceMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinSpaceMessage.ProtoReflect.Descriptor instead.
 func (*JoinSpaceMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{252}
+	return file_messages_proto_rawDescGZIP(), []int{253}
 }
 
 func (x *JoinSpaceMessage) GetSpaceName() string {
@@ -19500,7 +19655,7 @@ type LeaveSpaceMessage struct {
 
 func (x *LeaveSpaceMessage) Reset() {
 	*x = LeaveSpaceMessage{}
-	mi := &file_messages_proto_msgTypes[253]
+	mi := &file_messages_proto_msgTypes[254]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19512,7 +19667,7 @@ func (x *LeaveSpaceMessage) String() string {
 func (*LeaveSpaceMessage) ProtoMessage() {}
 
 func (x *LeaveSpaceMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[253]
+	mi := &file_messages_proto_msgTypes[254]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19525,7 +19680,7 @@ func (x *LeaveSpaceMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LeaveSpaceMessage.ProtoReflect.Descriptor instead.
 func (*LeaveSpaceMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{253}
+	return file_messages_proto_rawDescGZIP(), []int{254}
 }
 
 func (x *LeaveSpaceMessage) GetSpaceName() string {
@@ -19565,7 +19720,7 @@ type SpaceUser struct {
 
 func (x *SpaceUser) Reset() {
 	*x = SpaceUser{}
-	mi := &file_messages_proto_msgTypes[254]
+	mi := &file_messages_proto_msgTypes[255]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19577,7 +19732,7 @@ func (x *SpaceUser) String() string {
 func (*SpaceUser) ProtoMessage() {}
 
 func (x *SpaceUser) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[254]
+	mi := &file_messages_proto_msgTypes[255]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19590,7 +19745,7 @@ func (x *SpaceUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpaceUser.ProtoReflect.Descriptor instead.
 func (*SpaceUser) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{254}
+	return file_messages_proto_rawDescGZIP(), []int{255}
 }
 
 func (x *SpaceUser) GetSpaceUserId() string {
@@ -19745,7 +19900,7 @@ type AddSpaceUserMessage struct {
 
 func (x *AddSpaceUserMessage) Reset() {
 	*x = AddSpaceUserMessage{}
-	mi := &file_messages_proto_msgTypes[255]
+	mi := &file_messages_proto_msgTypes[256]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19757,7 +19912,7 @@ func (x *AddSpaceUserMessage) String() string {
 func (*AddSpaceUserMessage) ProtoMessage() {}
 
 func (x *AddSpaceUserMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[255]
+	mi := &file_messages_proto_msgTypes[256]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19770,7 +19925,7 @@ func (x *AddSpaceUserMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSpaceUserMessage.ProtoReflect.Descriptor instead.
 func (*AddSpaceUserMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{255}
+	return file_messages_proto_rawDescGZIP(), []int{256}
 }
 
 func (x *AddSpaceUserMessage) GetSpaceName() string {
@@ -19801,7 +19956,7 @@ type InitSpaceUsersMessage struct {
 
 func (x *InitSpaceUsersMessage) Reset() {
 	*x = InitSpaceUsersMessage{}
-	mi := &file_messages_proto_msgTypes[256]
+	mi := &file_messages_proto_msgTypes[257]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19813,7 +19968,7 @@ func (x *InitSpaceUsersMessage) String() string {
 func (*InitSpaceUsersMessage) ProtoMessage() {}
 
 func (x *InitSpaceUsersMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[256]
+	mi := &file_messages_proto_msgTypes[257]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19826,7 +19981,7 @@ func (x *InitSpaceUsersMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InitSpaceUsersMessage.ProtoReflect.Descriptor instead.
 func (*InitSpaceUsersMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{256}
+	return file_messages_proto_rawDescGZIP(), []int{257}
 }
 
 func (x *InitSpaceUsersMessage) GetSpaceName() string {
@@ -19870,7 +20025,7 @@ type UpdateSpaceUserMessage struct {
 
 func (x *UpdateSpaceUserMessage) Reset() {
 	*x = UpdateSpaceUserMessage{}
-	mi := &file_messages_proto_msgTypes[257]
+	mi := &file_messages_proto_msgTypes[258]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19882,7 +20037,7 @@ func (x *UpdateSpaceUserMessage) String() string {
 func (*UpdateSpaceUserMessage) ProtoMessage() {}
 
 func (x *UpdateSpaceUserMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[257]
+	mi := &file_messages_proto_msgTypes[258]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19895,7 +20050,7 @@ func (x *UpdateSpaceUserMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSpaceUserMessage.ProtoReflect.Descriptor instead.
 func (*UpdateSpaceUserMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{257}
+	return file_messages_proto_rawDescGZIP(), []int{258}
 }
 
 func (x *UpdateSpaceUserMessage) GetSpaceName() string {
@@ -19930,7 +20085,7 @@ type UpdateSpaceUserPusherToFrontMessage struct {
 
 func (x *UpdateSpaceUserPusherToFrontMessage) Reset() {
 	*x = UpdateSpaceUserPusherToFrontMessage{}
-	mi := &file_messages_proto_msgTypes[258]
+	mi := &file_messages_proto_msgTypes[259]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19942,7 +20097,7 @@ func (x *UpdateSpaceUserPusherToFrontMessage) String() string {
 func (*UpdateSpaceUserPusherToFrontMessage) ProtoMessage() {}
 
 func (x *UpdateSpaceUserPusherToFrontMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[258]
+	mi := &file_messages_proto_msgTypes[259]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19955,7 +20110,7 @@ func (x *UpdateSpaceUserPusherToFrontMessage) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use UpdateSpaceUserPusherToFrontMessage.ProtoReflect.Descriptor instead.
 func (*UpdateSpaceUserPusherToFrontMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{258}
+	return file_messages_proto_rawDescGZIP(), []int{259}
 }
 
 func (x *UpdateSpaceUserPusherToFrontMessage) GetSpaceName() string {
@@ -19991,7 +20146,7 @@ type RemoveSpaceUserMessage struct {
 
 func (x *RemoveSpaceUserMessage) Reset() {
 	*x = RemoveSpaceUserMessage{}
-	mi := &file_messages_proto_msgTypes[259]
+	mi := &file_messages_proto_msgTypes[260]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20003,7 +20158,7 @@ func (x *RemoveSpaceUserMessage) String() string {
 func (*RemoveSpaceUserMessage) ProtoMessage() {}
 
 func (x *RemoveSpaceUserMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[259]
+	mi := &file_messages_proto_msgTypes[260]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20016,7 +20171,7 @@ func (x *RemoveSpaceUserMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveSpaceUserMessage.ProtoReflect.Descriptor instead.
 func (*RemoveSpaceUserMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{259}
+	return file_messages_proto_rawDescGZIP(), []int{260}
 }
 
 func (x *RemoveSpaceUserMessage) GetSpaceName() string {
@@ -20043,7 +20198,7 @@ type RemoveSpaceUserPusherToFrontMessage struct {
 
 func (x *RemoveSpaceUserPusherToFrontMessage) Reset() {
 	*x = RemoveSpaceUserPusherToFrontMessage{}
-	mi := &file_messages_proto_msgTypes[260]
+	mi := &file_messages_proto_msgTypes[261]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20055,7 +20210,7 @@ func (x *RemoveSpaceUserPusherToFrontMessage) String() string {
 func (*RemoveSpaceUserPusherToFrontMessage) ProtoMessage() {}
 
 func (x *RemoveSpaceUserPusherToFrontMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[260]
+	mi := &file_messages_proto_msgTypes[261]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20068,7 +20223,7 @@ func (x *RemoveSpaceUserPusherToFrontMessage) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use RemoveSpaceUserPusherToFrontMessage.ProtoReflect.Descriptor instead.
 func (*RemoveSpaceUserPusherToFrontMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{260}
+	return file_messages_proto_rawDescGZIP(), []int{261}
 }
 
 func (x *RemoveSpaceUserPusherToFrontMessage) GetSpaceName() string {
@@ -20095,7 +20250,7 @@ type UpdateSpaceMetadataMessage struct {
 
 func (x *UpdateSpaceMetadataMessage) Reset() {
 	*x = UpdateSpaceMetadataMessage{}
-	mi := &file_messages_proto_msgTypes[261]
+	mi := &file_messages_proto_msgTypes[262]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20107,7 +20262,7 @@ func (x *UpdateSpaceMetadataMessage) String() string {
 func (*UpdateSpaceMetadataMessage) ProtoMessage() {}
 
 func (x *UpdateSpaceMetadataMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[261]
+	mi := &file_messages_proto_msgTypes[262]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20120,7 +20275,7 @@ func (x *UpdateSpaceMetadataMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateSpaceMetadataMessage.ProtoReflect.Descriptor instead.
 func (*UpdateSpaceMetadataMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{261}
+	return file_messages_proto_rawDescGZIP(), []int{262}
 }
 
 func (x *UpdateSpaceMetadataMessage) GetSpaceName() string {
@@ -20148,7 +20303,7 @@ type UpdateSpaceMetadataPusherToBackMessage struct {
 
 func (x *UpdateSpaceMetadataPusherToBackMessage) Reset() {
 	*x = UpdateSpaceMetadataPusherToBackMessage{}
-	mi := &file_messages_proto_msgTypes[262]
+	mi := &file_messages_proto_msgTypes[263]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20160,7 +20315,7 @@ func (x *UpdateSpaceMetadataPusherToBackMessage) String() string {
 func (*UpdateSpaceMetadataPusherToBackMessage) ProtoMessage() {}
 
 func (x *UpdateSpaceMetadataPusherToBackMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[262]
+	mi := &file_messages_proto_msgTypes[263]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20173,7 +20328,7 @@ func (x *UpdateSpaceMetadataPusherToBackMessage) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use UpdateSpaceMetadataPusherToBackMessage.ProtoReflect.Descriptor instead.
 func (*UpdateSpaceMetadataPusherToBackMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{262}
+	return file_messages_proto_rawDescGZIP(), []int{263}
 }
 
 func (x *UpdateSpaceMetadataPusherToBackMessage) GetSpaceName() string {
@@ -20209,7 +20364,7 @@ type SyncSpaceUsersMessage struct {
 
 func (x *SyncSpaceUsersMessage) Reset() {
 	*x = SyncSpaceUsersMessage{}
-	mi := &file_messages_proto_msgTypes[263]
+	mi := &file_messages_proto_msgTypes[264]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20221,7 +20376,7 @@ func (x *SyncSpaceUsersMessage) String() string {
 func (*SyncSpaceUsersMessage) ProtoMessage() {}
 
 func (x *SyncSpaceUsersMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[263]
+	mi := &file_messages_proto_msgTypes[264]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20234,7 +20389,7 @@ func (x *SyncSpaceUsersMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncSpaceUsersMessage.ProtoReflect.Descriptor instead.
 func (*SyncSpaceUsersMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{263}
+	return file_messages_proto_rawDescGZIP(), []int{264}
 }
 
 func (x *SyncSpaceUsersMessage) GetSpaceName() string {
@@ -20263,7 +20418,7 @@ type AddSpaceUserToNotifyMessage struct {
 
 func (x *AddSpaceUserToNotifyMessage) Reset() {
 	*x = AddSpaceUserToNotifyMessage{}
-	mi := &file_messages_proto_msgTypes[264]
+	mi := &file_messages_proto_msgTypes[265]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20275,7 +20430,7 @@ func (x *AddSpaceUserToNotifyMessage) String() string {
 func (*AddSpaceUserToNotifyMessage) ProtoMessage() {}
 
 func (x *AddSpaceUserToNotifyMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[264]
+	mi := &file_messages_proto_msgTypes[265]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20288,7 +20443,7 @@ func (x *AddSpaceUserToNotifyMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSpaceUserToNotifyMessage.ProtoReflect.Descriptor instead.
 func (*AddSpaceUserToNotifyMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{264}
+	return file_messages_proto_rawDescGZIP(), []int{265}
 }
 
 func (x *AddSpaceUserToNotifyMessage) GetSpaceName() string {
@@ -20317,7 +20472,7 @@ type DeleteSpaceUserToNotifyMessage struct {
 
 func (x *DeleteSpaceUserToNotifyMessage) Reset() {
 	*x = DeleteSpaceUserToNotifyMessage{}
-	mi := &file_messages_proto_msgTypes[265]
+	mi := &file_messages_proto_msgTypes[266]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20329,7 +20484,7 @@ func (x *DeleteSpaceUserToNotifyMessage) String() string {
 func (*DeleteSpaceUserToNotifyMessage) ProtoMessage() {}
 
 func (x *DeleteSpaceUserToNotifyMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[265]
+	mi := &file_messages_proto_msgTypes[266]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20342,7 +20497,7 @@ func (x *DeleteSpaceUserToNotifyMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteSpaceUserToNotifyMessage.ProtoReflect.Descriptor instead.
 func (*DeleteSpaceUserToNotifyMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{265}
+	return file_messages_proto_rawDescGZIP(), []int{266}
 }
 
 func (x *DeleteSpaceUserToNotifyMessage) GetSpaceName() string {
@@ -20370,7 +20525,7 @@ type SpaceDestroyedMessage struct {
 
 func (x *SpaceDestroyedMessage) Reset() {
 	*x = SpaceDestroyedMessage{}
-	mi := &file_messages_proto_msgTypes[266]
+	mi := &file_messages_proto_msgTypes[267]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20382,7 +20537,7 @@ func (x *SpaceDestroyedMessage) String() string {
 func (*SpaceDestroyedMessage) ProtoMessage() {}
 
 func (x *SpaceDestroyedMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[266]
+	mi := &file_messages_proto_msgTypes[267]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20395,7 +20550,7 @@ func (x *SpaceDestroyedMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpaceDestroyedMessage.ProtoReflect.Descriptor instead.
 func (*SpaceDestroyedMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{266}
+	return file_messages_proto_rawDescGZIP(), []int{267}
 }
 
 func (x *SpaceDestroyedMessage) GetSpaceName() string {
@@ -20415,7 +20570,7 @@ type KickOffMessage struct {
 
 func (x *KickOffMessage) Reset() {
 	*x = KickOffMessage{}
-	mi := &file_messages_proto_msgTypes[267]
+	mi := &file_messages_proto_msgTypes[268]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20427,7 +20582,7 @@ func (x *KickOffMessage) String() string {
 func (*KickOffMessage) ProtoMessage() {}
 
 func (x *KickOffMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[267]
+	mi := &file_messages_proto_msgTypes[268]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20440,7 +20595,7 @@ func (x *KickOffMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use KickOffMessage.ProtoReflect.Descriptor instead.
 func (*KickOffMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{267}
+	return file_messages_proto_rawDescGZIP(), []int{268}
 }
 
 func (x *KickOffMessage) GetSpaceName() string {
@@ -20467,7 +20622,7 @@ type AddSpaceFilterMessage struct {
 
 func (x *AddSpaceFilterMessage) Reset() {
 	*x = AddSpaceFilterMessage{}
-	mi := &file_messages_proto_msgTypes[268]
+	mi := &file_messages_proto_msgTypes[269]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20479,7 +20634,7 @@ func (x *AddSpaceFilterMessage) String() string {
 func (*AddSpaceFilterMessage) ProtoMessage() {}
 
 func (x *AddSpaceFilterMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[268]
+	mi := &file_messages_proto_msgTypes[269]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20492,7 +20647,7 @@ func (x *AddSpaceFilterMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddSpaceFilterMessage.ProtoReflect.Descriptor instead.
 func (*AddSpaceFilterMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{268}
+	return file_messages_proto_rawDescGZIP(), []int{269}
 }
 
 func (x *AddSpaceFilterMessage) GetSpaceFilterMessage() *SpaceFilterMessage {
@@ -20511,7 +20666,7 @@ type RemoveSpaceFilterMessage struct {
 
 func (x *RemoveSpaceFilterMessage) Reset() {
 	*x = RemoveSpaceFilterMessage{}
-	mi := &file_messages_proto_msgTypes[269]
+	mi := &file_messages_proto_msgTypes[270]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20523,7 +20678,7 @@ func (x *RemoveSpaceFilterMessage) String() string {
 func (*RemoveSpaceFilterMessage) ProtoMessage() {}
 
 func (x *RemoveSpaceFilterMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[269]
+	mi := &file_messages_proto_msgTypes[270]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20536,7 +20691,7 @@ func (x *RemoveSpaceFilterMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveSpaceFilterMessage.ProtoReflect.Descriptor instead.
 func (*RemoveSpaceFilterMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{269}
+	return file_messages_proto_rawDescGZIP(), []int{270}
 }
 
 func (x *RemoveSpaceFilterMessage) GetSpaceFilterMessage() *SpaceFilterMessage {
@@ -20555,7 +20710,7 @@ type SpaceFilterMessage struct {
 
 func (x *SpaceFilterMessage) Reset() {
 	*x = SpaceFilterMessage{}
-	mi := &file_messages_proto_msgTypes[270]
+	mi := &file_messages_proto_msgTypes[271]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20567,7 +20722,7 @@ func (x *SpaceFilterMessage) String() string {
 func (*SpaceFilterMessage) ProtoMessage() {}
 
 func (x *SpaceFilterMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[270]
+	mi := &file_messages_proto_msgTypes[271]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20580,7 +20735,7 @@ func (x *SpaceFilterMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpaceFilterMessage.ProtoReflect.Descriptor instead.
 func (*SpaceFilterMessage) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{270}
+	return file_messages_proto_rawDescGZIP(), []int{271}
 }
 
 func (x *SpaceFilterMessage) GetSpaceName() string {
@@ -20599,7 +20754,7 @@ type SpaceFilterContainName struct {
 
 func (x *SpaceFilterContainName) Reset() {
 	*x = SpaceFilterContainName{}
-	mi := &file_messages_proto_msgTypes[271]
+	mi := &file_messages_proto_msgTypes[272]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20611,7 +20766,7 @@ func (x *SpaceFilterContainName) String() string {
 func (*SpaceFilterContainName) ProtoMessage() {}
 
 func (x *SpaceFilterContainName) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[271]
+	mi := &file_messages_proto_msgTypes[272]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20624,7 +20779,7 @@ func (x *SpaceFilterContainName) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpaceFilterContainName.ProtoReflect.Descriptor instead.
 func (*SpaceFilterContainName) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{271}
+	return file_messages_proto_rawDescGZIP(), []int{272}
 }
 
 func (x *SpaceFilterContainName) GetValue() string {
@@ -20642,7 +20797,7 @@ type SpaceFilterLiveStreaming struct {
 
 func (x *SpaceFilterLiveStreaming) Reset() {
 	*x = SpaceFilterLiveStreaming{}
-	mi := &file_messages_proto_msgTypes[272]
+	mi := &file_messages_proto_msgTypes[273]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20654,7 +20809,7 @@ func (x *SpaceFilterLiveStreaming) String() string {
 func (*SpaceFilterLiveStreaming) ProtoMessage() {}
 
 func (x *SpaceFilterLiveStreaming) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[272]
+	mi := &file_messages_proto_msgTypes[273]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20667,7 +20822,7 @@ func (x *SpaceFilterLiveStreaming) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpaceFilterLiveStreaming.ProtoReflect.Descriptor instead.
 func (*SpaceFilterLiveStreaming) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{272}
+	return file_messages_proto_rawDescGZIP(), []int{273}
 }
 
 type SpaceFilterEverybody struct {
@@ -20678,7 +20833,7 @@ type SpaceFilterEverybody struct {
 
 func (x *SpaceFilterEverybody) Reset() {
 	*x = SpaceFilterEverybody{}
-	mi := &file_messages_proto_msgTypes[273]
+	mi := &file_messages_proto_msgTypes[274]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20690,7 +20845,7 @@ func (x *SpaceFilterEverybody) String() string {
 func (*SpaceFilterEverybody) ProtoMessage() {}
 
 func (x *SpaceFilterEverybody) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[273]
+	mi := &file_messages_proto_msgTypes[274]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20703,7 +20858,7 @@ func (x *SpaceFilterEverybody) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SpaceFilterEverybody.ProtoReflect.Descriptor instead.
 func (*SpaceFilterEverybody) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{273}
+	return file_messages_proto_rawDescGZIP(), []int{274}
 }
 
 type VariableRequest struct {
@@ -20718,7 +20873,7 @@ type VariableRequest struct {
 
 func (x *VariableRequest) Reset() {
 	*x = VariableRequest{}
-	mi := &file_messages_proto_msgTypes[274]
+	mi := &file_messages_proto_msgTypes[275]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20730,7 +20885,7 @@ func (x *VariableRequest) String() string {
 func (*VariableRequest) ProtoMessage() {}
 
 func (x *VariableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[274]
+	mi := &file_messages_proto_msgTypes[275]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20743,7 +20898,7 @@ func (x *VariableRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VariableRequest.ProtoReflect.Descriptor instead.
 func (*VariableRequest) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{274}
+	return file_messages_proto_rawDescGZIP(), []int{275}
 }
 
 func (x *VariableRequest) GetRoom() string {
@@ -20774,7 +20929,7 @@ type SaveVariableRequest struct {
 
 func (x *SaveVariableRequest) Reset() {
 	*x = SaveVariableRequest{}
-	mi := &file_messages_proto_msgTypes[275]
+	mi := &file_messages_proto_msgTypes[276]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20786,7 +20941,7 @@ func (x *SaveVariableRequest) String() string {
 func (*SaveVariableRequest) ProtoMessage() {}
 
 func (x *SaveVariableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[275]
+	mi := &file_messages_proto_msgTypes[276]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20799,7 +20954,7 @@ func (x *SaveVariableRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveVariableRequest.ProtoReflect.Descriptor instead.
 func (*SaveVariableRequest) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{275}
+	return file_messages_proto_rawDescGZIP(), []int{276}
 }
 
 func (x *SaveVariableRequest) GetRoom() string {
@@ -20834,7 +20989,7 @@ type EventRequest struct {
 
 func (x *EventRequest) Reset() {
 	*x = EventRequest{}
-	mi := &file_messages_proto_msgTypes[276]
+	mi := &file_messages_proto_msgTypes[277]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20846,7 +21001,7 @@ func (x *EventRequest) String() string {
 func (*EventRequest) ProtoMessage() {}
 
 func (x *EventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[276]
+	mi := &file_messages_proto_msgTypes[277]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20859,7 +21014,7 @@ func (x *EventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventRequest.ProtoReflect.Descriptor instead.
 func (*EventRequest) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{276}
+	return file_messages_proto_rawDescGZIP(), []int{277}
 }
 
 func (x *EventRequest) GetRoom() string {
@@ -20888,7 +21043,7 @@ type EventResponse struct {
 
 func (x *EventResponse) Reset() {
 	*x = EventResponse{}
-	mi := &file_messages_proto_msgTypes[277]
+	mi := &file_messages_proto_msgTypes[278]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20900,7 +21055,7 @@ func (x *EventResponse) String() string {
 func (*EventResponse) ProtoMessage() {}
 
 func (x *EventResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[277]
+	mi := &file_messages_proto_msgTypes[278]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20913,7 +21068,7 @@ func (x *EventResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EventResponse.ProtoReflect.Descriptor instead.
 func (*EventResponse) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{277}
+	return file_messages_proto_rawDescGZIP(), []int{278}
 }
 
 func (x *EventResponse) GetData() *structpb.Value {
@@ -20944,7 +21099,7 @@ type DispatchEventRequest struct {
 
 func (x *DispatchEventRequest) Reset() {
 	*x = DispatchEventRequest{}
-	mi := &file_messages_proto_msgTypes[278]
+	mi := &file_messages_proto_msgTypes[279]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20956,7 +21111,7 @@ func (x *DispatchEventRequest) String() string {
 func (*DispatchEventRequest) ProtoMessage() {}
 
 func (x *DispatchEventRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_messages_proto_msgTypes[278]
+	mi := &file_messages_proto_msgTypes[279]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20969,7 +21124,7 @@ func (x *DispatchEventRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DispatchEventRequest.ProtoReflect.Descriptor instead.
 func (*DispatchEventRequest) Descriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{278}
+	return file_messages_proto_rawDescGZIP(), []int{279}
 }
 
 func (x *DispatchEventRequest) GetRoom() string {
@@ -21333,7 +21488,7 @@ const file_messages_proto_rawDesc = "" +
 	"\x0e_collisionGridB\x0e\n" +
 	"\f_depthOffsetB\n" +
 	"\n" +
-	"\b_ownerId\"\xc1\x01\n" +
+	"\b_ownerId\"\xe8\x01\n" +
 	"\x11UploadFileMessage\x12\x12\n" +
 	"\x04file\x18\x01 \x01(\fR\x04file\x12\x0e\n" +
 	"\x02id\x18\x02 \x01(\tR\x02id\x12\x12\n" +
@@ -21342,7 +21497,8 @@ const file_messages_proto_rawDesc = "" +
 	"propertyId\x18\x04 \x01(\tR\n" +
 	"propertyId\x12\x1b\n" +
 	"\x06areaId\x18\x05 \x01(\tH\x00R\x06areaId\x88\x01\x01\x12\x1f\n" +
-	"\bentityId\x18\x06 \x01(\tH\x01R\bentityId\x88\x01\x01B\t\n" +
+	"\bentityId\x18\x06 \x01(\tH\x01R\bentityId\x88\x01\x01\x12%\n" +
+	"\x04kind\x18\a \x01(\x0e2\x11.UploadedFileKindR\x04kindB\t\n" +
 	"\a_areaIdB\v\n" +
 	"\t_entityId\"\xdf\x01\n" +
 	"\x19ModifyCustomEntityMessage\x12\x0e\n" +
@@ -21937,10 +22093,11 @@ const file_messages_proto_rawDesc = "" +
 	"\tstateJson\x18\x02 \x01(\tR\tstateJson\"M\n" +
 	"\x17GroupUsersUpdateMessage\x12\x18\n" +
 	"\agroupId\x18\x01 \x01(\x05R\agroupId\x12\x18\n" +
-	"\auserIds\x18\x02 \x03(\x05R\auserIds\"\x88\x01\n" +
+	"\auserIds\x18\x02 \x03(\x05R\auserIds\"\xa2\x01\n" +
 	"\x14RoomConnectedMessage\x12^\n" +
 	"\x1beditMapCommandsArrayMessage\x18\r \x01(\v2\x1c.EditMapCommandsArrayMessageR\x1beditMapCommandsArrayMessage\x12\x10\n" +
-	"\x03tag\x18\x05 \x03(\tR\x03tag\"\xd3\x04\n" +
+	"\x03tag\x18\x05 \x03(\tR\x03tag\x12\x18\n" +
+	"\acanEdit\x18\x0e \x01(\bR\acanEdit\"\xd3\x04\n" +
 	"\x11RoomJoinedMessage\x12%\n" +
 	"\x04item\x18\x03 \x03(\v2\x11.ItemStateMessageR\x04item\x12$\n" +
 	"\rcurrentUserId\x18\x04 \x01(\x05R\rcurrentUserId\x12,\n" +
@@ -22122,10 +22279,15 @@ const file_messages_proto_rawDesc = "" +
 	"\tspaceName\x18\x01 \x01(\tR\tspaceName\x12\"\n" +
 	"\fsenderUserId\x18\x03 \x01(\tR\fsenderUserId\x12(\n" +
 	"\tbackEvent\x18\x04 \x01(\v2\n" +
-	".BackEventR\tbackEvent\"\x82\x01\n" +
+	".BackEventR\tbackEvent\"\xf0\x01\n" +
 	"\tBackEvent\x12l\n" +
-	"\x1fmeetingConnectionRestartMessage\x18\x02 \x01(\v2 .MeetingConnectionRestartMessageH\x00R\x1fmeetingConnectionRestartMessageB\a\n" +
-	"\x05event\"\xac\x01\n" +
+	"\x1fmeetingConnectionRestartMessage\x18\x02 \x01(\v2 .MeetingConnectionRestartMessageH\x00R\x1fmeetingConnectionRestartMessage\x12l\n" +
+	"\x1fmicrophoneTrackPublishedMessage\x18\x03 \x01(\v2 .MicrophoneTrackPublishedMessageH\x00R\x1fmicrophoneTrackPublishedMessageB\a\n" +
+	"\x05event\"\x85\x01\n" +
+	"\x1fMicrophoneTrackPublishedMessage\x12\x1a\n" +
+	"\btrackSid\x18\x01 \x01(\tR\btrackSid\x12\x1a\n" +
+	"\blanguage\x18\x02 \x01(\tR\blanguage\x12*\n" +
+	"\x10noiseSuppression\x18\x03 \x01(\tR\x10noiseSuppression\"\xac\x01\n" +
 	"\fPrivateEvent\x12\x1c\n" +
 	"\tspaceName\x18\x01 \x01(\tR\tspaceName\x12&\n" +
 	"\x0ereceiverUserId\x18\x02 \x01(\tR\x0ereceiverUserId\x12\"\n" +
@@ -22195,11 +22357,12 @@ const file_messages_proto_rawDesc = "" +
 	"%meetingInvitationRequestClosedMessage\x18( \x01(\v2&.MeetingInvitationRequestClosedMessageH\x00R%meetingInvitationRequestClosedMessage\x12f\n" +
 	"\x1dduplicateUserConnectedMessage\x18) \x01(\v2\x1e.DuplicateUserConnectedMessageH\x00R\x1dduplicateUserConnectedMessage\x12o\n" +
 	" backConnectionCloseReasonMessage\x18* \x01(\v2!.BackConnectionCloseReasonMessageH\x00R backConnectionCloseReasonMessageB\t\n" +
-	"\amessage\"\x84\x01\n" +
+	"\amessage\"\x9e\x01\n" +
 	"\x14ConnectToRoomMessage\x12\x16\n" +
 	"\x06roomId\x18\x01 \x01(\tR\x06roomId\x12B\n" +
 	"\rlastCommandId\x18\x02 \x01(\v2\x1c.google.protobuf.StringValueR\rlastCommandId\x12\x10\n" +
-	"\x03tag\x18\x03 \x03(\tR\x03tag\"\xe7\x01\n" +
+	"\x03tag\x18\x03 \x03(\tR\x03tag\x12\x18\n" +
+	"\acanEdit\x18\x04 \x01(\bR\acanEdit\"\xe7\x01\n" +
 	"\x14JoinRoomFrontMessage\x12:\n" +
 	"\x0fpositionMessage\x18\x01 \x01(\v2\x10.PositionMessageR\x0fpositionMessage\x12:\n" +
 	"\x0fviewportMessage\x18\x02 \x01(\v2\x10.ViewportMessageR\x0fviewportMessage\x12\x12\n" +
@@ -22567,7 +22730,10 @@ const file_messages_proto_rawDesc = "" +
 	"\x02Up\x10\x00\x12\t\n" +
 	"\x05Right\x10\x01\x12\b\n" +
 	"\x04Down\x10\x02\x12\b\n" +
-	"\x04Left\x10\x03*\x88\x01\n" +
+	"\x04Left\x10\x03*+\n" +
+	"\x10UploadedFileKind\x12\f\n" +
+	"\bDocument\x10\x00\x12\t\n" +
+	"\x05Sound\x10\x01*\x88\x01\n" +
 	"\x15RecordingWebhookPhase\x12'\n" +
 	"#RECORDING_WEBHOOK_PHASE_UNSPECIFIED\x10\x00\x12#\n" +
 	"\x1fRECORDING_WEBHOOK_PHASE_STARTED\x10\x01\x12!\n" +
@@ -22590,8 +22756,8 @@ func file_messages_proto_rawDescGZIP() []byte {
 	return file_messages_proto_rawDescData
 }
 
-var file_messages_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 281)
+var file_messages_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
+var file_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 282)
 var file_messages_proto_goTypes = []any{
 	(AvailabilityStatus)(0),                            // 0: AvailabilityStatus
 	(SayMessageType)(0),                                // 1: SayMessageType
@@ -22601,723 +22767,727 @@ var file_messages_proto_goTypes = []any{
 	(VideoQualityStreamDirection)(0),                   // 5: VideoQualityStreamDirection
 	(VideoQualityLimitationReason)(0),                  // 6: VideoQualityLimitationReason
 	(CustomEntityDirection)(0),                         // 7: CustomEntityDirection
-	(RecordingWebhookPhase)(0),                         // 8: RecordingWebhookPhase
-	(FilterType)(0),                                    // 9: FilterType
-	(PositionMessage_Direction)(0),                     // 10: PositionMessage.Direction
-	(SetPlayerVariableMessage_Scope)(0),                // 11: SetPlayerVariableMessage.Scope
-	(AskPositionMessage_AskType)(0),                    // 12: AskPositionMessage.AskType
-	(*PositionMessage)(nil),                            // 13: PositionMessage
-	(*PointMessage)(nil),                               // 14: PointMessage
-	(*ViewportMessage)(nil),                            // 15: ViewportMessage
-	(*CharacterTextureMessage)(nil),                    // 16: CharacterTextureMessage
-	(*ApplicationMessage)(nil),                         // 17: ApplicationMessage
-	(*CompanionTextureMessage)(nil),                    // 18: CompanionTextureMessage
-	(*ZoneMessage)(nil),                                // 19: ZoneMessage
-	(*PingMessage)(nil),                                // 20: PingMessage
-	(*UpdateMapToNewestMessage)(nil),                   // 21: UpdateMapToNewestMessage
-	(*UpdateMapToNewestWithKeyMessage)(nil),            // 22: UpdateMapToNewestWithKeyMessage
-	(*SetPlayerDetailsMessage)(nil),                    // 23: SetPlayerDetailsMessage
-	(*SayMessage)(nil),                                 // 24: SayMessage
-	(*UserMovesMessage)(nil),                           // 25: UserMovesMessage
-	(*WebRtcSignal)(nil),                               // 26: WebRtcSignal
-	(*VideoQualitySampleMessage)(nil),                  // 27: VideoQualitySampleMessage
-	(*VideoQualityReportMessage)(nil),                  // 28: VideoQualityReportMessage
-	(*AnalyticsEventMessage)(nil),                      // 29: AnalyticsEventMessage
-	(*AnalyticsEventReportMessage)(nil),                // 30: AnalyticsEventReportMessage
-	(*ReportPlayerMessage)(nil),                        // 31: ReportPlayerMessage
-	(*BanPlayerMessage)(nil),                           // 32: BanPlayerMessage
-	(*UpdateChatIdMessage)(nil),                        // 33: UpdateChatIdMessage
-	(*LeaveChatRoomAreaMessage)(nil),                   // 34: LeaveChatRoomAreaMessage
-	(*EmotePromptMessage)(nil),                         // 35: EmotePromptMessage
-	(*EmoteEventMessage)(nil),                          // 36: EmoteEventMessage
-	(*FollowRequestMessage)(nil),                       // 37: FollowRequestMessage
-	(*FollowConfirmationMessage)(nil),                  // 38: FollowConfirmationMessage
-	(*FollowAbortMessage)(nil),                         // 39: FollowAbortMessage
-	(*LockGroupPromptMessage)(nil),                     // 40: LockGroupPromptMessage
-	(*EditMapMessage)(nil),                             // 41: EditMapMessage
-	(*ErrorCommandMessage)(nil),                        // 42: ErrorCommandMessage
-	(*UpdateWAMSettingsMessage)(nil),                   // 43: UpdateWAMSettingsMessage
-	(*UpdateMegaphoneSettingMessage)(nil),              // 44: UpdateMegaphoneSettingMessage
-	(*UpdateRecordingSettingMessage)(nil),              // 45: UpdateRecordingSettingMessage
-	(*EditMapCommandMessage)(nil),                      // 46: EditMapCommandMessage
-	(*EditMapCommandsArrayMessage)(nil),                // 47: EditMapCommandsArrayMessage
-	(*EditMapCommandWithKeyMessage)(nil),               // 48: EditMapCommandWithKeyMessage
-	(*ModifyAreaMessage)(nil),                          // 49: ModifyAreaMessage
-	(*DeleteAreaMessage)(nil),                          // 50: DeleteAreaMessage
-	(*CreateAreaMessage)(nil),                          // 51: CreateAreaMessage
-	(*CreateEntityMessage)(nil),                        // 52: CreateEntityMessage
-	(*DeleteEntityMessage)(nil),                        // 53: DeleteEntityMessage
-	(*CollisionGridRow)(nil),                           // 54: CollisionGridRow
-	(*UploadEntityMessage)(nil),                        // 55: UploadEntityMessage
-	(*UploadFileMessage)(nil),                          // 56: UploadFileMessage
-	(*ModifyCustomEntityMessage)(nil),                  // 57: ModifyCustomEntityMessage
-	(*DeleteCustomEntityMessage)(nil),                  // 58: DeleteCustomEntityMessage
-	(*ModifyEntityMessage)(nil),                        // 59: ModifyEntityMessage
-	(*FrontToPusherWebSocketMessage)(nil),              // 60: FrontToPusherWebSocketMessage
-	(*PusherToFrontWebSocketMessage)(nil),              // 61: PusherToFrontWebSocketMessage
-	(*ClientToServerMessage)(nil),                      // 62: ClientToServerMessage
-	(*ReceivedEventMessage)(nil),                       // 63: ReceivedEventMessage
-	(*ModifiyWAMMetadataMessage)(nil),                  // 64: ModifiyWAMMetadataMessage
-	(*ItemEventMessage)(nil),                           // 65: ItemEventMessage
-	(*VariableMessage)(nil),                            // 66: VariableMessage
-	(*SetAreaPropertyVariableMessage)(nil),             // 67: SetAreaPropertyVariableMessage
-	(*AreaPropertyVariableMessage)(nil),                // 68: AreaPropertyVariableMessage
-	(*EntitySoundPlayed)(nil),                          // 69: EntitySoundPlayed
-	(*EntityEvent)(nil),                                // 70: EntityEvent
-	(*EntityMessage)(nil),                              // 71: EntityMessage
-	(*SetPlayerVariableMessage)(nil),                   // 72: SetPlayerVariableMessage
-	(*VariableWithTagMessage)(nil),                     // 73: VariableWithTagMessage
-	(*PlayGlobalMessage)(nil),                          // 74: PlayGlobalMessage
-	(*QueryMessage)(nil),                               // 75: QueryMessage
-	(*GetSignedUrlQuery)(nil),                          // 76: GetSignedUrlQuery
-	(*AbortQueryMessage)(nil),                          // 77: AbortQueryMessage
-	(*MapStorageJwtQuery)(nil),                         // 78: MapStorageJwtQuery
-	(*JitsiJwtQuery)(nil),                              // 79: JitsiJwtQuery
-	(*JoinBBBMeetingQuery)(nil),                        // 80: JoinBBBMeetingQuery
-	(*RoomTagsQuery)(nil),                              // 81: RoomTagsQuery
-	(*EmbeddableWebsiteQuery)(nil),                     // 82: EmbeddableWebsiteQuery
-	(*RoomsFromSameWorldQuery)(nil),                    // 83: RoomsFromSameWorldQuery
-	(*SendEventQuery)(nil),                             // 84: SendEventQuery
-	(*SearchMemberQuery)(nil),                          // 85: SearchMemberQuery
-	(*GetMemberQuery)(nil),                             // 86: GetMemberQuery
-	(*ChatMembersQuery)(nil),                           // 87: ChatMembersQuery
-	(*OauthRefreshTokenQuery)(nil),                     // 88: OauthRefreshTokenQuery
-	(*SearchTagsQuery)(nil),                            // 89: SearchTagsQuery
-	(*EnterChatRoomAreaQuery)(nil),                     // 90: EnterChatRoomAreaQuery
-	(*JoinSpaceQuery)(nil),                             // 91: JoinSpaceQuery
-	(*LeaveSpaceQuery)(nil),                            // 92: LeaveSpaceQuery
-	(*GetRecordingsQuery)(nil),                         // 93: GetRecordingsQuery
-	(*GetRecordingThumbnailsQuery)(nil),                // 94: GetRecordingThumbnailsQuery
-	(*DeleteRecordingQuery)(nil),                       // 95: DeleteRecordingQuery
-	(*AnswerMessage)(nil),                              // 96: AnswerMessage
-	(*JitsiJwtAnswer)(nil),                             // 97: JitsiJwtAnswer
-	(*MapStorageJwtAnswer)(nil),                        // 98: MapStorageJwtAnswer
-	(*JoinBBBMeetingAnswer)(nil),                       // 99: JoinBBBMeetingAnswer
-	(*RoomTagsAnswer)(nil),                             // 100: RoomTagsAnswer
-	(*EmbeddableWebsiteAnswer)(nil),                    // 101: EmbeddableWebsiteAnswer
-	(*RoomShortDescription)(nil),                       // 102: RoomShortDescription
-	(*RoomsFromSameWorldAnswer)(nil),                   // 103: RoomsFromSameWorldAnswer
-	(*SendEventAnswer)(nil),                            // 104: SendEventAnswer
-	(*SearchMemberAnswer)(nil),                         // 105: SearchMemberAnswer
-	(*GetMemberAnswer)(nil),                            // 106: GetMemberAnswer
-	(*ChatMembersAnswer)(nil),                          // 107: ChatMembersAnswer
-	(*OauthRefreshTokenAnswer)(nil),                    // 108: OauthRefreshTokenAnswer
-	(*EnterChatRoomAreaAnswer)(nil),                    // 109: EnterChatRoomAreaAnswer
-	(*JoinSpaceAnswer)(nil),                            // 110: JoinSpaceAnswer
-	(*LeaveSpaceAnswer)(nil),                           // 111: LeaveSpaceAnswer
-	(*SearchTagsAnswer)(nil),                           // 112: SearchTagsAnswer
-	(*GetRecordingsAnswer)(nil),                        // 113: GetRecordingsAnswer
-	(*GetRecordingThumbnailsAnswer)(nil),               // 114: GetRecordingThumbnailsAnswer
-	(*DeleteRecordingAnswer)(nil),                      // 115: DeleteRecordingAnswer
-	(*GetSignedUrlAnswer)(nil),                         // 116: GetSignedUrlAnswer
-	(*BanIpPreviewQuery)(nil),                          // 117: BanIpPreviewQuery
-	(*BanIpPreviewUser)(nil),                           // 118: BanIpPreviewUser
-	(*BanIpPreviewAnswer)(nil),                         // 119: BanIpPreviewAnswer
-	(*Member)(nil),                                     // 120: Member
-	(*IceServer)(nil),                                  // 121: IceServer
-	(*IceServersAnswer)(nil),                           // 122: IceServersAnswer
-	(*IceServersQuery)(nil),                            // 123: IceServersQuery
-	(*ChatMember)(nil),                                 // 124: ChatMember
-	(*Recording)(nil),                                  // 125: Recording
-	(*VideoFile)(nil),                                  // 126: VideoFile
-	(*SpaceQueryMessage)(nil),                          // 127: SpaceQueryMessage
-	(*AddSpaceUserQuery)(nil),                          // 128: AddSpaceUserQuery
-	(*RemoveSpaceUserQuery)(nil),                       // 129: RemoveSpaceUserQuery
-	(*SpaceStateQuery)(nil),                            // 130: SpaceStateQuery
-	(*SetSpaceKindQuery)(nil),                          // 131: SetSpaceKindQuery
-	(*RaiseHandQuery)(nil),                             // 132: RaiseHandQuery
-	(*LowerHandQuery)(nil),                             // 133: LowerHandQuery
-	(*GiveFloorQuery)(nil),                             // 134: GiveFloorQuery
-	(*RevokeFloorQuery)(nil),                           // 135: RevokeFloorQuery
-	(*StartRecordingQuery)(nil),                        // 136: StartRecordingQuery
-	(*StopRecordingQuery)(nil),                         // 137: StopRecordingQuery
-	(*CreatePollQuery)(nil),                            // 138: CreatePollQuery
-	(*VotePollQuery)(nil),                              // 139: VotePollQuery
-	(*ClosePollQuery)(nil),                             // 140: ClosePollQuery
-	(*DeletePollQuery)(nil),                            // 141: DeletePollQuery
-	(*AskQuestionQuery)(nil),                           // 142: AskQuestionQuery
-	(*UpvoteQuestionQuery)(nil),                        // 143: UpvoteQuestionQuery
-	(*AnswerQuestionQuery)(nil),                        // 144: AnswerQuestionQuery
-	(*DeleteQuestionQuery)(nil),                        // 145: DeleteQuestionQuery
-	(*SpaceStateQueryFrontToPusher)(nil),               // 146: SpaceStateQueryFrontToPusher
-	(*SpaceStateQueryPusherToBack)(nil),                // 147: SpaceStateQueryPusherToBack
-	(*SpaceStateAnswer)(nil),                           // 148: SpaceStateAnswer
-	(*SpaceStatePatchMessage)(nil),                     // 149: SpaceStatePatchMessage
-	(*SpaceAnswerMessage)(nil),                         // 150: SpaceAnswerMessage
-	(*AddSpaceUserAnswer)(nil),                         // 151: AddSpaceUserAnswer
-	(*RemoveSpaceUserAnswer)(nil),                      // 152: RemoveSpaceUserAnswer
-	(*HandleRecordingWebhookRequest)(nil),              // 153: HandleRecordingWebhookRequest
-	(*RecordingFileResult)(nil),                        // 154: RecordingFileResult
-	(*HandleLivekitWebhookRequest)(nil),                // 155: HandleLivekitWebhookRequest
-	(*UserMovedMessage)(nil),                           // 156: UserMovedMessage
-	(*MoveToPositionMessage)(nil),                      // 157: MoveToPositionMessage
-	(*LocatePositionMessage)(nil),                      // 158: LocatePositionMessage
-	(*SubMessage)(nil),                                 // 159: SubMessage
-	(*BatchMessage)(nil),                               // 160: BatchMessage
-	(*GroupUpdateMessage)(nil),                         // 161: GroupUpdateMessage
-	(*GroupDeleteMessage)(nil),                         // 162: GroupDeleteMessage
-	(*UserJoinedMessage)(nil),                          // 163: UserJoinedMessage
-	(*UserLeftMessage)(nil),                            // 164: UserLeftMessage
-	(*ErrorMessage)(nil),                               // 165: ErrorMessage
-	(*ErrorScreenMessage)(nil),                         // 166: ErrorScreenMessage
-	(*ItemStateMessage)(nil),                           // 167: ItemStateMessage
-	(*GroupUsersUpdateMessage)(nil),                    // 168: GroupUsersUpdateMessage
-	(*RoomConnectedMessage)(nil),                       // 169: RoomConnectedMessage
-	(*RoomJoinedMessage)(nil),                          // 170: RoomJoinedMessage
-	(*WebRtcStartMessage)(nil),                         // 171: WebRtcStartMessage
-	(*MeetingConnectionRestartMessage)(nil),            // 172: MeetingConnectionRestartMessage
-	(*WebRtcDisconnectMessage)(nil),                    // 173: WebRtcDisconnectMessage
-	(*TeleportMessageMessage)(nil),                     // 174: TeleportMessageMessage
-	(*SendUserMessage)(nil),                            // 175: SendUserMessage
-	(*WorldFullWarningMessage)(nil),                    // 176: WorldFullWarningMessage
-	(*WorldFullWarningToRoomMessage)(nil),              // 177: WorldFullWarningToRoomMessage
-	(*RefreshRoomPromptMessage)(nil),                   // 178: RefreshRoomPromptMessage
-	(*RefreshRoomMessage)(nil),                         // 179: RefreshRoomMessage
-	(*DeleteMapMessage)(nil),                           // 180: DeleteMapMessage
-	(*TokenExpiredMessage)(nil),                        // 181: TokenExpiredMessage
-	(*InvalidCharacterTextureMessage)(nil),             // 182: InvalidCharacterTextureMessage
-	(*InvalidCompanionTextureMessage)(nil),             // 183: InvalidCompanionTextureMessage
-	(*WorldConnectionMessage)(nil),                     // 184: WorldConnectionMessage
-	(*BanUserMessage)(nil),                             // 185: BanUserMessage
-	(*AskPositionMessage)(nil),                         // 186: AskPositionMessage
-	(*MeetingInvitationRequestMessage)(nil),            // 187: MeetingInvitationRequestMessage
-	(*MeetingInvitationRequestReceivedMessage)(nil),    // 188: MeetingInvitationRequestReceivedMessage
-	(*MeetingInvitationResponseMessage)(nil),           // 189: MeetingInvitationResponseMessage
-	(*MeetingInvitationResponseReceivedMessage)(nil),   // 190: MeetingInvitationResponseReceivedMessage
-	(*MeetingInvitationRequestTooHighMessage)(nil),     // 191: MeetingInvitationRequestTooHighMessage
-	(*MeetingInvitationRequestClosedMessage)(nil),      // 192: MeetingInvitationRequestClosedMessage
-	(*MuteAudioPrivateMessage)(nil),                    // 193: MuteAudioPrivateMessage
-	(*MuteVideoPrivateMessage)(nil),                    // 194: MuteVideoPrivateMessage
-	(*MuteAudioForEverybodyPublicMessage)(nil),         // 195: MuteAudioForEverybodyPublicMessage
-	(*MuteVideoForEverybodyPublicMessage)(nil),         // 196: MuteVideoForEverybodyPublicMessage
-	(*KickOffUserPrivateMessage)(nil),                  // 197: KickOffUserPrivateMessage
-	(*RecordingUnexpectedlyStoppedPrivateMessage)(nil), // 198: RecordingUnexpectedlyStoppedPrivateMessage
-	(*PublicEventFrontToPusher)(nil),                   // 199: PublicEventFrontToPusher
-	(*BackEventFrontToPusherMessage)(nil),              // 200: BackEventFrontToPusherMessage
-	(*PublicEvent)(nil),                                // 201: PublicEvent
-	(*SpaceEvent)(nil),                                 // 202: SpaceEvent
-	(*PrivateSpaceEvent)(nil),                          // 203: PrivateSpaceEvent
-	(*CommunicationStrategyMessage)(nil),               // 204: CommunicationStrategyMessage
-	(*SwitchMessage)(nil),                              // 205: SwitchMessage
-	(*FinalizeSwitchMessage)(nil),                      // 206: FinalizeSwitchMessage
-	(*BlockUserMessage)(nil),                           // 207: BlockUserMessage
-	(*UnblockUserMessage)(nil),                         // 208: UnblockUserMessage
-	(*LivekitInvitationMessage)(nil),                   // 209: LivekitInvitationMessage
-	(*LivekitDisconnectMessage)(nil),                   // 210: LivekitDisconnectMessage
-	(*SpaceMessage)(nil),                               // 211: SpaceMessage
-	(*SpaceIsTyping)(nil),                              // 212: SpaceIsTyping
-	(*ProximityFileTransferOfferMessage)(nil),          // 213: ProximityFileTransferOfferMessage
-	(*ProximityFileTransferDeclineMessage)(nil),        // 214: ProximityFileTransferDeclineMessage
-	(*ProximityFileTransferSignalMessage)(nil),         // 215: ProximityFileTransferSignalMessage
-	(*BackEventMessage)(nil),                           // 216: BackEventMessage
-	(*BackEvent)(nil),                                  // 217: BackEvent
-	(*PrivateEvent)(nil),                               // 218: PrivateEvent
-	(*PrivateEventBackToPusher)(nil),                   // 219: PrivateEventBackToPusher
-	(*PrivateEventPusherToFront)(nil),                  // 220: PrivateEventPusherToFront
-	(*PrivateEventFrontToPusher)(nil),                  // 221: PrivateEventFrontToPusher
-	(*JoinSpaceRequestMessage)(nil),                    // 222: JoinSpaceRequestMessage
-	(*LeaveSpaceRequestMessage)(nil),                   // 223: LeaveSpaceRequestMessage
-	(*DuplicateUserConnectedMessage)(nil),              // 224: DuplicateUserConnectedMessage
-	(*BackConnectionCloseReasonMessage)(nil),           // 225: BackConnectionCloseReasonMessage
-	(*ServerToClientMessage)(nil),                      // 226: ServerToClientMessage
-	(*ConnectToRoomMessage)(nil),                       // 227: ConnectToRoomMessage
-	(*JoinRoomFrontMessage)(nil),                       // 228: JoinRoomFrontMessage
-	(*JoinRoomMessage)(nil),                            // 229: JoinRoomMessage
-	(*UserJoinedZoneMessage)(nil),                      // 230: UserJoinedZoneMessage
-	(*UserLeftZoneMessage)(nil),                        // 231: UserLeftZoneMessage
-	(*GroupUpdateZoneMessage)(nil),                     // 232: GroupUpdateZoneMessage
-	(*GroupLeftZoneMessage)(nil),                       // 233: GroupLeftZoneMessage
-	(*PlayerDetailsUpdatedMessage)(nil),                // 234: PlayerDetailsUpdatedMessage
-	(*Zone)(nil),                                       // 235: Zone
-	(*SubscribeZoneMessage)(nil),                       // 236: SubscribeZoneMessage
-	(*UnsubscribeZoneMessage)(nil),                     // 237: UnsubscribeZoneMessage
-	(*RoomMessage)(nil),                                // 238: RoomMessage
-	(*PusherToBackRoomMessage)(nil),                    // 239: PusherToBackRoomMessage
-	(*InitRoomMessage)(nil),                            // 240: InitRoomMessage
-	(*PusherToBackMessage)(nil),                        // 241: PusherToBackMessage
-	(*BatchToPusherRoomMessage)(nil),                   // 242: BatchToPusherRoomMessage
-	(*SubToPusherRoomMessage)(nil),                     // 243: SubToPusherRoomMessage
-	(*UserJoinedRoomMessage)(nil),                      // 244: UserJoinedRoomMessage
-	(*UserLeftRoomMessage)(nil),                        // 245: UserLeftRoomMessage
-	(*ServerToAdminClientMessage)(nil),                 // 246: ServerToAdminClientMessage
-	(*AdminPusherToBackMessage)(nil),                   // 247: AdminPusherToBackMessage
-	(*MapStorageRefreshMessage)(nil),                   // 248: MapStorageRefreshMessage
-	(*MapStorageToBackMessage)(nil),                    // 249: MapStorageToBackMessage
-	(*MapStorageUrlMessage)(nil),                       // 250: MapStorageUrlMessage
-	(*MapStorageClearAfterUploadMessage)(nil),          // 251: MapStorageClearAfterUploadMessage
-	(*MapStorageDeleteMessage)(nil),                    // 252: MapStorageDeleteMessage
-	(*AdminRoomMessage)(nil),                           // 253: AdminRoomMessage
-	(*AdminGlobalMessage)(nil),                         // 254: AdminGlobalMessage
-	(*BanMessage)(nil),                                 // 255: BanMessage
-	(*RoomDescription)(nil),                            // 256: RoomDescription
-	(*RoomsList)(nil),                                  // 257: RoomsList
-	(*WorldUsersQuery)(nil),                            // 258: WorldUsersQuery
-	(*WorldUser)(nil),                                  // 259: WorldUser
-	(*WorldUsersAnswer)(nil),                           // 260: WorldUsersAnswer
-	(*DispatchGlobalEventRequest)(nil),                 // 261: DispatchGlobalEventRequest
-	(*ExternalModuleMessage)(nil),                      // 262: ExternalModuleMessage
-	(*PusherToBackSpaceMessage)(nil),                   // 263: PusherToBackSpaceMessage
-	(*BackToPusherSpaceMessage)(nil),                   // 264: BackToPusherSpaceMessage
-	(*JoinSpaceMessage)(nil),                           // 265: JoinSpaceMessage
-	(*LeaveSpaceMessage)(nil),                          // 266: LeaveSpaceMessage
-	(*SpaceUser)(nil),                                  // 267: SpaceUser
-	(*AddSpaceUserMessage)(nil),                        // 268: AddSpaceUserMessage
-	(*InitSpaceUsersMessage)(nil),                      // 269: InitSpaceUsersMessage
-	(*UpdateSpaceUserMessage)(nil),                     // 270: UpdateSpaceUserMessage
-	(*UpdateSpaceUserPusherToFrontMessage)(nil),        // 271: UpdateSpaceUserPusherToFrontMessage
-	(*RemoveSpaceUserMessage)(nil),                     // 272: RemoveSpaceUserMessage
-	(*RemoveSpaceUserPusherToFrontMessage)(nil),        // 273: RemoveSpaceUserPusherToFrontMessage
-	(*UpdateSpaceMetadataMessage)(nil),                 // 274: UpdateSpaceMetadataMessage
-	(*UpdateSpaceMetadataPusherToBackMessage)(nil),     // 275: UpdateSpaceMetadataPusherToBackMessage
-	(*SyncSpaceUsersMessage)(nil),                      // 276: SyncSpaceUsersMessage
-	(*AddSpaceUserToNotifyMessage)(nil),                // 277: AddSpaceUserToNotifyMessage
-	(*DeleteSpaceUserToNotifyMessage)(nil),             // 278: DeleteSpaceUserToNotifyMessage
-	(*SpaceDestroyedMessage)(nil),                      // 279: SpaceDestroyedMessage
-	(*KickOffMessage)(nil),                             // 280: KickOffMessage
-	(*AddSpaceFilterMessage)(nil),                      // 281: AddSpaceFilterMessage
-	(*RemoveSpaceFilterMessage)(nil),                   // 282: RemoveSpaceFilterMessage
-	(*SpaceFilterMessage)(nil),                         // 283: SpaceFilterMessage
-	(*SpaceFilterContainName)(nil),                     // 284: SpaceFilterContainName
-	(*SpaceFilterLiveStreaming)(nil),                   // 285: SpaceFilterLiveStreaming
-	(*SpaceFilterEverybody)(nil),                       // 286: SpaceFilterEverybody
-	(*VariableRequest)(nil),                            // 287: VariableRequest
-	(*SaveVariableRequest)(nil),                        // 288: SaveVariableRequest
-	(*EventRequest)(nil),                               // 289: EventRequest
-	(*EventResponse)(nil),                              // 290: EventResponse
-	(*DispatchEventRequest)(nil),                       // 291: DispatchEventRequest
-	nil,                                                // 292: UserJoinedMessage.VariablesEntry
-	nil,                                                // 293: UserJoinedZoneMessage.VariablesEntry
-	(*wrapperspb.UInt32Value)(nil),                     // 294: google.protobuf.UInt32Value
-	(*wrapperspb.BoolValue)(nil),                       // 295: google.protobuf.BoolValue
-	(*wrapperspb.StringValue)(nil),                     // 296: google.protobuf.StringValue
-	(*structpb.Value)(nil),                             // 297: google.protobuf.Value
-	(*wrapperspb.Int32Value)(nil),                      // 298: google.protobuf.Int32Value
-	(*fieldmaskpb.FieldMask)(nil),                      // 299: google.protobuf.FieldMask
+	(UploadedFileKind)(0),                              // 8: UploadedFileKind
+	(RecordingWebhookPhase)(0),                         // 9: RecordingWebhookPhase
+	(FilterType)(0),                                    // 10: FilterType
+	(PositionMessage_Direction)(0),                     // 11: PositionMessage.Direction
+	(SetPlayerVariableMessage_Scope)(0),                // 12: SetPlayerVariableMessage.Scope
+	(AskPositionMessage_AskType)(0),                    // 13: AskPositionMessage.AskType
+	(*PositionMessage)(nil),                            // 14: PositionMessage
+	(*PointMessage)(nil),                               // 15: PointMessage
+	(*ViewportMessage)(nil),                            // 16: ViewportMessage
+	(*CharacterTextureMessage)(nil),                    // 17: CharacterTextureMessage
+	(*ApplicationMessage)(nil),                         // 18: ApplicationMessage
+	(*CompanionTextureMessage)(nil),                    // 19: CompanionTextureMessage
+	(*ZoneMessage)(nil),                                // 20: ZoneMessage
+	(*PingMessage)(nil),                                // 21: PingMessage
+	(*UpdateMapToNewestMessage)(nil),                   // 22: UpdateMapToNewestMessage
+	(*UpdateMapToNewestWithKeyMessage)(nil),            // 23: UpdateMapToNewestWithKeyMessage
+	(*SetPlayerDetailsMessage)(nil),                    // 24: SetPlayerDetailsMessage
+	(*SayMessage)(nil),                                 // 25: SayMessage
+	(*UserMovesMessage)(nil),                           // 26: UserMovesMessage
+	(*WebRtcSignal)(nil),                               // 27: WebRtcSignal
+	(*VideoQualitySampleMessage)(nil),                  // 28: VideoQualitySampleMessage
+	(*VideoQualityReportMessage)(nil),                  // 29: VideoQualityReportMessage
+	(*AnalyticsEventMessage)(nil),                      // 30: AnalyticsEventMessage
+	(*AnalyticsEventReportMessage)(nil),                // 31: AnalyticsEventReportMessage
+	(*ReportPlayerMessage)(nil),                        // 32: ReportPlayerMessage
+	(*BanPlayerMessage)(nil),                           // 33: BanPlayerMessage
+	(*UpdateChatIdMessage)(nil),                        // 34: UpdateChatIdMessage
+	(*LeaveChatRoomAreaMessage)(nil),                   // 35: LeaveChatRoomAreaMessage
+	(*EmotePromptMessage)(nil),                         // 36: EmotePromptMessage
+	(*EmoteEventMessage)(nil),                          // 37: EmoteEventMessage
+	(*FollowRequestMessage)(nil),                       // 38: FollowRequestMessage
+	(*FollowConfirmationMessage)(nil),                  // 39: FollowConfirmationMessage
+	(*FollowAbortMessage)(nil),                         // 40: FollowAbortMessage
+	(*LockGroupPromptMessage)(nil),                     // 41: LockGroupPromptMessage
+	(*EditMapMessage)(nil),                             // 42: EditMapMessage
+	(*ErrorCommandMessage)(nil),                        // 43: ErrorCommandMessage
+	(*UpdateWAMSettingsMessage)(nil),                   // 44: UpdateWAMSettingsMessage
+	(*UpdateMegaphoneSettingMessage)(nil),              // 45: UpdateMegaphoneSettingMessage
+	(*UpdateRecordingSettingMessage)(nil),              // 46: UpdateRecordingSettingMessage
+	(*EditMapCommandMessage)(nil),                      // 47: EditMapCommandMessage
+	(*EditMapCommandsArrayMessage)(nil),                // 48: EditMapCommandsArrayMessage
+	(*EditMapCommandWithKeyMessage)(nil),               // 49: EditMapCommandWithKeyMessage
+	(*ModifyAreaMessage)(nil),                          // 50: ModifyAreaMessage
+	(*DeleteAreaMessage)(nil),                          // 51: DeleteAreaMessage
+	(*CreateAreaMessage)(nil),                          // 52: CreateAreaMessage
+	(*CreateEntityMessage)(nil),                        // 53: CreateEntityMessage
+	(*DeleteEntityMessage)(nil),                        // 54: DeleteEntityMessage
+	(*CollisionGridRow)(nil),                           // 55: CollisionGridRow
+	(*UploadEntityMessage)(nil),                        // 56: UploadEntityMessage
+	(*UploadFileMessage)(nil),                          // 57: UploadFileMessage
+	(*ModifyCustomEntityMessage)(nil),                  // 58: ModifyCustomEntityMessage
+	(*DeleteCustomEntityMessage)(nil),                  // 59: DeleteCustomEntityMessage
+	(*ModifyEntityMessage)(nil),                        // 60: ModifyEntityMessage
+	(*FrontToPusherWebSocketMessage)(nil),              // 61: FrontToPusherWebSocketMessage
+	(*PusherToFrontWebSocketMessage)(nil),              // 62: PusherToFrontWebSocketMessage
+	(*ClientToServerMessage)(nil),                      // 63: ClientToServerMessage
+	(*ReceivedEventMessage)(nil),                       // 64: ReceivedEventMessage
+	(*ModifiyWAMMetadataMessage)(nil),                  // 65: ModifiyWAMMetadataMessage
+	(*ItemEventMessage)(nil),                           // 66: ItemEventMessage
+	(*VariableMessage)(nil),                            // 67: VariableMessage
+	(*SetAreaPropertyVariableMessage)(nil),             // 68: SetAreaPropertyVariableMessage
+	(*AreaPropertyVariableMessage)(nil),                // 69: AreaPropertyVariableMessage
+	(*EntitySoundPlayed)(nil),                          // 70: EntitySoundPlayed
+	(*EntityEvent)(nil),                                // 71: EntityEvent
+	(*EntityMessage)(nil),                              // 72: EntityMessage
+	(*SetPlayerVariableMessage)(nil),                   // 73: SetPlayerVariableMessage
+	(*VariableWithTagMessage)(nil),                     // 74: VariableWithTagMessage
+	(*PlayGlobalMessage)(nil),                          // 75: PlayGlobalMessage
+	(*QueryMessage)(nil),                               // 76: QueryMessage
+	(*GetSignedUrlQuery)(nil),                          // 77: GetSignedUrlQuery
+	(*AbortQueryMessage)(nil),                          // 78: AbortQueryMessage
+	(*MapStorageJwtQuery)(nil),                         // 79: MapStorageJwtQuery
+	(*JitsiJwtQuery)(nil),                              // 80: JitsiJwtQuery
+	(*JoinBBBMeetingQuery)(nil),                        // 81: JoinBBBMeetingQuery
+	(*RoomTagsQuery)(nil),                              // 82: RoomTagsQuery
+	(*EmbeddableWebsiteQuery)(nil),                     // 83: EmbeddableWebsiteQuery
+	(*RoomsFromSameWorldQuery)(nil),                    // 84: RoomsFromSameWorldQuery
+	(*SendEventQuery)(nil),                             // 85: SendEventQuery
+	(*SearchMemberQuery)(nil),                          // 86: SearchMemberQuery
+	(*GetMemberQuery)(nil),                             // 87: GetMemberQuery
+	(*ChatMembersQuery)(nil),                           // 88: ChatMembersQuery
+	(*OauthRefreshTokenQuery)(nil),                     // 89: OauthRefreshTokenQuery
+	(*SearchTagsQuery)(nil),                            // 90: SearchTagsQuery
+	(*EnterChatRoomAreaQuery)(nil),                     // 91: EnterChatRoomAreaQuery
+	(*JoinSpaceQuery)(nil),                             // 92: JoinSpaceQuery
+	(*LeaveSpaceQuery)(nil),                            // 93: LeaveSpaceQuery
+	(*GetRecordingsQuery)(nil),                         // 94: GetRecordingsQuery
+	(*GetRecordingThumbnailsQuery)(nil),                // 95: GetRecordingThumbnailsQuery
+	(*DeleteRecordingQuery)(nil),                       // 96: DeleteRecordingQuery
+	(*AnswerMessage)(nil),                              // 97: AnswerMessage
+	(*JitsiJwtAnswer)(nil),                             // 98: JitsiJwtAnswer
+	(*MapStorageJwtAnswer)(nil),                        // 99: MapStorageJwtAnswer
+	(*JoinBBBMeetingAnswer)(nil),                       // 100: JoinBBBMeetingAnswer
+	(*RoomTagsAnswer)(nil),                             // 101: RoomTagsAnswer
+	(*EmbeddableWebsiteAnswer)(nil),                    // 102: EmbeddableWebsiteAnswer
+	(*RoomShortDescription)(nil),                       // 103: RoomShortDescription
+	(*RoomsFromSameWorldAnswer)(nil),                   // 104: RoomsFromSameWorldAnswer
+	(*SendEventAnswer)(nil),                            // 105: SendEventAnswer
+	(*SearchMemberAnswer)(nil),                         // 106: SearchMemberAnswer
+	(*GetMemberAnswer)(nil),                            // 107: GetMemberAnswer
+	(*ChatMembersAnswer)(nil),                          // 108: ChatMembersAnswer
+	(*OauthRefreshTokenAnswer)(nil),                    // 109: OauthRefreshTokenAnswer
+	(*EnterChatRoomAreaAnswer)(nil),                    // 110: EnterChatRoomAreaAnswer
+	(*JoinSpaceAnswer)(nil),                            // 111: JoinSpaceAnswer
+	(*LeaveSpaceAnswer)(nil),                           // 112: LeaveSpaceAnswer
+	(*SearchTagsAnswer)(nil),                           // 113: SearchTagsAnswer
+	(*GetRecordingsAnswer)(nil),                        // 114: GetRecordingsAnswer
+	(*GetRecordingThumbnailsAnswer)(nil),               // 115: GetRecordingThumbnailsAnswer
+	(*DeleteRecordingAnswer)(nil),                      // 116: DeleteRecordingAnswer
+	(*GetSignedUrlAnswer)(nil),                         // 117: GetSignedUrlAnswer
+	(*BanIpPreviewQuery)(nil),                          // 118: BanIpPreviewQuery
+	(*BanIpPreviewUser)(nil),                           // 119: BanIpPreviewUser
+	(*BanIpPreviewAnswer)(nil),                         // 120: BanIpPreviewAnswer
+	(*Member)(nil),                                     // 121: Member
+	(*IceServer)(nil),                                  // 122: IceServer
+	(*IceServersAnswer)(nil),                           // 123: IceServersAnswer
+	(*IceServersQuery)(nil),                            // 124: IceServersQuery
+	(*ChatMember)(nil),                                 // 125: ChatMember
+	(*Recording)(nil),                                  // 126: Recording
+	(*VideoFile)(nil),                                  // 127: VideoFile
+	(*SpaceQueryMessage)(nil),                          // 128: SpaceQueryMessage
+	(*AddSpaceUserQuery)(nil),                          // 129: AddSpaceUserQuery
+	(*RemoveSpaceUserQuery)(nil),                       // 130: RemoveSpaceUserQuery
+	(*SpaceStateQuery)(nil),                            // 131: SpaceStateQuery
+	(*SetSpaceKindQuery)(nil),                          // 132: SetSpaceKindQuery
+	(*RaiseHandQuery)(nil),                             // 133: RaiseHandQuery
+	(*LowerHandQuery)(nil),                             // 134: LowerHandQuery
+	(*GiveFloorQuery)(nil),                             // 135: GiveFloorQuery
+	(*RevokeFloorQuery)(nil),                           // 136: RevokeFloorQuery
+	(*StartRecordingQuery)(nil),                        // 137: StartRecordingQuery
+	(*StopRecordingQuery)(nil),                         // 138: StopRecordingQuery
+	(*CreatePollQuery)(nil),                            // 139: CreatePollQuery
+	(*VotePollQuery)(nil),                              // 140: VotePollQuery
+	(*ClosePollQuery)(nil),                             // 141: ClosePollQuery
+	(*DeletePollQuery)(nil),                            // 142: DeletePollQuery
+	(*AskQuestionQuery)(nil),                           // 143: AskQuestionQuery
+	(*UpvoteQuestionQuery)(nil),                        // 144: UpvoteQuestionQuery
+	(*AnswerQuestionQuery)(nil),                        // 145: AnswerQuestionQuery
+	(*DeleteQuestionQuery)(nil),                        // 146: DeleteQuestionQuery
+	(*SpaceStateQueryFrontToPusher)(nil),               // 147: SpaceStateQueryFrontToPusher
+	(*SpaceStateQueryPusherToBack)(nil),                // 148: SpaceStateQueryPusherToBack
+	(*SpaceStateAnswer)(nil),                           // 149: SpaceStateAnswer
+	(*SpaceStatePatchMessage)(nil),                     // 150: SpaceStatePatchMessage
+	(*SpaceAnswerMessage)(nil),                         // 151: SpaceAnswerMessage
+	(*AddSpaceUserAnswer)(nil),                         // 152: AddSpaceUserAnswer
+	(*RemoveSpaceUserAnswer)(nil),                      // 153: RemoveSpaceUserAnswer
+	(*HandleRecordingWebhookRequest)(nil),              // 154: HandleRecordingWebhookRequest
+	(*RecordingFileResult)(nil),                        // 155: RecordingFileResult
+	(*HandleLivekitWebhookRequest)(nil),                // 156: HandleLivekitWebhookRequest
+	(*UserMovedMessage)(nil),                           // 157: UserMovedMessage
+	(*MoveToPositionMessage)(nil),                      // 158: MoveToPositionMessage
+	(*LocatePositionMessage)(nil),                      // 159: LocatePositionMessage
+	(*SubMessage)(nil),                                 // 160: SubMessage
+	(*BatchMessage)(nil),                               // 161: BatchMessage
+	(*GroupUpdateMessage)(nil),                         // 162: GroupUpdateMessage
+	(*GroupDeleteMessage)(nil),                         // 163: GroupDeleteMessage
+	(*UserJoinedMessage)(nil),                          // 164: UserJoinedMessage
+	(*UserLeftMessage)(nil),                            // 165: UserLeftMessage
+	(*ErrorMessage)(nil),                               // 166: ErrorMessage
+	(*ErrorScreenMessage)(nil),                         // 167: ErrorScreenMessage
+	(*ItemStateMessage)(nil),                           // 168: ItemStateMessage
+	(*GroupUsersUpdateMessage)(nil),                    // 169: GroupUsersUpdateMessage
+	(*RoomConnectedMessage)(nil),                       // 170: RoomConnectedMessage
+	(*RoomJoinedMessage)(nil),                          // 171: RoomJoinedMessage
+	(*WebRtcStartMessage)(nil),                         // 172: WebRtcStartMessage
+	(*MeetingConnectionRestartMessage)(nil),            // 173: MeetingConnectionRestartMessage
+	(*WebRtcDisconnectMessage)(nil),                    // 174: WebRtcDisconnectMessage
+	(*TeleportMessageMessage)(nil),                     // 175: TeleportMessageMessage
+	(*SendUserMessage)(nil),                            // 176: SendUserMessage
+	(*WorldFullWarningMessage)(nil),                    // 177: WorldFullWarningMessage
+	(*WorldFullWarningToRoomMessage)(nil),              // 178: WorldFullWarningToRoomMessage
+	(*RefreshRoomPromptMessage)(nil),                   // 179: RefreshRoomPromptMessage
+	(*RefreshRoomMessage)(nil),                         // 180: RefreshRoomMessage
+	(*DeleteMapMessage)(nil),                           // 181: DeleteMapMessage
+	(*TokenExpiredMessage)(nil),                        // 182: TokenExpiredMessage
+	(*InvalidCharacterTextureMessage)(nil),             // 183: InvalidCharacterTextureMessage
+	(*InvalidCompanionTextureMessage)(nil),             // 184: InvalidCompanionTextureMessage
+	(*WorldConnectionMessage)(nil),                     // 185: WorldConnectionMessage
+	(*BanUserMessage)(nil),                             // 186: BanUserMessage
+	(*AskPositionMessage)(nil),                         // 187: AskPositionMessage
+	(*MeetingInvitationRequestMessage)(nil),            // 188: MeetingInvitationRequestMessage
+	(*MeetingInvitationRequestReceivedMessage)(nil),    // 189: MeetingInvitationRequestReceivedMessage
+	(*MeetingInvitationResponseMessage)(nil),           // 190: MeetingInvitationResponseMessage
+	(*MeetingInvitationResponseReceivedMessage)(nil),   // 191: MeetingInvitationResponseReceivedMessage
+	(*MeetingInvitationRequestTooHighMessage)(nil),     // 192: MeetingInvitationRequestTooHighMessage
+	(*MeetingInvitationRequestClosedMessage)(nil),      // 193: MeetingInvitationRequestClosedMessage
+	(*MuteAudioPrivateMessage)(nil),                    // 194: MuteAudioPrivateMessage
+	(*MuteVideoPrivateMessage)(nil),                    // 195: MuteVideoPrivateMessage
+	(*MuteAudioForEverybodyPublicMessage)(nil),         // 196: MuteAudioForEverybodyPublicMessage
+	(*MuteVideoForEverybodyPublicMessage)(nil),         // 197: MuteVideoForEverybodyPublicMessage
+	(*KickOffUserPrivateMessage)(nil),                  // 198: KickOffUserPrivateMessage
+	(*RecordingUnexpectedlyStoppedPrivateMessage)(nil), // 199: RecordingUnexpectedlyStoppedPrivateMessage
+	(*PublicEventFrontToPusher)(nil),                   // 200: PublicEventFrontToPusher
+	(*BackEventFrontToPusherMessage)(nil),              // 201: BackEventFrontToPusherMessage
+	(*PublicEvent)(nil),                                // 202: PublicEvent
+	(*SpaceEvent)(nil),                                 // 203: SpaceEvent
+	(*PrivateSpaceEvent)(nil),                          // 204: PrivateSpaceEvent
+	(*CommunicationStrategyMessage)(nil),               // 205: CommunicationStrategyMessage
+	(*SwitchMessage)(nil),                              // 206: SwitchMessage
+	(*FinalizeSwitchMessage)(nil),                      // 207: FinalizeSwitchMessage
+	(*BlockUserMessage)(nil),                           // 208: BlockUserMessage
+	(*UnblockUserMessage)(nil),                         // 209: UnblockUserMessage
+	(*LivekitInvitationMessage)(nil),                   // 210: LivekitInvitationMessage
+	(*LivekitDisconnectMessage)(nil),                   // 211: LivekitDisconnectMessage
+	(*SpaceMessage)(nil),                               // 212: SpaceMessage
+	(*SpaceIsTyping)(nil),                              // 213: SpaceIsTyping
+	(*ProximityFileTransferOfferMessage)(nil),          // 214: ProximityFileTransferOfferMessage
+	(*ProximityFileTransferDeclineMessage)(nil),        // 215: ProximityFileTransferDeclineMessage
+	(*ProximityFileTransferSignalMessage)(nil),         // 216: ProximityFileTransferSignalMessage
+	(*BackEventMessage)(nil),                           // 217: BackEventMessage
+	(*BackEvent)(nil),                                  // 218: BackEvent
+	(*MicrophoneTrackPublishedMessage)(nil),            // 219: MicrophoneTrackPublishedMessage
+	(*PrivateEvent)(nil),                               // 220: PrivateEvent
+	(*PrivateEventBackToPusher)(nil),                   // 221: PrivateEventBackToPusher
+	(*PrivateEventPusherToFront)(nil),                  // 222: PrivateEventPusherToFront
+	(*PrivateEventFrontToPusher)(nil),                  // 223: PrivateEventFrontToPusher
+	(*JoinSpaceRequestMessage)(nil),                    // 224: JoinSpaceRequestMessage
+	(*LeaveSpaceRequestMessage)(nil),                   // 225: LeaveSpaceRequestMessage
+	(*DuplicateUserConnectedMessage)(nil),              // 226: DuplicateUserConnectedMessage
+	(*BackConnectionCloseReasonMessage)(nil),           // 227: BackConnectionCloseReasonMessage
+	(*ServerToClientMessage)(nil),                      // 228: ServerToClientMessage
+	(*ConnectToRoomMessage)(nil),                       // 229: ConnectToRoomMessage
+	(*JoinRoomFrontMessage)(nil),                       // 230: JoinRoomFrontMessage
+	(*JoinRoomMessage)(nil),                            // 231: JoinRoomMessage
+	(*UserJoinedZoneMessage)(nil),                      // 232: UserJoinedZoneMessage
+	(*UserLeftZoneMessage)(nil),                        // 233: UserLeftZoneMessage
+	(*GroupUpdateZoneMessage)(nil),                     // 234: GroupUpdateZoneMessage
+	(*GroupLeftZoneMessage)(nil),                       // 235: GroupLeftZoneMessage
+	(*PlayerDetailsUpdatedMessage)(nil),                // 236: PlayerDetailsUpdatedMessage
+	(*Zone)(nil),                                       // 237: Zone
+	(*SubscribeZoneMessage)(nil),                       // 238: SubscribeZoneMessage
+	(*UnsubscribeZoneMessage)(nil),                     // 239: UnsubscribeZoneMessage
+	(*RoomMessage)(nil),                                // 240: RoomMessage
+	(*PusherToBackRoomMessage)(nil),                    // 241: PusherToBackRoomMessage
+	(*InitRoomMessage)(nil),                            // 242: InitRoomMessage
+	(*PusherToBackMessage)(nil),                        // 243: PusherToBackMessage
+	(*BatchToPusherRoomMessage)(nil),                   // 244: BatchToPusherRoomMessage
+	(*SubToPusherRoomMessage)(nil),                     // 245: SubToPusherRoomMessage
+	(*UserJoinedRoomMessage)(nil),                      // 246: UserJoinedRoomMessage
+	(*UserLeftRoomMessage)(nil),                        // 247: UserLeftRoomMessage
+	(*ServerToAdminClientMessage)(nil),                 // 248: ServerToAdminClientMessage
+	(*AdminPusherToBackMessage)(nil),                   // 249: AdminPusherToBackMessage
+	(*MapStorageRefreshMessage)(nil),                   // 250: MapStorageRefreshMessage
+	(*MapStorageToBackMessage)(nil),                    // 251: MapStorageToBackMessage
+	(*MapStorageUrlMessage)(nil),                       // 252: MapStorageUrlMessage
+	(*MapStorageClearAfterUploadMessage)(nil),          // 253: MapStorageClearAfterUploadMessage
+	(*MapStorageDeleteMessage)(nil),                    // 254: MapStorageDeleteMessage
+	(*AdminRoomMessage)(nil),                           // 255: AdminRoomMessage
+	(*AdminGlobalMessage)(nil),                         // 256: AdminGlobalMessage
+	(*BanMessage)(nil),                                 // 257: BanMessage
+	(*RoomDescription)(nil),                            // 258: RoomDescription
+	(*RoomsList)(nil),                                  // 259: RoomsList
+	(*WorldUsersQuery)(nil),                            // 260: WorldUsersQuery
+	(*WorldUser)(nil),                                  // 261: WorldUser
+	(*WorldUsersAnswer)(nil),                           // 262: WorldUsersAnswer
+	(*DispatchGlobalEventRequest)(nil),                 // 263: DispatchGlobalEventRequest
+	(*ExternalModuleMessage)(nil),                      // 264: ExternalModuleMessage
+	(*PusherToBackSpaceMessage)(nil),                   // 265: PusherToBackSpaceMessage
+	(*BackToPusherSpaceMessage)(nil),                   // 266: BackToPusherSpaceMessage
+	(*JoinSpaceMessage)(nil),                           // 267: JoinSpaceMessage
+	(*LeaveSpaceMessage)(nil),                          // 268: LeaveSpaceMessage
+	(*SpaceUser)(nil),                                  // 269: SpaceUser
+	(*AddSpaceUserMessage)(nil),                        // 270: AddSpaceUserMessage
+	(*InitSpaceUsersMessage)(nil),                      // 271: InitSpaceUsersMessage
+	(*UpdateSpaceUserMessage)(nil),                     // 272: UpdateSpaceUserMessage
+	(*UpdateSpaceUserPusherToFrontMessage)(nil),        // 273: UpdateSpaceUserPusherToFrontMessage
+	(*RemoveSpaceUserMessage)(nil),                     // 274: RemoveSpaceUserMessage
+	(*RemoveSpaceUserPusherToFrontMessage)(nil),        // 275: RemoveSpaceUserPusherToFrontMessage
+	(*UpdateSpaceMetadataMessage)(nil),                 // 276: UpdateSpaceMetadataMessage
+	(*UpdateSpaceMetadataPusherToBackMessage)(nil),     // 277: UpdateSpaceMetadataPusherToBackMessage
+	(*SyncSpaceUsersMessage)(nil),                      // 278: SyncSpaceUsersMessage
+	(*AddSpaceUserToNotifyMessage)(nil),                // 279: AddSpaceUserToNotifyMessage
+	(*DeleteSpaceUserToNotifyMessage)(nil),             // 280: DeleteSpaceUserToNotifyMessage
+	(*SpaceDestroyedMessage)(nil),                      // 281: SpaceDestroyedMessage
+	(*KickOffMessage)(nil),                             // 282: KickOffMessage
+	(*AddSpaceFilterMessage)(nil),                      // 283: AddSpaceFilterMessage
+	(*RemoveSpaceFilterMessage)(nil),                   // 284: RemoveSpaceFilterMessage
+	(*SpaceFilterMessage)(nil),                         // 285: SpaceFilterMessage
+	(*SpaceFilterContainName)(nil),                     // 286: SpaceFilterContainName
+	(*SpaceFilterLiveStreaming)(nil),                   // 287: SpaceFilterLiveStreaming
+	(*SpaceFilterEverybody)(nil),                       // 288: SpaceFilterEverybody
+	(*VariableRequest)(nil),                            // 289: VariableRequest
+	(*SaveVariableRequest)(nil),                        // 290: SaveVariableRequest
+	(*EventRequest)(nil),                               // 291: EventRequest
+	(*EventResponse)(nil),                              // 292: EventResponse
+	(*DispatchEventRequest)(nil),                       // 293: DispatchEventRequest
+	nil,                                                // 294: UserJoinedMessage.VariablesEntry
+	nil,                                                // 295: UserJoinedZoneMessage.VariablesEntry
+	(*wrapperspb.UInt32Value)(nil),                     // 296: google.protobuf.UInt32Value
+	(*wrapperspb.BoolValue)(nil),                       // 297: google.protobuf.BoolValue
+	(*wrapperspb.StringValue)(nil),                     // 298: google.protobuf.StringValue
+	(*structpb.Value)(nil),                             // 299: google.protobuf.Value
+	(*wrapperspb.Int32Value)(nil),                      // 300: google.protobuf.Int32Value
+	(*fieldmaskpb.FieldMask)(nil),                      // 301: google.protobuf.FieldMask
 }
 var file_messages_proto_depIdxs = []int32{
-	10,  // 0: PositionMessage.direction:type_name -> PositionMessage.Direction
-	230, // 1: ZoneMessage.userJoinedZoneMessage:type_name -> UserJoinedZoneMessage
-	232, // 2: ZoneMessage.groupUpdateZoneMessage:type_name -> GroupUpdateZoneMessage
-	156, // 3: ZoneMessage.userMovedMessage:type_name -> UserMovedMessage
-	233, // 4: ZoneMessage.groupLeftZoneMessage:type_name -> GroupLeftZoneMessage
-	231, // 5: ZoneMessage.userLeftZoneMessage:type_name -> UserLeftZoneMessage
-	36,  // 6: ZoneMessage.emoteEventMessage:type_name -> EmoteEventMessage
-	234, // 7: ZoneMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
-	168, // 8: ZoneMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
-	21,  // 9: UpdateMapToNewestWithKeyMessage.updateMapToNewestMessage:type_name -> UpdateMapToNewestMessage
-	294, // 10: SetPlayerDetailsMessage.outlineColor:type_name -> google.protobuf.UInt32Value
-	295, // 11: SetPlayerDetailsMessage.removeOutlineColor:type_name -> google.protobuf.BoolValue
-	295, // 12: SetPlayerDetailsMessage.showVoiceIndicator:type_name -> google.protobuf.BoolValue
+	11,  // 0: PositionMessage.direction:type_name -> PositionMessage.Direction
+	232, // 1: ZoneMessage.userJoinedZoneMessage:type_name -> UserJoinedZoneMessage
+	234, // 2: ZoneMessage.groupUpdateZoneMessage:type_name -> GroupUpdateZoneMessage
+	157, // 3: ZoneMessage.userMovedMessage:type_name -> UserMovedMessage
+	235, // 4: ZoneMessage.groupLeftZoneMessage:type_name -> GroupLeftZoneMessage
+	233, // 5: ZoneMessage.userLeftZoneMessage:type_name -> UserLeftZoneMessage
+	37,  // 6: ZoneMessage.emoteEventMessage:type_name -> EmoteEventMessage
+	236, // 7: ZoneMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
+	169, // 8: ZoneMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
+	22,  // 9: UpdateMapToNewestWithKeyMessage.updateMapToNewestMessage:type_name -> UpdateMapToNewestMessage
+	296, // 10: SetPlayerDetailsMessage.outlineColor:type_name -> google.protobuf.UInt32Value
+	297, // 11: SetPlayerDetailsMessage.removeOutlineColor:type_name -> google.protobuf.BoolValue
+	297, // 12: SetPlayerDetailsMessage.showVoiceIndicator:type_name -> google.protobuf.BoolValue
 	0,   // 13: SetPlayerDetailsMessage.availabilityStatus:type_name -> AvailabilityStatus
-	72,  // 14: SetPlayerDetailsMessage.setVariable:type_name -> SetPlayerVariableMessage
-	296, // 15: SetPlayerDetailsMessage.chatID:type_name -> google.protobuf.StringValue
-	24,  // 16: SetPlayerDetailsMessage.sayMessage:type_name -> SayMessage
+	73,  // 14: SetPlayerDetailsMessage.setVariable:type_name -> SetPlayerVariableMessage
+	298, // 15: SetPlayerDetailsMessage.chatID:type_name -> google.protobuf.StringValue
+	25,  // 16: SetPlayerDetailsMessage.sayMessage:type_name -> SayMessage
 	1,   // 17: SayMessage.type:type_name -> SayMessageType
-	13,  // 18: UserMovesMessage.position:type_name -> PositionMessage
-	15,  // 19: UserMovesMessage.viewport:type_name -> ViewportMessage
+	14,  // 18: UserMovesMessage.position:type_name -> PositionMessage
+	16,  // 19: UserMovesMessage.viewport:type_name -> ViewportMessage
 	2,   // 20: VideoQualitySampleMessage.streamCategory:type_name -> VideoQualityStreamCategory
 	3,   // 21: VideoQualitySampleMessage.transportType:type_name -> VideoQualityTransportType
 	4,   // 22: VideoQualitySampleMessage.relayProtocol:type_name -> VideoQualityRelayProtocol
 	5,   // 23: VideoQualitySampleMessage.direction:type_name -> VideoQualityStreamDirection
 	6,   // 24: VideoQualitySampleMessage.qualityLimitationReason:type_name -> VideoQualityLimitationReason
-	27,  // 25: VideoQualityReportMessage.samples:type_name -> VideoQualitySampleMessage
-	297, // 26: AnalyticsEventMessage.properties:type_name -> google.protobuf.Value
-	29,  // 27: AnalyticsEventReportMessage.events:type_name -> AnalyticsEventMessage
-	49,  // 28: EditMapMessage.modifyAreaMessage:type_name -> ModifyAreaMessage
-	51,  // 29: EditMapMessage.createAreaMessage:type_name -> CreateAreaMessage
-	50,  // 30: EditMapMessage.deleteAreaMessage:type_name -> DeleteAreaMessage
-	59,  // 31: EditMapMessage.modifyEntityMessage:type_name -> ModifyEntityMessage
-	52,  // 32: EditMapMessage.createEntityMessage:type_name -> CreateEntityMessage
-	53,  // 33: EditMapMessage.deleteEntityMessage:type_name -> DeleteEntityMessage
-	43,  // 34: EditMapMessage.updateWAMSettingsMessage:type_name -> UpdateWAMSettingsMessage
-	42,  // 35: EditMapMessage.errorCommandMessage:type_name -> ErrorCommandMessage
-	55,  // 36: EditMapMessage.uploadEntityMessage:type_name -> UploadEntityMessage
-	57,  // 37: EditMapMessage.modifyCustomEntityMessage:type_name -> ModifyCustomEntityMessage
-	58,  // 38: EditMapMessage.deleteCustomEntityMessage:type_name -> DeleteCustomEntityMessage
-	64,  // 39: EditMapMessage.modifiyWAMMetadataMessage:type_name -> ModifiyWAMMetadataMessage
-	56,  // 40: EditMapMessage.uploadFileMessage:type_name -> UploadFileMessage
-	44,  // 41: UpdateWAMSettingsMessage.updateMegaphoneSettingMessage:type_name -> UpdateMegaphoneSettingMessage
-	45,  // 42: UpdateWAMSettingsMessage.updateRecordingSettingMessage:type_name -> UpdateRecordingSettingMessage
-	297, // 43: UpdateMegaphoneSettingMessage.settings:type_name -> google.protobuf.Value
-	297, // 44: UpdateRecordingSettingMessage.settings:type_name -> google.protobuf.Value
-	41,  // 45: EditMapCommandMessage.editMapMessage:type_name -> EditMapMessage
-	46,  // 46: EditMapCommandsArrayMessage.editMapCommands:type_name -> EditMapCommandMessage
-	46,  // 47: EditMapCommandWithKeyMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	297, // 48: ModifyAreaMessage.properties:type_name -> google.protobuf.Value
-	297, // 49: CreateAreaMessage.properties:type_name -> google.protobuf.Value
-	297, // 50: CreateEntityMessage.properties:type_name -> google.protobuf.Value
+	28,  // 25: VideoQualityReportMessage.samples:type_name -> VideoQualitySampleMessage
+	299, // 26: AnalyticsEventMessage.properties:type_name -> google.protobuf.Value
+	30,  // 27: AnalyticsEventReportMessage.events:type_name -> AnalyticsEventMessage
+	50,  // 28: EditMapMessage.modifyAreaMessage:type_name -> ModifyAreaMessage
+	52,  // 29: EditMapMessage.createAreaMessage:type_name -> CreateAreaMessage
+	51,  // 30: EditMapMessage.deleteAreaMessage:type_name -> DeleteAreaMessage
+	60,  // 31: EditMapMessage.modifyEntityMessage:type_name -> ModifyEntityMessage
+	53,  // 32: EditMapMessage.createEntityMessage:type_name -> CreateEntityMessage
+	54,  // 33: EditMapMessage.deleteEntityMessage:type_name -> DeleteEntityMessage
+	44,  // 34: EditMapMessage.updateWAMSettingsMessage:type_name -> UpdateWAMSettingsMessage
+	43,  // 35: EditMapMessage.errorCommandMessage:type_name -> ErrorCommandMessage
+	56,  // 36: EditMapMessage.uploadEntityMessage:type_name -> UploadEntityMessage
+	58,  // 37: EditMapMessage.modifyCustomEntityMessage:type_name -> ModifyCustomEntityMessage
+	59,  // 38: EditMapMessage.deleteCustomEntityMessage:type_name -> DeleteCustomEntityMessage
+	65,  // 39: EditMapMessage.modifiyWAMMetadataMessage:type_name -> ModifiyWAMMetadataMessage
+	57,  // 40: EditMapMessage.uploadFileMessage:type_name -> UploadFileMessage
+	45,  // 41: UpdateWAMSettingsMessage.updateMegaphoneSettingMessage:type_name -> UpdateMegaphoneSettingMessage
+	46,  // 42: UpdateWAMSettingsMessage.updateRecordingSettingMessage:type_name -> UpdateRecordingSettingMessage
+	299, // 43: UpdateMegaphoneSettingMessage.settings:type_name -> google.protobuf.Value
+	299, // 44: UpdateRecordingSettingMessage.settings:type_name -> google.protobuf.Value
+	42,  // 45: EditMapCommandMessage.editMapMessage:type_name -> EditMapMessage
+	47,  // 46: EditMapCommandsArrayMessage.editMapCommands:type_name -> EditMapCommandMessage
+	47,  // 47: EditMapCommandWithKeyMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	299, // 48: ModifyAreaMessage.properties:type_name -> google.protobuf.Value
+	299, // 49: CreateAreaMessage.properties:type_name -> google.protobuf.Value
+	299, // 50: CreateEntityMessage.properties:type_name -> google.protobuf.Value
 	7,   // 51: UploadEntityMessage.direction:type_name -> CustomEntityDirection
-	297, // 52: UploadEntityMessage.collisionGrid:type_name -> google.protobuf.Value
-	297, // 53: ModifyCustomEntityMessage.collisionGrid:type_name -> google.protobuf.Value
-	297, // 54: ModifyEntityMessage.properties:type_name -> google.protobuf.Value
-	62,  // 55: FrontToPusherWebSocketMessage.message:type_name -> ClientToServerMessage
-	226, // 56: PusherToFrontWebSocketMessage.message:type_name -> ServerToClientMessage
-	228, // 57: ClientToServerMessage.joinRoomFrontMessage:type_name -> JoinRoomFrontMessage
-	25,  // 58: ClientToServerMessage.userMovesMessage:type_name -> UserMovesMessage
-	15,  // 59: ClientToServerMessage.viewportMessage:type_name -> ViewportMessage
-	65,  // 60: ClientToServerMessage.itemEventMessage:type_name -> ItemEventMessage
-	23,  // 61: ClientToServerMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
-	74,  // 62: ClientToServerMessage.playGlobalMessage:type_name -> PlayGlobalMessage
-	31,  // 63: ClientToServerMessage.reportPlayerMessage:type_name -> ReportPlayerMessage
-	35,  // 64: ClientToServerMessage.emotePromptMessage:type_name -> EmotePromptMessage
-	66,  // 65: ClientToServerMessage.variableMessage:type_name -> VariableMessage
-	37,  // 66: ClientToServerMessage.followRequestMessage:type_name -> FollowRequestMessage
-	38,  // 67: ClientToServerMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
-	39,  // 68: ClientToServerMessage.followAbortMessage:type_name -> FollowAbortMessage
-	40,  // 69: ClientToServerMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
-	75,  // 70: ClientToServerMessage.queryMessage:type_name -> QueryMessage
-	77,  // 71: ClientToServerMessage.abortQueryMessage:type_name -> AbortQueryMessage
-	20,  // 72: ClientToServerMessage.pingMessage:type_name -> PingMessage
-	186, // 73: ClientToServerMessage.askPositionMessage:type_name -> AskPositionMessage
-	46,  // 74: ClientToServerMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	281, // 75: ClientToServerMessage.addSpaceFilterMessage:type_name -> AddSpaceFilterMessage
-	282, // 76: ClientToServerMessage.removeSpaceFilterMessage:type_name -> RemoveSpaceFilterMessage
-	270, // 77: ClientToServerMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	274, // 78: ClientToServerMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
-	32,  // 79: ClientToServerMessage.banPlayerMessage:type_name -> BanPlayerMessage
-	33,  // 80: ClientToServerMessage.updateChatIdMessage:type_name -> UpdateChatIdMessage
-	199, // 81: ClientToServerMessage.publicEvent:type_name -> PublicEventFrontToPusher
-	221, // 82: ClientToServerMessage.privateEvent:type_name -> PrivateEventFrontToPusher
-	200, // 83: ClientToServerMessage.backEvent:type_name -> BackEventFrontToPusherMessage
-	34,  // 84: ClientToServerMessage.leaveChatRoomAreaMessage:type_name -> LeaveChatRoomAreaMessage
-	187, // 85: ClientToServerMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
-	189, // 86: ClientToServerMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
-	67,  // 87: ClientToServerMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
-	28,  // 88: ClientToServerMessage.videoQualityReportMessage:type_name -> VideoQualityReportMessage
-	30,  // 89: ClientToServerMessage.analyticsEventReportMessage:type_name -> AnalyticsEventReportMessage
-	71,  // 90: ClientToServerMessage.entityMessage:type_name -> EntityMessage
-	297, // 91: ReceivedEventMessage.data:type_name -> google.protobuf.Value
-	69,  // 92: EntityEvent.entitySoundPlayed:type_name -> EntitySoundPlayed
-	70,  // 93: EntityMessage.entityEvent:type_name -> EntityEvent
-	298, // 94: SetPlayerVariableMessage.ttl:type_name -> google.protobuf.Int32Value
-	11,  // 95: SetPlayerVariableMessage.scope:type_name -> SetPlayerVariableMessage.Scope
-	79,  // 96: QueryMessage.jitsiJwtQuery:type_name -> JitsiJwtQuery
-	80,  // 97: QueryMessage.joinBBBMeetingQuery:type_name -> JoinBBBMeetingQuery
-	81,  // 98: QueryMessage.roomTagsQuery:type_name -> RoomTagsQuery
-	82,  // 99: QueryMessage.embeddableWebsiteQuery:type_name -> EmbeddableWebsiteQuery
-	83,  // 100: QueryMessage.roomsFromSameWorldQuery:type_name -> RoomsFromSameWorldQuery
-	84,  // 101: QueryMessage.sendEventQuery:type_name -> SendEventQuery
-	85,  // 102: QueryMessage.searchMemberQuery:type_name -> SearchMemberQuery
-	86,  // 103: QueryMessage.getMemberQuery:type_name -> GetMemberQuery
-	123, // 104: QueryMessage.iceServersQuery:type_name -> IceServersQuery
-	87,  // 105: QueryMessage.chatMembersQuery:type_name -> ChatMembersQuery
-	89,  // 106: QueryMessage.searchTagsQuery:type_name -> SearchTagsQuery
-	88,  // 107: QueryMessage.oauthRefreshTokenQuery:type_name -> OauthRefreshTokenQuery
-	90,  // 108: QueryMessage.enterChatRoomAreaQuery:type_name -> EnterChatRoomAreaQuery
-	91,  // 109: QueryMessage.joinSpaceQuery:type_name -> JoinSpaceQuery
-	92,  // 110: QueryMessage.leaveSpaceQuery:type_name -> LeaveSpaceQuery
-	78,  // 111: QueryMessage.mapStorageJwtQuery:type_name -> MapStorageJwtQuery
-	93,  // 112: QueryMessage.getRecordingsQuery:type_name -> GetRecordingsQuery
-	95,  // 113: QueryMessage.deleteRecordingQuery:type_name -> DeleteRecordingQuery
-	76,  // 114: QueryMessage.getSignedUrlQuery:type_name -> GetSignedUrlQuery
-	94,  // 115: QueryMessage.getRecordingThumbnailsQuery:type_name -> GetRecordingThumbnailsQuery
-	117, // 116: QueryMessage.banIpPreviewQuery:type_name -> BanIpPreviewQuery
-	146, // 117: QueryMessage.spaceStateQuery:type_name -> SpaceStateQueryFrontToPusher
-	297, // 118: SendEventQuery.data:type_name -> google.protobuf.Value
-	9,   // 119: JoinSpaceQuery.filterType:type_name -> FilterType
-	165, // 120: AnswerMessage.error:type_name -> ErrorMessage
-	97,  // 121: AnswerMessage.jitsiJwtAnswer:type_name -> JitsiJwtAnswer
-	99,  // 122: AnswerMessage.joinBBBMeetingAnswer:type_name -> JoinBBBMeetingAnswer
-	100, // 123: AnswerMessage.roomTagsAnswer:type_name -> RoomTagsAnswer
-	101, // 124: AnswerMessage.embeddableWebsiteAnswer:type_name -> EmbeddableWebsiteAnswer
-	103, // 125: AnswerMessage.roomsFromSameWorldAnswer:type_name -> RoomsFromSameWorldAnswer
-	104, // 126: AnswerMessage.sendEventAnswer:type_name -> SendEventAnswer
-	105, // 127: AnswerMessage.searchMemberAnswer:type_name -> SearchMemberAnswer
-	106, // 128: AnswerMessage.getMemberAnswer:type_name -> GetMemberAnswer
-	122, // 129: AnswerMessage.iceServersAnswer:type_name -> IceServersAnswer
-	107, // 130: AnswerMessage.chatMembersAnswer:type_name -> ChatMembersAnswer
-	112, // 131: AnswerMessage.searchTagsAnswer:type_name -> SearchTagsAnswer
-	108, // 132: AnswerMessage.oauthRefreshTokenAnswer:type_name -> OauthRefreshTokenAnswer
-	109, // 133: AnswerMessage.enterChatRoomAreaAnswer:type_name -> EnterChatRoomAreaAnswer
-	110, // 134: AnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
-	111, // 135: AnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
-	98,  // 136: AnswerMessage.mapStorageJwtAnswer:type_name -> MapStorageJwtAnswer
-	113, // 137: AnswerMessage.getRecordingsAnswer:type_name -> GetRecordingsAnswer
-	115, // 138: AnswerMessage.deleteRecordingAnswer:type_name -> DeleteRecordingAnswer
-	116, // 139: AnswerMessage.getSignedUrlAnswer:type_name -> GetSignedUrlAnswer
-	114, // 140: AnswerMessage.getRecordingThumbnailsAnswer:type_name -> GetRecordingThumbnailsAnswer
-	119, // 141: AnswerMessage.banIpPreviewAnswer:type_name -> BanIpPreviewAnswer
-	148, // 142: AnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
-	102, // 143: RoomsFromSameWorldAnswer.roomDescriptions:type_name -> RoomShortDescription
-	120, // 144: SearchMemberAnswer.members:type_name -> Member
-	120, // 145: GetMemberAnswer.member:type_name -> Member
-	124, // 146: ChatMembersAnswer.members:type_name -> ChatMember
-	125, // 147: GetRecordingsAnswer.recordings:type_name -> Recording
-	118, // 148: BanIpPreviewAnswer.users:type_name -> BanIpPreviewUser
-	121, // 149: IceServersAnswer.iceServers:type_name -> IceServer
-	126, // 150: Recording.videoFile:type_name -> VideoFile
-	128, // 151: SpaceQueryMessage.addSpaceUserQuery:type_name -> AddSpaceUserQuery
-	129, // 152: SpaceQueryMessage.removeSpaceUserQuery:type_name -> RemoveSpaceUserQuery
-	147, // 153: SpaceQueryMessage.spaceStateQuery:type_name -> SpaceStateQueryPusherToBack
-	267, // 154: AddSpaceUserQuery.user:type_name -> SpaceUser
-	9,   // 155: AddSpaceUserQuery.filterType:type_name -> FilterType
-	132, // 156: SpaceStateQuery.raiseHand:type_name -> RaiseHandQuery
-	133, // 157: SpaceStateQuery.lowerHand:type_name -> LowerHandQuery
-	134, // 158: SpaceStateQuery.giveFloor:type_name -> GiveFloorQuery
-	135, // 159: SpaceStateQuery.revokeFloor:type_name -> RevokeFloorQuery
-	136, // 160: SpaceStateQuery.startRecording:type_name -> StartRecordingQuery
-	137, // 161: SpaceStateQuery.stopRecording:type_name -> StopRecordingQuery
-	138, // 162: SpaceStateQuery.createPoll:type_name -> CreatePollQuery
-	139, // 163: SpaceStateQuery.votePoll:type_name -> VotePollQuery
-	140, // 164: SpaceStateQuery.closePoll:type_name -> ClosePollQuery
-	141, // 165: SpaceStateQuery.deletePoll:type_name -> DeletePollQuery
-	142, // 166: SpaceStateQuery.askQuestion:type_name -> AskQuestionQuery
-	143, // 167: SpaceStateQuery.upvoteQuestion:type_name -> UpvoteQuestionQuery
-	144, // 168: SpaceStateQuery.answerQuestion:type_name -> AnswerQuestionQuery
-	145, // 169: SpaceStateQuery.deleteQuestion:type_name -> DeleteQuestionQuery
-	131, // 170: SpaceStateQuery.setKind:type_name -> SetSpaceKindQuery
-	130, // 171: SpaceStateQueryFrontToPusher.query:type_name -> SpaceStateQuery
-	130, // 172: SpaceStateQueryPusherToBack.query:type_name -> SpaceStateQuery
-	165, // 173: SpaceAnswerMessage.error:type_name -> ErrorMessage
-	151, // 174: SpaceAnswerMessage.addSpaceUserAnswer:type_name -> AddSpaceUserAnswer
-	152, // 175: SpaceAnswerMessage.removeSpaceUserAnswer:type_name -> RemoveSpaceUserAnswer
-	110, // 176: SpaceAnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
-	111, // 177: SpaceAnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
-	148, // 178: SpaceAnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
-	8,   // 179: HandleRecordingWebhookRequest.phase:type_name -> RecordingWebhookPhase
-	154, // 180: HandleRecordingWebhookRequest.fileResults:type_name -> RecordingFileResult
-	13,  // 181: UserMovedMessage.position:type_name -> PositionMessage
-	13,  // 182: MoveToPositionMessage.position:type_name -> PositionMessage
-	13,  // 183: LocatePositionMessage.position:type_name -> PositionMessage
-	156, // 184: SubMessage.userMovedMessage:type_name -> UserMovedMessage
-	161, // 185: SubMessage.groupUpdateMessage:type_name -> GroupUpdateMessage
-	162, // 186: SubMessage.groupDeleteMessage:type_name -> GroupDeleteMessage
-	163, // 187: SubMessage.userJoinedMessage:type_name -> UserJoinedMessage
-	164, // 188: SubMessage.userLeftMessage:type_name -> UserLeftMessage
-	65,  // 189: SubMessage.itemEventMessage:type_name -> ItemEventMessage
-	36,  // 190: SubMessage.emoteEventMessage:type_name -> EmoteEventMessage
-	66,  // 191: SubMessage.variableMessage:type_name -> VariableMessage
-	165, // 192: SubMessage.errorMessage:type_name -> ErrorMessage
-	234, // 193: SubMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
-	20,  // 194: SubMessage.pingMessage:type_name -> PingMessage
-	46,  // 195: SubMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	268, // 196: SubMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
-	271, // 197: SubMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserPusherToFrontMessage
-	273, // 198: SubMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserPusherToFrontMessage
-	63,  // 199: SubMessage.receivedEventMessage:type_name -> ReceivedEventMessage
-	274, // 200: SubMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
-	168, // 201: SubMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
-	280, // 202: SubMessage.kickOffMessage:type_name -> KickOffMessage
-	201, // 203: SubMessage.publicEvent:type_name -> PublicEvent
-	220, // 204: SubMessage.privateEvent:type_name -> PrivateEventPusherToFront
-	279, // 205: SubMessage.spaceDestroyedMessage:type_name -> SpaceDestroyedMessage
-	269, // 206: SubMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
-	68,  // 207: SubMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
-	224, // 208: SubMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
-	71,  // 209: SubMessage.entityMessage:type_name -> EntityMessage
-	149, // 210: SubMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
-	159, // 211: BatchMessage.payload:type_name -> SubMessage
-	14,  // 212: GroupUpdateMessage.position:type_name -> PointMessage
-	294, // 213: GroupUpdateMessage.groupSize:type_name -> google.protobuf.UInt32Value
-	295, // 214: GroupUpdateMessage.locked:type_name -> google.protobuf.BoolValue
-	16,  // 215: UserJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
-	13,  // 216: UserJoinedMessage.position:type_name -> PositionMessage
-	18,  // 217: UserJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
-	0,   // 218: UserJoinedMessage.availabilityStatus:type_name -> AvailabilityStatus
-	292, // 219: UserJoinedMessage.variables:type_name -> UserJoinedMessage.VariablesEntry
-	24,  // 220: UserJoinedMessage.sayMessage:type_name -> SayMessage
-	296, // 221: ErrorScreenMessage.code:type_name -> google.protobuf.StringValue
-	296, // 222: ErrorScreenMessage.title:type_name -> google.protobuf.StringValue
-	296, // 223: ErrorScreenMessage.subtitle:type_name -> google.protobuf.StringValue
-	296, // 224: ErrorScreenMessage.details:type_name -> google.protobuf.StringValue
-	298, // 225: ErrorScreenMessage.timeToRetry:type_name -> google.protobuf.Int32Value
-	295, // 226: ErrorScreenMessage.canRetryManual:type_name -> google.protobuf.BoolValue
-	296, // 227: ErrorScreenMessage.urlToRedirect:type_name -> google.protobuf.StringValue
-	296, // 228: ErrorScreenMessage.buttonTitle:type_name -> google.protobuf.StringValue
-	296, // 229: ErrorScreenMessage.image:type_name -> google.protobuf.StringValue
-	296, // 230: ErrorScreenMessage.imageLogo:type_name -> google.protobuf.StringValue
-	47,  // 231: RoomConnectedMessage.editMapCommandsArrayMessage:type_name -> EditMapCommandsArrayMessage
-	167, // 232: RoomJoinedMessage.item:type_name -> ItemStateMessage
-	66,  // 233: RoomJoinedMessage.variable:type_name -> VariableMessage
-	16,  // 234: RoomJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
-	66,  // 235: RoomJoinedMessage.playerVariable:type_name -> VariableMessage
-	17,  // 236: RoomJoinedMessage.applications:type_name -> ApplicationMessage
-	18,  // 237: RoomJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
-	68,  // 238: RoomJoinedMessage.areaPropertyVariable:type_name -> AreaPropertyVariableMessage
-	12,  // 239: AskPositionMessage.askType:type_name -> AskPositionMessage.AskType
-	202, // 240: PublicEventFrontToPusher.spaceEvent:type_name -> SpaceEvent
-	217, // 241: BackEventFrontToPusherMessage.backEvent:type_name -> BackEvent
-	202, // 242: PublicEvent.spaceEvent:type_name -> SpaceEvent
-	211, // 243: SpaceEvent.spaceMessage:type_name -> SpaceMessage
-	212, // 244: SpaceEvent.spaceIsTyping:type_name -> SpaceIsTyping
-	195, // 245: SpaceEvent.muteAudioForEverybody:type_name -> MuteAudioForEverybodyPublicMessage
-	196, // 246: SpaceEvent.muteVideoForEverybody:type_name -> MuteVideoForEverybodyPublicMessage
-	194, // 247: PrivateSpaceEvent.muteVideo:type_name -> MuteVideoPrivateMessage
-	193, // 248: PrivateSpaceEvent.muteAudio:type_name -> MuteAudioPrivateMessage
-	197, // 249: PrivateSpaceEvent.kickOffUser:type_name -> KickOffUserPrivateMessage
-	171, // 250: PrivateSpaceEvent.webRtcStartMessage:type_name -> WebRtcStartMessage
-	26,  // 251: PrivateSpaceEvent.webRtcSignal:type_name -> WebRtcSignal
-	26,  // 252: PrivateSpaceEvent.webRtcScreenSharingSignal:type_name -> WebRtcSignal
-	173, // 253: PrivateSpaceEvent.webRtcDisconnectMessage:type_name -> WebRtcDisconnectMessage
-	204, // 254: PrivateSpaceEvent.communicationStrategyMessage:type_name -> CommunicationStrategyMessage
-	205, // 255: PrivateSpaceEvent.switchMessage:type_name -> SwitchMessage
-	206, // 256: PrivateSpaceEvent.finalizeSwitchMessage:type_name -> FinalizeSwitchMessage
-	209, // 257: PrivateSpaceEvent.livekitInvitationMessage:type_name -> LivekitInvitationMessage
-	210, // 258: PrivateSpaceEvent.livekitDisconnectMessage:type_name -> LivekitDisconnectMessage
-	268, // 259: PrivateSpaceEvent.addSpaceUserMessage:type_name -> AddSpaceUserMessage
-	270, // 260: PrivateSpaceEvent.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	272, // 261: PrivateSpaceEvent.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
-	207, // 262: PrivateSpaceEvent.blockUserMessage:type_name -> BlockUserMessage
-	208, // 263: PrivateSpaceEvent.unblockUserMessage:type_name -> UnblockUserMessage
-	172, // 264: PrivateSpaceEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
-	198, // 265: PrivateSpaceEvent.recordingUnexpectedlyStoppedMessage:type_name -> RecordingUnexpectedlyStoppedPrivateMessage
-	213, // 266: PrivateSpaceEvent.proximityFileTransferOffer:type_name -> ProximityFileTransferOfferMessage
-	215, // 267: PrivateSpaceEvent.proximityFileTransferSignal:type_name -> ProximityFileTransferSignalMessage
-	214, // 268: PrivateSpaceEvent.proximityFileTransferDecline:type_name -> ProximityFileTransferDeclineMessage
-	16,  // 269: SpaceMessage.characterTextures:type_name -> CharacterTextureMessage
-	16,  // 270: SpaceIsTyping.characterTextures:type_name -> CharacterTextureMessage
-	16,  // 271: ProximityFileTransferOfferMessage.characterTextures:type_name -> CharacterTextureMessage
-	217, // 272: BackEventMessage.backEvent:type_name -> BackEvent
-	172, // 273: BackEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
-	203, // 274: PrivateEvent.spaceEvent:type_name -> PrivateSpaceEvent
-	267, // 275: PrivateEventBackToPusher.sender:type_name -> SpaceUser
-	203, // 276: PrivateEventBackToPusher.spaceEvent:type_name -> PrivateSpaceEvent
-	267, // 277: PrivateEventPusherToFront.sender:type_name -> SpaceUser
-	203, // 278: PrivateEventPusherToFront.spaceEvent:type_name -> PrivateSpaceEvent
-	203, // 279: PrivateEventFrontToPusher.spaceEvent:type_name -> PrivateSpaceEvent
-	160, // 280: ServerToClientMessage.batchMessage:type_name -> BatchMessage
-	165, // 281: ServerToClientMessage.errorMessage:type_name -> ErrorMessage
-	169, // 282: ServerToClientMessage.roomConnectedMessage:type_name -> RoomConnectedMessage
-	170, // 283: ServerToClientMessage.roomJoinedMessage:type_name -> RoomJoinedMessage
-	174, // 284: ServerToClientMessage.teleportMessageMessage:type_name -> TeleportMessageMessage
-	175, // 285: ServerToClientMessage.sendUserMessage:type_name -> SendUserMessage
-	185, // 286: ServerToClientMessage.banUserMessage:type_name -> BanUserMessage
-	176, // 287: ServerToClientMessage.worldFullWarningMessage:type_name -> WorldFullWarningMessage
-	179, // 288: ServerToClientMessage.refreshRoomMessage:type_name -> RefreshRoomMessage
-	184, // 289: ServerToClientMessage.worldConnectionMessage:type_name -> WorldConnectionMessage
-	181, // 290: ServerToClientMessage.tokenExpiredMessage:type_name -> TokenExpiredMessage
-	37,  // 291: ServerToClientMessage.followRequestMessage:type_name -> FollowRequestMessage
-	38,  // 292: ServerToClientMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
-	39,  // 293: ServerToClientMessage.followAbortMessage:type_name -> FollowAbortMessage
-	182, // 294: ServerToClientMessage.invalidCharacterTextureMessage:type_name -> InvalidCharacterTextureMessage
-	180, // 295: ServerToClientMessage.deleteMapMessage:type_name -> DeleteMapMessage
-	166, // 296: ServerToClientMessage.errorScreenMessage:type_name -> ErrorScreenMessage
-	96,  // 297: ServerToClientMessage.answerMessage:type_name -> AnswerMessage
-	157, // 298: ServerToClientMessage.moveToPositionMessage:type_name -> MoveToPositionMessage
-	183, // 299: ServerToClientMessage.invalidCompanionTextureMessage:type_name -> InvalidCompanionTextureMessage
-	222, // 300: ServerToClientMessage.joinSpaceRequestMessage:type_name -> JoinSpaceRequestMessage
-	223, // 301: ServerToClientMessage.leaveSpaceRequestMessage:type_name -> LeaveSpaceRequestMessage
-	262, // 302: ServerToClientMessage.externalModuleMessage:type_name -> ExternalModuleMessage
-	158, // 303: ServerToClientMessage.locatePositionMessage:type_name -> LocatePositionMessage
-	188, // 304: ServerToClientMessage.meetingInvitationRequestReceivedMessage:type_name -> MeetingInvitationRequestReceivedMessage
-	190, // 305: ServerToClientMessage.meetingInvitationResponseReceivedMessage:type_name -> MeetingInvitationResponseReceivedMessage
-	191, // 306: ServerToClientMessage.meetingInvitationRequestTooHighMessage:type_name -> MeetingInvitationRequestTooHighMessage
-	192, // 307: ServerToClientMessage.meetingInvitationRequestClosedMessage:type_name -> MeetingInvitationRequestClosedMessage
-	224, // 308: ServerToClientMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
-	225, // 309: ServerToClientMessage.backConnectionCloseReasonMessage:type_name -> BackConnectionCloseReasonMessage
-	296, // 310: ConnectToRoomMessage.lastCommandId:type_name -> google.protobuf.StringValue
-	13,  // 311: JoinRoomFrontMessage.positionMessage:type_name -> PositionMessage
-	15,  // 312: JoinRoomFrontMessage.viewportMessage:type_name -> ViewportMessage
-	0,   // 313: JoinRoomFrontMessage.availabilityStatus:type_name -> AvailabilityStatus
-	13,  // 314: JoinRoomMessage.positionMessage:type_name -> PositionMessage
-	16,  // 315: JoinRoomMessage.characterTextures:type_name -> CharacterTextureMessage
-	18,  // 316: JoinRoomMessage.companionTexture:type_name -> CompanionTextureMessage
-	296, // 317: JoinRoomMessage.visitCardUrl:type_name -> google.protobuf.StringValue
-	0,   // 318: JoinRoomMessage.availabilityStatus:type_name -> AvailabilityStatus
-	17,  // 319: JoinRoomMessage.applications:type_name -> ApplicationMessage
-	296, // 320: JoinRoomMessage.chatID:type_name -> google.protobuf.StringValue
-	16,  // 321: UserJoinedZoneMessage.characterTextures:type_name -> CharacterTextureMessage
-	13,  // 322: UserJoinedZoneMessage.position:type_name -> PositionMessage
-	235, // 323: UserJoinedZoneMessage.fromZone:type_name -> Zone
-	18,  // 324: UserJoinedZoneMessage.companionTexture:type_name -> CompanionTextureMessage
-	0,   // 325: UserJoinedZoneMessage.availabilityStatus:type_name -> AvailabilityStatus
-	293, // 326: UserJoinedZoneMessage.variables:type_name -> UserJoinedZoneMessage.VariablesEntry
-	24,  // 327: UserJoinedZoneMessage.sayMessage:type_name -> SayMessage
-	235, // 328: UserLeftZoneMessage.toZone:type_name -> Zone
-	14,  // 329: GroupUpdateZoneMessage.position:type_name -> PointMessage
-	235, // 330: GroupUpdateZoneMessage.fromZone:type_name -> Zone
-	235, // 331: GroupLeftZoneMessage.toZone:type_name -> Zone
-	23,  // 332: PlayerDetailsUpdatedMessage.details:type_name -> SetPlayerDetailsMessage
-	240, // 333: PusherToBackRoomMessage.initRoomMessage:type_name -> InitRoomMessage
-	236, // 334: PusherToBackRoomMessage.subscribeZoneMessage:type_name -> SubscribeZoneMessage
-	237, // 335: PusherToBackRoomMessage.unsubscribeZoneMessage:type_name -> UnsubscribeZoneMessage
-	227, // 336: PusherToBackMessage.connectToRoomMessage:type_name -> ConnectToRoomMessage
-	229, // 337: PusherToBackMessage.joinRoomMessage:type_name -> JoinRoomMessage
-	25,  // 338: PusherToBackMessage.userMovesMessage:type_name -> UserMovesMessage
-	65,  // 339: PusherToBackMessage.itemEventMessage:type_name -> ItemEventMessage
-	23,  // 340: PusherToBackMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
-	35,  // 341: PusherToBackMessage.emotePromptMessage:type_name -> EmotePromptMessage
-	66,  // 342: PusherToBackMessage.variableMessage:type_name -> VariableMessage
-	37,  // 343: PusherToBackMessage.followRequestMessage:type_name -> FollowRequestMessage
-	38,  // 344: PusherToBackMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
-	39,  // 345: PusherToBackMessage.followAbortMessage:type_name -> FollowAbortMessage
-	40,  // 346: PusherToBackMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
-	75,  // 347: PusherToBackMessage.queryMessage:type_name -> QueryMessage
-	77,  // 348: PusherToBackMessage.abortQueryMessage:type_name -> AbortQueryMessage
-	186, // 349: PusherToBackMessage.askPositionMessage:type_name -> AskPositionMessage
-	46,  // 350: PusherToBackMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	20,  // 351: PusherToBackMessage.pingMessage:type_name -> PingMessage
-	201, // 352: PusherToBackMessage.publicEvent:type_name -> PublicEvent
-	218, // 353: PusherToBackMessage.privateEvent:type_name -> PrivateEvent
-	187, // 354: PusherToBackMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
-	189, // 355: PusherToBackMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
-	67,  // 356: PusherToBackMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
-	71,  // 357: PusherToBackMessage.entityMessage:type_name -> EntityMessage
-	243, // 358: BatchToPusherRoomMessage.payload:type_name -> SubToPusherRoomMessage
-	73,  // 359: SubToPusherRoomMessage.variableMessage:type_name -> VariableWithTagMessage
-	165, // 360: SubToPusherRoomMessage.errorMessage:type_name -> ErrorMessage
-	46,  // 361: SubToPusherRoomMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	63,  // 362: SubToPusherRoomMessage.receivedEventMessage:type_name -> ReceivedEventMessage
-	71,  // 363: SubToPusherRoomMessage.entityMessage:type_name -> EntityMessage
-	19,  // 364: SubToPusherRoomMessage.zoneMessage:type_name -> ZoneMessage
-	68,  // 365: SubToPusherRoomMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
-	244, // 366: ServerToAdminClientMessage.userJoinedRoom:type_name -> UserJoinedRoomMessage
-	245, // 367: ServerToAdminClientMessage.userLeftRoom:type_name -> UserLeftRoomMessage
-	165, // 368: ServerToAdminClientMessage.errorMessage:type_name -> ErrorMessage
-	248, // 369: MapStorageToBackMessage.mapStorageRefreshMessage:type_name -> MapStorageRefreshMessage
-	256, // 370: RoomsList.roomDescription:type_name -> RoomDescription
-	259, // 371: WorldUsersAnswer.users:type_name -> WorldUser
-	297, // 372: DispatchGlobalEventRequest.value:type_name -> google.protobuf.Value
-	297, // 373: ExternalModuleMessage.message:type_name -> google.protobuf.Value
-	265, // 374: PusherToBackSpaceMessage.joinSpaceMessage:type_name -> JoinSpaceMessage
-	266, // 375: PusherToBackSpaceMessage.leaveSpaceMessage:type_name -> LeaveSpaceMessage
-	270, // 376: PusherToBackSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	20,  // 377: PusherToBackSpaceMessage.pongMessage:type_name -> PingMessage
-	275, // 378: PusherToBackSpaceMessage.updateSpaceMetadataPusherToBackMessage:type_name -> UpdateSpaceMetadataPusherToBackMessage
-	280, // 379: PusherToBackSpaceMessage.kickOffMessage:type_name -> KickOffMessage
-	201, // 380: PusherToBackSpaceMessage.publicEvent:type_name -> PublicEvent
-	218, // 381: PusherToBackSpaceMessage.privateEvent:type_name -> PrivateEvent
-	276, // 382: PusherToBackSpaceMessage.syncSpaceUsersMessage:type_name -> SyncSpaceUsersMessage
-	127, // 383: PusherToBackSpaceMessage.spaceQueryMessage:type_name -> SpaceQueryMessage
-	277, // 384: PusherToBackSpaceMessage.addSpaceUserToNotifyMessage:type_name -> AddSpaceUserToNotifyMessage
-	278, // 385: PusherToBackSpaceMessage.deleteSpaceUserToNotifyMessage:type_name -> DeleteSpaceUserToNotifyMessage
-	216, // 386: PusherToBackSpaceMessage.backEvent:type_name -> BackEventMessage
-	268, // 387: BackToPusherSpaceMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
-	270, // 388: BackToPusherSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	272, // 389: BackToPusherSpaceMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
-	20,  // 390: BackToPusherSpaceMessage.pingMessage:type_name -> PingMessage
-	274, // 391: BackToPusherSpaceMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
-	280, // 392: BackToPusherSpaceMessage.kickOffMessage:type_name -> KickOffMessage
-	201, // 393: BackToPusherSpaceMessage.publicEvent:type_name -> PublicEvent
-	219, // 394: BackToPusherSpaceMessage.privateEvent:type_name -> PrivateEventBackToPusher
-	150, // 395: BackToPusherSpaceMessage.spaceAnswerMessage:type_name -> SpaceAnswerMessage
-	269, // 396: BackToPusherSpaceMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
-	149, // 397: BackToPusherSpaceMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
-	9,   // 398: JoinSpaceMessage.filterType:type_name -> FilterType
-	16,  // 399: SpaceUser.characterTextures:type_name -> CharacterTextureMessage
-	296, // 400: SpaceUser.roomName:type_name -> google.protobuf.StringValue
-	296, // 401: SpaceUser.visitCardUrl:type_name -> google.protobuf.StringValue
-	296, // 402: SpaceUser.jitsiParticipantId:type_name -> google.protobuf.StringValue
-	296, // 403: SpaceUser.chatID:type_name -> google.protobuf.StringValue
-	267, // 404: AddSpaceUserMessage.user:type_name -> SpaceUser
-	267, // 405: InitSpaceUsersMessage.users:type_name -> SpaceUser
-	267, // 406: UpdateSpaceUserMessage.user:type_name -> SpaceUser
-	299, // 407: UpdateSpaceUserMessage.updateMask:type_name -> google.protobuf.FieldMask
-	267, // 408: UpdateSpaceUserPusherToFrontMessage.user:type_name -> SpaceUser
-	299, // 409: UpdateSpaceUserPusherToFrontMessage.updateMask:type_name -> google.protobuf.FieldMask
-	267, // 410: SyncSpaceUsersMessage.users:type_name -> SpaceUser
-	267, // 411: AddSpaceUserToNotifyMessage.user:type_name -> SpaceUser
-	267, // 412: DeleteSpaceUserToNotifyMessage.user:type_name -> SpaceUser
-	283, // 413: AddSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
-	283, // 414: RemoveSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
-	297, // 415: SaveVariableRequest.value:type_name -> google.protobuf.Value
-	297, // 416: EventResponse.data:type_name -> google.protobuf.Value
-	297, // 417: DispatchEventRequest.data:type_name -> google.protobuf.Value
-	418, // [418:418] is the sub-list for method output_type
-	418, // [418:418] is the sub-list for method input_type
-	418, // [418:418] is the sub-list for extension type_name
-	418, // [418:418] is the sub-list for extension extendee
-	0,   // [0:418] is the sub-list for field type_name
+	299, // 52: UploadEntityMessage.collisionGrid:type_name -> google.protobuf.Value
+	8,   // 53: UploadFileMessage.kind:type_name -> UploadedFileKind
+	299, // 54: ModifyCustomEntityMessage.collisionGrid:type_name -> google.protobuf.Value
+	299, // 55: ModifyEntityMessage.properties:type_name -> google.protobuf.Value
+	63,  // 56: FrontToPusherWebSocketMessage.message:type_name -> ClientToServerMessage
+	228, // 57: PusherToFrontWebSocketMessage.message:type_name -> ServerToClientMessage
+	230, // 58: ClientToServerMessage.joinRoomFrontMessage:type_name -> JoinRoomFrontMessage
+	26,  // 59: ClientToServerMessage.userMovesMessage:type_name -> UserMovesMessage
+	16,  // 60: ClientToServerMessage.viewportMessage:type_name -> ViewportMessage
+	66,  // 61: ClientToServerMessage.itemEventMessage:type_name -> ItemEventMessage
+	24,  // 62: ClientToServerMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
+	75,  // 63: ClientToServerMessage.playGlobalMessage:type_name -> PlayGlobalMessage
+	32,  // 64: ClientToServerMessage.reportPlayerMessage:type_name -> ReportPlayerMessage
+	36,  // 65: ClientToServerMessage.emotePromptMessage:type_name -> EmotePromptMessage
+	67,  // 66: ClientToServerMessage.variableMessage:type_name -> VariableMessage
+	38,  // 67: ClientToServerMessage.followRequestMessage:type_name -> FollowRequestMessage
+	39,  // 68: ClientToServerMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
+	40,  // 69: ClientToServerMessage.followAbortMessage:type_name -> FollowAbortMessage
+	41,  // 70: ClientToServerMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
+	76,  // 71: ClientToServerMessage.queryMessage:type_name -> QueryMessage
+	78,  // 72: ClientToServerMessage.abortQueryMessage:type_name -> AbortQueryMessage
+	21,  // 73: ClientToServerMessage.pingMessage:type_name -> PingMessage
+	187, // 74: ClientToServerMessage.askPositionMessage:type_name -> AskPositionMessage
+	47,  // 75: ClientToServerMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	283, // 76: ClientToServerMessage.addSpaceFilterMessage:type_name -> AddSpaceFilterMessage
+	284, // 77: ClientToServerMessage.removeSpaceFilterMessage:type_name -> RemoveSpaceFilterMessage
+	272, // 78: ClientToServerMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	276, // 79: ClientToServerMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
+	33,  // 80: ClientToServerMessage.banPlayerMessage:type_name -> BanPlayerMessage
+	34,  // 81: ClientToServerMessage.updateChatIdMessage:type_name -> UpdateChatIdMessage
+	200, // 82: ClientToServerMessage.publicEvent:type_name -> PublicEventFrontToPusher
+	223, // 83: ClientToServerMessage.privateEvent:type_name -> PrivateEventFrontToPusher
+	201, // 84: ClientToServerMessage.backEvent:type_name -> BackEventFrontToPusherMessage
+	35,  // 85: ClientToServerMessage.leaveChatRoomAreaMessage:type_name -> LeaveChatRoomAreaMessage
+	188, // 86: ClientToServerMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
+	190, // 87: ClientToServerMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
+	68,  // 88: ClientToServerMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
+	29,  // 89: ClientToServerMessage.videoQualityReportMessage:type_name -> VideoQualityReportMessage
+	31,  // 90: ClientToServerMessage.analyticsEventReportMessage:type_name -> AnalyticsEventReportMessage
+	72,  // 91: ClientToServerMessage.entityMessage:type_name -> EntityMessage
+	299, // 92: ReceivedEventMessage.data:type_name -> google.protobuf.Value
+	70,  // 93: EntityEvent.entitySoundPlayed:type_name -> EntitySoundPlayed
+	71,  // 94: EntityMessage.entityEvent:type_name -> EntityEvent
+	300, // 95: SetPlayerVariableMessage.ttl:type_name -> google.protobuf.Int32Value
+	12,  // 96: SetPlayerVariableMessage.scope:type_name -> SetPlayerVariableMessage.Scope
+	80,  // 97: QueryMessage.jitsiJwtQuery:type_name -> JitsiJwtQuery
+	81,  // 98: QueryMessage.joinBBBMeetingQuery:type_name -> JoinBBBMeetingQuery
+	82,  // 99: QueryMessage.roomTagsQuery:type_name -> RoomTagsQuery
+	83,  // 100: QueryMessage.embeddableWebsiteQuery:type_name -> EmbeddableWebsiteQuery
+	84,  // 101: QueryMessage.roomsFromSameWorldQuery:type_name -> RoomsFromSameWorldQuery
+	85,  // 102: QueryMessage.sendEventQuery:type_name -> SendEventQuery
+	86,  // 103: QueryMessage.searchMemberQuery:type_name -> SearchMemberQuery
+	87,  // 104: QueryMessage.getMemberQuery:type_name -> GetMemberQuery
+	124, // 105: QueryMessage.iceServersQuery:type_name -> IceServersQuery
+	88,  // 106: QueryMessage.chatMembersQuery:type_name -> ChatMembersQuery
+	90,  // 107: QueryMessage.searchTagsQuery:type_name -> SearchTagsQuery
+	89,  // 108: QueryMessage.oauthRefreshTokenQuery:type_name -> OauthRefreshTokenQuery
+	91,  // 109: QueryMessage.enterChatRoomAreaQuery:type_name -> EnterChatRoomAreaQuery
+	92,  // 110: QueryMessage.joinSpaceQuery:type_name -> JoinSpaceQuery
+	93,  // 111: QueryMessage.leaveSpaceQuery:type_name -> LeaveSpaceQuery
+	79,  // 112: QueryMessage.mapStorageJwtQuery:type_name -> MapStorageJwtQuery
+	94,  // 113: QueryMessage.getRecordingsQuery:type_name -> GetRecordingsQuery
+	96,  // 114: QueryMessage.deleteRecordingQuery:type_name -> DeleteRecordingQuery
+	77,  // 115: QueryMessage.getSignedUrlQuery:type_name -> GetSignedUrlQuery
+	95,  // 116: QueryMessage.getRecordingThumbnailsQuery:type_name -> GetRecordingThumbnailsQuery
+	118, // 117: QueryMessage.banIpPreviewQuery:type_name -> BanIpPreviewQuery
+	147, // 118: QueryMessage.spaceStateQuery:type_name -> SpaceStateQueryFrontToPusher
+	299, // 119: SendEventQuery.data:type_name -> google.protobuf.Value
+	10,  // 120: JoinSpaceQuery.filterType:type_name -> FilterType
+	166, // 121: AnswerMessage.error:type_name -> ErrorMessage
+	98,  // 122: AnswerMessage.jitsiJwtAnswer:type_name -> JitsiJwtAnswer
+	100, // 123: AnswerMessage.joinBBBMeetingAnswer:type_name -> JoinBBBMeetingAnswer
+	101, // 124: AnswerMessage.roomTagsAnswer:type_name -> RoomTagsAnswer
+	102, // 125: AnswerMessage.embeddableWebsiteAnswer:type_name -> EmbeddableWebsiteAnswer
+	104, // 126: AnswerMessage.roomsFromSameWorldAnswer:type_name -> RoomsFromSameWorldAnswer
+	105, // 127: AnswerMessage.sendEventAnswer:type_name -> SendEventAnswer
+	106, // 128: AnswerMessage.searchMemberAnswer:type_name -> SearchMemberAnswer
+	107, // 129: AnswerMessage.getMemberAnswer:type_name -> GetMemberAnswer
+	123, // 130: AnswerMessage.iceServersAnswer:type_name -> IceServersAnswer
+	108, // 131: AnswerMessage.chatMembersAnswer:type_name -> ChatMembersAnswer
+	113, // 132: AnswerMessage.searchTagsAnswer:type_name -> SearchTagsAnswer
+	109, // 133: AnswerMessage.oauthRefreshTokenAnswer:type_name -> OauthRefreshTokenAnswer
+	110, // 134: AnswerMessage.enterChatRoomAreaAnswer:type_name -> EnterChatRoomAreaAnswer
+	111, // 135: AnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
+	112, // 136: AnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
+	99,  // 137: AnswerMessage.mapStorageJwtAnswer:type_name -> MapStorageJwtAnswer
+	114, // 138: AnswerMessage.getRecordingsAnswer:type_name -> GetRecordingsAnswer
+	116, // 139: AnswerMessage.deleteRecordingAnswer:type_name -> DeleteRecordingAnswer
+	117, // 140: AnswerMessage.getSignedUrlAnswer:type_name -> GetSignedUrlAnswer
+	115, // 141: AnswerMessage.getRecordingThumbnailsAnswer:type_name -> GetRecordingThumbnailsAnswer
+	120, // 142: AnswerMessage.banIpPreviewAnswer:type_name -> BanIpPreviewAnswer
+	149, // 143: AnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
+	103, // 144: RoomsFromSameWorldAnswer.roomDescriptions:type_name -> RoomShortDescription
+	121, // 145: SearchMemberAnswer.members:type_name -> Member
+	121, // 146: GetMemberAnswer.member:type_name -> Member
+	125, // 147: ChatMembersAnswer.members:type_name -> ChatMember
+	126, // 148: GetRecordingsAnswer.recordings:type_name -> Recording
+	119, // 149: BanIpPreviewAnswer.users:type_name -> BanIpPreviewUser
+	122, // 150: IceServersAnswer.iceServers:type_name -> IceServer
+	127, // 151: Recording.videoFile:type_name -> VideoFile
+	129, // 152: SpaceQueryMessage.addSpaceUserQuery:type_name -> AddSpaceUserQuery
+	130, // 153: SpaceQueryMessage.removeSpaceUserQuery:type_name -> RemoveSpaceUserQuery
+	148, // 154: SpaceQueryMessage.spaceStateQuery:type_name -> SpaceStateQueryPusherToBack
+	269, // 155: AddSpaceUserQuery.user:type_name -> SpaceUser
+	10,  // 156: AddSpaceUserQuery.filterType:type_name -> FilterType
+	133, // 157: SpaceStateQuery.raiseHand:type_name -> RaiseHandQuery
+	134, // 158: SpaceStateQuery.lowerHand:type_name -> LowerHandQuery
+	135, // 159: SpaceStateQuery.giveFloor:type_name -> GiveFloorQuery
+	136, // 160: SpaceStateQuery.revokeFloor:type_name -> RevokeFloorQuery
+	137, // 161: SpaceStateQuery.startRecording:type_name -> StartRecordingQuery
+	138, // 162: SpaceStateQuery.stopRecording:type_name -> StopRecordingQuery
+	139, // 163: SpaceStateQuery.createPoll:type_name -> CreatePollQuery
+	140, // 164: SpaceStateQuery.votePoll:type_name -> VotePollQuery
+	141, // 165: SpaceStateQuery.closePoll:type_name -> ClosePollQuery
+	142, // 166: SpaceStateQuery.deletePoll:type_name -> DeletePollQuery
+	143, // 167: SpaceStateQuery.askQuestion:type_name -> AskQuestionQuery
+	144, // 168: SpaceStateQuery.upvoteQuestion:type_name -> UpvoteQuestionQuery
+	145, // 169: SpaceStateQuery.answerQuestion:type_name -> AnswerQuestionQuery
+	146, // 170: SpaceStateQuery.deleteQuestion:type_name -> DeleteQuestionQuery
+	132, // 171: SpaceStateQuery.setKind:type_name -> SetSpaceKindQuery
+	131, // 172: SpaceStateQueryFrontToPusher.query:type_name -> SpaceStateQuery
+	131, // 173: SpaceStateQueryPusherToBack.query:type_name -> SpaceStateQuery
+	166, // 174: SpaceAnswerMessage.error:type_name -> ErrorMessage
+	152, // 175: SpaceAnswerMessage.addSpaceUserAnswer:type_name -> AddSpaceUserAnswer
+	153, // 176: SpaceAnswerMessage.removeSpaceUserAnswer:type_name -> RemoveSpaceUserAnswer
+	111, // 177: SpaceAnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
+	112, // 178: SpaceAnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
+	149, // 179: SpaceAnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
+	9,   // 180: HandleRecordingWebhookRequest.phase:type_name -> RecordingWebhookPhase
+	155, // 181: HandleRecordingWebhookRequest.fileResults:type_name -> RecordingFileResult
+	14,  // 182: UserMovedMessage.position:type_name -> PositionMessage
+	14,  // 183: MoveToPositionMessage.position:type_name -> PositionMessage
+	14,  // 184: LocatePositionMessage.position:type_name -> PositionMessage
+	157, // 185: SubMessage.userMovedMessage:type_name -> UserMovedMessage
+	162, // 186: SubMessage.groupUpdateMessage:type_name -> GroupUpdateMessage
+	163, // 187: SubMessage.groupDeleteMessage:type_name -> GroupDeleteMessage
+	164, // 188: SubMessage.userJoinedMessage:type_name -> UserJoinedMessage
+	165, // 189: SubMessage.userLeftMessage:type_name -> UserLeftMessage
+	66,  // 190: SubMessage.itemEventMessage:type_name -> ItemEventMessage
+	37,  // 191: SubMessage.emoteEventMessage:type_name -> EmoteEventMessage
+	67,  // 192: SubMessage.variableMessage:type_name -> VariableMessage
+	166, // 193: SubMessage.errorMessage:type_name -> ErrorMessage
+	236, // 194: SubMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
+	21,  // 195: SubMessage.pingMessage:type_name -> PingMessage
+	47,  // 196: SubMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	270, // 197: SubMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
+	273, // 198: SubMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserPusherToFrontMessage
+	275, // 199: SubMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserPusherToFrontMessage
+	64,  // 200: SubMessage.receivedEventMessage:type_name -> ReceivedEventMessage
+	276, // 201: SubMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
+	169, // 202: SubMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
+	282, // 203: SubMessage.kickOffMessage:type_name -> KickOffMessage
+	202, // 204: SubMessage.publicEvent:type_name -> PublicEvent
+	222, // 205: SubMessage.privateEvent:type_name -> PrivateEventPusherToFront
+	281, // 206: SubMessage.spaceDestroyedMessage:type_name -> SpaceDestroyedMessage
+	271, // 207: SubMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
+	69,  // 208: SubMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
+	226, // 209: SubMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
+	72,  // 210: SubMessage.entityMessage:type_name -> EntityMessage
+	150, // 211: SubMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
+	160, // 212: BatchMessage.payload:type_name -> SubMessage
+	15,  // 213: GroupUpdateMessage.position:type_name -> PointMessage
+	296, // 214: GroupUpdateMessage.groupSize:type_name -> google.protobuf.UInt32Value
+	297, // 215: GroupUpdateMessage.locked:type_name -> google.protobuf.BoolValue
+	17,  // 216: UserJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
+	14,  // 217: UserJoinedMessage.position:type_name -> PositionMessage
+	19,  // 218: UserJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
+	0,   // 219: UserJoinedMessage.availabilityStatus:type_name -> AvailabilityStatus
+	294, // 220: UserJoinedMessage.variables:type_name -> UserJoinedMessage.VariablesEntry
+	25,  // 221: UserJoinedMessage.sayMessage:type_name -> SayMessage
+	298, // 222: ErrorScreenMessage.code:type_name -> google.protobuf.StringValue
+	298, // 223: ErrorScreenMessage.title:type_name -> google.protobuf.StringValue
+	298, // 224: ErrorScreenMessage.subtitle:type_name -> google.protobuf.StringValue
+	298, // 225: ErrorScreenMessage.details:type_name -> google.protobuf.StringValue
+	300, // 226: ErrorScreenMessage.timeToRetry:type_name -> google.protobuf.Int32Value
+	297, // 227: ErrorScreenMessage.canRetryManual:type_name -> google.protobuf.BoolValue
+	298, // 228: ErrorScreenMessage.urlToRedirect:type_name -> google.protobuf.StringValue
+	298, // 229: ErrorScreenMessage.buttonTitle:type_name -> google.protobuf.StringValue
+	298, // 230: ErrorScreenMessage.image:type_name -> google.protobuf.StringValue
+	298, // 231: ErrorScreenMessage.imageLogo:type_name -> google.protobuf.StringValue
+	48,  // 232: RoomConnectedMessage.editMapCommandsArrayMessage:type_name -> EditMapCommandsArrayMessage
+	168, // 233: RoomJoinedMessage.item:type_name -> ItemStateMessage
+	67,  // 234: RoomJoinedMessage.variable:type_name -> VariableMessage
+	17,  // 235: RoomJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
+	67,  // 236: RoomJoinedMessage.playerVariable:type_name -> VariableMessage
+	18,  // 237: RoomJoinedMessage.applications:type_name -> ApplicationMessage
+	19,  // 238: RoomJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
+	69,  // 239: RoomJoinedMessage.areaPropertyVariable:type_name -> AreaPropertyVariableMessage
+	13,  // 240: AskPositionMessage.askType:type_name -> AskPositionMessage.AskType
+	203, // 241: PublicEventFrontToPusher.spaceEvent:type_name -> SpaceEvent
+	218, // 242: BackEventFrontToPusherMessage.backEvent:type_name -> BackEvent
+	203, // 243: PublicEvent.spaceEvent:type_name -> SpaceEvent
+	212, // 244: SpaceEvent.spaceMessage:type_name -> SpaceMessage
+	213, // 245: SpaceEvent.spaceIsTyping:type_name -> SpaceIsTyping
+	196, // 246: SpaceEvent.muteAudioForEverybody:type_name -> MuteAudioForEverybodyPublicMessage
+	197, // 247: SpaceEvent.muteVideoForEverybody:type_name -> MuteVideoForEverybodyPublicMessage
+	195, // 248: PrivateSpaceEvent.muteVideo:type_name -> MuteVideoPrivateMessage
+	194, // 249: PrivateSpaceEvent.muteAudio:type_name -> MuteAudioPrivateMessage
+	198, // 250: PrivateSpaceEvent.kickOffUser:type_name -> KickOffUserPrivateMessage
+	172, // 251: PrivateSpaceEvent.webRtcStartMessage:type_name -> WebRtcStartMessage
+	27,  // 252: PrivateSpaceEvent.webRtcSignal:type_name -> WebRtcSignal
+	27,  // 253: PrivateSpaceEvent.webRtcScreenSharingSignal:type_name -> WebRtcSignal
+	174, // 254: PrivateSpaceEvent.webRtcDisconnectMessage:type_name -> WebRtcDisconnectMessage
+	205, // 255: PrivateSpaceEvent.communicationStrategyMessage:type_name -> CommunicationStrategyMessage
+	206, // 256: PrivateSpaceEvent.switchMessage:type_name -> SwitchMessage
+	207, // 257: PrivateSpaceEvent.finalizeSwitchMessage:type_name -> FinalizeSwitchMessage
+	210, // 258: PrivateSpaceEvent.livekitInvitationMessage:type_name -> LivekitInvitationMessage
+	211, // 259: PrivateSpaceEvent.livekitDisconnectMessage:type_name -> LivekitDisconnectMessage
+	270, // 260: PrivateSpaceEvent.addSpaceUserMessage:type_name -> AddSpaceUserMessage
+	272, // 261: PrivateSpaceEvent.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	274, // 262: PrivateSpaceEvent.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
+	208, // 263: PrivateSpaceEvent.blockUserMessage:type_name -> BlockUserMessage
+	209, // 264: PrivateSpaceEvent.unblockUserMessage:type_name -> UnblockUserMessage
+	173, // 265: PrivateSpaceEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
+	199, // 266: PrivateSpaceEvent.recordingUnexpectedlyStoppedMessage:type_name -> RecordingUnexpectedlyStoppedPrivateMessage
+	214, // 267: PrivateSpaceEvent.proximityFileTransferOffer:type_name -> ProximityFileTransferOfferMessage
+	216, // 268: PrivateSpaceEvent.proximityFileTransferSignal:type_name -> ProximityFileTransferSignalMessage
+	215, // 269: PrivateSpaceEvent.proximityFileTransferDecline:type_name -> ProximityFileTransferDeclineMessage
+	17,  // 270: SpaceMessage.characterTextures:type_name -> CharacterTextureMessage
+	17,  // 271: SpaceIsTyping.characterTextures:type_name -> CharacterTextureMessage
+	17,  // 272: ProximityFileTransferOfferMessage.characterTextures:type_name -> CharacterTextureMessage
+	218, // 273: BackEventMessage.backEvent:type_name -> BackEvent
+	173, // 274: BackEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
+	219, // 275: BackEvent.microphoneTrackPublishedMessage:type_name -> MicrophoneTrackPublishedMessage
+	204, // 276: PrivateEvent.spaceEvent:type_name -> PrivateSpaceEvent
+	269, // 277: PrivateEventBackToPusher.sender:type_name -> SpaceUser
+	204, // 278: PrivateEventBackToPusher.spaceEvent:type_name -> PrivateSpaceEvent
+	269, // 279: PrivateEventPusherToFront.sender:type_name -> SpaceUser
+	204, // 280: PrivateEventPusherToFront.spaceEvent:type_name -> PrivateSpaceEvent
+	204, // 281: PrivateEventFrontToPusher.spaceEvent:type_name -> PrivateSpaceEvent
+	161, // 282: ServerToClientMessage.batchMessage:type_name -> BatchMessage
+	166, // 283: ServerToClientMessage.errorMessage:type_name -> ErrorMessage
+	170, // 284: ServerToClientMessage.roomConnectedMessage:type_name -> RoomConnectedMessage
+	171, // 285: ServerToClientMessage.roomJoinedMessage:type_name -> RoomJoinedMessage
+	175, // 286: ServerToClientMessage.teleportMessageMessage:type_name -> TeleportMessageMessage
+	176, // 287: ServerToClientMessage.sendUserMessage:type_name -> SendUserMessage
+	186, // 288: ServerToClientMessage.banUserMessage:type_name -> BanUserMessage
+	177, // 289: ServerToClientMessage.worldFullWarningMessage:type_name -> WorldFullWarningMessage
+	180, // 290: ServerToClientMessage.refreshRoomMessage:type_name -> RefreshRoomMessage
+	185, // 291: ServerToClientMessage.worldConnectionMessage:type_name -> WorldConnectionMessage
+	182, // 292: ServerToClientMessage.tokenExpiredMessage:type_name -> TokenExpiredMessage
+	38,  // 293: ServerToClientMessage.followRequestMessage:type_name -> FollowRequestMessage
+	39,  // 294: ServerToClientMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
+	40,  // 295: ServerToClientMessage.followAbortMessage:type_name -> FollowAbortMessage
+	183, // 296: ServerToClientMessage.invalidCharacterTextureMessage:type_name -> InvalidCharacterTextureMessage
+	181, // 297: ServerToClientMessage.deleteMapMessage:type_name -> DeleteMapMessage
+	167, // 298: ServerToClientMessage.errorScreenMessage:type_name -> ErrorScreenMessage
+	97,  // 299: ServerToClientMessage.answerMessage:type_name -> AnswerMessage
+	158, // 300: ServerToClientMessage.moveToPositionMessage:type_name -> MoveToPositionMessage
+	184, // 301: ServerToClientMessage.invalidCompanionTextureMessage:type_name -> InvalidCompanionTextureMessage
+	224, // 302: ServerToClientMessage.joinSpaceRequestMessage:type_name -> JoinSpaceRequestMessage
+	225, // 303: ServerToClientMessage.leaveSpaceRequestMessage:type_name -> LeaveSpaceRequestMessage
+	264, // 304: ServerToClientMessage.externalModuleMessage:type_name -> ExternalModuleMessage
+	159, // 305: ServerToClientMessage.locatePositionMessage:type_name -> LocatePositionMessage
+	189, // 306: ServerToClientMessage.meetingInvitationRequestReceivedMessage:type_name -> MeetingInvitationRequestReceivedMessage
+	191, // 307: ServerToClientMessage.meetingInvitationResponseReceivedMessage:type_name -> MeetingInvitationResponseReceivedMessage
+	192, // 308: ServerToClientMessage.meetingInvitationRequestTooHighMessage:type_name -> MeetingInvitationRequestTooHighMessage
+	193, // 309: ServerToClientMessage.meetingInvitationRequestClosedMessage:type_name -> MeetingInvitationRequestClosedMessage
+	226, // 310: ServerToClientMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
+	227, // 311: ServerToClientMessage.backConnectionCloseReasonMessage:type_name -> BackConnectionCloseReasonMessage
+	298, // 312: ConnectToRoomMessage.lastCommandId:type_name -> google.protobuf.StringValue
+	14,  // 313: JoinRoomFrontMessage.positionMessage:type_name -> PositionMessage
+	16,  // 314: JoinRoomFrontMessage.viewportMessage:type_name -> ViewportMessage
+	0,   // 315: JoinRoomFrontMessage.availabilityStatus:type_name -> AvailabilityStatus
+	14,  // 316: JoinRoomMessage.positionMessage:type_name -> PositionMessage
+	17,  // 317: JoinRoomMessage.characterTextures:type_name -> CharacterTextureMessage
+	19,  // 318: JoinRoomMessage.companionTexture:type_name -> CompanionTextureMessage
+	298, // 319: JoinRoomMessage.visitCardUrl:type_name -> google.protobuf.StringValue
+	0,   // 320: JoinRoomMessage.availabilityStatus:type_name -> AvailabilityStatus
+	18,  // 321: JoinRoomMessage.applications:type_name -> ApplicationMessage
+	298, // 322: JoinRoomMessage.chatID:type_name -> google.protobuf.StringValue
+	17,  // 323: UserJoinedZoneMessage.characterTextures:type_name -> CharacterTextureMessage
+	14,  // 324: UserJoinedZoneMessage.position:type_name -> PositionMessage
+	237, // 325: UserJoinedZoneMessage.fromZone:type_name -> Zone
+	19,  // 326: UserJoinedZoneMessage.companionTexture:type_name -> CompanionTextureMessage
+	0,   // 327: UserJoinedZoneMessage.availabilityStatus:type_name -> AvailabilityStatus
+	295, // 328: UserJoinedZoneMessage.variables:type_name -> UserJoinedZoneMessage.VariablesEntry
+	25,  // 329: UserJoinedZoneMessage.sayMessage:type_name -> SayMessage
+	237, // 330: UserLeftZoneMessage.toZone:type_name -> Zone
+	15,  // 331: GroupUpdateZoneMessage.position:type_name -> PointMessage
+	237, // 332: GroupUpdateZoneMessage.fromZone:type_name -> Zone
+	237, // 333: GroupLeftZoneMessage.toZone:type_name -> Zone
+	24,  // 334: PlayerDetailsUpdatedMessage.details:type_name -> SetPlayerDetailsMessage
+	242, // 335: PusherToBackRoomMessage.initRoomMessage:type_name -> InitRoomMessage
+	238, // 336: PusherToBackRoomMessage.subscribeZoneMessage:type_name -> SubscribeZoneMessage
+	239, // 337: PusherToBackRoomMessage.unsubscribeZoneMessage:type_name -> UnsubscribeZoneMessage
+	229, // 338: PusherToBackMessage.connectToRoomMessage:type_name -> ConnectToRoomMessage
+	231, // 339: PusherToBackMessage.joinRoomMessage:type_name -> JoinRoomMessage
+	26,  // 340: PusherToBackMessage.userMovesMessage:type_name -> UserMovesMessage
+	66,  // 341: PusherToBackMessage.itemEventMessage:type_name -> ItemEventMessage
+	24,  // 342: PusherToBackMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
+	36,  // 343: PusherToBackMessage.emotePromptMessage:type_name -> EmotePromptMessage
+	67,  // 344: PusherToBackMessage.variableMessage:type_name -> VariableMessage
+	38,  // 345: PusherToBackMessage.followRequestMessage:type_name -> FollowRequestMessage
+	39,  // 346: PusherToBackMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
+	40,  // 347: PusherToBackMessage.followAbortMessage:type_name -> FollowAbortMessage
+	41,  // 348: PusherToBackMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
+	76,  // 349: PusherToBackMessage.queryMessage:type_name -> QueryMessage
+	78,  // 350: PusherToBackMessage.abortQueryMessage:type_name -> AbortQueryMessage
+	187, // 351: PusherToBackMessage.askPositionMessage:type_name -> AskPositionMessage
+	47,  // 352: PusherToBackMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	21,  // 353: PusherToBackMessage.pingMessage:type_name -> PingMessage
+	202, // 354: PusherToBackMessage.publicEvent:type_name -> PublicEvent
+	220, // 355: PusherToBackMessage.privateEvent:type_name -> PrivateEvent
+	188, // 356: PusherToBackMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
+	190, // 357: PusherToBackMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
+	68,  // 358: PusherToBackMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
+	72,  // 359: PusherToBackMessage.entityMessage:type_name -> EntityMessage
+	245, // 360: BatchToPusherRoomMessage.payload:type_name -> SubToPusherRoomMessage
+	74,  // 361: SubToPusherRoomMessage.variableMessage:type_name -> VariableWithTagMessage
+	166, // 362: SubToPusherRoomMessage.errorMessage:type_name -> ErrorMessage
+	47,  // 363: SubToPusherRoomMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	64,  // 364: SubToPusherRoomMessage.receivedEventMessage:type_name -> ReceivedEventMessage
+	72,  // 365: SubToPusherRoomMessage.entityMessage:type_name -> EntityMessage
+	20,  // 366: SubToPusherRoomMessage.zoneMessage:type_name -> ZoneMessage
+	69,  // 367: SubToPusherRoomMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
+	246, // 368: ServerToAdminClientMessage.userJoinedRoom:type_name -> UserJoinedRoomMessage
+	247, // 369: ServerToAdminClientMessage.userLeftRoom:type_name -> UserLeftRoomMessage
+	166, // 370: ServerToAdminClientMessage.errorMessage:type_name -> ErrorMessage
+	250, // 371: MapStorageToBackMessage.mapStorageRefreshMessage:type_name -> MapStorageRefreshMessage
+	258, // 372: RoomsList.roomDescription:type_name -> RoomDescription
+	261, // 373: WorldUsersAnswer.users:type_name -> WorldUser
+	299, // 374: DispatchGlobalEventRequest.value:type_name -> google.protobuf.Value
+	299, // 375: ExternalModuleMessage.message:type_name -> google.protobuf.Value
+	267, // 376: PusherToBackSpaceMessage.joinSpaceMessage:type_name -> JoinSpaceMessage
+	268, // 377: PusherToBackSpaceMessage.leaveSpaceMessage:type_name -> LeaveSpaceMessage
+	272, // 378: PusherToBackSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	21,  // 379: PusherToBackSpaceMessage.pongMessage:type_name -> PingMessage
+	277, // 380: PusherToBackSpaceMessage.updateSpaceMetadataPusherToBackMessage:type_name -> UpdateSpaceMetadataPusherToBackMessage
+	282, // 381: PusherToBackSpaceMessage.kickOffMessage:type_name -> KickOffMessage
+	202, // 382: PusherToBackSpaceMessage.publicEvent:type_name -> PublicEvent
+	220, // 383: PusherToBackSpaceMessage.privateEvent:type_name -> PrivateEvent
+	278, // 384: PusherToBackSpaceMessage.syncSpaceUsersMessage:type_name -> SyncSpaceUsersMessage
+	128, // 385: PusherToBackSpaceMessage.spaceQueryMessage:type_name -> SpaceQueryMessage
+	279, // 386: PusherToBackSpaceMessage.addSpaceUserToNotifyMessage:type_name -> AddSpaceUserToNotifyMessage
+	280, // 387: PusherToBackSpaceMessage.deleteSpaceUserToNotifyMessage:type_name -> DeleteSpaceUserToNotifyMessage
+	217, // 388: PusherToBackSpaceMessage.backEvent:type_name -> BackEventMessage
+	270, // 389: BackToPusherSpaceMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
+	272, // 390: BackToPusherSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	274, // 391: BackToPusherSpaceMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
+	21,  // 392: BackToPusherSpaceMessage.pingMessage:type_name -> PingMessage
+	276, // 393: BackToPusherSpaceMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
+	282, // 394: BackToPusherSpaceMessage.kickOffMessage:type_name -> KickOffMessage
+	202, // 395: BackToPusherSpaceMessage.publicEvent:type_name -> PublicEvent
+	221, // 396: BackToPusherSpaceMessage.privateEvent:type_name -> PrivateEventBackToPusher
+	151, // 397: BackToPusherSpaceMessage.spaceAnswerMessage:type_name -> SpaceAnswerMessage
+	271, // 398: BackToPusherSpaceMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
+	150, // 399: BackToPusherSpaceMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
+	10,  // 400: JoinSpaceMessage.filterType:type_name -> FilterType
+	17,  // 401: SpaceUser.characterTextures:type_name -> CharacterTextureMessage
+	298, // 402: SpaceUser.roomName:type_name -> google.protobuf.StringValue
+	298, // 403: SpaceUser.visitCardUrl:type_name -> google.protobuf.StringValue
+	298, // 404: SpaceUser.jitsiParticipantId:type_name -> google.protobuf.StringValue
+	298, // 405: SpaceUser.chatID:type_name -> google.protobuf.StringValue
+	269, // 406: AddSpaceUserMessage.user:type_name -> SpaceUser
+	269, // 407: InitSpaceUsersMessage.users:type_name -> SpaceUser
+	269, // 408: UpdateSpaceUserMessage.user:type_name -> SpaceUser
+	301, // 409: UpdateSpaceUserMessage.updateMask:type_name -> google.protobuf.FieldMask
+	269, // 410: UpdateSpaceUserPusherToFrontMessage.user:type_name -> SpaceUser
+	301, // 411: UpdateSpaceUserPusherToFrontMessage.updateMask:type_name -> google.protobuf.FieldMask
+	269, // 412: SyncSpaceUsersMessage.users:type_name -> SpaceUser
+	269, // 413: AddSpaceUserToNotifyMessage.user:type_name -> SpaceUser
+	269, // 414: DeleteSpaceUserToNotifyMessage.user:type_name -> SpaceUser
+	285, // 415: AddSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
+	285, // 416: RemoveSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
+	299, // 417: SaveVariableRequest.value:type_name -> google.protobuf.Value
+	299, // 418: EventResponse.data:type_name -> google.protobuf.Value
+	299, // 419: DispatchEventRequest.data:type_name -> google.protobuf.Value
+	420, // [420:420] is the sub-list for method output_type
+	420, // [420:420] is the sub-list for method input_type
+	420, // [420:420] is the sub-list for extension type_name
+	420, // [420:420] is the sub-list for extension extendee
+	0,   // [0:420] is the sub-list for field type_name
 }
 
 func init() { file_messages_proto_init() }
@@ -23563,8 +23733,9 @@ func file_messages_proto_init() {
 	file_messages_proto_msgTypes[200].OneofWrappers = []any{}
 	file_messages_proto_msgTypes[204].OneofWrappers = []any{
 		(*BackEvent_MeetingConnectionRestartMessage)(nil),
+		(*BackEvent_MicrophoneTrackPublishedMessage)(nil),
 	}
-	file_messages_proto_msgTypes[213].OneofWrappers = []any{
+	file_messages_proto_msgTypes[214].OneofWrappers = []any{
 		(*ServerToClientMessage_BatchMessage)(nil),
 		(*ServerToClientMessage_ErrorMessage)(nil),
 		(*ServerToClientMessage_RoomConnectedMessage)(nil),
@@ -23596,14 +23767,14 @@ func file_messages_proto_init() {
 		(*ServerToClientMessage_DuplicateUserConnectedMessage)(nil),
 		(*ServerToClientMessage_BackConnectionCloseReasonMessage)(nil),
 	}
-	file_messages_proto_msgTypes[216].OneofWrappers = []any{}
 	file_messages_proto_msgTypes[217].OneofWrappers = []any{}
-	file_messages_proto_msgTypes[226].OneofWrappers = []any{
+	file_messages_proto_msgTypes[218].OneofWrappers = []any{}
+	file_messages_proto_msgTypes[227].OneofWrappers = []any{
 		(*PusherToBackRoomMessage_InitRoomMessage)(nil),
 		(*PusherToBackRoomMessage_SubscribeZoneMessage)(nil),
 		(*PusherToBackRoomMessage_UnsubscribeZoneMessage)(nil),
 	}
-	file_messages_proto_msgTypes[228].OneofWrappers = []any{
+	file_messages_proto_msgTypes[229].OneofWrappers = []any{
 		(*PusherToBackMessage_ConnectToRoomMessage)(nil),
 		(*PusherToBackMessage_JoinRoomMessage)(nil),
 		(*PusherToBackMessage_UserMovesMessage)(nil),
@@ -23627,7 +23798,7 @@ func file_messages_proto_init() {
 		(*PusherToBackMessage_SetAreaPropertyVariableMessage)(nil),
 		(*PusherToBackMessage_EntityMessage)(nil),
 	}
-	file_messages_proto_msgTypes[230].OneofWrappers = []any{
+	file_messages_proto_msgTypes[231].OneofWrappers = []any{
 		(*SubToPusherRoomMessage_VariableMessage)(nil),
 		(*SubToPusherRoomMessage_ErrorMessage)(nil),
 		(*SubToPusherRoomMessage_EditMapCommandMessage)(nil),
@@ -23636,19 +23807,19 @@ func file_messages_proto_init() {
 		(*SubToPusherRoomMessage_ZoneMessage)(nil),
 		(*SubToPusherRoomMessage_AreaPropertyVariableMessage)(nil),
 	}
-	file_messages_proto_msgTypes[233].OneofWrappers = []any{
+	file_messages_proto_msgTypes[234].OneofWrappers = []any{
 		(*ServerToAdminClientMessage_UserJoinedRoom)(nil),
 		(*ServerToAdminClientMessage_UserLeftRoom)(nil),
 		(*ServerToAdminClientMessage_ErrorMessage)(nil),
 	}
-	file_messages_proto_msgTypes[234].OneofWrappers = []any{
+	file_messages_proto_msgTypes[235].OneofWrappers = []any{
 		(*AdminPusherToBackMessage_SubscribeToRoom)(nil),
 	}
-	file_messages_proto_msgTypes[236].OneofWrappers = []any{
+	file_messages_proto_msgTypes[237].OneofWrappers = []any{
 		(*MapStorageToBackMessage_MapStorageRefreshMessage)(nil),
 	}
-	file_messages_proto_msgTypes[249].OneofWrappers = []any{}
-	file_messages_proto_msgTypes[250].OneofWrappers = []any{
+	file_messages_proto_msgTypes[250].OneofWrappers = []any{}
+	file_messages_proto_msgTypes[251].OneofWrappers = []any{
 		(*PusherToBackSpaceMessage_JoinSpaceMessage)(nil),
 		(*PusherToBackSpaceMessage_LeaveSpaceMessage)(nil),
 		(*PusherToBackSpaceMessage_UpdateSpaceUserMessage)(nil),
@@ -23663,7 +23834,7 @@ func file_messages_proto_init() {
 		(*PusherToBackSpaceMessage_DeleteSpaceUserToNotifyMessage)(nil),
 		(*PusherToBackSpaceMessage_BackEvent)(nil),
 	}
-	file_messages_proto_msgTypes[251].OneofWrappers = []any{
+	file_messages_proto_msgTypes[252].OneofWrappers = []any{
 		(*BackToPusherSpaceMessage_AddSpaceUserMessage)(nil),
 		(*BackToPusherSpaceMessage_UpdateSpaceUserMessage)(nil),
 		(*BackToPusherSpaceMessage_RemoveSpaceUserMessage)(nil),
@@ -23676,14 +23847,14 @@ func file_messages_proto_init() {
 		(*BackToPusherSpaceMessage_InitSpaceUsersMessage)(nil),
 		(*BackToPusherSpaceMessage_SpaceStatePatchMessage)(nil),
 	}
-	file_messages_proto_msgTypes[277].OneofWrappers = []any{}
+	file_messages_proto_msgTypes[278].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_messages_proto_rawDesc), len(file_messages_proto_rawDesc)),
-			NumEnums:      13,
-			NumMessages:   281,
+			NumEnums:      14,
+			NumMessages:   282,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

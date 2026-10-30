@@ -274,10 +274,11 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        run: npx playwright install --with-deps ${{ matrix.browser }}
+        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts)
+        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.browser == 'chromium' && 'firefox' || '' }}
         working-directory: tests
       - name: Set up virtual audio output for Firefox
-        if: ${{ contains(matrix.project, 'firefox') }}
+        if: ${{ contains(matrix.project, 'firefox') || matrix.project == 'chromium' }}
         run: |
           sudo apt-get install --yes pulseaudio pulseaudio-utils
           pulseaudio --start --exit-idle-time=-1
@@ -540,11 +541,10 @@ jobs:
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts)
-        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.browser == 'chromium' && 'firefox' || '' }}
+        run: npx playwright install --with-deps ${{ matrix.browser }}
         working-directory: tests
       - name: Set up virtual audio output for Firefox
-        if: ${{ contains(matrix.project, 'firefox') || matrix.project == 'chromium' }}
+        if: ${{ contains(matrix.project, 'firefox') }}
         run: |
           sudo apt-get install --yes pulseaudio pulseaudio-utils
           pulseaudio --start --exit-idle-time=-1
@@ -816,8 +816,8 @@ jobs:
   #         fail: ${{ steps.poll-pipeline.outputs.failed == 'true' }}
   #         recreate: true
 
-  prod-single-domain-deploy-tests:
-    name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
+  prod-single-domain-deploy-tests-ts:
+    name: "Test production docker compose (TypeScript) (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
