@@ -301,6 +301,10 @@ function toSenderProperties(sample: VideoQualitySampleMessage, direction: "inbou
     return {
         captureFps: outbound(sample.captureFps, 240),
         captureTargetFps: outbound(sample.captureTargetFps, 240),
+        // The largest size a browser captures, and what the warehouse column holds
+        captureWidth: outbound(sample.captureWidth, 65_535),
+        captureHeight: outbound(sample.captureHeight, 65_535),
+        qualitySetting: direction === "outbound" ? toQualitySetting(sample.qualitySetting) : null,
         encodeMsPerFrame: outbound(sample.encodeMsPerFrame, 10_000),
         cpuLimitedRatio: outbound(sample.cpuLimitedRatio, 1),
         bandwidthLimitedRatio: outbound(sample.bandwidthLimitedRatio, 1),
@@ -309,6 +313,12 @@ function toSenderProperties(sample: VideoQualitySampleMessage, direction: "inbou
         // 10 Gbit/s: far above any estimate a browser makes
         availableOutgoingBitrate: outbound(sample.availableOutgoingBitrate, 10_000_000_000),
     };
+}
+
+const QUALITY_SETTINGS = ["low", "recommended", "high"] as const;
+
+function toQualitySetting(value: string | undefined): (typeof QUALITY_SETTINGS)[number] | null {
+    return QUALITY_SETTINGS.find((setting) => setting === value) ?? null;
 }
 
 function plausible(value: number | undefined, max: number): number | null {

@@ -195,7 +195,7 @@ function createReceiverStatsStore(
 function createSenderStatsStore(
     reportStore: Readable<RTCStatsReport | undefined>,
     source: string,
-    // Settings of the video track being sent: the stats do not say what rate the capture is configured at
+    // Settings of the video track being sent: the stats do not say what rate and size the capture is configured at
     getCaptureSettings: () => MediaTrackSettings | undefined,
 ): Readable<WebRtcSenderStats | undefined> {
     const prev = new Map<string, SenderLayerPrev>();
@@ -208,8 +208,16 @@ function createSenderStatsStore(
                 return;
             }
             const stats = buildWebRtcSenderStatsFromReport($report, prev, source);
-            const captureTargetFps = getCaptureSettings()?.frameRate;
-            set(stats && isCounter(captureTargetFps) && captureTargetFps > 0 ? { ...stats, captureTargetFps } : stats);
+            const settings = getCaptureSettings();
+            const positive = (value: number | undefined) => (isCounter(value) && value > 0 ? value : undefined);
+            set(
+                stats && {
+                    ...stats,
+                    captureTargetFps: positive(settings?.frameRate),
+                    captureWidth: positive(settings?.width),
+                    captureHeight: positive(settings?.height),
+                },
+            );
         },
         undefined,
     );

@@ -479,6 +479,9 @@ describe("AnalyticsEventsQueue", () => {
         const encoderLoad = {
             captureFps: 24,
             captureTargetFps: 30,
+            captureWidth: 1280,
+            captureHeight: 720,
+            qualitySetting: "low",
             encodeMsPerFrame: 12.5,
             cpuLimitedRatio: 0.4,
             bandwidthLimitedRatio: 0,
@@ -492,7 +495,14 @@ describe("AnalyticsEventsQueue", () => {
             {
                 samples: [
                     videoQualitySample({ ...outbound, ...encoderLoad }),
-                    videoQualitySample({ ...outbound, ...encoderLoad, cpuLimitedRatio: 1.5, captureFps: Number.NaN }),
+                    videoQualitySample({
+                        ...outbound,
+                        ...encoderLoad,
+                        cpuLimitedRatio: 1.5,
+                        captureFps: Number.NaN,
+                        captureWidth: 100_000,
+                        qualitySetting: "ultra",
+                    }),
                     // A stream we receive tells nothing about our encoder
                     videoQualitySample(encoderLoad),
                 ],
@@ -503,8 +513,22 @@ describe("AnalyticsEventsQueue", () => {
 
         const events = (post.mock.calls[0][1] as AnalyticsEventsBatch).events;
         expect(events[0].properties).toMatchObject(encoderLoad);
-        expect(events[1].properties).toMatchObject({ captureFps: null, cpuLimitedRatio: null, encodeMsPerFrame: 12.5 });
-        expect(events[2].properties).toMatchObject({ captureFps: null, encodeMsPerFrame: null, cpuLimitedRatio: null });
+        expect(events[1].properties).toMatchObject({
+            captureFps: null,
+            cpuLimitedRatio: null,
+            encodeMsPerFrame: 12.5,
+            captureWidth: null,
+            captureHeight: 720,
+            qualitySetting: null,
+        });
+        expect(events[2].properties).toMatchObject({
+            captureFps: null,
+            encodeMsPerFrame: null,
+            cpuLimitedRatio: null,
+            captureWidth: null,
+            captureHeight: null,
+            qualitySetting: null,
+        });
     });
 
     it("keeps the network of each direction where it belongs", async () => {

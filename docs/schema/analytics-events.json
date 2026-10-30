@@ -3940,6 +3940,44 @@
           ],
           "description": "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate)."
         },
+        "captureWidth": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: width the camera or screen capture delivers (MediaTrackSettings.width), where frameWidth is the largest layer the encoder sends. A capture larger than what is sent was scaled down by the encoder or by its layer setup."
+        },
+        "captureHeight": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: height the camera or screen capture delivers (MediaTrackSettings.height)."
+        },
+        "qualitySetting": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "low",
+                "recommended",
+                "high"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: the sender's quality setting when the sample was taken: the camera's for a camera, the screen share's for a screen share."
+        },
         "encodeMsPerFrame": {
           "type": [
             "number",

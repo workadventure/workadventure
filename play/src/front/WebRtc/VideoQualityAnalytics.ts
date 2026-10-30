@@ -10,6 +10,7 @@ import {
 import type { WebRtcSenderStats, WebRtcStats } from "../Components/Video/WebRtcStats";
 import { hasCapability } from "../Connection/Capabilities";
 import { VideoPlaybackWindow } from "./VideoPlaybackWindow";
+import type { VideoQualitySetting } from "./VideoPresets";
 
 const VIDEO_ANALYTICS_SEND_INTERVAL_MS = 5_000;
 
@@ -25,6 +26,8 @@ export type VideoQualityAnalyticsContext = {
     livekitServerUrl?: string;
     // Read at each sample: LiveKit can move the client to another region when it reconnects
     getLivekitRegion?: () => string | undefined;
+    // Outbound streams only, read at each sample: the user can change it during the call
+    getQualitySetting?: () => VideoQualitySetting;
 };
 
 const sessionId = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
@@ -94,6 +97,9 @@ export function subscribeToOutboundVideoQualityAnalytics(
             encoderImplementation: stats.encoderImplementation,
             captureFps: stats.captureFps,
             captureTargetFps: stats.captureTargetFps,
+            captureWidth: stats.captureWidth,
+            captureHeight: stats.captureHeight,
+            qualitySetting: context.getQualitySetting?.(),
             encodeMsPerFrame: stats.encodeMsPerFrame,
             cpuLimitedRatio: stats.cpuLimitedRatio,
             bandwidthLimitedRatio: stats.bandwidthLimitedRatio,

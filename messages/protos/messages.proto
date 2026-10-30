@@ -237,6 +237,13 @@ message VideoQualitySampleMessage {
   // LiveKit streams only: region of the LiveKit server the client is connected to (serverInfo.region). Set by
   // LiveKit Cloud, usually empty on a self-hosted server.
   optional string livekitRegion = 45;
+  // Outbound streams only: the sender's quality setting ("low", "recommended" or "high"), the camera's for a camera,
+  // the screen share's for a screen share.
+  optional string qualitySetting = 46;
+  // Outbound streams only: size the camera or screen capture delivers (MediaTrackSettings), where frameWidth and
+  // frameHeight are the largest layer the encoder sends.
+  optional uint32 captureWidth = 47;
+  optional uint32 captureHeight = 48;
 }
 
 message VideoQualityReportMessage {
