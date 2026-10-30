@@ -253,7 +253,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                         return;
                     }
 
-                    openDirectChatRoom(this.chatID!).catch((error) => {
+                    openDirectChatRoom(this.chatID!, this.playerName).catch((error) => {
                         console.error("Error opening direct chat room:", error);
                         Sentry.captureException(error, {
                             extra: {

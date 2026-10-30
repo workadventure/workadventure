@@ -233,6 +233,7 @@
             filteredDirectRoom.length === 0 &&
             filteredRooms.length === 0 &&
             filteredRoomInvitations.length === 0 &&
+            $joignableRoom.length === 0 &&
             !$roomFolders.some((folder) => folderHasSearchMatch(folder, $chatSearchBarValue.toLocaleLowerCase())),
     );
 
@@ -405,7 +406,12 @@
                         </p>
                     {/if}
                     {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
-                        <p class="p-0 m-0 text-gray-400">{$LL.chat.joinableRooms()}</p>
+                        <p
+                            class="px-3 py-1 m-0 text-xs font-bold uppercase text-white/50"
+                            data-testid="chatJoinableRoomsTitle"
+                        >
+                            {$LL.chat.joinableRooms()} · {$joignableRoom.length}
+                        </p>
                         <div class="flex flex-col">
                             {#each $joignableRoom as room (room.id)}
                                 <RoomSuggested
