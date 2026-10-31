@@ -4,6 +4,8 @@ import {
     AvailabilityStatus,
     JoinRoomMessage,
     LockGroupPromptMessage,
+    MeetingInvitationRequestMessage,
+    MeetingInvitationResponseMessage,
     PositionMessage_Direction,
     RoomJoinedMessage,
     SetPlayerDetailsMessage,
@@ -268,6 +270,104 @@ describe("GameRoom", () => {
 
             world.updatePosition(user3, new Point(400, 100));
             expect(user3.group).toBe(user1.group);
+        });
+    });
+
+    describe("when a member of a locked group invites a user", () => {
+        // user1 and user2 form a locked group centered on (150, 100). user3 stands far away.
+        async function createLockedGroup() {
+            const world = await createWorld();
+            const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 100, 100));
+            const user2 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("2", 200, 100));
+            const user3 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("3", 1000, 100));
+            user1.group?.lock();
+            return { world, user1, user2, user3 };
+        }
+
+        function invite(world: GameRoom, sender: User, receiver: User, accept = true): void {
+            socketManager.handleMeetingInvitationRequestMessage(
+                world,
+                sender,
+                MeetingInvitationRequestMessage.fromPartial({ receiverUserUuid: receiver.uuid }),
+            );
+            socketManager.handleMeetingInvitationResponseMessage(
+                world,
+                receiver,
+                MeetingInvitationResponseMessage.fromPartial({ accept, requestSenderUserUuid: sender.uuid }),
+            );
+        }
+
+        it("should let the invited user in", async () => {
+            const { world, user1, user2, user3 } = await createLockedGroup();
+            invite(world, user2, user3);
+
+            world.updatePosition(user3, new Point(150, 140));
+
+            expect(user3.group).toBe(user1.group);
+        });
+
+        it("should let the invited user in when a member walks up to them", async () => {
+            const { world, user1, user2, user3 } = await createLockedGroup();
+            invite(world, user2, user3);
+            world.updatePosition(user3, new Point(400, 100));
+            expect(user3.group).toBeUndefined();
+
+            world.updatePosition(user2, new Point(390, 100));
+
+            expect(user3.group).toBe(user1.group);
+        });
+
+        it("should keep the lock for a user who declined, or was never invited", async () => {
+            const { world, user2, user3 } = await createLockedGroup();
+            invite(world, user2, user3, false);
+            // Accepting an invitation that was never sent (or already answered) gives nothing either
+            socketManager.handleMeetingInvitationResponseMessage(
+                world,
+                user3,
+                MeetingInvitationResponseMessage.fromPartial({ accept: true, requestSenderUserUuid: user2.uuid }),
+            );
+
+            world.updatePosition(user3, new Point(150, 140));
+
+            expect(user3.group).toBeUndefined();
+        });
+
+        it("should only let the user in once", async () => {
+            const { world, user2, user3 } = await createLockedGroup();
+            invite(world, user2, user3);
+            world.updatePosition(user3, new Point(150, 140));
+            expect(user3.group).toBeDefined();
+
+            world.updatePosition(user3, new Point(1000, 100));
+            expect(user3.group).toBeUndefined();
+            world.updatePosition(user3, new Point(150, 140));
+
+            expect(user3.group).toBeUndefined();
+        });
+
+        it("should not open another locked group", async () => {
+            const { world, user2, user3 } = await createLockedGroup();
+            const user4 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("4", 3000, 100));
+            invite(world, user4, user3);
+
+            world.updatePosition(user3, new Point(150, 140));
+
+            expect(user3.group).toBeUndefined();
+        });
+
+        it("should expire after 2 minutes", async () => {
+            const { world, user2, user3 } = await createLockedGroup();
+            vi.useFakeTimers();
+            try {
+                invite(world, user2, user3);
+                vi.advanceTimersByTime(2 * 60 * 1000 + 1);
+
+                world.updatePosition(user3, new Point(150, 140));
+
+                expect(user3.group).toBeUndefined();
+            } finally {
+                vi.useRealTimers();
+            }
         });
     });
 
