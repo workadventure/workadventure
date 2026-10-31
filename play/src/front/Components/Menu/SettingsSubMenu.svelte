@@ -777,7 +777,7 @@
 
         <div class="flex cursor-pointer items-center relative m-4">
             <InputSwitch
-                id="cowebsiteTrigger-toggle"
+                id="ignoreFollowRequests-toggle"
                 bind:value={ignoreFollowRequests}
                 onchange={changeIgnoreFollowRequests}
                 label={$LL.menu.settings.ignoreFollowRequest()}

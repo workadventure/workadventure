@@ -12,9 +12,9 @@ While you are in a [discussion bubble](/user/proximity-bubble), click the follow
 
 ![The follow button in the action bar](images/follow-button.png)
 
-Everyone else in your bubble receives the request. While you wait for their answer, you see "Waiting for followers confirmation".
+Everyone else in your bubble receives the request. While you wait for their answer, you see "Waiting for followers confirmation" and a **Stop leading** button to cancel.
 
-The button is not available in meeting rooms. On a small screen, it is in the profile menu, under **Contextual actions**.
+The follow button is not available in meeting rooms. On a small screen, it is in the profile menu, under **Contextual actions**.
 
 ## Answering a request
 
@@ -43,7 +43,7 @@ You see who follows you, for example "Gregory and Grégoire are following you".
 
 ![David leads Gregory and Grégoire](images/follow-leader.png)
 
-To stop, click the follow button again, press **F**, or press **Escape**: everybody stops following you.
+To stop, click **Stop leading** under that message, click the follow button again (its tooltip now says **Stop leading**), press **F**, or press **Escape**: everybody stops following you.
 
 ## When it stops
 

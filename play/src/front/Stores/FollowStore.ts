@@ -4,7 +4,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import PopUpFollow from "../Components/PopUp/PopUpFollow.svelte";
 import { popupStore } from "./PopupStore";
 
-type FollowState = "off" | "requesting" | "active" | "ending";
+type FollowState = "off" | "requesting" | "active";
 type FollowRole = "leader" | "follower";
 
 export const followStateStore = writable<FollowState>("off");
