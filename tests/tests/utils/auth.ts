@@ -135,6 +135,12 @@ async function createUser(
 
     // selectMedia
     await expect(page.locator("h2", { hasText: "Turn on your camera and microphone" })).toBeVisible();
+    if (browser.browserType().name() !== "webkit") {
+        // Save keeps the devices selected so far, and video and (processed) audio tracks land separately:
+        // wait until both are picked, or the user enters with camera and microphone off.
+        await expect(page.getByText("Turn off your camera")).toBeHidden();
+        await expect(page.getByText("Turn off your microphone")).toBeHidden();
+    }
     await page.click("text=Save");
 
     await dismissDuplicateUserConnectedModalIfShown(page);
