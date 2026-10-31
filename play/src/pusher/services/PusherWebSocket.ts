@@ -21,6 +21,7 @@ export class PusherWebSocket {
     private socket: RawSocket;
     private _isDisconnecting = false;
     private _isPermanentlyDisconnected = false;
+    private _isCleanedUp = false;
     private keepAliveInterval: NodeJS.Timeout | undefined;
     private batchTimeout: NodeJS.Timeout | undefined;
     private pingBackpressured = false;
@@ -171,6 +172,20 @@ export class PusherWebSocket {
      */
     public isPermanentlyDisconnected(): boolean {
         return this._isPermanentlyDisconnected;
+    }
+
+    /**
+     * Returns true the first time only. Both the transport close and the end of the back stream clean the
+     * connection up, and the room/space cleanup must run once. Kept apart from isDisconnecting() on purpose:
+     * end() bails out once that is set, so the close frame would never be sent.
+     */
+    public markCleanedUp(): boolean {
+        if (this._isCleanedUp) {
+            return false;
+        }
+
+        this._isCleanedUp = true;
+        return true;
     }
 
     public startDisconnecting(): boolean {
