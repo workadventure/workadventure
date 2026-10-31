@@ -1,3 +1,4 @@
+{{- if not .Values.server.enabled }}
 {{- range $replica, $f := until (int $.Values.back.replicaCount) }}
 ---
 apiVersion: v1
@@ -24,3 +25,4 @@ spec:
     role: back
     statefulset.kubernetes.io/pod-name: {{ include "workadventure.fullname" $ }}-back-{{ $replica }}
 {{ end -}}
+{{- end }}

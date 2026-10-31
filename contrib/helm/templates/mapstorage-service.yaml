@@ -9,13 +9,15 @@ spec:
   type: {{ .Values.mapstorage.service.type }}
   ports:
     - port: {{ .Values.mapstorage.service.port }}
-      targetPort: http
+      targetPort: {{ if .Values.server.enabled }}{{ .Values.server.mapStoragePort }}{{ else }}http{{ end }}
       protocol: TCP
       name: http
+    {{- if not .Values.server.enabled }}
     - port: 50053
       targetPort: grpc
       protocol: TCP
       name: grpc
+    {{- end }}
   selector:
     {{- include "workadventure.selectorLabels" . | nindent 4 }}
-    role: mapstorage
+    role: {{ if .Values.server.enabled }}play{{ else }}mapstorage{{ end }}
