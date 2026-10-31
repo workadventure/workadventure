@@ -3,6 +3,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import Select from "../../Input/Select.svelte";
     import { IconDoorIn } from "../../Icons";
+    import { StringUtils } from "../../../Utils/StringUtils";
     import PropertyEditorBase from "./PropertyEditorBase.svelte";
 
     interface Props {
@@ -16,15 +17,8 @@
     let { property = $bindable(), startAreaName, updateStartAreaNameCallback, onchange, onclose }: Props = $props();
 
     function onValueChange() {
-        // Replace all special characters or spaces with an empty string
-        if (property.isDefault === false)
-            updateStartAreaNameCallback(
-                startAreaName
-                    .trim()
-                    .replace(/[^a-zA-Z0-9 !@#$%^&*]/g, "")
-                    .replaceAll(" ", "-")
-                    .toLowerCase(),
-            );
+        // The name is used after the "#" of the room URL
+        if (property.isDefault === false) updateStartAreaNameCallback(StringUtils.toUrlHashName(startAreaName));
         onchange?.();
     }
 </script>
