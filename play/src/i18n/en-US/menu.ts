@@ -193,6 +193,10 @@ const menu: BaseTranslation = {
         openSayPopup: "Open Say Popup",
         openThinkPopup: "Open Think Popup",
         walkMyDesk: "Walk to My Desk",
+        toggleMicrophone: "Enable/disable your microphone",
+        toggleCamera: "Enable/disable your camera",
+        setShortcut: "Set shortcut",
+        pressKey: "Press a key combination…",
     },
 };
 

@@ -1,5 +1,12 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import {
+        getMediaShortcut,
+        setMediaShortcut,
+        mediaShortcutRebindingStore,
+        type MediaShortcut,
+        type MediaShortcutAction,
+    } from "../../Stores/MediaShortcutStore";
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
 
@@ -9,6 +16,61 @@
     };
 
     let groupedShortcuts: GroupedShortcut[] = $state([]);
+    let mediaShortcuts = $state({ microphone: getMediaShortcut("microphone"), camera: getMediaShortcut("camera") });
+    let rebinding: MediaShortcutAction | undefined = $state();
+
+    function shortcutKeyParts(shortcut: MediaShortcut): string[] {
+        const modifiers = [
+            ...(shortcut.ctrlKey ? ["Ctrl"] : []),
+            ...(shortcut.metaKey ? ["⌘"] : []),
+            ...(shortcut.altKey ? ["Alt"] : []),
+            ...(shortcut.shiftKey ? ["Shift"] : []),
+        ];
+        const key = shortcut.key.replace(/^(Key|Digit)/, "");
+        return modifiers.flatMap((modifier) => [modifier, "+"]).concat(key);
+    }
+
+    function startRebinding(action: MediaShortcutAction) {
+        rebinding = action;
+        mediaShortcutRebindingStore.set(true);
+    }
+
+    function captureShortcut(event: KeyboardEvent, action: MediaShortcutAction) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.key === "Escape") {
+            rebinding = undefined;
+            mediaShortcutRebindingStore.set(false);
+            return;
+        }
+        if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
+        const shortcut = {
+            key: event.code,
+            ctrlKey: event.ctrlKey,
+            altKey: event.altKey,
+            shiftKey: event.shiftKey,
+            metaKey: event.metaKey,
+        };
+        setMediaShortcut(action, shortcut);
+        mediaShortcuts = { ...mediaShortcuts, [action]: shortcut };
+        rebinding = undefined;
+        mediaShortcutRebindingStore.set(false);
+    }
+
+    function handleWindowKeydown(event: KeyboardEvent) {
+        if (rebinding) {
+            captureShortcut(event, rebinding);
+        }
+    }
+
+    onMount(() => {
+        window.addEventListener("keydown", handleWindowKeydown);
+        return () => {
+            window.removeEventListener("keydown", handleWindowKeydown);
+            rebinding = undefined;
+            mediaShortcutRebindingStore.set(false);
+        };
+    });
 
     onMount(() => {
         const userInputManager = gameManager.getCurrentGameScene().userInputManager;
@@ -59,6 +121,58 @@
                 </tr>
             </thead>
             <tbody>
+                <tr class="border-t-4 border-white">
+                    <td class="p-3">
+                        <button
+                            class="inline-flex items-center gap-1 p-0 bg-transparent border-0 font-mono"
+                            title={$LL.menu.shortcuts.setShortcut()}
+                            aria-label={$LL.menu.shortcuts.setShortcut()}
+                            onclick={() => startRebinding("microphone")}
+                        >
+                            {#if rebinding === "microphone"}
+                                {$LL.menu.shortcuts.pressKey()}
+                            {:else}
+                                {#each shortcutKeyParts(mediaShortcuts.microphone) as key, i (i)}
+                                    {#if i % 2 === 0}
+                                        <span
+                                            class="bg-gray-700 text-white px-4 py-3 rounded text-sm font-mono shadow-sm border-2 border-solid border-black p-2 border-b-4 hover:border-b-2"
+                                            >{key}</span
+                                        >
+                                    {:else}
+                                        <span class="text-gray-400">{key}</span>
+                                    {/if}
+                                {/each}
+                            {/if}
+                        </button>
+                    </td>
+                    <td class="p-3 text-white">{$LL.menu.shortcuts.toggleMicrophone()}</td>
+                </tr>
+                <tr class="border-t-4 border-white">
+                    <td class="p-3">
+                        <button
+                            class="inline-flex items-center gap-1 p-0 bg-transparent border-0 font-mono"
+                            title={$LL.menu.shortcuts.setShortcut()}
+                            aria-label={$LL.menu.shortcuts.setShortcut()}
+                            onclick={() => startRebinding("camera")}
+                        >
+                            {#if rebinding === "camera"}
+                                {$LL.menu.shortcuts.pressKey()}
+                            {:else}
+                                {#each shortcutKeyParts(mediaShortcuts.camera) as key, i (i)}
+                                    {#if i % 2 === 0}
+                                        <span
+                                            class="bg-gray-700 text-white px-4 py-3 rounded text-sm font-mono shadow-sm border-2 border-solid border-black p-2 border-b-4 hover:border-b-2"
+                                            >{key}</span
+                                        >
+                                    {:else}
+                                        <span class="text-gray-400">{key}</span>
+                                    {/if}
+                                {/each}
+                            {/if}
+                        </button>
+                    </td>
+                    <td class="p-3 text-white">{$LL.menu.shortcuts.toggleCamera()}</td>
+                </tr>
                 {#each groupedShortcuts as shortcut, i (i)}
                     <tr class="hover:bg-white/5 border-t-4 border-white mx-3">
                         <td class="p-3">
