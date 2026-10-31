@@ -2300,7 +2300,7 @@ export class GameScene extends DirtyScene {
                 // Set up follow manager
                 this.followManager = new FollowManager(this.connection, this.remotePlayersRepository);
 
-                this.inviteManager = new InviteManager(this.connection);
+                this.inviteManager = new InviteManager(this.connection, this.roomUrl);
 
                 // Set up locate manager
                 this.locateManager = new LocateManager(this, this.cameraManager, this.connection);
@@ -2517,6 +2517,7 @@ export class GameScene extends DirtyScene {
             )
             .then((space) => {
                 this.allUserSpace = space;
+                this.inviteManager?.setWorldSpace(space);
                 worldUserProvider = new WorldUserProvider(space);
                 this._worldUserCounter.forward(worldUserProvider.userCount);
                 return gameManager.getChatConnection();
