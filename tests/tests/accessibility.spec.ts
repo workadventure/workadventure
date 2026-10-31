@@ -21,7 +21,7 @@ test.describe("Accessibility @nomobile", () => {
         await nameInput.press("Enter");
 
         // Every Woka choice is named and tells which one is selected
-        const wokas = page.locator("[id^='woka-']");
+        const wokas = page.locator("button[id^='woka-']");
         await expect(wokas.first()).toBeVisible();
         for (const woka of await wokas.all()) {
             await expect(woka).toHaveAccessibleName(/.+/);
@@ -35,7 +35,7 @@ test.describe("Accessibility @nomobile", () => {
         await context.close();
     });
 
-    test("the action bar buttons are named and expose their on/off state", async ({ browser }) => {
+    test("the action bar buttons are named and expose their on/off state", async ({ browser, browserName }) => {
         await using page = await getPage(browser, "Alice", MAP_URL);
 
         const buttons = page.getByTestId("action-bar").locator("button:visible");
@@ -45,6 +45,7 @@ test.describe("Accessibility @nomobile", () => {
         }
 
         // The microphone is a toggle: its state is exposed, not only its colour
+        test.skip(browserName !== "chromium", "fake microphone flags are set on the Chromium project");
         const microphone = page.getByTestId("microphone-button");
         const before = await microphone.getAttribute("aria-pressed");
         expect(before).toMatch(/true|false/);
