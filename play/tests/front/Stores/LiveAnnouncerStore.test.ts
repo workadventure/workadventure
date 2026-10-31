@@ -82,10 +82,14 @@ describe("watchRaisedHands", () => {
 
         sections.set([section("Eve", "me")]);
         sections.set([section("Eve", "me", "Bob")]);
+        // All hands down: the section goes away. A new hand then gets a new section.
+        sections.set([]);
+        sections.set([section("Carol")]);
         unsubscribe();
 
-        expect(messages()).toHaveLength(1);
+        expect(messages()).toHaveLength(2);
         expect(messages()[0]).toContain("Bob");
+        expect(messages()[1]).toContain("Carol");
         vi.advanceTimersByTime(ANNOUNCEMENT_LIFETIME_MS);
     });
 });

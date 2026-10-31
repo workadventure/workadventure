@@ -72,18 +72,22 @@ export function announceChatMessage(
 }
 
 /**
- * Announces each hand raised by someone else. Only a hand raised since the last update counts, so joining a space
- * where hands are already up says nothing.
+ * Announces each hand raised by someone else. A space has a section only while hands are up, so a space without one
+ * has none raised. Only the hands up when this starts are not announced.
  */
 export function watchRaisedHands(sectionsStore: Readable<RaisedHandSection[]>): Unsubscriber {
-    let raisedHandsBySpace = new Map<string, Set<string>>();
+    let raisedHandsBySpace: Map<string, Set<string>> | undefined;
     return sectionsStore.subscribe((sections) => {
         const next = new Map<string, Set<string>>();
         for (const section of sections) {
             const spaceName = section.space.getName();
-            const before = raisedHandsBySpace.get(spaceName);
+            const before = raisedHandsBySpace?.get(spaceName) ?? new Set<string>();
             for (const hand of section.hands) {
-                if (before && !before.has(hand.spaceUserId) && hand.spaceUserId !== section.space.mySpaceUserId) {
+                if (
+                    raisedHandsBySpace &&
+                    !before.has(hand.spaceUserId) &&
+                    hand.spaceUserId !== section.space.mySpaceUserId
+                ) {
                     announce(get(LL).notification.a11y.handRaised({ name: hand.name }));
                 }
             }
