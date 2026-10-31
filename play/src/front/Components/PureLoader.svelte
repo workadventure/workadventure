@@ -16,7 +16,7 @@
     }: Props = $props();
 </script>
 
-<div aria-label="Loading..." class={`pure-loader flex flex-wrap flex-col items-center justify-center ${customClass}`}>
+<div role="status" class={`pure-loader flex flex-wrap flex-col items-center justify-center ${customClass}`}>
     <svg class={`h-${size} w-${size} animate-spin mb-3 text-${color}`} viewBox="3 3 18 18">
         <path
             fill="currentColor"

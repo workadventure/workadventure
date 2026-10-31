@@ -259,13 +259,15 @@
                                     id="woka-line-{collectionIndex}"
                                     class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
                                 >
-                                    {#each collection.textures || [] as texture (texture.id)}
+                                    {#each collection.textures || [] as texture, textureIndex (texture.id)}
                                         <button
                                             class="rounded border border-solid box-border p-0 h-fit {selectedWokaTextureId?.woka ===
                                             texture.id
                                                 ? 'bg-white/50 border-white'
                                                 : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                             id="woka-{texture.id}"
+                                            aria-label={$LL.actionbar.a11y.wokaOption({ index: textureIndex + 1 })}
+                                            aria-pressed={selectedWokaTextureId?.woka === texture.id}
                                             onclick={() => selectTexture(collectionIndex, texture.id)}
                                         >
                                             <WokaImage

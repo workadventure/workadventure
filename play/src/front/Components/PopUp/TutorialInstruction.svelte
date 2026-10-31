@@ -5,6 +5,7 @@
     import XIcon from "../Icons/XIcon.svelte";
     import { currentBannerIndex } from "../../Stores/PopupStore";
     import Button from "../UI/Button.svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -42,7 +43,7 @@
                     : 'opacity-20'}"
                 id="chevron-left"
                 onclick={goToPreviousBanner}
-                aria-label="Previous"
+                aria-label={$LL.actionbar.a11y.previous()}
             >
                 {#snippet icon()}
                     <ChevronLeftIcon height="h-4" width="w-4" />
@@ -60,7 +61,7 @@
                     : ''}"
                 id="chevron-right"
                 onclick={goToNextBanner}
-                aria-label="Next"
+                aria-label={$LL.actionbar.a11y.next()}
             >
                 {#snippet icon()}
                     <ChevronRightIcon height="h-4" width="w-4" />
@@ -74,7 +75,7 @@
                 square
                 class="min-h-10 min-w-10 sm:min-h-0 sm:min-w-0 p-2"
                 onclick={closeBanner}
-                aria-label="Close"
+                aria-label={$LL.actionbar.a11y.close()}
             >
                 {#snippet icon()}
                     <XIcon height="h-4" width="w-4" />

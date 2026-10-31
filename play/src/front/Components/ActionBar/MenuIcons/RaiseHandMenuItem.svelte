@@ -116,6 +116,7 @@
     classList="group/btn-raise-hand"
     disabledHelp={$openedMenuStore !== undefined}
     state={$buttonStateStore}
+    pressed={$buttonStateStore === "active" || $buttonStateStore === "live"}
     dataTestId="raise-hand-button"
     tooltipTitle={$givenFloorSpaceStore
         ? $LL.actionbar.help.giveBackFloor.title()

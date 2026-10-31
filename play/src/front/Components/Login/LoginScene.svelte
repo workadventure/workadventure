@@ -119,13 +119,18 @@
 >
     <div class="w-full sm:w-96 md:w-10/12 lg:w-1/2 xl:w-1/3 rounded mx-auto text-center p-8">
         <section class="text-center flex h-fit flex-col justify-center items-center mb-0">
-            <span class="text-white text-lg bold">
+            <label for="loginSceneNameInput" class="text-white text-lg bold">
                 {$LL.login.input.name.placeholder()}
-            </span>
+            </label>
             <!-- svelte-ignore a11y_autofocus -->
             <input
                 type="text"
+                id="loginSceneNameInput"
                 name="fname"
+                aria-invalid={(name.trim() === "" && startValidating) || errorName !== ""}
+                aria-describedby={(name.trim() === "" && startValidating) || errorName !== ""
+                    ? "loginSceneNameError"
+                    : undefined}
                 data-testid="loginSceneNameInput"
                 placeholder={$LL.login.input.name.placeholder()}
                 class="w-52 md:w-96 h-12 text text-center bg-contrast rounded border border-solid border-white/20 mt-4 mb-0"
@@ -138,7 +143,7 @@
                 class:border-danger={(name.trim() === "" && startValidating) || errorName !== ""}
             />
             {#if (name.trim() === "" && startValidating) || errorName !== ""}
-                <p class="err text-xs text-danger italic pt-2 mb-0">
+                <p id="loginSceneNameError" class="err text-xs text-danger italic pt-2 mb-0" role="alert">
                     {#if errorName}{errorName}{:else}{$LL.login.input.name.empty()}{/if}
                 </p>
             {/if}
