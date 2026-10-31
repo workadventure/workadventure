@@ -121,8 +121,8 @@ test.describe("Adaptive streaming test @nomobile @nowebkit @nofirefox", () => {
         await expect(userBob.getByText("No video stream received")).toBeHidden();
 
         ////////////////////////// Alice turns her camera off and on: Bob sees her again /////////////////////////
-        // Bob's tile unmounts with the track and reports 0x0; the re-added track must not stay paused, or Bob
-        // would never mount a tile again (a remote track only unmutes on its first frame, so a paused sender
+        // Bob's tile unmounts with the camera and reports 0x0; the resumed encoder must not stay paused, or Bob
+        // would never mount a tile again (a remote track only unmutes on its first frame, so a paused encoder
         // keeps it muted). Bob's own tile is in the container too, hence the filter on Alice's.
         const bobViewOfAlice = userBob.locator("#cameras-container > div").filter({ hasText: "Alice" });
         await Menu.turnOffCamera(page);
