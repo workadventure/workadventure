@@ -458,7 +458,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         error: "Impossibile inviare inviti",
         participants: "Partecipanti",
-        roomID: "ID stanza: {roomId}",
         invite: "Invitato",
         ban: "Bannato",
         kick: "Espulso",
@@ -508,10 +507,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Crittografata",
             notEncrypted: "Non crittografata",
             readOnly: "Sola lettura",
-            copyRoomId: "Copia l'ID della stanza",
         },
         settings: {
             roomType: "Tipo di stanza",
+            roomId: "ID stanza",
             encryption: "Crittografia",
             topic: "Argomento",
             joinRule: "Accesso",

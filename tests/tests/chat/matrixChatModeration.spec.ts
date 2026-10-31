@@ -65,6 +65,8 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         const publicChatRoomName = ChatUtils.getRandomName();
         await page.getByTestId("createRoomName").fill(publicChatRoomName);
         await page.getByTestId("createRoomButton").click();
+        await expect(page.getByTestId("roomName")).toHaveText(publicChatRoomName);
+        const roomId = await ChatUtils.readOpenRoomId(page);
         await ChatUtils.backToRoomListAfterCreation(page, publicChatRoomName);
 
         await matrixApi.overrideRateLimitForUser("@john.doe:matrix.workadventure.localhost");
@@ -112,11 +114,8 @@ test.describe("chat moderation @matrix @nowebkit", () => {
         await memberAction("inviteButton");
         await expect(members.getByTestId(`${ADMIN}-panel-status`)).toHaveText("Invited");
 
-        // The room id sits in the panel's overview.
+        // Members are reached from the panel overview.
         await page.getByTestId("roomSidePanelBackButton").click();
-        const roomId = ChatUtils.parseMatrixRoomIdFromRoomLabelText(
-            (await page.getByTestId("roomID").textContent())?.trim() ?? "",
-        );
 
         await matrixApi.acceptRoomInvitations(roomId);
 

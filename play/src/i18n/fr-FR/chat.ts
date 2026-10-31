@@ -459,7 +459,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     manageRoomUsers: {
         error: "Impossible d'envoyer les invitations",
         participants: "Participants",
-        roomID: "ID du salon : {roomId}",
         invite: "Invité",
         ban: "Banni",
         kick: "Expulsé",
@@ -509,10 +508,10 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Chiffré",
             notEncrypted: "Non chiffré",
             readOnly: "Lecture seule",
-            copyRoomId: "Copier l'ID du salon",
         },
         settings: {
             roomType: "Type de salon",
+            roomId: "ID du salon",
             encryption: "Chiffrement",
             topic: "Sujet",
             joinRule: "Accès",

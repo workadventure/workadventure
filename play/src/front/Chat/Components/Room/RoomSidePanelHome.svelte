@@ -21,7 +21,6 @@
     import {
         IconBellOff,
         IconCheckList,
-        IconLink,
         IconLoader,
         IconLogout,
         IconMessageCircle2,
@@ -128,17 +127,6 @@
         openSection("participants");
     }
 
-    let roomIdCopied = $state(false);
-    function copyRoomId() {
-        navigator.clipboard
-            .writeText(room.id)
-            .then(() => {
-                roomIdCopied = true;
-                setTimeout(() => (roomIdCopied = false), 2000);
-            })
-            .catch((error) => console.error(error));
-    }
-
     function toggleMute() {
         if ($areNotificationsMuted) {
             room.unmuteNotification().catch(() => console.error("Failed to unmute room"));
@@ -186,20 +174,6 @@
                 </div>
             </div>
         </div>
-        <button
-            type="button"
-            data-testid="roomID"
-            class="group m-0 mt-3 flex w-full items-center gap-2 rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-2 text-start text-xs text-white/65 transition-colors hover:bg-white/[0.08]"
-            title={$LL.chat.roomPanel.home.copyRoomId()}
-            onclick={copyRoomId}
-        >
-            <span class="min-w-0 flex-1 break-all"
-                >{roomIdCopied
-                    ? $LL.chat.matrixSettings.copied()
-                    : $LL.chat.manageRoomUsers.roomID({ roomId: room.id })}</span
-            >
-            <IconLink class="h-4 w-4 shrink-0 opacity-50 group-hover:opacity-90" aria-hidden="true" />
-        </button>
     </div>
 
     <div class="flex-1 overflow-y-auto px-3 py-3">

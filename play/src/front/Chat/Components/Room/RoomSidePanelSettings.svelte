@@ -28,6 +28,7 @@
         historyVisibilityOptions,
     } from "../../Connection/ChatConnection";
     import { applyWritePreset, permissionsLostBy, writePresetOf, type WritePreset } from "./roomPermissionPresets";
+    import { IconCopy } from "@wa-icons";
 
     interface Props {
         room: ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomSettingsManagement;
@@ -159,6 +160,17 @@
             if (url) URL.revokeObjectURL(url);
         };
     });
+
+    let roomIdCopied = $state(false);
+    function copyRoomId() {
+        navigator.clipboard
+            .writeText(room.id)
+            .then(() => {
+                roomIdCopied = true;
+                setTimeout(() => (roomIdCopied = false), 2000);
+            })
+            .catch((error) => console.error(error));
+    }
 
     function pickAvatar(event: Event) {
         const file = (event.currentTarget as HTMLInputElement).files?.[0];
@@ -300,6 +312,28 @@
                 </div>
                 <div class="mt-1 text-white">
                     {$isEncrypted ? $LL.chat.roomPanel.home.encrypted() : $LL.chat.roomPanel.home.notEncrypted()}
+                </div>
+            </div>
+
+            <div class="rounded-lg border border-solid border-white/10 bg-white/[0.04] px-3 py-3">
+                <div class="text-xs font-semibold uppercase text-white/45">
+                    {$LL.chat.roomPanel.settings.roomId()}
+                </div>
+                <div class="mt-1 flex items-center gap-2">
+                    <span class="min-w-0 flex-1 break-all text-xs text-white" data-testid="roomID">{room.id}</span>
+                    <Button
+                        variant="light"
+                        appearance="border"
+                        size="xs"
+                        class="m-0 shrink-0"
+                        dataTestId="copyRoomIdButton"
+                        onclick={copyRoomId}
+                    >
+                        {#snippet icon()}
+                            <IconCopy font-size={14} aria-hidden="true" />
+                        {/snippet}
+                        {roomIdCopied ? $LL.chat.copied() : $LL.chat.copy()}
+                    </Button>
                 </div>
             </div>
 
