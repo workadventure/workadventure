@@ -13,6 +13,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     givenTheFloorEnableMicrophone: "حان دورك للتحدث — فعّل الميكروفون",
     floorRevoked: "لم يعد لديك الكلمة",
     announcement: "إعلان",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "رسالة خاصة من {sender}: {excerpt}",
+        mention: "أشار إليك {sender} في {room}: {excerpt}",
+        roomMessage: "{sender} في {room}: {excerpt}",
+        bubbleLocked: "المحادثة مقفلة: لا يمكن لأي شخص آخر الانضمام",
+        bubbleUnlocked: "المحادثة غير مقفلة",
+        handRaised: "رفع {name} يده",
+        megaphone: "{name} يتحدث عبر مكبر الصوت",
+    },
     help: {
         title: "تم رفض الوصول إلى الإشعارات", // access to notifications denied
         permissionDenied: "تم الرفض", // access denied

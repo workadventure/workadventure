@@ -17,6 +17,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     removedFromConversation: "ผู้ดูแลได้นำคุณออกจากการสนทนา",
     actionFailed: "ไม่สามารถดำเนินการนี้ได้",
     announcement: "ประกาศ",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "ข้อความส่วนตัวจาก {sender}: {excerpt}",
+        mention: "{sender} กล่าวถึงคุณใน {room}: {excerpt}",
+        roomMessage: "{sender} ใน {room}: {excerpt}",
+        bubbleLocked: "การสนทนาถูกล็อก: ไม่มีใครเข้าร่วมได้อีก",
+        bubbleUnlocked: "การสนทนาถูกปลดล็อกแล้ว",
+        handRaised: "{name} ยกมือ",
+        megaphone: "{name} กำลังพูดผ่านโทรโข่ง",
+    },
     help: {
         title: "การเข้าถึงการแจ้งเตือนถูกปฏิเสธ",
         permissionDenied: "ไม่ได้รับอนุญาต",

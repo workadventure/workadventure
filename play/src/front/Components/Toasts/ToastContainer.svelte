@@ -3,6 +3,7 @@
     import { fly } from "svelte/transition";
     import { onDestroy, onMount } from "svelte";
     import { toastStore } from "../../Stores/ToastStoreSingleton";
+    import { announce } from "../../Stores/LiveAnnouncerStore";
 
     interface Props {
         extraClasses: string;
@@ -22,18 +23,51 @@
         buttons,
     }: Props = $props();
 
-    let timeout: ReturnType<typeof setTimeout>;
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    let message: HTMLDivElement | undefined = $state();
+    // A toast that closes by itself pauses while the pointer or the focus is on it (RGAA 13.1).
+    let paused = $state(false);
+    let remaining = 0;
+    let startedAt = 0;
+
+    function startTimer() {
+        if (toastUuid === undefined) return;
+        const theToastUuid = toastUuid;
+        startedAt = Date.now();
+        timeout = setTimeout(() => {
+            toastStore.removeToast(theToastUuid);
+        }, remaining);
+    }
+
+    function pause() {
+        if (duration === undefined || paused) return;
+        paused = true;
+        clearTimeout(timeout);
+        remaining -= Date.now() - startedAt;
+    }
+
+    function resume(event: FocusEvent | MouseEvent) {
+        if (duration === undefined || !paused) return;
+        const container = event.currentTarget as HTMLElement;
+        // Still hovered, or the focus stays inside: the other of the two keeps it paused.
+        const focused = event instanceof FocusEvent ? event.relatedTarget : document.activeElement;
+        if ((event instanceof FocusEvent && container.matches(":hover")) || container.contains(focused as Node | null))
+            return;
+        paused = false;
+        startTimer();
+    }
 
     onMount(() => {
         if (duration !== undefined && toastUuid === undefined) {
             throw new Error("ToastContainer: if duration is set, toastUuid must be defined");
         }
 
-        if (duration !== undefined && toastUuid !== undefined) {
-            const theToastUuid = toastUuid;
-            timeout = setTimeout(() => {
-                toastStore.removeToast(theToastUuid);
-            }, duration);
+        // The message only: the buttons are reached with Tab.
+        announce(message?.textContent ?? "", theme === "error" ? "assertive" : "polite");
+
+        if (duration !== undefined) {
+            remaining = duration;
+            startTimer();
         }
     });
 
@@ -42,7 +76,14 @@
     });
 </script>
 
-<div class="toast-container flex flex-row flex-nowrap items-stretch gap-1">
+<!-- svelte-ignore a11y_no_static_element_interactions -->
+<div
+    class="toast-container flex flex-row flex-nowrap items-stretch gap-1"
+    onmouseenter={pause}
+    onmouseleave={resume}
+    onfocusin={pause}
+    onfocusout={resume}
+>
     <div
         class="w-2 rounded-lg my-3"
         class:bg-danger={theme === "error"}
@@ -61,13 +102,13 @@
                     class:success={theme === "success"}
                     class:error={theme === "error"}
                     class:secondary={theme === "secondary"}
-                    style="animation-duration: {duration}ms;"
+                    style="animation-duration: {duration}ms; animation-play-state: {paused ? 'paused' : 'running'};"
                 ></div>
             </div>
         {/if}
 
         <div class="flex items-center p-4 pointer-events-auto justify-center grow">
-            <div class="text-center leading-6 responsive-message">
+            <div class="text-center leading-6 responsive-message" bind:this={message}>
                 {@render children?.()}
             </div>
         </div>

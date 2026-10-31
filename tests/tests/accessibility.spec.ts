@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
+import Map from "./utils/map";
 import { getPage } from "./utils/auth";
+import { evaluateScript } from "./utils/scripting";
 import { play_url, publicTestMapUrl } from "./utils/urls";
 
 const MAP_URL = new URL(publicTestMapUrl("tests/E2E/empty.json", "accessibility"), play_url).toString();
@@ -52,5 +54,27 @@ test.describe("Accessibility @nomobile", () => {
         await microphone.focus();
         await page.keyboard.press("Space");
         await expect(microphone).toHaveAttribute("aria-pressed", before === "true" ? "false" : "true");
+    });
+});
+
+test.describe("Screen reader announcements @nomobile", () => {
+    test("someone joining or leaving my bubble is announced", async ({ browser }) => {
+        const url = MAP_URL;
+        await using alice = await getPage(browser, "Alice", url);
+        await using bob = await getPage(browser, "Bob", url);
+
+        // Not announced before anything happens: the region is in the page, empty.
+        const aliceRegion = alice.getByTestId("liveRegionPolite");
+        await expect(aliceRegion).toBeAttached();
+        await expect(aliceRegion).not.toContainText("Bob");
+
+        const position = await evaluateScript(alice, async () => WA.player.getPosition());
+        await Map.teleportToPosition(bob, position.x, position.y);
+        await expect(aliceRegion).toContainText("Bob", { timeout: 30_000 });
+
+        // The join announcement expires, then the leave is announced.
+        await expect(aliceRegion).not.toContainText("Bob", { timeout: 15_000 });
+        await Map.teleportToPosition(bob, position.x + 20 * 32, position.y);
+        await expect(aliceRegion).toContainText("Bob", { timeout: 30_000 });
     });
 });

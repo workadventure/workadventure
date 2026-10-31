@@ -39,6 +39,7 @@ import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInte
 import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
+import { announce, announceChatMessage } from "../../../Stores/LiveAnnouncerStore";
 import {
     isAChatRoomIsVisible,
     navChat,
@@ -362,6 +363,15 @@ export class ProximityChatRoom implements ChatRoom {
         private notifyNewMessage = (message: ProximityChatMessage) => {
             const { body, mentionsMe = false } = get(message.content);
             const plan = this.planNotification(mentionsMe);
+            const displayed = get(chatVisibilityStore) && get(selectedRoomStore)?.id === this.id;
+            if (displayed || plan.toast || plan.banner) {
+                announceChatMessage(
+                    message.sender.username ?? this.unknownUserName,
+                    mentionsToPlainText(body),
+                    get(this.name),
+                    { displayed, direct: false, mentionsMe },
+                );
+            }
 
             if (plan.sound && localUserStore.getChatSounds()) {
                 gameManager.getCurrentGameScene().playSound("new-message");
@@ -412,6 +422,10 @@ export class ProximityChatRoom implements ChatRoom {
     }
 
     sendMessage(message: string, action: ChatMessageType = "proximity", broadcast = true): void {
+        // Who joins or leaves the bubble: zone rooms are left out, a crowded zone would talk all the time.
+        if ((action === "incoming" || action === "outcoming") && this.isDefaultProximityRoom()) {
+            announce(message);
+        }
         // Create content message
         const newChatMessageContent = {
             body: message,
