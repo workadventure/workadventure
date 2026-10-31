@@ -13,6 +13,10 @@
         tooltipDelay?: number;
         state?: "normal" | "active" | "forbidden" | "live" | "disabled" | "disabledForbidden";
         dataTestId?: string;
+        // On/off state of a toggle (camera, microphone...), exposed as aria-pressed. Leave undefined for plain buttons.
+        pressed?: boolean;
+        // Accessible name for an icon-only button without a tooltip title.
+        ariaLabel?: string;
         classList?: string;
         hideIconInActionBar?: boolean;
         bgColor?: string;
@@ -52,6 +56,8 @@
         tooltipDelay = 500,
         state: buttonState = "normal",
         dataTestId = undefined,
+        pressed = undefined,
+        ariaLabel = undefined,
         classList = "group",
         hideIconInActionBar = false,
         bgColor = undefined,
@@ -75,6 +81,9 @@
         tooltip,
         end,
     }: Props = $props();
+
+    // An icon-only button has no text of its own: the tooltip title is its accessible name.
+    let accessibleName = $derived(ariaLabel ?? (label ? undefined : tooltipTitle || undefined));
 
     let isInMenu = $derived(context !== undefined ? context === "menu" : getContext("inMenu"));
 
@@ -126,8 +135,10 @@
                 {isGradient ? 'gradient overflow-hidden font-bold' : ''}
                 {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
-                    flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
+                    flex items-center justify-center gap-2 select-none"
             disabled={buttonState === "disabled" || buttonState === "disabledForbidden"}
+            aria-label={accessibleName}
+            aria-pressed={pressed}
             onclick={(event) => {
                 event.preventDefault();
                 handleClick(event);
@@ -175,6 +186,7 @@
                     {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     {isGradient ? 'relative' : ''}"
         use:action
+        aria-pressed={pressed}
         onclick={handleClick}
         {onkeydown}
         {onmouseenter}

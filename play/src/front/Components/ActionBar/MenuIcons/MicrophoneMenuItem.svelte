@@ -105,6 +105,8 @@
     classList="group/btn-mic peer/mic"
     disabledHelp={$openedMenuStore !== undefined}
     state={$microphoneButtonStateStore}
+    pressed={$microphoneButtonStateStore === "normal"}
+    ariaLabel={$microphoneActionBarTooltipStore.title || $LL.actionbar.help.mic.title()}
     dataTestId="microphone-button"
     tooltipTitle={$microphoneActionBarTooltipStore.title}
     desc={$microphoneActionBarTooltipStore.desc}

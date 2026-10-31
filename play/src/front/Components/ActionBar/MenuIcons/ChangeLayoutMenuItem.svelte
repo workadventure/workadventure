@@ -3,7 +3,7 @@
     import { LayoutMode } from "../../../WebRtc/LayoutManager";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { openedMenuStore } from "../../../Stores/MenuStore";
-    //import LL from "../../../workadventure/play/src/i18n/i18n-svelte";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import { embedScreenLayoutStore } from "../../../Stores/EmbedScreenLayoutStore";
 
     // Still needed ?
@@ -24,6 +24,7 @@
     classList="group/btn-layout"
     disabledHelp={$openedMenuStore !== undefined}
     dataTestId="changeLayout"
+    ariaLabel={$LL.actionbar.a11y.changeLayout()}
 >
     <!--            tooltipTitle={$LL.actionbar.help.changeLayout.title()}
                 tooltipDesc={$LL.actionbar.help.changeLayout.desc()} -->

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
     import type { WokaData } from "./WokaTypes";
     import WokaImage from "./WokaImage.svelte";
 
@@ -21,7 +22,7 @@
 <div class="woka-preview flex items-center justify-center relative">
     <div class="p-6 relative flex items-center justify-center w-fit bg-white/10 rounded-lg">
         <button
-            aria-label="Rotate avatar"
+            aria-label={$LL.actionbar.a11y.rotateAvatar()}
             class="bg-white/10 hover:bg-white/20 rounded-md absolute bottom-2 right-2 aspect-square p-2 flex items-center justify-center"
             onclick={() => {
                 direction = (direction + 1) % 4;
