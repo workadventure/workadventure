@@ -444,7 +444,7 @@ fn counter<T: Into<f64> + Copy>(v: Option<T>) -> Value {
 fn video_sample(s: &pb::VideoQualitySampleMessage) -> Option<Value> {
     use pb::{
         VideoQualityLimitationReason as L, VideoQualityRelayProtocol as R, VideoQualityStreamCategory as C,
-        VideoQualityStreamDirection as D, VideoQualityTransportType as T,
+        VideoQualityLevel as Q, VideoQualityStreamDirection as D, VideoQualityTransportType as T,
     };
     if s.stream_id.is_empty() || s.space_name.is_empty() || client_time(s.client_event_time_ms).is_none() {
         return None;
@@ -493,10 +493,43 @@ fn video_sample(s: &pb::VideoQualitySampleMessage) -> Option<Value> {
         "decodeSeconds": play(counter(s.decode_seconds)),
         "packetsReceived": play(counter(s.packets_received)), "packetsLost": play(counter(s.packets_lost)),
         "roundTripTimeMs": if outbound { Value::Null } else { plausible(s.round_trip_time_ms, 60_000.0) },
+        "captureWidth": out(s.capture_width.filter(|w| *w <= 65_535).map_or(Value::Null, Value::from)),
+        "captureHeight": out(s.capture_height.filter(|h| *h <= 65_535).map_or(Value::Null, Value::from)),
+        "qualitySetting": out(s.quality_setting.and_then(|q| Q::try_from(q).ok()).map_or(Value::Null, |q| match q {
+            Q::Low => "low", Q::Recommended => "recommended", Q::High => "high" }.into())),
         "captureFps": out(plausible(s.capture_fps, 240.0)), "captureTargetFps": out(plausible(s.capture_target_fps, 240.0)),
         "encodeMsPerFrame": out(plausible(s.encode_ms_per_frame, 10_000.0)),
         "cpuLimitedRatio": out(plausible(s.cpu_limited_ratio, 1.0)), "bandwidthLimitedRatio": out(plausible(s.bandwidth_limited_ratio, 1.0)),
         "uploadRoundTripTimeMs": out(plausible(s.upload_round_trip_time_ms, 60_000.0)), "uploadLossRatio": out(plausible(s.upload_loss_ratio, 1.0)),
         "availableOutgoingBitrate": out(plausible(s.available_outgoing_bitrate, 10_000_000_000.0)),
     }))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A sender's capture size and quality setting are reported on its outbound samples only, and a size above 65535 is dropped.
+    #[test]
+    fn a_senders_setup_is_reported_only_on_its_outbound_samples() {
+        let sample = |direction: pb::VideoQualityStreamDirection| pb::VideoQualitySampleMessage {
+            stream_id: "s".into(),
+            space_name: "meeting".into(),
+            client_event_time_ms: 1_700_000_000_000,
+            direction: direction as i32,
+            capture_width: Some(1280),
+            capture_height: Some(70_000),
+            quality_setting: Some(pb::VideoQualityLevel::High as i32),
+            ..Default::default()
+        };
+
+        let out = video_sample(&sample(pb::VideoQualityStreamDirection::Outbound)).expect("a valid sample");
+        assert_eq!(out["captureWidth"], 1280);
+        assert!(out["captureHeight"].is_null());
+        assert_eq!(out["qualitySetting"], "high");
+
+        let inbound = video_sample(&sample(pb::VideoQualityStreamDirection::Inbound)).expect("a valid sample");
+        assert!(inbound["captureWidth"].is_null());
+        assert!(inbound["qualitySetting"].is_null());
+    }
 }
