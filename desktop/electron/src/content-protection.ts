@@ -11,7 +11,7 @@ import electronIsDev from "electron-is-dev";
  * The catch is that content protection blanks these windows in EVERY capture, including the
  * developer's own screenshots and screen recordings — which makes the components impossible to
  * document. So we turn it off while developing (`electron-is-dev`, i.e. an unpackaged run such as
- * `yarn dev`) and whenever `WA_ALLOW_WINDOW_CAPTURE=1` is set (to grab documentation/marketing shots
+ * `npm run dev`) and whenever `WA_ALLOW_WINDOW_CAPTURE=1` is set (to grab documentation/marketing shots
  * from a packaged build). Normal production runs keep the protection on.
  *
  * The companion panel is an ordinary utility window: it is only protected while the user shares
