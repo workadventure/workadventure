@@ -1,0 +1,635 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "WorkAdventure Pusher",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/ping": {
+      "get": {
+        "description": "Returns a \"pong\" message. This endpoint can be useful to check if the application is alive.",
+        "produces": [
+          "text/plain;charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "pong"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ready": {
+      "get": {
+        "description": "Returns \"ready\" once the pusher can serve pages. When ASSETS_URL is set, this waits for the index.html template of the front container. Use it as a readiness probe (and /ping as a liveness probe).",
+        "produces": [
+          "text/plain;charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "503": {
+            "description": "The front template is not loaded yet"
+          }
+        }
+      }
+    },
+    "/ping-back": {
+      "get": {
+        "description": "Returns a \"pong\" message if all back servers could be reached.",
+        "produces": [
+          "text/plain;charset=UTF-8"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "pong"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more back servers are unreachable",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "ko"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/roomArea": {
+      "post": {
+        "summary": "Create a new Matrix room dedicated to an area",
+        "description": "Create a new Matrix room associated with a specific area.",
+        "tags": [
+          "MatrixRoomArea"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatrixRoomPropertyData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Matrix room created successfully.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MatrixRoomPropertyData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Invalid Request Body"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Internal Server Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update Matrix room name",
+        "description": "Update room name",
+        "tags": [
+          "MatrixRoomArea"
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MatrixRoomPropertyData"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "pong"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Invalid Request Body"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error.",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "Internal Server Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "One or more back servers are unreachable",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string",
+                  "example": "ko"
+                }
+              }
+            }
+          }
+        },
+        "produces": [
+          "text/plain;charset=UTF-8"
+        ]
+      }
+    },
+    "/map": {
+      "get": {
+        "description": "Returns a map mapping map name to file name of the map",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "playUri",
+            "in": "query",
+            "description": "The full URL of WorkAdventure to load this map",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "authToken",
+            "in": "query",
+            "description": "The authentication token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The details of the map",
+            "schema": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/MapDetailsData"
+                },
+                {
+                  "$ref": "#/definitions/RoomRedirect"
+                }
+              ]
+            }
+          },
+          "401": {
+            "description": "Error while retrieving the data because you are not authorized",
+            "schema": {
+              "$ref": "#/definitions/ErrorApiRedirectData"
+            }
+          },
+          "403": {
+            "description": "Error while retrieving the data because you are not authorized",
+            "schema": {
+              "$ref": "#/definitions/ErrorApiUnauthorizedData"
+            }
+          },
+          "404": {
+            "description": "Error while retrieving the data",
+            "schema": {
+              "$ref": "#/definitions/ErrorApiErrorData"
+            }
+          }
+        }
+      }
+    },
+    "/login-screen": {
+      "get": {
+        "description": "Redirects the user to the OpenID login screen",
+        "parameters": [
+          {
+            "name": "nonce",
+            "in": "query",
+            "description": "todo",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "description": "todo",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "playUri",
+            "in": "query",
+            "description": "todo",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects the user to the OpenID login screen"
+          }
+        }
+      }
+    },
+    "/me": {
+      "get": {
+        "description": "TODO",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "todo",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nonce",
+            "in": "query",
+            "description": "todo",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "description": "todo",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "playUri",
+            "in": "query",
+            "description": "todo",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Response to the /me endpoint",
+            "schema": {
+              "$ref": "#/definitions/MeResponse"
+            }
+          },
+          "401": {
+            "description": "Thrown when the token is invalid"
+          }
+        }
+      }
+    },
+    "/openid-callback": {
+      "get": {
+        "description": "This endpoint is meant to be called by the OpenID provider after the OpenID provider handles a login attempt. The OpenID provider redirects the browser to this endpoint.",
+        "parameters": [
+          {
+            "name": "code",
+            "in": "query",
+            "description": "A unique code to be exchanged for an authentication token",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "nonce",
+            "in": "query",
+            "description": "todo",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to play once authentication is done, unless we use an AdminAPI (in this case, we redirect to the AdminAPI with same parameters)"
+          }
+        }
+      }
+    },
+    "/matrix-callback": {
+      "get": {
+        "description": "This endpoint is meant to be called by the Matrix server (Synapse) after the OpenID provider connected to Synapse handles a login attempt. Synapse redirects the browser to this endpoint.",
+        "parameters": [
+          {
+            "name": "loginToken",
+            "in": "query",
+            "description": "A unique token that can be exchanged for a Matrix authentication token",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects to play once authentication is done."
+          }
+        }
+      }
+    },
+    "/anonymLogin": {
+      "post": {
+        "description": "Generates an \"anonymous\" JWT token allowing to connect to WorkAdventure anonymously.",
+        "responses": {
+          "200": {
+            "description": "The details of the logged user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "authToken": {
+                      "type": "string",
+                      "description": "A unique identification JWT token"
+                    },
+                    "userUuid": {
+                      "type": "string",
+                      "description": "Unique user ID"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Anonymous login is disabled at the configuration level (environment variable DISABLE_ANONYMOUS = true)"
+          }
+        }
+      }
+    },
+    "/profile-callback": {
+      "get": {
+        "description": "???",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "A JWT authentication token ???",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "playUri",
+            "in": "query",
+            "description": "Room URL of the current virtual place",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirects the user to the profile screen of the admin"
+          }
+        }
+      }
+    },
+    "/logout-callback": {
+      "get": {
+        "description": "TODO",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "description": "todo",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "TODO"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "get": {
+        "description": "TODO",
+        "responses": {
+          "302": {
+            "description": "Redirects the user to the OpenID logout screen"
+          }
+        }
+      }
+    },
+    "/room/refresh": {
+      "post": {
+        "description": "Forces anyone out of the room. The request must be authenticated with the \"admin-token\" header.",
+        "tags": [
+          "Admin endpoint"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": "The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)"
+          },
+          {
+            "name": "roomId",
+            "in": "body",
+            "description": "The ID (full URL) to the room",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Will always return \"ok\".",
+            "example": "ok"
+          }
+        }
+      }
+    },
+    "/message": {
+      "post": {
+        "description": "Sends a message (or a world full message) to a number of rooms.",
+        "tags": [
+          "Admin endpoint"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": "The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)"
+          },
+          {
+            "name": "text",
+            "in": "body",
+            "description": "The text of the message",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "type",
+            "in": "body",
+            "description": "Either \"capacity\" or \"message",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "targets",
+            "in": "body",
+            "description": "The list of room IDs to target",
+            "required": true,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "example": "https://play.workadventu.re/@/foo/bar/baz"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Will always return \"ok\".",
+            "example": "ok"
+          }
+        }
+      }
+    },
+    "/rooms": {
+      "get": {
+        "description": "Returns the list of all rooms, along the number of users in each room.",
+        "tags": [
+          "Admin endpoint"
+        ],
+        "parameters": [
+          {
+            "name": "Authorization",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": "The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Will always return \"ok\".",
+            "example": "{\"https://workadventu.re/@/company/world/room\": 24}",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/global/event": {
+      "post": {
+        "description": "Sends a scripting API event to ALL rooms.",
+        "tags": [
+          "Admin endpoint"
+        ],
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "required": true,
+            "type": "string",
+            "description": "The token to be allowed to access this API (in ADMIN_API_TOKEN environment variable)"
+          },
+          {
+            "name": "name",
+            "in": "body",
+            "description": "The name of the event",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "data",
+            "in": "body",
+            "description": "The payload of the event",
+            "required": false,
+            "type": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "nullable": true
+                },
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "array"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Will always return \"ok\".",
+            "example": "ok"
+          }
+        }
+      }
+    }
+  },
+  "components": {},
+  "tags": []
+}

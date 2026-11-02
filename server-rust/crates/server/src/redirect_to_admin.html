@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        function getUrlWithoutAccessKey() {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("access_key");
+            return url.href;
+        }
+
+        window.location.href = "{{{AUTOLOGIN_URL}}}?token={{accessKey}}&playUri=" + encodeURIComponent(getUrlWithoutAccessKey())
+    </script>
+</head>
+<body>
+</body>
+</html>

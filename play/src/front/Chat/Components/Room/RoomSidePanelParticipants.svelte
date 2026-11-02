@@ -1,14 +1,21 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, tick } from "svelte";
     import { get } from "svelte/store";
+    import { SvelteMap } from "svelte/reactivity";
     import LL from "../../../../i18n/i18n-svelte";
-    import type { ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration } from "../../Connection/ChatConnection";
+    import type {
+        ChatRoom,
+        ChatRoomMember,
+        ChatRoomMembershipManagement,
+        ChatRoomModeration,
+    } from "../../Connection/ChatConnection";
     import Button from "../../../Components/UI/Button.svelte";
     import Alert from "../../../Components/UI/Alert.svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import SelectMatrixUser from "../SelectMatrixUser.svelte";
     import { rovingFocus } from "../roomRowKeyboard";
+    import { membersFocusRequestStore } from "../../Stores/RoomSidePanelStore";
     import RoomSidePanelParticipantRow from "./RoomSidePanelParticipantRow.svelte";
     import MemberActionsMenu from "./MemberActionsMenu.svelte";
     import { IconLoader } from "@wa-icons";
@@ -28,6 +35,18 @@
     let sendingInvitations = $state(false);
     let invitationError: string | undefined = $state(undefined);
     const myId = localUserStore.getChatId();
+    let container: HTMLDivElement | undefined = $state();
+
+    // Opened from a "…" menu: the invite field if one may invite, otherwise the first member.
+    $effect(() => {
+        if (!$membersFocusRequestStore || loadingMembers || !container) return;
+        membersFocusRequestStore.set(false);
+        const target = $canInvite ? "input" : "[data-member-row]";
+        const panel = container;
+        tick()
+            .then(() => panel.querySelector<HTMLElement>(target)?.focus())
+            .catch((error) => console.error(error));
+    });
 
     onMount(() => {
         loadMembers().catch((error) => console.error(error));
@@ -67,10 +86,21 @@
         sendingInvitations = false;
     }
 
+    // A ban, a kick or an accepted invitation changes a member's membership without changing the member list:
+    // follow each membership, so that the person moves to the right section and shows the right status.
+    const memberships = new SvelteMap<string, string>();
+    $effect(() => {
+        const unsubscribers = $members.map((member) =>
+            member.membership.subscribe((membership) => memberships.set(member.id, membership)),
+        );
+        return () => unsubscribers.forEach((unsubscribe) => unsubscribe());
+    });
+    const membershipOf = (member: ChatRoomMember) => memberships.get(member.id) ?? get(member.membership);
+
     let sortedMembers = $derived([...$members].sort((a, b) => get(a.name).localeCompare(get(b.name))));
-    let joined = $derived(sortedMembers.filter((member) => get(member.membership) === "join"));
-    let invited = $derived(sortedMembers.filter((member) => ["invite", "knock"].includes(get(member.membership))));
-    let leftOrBanned = $derived(sortedMembers.filter((member) => ["leave", "ban"].includes(get(member.membership))));
+    let joined = $derived(sortedMembers.filter((member) => membershipOf(member) === "join"));
+    let invited = $derived(sortedMembers.filter((member) => ["invite", "knock"].includes(membershipOf(member))));
+    let leftOrBanned = $derived(sortedMembers.filter((member) => ["leave", "ban"].includes(membershipOf(member))));
 
     function statusOf(membership: string): string | undefined {
         switch (membership) {
@@ -86,7 +116,7 @@
     }
 </script>
 
-<div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelParticipants">
+<div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanelParticipants" bind:this={container}>
     {#if $canInvite}
         <div class="flex flex-col gap-2 border border-solid border-x-0 border-t-0 border-white/10 px-3 py-3">
             <SelectMatrixUser
@@ -152,7 +182,7 @@
                                 {section.title} · {section.list.length}
                             </h3>
                             {#each section.list as member (member.id)}
-                                <RoomSidePanelParticipantRow {member} status={statusOf(get(member.membership))}>
+                                <RoomSidePanelParticipantRow {member} status={statusOf(membershipOf(member))}>
                                     {#snippet actions()}
                                         {#if member.id !== myId}
                                             <MemberActionsMenu {room} {member} />
@@ -172,7 +202,7 @@
                         </summary>
                         <div class="mt-2 flex flex-col gap-2">
                             {#each leftOrBanned as member (member.id)}
-                                <RoomSidePanelParticipantRow {member} status={statusOf(get(member.membership))}>
+                                <RoomSidePanelParticipantRow {member} status={statusOf(membershipOf(member))}>
                                     {#snippet actions()}
                                         <MemberActionsMenu {room} {member} />
                                     {/snippet}

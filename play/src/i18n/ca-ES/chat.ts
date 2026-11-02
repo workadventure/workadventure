@@ -379,7 +379,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Sala recomanada",
         suggestedDescription: "Aquesta sala serà recomanada als usuaris que s'uneixin al mateix espai.",
-        users: "Usuaris",
         historyVisibility: {
             label: "Visibilitat dels missatges anteriors",
             world_readable: "Tots els missatges són visibles",
@@ -456,12 +455,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participants",
         error: "No s'han pogut enviar les invitacions",
-        title: "Gestionar participants",
-        invitations: "Invitacions",
         participants: "Participants",
-        join: "S'ha unit",
         invite: "Convidat",
         ban: "Bannejat",
         kick: "Expulsat",
@@ -477,7 +472,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Desbannejar",
             invite: "Convidar",
             cancelInvitation: "Cancel·la la invitació",
-            close: "Tanca",
         },
         roles: {
             USER: "Usuari",
@@ -513,6 +507,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Xifrada",
             notEncrypted: "No xifrada",
             readOnly: "Només lectura",
+            copyRoomId: "Copia l'ID de la sala",
         },
         settings: {
             roomType: "Tipus de sala",
@@ -573,6 +568,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "No s'han pogut carregar les enquestes. Torneu-ho a provar.",
         pollsPartial: "Algunes enquestes no han pogut carregar els seus resultats detallats.",
         pollFocusError: "No s'ha pogut obrir aquesta enquesta a la línia de temps.",
+        closeFolderMembers: "Tanca els membres de la carpeta",
+        folderMembersHint: "Els membres de la carpeta poden unir-se a les seves sales obertes als membres.",
     },
     roomMenu: {
         leaveRoom: {

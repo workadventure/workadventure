@@ -379,7 +379,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Sala sugerida",
         suggestedDescription: "Esta sala será sugerida a los usuarios que se unan al mismo espacio.",
-        users: "Usuarios",
         historyVisibility: {
             label: "Visibilidad de mensajes anteriores",
             world_readable: "Todos los mensajes son visibles",
@@ -456,12 +455,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participantes",
         error: "No se pudieron enviar las invitaciones",
-        title: "Gestionar participantes",
-        invitations: "Invitaciones",
         participants: "Participantes",
-        join: "Se unió",
         invite: "Invitado",
         ban: "Prohibido",
         kick: "Expulsado",
@@ -477,7 +472,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Desprohibir",
             invite: "Invitar",
             cancelInvitation: "Cancelar invitación",
-            close: "Cerrar",
         },
         roles: {
             USER: "Usuario",
@@ -513,6 +507,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Cifrada",
             notEncrypted: "Sin cifrar",
             readOnly: "Solo lectura",
+            copyRoomId: "Copiar el ID de la sala",
         },
         settings: {
             roomType: "Tipo de sala",
@@ -573,6 +568,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "No se pudieron cargar las encuestas. Inténtelo de nuevo.",
         pollsPartial: "Algunas encuestas no pudieron cargar sus resultados detallados.",
         pollFocusError: "No se pudo abrir esta encuesta en la línea de tiempo.",
+        closeFolderMembers: "Cerrar los miembros de la carpeta",
+        folderMembersHint: "Los miembros de la carpeta pueden unirse a sus salas abiertas a los miembros.",
     },
     roomMenu: {
         leaveRoom: {

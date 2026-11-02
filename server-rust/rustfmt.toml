@@ -1,0 +1,3 @@
+# Like the TypeScript side (Prettier, 120 columns).
+max_width = 120
+use_small_heuristics = "Max"
