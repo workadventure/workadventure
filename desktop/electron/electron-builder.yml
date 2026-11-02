@@ -14,6 +14,20 @@ files:
 directories:
     output: ./build
 
+# Flipped in the packaged Electron binary only (`npm run dev` is unaffected); the same set as a new
+# Electron Forge app. The signed app can no longer be turned into a Node.js runtime
+# (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect) to run other code under its camera, microphone and
+# screen recording permissions, and it only loads its own app.asar, checked against the hash
+# embedded at build time (macOS and Windows). Cookie encryption is one-way: turning it off again
+# would make every stored cookie (the world logins) unreadable.
+electronFuses:
+    runAsNode: false
+    enableCookieEncryption: true
+    enableNodeOptionsEnvironmentVariable: false
+    enableNodeCliInspectArguments: false
+    enableEmbeddedAsarIntegrityValidation: true
+    onlyLoadAppFromAsar: true
+
 dmg:
     icon: false
 
