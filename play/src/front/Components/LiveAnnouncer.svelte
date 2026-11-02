@@ -22,6 +22,8 @@
         // The regions must be in the page before anything is announced: a region inserted with its text is not read.
         root.append(regions.polite, regions.assertive);
 
+        // DOM bookkeeping, not state: nothing renders from it.
+        // eslint-disable-next-line svelte/prefer-svelte-reactivity
         const nodes = new Map<number, HTMLParagraphElement>();
         const unsubscribe = liveAnnouncementsStore.subscribe((announcements) => {
             const ids = new Set(announcements.map((a) => a.id));
