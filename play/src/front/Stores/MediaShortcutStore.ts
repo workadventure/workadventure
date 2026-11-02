@@ -5,8 +5,8 @@ export type MediaShortcut = { key: string; ctrlKey: boolean; altKey: boolean; sh
 
 const storageKey = "mediaShortcuts";
 const defaults: Record<MediaShortcutAction, MediaShortcut> = {
-    microphone: { key: "KeyA", ctrlKey: true, altKey: false, shiftKey: false, metaKey: false },
-    camera: { key: "KeyV", ctrlKey: true, altKey: false, shiftKey: false, metaKey: false },
+    microphone: { key: "KeyO", ctrlKey: false, altKey: false, shiftKey: false, metaKey: false },
+    camera: { key: "KeyP", ctrlKey: false, altKey: false, shiftKey: false, metaKey: false },
 };
 
 export const mediaShortcutRebindingStore = writable(false);
@@ -32,6 +32,7 @@ export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaSho
 }
 export function mediaShortcutMatches(event: KeyboardEvent, shortcut: MediaShortcut): boolean {
     return (
+        !event.repeat &&
         event.code === shortcut.key &&
         event.ctrlKey === shortcut.ctrlKey &&
         event.altKey === shortcut.altKey &&
