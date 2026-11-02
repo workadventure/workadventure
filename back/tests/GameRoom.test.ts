@@ -107,6 +107,7 @@ function createWorld(): Promise<GameRoom> {
         () => {},
         () => {},
         () => {},
+        () => {},
     );
 }
 
@@ -128,6 +129,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {},
             () => {},
             () => {},
@@ -169,6 +171,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             () => {},
+            () => {},
         );
 
         const user1 = await world.join(createMockUserSocket().socket, createJoinRoomMessage("1", 100, 100));
@@ -204,6 +207,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {},
             () => {},
             () => {},
@@ -295,6 +299,7 @@ describe("GameRoom", () => {
                 if (thing instanceof Group) groupsIn(zone).delete(thing.getId());
             },
             emote,
+            () => {},
             (zone, groupId) => groupsIn(zone).add(groupId),
             () => {},
             () => {},
@@ -340,6 +345,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             () => {},
+            () => {},
         );
 
         const user1Socket = createMockUserSocket();
@@ -370,6 +376,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {},
             () => {},
             () => {},
@@ -405,6 +412,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             () => {},
+            () => {},
         );
 
         const firstSocket = createMockUserSocket();
@@ -434,6 +442,7 @@ describe("GameRoom", () => {
             () => {},
             () => {},
             emote,
+            () => {},
             () => {},
             () => {},
             () => {},

@@ -2424,9 +2424,21 @@ export class GameScene extends DirtyScene {
 
                 this.emoteManager = new EmoteManager(this, this.connection);
                 this.duckRushManager = new DuckRushManager(this);
-                this.konamiCodeDetector = new KonamiCodeDetector(() =>
-                    this.duckRushManager?.start(this.CurrentPlayer.x, this.CurrentPlayer.y),
-                );
+                const connection = this.connection;
+                this.konamiCodeDetector = new KonamiCodeDetector(() => {
+                    this.duckRushManager?.start(connection.getUserId(), () => ({
+                        x: this.CurrentPlayer.x,
+                        y: this.CurrentPlayer.y,
+                    }));
+                    connection.emitDuckRush();
+                });
+                // The duckRushEventMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
+                // eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
+                this.connection.duckRushEventMessageStream.subscribe(({ actorUserId }) => {
+                    this.duckRushManager?.start(actorUserId, () =>
+                        this.MapPlayersByKey.get(actorUserId)?.getPosition(),
+                    );
+                });
                 this.entityAudioManager = new EntityAudioManager(this, this.connection);
                 this.CurrentPlayer.on(hasMovedEventName, () => this.entityAudioManager.onPlayerMoved());
 

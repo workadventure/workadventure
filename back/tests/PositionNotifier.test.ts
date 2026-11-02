@@ -38,6 +38,7 @@ describe("PositionNotifier", () => {
             () => {},
             () => {},
             () => {},
+            () => {},
         );
 
         const user1 = await User.create(
@@ -155,6 +156,7 @@ describe("PositionNotifier", () => {
             (thing: Movable) => {
                 leaveTriggered = true;
             },
+            () => {},
             () => {},
             () => {},
             () => {},

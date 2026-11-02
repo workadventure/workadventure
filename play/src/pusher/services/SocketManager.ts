@@ -8,6 +8,7 @@ import type {
     BanPlayerMessage,
     ChatMembersAnswer,
     ChatMembersQuery,
+    DuckRushEventMessage,
     EmoteEventMessage,
     ErrorApiData,
     ErrorMessage,
@@ -693,6 +694,15 @@ export class SocketManager implements ZoneEventListener {
             message: {
                 $case: "emoteEventMessage",
                 emoteEventMessage: emoteMessage,
+            },
+        });
+    }
+
+    onDuckRush(duckRushMessage: DuckRushEventMessage, listener: PusherWebSocket): void {
+        listener.emitInBatch({
+            message: {
+                $case: "duckRushEventMessage",
+                duckRushEventMessage: duckRushMessage,
             },
         });
     }

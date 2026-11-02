@@ -8,12 +8,13 @@
  * The PositionNotifier is important for performance. It allows us to send the position of players only to a restricted
  * number of players around the current player.
  */
-import type { EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
+import type { DuckRushEventMessage, EmoteEventMessage, SetPlayerDetailsMessage } from "@workadventure/messages";
 import type { Movable } from "@workadventure/shared-utils";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { RoomSocket } from "../RoomManager";
 import { User } from "../Model/User";
 import type {
+    DuckRushCallback,
     EmoteCallback,
     EntersCallback,
     GroupUsersUpdatedCallback,
@@ -53,6 +54,7 @@ export class PositionNotifier {
         private onUserMoves: MovesCallback,
         private onUserLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onDuckRush: DuckRushCallback,
         private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         private onGroupUsersUpdated: GroupUsersUpdatedCallback,
@@ -116,6 +118,7 @@ export class PositionNotifier {
                 this.onUserMoves,
                 this.onUserLeaves,
                 this.onEmote,
+                this.onDuckRush,
                 this.onLockGroup,
                 this.onPlayerDetailsUpdated,
                 this.onGroupUsersUpdated,
@@ -142,6 +145,12 @@ export class PositionNotifier {
         const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
         const zone = this.getZone(zoneDesc.i, zoneDesc.j);
         zone.emitEmoteEvent(emoteEventMessage);
+    }
+
+    public emitDuckRushEvent(user: User, duckRushEventMessage: DuckRushEventMessage) {
+        const zoneDesc = this.getZoneDescriptorFromCoordinates(user.getPosition().x, user.getPosition().y);
+        const zone = this.getZone(zoneDesc.i, zoneDesc.j);
+        zone.emitDuckRushEvent(duckRushEventMessage);
     }
 
     public emitLockGroupEvent(group: Group) {

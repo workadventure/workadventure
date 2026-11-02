@@ -7,6 +7,7 @@ import { LocalUrlError } from "@workadventure/map-editor/src/LocalUrlError";
 import { mapFetcher } from "@workadventure/map-editor/src/MapFetcher";
 import type {
     EditMapCommandMessage,
+    DuckRushEventMessage,
     EmoteEventMessage,
     EntityEvent,
     JoinRoomMessage,
@@ -42,6 +43,7 @@ import type { Admin } from "../Model/Admin";
 import type { PositionInterface } from "../Model/PositionInterface";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
 import type {
+    DuckRushCallback,
     EmoteCallback,
     EntersCallback,
     GroupUsersUpdatedCallback,
@@ -126,6 +128,7 @@ export class GameRoom implements BrothersFinder {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
+        onDuckRush: DuckRushCallback,
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         onGroupUsersUpdated: GroupUsersUpdatedCallback,
@@ -150,6 +153,7 @@ export class GameRoom implements BrothersFinder {
             onMoves,
             onLeaves,
             onEmote,
+            onDuckRush,
             onLockGroup,
             onPlayerDetailsUpdated,
             onGroupUsersUpdated,
@@ -170,6 +174,7 @@ export class GameRoom implements BrothersFinder {
         onMoves: MovesCallback,
         onLeaves: LeavesCallback,
         onEmote: EmoteCallback,
+        onDuckRush: DuckRushCallback,
         onLockGroup: LockGroupCallback,
         onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         onGroupUsersUpdated: GroupUsersUpdatedCallback,
@@ -200,6 +205,7 @@ export class GameRoom implements BrothersFinder {
             onMoves,
             onLeaves,
             onEmote,
+            onDuckRush,
             onLockGroup,
             onPlayerDetailsUpdated,
             onGroupUsersUpdated,
@@ -998,6 +1004,10 @@ export class GameRoom implements BrothersFinder {
 
     public emitEmoteEvent(user: User, emoteEventMessage: EmoteEventMessage) {
         this.positionNotifier.emitEmoteEvent(user, emoteEventMessage);
+    }
+
+    public emitDuckRushEvent(user: User, duckRushEventMessage: DuckRushEventMessage) {
+        this.positionNotifier.emitDuckRushEvent(user, duckRushEventMessage);
     }
 
     public emitLockGroupEvent(group: Group) {

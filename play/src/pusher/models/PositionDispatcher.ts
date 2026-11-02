@@ -258,6 +258,9 @@ export class PositionDispatcher {
             case "emoteEventMessage":
                 zone.handleEmoteEvent(message.emoteEventMessage);
                 break;
+            case "duckRushEventMessage":
+                zone.handleDuckRushEvent(message.duckRushEventMessage);
+                break;
             case "playerDetailsUpdatedMessage":
                 zone.handlePlayerDetailsUpdated(message.playerDetailsUpdatedMessage);
                 break;

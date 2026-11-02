@@ -1,4 +1,9 @@
-import type { EmoteEventMessage, SetPlayerDetailsMessage, PlayerDetailsUpdatedMessage } from "@workadventure/messages";
+import type {
+    DuckRushEventMessage,
+    EmoteEventMessage,
+    SetPlayerDetailsMessage,
+    PlayerDetailsUpdatedMessage,
+} from "@workadventure/messages";
 import type { Movable } from "@workadventure/shared-utils";
 import type { PositionInterface } from "../Model/PositionInterface";
 import type { RoomSocket } from "../RoomManager";
@@ -15,6 +20,11 @@ export type MovesCallback = (
 ) => void;
 export type LeavesCallback = (thing: Movable, currentZone: Zone, newZone: Zone | null, listener: RoomSocket) => void;
 export type EmoteCallback = (emoteEventMessage: EmoteEventMessage, currentZone: Zone, listener: RoomSocket) => void;
+export type DuckRushCallback = (
+    duckRushEventMessage: DuckRushEventMessage,
+    currentZone: Zone,
+    listener: RoomSocket,
+) => void;
 export type LockGroupCallback = (currentZone: Zone, groupId: number, listener: RoomSocket) => void;
 export type GroupUsersUpdatedCallback = (currentZone: Zone, group: Group, listener: RoomSocket) => void;
 export type PlayerDetailsUpdatedCallback = (
@@ -37,6 +47,7 @@ export class Zone implements CustomJsonReplacerInterface, ZonePosition {
         private onMoves: MovesCallback,
         private onLeaves: LeavesCallback,
         private onEmote: EmoteCallback,
+        private onDuckRush: DuckRushCallback,
         private onLockGroup: LockGroupCallback,
         private onPlayerDetailsUpdated: PlayerDetailsUpdatedCallback,
         private onGroupUsersUpdated: GroupUsersUpdatedCallback,
@@ -121,6 +132,12 @@ export class Zone implements CustomJsonReplacerInterface, ZonePosition {
     public emitEmoteEvent(emoteEventMessage: EmoteEventMessage) {
         for (const listener of this.listeners) {
             this.onEmote(emoteEventMessage, this, listener);
+        }
+    }
+
+    public emitDuckRushEvent(duckRushEventMessage: DuckRushEventMessage) {
+        for (const listener of this.listeners) {
+            this.onDuckRush(duckRushEventMessage, this, listener);
         }
     }
 

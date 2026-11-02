@@ -7,6 +7,7 @@ import type {
     BatchToPusherRoomMessage,
     EditMapCommandMessage,
     EditMapCommandsArrayMessage,
+    DuckRushEventMessage,
     EmoteEventMessage,
     EmotePromptMessage,
     FollowAbortMessage,
@@ -375,6 +376,8 @@ export class SocketManager {
                     this.onClientLeave(thing, currentZone, newZone, listener),
                 (emoteEventMessage: EmoteEventMessage, currentZone: ZonePosition, listener: RoomSocket) =>
                     this.onEmote(emoteEventMessage, currentZone, listener),
+                (duckRushEventMessage: DuckRushEventMessage, currentZone: ZonePosition, listener: RoomSocket) =>
+                    this.onDuckRush(duckRushEventMessage, currentZone, listener),
                 (currentZone: ZonePosition, groupId: number, listener: RoomSocket) => {
                     this.onLockGroup(currentZone, groupId, listener, roomPromise).catch((e) => {
                         console.error("An error happened while handling a lock group event:", e);
@@ -533,6 +536,16 @@ export class SocketManager {
             SocketManager.toZoneMessage(currentZone, {
                 $case: "emoteEventMessage",
                 emoteEventMessage,
+            }),
+            client,
+        );
+    }
+
+    private onDuckRush(duckRushEventMessage: DuckRushEventMessage, currentZone: ZonePosition, client: RoomSocket) {
+        emitZoneMessage(
+            SocketManager.toZoneMessage(currentZone, {
+                $case: "duckRushEventMessage",
+                duckRushEventMessage,
             }),
             client,
         );
@@ -1204,6 +1217,10 @@ export class SocketManager {
             emote: emotePromptMessage.emote,
             actorUserId: user.id,
         });
+    }
+
+    handleDuckRushPromptMessage(room: GameRoom, user: User) {
+        room.emitDuckRushEvent(user, { actorUserId: user.id });
     }
 
     handleFollowRequestMessage(room: GameRoom, user: User, message: FollowRequestMessage) {

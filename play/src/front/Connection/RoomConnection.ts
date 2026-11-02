@@ -16,6 +16,7 @@ import type {
     DeleteMapMessage,
     EditMapCommandMessage,
     EmbeddableWebsiteAnswer,
+    DuckRushEventMessage as DuckRushEventMessageTsProto,
     EmoteEventMessage as EmoteEventMessageTsProto,
     EntityMessage as EntityMessageTsProto,
     BanUserMessage,
@@ -212,6 +213,9 @@ export class RoomConnection implements RoomConnection {
     public readonly itemEventMessageStream = this._itemEventMessageStream.asObservable();
     private readonly _emoteEventMessageStream = new Subject<EmoteEventMessageTsProto>();
     public readonly emoteEventMessageStream = this._emoteEventMessageStream.asObservable();
+
+    private readonly _duckRushEventMessageStream = new Subject<DuckRushEventMessageTsProto>();
+    public readonly duckRushEventMessageStream = this._duckRushEventMessageStream.asObservable();
     private readonly _variableMessageStream = new Subject<{ name: string; value: unknown }>();
     public readonly variableMessageStream = this._variableMessageStream.asObservable();
     private readonly _areaPropertyVariableMessageStream = new Subject<{
@@ -412,6 +416,10 @@ export class RoomConnection implements RoomConnection {
                                 }
                                 case "emoteEventMessage": {
                                     this._emoteEventMessageStream.next(subMessage.emoteEventMessage);
+                                    break;
+                                }
+                                case "duckRushEventMessage": {
+                                    this._duckRushEventMessageStream.next(subMessage.duckRushEventMessage);
                                     break;
                                 }
                                 case "playerDetailsUpdatedMessage": {
@@ -1252,6 +1260,15 @@ export class RoomConnection implements RoomConnection {
                 emotePromptMessage: {
                     emote: emoteName,
                 },
+            },
+        });
+    }
+
+    public emitDuckRush(): void {
+        this.send({
+            message: {
+                $case: "duckRushPromptMessage",
+                duckRushPromptMessage: {},
             },
         });
     }
@@ -2269,6 +2286,7 @@ export class RoomConnection implements RoomConnection {
         this._followAbortMessageStream.complete();
         this._itemEventMessageStream.complete();
         this._emoteEventMessageStream.complete();
+        this._duckRushEventMessageStream.complete();
         this._variableMessageStream.complete();
         this._areaPropertyVariableMessageStream.complete();
         this._entityMessageStream.complete();

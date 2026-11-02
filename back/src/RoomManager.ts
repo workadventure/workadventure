@@ -152,6 +152,10 @@ const roomManager = {
                             socketManager.handleEmoteEventMessage(room, user, message.message.emotePromptMessage);
                             break;
                         }
+                        case "duckRushPromptMessage": {
+                            socketManager.handleDuckRushPromptMessage(room, user);
+                            break;
+                        }
                         case "followRequestMessage": {
                             socketManager.handleFollowRequestMessage(room, user, message.message.followRequestMessage);
                             break;

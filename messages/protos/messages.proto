@@ -92,6 +92,7 @@ message ZoneMessage {
     EmoteEventMessage emoteEventMessage = 11;
     PlayerDetailsUpdatedMessage playerDetailsUpdatedMessage = 12;
     GroupUsersUpdateMessage groupUsersUpdateMessage = 13;
+    DuckRushEventMessage duckRushEventMessage = 14;
   }
 }
 
@@ -300,6 +301,13 @@ message EmotePromptMessage {
 message EmoteEventMessage {
   int32 actorUserId = 1;
   string emote = 2;
+}
+
+message DuckRushPromptMessage {
+}
+
+message DuckRushEventMessage {
+  int32 actorUserId = 1;
 }
 
 message FollowRequestMessage {
@@ -564,6 +572,7 @@ message ClientToServerMessage {
     VideoQualityReportMessage videoQualityReportMessage = 50;
     AnalyticsEventReportMessage analyticsEventReportMessage = 52;
     EntityMessage entityMessage = 53;
+    DuckRushPromptMessage duckRushPromptMessage = 54;
   }
 }
 
@@ -1213,6 +1222,7 @@ message SubMessage {
     DuplicateUserConnectedMessage duplicateUserConnectedMessage = 27;
     EntityMessage entityMessage = 31;
     SpaceStatePatchMessage spaceStatePatchMessage = 32;
+    DuckRushEventMessage duckRushEventMessage = 33;
   }
 }
 
@@ -1820,6 +1830,7 @@ message PusherToBackMessage {
     MeetingInvitationResponseMessage meetingInvitationResponseMessage = 33;
     SetAreaPropertyVariableMessage setAreaPropertyVariableMessage = 34;
     EntityMessage entityMessage = 35;
+    DuckRushPromptMessage duckRushPromptMessage = 36;
   }
 }
 

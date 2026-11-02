@@ -28,7 +28,22 @@ const RESIDENT_MAX_PATH_DETOUR = 2;
 
 type Point = { x: number; y: number };
 
+/**
+ * The burst of ducks of one player. Every client plays the rush of every player nearby: only the player who entered
+ * the Konami code announces it, the ducks themselves are never sent through the network.
+ */
+interface Rush {
+    userId: number;
+    origin: Point;
+    // Where the player is now: undefined once the player is gone (left the room, or too far to be known).
+    getPlayerPosition: () => Point | undefined;
+    lastPlayerPosition: Point;
+    pendingSpawns: number;
+    duckCount: number;
+}
+
 interface Duck {
+    rush: Rush;
     sprite: Phaser.GameObjects.Sprite;
     speed: number;
     expiresAt: number;
@@ -43,13 +58,13 @@ interface Duck {
 }
 
 /**
- * Makes a lot of ducks leave the player and run to many different places for a few seconds. The ducks follow the
+ * Makes a lot of ducks leave a player and run to many different places for a few seconds. The ducks follow the
  * pathfinding, so they respect the colliders of the map.
  */
 export class DuckRushManager {
     private ducks = new Set<Duck>();
-    private origin: Point | undefined;
-    private pendingSpawns = 0;
+    // The rushes in progress, by user id of the player: a player cannot start a new rush before the previous one is over.
+    private rushes = new Map<number, Rush>();
     private readonly updateListener = (time: number, delta: number): void => this.update(time, delta);
 
     constructor(private scene: GameScene) {}
@@ -62,11 +77,12 @@ export class DuckRushManager {
     }
 
     /**
-     * @param x The x coordinate of the player
-     * @param y The y coordinate of the player
+     * @param userId The user id of the player who entered the Konami code
+     * @param getPlayerPosition Returns the position (center) of the player, or undefined if the player is not on the map
      */
-    public start(x: number, y: number): void {
-        if (this.isRunning() || !this.scene.textures.exists(DUCK_TEXTURE_KEY)) {
+    public start(userId: number, getPlayerPosition: () => Point | undefined): void {
+        const origin = getPlayerPosition();
+        if (!origin || this.rushes.has(userId) || !this.scene.textures.exists(DUCK_TEXTURE_KEY)) {
             return;
         }
         if (!this.scene.anims.exists(DUCK_WALK_ANIMATION_KEY)) {
@@ -81,29 +97,45 @@ export class DuckRushManager {
             });
         }
 
-        this.origin = { x, y };
+        const rush: Rush = {
+            userId,
+            origin,
+            getPlayerPosition,
+            lastPlayerPosition: origin,
+            pendingSpawns: DUCK_COUNT,
+            duckCount: 0,
+        };
+        const isFirstRush = this.rushes.size === 0;
+        this.rushes.set(userId, rush);
         // The ducks come out one after the other, like a burst.
-        this.pendingSpawns = DUCK_COUNT;
         for (let i = 0; i < DUCK_COUNT; i++) {
             this.scene.time.delayedCall(i * DUCK_SPAWN_INTERVAL_MS, () => {
-                this.pendingSpawns--;
-                this.spawnDuck(i);
+                if (this.rushes.get(userId) !== rush) {
+                    return;
+                }
+                rush.pendingSpawns--;
+                this.spawnDuck(rush, i);
             });
         }
-        this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateListener);
+        // One listener for all the rushes: registering it twice would make the ducks run twice as fast.
+        if (isFirstRush) {
+            this.scene.events.on(Phaser.Scenes.Events.UPDATE, this.updateListener);
+        }
     }
 
     public destroy(): void {
         this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateListener);
-        this.pendingSpawns = 0;
+        this.rushes.clear();
         for (const duck of this.ducks) {
             duck.sprite.destroy();
         }
         this.ducks.clear();
     }
 
-    private isRunning(): boolean {
-        return this.pendingSpawns > 0 || this.ducks.size > 0;
+    private forgetRushIfOver(rush: Rush): void {
+        if (rush.pendingSpawns === 0 && rush.duckCount === 0) {
+            this.rushes.delete(rush.userId);
+        }
     }
 
     /**
@@ -115,17 +147,15 @@ export class DuckRushManager {
         }
     }
 
-    private spawnDuck(index: number): void {
-        if (!this.origin) {
-            return;
-        }
+    private spawnDuck(rush: Rush, index: number): void {
         // The player is positioned by its center, the ducks by their feet.
-        const sprite = this.scene.add.sprite(this.origin.x, this.origin.y + DUCK_FRAME_SIZE / 2, DUCK_TEXTURE_KEY);
+        const sprite = this.scene.add.sprite(rush.origin.x, rush.origin.y + DUCK_FRAME_SIZE / 2, DUCK_TEXTURE_KEY);
         // The position of a duck is the position of its feet.
         sprite.setOrigin(0.5, 1);
         sprite.setScale(Phaser.Math.FloatBetween(0.8, 1.2));
         sprite.play({ key: DUCK_WALK_ANIMATION_KEY, startFrame: Phaser.Math.Between(0, 5) });
         const duck: Duck = {
+            rush,
             sprite,
             speed: Phaser.Math.Between(DUCK_MIN_SPEED, DUCK_MAX_SPEED),
             expiresAt: this.scene.time.now + Phaser.Math.Between(DUCK_MIN_LIFETIME_MS, DUCK_MAX_LIFETIME_MS),
@@ -136,6 +166,7 @@ export class DuckRushManager {
             opener: { x: sprite.x, y: sprite.y - DUCK_FRAME_SIZE / 2 },
         };
         this.ducks.add(duck);
+        rush.duckCount++;
         this.searchPath(duck);
     }
 
@@ -158,7 +189,7 @@ export class DuckRushManager {
     private async findRandomPath(duck: Duck): Promise<Point[]> {
         const feet = duck.sprite;
         // A resident wanders around the player, wherever the player is now.
-        const center = duck.isResident ? this.getPlayerFeet() : feet;
+        const center = duck.isResident ? this.getPlayerFeet(duck.rush) : feet;
         const minDistance = duck.isResident ? RESIDENT_MIN_TARGET_DISTANCE : DUCK_MIN_TARGET_DISTANCE;
         const maxDistance = duck.isResident ? RESIDENT_MAX_TARGET_DISTANCE : DUCK_MAX_TARGET_DISTANCE;
         const pathfindingManager = this.scene.getUpToDatePathfindingManager();
@@ -180,9 +211,9 @@ export class DuckRushManager {
         return [];
     }
 
-    private getPlayerFeet(): Point {
-        const player = this.scene.CurrentPlayer;
-        return { x: player.x, y: player.y + DUCK_FRAME_SIZE / 2 };
+    private getPlayerFeet(rush: Rush): Point {
+        rush.lastPlayerPosition = rush.getPlayerPosition() ?? rush.lastPlayerPosition;
+        return { x: rush.lastPlayerPosition.x, y: rush.lastPlayerPosition.y + DUCK_FRAME_SIZE / 2 };
     }
 
     /**
@@ -205,6 +236,8 @@ export class DuckRushManager {
             if (remaining <= 0) {
                 sprite.destroy();
                 this.ducks.delete(duck);
+                duck.rush.duckCount--;
+                this.forgetRushIfOver(duck.rush);
                 continue;
             }
             sprite.setAlpha(Math.min(1, remaining / DUCK_FADE_OUT_MS));
@@ -237,7 +270,7 @@ export class DuckRushManager {
             // Like the characters, the depth follows the y coordinate to simulate a perspective.
             sprite.setDepth(sprite.y);
         }
-        if (!this.isRunning()) {
+        if (this.rushes.size === 0) {
             this.scene.events.off(Phaser.Scenes.Events.UPDATE, this.updateListener);
         }
     }

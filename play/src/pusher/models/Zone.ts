@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/node";
 import type {
     CharacterTextureMessage,
     CompanionTextureMessage,
+    DuckRushEventMessage,
     EmoteEventMessage,
     ErrorMessage,
     GroupUpdateMessage,
@@ -30,6 +31,7 @@ export interface ZoneEventListener {
     onGroupLeaves(groupId: number, listener: PusherWebSocket): void;
     onGroupUsersUpdated(group: GroupDescriptor, listener: PusherWebSocket): void;
     onEmote(emoteMessage: EmoteEventMessage, listener: PusherWebSocket): void;
+    onDuckRush(duckRushMessage: DuckRushEventMessage, listener: PusherWebSocket): void;
     onError(errorMessage: ErrorMessage, listener: PusherWebSocket): void;
     onPlayerDetailsUpdated(playerDetailsUpdatedMessage: PlayerDetailsUpdatedMessage, listener: PusherWebSocket): void;
 }
@@ -268,6 +270,10 @@ export class Zone {
         this.notifyEmote(message);
     }
 
+    public handleDuckRushEvent(message: DuckRushEventMessage): void {
+        this.notifyDuckRush(message);
+    }
+
     public handlePlayerDetailsUpdated(message: PlayerDetailsUpdatedMessage): void {
         const userId = message.userId;
         const userDescriptor = this.users.get(userId);
@@ -337,6 +343,15 @@ export class Zone {
             } else {
                 // Do not send a signal. The move event will be triggered when joining the new room.
             }
+        }
+    }
+
+    private notifyDuckRush(duckRushMessage: DuckRushEventMessage): void {
+        for (const listener of this.listeners) {
+            if (listener.getUserData().userId === duckRushMessage.actorUserId) {
+                continue;
+            }
+            this.socketListener.onDuckRush(duckRushMessage, listener);
         }
     }
 
