@@ -45,6 +45,7 @@ var catalog = map[string]string{
 	"media.connection_retry":                       "front",
 	"media.turn_test.succeeded":                    "front",
 	"media.codec.degraded":                         "front",
+	"media.codec.probed":                           "front",
 	"chat.proximity_file.sent":                     "front",
 	"chat.proximity_file.received":                 "front",
 	"media.livekit.connected":                      "front",
