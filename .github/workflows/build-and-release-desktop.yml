@@ -65,6 +65,13 @@ jobs:
         run: npm ci
         working-directory: "desktop/electron"
 
+      # tsup only strips the types: without these, a type error or a broken contract.test.ts
+      # (what window.WAD exposes to world pages) would reach a release.
+      - name: "Type-check and test"
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: npm run typecheck && npm test
+        working-directory: "desktop/electron"
+
       - name: "Build typescript"
         run: npm run build
         working-directory: "desktop/electron"
