@@ -168,6 +168,9 @@
  "media.codec.degraded": {
   "source": "front"
  },
+ "media.codec.probed": {
+  "source": "front"
+ },
  "media.livekit.connected": {
   "source": "front"
  },

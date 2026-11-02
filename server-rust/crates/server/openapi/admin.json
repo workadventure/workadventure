@@ -498,6 +498,32 @@
                   ],
                   "description": "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate)."
                 },
+                "captureWidth": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Outbound only: width the camera or screen capture delivers (MediaTrackSettings.width), where frameWidth is the largest layer the encoder sends. A capture larger than what is sent was scaled down by the encoder or by its layer setup."
+                },
+                "captureHeight": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "description": "Outbound only: height the camera or screen capture delivers (MediaTrackSettings.height)."
+                },
+                "qualitySetting": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "enum": [
+                    "low",
+                    "recommended",
+                    "high"
+                  ],
+                  "description": "Outbound only: the sender's quality setting when the sample was taken: the camera's for a camera, the screen share's for a screen share."
+                },
                 "encodeMsPerFrame": {
                   "type": [
                     "number",
@@ -604,6 +630,9 @@
                 "decodeSeconds",
                 "captureFps",
                 "captureTargetFps",
+                "captureWidth",
+                "captureHeight",
+                "qualitySetting",
                 "encodeMsPerFrame",
                 "cpuLimitedRatio",
                 "bandwidthLimitedRatio",
@@ -3601,6 +3630,198 @@
             "properties"
           ],
           "description": "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload."
+        },
+        {
+          "type": [
+            "object"
+          ],
+          "properties": {
+            "eventName": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "media.codec.probed"
+              ]
+            },
+            "source": {
+              "type": [
+                "string"
+              ],
+              "enum": [
+                "front"
+              ],
+              "description": "Reported by the client."
+            },
+            "clientEventTimeMs": {
+              "type": [
+                "integer"
+              ],
+              "minimum": 0,
+              "maximum": 8640000000000000,
+              "description": "When the client believes the event happened, in milliseconds since the epoch. Untrusted: it comes from the browser clock, and the admin clamps it to the pusher's receive time when the two are implausibly far apart."
+            },
+            "eventId": {
+              "type": [
+                "string"
+              ],
+              "minLength": 1,
+              "maxLength": 255,
+              "description": "Idempotency key. The backend stores events in a ReplacingMergeTree keyed partly on it, so a retried batch collapses instead of double-counting. Deterministic for backend-synthesized events; uuid-suffixed for repeating client events."
+            },
+            "properties": {
+              "type": [
+                "object"
+              ],
+              "properties": {
+                "browser": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "chrome",
+                    "edge",
+                    "firefox",
+                    "safari",
+                    "other"
+                  ],
+                  "description": "Browser family, from the user agent. chrome covers every Chromium browser but Edge; every iOS browser is safari, since all of them run WebKit."
+                },
+                "os": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "windows",
+                    "mac",
+                    "linux",
+                    "chromeos",
+                    "android",
+                    "ios",
+                    "other"
+                  ],
+                  "description": "Operating system family, from the user agent."
+                },
+                "av1Encode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Encoding AV1 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "av1Decode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Decoding AV1 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "vp9Encode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Encoding VP9 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "vp9Decode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Decoding VP9 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "h264Encode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Encoding H.264 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "h264Decode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Decoding H.264 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "h265Encode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Encoding H.265 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                },
+                "h265Decode": {
+                  "type": [
+                    "string"
+                  ],
+                  "enum": [
+                    "hardware",
+                    "software",
+                    "unsupported",
+                    "unknown"
+                  ],
+                  "description": "Decoding H.265 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+                }
+              },
+              "required": [
+                "browser",
+                "os",
+                "av1Encode",
+                "av1Decode",
+                "vp9Encode",
+                "vp9Decode",
+                "h264Encode",
+                "h264Decode",
+                "h265Encode",
+                "h265Decode"
+              ],
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "eventName",
+            "source",
+            "clientEventTimeMs",
+            "eventId",
+            "properties"
+          ],
+          "description": "What this browser can do with each video codec in a WebRTC call, as MediaCapabilities answers at 720p: the verdict the codec preference lists are filtered on. Once per page load. H.265 is probed but never negotiated: it is here to measure how many users could use it."
         },
         {
           "type": [
