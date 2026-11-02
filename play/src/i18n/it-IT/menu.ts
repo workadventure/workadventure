@@ -196,6 +196,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Apri popup di dire",
         openThinkPopup: "Apri popup di pensare",
         walkMyDesk: "Vai alla mia scrivania",
+        subtitle: "Sono disattivate mentre scrivi in un campo di testo.",
+        searchLabel: "Cerca una scorciatoia",
+        searchPlaceholder: "Cerca un'azione o un tasto…",
+        noResult: "Nessuna scorciatoia corrisponde a «{query}».",
+        or: "o",
+        layout: "Layout della tastiera",
+        walk: "Camminare",
+        sendEmote: "Invia un'emoticon",
+        groups: {
+            move: "Muoversi",
+            communicate: "Comunicare",
+            express: "Esprimersi",
+            interact: "Interagire",
+        },
+        hints: {
+            speedUp: "Tieni premuto mentre ti muovi",
+            follow: "Vicino a qualcuno",
+            emotes: "Nell'ordine della barra delle emoticon",
+            mapEditor: "Se puoi modificare la mappa",
+        },
+        keyNames: {
+            shift: "Maiusc",
+            enter: "Invio",
+            space: "Spazio",
+        },
     },
 };
 

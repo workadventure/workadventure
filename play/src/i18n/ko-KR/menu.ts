@@ -193,6 +193,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
         walkMyDesk: "내 책상으로 이동",
+        subtitle: "텍스트 입력 중에는 비활성화됩니다.",
+        searchLabel: "단축키 검색",
+        searchPlaceholder: "동작 또는 키 검색…",
+        noResult: "“{query}”와 일치하는 단축키가 없습니다.",
+        or: "또는",
+        layout: "키보드 배열",
+        walk: "걷기",
+        sendEmote: "이모트 보내기",
+        groups: {
+            move: "이동",
+            communicate: "소통",
+            express: "감정 표현",
+            interact: "상호작용",
+        },
+        hints: {
+            speedUp: "이동 중에 누르고 있기",
+            follow: "다른 사람 근처에서",
+            emotes: "이모트 바 순서대로",
+            mapEditor: "맵을 편집할 수 있는 경우",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "스페이스",
+        },
     },
 };
 

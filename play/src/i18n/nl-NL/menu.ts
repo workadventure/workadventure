@@ -195,6 +195,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Zeg-popup openen",
         openThinkPopup: "Denk-popup openen",
         walkMyDesk: "Naar mijn bureau lopen",
+        subtitle: "Ze zijn uitgeschakeld terwijl je in een tekstveld typt.",
+        searchLabel: "Sneltoets zoeken",
+        searchPlaceholder: "Zoek een actie of een toets…",
+        noResult: "Geen sneltoets komt overeen met ‘{query}’.",
+        or: "of",
+        layout: "Toetsenbordindeling",
+        walk: "Lopen",
+        sendEmote: "Emote sturen",
+        groups: {
+            move: "Bewegen",
+            communicate: "Communiceren",
+            express: "Jezelf uiten",
+            interact: "Interactie",
+        },
+        hints: {
+            speedUp: "Ingedrukt houden tijdens het lopen",
+            follow: "In de buurt van iemand",
+            emotes: "In de volgorde van de emotebalk",
+            mapEditor: "Als je de kaart mag bewerken",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Spatie",
+        },
     },
 };
 

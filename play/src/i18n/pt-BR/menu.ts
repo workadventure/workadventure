@@ -195,6 +195,31 @@ const menu: BaseTranslation = {
         openSayPopup: "Abrir Popup de Fala",
         openThinkPopup: "Abrir Popup de Pensamento",
         walkMyDesk: "Ir para Minha Mesa",
+        subtitle: "Eles ficam desativados enquanto você digita em um campo de texto.",
+        searchLabel: "Buscar um atalho",
+        searchPlaceholder: "Buscar uma ação ou uma tecla…",
+        noResult: "Nenhum atalho corresponde a “{query}”.",
+        or: "ou",
+        layout: "Layout do teclado",
+        walk: "Andar",
+        sendEmote: "Enviar um emoji",
+        groups: {
+            move: "Mover-se",
+            communicate: "Comunicar",
+            express: "Expressar-se",
+            interact: "Interagir",
+        },
+        hints: {
+            speedUp: "Segure enquanto se move",
+            follow: "Perto de alguém",
+            emotes: "Na ordem da barra de emojis",
+            mapEditor: "Se você pode editar o mapa",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Espaço",
+        },
     },
 };
 

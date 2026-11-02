@@ -190,6 +190,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "開啟「說」彈出視窗",
         openThinkPopup: "開啟「想」彈出視窗",
         walkMyDesk: "走到我的辦公桌",
+        subtitle: "在文字欄位中輸入時會停用。",
+        searchLabel: "搜尋快捷鍵",
+        searchPlaceholder: "搜尋動作或按鍵…",
+        noResult: "沒有符合「{query}」的快捷鍵。",
+        or: "或",
+        layout: "鍵盤配置",
+        walk: "行走",
+        sendEmote: "傳送表情",
+        groups: {
+            move: "移動",
+            communicate: "交流",
+            express: "表達",
+            interact: "互動",
+        },
+        hints: {
+            speedUp: "移動時按住",
+            follow: "在某人附近時",
+            emotes: "依表情列的順序",
+            mapEditor: "如果你可以編輯地圖",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "空白鍵",
+        },
     },
 };
 

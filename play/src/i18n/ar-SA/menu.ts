@@ -194,6 +194,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "فتح نافذة قل",
         openThinkPopup: "فتح نافذة فكر",
         walkMyDesk: "الذهاب إلى مكتبي",
+        subtitle: "تُعطَّل أثناء الكتابة في حقل نصي.",
+        searchLabel: "البحث عن اختصار",
+        searchPlaceholder: "ابحث عن إجراء أو مفتاح…",
+        noResult: "لا يوجد اختصار يطابق «{query}».",
+        or: "أو",
+        layout: "تخطيط لوحة المفاتيح",
+        walk: "المشي",
+        sendEmote: "إرسال رمز تعبيري",
+        groups: {
+            move: "التنقل",
+            communicate: "التواصل",
+            express: "التعبير",
+            interact: "التفاعل",
+        },
+        hints: {
+            speedUp: "اضغط مع الاستمرار أثناء التنقل",
+            follow: "بالقرب من شخص ما",
+            emotes: "بترتيب شريط الرموز التعبيرية",
+            mapEditor: "إذا كان بإمكانك تعديل الخريطة",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "مسافة",
+        },
     },
 };
 
