@@ -396,6 +396,56 @@ func (VideoQualityLimitationReason) EnumDescriptor() ([]byte, []int) {
 	return file_messages_proto_rawDescGZIP(), []int{6}
 }
 
+// The sender's video quality setting.
+type VideoQualityLevel int32
+
+const (
+	VideoQualityLevel_VIDEO_QUALITY_LEVEL_LOW         VideoQualityLevel = 0
+	VideoQualityLevel_VIDEO_QUALITY_LEVEL_RECOMMENDED VideoQualityLevel = 1
+	VideoQualityLevel_VIDEO_QUALITY_LEVEL_HIGH        VideoQualityLevel = 2
+)
+
+// Enum value maps for VideoQualityLevel.
+var (
+	VideoQualityLevel_name = map[int32]string{
+		0: "VIDEO_QUALITY_LEVEL_LOW",
+		1: "VIDEO_QUALITY_LEVEL_RECOMMENDED",
+		2: "VIDEO_QUALITY_LEVEL_HIGH",
+	}
+	VideoQualityLevel_value = map[string]int32{
+		"VIDEO_QUALITY_LEVEL_LOW":         0,
+		"VIDEO_QUALITY_LEVEL_RECOMMENDED": 1,
+		"VIDEO_QUALITY_LEVEL_HIGH":        2,
+	}
+)
+
+func (x VideoQualityLevel) Enum() *VideoQualityLevel {
+	p := new(VideoQualityLevel)
+	*p = x
+	return p
+}
+
+func (x VideoQualityLevel) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (VideoQualityLevel) Descriptor() protoreflect.EnumDescriptor {
+	return file_messages_proto_enumTypes[7].Descriptor()
+}
+
+func (VideoQualityLevel) Type() protoreflect.EnumType {
+	return &file_messages_proto_enumTypes[7]
+}
+
+func (x VideoQualityLevel) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use VideoQualityLevel.Descriptor instead.
+func (VideoQualityLevel) EnumDescriptor() ([]byte, []int) {
+	return file_messages_proto_rawDescGZIP(), []int{7}
+}
+
 type CustomEntityDirection int32
 
 const (
@@ -432,11 +482,11 @@ func (x CustomEntityDirection) String() string {
 }
 
 func (CustomEntityDirection) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[7].Descriptor()
+	return file_messages_proto_enumTypes[8].Descriptor()
 }
 
 func (CustomEntityDirection) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[7]
+	return &file_messages_proto_enumTypes[8]
 }
 
 func (x CustomEntityDirection) Number() protoreflect.EnumNumber {
@@ -445,7 +495,7 @@ func (x CustomEntityDirection) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use CustomEntityDirection.Descriptor instead.
 func (CustomEntityDirection) EnumDescriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{7}
+	return file_messages_proto_rawDescGZIP(), []int{8}
 }
 
 // What an uploaded file is for, which decides where map-storage stores it and which formats it accepts.
@@ -481,11 +531,11 @@ func (x UploadedFileKind) String() string {
 }
 
 func (UploadedFileKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[8].Descriptor()
+	return file_messages_proto_enumTypes[9].Descriptor()
 }
 
 func (UploadedFileKind) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[8]
+	return &file_messages_proto_enumTypes[9]
 }
 
 func (x UploadedFileKind) Number() protoreflect.EnumNumber {
@@ -494,7 +544,7 @@ func (x UploadedFileKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use UploadedFileKind.Descriptor instead.
 func (UploadedFileKind) EnumDescriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{8}
+	return file_messages_proto_rawDescGZIP(), []int{9}
 }
 
 type RecordingWebhookPhase int32
@@ -530,11 +580,11 @@ func (x RecordingWebhookPhase) String() string {
 }
 
 func (RecordingWebhookPhase) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[9].Descriptor()
+	return file_messages_proto_enumTypes[10].Descriptor()
 }
 
 func (RecordingWebhookPhase) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[9]
+	return &file_messages_proto_enumTypes[10]
 }
 
 func (x RecordingWebhookPhase) Number() protoreflect.EnumNumber {
@@ -543,7 +593,7 @@ func (x RecordingWebhookPhase) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use RecordingWebhookPhase.Descriptor instead.
 func (RecordingWebhookPhase) EnumDescriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{9}
+	return file_messages_proto_rawDescGZIP(), []int{10}
 }
 
 type FilterType int32
@@ -579,11 +629,11 @@ func (x FilterType) String() string {
 }
 
 func (FilterType) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[10].Descriptor()
+	return file_messages_proto_enumTypes[11].Descriptor()
 }
 
 func (FilterType) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[10]
+	return &file_messages_proto_enumTypes[11]
 }
 
 func (x FilterType) Number() protoreflect.EnumNumber {
@@ -592,7 +642,7 @@ func (x FilterType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use FilterType.Descriptor instead.
 func (FilterType) EnumDescriptor() ([]byte, []int) {
-	return file_messages_proto_rawDescGZIP(), []int{10}
+	return file_messages_proto_rawDescGZIP(), []int{11}
 }
 
 type PositionMessage_Direction int32
@@ -631,11 +681,11 @@ func (x PositionMessage_Direction) String() string {
 }
 
 func (PositionMessage_Direction) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[11].Descriptor()
+	return file_messages_proto_enumTypes[12].Descriptor()
 }
 
 func (PositionMessage_Direction) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[11]
+	return &file_messages_proto_enumTypes[12]
 }
 
 func (x PositionMessage_Direction) Number() protoreflect.EnumNumber {
@@ -677,11 +727,11 @@ func (x SetPlayerVariableMessage_Scope) String() string {
 }
 
 func (SetPlayerVariableMessage_Scope) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[12].Descriptor()
+	return file_messages_proto_enumTypes[13].Descriptor()
 }
 
 func (SetPlayerVariableMessage_Scope) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[12]
+	return &file_messages_proto_enumTypes[13]
 }
 
 func (x SetPlayerVariableMessage_Scope) Number() protoreflect.EnumNumber {
@@ -723,11 +773,11 @@ func (x AskPositionMessage_AskType) String() string {
 }
 
 func (AskPositionMessage_AskType) Descriptor() protoreflect.EnumDescriptor {
-	return file_messages_proto_enumTypes[13].Descriptor()
+	return file_messages_proto_enumTypes[14].Descriptor()
 }
 
 func (AskPositionMessage_AskType) Type() protoreflect.EnumType {
-	return &file_messages_proto_enumTypes[13]
+	return &file_messages_proto_enumTypes[14]
 }
 
 func (x AskPositionMessage_AskType) Number() protoreflect.EnumNumber {
@@ -1814,6 +1864,13 @@ type VideoQualitySampleMessage struct {
 	// LiveKit streams only: region of the LiveKit server the client is connected to (serverInfo.region). Set by
 	// LiveKit Cloud, usually empty on a self-hosted server.
 	LivekitRegion *string `protobuf:"bytes,45,opt,name=livekitRegion,proto3,oneof" json:"livekitRegion,omitempty"`
+	// Outbound streams only: the sender's quality setting, the camera's for a camera, the screen share's for a screen
+	// share.
+	QualitySetting *VideoQualityLevel `protobuf:"varint,46,opt,name=qualitySetting,proto3,enum=VideoQualityLevel,oneof" json:"qualitySetting,omitempty"`
+	// Outbound streams only: size the camera or screen capture delivers (MediaTrackSettings), where frameWidth and
+	// frameHeight are the largest layer the encoder sends.
+	CaptureWidth  *uint32 `protobuf:"varint,47,opt,name=captureWidth,proto3,oneof" json:"captureWidth,omitempty"`
+	CaptureHeight *uint32 `protobuf:"varint,48,opt,name=captureHeight,proto3,oneof" json:"captureHeight,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2161,6 +2218,27 @@ func (x *VideoQualitySampleMessage) GetLivekitRegion() string {
 		return *x.LivekitRegion
 	}
 	return ""
+}
+
+func (x *VideoQualitySampleMessage) GetQualitySetting() VideoQualityLevel {
+	if x != nil && x.QualitySetting != nil {
+		return *x.QualitySetting
+	}
+	return VideoQualityLevel_VIDEO_QUALITY_LEVEL_LOW
+}
+
+func (x *VideoQualitySampleMessage) GetCaptureWidth() uint32 {
+	if x != nil && x.CaptureWidth != nil {
+		return *x.CaptureWidth
+	}
+	return 0
+}
+
+func (x *VideoQualitySampleMessage) GetCaptureHeight() uint32 {
+	if x != nil && x.CaptureHeight != nil {
+		return *x.CaptureHeight
+	}
+	return 0
 }
 
 type VideoQualityReportMessage struct {
@@ -21430,7 +21508,7 @@ const file_messages_proto_rawDesc = "" +
 	"\bviewport\x18\x02 \x01(\v2\x10.ViewportMessageR\bviewport\"J\n" +
 	"\fWebRtcSignal\x12\x16\n" +
 	"\x06signal\x18\x02 \x01(\tR\x06signal\x12\"\n" +
-	"\fconnectionId\x18\x03 \x01(\tR\fconnectionId\"\xdd\x15\n" +
+	"\fconnectionId\x18\x03 \x01(\tR\fconnectionId\"\xa8\x17\n" +
 	"\x19VideoQualitySampleMessage\x12,\n" +
 	"\x11clientEventTimeMs\x18\x01 \x01(\x04R\x11clientEventTimeMs\x12!\n" +
 	"\tsampleSeq\x18\x02 \x01(\x04H\x00R\tsampleSeq\x88\x01\x01\x12\x1a\n" +
@@ -21484,7 +21562,10 @@ const file_messages_proto_rawDesc = "" +
 	"\x15uploadRoundTripTimeMs\x18* \x01(\x01H\x1dR\x15uploadRoundTripTimeMs\x88\x01\x01\x12-\n" +
 	"\x0fuploadLossRatio\x18+ \x01(\x01H\x1eR\x0fuploadLossRatio\x88\x01\x01\x12?\n" +
 	"\x18availableOutgoingBitrate\x18, \x01(\x01H\x1fR\x18availableOutgoingBitrate\x88\x01\x01\x12)\n" +
-	"\rlivekitRegion\x18- \x01(\tH R\rlivekitRegion\x88\x01\x01B\f\n" +
+	"\rlivekitRegion\x18- \x01(\tH R\rlivekitRegion\x88\x01\x01\x12?\n" +
+	"\x0equalitySetting\x18. \x01(\x0e2\x12.VideoQualityLevelH!R\x0equalitySetting\x88\x01\x01\x12'\n" +
+	"\fcaptureWidth\x18/ \x01(\rH\"R\fcaptureWidth\x88\x01\x01\x12)\n" +
+	"\rcaptureHeight\x180 \x01(\rH#R\rcaptureHeight\x88\x01\x01B\f\n" +
 	"\n" +
 	"_sampleSeqB\x0f\n" +
 	"\r_connectionIdB\f\n" +
@@ -21520,7 +21601,10 @@ const file_messages_proto_rawDesc = "" +
 	"\x16_uploadRoundTripTimeMsB\x12\n" +
 	"\x10_uploadLossRatioB\x1b\n" +
 	"\x19_availableOutgoingBitrateB\x10\n" +
-	"\x0e_livekitRegion\"Q\n" +
+	"\x0e_livekitRegionB\x11\n" +
+	"\x0f_qualitySettingB\x0f\n" +
+	"\r_captureWidthB\x10\n" +
+	"\x0e_captureHeight\"Q\n" +
 	"\x19VideoQualityReportMessage\x124\n" +
 	"\asamples\x18\x01 \x03(\v2\x1a.VideoQualitySampleMessageR\asamples\"\xcd\x01\n" +
 	"\x15AnalyticsEventMessage\x12\x1c\n" +
@@ -22921,7 +23005,11 @@ const file_messages_proto_rawDesc = "" +
 	"$VIDEO_QUALITY_LIMITATION_REASON_NONE\x10\x00\x12'\n" +
 	"#VIDEO_QUALITY_LIMITATION_REASON_CPU\x10\x01\x12-\n" +
 	")VIDEO_QUALITY_LIMITATION_REASON_BANDWIDTH\x10\x02\x12)\n" +
-	"%VIDEO_QUALITY_LIMITATION_REASON_OTHER\x10\x03*>\n" +
+	"%VIDEO_QUALITY_LIMITATION_REASON_OTHER\x10\x03*s\n" +
+	"\x11VideoQualityLevel\x12\x1b\n" +
+	"\x17VIDEO_QUALITY_LEVEL_LOW\x10\x00\x12#\n" +
+	"\x1fVIDEO_QUALITY_LEVEL_RECOMMENDED\x10\x01\x12\x1c\n" +
+	"\x18VIDEO_QUALITY_LEVEL_HIGH\x10\x02*>\n" +
 	"\x15CustomEntityDirection\x12\x06\n" +
 	"\x02Up\x10\x00\x12\t\n" +
 	"\x05Right\x10\x01\x12\b\n" +
@@ -22952,7 +23040,7 @@ func file_messages_proto_rawDescGZIP() []byte {
 	return file_messages_proto_rawDescData
 }
 
-var file_messages_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
+var file_messages_proto_enumTypes = make([]protoimpl.EnumInfo, 15)
 var file_messages_proto_msgTypes = make([]protoimpl.MessageInfo, 284)
 var file_messages_proto_goTypes = []any{
 	(AvailabilityStatus)(0),                            // 0: AvailabilityStatus
@@ -22962,732 +23050,734 @@ var file_messages_proto_goTypes = []any{
 	(VideoQualityRelayProtocol)(0),                     // 4: VideoQualityRelayProtocol
 	(VideoQualityStreamDirection)(0),                   // 5: VideoQualityStreamDirection
 	(VideoQualityLimitationReason)(0),                  // 6: VideoQualityLimitationReason
-	(CustomEntityDirection)(0),                         // 7: CustomEntityDirection
-	(UploadedFileKind)(0),                              // 8: UploadedFileKind
-	(RecordingWebhookPhase)(0),                         // 9: RecordingWebhookPhase
-	(FilterType)(0),                                    // 10: FilterType
-	(PositionMessage_Direction)(0),                     // 11: PositionMessage.Direction
-	(SetPlayerVariableMessage_Scope)(0),                // 12: SetPlayerVariableMessage.Scope
-	(AskPositionMessage_AskType)(0),                    // 13: AskPositionMessage.AskType
-	(*PositionMessage)(nil),                            // 14: PositionMessage
-	(*PointMessage)(nil),                               // 15: PointMessage
-	(*ViewportMessage)(nil),                            // 16: ViewportMessage
-	(*CharacterTextureMessage)(nil),                    // 17: CharacterTextureMessage
-	(*ApplicationMessage)(nil),                         // 18: ApplicationMessage
-	(*CompanionTextureMessage)(nil),                    // 19: CompanionTextureMessage
-	(*ZoneMessage)(nil),                                // 20: ZoneMessage
-	(*PingMessage)(nil),                                // 21: PingMessage
-	(*UpdateMapToNewestMessage)(nil),                   // 22: UpdateMapToNewestMessage
-	(*UpdateMapToNewestWithKeyMessage)(nil),            // 23: UpdateMapToNewestWithKeyMessage
-	(*SetPlayerDetailsMessage)(nil),                    // 24: SetPlayerDetailsMessage
-	(*SayMessage)(nil),                                 // 25: SayMessage
-	(*UserMovesMessage)(nil),                           // 26: UserMovesMessage
-	(*WebRtcSignal)(nil),                               // 27: WebRtcSignal
-	(*VideoQualitySampleMessage)(nil),                  // 28: VideoQualitySampleMessage
-	(*VideoQualityReportMessage)(nil),                  // 29: VideoQualityReportMessage
-	(*AnalyticsEventMessage)(nil),                      // 30: AnalyticsEventMessage
-	(*AnalyticsEventReportMessage)(nil),                // 31: AnalyticsEventReportMessage
-	(*ReportPlayerMessage)(nil),                        // 32: ReportPlayerMessage
-	(*BanPlayerMessage)(nil),                           // 33: BanPlayerMessage
-	(*UpdateChatIdMessage)(nil),                        // 34: UpdateChatIdMessage
-	(*LeaveChatRoomAreaMessage)(nil),                   // 35: LeaveChatRoomAreaMessage
-	(*EmotePromptMessage)(nil),                         // 36: EmotePromptMessage
-	(*EmoteEventMessage)(nil),                          // 37: EmoteEventMessage
-	(*FollowRequestMessage)(nil),                       // 38: FollowRequestMessage
-	(*FollowConfirmationMessage)(nil),                  // 39: FollowConfirmationMessage
-	(*FollowAbortMessage)(nil),                         // 40: FollowAbortMessage
-	(*LockGroupPromptMessage)(nil),                     // 41: LockGroupPromptMessage
-	(*EditMapMessage)(nil),                             // 42: EditMapMessage
-	(*ErrorCommandMessage)(nil),                        // 43: ErrorCommandMessage
-	(*UpdateWAMSettingsMessage)(nil),                   // 44: UpdateWAMSettingsMessage
-	(*UpdateMegaphoneSettingMessage)(nil),              // 45: UpdateMegaphoneSettingMessage
-	(*UpdateRecordingSettingMessage)(nil),              // 46: UpdateRecordingSettingMessage
-	(*EditMapCommandMessage)(nil),                      // 47: EditMapCommandMessage
-	(*EditMapCommandsArrayMessage)(nil),                // 48: EditMapCommandsArrayMessage
-	(*EditMapCommandWithKeyMessage)(nil),               // 49: EditMapCommandWithKeyMessage
-	(*ModifyAreaMessage)(nil),                          // 50: ModifyAreaMessage
-	(*DeleteAreaMessage)(nil),                          // 51: DeleteAreaMessage
-	(*CreateAreaMessage)(nil),                          // 52: CreateAreaMessage
-	(*CreateEntityMessage)(nil),                        // 53: CreateEntityMessage
-	(*DeleteEntityMessage)(nil),                        // 54: DeleteEntityMessage
-	(*CollisionGridRow)(nil),                           // 55: CollisionGridRow
-	(*UploadEntityMessage)(nil),                        // 56: UploadEntityMessage
-	(*UploadFileMessage)(nil),                          // 57: UploadFileMessage
-	(*ModifyCustomEntityMessage)(nil),                  // 58: ModifyCustomEntityMessage
-	(*DeleteCustomEntityMessage)(nil),                  // 59: DeleteCustomEntityMessage
-	(*ModifyEntityMessage)(nil),                        // 60: ModifyEntityMessage
-	(*FrontToPusherWebSocketMessage)(nil),              // 61: FrontToPusherWebSocketMessage
-	(*PusherToFrontWebSocketMessage)(nil),              // 62: PusherToFrontWebSocketMessage
-	(*ClientToServerMessage)(nil),                      // 63: ClientToServerMessage
-	(*ReceivedEventMessage)(nil),                       // 64: ReceivedEventMessage
-	(*ModifiyWAMMetadataMessage)(nil),                  // 65: ModifiyWAMMetadataMessage
-	(*ItemEventMessage)(nil),                           // 66: ItemEventMessage
-	(*VariableMessage)(nil),                            // 67: VariableMessage
-	(*SetAreaPropertyVariableMessage)(nil),             // 68: SetAreaPropertyVariableMessage
-	(*AreaPropertyVariableMessage)(nil),                // 69: AreaPropertyVariableMessage
-	(*EntitySoundPlayed)(nil),                          // 70: EntitySoundPlayed
-	(*EntityEvent)(nil),                                // 71: EntityEvent
-	(*EntityMessage)(nil),                              // 72: EntityMessage
-	(*SetPlayerVariableMessage)(nil),                   // 73: SetPlayerVariableMessage
-	(*VariableWithTagMessage)(nil),                     // 74: VariableWithTagMessage
-	(*PlayGlobalMessage)(nil),                          // 75: PlayGlobalMessage
-	(*QueryMessage)(nil),                               // 76: QueryMessage
-	(*GetSignedUrlQuery)(nil),                          // 77: GetSignedUrlQuery
-	(*AbortQueryMessage)(nil),                          // 78: AbortQueryMessage
-	(*MapStorageJwtQuery)(nil),                         // 79: MapStorageJwtQuery
-	(*JitsiJwtQuery)(nil),                              // 80: JitsiJwtQuery
-	(*JoinBBBMeetingQuery)(nil),                        // 81: JoinBBBMeetingQuery
-	(*RoomTagsQuery)(nil),                              // 82: RoomTagsQuery
-	(*EmbeddableWebsiteQuery)(nil),                     // 83: EmbeddableWebsiteQuery
-	(*RoomsFromSameWorldQuery)(nil),                    // 84: RoomsFromSameWorldQuery
-	(*SendEventQuery)(nil),                             // 85: SendEventQuery
-	(*SearchMemberQuery)(nil),                          // 86: SearchMemberQuery
-	(*GetMemberQuery)(nil),                             // 87: GetMemberQuery
-	(*ChatMembersQuery)(nil),                           // 88: ChatMembersQuery
-	(*OauthRefreshTokenQuery)(nil),                     // 89: OauthRefreshTokenQuery
-	(*SearchTagsQuery)(nil),                            // 90: SearchTagsQuery
-	(*EnterChatRoomAreaQuery)(nil),                     // 91: EnterChatRoomAreaQuery
-	(*JoinSpaceQuery)(nil),                             // 92: JoinSpaceQuery
-	(*LeaveSpaceQuery)(nil),                            // 93: LeaveSpaceQuery
-	(*GetRecordingsQuery)(nil),                         // 94: GetRecordingsQuery
-	(*GetRecordingThumbnailsQuery)(nil),                // 95: GetRecordingThumbnailsQuery
-	(*DeleteRecordingQuery)(nil),                       // 96: DeleteRecordingQuery
-	(*AnswerMessage)(nil),                              // 97: AnswerMessage
-	(*JitsiJwtAnswer)(nil),                             // 98: JitsiJwtAnswer
-	(*MapStorageJwtAnswer)(nil),                        // 99: MapStorageJwtAnswer
-	(*JoinBBBMeetingAnswer)(nil),                       // 100: JoinBBBMeetingAnswer
-	(*RoomTagsAnswer)(nil),                             // 101: RoomTagsAnswer
-	(*EmbeddableWebsiteAnswer)(nil),                    // 102: EmbeddableWebsiteAnswer
-	(*RoomShortDescription)(nil),                       // 103: RoomShortDescription
-	(*RoomsFromSameWorldAnswer)(nil),                   // 104: RoomsFromSameWorldAnswer
-	(*SendEventAnswer)(nil),                            // 105: SendEventAnswer
-	(*SearchMemberAnswer)(nil),                         // 106: SearchMemberAnswer
-	(*GetMemberAnswer)(nil),                            // 107: GetMemberAnswer
-	(*ChatMembersAnswer)(nil),                          // 108: ChatMembersAnswer
-	(*OauthRefreshTokenAnswer)(nil),                    // 109: OauthRefreshTokenAnswer
-	(*EnterChatRoomAreaAnswer)(nil),                    // 110: EnterChatRoomAreaAnswer
-	(*JoinSpaceAnswer)(nil),                            // 111: JoinSpaceAnswer
-	(*LeaveSpaceAnswer)(nil),                           // 112: LeaveSpaceAnswer
-	(*SearchTagsAnswer)(nil),                           // 113: SearchTagsAnswer
-	(*GetRecordingsAnswer)(nil),                        // 114: GetRecordingsAnswer
-	(*GetRecordingThumbnailsAnswer)(nil),               // 115: GetRecordingThumbnailsAnswer
-	(*DeleteRecordingAnswer)(nil),                      // 116: DeleteRecordingAnswer
-	(*GetSignedUrlAnswer)(nil),                         // 117: GetSignedUrlAnswer
-	(*BanIpPreviewQuery)(nil),                          // 118: BanIpPreviewQuery
-	(*BanIpPreviewUser)(nil),                           // 119: BanIpPreviewUser
-	(*BanIpPreviewAnswer)(nil),                         // 120: BanIpPreviewAnswer
-	(*Member)(nil),                                     // 121: Member
-	(*IceServer)(nil),                                  // 122: IceServer
-	(*IceServersAnswer)(nil),                           // 123: IceServersAnswer
-	(*IceServersQuery)(nil),                            // 124: IceServersQuery
-	(*ChatMember)(nil),                                 // 125: ChatMember
-	(*Recording)(nil),                                  // 126: Recording
-	(*VideoFile)(nil),                                  // 127: VideoFile
-	(*SpaceQueryMessage)(nil),                          // 128: SpaceQueryMessage
-	(*AddSpaceUserQuery)(nil),                          // 129: AddSpaceUserQuery
-	(*RemoveSpaceUserQuery)(nil),                       // 130: RemoveSpaceUserQuery
-	(*SpaceStateQuery)(nil),                            // 131: SpaceStateQuery
-	(*SetSpaceKindQuery)(nil),                          // 132: SetSpaceKindQuery
-	(*RaiseHandQuery)(nil),                             // 133: RaiseHandQuery
-	(*LowerHandQuery)(nil),                             // 134: LowerHandQuery
-	(*GiveFloorQuery)(nil),                             // 135: GiveFloorQuery
-	(*RevokeFloorQuery)(nil),                           // 136: RevokeFloorQuery
-	(*StartRecordingQuery)(nil),                        // 137: StartRecordingQuery
-	(*StopRecordingQuery)(nil),                         // 138: StopRecordingQuery
-	(*CreatePollQuery)(nil),                            // 139: CreatePollQuery
-	(*VotePollQuery)(nil),                              // 140: VotePollQuery
-	(*ClosePollQuery)(nil),                             // 141: ClosePollQuery
-	(*DeletePollQuery)(nil),                            // 142: DeletePollQuery
-	(*AskQuestionQuery)(nil),                           // 143: AskQuestionQuery
-	(*UpvoteQuestionQuery)(nil),                        // 144: UpvoteQuestionQuery
-	(*AnswerQuestionQuery)(nil),                        // 145: AnswerQuestionQuery
-	(*DeleteQuestionQuery)(nil),                        // 146: DeleteQuestionQuery
-	(*SpaceStateQueryFrontToPusher)(nil),               // 147: SpaceStateQueryFrontToPusher
-	(*SpaceStateQueryPusherToBack)(nil),                // 148: SpaceStateQueryPusherToBack
-	(*SpaceStateAnswer)(nil),                           // 149: SpaceStateAnswer
-	(*SpaceStatePatchMessage)(nil),                     // 150: SpaceStatePatchMessage
-	(*SpaceAnswerMessage)(nil),                         // 151: SpaceAnswerMessage
-	(*AddSpaceUserAnswer)(nil),                         // 152: AddSpaceUserAnswer
-	(*RemoveSpaceUserAnswer)(nil),                      // 153: RemoveSpaceUserAnswer
-	(*HandleRecordingWebhookRequest)(nil),              // 154: HandleRecordingWebhookRequest
-	(*RecordingFileResult)(nil),                        // 155: RecordingFileResult
-	(*HandleLivekitWebhookRequest)(nil),                // 156: HandleLivekitWebhookRequest
-	(*UserMovedMessage)(nil),                           // 157: UserMovedMessage
-	(*MoveToPositionMessage)(nil),                      // 158: MoveToPositionMessage
-	(*LocatePositionMessage)(nil),                      // 159: LocatePositionMessage
-	(*SubMessage)(nil),                                 // 160: SubMessage
-	(*BatchMessage)(nil),                               // 161: BatchMessage
-	(*GroupUpdateMessage)(nil),                         // 162: GroupUpdateMessage
-	(*GroupDeleteMessage)(nil),                         // 163: GroupDeleteMessage
-	(*UserJoinedMessage)(nil),                          // 164: UserJoinedMessage
-	(*UserLeftMessage)(nil),                            // 165: UserLeftMessage
-	(*ErrorMessage)(nil),                               // 166: ErrorMessage
-	(*ErrorScreenMessage)(nil),                         // 167: ErrorScreenMessage
-	(*ItemStateMessage)(nil),                           // 168: ItemStateMessage
-	(*GroupUsersUpdateMessage)(nil),                    // 169: GroupUsersUpdateMessage
-	(*RoomConnectedMessage)(nil),                       // 170: RoomConnectedMessage
-	(*RoomJoinedMessage)(nil),                          // 171: RoomJoinedMessage
-	(*WebRtcStartMessage)(nil),                         // 172: WebRtcStartMessage
-	(*MeetingConnectionRestartMessage)(nil),            // 173: MeetingConnectionRestartMessage
-	(*WebRtcDisconnectMessage)(nil),                    // 174: WebRtcDisconnectMessage
-	(*TeleportMessageMessage)(nil),                     // 175: TeleportMessageMessage
-	(*SendUserMessage)(nil),                            // 176: SendUserMessage
-	(*WorldFullWarningMessage)(nil),                    // 177: WorldFullWarningMessage
-	(*WorldFullWarningToRoomMessage)(nil),              // 178: WorldFullWarningToRoomMessage
-	(*RefreshRoomPromptMessage)(nil),                   // 179: RefreshRoomPromptMessage
-	(*RefreshRoomMessage)(nil),                         // 180: RefreshRoomMessage
-	(*DeleteMapMessage)(nil),                           // 181: DeleteMapMessage
-	(*TokenExpiredMessage)(nil),                        // 182: TokenExpiredMessage
-	(*InvalidCharacterTextureMessage)(nil),             // 183: InvalidCharacterTextureMessage
-	(*InvalidCompanionTextureMessage)(nil),             // 184: InvalidCompanionTextureMessage
-	(*WorldConnectionMessage)(nil),                     // 185: WorldConnectionMessage
-	(*BanUserMessage)(nil),                             // 186: BanUserMessage
-	(*AskPositionMessage)(nil),                         // 187: AskPositionMessage
-	(*MeetingInvitationRequestMessage)(nil),            // 188: MeetingInvitationRequestMessage
-	(*MeetingInvitationRequestReceivedMessage)(nil),    // 189: MeetingInvitationRequestReceivedMessage
-	(*MeetingInvitationResponseMessage)(nil),           // 190: MeetingInvitationResponseMessage
-	(*MeetingInvitationResponseReceivedMessage)(nil),   // 191: MeetingInvitationResponseReceivedMessage
-	(*MeetingInvitationRequestTooHighMessage)(nil),     // 192: MeetingInvitationRequestTooHighMessage
-	(*MeetingInvitationRequestClosedMessage)(nil),      // 193: MeetingInvitationRequestClosedMessage
-	(*MuteAudioPrivateMessage)(nil),                    // 194: MuteAudioPrivateMessage
-	(*MuteVideoPrivateMessage)(nil),                    // 195: MuteVideoPrivateMessage
-	(*MuteAudioForEverybodyPublicMessage)(nil),         // 196: MuteAudioForEverybodyPublicMessage
-	(*MuteVideoForEverybodyPublicMessage)(nil),         // 197: MuteVideoForEverybodyPublicMessage
-	(*KickOffUserPrivateMessage)(nil),                  // 198: KickOffUserPrivateMessage
-	(*RecordingUnexpectedlyStoppedPrivateMessage)(nil), // 199: RecordingUnexpectedlyStoppedPrivateMessage
-	(*PublicEventFrontToPusher)(nil),                   // 200: PublicEventFrontToPusher
-	(*BackEventFrontToPusherMessage)(nil),              // 201: BackEventFrontToPusherMessage
-	(*PublicEvent)(nil),                                // 202: PublicEvent
-	(*SpaceEvent)(nil),                                 // 203: SpaceEvent
-	(*PrivateSpaceEvent)(nil),                          // 204: PrivateSpaceEvent
-	(*CommunicationStrategyMessage)(nil),               // 205: CommunicationStrategyMessage
-	(*SwitchMessage)(nil),                              // 206: SwitchMessage
-	(*FinalizeSwitchMessage)(nil),                      // 207: FinalizeSwitchMessage
-	(*BlockUserMessage)(nil),                           // 208: BlockUserMessage
-	(*UnblockUserMessage)(nil),                         // 209: UnblockUserMessage
-	(*LivekitInvitationMessage)(nil),                   // 210: LivekitInvitationMessage
-	(*LivekitDisconnectMessage)(nil),                   // 211: LivekitDisconnectMessage
-	(*SpaceMessage)(nil),                               // 212: SpaceMessage
-	(*SpaceMessageQuote)(nil),                          // 213: SpaceMessageQuote
-	(*SpaceMessageReaction)(nil),                       // 214: SpaceMessageReaction
-	(*SpaceIsTyping)(nil),                              // 215: SpaceIsTyping
-	(*ProximityFileTransferOfferMessage)(nil),          // 216: ProximityFileTransferOfferMessage
-	(*ProximityFileTransferDeclineMessage)(nil),        // 217: ProximityFileTransferDeclineMessage
-	(*ProximityFileTransferSignalMessage)(nil),         // 218: ProximityFileTransferSignalMessage
-	(*BackEventMessage)(nil),                           // 219: BackEventMessage
-	(*BackEvent)(nil),                                  // 220: BackEvent
-	(*MicrophoneTrackPublishedMessage)(nil),            // 221: MicrophoneTrackPublishedMessage
-	(*PrivateEvent)(nil),                               // 222: PrivateEvent
-	(*PrivateEventBackToPusher)(nil),                   // 223: PrivateEventBackToPusher
-	(*PrivateEventPusherToFront)(nil),                  // 224: PrivateEventPusherToFront
-	(*PrivateEventFrontToPusher)(nil),                  // 225: PrivateEventFrontToPusher
-	(*JoinSpaceRequestMessage)(nil),                    // 226: JoinSpaceRequestMessage
-	(*LeaveSpaceRequestMessage)(nil),                   // 227: LeaveSpaceRequestMessage
-	(*DuplicateUserConnectedMessage)(nil),              // 228: DuplicateUserConnectedMessage
-	(*BackConnectionCloseReasonMessage)(nil),           // 229: BackConnectionCloseReasonMessage
-	(*ServerToClientMessage)(nil),                      // 230: ServerToClientMessage
-	(*ConnectToRoomMessage)(nil),                       // 231: ConnectToRoomMessage
-	(*JoinRoomFrontMessage)(nil),                       // 232: JoinRoomFrontMessage
-	(*JoinRoomMessage)(nil),                            // 233: JoinRoomMessage
-	(*UserJoinedZoneMessage)(nil),                      // 234: UserJoinedZoneMessage
-	(*UserLeftZoneMessage)(nil),                        // 235: UserLeftZoneMessage
-	(*GroupUpdateZoneMessage)(nil),                     // 236: GroupUpdateZoneMessage
-	(*GroupLeftZoneMessage)(nil),                       // 237: GroupLeftZoneMessage
-	(*PlayerDetailsUpdatedMessage)(nil),                // 238: PlayerDetailsUpdatedMessage
-	(*Zone)(nil),                                       // 239: Zone
-	(*SubscribeZoneMessage)(nil),                       // 240: SubscribeZoneMessage
-	(*UnsubscribeZoneMessage)(nil),                     // 241: UnsubscribeZoneMessage
-	(*RoomMessage)(nil),                                // 242: RoomMessage
-	(*PusherToBackRoomMessage)(nil),                    // 243: PusherToBackRoomMessage
-	(*InitRoomMessage)(nil),                            // 244: InitRoomMessage
-	(*PusherToBackMessage)(nil),                        // 245: PusherToBackMessage
-	(*BatchToPusherRoomMessage)(nil),                   // 246: BatchToPusherRoomMessage
-	(*SubToPusherRoomMessage)(nil),                     // 247: SubToPusherRoomMessage
-	(*UserJoinedRoomMessage)(nil),                      // 248: UserJoinedRoomMessage
-	(*UserLeftRoomMessage)(nil),                        // 249: UserLeftRoomMessage
-	(*ServerToAdminClientMessage)(nil),                 // 250: ServerToAdminClientMessage
-	(*AdminPusherToBackMessage)(nil),                   // 251: AdminPusherToBackMessage
-	(*MapStorageRefreshMessage)(nil),                   // 252: MapStorageRefreshMessage
-	(*MapStorageToBackMessage)(nil),                    // 253: MapStorageToBackMessage
-	(*MapStorageUrlMessage)(nil),                       // 254: MapStorageUrlMessage
-	(*MapStorageClearAfterUploadMessage)(nil),          // 255: MapStorageClearAfterUploadMessage
-	(*MapStorageDeleteMessage)(nil),                    // 256: MapStorageDeleteMessage
-	(*AdminRoomMessage)(nil),                           // 257: AdminRoomMessage
-	(*AdminGlobalMessage)(nil),                         // 258: AdminGlobalMessage
-	(*BanMessage)(nil),                                 // 259: BanMessage
-	(*RoomDescription)(nil),                            // 260: RoomDescription
-	(*RoomsList)(nil),                                  // 261: RoomsList
-	(*WorldUsersQuery)(nil),                            // 262: WorldUsersQuery
-	(*WorldUser)(nil),                                  // 263: WorldUser
-	(*WorldUsersAnswer)(nil),                           // 264: WorldUsersAnswer
-	(*DispatchGlobalEventRequest)(nil),                 // 265: DispatchGlobalEventRequest
-	(*ExternalModuleMessage)(nil),                      // 266: ExternalModuleMessage
-	(*PusherToBackSpaceMessage)(nil),                   // 267: PusherToBackSpaceMessage
-	(*BackToPusherSpaceMessage)(nil),                   // 268: BackToPusherSpaceMessage
-	(*JoinSpaceMessage)(nil),                           // 269: JoinSpaceMessage
-	(*LeaveSpaceMessage)(nil),                          // 270: LeaveSpaceMessage
-	(*SpaceUser)(nil),                                  // 271: SpaceUser
-	(*AddSpaceUserMessage)(nil),                        // 272: AddSpaceUserMessage
-	(*InitSpaceUsersMessage)(nil),                      // 273: InitSpaceUsersMessage
-	(*UpdateSpaceUserMessage)(nil),                     // 274: UpdateSpaceUserMessage
-	(*UpdateSpaceUserPusherToFrontMessage)(nil),        // 275: UpdateSpaceUserPusherToFrontMessage
-	(*RemoveSpaceUserMessage)(nil),                     // 276: RemoveSpaceUserMessage
-	(*RemoveSpaceUserPusherToFrontMessage)(nil),        // 277: RemoveSpaceUserPusherToFrontMessage
-	(*UpdateSpaceMetadataMessage)(nil),                 // 278: UpdateSpaceMetadataMessage
-	(*UpdateSpaceMetadataPusherToBackMessage)(nil),     // 279: UpdateSpaceMetadataPusherToBackMessage
-	(*SyncSpaceUsersMessage)(nil),                      // 280: SyncSpaceUsersMessage
-	(*AddSpaceUserToNotifyMessage)(nil),                // 281: AddSpaceUserToNotifyMessage
-	(*DeleteSpaceUserToNotifyMessage)(nil),             // 282: DeleteSpaceUserToNotifyMessage
-	(*SpaceDestroyedMessage)(nil),                      // 283: SpaceDestroyedMessage
-	(*KickOffMessage)(nil),                             // 284: KickOffMessage
-	(*AddSpaceFilterMessage)(nil),                      // 285: AddSpaceFilterMessage
-	(*RemoveSpaceFilterMessage)(nil),                   // 286: RemoveSpaceFilterMessage
-	(*SpaceFilterMessage)(nil),                         // 287: SpaceFilterMessage
-	(*SpaceFilterContainName)(nil),                     // 288: SpaceFilterContainName
-	(*SpaceFilterLiveStreaming)(nil),                   // 289: SpaceFilterLiveStreaming
-	(*SpaceFilterEverybody)(nil),                       // 290: SpaceFilterEverybody
-	(*VariableRequest)(nil),                            // 291: VariableRequest
-	(*SaveVariableRequest)(nil),                        // 292: SaveVariableRequest
-	(*EventRequest)(nil),                               // 293: EventRequest
-	(*EventResponse)(nil),                              // 294: EventResponse
-	(*DispatchEventRequest)(nil),                       // 295: DispatchEventRequest
-	nil,                                                // 296: UserJoinedMessage.VariablesEntry
-	nil,                                                // 297: UserJoinedZoneMessage.VariablesEntry
-	(*wrapperspb.UInt32Value)(nil),                     // 298: google.protobuf.UInt32Value
-	(*wrapperspb.BoolValue)(nil),                       // 299: google.protobuf.BoolValue
-	(*wrapperspb.StringValue)(nil),                     // 300: google.protobuf.StringValue
-	(*structpb.Value)(nil),                             // 301: google.protobuf.Value
-	(*wrapperspb.Int32Value)(nil),                      // 302: google.protobuf.Int32Value
-	(*fieldmaskpb.FieldMask)(nil),                      // 303: google.protobuf.FieldMask
+	(VideoQualityLevel)(0),                             // 7: VideoQualityLevel
+	(CustomEntityDirection)(0),                         // 8: CustomEntityDirection
+	(UploadedFileKind)(0),                              // 9: UploadedFileKind
+	(RecordingWebhookPhase)(0),                         // 10: RecordingWebhookPhase
+	(FilterType)(0),                                    // 11: FilterType
+	(PositionMessage_Direction)(0),                     // 12: PositionMessage.Direction
+	(SetPlayerVariableMessage_Scope)(0),                // 13: SetPlayerVariableMessage.Scope
+	(AskPositionMessage_AskType)(0),                    // 14: AskPositionMessage.AskType
+	(*PositionMessage)(nil),                            // 15: PositionMessage
+	(*PointMessage)(nil),                               // 16: PointMessage
+	(*ViewportMessage)(nil),                            // 17: ViewportMessage
+	(*CharacterTextureMessage)(nil),                    // 18: CharacterTextureMessage
+	(*ApplicationMessage)(nil),                         // 19: ApplicationMessage
+	(*CompanionTextureMessage)(nil),                    // 20: CompanionTextureMessage
+	(*ZoneMessage)(nil),                                // 21: ZoneMessage
+	(*PingMessage)(nil),                                // 22: PingMessage
+	(*UpdateMapToNewestMessage)(nil),                   // 23: UpdateMapToNewestMessage
+	(*UpdateMapToNewestWithKeyMessage)(nil),            // 24: UpdateMapToNewestWithKeyMessage
+	(*SetPlayerDetailsMessage)(nil),                    // 25: SetPlayerDetailsMessage
+	(*SayMessage)(nil),                                 // 26: SayMessage
+	(*UserMovesMessage)(nil),                           // 27: UserMovesMessage
+	(*WebRtcSignal)(nil),                               // 28: WebRtcSignal
+	(*VideoQualitySampleMessage)(nil),                  // 29: VideoQualitySampleMessage
+	(*VideoQualityReportMessage)(nil),                  // 30: VideoQualityReportMessage
+	(*AnalyticsEventMessage)(nil),                      // 31: AnalyticsEventMessage
+	(*AnalyticsEventReportMessage)(nil),                // 32: AnalyticsEventReportMessage
+	(*ReportPlayerMessage)(nil),                        // 33: ReportPlayerMessage
+	(*BanPlayerMessage)(nil),                           // 34: BanPlayerMessage
+	(*UpdateChatIdMessage)(nil),                        // 35: UpdateChatIdMessage
+	(*LeaveChatRoomAreaMessage)(nil),                   // 36: LeaveChatRoomAreaMessage
+	(*EmotePromptMessage)(nil),                         // 37: EmotePromptMessage
+	(*EmoteEventMessage)(nil),                          // 38: EmoteEventMessage
+	(*FollowRequestMessage)(nil),                       // 39: FollowRequestMessage
+	(*FollowConfirmationMessage)(nil),                  // 40: FollowConfirmationMessage
+	(*FollowAbortMessage)(nil),                         // 41: FollowAbortMessage
+	(*LockGroupPromptMessage)(nil),                     // 42: LockGroupPromptMessage
+	(*EditMapMessage)(nil),                             // 43: EditMapMessage
+	(*ErrorCommandMessage)(nil),                        // 44: ErrorCommandMessage
+	(*UpdateWAMSettingsMessage)(nil),                   // 45: UpdateWAMSettingsMessage
+	(*UpdateMegaphoneSettingMessage)(nil),              // 46: UpdateMegaphoneSettingMessage
+	(*UpdateRecordingSettingMessage)(nil),              // 47: UpdateRecordingSettingMessage
+	(*EditMapCommandMessage)(nil),                      // 48: EditMapCommandMessage
+	(*EditMapCommandsArrayMessage)(nil),                // 49: EditMapCommandsArrayMessage
+	(*EditMapCommandWithKeyMessage)(nil),               // 50: EditMapCommandWithKeyMessage
+	(*ModifyAreaMessage)(nil),                          // 51: ModifyAreaMessage
+	(*DeleteAreaMessage)(nil),                          // 52: DeleteAreaMessage
+	(*CreateAreaMessage)(nil),                          // 53: CreateAreaMessage
+	(*CreateEntityMessage)(nil),                        // 54: CreateEntityMessage
+	(*DeleteEntityMessage)(nil),                        // 55: DeleteEntityMessage
+	(*CollisionGridRow)(nil),                           // 56: CollisionGridRow
+	(*UploadEntityMessage)(nil),                        // 57: UploadEntityMessage
+	(*UploadFileMessage)(nil),                          // 58: UploadFileMessage
+	(*ModifyCustomEntityMessage)(nil),                  // 59: ModifyCustomEntityMessage
+	(*DeleteCustomEntityMessage)(nil),                  // 60: DeleteCustomEntityMessage
+	(*ModifyEntityMessage)(nil),                        // 61: ModifyEntityMessage
+	(*FrontToPusherWebSocketMessage)(nil),              // 62: FrontToPusherWebSocketMessage
+	(*PusherToFrontWebSocketMessage)(nil),              // 63: PusherToFrontWebSocketMessage
+	(*ClientToServerMessage)(nil),                      // 64: ClientToServerMessage
+	(*ReceivedEventMessage)(nil),                       // 65: ReceivedEventMessage
+	(*ModifiyWAMMetadataMessage)(nil),                  // 66: ModifiyWAMMetadataMessage
+	(*ItemEventMessage)(nil),                           // 67: ItemEventMessage
+	(*VariableMessage)(nil),                            // 68: VariableMessage
+	(*SetAreaPropertyVariableMessage)(nil),             // 69: SetAreaPropertyVariableMessage
+	(*AreaPropertyVariableMessage)(nil),                // 70: AreaPropertyVariableMessage
+	(*EntitySoundPlayed)(nil),                          // 71: EntitySoundPlayed
+	(*EntityEvent)(nil),                                // 72: EntityEvent
+	(*EntityMessage)(nil),                              // 73: EntityMessage
+	(*SetPlayerVariableMessage)(nil),                   // 74: SetPlayerVariableMessage
+	(*VariableWithTagMessage)(nil),                     // 75: VariableWithTagMessage
+	(*PlayGlobalMessage)(nil),                          // 76: PlayGlobalMessage
+	(*QueryMessage)(nil),                               // 77: QueryMessage
+	(*GetSignedUrlQuery)(nil),                          // 78: GetSignedUrlQuery
+	(*AbortQueryMessage)(nil),                          // 79: AbortQueryMessage
+	(*MapStorageJwtQuery)(nil),                         // 80: MapStorageJwtQuery
+	(*JitsiJwtQuery)(nil),                              // 81: JitsiJwtQuery
+	(*JoinBBBMeetingQuery)(nil),                        // 82: JoinBBBMeetingQuery
+	(*RoomTagsQuery)(nil),                              // 83: RoomTagsQuery
+	(*EmbeddableWebsiteQuery)(nil),                     // 84: EmbeddableWebsiteQuery
+	(*RoomsFromSameWorldQuery)(nil),                    // 85: RoomsFromSameWorldQuery
+	(*SendEventQuery)(nil),                             // 86: SendEventQuery
+	(*SearchMemberQuery)(nil),                          // 87: SearchMemberQuery
+	(*GetMemberQuery)(nil),                             // 88: GetMemberQuery
+	(*ChatMembersQuery)(nil),                           // 89: ChatMembersQuery
+	(*OauthRefreshTokenQuery)(nil),                     // 90: OauthRefreshTokenQuery
+	(*SearchTagsQuery)(nil),                            // 91: SearchTagsQuery
+	(*EnterChatRoomAreaQuery)(nil),                     // 92: EnterChatRoomAreaQuery
+	(*JoinSpaceQuery)(nil),                             // 93: JoinSpaceQuery
+	(*LeaveSpaceQuery)(nil),                            // 94: LeaveSpaceQuery
+	(*GetRecordingsQuery)(nil),                         // 95: GetRecordingsQuery
+	(*GetRecordingThumbnailsQuery)(nil),                // 96: GetRecordingThumbnailsQuery
+	(*DeleteRecordingQuery)(nil),                       // 97: DeleteRecordingQuery
+	(*AnswerMessage)(nil),                              // 98: AnswerMessage
+	(*JitsiJwtAnswer)(nil),                             // 99: JitsiJwtAnswer
+	(*MapStorageJwtAnswer)(nil),                        // 100: MapStorageJwtAnswer
+	(*JoinBBBMeetingAnswer)(nil),                       // 101: JoinBBBMeetingAnswer
+	(*RoomTagsAnswer)(nil),                             // 102: RoomTagsAnswer
+	(*EmbeddableWebsiteAnswer)(nil),                    // 103: EmbeddableWebsiteAnswer
+	(*RoomShortDescription)(nil),                       // 104: RoomShortDescription
+	(*RoomsFromSameWorldAnswer)(nil),                   // 105: RoomsFromSameWorldAnswer
+	(*SendEventAnswer)(nil),                            // 106: SendEventAnswer
+	(*SearchMemberAnswer)(nil),                         // 107: SearchMemberAnswer
+	(*GetMemberAnswer)(nil),                            // 108: GetMemberAnswer
+	(*ChatMembersAnswer)(nil),                          // 109: ChatMembersAnswer
+	(*OauthRefreshTokenAnswer)(nil),                    // 110: OauthRefreshTokenAnswer
+	(*EnterChatRoomAreaAnswer)(nil),                    // 111: EnterChatRoomAreaAnswer
+	(*JoinSpaceAnswer)(nil),                            // 112: JoinSpaceAnswer
+	(*LeaveSpaceAnswer)(nil),                           // 113: LeaveSpaceAnswer
+	(*SearchTagsAnswer)(nil),                           // 114: SearchTagsAnswer
+	(*GetRecordingsAnswer)(nil),                        // 115: GetRecordingsAnswer
+	(*GetRecordingThumbnailsAnswer)(nil),               // 116: GetRecordingThumbnailsAnswer
+	(*DeleteRecordingAnswer)(nil),                      // 117: DeleteRecordingAnswer
+	(*GetSignedUrlAnswer)(nil),                         // 118: GetSignedUrlAnswer
+	(*BanIpPreviewQuery)(nil),                          // 119: BanIpPreviewQuery
+	(*BanIpPreviewUser)(nil),                           // 120: BanIpPreviewUser
+	(*BanIpPreviewAnswer)(nil),                         // 121: BanIpPreviewAnswer
+	(*Member)(nil),                                     // 122: Member
+	(*IceServer)(nil),                                  // 123: IceServer
+	(*IceServersAnswer)(nil),                           // 124: IceServersAnswer
+	(*IceServersQuery)(nil),                            // 125: IceServersQuery
+	(*ChatMember)(nil),                                 // 126: ChatMember
+	(*Recording)(nil),                                  // 127: Recording
+	(*VideoFile)(nil),                                  // 128: VideoFile
+	(*SpaceQueryMessage)(nil),                          // 129: SpaceQueryMessage
+	(*AddSpaceUserQuery)(nil),                          // 130: AddSpaceUserQuery
+	(*RemoveSpaceUserQuery)(nil),                       // 131: RemoveSpaceUserQuery
+	(*SpaceStateQuery)(nil),                            // 132: SpaceStateQuery
+	(*SetSpaceKindQuery)(nil),                          // 133: SetSpaceKindQuery
+	(*RaiseHandQuery)(nil),                             // 134: RaiseHandQuery
+	(*LowerHandQuery)(nil),                             // 135: LowerHandQuery
+	(*GiveFloorQuery)(nil),                             // 136: GiveFloorQuery
+	(*RevokeFloorQuery)(nil),                           // 137: RevokeFloorQuery
+	(*StartRecordingQuery)(nil),                        // 138: StartRecordingQuery
+	(*StopRecordingQuery)(nil),                         // 139: StopRecordingQuery
+	(*CreatePollQuery)(nil),                            // 140: CreatePollQuery
+	(*VotePollQuery)(nil),                              // 141: VotePollQuery
+	(*ClosePollQuery)(nil),                             // 142: ClosePollQuery
+	(*DeletePollQuery)(nil),                            // 143: DeletePollQuery
+	(*AskQuestionQuery)(nil),                           // 144: AskQuestionQuery
+	(*UpvoteQuestionQuery)(nil),                        // 145: UpvoteQuestionQuery
+	(*AnswerQuestionQuery)(nil),                        // 146: AnswerQuestionQuery
+	(*DeleteQuestionQuery)(nil),                        // 147: DeleteQuestionQuery
+	(*SpaceStateQueryFrontToPusher)(nil),               // 148: SpaceStateQueryFrontToPusher
+	(*SpaceStateQueryPusherToBack)(nil),                // 149: SpaceStateQueryPusherToBack
+	(*SpaceStateAnswer)(nil),                           // 150: SpaceStateAnswer
+	(*SpaceStatePatchMessage)(nil),                     // 151: SpaceStatePatchMessage
+	(*SpaceAnswerMessage)(nil),                         // 152: SpaceAnswerMessage
+	(*AddSpaceUserAnswer)(nil),                         // 153: AddSpaceUserAnswer
+	(*RemoveSpaceUserAnswer)(nil),                      // 154: RemoveSpaceUserAnswer
+	(*HandleRecordingWebhookRequest)(nil),              // 155: HandleRecordingWebhookRequest
+	(*RecordingFileResult)(nil),                        // 156: RecordingFileResult
+	(*HandleLivekitWebhookRequest)(nil),                // 157: HandleLivekitWebhookRequest
+	(*UserMovedMessage)(nil),                           // 158: UserMovedMessage
+	(*MoveToPositionMessage)(nil),                      // 159: MoveToPositionMessage
+	(*LocatePositionMessage)(nil),                      // 160: LocatePositionMessage
+	(*SubMessage)(nil),                                 // 161: SubMessage
+	(*BatchMessage)(nil),                               // 162: BatchMessage
+	(*GroupUpdateMessage)(nil),                         // 163: GroupUpdateMessage
+	(*GroupDeleteMessage)(nil),                         // 164: GroupDeleteMessage
+	(*UserJoinedMessage)(nil),                          // 165: UserJoinedMessage
+	(*UserLeftMessage)(nil),                            // 166: UserLeftMessage
+	(*ErrorMessage)(nil),                               // 167: ErrorMessage
+	(*ErrorScreenMessage)(nil),                         // 168: ErrorScreenMessage
+	(*ItemStateMessage)(nil),                           // 169: ItemStateMessage
+	(*GroupUsersUpdateMessage)(nil),                    // 170: GroupUsersUpdateMessage
+	(*RoomConnectedMessage)(nil),                       // 171: RoomConnectedMessage
+	(*RoomJoinedMessage)(nil),                          // 172: RoomJoinedMessage
+	(*WebRtcStartMessage)(nil),                         // 173: WebRtcStartMessage
+	(*MeetingConnectionRestartMessage)(nil),            // 174: MeetingConnectionRestartMessage
+	(*WebRtcDisconnectMessage)(nil),                    // 175: WebRtcDisconnectMessage
+	(*TeleportMessageMessage)(nil),                     // 176: TeleportMessageMessage
+	(*SendUserMessage)(nil),                            // 177: SendUserMessage
+	(*WorldFullWarningMessage)(nil),                    // 178: WorldFullWarningMessage
+	(*WorldFullWarningToRoomMessage)(nil),              // 179: WorldFullWarningToRoomMessage
+	(*RefreshRoomPromptMessage)(nil),                   // 180: RefreshRoomPromptMessage
+	(*RefreshRoomMessage)(nil),                         // 181: RefreshRoomMessage
+	(*DeleteMapMessage)(nil),                           // 182: DeleteMapMessage
+	(*TokenExpiredMessage)(nil),                        // 183: TokenExpiredMessage
+	(*InvalidCharacterTextureMessage)(nil),             // 184: InvalidCharacterTextureMessage
+	(*InvalidCompanionTextureMessage)(nil),             // 185: InvalidCompanionTextureMessage
+	(*WorldConnectionMessage)(nil),                     // 186: WorldConnectionMessage
+	(*BanUserMessage)(nil),                             // 187: BanUserMessage
+	(*AskPositionMessage)(nil),                         // 188: AskPositionMessage
+	(*MeetingInvitationRequestMessage)(nil),            // 189: MeetingInvitationRequestMessage
+	(*MeetingInvitationRequestReceivedMessage)(nil),    // 190: MeetingInvitationRequestReceivedMessage
+	(*MeetingInvitationResponseMessage)(nil),           // 191: MeetingInvitationResponseMessage
+	(*MeetingInvitationResponseReceivedMessage)(nil),   // 192: MeetingInvitationResponseReceivedMessage
+	(*MeetingInvitationRequestTooHighMessage)(nil),     // 193: MeetingInvitationRequestTooHighMessage
+	(*MeetingInvitationRequestClosedMessage)(nil),      // 194: MeetingInvitationRequestClosedMessage
+	(*MuteAudioPrivateMessage)(nil),                    // 195: MuteAudioPrivateMessage
+	(*MuteVideoPrivateMessage)(nil),                    // 196: MuteVideoPrivateMessage
+	(*MuteAudioForEverybodyPublicMessage)(nil),         // 197: MuteAudioForEverybodyPublicMessage
+	(*MuteVideoForEverybodyPublicMessage)(nil),         // 198: MuteVideoForEverybodyPublicMessage
+	(*KickOffUserPrivateMessage)(nil),                  // 199: KickOffUserPrivateMessage
+	(*RecordingUnexpectedlyStoppedPrivateMessage)(nil), // 200: RecordingUnexpectedlyStoppedPrivateMessage
+	(*PublicEventFrontToPusher)(nil),                   // 201: PublicEventFrontToPusher
+	(*BackEventFrontToPusherMessage)(nil),              // 202: BackEventFrontToPusherMessage
+	(*PublicEvent)(nil),                                // 203: PublicEvent
+	(*SpaceEvent)(nil),                                 // 204: SpaceEvent
+	(*PrivateSpaceEvent)(nil),                          // 205: PrivateSpaceEvent
+	(*CommunicationStrategyMessage)(nil),               // 206: CommunicationStrategyMessage
+	(*SwitchMessage)(nil),                              // 207: SwitchMessage
+	(*FinalizeSwitchMessage)(nil),                      // 208: FinalizeSwitchMessage
+	(*BlockUserMessage)(nil),                           // 209: BlockUserMessage
+	(*UnblockUserMessage)(nil),                         // 210: UnblockUserMessage
+	(*LivekitInvitationMessage)(nil),                   // 211: LivekitInvitationMessage
+	(*LivekitDisconnectMessage)(nil),                   // 212: LivekitDisconnectMessage
+	(*SpaceMessage)(nil),                               // 213: SpaceMessage
+	(*SpaceMessageQuote)(nil),                          // 214: SpaceMessageQuote
+	(*SpaceMessageReaction)(nil),                       // 215: SpaceMessageReaction
+	(*SpaceIsTyping)(nil),                              // 216: SpaceIsTyping
+	(*ProximityFileTransferOfferMessage)(nil),          // 217: ProximityFileTransferOfferMessage
+	(*ProximityFileTransferDeclineMessage)(nil),        // 218: ProximityFileTransferDeclineMessage
+	(*ProximityFileTransferSignalMessage)(nil),         // 219: ProximityFileTransferSignalMessage
+	(*BackEventMessage)(nil),                           // 220: BackEventMessage
+	(*BackEvent)(nil),                                  // 221: BackEvent
+	(*MicrophoneTrackPublishedMessage)(nil),            // 222: MicrophoneTrackPublishedMessage
+	(*PrivateEvent)(nil),                               // 223: PrivateEvent
+	(*PrivateEventBackToPusher)(nil),                   // 224: PrivateEventBackToPusher
+	(*PrivateEventPusherToFront)(nil),                  // 225: PrivateEventPusherToFront
+	(*PrivateEventFrontToPusher)(nil),                  // 226: PrivateEventFrontToPusher
+	(*JoinSpaceRequestMessage)(nil),                    // 227: JoinSpaceRequestMessage
+	(*LeaveSpaceRequestMessage)(nil),                   // 228: LeaveSpaceRequestMessage
+	(*DuplicateUserConnectedMessage)(nil),              // 229: DuplicateUserConnectedMessage
+	(*BackConnectionCloseReasonMessage)(nil),           // 230: BackConnectionCloseReasonMessage
+	(*ServerToClientMessage)(nil),                      // 231: ServerToClientMessage
+	(*ConnectToRoomMessage)(nil),                       // 232: ConnectToRoomMessage
+	(*JoinRoomFrontMessage)(nil),                       // 233: JoinRoomFrontMessage
+	(*JoinRoomMessage)(nil),                            // 234: JoinRoomMessage
+	(*UserJoinedZoneMessage)(nil),                      // 235: UserJoinedZoneMessage
+	(*UserLeftZoneMessage)(nil),                        // 236: UserLeftZoneMessage
+	(*GroupUpdateZoneMessage)(nil),                     // 237: GroupUpdateZoneMessage
+	(*GroupLeftZoneMessage)(nil),                       // 238: GroupLeftZoneMessage
+	(*PlayerDetailsUpdatedMessage)(nil),                // 239: PlayerDetailsUpdatedMessage
+	(*Zone)(nil),                                       // 240: Zone
+	(*SubscribeZoneMessage)(nil),                       // 241: SubscribeZoneMessage
+	(*UnsubscribeZoneMessage)(nil),                     // 242: UnsubscribeZoneMessage
+	(*RoomMessage)(nil),                                // 243: RoomMessage
+	(*PusherToBackRoomMessage)(nil),                    // 244: PusherToBackRoomMessage
+	(*InitRoomMessage)(nil),                            // 245: InitRoomMessage
+	(*PusherToBackMessage)(nil),                        // 246: PusherToBackMessage
+	(*BatchToPusherRoomMessage)(nil),                   // 247: BatchToPusherRoomMessage
+	(*SubToPusherRoomMessage)(nil),                     // 248: SubToPusherRoomMessage
+	(*UserJoinedRoomMessage)(nil),                      // 249: UserJoinedRoomMessage
+	(*UserLeftRoomMessage)(nil),                        // 250: UserLeftRoomMessage
+	(*ServerToAdminClientMessage)(nil),                 // 251: ServerToAdminClientMessage
+	(*AdminPusherToBackMessage)(nil),                   // 252: AdminPusherToBackMessage
+	(*MapStorageRefreshMessage)(nil),                   // 253: MapStorageRefreshMessage
+	(*MapStorageToBackMessage)(nil),                    // 254: MapStorageToBackMessage
+	(*MapStorageUrlMessage)(nil),                       // 255: MapStorageUrlMessage
+	(*MapStorageClearAfterUploadMessage)(nil),          // 256: MapStorageClearAfterUploadMessage
+	(*MapStorageDeleteMessage)(nil),                    // 257: MapStorageDeleteMessage
+	(*AdminRoomMessage)(nil),                           // 258: AdminRoomMessage
+	(*AdminGlobalMessage)(nil),                         // 259: AdminGlobalMessage
+	(*BanMessage)(nil),                                 // 260: BanMessage
+	(*RoomDescription)(nil),                            // 261: RoomDescription
+	(*RoomsList)(nil),                                  // 262: RoomsList
+	(*WorldUsersQuery)(nil),                            // 263: WorldUsersQuery
+	(*WorldUser)(nil),                                  // 264: WorldUser
+	(*WorldUsersAnswer)(nil),                           // 265: WorldUsersAnswer
+	(*DispatchGlobalEventRequest)(nil),                 // 266: DispatchGlobalEventRequest
+	(*ExternalModuleMessage)(nil),                      // 267: ExternalModuleMessage
+	(*PusherToBackSpaceMessage)(nil),                   // 268: PusherToBackSpaceMessage
+	(*BackToPusherSpaceMessage)(nil),                   // 269: BackToPusherSpaceMessage
+	(*JoinSpaceMessage)(nil),                           // 270: JoinSpaceMessage
+	(*LeaveSpaceMessage)(nil),                          // 271: LeaveSpaceMessage
+	(*SpaceUser)(nil),                                  // 272: SpaceUser
+	(*AddSpaceUserMessage)(nil),                        // 273: AddSpaceUserMessage
+	(*InitSpaceUsersMessage)(nil),                      // 274: InitSpaceUsersMessage
+	(*UpdateSpaceUserMessage)(nil),                     // 275: UpdateSpaceUserMessage
+	(*UpdateSpaceUserPusherToFrontMessage)(nil),        // 276: UpdateSpaceUserPusherToFrontMessage
+	(*RemoveSpaceUserMessage)(nil),                     // 277: RemoveSpaceUserMessage
+	(*RemoveSpaceUserPusherToFrontMessage)(nil),        // 278: RemoveSpaceUserPusherToFrontMessage
+	(*UpdateSpaceMetadataMessage)(nil),                 // 279: UpdateSpaceMetadataMessage
+	(*UpdateSpaceMetadataPusherToBackMessage)(nil),     // 280: UpdateSpaceMetadataPusherToBackMessage
+	(*SyncSpaceUsersMessage)(nil),                      // 281: SyncSpaceUsersMessage
+	(*AddSpaceUserToNotifyMessage)(nil),                // 282: AddSpaceUserToNotifyMessage
+	(*DeleteSpaceUserToNotifyMessage)(nil),             // 283: DeleteSpaceUserToNotifyMessage
+	(*SpaceDestroyedMessage)(nil),                      // 284: SpaceDestroyedMessage
+	(*KickOffMessage)(nil),                             // 285: KickOffMessage
+	(*AddSpaceFilterMessage)(nil),                      // 286: AddSpaceFilterMessage
+	(*RemoveSpaceFilterMessage)(nil),                   // 287: RemoveSpaceFilterMessage
+	(*SpaceFilterMessage)(nil),                         // 288: SpaceFilterMessage
+	(*SpaceFilterContainName)(nil),                     // 289: SpaceFilterContainName
+	(*SpaceFilterLiveStreaming)(nil),                   // 290: SpaceFilterLiveStreaming
+	(*SpaceFilterEverybody)(nil),                       // 291: SpaceFilterEverybody
+	(*VariableRequest)(nil),                            // 292: VariableRequest
+	(*SaveVariableRequest)(nil),                        // 293: SaveVariableRequest
+	(*EventRequest)(nil),                               // 294: EventRequest
+	(*EventResponse)(nil),                              // 295: EventResponse
+	(*DispatchEventRequest)(nil),                       // 296: DispatchEventRequest
+	nil,                                                // 297: UserJoinedMessage.VariablesEntry
+	nil,                                                // 298: UserJoinedZoneMessage.VariablesEntry
+	(*wrapperspb.UInt32Value)(nil),                     // 299: google.protobuf.UInt32Value
+	(*wrapperspb.BoolValue)(nil),                       // 300: google.protobuf.BoolValue
+	(*wrapperspb.StringValue)(nil),                     // 301: google.protobuf.StringValue
+	(*structpb.Value)(nil),                             // 302: google.protobuf.Value
+	(*wrapperspb.Int32Value)(nil),                      // 303: google.protobuf.Int32Value
+	(*fieldmaskpb.FieldMask)(nil),                      // 304: google.protobuf.FieldMask
 }
 var file_messages_proto_depIdxs = []int32{
-	11,  // 0: PositionMessage.direction:type_name -> PositionMessage.Direction
-	234, // 1: ZoneMessage.userJoinedZoneMessage:type_name -> UserJoinedZoneMessage
-	236, // 2: ZoneMessage.groupUpdateZoneMessage:type_name -> GroupUpdateZoneMessage
-	157, // 3: ZoneMessage.userMovedMessage:type_name -> UserMovedMessage
-	237, // 4: ZoneMessage.groupLeftZoneMessage:type_name -> GroupLeftZoneMessage
-	235, // 5: ZoneMessage.userLeftZoneMessage:type_name -> UserLeftZoneMessage
-	37,  // 6: ZoneMessage.emoteEventMessage:type_name -> EmoteEventMessage
-	238, // 7: ZoneMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
-	169, // 8: ZoneMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
-	22,  // 9: UpdateMapToNewestWithKeyMessage.updateMapToNewestMessage:type_name -> UpdateMapToNewestMessage
-	298, // 10: SetPlayerDetailsMessage.outlineColor:type_name -> google.protobuf.UInt32Value
-	299, // 11: SetPlayerDetailsMessage.removeOutlineColor:type_name -> google.protobuf.BoolValue
-	299, // 12: SetPlayerDetailsMessage.showVoiceIndicator:type_name -> google.protobuf.BoolValue
+	12,  // 0: PositionMessage.direction:type_name -> PositionMessage.Direction
+	235, // 1: ZoneMessage.userJoinedZoneMessage:type_name -> UserJoinedZoneMessage
+	237, // 2: ZoneMessage.groupUpdateZoneMessage:type_name -> GroupUpdateZoneMessage
+	158, // 3: ZoneMessage.userMovedMessage:type_name -> UserMovedMessage
+	238, // 4: ZoneMessage.groupLeftZoneMessage:type_name -> GroupLeftZoneMessage
+	236, // 5: ZoneMessage.userLeftZoneMessage:type_name -> UserLeftZoneMessage
+	38,  // 6: ZoneMessage.emoteEventMessage:type_name -> EmoteEventMessage
+	239, // 7: ZoneMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
+	170, // 8: ZoneMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
+	23,  // 9: UpdateMapToNewestWithKeyMessage.updateMapToNewestMessage:type_name -> UpdateMapToNewestMessage
+	299, // 10: SetPlayerDetailsMessage.outlineColor:type_name -> google.protobuf.UInt32Value
+	300, // 11: SetPlayerDetailsMessage.removeOutlineColor:type_name -> google.protobuf.BoolValue
+	300, // 12: SetPlayerDetailsMessage.showVoiceIndicator:type_name -> google.protobuf.BoolValue
 	0,   // 13: SetPlayerDetailsMessage.availabilityStatus:type_name -> AvailabilityStatus
-	73,  // 14: SetPlayerDetailsMessage.setVariable:type_name -> SetPlayerVariableMessage
-	300, // 15: SetPlayerDetailsMessage.chatID:type_name -> google.protobuf.StringValue
-	25,  // 16: SetPlayerDetailsMessage.sayMessage:type_name -> SayMessage
+	74,  // 14: SetPlayerDetailsMessage.setVariable:type_name -> SetPlayerVariableMessage
+	301, // 15: SetPlayerDetailsMessage.chatID:type_name -> google.protobuf.StringValue
+	26,  // 16: SetPlayerDetailsMessage.sayMessage:type_name -> SayMessage
 	1,   // 17: SayMessage.type:type_name -> SayMessageType
-	14,  // 18: UserMovesMessage.position:type_name -> PositionMessage
-	16,  // 19: UserMovesMessage.viewport:type_name -> ViewportMessage
+	15,  // 18: UserMovesMessage.position:type_name -> PositionMessage
+	17,  // 19: UserMovesMessage.viewport:type_name -> ViewportMessage
 	2,   // 20: VideoQualitySampleMessage.streamCategory:type_name -> VideoQualityStreamCategory
 	3,   // 21: VideoQualitySampleMessage.transportType:type_name -> VideoQualityTransportType
 	4,   // 22: VideoQualitySampleMessage.relayProtocol:type_name -> VideoQualityRelayProtocol
 	5,   // 23: VideoQualitySampleMessage.direction:type_name -> VideoQualityStreamDirection
 	6,   // 24: VideoQualitySampleMessage.qualityLimitationReason:type_name -> VideoQualityLimitationReason
-	28,  // 25: VideoQualityReportMessage.samples:type_name -> VideoQualitySampleMessage
-	301, // 26: AnalyticsEventMessage.properties:type_name -> google.protobuf.Value
-	30,  // 27: AnalyticsEventReportMessage.events:type_name -> AnalyticsEventMessage
-	50,  // 28: EditMapMessage.modifyAreaMessage:type_name -> ModifyAreaMessage
-	52,  // 29: EditMapMessage.createAreaMessage:type_name -> CreateAreaMessage
-	51,  // 30: EditMapMessage.deleteAreaMessage:type_name -> DeleteAreaMessage
-	60,  // 31: EditMapMessage.modifyEntityMessage:type_name -> ModifyEntityMessage
-	53,  // 32: EditMapMessage.createEntityMessage:type_name -> CreateEntityMessage
-	54,  // 33: EditMapMessage.deleteEntityMessage:type_name -> DeleteEntityMessage
-	44,  // 34: EditMapMessage.updateWAMSettingsMessage:type_name -> UpdateWAMSettingsMessage
-	43,  // 35: EditMapMessage.errorCommandMessage:type_name -> ErrorCommandMessage
-	56,  // 36: EditMapMessage.uploadEntityMessage:type_name -> UploadEntityMessage
-	58,  // 37: EditMapMessage.modifyCustomEntityMessage:type_name -> ModifyCustomEntityMessage
-	59,  // 38: EditMapMessage.deleteCustomEntityMessage:type_name -> DeleteCustomEntityMessage
-	65,  // 39: EditMapMessage.modifiyWAMMetadataMessage:type_name -> ModifiyWAMMetadataMessage
-	57,  // 40: EditMapMessage.uploadFileMessage:type_name -> UploadFileMessage
-	45,  // 41: UpdateWAMSettingsMessage.updateMegaphoneSettingMessage:type_name -> UpdateMegaphoneSettingMessage
-	46,  // 42: UpdateWAMSettingsMessage.updateRecordingSettingMessage:type_name -> UpdateRecordingSettingMessage
-	301, // 43: UpdateMegaphoneSettingMessage.settings:type_name -> google.protobuf.Value
-	301, // 44: UpdateRecordingSettingMessage.settings:type_name -> google.protobuf.Value
-	42,  // 45: EditMapCommandMessage.editMapMessage:type_name -> EditMapMessage
-	47,  // 46: EditMapCommandsArrayMessage.editMapCommands:type_name -> EditMapCommandMessage
-	47,  // 47: EditMapCommandWithKeyMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	301, // 48: ModifyAreaMessage.properties:type_name -> google.protobuf.Value
-	301, // 49: CreateAreaMessage.properties:type_name -> google.protobuf.Value
-	301, // 50: CreateEntityMessage.properties:type_name -> google.protobuf.Value
-	7,   // 51: UploadEntityMessage.direction:type_name -> CustomEntityDirection
-	301, // 52: UploadEntityMessage.collisionGrid:type_name -> google.protobuf.Value
-	8,   // 53: UploadFileMessage.kind:type_name -> UploadedFileKind
-	301, // 54: ModifyCustomEntityMessage.collisionGrid:type_name -> google.protobuf.Value
-	301, // 55: ModifyEntityMessage.properties:type_name -> google.protobuf.Value
-	63,  // 56: FrontToPusherWebSocketMessage.message:type_name -> ClientToServerMessage
-	230, // 57: PusherToFrontWebSocketMessage.message:type_name -> ServerToClientMessage
-	232, // 58: ClientToServerMessage.joinRoomFrontMessage:type_name -> JoinRoomFrontMessage
-	26,  // 59: ClientToServerMessage.userMovesMessage:type_name -> UserMovesMessage
-	16,  // 60: ClientToServerMessage.viewportMessage:type_name -> ViewportMessage
-	66,  // 61: ClientToServerMessage.itemEventMessage:type_name -> ItemEventMessage
-	24,  // 62: ClientToServerMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
-	75,  // 63: ClientToServerMessage.playGlobalMessage:type_name -> PlayGlobalMessage
-	32,  // 64: ClientToServerMessage.reportPlayerMessage:type_name -> ReportPlayerMessage
-	36,  // 65: ClientToServerMessage.emotePromptMessage:type_name -> EmotePromptMessage
-	67,  // 66: ClientToServerMessage.variableMessage:type_name -> VariableMessage
-	38,  // 67: ClientToServerMessage.followRequestMessage:type_name -> FollowRequestMessage
-	39,  // 68: ClientToServerMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
-	40,  // 69: ClientToServerMessage.followAbortMessage:type_name -> FollowAbortMessage
-	41,  // 70: ClientToServerMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
-	76,  // 71: ClientToServerMessage.queryMessage:type_name -> QueryMessage
-	78,  // 72: ClientToServerMessage.abortQueryMessage:type_name -> AbortQueryMessage
-	21,  // 73: ClientToServerMessage.pingMessage:type_name -> PingMessage
-	187, // 74: ClientToServerMessage.askPositionMessage:type_name -> AskPositionMessage
-	47,  // 75: ClientToServerMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	285, // 76: ClientToServerMessage.addSpaceFilterMessage:type_name -> AddSpaceFilterMessage
-	286, // 77: ClientToServerMessage.removeSpaceFilterMessage:type_name -> RemoveSpaceFilterMessage
-	274, // 78: ClientToServerMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	278, // 79: ClientToServerMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
-	33,  // 80: ClientToServerMessage.banPlayerMessage:type_name -> BanPlayerMessage
-	34,  // 81: ClientToServerMessage.updateChatIdMessage:type_name -> UpdateChatIdMessage
-	200, // 82: ClientToServerMessage.publicEvent:type_name -> PublicEventFrontToPusher
-	225, // 83: ClientToServerMessage.privateEvent:type_name -> PrivateEventFrontToPusher
-	201, // 84: ClientToServerMessage.backEvent:type_name -> BackEventFrontToPusherMessage
-	35,  // 85: ClientToServerMessage.leaveChatRoomAreaMessage:type_name -> LeaveChatRoomAreaMessage
-	188, // 86: ClientToServerMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
-	190, // 87: ClientToServerMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
-	68,  // 88: ClientToServerMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
-	29,  // 89: ClientToServerMessage.videoQualityReportMessage:type_name -> VideoQualityReportMessage
-	31,  // 90: ClientToServerMessage.analyticsEventReportMessage:type_name -> AnalyticsEventReportMessage
-	72,  // 91: ClientToServerMessage.entityMessage:type_name -> EntityMessage
-	301, // 92: ReceivedEventMessage.data:type_name -> google.protobuf.Value
-	70,  // 93: EntityEvent.entitySoundPlayed:type_name -> EntitySoundPlayed
-	71,  // 94: EntityMessage.entityEvent:type_name -> EntityEvent
-	302, // 95: SetPlayerVariableMessage.ttl:type_name -> google.protobuf.Int32Value
-	12,  // 96: SetPlayerVariableMessage.scope:type_name -> SetPlayerVariableMessage.Scope
-	80,  // 97: QueryMessage.jitsiJwtQuery:type_name -> JitsiJwtQuery
-	81,  // 98: QueryMessage.joinBBBMeetingQuery:type_name -> JoinBBBMeetingQuery
-	82,  // 99: QueryMessage.roomTagsQuery:type_name -> RoomTagsQuery
-	83,  // 100: QueryMessage.embeddableWebsiteQuery:type_name -> EmbeddableWebsiteQuery
-	84,  // 101: QueryMessage.roomsFromSameWorldQuery:type_name -> RoomsFromSameWorldQuery
-	85,  // 102: QueryMessage.sendEventQuery:type_name -> SendEventQuery
-	86,  // 103: QueryMessage.searchMemberQuery:type_name -> SearchMemberQuery
-	87,  // 104: QueryMessage.getMemberQuery:type_name -> GetMemberQuery
-	124, // 105: QueryMessage.iceServersQuery:type_name -> IceServersQuery
-	88,  // 106: QueryMessage.chatMembersQuery:type_name -> ChatMembersQuery
-	90,  // 107: QueryMessage.searchTagsQuery:type_name -> SearchTagsQuery
-	89,  // 108: QueryMessage.oauthRefreshTokenQuery:type_name -> OauthRefreshTokenQuery
-	91,  // 109: QueryMessage.enterChatRoomAreaQuery:type_name -> EnterChatRoomAreaQuery
-	92,  // 110: QueryMessage.joinSpaceQuery:type_name -> JoinSpaceQuery
-	93,  // 111: QueryMessage.leaveSpaceQuery:type_name -> LeaveSpaceQuery
-	79,  // 112: QueryMessage.mapStorageJwtQuery:type_name -> MapStorageJwtQuery
-	94,  // 113: QueryMessage.getRecordingsQuery:type_name -> GetRecordingsQuery
-	96,  // 114: QueryMessage.deleteRecordingQuery:type_name -> DeleteRecordingQuery
-	77,  // 115: QueryMessage.getSignedUrlQuery:type_name -> GetSignedUrlQuery
-	95,  // 116: QueryMessage.getRecordingThumbnailsQuery:type_name -> GetRecordingThumbnailsQuery
-	118, // 117: QueryMessage.banIpPreviewQuery:type_name -> BanIpPreviewQuery
-	147, // 118: QueryMessage.spaceStateQuery:type_name -> SpaceStateQueryFrontToPusher
-	301, // 119: SendEventQuery.data:type_name -> google.protobuf.Value
-	10,  // 120: JoinSpaceQuery.filterType:type_name -> FilterType
-	166, // 121: AnswerMessage.error:type_name -> ErrorMessage
-	98,  // 122: AnswerMessage.jitsiJwtAnswer:type_name -> JitsiJwtAnswer
-	100, // 123: AnswerMessage.joinBBBMeetingAnswer:type_name -> JoinBBBMeetingAnswer
-	101, // 124: AnswerMessage.roomTagsAnswer:type_name -> RoomTagsAnswer
-	102, // 125: AnswerMessage.embeddableWebsiteAnswer:type_name -> EmbeddableWebsiteAnswer
-	104, // 126: AnswerMessage.roomsFromSameWorldAnswer:type_name -> RoomsFromSameWorldAnswer
-	105, // 127: AnswerMessage.sendEventAnswer:type_name -> SendEventAnswer
-	106, // 128: AnswerMessage.searchMemberAnswer:type_name -> SearchMemberAnswer
-	107, // 129: AnswerMessage.getMemberAnswer:type_name -> GetMemberAnswer
-	123, // 130: AnswerMessage.iceServersAnswer:type_name -> IceServersAnswer
-	108, // 131: AnswerMessage.chatMembersAnswer:type_name -> ChatMembersAnswer
-	113, // 132: AnswerMessage.searchTagsAnswer:type_name -> SearchTagsAnswer
-	109, // 133: AnswerMessage.oauthRefreshTokenAnswer:type_name -> OauthRefreshTokenAnswer
-	110, // 134: AnswerMessage.enterChatRoomAreaAnswer:type_name -> EnterChatRoomAreaAnswer
-	111, // 135: AnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
-	112, // 136: AnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
-	99,  // 137: AnswerMessage.mapStorageJwtAnswer:type_name -> MapStorageJwtAnswer
-	114, // 138: AnswerMessage.getRecordingsAnswer:type_name -> GetRecordingsAnswer
-	116, // 139: AnswerMessage.deleteRecordingAnswer:type_name -> DeleteRecordingAnswer
-	117, // 140: AnswerMessage.getSignedUrlAnswer:type_name -> GetSignedUrlAnswer
-	115, // 141: AnswerMessage.getRecordingThumbnailsAnswer:type_name -> GetRecordingThumbnailsAnswer
-	120, // 142: AnswerMessage.banIpPreviewAnswer:type_name -> BanIpPreviewAnswer
-	149, // 143: AnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
-	103, // 144: RoomsFromSameWorldAnswer.roomDescriptions:type_name -> RoomShortDescription
-	121, // 145: SearchMemberAnswer.members:type_name -> Member
-	121, // 146: GetMemberAnswer.member:type_name -> Member
-	125, // 147: ChatMembersAnswer.members:type_name -> ChatMember
-	126, // 148: GetRecordingsAnswer.recordings:type_name -> Recording
-	119, // 149: BanIpPreviewAnswer.users:type_name -> BanIpPreviewUser
-	122, // 150: IceServersAnswer.iceServers:type_name -> IceServer
-	127, // 151: Recording.videoFile:type_name -> VideoFile
-	129, // 152: SpaceQueryMessage.addSpaceUserQuery:type_name -> AddSpaceUserQuery
-	130, // 153: SpaceQueryMessage.removeSpaceUserQuery:type_name -> RemoveSpaceUserQuery
-	148, // 154: SpaceQueryMessage.spaceStateQuery:type_name -> SpaceStateQueryPusherToBack
-	271, // 155: AddSpaceUserQuery.user:type_name -> SpaceUser
-	10,  // 156: AddSpaceUserQuery.filterType:type_name -> FilterType
-	133, // 157: SpaceStateQuery.raiseHand:type_name -> RaiseHandQuery
-	134, // 158: SpaceStateQuery.lowerHand:type_name -> LowerHandQuery
-	135, // 159: SpaceStateQuery.giveFloor:type_name -> GiveFloorQuery
-	136, // 160: SpaceStateQuery.revokeFloor:type_name -> RevokeFloorQuery
-	137, // 161: SpaceStateQuery.startRecording:type_name -> StartRecordingQuery
-	138, // 162: SpaceStateQuery.stopRecording:type_name -> StopRecordingQuery
-	139, // 163: SpaceStateQuery.createPoll:type_name -> CreatePollQuery
-	140, // 164: SpaceStateQuery.votePoll:type_name -> VotePollQuery
-	141, // 165: SpaceStateQuery.closePoll:type_name -> ClosePollQuery
-	142, // 166: SpaceStateQuery.deletePoll:type_name -> DeletePollQuery
-	143, // 167: SpaceStateQuery.askQuestion:type_name -> AskQuestionQuery
-	144, // 168: SpaceStateQuery.upvoteQuestion:type_name -> UpvoteQuestionQuery
-	145, // 169: SpaceStateQuery.answerQuestion:type_name -> AnswerQuestionQuery
-	146, // 170: SpaceStateQuery.deleteQuestion:type_name -> DeleteQuestionQuery
-	132, // 171: SpaceStateQuery.setKind:type_name -> SetSpaceKindQuery
-	131, // 172: SpaceStateQueryFrontToPusher.query:type_name -> SpaceStateQuery
-	131, // 173: SpaceStateQueryPusherToBack.query:type_name -> SpaceStateQuery
-	166, // 174: SpaceAnswerMessage.error:type_name -> ErrorMessage
-	152, // 175: SpaceAnswerMessage.addSpaceUserAnswer:type_name -> AddSpaceUserAnswer
-	153, // 176: SpaceAnswerMessage.removeSpaceUserAnswer:type_name -> RemoveSpaceUserAnswer
-	111, // 177: SpaceAnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
-	112, // 178: SpaceAnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
-	149, // 179: SpaceAnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
-	9,   // 180: HandleRecordingWebhookRequest.phase:type_name -> RecordingWebhookPhase
-	155, // 181: HandleRecordingWebhookRequest.fileResults:type_name -> RecordingFileResult
-	14,  // 182: UserMovedMessage.position:type_name -> PositionMessage
-	14,  // 183: MoveToPositionMessage.position:type_name -> PositionMessage
-	14,  // 184: LocatePositionMessage.position:type_name -> PositionMessage
-	157, // 185: SubMessage.userMovedMessage:type_name -> UserMovedMessage
-	162, // 186: SubMessage.groupUpdateMessage:type_name -> GroupUpdateMessage
-	163, // 187: SubMessage.groupDeleteMessage:type_name -> GroupDeleteMessage
-	164, // 188: SubMessage.userJoinedMessage:type_name -> UserJoinedMessage
-	165, // 189: SubMessage.userLeftMessage:type_name -> UserLeftMessage
-	66,  // 190: SubMessage.itemEventMessage:type_name -> ItemEventMessage
-	37,  // 191: SubMessage.emoteEventMessage:type_name -> EmoteEventMessage
-	67,  // 192: SubMessage.variableMessage:type_name -> VariableMessage
-	166, // 193: SubMessage.errorMessage:type_name -> ErrorMessage
-	238, // 194: SubMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
-	21,  // 195: SubMessage.pingMessage:type_name -> PingMessage
-	47,  // 196: SubMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	272, // 197: SubMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
-	275, // 198: SubMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserPusherToFrontMessage
-	277, // 199: SubMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserPusherToFrontMessage
-	64,  // 200: SubMessage.receivedEventMessage:type_name -> ReceivedEventMessage
-	278, // 201: SubMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
-	169, // 202: SubMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
-	284, // 203: SubMessage.kickOffMessage:type_name -> KickOffMessage
-	202, // 204: SubMessage.publicEvent:type_name -> PublicEvent
-	224, // 205: SubMessage.privateEvent:type_name -> PrivateEventPusherToFront
-	283, // 206: SubMessage.spaceDestroyedMessage:type_name -> SpaceDestroyedMessage
-	273, // 207: SubMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
-	69,  // 208: SubMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
-	228, // 209: SubMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
-	72,  // 210: SubMessage.entityMessage:type_name -> EntityMessage
-	150, // 211: SubMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
-	160, // 212: BatchMessage.payload:type_name -> SubMessage
-	15,  // 213: GroupUpdateMessage.position:type_name -> PointMessage
-	298, // 214: GroupUpdateMessage.groupSize:type_name -> google.protobuf.UInt32Value
-	299, // 215: GroupUpdateMessage.locked:type_name -> google.protobuf.BoolValue
-	17,  // 216: UserJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
-	14,  // 217: UserJoinedMessage.position:type_name -> PositionMessage
-	19,  // 218: UserJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
-	0,   // 219: UserJoinedMessage.availabilityStatus:type_name -> AvailabilityStatus
-	296, // 220: UserJoinedMessage.variables:type_name -> UserJoinedMessage.VariablesEntry
-	25,  // 221: UserJoinedMessage.sayMessage:type_name -> SayMessage
-	300, // 222: ErrorScreenMessage.code:type_name -> google.protobuf.StringValue
-	300, // 223: ErrorScreenMessage.title:type_name -> google.protobuf.StringValue
-	300, // 224: ErrorScreenMessage.subtitle:type_name -> google.protobuf.StringValue
-	300, // 225: ErrorScreenMessage.details:type_name -> google.protobuf.StringValue
-	302, // 226: ErrorScreenMessage.timeToRetry:type_name -> google.protobuf.Int32Value
-	299, // 227: ErrorScreenMessage.canRetryManual:type_name -> google.protobuf.BoolValue
-	300, // 228: ErrorScreenMessage.urlToRedirect:type_name -> google.protobuf.StringValue
-	300, // 229: ErrorScreenMessage.buttonTitle:type_name -> google.protobuf.StringValue
-	300, // 230: ErrorScreenMessage.image:type_name -> google.protobuf.StringValue
-	300, // 231: ErrorScreenMessage.imageLogo:type_name -> google.protobuf.StringValue
-	48,  // 232: RoomConnectedMessage.editMapCommandsArrayMessage:type_name -> EditMapCommandsArrayMessage
-	168, // 233: RoomJoinedMessage.item:type_name -> ItemStateMessage
-	67,  // 234: RoomJoinedMessage.variable:type_name -> VariableMessage
-	17,  // 235: RoomJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
-	67,  // 236: RoomJoinedMessage.playerVariable:type_name -> VariableMessage
-	18,  // 237: RoomJoinedMessage.applications:type_name -> ApplicationMessage
-	19,  // 238: RoomJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
-	69,  // 239: RoomJoinedMessage.areaPropertyVariable:type_name -> AreaPropertyVariableMessage
-	13,  // 240: AskPositionMessage.askType:type_name -> AskPositionMessage.AskType
-	203, // 241: PublicEventFrontToPusher.spaceEvent:type_name -> SpaceEvent
-	220, // 242: BackEventFrontToPusherMessage.backEvent:type_name -> BackEvent
-	203, // 243: PublicEvent.spaceEvent:type_name -> SpaceEvent
-	212, // 244: SpaceEvent.spaceMessage:type_name -> SpaceMessage
-	215, // 245: SpaceEvent.spaceIsTyping:type_name -> SpaceIsTyping
-	196, // 246: SpaceEvent.muteAudioForEverybody:type_name -> MuteAudioForEverybodyPublicMessage
-	197, // 247: SpaceEvent.muteVideoForEverybody:type_name -> MuteVideoForEverybodyPublicMessage
-	214, // 248: SpaceEvent.spaceMessageReaction:type_name -> SpaceMessageReaction
-	195, // 249: PrivateSpaceEvent.muteVideo:type_name -> MuteVideoPrivateMessage
-	194, // 250: PrivateSpaceEvent.muteAudio:type_name -> MuteAudioPrivateMessage
-	198, // 251: PrivateSpaceEvent.kickOffUser:type_name -> KickOffUserPrivateMessage
-	172, // 252: PrivateSpaceEvent.webRtcStartMessage:type_name -> WebRtcStartMessage
-	27,  // 253: PrivateSpaceEvent.webRtcSignal:type_name -> WebRtcSignal
-	27,  // 254: PrivateSpaceEvent.webRtcScreenSharingSignal:type_name -> WebRtcSignal
-	174, // 255: PrivateSpaceEvent.webRtcDisconnectMessage:type_name -> WebRtcDisconnectMessage
-	205, // 256: PrivateSpaceEvent.communicationStrategyMessage:type_name -> CommunicationStrategyMessage
-	206, // 257: PrivateSpaceEvent.switchMessage:type_name -> SwitchMessage
-	207, // 258: PrivateSpaceEvent.finalizeSwitchMessage:type_name -> FinalizeSwitchMessage
-	210, // 259: PrivateSpaceEvent.livekitInvitationMessage:type_name -> LivekitInvitationMessage
-	211, // 260: PrivateSpaceEvent.livekitDisconnectMessage:type_name -> LivekitDisconnectMessage
-	272, // 261: PrivateSpaceEvent.addSpaceUserMessage:type_name -> AddSpaceUserMessage
-	274, // 262: PrivateSpaceEvent.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	276, // 263: PrivateSpaceEvent.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
-	208, // 264: PrivateSpaceEvent.blockUserMessage:type_name -> BlockUserMessage
-	209, // 265: PrivateSpaceEvent.unblockUserMessage:type_name -> UnblockUserMessage
-	173, // 266: PrivateSpaceEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
-	199, // 267: PrivateSpaceEvent.recordingUnexpectedlyStoppedMessage:type_name -> RecordingUnexpectedlyStoppedPrivateMessage
-	216, // 268: PrivateSpaceEvent.proximityFileTransferOffer:type_name -> ProximityFileTransferOfferMessage
-	218, // 269: PrivateSpaceEvent.proximityFileTransferSignal:type_name -> ProximityFileTransferSignalMessage
-	217, // 270: PrivateSpaceEvent.proximityFileTransferDecline:type_name -> ProximityFileTransferDeclineMessage
-	17,  // 271: SpaceMessage.characterTextures:type_name -> CharacterTextureMessage
-	213, // 272: SpaceMessage.quote:type_name -> SpaceMessageQuote
-	17,  // 273: SpaceIsTyping.characterTextures:type_name -> CharacterTextureMessage
-	17,  // 274: ProximityFileTransferOfferMessage.characterTextures:type_name -> CharacterTextureMessage
-	220, // 275: BackEventMessage.backEvent:type_name -> BackEvent
-	173, // 276: BackEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
-	221, // 277: BackEvent.microphoneTrackPublishedMessage:type_name -> MicrophoneTrackPublishedMessage
-	204, // 278: PrivateEvent.spaceEvent:type_name -> PrivateSpaceEvent
-	271, // 279: PrivateEventBackToPusher.sender:type_name -> SpaceUser
-	204, // 280: PrivateEventBackToPusher.spaceEvent:type_name -> PrivateSpaceEvent
-	271, // 281: PrivateEventPusherToFront.sender:type_name -> SpaceUser
-	204, // 282: PrivateEventPusherToFront.spaceEvent:type_name -> PrivateSpaceEvent
-	204, // 283: PrivateEventFrontToPusher.spaceEvent:type_name -> PrivateSpaceEvent
-	161, // 284: ServerToClientMessage.batchMessage:type_name -> BatchMessage
-	166, // 285: ServerToClientMessage.errorMessage:type_name -> ErrorMessage
-	170, // 286: ServerToClientMessage.roomConnectedMessage:type_name -> RoomConnectedMessage
-	171, // 287: ServerToClientMessage.roomJoinedMessage:type_name -> RoomJoinedMessage
-	175, // 288: ServerToClientMessage.teleportMessageMessage:type_name -> TeleportMessageMessage
-	176, // 289: ServerToClientMessage.sendUserMessage:type_name -> SendUserMessage
-	186, // 290: ServerToClientMessage.banUserMessage:type_name -> BanUserMessage
-	177, // 291: ServerToClientMessage.worldFullWarningMessage:type_name -> WorldFullWarningMessage
-	180, // 292: ServerToClientMessage.refreshRoomMessage:type_name -> RefreshRoomMessage
-	185, // 293: ServerToClientMessage.worldConnectionMessage:type_name -> WorldConnectionMessage
-	182, // 294: ServerToClientMessage.tokenExpiredMessage:type_name -> TokenExpiredMessage
-	38,  // 295: ServerToClientMessage.followRequestMessage:type_name -> FollowRequestMessage
-	39,  // 296: ServerToClientMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
-	40,  // 297: ServerToClientMessage.followAbortMessage:type_name -> FollowAbortMessage
-	183, // 298: ServerToClientMessage.invalidCharacterTextureMessage:type_name -> InvalidCharacterTextureMessage
-	181, // 299: ServerToClientMessage.deleteMapMessage:type_name -> DeleteMapMessage
-	167, // 300: ServerToClientMessage.errorScreenMessage:type_name -> ErrorScreenMessage
-	97,  // 301: ServerToClientMessage.answerMessage:type_name -> AnswerMessage
-	158, // 302: ServerToClientMessage.moveToPositionMessage:type_name -> MoveToPositionMessage
-	184, // 303: ServerToClientMessage.invalidCompanionTextureMessage:type_name -> InvalidCompanionTextureMessage
-	226, // 304: ServerToClientMessage.joinSpaceRequestMessage:type_name -> JoinSpaceRequestMessage
-	227, // 305: ServerToClientMessage.leaveSpaceRequestMessage:type_name -> LeaveSpaceRequestMessage
-	266, // 306: ServerToClientMessage.externalModuleMessage:type_name -> ExternalModuleMessage
-	159, // 307: ServerToClientMessage.locatePositionMessage:type_name -> LocatePositionMessage
-	189, // 308: ServerToClientMessage.meetingInvitationRequestReceivedMessage:type_name -> MeetingInvitationRequestReceivedMessage
-	191, // 309: ServerToClientMessage.meetingInvitationResponseReceivedMessage:type_name -> MeetingInvitationResponseReceivedMessage
-	192, // 310: ServerToClientMessage.meetingInvitationRequestTooHighMessage:type_name -> MeetingInvitationRequestTooHighMessage
-	193, // 311: ServerToClientMessage.meetingInvitationRequestClosedMessage:type_name -> MeetingInvitationRequestClosedMessage
-	228, // 312: ServerToClientMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
-	229, // 313: ServerToClientMessage.backConnectionCloseReasonMessage:type_name -> BackConnectionCloseReasonMessage
-	300, // 314: ConnectToRoomMessage.lastCommandId:type_name -> google.protobuf.StringValue
-	14,  // 315: JoinRoomFrontMessage.positionMessage:type_name -> PositionMessage
-	16,  // 316: JoinRoomFrontMessage.viewportMessage:type_name -> ViewportMessage
-	0,   // 317: JoinRoomFrontMessage.availabilityStatus:type_name -> AvailabilityStatus
-	14,  // 318: JoinRoomMessage.positionMessage:type_name -> PositionMessage
-	17,  // 319: JoinRoomMessage.characterTextures:type_name -> CharacterTextureMessage
-	19,  // 320: JoinRoomMessage.companionTexture:type_name -> CompanionTextureMessage
-	300, // 321: JoinRoomMessage.visitCardUrl:type_name -> google.protobuf.StringValue
-	0,   // 322: JoinRoomMessage.availabilityStatus:type_name -> AvailabilityStatus
-	18,  // 323: JoinRoomMessage.applications:type_name -> ApplicationMessage
-	300, // 324: JoinRoomMessage.chatID:type_name -> google.protobuf.StringValue
-	17,  // 325: UserJoinedZoneMessage.characterTextures:type_name -> CharacterTextureMessage
-	14,  // 326: UserJoinedZoneMessage.position:type_name -> PositionMessage
-	239, // 327: UserJoinedZoneMessage.fromZone:type_name -> Zone
-	19,  // 328: UserJoinedZoneMessage.companionTexture:type_name -> CompanionTextureMessage
-	0,   // 329: UserJoinedZoneMessage.availabilityStatus:type_name -> AvailabilityStatus
-	297, // 330: UserJoinedZoneMessage.variables:type_name -> UserJoinedZoneMessage.VariablesEntry
-	25,  // 331: UserJoinedZoneMessage.sayMessage:type_name -> SayMessage
-	239, // 332: UserLeftZoneMessage.toZone:type_name -> Zone
-	15,  // 333: GroupUpdateZoneMessage.position:type_name -> PointMessage
-	239, // 334: GroupUpdateZoneMessage.fromZone:type_name -> Zone
-	239, // 335: GroupLeftZoneMessage.toZone:type_name -> Zone
-	24,  // 336: PlayerDetailsUpdatedMessage.details:type_name -> SetPlayerDetailsMessage
-	244, // 337: PusherToBackRoomMessage.initRoomMessage:type_name -> InitRoomMessage
-	240, // 338: PusherToBackRoomMessage.subscribeZoneMessage:type_name -> SubscribeZoneMessage
-	241, // 339: PusherToBackRoomMessage.unsubscribeZoneMessage:type_name -> UnsubscribeZoneMessage
-	231, // 340: PusherToBackMessage.connectToRoomMessage:type_name -> ConnectToRoomMessage
-	233, // 341: PusherToBackMessage.joinRoomMessage:type_name -> JoinRoomMessage
-	26,  // 342: PusherToBackMessage.userMovesMessage:type_name -> UserMovesMessage
-	66,  // 343: PusherToBackMessage.itemEventMessage:type_name -> ItemEventMessage
-	24,  // 344: PusherToBackMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
-	36,  // 345: PusherToBackMessage.emotePromptMessage:type_name -> EmotePromptMessage
-	67,  // 346: PusherToBackMessage.variableMessage:type_name -> VariableMessage
-	38,  // 347: PusherToBackMessage.followRequestMessage:type_name -> FollowRequestMessage
-	39,  // 348: PusherToBackMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
-	40,  // 349: PusherToBackMessage.followAbortMessage:type_name -> FollowAbortMessage
-	41,  // 350: PusherToBackMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
-	76,  // 351: PusherToBackMessage.queryMessage:type_name -> QueryMessage
-	78,  // 352: PusherToBackMessage.abortQueryMessage:type_name -> AbortQueryMessage
-	187, // 353: PusherToBackMessage.askPositionMessage:type_name -> AskPositionMessage
-	47,  // 354: PusherToBackMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	21,  // 355: PusherToBackMessage.pingMessage:type_name -> PingMessage
-	202, // 356: PusherToBackMessage.publicEvent:type_name -> PublicEvent
-	222, // 357: PusherToBackMessage.privateEvent:type_name -> PrivateEvent
-	188, // 358: PusherToBackMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
-	190, // 359: PusherToBackMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
-	68,  // 360: PusherToBackMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
-	72,  // 361: PusherToBackMessage.entityMessage:type_name -> EntityMessage
-	247, // 362: BatchToPusherRoomMessage.payload:type_name -> SubToPusherRoomMessage
-	74,  // 363: SubToPusherRoomMessage.variableMessage:type_name -> VariableWithTagMessage
-	166, // 364: SubToPusherRoomMessage.errorMessage:type_name -> ErrorMessage
-	47,  // 365: SubToPusherRoomMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
-	64,  // 366: SubToPusherRoomMessage.receivedEventMessage:type_name -> ReceivedEventMessage
-	72,  // 367: SubToPusherRoomMessage.entityMessage:type_name -> EntityMessage
-	20,  // 368: SubToPusherRoomMessage.zoneMessage:type_name -> ZoneMessage
-	69,  // 369: SubToPusherRoomMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
-	248, // 370: ServerToAdminClientMessage.userJoinedRoom:type_name -> UserJoinedRoomMessage
-	249, // 371: ServerToAdminClientMessage.userLeftRoom:type_name -> UserLeftRoomMessage
-	166, // 372: ServerToAdminClientMessage.errorMessage:type_name -> ErrorMessage
-	252, // 373: MapStorageToBackMessage.mapStorageRefreshMessage:type_name -> MapStorageRefreshMessage
-	260, // 374: RoomsList.roomDescription:type_name -> RoomDescription
-	263, // 375: WorldUsersAnswer.users:type_name -> WorldUser
-	301, // 376: DispatchGlobalEventRequest.value:type_name -> google.protobuf.Value
-	301, // 377: ExternalModuleMessage.message:type_name -> google.protobuf.Value
-	269, // 378: PusherToBackSpaceMessage.joinSpaceMessage:type_name -> JoinSpaceMessage
-	270, // 379: PusherToBackSpaceMessage.leaveSpaceMessage:type_name -> LeaveSpaceMessage
-	274, // 380: PusherToBackSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	21,  // 381: PusherToBackSpaceMessage.pongMessage:type_name -> PingMessage
-	279, // 382: PusherToBackSpaceMessage.updateSpaceMetadataPusherToBackMessage:type_name -> UpdateSpaceMetadataPusherToBackMessage
-	284, // 383: PusherToBackSpaceMessage.kickOffMessage:type_name -> KickOffMessage
-	202, // 384: PusherToBackSpaceMessage.publicEvent:type_name -> PublicEvent
-	222, // 385: PusherToBackSpaceMessage.privateEvent:type_name -> PrivateEvent
-	280, // 386: PusherToBackSpaceMessage.syncSpaceUsersMessage:type_name -> SyncSpaceUsersMessage
-	128, // 387: PusherToBackSpaceMessage.spaceQueryMessage:type_name -> SpaceQueryMessage
-	281, // 388: PusherToBackSpaceMessage.addSpaceUserToNotifyMessage:type_name -> AddSpaceUserToNotifyMessage
-	282, // 389: PusherToBackSpaceMessage.deleteSpaceUserToNotifyMessage:type_name -> DeleteSpaceUserToNotifyMessage
-	219, // 390: PusherToBackSpaceMessage.backEvent:type_name -> BackEventMessage
-	272, // 391: BackToPusherSpaceMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
-	274, // 392: BackToPusherSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
-	276, // 393: BackToPusherSpaceMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
-	21,  // 394: BackToPusherSpaceMessage.pingMessage:type_name -> PingMessage
-	278, // 395: BackToPusherSpaceMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
-	284, // 396: BackToPusherSpaceMessage.kickOffMessage:type_name -> KickOffMessage
-	202, // 397: BackToPusherSpaceMessage.publicEvent:type_name -> PublicEvent
-	223, // 398: BackToPusherSpaceMessage.privateEvent:type_name -> PrivateEventBackToPusher
-	151, // 399: BackToPusherSpaceMessage.spaceAnswerMessage:type_name -> SpaceAnswerMessage
-	273, // 400: BackToPusherSpaceMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
-	150, // 401: BackToPusherSpaceMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
-	10,  // 402: JoinSpaceMessage.filterType:type_name -> FilterType
-	17,  // 403: SpaceUser.characterTextures:type_name -> CharacterTextureMessage
-	300, // 404: SpaceUser.roomName:type_name -> google.protobuf.StringValue
-	300, // 405: SpaceUser.visitCardUrl:type_name -> google.protobuf.StringValue
-	300, // 406: SpaceUser.jitsiParticipantId:type_name -> google.protobuf.StringValue
-	300, // 407: SpaceUser.chatID:type_name -> google.protobuf.StringValue
-	271, // 408: AddSpaceUserMessage.user:type_name -> SpaceUser
-	271, // 409: InitSpaceUsersMessage.users:type_name -> SpaceUser
-	271, // 410: UpdateSpaceUserMessage.user:type_name -> SpaceUser
-	303, // 411: UpdateSpaceUserMessage.updateMask:type_name -> google.protobuf.FieldMask
-	271, // 412: UpdateSpaceUserPusherToFrontMessage.user:type_name -> SpaceUser
-	303, // 413: UpdateSpaceUserPusherToFrontMessage.updateMask:type_name -> google.protobuf.FieldMask
-	271, // 414: SyncSpaceUsersMessage.users:type_name -> SpaceUser
-	271, // 415: AddSpaceUserToNotifyMessage.user:type_name -> SpaceUser
-	271, // 416: DeleteSpaceUserToNotifyMessage.user:type_name -> SpaceUser
-	287, // 417: AddSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
-	287, // 418: RemoveSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
-	301, // 419: SaveVariableRequest.value:type_name -> google.protobuf.Value
-	301, // 420: EventResponse.data:type_name -> google.protobuf.Value
-	301, // 421: DispatchEventRequest.data:type_name -> google.protobuf.Value
-	422, // [422:422] is the sub-list for method output_type
-	422, // [422:422] is the sub-list for method input_type
-	422, // [422:422] is the sub-list for extension type_name
-	422, // [422:422] is the sub-list for extension extendee
-	0,   // [0:422] is the sub-list for field type_name
+	7,   // 25: VideoQualitySampleMessage.qualitySetting:type_name -> VideoQualityLevel
+	29,  // 26: VideoQualityReportMessage.samples:type_name -> VideoQualitySampleMessage
+	302, // 27: AnalyticsEventMessage.properties:type_name -> google.protobuf.Value
+	31,  // 28: AnalyticsEventReportMessage.events:type_name -> AnalyticsEventMessage
+	51,  // 29: EditMapMessage.modifyAreaMessage:type_name -> ModifyAreaMessage
+	53,  // 30: EditMapMessage.createAreaMessage:type_name -> CreateAreaMessage
+	52,  // 31: EditMapMessage.deleteAreaMessage:type_name -> DeleteAreaMessage
+	61,  // 32: EditMapMessage.modifyEntityMessage:type_name -> ModifyEntityMessage
+	54,  // 33: EditMapMessage.createEntityMessage:type_name -> CreateEntityMessage
+	55,  // 34: EditMapMessage.deleteEntityMessage:type_name -> DeleteEntityMessage
+	45,  // 35: EditMapMessage.updateWAMSettingsMessage:type_name -> UpdateWAMSettingsMessage
+	44,  // 36: EditMapMessage.errorCommandMessage:type_name -> ErrorCommandMessage
+	57,  // 37: EditMapMessage.uploadEntityMessage:type_name -> UploadEntityMessage
+	59,  // 38: EditMapMessage.modifyCustomEntityMessage:type_name -> ModifyCustomEntityMessage
+	60,  // 39: EditMapMessage.deleteCustomEntityMessage:type_name -> DeleteCustomEntityMessage
+	66,  // 40: EditMapMessage.modifiyWAMMetadataMessage:type_name -> ModifiyWAMMetadataMessage
+	58,  // 41: EditMapMessage.uploadFileMessage:type_name -> UploadFileMessage
+	46,  // 42: UpdateWAMSettingsMessage.updateMegaphoneSettingMessage:type_name -> UpdateMegaphoneSettingMessage
+	47,  // 43: UpdateWAMSettingsMessage.updateRecordingSettingMessage:type_name -> UpdateRecordingSettingMessage
+	302, // 44: UpdateMegaphoneSettingMessage.settings:type_name -> google.protobuf.Value
+	302, // 45: UpdateRecordingSettingMessage.settings:type_name -> google.protobuf.Value
+	43,  // 46: EditMapCommandMessage.editMapMessage:type_name -> EditMapMessage
+	48,  // 47: EditMapCommandsArrayMessage.editMapCommands:type_name -> EditMapCommandMessage
+	48,  // 48: EditMapCommandWithKeyMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	302, // 49: ModifyAreaMessage.properties:type_name -> google.protobuf.Value
+	302, // 50: CreateAreaMessage.properties:type_name -> google.protobuf.Value
+	302, // 51: CreateEntityMessage.properties:type_name -> google.protobuf.Value
+	8,   // 52: UploadEntityMessage.direction:type_name -> CustomEntityDirection
+	302, // 53: UploadEntityMessage.collisionGrid:type_name -> google.protobuf.Value
+	9,   // 54: UploadFileMessage.kind:type_name -> UploadedFileKind
+	302, // 55: ModifyCustomEntityMessage.collisionGrid:type_name -> google.protobuf.Value
+	302, // 56: ModifyEntityMessage.properties:type_name -> google.protobuf.Value
+	64,  // 57: FrontToPusherWebSocketMessage.message:type_name -> ClientToServerMessage
+	231, // 58: PusherToFrontWebSocketMessage.message:type_name -> ServerToClientMessage
+	233, // 59: ClientToServerMessage.joinRoomFrontMessage:type_name -> JoinRoomFrontMessage
+	27,  // 60: ClientToServerMessage.userMovesMessage:type_name -> UserMovesMessage
+	17,  // 61: ClientToServerMessage.viewportMessage:type_name -> ViewportMessage
+	67,  // 62: ClientToServerMessage.itemEventMessage:type_name -> ItemEventMessage
+	25,  // 63: ClientToServerMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
+	76,  // 64: ClientToServerMessage.playGlobalMessage:type_name -> PlayGlobalMessage
+	33,  // 65: ClientToServerMessage.reportPlayerMessage:type_name -> ReportPlayerMessage
+	37,  // 66: ClientToServerMessage.emotePromptMessage:type_name -> EmotePromptMessage
+	68,  // 67: ClientToServerMessage.variableMessage:type_name -> VariableMessage
+	39,  // 68: ClientToServerMessage.followRequestMessage:type_name -> FollowRequestMessage
+	40,  // 69: ClientToServerMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
+	41,  // 70: ClientToServerMessage.followAbortMessage:type_name -> FollowAbortMessage
+	42,  // 71: ClientToServerMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
+	77,  // 72: ClientToServerMessage.queryMessage:type_name -> QueryMessage
+	79,  // 73: ClientToServerMessage.abortQueryMessage:type_name -> AbortQueryMessage
+	22,  // 74: ClientToServerMessage.pingMessage:type_name -> PingMessage
+	188, // 75: ClientToServerMessage.askPositionMessage:type_name -> AskPositionMessage
+	48,  // 76: ClientToServerMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	286, // 77: ClientToServerMessage.addSpaceFilterMessage:type_name -> AddSpaceFilterMessage
+	287, // 78: ClientToServerMessage.removeSpaceFilterMessage:type_name -> RemoveSpaceFilterMessage
+	275, // 79: ClientToServerMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	279, // 80: ClientToServerMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
+	34,  // 81: ClientToServerMessage.banPlayerMessage:type_name -> BanPlayerMessage
+	35,  // 82: ClientToServerMessage.updateChatIdMessage:type_name -> UpdateChatIdMessage
+	201, // 83: ClientToServerMessage.publicEvent:type_name -> PublicEventFrontToPusher
+	226, // 84: ClientToServerMessage.privateEvent:type_name -> PrivateEventFrontToPusher
+	202, // 85: ClientToServerMessage.backEvent:type_name -> BackEventFrontToPusherMessage
+	36,  // 86: ClientToServerMessage.leaveChatRoomAreaMessage:type_name -> LeaveChatRoomAreaMessage
+	189, // 87: ClientToServerMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
+	191, // 88: ClientToServerMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
+	69,  // 89: ClientToServerMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
+	30,  // 90: ClientToServerMessage.videoQualityReportMessage:type_name -> VideoQualityReportMessage
+	32,  // 91: ClientToServerMessage.analyticsEventReportMessage:type_name -> AnalyticsEventReportMessage
+	73,  // 92: ClientToServerMessage.entityMessage:type_name -> EntityMessage
+	302, // 93: ReceivedEventMessage.data:type_name -> google.protobuf.Value
+	71,  // 94: EntityEvent.entitySoundPlayed:type_name -> EntitySoundPlayed
+	72,  // 95: EntityMessage.entityEvent:type_name -> EntityEvent
+	303, // 96: SetPlayerVariableMessage.ttl:type_name -> google.protobuf.Int32Value
+	13,  // 97: SetPlayerVariableMessage.scope:type_name -> SetPlayerVariableMessage.Scope
+	81,  // 98: QueryMessage.jitsiJwtQuery:type_name -> JitsiJwtQuery
+	82,  // 99: QueryMessage.joinBBBMeetingQuery:type_name -> JoinBBBMeetingQuery
+	83,  // 100: QueryMessage.roomTagsQuery:type_name -> RoomTagsQuery
+	84,  // 101: QueryMessage.embeddableWebsiteQuery:type_name -> EmbeddableWebsiteQuery
+	85,  // 102: QueryMessage.roomsFromSameWorldQuery:type_name -> RoomsFromSameWorldQuery
+	86,  // 103: QueryMessage.sendEventQuery:type_name -> SendEventQuery
+	87,  // 104: QueryMessage.searchMemberQuery:type_name -> SearchMemberQuery
+	88,  // 105: QueryMessage.getMemberQuery:type_name -> GetMemberQuery
+	125, // 106: QueryMessage.iceServersQuery:type_name -> IceServersQuery
+	89,  // 107: QueryMessage.chatMembersQuery:type_name -> ChatMembersQuery
+	91,  // 108: QueryMessage.searchTagsQuery:type_name -> SearchTagsQuery
+	90,  // 109: QueryMessage.oauthRefreshTokenQuery:type_name -> OauthRefreshTokenQuery
+	92,  // 110: QueryMessage.enterChatRoomAreaQuery:type_name -> EnterChatRoomAreaQuery
+	93,  // 111: QueryMessage.joinSpaceQuery:type_name -> JoinSpaceQuery
+	94,  // 112: QueryMessage.leaveSpaceQuery:type_name -> LeaveSpaceQuery
+	80,  // 113: QueryMessage.mapStorageJwtQuery:type_name -> MapStorageJwtQuery
+	95,  // 114: QueryMessage.getRecordingsQuery:type_name -> GetRecordingsQuery
+	97,  // 115: QueryMessage.deleteRecordingQuery:type_name -> DeleteRecordingQuery
+	78,  // 116: QueryMessage.getSignedUrlQuery:type_name -> GetSignedUrlQuery
+	96,  // 117: QueryMessage.getRecordingThumbnailsQuery:type_name -> GetRecordingThumbnailsQuery
+	119, // 118: QueryMessage.banIpPreviewQuery:type_name -> BanIpPreviewQuery
+	148, // 119: QueryMessage.spaceStateQuery:type_name -> SpaceStateQueryFrontToPusher
+	302, // 120: SendEventQuery.data:type_name -> google.protobuf.Value
+	11,  // 121: JoinSpaceQuery.filterType:type_name -> FilterType
+	167, // 122: AnswerMessage.error:type_name -> ErrorMessage
+	99,  // 123: AnswerMessage.jitsiJwtAnswer:type_name -> JitsiJwtAnswer
+	101, // 124: AnswerMessage.joinBBBMeetingAnswer:type_name -> JoinBBBMeetingAnswer
+	102, // 125: AnswerMessage.roomTagsAnswer:type_name -> RoomTagsAnswer
+	103, // 126: AnswerMessage.embeddableWebsiteAnswer:type_name -> EmbeddableWebsiteAnswer
+	105, // 127: AnswerMessage.roomsFromSameWorldAnswer:type_name -> RoomsFromSameWorldAnswer
+	106, // 128: AnswerMessage.sendEventAnswer:type_name -> SendEventAnswer
+	107, // 129: AnswerMessage.searchMemberAnswer:type_name -> SearchMemberAnswer
+	108, // 130: AnswerMessage.getMemberAnswer:type_name -> GetMemberAnswer
+	124, // 131: AnswerMessage.iceServersAnswer:type_name -> IceServersAnswer
+	109, // 132: AnswerMessage.chatMembersAnswer:type_name -> ChatMembersAnswer
+	114, // 133: AnswerMessage.searchTagsAnswer:type_name -> SearchTagsAnswer
+	110, // 134: AnswerMessage.oauthRefreshTokenAnswer:type_name -> OauthRefreshTokenAnswer
+	111, // 135: AnswerMessage.enterChatRoomAreaAnswer:type_name -> EnterChatRoomAreaAnswer
+	112, // 136: AnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
+	113, // 137: AnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
+	100, // 138: AnswerMessage.mapStorageJwtAnswer:type_name -> MapStorageJwtAnswer
+	115, // 139: AnswerMessage.getRecordingsAnswer:type_name -> GetRecordingsAnswer
+	117, // 140: AnswerMessage.deleteRecordingAnswer:type_name -> DeleteRecordingAnswer
+	118, // 141: AnswerMessage.getSignedUrlAnswer:type_name -> GetSignedUrlAnswer
+	116, // 142: AnswerMessage.getRecordingThumbnailsAnswer:type_name -> GetRecordingThumbnailsAnswer
+	121, // 143: AnswerMessage.banIpPreviewAnswer:type_name -> BanIpPreviewAnswer
+	150, // 144: AnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
+	104, // 145: RoomsFromSameWorldAnswer.roomDescriptions:type_name -> RoomShortDescription
+	122, // 146: SearchMemberAnswer.members:type_name -> Member
+	122, // 147: GetMemberAnswer.member:type_name -> Member
+	126, // 148: ChatMembersAnswer.members:type_name -> ChatMember
+	127, // 149: GetRecordingsAnswer.recordings:type_name -> Recording
+	120, // 150: BanIpPreviewAnswer.users:type_name -> BanIpPreviewUser
+	123, // 151: IceServersAnswer.iceServers:type_name -> IceServer
+	128, // 152: Recording.videoFile:type_name -> VideoFile
+	130, // 153: SpaceQueryMessage.addSpaceUserQuery:type_name -> AddSpaceUserQuery
+	131, // 154: SpaceQueryMessage.removeSpaceUserQuery:type_name -> RemoveSpaceUserQuery
+	149, // 155: SpaceQueryMessage.spaceStateQuery:type_name -> SpaceStateQueryPusherToBack
+	272, // 156: AddSpaceUserQuery.user:type_name -> SpaceUser
+	11,  // 157: AddSpaceUserQuery.filterType:type_name -> FilterType
+	134, // 158: SpaceStateQuery.raiseHand:type_name -> RaiseHandQuery
+	135, // 159: SpaceStateQuery.lowerHand:type_name -> LowerHandQuery
+	136, // 160: SpaceStateQuery.giveFloor:type_name -> GiveFloorQuery
+	137, // 161: SpaceStateQuery.revokeFloor:type_name -> RevokeFloorQuery
+	138, // 162: SpaceStateQuery.startRecording:type_name -> StartRecordingQuery
+	139, // 163: SpaceStateQuery.stopRecording:type_name -> StopRecordingQuery
+	140, // 164: SpaceStateQuery.createPoll:type_name -> CreatePollQuery
+	141, // 165: SpaceStateQuery.votePoll:type_name -> VotePollQuery
+	142, // 166: SpaceStateQuery.closePoll:type_name -> ClosePollQuery
+	143, // 167: SpaceStateQuery.deletePoll:type_name -> DeletePollQuery
+	144, // 168: SpaceStateQuery.askQuestion:type_name -> AskQuestionQuery
+	145, // 169: SpaceStateQuery.upvoteQuestion:type_name -> UpvoteQuestionQuery
+	146, // 170: SpaceStateQuery.answerQuestion:type_name -> AnswerQuestionQuery
+	147, // 171: SpaceStateQuery.deleteQuestion:type_name -> DeleteQuestionQuery
+	133, // 172: SpaceStateQuery.setKind:type_name -> SetSpaceKindQuery
+	132, // 173: SpaceStateQueryFrontToPusher.query:type_name -> SpaceStateQuery
+	132, // 174: SpaceStateQueryPusherToBack.query:type_name -> SpaceStateQuery
+	167, // 175: SpaceAnswerMessage.error:type_name -> ErrorMessage
+	153, // 176: SpaceAnswerMessage.addSpaceUserAnswer:type_name -> AddSpaceUserAnswer
+	154, // 177: SpaceAnswerMessage.removeSpaceUserAnswer:type_name -> RemoveSpaceUserAnswer
+	112, // 178: SpaceAnswerMessage.joinSpaceAnswer:type_name -> JoinSpaceAnswer
+	113, // 179: SpaceAnswerMessage.leaveSpaceAnswer:type_name -> LeaveSpaceAnswer
+	150, // 180: SpaceAnswerMessage.spaceStateAnswer:type_name -> SpaceStateAnswer
+	10,  // 181: HandleRecordingWebhookRequest.phase:type_name -> RecordingWebhookPhase
+	156, // 182: HandleRecordingWebhookRequest.fileResults:type_name -> RecordingFileResult
+	15,  // 183: UserMovedMessage.position:type_name -> PositionMessage
+	15,  // 184: MoveToPositionMessage.position:type_name -> PositionMessage
+	15,  // 185: LocatePositionMessage.position:type_name -> PositionMessage
+	158, // 186: SubMessage.userMovedMessage:type_name -> UserMovedMessage
+	163, // 187: SubMessage.groupUpdateMessage:type_name -> GroupUpdateMessage
+	164, // 188: SubMessage.groupDeleteMessage:type_name -> GroupDeleteMessage
+	165, // 189: SubMessage.userJoinedMessage:type_name -> UserJoinedMessage
+	166, // 190: SubMessage.userLeftMessage:type_name -> UserLeftMessage
+	67,  // 191: SubMessage.itemEventMessage:type_name -> ItemEventMessage
+	38,  // 192: SubMessage.emoteEventMessage:type_name -> EmoteEventMessage
+	68,  // 193: SubMessage.variableMessage:type_name -> VariableMessage
+	167, // 194: SubMessage.errorMessage:type_name -> ErrorMessage
+	239, // 195: SubMessage.playerDetailsUpdatedMessage:type_name -> PlayerDetailsUpdatedMessage
+	22,  // 196: SubMessage.pingMessage:type_name -> PingMessage
+	48,  // 197: SubMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	273, // 198: SubMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
+	276, // 199: SubMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserPusherToFrontMessage
+	278, // 200: SubMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserPusherToFrontMessage
+	65,  // 201: SubMessage.receivedEventMessage:type_name -> ReceivedEventMessage
+	279, // 202: SubMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
+	170, // 203: SubMessage.groupUsersUpdateMessage:type_name -> GroupUsersUpdateMessage
+	285, // 204: SubMessage.kickOffMessage:type_name -> KickOffMessage
+	203, // 205: SubMessage.publicEvent:type_name -> PublicEvent
+	225, // 206: SubMessage.privateEvent:type_name -> PrivateEventPusherToFront
+	284, // 207: SubMessage.spaceDestroyedMessage:type_name -> SpaceDestroyedMessage
+	274, // 208: SubMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
+	70,  // 209: SubMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
+	229, // 210: SubMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
+	73,  // 211: SubMessage.entityMessage:type_name -> EntityMessage
+	151, // 212: SubMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
+	161, // 213: BatchMessage.payload:type_name -> SubMessage
+	16,  // 214: GroupUpdateMessage.position:type_name -> PointMessage
+	299, // 215: GroupUpdateMessage.groupSize:type_name -> google.protobuf.UInt32Value
+	300, // 216: GroupUpdateMessage.locked:type_name -> google.protobuf.BoolValue
+	18,  // 217: UserJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
+	15,  // 218: UserJoinedMessage.position:type_name -> PositionMessage
+	20,  // 219: UserJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
+	0,   // 220: UserJoinedMessage.availabilityStatus:type_name -> AvailabilityStatus
+	297, // 221: UserJoinedMessage.variables:type_name -> UserJoinedMessage.VariablesEntry
+	26,  // 222: UserJoinedMessage.sayMessage:type_name -> SayMessage
+	301, // 223: ErrorScreenMessage.code:type_name -> google.protobuf.StringValue
+	301, // 224: ErrorScreenMessage.title:type_name -> google.protobuf.StringValue
+	301, // 225: ErrorScreenMessage.subtitle:type_name -> google.protobuf.StringValue
+	301, // 226: ErrorScreenMessage.details:type_name -> google.protobuf.StringValue
+	303, // 227: ErrorScreenMessage.timeToRetry:type_name -> google.protobuf.Int32Value
+	300, // 228: ErrorScreenMessage.canRetryManual:type_name -> google.protobuf.BoolValue
+	301, // 229: ErrorScreenMessage.urlToRedirect:type_name -> google.protobuf.StringValue
+	301, // 230: ErrorScreenMessage.buttonTitle:type_name -> google.protobuf.StringValue
+	301, // 231: ErrorScreenMessage.image:type_name -> google.protobuf.StringValue
+	301, // 232: ErrorScreenMessage.imageLogo:type_name -> google.protobuf.StringValue
+	49,  // 233: RoomConnectedMessage.editMapCommandsArrayMessage:type_name -> EditMapCommandsArrayMessage
+	169, // 234: RoomJoinedMessage.item:type_name -> ItemStateMessage
+	68,  // 235: RoomJoinedMessage.variable:type_name -> VariableMessage
+	18,  // 236: RoomJoinedMessage.characterTextures:type_name -> CharacterTextureMessage
+	68,  // 237: RoomJoinedMessage.playerVariable:type_name -> VariableMessage
+	19,  // 238: RoomJoinedMessage.applications:type_name -> ApplicationMessage
+	20,  // 239: RoomJoinedMessage.companionTexture:type_name -> CompanionTextureMessage
+	70,  // 240: RoomJoinedMessage.areaPropertyVariable:type_name -> AreaPropertyVariableMessage
+	14,  // 241: AskPositionMessage.askType:type_name -> AskPositionMessage.AskType
+	204, // 242: PublicEventFrontToPusher.spaceEvent:type_name -> SpaceEvent
+	221, // 243: BackEventFrontToPusherMessage.backEvent:type_name -> BackEvent
+	204, // 244: PublicEvent.spaceEvent:type_name -> SpaceEvent
+	213, // 245: SpaceEvent.spaceMessage:type_name -> SpaceMessage
+	216, // 246: SpaceEvent.spaceIsTyping:type_name -> SpaceIsTyping
+	197, // 247: SpaceEvent.muteAudioForEverybody:type_name -> MuteAudioForEverybodyPublicMessage
+	198, // 248: SpaceEvent.muteVideoForEverybody:type_name -> MuteVideoForEverybodyPublicMessage
+	215, // 249: SpaceEvent.spaceMessageReaction:type_name -> SpaceMessageReaction
+	196, // 250: PrivateSpaceEvent.muteVideo:type_name -> MuteVideoPrivateMessage
+	195, // 251: PrivateSpaceEvent.muteAudio:type_name -> MuteAudioPrivateMessage
+	199, // 252: PrivateSpaceEvent.kickOffUser:type_name -> KickOffUserPrivateMessage
+	173, // 253: PrivateSpaceEvent.webRtcStartMessage:type_name -> WebRtcStartMessage
+	28,  // 254: PrivateSpaceEvent.webRtcSignal:type_name -> WebRtcSignal
+	28,  // 255: PrivateSpaceEvent.webRtcScreenSharingSignal:type_name -> WebRtcSignal
+	175, // 256: PrivateSpaceEvent.webRtcDisconnectMessage:type_name -> WebRtcDisconnectMessage
+	206, // 257: PrivateSpaceEvent.communicationStrategyMessage:type_name -> CommunicationStrategyMessage
+	207, // 258: PrivateSpaceEvent.switchMessage:type_name -> SwitchMessage
+	208, // 259: PrivateSpaceEvent.finalizeSwitchMessage:type_name -> FinalizeSwitchMessage
+	211, // 260: PrivateSpaceEvent.livekitInvitationMessage:type_name -> LivekitInvitationMessage
+	212, // 261: PrivateSpaceEvent.livekitDisconnectMessage:type_name -> LivekitDisconnectMessage
+	273, // 262: PrivateSpaceEvent.addSpaceUserMessage:type_name -> AddSpaceUserMessage
+	275, // 263: PrivateSpaceEvent.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	277, // 264: PrivateSpaceEvent.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
+	209, // 265: PrivateSpaceEvent.blockUserMessage:type_name -> BlockUserMessage
+	210, // 266: PrivateSpaceEvent.unblockUserMessage:type_name -> UnblockUserMessage
+	174, // 267: PrivateSpaceEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
+	200, // 268: PrivateSpaceEvent.recordingUnexpectedlyStoppedMessage:type_name -> RecordingUnexpectedlyStoppedPrivateMessage
+	217, // 269: PrivateSpaceEvent.proximityFileTransferOffer:type_name -> ProximityFileTransferOfferMessage
+	219, // 270: PrivateSpaceEvent.proximityFileTransferSignal:type_name -> ProximityFileTransferSignalMessage
+	218, // 271: PrivateSpaceEvent.proximityFileTransferDecline:type_name -> ProximityFileTransferDeclineMessage
+	18,  // 272: SpaceMessage.characterTextures:type_name -> CharacterTextureMessage
+	214, // 273: SpaceMessage.quote:type_name -> SpaceMessageQuote
+	18,  // 274: SpaceIsTyping.characterTextures:type_name -> CharacterTextureMessage
+	18,  // 275: ProximityFileTransferOfferMessage.characterTextures:type_name -> CharacterTextureMessage
+	221, // 276: BackEventMessage.backEvent:type_name -> BackEvent
+	174, // 277: BackEvent.meetingConnectionRestartMessage:type_name -> MeetingConnectionRestartMessage
+	222, // 278: BackEvent.microphoneTrackPublishedMessage:type_name -> MicrophoneTrackPublishedMessage
+	205, // 279: PrivateEvent.spaceEvent:type_name -> PrivateSpaceEvent
+	272, // 280: PrivateEventBackToPusher.sender:type_name -> SpaceUser
+	205, // 281: PrivateEventBackToPusher.spaceEvent:type_name -> PrivateSpaceEvent
+	272, // 282: PrivateEventPusherToFront.sender:type_name -> SpaceUser
+	205, // 283: PrivateEventPusherToFront.spaceEvent:type_name -> PrivateSpaceEvent
+	205, // 284: PrivateEventFrontToPusher.spaceEvent:type_name -> PrivateSpaceEvent
+	162, // 285: ServerToClientMessage.batchMessage:type_name -> BatchMessage
+	167, // 286: ServerToClientMessage.errorMessage:type_name -> ErrorMessage
+	171, // 287: ServerToClientMessage.roomConnectedMessage:type_name -> RoomConnectedMessage
+	172, // 288: ServerToClientMessage.roomJoinedMessage:type_name -> RoomJoinedMessage
+	176, // 289: ServerToClientMessage.teleportMessageMessage:type_name -> TeleportMessageMessage
+	177, // 290: ServerToClientMessage.sendUserMessage:type_name -> SendUserMessage
+	187, // 291: ServerToClientMessage.banUserMessage:type_name -> BanUserMessage
+	178, // 292: ServerToClientMessage.worldFullWarningMessage:type_name -> WorldFullWarningMessage
+	181, // 293: ServerToClientMessage.refreshRoomMessage:type_name -> RefreshRoomMessage
+	186, // 294: ServerToClientMessage.worldConnectionMessage:type_name -> WorldConnectionMessage
+	183, // 295: ServerToClientMessage.tokenExpiredMessage:type_name -> TokenExpiredMessage
+	39,  // 296: ServerToClientMessage.followRequestMessage:type_name -> FollowRequestMessage
+	40,  // 297: ServerToClientMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
+	41,  // 298: ServerToClientMessage.followAbortMessage:type_name -> FollowAbortMessage
+	184, // 299: ServerToClientMessage.invalidCharacterTextureMessage:type_name -> InvalidCharacterTextureMessage
+	182, // 300: ServerToClientMessage.deleteMapMessage:type_name -> DeleteMapMessage
+	168, // 301: ServerToClientMessage.errorScreenMessage:type_name -> ErrorScreenMessage
+	98,  // 302: ServerToClientMessage.answerMessage:type_name -> AnswerMessage
+	159, // 303: ServerToClientMessage.moveToPositionMessage:type_name -> MoveToPositionMessage
+	185, // 304: ServerToClientMessage.invalidCompanionTextureMessage:type_name -> InvalidCompanionTextureMessage
+	227, // 305: ServerToClientMessage.joinSpaceRequestMessage:type_name -> JoinSpaceRequestMessage
+	228, // 306: ServerToClientMessage.leaveSpaceRequestMessage:type_name -> LeaveSpaceRequestMessage
+	267, // 307: ServerToClientMessage.externalModuleMessage:type_name -> ExternalModuleMessage
+	160, // 308: ServerToClientMessage.locatePositionMessage:type_name -> LocatePositionMessage
+	190, // 309: ServerToClientMessage.meetingInvitationRequestReceivedMessage:type_name -> MeetingInvitationRequestReceivedMessage
+	192, // 310: ServerToClientMessage.meetingInvitationResponseReceivedMessage:type_name -> MeetingInvitationResponseReceivedMessage
+	193, // 311: ServerToClientMessage.meetingInvitationRequestTooHighMessage:type_name -> MeetingInvitationRequestTooHighMessage
+	194, // 312: ServerToClientMessage.meetingInvitationRequestClosedMessage:type_name -> MeetingInvitationRequestClosedMessage
+	229, // 313: ServerToClientMessage.duplicateUserConnectedMessage:type_name -> DuplicateUserConnectedMessage
+	230, // 314: ServerToClientMessage.backConnectionCloseReasonMessage:type_name -> BackConnectionCloseReasonMessage
+	301, // 315: ConnectToRoomMessage.lastCommandId:type_name -> google.protobuf.StringValue
+	15,  // 316: JoinRoomFrontMessage.positionMessage:type_name -> PositionMessage
+	17,  // 317: JoinRoomFrontMessage.viewportMessage:type_name -> ViewportMessage
+	0,   // 318: JoinRoomFrontMessage.availabilityStatus:type_name -> AvailabilityStatus
+	15,  // 319: JoinRoomMessage.positionMessage:type_name -> PositionMessage
+	18,  // 320: JoinRoomMessage.characterTextures:type_name -> CharacterTextureMessage
+	20,  // 321: JoinRoomMessage.companionTexture:type_name -> CompanionTextureMessage
+	301, // 322: JoinRoomMessage.visitCardUrl:type_name -> google.protobuf.StringValue
+	0,   // 323: JoinRoomMessage.availabilityStatus:type_name -> AvailabilityStatus
+	19,  // 324: JoinRoomMessage.applications:type_name -> ApplicationMessage
+	301, // 325: JoinRoomMessage.chatID:type_name -> google.protobuf.StringValue
+	18,  // 326: UserJoinedZoneMessage.characterTextures:type_name -> CharacterTextureMessage
+	15,  // 327: UserJoinedZoneMessage.position:type_name -> PositionMessage
+	240, // 328: UserJoinedZoneMessage.fromZone:type_name -> Zone
+	20,  // 329: UserJoinedZoneMessage.companionTexture:type_name -> CompanionTextureMessage
+	0,   // 330: UserJoinedZoneMessage.availabilityStatus:type_name -> AvailabilityStatus
+	298, // 331: UserJoinedZoneMessage.variables:type_name -> UserJoinedZoneMessage.VariablesEntry
+	26,  // 332: UserJoinedZoneMessage.sayMessage:type_name -> SayMessage
+	240, // 333: UserLeftZoneMessage.toZone:type_name -> Zone
+	16,  // 334: GroupUpdateZoneMessage.position:type_name -> PointMessage
+	240, // 335: GroupUpdateZoneMessage.fromZone:type_name -> Zone
+	240, // 336: GroupLeftZoneMessage.toZone:type_name -> Zone
+	25,  // 337: PlayerDetailsUpdatedMessage.details:type_name -> SetPlayerDetailsMessage
+	245, // 338: PusherToBackRoomMessage.initRoomMessage:type_name -> InitRoomMessage
+	241, // 339: PusherToBackRoomMessage.subscribeZoneMessage:type_name -> SubscribeZoneMessage
+	242, // 340: PusherToBackRoomMessage.unsubscribeZoneMessage:type_name -> UnsubscribeZoneMessage
+	232, // 341: PusherToBackMessage.connectToRoomMessage:type_name -> ConnectToRoomMessage
+	234, // 342: PusherToBackMessage.joinRoomMessage:type_name -> JoinRoomMessage
+	27,  // 343: PusherToBackMessage.userMovesMessage:type_name -> UserMovesMessage
+	67,  // 344: PusherToBackMessage.itemEventMessage:type_name -> ItemEventMessage
+	25,  // 345: PusherToBackMessage.setPlayerDetailsMessage:type_name -> SetPlayerDetailsMessage
+	37,  // 346: PusherToBackMessage.emotePromptMessage:type_name -> EmotePromptMessage
+	68,  // 347: PusherToBackMessage.variableMessage:type_name -> VariableMessage
+	39,  // 348: PusherToBackMessage.followRequestMessage:type_name -> FollowRequestMessage
+	40,  // 349: PusherToBackMessage.followConfirmationMessage:type_name -> FollowConfirmationMessage
+	41,  // 350: PusherToBackMessage.followAbortMessage:type_name -> FollowAbortMessage
+	42,  // 351: PusherToBackMessage.lockGroupPromptMessage:type_name -> LockGroupPromptMessage
+	77,  // 352: PusherToBackMessage.queryMessage:type_name -> QueryMessage
+	79,  // 353: PusherToBackMessage.abortQueryMessage:type_name -> AbortQueryMessage
+	188, // 354: PusherToBackMessage.askPositionMessage:type_name -> AskPositionMessage
+	48,  // 355: PusherToBackMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	22,  // 356: PusherToBackMessage.pingMessage:type_name -> PingMessage
+	203, // 357: PusherToBackMessage.publicEvent:type_name -> PublicEvent
+	223, // 358: PusherToBackMessage.privateEvent:type_name -> PrivateEvent
+	189, // 359: PusherToBackMessage.meetingInvitationRequestMessage:type_name -> MeetingInvitationRequestMessage
+	191, // 360: PusherToBackMessage.meetingInvitationResponseMessage:type_name -> MeetingInvitationResponseMessage
+	69,  // 361: PusherToBackMessage.setAreaPropertyVariableMessage:type_name -> SetAreaPropertyVariableMessage
+	73,  // 362: PusherToBackMessage.entityMessage:type_name -> EntityMessage
+	248, // 363: BatchToPusherRoomMessage.payload:type_name -> SubToPusherRoomMessage
+	75,  // 364: SubToPusherRoomMessage.variableMessage:type_name -> VariableWithTagMessage
+	167, // 365: SubToPusherRoomMessage.errorMessage:type_name -> ErrorMessage
+	48,  // 366: SubToPusherRoomMessage.editMapCommandMessage:type_name -> EditMapCommandMessage
+	65,  // 367: SubToPusherRoomMessage.receivedEventMessage:type_name -> ReceivedEventMessage
+	73,  // 368: SubToPusherRoomMessage.entityMessage:type_name -> EntityMessage
+	21,  // 369: SubToPusherRoomMessage.zoneMessage:type_name -> ZoneMessage
+	70,  // 370: SubToPusherRoomMessage.areaPropertyVariableMessage:type_name -> AreaPropertyVariableMessage
+	249, // 371: ServerToAdminClientMessage.userJoinedRoom:type_name -> UserJoinedRoomMessage
+	250, // 372: ServerToAdminClientMessage.userLeftRoom:type_name -> UserLeftRoomMessage
+	167, // 373: ServerToAdminClientMessage.errorMessage:type_name -> ErrorMessage
+	253, // 374: MapStorageToBackMessage.mapStorageRefreshMessage:type_name -> MapStorageRefreshMessage
+	261, // 375: RoomsList.roomDescription:type_name -> RoomDescription
+	264, // 376: WorldUsersAnswer.users:type_name -> WorldUser
+	302, // 377: DispatchGlobalEventRequest.value:type_name -> google.protobuf.Value
+	302, // 378: ExternalModuleMessage.message:type_name -> google.protobuf.Value
+	270, // 379: PusherToBackSpaceMessage.joinSpaceMessage:type_name -> JoinSpaceMessage
+	271, // 380: PusherToBackSpaceMessage.leaveSpaceMessage:type_name -> LeaveSpaceMessage
+	275, // 381: PusherToBackSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	22,  // 382: PusherToBackSpaceMessage.pongMessage:type_name -> PingMessage
+	280, // 383: PusherToBackSpaceMessage.updateSpaceMetadataPusherToBackMessage:type_name -> UpdateSpaceMetadataPusherToBackMessage
+	285, // 384: PusherToBackSpaceMessage.kickOffMessage:type_name -> KickOffMessage
+	203, // 385: PusherToBackSpaceMessage.publicEvent:type_name -> PublicEvent
+	223, // 386: PusherToBackSpaceMessage.privateEvent:type_name -> PrivateEvent
+	281, // 387: PusherToBackSpaceMessage.syncSpaceUsersMessage:type_name -> SyncSpaceUsersMessage
+	129, // 388: PusherToBackSpaceMessage.spaceQueryMessage:type_name -> SpaceQueryMessage
+	282, // 389: PusherToBackSpaceMessage.addSpaceUserToNotifyMessage:type_name -> AddSpaceUserToNotifyMessage
+	283, // 390: PusherToBackSpaceMessage.deleteSpaceUserToNotifyMessage:type_name -> DeleteSpaceUserToNotifyMessage
+	220, // 391: PusherToBackSpaceMessage.backEvent:type_name -> BackEventMessage
+	273, // 392: BackToPusherSpaceMessage.addSpaceUserMessage:type_name -> AddSpaceUserMessage
+	275, // 393: BackToPusherSpaceMessage.updateSpaceUserMessage:type_name -> UpdateSpaceUserMessage
+	277, // 394: BackToPusherSpaceMessage.removeSpaceUserMessage:type_name -> RemoveSpaceUserMessage
+	22,  // 395: BackToPusherSpaceMessage.pingMessage:type_name -> PingMessage
+	279, // 396: BackToPusherSpaceMessage.updateSpaceMetadataMessage:type_name -> UpdateSpaceMetadataMessage
+	285, // 397: BackToPusherSpaceMessage.kickOffMessage:type_name -> KickOffMessage
+	203, // 398: BackToPusherSpaceMessage.publicEvent:type_name -> PublicEvent
+	224, // 399: BackToPusherSpaceMessage.privateEvent:type_name -> PrivateEventBackToPusher
+	152, // 400: BackToPusherSpaceMessage.spaceAnswerMessage:type_name -> SpaceAnswerMessage
+	274, // 401: BackToPusherSpaceMessage.initSpaceUsersMessage:type_name -> InitSpaceUsersMessage
+	151, // 402: BackToPusherSpaceMessage.spaceStatePatchMessage:type_name -> SpaceStatePatchMessage
+	11,  // 403: JoinSpaceMessage.filterType:type_name -> FilterType
+	18,  // 404: SpaceUser.characterTextures:type_name -> CharacterTextureMessage
+	301, // 405: SpaceUser.roomName:type_name -> google.protobuf.StringValue
+	301, // 406: SpaceUser.visitCardUrl:type_name -> google.protobuf.StringValue
+	301, // 407: SpaceUser.jitsiParticipantId:type_name -> google.protobuf.StringValue
+	301, // 408: SpaceUser.chatID:type_name -> google.protobuf.StringValue
+	272, // 409: AddSpaceUserMessage.user:type_name -> SpaceUser
+	272, // 410: InitSpaceUsersMessage.users:type_name -> SpaceUser
+	272, // 411: UpdateSpaceUserMessage.user:type_name -> SpaceUser
+	304, // 412: UpdateSpaceUserMessage.updateMask:type_name -> google.protobuf.FieldMask
+	272, // 413: UpdateSpaceUserPusherToFrontMessage.user:type_name -> SpaceUser
+	304, // 414: UpdateSpaceUserPusherToFrontMessage.updateMask:type_name -> google.protobuf.FieldMask
+	272, // 415: SyncSpaceUsersMessage.users:type_name -> SpaceUser
+	272, // 416: AddSpaceUserToNotifyMessage.user:type_name -> SpaceUser
+	272, // 417: DeleteSpaceUserToNotifyMessage.user:type_name -> SpaceUser
+	288, // 418: AddSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
+	288, // 419: RemoveSpaceFilterMessage.spaceFilterMessage:type_name -> SpaceFilterMessage
+	302, // 420: SaveVariableRequest.value:type_name -> google.protobuf.Value
+	302, // 421: EventResponse.data:type_name -> google.protobuf.Value
+	302, // 422: DispatchEventRequest.data:type_name -> google.protobuf.Value
+	423, // [423:423] is the sub-list for method output_type
+	423, // [423:423] is the sub-list for method input_type
+	423, // [423:423] is the sub-list for extension type_name
+	423, // [423:423] is the sub-list for extension extendee
+	0,   // [0:423] is the sub-list for field type_name
 }
 
 func init() { file_messages_proto_init() }
@@ -24056,7 +24146,7 @@ func file_messages_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_messages_proto_rawDesc), len(file_messages_proto_rawDesc)),
-			NumEnums:      14,
+			NumEnums:      15,
 			NumMessages:   284,
 			NumExtensions: 0,
 			NumServices:   0,

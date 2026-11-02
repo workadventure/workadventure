@@ -303,6 +303,41 @@
       "null"
      ]
     },
+    "captureWidth": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "captureHeight": {
+     "anyOf": [
+      {
+       "type": "integer"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
+    "qualitySetting": {
+     "anyOf": [
+      {
+       "type": "string",
+       "enum": [
+        "low",
+        "recommended",
+        "high"
+       ]
+      },
+      {
+       "type": "null"
+      }
+     ]
+    },
     "encodeMsPerFrame": {
      "type": [
       "number",
@@ -407,6 +442,9 @@
     "decodeSeconds",
     "captureFps",
     "captureTargetFps",
+    "captureWidth",
+    "captureHeight",
+    "qualitySetting",
     "encodeMsPerFrame",
     "cpuLimitedRatio",
     "bandwidthLimitedRatio",
@@ -1344,6 +1382,121 @@
     "streamCategory",
     "codec",
     "transportType"
+   ],
+   "additionalProperties": true
+  }
+ },
+ "media.codec.probed": {
+  "source": "front",
+  "properties": {
+   "type": "object",
+   "properties": {
+    "browser": {
+     "type": "string",
+     "enum": [
+      "chrome",
+      "edge",
+      "firefox",
+      "safari",
+      "other"
+     ]
+    },
+    "os": {
+     "type": "string",
+     "enum": [
+      "windows",
+      "mac",
+      "linux",
+      "chromeos",
+      "android",
+      "ios",
+      "other"
+     ]
+    },
+    "av1Encode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "av1Decode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "vp9Encode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "vp9Decode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "h264Encode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "h264Decode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "h265Encode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    },
+    "h265Decode": {
+     "type": "string",
+     "enum": [
+      "hardware",
+      "software",
+      "unsupported",
+      "unknown"
+     ]
+    }
+   },
+   "required": [
+    "browser",
+    "os",
+    "av1Encode",
+    "av1Decode",
+    "vp9Encode",
+    "vp9Decode",
+    "h264Encode",
+    "h264Decode",
+    "h265Encode",
+    "h265Decode"
    ],
    "additionalProperties": true
   }
