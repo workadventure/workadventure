@@ -1014,8 +1014,9 @@
                 <!-- The input is disabled until the unsent messages are retried: say so here, where the user is. -->
                 <RefreshChat />
             {/if}
+            <!-- A copy: the proximity room pushes into the same array, which a prop would not see change. -->
             <TypingUsers
-                typingMembers={$initializationState === "ready" ? $typingMembers : []}
+                typingMembers={$initializationState === "ready" ? [...$typingMembers] : []}
                 isDirect={$roomTypeStore === "direct"}
             />
             {#key room}
