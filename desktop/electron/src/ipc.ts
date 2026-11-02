@@ -5,7 +5,8 @@ import path from "path";
 import { pathToFileURL } from "url";
 import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
 import settings from "./settings";
-import { setKeepAwake, setUnreadCount, showNotification, type ShowNotificationOptions } from "./system-integration";
+import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadventure/desktop-api";
+import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
     dismissCompanion,
@@ -53,7 +54,7 @@ const DESKTOP_CAPTURER_MIN_INTERVAL_MS = 250;
 
 type CapturerCacheEntry = {
     at: number;
-    result: Array<{ id: string; name: string; thumbnailURL: string; display_id?: number }>;
+    result: DesktopCapturerSource[];
 };
 const desktopCapturerCacheByFrame = new Map<string, CapturerCacheEntry>();
 
@@ -160,7 +161,7 @@ export function emitCameraToggle() {
     getControllingWorldContents()?.send("app:on-camera-toggle");
 }
 
-function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | undefined {
+function normalizeNotifyPayload(payload: unknown): DesktopNotificationPayload | undefined {
     if (typeof payload === "string") {
         // notify(text), as in contract 1: the text is the body.
         const body = payload.trim();

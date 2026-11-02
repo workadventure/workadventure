@@ -1,4 +1,5 @@
 import { app, desktopCapturer, dialog, shell, systemPreferences } from "electron";
+import type { DesktopScreenPermission } from "@workadventure/desktop-api";
 import ElectronLog from "electron-log";
 import { t } from "./i18n";
 import { getWindow } from "./window";
@@ -11,9 +12,7 @@ const SCREEN_RECORDING_SETTINGS = "x-apple.systempreferences:com.apple.preferenc
  * starts: granted while the app runs, it only applies after a restart. It does not tell "never asked"
  * from "denied", hence a single "missing" state.
  */
-export type ScreenPermission = "granted" | "missing" | "not-needed";
-
-export function screenPermission(): ScreenPermission {
+export function screenPermission(): DesktopScreenPermission {
     if (process.platform !== "darwin") {
         return "not-needed";
     }
@@ -24,7 +23,7 @@ export function screenPermission(): ScreenPermission {
  * macOS has no request API for screen recording: a capture attempt lists the app in System Settings
  * (with macOS's own prompt the first time), which is then opened on the right pane.
  */
-export async function requestScreenPermission(): Promise<ScreenPermission> {
+export async function requestScreenPermission(): Promise<DesktopScreenPermission> {
     if (screenPermission() !== "missing") {
         return screenPermission();
     }

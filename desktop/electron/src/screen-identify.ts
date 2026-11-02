@@ -1,4 +1,5 @@
 import { BrowserWindow, desktopCapturer, screen } from "electron";
+import type { DesktopCapturerSource } from "@workadventure/desktop-api";
 import ElectronLog from "electron-log";
 import { nativeLocale, t } from "./i18n";
 import { textDirection } from "./native-locale-policy";
@@ -10,13 +11,7 @@ import path from "path";
  * the caller uses to start sharing — and which lets the meeting bar target the exact display.
  */
 
-export type IdentifiedScreenSource = {
-    id: string;
-    name: string;
-    thumbnailURL: string;
-    display_id?: number;
-    type: "screen";
-};
+export type IdentifiedScreenSource = DesktopCapturerSource & { type: "screen" };
 
 let windows: BrowserWindow[] = [];
 const displayIdByWebContentsId = new Map<number, number>();
