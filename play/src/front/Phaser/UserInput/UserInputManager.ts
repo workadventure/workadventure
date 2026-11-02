@@ -3,7 +3,6 @@ import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
-import LL from "../../../i18n/i18n-svelte";
 
 import Key = Phaser.Input.Keyboard.Key;
 import Pointer = Phaser.Input.Pointer;
@@ -12,7 +11,7 @@ import GameObject = Phaser.GameObjects.GameObject;
 // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
-interface UserInputManagerDatum extends Shortcut {
+interface UserInputManagerDatum {
     keyInstance?: Key;
     event: UserInputEvent;
 }
@@ -30,14 +29,6 @@ export enum UserInputEvent {
 // The reason why the controls are disabled
 // The MessageEventSource type means the controls where disabled by the scripting API in the related iframe
 type DisableControlsReason = "store" | "explorerTool" | "errorScreen" | MessageEventSource;
-
-export interface Shortcut {
-    key: string;
-    description: string;
-    ctrlKey?: boolean;
-    altKey?: boolean;
-    shiftKey?: boolean;
-}
 
 //we cannot use a map structure so we have to create a replacement
 export class ActiveEventList {
@@ -105,82 +96,56 @@ export class UserInputManager {
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
-                key: "Z",
-                description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
-                key: "W",
-                description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
-                key: "Q",
-                description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
-                key: "A",
-                description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
-                key: "S",
-                description: get(LL).menu.shortcuts.moveDown(),
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
-                key: "D",
-                description: get(LL).menu.shortcuts.moveRight(),
             },
 
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
-                key: "Up",
-                description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
-                key: "Left",
-                description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
-                key: "Down",
-                description: get(LL).menu.shortcuts.moveDown(),
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
-                key: "Right",
-                description: get(LL).menu.shortcuts.moveRight(),
             },
 
             {
                 event: UserInputEvent.SpeedUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
-                key: "Shift",
-                description: get(LL).menu.shortcuts.speedUp(),
             },
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
-                key: "Space",
-                description: get(LL).menu.shortcuts.interact(),
             },
             {
                 event: UserInputEvent.Follow,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
-                key: "F",
-                description: get(LL).menu.shortcuts.follow(),
             },
         ];
     }
@@ -217,10 +182,6 @@ export class UserInputManager {
             console.warn(e);
         }
         this.isInputDisabled = false;
-    }
-
-    get keysCodeList(): Shortcut[] {
-        return this.keysCode;
     }
 
     get isControlsEnabled() {
