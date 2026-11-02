@@ -139,6 +139,7 @@ import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore
 import type { AddPlayerEvent } from "../../Api/Events/AddPlayerEvent";
 
 import { chatVisibilityStore, forceRefreshChatStore } from "../../Stores/ChatStore";
+import { announce } from "../../Stores/LiveAnnouncerStore";
 import type { HasPlayerMovedInterface } from "../../Api/Events/HasPlayerMovedInterface";
 import { extensionModuleStore, gameSceneIsLoadedStore, gameSceneStore } from "../../Stores/GameSceneStore";
 import { myCameraBlockedStore, myMicrophoneBlockedStore } from "../../Stores/MyMediaStore";
@@ -4620,7 +4621,15 @@ ${escapedMessage}
         }
 
         if (this.currentPlayerGroupId === groupPositionMessage.groupId) {
+            const wasLocked = get(currentPlayerGroupLockStateStore);
             currentPlayerGroupLockStateStore.set(groupPositionMessage.locked);
+            if (wasLocked !== undefined && wasLocked !== groupPositionMessage.locked) {
+                announce(
+                    groupPositionMessage.locked
+                        ? get(LL).notification.a11y.bubbleLocked()
+                        : get(LL).notification.a11y.bubbleUnlocked(),
+                );
+            }
         }
 
         // TODO: keep a reference to the group sprite in the conversationBubble

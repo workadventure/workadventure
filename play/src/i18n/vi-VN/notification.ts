@@ -17,6 +17,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     removedFromConversation: "Một người điều hành đã cho bạn rời cuộc trò chuyện.",
     actionFailed: "Không thể hoàn tất thao tác này",
     announcement: "Thông báo chung",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "Tin nhắn riêng từ {sender}: {excerpt}",
+        mention: "{sender} đã nhắc đến bạn trong {room}: {excerpt}",
+        roomMessage: "{sender} trong {room}: {excerpt}",
+        bubbleLocked: "Cuộc trò chuyện đã bị khóa: không ai khác có thể tham gia",
+        bubbleUnlocked: "Cuộc trò chuyện đã được mở khóa",
+        handRaised: "{name} đã giơ tay",
+        megaphone: "{name} đang nói qua loa phóng thanh",
+    },
     help: {
         title: "Quyền thông báo bị từ chối",
         permissionDenied: "Quyền bị từ chối",

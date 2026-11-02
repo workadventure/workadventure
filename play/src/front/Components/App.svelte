@@ -37,6 +37,7 @@
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
+    import LiveAnnouncer from "./LiveAnnouncer.svelte";
 
     let WebGLRenderer = Phaser.Renderer.WebGL.WebGLRenderer;
     let game: Game | undefined = $state();
@@ -275,6 +276,8 @@
         }
     });
 </script>
+
+<LiveAnnouncer />
 
 {#if browserNotSupported}
     <BrowserNotSupported />

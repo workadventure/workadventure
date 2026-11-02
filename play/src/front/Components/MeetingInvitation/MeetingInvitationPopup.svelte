@@ -2,11 +2,18 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { meetingInvitationRequestStore } from "../../Stores/MeetingInvitationStore";
+    import { announce } from "../../Stores/LiveAnnouncerStore";
     import Button from "../UI/Button.svelte";
     import WokaFromUserId from "../Woka/WokaFromUserId.svelte";
     import { IconUsersGroup } from "@wa-icons";
 
     let request = $derived($meetingInvitationRequestStore);
+
+    $effect(() => {
+        if (request) {
+            announce($LL.chat.meetingInvitation.title({ name: request.senderName }), "assertive");
+        }
+    });
 
     function onAccept() {
         gameManager.getCurrentGameScene().inviteManager?.handleAccept({

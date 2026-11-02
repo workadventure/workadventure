@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
+import Map from "./utils/map";
 import { getPage } from "./utils/auth";
+import { evaluateScript } from "./utils/scripting";
 import { play_url, publicTestMapUrl } from "./utils/urls";
 
 const MAP_URL = new URL(publicTestMapUrl("tests/E2E/empty.json", "accessibility"), play_url).toString();
@@ -52,5 +54,29 @@ test.describe("Accessibility @nomobile", () => {
         await microphone.focus();
         await page.keyboard.press("Space");
         await expect(microphone).toHaveAttribute("aria-pressed", before === "true" ? "false" : "true");
+    });
+});
+
+test.describe("Screen reader announcements @nomobile @nowebkit", () => {
+    test("someone joining or leaving my bubble is announced", async ({ browser }) => {
+        const url = MAP_URL;
+        await using alice = await getPage(browser, "Alice", url);
+        await using bob = await getPage(browser, "Bob", url);
+
+        // Both spawn on the same tile, so they may already share a bubble: move Bob away and let any announcement expire.
+        const aliceRegion = alice.getByTestId("liveAnnouncer");
+        const position = await evaluateScript(alice, async () => WA.player.getPosition());
+        await Map.teleportToPosition(bob, position.x + 20 * 32, position.y);
+        await expect(aliceRegion).not.toHaveAttribute("data-polite", /Bob/, { timeout: 15_000 });
+
+        await Map.teleportToPosition(bob, position.x, position.y);
+        await expect(aliceRegion).toHaveAttribute("data-polite", /New discussion with Bob|Bob joined/, {
+            timeout: 30_000,
+        });
+
+        // The join announcement expires, then the leave is announced.
+        await expect(aliceRegion).not.toHaveAttribute("data-polite", /Bob/, { timeout: 15_000 });
+        await Map.teleportToPosition(bob, position.x + 20 * 32, position.y);
+        await expect(aliceRegion).toHaveAttribute("data-polite", /Bob has left/, { timeout: 30_000 });
     });
 });

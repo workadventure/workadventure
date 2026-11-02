@@ -17,6 +17,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     removedFromConversation: "Moderator je će z rozmołwy wotstronił.",
     actionFailed: "Tuta akcija njeje so poradźiła",
     announcement: "Připowěźeńka",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "Priwatna powěsć wot {sender}: {excerpt}",
+        mention: "{sender} je was w {room} naspomnił: {excerpt}",
+        roomMessage: "{sender} w {room}: {excerpt}",
+        bubbleLocked: "Rozmołwa je zawrjena: nichtó dalši njemóže přistupić",
+        bubbleUnlocked: "Rozmołwa je zaso wotewrjena",
+        handRaised: "{name} je ruku zběhnył",
+        megaphone: "{name} rěči přez megafon",
+    },
     help: {
         title: "Přistup k powěźeńkam wotpokazany",
         permissionDenied: "Přistup wotpokazany",

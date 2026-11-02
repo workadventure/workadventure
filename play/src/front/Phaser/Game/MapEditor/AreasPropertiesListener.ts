@@ -206,7 +206,13 @@ export class AreasPropertiesListener {
 
             // Add new notification to show at the user that he entered a new area
             if (areaData.name && areaData.name !== "") {
-                notificationPlayingStore.playNotification(areaData.name, "icon-tool-area.png", areaData.id);
+                // With the chat open, its "You entered" banner (role=status) says it already.
+                notificationPlayingStore.playNotification(
+                    areaData.name,
+                    "icon-tool-area.png",
+                    areaData.id,
+                    !get(chatVisibilityStore) && get(LL).chat.enteredZone.title({ zoneName: areaData.name }),
+                );
             }
 
             // get area from area data
