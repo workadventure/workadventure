@@ -167,3 +167,21 @@ func TestAVideoSampleOfAJoinedSpaceIsReported(t *testing.T) {
 		t.Fatalf("%+v", sample)
 	}
 }
+
+// A sender's capture size and quality setting are reported on its outbound samples only, and a size above 65535 is dropped.
+func TestASenderSetupIsReportedOnlyOnItsOutboundSamples(t *testing.T) {
+	width, height, level := uint32(1280), uint32(70_000), pb.VideoQualityLevel_VIDEO_QUALITY_LEVEL_HIGH
+	sample := &pb.VideoQualitySampleMessage{CaptureWidth: &width, CaptureHeight: &height, QualitySetting: &level}
+
+	out := map[string]any{}
+	counterProps(sample, "outbound", out)
+	if out["captureWidth"] != uint32(1280) || out["captureHeight"] != nil || out["qualitySetting"] != "high" {
+		t.Fatalf("outbound: %+v", out)
+	}
+
+	in := map[string]any{}
+	counterProps(sample, "inbound", in)
+	if in["captureWidth"] != nil || in["qualitySetting"] != nil {
+		t.Fatalf("inbound: %+v", in)
+	}
+}

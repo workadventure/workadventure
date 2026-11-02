@@ -56,7 +56,7 @@ func TestTheSampleCountersAreKeptOnlyWhenPlausible(t *testing.T) {
 	}
 	out := map[string]any{}
 	counterProps(&pb.VideoQualitySampleMessage{CaptureFps: f(30), CpuLimitedRatio: f(2), WindowSeconds: f(5), RoundTripTimeMs: f(40)}, "outbound", out)
-	if out["captureFps"] != 30.0 || out["cpuLimitedRatio"] != nil || out["windowSeconds"] != nil || out["roundTripTimeMs"] != nil || len(out) != 21 {
+	if out["captureFps"] != 30.0 || out["cpuLimitedRatio"] != nil || out["windowSeconds"] != nil || out["roundTripTimeMs"] != nil || len(out) != 24 {
 		t.Fatalf("outbound: %v (%d)", out, len(out))
 	}
 }

@@ -214,6 +214,18 @@ func counterProps(v *pb.VideoQualitySampleMessage, direction string, props map[s
 			props[k] = *x
 		}
 	}
+	// The sender's setup: the size its capture delivers (a size above 65535 is dropped) and its quality setting.
+	for k, x := range map[string]*uint32{"captureWidth": v.CaptureWidth, "captureHeight": v.CaptureHeight} {
+		if props[k] = nil; outbound && x != nil && *x <= 65_535 {
+			props[k] = *x
+		}
+	}
+	props["qualitySetting"] = nil
+	if outbound && v.QualitySetting != nil {
+		if q := map[pb.VideoQualityLevel]string{0: "low", 1: "recommended", 2: "high"}[*v.QualitySetting]; q != "" {
+			props["qualitySetting"] = q
+		}
+	}
 }
 
 // plausible is the value when wanted, finite and in [0, max], else nil (as the TS pusher's plausible()).
