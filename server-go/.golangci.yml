@@ -1,0 +1,47 @@
+version: "2"
+run:
+  tests: true
+linters:
+  default: none
+  enable: [errcheck, govet, staticcheck, unused, ineffassign, gosec, bodyclose, misspell]
+  settings:
+    errcheck:
+      # Closing what was only read (a response body, an uploaded file, a zip entry) and dropping a request's
+      # temporary files cannot lose data: their errors are ignored. A written file's Close is still checked.
+      exclude-functions:
+        - (io.ReadCloser).Close
+        - (io.Closer).Close
+        - (mime/multipart.File).Close
+        - (*mime/multipart.Form).RemoveAll
+    staticcheck:
+      checks:
+        - all
+        # The error strings are the TS server's, word for word: the front shows them and the E2E compare them.
+        - -ST1005
+        # `!(a || b)` reads as the TS condition it ports; De Morgan would not make it clearer.
+        - -QF1001
+        # Off by default in golangci-lint (package and doc comment forms, naming).
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
+  exclusions:
+    generated: strict
+    paths: [internal/pb]
+    # Baseline of the findings present when the linters were introduced: one rule = one file + one linter + one
+    # message, so a NEW finding (another file or message) still fails the job. Fix them, then delete the rule.
+    rules:
+      # Tests write fixtures with plain permissions, read fixed paths, use math/rand and the MD5 that S3 asks for:
+      # gosec's rules are for the server's code.
+      - path: _test\.go$
+        linters: [gosec]
+      # The load generator: math/rand positions and int32 coordinates of a test map are what it wants.
+      - path: ^cmd/loadbot/
+        linters: [gosec]
+        text: 'G115|G404'
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  uniq-by-line: false

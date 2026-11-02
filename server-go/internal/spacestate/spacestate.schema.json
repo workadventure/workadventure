@@ -1,0 +1,295 @@
+{
+  "$ref": "#/definitions/SpaceState",
+  "definitions": {
+    "SpaceState": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "$ref": "#/definitions/SpaceKind"
+        },
+        "raisedHands": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RaisedHandEntry"
+          }
+        },
+        "floorHolders": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FloorHolderEntry"
+          }
+        },
+        "recording": {
+          "$ref": "#/definitions/RecordingState"
+        },
+        "polls": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProximityPoll"
+          }
+        },
+        "questions": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProximityQuestion"
+          }
+        }
+      },
+      "required": [
+        "raisedHands",
+        "floorHolders",
+        "recording",
+        "polls",
+        "questions"
+      ]
+    },
+    "SpaceKind": {
+      "type": "string",
+      "enum": [
+        "bubble",
+        "area",
+        "megaphone",
+        "speaker_zone"
+      ]
+    },
+    "RaisedHandEntry": {
+      "type": "object",
+      "properties": {
+        "spaceUserId": {
+          "type": "string",
+          "minLengthUTF16": 1
+        },
+        "name": {
+          "type": "string"
+        },
+        "at": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spaceUserId",
+        "name",
+        "at"
+      ]
+    },
+    "FloorHolderEntry": {
+      "type": "object",
+      "properties": {
+        "spaceUserId": {
+          "type": "string",
+          "minLengthUTF16": 1
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "spaceUserId",
+        "name"
+      ]
+    },
+    "RecordingStatus": {
+      "type": "string",
+      "enum": [
+        "idle",
+        "starting",
+        "recording",
+        "stopping"
+      ]
+    },
+    "RecordingState": {
+      "type": "object",
+      "properties": {
+        "recording": {
+          "type": "boolean"
+        },
+        "recorder": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/definitions/RecordingStatus"
+        }
+      },
+      "required": [
+        "recording",
+        "recorder",
+        "status"
+      ]
+    },
+    "ProximityPollAnswer": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLengthUTF16": 1,
+          "maxLengthUTF16": 100
+        },
+        "text": {
+          "type": "string",
+          "minLengthUTF16": 1,
+          "maxLengthUTF16": 240
+        }
+      },
+      "required": [
+        "id",
+        "text"
+      ]
+    },
+    "ProximityPollVote": {
+      "type": "object",
+      "properties": {
+        "answerIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLengthUTF16": 1,
+            "maxLengthUTF16": 100
+          },
+          "maxItems": 20
+        },
+        "updatedAt": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "answerIds",
+        "updatedAt"
+      ]
+    },
+    "ProximityPoll": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLengthUTF16": 1,
+          "maxLengthUTF16": 100
+        },
+        "question": {
+          "type": "string",
+          "minLengthUTF16": 1,
+          "maxLengthUTF16": 340
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "open",
+            "closed"
+          ]
+        },
+        "answers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ProximityPollAnswer"
+          },
+          "minItems": 2,
+          "maxItems": 20
+        },
+        "maxSelections": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "senderId": {
+          "type": "string",
+          "minLengthUTF16": 1
+        },
+        "senderName": {
+          "type": "string",
+          "maxLengthUTF16": 256
+        },
+        "createdAt": {
+          "type": "integer"
+        },
+        "end": {
+          "type": "object",
+          "properties": {
+            "closingMessage": {
+              "type": "string",
+              "maxLengthUTF16": 500
+            },
+            "closedAt": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "closedAt"
+          ]
+        },
+        "votes": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/ProximityPollVote"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "question",
+        "kind",
+        "answers",
+        "maxSelections",
+        "senderId",
+        "createdAt",
+        "votes"
+      ]
+    },
+    "ProximityQuestion": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLengthUTF16": 1,
+          "maxLengthUTF16": 100
+        },
+        "body": {
+          "type": "string",
+          "minLengthUTF16": 1,
+          "maxLengthUTF16": 500
+        },
+        "senderId": {
+          "type": "string",
+          "minLengthUTF16": 1
+        },
+        "senderName": {
+          "type": "string",
+          "maxLengthUTF16": 256
+        },
+        "createdAt": {
+          "type": "integer"
+        },
+        "answer": {
+          "type": "object",
+          "properties": {
+            "moderatorId": {
+              "type": "string",
+              "minLengthUTF16": 1
+            },
+            "answeredAt": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "moderatorId",
+            "answeredAt"
+          ]
+        },
+        "upvotes": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "body",
+        "senderId",
+        "createdAt",
+        "upvotes"
+      ]
+    }
+  }
+}

@@ -1,0 +1,490 @@
+// Package httpapi serves the HTTP routes the front and the admin call: the initial HTML page, authentication,
+// map details, woka lists, probes and metrics. It is the HTTP adapter of the server.
+package httpapi
+
+import (
+	"context"
+	"crypto/rand"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"html"
+	"log/slog"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/admin"
+	"github.com/workadventure/workadventure/server-go/internal/auth"
+	"github.com/workadventure/workadventure/server-go/internal/config"
+	"github.com/workadventure/workadventure/server-go/internal/httpx"
+	"github.com/workadventure/workadventure/server-go/internal/metrics"
+	"github.com/workadventure/workadventure/server-go/internal/netguard"
+)
+
+type API struct {
+	cfg     *config.Config
+	auth    *auth.Manager
+	admin   admin.Admin
+	front   *FrontAssets
+	version string
+	oidc    *openID // nil without OpenID
+	maps    mapReader
+}
+
+// mapReader reads the Tiled map a room plays (the WebSocket server does, for the room variables).
+type mapReader interface {
+	TiledMap(ctx context.Context, roomURL string) ([]byte, error)
+}
+
+// New returns the whole HTTP handler. ws handles /ws/room.
+func New(cfg *config.Config, a *auth.Manager, adm admin.Admin, front *FrontAssets, ws http.Handler, version string) http.Handler {
+	api := &API{cfg: cfg, auth: a, admin: adm, front: front, version: version, oidc: newOpenID(cfg)}
+	mux := http.NewServeMux()
+
+	mux.Handle("/ws/room", ws)
+	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, "pong") })
+	mux.HandleFunc("GET /ready", func(w http.ResponseWriter, _ *http.Request) {
+		if front.Template() == nil {
+			text(w, http.StatusServiceUnavailable, "not ready")
+			return
+		}
+		text(w, http.StatusOK, "ready")
+	})
+	// The protocol hash this server speaks, for the SaaS pipeline (it checked a file of the TS play pod).
+	mux.HandleFunc("GET /api-version", func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, front.APIVersion()) })
+	if cfg.PrometheusPort == 0 {
+		mux.Handle("GET /metrics", metrics.Handler(false, cfg.PrometheusToken))
+	}
+
+	mux.HandleFunc("POST /anonymLogin", api.anonymLogin)
+	if admin, ok := ws.(interface {
+		GlobalEvent(http.ResponseWriter, *http.Request)
+		Rooms(http.ResponseWriter, *http.Request)
+		RoomRefresh(http.ResponseWriter, *http.Request)
+		AdminMessage(http.ResponseWriter, *http.Request)
+		ExternalModuleEvent(http.ResponseWriter, *http.Request)
+		AdminRooms(http.ResponseWriter, *http.Request)
+		RoomArea(http.ResponseWriter, *http.Request)
+		Dump(http.ResponseWriter, *http.Request)
+		CloseSpaceConnection(http.ResponseWriter, *http.Request)
+	}); ok {
+		mux.HandleFunc("GET /dump", admin.Dump)
+		mux.HandleFunc("POST /debug/close-space-connection", admin.CloseSpaceConnection)
+		mux.HandleFunc("/ws/admin/rooms", admin.AdminRooms)
+		mux.HandleFunc("/roomArea", admin.RoomArea)
+		mux.HandleFunc("POST /global/event", admin.GlobalEvent)
+		mux.HandleFunc("GET /rooms", admin.Rooms)
+		mux.HandleFunc("POST /room/refresh", admin.RoomRefresh)
+		mux.HandleFunc("POST /message", admin.AdminMessage)
+		mux.HandleFunc("POST /external-module/event", admin.ExternalModuleEvent)
+	}
+	api.maps, _ = ws.(mapReader)
+	api.registerOpenID(mux)
+	mux.HandleFunc("GET /me", api.me)
+	mux.HandleFunc("GET /.well-known/cf-custom-hostname-challenge/", api.cfChallenge)
+	mux.HandleFunc("GET /profile-callback", api.profileCallback)
+	for p, what := range map[string]admin.SaveWhat{"/save-name": admin.SaveName, "/save-textures": admin.SaveTextures,
+		"/save-companion-texture": admin.SaveCompanion} {
+		mux.HandleFunc("POST "+p, api.save(what))
+		mux.HandleFunc("OPTIONS "+p, func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, "") })
+	}
+	mux.HandleFunc("GET /map", api.mapDetails)
+	mux.HandleFunc("GET /woka/list", api.authenticatedList(adm.WokaList))
+	mux.HandleFunc("GET /companion/list", api.authenticatedList(adm.CompanionList))
+	mux.HandleFunc("OPTIONS /woka/list", func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, "") })
+	mux.HandleFunc("OPTIONS /companion/list", func(w http.ResponseWriter, _ *http.Request) { text(w, http.StatusOK, "") })
+	mux.HandleFunc("GET /local-script", localScript)
+	mux.HandleFunc("GET /server.json", api.serverJSON)
+	if cfg.EnableOpenAPIEndpoint {
+		api.swaggerRoutes(mux)
+	}
+	mux.HandleFunc("GET /manifest.json", api.manifest)
+
+	for _, p := range []string{"/_/", "/@/", "/~/"} {
+		mux.HandleFunc("GET "+p, api.displayFront)
+		mux.HandleFunc("POST "+p, api.displayFront)
+	}
+	mux.HandleFunc("GET /{$}", api.displayFront)
+	mux.HandleFunc("GET /login", api.displayFront)
+	mux.HandleFunc("GET /jwt", api.displayFront)
+	mux.HandleFunc("GET /index.html", func(w http.ResponseWriter, r *http.Request) { http.Redirect(w, r, "/", http.StatusSeeOther) })
+
+	// Files that must stay same-origin with the page. Ingress rules should route them to the front container
+	// directly; this proxy is the fallback when they don't (RemoteFrontAssets.registerStaticRoutes).
+	if cfg.AssetsInternalURL != "" {
+		proxy := assetsProxy(cfg.AssetsInternalURL)
+		for _, p := range []string{"/assets/", "/static/", "/resources/", "/collections/", "/iframe_api.js", "/iframe_api.js.map",
+			"/service-worker-prod.js"} {
+			mux.Handle("GET "+p, proxy)
+		}
+	}
+
+	mux.HandleFunc("/", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		text(w, http.StatusNotFound, "Not Found")
+	})
+	return cors(cfg, mux)
+}
+
+func text(w http.ResponseWriter, status int, body string) {
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(status)
+	_, _ = w.Write([]byte(body)) //nolint:gosec // text/plain, never HTML
+}
+
+// cors mirrors the cors() middleware of the pusher: ALLOWED_CORS_ORIGIN, "*" reflecting the caller's origin.
+func cors(cfg *config.Config, next http.Handler) http.Handler {
+	allowed := cfg.AllowedCORSOrigin
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+		switch {
+		case allowed == "*" && origin != "":
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Add("Vary", "Origin")
+		case allowed == "":
+			w.Header().Set("Access-Control-Allow-Origin", "*")
+		default:
+			w.Header().Set("Access-Control-Allow-Origin", allowed)
+			w.Header().Add("Vary", "Origin")
+		}
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		if r.Method == http.MethodOptions && r.Header.Get("Access-Control-Request-Method") != "" {
+			w.Header().Set("Access-Control-Allow-Methods", "GET,POST,OPTIONS,PUT,PATCH,DELETE")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type,Authorization,Origin,X-Requested-With,Accept,Pragma,Cache-Control,baggage,sentry-trace")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (api *API) anonymLogin(w http.ResponseWriter, _ *http.Request) {
+	if api.cfg.DisableAnonymous {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	userUUID := newUUID()
+	token, err := api.auth.Create(auth.Token{Identifier: userUUID})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"authToken": token, "userUuid": userUUID})
+}
+
+// newUUID returns a random (version 4) UUID.
+func newUUID() string {
+	var b [16]byte
+	_, _ = rand.Read(b[:])
+	b[6] = b[6]&0x0f | 0x40
+	b[8] = b[8]&0x3f | 0x80
+	return fmt.Sprintf("%x-%x-%x-%x-%x", b[0:4], b[4:6], b[6:8], b[8:10], b[10:])
+}
+
+func (api *API) me(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	if !q.Has("token") || !q.Has("playUri") {
+		http.Error(w, "Parameters token and playUri are required", http.StatusBadRequest)
+		return
+	}
+	token := q.Get("token")
+	tok, err := api.auth.Verify(token)
+	if err != nil || (tok.AccessToken != "" && api.oidc == nil) {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+	var logged *session
+	if tok.AccessToken != "" {
+		// A logged user: the provider must still accept the access token, renewed if need be. This comes before the
+		// admin call, since the admin may identify the member by the access token.
+		s, err := api.oidc.check(r.Context(), tok)
+		if err != nil {
+			slog.Warn("Error while checking token auth", "error", err)
+			http.Error(w, "Invalid token", http.StatusUnauthorized)
+			return
+		}
+		logged = &s
+		if s.renewed {
+			// A renewal stands for a new login: the name, locale and tags come from the fresh claims, so that a tag
+			// removed on the provider does not live on in a new 30-day token. The front stores the token it gets.
+			tok = api.oidc.withClaims(tok, s.claims)
+			tok.AccessToken, tok.EncryptedRefreshToken = s.accessToken, s.refreshToken
+			if token, err = api.auth.Create(tok); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+	}
+	member, err := api.admin.MemberData(r.Context(), admin.MemberQuery{
+		Identifier: tok.Identifier, AccessToken: tok.AccessToken, PlayURI: q.Get("playUri"), IPAddress: netguard.ClientIP(r, api.cfg.TrustedProxies), Locale: r.Header.Get("Accept-Language"),
+		CharacterTextureIDs: q["localStorageCharacterTextureIds[]"], CompanionTextureID: q.Get("localStorageCompanionTextureId"),
+		Tags: tok.Tags, ChatID: q.Get("chatID"),
+	})
+	var refused *admin.Refusal
+	if errors.As(err, &refused) {
+		httpx.WriteJSON(w, http.StatusOK, refused.Data) // the front shows the admin's error (banned, world full, login needed...)
+		return
+	}
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// MeResponse: the member data plus the token and what it says about the user.
+	b, _ := json.Marshal(member)
+	var resp map[string]any
+	_ = json.Unmarshal(b, &resp)
+	resp["authToken"] = token
+	for k, v := range map[string]string{"username": tok.Username, "locale": tok.Locale, "matrixUserId": tok.MatrixUserID, "matrixServerUrl": api.cfg.MatrixPublicURI} {
+		if v != "" {
+			resp[k] = v
+		}
+	}
+	if logged != nil {
+		// The provider's claims override the member data.
+		if m := claimString(logged.claims, "matrix_url"); m != "" {
+			resp["matrixServerUrl"] = m
+		}
+		for k, v := range logged.claims {
+			resp[k] = v
+		}
+	}
+	httpx.WriteJSON(w, http.StatusOK, resp)
+}
+
+func (api *API) mapDetails(w http.ResponseWriter, r *http.Request) {
+	playURI := r.URL.Query().Get("playUri")
+	if playURI == "" {
+		http.Error(w, "Parameter playUri is required", http.StatusBadRequest)
+		return
+	}
+	q := admin.MapQuery{PlayURI: playURI, Locale: r.Header.Get("Accept-Language")}
+	if raw := r.URL.Query().Get("authToken"); raw != "" {
+		// The pusher reads the user in its own token, even expired; an invalid one is refused.
+		tok, err := api.auth.VerifyIgnoringExpiry(raw)
+		if err != nil {
+			text(w, http.StatusUnauthorized, "The Token is invalid")
+			return
+		}
+		q.UserID, q.AccessToken = tok.Identifier, tok.AccessToken
+	}
+	details, err := api.admin.MapDetails(r.Context(), q)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	front := details.Raw
+	delete(front, "thirdParty") // Jitsi and BBB secrets stay on the server
+	if api.cfg.DisableAnonymous && details.IsRoom() {
+		front["authenticationMandatory"] = true
+	}
+	httpx.WriteJSON(w, http.StatusOK, front)
+}
+
+func (api *API) authenticatedList(list func(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("Authorization")
+		if token == "" {
+			text(w, http.StatusUnauthorized, "Undefined authorization header")
+			return
+		}
+		tok, err := api.auth.Verify(token)
+		if err != nil {
+			text(w, http.StatusUnauthorized, "Invalid token sent")
+			return
+		}
+		roomURL := r.URL.Query().Get("roomUrl")
+		if roomURL == "" {
+			text(w, http.StatusBadRequest, "bad roomUrl URL parameter")
+			return
+		}
+		data, err := list(r.Context(), roomURL, tok.Identifier)
+		if err != nil {
+			slog.Error("woka or companion list of the admin", "error", err)
+			text(w, http.StatusInternalServerError, "Error on getting data")
+			return
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		_, _ = w.Write(data)
+	}
+}
+
+func localScript(w http.ResponseWriter, r *http.Request) {
+	script, err := url.Parse(r.URL.Query().Get("script"))
+	if err != nil || script.Scheme == "" || script.Host == "" {
+		text(w, http.StatusBadRequest, "Invalid query parameters")
+		return
+	}
+	if h := script.Hostname(); h != "localhost" && !strings.HasSuffix(h, ".localhost") {
+		text(w, http.StatusBadRequest, "Script URL must be from localhost or *.localhost domain for security reasons")
+		return
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = fmt.Fprintf(w, `<!DOCTYPE html>
+<html>
+  <head>
+    <script src="/iframe_api.js"></script>
+    <script type="module" src="%s"></script>
+  </head>
+  <body>
+  </body>
+</html>`, html.EscapeString(r.URL.Query().Get("script")))
+}
+
+func (api *API) serverJSON(w http.ResponseWriter, _ *http.Request) {
+	version := api.version
+	if api.cfg.NodeEnv != "production" {
+		version += "-dev"
+	}
+	httpx.WriteJSON(w, http.StatusOK, map[string]string{"domain": api.cfg.PusherURL, "name": api.cfg.ServerName, "motd": api.cfg.ServerMotd, "icon": api.cfg.ServerIcon, "version": version})
+}
+
+func fullURL(r *http.Request) string {
+	proto := r.Header.Get("X-Forwarded-Proto")
+	if proto == "" {
+		proto = "http"
+		if r.TLS != nil {
+			proto = "https"
+		}
+	}
+	return proto + "://" + r.Host + r.URL.RequestURI()
+}
+
+func (api *API) displayFront(w http.ResponseWriter, r *http.Request) {
+	tpl := api.front.Template()
+	if tpl == nil {
+		w.Header().Set("Retry-After", "2")
+		text(w, http.StatusServiceUnavailable, "WorkAdventure is starting, please retry in a few seconds.")
+		return
+	}
+	// MetaTagsBuilder: with an admin, the room may redirect, and the world gives its tags and colors.
+	var details admin.MapDetails
+	if api.cfg.AdminAPIURL != "" {
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		details, _ = api.admin.MapDetails(ctx, admin.MapQuery{PlayURI: fullURL(r)})
+		cancel()
+		if to := details.RedirectURL; to != "" {
+			http.Redirect(w, r, to, http.StatusFound)
+			return
+		}
+	}
+	if api.accessKey(w, r) {
+		return
+	}
+	meta := admin.DefaultMetaTags()
+	if tags := details.Metatags; tags != nil {
+		for k, v := range tags {
+			if v != nil {
+				meta[k] = v
+			}
+		}
+	} else {
+		api.mapMetaTags(r, meta)
+	}
+	primary := details.PrimaryColor
+	background := details.BackgroundColor
+	capabilities, _ := json.Marshal(api.admin.Capabilities())
+	env, _ := json.Marshal(api.cfg.FrontEnv)
+	data := map[string]any{
+		"url":                       fullURL(r),
+		"script":                    "window.env = " + string(env) + "\nwindow.capabilities = " + string(capabilities),
+		"msApplicationTileImage":    lastFavIcon(meta["favIcons"]),
+		"posthogApiKey":             api.cfg.FrontEnv.PosthogAPIKey,
+		"posthogUrl":                api.cfg.FrontEnv.PosthogURL,
+		"authToken":                 r.PostFormValue("authToken"),
+		"googleDrivePickerClientId": api.cfg.GoogleDrivePickerClientID,
+		"assetsOrigin":              origin(api.cfg.AssetsURL),
+		"cssVariablesOverride":      cssOverride(primary, background),
+	}
+	for k, v := range meta {
+		data[k] = v
+	}
+	page, err := tpl.Render(data)
+	if err != nil {
+		slog.Error("cannot render the front page", "error", err)
+		http.Error(w, "cannot render the page", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	_, _ = w.Write([]byte(page))
+}
+
+func origin(raw string) string {
+	u, err := url.Parse(raw)
+	if raw == "" || err != nil {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
+}
+
+func (api *API) manifest(w http.ResponseWriter, r *http.Request) {
+	pageURL := r.URL.Query().Get("url")
+	if pageURL == "" {
+		http.Error(w, "Parameter url is required", http.StatusBadRequest)
+		return
+	}
+	meta := admin.DefaultMetaTags()
+	w.Header().Set("Content-Type", "application/manifest+json")
+	_ = json.NewEncoder(w).Encode(map[string]any{
+		"short_name": meta["title"], "name": meta["title"], "icons": meta["manifestIcons"],
+		"start_url":        strings.Replace(pageURL, "http://"+r.Host, "", 1),
+		"background_color": meta["themeColor"], "display_override": []string{"window-control-overlay", "minimal-ui"},
+		"display": "standalone", "orientation": "portrait-primary", "scope": "/", "lang": "en", "theme_color": meta["themeColor"],
+		"shortcuts": []map[string]any{{"name": meta["title"], "short_name": meta["title"], "description": meta["description"], "url": "/",
+			"icons": []map[string]string{{"src": "/static/images/favicons/android-icon-192x192.png", "sizes": "192x192", "type": "image/png"}}}},
+		"description": meta["description"], "screenshots": []any{},
+		"related_applications": []map[string]string{{"platform": "web", "url": "https://workadventu.re"}, {"platform": "play", "url": "https://play.workadventu.re"}},
+	})
+}
+
+func assetsProxy(internalURL string) http.Handler {
+	target, err := url.Parse(internalURL)
+	if err != nil {
+		panic(fmt.Sprintf("ASSETS_INTERNAL_URL: %v", err))
+	}
+	// Only these headers cross, both ways, as the pusher's AssetsProxy.ts: no cookie goes to the front container, and
+	// its CORS headers (nginx-front.conf adds "ACAO: *") never sit next to ours, which browsers reject.
+	// Accept-Encoding is not forwarded: the transport asks for gzip itself and hands over the decompressed body.
+	keep := func(h http.Header, names ...string) http.Header {
+		out := http.Header{}
+		for _, n := range names {
+			if v := h.Values(n); len(v) > 0 {
+				out[http.CanonicalHeaderKey(n)] = v
+			}
+		}
+		return out
+	}
+	return &httputil.ReverseProxy{
+		Rewrite: func(pr *httputil.ProxyRequest) {
+			pr.SetURL(target)
+			pr.Out.Header = keep(pr.In.Header, "If-None-Match", "If-Modified-Since")
+		},
+		ModifyResponse: func(r *http.Response) error {
+			r.Header = keep(r.Header, "Content-Type", "Content-Length", "Cache-Control", "ETag", "Last-Modified", "Expires")
+			return nil
+		},
+	}
+}
+
+// lastFavIcon is the src of the last favicon (msApplicationTileImage).
+func lastFavIcon(icons any) string {
+	switch list := icons.(type) {
+	case []map[string]string:
+		if len(list) > 0 {
+			return list[len(list)-1]["src"]
+		}
+	case []any:
+		if len(list) > 0 {
+			if m, _ := list[len(list)-1].(map[string]any); m != nil {
+				src, _ := m["src"].(string)
+				return src
+			}
+		}
+	}
+	return "/static/images/favicons/favicon-512x512.svg"
+}

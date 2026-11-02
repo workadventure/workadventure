@@ -378,7 +378,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "推荐房间",
         suggestedDescription: "此房间将推荐给加入同一空间的用户。",
-        users: "用户",
         historyVisibility: {
             label: "以前消息的可见性",
             world_readable: "所有消息都可见",
@@ -455,12 +454,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "参与者",
         error: "无法发送邀请",
-        title: "管理参与者",
-        invitations: "邀请",
         participants: "参与者",
-        join: "已加入",
         invite: "已邀请",
         ban: "已封禁",
         kick: "已踢出",
@@ -476,7 +471,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "解除封禁",
             invite: "邀请",
             cancelInvitation: "取消邀请",
-            close: "关闭",
         },
         roles: {
             USER: "用户",
@@ -512,6 +506,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "已加密",
             notEncrypted: "未加密",
             readOnly: "只读",
+            copyRoomId: "复制房间 ID",
         },
         settings: {
             roomType: "房间类型",
@@ -572,6 +567,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "无法加载投票。请重试。",
         pollsPartial: "部分投票无法加载其详细结果。",
         pollFocusError: "无法在时间线中打开此投票。",
+        closeFolderMembers: "关闭文件夹成员",
+        folderMembersHint: "文件夹成员可以加入其中对成员开放的房间。",
     },
     roomMenu: {
         leaveRoom: {

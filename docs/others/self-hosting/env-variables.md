@@ -240,6 +240,15 @@ Environment variables for the Map Storage service.
 | `GRPC_MAX_MESSAGE_SIZE` | Yes | The maximum size of a gRPC message. Defaults to 20 MB. |
 | `BODY_PARSER_JSON_SIZE_LIMIT` | No | The maximum size of JSON request bodies accepted by the body parser (used in PUT / PATCH HTTP requests). Defaults to 100mb. Examples: '50mb', '200mb', '1gb' |
 
+## Go Server
+
+The Go server (`server-go/`) replaces the play, back, map-storage and uploader containers and reads their variables. It also reads these ones:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `TRUSTED_PROXIES` | No | Comma-separated CIDRs of the reverse proxies in front of the server. The client IP (IP bans, logs) is the right-most X-Forwarded-For address that is not one of them, the peer included. Defaults to the private ranges: 127.0.0.0/8,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7 |
+| `RESUME_BUFFER_BUDGET_BYTES` | No | Maximum bytes all the connections keep, together, to replay messages after a short disconnection. Once spent, new connections get no replay buffer and reconnect from scratch after a drop. 0 for no cap. Defaults to 268435456 (256 MiB) |
+
 ## Deprecated Variables
 
 The following variables are deprecated and will be removed in a future version. Please use the `OPENID_*` equivalents instead.

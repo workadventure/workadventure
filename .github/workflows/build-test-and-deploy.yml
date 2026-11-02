@@ -13,6 +13,74 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The Go server (server-go/) replaces the play/pusher, back, map-storage and uploader services. It still needs the
+  # compiled front (it renders its index.html template from ASSETS_INTERNAL_URL), served by the "front" image.
+  build-front:
+    uses: ./.github/workflows/build-multi-arch-image.yml
+    secrets: inherit
+    with:
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/front-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/front'
+      dockerio-image-name: 'thecodingmachine/workadventure-front'
+      # FIXME: Final build should only build on master or tags
+      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
+      dockerfile: play/Dockerfile
+      target: front
+      short_name: front
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./
+
+  # The server refuses a front template whose apiVersionHash differs from its own: the hash is computed at build time
+  # from the same files as `npm run tag-version` (messages/package.json).
+  server-api-version:
+    runs-on: ubuntu-24.04
+    outputs:
+      hash: ${{ steps.hash.outputs.hash }}
+      version: ${{ steps.hash.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compute the API version hash and the release version
+        id: hash
+        run: |
+          echo "hash=$(server-go/api-version.sh)" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./play/package.json').version")" >> "$GITHUB_OUTPUT"
+
+  build-server:
+    needs:
+      - server-api-version
+    uses: ./.github/workflows/build-multi-arch-image.yml
+    secrets: inherit
+    with:
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/server-go-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/server-go'
+      dockerio-image-name: 'thecodingmachine/workadventure-server-go'
+      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch'))) }}
+      dockerfile: server-go/Dockerfile
+      target: prod
+      build-args: |
+        API_VERSION=${{ needs.server-api-version.outputs.hash }}
+        VERSION=${{ needs.server-api-version.outputs.version }}
+      short_name: server-go
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./server-go
+
+  build-maps:
+    uses: ./.github/workflows/build-multi-arch-image.yml
+    secrets: inherit
+    with:
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/maps-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/maps'
+      dockerio-image-name: 'thecodingmachine/workadventure-maps'
+      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
+      dockerfile: maps/Dockerfile
+      short_name: maps
+      sentry_project: maps
+      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
+      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
+      context: ./maps
+
+  # The TypeScript images, built and tested next to the Go server's during the transition.
   build-play:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
@@ -28,7 +96,6 @@ jobs:
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
-
 
   build-back:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -60,21 +127,6 @@ jobs:
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
-  build-maps:
-    uses: ./.github/workflows/build-multi-arch-image.yml
-    secrets: inherit
-    with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/maps-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/maps'
-      dockerio-image-name: 'thecodingmachine/workadventure-maps'
-      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
-      dockerfile: maps/Dockerfile
-      short_name: maps
-      sentry_project: maps
-      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
-      context: ./maps
-
   build-map-storage:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
@@ -90,8 +142,8 @@ jobs:
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
-  end-to-end-tests:
-    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
+  end-to-end-tests-ts:
+    name: "End to end tests (TypeScript) with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
     strategy:
       fail-fast: false
       matrix:
@@ -355,6 +407,263 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: playwright-report-ts-${{ matrix.project }}-${{ matrix.shard }}-${{ matrix.nbShards }}
+          path: tests/playwright-report/
+          retention-days: 30
+
+  end-to-end-tests:
+    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 1
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 2
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 3
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 4
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: chromium
+            parameters: --project=chromium
+            project: chromium
+            shard: 5
+            nbShards: 5
+            renderer: auto
+            ignoreTags: "@nodesktop"
+            shardWeights: "56:32:36:68:40"
+          - browser: firefox
+            parameters: --project=firefox
+            project: firefox
+            shard: 1
+            nbShards: 4
+            renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
+          - browser: firefox
+            parameters: --project=firefox
+            project: firefox
+            shard: 2
+            nbShards: 4
+            renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
+          - browser: firefox
+            parameters: --project=firefox
+            project: firefox
+            shard: 3
+            nbShards: 4
+            renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
+          - browser: firefox
+            parameters: --project=firefox
+            project: firefox
+            shard: 4
+            nbShards: 4
+            renderer: auto
+            ignoreTags: "@nofirefox|@nodesktop"
+            shardWeights: "53:38:26:86"
+          - browser: webkit
+            parameters: --project=webkit
+            project: webkit
+            shard: 1
+            nbShards: 1
+            renderer: headless
+            ignoreTags: "@nowebkit|@nodesktop"
+          - browser: ""
+            parameters: --project=mobilechromium
+            project: mobilechromium
+            shard: 1
+            nbShards: 2
+            renderer: auto
+            ignoreTags: "@nomobile"
+            shardWeights: "33:48"
+          - browser: ""
+            parameters: --project=mobilechromium
+            project: mobilechromium
+            shard: 2
+            nbShards: 2
+            renderer: auto
+            ignoreTags: "@nomobile"
+            shardWeights: "33:48"
+          - browser: ""
+            parameters: --project=mobilefirefox
+            project: mobilefirefox
+            shard: 1
+            nbShards: 1
+            renderer: auto
+            ignoreTags: "@nomobile|@nofirefox"
+          - browser: ""
+            parameters: --project=mobilewebkit
+            project: mobilewebkit
+            shard: 1
+            nbShards: 1
+            renderer: headless
+            ignoreTags: "@nomobile|@nowebkit"
+    needs:
+      - build-front
+      - build-server
+      - build-maps
+    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps ${{ matrix.browser }}
+        working-directory: tests
+      - name: Set up virtual audio output for Firefox
+        if: ${{ contains(matrix.project, 'firefox') }}
+        run: |
+          sudo apt-get install --yes pulseaudio pulseaudio-utils
+          pulseaudio --start --exit-idle-time=-1
+          pactl load-module module-null-sink sink_name=ci_null_sink
+          pactl set-default-sink ci_null_sink
+          pactl info
+      - name: 'Setup .env file'
+        run: cp .env.template .env
+      - uses: rlespinasse/github-slug-action@4.2.3
+      - name: Display pulled version
+        run: echo "Pulling images with tag ${DOCKER_TAG}"
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Fill .env file
+        run: |
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
+          sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
+          sed -i "s/MAP_STORAGE_API_TOKEN=/MAP_STORAGE_API_TOKEN=MYAWESOMEKEY/g" .env  
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
+          sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
+          sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=http:\/\/livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
+          sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/#MAX_DISPLAYED_VIDEOS=16/MAX_DISPLAYED_VIDEOS=6/g" .env
+          sed -i "s/ENABLE_TUTORIAL=true/ENABLE_TUTORIAL=false/g" .env
+        env:
+          KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+
+
+      - name: Download artifact
+        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        uses: actions/download-artifact@v4
+        with:
+          name: front
+          path: /tmp
+      - name: Download artifact
+        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        uses: actions/download-artifact@v4
+        with:
+          name: server-go
+          path: /tmp
+      - name: Download artifact
+        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        uses: actions/download-artifact@v4
+        with:
+          name: maps
+          path: /tmp
+      - name: Load image
+        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
+        run: |
+          docker image load --input /tmp/front.tar.gz
+          docker image load --input /tmp/server-go.tar.gz
+          docker image load --input /tmp/maps.tar.gz
+          docker image ls -a
+      - name: Start WorkAdventure
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up -d --scale egress=2
+
+        
+      - name: Upload test-map
+        run: sleep 5 && npm run upload-test-map
+        working-directory: map-storage
+      - name: Check PR labels
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Run Playwright tests
+        run: npm run test -- ${{ matrix.parameters }} --shard=${{ matrix.shard }}/${{ matrix.nbShards }} --grep-invert "@slow${{ matrix.ignoreTags && matrix.ignoreTags != '' && format('|{0}', matrix.ignoreTags) || '' }}"
+        working-directory: tests
+        env:
+          # `npm run test-prod-like` forces a single override file, hence `npm run test`. The tests restart containers
+          # with these same files (tests/tests/utils/containers.ts).
+          OVERRIDE_DOCKER_COMPOSE: docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml
+          # The "back" no longer exists on its own: restarting it means restarting the server (the play service).
+          DEV_REBOOT_BACK: cd .. && docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml up --force-recreate -d --wait play
+          RENDERER_MODE: ${{ matrix.renderer }}
+          # Playwright's --shard balances by TEST COUNT, which left shards 3.5x apart in wall time
+          # (1249s vs 362s on chromium 4-way). PWTEST_SHARD_WEIGHTS sets each shard's test count
+          # explicitly, so the boundaries can be placed to balance DURATION instead. Regenerate with
+          # tests/scripts/shard-weights.mjs after adding or substantially changing tests.
+          PWTEST_SHARD_WEIGHTS: ${{ matrix.shardWeights }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
+          # Secrets are withheld from forks AND from Dependabot PRs, so test for the secret itself.
+          NO_KLAXOON_SECRET: ${{ secrets.KLAXOON_CLIENT_ID == '' }}
+      - name: Display docker compose logs on failure
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml logs
+        if: failure()
+      - name: Display containers state
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml ps
+        if: failure()
+      - name: Side-load docker compose logs in the playwright report
+        run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml -f docker-compose.server.yml logs > tests/playwright-report/docker-compose.log
+        if: failure()
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: playwright-report-${{ matrix.project }}-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
@@ -507,8 +816,8 @@ jobs:
   #         fail: ${{ steps.poll-pipeline.outputs.failed == 'true' }}
   #         recreate: true
 
-  prod-single-domain-deploy-tests:
-    name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
+  prod-single-domain-deploy-tests-ts:
+    name: "Test production docker compose (TypeScript) (${{ matrix.shard }}/${{ matrix.nbShards }})"
     strategy:
       fail-fast: false
       matrix:
@@ -637,6 +946,147 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
+          name: playwright-report-ts-single-domain-${{ matrix.shard }}-${{ matrix.nbShards }}
+          path: tests/playwright-report/
+          retention-days: 30
+
+  prod-single-domain-deploy-tests:
+    name: "Test production docker compose (${{ matrix.shard }}/${{ matrix.nbShards }})"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: 1
+            nbShards: 2
+          - shard: 2
+            nbShards: 2
+    if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
+    needs:
+      - build-front
+      - build-server
+      - build-maps
+    timeout-minutes: 60
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 24
+      - name: Install dependencies
+        run: npm ci
+        working-directory: tests
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+        working-directory: tests
+      - name: 'Setup .env file'
+        run: cp .env.prod.template .env
+        working-directory: contrib/docker
+      - uses: rlespinasse/github-slug-action@4.2.3
+
+      - name: "Install Room Api client dependencies"
+        run: npm ci
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: "Build Room Api client proto files"
+        run: npm run ts-proto
+        working-directory: "libs/room-api-clients/room-api-client-js"
+
+      - name: Fill .env file
+        run: |
+          sed -i "s/SECRET_KEY=/SECRET_KEY=someSecret/g" .env
+          sed -i "s/VERSION=master/VERSION=${DOCKER_TAG}/g" .env
+          sed -i "s/DOMAIN=workadventure.localhost/DOMAIN=play.workadventure.localhost/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_USER=/MAP_STORAGE_AUTHENTICATION_USER=john.doe/g" .env
+          sed -i "s/MAP_STORAGE_AUTHENTICATION_PASSWORD=/MAP_STORAGE_AUTHENTICATION_PASSWORD=password/g" .env
+          sed -i "s/ADMIN_API_TOKEN=/ADMIN_API_TOKEN=123/g" .env
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/KLAXOON_ENABLED=false/KLAXOON_ENABLED=true/g" .env
+          sed -i "s/KLAXOON_CLIENT_ID=/KLAXOON_CLIENT_ID=${{ env.KLAXOON_CLIENT_ID }}/g" .env
+          sed -i "s/ROOM_API_SECRET_KEY=/ROOM_API_SECRET_KEY=MYAWESOMEKEY/g" .env
+          sed -i "s/OPENID_PROMPT=/OPENID_PROMPT=login/g" .env
+          sed -i "s/MAX_USERS_FOR_WEBRTC=4/MAX_USERS_FOR_WEBRTC=3/g" .env
+          sed -i "s/LIVEKIT_HOST=/LIVEKIT_HOST=https:\/\/livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_API_KEY=/LIVEKIT_API_KEY=devkey/g" .env
+          sed -i "s/LIVEKIT_API_SECRET=/LIVEKIT_API_SECRET=12345678901234567890123456789012/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_ACCESS_KEY=/LIVEKIT_RECORDING_S3_ACCESS_KEY=rustfs-access-key/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_SECRET_KEY=/LIVEKIT_RECORDING_S3_SECRET_KEY=rustfs-secret-access-key/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_REGION=/LIVEKIT_RECORDING_S3_REGION=eu-west-1/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_BUCKET=/LIVEKIT_RECORDING_S3_BUCKET=livekit-recording/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_CDN_ENDPOINT=/LIVEKIT_RECORDING_S3_CDN_ENDPOINT=https:\/\/cdn-livekit.workadventure.localhost/g" .env
+          sed -i "s/LIVEKIT_RECORDING_S3_ENDPOINT=/LIVEKIT_RECORDING_S3_ENDPOINT=https:\/\/rustfs-livekit:9000/g" .env
+          sed -i "s/MAX_PER_GROUP=4/MAX_PER_GROUP=100/g" .env
+          echo "MAX_DISPLAYED_VIDEOS=6" >> .env
+          echo "ENABLE_TUTORIAL=false" >> .env
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          KLAXOON_CLIENT_ID: ${{ secrets.KLAXOON_CLIENT_ID }}
+        working-directory: contrib/docker
+      - name: Generate the self-signed certificate
+        # Served by Traefik as its default certificate, and trusted by the Go server (SSL_CERT_FILE).
+        run: |
+          mkdir -p tests/certs
+          openssl req -x509 -newkey rsa:2048 -nodes -days 2 -subj "/CN=workadventure.localhost" \
+            -addext "subjectAltName=DNS:workadventure.localhost,DNS:*.workadventure.localhost" \
+            -keyout tests/certs/key.pem -out tests/certs/cert.pem
+          chmod a+r tests/certs/key.pem
+        working-directory: contrib/docker
+      - name: Start WorkAdventure
+        run: docker compose -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml up -d --scale egress=2
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Upload test-map
+        run: |
+          sed -i "s/http:/https:/g" tests/assets/maps/empty.wam
+          sleep 10
+          npm run upload-test-map-single-domain
+        working-directory: map-storage
+      - name: Check PR labels
+        id: check-no-flaky
+        if: github.event_name == 'pull_request'
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'no-flaky') }}" == "true" ]]; then
+            echo "has_no_flaky_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_no_flaky_label=false" >> $GITHUB_OUTPUT
+          fi
+          # Traces always record DOM snapshots off by default, because they cost ~23% of test time while
+          # the rest of a trace costs ~1%. Add the "full-trace" label when hunting a specific flake and the
+          # time-travel DOM viewer is worth that price.
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-trace') }}" == "true" ]]; then
+            echo "has_full_trace_label=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_full_trace_label=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Run Playwright tests
+        # Run all tests, except the ones needing to restart Docker and the ones relying on an OIDC server
+        run: npm run test-single-domain-install -- --shard ${{ matrix.shard }}/${{ matrix.nbShards }}
+        working-directory: tests
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
+      - name: Display docker compose logs on failure
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml logs
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Display containers state
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml ps
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - name: Side-load docker compose logs in the playwright report
+        run: docker compose  -f docker-compose.prod.yaml -f tests/docker-compose.test.yaml -f tests/docker-compose.server.yaml logs > ../../tests/playwright-report/docker-compose.log
+        if: failure()
+        env:
+          DOCKER_TAG: ${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG || env.GITHUB_REF_SLUG }}
+        working-directory: contrib/docker
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
           name: playwright-report-single-domain-${{ matrix.shard }}-${{ matrix.nbShards }}
           path: tests/playwright-report/
           retention-days: 30
@@ -644,11 +1094,9 @@ jobs:
   helm-deploy:
     name: "Deploy in Kubernetes"
     needs:
-      - build-play
-      - build-back
+      - build-front
+      - build-server
       - build-maps
-      - build-uploader
-      - build-map-storage
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
 
@@ -727,8 +1175,18 @@ jobs:
           appVersion: "${DEPLOY_REF}"
           domainName: ${NAMESPACE}.test.workadventu.re
           forceRedeploy: true
+          # The Go server runs in the play Deployment and answers for the pusher, back, map-storage and uploader
+          # (the map-storage and uploader Services point at its pods). No separate back, map-storage or uploader pod.
+          server:
+            enabled: true
+          # The server renders the index.html template of the front: the front container is always needed.
+          front:
+            enabled: true
           play:
-            replicaCount: 2
+            # One replica: the server keeps rooms, spaces and variables in memory (the TypeScript back was a single pod per room set too).
+            replicaCount: 1
+            image:
+              repository: thecodingmachine/workadventure-server-go
             env:
               PROMETHEUS_PORT: "9090"
             secretEnv:
@@ -742,17 +1200,17 @@ jobs:
                 cookie:
                   # The affinity cookie needs to be set to "None" for cross-domain cookies to work (pusher vs play/custom domains)
                   sameSite: "None"
-          back:
-            env:
-              PROMETHEUS_PORT: "9090"
-        
-            podAnnotations:
-              prometheus.io/scrape: 'true'
-              prometheus.io/path: '/metrics'
-              prometheus.io/port: '9090'
-          
+            # The maps uploaded to the map-storage live in /maps (STORAGE_DIRECTORY). They are uploaded again after each deploy.
+            extraVolumes:
+              - name: maps
+                emptyDir: {}
+            extraVolumeMounts:
+              - name: maps
+                mountPath: /maps
           mapstorage:
             env:
+              # The server only checks the basic authentication when it is enabled explicitly.
+              ENABLE_BASIC_AUTHENTICATION: "true"
               AUTHENTICATION_USER: "john.doe"
             secretEnv:
               AUTHENTICATION_PASSWORD: "password"
@@ -978,6 +1436,15 @@ jobs:
           MAP_STORAGE_API_TOKEN: ${{ secrets.MAP_STORAGE_API_TOKEN }}
           NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
+      # The server's own logs, to read what happened on its side when a spec fails (they are not in the trace).
+      - name: Dump the server's logs
+        if: failure()
+        run: |
+          mkdir ~/.kube && echo "${KUBE_CONFIG_FILE}" > ~/.kube/config && chmod 0600 ~/.kube/config
+          kubectl logs -n "${NAMESPACE}" deployment/test-workadventure-play --all-containers --since=2h > tests/playwright-report/server.log 2>&1 || true
+        env:
+          KUBE_CONFIG_FILE: ${{ secrets.KUBE_CONFIG_FILE }}
+          NAMESPACE: workadventure-${{ github.event_name == 'pull_request' && env.GITHUB_HEAD_REF_SLUG_URL || env.GITHUB_REF_SLUG_URL }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -990,42 +1457,32 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - end-to-end-tests
+      - end-to-end-tests-ts
       - prod-single-domain-deploy-tests
+      - prod-single-domain-deploy-tests-ts
       - helm-test
     # This will fail if the token does not belong to an admin, hence the always
     if: always() && ((github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure'))
     continue-on-error: true
     steps:
-      - name: Prune play
+      - name: Prune front
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: workadventure
-          container: play-dev-build
+          container: front-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5
           prune-untagged: true
           prune-tags-regexes: ".*"
 
-      - name: Prune back
+      - name: Prune server-go
         uses: vlaurin/action-ghcr-prune@v0.6.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           organization: workadventure
-          dry-run: false # Dry-run first, then change to `false`
-          container: back-dev-build
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"
-
-      - name: Prune map-storage
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: map-storage-dev-build
+          container: server-go-dev-build
           dry-run: false # Dry-run first, then change to `false`
           keep-younger-than: 7 # days
           keep-last: 5
@@ -1044,6 +1501,41 @@ jobs:
           prune-untagged: true
           prune-tags-regexes: ".*"
 
+      - name: Prune play
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: play-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+      - name: Prune back
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: back-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
+
+      - name: Prune map-storage
+        uses: vlaurin/action-ghcr-prune@v0.6.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          organization: workadventure
+          container: map-storage-dev-build
+          dry-run: false # Dry-run first, then change to `false`
+          keep-younger-than: 7 # days
+          keep-last: 5
+          prune-untagged: true
+          prune-tags-regexes: ".*"
 
       - name: Prune uploader
         uses: vlaurin/action-ghcr-prune@v0.6.0

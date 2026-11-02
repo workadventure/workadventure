@@ -10,6 +10,7 @@
     } from "../../Connection/ChatConnection";
     import { hasProximityChatSidePanel } from "../../Connection/ChatConnection";
     import { roomSidePanelStore, type RoomSidePanelSection } from "../../Stores/RoomSidePanelStore";
+    import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
     import ThreadPanel from "./ThreadPanel.svelte";
     import RoomSidePanelParticipants from "./RoomSidePanelParticipants.svelte";
     import RoomSidePanelPolls from "./RoomSidePanelPolls.svelte";
@@ -70,7 +71,12 @@
 
 <div class="flex h-full min-h-0 flex-col bg-white/[0.02]" data-testid="roomSidePanel">
     {#if displayedSection !== "home" || shouldShowCloseButton}
-        <div class="border border-solid border-x-0 border-t-0 border-white/10 px-3 py-3">
+        <!-- An open panel sits at the top end of the chat, under its floating close cross: keep the header clear of it. -->
+        <div
+            class="border border-solid border-x-0 border-t-0 border-white/10 px-3 py-3 {$hideActionBarStoreBecauseOfChatBar
+                ? 'pe-14'
+                : ''}"
+        >
             <div class="flex items-center gap-2">
                 {#if displayedSection !== "home"}
                     <button

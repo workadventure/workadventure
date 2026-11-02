@@ -1,0 +1,1851 @@
+{
+    "woka": {
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "male1",
+                        "name": "male1",
+                        "url": "resources/characters/pipoya/Male 01-1.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "male2",
+                        "name": "male2",
+                        "url": "resources/characters/pipoya/Male 02-2.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "male3",
+                        "name": "male3",
+                        "url": "resources/characters/pipoya/Male 03-4.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "male4",
+                        "name": "male4",
+                        "url": "resources/characters/pipoya/Male 09-1.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "male5",
+                        "name": "male5",
+                        "url": "resources/characters/pipoya/Male 10-3.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "male6",
+                        "name": "male6",
+                        "url": "resources/characters/pipoya/Male 17-2.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "male7",
+                        "name": "male7",
+                        "url": "resources/characters/pipoya/Male 18-1.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "male8",
+                        "name": "male8",
+                        "url": "resources/characters/pipoya/Male 16-4.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "male9",
+                        "name": "male9",
+                        "url": "resources/characters/pipoya/Male 07-2.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "male10",
+                        "name": "male10",
+                        "url": "resources/characters/pipoya/Male 05-3.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "male11",
+                        "name": "male11",
+                        "url": "resources/characters/pipoya/Teacher male 02.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "male12",
+                        "name": "male12",
+                        "url": "resources/characters/pipoya/su4 Student male 12.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "female1",
+                        "name": "female1",
+                        "url": "resources/characters/pipoya/Female 01-1.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "female2",
+                        "name": "female2",
+                        "url": "resources/characters/pipoya/Female 02-2.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "female3",
+                        "name": "female3",
+                        "url": "resources/characters/pipoya/Female 03-4.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "female4",
+                        "name": "female4",
+                        "url": "resources/characters/pipoya/Female 09-1.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "female5",
+                        "name": "female5",
+                        "url": "resources/characters/pipoya/Female 10-3.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "female6",
+                        "name": "female6",
+                        "url": "resources/characters/pipoya/Female 17-2.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "female7",
+                        "name": "female7",
+                        "url": "resources/characters/pipoya/Female 18-1.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "female8",
+                        "name": "female8",
+                        "url": "resources/characters/pipoya/Female 16-4.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "female9",
+                        "name": "female9",
+                        "url": "resources/characters/pipoya/Female 07-2.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "female10",
+                        "name": "female10",
+                        "url": "resources/characters/pipoya/Female 05-3.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "female11",
+                        "name": "female11",
+                        "url": "resources/characters/pipoya/Teacher fmale 02.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "female12",
+                        "name": "female12",
+                        "url": "resources/characters/pipoya/su4 Student fmale 12.png",
+                        "position": 23
+                    }
+                ]
+            }
+        ]
+    },
+    "body": {
+        "required": true,
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "body1",
+                        "name": "body1",
+                        "url": "resources/customisation/character_color/character_color0.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "body2",
+                        "name": "body2",
+                        "url": "resources/customisation/character_color/character_color1.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "body3",
+                        "name": "body3",
+                        "url": "resources/customisation/character_color/character_color2.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "body4",
+                        "name": "body4",
+                        "url": "resources/customisation/character_color/character_color3.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "body5",
+                        "name": "body5",
+                        "url": "resources/customisation/character_color/character_color4.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "body6",
+                        "name": "body6",
+                        "url": "resources/customisation/character_color/character_color5.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "body7",
+                        "name": "body7",
+                        "url": "resources/customisation/character_color/character_color6.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "body8",
+                        "name": "body8",
+                        "url": "resources/customisation/character_color/character_color7.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "body9",
+                        "name": "body9",
+                        "url": "resources/customisation/character_color/character_color8.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "body10",
+                        "name": "body10",
+                        "url": "resources/customisation/character_color/character_color9.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "body11",
+                        "name": "body11",
+                        "url": "resources/customisation/character_color/character_color10.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "body12",
+                        "name": "body12",
+                        "url": "resources/customisation/character_color/character_color11.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "body13",
+                        "name": "body13",
+                        "url": "resources/customisation/character_color/character_color12.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "body14",
+                        "name": "body14",
+                        "url": "resources/customisation/character_color/character_color13.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "body15",
+                        "name": "body15",
+                        "url": "resources/customisation/character_color/character_color14.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "body16",
+                        "name": "body16",
+                        "url": "resources/customisation/character_color/character_color15.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "body17",
+                        "name": "body17",
+                        "url": "resources/customisation/character_color/character_color16.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "body18",
+                        "name": "body18",
+                        "url": "resources/customisation/character_color/character_color17.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "body19",
+                        "name": "body19",
+                        "url": "resources/customisation/character_color/character_color18.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "body20",
+                        "name": "body20",
+                        "url": "resources/customisation/character_color/character_color19.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "body21",
+                        "name": "body21",
+                        "url": "resources/customisation/character_color/character_color20.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "body22",
+                        "name": "body22",
+                        "url": "resources/customisation/character_color/character_color21.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "body23",
+                        "name": "body23",
+                        "url": "resources/customisation/character_color/character_color22.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "body24",
+                        "name": "body24",
+                        "url": "resources/customisation/character_color/character_color23.png",
+                        "position": 23
+                    },
+                    {
+                        "id": "body25",
+                        "name": "body25",
+                        "url": "resources/customisation/character_color/character_color24.png",
+                        "position": 24
+                    },
+                    {
+                        "id": "body26",
+                        "name": "body26",
+                        "url": "resources/customisation/character_color/character_color25.png",
+                        "position": 25
+                    },
+                    {
+                        "id": "body27",
+                        "name": "body27",
+                        "url": "resources/customisation/character_color/character_color26.png",
+                        "position": 26
+                    },
+                    {
+                        "id": "body28",
+                        "name": "body28",
+                        "url": "resources/customisation/character_color/character_color27.png",
+                        "position": 27
+                    },
+                    {
+                        "id": "body29",
+                        "name": "body29",
+                        "url": "resources/customisation/character_color/character_color28.png",
+                        "position": 28
+                    },
+                    {
+                        "id": "body30",
+                        "name": "body30",
+                        "url": "resources/customisation/character_color/character_color29.png",
+                        "position": 29
+                    },
+                    {
+                        "id": "body31",
+                        "name": "body31",
+                        "url": "resources/customisation/character_color/character_color30.png",
+                        "position": 30
+                    },
+                    {
+                        "id": "body32",
+                        "name": "body32",
+                        "url": "resources/customisation/character_color/character_color31.png",
+                        "position": 31
+                    },
+                    {
+                        "id": "body33",
+                        "name": "body33",
+                        "url": "resources/customisation/character_color/character_color32.png",
+                        "position": 32
+                    }
+                ]
+            }
+        ]
+    },
+    "eyes": {
+        "required": true,
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "eyes1",
+                        "name": "eyes1",
+                        "url": "resources/customisation/character_eyes/character_eyes1.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "eyes2",
+                        "name": "eyes2",
+                        "url": "resources/customisation/character_eyes/character_eyes2.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "eyes3",
+                        "name": "eyes3",
+                        "url": "resources/customisation/character_eyes/character_eyes3.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "eyes4",
+                        "name": "eyes4",
+                        "url": "resources/customisation/character_eyes/character_eyes4.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "eyes5",
+                        "name": "eyes5",
+                        "url": "resources/customisation/character_eyes/character_eyes5.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "eyes6",
+                        "name": "eyes6",
+                        "url": "resources/customisation/character_eyes/character_eyes6.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "eyes7",
+                        "name": "eyes7",
+                        "url": "resources/customisation/character_eyes/character_eyes7.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "eyes8",
+                        "name": "eyes8",
+                        "url": "resources/customisation/character_eyes/character_eyes8.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "eyes9",
+                        "name": "eyes9",
+                        "url": "resources/customisation/character_eyes/character_eyes9.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "eyes10",
+                        "name": "eyes10",
+                        "url": "resources/customisation/character_eyes/character_eyes10.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "eyes11",
+                        "name": "eyes11",
+                        "url": "resources/customisation/character_eyes/character_eyes11.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "eyes12",
+                        "name": "eyes12",
+                        "url": "resources/customisation/character_eyes/character_eyes12.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "eyes13",
+                        "name": "eyes13",
+                        "url": "resources/customisation/character_eyes/character_eyes13.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "eyes14",
+                        "name": "eyes14",
+                        "url": "resources/customisation/character_eyes/character_eyes14.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "eyes15",
+                        "name": "eyes15",
+                        "url": "resources/customisation/character_eyes/character_eyes15.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "eyes16",
+                        "name": "eyes16",
+                        "url": "resources/customisation/character_eyes/character_eyes16.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "eyes17",
+                        "name": "eyes17",
+                        "url": "resources/customisation/character_eyes/character_eyes17.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "eyes18",
+                        "name": "eyes18",
+                        "url": "resources/customisation/character_eyes/character_eyes18.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "eyes19",
+                        "name": "eyes19",
+                        "url": "resources/customisation/character_eyes/character_eyes19.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "eyes20",
+                        "name": "eyes20",
+                        "url": "resources/customisation/character_eyes/character_eyes20.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "eyes21",
+                        "name": "eyes21",
+                        "url": "resources/customisation/character_eyes/character_eyes21.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "eyes22",
+                        "name": "eyes22",
+                        "url": "resources/customisation/character_eyes/character_eyes22.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "eyes23",
+                        "name": "eyes23",
+                        "url": "resources/customisation/character_eyes/character_eyes23.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "eyes24",
+                        "name": "eyes24",
+                        "url": "resources/customisation/character_eyes/character_eyes24.png",
+                        "position": 23
+                    },
+                    {
+                        "id": "eyes25",
+                        "name": "eyes25",
+                        "url": "resources/customisation/character_eyes/character_eyes25.png",
+                        "position": 24
+                    },
+                    {
+                        "id": "eyes26",
+                        "name": "eyes26",
+                        "url": "resources/customisation/character_eyes/character_eyes26.png",
+                        "position": 25
+                    },
+                    {
+                        "id": "eyes27",
+                        "name": "eyes27",
+                        "url": "resources/customisation/character_eyes/character_eyes27.png",
+                        "position": 26
+                    },
+                    {
+                        "id": "eyes28",
+                        "name": "eyes28",
+                        "url": "resources/customisation/character_eyes/character_eyes28.png",
+                        "position": 27
+                    },
+                    {
+                        "id": "eyes29",
+                        "name": "eyes29",
+                        "url": "resources/customisation/character_eyes/character_eyes29.png",
+                        "position": 28
+                    },
+                    {
+                        "id": "eyes30",
+                        "name": "eyes30",
+                        "url": "resources/customisation/character_eyes/character_eyes30.png",
+                        "position": 29
+                    }
+                ]
+            }
+        ]
+    },
+    "hair": {
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "hair1",
+                        "name": "hair1",
+                        "url": "resources/customisation/character_hairs/character_hairs0.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "hair2",
+                        "name": "hair2",
+                        "url": "resources/customisation/character_hairs/character_hairs1.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "hair3",
+                        "name": "hair3",
+                        "url": "resources/customisation/character_hairs/character_hairs2.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "hair4",
+                        "name": "hair4",
+                        "url": "resources/customisation/character_hairs/character_hairs3.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "hair5",
+                        "name": "hair5",
+                        "url": "resources/customisation/character_hairs/character_hairs4.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "hair6",
+                        "name": "hair6",
+                        "url": "resources/customisation/character_hairs/character_hairs5.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "hair7",
+                        "name": "hair7",
+                        "url": "resources/customisation/character_hairs/character_hairs6.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "hair8",
+                        "name": "hair8",
+                        "url": "resources/customisation/character_hairs/character_hairs7.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "hair9",
+                        "name": "hair9",
+                        "url": "resources/customisation/character_hairs/character_hairs8.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "hair10",
+                        "name": "hair10",
+                        "url": "resources/customisation/character_hairs/character_hairs9.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "hair11",
+                        "name": "hair11",
+                        "url": "resources/customisation/character_hairs/character_hairs10.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "hair12",
+                        "name": "hair12",
+                        "url": "resources/customisation/character_hairs/character_hairs11.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "hair13",
+                        "name": "hair13",
+                        "url": "resources/customisation/character_hairs/character_hairs12.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "hair14",
+                        "name": "hair14",
+                        "url": "resources/customisation/character_hairs/character_hairs13.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "hair15",
+                        "name": "hair15",
+                        "url": "resources/customisation/character_hairs/character_hairs14.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "hair16",
+                        "name": "hair16",
+                        "url": "resources/customisation/character_hairs/character_hairs15.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "hair17",
+                        "name": "hair17",
+                        "url": "resources/customisation/character_hairs/character_hairs16.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "hair18",
+                        "name": "hair18",
+                        "url": "resources/customisation/character_hairs/character_hairs17.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "hair19",
+                        "name": "hair19",
+                        "url": "resources/customisation/character_hairs/character_hairs18.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "hair20",
+                        "name": "hair20",
+                        "url": "resources/customisation/character_hairs/character_hairs19.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "hair21",
+                        "name": "hair21",
+                        "url": "resources/customisation/character_hairs/character_hairs20.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "hair22",
+                        "name": "hair22",
+                        "url": "resources/customisation/character_hairs/character_hairs21.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "hair23",
+                        "name": "hair23",
+                        "url": "resources/customisation/character_hairs/character_hairs22.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "hair24",
+                        "name": "hair24",
+                        "url": "resources/customisation/character_hairs/character_hairs23.png",
+                        "position": 23
+                    },
+                    {
+                        "id": "hair25",
+                        "name": "hair25",
+                        "url": "resources/customisation/character_hairs/character_hairs24.png",
+                        "position": 24
+                    },
+                    {
+                        "id": "hair26",
+                        "name": "hair26",
+                        "url": "resources/customisation/character_hairs/character_hairs25.png",
+                        "position": 25
+                    },
+                    {
+                        "id": "hair27",
+                        "name": "hair27",
+                        "url": "resources/customisation/character_hairs/character_hairs26.png",
+                        "position": 26
+                    },
+                    {
+                        "id": "hair28",
+                        "name": "hair28",
+                        "url": "resources/customisation/character_hairs/character_hairs27.png",
+                        "position": 27
+                    },
+                    {
+                        "id": "hair29",
+                        "name": "hair29",
+                        "url": "resources/customisation/character_hairs/character_hairs28.png",
+                        "position": 28
+                    },
+                    {
+                        "id": "hair30",
+                        "name": "hair30",
+                        "url": "resources/customisation/character_hairs/character_hairs29.png",
+                        "position": 29
+                    },
+                    {
+                        "id": "hair31",
+                        "name": "hair31",
+                        "url": "resources/customisation/character_hairs/character_hairs30.png",
+                        "position": 30
+                    },
+                    {
+                        "id": "hair32",
+                        "name": "hair32",
+                        "url": "resources/customisation/character_hairs/character_hairs31.png",
+                        "position": 31
+                    },
+                    {
+                        "id": "hair33",
+                        "name": "hair33",
+                        "url": "resources/customisation/character_hairs/character_hairs32.png",
+                        "position": 32
+                    },
+                    {
+                        "id": "hair34",
+                        "name": "hair34",
+                        "url": "resources/customisation/character_hairs/character_hairs33.png",
+                        "position": 33
+                    },
+                    {
+                        "id": "hair35",
+                        "name": "hair35",
+                        "url": "resources/customisation/character_hairs/character_hairs34.png",
+                        "position": 34
+                    },
+                    {
+                        "id": "hair36",
+                        "name": "hair36",
+                        "url": "resources/customisation/character_hairs/character_hairs35.png",
+                        "position": 35
+                    },
+                    {
+                        "id": "hair37",
+                        "name": "hair37",
+                        "url": "resources/customisation/character_hairs/character_hairs36.png",
+                        "position": 36
+                    },
+                    {
+                        "id": "hair38",
+                        "name": "hair38",
+                        "url": "resources/customisation/character_hairs/character_hairs37.png",
+                        "position": 37
+                    },
+                    {
+                        "id": "hair39",
+                        "name": "hair39",
+                        "url": "resources/customisation/character_hairs/character_hairs38.png",
+                        "position": 38
+                    },
+                    {
+                        "id": "hair40",
+                        "name": "hair40",
+                        "url": "resources/customisation/character_hairs/character_hairs39.png",
+                        "position": 39
+                    },
+                    {
+                        "id": "hair41",
+                        "name": "hair41",
+                        "url": "resources/customisation/character_hairs/character_hairs40.png",
+                        "position": 40
+                    },
+                    {
+                        "id": "hair42",
+                        "name": "hair42",
+                        "url": "resources/customisation/character_hairs/character_hairs41.png",
+                        "position": 41
+                    },
+                    {
+                        "id": "hair43",
+                        "name": "hair43",
+                        "url": "resources/customisation/character_hairs/character_hairs42.png",
+                        "position": 42
+                    },
+                    {
+                        "id": "hair44",
+                        "name": "hair44",
+                        "url": "resources/customisation/character_hairs/character_hairs43.png",
+                        "position": 43
+                    },
+                    {
+                        "id": "hair45",
+                        "name": "hair45",
+                        "url": "resources/customisation/character_hairs/character_hairs44.png",
+                        "position": 44
+                    },
+                    {
+                        "id": "hair46",
+                        "name": "hair46",
+                        "url": "resources/customisation/character_hairs/character_hairs45.png",
+                        "position": 45
+                    },
+                    {
+                        "id": "hair47",
+                        "name": "hair47",
+                        "url": "resources/customisation/character_hairs/character_hairs46.png",
+                        "position": 46
+                    },
+                    {
+                        "id": "hair48",
+                        "name": "hair48",
+                        "url": "resources/customisation/character_hairs/character_hairs47.png",
+                        "position": 47
+                    },
+                    {
+                        "id": "hair49",
+                        "name": "hair49",
+                        "url": "resources/customisation/character_hairs/character_hairs48.png",
+                        "position": 48
+                    },
+                    {
+                        "id": "hair50",
+                        "name": "hair50",
+                        "url": "resources/customisation/character_hairs/character_hairs49.png",
+                        "position": 49
+                    },
+                    {
+                        "id": "hair51",
+                        "name": "hair51",
+                        "url": "resources/customisation/character_hairs/character_hairs50.png",
+                        "position": 50
+                    },
+                    {
+                        "id": "hair52",
+                        "name": "hair52",
+                        "url": "resources/customisation/character_hairs/character_hairs51.png",
+                        "position": 51
+                    },
+                    {
+                        "id": "hair53",
+                        "name": "hair53",
+                        "url": "resources/customisation/character_hairs/character_hairs52.png",
+                        "position": 52
+                    },
+                    {
+                        "id": "hair54",
+                        "name": "hair54",
+                        "url": "resources/customisation/character_hairs/character_hairs53.png",
+                        "position": 53
+                    },
+                    {
+                        "id": "hair55",
+                        "name": "hair55",
+                        "url": "resources/customisation/character_hairs/character_hairs54.png",
+                        "position": 54
+                    },
+                    {
+                        "id": "hair56",
+                        "name": "hair56",
+                        "url": "resources/customisation/character_hairs/character_hairs55.png",
+                        "position": 55
+                    },
+                    {
+                        "id": "hair57",
+                        "name": "hair57",
+                        "url": "resources/customisation/character_hairs/character_hairs56.png",
+                        "position": 56
+                    },
+                    {
+                        "id": "hair58",
+                        "name": "hair58",
+                        "url": "resources/customisation/character_hairs/character_hairs57.png",
+                        "position": 57
+                    },
+                    {
+                        "id": "hair59",
+                        "name": "hair59",
+                        "url": "resources/customisation/character_hairs/character_hairs58.png",
+                        "position": 58
+                    },
+                    {
+                        "id": "hair60",
+                        "name": "hair60",
+                        "url": "resources/customisation/character_hairs/character_hairs59.png",
+                        "position": 59
+                    },
+                    {
+                        "id": "hair61",
+                        "name": "hair61",
+                        "url": "resources/customisation/character_hairs/character_hairs60.png",
+                        "position": 60
+                    },
+                    {
+                        "id": "hair62",
+                        "name": "hair62",
+                        "url": "resources/customisation/character_hairs/character_hairs61.png",
+                        "position": 61
+                    },
+                    {
+                        "id": "hair63",
+                        "name": "hair63",
+                        "url": "resources/customisation/character_hairs/character_hairs62.png",
+                        "position": 62
+                    },
+                    {
+                        "id": "hair64",
+                        "name": "hair64",
+                        "url": "resources/customisation/character_hairs/character_hairs63.png",
+                        "position": 63
+                    },
+                    {
+                        "id": "hair65",
+                        "name": "hair65",
+                        "url": "resources/customisation/character_hairs/character_hairs64.png",
+                        "position": 64
+                    },
+                    {
+                        "id": "hair66",
+                        "name": "hair66",
+                        "url": "resources/customisation/character_hairs/character_hairs65.png",
+                        "position": 65
+                    },
+                    {
+                        "id": "hair67",
+                        "name": "hair67",
+                        "url": "resources/customisation/character_hairs/character_hairs66.png",
+                        "position": 66
+                    },
+                    {
+                        "id": "hair68",
+                        "name": "hair68",
+                        "url": "resources/customisation/character_hairs/character_hairs67.png",
+                        "position": 67
+                    },
+                    {
+                        "id": "hair69",
+                        "name": "hair69",
+                        "url": "resources/customisation/character_hairs/character_hairs68.png",
+                        "position": 68
+                    },
+                    {
+                        "id": "hair70",
+                        "name": "hair70",
+                        "url": "resources/customisation/character_hairs/character_hairs69.png",
+                        "position": 69
+                    },
+                    {
+                        "id": "hair71",
+                        "name": "hair71",
+                        "url": "resources/customisation/character_hairs/character_hairs70.png",
+                        "position": 70
+                    },
+                    {
+                        "id": "hair72",
+                        "name": "hair72",
+                        "url": "resources/customisation/character_hairs/character_hairs71.png",
+                        "position": 71
+                    },
+                    {
+                        "id": "hair73",
+                        "name": "hair73",
+                        "url": "resources/customisation/character_hairs/character_hairs72.png",
+                        "position": 72
+                    },
+                    {
+                        "id": "hair74",
+                        "name": "hair74",
+                        "url": "resources/customisation/character_hairs/character_hairs73.png",
+                        "position": 73
+                    }
+                ]
+            }
+        ]
+    },
+    "clothes": {
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "clothes1",
+                        "name": "clothes1",
+                        "url": "resources/customisation/character_clothes/character_clothes0.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "clothes2",
+                        "name": "clothes2",
+                        "url": "resources/customisation/character_clothes/character_clothes1.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "clothes3",
+                        "name": "clothes3",
+                        "url": "resources/customisation/character_clothes/character_clothes2.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "clothes4",
+                        "name": "clothes4",
+                        "url": "resources/customisation/character_clothes/character_clothes3.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "clothes5",
+                        "name": "clothes5",
+                        "url": "resources/customisation/character_clothes/character_clothes4.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "clothes6",
+                        "name": "clothes6",
+                        "url": "resources/customisation/character_clothes/character_clothes5.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "clothes7",
+                        "name": "clothes7",
+                        "url": "resources/customisation/character_clothes/character_clothes6.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "clothes8",
+                        "name": "clothes8",
+                        "url": "resources/customisation/character_clothes/character_clothes7.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "clothes9",
+                        "name": "clothes9",
+                        "url": "resources/customisation/character_clothes/character_clothes8.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "clothes10",
+                        "name": "clothes10",
+                        "url": "resources/customisation/character_clothes/character_clothes9.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "clothes11",
+                        "name": "clothes11",
+                        "url": "resources/customisation/character_clothes/character_clothes10.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "clothes12",
+                        "name": "clothes12",
+                        "url": "resources/customisation/character_clothes/character_clothes11.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "clothes13",
+                        "name": "clothes13",
+                        "url": "resources/customisation/character_clothes/character_clothes12.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "clothes14",
+                        "name": "clothes14",
+                        "url": "resources/customisation/character_clothes/character_clothes13.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "clothes15",
+                        "name": "clothes15",
+                        "url": "resources/customisation/character_clothes/character_clothes14.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "clothes16",
+                        "name": "clothes16",
+                        "url": "resources/customisation/character_clothes/character_clothes15.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "clothes17",
+                        "name": "clothes17",
+                        "url": "resources/customisation/character_clothes/character_clothes16.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "clothes18",
+                        "name": "clothes18",
+                        "url": "resources/customisation/character_clothes/character_clothes17.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "clothes19",
+                        "name": "clothes19",
+                        "url": "resources/customisation/character_clothes/character_clothes18.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "clothes20",
+                        "name": "clothes20",
+                        "url": "resources/customisation/character_clothes/character_clothes19.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "clothes21",
+                        "name": "clothes21",
+                        "url": "resources/customisation/character_clothes/character_clothes20.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "clothes22",
+                        "name": "clothes22",
+                        "url": "resources/customisation/character_clothes/character_clothes21.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "clothes23",
+                        "name": "clothes23",
+                        "url": "resources/customisation/character_clothes/character_clothes22.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "clothes24",
+                        "name": "clothes24",
+                        "url": "resources/customisation/character_clothes/character_clothes23.png",
+                        "position": 23
+                    },
+                    {
+                        "id": "clothes25",
+                        "name": "clothes25",
+                        "url": "resources/customisation/character_clothes/character_clothes24.png",
+                        "position": 24
+                    },
+                    {
+                        "id": "clothes26",
+                        "name": "clothes26",
+                        "url": "resources/customisation/character_clothes/character_clothes25.png",
+                        "position": 25
+                    },
+                    {
+                        "id": "clothes27",
+                        "name": "clothes27",
+                        "url": "resources/customisation/character_clothes/character_clothes26.png",
+                        "position": 26
+                    },
+                    {
+                        "id": "clothes28",
+                        "name": "clothes28",
+                        "url": "resources/customisation/character_clothes/character_clothes27.png",
+                        "position": 27
+                    },
+                    {
+                        "id": "clothes29",
+                        "name": "clothes29",
+                        "url": "resources/customisation/character_clothes/character_clothes28.png",
+                        "position": 28
+                    },
+                    {
+                        "id": "clothes30",
+                        "name": "clothes30",
+                        "url": "resources/customisation/character_clothes/character_clothes29.png",
+                        "position": 29
+                    },
+                    {
+                        "id": "clothes31",
+                        "name": "clothes31",
+                        "url": "resources/customisation/character_clothes/character_clothes30.png",
+                        "position": 30
+                    },
+                    {
+                        "id": "clothes32",
+                        "name": "clothes32",
+                        "url": "resources/customisation/character_clothes/character_clothes31.png",
+                        "position": 31
+                    },
+                    {
+                        "id": "clothes33",
+                        "name": "clothes33",
+                        "url": "resources/customisation/character_clothes/character_clothes32.png",
+                        "position": 32
+                    },
+                    {
+                        "id": "clothes34",
+                        "name": "clothes34",
+                        "url": "resources/customisation/character_clothes/character_clothes33.png",
+                        "position": 33
+                    },
+                    {
+                        "id": "clothes35",
+                        "name": "clothes35",
+                        "url": "resources/customisation/character_clothes/character_clothes34.png",
+                        "position": 34
+                    },
+                    {
+                        "id": "clothes36",
+                        "name": "clothes36",
+                        "url": "resources/customisation/character_clothes/character_clothes35.png",
+                        "position": 35
+                    },
+                    {
+                        "id": "clothes37",
+                        "name": "clothes37",
+                        "url": "resources/customisation/character_clothes/character_clothes36.png",
+                        "position": 36
+                    },
+                    {
+                        "id": "clothes38",
+                        "name": "clothes38",
+                        "url": "resources/customisation/character_clothes/character_clothes37.png",
+                        "position": 37
+                    },
+                    {
+                        "id": "clothes39",
+                        "name": "clothes39",
+                        "url": "resources/customisation/character_clothes/character_clothes38.png",
+                        "position": 38
+                    },
+                    {
+                        "id": "clothes40",
+                        "name": "clothes40",
+                        "url": "resources/customisation/character_clothes/character_clothes39.png",
+                        "position": 39
+                    },
+                    {
+                        "id": "clothes41",
+                        "name": "clothes41",
+                        "url": "resources/customisation/character_clothes/character_clothes40.png",
+                        "position": 40
+                    },
+                    {
+                        "id": "clothes42",
+                        "name": "clothes42",
+                        "url": "resources/customisation/character_clothes/character_clothes41.png",
+                        "position": 41
+                    },
+                    {
+                        "id": "clothes43",
+                        "name": "clothes43",
+                        "url": "resources/customisation/character_clothes/character_clothes42.png",
+                        "position": 42
+                    },
+                    {
+                        "id": "clothes44",
+                        "name": "clothes44",
+                        "url": "resources/customisation/character_clothes/character_clothes43.png",
+                        "position": 43
+                    },
+                    {
+                        "id": "clothes45",
+                        "name": "clothes45",
+                        "url": "resources/customisation/character_clothes/character_clothes44.png",
+                        "position": 44
+                    },
+                    {
+                        "id": "clothes46",
+                        "name": "clothes46",
+                        "url": "resources/customisation/character_clothes/character_clothes45.png",
+                        "position": 45
+                    },
+                    {
+                        "id": "clothes47",
+                        "name": "clothes47",
+                        "url": "resources/customisation/character_clothes/character_clothes46.png",
+                        "position": 46
+                    },
+                    {
+                        "id": "clothes48",
+                        "name": "clothes48",
+                        "url": "resources/customisation/character_clothes/character_clothes47.png",
+                        "position": 47
+                    },
+                    {
+                        "id": "clothes49",
+                        "name": "clothes49",
+                        "url": "resources/customisation/character_clothes/character_clothes48.png",
+                        "position": 48
+                    },
+                    {
+                        "id": "clothes50",
+                        "name": "clothes50",
+                        "url": "resources/customisation/character_clothes/character_clothes49.png",
+                        "position": 49
+                    },
+                    {
+                        "id": "clothes51",
+                        "name": "clothes51",
+                        "url": "resources/customisation/character_clothes/character_clothes50.png",
+                        "position": 50
+                    },
+                    {
+                        "id": "clothes52",
+                        "name": "clothes52",
+                        "url": "resources/customisation/character_clothes/character_clothes51.png",
+                        "position": 51
+                    },
+                    {
+                        "id": "clothes53",
+                        "name": "clothes53",
+                        "url": "resources/customisation/character_clothes/character_clothes52.png",
+                        "position": 52
+                    },
+                    {
+                        "id": "clothes54",
+                        "name": "clothes54",
+                        "url": "resources/customisation/character_clothes/character_clothes53.png",
+                        "position": 53
+                    },
+                    {
+                        "id": "clothes55",
+                        "name": "clothes55",
+                        "url": "resources/customisation/character_clothes/character_clothes54.png",
+                        "position": 54
+                    },
+                    {
+                        "id": "clothes56",
+                        "name": "clothes56",
+                        "url": "resources/customisation/character_clothes/character_clothes55.png",
+                        "position": 55
+                    },
+                    {
+                        "id": "clothes57",
+                        "name": "clothes57",
+                        "url": "resources/customisation/character_clothes/character_clothes56.png",
+                        "position": 56
+                    },
+                    {
+                        "id": "clothes58",
+                        "name": "clothes58",
+                        "url": "resources/customisation/character_clothes/character_clothes57.png",
+                        "position": 57
+                    },
+                    {
+                        "id": "clothes59",
+                        "name": "clothes59",
+                        "url": "resources/customisation/character_clothes/character_clothes58.png",
+                        "position": 58
+                    },
+                    {
+                        "id": "clothes60",
+                        "name": "clothes60",
+                        "url": "resources/customisation/character_clothes/character_clothes59.png",
+                        "position": 59
+                    },
+                    {
+                        "id": "clothes61",
+                        "name": "clothes61",
+                        "url": "resources/customisation/character_clothes/character_clothes60.png",
+                        "position": 60
+                    },
+                    {
+                        "id": "clothes62",
+                        "name": "clothes62",
+                        "url": "resources/customisation/character_clothes/character_clothes61.png",
+                        "position": 61
+                    },
+                    {
+                        "id": "clothes63",
+                        "name": "clothes63",
+                        "url": "resources/customisation/character_clothes/character_clothes62.png",
+                        "position": 62
+                    },
+                    {
+                        "id": "clothes64",
+                        "name": "clothes64",
+                        "url": "resources/customisation/character_clothes/character_clothes63.png",
+                        "position": 63
+                    },
+                    {
+                        "id": "clothes65",
+                        "name": "clothes65",
+                        "url": "resources/customisation/character_clothes/character_clothes64.png",
+                        "position": 64
+                    },
+                    {
+                        "id": "clothes66",
+                        "name": "clothes66",
+                        "url": "resources/customisation/character_clothes/character_clothes65.png",
+                        "position": 65
+                    },
+                    {
+                        "id": "clothes67",
+                        "name": "clothes67",
+                        "url": "resources/customisation/character_clothes/character_clothes66.png",
+                        "position": 66
+                    },
+                    {
+                        "id": "clothes68",
+                        "name": "clothes68",
+                        "url": "resources/customisation/character_clothes/character_clothes67.png",
+                        "position": 67
+                    },
+                    {
+                        "id": "clothes69",
+                        "name": "clothes69",
+                        "url": "resources/customisation/character_clothes/character_clothes68.png",
+                        "position": 68
+                    },
+                    {
+                        "id": "clothes70",
+                        "name": "clothes70",
+                        "url": "resources/customisation/character_clothes/character_clothes69.png",
+                        "position": 69
+                    },
+                    {
+                        "id": "clothes_pride_shirt",
+                        "name": "clothes_pride_shirt",
+                        "url": "resources/customisation/character_clothes/pride_shirt.png",
+                        "position": 70
+                    },
+                    {
+                        "id": "clothes_black_hoodie",
+                        "name": "clothes_black_hoodie",
+                        "url": "resources/customisation/character_clothes/black_hoodie.png",
+                        "position": 71
+                    },
+                    {
+                        "id": "clothes_white_hoodie",
+                        "name": "clothes_white_hoodie",
+                        "url": "resources/customisation/character_clothes/white_hoodie.png",
+                        "position": 72
+                    },
+                    {
+                        "id": "clothes_engelbert",
+                        "name": "clothes_engelbert",
+                        "url": "resources/customisation/character_clothes/engelbert.png",
+                        "position": 73
+                    }
+                ]
+            }
+        ]
+    },
+    "hat": {
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "hat1",
+                        "name": "hat1",
+                        "url": "resources/customisation/character_hats/character_hats1.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "hat2",
+                        "name": "hat2",
+                        "url": "resources/customisation/character_hats/character_hats2.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "hat3",
+                        "name": "hat3",
+                        "url": "resources/customisation/character_hats/character_hats3.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "hat4",
+                        "name": "hat4",
+                        "url": "resources/customisation/character_hats/character_hats4.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "hat5",
+                        "name": "hat5",
+                        "url": "resources/customisation/character_hats/character_hats5.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "hat6",
+                        "name": "hat6",
+                        "url": "resources/customisation/character_hats/character_hats6.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "hat7",
+                        "name": "hat7",
+                        "url": "resources/customisation/character_hats/character_hats7.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "hat8",
+                        "name": "hat8",
+                        "url": "resources/customisation/character_hats/character_hats8.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "hat9",
+                        "name": "hat9",
+                        "url": "resources/customisation/character_hats/character_hats9.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "hat10",
+                        "name": "hat10",
+                        "url": "resources/customisation/character_hats/character_hats10.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "hat11",
+                        "name": "hat11",
+                        "url": "resources/customisation/character_hats/character_hats11.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "hat12",
+                        "name": "hat12",
+                        "url": "resources/customisation/character_hats/character_hats12.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "hat13",
+                        "name": "hat13",
+                        "url": "resources/customisation/character_hats/character_hats13.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "hat14",
+                        "name": "hat14",
+                        "url": "resources/customisation/character_hats/character_hats14.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "hat15",
+                        "name": "hat15",
+                        "url": "resources/customisation/character_hats/character_hats15.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "hat16",
+                        "name": "hat16",
+                        "url": "resources/customisation/character_hats/character_hats16.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "hat17",
+                        "name": "hat17",
+                        "url": "resources/customisation/character_hats/character_hats17.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "hat18",
+                        "name": "hat18",
+                        "url": "resources/customisation/character_hats/character_hats18.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "hat19",
+                        "name": "hat19",
+                        "url": "resources/customisation/character_hats/character_hats19.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "hat20",
+                        "name": "hat20",
+                        "url": "resources/customisation/character_hats/character_hats20.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "hat21",
+                        "name": "hat21",
+                        "url": "resources/customisation/character_hats/character_hats21.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "hat22",
+                        "name": "hat22",
+                        "url": "resources/customisation/character_hats/character_hats22.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "hat23",
+                        "name": "hat23",
+                        "url": "resources/customisation/character_hats/character_hats23.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "hat24",
+                        "name": "hat24",
+                        "url": "resources/customisation/character_hats/character_hats24.png",
+                        "position": 23
+                    },
+                    {
+                        "id": "hat25",
+                        "name": "hat25",
+                        "url": "resources/customisation/character_hats/character_hats25.png",
+                        "position": 24
+                    },
+                    {
+                        "id": "hat26",
+                        "name": "hat26",
+                        "url": "resources/customisation/character_hats/character_hats26.png",
+                        "position": 25
+                    },
+                    {
+                        "id": "tinfoil_hat1",
+                        "name": "tinfoil_hat1",
+                        "url": "resources/customisation/character_hats/tinfoil_hat1.png",
+                        "position": 26
+                    }
+                ]
+            }
+        ]
+    },
+    "accessory": {
+        "required": true,
+        "collections": [
+            {
+                "name": "default",
+                "position": 0,
+                "textures": [
+                    {
+                        "id": "accessory1",
+                        "name": "accessory1",
+                        "url": "resources/customisation/character_accessories/character_accessories1.png",
+                        "position": 0
+                    },
+                    {
+                        "id": "accessory2",
+                        "name": "accessory2",
+                        "url": "resources/customisation/character_accessories/character_accessories2.png",
+                        "position": 1
+                    },
+                    {
+                        "id": "accessory3",
+                        "name": "accessory3",
+                        "url": "resources/customisation/character_accessories/character_accessories3.png",
+                        "position": 2
+                    },
+                    {
+                        "id": "accessory4",
+                        "name": "accessory4",
+                        "url": "resources/customisation/character_accessories/character_accessories4.png",
+                        "position": 3
+                    },
+                    {
+                        "id": "accessory5",
+                        "name": "accessory5",
+                        "url": "resources/customisation/character_accessories/character_accessories5.png",
+                        "position": 4
+                    },
+                    {
+                        "id": "accessory6",
+                        "name": "accessory6",
+                        "url": "resources/customisation/character_accessories/character_accessories6.png",
+                        "position": 5
+                    },
+                    {
+                        "id": "accessory7",
+                        "name": "accessory7",
+                        "url": "resources/customisation/character_accessories/character_accessories7.png",
+                        "position": 6
+                    },
+                    {
+                        "id": "accessory8",
+                        "name": "accessory8",
+                        "url": "resources/customisation/character_accessories/character_accessories8.png",
+                        "position": 7
+                    },
+                    {
+                        "id": "accessory9",
+                        "name": "accessory9",
+                        "url": "resources/customisation/character_accessories/character_accessories9.png",
+                        "position": 8
+                    },
+                    {
+                        "id": "accessory10",
+                        "name": "accessory10",
+                        "url": "resources/customisation/character_accessories/character_accessories10.png",
+                        "position": 9
+                    },
+                    {
+                        "id": "accessory11",
+                        "name": "accessory11",
+                        "url": "resources/customisation/character_accessories/character_accessories11.png",
+                        "position": 10
+                    },
+                    {
+                        "id": "accessory12",
+                        "name": "accessory12",
+                        "url": "resources/customisation/character_accessories/character_accessories12.png",
+                        "position": 11
+                    },
+                    {
+                        "id": "accessory13",
+                        "name": "accessory13",
+                        "url": "resources/customisation/character_accessories/character_accessories13.png",
+                        "position": 12
+                    },
+                    {
+                        "id": "accessory14",
+                        "name": "accessory14",
+                        "url": "resources/customisation/character_accessories/character_accessories14.png",
+                        "position": 13
+                    },
+                    {
+                        "id": "accessory15",
+                        "name": "accessory15",
+                        "url": "resources/customisation/character_accessories/character_accessories15.png",
+                        "position": 14
+                    },
+                    {
+                        "id": "accessory16",
+                        "name": "accessory16",
+                        "url": "resources/customisation/character_accessories/character_accessories16.png",
+                        "position": 15
+                    },
+                    {
+                        "id": "accessory17",
+                        "name": "accessory17",
+                        "url": "resources/customisation/character_accessories/character_accessories17.png",
+                        "position": 16
+                    },
+                    {
+                        "id": "accessory18",
+                        "name": "accessory18",
+                        "url": "resources/customisation/character_accessories/character_accessories18.png",
+                        "position": 17
+                    },
+                    {
+                        "id": "accessory19",
+                        "name": "accessory19",
+                        "url": "resources/customisation/character_accessories/character_accessories19.png",
+                        "position": 18
+                    },
+                    {
+                        "id": "accessory20",
+                        "name": "accessory20",
+                        "url": "resources/customisation/character_accessories/character_accessories20.png",
+                        "position": 19
+                    },
+                    {
+                        "id": "accessory21",
+                        "name": "accessory21",
+                        "url": "resources/customisation/character_accessories/character_accessories21.png",
+                        "position": 20
+                    },
+                    {
+                        "id": "accessory22",
+                        "name": "accessory22",
+                        "url": "resources/customisation/character_accessories/character_accessories22.png",
+                        "position": 21
+                    },
+                    {
+                        "id": "accessory23",
+                        "name": "accessory23",
+                        "url": "resources/customisation/character_accessories/character_accessories23.png",
+                        "position": 22
+                    },
+                    {
+                        "id": "accessory24",
+                        "name": "accessory24",
+                        "url": "resources/customisation/character_accessories/character_accessories24.png",
+                        "position": 23
+                    },
+                    {
+                        "id": "accessory25",
+                        "name": "accessory25",
+                        "url": "resources/customisation/character_accessories/character_accessories25.png",
+                        "position": 24
+                    },
+                    {
+                        "id": "accessory26",
+                        "name": "accessory26",
+                        "url": "resources/customisation/character_accessories/character_accessories26.png",
+                        "position": 25
+                    },
+                    {
+                        "id": "accessory27",
+                        "name": "accessory27",
+                        "url": "resources/customisation/character_accessories/character_accessories27.png",
+                        "position": 26
+                    },
+                    {
+                        "id": "accessory28",
+                        "name": "accessory28",
+                        "url": "resources/customisation/character_accessories/character_accessories28.png",
+                        "position": 27
+                    },
+                    {
+                        "id": "accessory29",
+                        "name": "accessory29",
+                        "url": "resources/customisation/character_accessories/character_accessories29.png",
+                        "position": 28
+                    },
+                    {
+                        "id": "accessory30",
+                        "name": "accessory30",
+                        "url": "resources/customisation/character_accessories/character_accessories30.png",
+                        "position": 29
+                    },
+                    {
+                        "id": "accessory31",
+                        "name": "accessory31",
+                        "url": "resources/customisation/character_accessories/character_accessories31.png",
+                        "position": 30
+                    },
+                    {
+                        "id": "accessory32",
+                        "name": "accessory32",
+                        "url": "resources/customisation/character_accessories/character_accessories32.png",
+                        "position": 31
+                    },
+                    {
+                        "id": "accessory_mate_bottle",
+                        "name": "accessory_mate_bottle",
+                        "url": "resources/customisation/character_accessories/mate_bottle1.png",
+                        "position": 32
+                    },
+                    {
+                        "id": "accessory_mask",
+                        "name": "accessory_mask",
+                        "url": "resources/customisation/character_accessories/mask.png",
+                        "position": 33
+                    }
+                ]
+            }
+        ]
+    }
+}

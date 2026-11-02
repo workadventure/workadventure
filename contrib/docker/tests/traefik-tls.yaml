@@ -1,0 +1,7 @@
+# Default certificate of Traefik for the tests (the ACME resolver cannot work locally).
+tls:
+  stores:
+    default:
+      defaultCertificate:
+        certFile: /certs/cert.pem
+        keyFile: /certs/key.pem
