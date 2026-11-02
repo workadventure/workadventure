@@ -36,6 +36,7 @@ import { nativeStrings, t } from "./i18n";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
 import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
+import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 // Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
@@ -514,6 +515,16 @@ export default () => {
     ipcMain.handle("app:screen-permission:ensure", (event) =>
         isFromActiveRenderer(event) ? ensureScreenPermission() : false
     );
+
+    // ---- Start at login (WorkAdventure's "Desktop application" settings) ----
+    ipcMain.handle("app:start-at-login:get", (event) => isFromActiveRenderer(event) && isStartAtLoginEnabled());
+    ipcMain.handle("app:start-at-login:set", (event, enabled: unknown) => {
+        if (!isFromActiveRenderer(event)) {
+            return false;
+        }
+        setStartAtLogin(enabled === true);
+        return isStartAtLoginEnabled();
+    });
 
     // ---- Picture-in-Picture (native utility window) ----
     // The PiP utility window is a frameless, always-on-top BrowserWindow that mirrors video tracks

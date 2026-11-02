@@ -6,6 +6,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         title: "桌面應用程式",
         installed: "已安裝版本",
         unknown: "無法取得",
+        startAtLogin: "登入電腦時啟動 WorkAdventure",
         browser: "你正在瀏覽器中使用 WorkAdventure。",
         recommendedVersion: "建議版本",
         minimumVersion: "最低支援版本",

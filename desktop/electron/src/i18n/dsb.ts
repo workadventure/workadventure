@@ -95,6 +95,7 @@ const dsb: NativeStrings = {
     "tray.showHide": "Pokazaś / schowaś",
     "tray.worlds": "Swěty",
     "tray.help": "Pomoc",
+    "tray.startAtLogin": "Pśi pśizjawjenju startowaś",
     "tray.checkForUpdates": "Za aktualizacijami pytaś",
     "tray.openLogs": "Protokole wócyniś",
     "tray.about": "Wó",

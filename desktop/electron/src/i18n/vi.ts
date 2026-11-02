@@ -96,6 +96,7 @@ const vi: NativeStrings = {
     "tray.showHide": "Hiện / ẩn",
     "tray.worlds": "Thế giới",
     "tray.help": "Trợ giúp",
+    "tray.startAtLogin": "Khởi động khi đăng nhập",
     "tray.checkForUpdates": "Kiểm tra cập nhật",
     "tray.openLogs": "Mở nhật ký",
     "tray.about": "Giới thiệu",

@@ -232,4 +232,13 @@ export type WorkAdventureDesktopApi = {
     windows?: WorkAdventureDesktopWindowsApi;
     /** macOS screen recording permission ("not-needed" elsewhere). */
     screenPermission?: WorkAdventureDesktopScreenPermissionApi;
+    /** Start WorkAdventure when the user logs in to the computer (the "Desktop application" settings). */
+    startAtLogin?: WorkAdventureDesktopStartAtLoginApi;
 };
+
+/** Read from the system each time, so a change made in its own startup settings shows. */
+export interface WorkAdventureDesktopStartAtLoginApi {
+    get: () => Promise<boolean>;
+    /** Resolves with the state the system ends up in. */
+    set: (enabled: boolean) => Promise<boolean>;
+}

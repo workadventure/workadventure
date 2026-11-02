@@ -9,7 +9,7 @@ import { startIdleMonitor } from "./idle-monitor";
 import { openCompanion, startCompanionController } from "./companion-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
-import { updateAutoLaunch } from "./auto-launch";
+import { initStartAtLogin } from "./auto-launch";
 import ipc from "./ipc";
 import settings from "./settings";
 import { setLogLevel } from "./log";
@@ -107,7 +107,7 @@ async function init() {
 
     // This method will be called when Electron has finished loading
     await app.whenReady().then(async () => {
-        await settings.init();
+        const firstLaunch = await settings.init();
 
         setLogLevel(settings.get("log_level") || "info");
 
@@ -116,8 +116,7 @@ async function init() {
         // long that request took to fail.
         void autoUpdater.init();
 
-        // enable auto launch
-        await updateAutoLaunch();
+        initStartAtLogin(firstLaunch);
 
         // load ipc handler
         ipc();

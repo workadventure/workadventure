@@ -95,6 +95,7 @@ const ja: NativeStrings = {
     "tray.showHide": "表示 / 非表示",
     "tray.worlds": "ワールド",
     "tray.help": "ヘルプ",
+    "tray.startAtLogin": "ログイン時に起動",
     "tray.checkForUpdates": "アップデートを確認",
     "tray.openLogs": "ログを開く",
     "tray.about": "このアプリについて",

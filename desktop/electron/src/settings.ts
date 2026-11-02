@@ -9,7 +9,6 @@ import {
 
 export type SettingsData = {
     log_level: ElectronLog.LogLevel;
-    auto_launch_enabled: boolean;
     /** Show the multi-tab strip at the top of the shell. Most users run single-tab, so it can be
      * turned off via the "Show tab bar" menu item. Defaults to on for backward compatibility. */
     tab_bar_enabled: boolean;
@@ -30,10 +29,6 @@ let settings: SettingsData;
 
 const defaultSettings: SettingsData = {
     log_level: "info",
-    // Auto-launch is OPT-IN: silently adding WorkAdventure to OS startup is non-compliant with
-    // macOS Sonoma+ background-item guidelines and Windows install best practices. Users explicitly
-    // opt in via the preferences UI.
-    auto_launch_enabled: false,
     tab_bar_enabled: true,
     portal_url: process.env.WA_DESKTOP_PORTAL_URL || getDefaultPortalUrl(),
     world_history: [],
@@ -69,9 +64,11 @@ function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | und
     return configured;
 }
 
-async function init() {
+/** Loads the settings. True on the first launch of a fresh install (nothing saved yet). */
+async function init(): Promise<boolean> {
     let _settings = await Settings.get();
-    if (Object.keys(_settings).length === 0) {
+    const firstLaunch = Object.keys(_settings).length === 0;
+    if (firstLaunch) {
         _settings = defaultSettings;
     }
     const persistedSettings = _settings as Partial<SettingsData>;
@@ -91,6 +88,7 @@ async function init() {
     // Pinned worlds are sanitized the same way; a modest cap keeps the sidebar/menus tidy.
     settings.pinned_worlds = normalizePersistedWorldHistory(persistedPinnedWorlds, 12);
     await Settings.set(settings);
+    return firstLaunch;
 }
 
 function get(): SettingsData;

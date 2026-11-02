@@ -95,6 +95,7 @@ const hsb: NativeStrings = {
     "tray.showHide": "Pokazać / schować",
     "tray.worlds": "Swěty",
     "tray.help": "Pomoc",
+    "tray.startAtLogin": "Při přizjewjenju startować",
     "tray.checkForUpdates": "Za aktualizacijemi pytać",
     "tray.openLogs": "Protokole wočinić",
     "tray.about": "Wo",
