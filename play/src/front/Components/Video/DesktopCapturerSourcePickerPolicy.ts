@@ -1,4 +1,4 @@
-import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
+import type { DesktopCapturerSource } from "@workadventure/desktop-api";
 
 export type DesktopCapturerSourceKind = "screen" | "window";
 

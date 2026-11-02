@@ -1,11 +1,40 @@
 import type { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
 import { formatTime, formatTimeUntil, meetingPlace, startOfDay } from "../../Components/Calendar/agenda";
 import { buildTodo, dueGroup, formatDue } from "../../Components/TodoList/todo";
-import type {
-    CompanionAgenda,
-    CompanionAgendaMeeting,
-    CompanionAgendaTask,
-} from "../../Interfaces/DesktopAppInterfaces";
+
+/** A meeting of the day in the companion's Today view; texts formatted by the world. */
+export type CompanionAgendaMeeting = {
+    id: string;
+    title: string;
+    /** Start time, "10:45". */
+    time: string;
+    /** "in 12 minutes · Google Meet", "In progress · until 10:30 · WorkAdventure". */
+    detail: string;
+    live: boolean;
+    /** In progress or starting within the hour: the strip under the header. */
+    soon: boolean;
+    joinable: boolean;
+    /** Takes place in this WorkAdventure: joining brings the app to the front. */
+    inApp: boolean;
+};
+
+/** An open task in the companion's Today view (read-only, like in WorkAdventure). */
+export type CompanionAgendaTask = {
+    id: string;
+    title: string;
+    /** The task list it belongs to. */
+    list: string;
+    inProgress: boolean;
+    /** "Yesterday", "Today", "Fri 16"; absent without a due date. */
+    due?: string;
+    urgency: "late" | "today" | "later";
+};
+
+/** Each part is absent when the world has no calendar / no task list connected. */
+export type CompanionAgenda = {
+    meetings?: CompanionAgendaMeeting[];
+    tasks?: { open: number; items: CompanionAgendaTask[] };
+};
 
 const SHOWN = 3;
 // A meeting starting within the hour gets the strip under the companion's header.

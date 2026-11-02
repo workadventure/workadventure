@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount, tick, unmount } from "svelte";
 import { mock } from "vitest-mock-extended";
-import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
+import type { WorkAdventureDesktopApi } from "@workadventure/desktop-api";
 import { loadLocale } from "../../../i18n/i18n-util.sync";
 import { setLocale } from "../../../i18n/i18n-svelte";
 vi.mock("../../Enum/EnvironmentVariable", () => ({

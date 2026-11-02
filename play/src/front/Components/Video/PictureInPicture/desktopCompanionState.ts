@@ -22,8 +22,7 @@ import { gameManager } from "../../../Phaser/Game/GameManager";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import type { PlayerInterface } from "../../../Phaser/Game/PlayerInterface";
 import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../../Chat/Connection/ChatConnection";
-import { buildCompanionAgenda } from "../../../Api/Desktop/CompanionAgenda";
-import type { CompanionAgenda } from "../../../Interfaces/DesktopAppInterfaces";
+import { buildCompanionAgenda, type CompanionAgenda } from "../../../Api/Desktop/CompanionAgenda";
 import { LL } from "../../../../i18n/i18n-svelte";
 
 /** The availability statuses the user picks, as the companion's status dots name them. */

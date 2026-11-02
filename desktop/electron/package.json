@@ -27,6 +27,7 @@
     },
     "devDependencies": {
         "@types/auto-launch": "^5.0.2",
+        "@workadventure/desktop-api": "file:../../libs/desktop-api",
         "@typescript-eslint/eslint-plugin": "^8.72.1",
         "@typescript-eslint/parser": "^8.72.1",
         "electron": "^45.0.0",

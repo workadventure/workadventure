@@ -1,5 +1,5 @@
 import { get, type Unsubscriber } from "svelte/store";
-import type { WorkAdventureDesktopWindowsApi } from "../../Interfaces/DesktopAppInterfaces";
+import type { WorkAdventureDesktopWindowsApi } from "@workadventure/desktop-api";
 import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
 import { presenterEffectManager } from "../../Space/ScreenAnnotation/PresenterEffectManager";
 import {

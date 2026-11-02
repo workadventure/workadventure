@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount, tick } from "svelte";
+    import type { DesktopCapturerSource, WorkAdventureDesktopWindowsApi } from "@workadventure/desktop-api";
     import { screenAnnotationManager } from "../../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { localAnnotationActiveStore, screenAnnotationEnabledStore } from "../../../Stores/ScreenAnnotationStore";
     import {
@@ -14,10 +15,6 @@
     } from "../../../Stores/MediaStore";
     import { requestedScreenSharingState, startScreenShareWithSource } from "../../../Stores/ScreenSharingStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
-    import type {
-        DesktopCapturerSource,
-        WorkAdventureDesktopWindowsApi,
-    } from "../../../Interfaces/DesktopAppInterfaces";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { toggleCamera, toggleMicrophone } from "./desktopCompanionState";
 

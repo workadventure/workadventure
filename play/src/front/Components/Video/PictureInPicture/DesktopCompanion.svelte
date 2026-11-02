@@ -1,12 +1,12 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { Color } from "@workadventure/shared-utils";
+    import type { WorkAdventureDesktopWindowsApi } from "@workadventure/desktop-api";
     import { meetingInvitationRequestStore } from "../../../Stores/MeetingInvitationStore";
     import { calendarEventsStore, isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { joinMeeting } from "../../Calendar/joinMeeting";
-    import type { WorkAdventureDesktopWindowsApi } from "../../../Interfaces/DesktopAppInterfaces";
-    import type { CompanionAgendaMeeting } from "../../../Interfaces/DesktopAppInterfaces";
+    import type { CompanionAgendaMeeting } from "../../../Api/Desktop/CompanionAgenda";
     import CompactConversation from "../../../Chat/Components/CompactConversation.svelte";
     import FloatingUiPopupList from "../../Util/FloatingUiPopupList.svelte";
     import DesktopCapturerSourcePicker from "../DesktopCapturerSourcePicker.svelte";

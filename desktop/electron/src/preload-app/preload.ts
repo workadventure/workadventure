@@ -1,7 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
 import { companionVisibleInShare } from "../share-surfaces-policy";
-import type { DesktopNativeStrings, WorkAdventureDesktopApi, WorkAdventureDesktopWindowsApi } from "./types";
+import type {
+    DesktopNativeStrings,
+    WorkAdventureDesktopApi,
+    WorkAdventureDesktopWindowsApi,
+} from "@workadventure/desktop-api";
 
 function subscribe(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args);

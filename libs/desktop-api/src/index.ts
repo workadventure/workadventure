@@ -1,3 +1,16 @@
+/**
+ * window.WAD: what the desktop app (desktop/electron, its preload) exposes to the pages it loads, the world
+ * pages of play and the native Landing.
+ *
+ * Types only, with no import: play and the desktop app both compile this file, and nothing of it reaches
+ * their bundles.
+ *
+ * It is a contract between versions: self-hosted servers stay on older releases while the app updates, and
+ * an older app may load a newer server. Members added after contract 1 are optional, so a page checks them
+ * before calling. A published member never goes away and never changes shape (contract.test.ts in the
+ * desktop app): add a new member for a new shape.
+ */
+
 // copy of Electron.SourcesOptions to avoid Electron dependency in front
 export interface SourcesOptions {
     types: string[];
@@ -23,6 +36,9 @@ export type DesktopRecentWorld = {
     label: string;
     pinned: boolean;
 };
+
+/** A slice of the desktop's native catalog, in the OS language. */
+export type DesktopNativeStrings = { lang: string; strings: Record<string, string> };
 
 /** The members other than joinWorld and openAdminSignup are only exposed to the native Landing. */
 export type WorkAdventureDesktopNavigationApi = {
@@ -50,14 +66,10 @@ export type WorkAdventureDesktopNavigationApi = {
     getStrings?: () => DesktopNativeStrings | null;
 };
 
-/** A slice of the desktop's native catalog, in the OS language. */
-export type DesktopNativeStrings = { lang: string; strings: Record<string, string> };
-
 /**
- * Rich notification payload of `WorkAdventureDesktopApi.notifyMessage`. Main
- * creates the OS notification with the WA icon and wires a click handler that focuses the main
- * window, emitting `onNotificationClick(tag)` back to the renderer so it can route to the right
- * room / conversation.
+ * Rich notification payload of `WorkAdventureDesktopApi.notifyMessage`. Main creates the OS notification
+ * with the WA icon and wires a click handler that focuses the main window, emitting
+ * `onNotificationClick(tag)` back to the renderer so it can route to the right room / conversation.
  */
 export type DesktopNotificationPayload = {
     title: string;
@@ -71,6 +83,37 @@ export type DesktopNotificationPayload = {
     /** Silent notifications don't play a sound / bounce the dock. */
     silent?: boolean;
 };
+
+/**
+ * The four user-selectable availability statuses, as stable string keys. Kept as strings (not the
+ * numeric AvailabilityStatus enum of @workadventure/messages) so the desktop app needs no dependency on
+ * it: the page maps to/from the enum on its side.
+ */
+export type DesktopAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+
+/**
+ * The live presence the page pushes to main, which drives the tray status dot, the tray quick-action
+ * checkmarks and the companion and meeting bar rules.
+ */
+export type DesktopPresence = {
+    inMeeting: boolean;
+    micEnabled: boolean;
+    cameraEnabled: boolean;
+    screenSharing: boolean;
+    /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
+    inWorld?: boolean;
+    /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
+    onboarding?: boolean;
+    /** True while a meeting invitation is pending — force-opens the companion for its banner. */
+    invitationPending?: boolean;
+    /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
+    autoOpenAllowed?: boolean;
+    /** The user's chosen availability, shown by the tray dot. */
+    requestedStatus?: DesktopAvailability;
+};
+
+/** The screen the user shares. */
+export type DesktopScreenShareSource = { sourceId: string; displayId?: number };
 
 /** The floating windows the world page renders as child windows. */
 export type DesktopChildWindowKind = "companion" | "meeting-bar" | "annotation";
@@ -103,6 +146,17 @@ export type WorkAdventureDesktopWindowsApi = {
     toggleTabStrip: () => void;
 };
 
+/** The macOS screen recording permission a share needs ("not-needed" on the other systems). */
+export type DesktopScreenPermission = "granted" | "missing" | "not-needed";
+
+export interface WorkAdventureDesktopScreenPermissionApi {
+    get: () => Promise<DesktopScreenPermission>;
+    /** Lists the app in System Settings (macOS's prompt the first time) and opens the Screen Recording pane. */
+    request: () => Promise<DesktopScreenPermission>;
+    /** Before a share: true when it can go on, else a native dialog explains and offers the settings or a restart. */
+    ensure: () => Promise<boolean>;
+}
+
 export type WorkAdventureDesktopApi = {
     desktop: boolean;
     /**
@@ -110,48 +164,32 @@ export type WorkAdventureDesktopApi = {
      * own. Absent on desktop apps of contract 1 (older than the handshake); null for a page the app does
      * not take as a world.
      */
-    hello: (page: { contract: number }) => { contract: number } | null;
+    hello?: (page: { contract: number }) => { contract: number } | null;
     isDevelopment: () => Promise<boolean>;
     getVersion: () => Promise<string>;
     /** Contract 1 (frozen): an OS notification whose body is the text, titled "WorkAdventure". */
     notify: (text: string) => void;
     /** An OS notification with a title, click routing (`tag`) and silence control. */
-    notifyMessage: (payload: DesktopNotificationPayload) => void;
+    notifyMessage?: (payload: DesktopNotificationPayload) => void;
     /**
      * Subscribe to notification-click events. The tag is the same value passed to `notifyMessage`; use
      * it to route to the originating chat room / world / etc. Returns an unsubscriber.
      */
-    onNotificationClick: (callback: (tag: string | undefined) => void) => () => void;
+    onNotificationClick?: (callback: (tag: string | undefined) => void) => () => void;
     /**
      * Keep the display awake while the user is in an active proximity meeting. Main manages a
      * single powerSaveBlocker; toggle on entry / off on leave (idempotent).
      */
-    setKeepAwake: (enabled: boolean) => void;
+    setKeepAwake?: (enabled: boolean) => void;
     /**
      * Update the dock (macOS) / taskbar (Windows) unread badge. Pass 0 to clear. Linux is a
      * silent no-op — X11/Wayland have no cross-DE badge primitive.
      */
-    setUnreadCount: (count: number) => void;
-    /**
-     * Push the live presence (in-meeting + mic/camera state + availability) to main, which drives
-     * the tray status dot, the tray quick-action checkmarks and the companion and meeting bar rules.
-     * `requestedStatus` is the user's chosen availability, shown by the tray dot.
-     */
-    setPresence: (presence: {
-        inMeeting: boolean;
-        micEnabled: boolean;
-        cameraEnabled: boolean;
-        screenSharing: boolean;
-        /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
-        inWorld?: boolean;
-        /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
-        onboarding?: boolean;
-        /** True while a meeting invitation is pending — force-opens the companion for its banner. */
-        invitationPending?: boolean;
-        requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
-    }) => void;
+    setUnreadCount?: (count: number) => void;
+    /** Push the live presence to main (see DesktopPresence). */
+    setPresence?: (presence: DesktopPresence) => void;
     /** The screen the user shares (null: none), so that the companion never opens by itself over it. */
-    setScreenShareSource?: (source: { sourceId: string; displayId?: number } | null) => void;
+    setScreenShareSource?: (source: DesktopScreenShareSource | null) => void;
     /**
      * Main asks this renderer to re-send its presence. Presence in the shell is a single global
      * describing the *active* tab, and it is cleared whenever the active tab changes; since the
@@ -160,13 +198,13 @@ export type WorkAdventureDesktopApi = {
      */
     onRequestPresence?: (callback: () => void) => () => void;
     /** Set the current world's display name on the active tab (admin-configured room name). */
-    setTabTitle: (title: string) => void;
+    setTabTitle?: (title: string) => void;
     /**
      * Subscribe to system idle/active transitions (main polls powerMonitor + screen-lock events).
      * The renderer uses this to auto-set the WA availability to "away" and back. Returns an
      * unsubscriber.
      */
-    onSystemIdle: (callback: (idle: boolean) => void) => () => void;
+    onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
     /**
      * Another tab entered a meeting: this world must turn off its microphone, camera and screen
      * share (one meeting at a time). Returns an unsubscriber.
@@ -190,18 +228,8 @@ export type WorkAdventureDesktopApi = {
      * every display with no other app-side exit.
      */
     cancelIdentifyScreens?: () => void;
-    navigation: WorkAdventureDesktopNavigationApi;
+    navigation?: WorkAdventureDesktopNavigationApi;
     windows?: WorkAdventureDesktopWindowsApi;
+    /** macOS screen recording permission ("not-needed" elsewhere). */
     screenPermission?: WorkAdventureDesktopScreenPermissionApi;
 };
-
-/** The macOS screen recording permission a share needs ("not-needed" on the other systems). */
-export type DesktopScreenPermission = "granted" | "missing" | "not-needed";
-
-export interface WorkAdventureDesktopScreenPermissionApi {
-    get: () => Promise<DesktopScreenPermission>;
-    /** Lists the app in System Settings (macOS's prompt the first time) and opens the Screen Recording pane. */
-    request: () => Promise<DesktopScreenPermission>;
-    /** Before a share: true when it can go on, else a native dialog explains and offers the settings or a restart. */
-    ensure: () => Promise<boolean>;
-}
