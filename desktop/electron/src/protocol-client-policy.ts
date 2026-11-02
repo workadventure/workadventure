@@ -1,12 +1,14 @@
-"use strict";
+import path from "node:path";
 
-const path = require("node:path");
-
-function isDevelopmentMainScriptArg(value) {
+function isDevelopmentMainScriptArg(value: string | undefined): value is string {
     return typeof value === "string" && !value.startsWith("workadventure://") && value.endsWith(".js");
 }
 
-function createDefaultProtocolClientArgs(options) {
+export function createDefaultProtocolClientArgs(options: {
+    defaultApp: boolean;
+    argv: string[];
+    cwd: string;
+}): string[] {
     const mainScriptArg = options.argv[1];
     if ((!options.defaultApp && !isDevelopmentMainScriptArg(mainScriptArg)) || options.argv.length < 2) {
         return [];
@@ -14,7 +16,3 @@ function createDefaultProtocolClientArgs(options) {
 
     return [path.resolve(options.cwd, mainScriptArg)];
 }
-
-module.exports = {
-    createDefaultProtocolClientArgs,
-};

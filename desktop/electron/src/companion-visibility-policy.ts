@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * When the Companion (People / Chat / meeting video) opens and closes. The desktop app is the only
  * decider: the world page reports facts (in a meeting, the "Allow picture-in-picture" setting, a
@@ -22,21 +20,25 @@
  * Pure functions (no Electron dependency) so the rules can be unit-tested.
  */
 
-/**
- * @param {{
- *   opened?: "no" | "auto" | "manual", // how the companion currently open was opened
- *   inWorld?: boolean,
- *   inMeeting?: boolean,
- *   invitationPending?: boolean,
- *   autoOpenAllowed?: boolean, // the "Allow picture-in-picture" setting
- *   waShowing?: boolean,
- *   dismissed?: boolean, // closed by the user since they last came back to WA
- *   placeAvailable?: boolean, // somewhere to open by itself (see companionAutoOpenDisplay)
- * }} state
- * @returns {"closed" | "auto" | "manual"}
- */
-function companionMode(state) {
-    const s = state || {};
+export type CompanionMode = "closed" | "auto" | "manual";
+
+export type CompanionState = {
+    /** How the companion currently open was opened. */
+    opened?: "no" | "auto" | "manual";
+    inWorld?: boolean;
+    inMeeting?: boolean;
+    invitationPending?: boolean;
+    /** The "Allow picture-in-picture" setting. */
+    autoOpenAllowed?: boolean;
+    /** WA shows: not minimized, hidden or fully covered. */
+    waShowing?: boolean;
+    /** Closed by the user since they last came back to WA. */
+    dismissed?: boolean;
+    /** Somewhere to open by itself (see companionAutoOpenDisplay). */
+    placeAvailable?: boolean;
+};
+
+export function companionMode(s: CompanionState): CompanionMode {
     if (!s.inWorld) {
         return "closed";
     }
@@ -56,7 +58,3 @@ function companionMode(state) {
     }
     return "closed";
 }
-
-module.exports = {
-    companionMode,
-};

@@ -1,36 +1,44 @@
-"use strict";
-
 // White-label worlds: origins the portal's admin confirmed as worlds of its install
 // (GET /api/desktop/verify-origin). They are trusted like *.workadventu.re for a limited time, so a
 // domain removed from a world (and maybe registered by someone else since) stops being trusted.
-const VERIFIED_ORIGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const VERIFIED_ORIGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
-function isRecord(value) {
+function isRecord(value: unknown): value is Record<string, unknown> {
     return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-/** Origins whose confirmation has not expired. */
-function activeVerifiedOrigins(stored, now = Date.now()) {
+function activeEntries(stored: unknown, now: number): [string, number][] {
     if (!isRecord(stored)) {
         return [];
     }
-    return Object.keys(stored).filter((origin) => typeof stored[origin] === "number" && stored[origin] > now);
+    return Object.entries(stored).filter(
+        (entry): entry is [string, number] => typeof entry[1] === "number" && entry[1] > now
+    );
+}
+
+/** Origins whose confirmation has not expired. */
+export function activeVerifiedOrigins(stored: unknown, now = Date.now()): string[] {
+    return activeEntries(stored, now).map(([origin]) => origin);
 }
 
 /** The stored map with `origin` confirmed until now + TTL, expired entries dropped. */
-function rememberVerifiedOrigin(stored, origin, now = Date.now(), ttlMs = VERIFIED_ORIGIN_TTL_MS) {
-    const next = {};
-    for (const active of activeVerifiedOrigins(stored, now)) {
-        next[active] = stored[active];
-    }
-    next[origin] = now + ttlMs;
-    return next;
+export function rememberVerifiedOrigin(
+    stored: unknown,
+    origin: string,
+    now = Date.now(),
+    ttlMs = VERIFIED_ORIGIN_TTL_MS
+): Record<string, number> {
+    return { ...Object.fromEntries(activeEntries(stored, now)), [origin]: now + ttlMs };
 }
 
 /** The admin endpoint to ask about `url`, or undefined when the portal cannot be trusted to answer. */
-function verifyOriginRequestUrl(portalUrl, url, allowInsecurePortal = false) {
-    let portal;
-    let target;
+export function verifyOriginRequestUrl(
+    portalUrl: string,
+    url: string,
+    allowInsecurePortal = false
+): string | undefined {
+    let portal: URL;
+    let target: URL;
     try {
         portal = new URL(portalUrl);
         target = new URL(url);
@@ -50,16 +58,16 @@ function verifyOriginRequestUrl(portalUrl, url, allowInsecurePortal = false) {
 
 // Self-hosted worlds: servers the user added by hand from the Landing (no admin to ask). Kept until
 // removed; capped so a settings file cannot grow without bound.
-const MAX_TRUSTED_SERVERS = 50;
+export const MAX_TRUSTED_SERVERS = 50;
 
 /**
  * The origin a user may add by hand, or undefined: a web URL without username/password, over https
  * (http only in development, since the page gets the native API and would be open to tampering).
  */
-function trustableOrigin(url, allowHttp = false) {
-    let target;
+export function trustableOrigin(url: unknown, allowHttp = false): string | undefined {
+    let target: URL;
     try {
-        target = new URL(String(url || "").trim());
+        target = new URL(typeof url === "string" ? url.trim() : "");
     } catch {
         return undefined;
     }
@@ -72,24 +80,16 @@ function trustableOrigin(url, allowHttp = false) {
     return target.origin;
 }
 
+function storedServers(stored: unknown): string[] {
+    return Array.isArray(stored) ? stored.filter((entry): entry is string => typeof entry === "string") : [];
+}
+
 /** The trusted servers with `origin` added (most recent first, deduplicated, capped). */
-function addTrustedServer(stored, origin) {
-    const current = Array.isArray(stored) ? stored.filter((entry) => typeof entry === "string") : [];
-    return [origin, ...current.filter((entry) => entry !== origin)].slice(0, MAX_TRUSTED_SERVERS);
+export function addTrustedServer(stored: unknown, origin: string): string[] {
+    return [origin, ...storedServers(stored).filter((entry) => entry !== origin)].slice(0, MAX_TRUSTED_SERVERS);
 }
 
 /** The trusted servers without `origin`. */
-function removeTrustedServer(stored, origin) {
-    return Array.isArray(stored) ? stored.filter((entry) => typeof entry === "string" && entry !== origin) : [];
+export function removeTrustedServer(stored: unknown, origin: string): string[] {
+    return storedServers(stored).filter((entry) => entry !== origin);
 }
-
-module.exports = {
-    MAX_TRUSTED_SERVERS,
-    addTrustedServer,
-    removeTrustedServer,
-    trustableOrigin,
-    VERIFIED_ORIGIN_TTL_MS,
-    activeVerifiedOrigins,
-    rememberVerifiedOrigin,
-    verifyOriginRequestUrl,
-};

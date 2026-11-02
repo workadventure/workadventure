@@ -1,4 +1,11 @@
-"use strict";
+export type MeetingTabs = {
+    meetingTab(): string | undefined;
+    controllingTab(activeTabId: string | undefined): string | undefined;
+    /** Returns the id of the tab that drove a meeting before this one entered its own, if any. */
+    setInMeeting(tabId: string, inMeeting: boolean): string | undefined;
+    forget(tabId: string): void;
+    clear(): void;
+};
 
 /**
  * Which tab drives media (mute/camera shortcuts, tray, companion, PiP, meeting bar).
@@ -8,12 +15,12 @@
  * controls: a tab already in one re-reporting it (its mic changed, say) changes nothing, otherwise a
  * tab that was told to drop its media would take the controls back on its next presence push.
  */
-function createMeetingTabs() {
-    const meetings = new Map();
+export function createMeetingTabs(): MeetingTabs {
+    const meetings = new Map<string, number>();
     let counter = 0;
 
-    function meetingTab() {
-        let latest;
+    function meetingTab(): string | undefined {
+        let latest: string | undefined;
         let latestAt = -1;
         for (const [id, at] of meetings) {
             if (at > latestAt) {
@@ -50,5 +57,3 @@ function createMeetingTabs() {
         },
     };
 }
-
-module.exports = { createMeetingTabs };

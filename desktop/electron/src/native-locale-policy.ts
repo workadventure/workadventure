@@ -1,8 +1,6 @@
-"use strict";
-
 // Languages of the native catalog (src/i18n/), the same set as the WorkAdventure front. Chinese is
 // split by script; every other language is matched on its prefix only (fr-CA → fr).
-const NATIVE_LOCALES = [
+export const NATIVE_LOCALES = [
     "ar",
     "ca",
     "de",
@@ -20,10 +18,16 @@ const NATIVE_LOCALES = [
     "vi",
     "zh-CN",
     "zh-TW",
-];
+] as const;
+
+export type NativeLocale = (typeof NATIVE_LOCALES)[number];
+
+function isNativeLocale(value: string): value is NativeLocale {
+    return (NATIVE_LOCALES as readonly string[]).includes(value);
+}
 
 /** Map an OS/Chromium locale (app.getLocale(), e.g. "fr-CA", "zh-Hant-TW") to a catalog key. */
-function resolveNativeLocale(appLocale) {
+export function resolveNativeLocale(appLocale: string): NativeLocale {
     const parts = String(appLocale || "")
         .replace(/_/g, "-")
         .toLowerCase()
@@ -33,15 +37,15 @@ function resolveNativeLocale(appLocale) {
         // Traditional script (explicit Hant, or a region that writes it) → zh-TW; the rest → zh-CN.
         return parts.slice(1).some((part) => ["hant", "tw", "hk", "mo"].includes(part)) ? "zh-TW" : "zh-CN";
     }
-    return NATIVE_LOCALES.includes(language) ? language : "en";
+    return isNativeLocale(language) ? language : "en";
 }
 
 /** Replace `{name}` placeholders; unknown placeholders are left as-is. */
-function interpolate(template, params) {
+export function interpolate(template: string, params?: Record<string, string | number>): string {
     if (!params) {
         return template;
     }
-    return template.replace(/\{(\w+)\}/g, (match, name) =>
+    return template.replace(/\{(\w+)\}/g, (match, name: string) =>
         Object.prototype.hasOwnProperty.call(params, name) ? String(params[name]) : match
     );
 }
@@ -52,7 +56,7 @@ const MAX_KEY_LENGTH = 100;
 const MAX_VALUE_LENGTH = 1000;
 
 /** A flat `Record<string, string>` of bounded size, or undefined if the payload is anything else. */
-function sanitizeStringTable(payload) {
+export function sanitizeStringTable(payload: unknown): Record<string, string> | undefined {
     if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
         return undefined;
     }
@@ -60,7 +64,7 @@ function sanitizeStringTable(payload) {
     if (entries.length > MAX_TABLE_ENTRIES) {
         return undefined;
     }
-    const table = {};
+    const table: Record<string, string> = {};
     for (const [key, value] of entries) {
         if (key.length > MAX_KEY_LENGTH || typeof value !== "string" || value.length > MAX_VALUE_LENGTH) {
             return undefined;
@@ -74,17 +78,9 @@ function sanitizeStringTable(payload) {
 const RTL_LANGUAGES = ["ar", "fa", "he", "ur"];
 
 /** "rtl" or "ltr" for an HTML `dir` attribute, from a language tag such as "ar-SA" or "fr". */
-function textDirection(lang) {
+export function textDirection(lang: string): "rtl" | "ltr" {
     const language = String(lang || "")
         .toLowerCase()
         .split(/[-_]/)[0];
     return RTL_LANGUAGES.includes(language) ? "rtl" : "ltr";
 }
-
-module.exports = {
-    NATIVE_LOCALES,
-    textDirection,
-    resolveNativeLocale,
-    interpolate,
-    sanitizeStringTable,
-};

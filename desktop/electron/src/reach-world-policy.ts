@@ -1,4 +1,4 @@
-"use strict";
+type Presence = { inWorld: boolean; onboarding: boolean };
 
 /**
  * What the reach-the-world watchdog does when the presence changes. Its clock only runs while the
@@ -6,7 +6,10 @@
  * screens (name, Woka, companion, camera), which wait for the user rather than the network. Leaving
  * those screens starts the clock again.
  */
-function reachWorldWatchdogStep(presence, clockRunning) {
+export function reachWorldWatchdogStep(
+    presence: Presence,
+    clockRunning: boolean
+): "reached" | "pause" | "resume" | "none" {
     if (presence.inWorld) {
         return "reached";
     }
@@ -21,7 +24,10 @@ function reachWorldWatchdogStep(presence, clockRunning) {
  * since the load started cannot tell whether the user got in: a WorkAdventure server older than the
  * desktop app never does. It is left alone rather than sent back to the Landing every 45 seconds.
  */
-function reachWorldDeadlineAction(presence, frontReportsPresence) {
+export function reachWorldDeadlineAction(
+    presence: Presence,
+    frontReportsPresence: boolean
+): "reached" | "wait" | "unknown" | "bounce" {
     if (presence.inWorld) {
         return "reached";
     }
@@ -33,5 +39,3 @@ function reachWorldDeadlineAction(presence, frontReportsPresence) {
     }
     return "bounce";
 }
-
-module.exports = { reachWorldWatchdogStep, reachWorldDeadlineAction };

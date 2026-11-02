@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "ES2023",
     "module": "commonjs",
-    "allowJs": true,
     "sourceMap": true,
     "outDir": "./dist",
     "strict": true,

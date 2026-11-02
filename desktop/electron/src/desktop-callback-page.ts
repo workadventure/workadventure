@@ -1,8 +1,6 @@
-"use strict";
+import { textDirection } from "./native-locale-policy";
 
-const { textDirection } = require("./native-locale-policy");
-
-function escapeHtml(value) {
+function escapeHtml(value: string): string {
     return value
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -11,7 +9,11 @@ function escapeHtml(value) {
         .replaceAll("'", "&#39;");
 }
 
-function createDesktopCallbackPage(message, closeHint = "You can close this window.", lang = "en") {
+export function createDesktopCallbackPage(
+    message: string,
+    closeHint = "You can close this window.",
+    lang = "en"
+): string {
     const safeMessage = escapeHtml(message);
     return `<!doctype html>
 <html lang="${escapeHtml(lang)}" dir="${textDirection(lang)}">
@@ -30,7 +32,3 @@ function createDesktopCallbackPage(message, closeHint = "You can close this wind
 </body>
 </html>`;
 }
-
-module.exports = {
-    createDesktopCallbackPage,
-};
