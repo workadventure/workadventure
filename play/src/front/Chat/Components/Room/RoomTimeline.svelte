@@ -80,6 +80,8 @@
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
     const AUTO_SCROLL_THRESHOLD_PX = 20;
+    /** The jump button is 32 px tall and sits 12 px above the input: below this, it covers the header. */
+    const JUMP_BUTTON_MIN_LIST_HEIGHT_PX = 48;
     /** Room left above the "New messages" line when a room opens on it. */
     const UNREAD_DIVIDER_TOP_MARGIN_PX = 8;
     /** No scroll event for this long means our own smooth animation has landed. */
@@ -106,6 +108,8 @@
     let newMessagesCount = $state(0);
     /** More than a screen above the bottom: worth offering a way back even with nothing new. */
     let farFromBottom = $state(false);
+    /** Height of the visible list: the applications panel can squeeze it down to nothing. */
+    let messageListHeight = $state(0);
 
     // Imperative, deliberately not $state: read and written from DOM handlers, never from the template.
     let scrollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -358,6 +362,12 @@
      */
     function syncContentResizeObservations() {
         if (!contentResizeObserver || !messageListRef) return;
+        // The list's own box too: when something above the input opens (applications, attachments),
+        // the list shrinks without any message changing, and a pinned list must stay pinned.
+        if (!observedItems.has(messageListRef)) {
+            observedItems.add(messageListRef);
+            contentResizeObserver.observe(messageListRef);
+        }
         for (const item of messageListRef.querySelectorAll<HTMLLIElement>("li[data-event-id]")) {
             if (observedItems.has(item)) continue;
             observedItems.add(item);
@@ -885,6 +895,7 @@
         </div>
         <div
             bind:this={messageListRef}
+            bind:clientHeight={messageListHeight}
             class="flex overflow-auto h-full justify-center items-end relative"
             onscroll={handleScroll}
             onwheel={cancelProgrammaticScroll}
@@ -983,7 +994,8 @@
             </ul>
         </div>
 
-        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom)}
+        <!-- Not over a list squeezed out of sight: the button would float over the applications panel. -->
+        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom) && messageListHeight > JUMP_BUTTON_MIN_LIST_HEIGHT_PX}
             <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
             <div class="relative h-0">
                 {#snippet newMessagesLabel()}
