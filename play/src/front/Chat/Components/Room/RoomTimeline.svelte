@@ -1014,9 +1014,10 @@
                 <!-- The input is disabled until the unsent messages are retried: say so here, where the user is. -->
                 <RefreshChat />
             {/if}
-            {#if $initializationState === "ready" && $typingMembers.length > 0}
-                <TypingUsers typingMembers={$typingMembers} />
-            {/if}
+            <TypingUsers
+                typingMembers={$initializationState === "ready" ? $typingMembers : []}
+                isDirect={$roomTypeStore === "direct"}
+            />
             {#key room}
                 <MessageInputBar
                     disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}
