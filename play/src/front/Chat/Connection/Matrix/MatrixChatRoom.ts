@@ -160,6 +160,7 @@ export class MatrixChatRoom
     readonly canSendMessages: Readable<boolean>;
     readonly canSendReactions: Readable<boolean>;
     typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    readonly typingNames: Readable<string[]>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember | undefined>;
@@ -580,6 +581,23 @@ export class MatrixChatRoom
             },
             [],
         );
+        this.typingNames = readable<string[]>([], (set) => {
+            const update = () =>
+                set(
+                    this.matrixRoom
+                        .getMembers()
+                        .filter((member) => member.typing && member.userId !== this.matrixRoom.myUserId)
+                        .map((member) => member.name),
+                );
+            const onTyping = (_event: MatrixEvent, member: RoomMember) => {
+                if (member.roomId === this.id) {
+                    update();
+                }
+            };
+            update();
+            this.matrixRoom.client.on(RoomMemberEvent.Typing, onTyping);
+            return () => this.matrixRoom.client.off(RoomMemberEvent.Typing, onTyping);
+        });
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 

@@ -164,6 +164,8 @@ export interface ChatConversation {
     readonly loadMorePreviousMessages: () => Promise<void>;
     readonly isEncrypted: Readable<boolean>;
     readonly typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    /** Who is typing, known before the members are loaded: what the room list shows. */
+    readonly typingNames?: Readable<string[]>;
     readonly startTyping: () => Promise<object>;
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;

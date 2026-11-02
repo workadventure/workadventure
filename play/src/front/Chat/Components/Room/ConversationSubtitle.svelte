@@ -70,6 +70,9 @@
     let bubble = $derived(hasProximityChatSidePanel(room) ? room : undefined);
     let participantsStore = $derived(bubble?.currentMeetingParticipantsStore ?? readable([]));
 
+    let typingNamesStore = $derived(room.typingNames ?? room.typingMembers);
+    let peerIsTyping = $derived($roomTypeStore === "direct" && $typingNamesStore.length > 0);
+
     let subtitle = $derived.by(() => {
         if (bubble) {
             return formatBubbleSubtitle($LL, $participantsStore, localUserStore.getLocalUser()?.uuid);
@@ -96,7 +99,11 @@
     });
 </script>
 
-{#if subtitle}
+{#if peerIsTyping}
+    <div class="text-xs font-normal text-success truncate {centered ? 'text-center' : ''}" data-testid="roomSubtitle">
+        {$LL.chat.typingIndicator.direct()}
+    </div>
+{:else if subtitle}
     <div
         class="text-xs font-normal opacity-75 truncate flex items-center gap-1 {centered ? 'justify-center' : ''}"
         data-testid="roomSubtitle"
