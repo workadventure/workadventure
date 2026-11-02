@@ -33,7 +33,7 @@ function onError(e: Error) {
         log.error(e);
 
         dialog.showErrorBox("WorkAdventure - A JavaScript error occurred", e.stack || "");
-    } catch (logError) {
+    } catch {
         console.error(e);
     }
 }
