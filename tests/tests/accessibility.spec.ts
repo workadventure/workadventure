@@ -63,17 +63,18 @@ test.describe("Screen reader announcements @nomobile @nowebkit", () => {
         await using alice = await getPage(browser, "Alice", url);
         await using bob = await getPage(browser, "Bob", url);
 
-        // Not announced before anything happens: the regions are in the page, empty.
+        // Both spawn on the same tile, so they may already share a bubble: move Bob away and let any announcement expire.
         const aliceRegion = alice.getByTestId("liveAnnouncer");
-        await expect(aliceRegion).toHaveAttribute("data-polite", "");
-
         const position = await evaluateScript(alice, async () => WA.player.getPosition());
+        await Map.teleportToPosition(bob, position.x + 20 * 32, position.y);
+        await expect(aliceRegion).not.toHaveAttribute("data-polite", /Bob/, { timeout: 15_000 });
+
         await Map.teleportToPosition(bob, position.x, position.y);
-        await expect(aliceRegion).toHaveAttribute("data-polite", /Bob/, { timeout: 30_000 });
+        await expect(aliceRegion).toHaveAttribute("data-polite", /New discussion with Bob|Bob joined/, { timeout: 30_000 });
 
         // The join announcement expires, then the leave is announced.
         await expect(aliceRegion).not.toHaveAttribute("data-polite", /Bob/, { timeout: 15_000 });
         await Map.teleportToPosition(bob, position.x + 20 * 32, position.y);
-        await expect(aliceRegion).toHaveAttribute("data-polite", /Bob/, { timeout: 30_000 });
+        await expect(aliceRegion).toHaveAttribute("data-polite", /Bob has left/, { timeout: 30_000 });
     });
 });
