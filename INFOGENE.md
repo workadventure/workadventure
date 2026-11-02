@@ -415,6 +415,9 @@ peut réduire sa qualité.
 
 Le bouton d'enregistrement indique « Les enregistrements sont désactivés pour ce monde »
 si la salle ne permet pas de démarrer un enregistrement et qu'aucun enregistrement n'est actif.
+Ce message remplace aussi le titre « Démarrer l'enregistrement » ; la vidéo de démonstration
+ne s'affiche que lorsqu'un démarrage est autorisé. Le message d'indisponibilité n'est pas répété
+dans la description de l'infobulle.
 Une raison fournie par l'Admin API reste affichée. Le message « Un enregistrement est en cours »
 est réservé à un enregistrement confirmé ; les demandes en attente affichent
 « Démarrer l'enregistrement… » ou « Arrêter l'enregistrement… ».

@@ -77,6 +77,8 @@ describe("RecordingMenuItem tooltip", () => {
             const { body } = render(RecordingMenuItem, { props: { recordingMenuState: readable(idleState) } });
 
             expect(body).toContain("Les enregistrements sont désactivés pour ce monde.");
+            expect(body).not.toContain("Démarrer l'enregistrement");
+            expect(body).not.toContain("Record.mp4");
             expect(body).not.toContain("Un enregistrement est en cours");
             expect(body).not.toContain("animate-pulse");
         },
@@ -88,6 +90,8 @@ describe("RecordingMenuItem tooltip", () => {
         const { body } = render(RecordingMenuItem, { props: { recordingMenuState: readable(idleState) } });
 
         expect(body).toContain(context.room.recording.disabledReason);
+        expect(body).not.toContain("Démarrer l'enregistrement");
+        expect(body).not.toContain("Record.mp4");
         expect(body).not.toContain("Un enregistrement est en cours");
     });
 
@@ -97,6 +101,8 @@ describe("RecordingMenuItem tooltip", () => {
         const { body } = render(RecordingMenuItem, { props: { recordingMenuState: readable(idleState) } });
 
         expect(body).toContain("Vous devez être connecté pour enregistrer.");
+        expect(body).not.toContain("Démarrer l'enregistrement");
+        expect(body).not.toContain("Record.mp4");
         expect(body).not.toContain("Un enregistrement est en cours");
     });
 
@@ -134,6 +140,7 @@ describe("RecordingMenuItem tooltip", () => {
         const { body } = render(RecordingMenuItem, { props: { recordingMenuState: readable(state) } });
 
         expect(body).toContain("Démarrer l'enregistrement");
+        expect(body).toContain("Record.mp4");
         expect(body).toContain("Tous les participants seront notifiés que vous démarrez un enregistrement.");
         expect(body).not.toContain("Un enregistrement est en cours");
     });
