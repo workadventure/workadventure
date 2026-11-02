@@ -70,7 +70,9 @@ test.describe("Screen reader announcements @nomobile @nowebkit", () => {
         await expect(aliceRegion).not.toHaveAttribute("data-polite", /Bob/, { timeout: 15_000 });
 
         await Map.teleportToPosition(bob, position.x, position.y);
-        await expect(aliceRegion).toHaveAttribute("data-polite", /New discussion with Bob|Bob joined/, { timeout: 30_000 });
+        await expect(aliceRegion).toHaveAttribute("data-polite", /New discussion with Bob|Bob joined/, {
+            timeout: 30_000,
+        });
 
         // The join announcement expires, then the leave is announced.
         await expect(aliceRegion).not.toHaveAttribute("data-polite", /Bob/, { timeout: 15_000 });
