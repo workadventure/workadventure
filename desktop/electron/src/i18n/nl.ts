@@ -118,7 +118,8 @@ const nl: NativeStrings = {
     "update.installAndRestart": "Installeren en opnieuw starten",
     "update.installLater": "Later installeren",
     "update.availableTitle": "WorkAdventure-update beschikbaar",
-    "update.availableBody": "Download en installeer de nieuwste versie via de website van WorkAdventure.",
+    "update.availableBody":
+        "De update wordt met je systeemupdates geïnstalleerd. Nu installeren: sudo apt update && sudo apt upgrade",
     "update.none": "Geen update beschikbaar.",
 };
 

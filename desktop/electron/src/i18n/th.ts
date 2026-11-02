@@ -114,7 +114,8 @@ const th: NativeStrings = {
     "update.installAndRestart": "ติดตั้งและรีสตาร์ท",
     "update.installLater": "ติดตั้งภายหลัง",
     "update.availableTitle": "มีอัปเดต WorkAdventure ใหม่",
-    "update.availableBody": "ดาวน์โหลดและติดตั้งเวอร์ชันล่าสุดจากเว็บไซต์ WorkAdventure",
+    "update.availableBody":
+        "อัปเดตจะติดตั้งพร้อมกับการอัปเดตระบบ หากต้องการติดตั้งทันที: sudo apt update && sudo apt upgrade",
     "update.none": "ไม่มีอัปเดต",
 };
 

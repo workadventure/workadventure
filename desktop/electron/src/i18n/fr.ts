@@ -121,7 +121,8 @@ const fr: NativeStrings = {
     "update.installAndRestart": "Installer et redémarrer",
     "update.installLater": "Installer plus tard",
     "update.availableTitle": "Mise à jour de WorkAdventure disponible",
-    "update.availableBody": "Téléchargez et installez la dernière version depuis le site de WorkAdventure.",
+    "update.availableBody":
+        "Elle sera installée avec les mises à jour du système. Pour l'installer maintenant : sudo apt update && sudo apt upgrade",
     "update.none": "Aucune mise à jour disponible.",
 };
 

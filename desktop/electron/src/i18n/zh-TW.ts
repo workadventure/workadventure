@@ -109,7 +109,7 @@ const zhTW: NativeStrings = {
     "update.installAndRestart": "安裝並重新啟動",
     "update.installLater": "稍後安裝",
     "update.availableTitle": "WorkAdventure 有可用的更新",
-    "update.availableBody": "請從 WorkAdventure 網站下載並安裝最新版本。",
+    "update.availableBody": "它將隨系統更新一起安裝。如需立即安裝，請執行：sudo apt update && sudo apt upgrade",
     "update.none": "目前沒有可用的更新。",
 };
 

@@ -118,7 +118,8 @@ const es: NativeStrings = {
     "update.installAndRestart": "Instalar y reiniciar",
     "update.installLater": "Instalar más tarde",
     "update.availableTitle": "Hay una actualización de WorkAdventure disponible",
-    "update.availableBody": "Descarga e instala la última versión desde el sitio web de WorkAdventure.",
+    "update.availableBody":
+        "Se instalará con las actualizaciones del sistema. Para instalarla ahora: sudo apt update && sudo apt upgrade",
     "update.none": "No hay actualizaciones disponibles.",
 };
 
