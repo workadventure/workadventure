@@ -380,7 +380,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Dopórucona śpa",
         suggestedDescription: "Toś ta śpa se dopóruco wužywarjam, kótarež se pśizamaknu k samemu rumoju.",
-        users: "Wužywarje",
         historyVisibility: {
             label: "Chto móžo historiju cytaś",
             world_readable: "Wšykne",
@@ -457,13 +456,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Wobźělniki",
         error: "Njejo móžno, pśepšosynki pósłaś",
-        title: "Wobźělnikow zastojaś",
-        invitations: "Pśepšosynki",
         participants: "Wobźělniki",
         roomID: "ID śpy: {roomId}",
-        join: "Pśibytny",
         invite: "Pśepšosony",
         ban: "Zablokěrowany",
         kick: "Wugnaś",
@@ -478,7 +473,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Deblokěrowaś",
             invite: "Pśepšosyś",
             cancelInvitation: "Pśepšosenje anulěrowaś",
-            close: "Zacyniś",
         },
         roles: {
             USER: "Wužywaŕ",
@@ -514,6 +508,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Zaklucowany",
             notEncrypted: "Njezaklucowany",
             readOnly: "Jano za cytanje",
+            copyRoomId: "ID rumy kopěrowaś",
         },
         settings: {
             roomType: "Typ ruma",
@@ -574,6 +569,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Wótběgi njedaju se zacytaś. Prošu wopytajśo hyšći raz.",
         pollsPartial: "Za někotare wótběgi njedachu se jich detalěrowane wuslědki zacytaś.",
         pollFocusError: "Toś ten wótběg njedajo se w casowej smužce wócyniś.",
+        closeFolderMembers: "Cłonki zarědnika zacyniś",
+        folderMembersHint: "Cłonki zarědnika mógu do jogo rumow zastupiś, kótarež su za cłonki wótwórjone.",
     },
     roomMenu: {
         leaveRoom: {

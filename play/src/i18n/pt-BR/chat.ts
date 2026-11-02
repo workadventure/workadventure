@@ -380,7 +380,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Sala sugerida",
         suggestedDescription: "Esta sala será sugerida aos usuários que estão no mesmo espaço.",
-        users: "Usuários",
         historyVisibility: {
             label: "Quem pode ler o histórico?",
             world_readable: "Qualquer pessoa",
@@ -457,12 +456,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participantes",
         error: "Não foi possível enviar convites",
-        title: "Gerenciar participantes",
-        invitations: "Convites",
         participants: "Participantes",
-        join: "Entrou",
         invite: "Convidado",
         ban: "Banido",
         kick: "Expulso",
@@ -478,7 +473,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Desbanir",
             invite: "Convidar",
             cancelInvitation: "Cancelar convite",
-            close: "Fechar",
         },
         roles: {
             USER: "Usuário",
@@ -514,6 +508,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Criptografada",
             notEncrypted: "Não criptografada",
             readOnly: "Somente leitura",
+            copyRoomId: "Copiar o ID da sala",
         },
         settings: {
             roomType: "Tipo de sala",
@@ -574,6 +569,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Não foi possível carregar as enquetes. Tente novamente.",
         pollsPartial: "Algumas enquetes não puderam carregar seus resultados detalhados.",
         pollFocusError: "Não foi possível abrir esta enquete na linha do tempo.",
+        closeFolderMembers: "Fechar os membros da pasta",
+        folderMembersHint: "Os membros da pasta podem entrar nas salas dela abertas aos membros.",
     },
     roomMenu: {
         leaveRoom: {

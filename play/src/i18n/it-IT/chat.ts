@@ -380,7 +380,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Stanza consigliata",
         suggestedDescription: "Questa stanza sarà consigliata agli utenti che si uniscono allo stesso spazio.",
-        users: "Utenti",
         historyVisibility: {
             label: "Chi può leggere la cronologia?",
             world_readable: "Chiunque",
@@ -457,13 +456,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Partecipanti",
         error: "Impossibile inviare inviti",
-        title: "Gestisci i partecipanti",
-        invitations: "Inviti",
         participants: "Partecipanti",
         roomID: "ID stanza: {roomId}",
-        join: "Unito",
         invite: "Invitato",
         ban: "Bannato",
         kick: "Espulso",
@@ -478,7 +473,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Revoca ban",
             invite: "Invita",
             cancelInvitation: "Annulla invito",
-            close: "Chiudi",
         },
         roles: {
             USER: "Utente",
@@ -514,6 +508,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Crittografata",
             notEncrypted: "Non crittografata",
             readOnly: "Sola lettura",
+            copyRoomId: "Copia l'ID della stanza",
         },
         settings: {
             roomType: "Tipo di stanza",
@@ -574,6 +569,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Impossibile caricare i sondaggi. Riprova.",
         pollsPartial: "Per alcuni sondaggi non è stato possibile caricare i risultati dettagliati.",
         pollFocusError: "Impossibile aprire questo sondaggio nella timeline.",
+        closeFolderMembers: "Chiudi i membri della cartella",
+        folderMembersHint: "I membri della cartella possono entrare nelle sue stanze aperte ai membri.",
     },
     roomMenu: {
         leaveRoom: {
