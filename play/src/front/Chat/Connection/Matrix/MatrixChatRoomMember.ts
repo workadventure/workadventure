@@ -140,6 +140,26 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.refreshAvatarFromRoomMember();
     }
 
+    /**
+     * The room state was replaced (refreshLiveTimeline, a gappy sync): it brings new RoomMember objects, and only
+     * those receive the next membership or power level events.
+     */
+    rebind(roomMember: RoomMember): void {
+        if (roomMember === this.roomMember) {
+            return;
+        }
+        this.roomMember.off(RoomMemberEvent.Membership, this.handleRoomMemberMembership);
+        this.roomMember.off(RoomMemberEvent.PowerLevel, this.handleRoomMemberPowerLevel);
+        this.roomMember.off(RoomMemberEvent.Name, this.handleRoomMemberName);
+        this.roomMember.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
+        this.roomMember = roomMember;
+        this.startHandlingChatRoomMemberEvents();
+        this.membership.set(roomMember.membership ?? "unknown");
+        this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(roomMember.powerLevel));
+        this.name.set(roomMember.name);
+        this.refreshAvatarFromRoomMember();
+    }
+
     private startHandlingChatRoomMemberEvents(): void {
         this.roomMember.on(RoomMemberEvent.Membership, this.handleRoomMemberMembership);
         this.roomMember.on(RoomMemberEvent.PowerLevel, this.handleRoomMemberPowerLevel);
