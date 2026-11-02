@@ -69,10 +69,6 @@ jobs:
         run: npm run build
         working-directory: "desktop/electron"
 
-      - name: "Install electron tools"
-        run: npx electron-builder install-app-deps
-        working-directory: "desktop/electron"
-
       - name: "Build app for testing"
         run: npx electron-builder --publish never
         env:
