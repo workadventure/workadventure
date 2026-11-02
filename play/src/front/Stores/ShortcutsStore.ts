@@ -78,7 +78,8 @@ function createShortcutOverridesStore() {
         },
         reset(action: ShortcutAction) {
             update((overrides) => {
-                const { [action]: _reset, ...rest } = overrides;
+                const rest = { ...overrides };
+                delete rest[action];
                 return save(rest);
             });
         },

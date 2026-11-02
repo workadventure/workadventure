@@ -1,6 +1,5 @@
 import * as Phaser from "phaser";
 import type { Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
 
