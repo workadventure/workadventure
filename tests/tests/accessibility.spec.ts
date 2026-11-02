@@ -57,7 +57,7 @@ test.describe("Accessibility @nomobile", () => {
     });
 });
 
-test.describe("Screen reader announcements @nomobile", () => {
+test.describe("Screen reader announcements @nomobile @nowebkit", () => {
     test("someone joining or leaving my bubble is announced", async ({ browser }) => {
         const url = MAP_URL;
         await using alice = await getPage(browser, "Alice", url);
