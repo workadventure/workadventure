@@ -194,6 +194,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "เปิดป็อปอัปพูด",
         openThinkPopup: "เปิดป็อปอัปคิด",
         walkMyDesk: "เดินไปยังโต๊ะของฉัน",
+        subtitle: "จะถูกปิดใช้งานขณะที่คุณพิมพ์ในช่องข้อความ",
+        searchLabel: "ค้นหาทางลัด",
+        searchPlaceholder: "ค้นหาการกระทำหรือปุ่ม…",
+        noResult: "ไม่มีทางลัดที่ตรงกับ “{query}”",
+        or: "หรือ",
+        layout: "รูปแบบแป้นพิมพ์",
+        walk: "เดิน",
+        sendEmote: "ส่งอีโมต",
+        groups: {
+            move: "เคลื่อนที่",
+            communicate: "สื่อสาร",
+            express: "แสดงออก",
+            interact: "โต้ตอบ",
+        },
+        hints: {
+            speedUp: "กดค้างไว้ขณะเคลื่อนที่",
+            follow: "เมื่ออยู่ใกล้ใครสักคน",
+            emotes: "ตามลำดับในแถบอีโมต",
+            mapEditor: "หากคุณแก้ไขแผนที่ได้",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Space",
+        },
     },
 };
 

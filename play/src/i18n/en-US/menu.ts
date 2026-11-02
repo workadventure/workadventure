@@ -193,6 +193,31 @@ const menu: BaseTranslation = {
         openSayPopup: "Open Say Popup",
         openThinkPopup: "Open Think Popup",
         walkMyDesk: "Walk to My Desk",
+        subtitle: "They are disabled while you type in a text field.",
+        searchLabel: "Search a shortcut",
+        searchPlaceholder: "Search an action or a key…",
+        noResult: "No shortcut matches “{query}”.",
+        or: "or",
+        layout: "Keyboard layout",
+        walk: "Walk",
+        sendEmote: "Send an emote",
+        groups: {
+            move: "Move",
+            communicate: "Communicate",
+            express: "Express yourself",
+            interact: "Interact",
+        },
+        hints: {
+            speedUp: "Hold while moving",
+            follow: "Near someone",
+            emotes: "In the order of the emote bar",
+            mapEditor: "If you can edit the map",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Space",
+        },
     },
 };
 

@@ -195,6 +195,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: 'popup „rěkać" wočinić',
         openThinkPopup: 'popup „myslić" wočinić',
         walkMyDesk: "k mojemu blidkej hić",
+        subtitle: "Su znjemóžnjene, mjeztym zo do tekstoweho pola pišeš.",
+        searchLabel: "Tastowu skrótšenku pytać",
+        searchPlaceholder: "Akciju abo tastu pytać…",
+        noResult: "Žana tastowa skrótšenka njewotpowěduje „{query}“.",
+        or: "abo",
+        layout: "Wuhotowanje tastatury",
+        walk: "Hić",
+        sendEmote: "Emote pósłać",
+        groups: {
+            move: "Pohibować so",
+            communicate: "Komunikować",
+            express: "So wuprajić",
+            interact: "Interagować",
+        },
+        hints: {
+            speedUp: "Při chodźenju dźeržeć",
+            follow: "Blisko někoho",
+            emotes: "W rjedźe emote-lajsty",
+            mapEditor: "Hdyž móžeš kartu wobdźěłać",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Mjezerowa tasta",
+        },
     },
 };
 

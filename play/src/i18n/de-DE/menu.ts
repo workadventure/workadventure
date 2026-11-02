@@ -197,6 +197,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Sprech-Popup öffnen",
         openThinkPopup: "Denk-Popup öffnen",
         walkMyDesk: "Zu meinem Schreibtisch gehen",
+        subtitle: "Sie sind deaktiviert, während du in ein Textfeld schreibst.",
+        searchLabel: "Tastenkürzel suchen",
+        searchPlaceholder: "Aktion oder Taste suchen…",
+        noResult: "Kein Tastenkürzel passt zu „{query}“.",
+        or: "oder",
+        layout: "Tastaturlayout",
+        walk: "Gehen",
+        sendEmote: "Emote senden",
+        groups: {
+            move: "Bewegen",
+            communicate: "Kommunizieren",
+            express: "Ausdrücken",
+            interact: "Interagieren",
+        },
+        hints: {
+            speedUp: "Beim Gehen gedrückt halten",
+            follow: "In der Nähe einer Person",
+            emotes: "In der Reihenfolge der Emote-Leiste",
+            mapEditor: "Wenn du die Karte bearbeiten darfst",
+        },
+        keyNames: {
+            shift: "Umschalt",
+            enter: "Eingabe",
+            space: "Leertaste",
+        },
     },
 };
 

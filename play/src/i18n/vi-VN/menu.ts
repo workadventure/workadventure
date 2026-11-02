@@ -195,6 +195,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Mở cửa sổ Nói",
         openThinkPopup: "Mở cửa sổ Nghĩ",
         walkMyDesk: "Đi tới bàn của tôi",
+        subtitle: "Chúng bị tắt khi bạn đang gõ trong ô văn bản.",
+        searchLabel: "Tìm phím tắt",
+        searchPlaceholder: "Tìm một thao tác hoặc một phím…",
+        noResult: "Không có phím tắt nào khớp với “{query}”.",
+        or: "hoặc",
+        layout: "Bố cục bàn phím",
+        walk: "Đi bộ",
+        sendEmote: "Gửi biểu cảm",
+        groups: {
+            move: "Di chuyển",
+            communicate: "Giao tiếp",
+            express: "Thể hiện",
+            interact: "Tương tác",
+        },
+        hints: {
+            speedUp: "Giữ trong khi di chuyển",
+            follow: "Khi ở gần ai đó",
+            emotes: "Theo thứ tự của thanh biểu cảm",
+            mapEditor: "Nếu bạn có quyền chỉnh sửa bản đồ",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Phím cách",
+        },
     },
 };
 
