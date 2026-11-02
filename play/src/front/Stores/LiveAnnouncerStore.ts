@@ -10,11 +10,8 @@ export interface Announcement {
     politeness: Politeness;
 }
 
-/**
- * How long an announcement stays in its live region. Screen readers queue the text when it is added, so it can go soon
- * after; while it is there, the visible text it repeats (a toast) is in the page twice.
- */
-export const ANNOUNCEMENT_LIFETIME_MS = 1_500;
+/** How long an announcement stays in its live region: long enough to be read, short enough not to pile up. */
+export const ANNOUNCEMENT_LIFETIME_MS = 7_000;
 /** The same message again within this delay is dropped (two stores reporting one event, a quick re-render). */
 export const DUPLICATE_WINDOW_MS = 1_000;
 
