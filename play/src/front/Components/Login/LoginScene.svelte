@@ -127,6 +127,7 @@
                 type="text"
                 id="loginSceneNameInput"
                 name="fname"
+                autocomplete="nickname"
                 aria-invalid={(name.trim() === "" && startValidating) || errorName !== ""}
                 aria-describedby={(name.trim() === "" && startValidating) || errorName !== ""
                     ? "loginSceneNameError"
