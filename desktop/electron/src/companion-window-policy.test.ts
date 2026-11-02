@@ -14,7 +14,9 @@ test("keeps a valid saved rectangle as-is", () => {
 });
 
 test("clamps an off-screen / oversized rectangle back into the work area", () => {
-    expect(normalizeCompanionBounds({ x: -400, y: 900, width: 900, height: 100 }, { x: 0, y: 0, width: 800, height: 600 })).toStrictEqual({ x: 0, y: 240, width: 800, height: COMPANION_MIN_HEIGHT });
+    expect(
+        normalizeCompanionBounds({ x: -400, y: 900, width: 900, height: 100 }, { x: 0, y: 0, width: 800, height: 600 })
+    ).toStrictEqual({ x: 0, y: 240, width: 800, height: COMPANION_MIN_HEIGHT });
 });
 
 test("never returns a rectangle below the minimum size", () => {

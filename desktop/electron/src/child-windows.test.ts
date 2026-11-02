@@ -1,9 +1,10 @@
+import type { BrowserWindow } from "electron";
 import { beforeEach, expect, test, vi } from "vitest";
 
 // The world page may only open a floating window while main is asking for that one: any other
 // window.open (another name, another URL, no pending request) is left to the usual handler.
 
-const fake = vi.hoisted(() => ({ sent: [], adopted: [], world: true, hello: true }));
+const fake = vi.hoisted(() => ({ sent: [] as unknown[][], adopted: [] as unknown[][], world: true, hello: true }));
 
 vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
 vi.mock("./settings", () => ({ default: { get: () => undefined } }));
@@ -11,17 +12,17 @@ vi.mock("./hud-windows", () => ({
     HUD_SIZES: { companion: { width: 340, height: 480 }, "meeting-bar": { width: 680, height: 76 } },
     resolveDisplay: () => ({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } }),
     meetingBarBounds: () => ({ x: 620, y: 980, width: 680, height: 76 }),
-    setUpHudWindow: (kind, window) => fake.adopted.push([kind, window]),
+    setUpHudWindow: (kind: string, window: unknown) => fake.adopted.push([kind, window]),
 }));
 vi.mock("./page-contract", () => ({ pageSaidHello: () => fake.hello }));
 vi.mock("./tab-manager", () => ({
     getControllingWorldContents: () =>
-        fake.world ? { send: (channel, kind) => fake.sent.push([channel, kind]) } : undefined,
+        fake.world ? { send: (channel: string, kind: string) => fake.sent.push([channel, kind]) } : undefined,
 }));
 
 const { adoptChildWindow, childWindowOptions, openChildWindow } = await import("./child-windows");
 
-const childWindow = () => ({});
+const childWindow = () => ({} as BrowserWindow);
 
 beforeEach(() => {
     fake.sent = [];

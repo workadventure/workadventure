@@ -21,7 +21,7 @@ import {
     validateDesktopNavigationUrl,
 } from "./desktop-url-policy";
 
-function withNodeEnv(value, fn) {
+function withNodeEnv(value: string | undefined, fn: () => void): void {
     const previous = process.env.NODE_ENV;
     if (value === undefined) {
         delete process.env.NODE_ENV;
@@ -105,7 +105,10 @@ test("validates and normalizes world URLs entered in the desktop navigation UI",
         code: "urlHost",
         error: "Invalid URL — missing host or contains credentials.",
     });
-    expect(validateDesktopNavigationUrl("https://evil.test/@/team/world/room", config).code).toBe("urlNotAllowed");
+    expect(validateDesktopNavigationUrl("https://evil.test/@/team/world/room", config)).toMatchObject({
+        ok: false,
+        code: "urlNotAllowed",
+    });
     expect(validateDesktopNavigationUrl(" https://play.workadventu.re/@/team/world/room ", config)).toStrictEqual({
         ok: true,
         url: "https://play.workadventu.re/@/team/world/room",

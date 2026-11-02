@@ -1,14 +1,20 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 // The controller's sequences over time (debounce, close by hand until the return, leaving the world),
-// with Electron and the windows faked. The rules themselves are in companion-visibility-policy.test.js.
+// with Electron and the windows faked. The rules themselves are in companion-visibility-policy.test.ts.
+
+type FakeCompanion = {
+    once: (event: string, callback: () => void) => void;
+    setContentProtection: () => void;
+    userClose: () => void;
+};
 
 const fake = vi.hoisted(() => ({
-    companion: undefined,
+    companion: undefined as FakeCompanion | undefined,
     main: { minimized: false, focused: true },
     presence: {},
     presenceListener: () => {},
-    sent: [],
+    sent: [] as unknown[],
     displays: [1],
     identifying: false,
     canHide: true,
@@ -32,9 +38,11 @@ vi.mock("./hud-windows", () => ({
 // Opening the window goes through the world page (window.open), faked here.
 vi.mock("./child-windows", () => ({
     openChildWindow: () => {
-        const listeners = {};
+        const listeners: Record<string, () => void> = {};
         fake.companion = {
-            once: (event, callback) => (listeners[event] = callback),
+            once: (event: string, callback: () => void) => {
+                listeners[event] = callback;
+            },
             setContentProtection: () => {},
             // The user closing the window (close shortcut), as opposed to the controller.
             userClose: () => {
@@ -47,7 +55,7 @@ vi.mock("./child-windows", () => ({
 }));
 vi.mock("./presence", () => ({
     getPresenceSnapshot: () => fake.presence,
-    onPresenceChange: (listener) => (fake.presenceListener = listener),
+    onPresenceChange: (listener: () => void) => (fake.presenceListener = listener),
 }));
 vi.mock("./window", () => ({
     getWindow: () => ({
@@ -58,13 +66,13 @@ vi.mock("./window", () => ({
     }),
 }));
 vi.mock("./tab-manager", () => ({
-    getControllingWorldContents: () => ({ send: (channel, value) => fake.sent.push(value) }),
+    getControllingWorldContents: () => ({ send: (_channel: string, value: unknown) => fake.sent.push(value) }),
 }));
 vi.mock("./content-protection", () => ({ shouldProtectWindowFromCapture: () => false }));
 vi.mock("./platform-capture-policy", () => ({ canHideWindowsFromCapture: () => fake.canHide }));
 vi.mock("./screen-identify", () => ({ isIdentifyingScreens: () => fake.identifying }));
 
-let controller;
+let controller: typeof import("./companion-controller");
 
 beforeEach(async () => {
     vi.useFakeTimers();
@@ -87,6 +95,13 @@ afterEach(() => {
 const isOpen = () => fake.companion !== undefined;
 const videoWanted = () => fake.sent.at(-1) === true;
 
+function closeByHand() {
+    if (!fake.companion) {
+        throw new Error("The companion is not open");
+    }
+    fake.companion.userClose();
+}
+
 async function leaveWA() {
     fake.main = { minimized: true, focused: false };
     controller.onMainWindowHidden();
@@ -99,7 +114,7 @@ async function comeBack() {
     await vi.advanceTimersByTimeAsync(0);
 }
 
-async function setPresence(changes) {
+async function setPresence(changes: Record<string, unknown>) {
     Object.assign(fake.presence, changes);
     fake.presenceListener();
     await vi.advanceTimersByTimeAsync(0);
@@ -129,7 +144,7 @@ test("a quick away-and-back does not flash it", async () => {
 
 test("closed by hand: stays closed while away, reopens on leaving again after coming back", async () => {
     await leaveWA();
-    fake.companion.userClose();
+    closeByHand();
     await vi.advanceTimersByTimeAsync(1000);
     expect(isOpen()).toBe(false);
 
@@ -173,7 +188,7 @@ test("the setting off: nothing opens by itself, opening by hand still works", as
 
 test("an invitation opens it even after a close by hand", async () => {
     await leaveWA();
-    fake.companion.userClose();
+    closeByHand();
     await setPresence({ inMeeting: false, invitationPending: true });
     await vi.advanceTimersByTimeAsync(500);
     expect(isOpen()).toBe(true);

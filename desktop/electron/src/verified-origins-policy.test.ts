@@ -1,5 +1,14 @@
 import { expect, test } from "vitest";
-import { MAX_TRUSTED_SERVERS, addTrustedServer, removeTrustedServer, trustableOrigin, VERIFIED_ORIGIN_TTL_MS, activeVerifiedOrigins, rememberVerifiedOrigin, verifyOriginRequestUrl } from "./verified-origins-policy";
+import {
+    MAX_TRUSTED_SERVERS,
+    addTrustedServer,
+    removeTrustedServer,
+    trustableOrigin,
+    VERIFIED_ORIGIN_TTL_MS,
+    activeVerifiedOrigins,
+    rememberVerifiedOrigin,
+    verifyOriginRequestUrl,
+} from "./verified-origins-policy";
 
 test("a confirmed origin is trusted until its confirmation expires", () => {
     const stored = rememberVerifiedOrigin({}, "https://acme.example", 1000);
@@ -18,7 +27,9 @@ test("remembering an origin drops the expired ones and ignores garbage", () => {
 });
 
 test("the question is asked to the portal over https, with the target origin only", () => {
-    expect(verifyOriginRequestUrl("https://admin.workadventu.re/", "https://acme.example/@/team/world/room?token=secret")).toBe("https://admin.workadventu.re/api/desktop/verify-origin?origin=https%3A%2F%2Facme.example");
+    expect(
+        verifyOriginRequestUrl("https://admin.workadventu.re/", "https://acme.example/@/team/world/room?token=secret")
+    ).toBe("https://admin.workadventu.re/api/desktop/verify-origin?origin=https%3A%2F%2Facme.example");
 });
 
 test("an http portal is only asked in development, and never about non-web URLs", () => {

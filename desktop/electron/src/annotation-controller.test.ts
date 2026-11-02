@@ -1,5 +1,14 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-const fake = vi.hoisted(() => ({ sharing: true, owner: undefined, overlay: undefined, listener: undefined }));
+import type { WebContents } from "electron";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+type FakeOverlay = { setIgnoreMouseEvents: Mock; setFocusable: Mock; isFocused: () => boolean; focus: Mock };
+type FakeOwner = Omit<WebContents, "send"> & { send: Mock };
+const fake = vi.hoisted(() => ({
+    sharing: true,
+    // Set in beforeEach.
+    owner: undefined as unknown as FakeOwner,
+    overlay: undefined as FakeOverlay | undefined,
+    listener: () => {},
+}));
 vi.mock("electron", () => ({
     screen: {
         getAllDisplays: () => [{ id: 1, bounds: { x: 100, y: 50, width: 1000, height: 500 } }],
@@ -10,21 +19,21 @@ vi.mock("./platform-capture-policy", () => ({ canHideWindowsFromCapture: () => t
 vi.mock("./tab-manager", () => ({ getControllingWorldContents: () => fake.owner }));
 vi.mock("./presence", () => ({
     getPresenceSnapshot: () => ({ screenSharing: fake.sharing }),
-    onPresenceChange: (listener) => {
+    onPresenceChange: (listener: () => void) => {
         fake.listener = listener;
     },
 }));
 const open = vi.hoisted(() => vi.fn());
 vi.mock("./child-windows", () => ({ openChildWindow: open }));
 vi.mock("./hud-windows", () => ({
-    getHudWindow: (kind) => (kind === "annotation" ? fake.overlay : undefined),
+    getHudWindow: (kind: string) => (kind === "annotation" ? fake.overlay : undefined),
     closeHudWindow: () => {
         fake.overlay = undefined;
     },
 }));
 import { resetAnnotations, setAnnotationSource, setAnnotationState } from "./annotation-controller";
 const passive = { visible: true, interactive: false, trackCursor: false };
-const overlay = () => ({
+const overlay = (): FakeOverlay => ({
     setIgnoreMouseEvents: vi.fn(),
     setFocusable: vi.fn(),
     isFocused: () => false,
@@ -34,11 +43,11 @@ beforeEach(() => {
     vi.useFakeTimers();
     resetAnnotations();
     setAnnotationSource(undefined);
-    fake.owner = { id: 1, isDestroyed: () => false, send: vi.fn() };
+    fake.owner = { id: 1, isDestroyed: () => false, send: vi.fn() } as unknown as FakeOwner;
     fake.sharing = true;
-    open.mockReset().mockImplementation(async () => {
+    open.mockReset().mockImplementation(() => {
         fake.overlay = overlay();
-        return true;
+        return Promise.resolve(true);
     });
 });
 afterEach(() => {
@@ -50,18 +59,18 @@ describe("Svelte annotation native lifecycle", () => {
         setAnnotationSource(1);
         await setAnnotationState(fake.owner, passive);
         expect(open).toHaveBeenCalledWith("annotation", 1);
-        expect(fake.overlay.setIgnoreMouseEvents).toHaveBeenCalledWith(true, { forward: true });
-        expect(fake.overlay.setFocusable).toHaveBeenCalledWith(false);
-        expect(fake.overlay.focus).not.toHaveBeenCalled();
+        expect(fake.overlay?.setIgnoreMouseEvents).toHaveBeenCalledWith(true, { forward: true });
+        expect(fake.overlay?.setFocusable).toHaveBeenCalledWith(false);
+        expect(fake.overlay?.focus).not.toHaveBeenCalled();
     });
     it("releases keyboard and pointer capture after explicit drawing ends", async () => {
         setAnnotationSource(1);
         await setAnnotationState(fake.owner, { ...passive, interactive: true });
         const window = fake.overlay;
-        expect(window.setFocusable).toHaveBeenLastCalledWith(true);
+        expect(window?.setFocusable).toHaveBeenLastCalledWith(true);
         await setAnnotationState(fake.owner, passive);
-        expect(window.setFocusable).toHaveBeenLastCalledWith(false);
-        expect(window.setIgnoreMouseEvents).toHaveBeenLastCalledWith(true, { forward: true });
+        expect(window?.setFocusable).toHaveBeenLastCalledWith(false);
+        expect(window?.setIgnoreMouseEvents).toHaveBeenLastCalledWith(true, { forward: true });
     });
     it("remembers a request while the shared display resolves", async () => {
         await setAnnotationState(fake.owner, passive);
@@ -71,15 +80,15 @@ describe("Svelte annotation native lifecycle", () => {
         expect(open).toHaveBeenCalledWith("annotation", 1);
     });
     it("closes an overlay which finishes opening after the share stops", async () => {
-        let finish;
+        let finish = () => {};
         open.mockImplementation(
             () =>
-                new Promise((resolve) => {
+                new Promise<boolean>((resolve) => {
                     finish = () => {
                         fake.overlay = overlay();
                         resolve(true);
                     };
-                }),
+                })
         );
         setAnnotationSource(1);
         const pending = setAnnotationState(fake.owner, passive);
@@ -90,15 +99,15 @@ describe("Svelte annotation native lifecycle", () => {
         expect(fake.overlay).toBeUndefined();
     });
     it("reopens on the latest display when the source changes during opening", async () => {
-        let finish;
+        let finish = () => {};
         open.mockImplementationOnce(
             () =>
-                new Promise((resolve) => {
+                new Promise<boolean>((resolve) => {
                     finish = () => {
                         fake.overlay = overlay();
                         resolve(true);
                     };
-                }),
+                })
         );
         setAnnotationSource(1);
         const pending = setAnnotationState(fake.owner, passive);
@@ -109,7 +118,7 @@ describe("Svelte annotation native lifecycle", () => {
             ["annotation", 1],
             ["annotation", 2],
         ]);
-        expect(fake.overlay.setFocusable).toHaveBeenCalledWith(false);
+        expect(fake.overlay?.setFocusable).toHaveBeenCalledWith(false);
     });
     it("retains a pending request during unrelated presence updates", async () => {
         await setAnnotationState(fake.owner, passive);
@@ -122,7 +131,7 @@ describe("Svelte annotation native lifecycle", () => {
         setAnnotationSource(1);
         await setAnnotationState(fake.owner, passive);
         const window = fake.overlay;
-        await setAnnotationState({ id: 2 }, { visible: false });
+        await setAnnotationState({ id: 2 } as WebContents, { visible: false });
         expect(fake.overlay).toBe(window);
     });
     it("polls normalized positions without restarting on every update", async () => {

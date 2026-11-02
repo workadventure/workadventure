@@ -36,17 +36,17 @@ const CONTRACT_2 = [
     "windows",
 ];
 
-const sent = [];
-let exposed = {};
+const sent: unknown[][] = [];
+let exposed: Record<string, unknown> = {};
 
 vi.mock("electron", () => ({
     contextBridge: {
-        exposeInMainWorld: (key, api) => {
+        exposeInMainWorld: (key: string, api: Record<string, unknown>) => {
             if (key === "WAD") exposed = api;
         },
     },
     ipcRenderer: {
-        send: (channel, payload) => sent.push([channel, payload]),
+        send: (channel: string, payload: unknown) => sent.push([channel, payload]),
         sendSync: () => ({ contract: 2 }),
         invoke: () => Promise.resolve(),
         on: () => undefined,
@@ -74,7 +74,7 @@ test("contract 1 keeps its shapes", () => {
         expect(typeof exposed[name], name).toBe("function");
     }
     // notify(text): the text, as a string, like the app of master.
-    exposed.notify("hello");
+    (exposed.notify as (text: string) => void)("hello");
     expect(sent.at(-1)).toEqual(["app:notify", "hello"]);
 });
 
@@ -90,10 +90,10 @@ test("the floating windows API keeps its members", () => {
         "tabStripShown",
         "toggleTabStrip",
     ]) {
-        expect(typeof exposed.windows[name], name).toBe("function");
+        expect(typeof (exposed.windows as Record<string, unknown>)[name], name).toBe("function");
     }
 });
 
 test("world pages do not get what only the native Landing uses", () => {
-    expect(Object.keys(exposed.navigation).sort()).toEqual(["joinWorld", "openAdminSignup"]);
+    expect(Object.keys(exposed.navigation as object).sort()).toEqual(["joinWorld", "openAdminSignup"]);
 });

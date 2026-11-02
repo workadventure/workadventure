@@ -33,7 +33,7 @@ test("string tables must be flat, string-valued and bounded", () => {
     expect(sanitizeStringTable(["a"])).toBe(undefined);
     expect(sanitizeStringTable({ nested: { a: "b" } })).toBe(undefined);
     expect(sanitizeStringTable({ a: "x".repeat(1001) })).toBe(undefined);
-    const tooMany = {};
+    const tooMany: Record<string, string> = {};
     for (let i = 0; i < 501; i++) {
         tooMany["k" + i] = "v";
     }

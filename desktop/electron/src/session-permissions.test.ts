@@ -1,25 +1,33 @@
 import { describe, expect, it, vi } from "vitest";
 import { configureSessionPermissions } from "./session-permissions";
-import { createDesktopConfig } from "./desktop-url-policy";
+import { createDesktopConfig, type DesktopConfig } from "./desktop-url-policy";
+
+// The handler as the test calls it: fakes stand in for Electron's WebContents and details.
+type PermissionHandler = (
+    contents: { getURL(): string },
+    permission: string,
+    callback: (granted: boolean) => void,
+    details: { requestingUrl?: string }
+) => void;
 
 function permissions() {
-    let request;
+    let request: PermissionHandler | undefined;
     let config = createDesktopConfig({ portalUrl: "https://play.example.org" });
     configureSessionPermissions(
         {
             setPermissionRequestHandler: (handler) => {
-                request = handler;
+                request = handler as unknown as PermissionHandler;
             },
         },
         () => config
     );
     return {
-        allow(permission, url, requestingUrl = url) {
-            const result = vi.fn();
-            request({ getURL: () => url }, permission, result, { requestingUrl });
+        allow(permission: string, url: string, requestingUrl = url) {
+            const result = vi.fn<(granted: boolean) => void>();
+            request?.({ getURL: () => url }, permission, result, { requestingUrl });
             return result.mock.calls[0]?.[0];
         },
-        setConfig(next) {
+        setConfig(next: DesktopConfig) {
             config = next;
         },
     };

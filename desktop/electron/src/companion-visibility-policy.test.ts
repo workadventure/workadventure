@@ -1,8 +1,8 @@
 import { expect, test } from "vitest";
-import { companionMode } from "./companion-visibility-policy";
+import { companionMode, type CompanionState } from "./companion-visibility-policy";
 
-// One test per row of the rules table in companion-visibility-policy.js.
-const awayInMeeting = {
+// One test per row of the rules table in companion-visibility-policy.ts.
+const awayInMeeting: CompanionState = {
     opened: "no",
     inWorld: true,
     inMeeting: true,
@@ -25,13 +25,19 @@ test("placement: nowhere to land keeps it closed, but an open companion stays wh
 });
 
 test("opening by hand: always, and it stays when WA shows again", () => {
-    const manual = { opened: "manual", inWorld: true, inMeeting: true, autoOpenAllowed: false, waShowing: true };
+    const manual: CompanionState = {
+        opened: "manual",
+        inWorld: true,
+        inMeeting: true,
+        autoOpenAllowed: false,
+        waShowing: true,
+    };
     expect(companionMode(manual)).toBe("manual");
     expect(companionMode({ ...manual, inMeeting: false })).toBe("manual");
 });
 
 test("invitation: opens even after a close and whatever the setting, as an automatic opening", () => {
-    const invited = {
+    const invited: CompanionState = {
         ...awayInMeeting,
         inMeeting: false,
         invitationPending: true,
@@ -43,7 +49,7 @@ test("invitation: opens even after a close and whatever the setting, as an autom
 });
 
 test("automatic closing: WA shows again, the meeting ends, or the user leaves the world", () => {
-    const openedByItself = { ...awayInMeeting, opened: "auto" };
+    const openedByItself: CompanionState = { ...awayInMeeting, opened: "auto" };
     expect(companionMode({ ...openedByItself, waShowing: true })).toBe("closed");
     expect(companionMode({ ...openedByItself, inMeeting: false })).toBe("closed");
     expect(companionMode({ ...openedByItself, inWorld: false })).toBe("closed");

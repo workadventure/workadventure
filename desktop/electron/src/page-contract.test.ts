@@ -1,7 +1,8 @@
+import type { WebContents } from "electron";
 import { expect, test } from "vitest";
 import { DESKTOP_CONTRACT, forgetPage, pageSaidHello, recordHello } from "./page-contract";
 
-const page = (id) => ({ id });
+const page = (id: number) => ({ id } as unknown as WebContents);
 
 test("a page is of contract 1 until it says hello, and again after a new load", () => {
     const tab = page(1);
