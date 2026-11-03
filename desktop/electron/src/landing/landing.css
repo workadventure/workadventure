@@ -2,14 +2,13 @@
 /* The design system's tokens only (type scale, fonts, radii, colours). Its base and component layers
    style the marketing site and would fight this page. */
 @import "@workadventure/design-system/theme.css";
-/* The faces behind the design system's --font-main and --font-title, plus Bebas Neue for the card
-   titles. Bundled with the page, which only loads from 'self'; each subset (latin-ext for Sorbian,
-   cyrillic, ...) is downloaded only when the text needs it. The static Oswald matches the theme's
-   "Oswald" (the variable package names its family "Oswald Variable"). */
+/* The faces behind the design system's --font-main and --font-title. Bundled with the page, which only
+   loads from 'self'; each subset (latin-ext for Sorbian, cyrillic, ...) is downloaded only when the
+   text needs it. The static Oswald matches the theme's "Oswald" (the variable package names its
+   family "Oswald Variable"). */
 @import "@fontsource/roboto-condensed/400.css";
 @import "@fontsource/roboto-condensed/700.css";
 @import "@fontsource/oswald/500.css";
-@import "@fontsource/bebas-neue/400.css";
 
 /* The Landing mockup's palette, which the design system does not have (its closest are `secondary`
    for the accent and `danger-600` for the alert). */
@@ -22,8 +21,6 @@
     --color-alert: #ff8c78;
     --color-focus-ring: rgb(139 143 255 / 0.5);
     --color-star: #f5c451;
-    /* Bebas Neue is caps-only; `uppercase` keeps the look if it ever falls back to Roboto Condensed. */
-    --font-display: "Bebas Neue", "Roboto Condensed", Arial, sans-serif;
 }
 
 @layer base {
