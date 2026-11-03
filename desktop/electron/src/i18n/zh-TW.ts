@@ -87,6 +87,7 @@ const zhTW: NativeStrings = {
     "tray.showHide": "顯示 / 隱藏",
     "tray.worlds": "世界",
     "tray.help": "說明",
+    "tray.startAtLogin": "登入時啟動",
     "tray.checkForUpdates": "檢查更新",
     "tray.openLogs": "開啟記錄檔",
     "tray.about": "關於",

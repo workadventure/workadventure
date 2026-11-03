@@ -93,6 +93,7 @@ const ko: NativeStrings = {
     "tray.showHide": "보기 / 숨기기",
     "tray.worlds": "월드",
     "tray.help": "도움말",
+    "tray.startAtLogin": "로그인 시 시작",
     "tray.checkForUpdates": "업데이트 확인",
     "tray.openLogs": "로그 열기",
     "tray.about": "정보",

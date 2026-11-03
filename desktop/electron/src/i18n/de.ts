@@ -98,6 +98,7 @@ const de: NativeStrings = {
     "tray.showHide": "Anzeigen / Ausblenden",
     "tray.worlds": "Welten",
     "tray.help": "Hilfe",
+    "tray.startAtLogin": "Bei der Anmeldung starten",
     "tray.checkForUpdates": "Nach Updates suchen",
     "tray.openLogs": "Protokolle öffnen",
     "tray.about": "Über",

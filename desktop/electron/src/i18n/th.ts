@@ -92,6 +92,7 @@ const th: NativeStrings = {
     "tray.showHide": "แสดง / ซ่อน",
     "tray.worlds": "โลก",
     "tray.help": "ความช่วยเหลือ",
+    "tray.startAtLogin": "เปิดเมื่อเข้าสู่ระบบ",
     "tray.checkForUpdates": "ตรวจหาอัปเดต",
     "tray.openLogs": "เปิดบันทึก",
     "tray.about": "เกี่ยวกับ",

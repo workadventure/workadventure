@@ -6,6 +6,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         title: "Aplicació d’escriptori",
         installed: "Versió instal·lada",
         unknown: "No disponible",
+        startAtLogin: "Inicia WorkAdventure en iniciar la sessió a l’ordinador",
         browser: "Estàs utilitzant WorkAdventure al navegador.",
         recommendedVersion: "Versió recomanada",
         minimumVersion: "Versió mínima compatible",

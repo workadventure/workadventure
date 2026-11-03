@@ -87,6 +87,7 @@ const zhCN: NativeStrings = {
     "tray.showHide": "显示 / 隐藏",
     "tray.worlds": "世界",
     "tray.help": "帮助",
+    "tray.startAtLogin": "登录时启动",
     "tray.checkForUpdates": "检查更新",
     "tray.openLogs": "打开日志",
     "tray.about": "关于",

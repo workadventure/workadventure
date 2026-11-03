@@ -110,6 +110,10 @@ const api: WorkAdventureDesktopApi = {
         request: () => ipcRenderer.invoke("app:screen-permission:request"),
         ensure: () => ipcRenderer.invoke("app:screen-permission:ensure"),
     },
+    startAtLogin: {
+        get: () => ipcRenderer.invoke("app:start-at-login:get"),
+        set: (enabled) => ipcRenderer.invoke("app:start-at-login:set", Boolean(enabled)),
+    },
 };
 
 contextBridge.exposeInMainWorld("WAD", api);

@@ -3,25 +3,20 @@ import ElectronLog from "electron-log";
 import settings from "./settings";
 import { createDesktopConfig, isAllowedNavigationUrl, type DesktopConfig } from "./desktop-url-policy";
 import {
-    activeVerifiedOrigins,
     addTrustedServer,
-    rememberVerifiedOrigin,
+    isWorkAdventureServerInfo,
     removeTrustedServer,
     trustableOrigin,
-    verifyOriginRequestUrl,
-} from "./verified-origins-policy";
+} from "./trusted-servers-policy";
 
-const VERIFY_TIMEOUT_MS = 5000;
+const SERVER_INFO_TIMEOUT_MS = 5000;
 
-/** The desktop config, including the white-label origins the portal confirmed and that have not expired. */
+/** The desktop config, including the servers the user added. */
 export function getDesktopConfig(): DesktopConfig {
     return createDesktopConfig({
         ...process.env,
         portalUrl: settings.get("portal_url"),
-        verifiedOrigins: [
-            ...activeVerifiedOrigins(settings.get("verified_origins")),
-            ...(settings.get("trusted_origins") ?? []),
-        ],
+        trustedOrigins: settings.get("trusted_origins") ?? [],
     });
 }
 
@@ -29,11 +24,8 @@ function isDevelopment(): boolean {
     return process.env.NODE_ENV === "development";
 }
 
-/**
- * The origin the user could add by hand for `url` (a self-hosted server: no admin to vouch for it),
- * or undefined. Only offered from the native Landing, for an address the user typed.
- */
-export function originUserMayTrust(url: string): string | undefined {
+/** The origin the user could add for `url`, or undefined. */
+function originUserMayTrust(url: string): string | undefined {
     return trustableOrigin(url, isDevelopment());
 }
 
@@ -83,40 +75,24 @@ export function trustServer(url: string): boolean {
 }
 
 /**
- * Whether `url` may be loaded, asking the portal's admin when its origin is not already trusted.
- *
- * Loaded pages get the native API (screen capture sources, notifications, PiP), so the app only loads
- * origins it trusts: the built-in ones, and white-label worlds the admin of the portal (built in, over
- * HTTPS) confirms as worlds of its install. A confirmation is remembered for a limited time. Only called
- * for addresses the user chose to open (Landing, world switcher, deep link, a world navigating itself):
- * never for every outgoing link, which would send the admin each site the user visits.
- * A self-hosted server is unknown to that admin: the Landing then offers to add it by hand (trustServer).
+ * Whether `url` is on a WorkAdventure server the user may add: over https (http in development), with a
+ * /server.json like WorkAdventure's. Loaded pages get the native API (screen capture sources, notifications,
+ * camera and microphone without a prompt), so passing this only earns the Landing's "add this server?"
+ * question: the user decides. Only asked for addresses the user chose to open (Landing, world switcher,
+ * deep link), never for every outgoing link.
  */
-export async function ensureWorldOriginTrusted(url: string): Promise<boolean> {
-    const config = getDesktopConfig();
-    if (isAllowedNavigationUrl(url, config)) {
-        return true;
-    }
-    const requestUrl = verifyOriginRequestUrl(config.portalUrl, url, isDevelopment());
-    if (!requestUrl) {
+export async function isWorkAdventureServer(url: string): Promise<boolean> {
+    const origin = originUserMayTrust(url);
+    if (!origin) {
         return false;
     }
-    const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), VERIFY_TIMEOUT_MS);
     try {
-        const response = await net.fetch(requestUrl, { signal: abort.signal });
-        if (response.status !== 204) {
-            return false;
-        }
+        const response = await net.fetch(origin + "/server.json", {
+            signal: AbortSignal.timeout(SERVER_INFO_TIMEOUT_MS),
+        });
+        return response.ok && isWorkAdventureServerInfo(await response.json());
     } catch (error) {
-        ElectronLog.warn("Could not ask the portal about a world origin.", error);
+        ElectronLog.info(`${origin} did not answer like a WorkAdventure server.`, error);
         return false;
-    } finally {
-        clearTimeout(timer);
     }
-    const origin = new URL(url).origin;
-    settings.set("verified_origins", rememberVerifiedOrigin(settings.get("verified_origins"), origin));
-    ElectronLog.info(`Trusting the white-label world origin ${origin} (confirmed by the portal).`);
-    // A white-label origin over http stays refused outside development (isAllowedNavigationUrl).
-    return isAllowedNavigationUrl(url, getDesktopConfig());
 }

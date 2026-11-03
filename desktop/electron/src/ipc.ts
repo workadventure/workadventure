@@ -3,7 +3,7 @@ import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { pathToFileURL } from "url";
-import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
+import { getDesktopConfig, isWorkAdventureServer, trustServer } from "./origin-verification";
 import settings from "./settings";
 import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadventure/desktop-api";
 import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
@@ -21,6 +21,7 @@ import {
     isActiveWorldContents,
     isControllingWorldContents,
     loadDesktopTarget,
+    loadLandingPage,
     switchToOpenWorld,
     openWorldTab,
 } from "./window";
@@ -36,6 +37,7 @@ import { nativeStrings, t } from "./i18n";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
 import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
+import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 // Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
@@ -362,22 +364,19 @@ export default () => {
             ElectronLog.warn("Rejected world navigation from non-main renderer");
             return { ok: false, error: t("landing.desktopOnly") };
         }
-        const config = getDesktopConfig();
-        let validation = validateDesktopNavigationUrl(rawUrl, config);
-        // A white-label world: the URL is fine but its origin is not built in, ask the portal's admin.
-        if (!validation.ok && validation.code === "urlNotAllowed" && typeof rawUrl === "string") {
-            if (await ensureWorldOriginTrusted(rawUrl.trim())) {
-                validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
-            }
-        }
+        const validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
         if (!validation.ok) {
-            // Unknown to the admin too (a self-hosted server): the native Landing may offer to add it.
-            // Never a world page (the in-game switcher): a world must not be able to add servers.
-            const trustOrigin =
-                validation.code === "urlNotAllowed" && typeof rawUrl === "string" && isFromNativeLanding(event)
-                    ? originUserMayTrust(rawUrl)
-                    : undefined;
-            return { ok: false, error: t(`landing.${validation.code}`), trustOrigin };
+            // A WorkAdventure server the user has not added: the Landing, loaded in this tab as the world would
+            // have been, asks whether to add it. Only the user can, from there (trustServerAndJoin).
+            if (
+                validation.code === "urlNotAllowed" &&
+                typeof rawUrl === "string" &&
+                (await isWorkAdventureServer(rawUrl.trim()))
+            ) {
+                await loadLandingPage({ trust: rawUrl.trim() });
+                return { ok: true };
+            }
+            return { ok: false, error: t(`landing.${validation.code}`) };
         }
         const safeUrl = validation.url;
         if (switchToOpenWorld(safeUrl, event.sender)) {
@@ -514,6 +513,16 @@ export default () => {
     ipcMain.handle("app:screen-permission:ensure", (event) =>
         isFromActiveRenderer(event) ? ensureScreenPermission() : false
     );
+
+    // ---- Start at login (WorkAdventure's "Desktop application" settings) ----
+    ipcMain.handle("app:start-at-login:get", (event) => isFromActiveRenderer(event) && isStartAtLoginEnabled());
+    ipcMain.handle("app:start-at-login:set", (event, enabled: unknown) => {
+        if (!isFromActiveRenderer(event)) {
+            return false;
+        }
+        setStartAtLogin(enabled === true);
+        return isStartAtLoginEnabled();
+    });
 
     // ---- Picture-in-Picture (native utility window) ----
     // The PiP utility window is a frameless, always-on-top BrowserWindow that mirrors video tracks

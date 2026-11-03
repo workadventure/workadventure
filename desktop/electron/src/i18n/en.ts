@@ -94,6 +94,7 @@ const en = {
     "tray.showHide": "Show / hide",
     "tray.worlds": "Worlds",
     "tray.help": "Help",
+    "tray.startAtLogin": "Start at login",
     "tray.checkForUpdates": "Check for updates",
     "tray.openLogs": "Open logs",
     "tray.about": "About",

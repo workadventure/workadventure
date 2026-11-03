@@ -96,6 +96,7 @@ const ca: NativeStrings = {
     "tray.showHide": "Mostra / amaga",
     "tray.worlds": "Mons",
     "tray.help": "Ajuda",
+    "tray.startAtLogin": "Inicia en iniciar la sessió",
     "tray.checkForUpdates": "Cerca actualitzacions",
     "tray.openLogs": "Obre els registres",
     "tray.about": "Quant a",

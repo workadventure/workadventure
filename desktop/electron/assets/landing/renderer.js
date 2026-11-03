@@ -51,15 +51,17 @@
         element.classList.toggle("visible", Boolean(message));
     }
 
-    // If the main process bounced us back here after a failed navigation, it passed a message
-    // via ?error=…. Show it, then strip the query so a refresh doesn't repeat the error.
+    // The main process passes ?error=… after a failed navigation, and ?trust=… (handled below, with the
+    // trust panel) for a world on a server the app does not know. Strip the query so a refresh doesn't
+    // repeat them.
+    var initialParams = new URLSearchParams(window.location.search);
     try {
-        var initialError = new URLSearchParams(window.location.search).get("error");
+        var initialError = initialParams.get("error");
         if (initialError) {
             showError(errorEl, initialError);
-            if (window.history && typeof window.history.replaceState === "function") {
-                window.history.replaceState({}, "", window.location.pathname);
-            }
+        }
+        if (window.location.search && window.history && typeof window.history.replaceState === "function") {
+            window.history.replaceState({}, "", window.location.pathname);
         }
     } catch (err) {
         console.warn("Landing renderer: failed to read initial error param", err);
@@ -263,11 +265,6 @@
                 if (!result || !result.ok) {
                     joinBtn.removeAttribute("disabled");
                     joinBtn.textContent = t("landing.openWorld", "Open world");
-                    // A self-hosted server: no admin knows it, so the user decides whether to trust it.
-                    if (result && result.trustOrigin && typeof api.trustServerAndJoin === "function") {
-                        showTrustPanel(url, result.trustOrigin);
-                        return;
-                    }
                     showError(errorEl, (result && result.error) || t("landing.joinFailed", "Failed to join world."));
                 }
             })
@@ -323,6 +320,17 @@
 
     // Editing the address withdraws the offer: it was about the address typed before.
     input.addEventListener("input", hideTrustPanel);
+
+    // A world on a WorkAdventure server the user has not added (typed here, deep link, world switcher).
+    try {
+        var initialTrustUrl = initialParams.get("trust");
+        if (initialTrustUrl) {
+            input.value = initialTrustUrl;
+            showTrustPanel(initialTrustUrl, new URL(initialTrustUrl).origin);
+        }
+    } catch (err) {
+        console.warn("Landing renderer: failed to read initial trust param", err);
+    }
 
     createBtn.addEventListener("click", function () {
         showError(createErrorEl, "");
@@ -407,8 +415,11 @@
 
     refreshWorlds();
 
-    // Autofocus the URL field so the user can just paste and hit Enter.
+    // Autofocus the URL field so the user can just paste and hit Enter. Not while asking to add a server:
+    // the question keeps the focus (on Cancel, so Enter never adds one by accident).
     setTimeout(function () {
-        input.focus();
+        if (trustPanel.hidden) {
+            input.focus();
+        }
     }, 50);
 })();

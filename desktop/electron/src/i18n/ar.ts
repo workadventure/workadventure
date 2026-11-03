@@ -91,6 +91,7 @@ const ar: NativeStrings = {
     "tray.showHide": "إظهار / إخفاء",
     "tray.worlds": "العوالم",
     "tray.help": "مساعدة",
+    "tray.startAtLogin": "التشغيل عند تسجيل الدخول",
     "tray.checkForUpdates": "التحقق من وجود تحديثات",
     "tray.openLogs": "فتح السجلات",
     "tray.about": "حول",

@@ -3,6 +3,7 @@ import { autoUpdater } from "electron-updater";
 import log from "electron-log";
 import * as util from "util";
 
+import { isStartAtLoginEnabled, writeLinuxAutostart } from "./auto-launch";
 import { createAndShowNotification } from "./notification";
 import { createDesktopConfig } from "./desktop-url-policy";
 import { t } from "./i18n";
@@ -86,6 +87,13 @@ async function init() {
                 app.quit();
             }
         })();
+    });
+
+    // Our AppImage names carry the version, so installing an update moves the app to a new file.
+    autoUpdater.on("appimage-filename-updated", (newPath) => {
+        if (isStartAtLoginEnabled()) {
+            writeLinuxAutostart(true, newPath);
+        }
     });
 
     // The .deb: apt brings the update, from the repository its after-install script adds (deb/).

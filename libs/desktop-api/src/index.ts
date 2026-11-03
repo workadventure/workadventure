@@ -25,11 +25,7 @@ export interface DesktopCapturerSource {
     display_id?: number;
 }
 
-/**
- * `trustOrigin`: the address is unknown to the portal's admin (a self-hosted server); only returned to
- * the native Landing, which may then offer to add that server (trustServerAndJoin).
- */
-export type DesktopNavigationResult = { ok: true } | { ok: false; error: string; trustOrigin?: string };
+export type DesktopNavigationResult = { ok: true } | { ok: false; error: string };
 
 export type DesktopRecentWorld = {
     url: string;
@@ -44,10 +40,11 @@ export type DesktopNativeStrings = { lang: string; strings: Record<string, strin
 export type WorkAdventureDesktopNavigationApi = {
     /**
      * Validate the URL and load the world in the main desktop window. Successful room
-     * navigations are persisted as `last_room_url` by the main process.
+     * navigations are persisted as `last_room_url` by the main process. A world on a WorkAdventure
+     * server the user has not added loads the native Landing instead, which asks whether to add it.
      */
     joinWorld: (url: string) => Promise<DesktopNavigationResult>;
-    /** Add a self-hosted server the user confirmed on the native Landing, then open the world. */
+    /** Add a server the user confirmed on the native Landing, then open the world. */
     trustServerAndJoin?: (url: string) => Promise<DesktopNavigationResult>;
     /** Return up to 10 worlds, ordered by most recent visit. */
     getRecentWorlds?: () => Promise<DesktopRecentWorld[]>;
@@ -232,4 +229,13 @@ export type WorkAdventureDesktopApi = {
     windows?: WorkAdventureDesktopWindowsApi;
     /** macOS screen recording permission ("not-needed" elsewhere). */
     screenPermission?: WorkAdventureDesktopScreenPermissionApi;
+    /** Start WorkAdventure when the user logs in to the computer (the "Desktop application" settings). */
+    startAtLogin?: WorkAdventureDesktopStartAtLoginApi;
 };
+
+/** Read from the system each time, so a change made in its own startup settings shows. */
+export interface WorkAdventureDesktopStartAtLoginApi {
+    get: () => Promise<boolean>;
+    /** Resolves with the state the system ends up in. */
+    set: (enabled: boolean) => Promise<boolean>;
+}

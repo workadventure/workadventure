@@ -96,6 +96,7 @@ const es: NativeStrings = {
     "tray.showHide": "Mostrar / ocultar",
     "tray.worlds": "Mundos",
     "tray.help": "Ayuda",
+    "tray.startAtLogin": "Iniciar al iniciar sesión",
     "tray.checkForUpdates": "Buscar actualizaciones",
     "tray.openLogs": "Abrir los registros",
     "tray.about": "Acerca de",
