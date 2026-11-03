@@ -98,6 +98,7 @@ import {
 } from "./ProximityFileTransferService";
 import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
 import { applyProximityReaction } from "./ProximityChatMessageReaction";
+import { TypingExpiry } from "./TypingExpiry";
 
 const debug = Debug("ProximityChatRoom");
 
@@ -113,6 +114,9 @@ export class ProximityChatMessage implements ChatMessage {
     canReact: Readable<boolean>;
     canDelete = writable(false);
     reactions: MapStore<string, ChatMessageReaction> = new MapStore();
+    // False once I left the bubble the message was sent in: its participants would never see a reaction or a reply.
+    private readonly inConversation = writable(true);
+    readonly canReply: Readable<boolean> = { subscribe: this.inConversation.subscribe };
     constructor(
         public id: string,
         public sender: AnyKindOfUser,
@@ -124,11 +128,19 @@ export class ProximityChatMessage implements ChatMessage {
         // Only messages every participant knows under the same id can be reacted to.
         private readonly toggleReaction?: (messageId: string, key: string) => void,
     ) {
-        this.canReact = readable(toggleReaction !== undefined);
+        this.canReact = derived(
+            this.inConversation,
+            (inConversation) => inConversation && toggleReaction !== undefined,
+        );
     }
 
-    remove(): void {
+    leaveConversation(): void {
+        this.inConversation.set(false);
+    }
+
+    remove(): Promise<void> {
         console.info("Function not implemented.");
+        return Promise.resolve();
     }
     edit(newContent: string): Promise<void> {
         console.info("Function not implemented.", newContent);
@@ -243,6 +255,7 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: SpaceInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private readonly typingExpiry = new TypingExpiry((id) => this.removeTypingUserbyID(id));
     private spaceMessageReactionSubscription: Subscription | undefined;
     private spaceStateUnsubscriber: Unsubscriber | undefined;
     private roomSidePanelUnsubscriber: Unsubscriber;
@@ -1116,7 +1129,7 @@ export class ProximityChatRoom implements ChatRoom {
      */
     private readonly toggleReaction = (messageId: string, key: string): void => {
         const message = this.messages.get(messageId);
-        if (!message) {
+        if (!message || !get(message.canReact)) {
             return;
         }
         const added = !message.reactions.get(key)?.users.has(this._spaceUserId);
@@ -1146,8 +1159,15 @@ export class ProximityChatRoom implements ChatRoom {
         const user = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : { ...this.unknownUser, spaceUserId };
         // Anonymous users have no chat id.
         const chatUser = { ...user, chatId: user.chatId || spaceUserId };
-        applyProximityReaction(message.reactions, key, spaceUserId, chatUser, added, this._spaceUserId, (reactionKey) =>
-            this.toggleReaction(message.id, reactionKey),
+        applyProximityReaction(
+            message.reactions,
+            key,
+            spaceUserId,
+            chatUser,
+            added,
+            this._spaceUserId,
+            (reactionKey) => this.toggleReaction(message.id, reactionKey),
+            message.canReact,
         );
     }
 
@@ -1298,6 +1318,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
             return typingMembers;
         });
+        this.typingExpiry.refresh(senderUserId);
     }
 
     private removeTypingUser(senderUserId: string): void {
@@ -1307,12 +1328,11 @@ export class ProximityChatRoom implements ChatRoom {
             userIdToRemove = sender.spaceUserId.toString();
         }
 
-        this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== userIdToRemove);
-        });
+        this.removeTypingUserbyID(userIdToRemove);
     }
 
     private removeTypingUserbyID(id: string) {
+        this.typingExpiry.forget(id);
         this.typingMembers.update((typingMembers) => {
             return typingMembers.filter((user) => user.id !== id);
         });
@@ -1325,12 +1345,11 @@ export class ProximityChatRoom implements ChatRoom {
             }
             return typingMembers;
         });
+        this.typingExpiry.refresh(id);
     }
 
     removeExternalTypingUser(id: string) {
-        this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== id);
-        });
+        this.removeTypingUserbyID(id);
     }
 
     public setDisplayName(displayName: string): void {
@@ -1917,6 +1936,17 @@ export class ProximityChatRoom implements ChatRoom {
             return false;
         }
 
+        // The messages stay readable, but the people they were sent to are gone: no more reactions or replies.
+        for (const message of get(this.messages)) {
+            if (message instanceof ProximityChatMessage) {
+                message.leaveConversation();
+            }
+        }
+        const replyTo = get(selectedChatMessageToReply);
+        if (replyTo && this.messages.get(replyTo.id) === replyTo) {
+            selectedChatMessageToReply.set(null);
+        }
+
         this.isChatDisabled.set(false);
         this.intentionallyClosed.set(false);
         this.unreadMessagesCount.set(0);
@@ -1967,7 +1997,7 @@ export class ProximityChatRoom implements ChatRoom {
                     }
                 }
             }
-            this.typingMembers.set([]);
+            this.clearTypingMembers();
         }
         this.hasUserInProximityChat.set(false);
 
@@ -2090,7 +2120,13 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space;
     }
 
+    private clearTypingMembers(): void {
+        this.typingExpiry.clear();
+        this.typingMembers.set([]);
+    }
+
     public destroy(): void {
+        this.clearTypingMembers();
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceMessageReactionSubscription?.unsubscribe();

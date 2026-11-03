@@ -1,10 +1,10 @@
-import { expect, test, type Browser, type Page } from "@playwright/test";
-import { chromium, firefox, webkit, type BrowserType } from "playwright-core";
+import { expect, test, type Page } from "@playwright/test";
 import Map from "./utils/map";
 import { getPage } from "./utils/auth";
 import { evaluateScript } from "./utils/scripting";
 import { expectWebRtcConnectionsCountToBe } from "./utils/webRtc";
 import { play_url, publicTestMapUrl } from "./utils/urls";
+import { launchOtherBrowser, otherBrowserContextOptions } from "./utils/otherBrowser";
 
 /**
  * Which codec each side of a P2P bubble ends up encoding, read from the "video quality statistics" box of the
@@ -65,39 +65,6 @@ const prepare = async (page: Page) => {
     });
 };
 
-// The test runner stores the Chromium project's launch flags and context options (camera permissions...) on the
-// shared Playwright object, and every browser type applies them; Firefox and WebKit reject them. They are cleared
-// while Bob's browser and pages are created, and restored afterwards for Alice's Chromium.
-async function withoutProjectDefaults<T>(type: BrowserType, run: () => Promise<T>): Promise<T> {
-    const playwright = (type as unknown as { _playwright: Record<string, unknown> })._playwright;
-    const saved = { launch: playwright._defaultLaunchOptions, context: playwright._defaultContextOptions };
-    playwright._defaultLaunchOptions = undefined;
-    playwright._defaultContextOptions = undefined;
-    try {
-        return await run();
-    } finally {
-        playwright._defaultLaunchOptions = saved.launch;
-        playwright._defaultContextOptions = saved.context;
-    }
-}
-
-async function launchBob(): Promise<Browser> {
-    switch (BOB_BROWSER) {
-        case "webkit":
-            return webkit.launch();
-        case "firefox":
-            return firefox.launch({
-                firefoxUserPrefs: {
-                    "media.navigator.streams.fake": true,
-                    "permissions.default.microphone": 1,
-                    "permissions.default.camera": 1,
-                },
-            });
-        default:
-            return chromium.launch({ args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"] });
-    }
-}
-
 async function sentCodec(page: Page): Promise<string> {
     const box = page.getByTestId("encoder-stats").first();
     await expect(box).toBeVisible({ timeout: 60_000 });
@@ -123,12 +90,12 @@ test.describe("P2P video codecs @nomobile", () => {
         await using alice = await getPage(browser, "Alice", new URL(MAP_URL, play_url).toString(), {
             pageCreatedHook: prepare,
         });
-        const bobType = { webkit, firefox }[BOB_BROWSER] ?? chromium;
-        const bobBrowser = await withoutProjectDefaults(bobType, launchBob);
+        const bobBrowser = await launchOtherBrowser(BOB_BROWSER);
         try {
-            await using bob = await withoutProjectDefaults(bobType, () =>
-                getPage(bobBrowser, "Bob", new URL(MAP_URL, play_url).toString(), { pageCreatedHook: prepare }),
-            );
+            await using bob = await getPage(bobBrowser, "Bob", new URL(MAP_URL, play_url).toString(), {
+                pageCreatedHook: prepare,
+                contextOptions: otherBrowserContextOptions(BOB_BROWSER),
+            });
 
             const position = await evaluateScript(alice, async () => WA.player.getPosition());
             await Map.teleportToPosition(bob, position.x, position.y);

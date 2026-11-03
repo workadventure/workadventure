@@ -104,14 +104,16 @@ async function createUser(
         | "John"
         | "UserMatrix2"
         | "User1"
-        | "Carol",
+        | "Carol"
+        | "Dave",
     browser: Browser,
     url: string,
+    contextOptions?: BrowserContextOptions,
 ): Promise<void> {
     if (isJsonCreate(name)) {
         return;
     }
-    const context: BrowserContext = await browser.newContext();
+    const context: BrowserContext = await browser.newContext(contextOptions);
     const page: Page = await context.newPage();
     const targetUrl = new URL(url, play_url).toString();
 
@@ -207,7 +209,8 @@ export async function getPage(
         | "John"
         | "UserMatrix2"
         | "User1"
-        | "Carol",
+        | "Carol"
+        | "Dave",
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void | Promise<void>;
@@ -215,7 +218,7 @@ export async function getPage(
         contextOptions?: BrowserContextOptions;
     } = {},
 ): Promise<Page> {
-    await createUser(name, browser, url);
+    await createUser(name, browser, url, options.contextOptions);
     const newBrowser: BrowserContext = await browser.newContext({
         ...options.contextOptions,
         storageState: "./.auth/" + name + ".json",

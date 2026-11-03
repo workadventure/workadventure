@@ -4,6 +4,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import EmojiButton from "./EmojiButton.svelte";
+    import { confirmDelete } from "./confirmDeleteMessage";
     import { IconArrowBackUp, IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -23,9 +24,11 @@
     }
 
     function removeMessage() {
-        message.remove();
-        // The options go away with the message content: keep the focus on what is left of it.
-        messageRef?.focus();
+        confirmDelete("message", async () => {
+            await message.remove();
+            // The options go away with the message content: keep the focus on what is left of it.
+            messageRef?.focus();
+        });
     }
 
     function selectMessageToEdit() {
@@ -37,6 +40,7 @@
     }
 
     let { content, canDelete, canReact, canEdit } = $derived(message);
+    let canReply = $derived(message.canReply ?? readable(true));
     const noAttachment = readable<ChatAttachmentStatus>({ state: "ready" });
     let attachmentStatus = $derived(message.attachment?.status ?? noAttachment);
     // A file offered but not accepted, or still downloading or decrypting, has nothing to save yet.
@@ -56,15 +60,17 @@
             <IconArrowDown font-size={16} class="hover:cursor-pointer" />
         </a>
     {/if}
-    <button
-        class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
-        data-testid="replyToMessageButton"
-        aria-label={$LL.chat.reply()}
-        title={$LL.chat.reply()}
-        onclick={replyToMessage}
-    >
-        <IconArrowBackUp font-size={16} />
-    </button>
+    {#if $canReply}
+        <button
+            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
+            data-testid="replyToMessageButton"
+            aria-label={$LL.chat.reply()}
+            title={$LL.chat.reply()}
+            onclick={replyToMessage}
+        >
+            <IconArrowBackUp font-size={16} />
+        </button>
+    {/if}
     {#if message.openThread}
         <button
             class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"

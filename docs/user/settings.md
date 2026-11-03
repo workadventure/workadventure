@@ -56,6 +56,8 @@ The preview at the top shows the result. Choose:
 
 Your choice is saved, and applied whenever your camera is on.
 
+The images depend on the world: its administrators can add their own and hide the built-in ones.
+
 Background effects need a computer with at least 4 processor cores and a recent browser with graphics acceleration. Otherwise, the tab says "Background effects are not supported on this browser". If the effect fails while your camera is on, the message "Failed to apply background effects" appears and your camera goes back to **No effect**.
 
 ## The Settings menu

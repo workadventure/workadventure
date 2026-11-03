@@ -148,8 +148,6 @@ const menu: BaseTranslation = {
         },
     },
     chat: {
-        matrixIDLabel: "Your Matrix ID",
-        settings: "Settings",
         resetKeyStorageUpButtonLabel: "Reset your key storage",
         resetKeyStorageConfirmationModal: {
             title: "Key storage reset confirmation",
@@ -167,7 +165,6 @@ const menu: BaseTranslation = {
         globalMessages: "Global Messages",
         contact: "Contact",
         report: "Report Issues",
-        chat: "Chat",
         help: "Help & tutorials",
         contextualActions: "Contextual actions",
         shortcuts: "Shortcuts",
@@ -200,6 +197,31 @@ const menu: BaseTranslation = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "They are disabled while you type in a text field.",
+        searchLabel: "Search a shortcut",
+        searchPlaceholder: "Search an action or a key…",
+        noResult: "No shortcut matches “{query}”.",
+        or: "or",
+        layout: "Keyboard layout",
+        walk: "Walk",
+        sendEmote: "Send an emote",
+        groups: {
+            move: "Move",
+            communicate: "Communicate",
+            express: "Express yourself",
+            interact: "Interact",
+        },
+        hints: {
+            speedUp: "Hold while moving",
+            follow: "Near someone",
+            emotes: "In the order of the emote bar",
+            mapEditor: "If you can edit the map",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Space",
+        },
     },
 };
 

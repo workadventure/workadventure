@@ -151,8 +151,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "El vostre ID Matrix",
-        settings: "Configuració",
         resetKeyStorageUpButtonLabel: "Restablir l'emmagatzematge de claus",
         resetKeyStorageConfirmationModal: {
             title: "Confirmació de restabliment de l'emmagatzematge de claus",
@@ -170,7 +168,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Missatges Globals",
         contact: "Contacte",
         report: "Reportar problemes",
-        chat: "Xat",
         help: "Ajuda i tutorials",
         contextualActions: "Accions contextuals",
         shortcuts: "Dreceres",
@@ -203,6 +200,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "Es desactiven mentre escrius en un camp de text.",
+        searchLabel: "Cerca una drecera",
+        searchPlaceholder: "Cerca una acció o una tecla…",
+        noResult: "Cap drecera coincideix amb «{query}».",
+        or: "o",
+        layout: "Distribució del teclat",
+        walk: "Caminar",
+        sendEmote: "Envia una emoticona",
+        groups: {
+            move: "Moure's",
+            communicate: "Comunicar-se",
+            express: "Expressar-se",
+            interact: "Interactuar",
+        },
+        hints: {
+            speedUp: "Mantén premut mentre et mous",
+            follow: "A prop d'algú",
+            emotes: "En l'ordre de la barra d'emoticones",
+            mapEditor: "Si pots editar el mapa",
+        },
+        keyNames: {
+            shift: "Maj",
+            enter: "Retorn",
+            space: "Espai",
+        },
     },
 };
 

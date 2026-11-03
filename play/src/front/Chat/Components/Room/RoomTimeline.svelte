@@ -32,6 +32,7 @@
     import { hasPendingMentionElsewhere } from "../../Stores/ChatMessageBannerStore";
     import Button from "../../../Components/UI/Button.svelte";
     import Avatar from "../Avatar.svelte";
+    import RefreshChat from "../RefreshChat.svelte";
     import ChatMessageBanner from "./ChatMessageBanner.svelte";
     import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
@@ -79,6 +80,8 @@
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
     const AUTO_SCROLL_THRESHOLD_PX = 20;
+    /** The jump button is 32 px tall and sits 12 px above the input: below this, it covers the header. */
+    const JUMP_BUTTON_MIN_LIST_HEIGHT_PX = 48;
     /** Room left above the "New messages" line when a room opens on it. */
     const UNREAD_DIVIDER_TOP_MARGIN_PX = 8;
     /** No scroll event for this long means our own smooth animation has landed. */
@@ -105,6 +108,8 @@
     let newMessagesCount = $state(0);
     /** More than a screen above the bottom: worth offering a way back even with nothing new. */
     let farFromBottom = $state(false);
+    /** Height of the visible list: the applications panel can squeeze it down to nothing. */
+    let messageListHeight = $state(0);
 
     // Imperative, deliberately not $state: read and written from DOM handlers, never from the template.
     let scrollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -357,6 +362,12 @@
      */
     function syncContentResizeObservations() {
         if (!contentResizeObserver || !messageListRef) return;
+        // The list's own box too: when something above the input opens (applications, attachments),
+        // the list shrinks without any message changing, and a pinned list must stay pinned.
+        if (!observedItems.has(messageListRef)) {
+            observedItems.add(messageListRef);
+            contentResizeObserver.observe(messageListRef);
+        }
         for (const item of messageListRef.querySelectorAll<HTMLLIElement>("li[data-event-id]")) {
             if (observedItems.has(item)) continue;
             observedItems.add(item);
@@ -451,9 +462,26 @@
         return true;
     }
 
+    // The read receipt clears the unread count and the "new messages" line: send one for what is on screen.
+    // On opening, on every new message while the room stays open, and on coming back to a hidden tab.
+    let pageVisible = $state(document.visibilityState === "visible");
+    let lastRenderedKey = $derived(renderItems[renderItems.length - 1]?.key);
+
+    let readReceipts = $derived(room.readReceipts);
+    let roomType = $derived(room.type);
+    // In a group, the readers' faces go under my last message only; the others keep their tick.
+    let lastOwnMessageId = $derived.by(() => {
+        for (let i = renderItems.length - 1; i >= 0; i--) {
+            const item = renderItems[i];
+            if (item.kind === "item" && item.timelineItem.kind === "message" && item.timelineItem.message.isMyMessage) {
+                return item.timelineItem.message.id;
+            }
+        }
+        return undefined;
+    });
     $effect(() => {
-        if ($initializationState === "ready") {
-            room.setTimelineAsRead();
+        if ($initializationState === "ready" && pageVisible && lastRenderedKey !== undefined) {
+            untrack(() => room.setTimelineAsRead());
         }
     });
 
@@ -726,6 +754,8 @@
     }
 </script>
 
+<svelte:document onvisibilitychange={() => (pageVisible = document.visibilityState === "visible")} />
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="flex flex-col flex-auto h-full w-full max-w-full"
@@ -865,6 +895,7 @@
         </div>
         <div
             bind:this={messageListRef}
+            bind:clientHeight={messageListHeight}
             class="flex overflow-auto h-full justify-center items-end relative"
             onscroll={handleScroll}
             onwheel={cancelProgrammaticScroll}
@@ -953,6 +984,9 @@
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
                                 showThreadSummary={room.conversationKind === "room"}
+                                readReceipts={$readReceipts}
+                                showReaders={$roomType === "multiple" &&
+                                    item.timelineItem.message.id === lastOwnMessageId}
                             />
                         {/if}
                     </li>
@@ -960,7 +994,8 @@
             </ul>
         </div>
 
-        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom)}
+        <!-- Not over a list squeezed out of sight: the button would float over the applications panel. -->
+        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom) && messageListHeight > JUMP_BUTTON_MIN_LIST_HEIGHT_PX}
             <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
             <div class="relative h-0">
                 {#snippet newMessagesLabel()}
@@ -987,9 +1022,15 @@
 
         <!-- Full width and never squeezed: a long message list must not shrink the input -->
         <div class="w-full shrink-0">
-            {#if $initializationState === "ready" && $typingMembers.length > 0}
-                <TypingUsers typingMembers={$typingMembers} />
+            {#if $shouldRetrySendingEvents}
+                <!-- The input is disabled until the unsent messages are retried: say so here, where the user is. -->
+                <RefreshChat />
             {/if}
+            <!-- A copy: the proximity room pushes into the same array, which a prop would not see change. -->
+            <TypingUsers
+                typingMembers={$initializationState === "ready" ? [...$typingMembers] : []}
+                isDirect={$roomTypeStore === "direct"}
+            />
             {#key room}
                 <MessageInputBar
                     disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}

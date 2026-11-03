@@ -107,11 +107,14 @@ interface BitrateCurve {
     fps: (pixels: number, quality: VideoQualitySetting) => number;
 }
 
-// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide): within 20 % of its table up to 1080p
+// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide), within 20 % of its tables up to 1080p:
+// "recommended" on the webcam one, "high" on the gaming one. "low" gets the bitrate of "recommended" at each size, and
+// saves by capturing 360p (videoConstraintStore) and by its frame rate. Below what libwebrtc wants for a size (190 kbps
+// for VP9 at 360p, 300 kbps for VP8), the encoder sends a smaller picture than the one we ask for.
 const cameraCurve: BitrateCurve = {
     anchorCodec: "vp9",
     anchorPixels: 1280 * 720,
-    anchor: { low: 400_000, recommended: 700_000, high: 1_800_000 },
+    anchor: { low: 700_000, recommended: 700_000, high: 1_800_000 },
     exponent: 0.75,
     // Small tiles are cheaper to watch at a lower frame rate
     fps: (pixels, quality) => {

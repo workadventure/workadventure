@@ -12,20 +12,11 @@ async function openFreshMatrixRoom(page: Page, roomName: string) {
     await ChatUtils.openChat(page);
     await ChatUtils.openCreateRoomDialog(page);
     await page.getByTestId("createRoomName").fill(roomName);
-    await page.getByPlaceholder("Users").click();
-    await page.getByPlaceholder("Users").press("Enter");
+    await page.getByPlaceholder("Search for people…").click();
+    await page.getByPlaceholder("Search for people…").press("Enter");
     await page.getByTestId("createRoomButton").click();
-    if (
-        isMobile(page) &&
-        (await page
-            .getByTestId("roomTimeline")
-            .isVisible({ timeout: 10_000 })
-            .catch(() => false))
-    ) {
-        return;
-    }
-
-    await page.getByTestId(roomName).click({ timeout: 60_000 });
+    // The new room opens by itself.
+    await expect(page.getByTestId("roomName")).toHaveText(roomName);
 }
 
 async function sendMessageToTimeline(timeline: Locator, message: string) {

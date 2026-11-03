@@ -150,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Waš Matrix ID",
-        settings: "Nastajenja",
         resetKeyStorageUpButtonLabel: "Wašu klucowu składarnju slědk stajiś",
         resetKeyStorageConfirmationModal: {
             title: "Wobkšuśenje slědk stajenja klucoweje składarnje",
@@ -169,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Globalne powěsći",
         contact: "Kontakt",
         report: "Zmólku pśipowěźeś",
-        chat: "Chat",
         help: "Pomoc a tutorials",
         contextualActions: "Kontekstowe akcije",
         shortcuts: "Tastowe skrotconki",
@@ -202,6 +199,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "Su znjemóžnjone, mjaztym až pišoš do tekstowego póla.",
+        searchLabel: "Tastowu skrotconku pytaś",
+        searchPlaceholder: "Akciju abo tastu pytaś…",
+        noResult: "Žedna tastowa skrotconka njewótpowědujo „{query}“.",
+        or: "abo",
+        layout: "Wuměrjenje tastatury",
+        walk: "Hyś",
+        sendEmote: "Emote pósłaś",
+        groups: {
+            move: "Se gibaś",
+            communicate: "Komunicěrowaś",
+            express: "Se wurazniś",
+            interact: "Interagěrowaś",
+        },
+        hints: {
+            speedUp: "Pśi chójźenju źaržaś",
+            follow: "Blisko někogo",
+            emotes: "W rěźe emote-lajsty",
+            mapEditor: "Gaž móžoš kórtu wobźěłaś",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Prozna tasta",
+        },
     },
 };
 

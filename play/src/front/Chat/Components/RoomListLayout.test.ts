@@ -5,8 +5,21 @@ import {
     getRoomSidePanelPlacement,
     ROOM_LIST_MAX_WIDTH,
     ROOM_LIST_MIN_WIDTH,
+    showsRoomRowPreview,
     threeColumnLayoutLimit,
 } from "./RoomListLayout";
+
+describe("showsRoomRowPreview", () => {
+    it("shows the last message on a wide room list, alone or beside a conversation", () => {
+        expect(showsRoomRowPreview({ besideConversation: false, roomListWidth: 260, sideBarWidth: 500 })).toBe(true);
+        expect(showsRoomRowPreview({ besideConversation: true, roomListWidth: 335, sideBarWidth: 900 })).toBe(true);
+    });
+
+    it("keeps the rows compact on a narrow room list, even in a wide chat", () => {
+        expect(showsRoomRowPreview({ besideConversation: false, roomListWidth: 400, sideBarWidth: 280 })).toBe(false);
+        expect(showsRoomRowPreview({ besideConversation: true, roomListWidth: 260, sideBarWidth: 1200 })).toBe(false);
+    });
+});
 
 describe("getRoomSidePanelPlacement", () => {
     it("hides the panel when it is closed or the room has none", () => {

@@ -131,8 +131,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "معرّف Matrix الخاص بك",
-        settings: "الإعدادات",
         resetKeyStorageUpButtonLabel: "إعادة تعيين مخزن المفاتيح",
         resetKeyStorageConfirmationModal: {
             title: "تأكيد إعادة تعيين مخزن المفاتيح",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
-        chat: "الدردشة",
         help: "مساعدة وشروحات",
         contextualActions: "إجراءات سياقية",
         shortcuts: "اختصارات",
@@ -201,6 +198,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "تُعطَّل أثناء الكتابة في حقل نصي.",
+        searchLabel: "البحث عن اختصار",
+        searchPlaceholder: "ابحث عن إجراء أو مفتاح…",
+        noResult: "لا يوجد اختصار يطابق «{query}».",
+        or: "أو",
+        layout: "تخطيط لوحة المفاتيح",
+        walk: "المشي",
+        sendEmote: "إرسال رمز تعبيري",
+        groups: {
+            move: "التنقل",
+            communicate: "التواصل",
+            express: "التعبير",
+            interact: "التفاعل",
+        },
+        hints: {
+            speedUp: "اضغط مع الاستمرار أثناء التنقل",
+            follow: "بالقرب من شخص ما",
+            emotes: "بترتيب شريط الرموز التعبيرية",
+            mapEditor: "إذا كان بإمكانك تعديل الخريطة",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "مسافة",
+        },
     },
 };
 

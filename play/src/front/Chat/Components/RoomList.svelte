@@ -3,11 +3,12 @@
 
     import { onDestroy, onMount, setContext } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import { warningMessageStore } from "../../Stores/ErrorStore";
     import LL from "../../../i18n/i18n-svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
-    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import { folderPanelStore, roomSidePanelStore } from "../Stores/RoomSidePanelStore";
     import {
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
@@ -44,6 +45,7 @@
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import FolderMembersPanel from "./Room/FolderMembersPanel.svelte";
     import {
         CHAT_TWO_COLUMN_LAYOUT_LIMIT,
         canDisplayRoomListAndTimeline,
@@ -52,15 +54,16 @@
         ROOM_LIST_DEFAULT_WIDTH,
         ROOM_LIST_MAX_WIDTH,
         ROOM_LIST_MIN_WIDTH,
-        ROOM_LIST_PREVIEW_MIN_WIDTH,
         ROOM_ROW_PREVIEW_CONTEXT,
         shouldShowRoomSidePanelToggle,
+        showsRoomRowPreview,
         threeColumnLayoutLimit,
     } from "./RoomListLayout";
     import ProximityRoomRow from "./Room/ProximityRoomRow.svelte";
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
-    import { IconChevronUp, IconCloudLock, IconPlus, IconRefresh } from "@wa-icons";
+    import { rovingFocus } from "./roomRowKeyboard";
+    import { IconChevronUp, IconCloudLock, IconLoader, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
         sideBarWidth?: number;
@@ -80,6 +83,13 @@
     const shouldRetrySendingEvents = chat.shouldRetrySendingEvents;
 
     const chatConnectionStatus = chat.connectionStatus;
+    // Once the list has been shown, a reconnection (network blip, laptop waking up) keeps it on screen under a
+    // banner instead of swapping every room for a loading skeleton.
+    let hasBeenOnline = $state(false);
+    $effect(() => {
+        if ($chatConnectionStatus === "ONLINE") hasBeenOnline = true;
+    });
+    let isReconnecting = $derived($chatConnectionStatus === "CONNECTING" && hasBeenOnline);
 
     let directRooms = chat.directRooms;
     let rooms = chat.rooms;
@@ -225,6 +235,7 @@
             filteredDirectRoom.length === 0 &&
             filteredRooms.length === 0 &&
             filteredRoomInvitations.length === 0 &&
+            $joignableRoom.length === 0 &&
             !$roomFolders.some((folder) => folderHasSearchMatch(folder, $chatSearchBarValue.toLocaleLowerCase())),
     );
 
@@ -236,8 +247,13 @@
     );
     let displayThreeColumnLayout = $derived(sideBarWidth >= threeColumnLayoutLimit($roomListWidthStore));
     let roomListBesideConversation = $derived(displayTwoColumnLayout && $navChat.key === "chat");
-    // ponytail: only beside a conversation, so the default one-column list keeps its compact rows.
-    let showRoomRowPreview = $derived(roomListBesideConversation && $roomListWidthStore > ROOM_LIST_PREVIEW_MIN_WIDTH);
+    let showRoomRowPreview = $derived(
+        showsRoomRowPreview({
+            besideConversation: displayTwoColumnLayout,
+            roomListWidth: $roomListWidthStore,
+            sideBarWidth,
+        }),
+    );
     setContext(ROOM_ROW_PREVIEW_CONTEXT, {
         get shown() {
             return showRoomRowPreview;
@@ -322,9 +338,10 @@
         ? `grid-template-columns: ${$roomListWidthStore}px minmax(0, 1fr) 360px`
         : undefined}
 >
-    {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
+    {#if ($selectedRoomStore === undefined && $folderPanelStore === undefined) || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
+            use:rovingFocus={{ items: "[data-room-row-button]" }}
             style={displayTwoColumnLayout ? `width:${$roomListWidthStore}px ;flex : 0 0 auto` : ``}
         >
             {#if $shouldRetrySendingEvents}
@@ -377,17 +394,32 @@
                     </div>
                 {/if}
                 <!-- Where the conversations will be: under the bubble, which does not wait for the chat server. -->
-                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected}
+                {#if $chatConnectionStatus === "CONNECTING" && $userIsConnected && !isReconnecting}
                     <RoomListSkeleton />
                 {/if}
-                {#if $chatConnectionStatus === "ONLINE"}
+                {#if isReconnecting}
+                    <div
+                        class="mx-2 mb-2 flex items-center gap-2 rounded border border-solid border-warning-900/50 bg-warning-900/20 px-3 py-2 text-xs text-white"
+                        role="status"
+                        data-testid="chatReconnecting"
+                    >
+                        <IconLoader class="animate-spin shrink-0" font-size="14" />
+                        {$LL.chat.reconnecting()}
+                    </div>
+                {/if}
+                {#if $chatConnectionStatus === "ONLINE" || isReconnecting}
                     {#if hasNoSearchResult}
                         <p class="px-3 py-2 m-0 text-sm text-center text-white/50" data-testid="chatSearchNoResult">
                             {$LL.chat.searchNoResult({ search: $chatSearchBarValue.trim() })}
                         </p>
                     {/if}
                     {#if $joignableRoom.length > 0 && $chatSearchBarValue.trim() !== ""}
-                        <p class="p-0 m-0 text-gray-400">{$LL.chat.joinableRooms()}</p>
+                        <p
+                            class="px-3 py-1 m-0 text-xs font-bold uppercase text-white/50"
+                            data-testid="chatJoinableRoomsTitle"
+                        >
+                            {$LL.chat.joinableRooms()} · {$joignableRoom.length}
+                        </p>
                         <div class="flex flex-col">
                             {#each $joignableRoom as room (room.id)}
                                 <RoomSuggested
@@ -401,6 +433,8 @@
                     {#if filteredRoomInvitations.length > 0}
                         <button
                             class="group relative m-0 px-3 rounded-none text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center border border-solid border-x-0 border-t border-b-0 border-white/10"
+                            data-room-row-button
+                            aria-expanded={displayRoomInvitations}
                             onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
@@ -431,6 +465,8 @@
                         <button
                             type="button"
                             class="flex items-center min-w-0 flex-1 text-start m-0 p-0 h-full bg-transparent border-0 cursor-pointer text-inherit rounded-none appearance-none"
+                            data-room-row-button
+                            aria-expanded={displayDirectRooms}
                             onclick={toggleDisplayDirectRooms}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase truncate">
@@ -559,7 +595,13 @@
                 </div>
             {/if}
         </div>
-    {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
+    {:else if $folderPanelStore !== undefined}
+        <div class="relative overflow-y-auto min-w-0">
+            {#key $folderPanelStore.id}
+                <FolderMembersPanel folder={$folderPanelStore} />
+            {/key}
+        </div>
+    {:else if displayTwoColumnLayout}
         <CatchUpList conversations={$unreadConversations} />
     {/if}
 
@@ -603,6 +645,7 @@
                         event.stopPropagation();
                         initChatConnectionEncryption().catch((error) => {
                             console.error("Failed to initialize chat encryption", error);
+                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), { closable: true });
                         });
                     }}
                     class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"

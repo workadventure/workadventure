@@ -150,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID của bạn",
-        settings: "Cài đặt",
         resetKeyStorageUpButtonLabel: "Đặt lại kho khóa của bạn",
         resetKeyStorageConfirmationModal: {
             title: "Xác nhận đặt lại kho khóa",
@@ -169,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Thông báo toàn cầu",
         contact: "Liên hệ",
         report: "Báo lỗi",
-        chat: "Trò chuyện",
         help: "Trợ giúp & hướng dẫn",
         contextualActions: "Thao tác theo ngữ cảnh",
         shortcuts: "Phím tắt",
@@ -202,6 +199,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "Chúng bị tắt khi bạn đang gõ trong ô văn bản.",
+        searchLabel: "Tìm phím tắt",
+        searchPlaceholder: "Tìm một thao tác hoặc một phím…",
+        noResult: "Không có phím tắt nào khớp với “{query}”.",
+        or: "hoặc",
+        layout: "Bố cục bàn phím",
+        walk: "Đi bộ",
+        sendEmote: "Gửi biểu cảm",
+        groups: {
+            move: "Di chuyển",
+            communicate: "Giao tiếp",
+            express: "Thể hiện",
+            interact: "Tương tác",
+        },
+        hints: {
+            speedUp: "Giữ trong khi di chuyển",
+            follow: "Khi ở gần ai đó",
+            emotes: "Theo thứ tự của thanh biểu cảm",
+            mapEditor: "Nếu bạn có quyền chỉnh sửa bản đồ",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Phím cách",
+        },
     },
 };
 

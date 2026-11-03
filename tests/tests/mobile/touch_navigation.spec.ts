@@ -49,7 +49,8 @@ test.describe("Touch navigation @nowebkit @nodesktop", () => {
         const touch = await touchscreen(page);
         await Map.teleportToPosition(page, 2 * 32, 2 * 32);
         const start = await Map.getPosition(page);
-        const destination = { x: 6 * 32, y: 6 * 32 };
+        // Just inside a tile: a tap right on a tile corner may round onto a neighbouring tile.
+        const destination = { x: 6 * 32 + 2, y: 6 * 32 + 2 };
         const target = await gameToBrowserCoordinates(page, destination);
 
         // A one-finger drag moves the view: the camera leaves the avatar, which stays put.
@@ -59,6 +60,11 @@ test.describe("Touch navigation @nowebkit @nodesktop", () => {
         }
         await touch("touchEnd", []);
         await expect(page.getByTestId("center-camera-on-player")).toBeAttached();
+
+        // A tap on your own woka brings the view back on it, and walks nowhere.
+        const self = await gameToBrowserCoordinates(page, start);
+        await page.touchscreen.tap(self.x, self.y);
+        await expect(page.getByTestId("center-camera-on-player")).toBeHidden();
 
         // Lifting the fingers of a quick two-finger touch (the end of a pinch) is not a tap.
         await touch("touchStart", [target, { x: target.x + 40, y: target.y }]);

@@ -149,8 +149,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "あなたの Matrix ID",
-        settings: "設定",
         resetKeyStorageUpButtonLabel: "キーストレージをリセット",
         resetKeyStorageConfirmationModal: {
             title: "キーストレージリセットの確認",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "グローバルメッセージ",
         contact: "コンタクト",
         report: "問題の報告",
-        chat: "チャット",
         help: "ヘルプとチュートリアル",
         contextualActions: "コンテキストアクション",
         shortcuts: "ショートカット",
@@ -201,6 +198,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "テキスト入力中は無効になります。",
+        searchLabel: "ショートカットを検索",
+        searchPlaceholder: "操作またはキーを検索…",
+        noResult: "「{query}」に一致するショートカットはありません。",
+        or: "または",
+        layout: "キーボード配列",
+        walk: "歩く",
+        sendEmote: "エモートを送信",
+        groups: {
+            move: "移動",
+            communicate: "コミュニケーション",
+            express: "感情表現",
+            interact: "インタラクション",
+        },
+        hints: {
+            speedUp: "移動中に押し続ける",
+            follow: "誰かの近くで",
+            emotes: "エモートバーの順番",
+            mapEditor: "マップを編集できる場合",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "スペース",
+        },
     },
 };
 

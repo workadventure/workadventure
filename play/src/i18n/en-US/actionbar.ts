@@ -83,6 +83,7 @@ const actionbar: BaseTranslation = {
         blurMiddle: "Middle blur",
         blurHigh: "High blur",
         images: "Images",
+        image: "Background image {index:number}",
     },
     help: {
         chat: {

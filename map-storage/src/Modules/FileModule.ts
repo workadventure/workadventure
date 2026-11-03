@@ -36,8 +36,22 @@ async function onPropertyDelete<T extends AreaDataProperty | EntityDataProperty>
     return property;
 }
 
+/** A copied property gets its own copy of the file it links to. */
+async function onPropertyAdd<T extends AreaDataProperty | EntityDataProperty>(
+    property: T,
+    hostname: string,
+): Promise<T> {
+    const link = await new CustomFileService(hostname).copySharedFile(property);
+    if (link === undefined) {
+        return property;
+    }
+    return property.type === "openFile" ? { ...property, link } : { ...property, audioLink: link };
+}
+
 export class FileModule implements MapStorageModuleInterface {
     public init(hookManager: HookManager): void {
+        hookManager.subscribeAreaPropertyAdd((area, property, hostname) => onPropertyAdd(property, hostname));
+        hookManager.subscribeEntityPropertyAdd((entity, property, hostname) => onPropertyAdd(property, hostname));
         hookManager.subscribeAreaPropertyChange((area, oldProperty, newProperty, hostname) =>
             onPropertyChange(oldProperty, newProperty, hostname),
         );

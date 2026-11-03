@@ -150,8 +150,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Je Matrix ID",
-        settings: "Instellingen",
         resetKeyStorageUpButtonLabel: "Reset je sleutelopslag",
         resetKeyStorageConfirmationModal: {
             title: "Bevestiging van reset van sleutelopslag",
@@ -169,7 +167,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Wereldwijde berichten",
         contact: "Contact",
         report: "Problemen melden",
-        chat: "Chat",
         help: "Help & tutorials",
         contextualActions: "Contextuele acties",
         shortcuts: "Sneltoetsen",
@@ -202,6 +199,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "Ze zijn uitgeschakeld terwijl je in een tekstveld typt.",
+        searchLabel: "Sneltoets zoeken",
+        searchPlaceholder: "Zoek een actie of een toets…",
+        noResult: "Geen sneltoets komt overeen met ‘{query}’.",
+        or: "of",
+        layout: "Toetsenbordindeling",
+        walk: "Lopen",
+        sendEmote: "Emote sturen",
+        groups: {
+            move: "Bewegen",
+            communicate: "Communiceren",
+            express: "Jezelf uiten",
+            interact: "Interactie",
+        },
+        hints: {
+            speedUp: "Ingedrukt houden tijdens het lopen",
+            follow: "In de buurt van iemand",
+            emotes: "In de volgorde van de emotebalk",
+            mapEditor: "Als je de kaart mag bewerken",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Spatie",
+        },
     },
 };
 

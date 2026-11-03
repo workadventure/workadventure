@@ -9,11 +9,14 @@ import type {
 } from "livekit-client";
 import {
     BackupCodecPolicy,
+    compareVersions,
+    getBrowser,
     LocalAudioTrack,
     LocalVideoTrack,
     Room,
     RoomEvent,
     Track,
+    VideoPreset,
     VideoPresets,
     DisconnectReason,
     ConnectionState,
@@ -34,7 +37,7 @@ import { screenShareQualityStore } from "../Stores/ScreenSharingStore";
 import { bandwidthConstrainedPreferenceStore } from "../Stores/BandwidthConstrainedPreferenceStore";
 import type { SpaceInterface, SpaceUserExtended } from "../Space/SpaceInterface";
 import type { StreamableSubjects } from "../Space/SpacePeerManager/SpacePeerManager";
-import { decrementLivekitRoomCount, incrementLivekitRoomCount } from "../Utils/E2EHooks";
+import { registerLivekitRoom, unregisterLivekitRoom, type E2ELivekitRoom } from "../Utils/E2EHooks";
 import { deriveSwitchStore } from "../Stores/InterruptorStore";
 import {
     preferredVideoCodecs,
@@ -61,8 +64,8 @@ const ParticipantMetadataSchema = z.object({
 type ParticipantMetadata = z.infer<typeof ParticipantMetadataSchema>;
 
 type LivekitRoomCounter = {
-    increment: () => void;
-    decrement: () => void;
+    increment: (room: E2ELivekitRoom) => void;
+    decrement: (room: E2ELivekitRoom) => void;
 };
 
 // ponytail: fixed delay before asking for a new invitation when the room never managed to connect (the LiveKit
@@ -70,7 +73,7 @@ type LivekitRoomCounter = {
 // backoff if it ever matters.
 const RESTART_DELAY_WHEN_NEVER_CONNECTED_MS = 5000;
 
-export class LiveKitRoom implements LiveKitRoomInterface {
+export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
     private room: Room | undefined;
     // Keyed by identity, like livekit-client: it keeps the same RemoteParticipant across a full reconnection and
     // changes its sid in place, so a sid key would no longer find the participant when it leaves
@@ -128,12 +131,21 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         private screenSharingLocalStreamStore: Readable<LocalStreamStoreValue | undefined>,
         private speakerDeviceIdStore: Readable<string | undefined> = speakerSelectedStore,
         private _livekitRoomCounter: LivekitRoomCounter = {
-            increment: incrementLivekitRoomCount,
-            decrement: decrementLivekitRoomCount,
+            increment: registerLivekitRoom,
+            decrement: unregisterLivekitRoom,
         },
         private _localStreamStore: Readable<LocalStreamStoreValue> = localStreamStoreForPublishing,
     ) {
-        this._livekitRoomCounter.increment();
+        this._livekitRoomCounter.increment(this);
+    }
+
+    /** [E2E] The camera this page publishes and the cameras it receives, for E2E tests to read their statistics. */
+    public getE2EVideoTracks(): ReturnType<E2ELivekitRoom["getE2EVideoTracks"]> {
+        const received = Array.from(this.room?.remoteParticipants.values() ?? []).flatMap((participant) => {
+            const track = participant.getTrackPublication(Track.Source.Camera)?.videoTrack;
+            return track ? [{ from: participant.name || participant.identity, track }] : [];
+        });
+        return { sent: this.localCameraTrack, received };
     }
 
     public async prepareConnection(): Promise<Room> {
@@ -268,6 +280,17 @@ export class LiveKitRoom implements LiveKitRoomInterface {
         );
     }
 
+    /**
+     * The layer a "low" camera sends under its captured one, for thumbnails: half the captured size, budgeted on our
+     * curve like the captured one. Otherwise livekit-client adds its own 180p preset, sized for VP8 (160 kbps) and at
+     * 20 fps, above the frame rate of "low".
+     */
+    private lowCameraLowerLayer(track: MediaStreamTrack, codec: VideoCodec): VideoPreset {
+        const { width = 640, height = 360 } = track.getSettings();
+        const { bitrate, fps } = selectVideoPreset(height / 2, width / 2, false, "low", codec);
+        return new VideoPreset(width / 2, height / 2, bitrate, fps);
+    }
+
     private getPresetForTrack(
         track: MediaStreamTrack,
         isScreenShare: boolean,
@@ -284,6 +307,22 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.getQualitySetting(isScreenShare),
             codec,
             spatialLayers,
+        );
+    }
+
+    /**
+     * Whether livekit-client publishes VP9 and AV1 as simulcast when asked to (simulcast + L1T3). It mirrors the
+     * client's own check, which otherwise keeps L1T3 and sends a single layer: Safari and every iOS browser read
+     * several VP9 encodings as SVC, and LiveKit servers up to 1.13.6 do not take VP9/AV1 simulcast.
+     */
+    private supportsSvcSimulcast(): boolean {
+        const browser = getBrowser();
+        const serverVersion = this.room?.engine?.serverVersion;
+        return (
+            browser?.name !== "Safari" &&
+            browser?.os !== "iOS" &&
+            serverVersion !== undefined &&
+            compareVersions(serverVersion, "1.13.6") > 0
         );
     }
 
@@ -354,24 +393,26 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             }
             const cameraTrack = new LocalVideoTrack(videoTrack);
             const cameraCodec = this.getVideoCodec(false, videoTrack);
-            // livekit-client publishes VP9 and AV1 as SVC, three spatial layers (L3T3_KEY) under one budget. "low" is
-            // captured at 360p and sent as one layer: libwebrtc's minimum for each SVC layer is above the low budget
-            // at every size, so the top layer would stay off while the stream is padded up to what it needs.
+            // VP9 and AV1 are published as simulcast (L1T3 on each layer) where livekit-client can, like VP8: dynacast
+            // then pauses the layers nobody watches. Elsewhere livekit-client sends them as SVC (L3T3_KEY): one stream
+            // that always carries its three layers, under one budget.
+            // "low" is captured at 360p and sent as 360p + 180p (see lowCameraLowerLayer). On the SVC fallback it stays a
+            // single layer: its 360p budget is below what libwebrtc needs to turn the second SVC layer on.
             const svc = cameraCodec === "vp9" || cameraCodec === "av1";
-            const singleLayer = svc && this.getQualitySetting(false) === "low";
+            const low = this.getQualitySetting(false) === "low";
+            const svcFallback = svc && !this.supportsSvcSimulcast();
+            const singleLayer = svcFallback && low;
+            const svcLayers = svcFallback && !low;
+            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svcLayers ? 3 : 1);
             const publishOptions: TrackPublishOptions = {
                 source: Track.Source.Camera,
                 videoCodec: cameraCodec,
-                simulcast: true,
-                ...(singleLayer ? { scalabilityMode: "L1T3" } : {}),
-                // Commented out: the default simulcast layers are sufficient for our use case
-                //videoSimulcastLayers: [VideoPresets.h1080, VideoPresets.h360, VideoPresets.h216,  ],
-            };
-
-            const preset = this.getPresetForTrack(videoTrack, false, cameraCodec, svc && !singleLayer ? 3 : 1);
-            publishOptions.videoEncoding = {
-                maxBitrate: preset.bitrate,
-                maxFramerate: preset.fps,
+                simulcast: !singleLayer,
+                ...(svc && !svcLayers ? { scalabilityMode: "L1T3" } : {}),
+                ...(low && !singleLayer
+                    ? { videoSimulcastLayers: [this.lowCameraLowerLayer(videoTrack, cameraCodec)] }
+                    : {}),
+                videoEncoding: { maxBitrate: preset.bitrate, maxFramerate: preset.fps },
             };
 
             const publishedWith = this.cameraPublicationKey(videoTrack);
@@ -1182,6 +1223,8 @@ export class LiveKitRoom implements LiveKitRoomInterface {
                 spaceName: this.space.getName(),
                 livekitServerUrl: this.serverUrl,
                 getLivekitRegion: () => this.getRegion(),
+                getQualitySetting: () =>
+                    get(streamCategory === "screenSharing" ? screenShareQualityStore : videoQualityStore),
             },
             (message) => this.space.emitVideoQualityReport(message),
         );
@@ -1219,7 +1262,7 @@ export class LiveKitRoom implements LiveKitRoomInterface {
             this.screenShareAnalyticsUnsubscribe = undefined;
             this.leaveRoom();
         } finally {
-            this._livekitRoomCounter.decrement();
+            this._livekitRoomCounter.decrement(this);
         }
     }
 

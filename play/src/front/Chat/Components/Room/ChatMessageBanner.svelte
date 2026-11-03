@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { get } from "svelte/store";
     import LL from "../../../../i18n/i18n-svelte";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
     import { focusNotificationMessage } from "../../../Components/ProximityNotification/NotificationRoomFocus";
@@ -32,7 +33,10 @@
 
     function reply(banner: ChatMessageBanner): void {
         open(banner);
-        selectedChatMessageToReply.set(banner.message);
+        // A bubble message received just before leaving the bubble: nobody would get the reply.
+        if (!banner.message.canReply || get(banner.message.canReply)) {
+            selectedChatMessageToReply.set(banner.message);
+        }
     }
 </script>
 

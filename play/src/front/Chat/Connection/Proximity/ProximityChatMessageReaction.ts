@@ -10,11 +10,11 @@ import ReactionIcon from "../../Components/Room/ReactionIcon.svelte";
 export class ProximityChatMessageReaction implements ChatMessageReaction {
     readonly users = new MapStore<string, ChatUser>();
     readonly reacted = writable(false);
-    readonly canReact: Readable<boolean> = readable(true);
     constructor(
         readonly key: string,
         readonly myChatId: string,
         private readonly toggle: (key: string) => void,
+        readonly canReact: Readable<boolean> = readable(true),
     ) {}
 
     get component() {
@@ -49,13 +49,14 @@ export function applyProximityReaction(
     added: boolean,
     myChatId: string,
     toggle: (key: string) => void,
+    canReact?: Readable<boolean>,
 ): void {
     const existing = reactions.get(key);
     const reaction =
         existing instanceof ProximityChatMessageReaction
             ? existing
             : added
-              ? new ProximityChatMessageReaction(key, myChatId, toggle)
+              ? new ProximityChatMessageReaction(key, myChatId, toggle, canReact)
               : undefined;
     if (!reaction) {
         return;

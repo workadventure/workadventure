@@ -4,6 +4,8 @@
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
     import LL from "../../../../i18n/i18n-svelte";
+    import Button from "../../../Components/UI/Button.svelte";
+    import Alert from "../../../Components/UI/Alert.svelte";
     import MessageInput from "./MessageInput.svelte";
 
     interface Props {
@@ -14,7 +16,9 @@
     let messageInput: HTMLDivElement | undefined = $state();
 
     let inputValue = $state((() => get(message.content).body)());
+    // Stays until the next try, so a failure is not missed.
     let editError = $state(false);
+    let saving = $state(false);
     let root: HTMLDivElement | undefined = $state();
 
     // Edit is often picked from the keyboard: start typing at the end of the text, and once done, land back
@@ -35,15 +39,16 @@
     });
 
     async function editMessage(newContent: string) {
+        editError = false;
+        saving = true;
         try {
             await message.edit(newContent);
             selectedChatMessageToEdit.set(null);
         } catch (error) {
             console.error(error);
             editError = true;
-            setTimeout(() => {
-                editError = false;
-            }, 2000);
+        } finally {
+            saving = false;
         }
     }
 </script>
@@ -58,22 +63,29 @@
     />
 
     {#if editError}
-        <p class="text-red-500 text-xxs p-0 m-0">{$LL.chat.messageEditedError()}</p>
+        <Alert variant="danger" class="mt-1 w-full">{$LL.chat.messageEditedError()}</Alert>
     {/if}
-    <div class="flex flew-row gap-1 justify-center p-1">
-        <button
-            class="hover:bg-white/10 text-white py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
-            data-testid="cancelMessageEditionButton"
+    <div class="flex flex-row gap-1 justify-center p-1">
+        <Button
+            variant="contrast"
+            size="sm"
+            class="flex-1"
+            dataTestId="cancelMessageEditionButton"
             onclick={() => selectedChatMessageToEdit.set(null)}
         >
-            {$LL.chat.createRoom.buttons.cancel()}
-        </button>
-        <button
-            class="bg-white hover:bg-white/80 text-secondary py-0.5 text-sm px-3 w-full text-center items-center justify-center rounded"
-            data-testid="saveMessageEditionButton"
-            onclick={() => editMessage(inputValue)}
+            {$LL.chat.confirm.cancel()}
+        </Button>
+        <Button
+            variant="secondary"
+            size="sm"
+            class="flex-1"
+            dataTestId="saveMessageEditionButton"
+            disabled={saving}
+            onclick={() => {
+                editMessage(inputValue).catch((error) => console.error(error));
+            }}
         >
-            {$LL.chat.createRoom.buttons.edit()}
-        </button>
+            {$LL.chat.confirm.save()}
+        </Button>
     </div>
 </div>

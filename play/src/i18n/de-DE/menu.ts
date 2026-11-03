@@ -152,8 +152,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Deine Matrix-ID",
-        settings: "Einstellungen",
         resetKeyStorageUpButtonLabel: "Schlüsselspeicher zurücksetzen",
         resetKeyStorageConfirmationModal: {
             title: "Bestätigung zurücksetzen des Schlüsselspeichers",
@@ -171,7 +169,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "Globale Nachrichten",
         contact: "Kontakt",
         report: "Einen Fehler melden",
-        chat: "Chat",
         help: "Hilfe & Tutorials",
         contextualActions: "Kontextuelle Aktionen",
         shortcuts: "Tastenkürzel",
@@ -204,6 +201,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Kamera ein-/ausschalten",
         setShortcut: "Tastenkürzel festlegen",
         pressKey: "Tastenkombination drücken …",
+        subtitle: "Sie sind deaktiviert, während du in ein Textfeld schreibst.",
+        searchLabel: "Tastenkürzel suchen",
+        searchPlaceholder: "Aktion oder Taste suchen…",
+        noResult: "Kein Tastenkürzel passt zu „{query}“.",
+        or: "oder",
+        layout: "Tastaturlayout",
+        walk: "Gehen",
+        sendEmote: "Emote senden",
+        groups: {
+            move: "Bewegen",
+            communicate: "Kommunizieren",
+            express: "Ausdrücken",
+            interact: "Interagieren",
+        },
+        hints: {
+            speedUp: "Beim Gehen gedrückt halten",
+            follow: "In der Nähe einer Person",
+            emotes: "In der Reihenfolge der Emote-Leiste",
+            mapEditor: "Wenn du die Karte bearbeiten darfst",
+        },
+        keyNames: {
+            shift: "Umschalt",
+            enter: "Eingabe",
+            space: "Leertaste",
+        },
     },
 };
 

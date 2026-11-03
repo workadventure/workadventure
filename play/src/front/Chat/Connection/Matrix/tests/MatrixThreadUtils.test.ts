@@ -145,6 +145,17 @@ describe("getLastMessagePreview", () => {
     it("has nothing to show without a message", () => {
         expect(getLastMessagePreview(roomWith([]))).toBeUndefined();
     });
+
+    it("carries the read state of my own last message only", () => {
+        const room = { ...roomWith([message("$hi", 1, { body: "Hi" })]), client: { getUserId: () => "@alice:server" } };
+        const readStateOf = vi.fn(() => "read" as const);
+
+        expect(getLastMessagePreview(room as never, readStateOf)?.readState).toBe("read");
+        expect(readStateOf).toHaveBeenCalledWith("$hi");
+
+        const someoneElse = { ...room, client: { getUserId: () => "@bob:server" } };
+        expect(getLastMessagePreview(someoneElse as never, readStateOf)?.readState).toBeUndefined();
+    });
 });
 
 function createThreadReplyEvent(options?: { isFallback?: boolean; replyTargetId?: string }) {

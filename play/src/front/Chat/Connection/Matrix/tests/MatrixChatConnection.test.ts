@@ -593,7 +593,51 @@ describe("MatrixChatConnection", () => {
             const matrixChatConnection = await getMatrixConnection(clientPromise);
 
             await clientPromise;
+            // No sync in this mock: the room never shows up in the room list.
+            vi.spyOn(
+                matrixChatConnection as unknown as {
+                    waitForPlacedRoom: (roomId: string) => Promise<undefined>;
+                },
+                "waitForPlacedRoom",
+            ).mockResolvedValue(undefined);
             expect(await matrixChatConnection.createRoom({ name: "Test" })).toEqual(expected);
+        });
+
+        it("should not hand back an encrypted room before its encryption event has synced", async () => {
+            const mockMatrixClient = {
+                isGuest: vi.fn(),
+                on: vi.fn(),
+                store: { startup: vi.fn() },
+                initRustCrypto: vi.fn(),
+                startClient: vi.fn(),
+            } as unknown as MatrixClient;
+            const matrixChatConnection = await getMatrixConnection(Promise.resolve(mockMatrixClient));
+
+            // The server sent the room with its creator only: the encryption event comes on a later sync.
+            const isEncrypted = writable(false);
+            const placedRoom = Object.assign(Object.create(MatrixChatRoomClass.prototype) as MatrixChatRoom, {
+                isEncrypted,
+            });
+            vi.spyOn(
+                matrixChatConnection as unknown as { findRoomOrFolder: (roomId: string) => Promise<MatrixChatRoom> },
+                "findRoomOrFolder",
+            ).mockResolvedValue(placedRoom);
+            const waitForPlacedRoom = (encrypted: boolean) =>
+                (
+                    matrixChatConnection as unknown as {
+                        waitForPlacedRoom: (
+                            roomId: string,
+                            parentSpaceID: string | undefined,
+                            encrypted: boolean,
+                            deadline: number,
+                        ) => Promise<MatrixChatRoom | undefined>;
+                    }
+                ).waitForPlacedRoom("!room:server", undefined, encrypted, Date.now());
+
+            expect(await waitForPlacedRoom(false)).toBe(placedRoom);
+            expect(await waitForPlacedRoom(true)).toBeUndefined();
+            isEncrypted.set(true);
+            expect(await waitForPlacedRoom(true)).toBe(placedRoom);
         });
     });
     describe("createDirectRoom", () => {

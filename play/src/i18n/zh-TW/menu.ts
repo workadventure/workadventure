@@ -145,8 +145,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "您的 Matrix ID",
-        settings: "設定",
         resetKeyStorageUpButtonLabel: "重設您的金鑰儲存",
         resetKeyStorageConfirmationModal: {
             title: "金鑰儲存重設確認",
@@ -164,7 +162,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "全域訊息",
         contact: "聯絡",
         report: "回報問題",
-        chat: "聊天",
         help: "說明和教學",
         contextualActions: "情境操作",
         shortcuts: "快捷鍵",
@@ -197,6 +194,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "在文字欄位中輸入時會停用。",
+        searchLabel: "搜尋快捷鍵",
+        searchPlaceholder: "搜尋動作或按鍵…",
+        noResult: "沒有符合「{query}」的快捷鍵。",
+        or: "或",
+        layout: "鍵盤配置",
+        walk: "行走",
+        sendEmote: "傳送表情",
+        groups: {
+            move: "移動",
+            communicate: "交流",
+            express: "表達",
+            interact: "互動",
+        },
+        hints: {
+            speedUp: "移動時按住",
+            follow: "在某人附近時",
+            emotes: "依表情列的順序",
+            mapEditor: "如果你可以編輯地圖",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "空白鍵",
+        },
     },
 };
 

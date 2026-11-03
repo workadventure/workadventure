@@ -10,8 +10,6 @@ import type {
 } from "@workadventure/map-editor";
 import {
     AreaDataProperties,
-    CreateAreaCommand,
-    CreateEntityCommand,
     EntityPermissions,
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
@@ -35,6 +33,8 @@ import { mapsManager } from "./MapsManager";
 import { mapPathUsingUrl } from "./Services/PathMapper";
 import { DeleteAreaMapStorageCommand } from "./Commands/Area/DeleteAreaMapStorageCommand";
 import { UpdateAreaMapStorageCommand } from "./Commands/Area/UpdateAreaMapStorageCommand";
+import { CreateAreaMapStorageCommand } from "./Commands/Area/CreateAreaMapStorageCommand";
+import { CreateEntityMapStorageCommand } from "./Commands/Entity/CreateEntityMapStorageCommand";
 import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
 import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
 import { hookManager } from "./Modules/HookManager";
@@ -246,15 +246,24 @@ const mapStorageServer: MapStorageServer = {
                     }
                     case "createAreaMessage": {
                         const message = editMapMessage.createAreaMessage;
-                        const areaObjectConfig: AreaData = {
-                            ...message,
-                            visible: true,
-                        };
-                        await mapsManager.executeCommand(
-                            mapKey,
-                            mapUrl.host,
-                            new CreateAreaCommand(wamFile, areaObjectConfig, commandId),
+                        const { id, x, y, width, height, name } = message;
+                        const properties = message.properties as AreaDataProperties;
+                        const areaObjectConfig: AreaData = { id, x, y, width, height, name, properties, visible: true };
+                        const command = new CreateAreaMapStorageCommand(
+                            wamFile,
+                            areaObjectConfig,
+                            commandId,
+                            hookManager,
+                            mapUrl.hostname,
                         );
+                        await mapsManager.executeCommand(mapKey, mapUrl.host, command);
+                        if (command.propertiesChangedByHooks) {
+                            editMapMessage.createAreaMessage = {
+                                ...message,
+                                properties: command.getProperties(),
+                                modifyServerData: true,
+                            };
+                        }
                         break;
                     }
                     case "deleteAreaMessage": {
@@ -307,25 +316,31 @@ const mapStorageServer: MapStorageServer = {
                     case "createEntityMessage": {
                         const message = editMapMessage.createEntityMessage;
                         assertCanEditEntityAt(message, "create an entity");
-                        await mapsManager.executeCommand(
-                            mapKey,
-                            mapUrl.host,
-                            new CreateEntityCommand(
-                                wamFile,
-                                message.id,
-                                {
-                                    prefabRef: {
-                                        id: message.prefabId,
-                                        collectionName: message.collectionName,
-                                    },
-                                    x: message.x,
-                                    y: message.y,
-                                    properties: message.properties as EntityDataProperties,
-                                    name: message.name,
+                        const command = new CreateEntityMapStorageCommand(
+                            wamFile,
+                            message.id,
+                            {
+                                prefabRef: {
+                                    id: message.prefabId,
+                                    collectionName: message.collectionName,
                                 },
-                                commandId,
-                            ),
+                                x: message.x,
+                                y: message.y,
+                                properties: message.properties as EntityDataProperties,
+                                name: message.name,
+                            },
+                            commandId,
+                            hookManager,
+                            mapUrl.hostname,
                         );
+                        await mapsManager.executeCommand(mapKey, mapUrl.host, command);
+                        if (command.propertiesChangedByHooks) {
+                            editMapMessage.createEntityMessage = {
+                                ...message,
+                                properties: command.getProperties(),
+                                modifyServerData: true,
+                            };
+                        }
                         break;
                     }
                     case "deleteEntityMessage": {

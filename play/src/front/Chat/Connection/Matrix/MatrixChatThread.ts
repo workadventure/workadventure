@@ -638,7 +638,7 @@ export class MatrixChatThread implements ChatThread {
             quotedMessage: undefined,
             type: "text",
             reactions: new MapStore(),
-            remove: () => undefined,
+            remove: () => Promise.resolve(),
             edit: () => Promise.resolve(),
             isDeleted: readable(false),
             isModified: readable(false),

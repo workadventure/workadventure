@@ -64,15 +64,18 @@ import type {
     ChatPollCreationCapability,
     ChatPollKind,
     ChatPollContext,
+    ChatRoomFolderPlacement,
     ChatRoomPermissionsState,
     ChatRoomPrivacyState,
     ChatRoomSettingsManagement,
     ChatRoomSettingsUpdate,
+    ChatReadReceipts,
     ChatTimelineItem,
     ChatThreadSummary,
     memberTypingInformation,
 } from "../ChatConnection";
 import { ChatPermissionLevel, ChatRoomSettingsError } from "../ChatConnection";
+import { computeReadReceipts, getReadState } from "../ReadReceipts";
 import { isAChatRoomIsVisible, navChat, selectedChatMessageToReply, botsChatIds } from "../../Stores/ChatStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
 import { addPendingMention, chatMessageBannerStore } from "../../Stores/ChatMessageBannerStore";
@@ -125,6 +128,7 @@ export class MatrixChatRoom
     readonly unreadNotificationCount: Writable<number>;
     readonly hasUnreadMentions: Writable<boolean>;
     readonly lastMessagePreview: Readable<ChatMessagePreview | undefined>;
+    readonly readReceipts: Readable<ChatReadReceipts>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
@@ -156,6 +160,7 @@ export class MatrixChatRoom
     readonly canSendMessages: Readable<boolean>;
     readonly canSendReactions: Readable<boolean>;
     typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    readonly typingNames: Readable<string[]>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember | undefined>;
@@ -170,6 +175,7 @@ export class MatrixChatRoom
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
+    private handleCurrentStateUpdated = this.onCurrentStateUpdated.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
     private readonly openThreadConversations = new Map<string, MatrixChatThread>();
@@ -199,6 +205,7 @@ export class MatrixChatRoom
     // power level before a room is opened, so we only observe the Matrix SDK RoomMember without avatar/profile work.
     private currentUserRoomMember: RoomMember | undefined;
     private currentUserPermissionLevel: Writable<ChatPermissionLevel | undefined> = writable(undefined);
+    readonly myPermissionLevel: Readable<ChatPermissionLevel | undefined> = readonly(this.currentUserPermissionLevel);
     private handleCurrentUserRoomMemberPowerLevel = this.onCurrentUserRoomMemberPowerLevel.bind(this);
 
     constructor(
@@ -284,8 +291,10 @@ export class MatrixChatRoom
         // displayed message — which left encrypted messages stuck on "Failed to decrypt" after a key-backup
         // restore. Instances are released together in destroy() at room teardown.
         this.messages = new SearchableArrayStore((item: MatrixChatMessage) => item.id);
-        this.lastMessagePreview = readable<ChatMessagePreview | undefined>(getLastMessagePreview(matrixRoom), (set) => {
-            const update = () => set(getLastMessagePreview(matrixRoom));
+        const getPreview = () =>
+            getLastMessagePreview(matrixRoom, (eventId) => getReadState(this.computeReadReceipts(), eventId));
+        this.lastMessagePreview = readable<ChatMessagePreview | undefined>(getPreview(), (set) => {
+            const update = () => set(getPreview());
             const updateOnDecrypted = (event: MatrixEvent) => {
                 if (event.getRoomId() === matrixRoom.roomId) update();
             };
@@ -293,12 +302,30 @@ export class MatrixChatRoom
             matrixRoom.on(RoomEvent.Timeline, update);
             matrixRoom.on(RoomEvent.LocalEchoUpdated, update);
             matrixRoom.on(RoomEvent.Redaction, update);
+            matrixRoom.on(RoomEvent.Receipt, update);
             matrixRoom.client.on(MatrixEventEvent.Decrypted, updateOnDecrypted);
             return () => {
                 matrixRoom.off(RoomEvent.Timeline, update);
                 matrixRoom.off(RoomEvent.LocalEchoUpdated, update);
                 matrixRoom.off(RoomEvent.Redaction, update);
+                matrixRoom.off(RoomEvent.Receipt, update);
                 matrixRoom.client.off(MatrixEventEvent.Decrypted, updateOnDecrypted);
+            };
+        });
+        this.readReceipts = readable<ChatReadReceipts>(this.computeReadReceipts(), (set) => {
+            // Receipts come in bursts (a sync carries several): recompute once per burst.
+            let timer: ReturnType<typeof setTimeout> | undefined;
+            const update = () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => set(this.computeReadReceipts()), 250);
+            };
+            update();
+            matrixRoom.on(RoomEvent.Receipt, update);
+            matrixRoom.on(RoomEvent.Timeline, update);
+            return () => {
+                clearTimeout(timer);
+                matrixRoom.off(RoomEvent.Receipt, update);
+                matrixRoom.off(RoomEvent.Timeline, update);
             };
         });
         this.timelinePolls = new SearchableArrayStore((item: MatrixChatPoll) => item.id);
@@ -554,6 +581,23 @@ export class MatrixChatRoom
             },
             [],
         );
+        this.typingNames = readable<string[]>([], (set) => {
+            const update = () =>
+                set(
+                    this.matrixRoom
+                        .getMembers()
+                        .filter((member) => member.typing && member.userId !== this.matrixRoom.myUserId)
+                        .map((member) => member.name),
+                );
+            const onTyping = (_event: MatrixEvent, member: RoomMember) => {
+                if (member.roomId === this.id) {
+                    update();
+                }
+            };
+            update();
+            this.matrixRoom.client.on(RoomMemberEvent.Typing, onTyping);
+            return () => this.matrixRoom.client.off(RoomMemberEvent.Typing, onTyping);
+        });
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
@@ -1181,6 +1225,20 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
         this.matrixRoom.currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+        this.matrixRoom.on(RoomEvent.CurrentStateUpdated, this.handleCurrentStateUpdated);
+    }
+
+    /** A new live timeline (refreshLiveTimeline, a gappy sync) comes with a new state and new RoomMember objects. */
+    private onCurrentStateUpdated(_room: Room, previousState: RoomState, currentState: RoomState): void {
+        previousState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
+        currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+        for (const member of get(this.members)) {
+            const roomMember = currentState.getMember(member.id);
+            if (roomMember) {
+                member.rebind(roomMember);
+            }
+        }
+        this.setCurrentUserRoomMember(currentState.getMember(this.matrixRoom.client.getSafeUserId()) ?? undefined);
     }
 
     private startHandlingChatRoomInitializedEvents() {
@@ -1844,6 +1902,40 @@ export class MatrixChatRoom
         return { eventId: receipt.eventId, timestamp: receipt.data.ts };
     }
 
+    private computeReadReceipts(): ChatReadReceipts {
+        const myUserId = this.matrixRoom.client.getUserId() ?? "";
+        const events = this.matrixRoom.getLiveTimeline().getEvents();
+        const receipts = events.flatMap((event) =>
+            this.matrixRoom
+                .getReceiptsForEvent(event)
+                .filter((receipt) => receipt.type === ReceiptType.Read)
+                .map((receipt) => ({
+                    userId: receipt.userId,
+                    eventId: event.getId() ?? "",
+                    timestamp: receipt.data.ts,
+                })),
+        );
+        const otherMembers = this.matrixRoom
+            .getJoinedMembers()
+            .map((member) => member.userId)
+            .filter((userId) => userId !== myUserId);
+        // Lazy-loaded members: while some are missing, nobody can be said to be the last to read.
+        const everyoneKnown = otherMembers.length === this.matrixRoom.getJoinedMemberCount() - 1;
+        return computeReadReceipts(
+            events.map((event) => ({
+                id: event.getId(),
+                // Writing or reacting means reading; joining or a settings change does not.
+                sender: [EventType.RoomMessage, EventType.Reaction].includes(event.getType() as EventType)
+                    ? event.getSender()
+                    : undefined,
+                timestamp: event.getTs(),
+            })),
+            receipts,
+            myUserId,
+            everyoneKnown ? otherMembers : [],
+        );
+    }
+
     setTimelineAsRead() {
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Highlight, 0);
         this.matrixRoom.setUnreadNotificationCount(NotificationCountType.Total, 0);
@@ -2153,11 +2245,23 @@ export class MatrixChatRoom
             (member) => directRoomsPerUsers && directRoomsPerUsers[member.userId]?.includes(this.id),
         );
 
-        if (isDirectBasedOnRoomData || memberCount === 2 || this.isRoomCreatedAsDirect()) {
+        // Two people alone is a direct message only for an unnamed room (old DMs that were never marked in
+        // m.direct): a group room someone created and named stays a group room, even with two members.
+        const looksLikeUnmarkedDirectRoom = memberCount === 2 && !this.hasRoomName();
+        if (isDirectBasedOnRoomData || looksLikeUnmarkedDirectRoom || this.isRoomCreatedAsDirect()) {
             return "direct";
         }
 
         return "multiple";
+    }
+
+    private hasRoomName(): boolean {
+        const nameEvent = this.matrixRoom
+            .getLiveTimeline()
+            ?.getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(EventType.RoomName, "");
+        const name: unknown = nameEvent?.getContent()?.name;
+        return typeof name === "string" && name.trim() !== "";
     }
 
     private refreshRoomType(): void {
@@ -2167,11 +2271,15 @@ export class MatrixChatRoom
         }
     }
 
+    /** Rejects when any file could not be sent, so the input bar can keep it instead of dropping it. */
     async sendFiles(files: FileList) {
-        try {
-            await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
-        } catch (error) {
-            console.error(error);
+        const results = await Promise.allSettled(Array.from(files).map((file) => this.sendFile(file)));
+        const failures = results.filter((result) => result.status === "rejected");
+        if (failures.length > 0) {
+            throw new AggregateError(
+                failures.map((failure) => failure.reason),
+                `${failures.length} of ${results.length} file(s) could not be sent`,
+            );
         }
     }
 
@@ -2197,10 +2305,10 @@ export class MatrixChatRoom
             };
             this.applyReplyContentIfReplyTo(content);
 
-            return this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
+            return await this.matrixRoom.client.sendMessage(this.matrixRoom.roomId, content);
         } catch (error) {
             console.error(error);
-            return;
+            throw error;
         }
     }
 
@@ -2277,6 +2385,7 @@ export class MatrixChatRoom
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
+        this.matrixRoom.off(RoomEvent.CurrentStateUpdated, this.handleCurrentStateUpdated);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);
@@ -2424,7 +2533,56 @@ export class MatrixChatRoom
             );
         }
 
+        if (settings.avatar !== undefined) {
+            const avatar = settings.avatar;
+            updates.push(
+                this.matrixRoom.client
+                    .uploadContent(avatar, { type: avatar.type })
+                    .then(({ content_uri }) =>
+                        this.matrixRoom.client.sendStateEvent(this.id, EventType.RoomAvatar, { url: content_uri }),
+                    ),
+            );
+        }
+
+        if (settings.suggested !== undefined && settings.restrictedRoomId) {
+            const folderId = settings.restrictedRoomId;
+            // Keep the "via" servers of the existing link: only the suggested flag changes.
+            const content = this.getSpaceChildEvent(folderId)?.getContent() ?? {};
+            updates.push(
+                this.matrixRoom.client.sendStateEvent(
+                    folderId,
+                    EventType.SpaceChild,
+                    { ...content, suggested: settings.suggested },
+                    this.id,
+                ),
+            );
+        }
+
         await Promise.all(updates);
+    }
+
+    private getSpaceChildEvent(folderId: string): MatrixEvent | null | undefined {
+        return this.matrixRoom.client
+            .getRoom(folderId)
+            ?.getLiveTimeline()
+            .getState(EventTimeline.FORWARDS)
+            ?.getStateEvents(EventType.SpaceChild, this.id);
+    }
+
+    public getFolderPlacement(): ChatRoomFolderPlacement | undefined {
+        const folderId = get(this.privacyState).restrictedRoomId;
+        const folder = folderId ? this.matrixRoom.client.getRoom(folderId) : null;
+        const childEvent = folderId ? this.getSpaceChildEvent(folderId) : undefined;
+        if (!folder || !childEvent) return undefined;
+        return {
+            folderName: folder.name,
+            suggested: childEvent.getContent().suggested === true,
+            canChangeSuggested:
+                folder
+                    .getLiveTimeline()
+                    .getState(EventTimeline.FORWARDS)
+                    ?.maySendStateEvent(EventType.SpaceChild, this.matrixRoom.client.getSafeUserId()) ?? false,
+        };
     }
 
     public async updateRoomPowerLevels(permissions: ChatRoomPermissionsState): Promise<void> {

@@ -4,6 +4,7 @@
     import type {
         ChatMessage,
         ChatMessageType,
+        ChatReadReceipts,
         ChatRoomMember,
         ChatThreadSummary,
     } from "../../Connection/ChatConnection";
@@ -25,6 +26,7 @@
     import MessageAudioFile from "./Message/MessageAudioFile.svelte";
     import MessageVideoFile from "./Message/MessageVideoFile.svelte";
     import MessageAttachmentRecipients from "./Message/MessageAttachmentRecipients.svelte";
+    import MessageReadReceipt from "./Message/MessageReadReceipt.svelte";
     import MessageEdition from "./MessageEdition.svelte";
     import MessageReactions from "./MessageReactions.svelte";
     import MessageIncoming from "./Message/MessageIncoming.svelte";
@@ -43,6 +45,9 @@
         membersForMessageAvatars?: Readable<readonly ChatRoomMember[]>;
         /** Root message reply preview; hide inside an open thread timeline (main room only). */
         showThreadSummary?: boolean;
+        /** Under my own messages: who has read them. */
+        readReceipts?: ChatReadReceipts;
+        showReaders?: boolean;
     }
 
     let {
@@ -51,6 +56,8 @@
         showHeader = true,
         membersForMessageAvatars = undefined,
         showThreadSummary = true,
+        readReceipts = undefined,
+        showReaders = false,
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -92,6 +99,15 @@
                 return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
             },
         ),
+    );
+    let hasReactions = $derived($reactionsWithUsers.length > 0 && !$isDeleted);
+    let hasReadReceipt = $derived(
+        readReceipts !== undefined &&
+            isMyMessage &&
+            replyDepth === 0 &&
+            !isQuotedMessage &&
+            !$isDeleted &&
+            !messageFromSystem,
     );
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
@@ -243,7 +259,7 @@
                 {#if $isDeleted}
                     <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
                         <IconTrash font-size={12} />
-                        {$LL.chat.messageDeleted()}
+                        {isMyMessage ? $LL.chat.messageDeletedByYou() : $LL.chat.messageDeleted()}
                     </p>
                 {:else if $selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id}
                     <MessageEdition message={$selectedChatMessageToEdit} />
@@ -277,11 +293,26 @@
                     </div>
                 {/if}
             </div>
-            {#if $reactionsWithUsers.length > 0 && !$isDeleted}
-                <MessageReactions
-                    classes={isMyMessage ? "justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
-                    reactions={$reactionsWithUsers}
-                />
+            {#if hasReactions || hasReadReceipt}
+                <!-- One line under the bubble: the receipt keeps the edge, the reactions wrap to its left only when
+                     they overflow. -->
+                <div class="flex items-end gap-1 {isMyMessage ? 'justify-end' : ''}">
+                    {#if hasReactions}
+                        <MessageReactions
+                            classes={isMyMessage ? "min-w-0 justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
+                            reactions={$reactionsWithUsers}
+                        />
+                    {/if}
+                    {#if hasReadReceipt && readReceipts !== undefined}
+                        <MessageReadReceipt
+                            messageId={id}
+                            receipts={readReceipts}
+                            {showReaders}
+                            showSeenByLabel={!hasReactions}
+                            members={roomMembersList}
+                        />
+                    {/if}
+                </div>
             {/if}
             {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
                 <div

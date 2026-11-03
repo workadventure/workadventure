@@ -149,8 +149,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID ของคุณ",
-        settings: "การตั้งค่า",
         resetKeyStorageUpButtonLabel: "รีเซ็ตที่เก็บกุญแจของคุณ",
         resetKeyStorageConfirmationModal: {
             title: "ยืนยันการรีเซ็ตที่เก็บกุญแจ",
@@ -168,7 +166,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "ข้อความทั่วถึง",
         contact: "ติดต่อ",
         report: "รายงานปัญหา",
-        chat: "แชท",
         help: "ความช่วยเหลือและบทแนะนำ",
         contextualActions: "การดำเนินการตามบริบท",
         shortcuts: "ปุ่มลัด",
@@ -201,6 +198,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "จะถูกปิดใช้งานขณะที่คุณพิมพ์ในช่องข้อความ",
+        searchLabel: "ค้นหาทางลัด",
+        searchPlaceholder: "ค้นหาการกระทำหรือปุ่ม…",
+        noResult: "ไม่มีทางลัดที่ตรงกับ “{query}”",
+        or: "หรือ",
+        layout: "รูปแบบแป้นพิมพ์",
+        walk: "เดิน",
+        sendEmote: "ส่งอีโมต",
+        groups: {
+            move: "เคลื่อนที่",
+            communicate: "สื่อสาร",
+            express: "แสดงออก",
+            interact: "โต้ตอบ",
+        },
+        hints: {
+            speedUp: "กดค้างไว้ขณะเคลื่อนที่",
+            follow: "เมื่ออยู่ใกล้ใครสักคน",
+            emotes: "ตามลำดับในแถบอีโมต",
+            mapEditor: "หากคุณแก้ไขแผนที่ได้",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "Space",
+        },
     },
 };
 

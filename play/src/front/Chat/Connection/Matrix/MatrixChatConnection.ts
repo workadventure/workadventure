@@ -1659,6 +1659,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
     //TODO createOptions only on matrix size
     async createRoom(roomOptions?: CreateRoomOptions): Promise<{
         room_id: string;
+        room?: ChatRoom;
     }> {
         if (roomOptions === undefined) {
             return Promise.reject(new Error("CreateRoomOptions is empty"));
@@ -1675,15 +1676,58 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
             );
 
             if (roomOptions.parentSpaceID && result) {
-                await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id, roomOptions.suggested);
+                try {
+                    await this.addRoomToSpace(roomOptions.parentSpaceID, result.room_id, roomOptions.suggested);
+                } catch (error) {
+                    // Without its folder the room would land at the root, and a new try would create a second one.
+                    await this.client.leave(result.room_id).catch((e) => console.error(e));
+                    throw error;
+                }
             }
 
-            return result;
+            return {
+                room_id: result.room_id,
+                room: await this.waitForPlacedRoom(
+                    result.room_id,
+                    roomOptions.parentSpaceID,
+                    roomOptions.encrypt === true,
+                ),
+            };
         } catch (error) {
             throw this.handleMatrixError(error);
         } finally {
             this.roomCreationInProgress.set(false);
         }
+    }
+
+    /**
+     * The room list places a new room on a later sync: wait for its wrapper, or give up after 10 s.
+     * A room created in a folder can also show up at the root for a while, and that copy is dropped
+     * when it moves into its folder: take the one inside the folder.
+     * The server can also split the creation state over two syncs (the room first comes down with only
+     * its creator): an encrypted room waits for its encryption event, or opening it would skip the
+     * encryption setup, which only shows up for a room already known to be encrypted.
+     */
+    private async waitForPlacedRoom(
+        roomId: string,
+        parentSpaceID: string | undefined,
+        encrypted: boolean,
+        deadline = Date.now() + 10_000,
+    ): Promise<ChatRoom | undefined> {
+        const folder = parentSpaceID ? await this.findParentFolder(parentSpaceID) : undefined;
+        // A closed folder has not built its rooms yet: build them, as opening it would.
+        folder?.ensureChildrenLoaded();
+        const room = parentSpaceID ? await folder?.getNode(roomId) : await this.findRoomOrFolder(roomId);
+        if (room instanceof MatrixChatRoom && (!encrypted || get(room.isEncrypted))) {
+            return room;
+        }
+        if (Date.now() >= deadline) {
+            return undefined;
+        }
+        await new Promise<void>((resolve) => {
+            setTimeout(resolve, 200);
+        });
+        return this.waitForPlacedRoom(roomId, parentSpaceID, encrypted, deadline);
     }
 
     private async waitForNextSync() {
@@ -1771,6 +1815,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     .filter((invitation) => invitation !== undefined && invitation !== this.client?.getSafeUserId()) ??
                 [],
             is_direct: roomOptions.is_direct,
+            topic: roomOptions.description,
             initial_state: this.computeInitialState(roomOptions),
             // No power_level_content_override: `suggested` is not an m.room.power_levels field (hence the
             // suppressed type error). The real "suggested" flag is set on the m.space.child event in

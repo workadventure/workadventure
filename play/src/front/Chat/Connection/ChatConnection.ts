@@ -90,6 +90,17 @@ export type ChatRoomSettingsUpdate = {
     access?: ChatRoomSettingsAccess;
     historyVisibility?: historyVisibility;
     restrictedRoomId?: string;
+    /** A new picture for the room. */
+    avatar?: File;
+    /** Whether the folder in `restrictedRoomId` suggests this room to its members. */
+    suggested?: boolean;
+};
+
+/** The folder holding a room, as its settings show it. */
+export type ChatRoomFolderPlacement = {
+    folderName: string;
+    suggested: boolean;
+    canChangeSuggested: boolean;
 };
 export type ChatRoomSettingsErrorCode = "roomNameEmpty" | "restrictedAccessNeedsParentSpace";
 
@@ -153,6 +164,8 @@ export interface ChatConversation {
     readonly loadMorePreviousMessages: () => Promise<void>;
     readonly isEncrypted: Readable<boolean>;
     readonly typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    /** Who is typing, known before the members are loaded: what the room list shows. */
+    readonly typingNames?: Readable<string[]>;
     readonly startTyping: () => Promise<object>;
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
@@ -166,12 +179,32 @@ export interface ChatConversation {
     readonly getReadMarker?: () => ChatReadMarker | undefined;
     /** The last message received, for a preview in a list. Only listens to the room while subscribed. */
     readonly lastMessagePreview?: Readable<ChatMessagePreview | undefined>;
+    /** Who has read what, from the other members' read receipts. Only listens to the room while subscribed. */
+    readonly readReceipts?: Readable<ChatReadReceipts>;
 }
 
 export type ChatMessagePreview = {
     body: string;
     senderName: string | undefined;
     timestamp: number;
+    /** Only when I wrote it. */
+    readState?: ChatReadState;
+};
+
+/** "read": everyone else has read it, which is only ever known in a direct or small room. */
+export type ChatReadState = "sent" | "read";
+
+export type ChatReader = {
+    userId: string;
+    /** When they read it, or when they wrote something after it. */
+    readAt: number | undefined;
+};
+
+export type ChatReadReceipts = {
+    /** Who has read this message or a later one, the most recent reader first. */
+    readersOf: (messageId: string) => readonly ChatReader[];
+    /** The other members, when the room is small enough to wait for all of them; undefined otherwise. */
+    otherMemberIds: readonly string[] | undefined;
 };
 
 export type ChatReadMarker = {
@@ -247,8 +280,8 @@ export interface ChatRoomModeration {
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;
-    readonly kick: (userID: string) => Promise<void>;
-    readonly ban: (userID: string) => Promise<void>;
+    readonly kick: (userID: string, reason?: string) => Promise<void>;
+    readonly ban: (userID: string, reason?: string) => Promise<void>;
     readonly unban: (userID: string) => Promise<void>;
     readonly changePermissionLevelFor: (member: ChatRoomMember, permissionLevel: ChatPermissionLevel) => Promise<void>;
     readonly getAllowedRolesToAssign: () => ChatPermissionLevel[];
@@ -260,6 +293,8 @@ export interface ChatRoomSettingsManagement {
     readonly permissionsState: Readable<ChatRoomPermissionsState>;
     readonly updateRoomSettings: (settings: ChatRoomSettingsUpdate) => Promise<void>;
     readonly updateRoomPowerLevels: (permissions: ChatRoomPermissionsState) => Promise<void>;
+    readonly myPermissionLevel: Readable<ChatPermissionLevel | undefined>;
+    readonly getFolderPlacement: () => ChatRoomFolderPlacement | undefined;
 }
 
 //Readonly attributes
@@ -273,7 +308,7 @@ export interface ChatMessage {
     quotedMessage: ChatMessage | undefined;
     type: ChatMessageType;
     reactions: MapStore<string, ChatMessageReaction>;
-    remove: () => void;
+    remove: () => Promise<void>;
     edit: (newContent: string) => Promise<void>;
     /** Only on messages carrying a file (image, file, audio, video). */
     attachment?: ChatMessageAttachment;
@@ -282,6 +317,8 @@ export interface ChatMessage {
     canEdit: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
     canReact: Readable<boolean>;
+    /** Absent: replying is always possible. */
+    canReply?: Readable<boolean>;
     canDelete: Readable<boolean>;
     threadSummary?: Readable<ChatThreadSummary | null>;
     openThread?: () => Promise<ChatThread | undefined>;
@@ -600,7 +637,8 @@ export interface ChatConnectionInterface {
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     folders: Readable<RoomFolder[]>;
-    createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+    /** Resolves once the room is created and, when it shows up in time, with the room as placed in the room list. */
+    createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string; room?: ChatRoom }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     roomCreationInProgress: Readable<boolean>;

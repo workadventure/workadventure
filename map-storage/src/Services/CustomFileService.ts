@@ -42,6 +42,36 @@ export class CustomFileService {
         await fileSystem.deleteFiles(this.getFilePath(file.name, property.id, file.kind));
     }
 
+    /**
+     * A copied property still links to the file uploaded for the property it was copied from (files are named
+     * after the property id). Gives it its own copy of that file, so that deleting or replacing one of them
+     * leaves the other alone. Returns the link to the copy, or undefined if the property already owns its file.
+     */
+    public async copySharedFile(property: AreaDataProperty | EntityDataProperty): Promise<string | undefined> {
+        const file = uploadedFile(property);
+        const link =
+            property.type === "openFile" ? property.link : property.type === "playAudio" ? property.audioLink : null;
+        if (!file?.name || !link) {
+            return undefined;
+        }
+        const { name, ext } = path.parse(file.name);
+        const url = new URL(link);
+        const linkedFileName = decodeURIComponent(path.posix.basename(url.pathname));
+        if (!linkedFileName.startsWith(`${name}-`) || !linkedFileName.endsWith(ext)) {
+            return undefined;
+        }
+        const linkedPropertyId = linkedFileName.slice(name.length + 1, linkedFileName.length - ext.length);
+        if (linkedPropertyId === property.id) {
+            return undefined;
+        }
+        await fileSystem.copy(
+            this.getFilePath(file.name, linkedPropertyId, file.kind),
+            this.getFilePath(file.name, property.id, file.kind),
+        );
+        url.pathname = path.posix.join(path.posix.dirname(url.pathname), `${name}-${property.id}${ext}`);
+        return url.toString();
+    }
+
     private getFilePath(fileName: string, propertyId: string, kind: UploadedFileKind): string {
         // The property id comes from the client (front-generated UUID). A separator in it would let the
         // normalized path climb out of this world's folder, into another world's files.

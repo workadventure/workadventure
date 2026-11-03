@@ -115,9 +115,9 @@ test.describe("Matrix chat mentions @oidc @matrix @nowebkit", () => {
 
         const mutedRow = page.getByTestId(mutedRoom);
         await mutedRow.getByTestId("toggleRoomMenu").click({ timeout: 60_000 });
-        await page.getByRole("button", { name: "Mute Room" }).click();
+        await page.getByRole("menuitem", { name: "Mute Room" }).click();
         await mutedRow.getByTestId("toggleRoomMenu").click();
-        await expect(page.getByRole("button", { name: "Unmute Room" })).toBeVisible();
+        await expect(page.getByRole("menuitem", { name: "Unmute Room" })).toBeVisible();
         await mutedRow.getByTestId("toggleRoomMenu").click();
 
         // Another conversation is open: a room that receives a message while the list shows opens by itself.

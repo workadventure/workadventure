@@ -98,15 +98,21 @@
     });
 </script>
 
-<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`}>
+<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`} data-roving-group>
     <div
         class={`group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
             rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10 rounded-none" : "rounded-md"
         }`}
         class:mb-2={isOpen || rootFolder}
+        data-roving-row
     >
         <div class="flex items-center space-x-2 grow m-0 p-0">
-            <button class="flex items-center space-x-2 grow m-0 p-0" onclick={toggleFolder}>
+            <button
+                class="flex items-center space-x-2 grow m-0 p-0 focus-visible:ring-2 focus-visible:ring-white/70"
+                data-room-row-button
+                aria-expanded={isOpen}
+                onclick={toggleFolder}
+            >
                 <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
                     <span class="truncate">{$name}</span>
                     {#if hasSuggestedRooms}
@@ -133,6 +139,8 @@
         <button
             class="transition-all group-hover:bg-white/10 p-1 rounded-lg aspect-square flex items-center justify-center text-white"
             data-testid={`toggleFolder${$name}`}
+            tabindex="-1"
+            aria-hidden="true"
             onclick={toggleFolder}
         >
             <IconChevronUp class={`transform transition ${!isOpen ? "" : "rotate-180"}`} />

@@ -148,8 +148,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         },
     },
     chat: {
-        matrixIDLabel: "Matrix ID",
-        settings: "설정",
         resetKeyStorageUpButtonLabel: "키 저장소 재설정",
         resetKeyStorageConfirmationModal: {
             title: "키 저장소 재설정 확인",
@@ -167,7 +165,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         globalMessages: "전역 메시지",
         contact: "연락처",
         report: "문제 신고",
-        chat: "채팅",
         help: "도움말 및 튜토리얼",
         contextualActions: "컨텍스트 작업",
         shortcuts: "단축키",
@@ -200,6 +197,31 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        subtitle: "텍스트 입력 중에는 비활성화됩니다.",
+        searchLabel: "단축키 검색",
+        searchPlaceholder: "동작 또는 키 검색…",
+        noResult: "“{query}”와 일치하는 단축키가 없습니다.",
+        or: "또는",
+        layout: "키보드 배열",
+        walk: "걷기",
+        sendEmote: "이모트 보내기",
+        groups: {
+            move: "이동",
+            communicate: "소통",
+            express: "감정 표현",
+            interact: "상호작용",
+        },
+        hints: {
+            speedUp: "이동 중에 누르고 있기",
+            follow: "다른 사람 근처에서",
+            emotes: "이모트 바 순서대로",
+            mapEditor: "맵을 편집할 수 있는 경우",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "스페이스",
+        },
     },
 };
 

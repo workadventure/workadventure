@@ -1,5 +1,6 @@
 /* eslint-disable import/no-unresolved */
 export { default as IconCheck } from "~icons/tabler/check";
+export { default as IconChecks } from "~icons/tabler/checks";
 export { default as IconX } from "~icons/tabler/x";
 export { default as IconPaperclip } from "~icons/tabler/paperclip";
 export { default as IconCornerDownRight } from "~icons/tabler/corner-down-right";
