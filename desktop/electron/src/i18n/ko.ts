@@ -116,7 +116,7 @@ const ko: NativeStrings = {
     "update.installAndRestart": "설치 후 다시 시작",
     "update.installLater": "나중에 설치",
     "update.availableTitle": "WorkAdventure 업데이트 가능",
-    "update.availableBody": "WorkAdventure 웹사이트에서 최신 버전을 다운로드하여 설치하세요.",
+    "update.availableBody": "시스템 업데이트와 함께 설치됩니다. 지금 설치하려면: sudo apt update && sudo apt upgrade",
     "update.none": "사용 가능한 업데이트가 없습니다.",
 };
 

@@ -114,7 +114,7 @@ const ar: NativeStrings = {
     "update.installAndRestart": "التثبيت وإعادة التشغيل",
     "update.installLater": "التثبيت لاحقًا",
     "update.availableTitle": "يتوفر تحديث لـ WorkAdventure",
-    "update.availableBody": "نزّل أحدث إصدار وثبّته من موقع WorkAdventure.",
+    "update.availableBody": "سيُثبَّت التحديث مع تحديثات النظام. لتثبيته الآن: sudo apt update && sudo apt upgrade",
     "update.none": "لا يوجد تحديث متاح.",
 };
 

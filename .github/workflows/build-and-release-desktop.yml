@@ -167,3 +167,64 @@ jobs:
           name: workadventure-mac.dmg
           path: desktop/electron/build/*.dmg
           if-no-files-found: error
+
+  # apt.workadventu.re serves the apt-repo branch (the signed index, a few KB) and redirects
+  # releases/download/... to the GitHub release, where electron-builder uploaded the .deb: apt checks
+  # each download against the SHA256 in the signed index. The .deb's after-install script adds the
+  # repository (desktop/electron/deb/).
+  apt_repository:
+    name: "Add the .deb to the APT repository"
+    needs: build_on_linux
+    # Not drafts (their downloads are not public yet) nor pre-releases (AppImage users do not get them).
+    if: ${{ github.event_name == 'release' && !github.event.release.draft && !github.event.release.prerelease }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    # Two releases at once would both push to the branch.
+    concurrency: apt-repository
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Download the .deb"
+        uses: actions/download-artifact@v4
+        with:
+          name: workadventure-desktop-linux-amd64.deb
+          # dpkg-scanpackages writes this path as the package's Filename: the path of its GitHub download URL.
+          path: ${{ runner.temp }}/releases/download/${{ github.ref_name }}
+
+      - name: "Add it to the apt-repo branch and sign the index"
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          : "${APT_SIGNING_KEY:?Add the APT_SIGNING_KEY secret: the armored private key, without a passphrase}"
+          key="$PWD/desktop/electron/deb/workadventure-desktop.gpg"
+          if git fetch --depth 1 origin apt-repo; then
+            git worktree add -B apt-repo "$RUNNER_TEMP/apt" FETCH_HEAD
+          else
+            git worktree add --orphan -b apt-repo "$RUNNER_TEMP/apt"
+          fi
+          cd "$RUNNER_TEMP"
+          mkdir -p apt/packages
+          # One file per release: a re-run replaces its own, and every earlier version stays installable.
+          dpkg-scanpackages "releases/download/$TAG" > "apt/packages/$TAG"
+          cd apt
+          cat packages/* > Packages
+          cp "$key" workadventure-desktop.gpg
+          {
+            echo "Origin: WorkAdventure"
+            echo "Label: WorkAdventure"
+            echo "Date: $(date -Ru)"
+            echo "SHA256:"
+            echo " $(sha256sum Packages | cut -d' ' -f1) $(stat -c %s Packages) Packages"
+          } > Release
+          gpg --batch --import <<< "$APT_SIGNING_KEY"
+          gpg --batch --yes --clearsign -o InRelease Release
+          gpg --batch --yes --armor --detach-sign -o Release.gpg Release
+          # Every install trusts the key shipped in the .deb: it must be the one that signs.
+          gpgv --keyring "$PWD/workadventure-desktop.gpg" InRelease
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "workadventure-desktop $TAG"
+          git push origin apt-repo

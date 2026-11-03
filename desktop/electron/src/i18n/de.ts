@@ -124,7 +124,7 @@ const de: NativeStrings = {
     "update.installLater": "Später installieren",
     "update.availableTitle": "WorkAdventure-Update verfügbar",
     "update.availableBody":
-        "Laden Sie die neueste Version von der WorkAdventure-Website herunter und installieren Sie sie.",
+        "Es wird mit den Systemaktualisierungen installiert. Um es sofort zu installieren: sudo apt update && sudo apt upgrade",
     "update.none": "Kein Update verfügbar.",
 };
 

@@ -119,7 +119,8 @@ const dsb: NativeStrings = {
     "update.installAndRestart": "Instalěrowaś a znowego startowaś",
     "update.installLater": "Pózdźej instalěrowaś",
     "update.availableTitle": "Aktualizacija WorkAdventure jo k dispoziciji",
-    "update.availableBody": "Ześěgniśo a instalěrujśo nejnowšu wersiju z websedła WorkAdventure.",
+    "update.availableBody":
+        "Aktualizacija se ze systemowymi aktualizacijami instalěrujo. Aby ju ned instalěrował: sudo apt update && sudo apt upgrade",
     "update.none": "Žedna aktualizacija k dispoziciji.",
 };
 

@@ -119,7 +119,8 @@ const ca: NativeStrings = {
     "update.installAndRestart": "Instal·la i reinicia",
     "update.installLater": "Instal·la més tard",
     "update.availableTitle": "Hi ha una actualització de WorkAdventure disponible",
-    "update.availableBody": "Baixa i instal·la la darrera versió des del lloc web de WorkAdventure.",
+    "update.availableBody":
+        "S'instal·larà amb les actualitzacions del sistema. Per instal·lar-la ara: sudo apt update && sudo apt upgrade",
     "update.none": "No hi ha cap actualització disponible.",
 };
 
