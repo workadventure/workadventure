@@ -34,7 +34,6 @@ const sameShortcut = (a: MediaShortcut, b: MediaShortcut) =>
     a.metaKey === b.metaKey;
 
 // Keys with fixed bindings in GameSceneUserInputHandler / UserInputManager / EmojiSubMenu, whatever the modifiers.
-// ponytail: hand-maintained, keep in sync when a fixed shortcut is added there.
 const reservedKeys = new Set([
     ...["KeyW", "KeyA", "KeyS", "KeyD", "KeyZ", "KeyQ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
     ...["Space", "Enter", "Escape", "KeyE", "KeyR", "KeyC", "KeyU", "KeyF"],
