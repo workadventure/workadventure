@@ -63,6 +63,7 @@
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
     import { rovingFocus } from "./roomRowKeyboard";
+    import { sortByLastMessage } from "./sortByLastMessage";
     import { IconChevronUp, IconCloudLock, IconLoader, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -205,15 +206,17 @@
         return undefined;
     }
 
+    let directRoomsByLastMessage = $derived(sortByLastMessage($directRooms));
     let filteredDirectRoom = $derived(
-        $directRooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $directRoomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
+    let roomsByLastMessage = $derived(sortByLastMessage($rooms));
     let filteredRooms = $derived(
-        $rooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $roomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
     let filteredRoomInvitations = $derived(
         $roomInvitations

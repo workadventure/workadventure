@@ -128,6 +128,7 @@ export class MatrixChatRoom
     readonly unreadNotificationCount: Writable<number>;
     readonly hasUnreadMentions: Writable<boolean>;
     readonly lastMessagePreview: Readable<ChatMessagePreview | undefined>;
+    readonly lastMessageTimestampStore: Readable<number>;
     readonly readReceipts: Readable<ChatReadReceipts>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
@@ -310,6 +311,16 @@ export class MatrixChatRoom
                 matrixRoom.off(RoomEvent.Redaction, update);
                 matrixRoom.off(RoomEvent.Receipt, update);
                 matrixRoom.client.off(MatrixEventEvent.Decrypted, updateOnDecrypted);
+            };
+        });
+        this.lastMessageTimestampStore = readable(matrixRoom.getLastActiveTimestamp(), (set) => {
+            const update = () => set(matrixRoom.getLastActiveTimestamp());
+            update();
+            matrixRoom.on(RoomEvent.Timeline, update);
+            matrixRoom.on(RoomEvent.LocalEchoUpdated, update);
+            return () => {
+                matrixRoom.off(RoomEvent.Timeline, update);
+                matrixRoom.off(RoomEvent.LocalEchoUpdated, update);
             };
         });
         this.readReceipts = readable<ChatReadReceipts>(this.computeReadReceipts(), (set) => {
