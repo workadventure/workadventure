@@ -288,8 +288,15 @@ export class MatrixChatMessage implements ChatMessage {
         }
         const sortedReactionByKey = reactionByKey.getSortedAnnotationsByKey() ?? [];
         sortedReactionByKey.forEach(([reactionKey, events]) => {
+            // One reaction per key, holding every user who reacted with it.
+            let reaction: MatrixChatMessageReaction | undefined;
             events.forEach((event) => {
-                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event, this.canReact));
+                if (reaction) {
+                    reaction.addUser(event);
+                    return;
+                }
+                reaction = new MatrixChatMessageReaction(this.room, event, this.canReact);
+                this.reactions.set(reactionKey, reaction);
             });
         });
     }
