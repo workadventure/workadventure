@@ -347,8 +347,9 @@
                 </div>
             {/if}
             {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+                <!-- Above the bubble: with the time inside it, there is no header line left to float over. -->
                 <div
-                    class="options -top-2 absolute z-50 rounded p-1 {!isMyMessage
+                    class="options -top-7 absolute z-50 rounded p-1 {!isMyMessage
                         ? 'right-2 bg-contrast/80'
                         : 'right-6 bg-secondary/80'}"
                 >
