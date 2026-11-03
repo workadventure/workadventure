@@ -175,7 +175,7 @@ const chat: BaseTranslation = {
             excalidraw: {
                 title: "Excalidraw",
                 description:
-                    "Send an source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+                    "Send an open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
             },
             cards: {
                 title: "Cards",
