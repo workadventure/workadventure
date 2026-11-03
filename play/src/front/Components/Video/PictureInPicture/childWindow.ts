@@ -33,6 +33,19 @@ const DELEGATED_EVENTS = [
 ];
 
 /**
+ * Report the element's client size now and on each resize, observed from the element's own window.
+ * Svelte's `bind:clientWidth` observes from this page, which stops reporting once the element is moved
+ * into a child window (picture-in-picture, desktop companion): call again after such a move.
+ */
+export function observeElementSize(element: HTMLElement, onSize: (width: number, height: number) => void): () => void {
+    const update = () => onSize(element.clientWidth, element.clientHeight);
+    const observer = new (element.ownerDocument.defaultView ?? window).ResizeObserver(update);
+    observer.observe(element);
+    update();
+    return () => observer.disconnect();
+}
+
+/**
  * Copy the page's styles into another window of this renderer (the browser's picture-in-picture, a
  * desktop child window). Keeping these windows in the Play renderer, instead of opening a second web
  * page, avoids another websocket/WebRTC session that would duplicate presence and media.

@@ -5,6 +5,7 @@ import crypto from "crypto";
 import windowStateKeeper from "electron-window-state";
 import path from "path";
 import settings from "./settings";
+import { configureSessionPermissions } from "./session-permissions";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
 import { ensureWorldOriginTrusted, getDesktopConfig } from "./origin-verification";
 import { nativeLocale, t } from "./i18n";
@@ -575,11 +576,7 @@ function ensureDesktopCallbackServer(): Promise<string> {
 
 // Both read the settings on every event: white-label origins the portal confirms are added at runtime.
 function configureSession() {
-    session.defaultSession.setPermissionRequestHandler((webContents, permission, callback, details) => {
-        const requestingUrl = details.requestingUrl || webContents.getURL();
-        const allowedPermissions = new Set(["media", "display-capture", "notifications", "fullscreen"]);
-        callback(allowedPermissions.has(permission) && isAllowedNavigationUrl(requestingUrl, getDesktopConfig()));
-    });
+    configureSessionPermissions(session.defaultSession, getDesktopConfig);
 
     // Wayland lets no app list the screens: the world falls back to getDisplayMedia, and the
     // system portal asked here (one dialog) is the picker. Elsewhere the in-app picker is used.
