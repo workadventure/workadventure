@@ -44,8 +44,11 @@ document.addEventListener("visibilitychange", () => {
     ipcRenderer.send("app:page-visibility", document.visibilityState === "hidden");
 });
 
-// A tab shows the native Landing (a local file) or a world (a remote page); the preload runs for each.
-const onNativeLanding = location.protocol === "file:";
+// A tab shows the native Landing (a local file, or electron-vite's dev server while developing) or a
+// world (a remote page); the preload runs for each. Main checks the sender again, dev server included.
+const devServerUrl = process.env.ELECTRON_RENDERER_URL;
+const onNativeLanding =
+    location.protocol === "file:" || (devServerUrl !== undefined && location.origin === new URL(devServerUrl).origin);
 
 const api: WorkAdventureDesktopApi = {
     desktop: true,

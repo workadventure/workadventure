@@ -8,10 +8,10 @@
     "main": "dist/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
-        "build": "tsup-node ./src/main.ts ./src/preload-app/preload.ts ./src/preload-tabs/preload.ts ./src/preload-screen-identify/preload.ts",
-        "dev": "npm run build -- --watch --onSuccess 'electron dist/main.js'",
+        "build": "electron-vite build",
+        "dev": "electron-vite dev --watch",
         "bundle": "npm run build && electron-builder",
-        "typecheck": "tsc --noEmit",
+        "typecheck": "tsc --noEmit && svelte-check --fail-on-warnings",
         "test": "vitest run",
         "lint": "eslint src/ . --ext .ts",
         "fix": "eslint --fix src/ . --ext .ts",
@@ -25,15 +25,22 @@
         "electron-window-state": "^5.0.3"
     },
     "devDependencies": {
+        "@sveltejs/vite-plugin-svelte": "^7.3.1",
+        "@tailwindcss/vite": "^4.3.4",
         "@typescript-eslint/eslint-plugin": "^8.72.1",
         "@typescript-eslint/parser": "^8.72.1",
+        "@workadventure/design-system": "^3.0.4",
         "@workadventure/desktop-api": "file:../../libs/desktop-api",
         "electron": "^45.0.0",
         "electron-builder": "^26.15.3",
+        "electron-vite": "^6.0.0",
         "eslint": "^8.12.0",
         "prettier": "^2.6.2",
-        "tsup": "^9.0.0",
+        "svelte": "^5.57.3",
+        "svelte-check": "^4.7.8",
+        "tailwindcss": "^4.3.4",
         "typescript": "^5.9.3",
+        "vite": "^8.3.5",
         "vitest": "^4.1.7"
     }
 }

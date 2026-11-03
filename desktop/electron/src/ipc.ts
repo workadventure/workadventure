@@ -1,9 +1,8 @@
 import { setAnnotationSource, setAnnotationState } from "./annotation-controller";
 import { ipcMain, app, desktopCapturer, net, screen, shell } from "electron";
 import ElectronLog from "electron-log";
-import path from "path";
-import { pathToFileURL } from "url";
 import { getDesktopConfig, isWorkAdventureServer, trustServer } from "./origin-verification";
+import { isLandingPageUrl } from "./landing-page";
 import settings from "./settings";
 import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadventure/desktop-api";
 import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
@@ -42,11 +41,6 @@ import { ensureScreenPermission, requestScreenPermission, screenPermission } fro
 import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
-// Compared on pathname only — the actual sender URL may carry a `?error=…` query when we bounce
-// back to Landing after a failed navigation, and we still want that page to keep its IPC access.
-const NATIVE_LANDING_PATHNAME = pathToFileURL(
-    path.resolve(__dirname, "..", "assets", "landing", "index.html")
-).pathname;
 
 // `desktop=true` lets the funnel offer to open the new world in the app once the account exists.
 function getAdminSignupUrl(): string {
@@ -457,7 +451,12 @@ export default () => {
             lastWorldLookup = { email, worlds };
             return {
                 ok: true,
-                worlds: worlds.map(({ name, organization, url, thumbnail }) => ({ name, organization, url, thumbnail })),
+                worlds: worlds.map(({ name, organization, url, thumbnail }) => ({
+                    name,
+                    organization,
+                    url,
+                    thumbnail,
+                })),
             };
         } catch (error) {
             ElectronLog.warn("The world lookup by email failed", error);
@@ -618,12 +617,8 @@ export default () => {
         if (!isFromActiveRenderer(event) || event.senderFrame?.parent !== null) {
             return false;
         }
-        try {
-            const senderUrl = new URL(event.senderFrame.url);
-            return senderUrl.protocol === "file:" && senderUrl.pathname === NATIVE_LANDING_PATHNAME;
-        } catch {
-            return false;
-        }
+        // Whatever its query: the page is reloaded with `?error=…` after a failed navigation.
+        return isLandingPageUrl(event.senderFrame.url);
     }
 
     // The companion window (a child window of the world page): opened and closed by hand from the
