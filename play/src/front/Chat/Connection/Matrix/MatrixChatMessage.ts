@@ -1,5 +1,5 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
-import { Direction, EventTimeline, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
+import { Direction, EventTimeline, EventType, MatrixEventEvent, RelationType } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
@@ -16,7 +16,14 @@ import type {
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
 import LL from "../../../../i18n/i18n-svelte";
-import { MATRIX_HTML_FORMAT, markOwnMentions, pillRoomMention, ROOM_MENTION_ID } from "../../Mentions";
+import {
+    getMatrixMessageContent,
+    MATRIX_HTML_FORMAT,
+    markOwnMentions,
+    pillRoomMention,
+    ROOM_MENTION_ID,
+} from "../../Mentions";
+import { escapeHtml } from "../../decodeHtmlEntities";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -188,6 +195,11 @@ export class MatrixChatMessage implements ChatMessage {
             formattedBody = withPills(html ?? content.body);
         } else if (mentionsUsers && html !== undefined) {
             formattedBody = withPills(html);
+        } else if (html !== undefined) {
+            // The body is plain text (ours since the composer sends it so, Element's always): its markdown is what we
+            // render, so a "<b>" typed in it must stay text. Older messages of ours, without HTML, keep their
+            // already escaped body.
+            formattedBody = escapeHtml(content.body);
         }
         return { body: content.body, url: undefined, formattedBody, mentionsMe };
     }
@@ -390,11 +402,13 @@ export class MatrixChatMessage implements ChatMessage {
             throw new Error("Missing permission to edit this message");
         }
         try {
+            const edited = getMatrixMessageContent(newContent);
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
-                msgtype: MsgType.Text,
+                ...edited,
+                // Whoever the message already mentioned was notified then: an edit must not notify them again.
+                "m.mentions": {},
                 "m.relates_to": { rel_type: RelationType.Replace, event_id: this.id },
-                "m.new_content": { msgtype: MsgType.Text, body: newContent },
-                body: newContent,
+                "m.new_content": edited,
             });
         } catch (error) {
             console.error(error);

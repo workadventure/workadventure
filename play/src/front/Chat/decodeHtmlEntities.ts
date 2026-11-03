@@ -5,7 +5,7 @@
  */
 export function decodeHtmlEntities(text: string): string {
     return text
-        .replace(/&nbsp;/g, " ")
+        .replace(/&nbsp;/g, "\u00a0")
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
         .replace(/&quot;/g, '"')
@@ -16,4 +16,9 @@ export function decodeHtmlEntities(text: string): string {
 
 function codePointOrEntity(entity: string, codePoint: number): string {
     return codePoint <= 0x10ffff ? String.fromCodePoint(codePoint) : entity;
+}
+
+/** Text into HTML that shows it as is: what a contenteditable holds, and markdown that must not carry markup. */
+export function escapeHtml(text: string): string {
+    return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
