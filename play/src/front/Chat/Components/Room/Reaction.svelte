@@ -103,7 +103,7 @@
         aria-label={label}
         aria-pressed={$reacted}
         class="reaction group flex flex-row items-center gap-1 py-0.5 px-2 m-0 border border-solid text-white rounded-full select-none {$reacted
-            ? 'border-secondary bg-secondary/25! hover:bg-secondary/40! focus-visible:bg-secondary/40!'
+            ? 'border-secondary bg-secondary-800! hover:bg-secondary-600! focus-visible:bg-secondary-600!'
             : 'border-white/10 hover:bg-white/20 focus-visible:bg-white/20'}"
         class:opacity-50={!$canReact}
         class:cursor-pointer={$canReact}
