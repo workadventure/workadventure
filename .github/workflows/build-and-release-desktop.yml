@@ -90,6 +90,33 @@ jobs:
           codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature"
         working-directory: "desktop/electron"
 
+      # A fuse that does not fit the package (an app.asar that fails its integrity check, say) makes
+      # the app abort at startup, on every user's machine: start it and check it still runs 15 s later.
+      - name: "Check the packaged app starts"
+        if: ${{ github.event_name != 'release' }}
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) app=build/linux-unpacked/workadventure-desktop ;;
+            macOS) app="$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)/Contents/MacOS/WorkAdventure" ;;
+            Windows) app=build/win-unpacked/WorkAdventure.exe ;;
+          esac
+          npx @electron/fuses read --app "$app"
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            xvfb-run -a "$app" --no-sandbox > startup.log 2>&1 &
+          else
+            "$app" > startup.log 2>&1 &
+          fi
+          pid=$!
+          sleep 15
+          if ! kill -0 "$pid" 2>/dev/null; then
+            cat startup.log
+            echo "The packaged app exited during startup"
+            exit 1
+          fi
+          kill "$pid" || true
+        working-directory: "desktop/electron"
+
       - name: "Build & release app"
         run: npx electron-builder --publish always
         env:
