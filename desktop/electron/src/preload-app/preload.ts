@@ -96,6 +96,8 @@ const api: WorkAdventureDesktopApi = {
         ...(onNativeLanding
             ? {
                   trustServerAndJoin: (url: string) => ipcRenderer.invoke("app:navigation:trustServerAndJoin", url),
+                  findWorlds: (email: string) => ipcRenderer.invoke("app:navigation:findWorlds", email),
+                  signInToWorld: (url: string) => ipcRenderer.invoke("app:navigation:signInToWorld", url),
                   getRecentWorlds: () => ipcRenderer.invoke("app:navigation:getRecentWorlds"),
                   getPinnedWorlds: () => ipcRenderer.invoke("app:navigation:getPinnedWorlds"),
                   togglePin: (url: string) => ipcRenderer.invoke("app:navigation:togglePin", url),

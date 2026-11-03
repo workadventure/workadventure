@@ -1,5 +1,5 @@
 import { setAnnotationSource, setAnnotationState } from "./annotation-controller";
-import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
+import { ipcMain, app, desktopCapturer, net, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { pathToFileURL } from "url";
@@ -22,9 +22,11 @@ import {
     isControllingWorldContents,
     loadDesktopTarget,
     loadLandingPage,
+    signInFromLanding,
     switchToOpenWorld,
     openWorldTab,
 } from "./window";
+import { isPlausibleEmail, loginUrlWithHint, parseFoundWorlds, type FoundWorld } from "./find-worlds-policy";
 import { activateTab, closeTab, getTabs, isWorldContents, setActiveWorldTitle, setTabInMeeting } from "./tab-manager";
 import { isTabStripSender, markTabStripReady, setTabStripVisible } from "./tab-strip";
 import { isAllowedNavigationUrl, validateDesktopNavigationUrl } from "./desktop-url-policy";
@@ -46,9 +48,17 @@ const NATIVE_LANDING_PATHNAME = pathToFileURL(
     path.resolve(__dirname, "..", "assets", "landing", "index.html")
 ).pathname;
 
+// `desktop=true` lets the funnel offer to open the new world in the app once the account exists.
 function getAdminSignupUrl(): string {
-    return process.env.WA_DESKTOP_ADMIN_SIGNUP_URL || DEFAULT_ADMIN_SIGNUP_URL;
+    const url = new URL(process.env.WA_DESKTOP_ADMIN_SIGNUP_URL || DEFAULT_ADMIN_SIGNUP_URL);
+    url.searchParams.set("desktop", "true");
+    return url.toString();
 }
+
+const FIND_WORLDS_TIMEOUT_MS = 8000;
+
+// The Landing's last email lookup: signInToWorld only opens a world it listed, with the email typed for it.
+let lastWorldLookup: { email: string; worlds: FoundWorld[] } | undefined;
 
 const DESKTOP_CAPTURER_ALLOWED_TYPES = new Set(["screen", "window"]);
 const DESKTOP_CAPTURER_MAX_THUMBNAIL = { width: 320, height: 180 };
@@ -416,6 +426,67 @@ export default () => {
         }
     });
 
+    // The worlds the WorkAdventure administration (the portal) knows for an email. The email goes in the
+    // body, not the URL, to stay out of access logs, and is never logged here either.
+    ipcMain.handle("app:navigation:findWorlds", async (event, rawEmail: unknown) => {
+        if (!isFromNativeLanding(event)) {
+            ElectronLog.warn("Rejected a world lookup from outside the native landing page");
+            return { ok: false, error: t("landing.desktopOnly") };
+        }
+        const email = typeof rawEmail === "string" ? rawEmail.trim() : "";
+        if (!isPlausibleEmail(email)) {
+            return { ok: false, error: t("landing.emailInvalid") };
+        }
+        try {
+            const response = await net.fetch(new URL("/api/desktop/worlds", getDesktopConfig().portalUrl).toString(), {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Accept: "application/json" },
+                body: JSON.stringify({ email }),
+                signal: AbortSignal.timeout(FIND_WORLDS_TIMEOUT_MS),
+            });
+            if (response.status === 429) {
+                return { ok: false, error: t("landing.lookupThrottled") };
+            }
+            if (response.status === 422) {
+                return { ok: false, error: t("landing.emailInvalid") };
+            }
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const worlds = parseFoundWorlds(await response.json());
+            lastWorldLookup = { email, worlds };
+            return { ok: true, worlds: worlds.map(({ name, organization, url }) => ({ name, organization, url })) };
+        } catch (error) {
+            ElectronLog.warn("The world lookup by email failed", error);
+            return { ok: false, error: t("landing.lookupFailed") };
+        }
+    });
+
+    ipcMain.handle("app:navigation:signInToWorld", async (event, rawUrl: unknown) => {
+        if (!isFromNativeLanding(event)) {
+            ElectronLog.warn("Rejected a sign-in request from outside the native landing page");
+            return { ok: false, error: t("landing.desktopOnly") };
+        }
+        const lookup = lastWorldLookup;
+        const world = lookup?.worlds.find((found) => found.url === rawUrl);
+        if (!lookup || !world) {
+            return { ok: false, error: t("landing.joinFailed") };
+        }
+        // Listed by our own administration over HTTPS: a white-label domain of the service, which the
+        // world loads on once signed in. Trusted like the built-in domains, without asking.
+        if (!isAllowedNavigationUrl(world.url, getDesktopConfig())) {
+            trustServer(world.url);
+        }
+        try {
+            return (await signInFromLanding(loginUrlWithHint(world.loginUrl, lookup.email)))
+                ? { ok: true }
+                : { ok: false, error: t("landing.joinFailed") };
+        } catch (error) {
+            ElectronLog.error(`app:navigation:signInToWorld failed for ${world.url}`, error);
+            return { ok: false, error: t("landing.joinFailed") };
+        }
+    });
+
     ipcMain.handle("app:navigation:getRecentWorlds", (event) => {
         if (!isFromNativeLanding(event)) {
             ElectronLog.warn("Rejected recent worlds request from outside the native landing page");
@@ -491,12 +562,11 @@ export default () => {
             ElectronLog.warn("Rejected admin signup navigation from non-main renderer");
             return { ok: false, error: t("landing.desktopOnly") };
         }
-        const url = getAdminSignupUrl();
         try {
-            await shell.openExternal(url);
+            await shell.openExternal(getAdminSignupUrl());
             return { ok: true };
         } catch (error) {
-            ElectronLog.error(`Failed to open admin signup URL ${url}`, error);
+            ElectronLog.error("Failed to open the admin signup URL", error);
             return { ok: false, error: t("landing.signupFailed") };
         }
     });

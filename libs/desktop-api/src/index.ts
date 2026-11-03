@@ -33,6 +33,15 @@ export type DesktopRecentWorld = {
     pinned: boolean;
 };
 
+/** A world the WorkAdventure administration lists for an email, on the native Landing. */
+export type DesktopFoundWorld = {
+    name: string;
+    organization: string;
+    url: string;
+};
+
+export type DesktopFindWorldsResult = { ok: true; worlds: DesktopFoundWorld[] } | { ok: false; error: string };
+
 /** A slice of the desktop's native catalog, in the OS language. */
 export type DesktopNativeStrings = { lang: string; strings: Record<string, string> };
 
@@ -56,6 +65,10 @@ export type WorkAdventureDesktopNavigationApi = {
     isPinned?: (url: string) => Promise<boolean>;
     /** Open the admin signup URL in the OS default browser. */
     openAdminSignup: () => Promise<DesktopNavigationResult>;
+    /** The worlds the WorkAdventure administration knows for this email. */
+    findWorlds?: (email: string) => Promise<DesktopFindWorldsResult>;
+    /** Sign in, in the system browser, to a world the last `findWorlds` returned (by its `url`). */
+    signInToWorld?: (url: string) => Promise<DesktopNavigationResult>;
     /**
      * The Landing's strings in the OS language (synchronous so the page never flashes English).
      * Null when called from anything but the native Landing page.
