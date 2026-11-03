@@ -6,7 +6,7 @@ Proposition de travail — 26 octobre 2026. Les choix de politique restent à va
 
 L'application Electron ne contient pas le frontend WA : chaque onglet charge le serveur choisi. Les composants Svelte du compagnon et des annotations proviennent donc de ce serveur. Une mise à jour du desktop ne met pas à jour un serveur self-hosted.
 
-`desktop/electron/src/auto-updater.ts` consulte les releases GitHub par défaut. Une organisation peut déjà configurer un autre flux avec `WA_DESKTOP_UPDATE_URL` (`desktop-url-policy.js`). Le flux est celui de l'installation desktop, pas celui d'un onglet.
+`desktop/electron/src/auto-updater.ts` consulte les releases GitHub par défaut. Une organisation peut déjà configurer un autre flux avec `WA_DESKTOP_UPDATE_URL` (`desktop-url-policy.ts`). Le flux est celui de l'installation desktop, pas celui d'un onglet.
 
 Hors Linux non-AppImage, `autoDownload` et `autoInstallOnAppQuit` conservent les valeurs par défaut `true` d'electron-updater. « Installer plus tard » reporte le redémarrage immédiat, mais ne désactive pas l'installation en quittant. Il faut expliciter ce comportement ou fournir un véritable mode géré.
 
