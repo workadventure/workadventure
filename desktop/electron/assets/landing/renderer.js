@@ -51,15 +51,17 @@
         element.classList.toggle("visible", Boolean(message));
     }
 
-    // If the main process bounced us back here after a failed navigation, it passed a message
-    // via ?error=…. Show it, then strip the query so a refresh doesn't repeat the error.
+    // The main process passes ?error=… after a failed navigation, and ?trust=… (handled below, with the
+    // trust panel) for a world on a server the app does not know. Strip the query so a refresh doesn't
+    // repeat them.
+    var initialParams = new URLSearchParams(window.location.search);
     try {
-        var initialError = new URLSearchParams(window.location.search).get("error");
+        var initialError = initialParams.get("error");
         if (initialError) {
             showError(errorEl, initialError);
-            if (window.history && typeof window.history.replaceState === "function") {
-                window.history.replaceState({}, "", window.location.pathname);
-            }
+        }
+        if (window.location.search && window.history && typeof window.history.replaceState === "function") {
+            window.history.replaceState({}, "", window.location.pathname);
         }
     } catch (err) {
         console.warn("Landing renderer: failed to read initial error param", err);
@@ -323,6 +325,17 @@
 
     // Editing the address withdraws the offer: it was about the address typed before.
     input.addEventListener("input", hideTrustPanel);
+
+    // A deep link to a self-hosted server the user has not added: same offer as for a typed address.
+    try {
+        var initialTrustUrl = initialParams.get("trust");
+        if (initialTrustUrl) {
+            input.value = initialTrustUrl;
+            showTrustPanel(initialTrustUrl, new URL(initialTrustUrl).origin);
+        }
+    } catch (err) {
+        console.warn("Landing renderer: failed to read initial trust param", err);
+    }
 
     createBtn.addEventListener("click", function () {
         showError(createErrorEl, "");

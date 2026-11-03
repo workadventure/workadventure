@@ -7,7 +7,7 @@ import path from "path";
 import settings from "./settings";
 import { configureSessionPermissions } from "./session-permissions";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
-import { ensureWorldOriginTrusted, getDesktopConfig } from "./origin-verification";
+import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust } from "./origin-verification";
 import { nativeLocale, t } from "./i18n";
 import { textDirection } from "./native-locale-policy";
 import { createDesktopWindowTitle } from "./app-name-policy";
@@ -863,20 +863,19 @@ export async function createWindow(initialUrl?: string) {
  * Load the native Landing HTML page (2 CTAs: Rejoindre / Créer). Called on first cold launch
  * when there's nothing to open yet, or from the native application/tray menu as an escape hatch
  * from a world whose web client does not expose desktop navigation. The Desktop navigation IPC
- * handlers then take over. When `errorMessage` is provided, it's rendered inline at the top of the
- * form via a `?error=` query param — used to surface load failures instead of silently reverting
- * to the portal.
+ * handlers then take over. `query.error` is rendered inline at the top of the form, to surface load
+ * failures instead of silently reverting to the portal. `query.trust` is a world URL on a server the
+ * app does not know: the page offers to add that server.
  */
-export async function loadLandingPage(errorMessage?: string): Promise<void> {
+export async function loadLandingPage(query?: { error: string } | { trust: string }): Promise<void> {
     const contents = getActiveWorldContents();
     if (!contents) {
         throw new Error("No active world view");
     }
     cancelReachWorldWatchdog();
     const landingPath = path.resolve(__dirname, "..", "assets", "landing", "index.html");
-    const loadOptions = errorMessage ? { query: { error: errorMessage } } : undefined;
     try {
-        await contents.loadFile(landingPath, loadOptions);
+        await contents.loadFile(landingPath, query ? { query } : undefined);
     } catch (error) {
         ElectronLog.error(`Failed to load Landing page at ${landingPath}`, error);
         // Fall back to the portal URL — worst case the user still lands somewhere usable. Guard
@@ -903,7 +902,7 @@ async function recoverToLandingWithError(errorMessage: string): Promise<void> {
     }
     landingRecoveryInProgress = true;
     try {
-        await loadLandingPage(errorMessage);
+        await loadLandingPage({ error: errorMessage });
     } finally {
         landingRecoveryInProgress = false;
     }
@@ -926,13 +925,20 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         return true;
     }
     // A white-label world (deep link, or the last room once its confirmation expired) is only loaded
-    // if the portal's admin vouches for it; otherwise resolveInitialTarget falls back below.
+    // if the portal's admin vouches for it.
     for (const candidate of [explicitTarget, lastRoomUrl]) {
         if (candidate) {
             await ensureWorldOriginTrusted(candidate);
         }
     }
     const config = getDesktopConfig();
+    // Nobody vouches for the requested world (a self-hosted server the user has not added): let the user
+    // add it from the Landing, rather than opening the last room or the portal in its place.
+    if (explicitTarget && !isAllowedNavigationUrl(explicitTarget, config) && originUserMayTrust(explicitTarget)) {
+        pendingDeepLinkUrl = undefined;
+        await loadLandingPage({ trust: explicitTarget });
+        return true;
+    }
     const target = resolveInitialTarget(config, {
         pendingDeepLinkUrl: explicitTarget,
         lastRoomUrl,
