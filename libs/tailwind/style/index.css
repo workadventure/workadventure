@@ -29,6 +29,9 @@
   --color-grey: #f6f6f6;
   --color-dark: #0f1f2d;
 
+  /* The design system says "Oswald", but @fontsource-variable/oswald registers the face as "Oswald Variable". */
+  --font-title: "Oswald Variable", "Oswald", "Arial";
+
   --animate-shake: shake 0.6s ease-in-out infinite;
   --animate-pulse-bg: pulse-bg 3s ease-in-out infinite;
 
