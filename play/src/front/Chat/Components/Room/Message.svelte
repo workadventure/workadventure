@@ -50,6 +50,8 @@
         showReaders?: boolean;
         /** 1:1 conversations: nobody's name is shown, we know who is talking. */
         isDirect?: boolean;
+        /** Off for all but the last message of a run from one sender: the time shows on hover instead. */
+        showTime?: boolean;
     }
 
     let {
@@ -61,6 +63,7 @@
         readReceipts = undefined,
         showReaders = false,
         isDirect = false,
+        showTime = true,
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -119,6 +122,16 @@
     // My last message in a group shows the readers' faces under it; until someone reads it, the tick stays in the bubble.
     let hasReaders = $derived(
         hasReadReceipt && showReaders && readReceipts !== undefined && readReceipts.readersOf(id).length > 0,
+    );
+    let timeLabel = $derived(date?.toLocaleTimeString($locale, { hour: "2-digit", minute: "2-digit" }));
+    let isEditing = $derived($selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id);
+    let hasStamp = $derived(
+        replyDepth === 0 && !isQuotedMessage && !messageFromSystem && (showTime || ($isModified && !$isDeleted)),
+    );
+    // A text message takes the stamp at the end of its last line, like most messengers; the other kinds (images,
+    // files…) and messages ending with a quote get it on a line of its own.
+    let stampInText = $derived(
+        hasStamp && !$isDeleted && !isEditing && !quotedMessage && (type === "text" || type === "proximity"),
     );
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
@@ -186,6 +199,20 @@
     }
 </script>
 
+{#snippet stamp()}
+    <span class="float-right ms-2 mt-1 inline-flex items-center gap-1 text-xxs leading-4 text-white/60">
+        {#if $isModified && !$isDeleted}
+            <span>({$LL.chat.messageEdited()})</span>
+        {/if}
+        {#if showTime}
+            <span class="font-condensed text-nowrap">{timeLabel}</span>
+        {/if}
+        {#if showTime && hasReadReceipt && !hasReaders && readReceipts !== undefined}
+            <MessageReadReceipt messageId={id} receipts={readReceipts} showReaders={false} members={roomMembersList} />
+        {/if}
+    </span>
+{/snippet}
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     id="message"
@@ -203,7 +230,7 @@
             ? 'group-hover/message:pb-4'
             : ''} {isMyMessage ? 'justify-end grid-container-inverted pr-4' : 'justify-start pl-3'}"
     >
-        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showSenderHeader}
+        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showSenderHeader && !isDirect}
             <AvatarBox class="overflow-hidden {showNameHeader ? 'mt-4' : ''} shrink-0">
                 <Avatar
                     compact
@@ -219,7 +246,7 @@
         <div
             class="flex flex-col justify-end {replyDepth === 0
                 ? 'max-w-[min(100%,65ch)]'
-                : 'max-w-full'} {replyDepth === 0 && !showSenderHeader && (!isMyMessage || isQuotedMessage)
+                : 'max-w-full'} {replyDepth === 0 && !showSenderHeader && (!isMyMessage || isQuotedMessage) && !isDirect
                 ? 'ml-12'
                 : ''}"
         >
@@ -242,6 +269,7 @@
                 </div>
             {/if}
             <div
+                title={showTime || replyDepth > 0 ? undefined : timeLabel}
                 class="message rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
@@ -271,7 +299,7 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent {content} {message} />
+                    <MessageComponent {content} {message} trailing={stampInText ? stamp : undefined} />
                     {#if message.attachment?.delivery}
                         <MessageAttachmentRecipients recipients={message.attachment.delivery} />
                     {/if}
@@ -291,26 +319,8 @@
                     </div>
                 {/if}
 
-                {#if replyDepth === 0 && !isQuotedMessage && !messageFromSystem}
-                    <div class="flex items-center justify-end gap-1 px-2 pb-1 -mt-1 text-xxs text-white/60">
-                        {#if $isModified && !$isDeleted}
-                            <span>({$LL.chat.messageEdited()})</span>
-                        {/if}
-                        <span class="font-condensed text-nowrap"
-                            >{date?.toLocaleTimeString($locale, {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}</span
-                        >
-                        {#if hasReadReceipt && !hasReaders && readReceipts !== undefined}
-                            <MessageReadReceipt
-                                messageId={id}
-                                receipts={readReceipts}
-                                showReaders={false}
-                                members={roomMembersList}
-                            />
-                        {/if}
-                    </div>
+                {#if hasStamp && !stampInText}
+                    <div class="flex justify-end px-2 pb-1 -mt-1">{@render stamp()}</div>
                 {/if}
             </div>
             {#if hasReactions || hasReaders}

@@ -230,7 +230,7 @@
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
-        | { kind: "item"; key: string; timelineItem: ChatTimelineItem; showHeader: boolean };
+        | { kind: "item"; key: string; timelineItem: ChatTimelineItem; showHeader: boolean; showTime: boolean };
 
     function isValidDate(d: Date) {
         return d instanceof Date && !Number.isNaN(d.getTime());
@@ -316,9 +316,18 @@
                 key: `${timelineItem.kind}-${timelineItem.id}`,
                 timelineItem,
                 showHeader: !isRepeatedSender,
+                showTime: true,
             });
             previousMessage = currentMessage;
         }
+
+        // A run of messages from one sender shows its time once, on its last message.
+        out.forEach((item, index) => {
+            const next = out[index + 1];
+            if (item.kind === "item" && next?.kind === "item" && !next.showHeader) {
+                item.showTime = false;
+            }
+        });
 
         return out;
     });
@@ -988,6 +997,7 @@
                                 showReaders={$roomType === "multiple" &&
                                     item.timelineItem.message.id === lastOwnMessageId}
                                 isDirect={$roomType === "direct"}
+                                showTime={item.showTime}
                             />
                         {/if}
                     </li>
