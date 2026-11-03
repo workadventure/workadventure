@@ -201,6 +201,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Kamera ein-/ausschalten",
         setShortcut: "Tastenkürzel festlegen",
         pressKey: "Tastenkombination drücken …",
+        reservedKey: "Diese Taste ist bereits belegt, bitte eine andere drücken …",
         subtitle: "Sie sind deaktiviert, während du in ein Textfeld schreibst.",
         searchLabel: "Tastenkürzel suchen",
         searchPlaceholder: "Aktion oder Taste suchen…",

@@ -12,4 +12,12 @@ describe("MediaShortcutStore", () => {
         expect(getMediaShortcut("microphone")).toEqual(camera);
         expect(getMediaShortcut("camera")).toEqual(microphone);
     });
+
+    it("rejects shortcuts reserved by fixed bindings", () => {
+        vi.stubGlobal("localStorage", { getItem: () => null, setItem: () => {} });
+        const microphone = getMediaShortcut("microphone");
+
+        expect(setMediaShortcut("microphone", { ...microphone, key: "KeyC" })).toBe(false);
+        expect(getMediaShortcut("microphone")).toEqual(microphone);
+    });
 });

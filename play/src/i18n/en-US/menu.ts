@@ -197,6 +197,7 @@ const menu: BaseTranslation = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        reservedKey: "This key is already in use, press another one…",
         subtitle: "They are disabled while you type in a text field.",
         searchLabel: "Search a shortcut",
         searchPlaceholder: "Search an action or a key…",

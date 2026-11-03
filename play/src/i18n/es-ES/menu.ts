@@ -200,6 +200,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         toggleCamera: "Enable/disable your camera",
         setShortcut: "Set shortcut",
         pressKey: "Press a key combination…",
+        reservedKey: "This key is already in use, press another one…",
         subtitle: "Se desactivan mientras escribes en un campo de texto.",
         searchLabel: "Buscar un atajo",
         searchPlaceholder: "Buscar una acción o una tecla…",

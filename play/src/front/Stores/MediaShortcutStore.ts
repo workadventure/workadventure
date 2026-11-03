@@ -33,8 +33,21 @@ const sameShortcut = (a: MediaShortcut, b: MediaShortcut) =>
     a.shiftKey === b.shiftKey &&
     a.metaKey === b.metaKey;
 
+// Keys with fixed bindings in GameSceneUserInputHandler / UserInputManager / EmojiSubMenu, whatever the modifiers.
+// ponytail: hand-maintained, keep in sync when a fixed shortcut is added there.
+const reservedKeys = new Set([
+    ...["KeyW", "KeyA", "KeyS", "KeyD", "KeyZ", "KeyQ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"],
+    ...["Space", "Enter", "Escape", "KeyE", "KeyR", "KeyC", "KeyU", "KeyF"],
+    ...[1, 2, 3, 4, 5, 6].flatMap((n) => [`Digit${n}`, `F${n}`]),
+]);
+export function isReservedShortcut(shortcut: MediaShortcut): boolean {
+    return reservedKeys.has(shortcut.key);
+}
+
 // Rebinding to a shortcut owned by another action swaps them, so no shortcut is ever bound twice.
-export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaShortcut): void {
+// Returns false (and changes nothing) when the shortcut is reserved by a fixed binding.
+export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaShortcut): boolean {
+    if (isReservedShortcut(shortcut)) return false;
     const shortcuts = get(mediaShortcutsStore);
     const owner = (Object.keys(shortcuts) as MediaShortcutAction[]).find(
         (other) => other !== action && sameShortcut(shortcuts[other], shortcut),
@@ -42,6 +55,7 @@ export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaSho
     const updated = { ...shortcuts, ...(owner ? { [owner]: shortcuts[action] } : {}), [action]: shortcut };
     mediaShortcutsStore.set(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
+    return true;
 }
 export function mediaShortcutMatches(event: KeyboardEvent, shortcut: MediaShortcut): boolean {
     return (

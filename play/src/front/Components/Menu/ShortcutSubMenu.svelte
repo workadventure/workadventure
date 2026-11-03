@@ -23,6 +23,7 @@
     let layout: Layout = $state($locale.startsWith("fr") ? "azerty" : "qwerty");
     let query = $state("");
     let rebinding: MediaShortcutAction | undefined = $state();
+    let reservedKeyPressed = $state(false);
 
     function mediaKeys(shortcut: MediaShortcut): string[] {
         return [
@@ -36,6 +37,7 @@
 
     function startRebinding(action: MediaShortcutAction) {
         rebinding = action;
+        reservedKeyPressed = false;
         mediaShortcutRebindingStore.set(true);
     }
 
@@ -53,13 +55,14 @@
             return;
         }
         if (["Control", "Alt", "Shift", "Meta"].includes(event.key)) return;
-        setMediaShortcut(rebinding, {
+        reservedKeyPressed = !setMediaShortcut(rebinding, {
             key: event.code,
             ctrlKey: event.ctrlKey,
             altKey: event.altKey,
             shiftKey: event.shiftKey,
             metaKey: event.metaKey,
         });
+        if (reservedKeyPressed) return;
         stopRebinding();
     }
 
@@ -226,7 +229,9 @@
                                         >
                                             {#if rebinding === action}
                                                 <span class="text-white/70 text-sm"
-                                                    >{$LL.menu.shortcuts.pressKey()}</span
+                                                    >{reservedKeyPressed
+                                                        ? $LL.menu.shortcuts.reservedKey()
+                                                        : $LL.menu.shortcuts.pressKey()}</span
                                                 >
                                             {:else}
                                                 {@render combos(row)}
