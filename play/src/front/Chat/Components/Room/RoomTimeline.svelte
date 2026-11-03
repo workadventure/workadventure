@@ -42,6 +42,7 @@
     import QuestionCard from "./QuestionCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
     import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
+    import RoomTimelineLoading from "./RoomTimelineLoading.svelte";
     import { shouldReserveFloatingCloseButtonSpace, shouldShowBackToRoomList } from "./RoomTimelineHeaderLayout";
     import { countIncomingMessagesAfter, findFirstUnreadKey, isReadMarkerLoaded } from "./RoomTimelineNewMessages";
     import {
@@ -104,6 +105,8 @@
     let messageInputBarRef: MessageInputBar | undefined = $state();
     let lastTimelineFocusSequence = $state(0);
     let initialMessagesLoaded = $state(false);
+    /** The room opened but its history did not come: the list is empty for that reason, not because the room is. */
+    let historyLoadFailed = $state(false);
     /** Messages from others that arrived while the user was reading history (autoScroll off). */
     let newMessagesCount = $state(0);
     /** More than a screen above the bottom: worth offering a way back even with nothing new. */
@@ -413,6 +416,7 @@
     async function initMessages() {
         if (!messageListRef) return;
         initialMessagesLoaded = false;
+        historyLoadFailed = false;
 
         try {
             await room.ensureTimelineInitialized();
@@ -424,14 +428,19 @@
             await loadUntilReadMarker(MAX_READ_MARKER_ROUNDS);
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
+            // A failed initialization has its own error state; this one covers the pages fetched after it.
+            historyLoadFailed = get(room.initializationState) === "ready";
         } finally {
             // Must be set even on failure, otherwise the $roomTimelineFocusStore effect stays frozen.
             initialMessagesLoaded = true;
         }
     }
 
-    function retryInitialization() {
-        room.ensureTimelineInitialized().catch((error) => console.error(error));
+    // Reruns the whole open: initMessages() retries the initialization too, then fetches the first pages.
+    function retryLoading() {
+        initMessages()
+            .catch((error) => console.error(error))
+            .finally(() => focusPendingTimelineRequestOrScrollToBottom().catch((error) => console.error(error)));
     }
 
     function hasPendingTimelineFocusRequest(
@@ -915,19 +924,23 @@
                     ? 'max-w-full items-center justify-center pb-4'
                     : 'max-w-3xl'}"
             >
-                {#if $initializationState === "loading" || $initializationState === "idle"}
+                {#if $initializationState === "loading" || $initializationState === "idle" || (!initialMessagesLoaded && $timelineItems.length === 0)}
+                    <!-- Until the first pages are in, an empty list means "not loaded yet", never "no message". -->
+                    <RoomTimelineLoading />
+                {:else if $initializationState === "error" || (historyLoadFailed && $timelineItems.length === 0)}
                     <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
-                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={32} />
-                    </li>
-                {:else if $initializationState === "error"}
-                    <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
-                        <div class="text-lg font-bold text-center">{$LL.chat.connectionError()}</div>
+                        <div class="text-lg font-bold text-center">
+                            {$initializationState === "error"
+                                ? $LL.chat.connectionError()
+                                : $LL.chat.timeLine.loadError()}
+                        </div>
                         <div class="text-sm opacity-50 text-center">
                             {$initializationError?.message ?? ""}
                         </div>
                         <button
                             class="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm"
-                            onclick={retryInitialization}
+                            data-testid="retryLoadingMessagesButton"
+                            onclick={retryLoading}
                         >
                             {$LL.chat.timeLine.retry()}
                         </button>

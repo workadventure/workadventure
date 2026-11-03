@@ -149,6 +149,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "رسائل جديدة: {count}",
         jumpToLatest: "الانتقال إلى أحدث الرسائل",
         unreadDivider: "رسائل جديدة",
+        loadingMessages: "جارٍ تحميل الرسائل…",
+        loadError: "تعذّر تحميل الرسائل",
     },
     form: {
         placeholder: "أدخل رسالتك...",

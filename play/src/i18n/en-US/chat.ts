@@ -149,6 +149,8 @@ const chat: BaseTranslation = {
         newMessages: "{{count:1 new message|?? new messages}}",
         jumpToLatest: "Jump to latest messages",
         unreadDivider: "New messages",
+        loadingMessages: "Loading messages…",
+        loadError: "Couldn't load the messages",
     },
     form: {
         placeholder: "Enter your message...",

@@ -150,6 +150,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "ข้อความใหม่ {count} ข้อความ",
         jumpToLatest: "ไปที่ข้อความล่าสุด",
         unreadDivider: "ข้อความใหม่",
+        loadingMessages: "กำลังโหลดข้อความ…",
+        loadError: "ไม่สามารถโหลดข้อความได้",
     },
     form: {
         placeholder: "พิมพ์ข้อความของคุณ...",
