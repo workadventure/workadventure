@@ -53,11 +53,11 @@
 
 <button
     data-testid="openEmojiPickerButton"
-    class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all flex"
+    class="p-0 m-0 w-7 h-7 grid place-items-center rounded-md text-white/80 hover:text-white hover:bg-white/10 focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 transition-all cursor-pointer"
     aria-label={$LL.chat.react()}
     title={$LL.chat.react()}
     bind:this={trigger}
     onclick={togglePicker}
 >
-    <IconMoodSmile font-size={16} />
+    <IconMoodSmile font-size={18} />
 </button>
