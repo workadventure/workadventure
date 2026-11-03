@@ -8,7 +8,7 @@
         open,
         idleLabel,
         busyLabel,
-        centered = false,
+        wrap = false,
         error = $bindable(""),
         onpin,
     }: {
@@ -17,7 +17,8 @@
         open: (url: string) => Promise<{ ok: boolean; error?: string }> | undefined;
         idleLabel: string;
         busyLabel: string;
-        centered?: boolean;
+        /** Centred rows that wrap, for a page with nothing else on it; otherwise one row that scrolls sideways. */
+        wrap?: boolean;
         error?: string;
         onpin?: (url: string) => void;
     } = $props();
@@ -40,13 +41,15 @@
     }
 </script>
 
-<!-- One row that runs off the edge, as in the mockup: worlds are scanned, not browsed. `center-safe`
-     keeps the first cards reachable when it overflows. -->
+<!-- Recent worlds: one row that runs off the edge, as in the mockup, since they are scanned, not browsed.
+     The worlds found for an email are the whole page, so they wrap and the page scrolls down instead. -->
 <div
     bind:this={row}
     class={[
-        "flex gap-[clamp(14px,1.7vw,24px)] overflow-x-auto pb-1.5 [scrollbar-color:rgb(255_255_255/0.18)_transparent] [scrollbar-width:thin]",
-        centered && "mx-auto justify-center-safe",
+        "flex gap-[clamp(14px,1.7vw,24px)]",
+        wrap
+            ? "flex-wrap justify-center"
+            : "overflow-x-auto pb-1.5 [scrollbar-color:rgb(255_255_255/0.18)_transparent] [scrollbar-width:thin]",
     ]}
 >
     {#each worlds as world (world.url)}

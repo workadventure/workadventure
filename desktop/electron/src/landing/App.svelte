@@ -268,7 +268,11 @@
 <!-- Sized against the 1440x1024 design frame, but everything scales with the window and keeps the
      design's ratios rather than its exact pixels. -->
 <div
-    class="mx-auto flex min-h-full w-[min(1340px,100%)] flex-col px-[clamp(20px,5vw,72px)] pt-[clamp(28px,5vh,64px)] pb-[clamp(48px,9vh,104px)]"
+    class={[
+        "mx-auto flex min-h-full flex-col px-[clamp(20px,5vw,72px)] pt-[clamp(28px,5vh,64px)] pb-[clamp(48px,9vh,104px)]",
+        // The worlds to choose from use the whole window: more of them per line, less scrolling.
+        choosingWorld ? "w-full" : "w-[min(1340px,100%)]",
+    ]}
 >
     <main
         class={[
@@ -472,7 +476,7 @@
                         open={(worldUrl) => navigation.signInToWorld?.(worldUrl)}
                         idleLabel={t("landing.signIn", "Sign in")}
                         busyLabel={t("landing.signingIn", "Signing in…")}
-                        {centered}
+                        wrap
                         bind:error={foundError}
                     />
                 {:else}
