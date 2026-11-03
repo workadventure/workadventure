@@ -987,6 +987,7 @@
                                 readReceipts={$readReceipts}
                                 showReaders={$roomType === "multiple" &&
                                     item.timelineItem.message.id === lastOwnMessageId}
+                                isDirect={$roomType === "direct"}
                             />
                         {/if}
                     </li>
