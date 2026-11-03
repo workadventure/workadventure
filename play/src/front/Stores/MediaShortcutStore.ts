@@ -33,15 +33,13 @@ const sameShortcut = (a: MediaShortcut, b: MediaShortcut) =>
     a.shiftKey === b.shiftKey &&
     a.metaKey === b.metaKey;
 
-// Rebinding to a shortcut owned by the other action swaps them, so no shortcut is ever bound twice.
+// Rebinding to a shortcut owned by another action swaps them, so no shortcut is ever bound twice.
 export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaShortcut): void {
-    const other: MediaShortcutAction = action === "microphone" ? "camera" : "microphone";
     const shortcuts = get(mediaShortcutsStore);
-    const updated = {
-        ...shortcuts,
-        [action]: shortcut,
-        ...(sameShortcut(shortcuts[other], shortcut) ? { [other]: shortcuts[action] } : {}),
-    };
+    const owner = (Object.keys(shortcuts) as MediaShortcutAction[]).find(
+        (other) => other !== action && sameShortcut(shortcuts[other], shortcut),
+    );
+    const updated = { ...shortcuts, ...(owner ? { [owner]: shortcuts[action] } : {}), [action]: shortcut };
     mediaShortcutsStore.set(updated);
     localStorage.setItem(storageKey, JSON.stringify(updated));
 }
