@@ -85,6 +85,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Invitacions",
     roomInvitation: {
         notification: "Has estat convidat a la sala {roomName}",
+        direct: "Conversa privada",
+        room: "Sala",
+        folder: "Carpeta",
+        invitedBy: "convidat per {name}",
+        notificationFrom: "{inviter} t'ha convidat a la sala {roomName}",
+        notificationDirect: "{name} vol xatejar amb tu",
         notificationTitle: "Nova invitació",
         unknownRoom: "Una sala",
     },

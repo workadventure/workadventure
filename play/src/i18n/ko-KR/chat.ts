@@ -85,6 +85,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "초대",
     roomInvitation: {
         notification: "방 {roomName}에 초대되었습니다",
+        direct: "개인 메시지",
+        room: "방",
+        folder: "폴더",
+        invitedBy: "{name}님의 초대",
+        notificationFrom: "{inviter}님이 방 {roomName}에 초대했습니다",
+        notificationDirect: "{name}님이 대화를 원합니다",
         notificationTitle: "새 초대",
         unknownRoom: "방",
     },

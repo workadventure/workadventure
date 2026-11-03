@@ -86,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Přeprošenja",
     roomInvitation: {
         notification: "Sy bu do ruma {roomName} přeprošony",
+        direct: "Priwatna rozmołwa",
+        room: "Rum",
+        folder: "Rjadowak",
+        invitedBy: "přeprošeny wot {name}",
+        notificationFrom: "{inviter} je was do ruma {roomName} přeprosył",
+        notificationDirect: "{name} chce z wami chatować",
         notificationTitle: "Nowe přeprošenje",
         unknownRoom: "Rum",
     },

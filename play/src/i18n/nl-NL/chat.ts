@@ -86,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Uitnodigingen",
     roomInvitation: {
         notification: "Je bent uitgenodigd voor de kamer {roomName}",
+        direct: "Privégesprek",
+        room: "Kamer",
+        folder: "Map",
+        invitedBy: "uitgenodigd door {name}",
+        notificationFrom: "{inviter} heeft je uitgenodigd voor de kamer {roomName}",
+        notificationDirect: "{name} wil met je chatten",
         notificationTitle: "Nieuwe uitnodiging",
         unknownRoom: "Een kamer",
     },

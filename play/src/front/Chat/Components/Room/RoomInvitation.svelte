@@ -6,7 +6,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Avatar from "../Avatar.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { IconLoader } from "@wa-icons";
+    import { IconLoader, IconX } from "@wa-icons";
 
     interface Props {
         room: ChatRoom & ChatRoomMembershipManagement;
@@ -18,6 +18,11 @@
     let roomName = $derived(room.name);
     let loadingInvitation = $state(false);
     let peerAvatarColorStore = $derived(room.avatarFallbackColor);
+    let subtitle = $derived.by(() => {
+        if ($roomType === "direct") return $LL.chat.roomInvitation.direct();
+        const kind = room.isRoomFolder ? $LL.chat.roomInvitation.folder() : $LL.chat.roomInvitation.room();
+        return room.inviterName ? `${kind} · ${$LL.chat.roomInvitation.invitedBy({ name: room.inviterName })}` : kind;
+    });
 
     function joinRoom() {
         loadingInvitation = true;
@@ -53,7 +58,7 @@
 </script>
 
 <div
-    class="wa-chat-item text-md flex gap-2 flex-row items-center transition-all hover:bg-white/10 hover:rounded hover:!cursor-pointer px-2 py-2 test-userinvitation"
+    class="wa-chat-item text-md flex gap-2 flex-row items-center px-2 py-2 test-userinvitation"
     data-testid="userInvitation"
 >
     <div class="relative shrink-0">
@@ -64,20 +69,23 @@
             color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
         />
     </div>
-    <div class="m-0 grow text-sm font-bold">
-        {$roomName}
+    <div class="flex flex-col min-w-0 grow">
+        <div class="m-0 text-sm font-bold truncate">{$roomName}</div>
+        <div class="text-xs text-white/50 truncate">{subtitle}</div>
     </div>
     {#if loadingInvitation}
-        <div class="min-h-[60px] text-md flex gap-2 justify-center flex-row items-center p-1">
+        <div class="flex shrink-0 items-center px-3">
             <IconLoader class="animate-spin" />
         </div>
     {:else}
-        <div class="flex gap-1">
+        <div class="flex shrink-0 items-center gap-1">
             <button
-                class="border border-solid border-danger text-danger hover:bg-danger-400/10 rounded text-xs py-1 px-2 m-0"
+                class="m-0 p-1 rounded text-white/50 hover:text-danger hover:bg-danger-400/10"
+                aria-label={$LL.chat.decline()}
+                title={$LL.chat.decline()}
                 onclick={() => leaveRoom()}
             >
-                {$LL.chat.decline()}
+                <IconX font-size="16" />
             </button>
             <button
                 class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"

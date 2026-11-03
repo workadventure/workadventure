@@ -246,6 +246,8 @@ export interface ChatRoomMembershipManagement {
     readonly ensureMembersInitialized: () => Promise<void>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
+    /** Who sent the pending invitation, when known. */
+    readonly inviterName?: string;
 }
 
 export interface ChatRoomNotificationControl {
@@ -666,7 +668,7 @@ export interface ChatConnectionInterface {
     retryConnection: () => boolean;
     nbUnreadRoomsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
-    nbUnreadInvitationsMessages: Readable<number>;
+    nbPendingInvitations: Readable<number>;
 
     /**
      * Matrix backend only — see {@link MatrixChatCapabilities}.
