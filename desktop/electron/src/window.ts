@@ -7,7 +7,7 @@ import path from "path";
 import settings from "./settings";
 import { configureSessionPermissions } from "./session-permissions";
 import { createDesktopCallbackPage } from "./desktop-callback-page";
-import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust } from "./origin-verification";
+import { getDesktopConfig, isWorkAdventureServer } from "./origin-verification";
 import { nativeLocale, t } from "./i18n";
 import { textDirection } from "./native-locale-policy";
 import { createDesktopWindowTitle } from "./app-name-policy";
@@ -654,11 +654,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
 
         if (shouldOpenExternally(url, getDesktopConfig())) {
             event.preventDefault();
-            // The world itself navigating elsewhere (a map exit to a white-label world): ask the portal
-            // before giving up and handing the URL to the browser.
-            void ensureWorldOriginTrusted(url)
-                .then((trusted) => (trusted ? webContents.loadURL(url) : openExternal(url)))
-                .catch((error) => ElectronLog.warn(`Navigation to "${url}" failed.`, error));
+            void openExternal(url);
         }
     });
 
@@ -924,19 +920,17 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         await loadLandingPage();
         return true;
     }
-    // A white-label world (deep link, or the last room once its confirmation expired) is only loaded
-    // if the portal's admin vouches for it.
-    for (const candidate of [explicitTarget, lastRoomUrl]) {
-        if (candidate) {
-            await ensureWorldOriginTrusted(candidate);
-        }
-    }
     const config = getDesktopConfig();
-    // Nobody vouches for the requested world (a self-hosted server the user has not added): let the user
-    // add it from the Landing, rather than opening the last room or the portal in its place.
-    if (explicitTarget && !isAllowedNavigationUrl(explicitTarget, config) && originUserMayTrust(explicitTarget)) {
+    // A world on a server the app does not trust (a deep link, a server the user removed since): never open
+    // the last room or the portal in its place. A WorkAdventure server is offered to be added, anything else
+    // gets an error.
+    if (explicitTarget && !isAllowedNavigationUrl(explicitTarget, config)) {
         pendingDeepLinkUrl = undefined;
-        await loadLandingPage({ trust: explicitTarget });
+        await loadLandingPage(
+            (await isWorkAdventureServer(explicitTarget))
+                ? { trust: explicitTarget }
+                : { error: t("landing.urlNotAllowed") }
+        );
         return true;
     }
     const target = resolveInitialTarget(config, {

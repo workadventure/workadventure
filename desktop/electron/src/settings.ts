@@ -16,9 +16,7 @@ export type SettingsData = {
     last_room_url?: string;
     world_history: string[];
     pinned_worlds: string[];
-    /** White-label origins confirmed by the portal's admin → expiry (ms epoch). See origin-verification. */
-    verified_origins?: Record<string, number>;
-    /** Self-hosted servers the user added by hand from the Landing (origins). See origin-verification. */
+    /** Servers outside the built-in domains the user added from the Landing (origins). See origin-verification. */
     trusted_origins?: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
     /** Last size + position of the resizable companion panel, restored (and clamped) on reopen. */

@@ -265,11 +265,6 @@
                 if (!result || !result.ok) {
                     joinBtn.removeAttribute("disabled");
                     joinBtn.textContent = t("landing.openWorld", "Open world");
-                    // A self-hosted server: no admin knows it, so the user decides whether to trust it.
-                    if (result && result.trustOrigin && typeof api.trustServerAndJoin === "function") {
-                        showTrustPanel(url, result.trustOrigin);
-                        return;
-                    }
                     showError(errorEl, (result && result.error) || t("landing.joinFailed", "Failed to join world."));
                 }
             })
@@ -326,7 +321,7 @@
     // Editing the address withdraws the offer: it was about the address typed before.
     input.addEventListener("input", hideTrustPanel);
 
-    // A deep link to a self-hosted server the user has not added: same offer as for a typed address.
+    // A world on a WorkAdventure server the user has not added (typed here, deep link, world switcher).
     try {
         var initialTrustUrl = initialParams.get("trust");
         if (initialTrustUrl) {
@@ -420,8 +415,11 @@
 
     refreshWorlds();
 
-    // Autofocus the URL field so the user can just paste and hit Enter.
+    // Autofocus the URL field so the user can just paste and hit Enter. Not while asking to add a server:
+    // the question keeps the focus (on Cancel, so Enter never adds one by accident).
     setTimeout(function () {
-        input.focus();
+        if (trustPanel.hidden) {
+            input.focus();
+        }
     }, 50);
 })();

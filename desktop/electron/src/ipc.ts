@@ -3,7 +3,7 @@ import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { pathToFileURL } from "url";
-import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
+import { getDesktopConfig, isWorkAdventureServer, trustServer } from "./origin-verification";
 import settings from "./settings";
 import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadventure/desktop-api";
 import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
@@ -21,6 +21,7 @@ import {
     isActiveWorldContents,
     isControllingWorldContents,
     loadDesktopTarget,
+    loadLandingPage,
     switchToOpenWorld,
     openWorldTab,
 } from "./window";
@@ -363,22 +364,19 @@ export default () => {
             ElectronLog.warn("Rejected world navigation from non-main renderer");
             return { ok: false, error: t("landing.desktopOnly") };
         }
-        const config = getDesktopConfig();
-        let validation = validateDesktopNavigationUrl(rawUrl, config);
-        // A white-label world: the URL is fine but its origin is not built in, ask the portal's admin.
-        if (!validation.ok && validation.code === "urlNotAllowed" && typeof rawUrl === "string") {
-            if (await ensureWorldOriginTrusted(rawUrl.trim())) {
-                validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
-            }
-        }
+        const validation = validateDesktopNavigationUrl(rawUrl, getDesktopConfig());
         if (!validation.ok) {
-            // Unknown to the admin too (a self-hosted server): the native Landing may offer to add it.
-            // Never a world page (the in-game switcher): a world must not be able to add servers.
-            const trustOrigin =
-                validation.code === "urlNotAllowed" && typeof rawUrl === "string" && isFromNativeLanding(event)
-                    ? originUserMayTrust(rawUrl)
-                    : undefined;
-            return { ok: false, error: t(`landing.${validation.code}`), trustOrigin };
+            // A WorkAdventure server the user has not added: the Landing, loaded in this tab as the world would
+            // have been, asks whether to add it. Only the user can, from there (trustServerAndJoin).
+            if (
+                validation.code === "urlNotAllowed" &&
+                typeof rawUrl === "string" &&
+                (await isWorkAdventureServer(rawUrl.trim()))
+            ) {
+                await loadLandingPage({ trust: rawUrl.trim() });
+                return { ok: true };
+            }
+            return { ok: false, error: t(`landing.${validation.code}`) };
         }
         const safeUrl = validation.url;
         if (switchToOpenWorld(safeUrl, event.sender)) {

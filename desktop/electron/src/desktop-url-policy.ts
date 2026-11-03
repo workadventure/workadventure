@@ -115,10 +115,10 @@ export function createDesktopConfig(env: Record<string, unknown> = process.env):
     const portalOrigin = new URL(portalUrl).origin;
     const allowedOrigins = new Set([portalOrigin]);
 
-    // `verifiedOrigins`: white-label worlds the portal's admin confirmed (see verified-origins-policy).
+    // `trustedOrigins`: the servers the user added (see trusted-servers-policy).
     const extraOrigins = [
         ...parseList(env.allowedOrigins || env.WA_DESKTOP_ALLOWED_ORIGINS),
-        ...parseList(env.verifiedOrigins),
+        ...parseList(env.trustedOrigins),
     ];
     for (const origin of extraOrigins) {
         const normalizedOrigin = normalizeOrigin(origin);
