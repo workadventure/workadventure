@@ -48,6 +48,10 @@
         /** Under my own messages: who has read them. */
         readReceipts?: ChatReadReceipts;
         showReaders?: boolean;
+        /** 1:1 conversations: nobody's name is shown, we know who is talking. */
+        isDirect?: boolean;
+        /** Off for all but the last message of a run from one sender: the time shows on hover instead. */
+        showTime?: boolean;
     }
 
     let {
@@ -58,6 +62,8 @@
         showThreadSummary = true,
         readReceipts = undefined,
         showReaders = false,
+        isDirect = false,
+        showTime = true,
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -80,6 +86,10 @@
     let mentionsMe = $derived(!isMyMessage && $content.mentionsMe === true);
     // A message that mentions us always shows who wrote it, and says so, even in a run of messages from one sender.
     let showSenderHeader = $derived(showHeader || mentionsMe);
+    // My own name is never shown, nor the other person's in a 1:1: the time and the receipt live in the bubble.
+    let showNameHeader = $derived(
+        replyDepth <= 0 && showSenderHeader && !isMyMessage && !isQuotedMessage && !messageFromSystem && !isDirect,
+    );
 
     const messageType: { [key in ChatMessageType]: WorkAdventureComponent } = {
         image: MessageImage,
@@ -108,6 +118,20 @@
             !isQuotedMessage &&
             !$isDeleted &&
             !messageFromSystem,
+    );
+    // My last message in a group shows the readers' faces under it; until someone reads it, the tick stays in the bubble.
+    let hasReaders = $derived(
+        hasReadReceipt && showReaders && readReceipts !== undefined && readReceipts.readersOf(id).length > 0,
+    );
+    let timeLabel = $derived(date?.toLocaleTimeString($locale, { hour: "2-digit", minute: "2-digit" }));
+    let isEditing = $derived($selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id);
+    let hasStamp = $derived(
+        replyDepth === 0 && !isQuotedMessage && !messageFromSystem && (showTime || ($isModified && !$isDeleted)),
+    );
+    // A text message takes the stamp at the end of its last line, like most messengers; the other kinds (images,
+    // files…) and messages ending with a quote get it on a line of its own.
+    let stampInText = $derived(
+        hasStamp && !$isDeleted && !isEditing && !quotedMessage && (type === "text" || type === "proximity"),
     );
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
@@ -175,6 +199,20 @@
     }
 </script>
 
+{#snippet stamp()}
+    <span class="float-right ms-2 mt-1 inline-flex items-center gap-1 text-xxs leading-4 text-white/60">
+        {#if $isModified && !$isDeleted}
+            <span>({$LL.chat.messageEdited()})</span>
+        {/if}
+        {#if showTime}
+            <span class="font-condensed text-nowrap">{timeLabel}</span>
+        {/if}
+        {#if showTime && hasReadReceipt && !hasReaders && readReceipts !== undefined}
+            <MessageReadReceipt messageId={id} receipts={readReceipts} showReaders={false} members={roomMembersList} />
+        {/if}
+    </span>
+{/snippet}
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     id="message"
@@ -192,8 +230,8 @@
             ? 'group-hover/message:pb-4'
             : ''} {isMyMessage ? 'justify-end grid-container-inverted pr-4' : 'justify-start pl-3'}"
     >
-        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showSenderHeader}
-            <AvatarBox class="overflow-hidden mt-4 shrink-0">
+        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showSenderHeader && !isDirect}
+            <AvatarBox class="overflow-hidden {showNameHeader ? 'mt-4' : ''} shrink-0">
                 <Avatar
                     compact
                     pictureStore={messageAvatarPictureStore}
@@ -208,43 +246,30 @@
         <div
             class="flex flex-col justify-end {replyDepth === 0
                 ? 'max-w-[min(100%,65ch)]'
-                : 'max-w-full'} {replyDepth === 0 && !showSenderHeader && (!isMyMessage || isQuotedMessage)
+                : 'max-w-full'} {replyDepth === 0 && !showSenderHeader && (!isMyMessage || isQuotedMessage) && !isDirect
                 ? 'ml-12'
                 : ''}"
         >
-            {#if replyDepth <= 0 && showSenderHeader}
-                <div
-                    class="w-full h-fit text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
-                    class:flex-row-reverse={isMyMessage}
-                    hidden={isQuotedMessage || messageFromSystem}
-                >
-                    <span class="flex min-w-0 items-center gap-2">
-                        <span
-                            hidden={messageFromSystem}
-                            class="text-nowrap text-sm font-bold {!isMyMessage ? 'text-white' : 'text-white/75'}"
-                            >{isMyMessage ? $LL.chat.you() : sender?.username}{#if waDisplayNameParens}<span
-                                    class="text-xs font-normal opacity-75 ml-0.5">({waDisplayNameParens})</span
-                                >{/if}</span
-                        >
-                        {#if mentionsMe}
-                            <span
-                                class="flex items-center gap-1 text-nowrap text-xs font-medium text-danger-500"
-                                data-testid="messageMentionsMe"
-                            >
-                                <IconAt font-size={14} />
-                                {$LL.chat.mention.mentionedYou()}
-                            </span>
-                        {/if}
-                    </span>
-                    <span class={`text-xs font-condensed text-nowrap opacity-75 ${isMyMessage ? "mr-1" : "ml-1"}`}
-                        >{date?.toLocaleTimeString($locale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}</span
+            {#if showNameHeader}
+                <div class="w-full h-fit text-xs px-2 flex items-end gap-2 overflow-x-hidden">
+                    <span class="text-nowrap text-sm font-bold text-white"
+                        >{sender?.username}{#if waDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+                                >({waDisplayNameParens})</span
+                            >{/if}</span
                     >
+                    {#if mentionsMe}
+                        <span
+                            class="flex items-center gap-1 text-nowrap text-xs font-medium text-danger-500"
+                            data-testid="messageMentionsMe"
+                        >
+                            <IconAt font-size={14} />
+                            {$LL.chat.mention.mentionedYou()}
+                        </span>
+                    {/if}
                 </div>
             {/if}
             <div
+                title={showTime || replyDepth > 0 ? undefined : timeLabel}
                 class="message rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
@@ -254,7 +279,8 @@
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
                     ? 'bg-secondary/90 rounded-br-none'
                     : ''}
-                    {!isQuotedMessage ? 'my' : ''}"
+                    {!isQuotedMessage ? 'my' : ''}
+                    {hasReactions ? 'pb-2' : ''}"
             >
                 {#if $isDeleted}
                     <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
@@ -273,12 +299,12 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent {content} {message} />
+                    <MessageComponent {content} {message} trailing={stampInText ? stamp : undefined} />
                     {#if message.attachment?.delivery}
                         <MessageAttachmentRecipients recipients={message.attachment.delivery} />
                     {/if}
 
-                    {#if $isModified}
+                    {#if $isModified && replyDepth > 0}
                         <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
                             ({$LL.chat.messageEdited()})
                         </div>
@@ -292,31 +318,38 @@
                         </div>
                     </div>
                 {/if}
+
+                {#if hasStamp && !stampInText}
+                    <div class="flex justify-end px-2 pb-1 -mt-1">{@render stamp()}</div>
+                {/if}
             </div>
-            {#if hasReactions || hasReadReceipt}
-                <!-- One line under the bubble: the receipt keeps the edge, the reactions wrap to its left only when
-                     they overflow. -->
-                <div class="flex items-end gap-1 {isMyMessage ? 'justify-end' : ''}">
+            {#if hasReactions || hasReaders}
+                <!-- The reactions straddle the bubble's bottom edge from its left; in a group, who has read my last
+                     message sits at the other end of the same line. -->
+                <div class="relative z-10 flex items-start gap-1 px-1.5 {hasReactions ? '-mt-2.5' : ''}">
                     {#if hasReactions}
                         <MessageReactions
-                            classes={isMyMessage ? "min-w-0 justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
+                            classes="min-w-0 mt-0! *:bg-contrast-900 *:ring-2 *:ring-contrast"
                             reactions={$reactionsWithUsers}
                         />
                     {/if}
-                    {#if hasReadReceipt && readReceipts !== undefined}
-                        <MessageReadReceipt
-                            messageId={id}
-                            receipts={readReceipts}
-                            {showReaders}
-                            showSeenByLabel={!hasReactions}
-                            members={roomMembersList}
-                        />
+                    {#if hasReaders && readReceipts !== undefined}
+                        <div class="ms-auto {hasReactions ? 'mt-2.5' : ''}">
+                            <MessageReadReceipt
+                                messageId={id}
+                                receipts={readReceipts}
+                                showReaders
+                                showSeenByLabel={!hasReactions}
+                                members={roomMembersList}
+                            />
+                        </div>
                     {/if}
                 </div>
             {/if}
             {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+                <!-- Above the bubble: with the time inside it, there is no header line left to float over. -->
                 <div
-                    class="options -top-2 absolute z-50 rounded p-1 {!isMyMessage
+                    class="options -top-7 absolute z-50 rounded p-1 {!isMyMessage
                         ? 'right-2 bg-contrast/80'
                         : 'right-6 bg-secondary/80'}"
                 >
