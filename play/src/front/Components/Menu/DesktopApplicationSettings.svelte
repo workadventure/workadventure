@@ -3,12 +3,15 @@
     import { LL } from "../../../i18n/i18n-svelte";
     import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
     import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
+    import InputSwitch from "../Input/InputSwitch.svelte";
 
     const desktop = window.WAD?.desktop ? window.WAD : undefined;
     const policy = DESKTOP_VERSION_POLICY;
     const downloadUrl = desktopDownloadUrl(policy);
     let installed = $state<string>();
     let status = $derived(desktopVersionStatus(installed, policy));
+    // Undefined until the app answers; older desktop apps have no startAtLogin, so no switch.
+    let startAtLogin = $state<boolean>();
     onMount(() => {
         let active = true;
         if (desktop) {
@@ -18,11 +21,30 @@
                     if (active) installed = version;
                 })
                 .catch((error: unknown) => console.warn("Could not read desktop version", error));
+            desktop.startAtLogin
+                ?.get()
+                .then((enabled) => {
+                    if (active) startAtLogin = enabled;
+                })
+                .catch((error: unknown) => console.warn("Could not read start at login", error));
         }
         return () => {
             active = false;
         };
     });
+
+    function saveStartAtLogin(enabled: boolean) {
+        desktop?.startAtLogin
+            ?.set(enabled)
+            .then((result) => {
+                // What the system ends up with: macOS may wait for the user's approval in its settings.
+                startAtLogin = result;
+            })
+            .catch((error: unknown) => {
+                console.warn("Could not change start at login", error);
+                startAtLogin = !enabled;
+            });
+    }
 </script>
 
 <section
@@ -36,6 +58,15 @@
             {$LL.desktop.application.installed()}:
             <strong data-testid="desktop-installed-version">{installed ?? $LL.desktop.application.unknown()}</strong>
         </p>
+        {#if startAtLogin !== undefined}
+            <InputSwitch
+                id="desktop-start-at-login"
+                bind:value={startAtLogin}
+                onchange={() => saveStartAtLogin(startAtLogin === true)}
+                label={$LL.desktop.application.startAtLogin()}
+                margin=""
+            />
+        {/if}
     {:else}
         <p>{$LL.desktop.application.browser()}</p>
     {/if}

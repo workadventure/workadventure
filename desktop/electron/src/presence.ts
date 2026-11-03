@@ -1,3 +1,5 @@
+import type { DesktopAvailability, DesktopPresence } from "@workadventure/desktop-api";
+
 /**
  * Single source of truth for the user's live presence, aggregated from two sources:
  *   - the renderer (in-meeting / mic / camera), pushed via `app:setPresence`;
@@ -12,30 +14,8 @@
 // (busy / back_in_a_moment / do_not_disturb), the auto-idle state, or plain online.
 export type TrayStatus = "meeting" | "idle" | "online" | "busy" | "back_in_a_moment" | "do_not_disturb" | "offline";
 
-/**
- * The four user-selectable availability statuses, as stable string keys. Kept as strings (not the
- * numeric AvailabilityStatus enum) so the main process needs no dependency on @workadventure/messages
- * — the renderer maps to/from the enum on its side.
- */
-export type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
-
-type PresenceState = {
-    inMeeting: boolean;
-    micEnabled: boolean;
-    cameraEnabled: boolean;
-    screenSharing: boolean;
-    idle: boolean;
-    /** True while a game scene is loaded (the user is actually in a world, not on landing/login). */
-    inWorld: boolean;
-    /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
-    onboarding: boolean;
-    /** True while a meeting invitation is pending — the companion force-opens to show its banner. */
-    invitationPending: boolean;
-    /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
-    autoOpenAllowed: boolean;
-    /** The user's chosen availability, shown by the tray dot. */
-    requestedStatus: TrayAvailability;
-};
+/** What the renderer pushes, plus the idle flag of the main process. */
+type PresenceState = Required<DesktopPresence> & { idle: boolean };
 
 const state: PresenceState = {
     inMeeting: false,
@@ -50,11 +30,16 @@ const state: PresenceState = {
     requestedStatus: "online",
 };
 
-const TRAY_AVAILABILITY_VALUES: readonly TrayAvailability[] = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
+const TRAY_AVAILABILITY_VALUES: readonly DesktopAvailability[] = [
+    "online",
+    "busy",
+    "back_in_a_moment",
+    "do_not_disturb",
+];
 
-function coerceAvailability(value: unknown): TrayAvailability {
+function coerceAvailability(value: unknown): DesktopAvailability {
     return typeof value === "string" && (TRAY_AVAILABILITY_VALUES as readonly string[]).includes(value)
-        ? (value as TrayAvailability)
+        ? (value as DesktopAvailability)
         : "online";
 }
 

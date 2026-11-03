@@ -1,5 +1,6 @@
 import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
+import type { DesktopAvailability, DesktopPresence, WorkAdventureDesktopApi } from "@workadventure/desktop-api";
 import {
     enableCameraSceneVisibilityStore,
     requestedCameraState,
@@ -25,7 +26,6 @@ import { notificationManager } from "../../Notification/NotificationManager";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
 import { focusStore } from "../../Stores/FocusStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
-import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
 import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
 import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMeetingBar.svelte";
@@ -35,26 +35,11 @@ import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
 import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
 import { startSvelteAnnotations } from "./SvelteAnnotations";
 
-/** The desktop contract this page speaks (see `hello` in DesktopAppInterfaces). */
+/** The desktop contract this page speaks (see `hello` in @workadventure/desktop-api). */
 const PAGE_CONTRACT = 2;
 const desktopDownload = desktopDownloadUrl(DESKTOP_VERSION_POLICY);
 
-type TrayAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
-
-type PresenceSnapshot = {
-    inMeeting: boolean;
-    micEnabled: boolean;
-    cameraEnabled: boolean;
-    screenSharing: boolean;
-    inWorld: boolean;
-    /** A first-connection screen (name, Woka, companion, camera) is waiting for the user. */
-    onboarding: boolean;
-    invitationPending: boolean;
-    autoOpenAllowed: boolean;
-    requestedStatus: TrayAvailability;
-};
-
-function requestedStatusToKey(status: RequestedStatus | null): TrayAvailability {
+function requestedStatusToKey(status: RequestedStatus | null): DesktopAvailability {
     switch (status) {
         case AvailabilityStatus.BUSY:
             return "busy";
@@ -302,7 +287,7 @@ class DesktopApi {
                     $onboarding,
                     $invitation,
                     $allowPictureInPicture,
-                ]): PresenceSnapshot => ({
+                ]): Required<DesktopPresence> => ({
                     inMeeting: Boolean($inMeeting),
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),

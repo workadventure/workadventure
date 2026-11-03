@@ -1,3 +1,4 @@
+import type { DesktopRecentWorld } from "@workadventure/desktop-api";
 import settings from "./settings";
 import {
     addWorldToHistory,
@@ -7,12 +8,6 @@ import {
 } from "./desktop-url-policy";
 
 const MAX_PINNED_WORLDS = 12;
-
-export type RecentWorld = {
-    url: string;
-    label: string;
-    pinned: boolean;
-};
 
 const historyChangeListeners = new Set<() => void>();
 
@@ -31,7 +26,7 @@ export function isWorldPinned(url: string): boolean {
     return sanitized ? getPinnedUrls().includes(sanitized) : false;
 }
 
-export function getRecentWorlds(): RecentWorld[] {
+export function getRecentWorlds(): DesktopRecentWorld[] {
     const pinned = new Set(getPinnedUrls());
     return (settings.get("world_history") || []).map((url) => ({
         url,
@@ -41,7 +36,7 @@ export function getRecentWorlds(): RecentWorld[] {
 }
 
 /** Pinned worlds, in the user's pin order (most recently pinned first). */
-export function getPinnedWorlds(): RecentWorld[] {
+export function getPinnedWorlds(): DesktopRecentWorld[] {
     return getPinnedUrls().map((url) => ({
         url,
         label: formatWorldHistoryLabel(url),

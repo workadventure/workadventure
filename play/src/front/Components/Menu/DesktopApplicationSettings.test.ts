@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount, tick, unmount } from "svelte";
 import { mock } from "vitest-mock-extended";
-import type { WorkAdventureDesktopApi } from "../../Interfaces/DesktopAppInterfaces";
+import type { WorkAdventureDesktopApi } from "@workadventure/desktop-api";
 import { loadLocale } from "../../../i18n/i18n-util.sync";
 import { setLocale } from "../../../i18n/i18n-svelte";
 vi.mock("../../Enum/EnvironmentVariable", () => ({
@@ -34,7 +34,8 @@ describe("desktop application settings", () => {
     });
     it("shows the installed version and warns below the supported minimum without blocking", async () => {
         const getVersion = vi.fn().mockResolvedValue("1.1.0");
-        window.WAD = mock<WorkAdventureDesktopApi>({ desktop: true, getVersion });
+        // startAtLogin: undefined, as on a desktop app older than the switch (the mock would invent one).
+        window.WAD = mock<WorkAdventureDesktopApi>({ desktop: true, getVersion, startAtLogin: undefined });
         component = mount(Settings, { target: document.body });
         await vi.waitFor(() =>
             expect(document.querySelector('[data-testid="desktop-installed-version"]')?.textContent).toBe("1.1.0"),
@@ -43,12 +44,33 @@ describe("desktop application settings", () => {
         expect(getVersion).toHaveBeenCalledOnce();
         expect(window.WAD.hello).not.toHaveBeenCalled();
     });
+    it("shows whether the app starts at login and keeps what the system answers", async () => {
+        // The system does not take the change (macOS waits for the user's approval in its settings).
+        const set = vi.fn().mockResolvedValue(false);
+        window.WAD = mock<WorkAdventureDesktopApi>({
+            desktop: true,
+            getVersion: vi.fn().mockResolvedValue("1.3.0"),
+            startAtLogin: { get: vi.fn().mockResolvedValue(false), set },
+        });
+        component = mount(Settings, { target: document.body });
+        await vi.waitFor(() => expect(document.querySelector("#desktop-start-at-login")).not.toBeNull());
+        const input = document.querySelector<HTMLInputElement>("#desktop-start-at-login");
+        expect(input?.checked).toBe(false);
+
+        input?.click();
+        await vi.waitFor(() => expect(set).toHaveBeenCalledWith(true));
+        await vi.waitFor(() => expect(input?.checked).toBe(false));
+    });
     it("ignores a version response after the panel has closed", async () => {
         let finish: ((version: string) => void) | undefined;
         const version = new Promise<string>((resolve) => {
             finish = resolve;
         });
-        window.WAD = mock<WorkAdventureDesktopApi>({ desktop: true, getVersion: () => version });
+        window.WAD = mock<WorkAdventureDesktopApi>({
+            desktop: true,
+            getVersion: () => version,
+            startAtLogin: undefined,
+        });
         component = mount(Settings, { target: document.body });
         await tick();
         const mounted = component;

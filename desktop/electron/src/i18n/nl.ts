@@ -96,6 +96,7 @@ const nl: NativeStrings = {
     "tray.showHide": "Tonen / verbergen",
     "tray.worlds": "Werelden",
     "tray.help": "Help",
+    "tray.startAtLogin": "Starten bij inloggen",
     "tray.checkForUpdates": "Controleren op updates",
     "tray.openLogs": "Logboeken openen",
     "tray.about": "Over",

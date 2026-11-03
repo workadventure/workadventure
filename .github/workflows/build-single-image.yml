@@ -69,7 +69,7 @@ jobs:
         if: ${{ github.event_name == 'release' }}
         run: |
           if [[ "${{ github.ref }}" == "refs/tags/"* ]]; then
-            sed -i "s/dev/${GITHUB_REF_NAME}/" back/src/Services/version.ts
+            sed -i "s/\"dev\"/\"${GITHUB_REF_NAME}\"/" back/src/Services/version.ts play/src/pusher/version.ts
           fi
 
       - name: Get previous commit SHA

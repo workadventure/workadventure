@@ -1,4 +1,5 @@
 import { app, BrowserWindow, nativeImage, Notification, powerSaveBlocker } from "electron";
+import type { DesktopNotificationPayload } from "@workadventure/desktop-api";
 import ElectronLog from "electron-log";
 import path from "path";
 
@@ -92,20 +93,13 @@ export function setUnreadCount(count: number, mainWindow?: BrowserWindow): void 
     ElectronLog.debug(`setUnreadCount(${safeCount}) — no badge primitive on this platform`);
 }
 
-export type ShowNotificationOptions = {
-    title: string;
-    body: string;
-    tag?: string;
-    silent?: boolean;
-};
-
 /**
  * Show an OS notification with the WA icon. When the user clicks it, `onClick(tag)` is called
  * — the ipc layer routes that back to the renderer as `app:on-notification-click(tag)` so the
  * front can open the originating room/conversation.
  */
 export function showNotification(
-    options: ShowNotificationOptions,
+    options: DesktopNotificationPayload,
     onClick: (tag: string | undefined) => void
 ): Notification | undefined {
     if (!Notification.isSupported()) {

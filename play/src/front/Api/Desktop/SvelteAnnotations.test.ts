@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { get, writable } from "svelte/store";
 import { mock } from "vitest-mock-extended";
-import type { WorkAdventureDesktopWindowsApi } from "../../Interfaces/DesktopAppInterfaces";
+import type { WorkAdventureDesktopWindowsApi } from "@workadventure/desktop-api";
 vi.mock("../../Space/ScreenAnnotation/ScreenAnnotationManager", () => ({
     screenAnnotationManager: { localUserId: "me", clearAll: vi.fn() },
 }));

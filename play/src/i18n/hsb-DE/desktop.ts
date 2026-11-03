@@ -6,6 +6,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         title: "Desktopowe nałoženje",
         installed: "Instalowana wersija",
         unknown: "Njedostupne",
+        startAtLogin: "WorkAdventure při přizjewjenju na kompjuterje startować",
         browser: "Wužiwaće WorkAdventure we wobhladowaku.",
         recommendedVersion: "Doporučena wersija",
         minimumVersion: "Najniša podpěrowana wersija",

@@ -2,6 +2,7 @@ import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 
+import { isStartAtLoginEnabled, onStartAtLoginChange, setStartAtLogin } from "./auto-launch";
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
 import settings from "./settings";
@@ -267,6 +268,16 @@ function updateTrayContextMenu() {
             label: t("tray.help"),
             submenu: [
                 {
+                    // Also in WorkAdventure's settings; here for worlds whose server predates that switch.
+                    label: t("tray.startAtLogin"),
+                    type: "checkbox",
+                    checked: isStartAtLoginEnabled(),
+                    click(item) {
+                        setStartAtLogin(item.checked);
+                    },
+                },
+                { type: "separator" },
+                {
                     label: t("tray.checkForUpdates"),
                     click() {
                         void autoUpdater.manualRequestUpdateCheck();
@@ -325,6 +336,7 @@ export function createTray() {
     updateTrayIcon();
     updateTrayContextMenu();
     onWorldHistoryChange(updateTrayContextMenu);
+    onStartAtLoginChange(updateTrayContextMenu);
     // Presence (meeting / mic / camera / idle) drives both the status dot and the quick-action
     // checkmarks, so rebuild both on every change.
     onPresenceChange(() => {
