@@ -380,11 +380,14 @@
         gap: 2px;
         transition-delay: 0.15s;
         opacity: 1;
+        pointer-events: auto;
     }
 
+    /* Hidden, it still covers the top of a short bubble: it must not catch the press meant for the message. */
     .options {
         transition: all 0.2s ease-in-out;
         opacity: 0;
+        pointer-events: none;
     }
 
     /* A long press opens the action sheet, which can copy the text: native selection would fight it. */
