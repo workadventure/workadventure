@@ -36,7 +36,11 @@ function createMessage(annotations: [string, Set<MatrixEvent>][]): MatrixChatMes
         on: vi.fn(),
         off: vi.fn(),
     } as unknown as MatrixEvent;
-    const roomState = { maySendEvent: () => true, hasSufficientPowerLevelFor: () => true };
+    const roomState = {
+        maySendEvent: () => true,
+        hasSufficientPowerLevelFor: () => true,
+        mayTriggerNotifOfType: () => false,
+    };
     const relations = { on: vi.fn(), off: vi.fn(), getSortedAnnotationsByKey: () => annotations };
     const room = {
         myUserId: "@me:matrix.test",
@@ -44,6 +48,7 @@ function createMessage(annotations: [string, Set<MatrixEvent>][]): MatrixChatMes
             getUserId: () => "@me:matrix.test",
             getSafeUserId: () => "@me:matrix.test",
             mxcUrlToHttp: () => null,
+            getPushActionsForEvent: () => null,
         },
         getLiveTimeline: () => ({ getState: () => roomState }),
         getUnfilteredTimelineSet: () => ({ relations: { getChildEventsForEvent: () => relations } }),
