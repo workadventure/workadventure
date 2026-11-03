@@ -86,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Pśepšosynki",
     roomInvitation: {
         notification: "Sy do śpy {roomName} pśepšosony",
+        direct: "Priwatna rozmołwa",
+        room: "Śpa",
+        folder: "Zarědnik",
+        invitedBy: "pśepšosony wót {name}",
+        notificationFrom: "{inviter} jo was do śpy {roomName} pśepšosył",
+        notificationDirect: "{name} co z wami chatowaś",
         notificationTitle: "Nowe pśepšosēnje",
         unknownRoom: "Śpa",
     },

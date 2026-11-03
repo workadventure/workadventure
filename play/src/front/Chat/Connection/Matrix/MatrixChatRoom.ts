@@ -2224,6 +2224,15 @@ export class MatrixChatRoom
             );
     }
 
+    /** Display name of whoever sent my pending invitation, when the invite state carries it. */
+    get inviterName(): string | undefined {
+        const myUserId = this.matrixRoom.myUserId;
+        const inviterId = this.matrixRoom.getMember(myUserId)?.events.member?.getSender();
+        if (!inviterId || inviterId === myUserId) return undefined;
+        const name = this.matrixRoom.getMember(inviterId)?.name;
+        return name && name !== inviterId ? name : undefined;
+    }
+
     private getMatrixRoomType(): "direct" | "multiple" {
         if (this.hasMatrixSpaceParent()) {
             return "multiple";

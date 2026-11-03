@@ -84,6 +84,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "邀請",
     roomInvitation: {
         notification: "您已被邀請加入房間 {roomName}",
+        direct: "私訊",
+        room: "房間",
+        folder: "資料夾",
+        invitedBy: "由 {name} 邀請",
+        notificationFrom: "{inviter} 邀請您加入房間 {roomName}",
+        notificationDirect: "{name} 想和您聊天",
         notificationTitle: "新邀請",
         unknownRoom: "一個房間",
     },

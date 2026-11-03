@@ -441,7 +441,7 @@
                             onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
-                                {$LL.chat.invitations()}
+                                {$LL.chat.invitations()} · {filteredRoomInvitations.length}
                             </div>
                             <div
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"

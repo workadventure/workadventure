@@ -85,6 +85,12 @@ const chat: BaseTranslation = {
     invitations: "Invitations",
     roomInvitation: {
         notification: "You have been invited to the room {roomName}",
+        direct: "Direct message",
+        room: "Room",
+        folder: "Folder",
+        invitedBy: "invited by {name}",
+        notificationFrom: "{inviter} invited you to the room {roomName}",
+        notificationDirect: "{name} wants to chat with you",
         notificationTitle: "New invitation",
         unknownRoom: "A room",
     },
