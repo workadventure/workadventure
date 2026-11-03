@@ -52,7 +52,7 @@
             metaKey: event.metaKey,
         };
         setMediaShortcut(action, shortcut);
-        mediaShortcuts = { ...mediaShortcuts, [action]: shortcut };
+        mediaShortcuts = { microphone: getMediaShortcut("microphone"), camera: getMediaShortcut("camera") };
         rebinding = undefined;
         mediaShortcutRebindingStore.set(false);
     }

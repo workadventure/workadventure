@@ -26,8 +26,21 @@ let shortcuts = load();
 export function getMediaShortcut(action: MediaShortcutAction): MediaShortcut {
     return shortcuts[action];
 }
+const sameShortcut = (a: MediaShortcut, b: MediaShortcut) =>
+    a.key === b.key &&
+    a.ctrlKey === b.ctrlKey &&
+    a.altKey === b.altKey &&
+    a.shiftKey === b.shiftKey &&
+    a.metaKey === b.metaKey;
+
+// Rebinding to a shortcut owned by the other action swaps them, so no shortcut is ever bound twice.
 export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaShortcut): void {
-    shortcuts = { ...shortcuts, [action]: shortcut };
+    const other: MediaShortcutAction = action === "microphone" ? "camera" : "microphone";
+    shortcuts = {
+        ...shortcuts,
+        [action]: shortcut,
+        ...(sameShortcut(shortcuts[other], shortcut) ? { [other]: shortcuts[action] } : {}),
+    };
     localStorage.setItem(storageKey, JSON.stringify(shortcuts));
 }
 export function mediaShortcutMatches(event: KeyboardEvent, shortcut: MediaShortcut): boolean {
