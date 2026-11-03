@@ -100,6 +100,15 @@
             },
         ),
     );
+    let hasReactions = $derived($reactionsWithUsers.length > 0 && !$isDeleted);
+    let hasReadReceipt = $derived(
+        readReceipts !== undefined &&
+            isMyMessage &&
+            replyDepth === 0 &&
+            !isQuotedMessage &&
+            !$isDeleted &&
+            !messageFromSystem,
+    );
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
     let messageSenderAvatarColor = $derived(
@@ -284,14 +293,26 @@
                     </div>
                 {/if}
             </div>
-            {#if $reactionsWithUsers.length > 0 && !$isDeleted}
-                <MessageReactions
-                    classes={isMyMessage ? "justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
-                    reactions={$reactionsWithUsers}
-                />
-            {/if}
-            {#if readReceipts && isMyMessage && replyDepth === 0 && !isQuotedMessage && !$isDeleted && !messageFromSystem}
-                <MessageReadReceipt messageId={id} receipts={readReceipts} {showReaders} members={roomMembersList} />
+            {#if hasReactions || hasReadReceipt}
+                <!-- One line under the bubble: the receipt keeps the edge, the reactions wrap to its left only when
+                     they overflow. -->
+                <div class="flex items-end gap-1 {isMyMessage ? 'justify-end' : ''}">
+                    {#if hasReactions}
+                        <MessageReactions
+                            classes={isMyMessage ? "min-w-0 justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
+                            reactions={$reactionsWithUsers}
+                        />
+                    {/if}
+                    {#if hasReadReceipt && readReceipts !== undefined}
+                        <MessageReadReceipt
+                            messageId={id}
+                            receipts={readReceipts}
+                            {showReaders}
+                            showSeenByLabel={!hasReactions}
+                            members={roomMembersList}
+                        />
+                    {/if}
+                </div>
             {/if}
             {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
                 <div
