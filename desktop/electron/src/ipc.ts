@@ -455,7 +455,10 @@ export default () => {
             }
             const worlds = parseFoundWorlds(await response.json());
             lastWorldLookup = { email, worlds };
-            return { ok: true, worlds: worlds.map(({ name, organization, url }) => ({ name, organization, url })) };
+            return {
+                ok: true,
+                worlds: worlds.map(({ name, organization, url, thumbnail }) => ({ name, organization, url, thumbnail })),
+            };
         } catch (error) {
             ElectronLog.warn("The world lookup by email failed", error);
             return { ok: false, error: t("landing.lookupFailed") };

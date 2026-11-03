@@ -12,6 +12,7 @@ const th: NativeStrings = {
     "landing.searching": "กำลังค้นหา…",
     "landing.emailInvalid": "โปรดป้อนที่อยู่อีเมลที่ถูกต้อง",
     "landing.yourWorlds": "โลกของคุณ",
+    "landing.useAnotherEmail": "ใช้อีเมลอื่น",
     "landing.signIn": "ลงชื่อเข้าใช้",
     "landing.signingIn": "กำลังลงชื่อเข้าใช้…",
     "landing.noWorldFound": "ไม่พบโลกสำหรับ {email}",

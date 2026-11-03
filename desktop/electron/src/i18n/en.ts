@@ -13,6 +13,7 @@ const en = {
     "landing.searching": "Searching…",
     "landing.emailInvalid": "Please enter a valid email address.",
     "landing.yourWorlds": "Your worlds",
+    "landing.useAnotherEmail": "Use another email",
     "landing.signIn": "Sign in",
     "landing.signingIn": "Signing in…",
     "landing.noWorldFound": "No world found for {email}",

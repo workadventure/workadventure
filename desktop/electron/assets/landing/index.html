@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';"
+            content="default-src 'self'; img-src 'self' data: https: http:; style-src 'self' 'unsafe-inline'; script-src 'self';"
         />
         <title>WorkAdventure</title>
         <style>
@@ -174,6 +174,58 @@
 
             .found-email {
                 text-transform: none;
+            }
+
+            /* ── The worlds found for an email, on their own ──────────────────────────────────
+               The answer is the only thing left to do, so the rest of the page steps aside. */
+            .found-for {
+                display: none;
+                margin: -4px 0 14px;
+                color: var(--text-muted);
+                font-size: var(--text-sm);
+            }
+
+            .found-for .link {
+                margin-left: 10px;
+            }
+
+            .page[data-view="worlds"] .found-for {
+                display: block;
+            }
+
+            .page[data-view="worlds"] .intro,
+            .page[data-view="worlds"] .recent,
+            .page[data-view="worlds"] .permission,
+            .page[data-view="worlds"] .choices,
+            .page[data-view="worlds"] .create {
+                display: none;
+            }
+
+            .page[data-view="worlds"] main {
+                justify-content: center;
+                padding-top: 0;
+            }
+
+            .page[data-view="worlds"] .found {
+                text-align: center;
+            }
+
+            .page[data-view="worlds"] .found .world-row {
+                justify-content: safe center;
+            }
+
+            /* The map's own thumbnail, when the world has one, over the generated art (kept as the
+               fallback if the image fails to load). */
+            .world-thumb {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .world-art.has-thumb::after {
+                display: none;
             }
 
             .no-world p {
@@ -823,6 +875,12 @@
                 <!-- The email lookup's answer: the worlds to sign in to, or why there are none. -->
                 <section class="found" id="found" aria-labelledby="found-title" hidden>
                     <h2 class="section-label" id="found-title"></h2>
+                    <p class="found-for" id="found-for">
+                        <span class="found-email" id="found-email"></span>
+                        <button class="link" type="button" id="found-back" data-i18n="landing.useAnotherEmail">
+                            Use another email
+                        </button>
+                    </p>
                     <div class="world-row" id="found-row"></div>
                     <div class="no-world" id="no-world" hidden>
                         <p data-i18n="landing.noWorldHint">

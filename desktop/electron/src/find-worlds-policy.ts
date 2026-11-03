@@ -39,6 +39,7 @@ export function parseFoundWorlds(body: unknown): FoundWorld[] {
             organization: typeof entry.organization === "string" ? entry.organization : "",
             url: entry.url,
             loginUrl: entry.loginUrl,
+            ...(isHttpUrl(entry.thumbnail) ? { thumbnail: entry.thumbnail } : {}),
         });
         if (worlds.length === MAX_FOUND_WORLDS) {
             break;

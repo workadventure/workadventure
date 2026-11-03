@@ -12,6 +12,7 @@ const de: NativeStrings = {
     "landing.searching": "Suche läuft…",
     "landing.emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
     "landing.yourWorlds": "Ihre Welten",
+    "landing.useAnotherEmail": "Andere E-Mail-Adresse verwenden",
     "landing.signIn": "Anmelden",
     "landing.signingIn": "Anmeldung läuft…",
     "landing.noWorldFound": "Keine Welt für {email} gefunden",

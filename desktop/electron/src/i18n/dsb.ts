@@ -12,6 +12,7 @@ const dsb: NativeStrings = {
     "landing.searching": "Pyta se…",
     "landing.emailInvalid": "Pšosym zapódajśo płaśiwu e-mailowu adresu.",
     "landing.yourWorlds": "Waše swěty",
+    "landing.useAnotherEmail": "Drugu e-mailowu adresu wužywaś",
     "landing.signIn": "Pśizjawiś",
     "landing.signingIn": "Pśizjawjanje…",
     "landing.noWorldFound": "Za {email} njejsmy žeden swět namakali",

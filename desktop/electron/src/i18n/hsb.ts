@@ -12,6 +12,7 @@ const hsb: NativeStrings = {
     "landing.searching": "Pyta so…",
     "landing.emailInvalid": "Prošu zapodajće płaćiwu e-mailowu adresu.",
     "landing.yourWorlds": "Waše swěty",
+    "landing.useAnotherEmail": "Druhu e-mailowu adresu wužiwać",
     "landing.signIn": "Přizjewić",
     "landing.signingIn": "Přizjewja so…",
     "landing.noWorldFound": "Za {email} njejsmy žadyn swět namakali",

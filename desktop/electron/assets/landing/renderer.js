@@ -27,6 +27,8 @@
     var foundErrorEl = document.getElementById("found-error");
     var noWorld = document.getElementById("no-world");
     var noWorldCreate = document.getElementById("no-world-create");
+    var foundEmail = document.getElementById("found-email");
+    var foundBack = document.getElementById("found-back");
     var trustPanel = document.getElementById("trust-panel");
     var trustBody = document.getElementById("trust-body");
     var trustConfirm = document.getElementById("trust-confirm");
@@ -128,6 +130,20 @@
         art.style.setProperty("--h", String(hash % 360));
         art.style.setProperty("--ox", (hash % 26) + "px");
         art.style.setProperty("--oy", ((hash >> 5) % 26) + "px");
+        if (world.thumbnail) {
+            var thumb = document.createElement("img");
+            thumb.className = "world-thumb";
+            thumb.alt = "";
+            thumb.loading = "lazy";
+            thumb.referrerPolicy = "no-referrer";
+            thumb.addEventListener("error", function () {
+                thumb.remove();
+                art.classList.remove("has-thumb");
+            });
+            thumb.src = world.thumbnail;
+            art.classList.add("has-thumb");
+            art.appendChild(thumb);
+        }
         card.appendChild(art);
 
         var scrim = document.createElement("span");
@@ -139,11 +155,15 @@
         var name = document.createElement("span");
         name.className = "world-name";
         name.textContent = world.label;
-        var url = document.createElement("span");
-        url.className = "world-url";
-        url.textContent = world.url;
         copy.appendChild(name);
-        copy.appendChild(url);
+        // The second line: the URL for recent worlds, the organization (or nothing) for the worlds found.
+        var detail = world.detail === undefined ? world.url : world.detail;
+        if (detail) {
+            var detailLine = document.createElement("span");
+            detailLine.className = "world-url";
+            detailLine.textContent = detail;
+            copy.appendChild(detailLine);
+        }
         card.appendChild(copy);
 
         var hover = document.createElement("span");
@@ -311,6 +331,7 @@
     }
 
     function hideFound() {
+        delete page.dataset.view;
         foundSection.hidden = true;
         foundRow.textContent = "";
         showError(foundErrorEl, "");
@@ -337,13 +358,47 @@
         }
         noWorld.hidden = !none;
         foundRow.hidden = none;
+        foundEmail.textContent = email;
+        // The organization only tells worlds apart when there is more than one.
+        var organizations = {};
         worlds.forEach(function (world) {
-            foundRow.appendChild(buildWorldCard({ url: world.url, label: world.name }, foundCards));
+            organizations[world.organization] = true;
+        });
+        var showOrganization = Object.keys(organizations).length > 1;
+        worlds.forEach(function (world) {
+            foundRow.appendChild(
+                buildWorldCard(
+                    {
+                        url: world.url,
+                        label: world.name,
+                        detail: showOrganization ? world.organization : "",
+                        thumbnail: world.thumbnail,
+                    },
+                    foundCards
+                )
+            );
         });
         foundSection.hidden = false;
-        // Narrow windows stack the cards, which pushes the answer below the fold.
-        foundSection.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        if (none) {
+            // Narrow windows stack the cards, which pushes the answer below the fold.
+            foundSection.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            return;
+        }
+        // Worlds to choose from: they are all that is left on the page, and the focus goes to the first one
+        // (the email field it was on is now hidden).
+        page.dataset.view = "worlds";
+        window.scrollTo(0, 0);
+        var first = foundRow.querySelector(".world");
+        if (first) {
+            first.focus();
+        }
     }
+
+    foundBack.addEventListener("click", function () {
+        hideFound();
+        emailInput.focus();
+        emailInput.select();
+    });
 
     emailForm.addEventListener("submit", function (event) {
         event.preventDefault();

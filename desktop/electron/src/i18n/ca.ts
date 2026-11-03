@@ -12,6 +12,7 @@ const ca: NativeStrings = {
     "landing.searching": "S'està cercant…",
     "landing.emailInvalid": "Introdueix una adreça electrònica vàlida.",
     "landing.yourWorlds": "Els teus mons",
+    "landing.useAnotherEmail": "Utilitza un altre correu electrònic",
     "landing.signIn": "Inicia la sessió",
     "landing.signingIn": "S'està iniciant la sessió…",
     "landing.noWorldFound": "No s'ha trobat cap món per a {email}",

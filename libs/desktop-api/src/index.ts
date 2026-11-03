@@ -38,6 +38,8 @@ export type DesktopFoundWorld = {
     name: string;
     organization: string;
     url: string;
+    /** The default room's map thumbnail, when it has one. */
+    thumbnail?: string;
 };
 
 export type DesktopFindWorldsResult = { ok: true; worlds: DesktopFoundWorld[] } | { ok: false; error: string };

@@ -23,6 +23,20 @@ test("keeps well-formed worlds and drops the rest", () => {
     ).toEqual([world, { ...world, organization: "" }]);
 });
 
+test("keeps a web thumbnail and drops any other", () => {
+    const thumbnail = "https://maps.example.com/office/map.png";
+    expect(
+        parseFoundWorlds({
+            worlds: [
+                { ...world, thumbnail },
+                { ...world, thumbnail: null },
+                { ...world, thumbnail: "javascript:alert(1)" },
+                { ...world, thumbnail: "map.png" },
+            ],
+        })
+    ).toEqual([{ ...world, thumbnail }, world, world, world]);
+});
+
 test("an unexpected body is no worlds", () => {
     expect(parseFoundWorlds(null)).toEqual([]);
     expect(parseFoundWorlds({ worlds: "x" })).toEqual([]);

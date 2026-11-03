@@ -12,6 +12,7 @@ const zhTW: NativeStrings = {
     "landing.searching": "正在搜尋…",
     "landing.emailInvalid": "請輸入有效的電子郵件地址。",
     "landing.yourWorlds": "你的世界",
+    "landing.useAnotherEmail": "使用其他電子郵件",
     "landing.signIn": "登入",
     "landing.signingIn": "正在登入…",
     "landing.noWorldFound": "找不到與 {email} 相關聯的世界",

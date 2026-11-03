@@ -11,6 +11,7 @@ const zhCN: NativeStrings = {
     "landing.searching": "正在搜索…",
     "landing.emailInvalid": "请输入有效的邮箱地址。",
     "landing.yourWorlds": "你的世界",
+    "landing.useAnotherEmail": "使用其他邮箱",
     "landing.signIn": "登录",
     "landing.signingIn": "正在登录…",
     "landing.noWorldFound": "未找到与 {email} 关联的世界",

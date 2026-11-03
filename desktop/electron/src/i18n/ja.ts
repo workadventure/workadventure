@@ -12,6 +12,7 @@ const ja: NativeStrings = {
     "landing.searching": "検索しています…",
     "landing.emailInvalid": "有効なメールアドレスを入力してください。",
     "landing.yourWorlds": "あなたのワールド",
+    "landing.useAnotherEmail": "別のメールアドレスを使う",
     "landing.signIn": "サインイン",
     "landing.signingIn": "サインインしています…",
     "landing.noWorldFound": "{email} のワールドが見つかりません",

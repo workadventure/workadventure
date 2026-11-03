@@ -12,6 +12,7 @@ const vi: NativeStrings = {
     "landing.searching": "Đang tìm kiếm…",
     "landing.emailInvalid": "Vui lòng nhập địa chỉ email hợp lệ.",
     "landing.yourWorlds": "Thế giới của bạn",
+    "landing.useAnotherEmail": "Dùng email khác",
     "landing.signIn": "Đăng nhập",
     "landing.signingIn": "Đang đăng nhập…",
     "landing.noWorldFound": "Không tìm thấy thế giới nào cho {email}",

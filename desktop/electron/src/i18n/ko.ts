@@ -12,6 +12,7 @@ const ko: NativeStrings = {
     "landing.searching": "검색하는 중…",
     "landing.emailInvalid": "유효한 이메일 주소를 입력하세요.",
     "landing.yourWorlds": "내 월드",
+    "landing.useAnotherEmail": "다른 이메일 사용",
     "landing.signIn": "로그인",
     "landing.signingIn": "로그인하는 중…",
     "landing.noWorldFound": "{email}에 해당하는 월드를 찾을 수 없습니다",

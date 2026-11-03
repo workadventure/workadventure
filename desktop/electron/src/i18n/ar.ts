@@ -12,6 +12,7 @@ const ar: NativeStrings = {
     "landing.searching": "جارٍ البحث…",
     "landing.emailInvalid": "يرجى إدخال عنوان بريد إلكتروني صالح.",
     "landing.yourWorlds": "عوالمك",
+    "landing.useAnotherEmail": "استخدام بريد إلكتروني آخر",
     "landing.signIn": "تسجيل الدخول",
     "landing.signingIn": "جارٍ تسجيل الدخول…",
     "landing.noWorldFound": "لم يُعثر على أي عالم لـ {email}",

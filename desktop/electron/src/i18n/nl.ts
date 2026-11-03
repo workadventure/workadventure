@@ -12,6 +12,7 @@ const nl: NativeStrings = {
     "landing.searching": "Zoeken…",
     "landing.emailInvalid": "Voer een geldig e-mailadres in.",
     "landing.yourWorlds": "Je werelden",
+    "landing.useAnotherEmail": "Ander e-mailadres gebruiken",
     "landing.signIn": "Aanmelden",
     "landing.signingIn": "Aanmelden…",
     "landing.noWorldFound": "Geen wereld gevonden voor {email}",
