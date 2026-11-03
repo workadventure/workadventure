@@ -149,6 +149,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{count} tin nhắn mới",
         jumpToLatest: "Chuyển đến tin nhắn mới nhất",
         unreadDivider: "Tin nhắn mới",
+        loadingMessages: "Đang tải tin nhắn…",
+        loadError: "Không thể tải tin nhắn",
     },
     form: {
         placeholder: "Nhập tin nhắn của bạn...",

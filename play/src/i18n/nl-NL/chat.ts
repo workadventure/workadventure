@@ -150,6 +150,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{{count:1 nieuw bericht|?? nieuwe berichten}}",
         jumpToLatest: "Naar de nieuwste berichten",
         unreadDivider: "Nieuwe berichten",
+        loadingMessages: "Berichten laden…",
+        loadError: "De berichten konden niet worden geladen",
     },
     form: {
         placeholder: "Voer je bericht in...",
