@@ -9,9 +9,6 @@ on:
   release:
     types: [created]
 
-env:
-  YARN_CACHE_FOLDER: ~/.yarn
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -47,39 +44,37 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: "desktop/electron/package-lock.json"
 
       - name: Caching
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.YARN_CACHE_FOLDER }}
             ~/.cache/electron
             ~/.cache/electron-builder
-          key: ${{ runner.OS }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.OS }}-electron-${{ hashFiles('desktop/electron/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-yarn-
-
-      - name: "Revert to Yarn 1"
-        run: yarn set version classic
+            ${{ runner.OS }}-electron-
 
       - name: "Set desktop app version"
         run: node helpers/set-version.js
         working-directory: "desktop/electron"
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
+        run: npm ci
         working-directory: "desktop/electron"
 
       - name: "Build typescript"
-        run: yarn build
+        run: npm run build
         working-directory: "desktop/electron"
 
       - name: "Install electron tools"
-        run: yarn electron-builder install-app-deps
+        run: npx electron-builder install-app-deps
         working-directory: "desktop/electron"
 
       - name: "Build app for testing"
-        run: yarn electron-builder --publish never
+        run: npx electron-builder --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # electron-builder skips signing on pull requests, the ad hoc one too (mac.identity "-"): the
@@ -100,7 +95,7 @@ jobs:
         working-directory: "desktop/electron"
 
       - name: "Build & release app"
-        run: yarn electron-builder --publish always
+        run: npx electron-builder --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop/electron"
