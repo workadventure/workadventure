@@ -53,9 +53,9 @@
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
     import { messageInputText } from "./messageInputText";
-    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";

@@ -3,8 +3,8 @@ import { EventType, NotificationCountType, RelationType } from "matrix-js-sdk";
 import type { IThreadBundledRelationship } from "matrix-js-sdk/lib/models/event";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
 import type { ChatMessagePreview, ChatReadState, ChatThreadSummary } from "../ChatConnection";
-import { getEventSenderMember } from "./MatrixChatUser";
 import { decodeHtmlEntities } from "../../decodeHtmlEntities";
+import { getEventSenderMember } from "./MatrixChatUser";
 
 type ThreadRelationContent = {
     rel_type: "m.thread";

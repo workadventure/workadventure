@@ -6,8 +6,8 @@
     import LL from "../../../../i18n/i18n-svelte";
     import Button from "../../../Components/UI/Button.svelte";
     import Alert from "../../../Components/UI/Alert.svelte";
-    import MessageInput from "./MessageInput.svelte";
     import { decodeHtmlEntities, escapeHtml } from "../../decodeHtmlEntities";
+    import MessageInput from "./MessageInput.svelte";
 
     interface Props {
         message: ChatMessage;

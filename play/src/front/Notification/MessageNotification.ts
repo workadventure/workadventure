@@ -1,9 +1,9 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import LL from "../../i18n/i18n-svelte";
+import { decodeHtmlEntities } from "../Chat/decodeHtmlEntities";
 import type { NotificationWA } from "./Notification";
 import { defaultOptions } from "./Notification";
-import { decodeHtmlEntities } from "../Chat/decodeHtmlEntities";
 export class MessageNotification implements NotificationWA {
     constructor(
         private userName: string,
