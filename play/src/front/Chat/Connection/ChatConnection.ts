@@ -170,6 +170,8 @@ export interface ChatConversation {
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    /** The same, as a store: a list sorted on it moves a conversation up when a message arrives. */
+    readonly lastMessageTimestampStore?: Readable<number>;
     readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
     readonly ensureTimelineEventVisible?: (eventId: string) => Promise<boolean>;
     /**
