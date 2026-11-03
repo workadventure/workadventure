@@ -5,7 +5,7 @@
     import InputSearch from "../Input/InputSearch.svelte";
     import Button from "../UI/Button.svelte";
     import {
-        getMediaShortcut,
+        mediaShortcutsStore,
         setMediaShortcut,
         mediaShortcutRebindingStore,
         type MediaShortcut,
@@ -22,7 +22,6 @@
     // Phaser listens to both ZQSD and WASD; only show the set that matches the user's keyboard.
     let layout: Layout = $state($locale.startsWith("fr") ? "azerty" : "qwerty");
     let query = $state("");
-    let mediaShortcuts = $state({ microphone: getMediaShortcut("microphone"), camera: getMediaShortcut("camera") });
     let rebinding: MediaShortcutAction | undefined = $state();
 
     function mediaKeys(shortcut: MediaShortcut): string[] {
@@ -61,7 +60,6 @@
             shiftKey: event.shiftKey,
             metaKey: event.metaKey,
         });
-        mediaShortcuts = { microphone: getMediaShortcut("microphone"), camera: getMediaShortcut("camera") };
         stopRebinding();
     }
 
@@ -101,12 +99,12 @@
                     {
                         label: t.toggleMicrophone(),
                         action: "microphone",
-                        combos: [single(...mediaKeys(mediaShortcuts.microphone))],
+                        combos: [single(...mediaKeys($mediaShortcutsStore.microphone))],
                     },
                     {
                         label: t.toggleCamera(),
                         action: "camera",
-                        combos: [single(...mediaKeys(mediaShortcuts.camera))],
+                        combos: [single(...mediaKeys($mediaShortcutsStore.camera))],
                     },
                     { label: t.openChat(), combos: [single("C")] },
                     { label: t.openUserList(), combos: [single("U")] },

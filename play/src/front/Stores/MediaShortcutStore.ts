@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 
 export type MediaShortcutAction = "microphone" | "camera";
 export type MediaShortcut = { key: string; ctrlKey: boolean; altKey: boolean; shiftKey: boolean; metaKey: boolean };
@@ -22,9 +22,9 @@ function load(): Record<MediaShortcutAction, MediaShortcut> {
     }
 }
 
-let shortcuts = load();
+export const mediaShortcutsStore = writable(load());
 export function getMediaShortcut(action: MediaShortcutAction): MediaShortcut {
-    return shortcuts[action];
+    return get(mediaShortcutsStore)[action];
 }
 const sameShortcut = (a: MediaShortcut, b: MediaShortcut) =>
     a.key === b.key &&
@@ -36,12 +36,14 @@ const sameShortcut = (a: MediaShortcut, b: MediaShortcut) =>
 // Rebinding to a shortcut owned by the other action swaps them, so no shortcut is ever bound twice.
 export function setMediaShortcut(action: MediaShortcutAction, shortcut: MediaShortcut): void {
     const other: MediaShortcutAction = action === "microphone" ? "camera" : "microphone";
-    shortcuts = {
+    const shortcuts = get(mediaShortcutsStore);
+    const updated = {
         ...shortcuts,
         [action]: shortcut,
         ...(sameShortcut(shortcuts[other], shortcut) ? { [other]: shortcuts[action] } : {}),
     };
-    localStorage.setItem(storageKey, JSON.stringify(shortcuts));
+    mediaShortcutsStore.set(updated);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
 }
 export function mediaShortcutMatches(event: KeyboardEvent, shortcut: MediaShortcut): boolean {
     return (
