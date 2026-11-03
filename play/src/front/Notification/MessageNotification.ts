@@ -3,6 +3,7 @@ import * as Sentry from "@sentry/svelte";
 import LL from "../../i18n/i18n-svelte";
 import type { NotificationWA } from "./Notification";
 import { defaultOptions } from "./Notification";
+import { decodeHtmlEntities } from "../Chat/decodeHtmlEntities";
 export class MessageNotification implements NotificationWA {
     constructor(
         private userName: string,
@@ -20,8 +21,8 @@ export class MessageNotification implements NotificationWA {
             const registration = await navigator.serviceWorker.ready;
 
             const numberOfChar = 60;
-            const messageToDisplay =
-                this.message.length > numberOfChar ? this.message.slice(0, numberOfChar) + "..." : this.message;
+            const message = decodeHtmlEntities(this.message);
+            const messageToDisplay = message.length > numberOfChar ? message.slice(0, numberOfChar) + "..." : message;
             const title = this.isMention
                 ? get(LL).notification.mention({ name: this.userName })
                 : get(LL).notification.message({ name: this.userName });

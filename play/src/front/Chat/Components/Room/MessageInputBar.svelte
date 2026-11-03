@@ -55,6 +55,7 @@
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
     import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
     import { messageInputText } from "./messageInputText";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
@@ -958,7 +959,7 @@
                             class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
                             style:overflow-wrap="anywhere"
                         >
-                            {$quotedMessageContent?.body}
+                            {decodeHtmlEntities($quotedMessageContent?.body ?? "")}
                         </p>
                     </div>
                 </div>

@@ -5,6 +5,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { confirmDelete } from "./confirmDeleteMessage";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import { IconArrowBackUp, IconCopy, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -41,7 +42,7 @@
 
     function copyText() {
         navigator.clipboard
-            .writeText($content.body)
+            .writeText(decodeHtmlEntities($content.body))
             .then(() => {
                 copied = true;
                 setTimeout(onClose, 600);
