@@ -23,12 +23,22 @@ describe("Mentions", () => {
         expect(findMentionQuery("@Yannis hello")).toBeUndefined();
     });
 
-    it("sends a message without mentions as before, with an empty m.mentions", () => {
+    it("sends a message without mentions with an empty m.mentions", () => {
         expect(getMatrixMessageContent("hello")).toEqual({
             msgtype: "m.text",
             body: "hello",
-            formatted_body: "hello",
+            format: "org.matrix.custom.html",
+            formatted_body: "<p>hello</p>",
             "m.mentions": {},
+        });
+    });
+
+    it("sends the composer's HTML as a plain-text body, its markup kept as text in the HTML", () => {
+        const content = getMatrixMessageContent("parfait&nbsp;<br>a &amp; b &lt;img src=x onerror=alert(1)&gt;");
+
+        expect(content).toMatchObject({
+            body: "parfait\u00a0\na & b <img src=x onerror=alert(1)>",
+            formatted_body: "<p>parfait&nbsp;<br>a &amp; b &lt;img src=x onerror=alert(1)&gt;</p>",
         });
     });
 
