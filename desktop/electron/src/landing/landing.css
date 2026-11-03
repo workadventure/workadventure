@@ -47,11 +47,8 @@
 }
 
 @layer base {
-    html,
-    body {
-        height: 100%;
-    }
-
+    /* No `height: 100%` on html/body: the background is painted over html's box, which then grows with
+       the page, so the gradient spans the whole page instead of repeating every window height. */
     body {
         @apply font-main text-white;
         min-width: 320px;

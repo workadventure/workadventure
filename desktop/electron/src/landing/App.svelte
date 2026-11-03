@@ -269,7 +269,7 @@
      design's ratios rather than its exact pixels. -->
 <div
     class={[
-        "mx-auto flex min-h-full flex-col px-[clamp(20px,5vw,72px)] pt-[clamp(28px,5vh,64px)] pb-[clamp(48px,9vh,104px)]",
+        "mx-auto flex min-h-screen flex-col px-[clamp(20px,5vw,72px)] pt-[clamp(28px,5vh,64px)] pb-[clamp(48px,9vh,104px)]",
         // The worlds to choose from use the whole window: more of them per line, less scrolling.
         choosingWorld ? "w-full" : "w-[min(1340px,100%)]",
     ]}
