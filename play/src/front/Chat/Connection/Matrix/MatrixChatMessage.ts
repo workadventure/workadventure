@@ -23,7 +23,7 @@ import {
     pillRoomMention,
     ROOM_MENTION_ID,
 } from "../../Mentions";
-import { escapeHtml } from "../../decodeHtmlEntities";
+import { HtmlUtils } from "../../../WebRtc/HtmlUtils";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -199,7 +199,7 @@ export class MatrixChatMessage implements ChatMessage {
             // The body is plain text (ours since the composer sends it so, Element's always): its markdown is what we
             // render, so a "<b>" typed in it must stay text. Older messages of ours, without HTML, keep their
             // already escaped body.
-            formattedBody = escapeHtml(content.body);
+            formattedBody = HtmlUtils.escapeHtml(content.body);
         }
         return { body: content.body, url: undefined, formattedBody, mentionsMe };
     }

@@ -6,7 +6,8 @@
     import LL from "../../../../i18n/i18n-svelte";
     import Button from "../../../Components/UI/Button.svelte";
     import Alert from "../../../Components/UI/Alert.svelte";
-    import { decodeHtmlEntities, escapeHtml } from "../../decodeHtmlEntities";
+    import { HtmlUtils } from "../../../WebRtc/HtmlUtils";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import MessageInput from "./MessageInput.svelte";
 
     interface Props {
@@ -17,7 +18,9 @@
     let messageInput: HTMLDivElement | undefined = $state();
 
     // The input takes HTML: the body is text (decoded first, older messages of ours being escaped already).
-    let inputValue = $state((() => escapeHtml(decodeHtmlEntities(get(message.content).body)).replace(/\n/g, "<br>"))());
+    let inputValue = $state(
+        (() => HtmlUtils.escapeHtml(decodeHtmlEntities(get(message.content).body)).replace(/\n/g, "<br>"))(),
+    );
     // Stays until the next try, so a failure is not missed.
     let editError = $state(false);
     let saving = $state(false);

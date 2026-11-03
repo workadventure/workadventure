@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decodeHtmlEntities, escapeHtml } from "./decodeHtmlEntities";
+import { decodeHtmlEntities } from "./decodeHtmlEntities";
 
 describe("decodeHtmlEntities", () => {
     it("decodes what the composer's HTML holds", () => {
@@ -15,13 +15,5 @@ describe("decodeHtmlEntities", () => {
     it("leaves plain text and unknown entities alone", () => {
         expect(decodeHtmlEntities("rien à décoder & pas d'entité")).toBe("rien à décoder & pas d'entité");
         expect(decodeHtmlEntities("&copy; &#99999999;")).toBe("&copy; &#99999999;");
-    });
-});
-
-describe("escapeHtml", () => {
-    it("turns text into HTML that shows it as is, and decodeHtmlEntities brings it back", () => {
-        const text = 'a & b <img src=x onerror="alert(1)">';
-        expect(escapeHtml(text)).toBe('a &amp; b &lt;img src=x onerror="alert(1)"&gt;');
-        expect(decodeHtmlEntities(escapeHtml(text))).toBe(text);
     });
 });
