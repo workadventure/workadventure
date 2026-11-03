@@ -1,7 +1,6 @@
 import { setAnnotationSource, setAnnotationState } from "./annotation-controller";
 import { ipcMain, app, desktopCapturer, screen, shell } from "electron";
 import ElectronLog from "electron-log";
-import electronIsDev from "electron-is-dev";
 import path from "path";
 import { pathToFileURL } from "url";
 import { ensureWorldOriginTrusted, getDesktopConfig, originUserMayTrust, trustServer } from "./origin-verification";
@@ -187,8 +186,8 @@ function normalizeNotifyPayload(payload: unknown): ShowNotificationOptions | und
 }
 
 export default () => {
-    ipcMain.handle("is-development", () => electronIsDev);
-    ipcMain.handle("get-version", () => (electronIsDev ? "dev" : app.getVersion()));
+    ipcMain.handle("is-development", () => !app.isPackaged);
+    ipcMain.handle("get-version", () => (app.isPackaged ? app.getVersion() : "dev"));
 
     // The handshake: a world page says which contract it speaks; the app answers with its own.
     ipcMain.on("app:hello", (event, page: unknown) => {

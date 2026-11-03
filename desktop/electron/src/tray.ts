@@ -1,7 +1,6 @@
 import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
-import { showAboutWindow } from "electron-util";
 
 import * as autoUpdater from "./auto-updater";
 import * as log from "./log";
@@ -285,10 +284,13 @@ function updateTrayContextMenu() {
                     // Duplicated in the macOS app menu, but absent everywhere on Windows/Linux.
                     label: t("tray.about"),
                     click() {
-                        showAboutWindow({
-                            icon: path.join(assetsDirectory, "icons", "logo.png"),
+                        app.setAboutPanelOptions({
+                            applicationName: app.getName(),
+                            applicationVersion: app.getVersion(),
+                            iconPath: path.join(assetsDirectory, "icons", "logo.png"),
                             copyright: "Copyright © WorkAdventure",
                         });
+                        app.showAboutPanel();
                     },
                 },
             ],
