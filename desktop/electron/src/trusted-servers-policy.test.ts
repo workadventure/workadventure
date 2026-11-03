@@ -8,6 +8,8 @@ import {
 } from "./trusted-servers-policy";
 
 test("only a body shaped like WorkAdventure's /server.json counts as a WorkAdventure server", () => {
+    expect(isWorkAdventureServerInfo({ version: "1.0.0" })).toBe(true);
+    // What servers released before the /server.json clean-up answer.
     expect(
         isWorkAdventureServerInfo({
             domain: "https://pusher.acme.example",
@@ -17,7 +19,8 @@ test("only a body shaped like WorkAdventure's /server.json counts as a WorkAdven
             version: "1.0.0",
         })
     ).toBe(true);
-    expect(isWorkAdventureServerInfo({ version: "1.0.0" })).toBe(false);
+    expect(isWorkAdventureServerInfo({ name: "WorkAdventure Server" })).toBe(false);
+    expect(isWorkAdventureServerInfo({ version: 1 })).toBe(false);
     expect(isWorkAdventureServerInfo([])).toBe(false);
     expect(isWorkAdventureServerInfo(null)).toBe(false);
 });

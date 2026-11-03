@@ -9,7 +9,7 @@ import { MetaTagsBuilder } from "../services/MetaTagsBuilder";
 import { adminService } from "../services/AdminService";
 import { getStringPalette, wrapWithStyleTag } from "../services/GenerateCustomColors";
 import { notWaHost } from "../middlewares/NotWaHost";
-import { version } from "../../../package.json";
+import { version } from "../version";
 import {
     FRONT_ENVIRONMENT_VARIABLES,
     LOGROCKET_ID,
@@ -188,15 +188,12 @@ export class FrontController extends BaseHttpController {
             },
         );
 
+        // Tells the desktop app this is a WorkAdventure server (desktop/electron/src/trusted-servers-policy.ts).
+        // It only reads `version`, which servers have answered since 2022: keep it. The release tag, or "dev"
+        // outside release images; servers released before November 2026 answer "1.0.0".
         this.app.get("/server.json", (req: Request, res: Response) => {
             debug(`FrontController => [${req.method}] ${req.originalUrl} — IP: ${req.ip} — Time: ${Date.now()}`);
-            res.json({
-                domain: process.env.PUSHER_URL,
-                name: process.env.SERVER_NAME || "WorkAdventure Server",
-                motd: process.env.SERVER_MOTD || "A WorkAdventure Server",
-                icon: process.env.SERVER_ICON || process.env.PUSHER_URL + "/static/images/favicons/icon-512x512.png",
-                version: version + (process.env.NODE_ENV !== "production" ? "-dev" : ""),
-            });
+            res.json({ version });
             return;
         });
 

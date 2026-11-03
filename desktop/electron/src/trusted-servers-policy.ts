@@ -7,12 +7,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Whether `body`, a server's /server.json (served by every WorkAdventure server since 2022), looks like
- * WorkAdventure's. Not a proof, since anyone can serve it: it only keeps other sites (a search engine, a typo)
- * from being offered at all. The user still decides whether to add the server.
+ * Whether `body`, a server's /server.json (served by every WorkAdventure server since 2022, with a `version`),
+ * looks like WorkAdventure's. Not a proof, since anyone can serve it: it only keeps other sites (a search
+ * engine, a typo) from being offered at all. The user still decides whether to add the server.
  */
 export function isWorkAdventureServerInfo(body: unknown): boolean {
-    return isRecord(body) && typeof body.motd === "string" && typeof body.version === "string";
+    return isRecord(body) && typeof body.version === "string";
 }
 
 /**
