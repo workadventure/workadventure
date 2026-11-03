@@ -322,6 +322,15 @@
                 {#if hasStamp && !stampInText}
                     <div class="flex justify-end px-2 pb-1 -mt-1">{@render stamp()}</div>
                 {/if}
+                {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+                    <!-- Straddles the bubble's top edge, like the reactions do its bottom one: it overlaps the message
+                         it acts on, never the one above. -->
+                    <div
+                        class="options absolute -top-3 end-2 z-50 rounded-lg p-0.5 bg-contrast border border-solid border-white/15 shadow-lg ring-2 ring-contrast"
+                    >
+                        <MessageOptions {message} {messageRef} onOpenThread={openThread} />
+                    </div>
+                {/if}
             </div>
             {#if hasReactions || hasReaders}
                 <!-- The reactions straddle the bubble's bottom edge from its left; in a group, who has read my last
@@ -344,16 +353,6 @@
                             />
                         </div>
                     {/if}
-                </div>
-            {/if}
-            {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
-                <!-- Above the bubble: with the time inside it, there is no header line left to float over. -->
-                <div
-                    class="options -top-7 absolute z-50 rounded p-1 {!isMyMessage
-                        ? 'right-2 bg-contrast/80'
-                        : 'right-6 bg-secondary/80'}"
-                >
-                    <MessageOptions {message} {messageRef} onOpenThread={openThread} />
                 </div>
             {/if}
 
