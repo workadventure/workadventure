@@ -11,6 +11,7 @@ import {
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
     isRoomUrl,
+    isSameRoomUrl,
     worldKeyOf,
     normalizePersistedLastRoomUrl,
     normalizePersistedWorldHistory,
@@ -384,6 +385,14 @@ test("servers the user added become navigable, over https only in production", (
         expect(isAllowedNavigationUrl("https://other.example/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("http://plain.example/@/team/world/room", config)).toBe(false);
     });
+});
+
+test("a room is the same whatever its query or #entry, and another path is another room", () => {
+    const office = "https://play.workadventu.re/@/team/world/office";
+    expect(isSameRoomUrl(office, `${office}?token=abc#desk`)).toBe(true);
+    expect(isSameRoomUrl(office, "https://play.workadventu.re/@/team/world/lobby")).toBe(false);
+    expect(isSameRoomUrl(office, "https://other.example/@/team/world/office")).toBe(false);
+    expect(isSameRoomUrl("", office)).toBe(false);
 });
 
 test("rooms of the same world share a world key, whatever the room, query or hash", () => {

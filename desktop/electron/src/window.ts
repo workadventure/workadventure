@@ -19,6 +19,7 @@ import {
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
     isRoomUrl,
+    isSameRoomUrl,
     resolveInitialTarget,
     stripSensitiveQueryParams,
     worldKeyOf,
@@ -974,10 +975,11 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
 }
 
 /**
- * Switch to the tab that already shows the world of `url`, if any (true). The requesting tab is
- * closed when it held no world: a Landing opened only to pick that world.
+ * Switch to the tab that already shows the world of `url`, if any (true), and take it to that room
+ * when it shows another one. The requesting tab is closed when it held no world: a Landing opened
+ * only to pick that world.
  */
-export function switchToOpenWorld(url: string, requester?: Electron.WebContents): boolean {
+export async function switchToOpenWorld(url: string, requester?: Electron.WebContents): Promise<boolean> {
     const existing = findTabShowingWorld(url);
     if (!existing || existing.view.webContents === requester) {
         return false;
@@ -990,6 +992,9 @@ export function switchToOpenWorld(url: string, requester?: Electron.WebContents)
         closeTab(requestingTab.id);
     }
     showWindow();
+    if (!isSameRoomUrl(existing.url, url)) {
+        await loadDesktopTarget(url);
+    }
     return true;
 }
 
@@ -1004,7 +1009,7 @@ export async function openWorldTab(url?: string): Promise<void> {
         await createWindow(url);
         return;
     }
-    if (url && switchToOpenWorld(url)) {
+    if (url && (await switchToOpenWorld(url))) {
         return;
     }
     if (settings.get("tab_bar_enabled") === false) {

@@ -386,7 +386,7 @@ export default () => {
             return { ok: false, error: t(`landing.${validation.code}`) };
         }
         const safeUrl = validation.url;
-        if (switchToOpenWorld(safeUrl, event.sender)) {
+        if (await switchToOpenWorld(safeUrl, event.sender)) {
             return { ok: true };
         }
         try {
@@ -411,7 +411,7 @@ export default () => {
         if (!validation.ok) {
             return { ok: false, error: t(`landing.${validation.code}`) };
         }
-        if (switchToOpenWorld(validation.url, event.sender)) {
+        if (await switchToOpenWorld(validation.url, event.sender)) {
             return { ok: true };
         }
         try {

@@ -425,6 +425,13 @@ export function isRoomUrl(value: string): boolean {
     );
 }
 
+/** The same room: same server and path. The query (tokens) and the #entry don't make another room. */
+export function isSameRoomUrl(a: string, b: string): boolean {
+    const left = parseHttpUrl(a);
+    const right = parseHttpUrl(b);
+    return Boolean(left && right && left.origin === right.origin && left.pathname === right.pathname);
+}
+
 /**
  * The world a room URL belongs to, to find the tab that already shows it. Rooms of the same world share
  * a key: /@/{team}/{world} on an admin-hosted server, the whole server for map-storage rooms (the ~ and
