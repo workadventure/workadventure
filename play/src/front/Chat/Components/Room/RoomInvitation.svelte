@@ -5,6 +5,7 @@
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import Avatar from "../Avatar.svelte";
+    import Button from "../../../Components/UI/Button.svelte";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { IconLoader, IconX } from "@wa-icons";
 
@@ -68,6 +69,12 @@
             fallbackName={$roomName}
             color={$roomType === "direct" ? ($peerAvatarColorStore ?? defaultColor) : null}
         />
+        {#if $roomType !== "direct" && room.inviterName}
+            <!-- Who invited, on the room's avatar. Initial only: the inviter is not a member we track yet. -->
+            <div class="absolute -right-1 -bottom-1 rounded-full ring-2 ring-contrast" title={room.inviterName}>
+                <Avatar tiny pictureStore={undefined} fallbackName={room.inviterName} />
+            </div>
+        {/if}
     </div>
     <div class="flex flex-col min-w-0 grow">
         <div class="m-0 text-sm font-bold truncate">{$roomName}</div>
@@ -78,22 +85,24 @@
             <IconLoader class="animate-spin" />
         </div>
     {:else}
-        <div class="flex shrink-0 items-center gap-1">
-            <button
-                class="m-0 p-1 rounded text-white/50 hover:text-danger hover:bg-danger-400/10"
+        <!-- Accept next to the name, decline at the edge where a dismiss is expected. -->
+        <div class="flex shrink-0 items-center gap-2">
+            <Button variant="secondary" size="xs" dataTestId="acceptInvitationButton" onclick={() => joinRoom()}>
+                {$roomType === "direct" ? $LL.chat.accept() : $LL.chat.join()}
+            </Button>
+            <Button
+                variant="light"
+                appearance="ghost"
+                size="xs"
+                square
                 aria-label={$LL.chat.decline()}
                 title={$LL.chat.decline()}
                 onclick={() => leaveRoom()}
             >
-                <IconX font-size="16" />
-            </button>
-            <button
-                class="border border-solid border-success text-success hover:bg-success-400/10 rounded text-xs py-1 px-2 m-0"
-                data-testid="acceptInvitationButton"
-                onclick={() => joinRoom()}
-            >
-                {$LL.chat.accept()}
-            </button>
+                {#snippet icon()}
+                    <IconX font-size="16" />
+                {/snippet}
+            </Button>
         </div>
     {/if}
 </div>
