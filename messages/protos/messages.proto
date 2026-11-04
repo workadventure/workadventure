@@ -1088,6 +1088,8 @@ message RevokeFloorQuery {
   string targetSpaceUserId = 1;
 }
 message StartRecordingQuery {
+  // Film the meeting over the live map (the ?recorder page) instead of the camera grid.
+  bool withMap = 1;
 }
 message StopRecordingQuery {
 }
@@ -1352,6 +1354,8 @@ message RoomJoinedMessage {
   repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
   // The back accepted the recorderToken: this user is the LiveKit egress filming the map. Nobody sees it.
   bool isRecorder = 20;
+  // The back lets this world record over the map (LIVEKIT_RECORDING_WITH_MAP): the front offers the choice.
+  bool recordingWithMapAvailable = 21;
 }
 
 message WebRtcStartMessage {

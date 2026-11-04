@@ -713,7 +713,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             case "revokeFloor":
                 return this.raiseHandManager.revokeFloor(sender, query.revokeFloor.targetSpaceUserId);
             case "startRecording":
-                return this.startRecording(sender);
+                return this.startRecording(sender, query.startRecording.withMap);
             case "stopRecording":
                 return this.stopRecording(sender);
             case "createPoll":
@@ -877,9 +877,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._nbPublishers;
     }
 
-    public async startRecording(user: SpaceUser) {
+    public async startRecording(user: SpaceUser, withMap = false) {
         try {
-            await this.communicationManager.handleStartRecording(user);
+            await this.communicationManager.handleStartRecording(user, withMap);
         } catch (error) {
             Sentry.captureException(error);
             throw error; // Re-throw the error to be handled by the caller

@@ -278,7 +278,7 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             Sentry.captureException(error);
         });
     }
-    async startRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo> {
+    async startRecording(user: SpaceUser, recordingSessionId: string, withMap = false): Promise<RecordingStartInfo> {
         if (!this.createRoomPromise) {
             console.warn("Room not created yet");
             Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting recording");
@@ -286,9 +286,11 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         }
 
         await this.createRoomPromise;
-        const customBaseUrl = LIVEKIT_RECORDING_WITH_MAP
-            ? recorderPageUrl(user.playUri, this.space.world, this.space.getSpaceName(), this.space.filterType)
-            : undefined;
+        // The user asked for the map, and this server allows it.
+        const customBaseUrl =
+            LIVEKIT_RECORDING_WITH_MAP && withMap
+                ? recorderPageUrl(user.playUri, this.space.world, this.space.getSpaceName(), this.space.filterType)
+                : undefined;
         return await this.livekitService.startRecording(
             this.space.getSpaceName(),
             user,

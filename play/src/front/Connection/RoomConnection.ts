@@ -115,6 +115,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
+import { recordingWithMapAvailableStore } from "../Stores/RecordingStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../Stores/DuplicateUserConnectedStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
@@ -606,6 +607,7 @@ export class RoomConnection implements RoomConnection {
                             : true,
                     );
                     this.canEdit = roomJoinedMessage.canEdit;
+                    recordingWithMapAvailableStore.set(roomJoinedMessage.recordingWithMapAvailable);
                     mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it

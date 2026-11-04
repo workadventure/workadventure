@@ -6,7 +6,7 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import RecordingIcon from "../../Icons/RecordingIcon.svelte";
     import RecordingActiveIcon from "../../Icons/RecordingActiveIcon.svelte";
-    import { recordingStore } from "../../../Stores/RecordingStore";
+    import { recordingStore, recordingWithMapAvailableStore } from "../../../Stores/RecordingStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { gameManager } from "../../../Phaser/Game/GameManager";
@@ -31,7 +31,7 @@
         closeFloatingUi = undefined;
     }
 
-    async function applyRecordingAction(row: RecordingSpaceRow): Promise<void> {
+    async function applyRecordingAction(row: RecordingSpaceRow, withMap = false): Promise<void> {
         if (!row.action) {
             return;
         }
@@ -43,7 +43,7 @@
 
         try {
             if (row.action === "start") {
-                await row.space.state.startRecording();
+                await row.space.state.startRecording(withMap);
                 analyticsClient.trackAdminEvent("recording.started");
             } else {
                 await row.space.state.stopRecording();
@@ -75,8 +75,9 @@
             RecordingSpacePicker,
             {
                 rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
-                onselect: (row: RecordingSpaceRow) => {
-                    applyRecordingAction(row).catch((error) => {
+                withMapAvailable: get(recordingWithMapAvailableStore),
+                onselect: (row: RecordingSpaceRow, withMap: boolean) => {
+                    applyRecordingAction(row, withMap).catch((error) => {
                         console.error(`Failed to apply recording action`, error);
                     });
                 },
@@ -98,7 +99,8 @@
             return;
         }
 
-        if (state.directRow) {
+        // With the map on offer, a start goes through the picker so the user chooses.
+        if (state.directRow && !(state.directRow.action === "start" && get(recordingWithMapAvailableStore))) {
             await applyRecordingAction(state.directRow);
             return;
         }

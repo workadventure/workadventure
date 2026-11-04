@@ -47,6 +47,7 @@ const recording: BaseTranslation = {
         spacePicker: {
             megaphone: "Record megaphone",
             discussion: "Record discussion",
+            withMap: "With the map",
         },
     },
 };

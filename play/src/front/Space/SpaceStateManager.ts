@@ -115,8 +115,11 @@ export class SpaceStateManager {
     }
 
     // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).
-    public async startRecording(): Promise<void> {
-        await this.alter({ $case: "startRecording", startRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
+    public async startRecording(withMap = false): Promise<void> {
+        await this.alter(
+            { $case: "startRecording", startRecording: { withMap } },
+            { timeout: RECORDING_QUERY_TIMEOUT_MS },
+        );
     }
 
     public async stopRecording(): Promise<void> {

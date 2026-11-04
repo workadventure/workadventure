@@ -3,6 +3,9 @@ import RecordingCompletedModal from "../Components/PopUp/Recording/RecordingComp
 import RecordingStartedToast from "../Components/PopUp/Recording/RecordingStartedToast.svelte";
 import { toastStore } from "./ToastStoreSingleton";
 
+// The back lets this world record over the live map (LIVEKIT_RECORDING_WITH_MAP): the Record button offers it.
+export const recordingWithMapAvailableStore = writable(false);
+
 export type RecordingRequestState = "starting" | "stopping";
 export type RecordingStatus = "idle" | "starting" | "recording" | "stopping";
 

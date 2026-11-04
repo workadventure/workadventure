@@ -6,22 +6,24 @@
 
     interface Props {
         rowsStore: Readable<RecordingSpaceRow[]>;
-        onselect?: (row: RecordingSpaceRow) => void;
+        // Offer a second start button that films the meeting over the live map.
+        withMapAvailable?: boolean;
+        onselect?: (row: RecordingSpaceRow, withMap: boolean) => void;
         onclose?: () => void;
     }
 
-    let { rowsStore, onselect, onclose = undefined }: Props = $props();
+    let { rowsStore, withMapAvailable = false, onselect, onclose = undefined }: Props = $props();
 
     function handleClose(): void {
         onclose?.();
     }
 
-    function handleSelect(row: RecordingSpaceRow): void {
+    function handleSelect(row: RecordingSpaceRow, withMap = false): void {
         if (row.disabled || !row.action) {
             return;
         }
 
-        onselect?.(row);
+        onselect?.(row, withMap);
         handleClose();
     }
 
@@ -91,6 +93,17 @@
                         ? $LL.recording.actionbar.title.stop()
                         : $LL.recording.actionbar.title.start()}
                 </button>
+                {#if row.action === "start" && withMapAvailable}
+                    <button
+                        type="button"
+                        data-testid="recording-space-action-start-with-map"
+                        class="shrink-0 rounded border border-white/20 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                        disabled={row.disabled}
+                        onclick={() => handleSelect(row, true)}
+                    >
+                        {$LL.recording.actionbar.spacePicker.withMap()}
+                    </button>
+                {/if}
             {/if}
         </div>
     {/each}

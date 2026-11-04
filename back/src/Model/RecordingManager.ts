@@ -22,6 +22,7 @@ interface RecordingSession {
     status: Exclude<RecordingStatus, "idle">;
     stopAfterStartRequested: boolean;
     stopPromise: Promise<SpaceUser | null> | null;
+    withMap: boolean;
 }
 
 export interface ManagedRecordingState {
@@ -32,7 +33,7 @@ export interface ManagedRecordingState {
 
 export interface IRecordingManager {
     getRecordingState(): ManagedRecordingState;
-    startRecording(user: SpaceUser): Promise<void>;
+    startRecording(user: SpaceUser, withMap?: boolean): Promise<void>;
     stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
     stopRecordingByServer(): Promise<SpaceUser | null>;
     stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
@@ -67,11 +68,11 @@ export class RecordingManager implements IRecordingManager {
         private readonly _lifecycleManager: IStateLifecycleManager,
     ) {}
 
-    public async startRecording(user: SpaceUser): Promise<void> {
+    public async startRecording(user: SpaceUser, withMap = false): Promise<void> {
         const primarySession = this.getPrimarySession();
 
         if (!primarySession) {
-            const session = this.createSession(user);
+            const session = this.createSession(user, withMap);
             return this.runStart(session);
         }
 
@@ -224,7 +225,7 @@ export class RecordingManager implements IRecordingManager {
         };
     }
 
-    private createSession(recorder: SpaceUser): RecordingSession {
+    private createSession(recorder: SpaceUser, withMap: boolean): RecordingSession {
         const session: RecordingSession = {
             createdAt: Date.now(),
             expectedRoomName: getLivekitRoomName(this._space.getSpaceName()),
@@ -234,6 +235,7 @@ export class RecordingManager implements IRecordingManager {
             status: "starting",
             stopAfterStartRequested: false,
             stopPromise: null,
+            withMap,
         };
 
         this.sessions.set(session.recordingSessionId, session);
@@ -298,6 +300,7 @@ export class RecordingManager implements IRecordingManager {
                 const recordingStartInfo = await currentState.handleStartRecording(
                     session.recorder,
                     session.recordingSessionId,
+                    session.withMap,
                 );
                 this.reconcileStartResult(
                     session.recordingSessionId,
@@ -404,6 +407,7 @@ export class RecordingManager implements IRecordingManager {
         const recordingStartInfo = await recordableState.handleStartRecording(
             session.recorder,
             session.recordingSessionId,
+            session.withMap,
         );
         this.reconcileStartResult(session.recordingSessionId, recordingStartInfo.egressId, recordingStartInfo.roomName);
     }

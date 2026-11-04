@@ -633,7 +633,7 @@ describe("Space test", () => {
 
         expect(alterSpaceStateSpy).toHaveBeenCalledWith(
             "space-name",
-            { $case: "startRecording", startRecording: {} },
+            { $case: "startRecording", startRecording: { withMap: false } },
             { timeout: 60_000 },
         );
         expect(alterSpaceStateSpy).toHaveBeenCalledWith(

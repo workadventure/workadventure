@@ -488,9 +488,9 @@ export class CommunicationManager implements ICommunicationManager {
             .getCurrentState()
             .handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
-    public async handleStartRecording(user: SpaceUser): Promise<void> {
+    public async handleStartRecording(user: SpaceUser, withMap = false): Promise<void> {
         this.cancelPendingTransitionIfNeeded();
-        await this._recordingManager.startRecording(user);
+        await this._recordingManager.startRecording(user, withMap);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
