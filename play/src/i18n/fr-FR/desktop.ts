@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
     application: {
-        title: "Application desktop",
+        title: "Application de bureau",
         installed: "Version installée",
         unknown: "Indisponible",
         startAtLogin: "Lancer WorkAdventure à l’ouverture de ma session",
@@ -28,16 +28,16 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         browser: "Vous utilisez WorkAdventure dans votre navigateur.",
         recommendedVersion: "Version recommandée",
         minimumVersion: "Version minimale prise en charge",
-        download: "Télécharger l’application desktop",
+        download: "Télécharger l’application de bureau",
         managed:
             "Suivez la politique de mise à jour de votre organisation. Cette page n’installe pas l’application et ne la remplace pas par une ancienne version.",
         status: {
             belowMinimum:
-                "Cette version desktop est inférieure au minimum pris en charge par cette instance. Vous pouvez continuer, mais certaines fonctionnalités pourraient ne pas fonctionner.",
-            recommended: "Vous utilisez la version recommandée pour cette instance.",
+                "Cette version de l’application est plus ancienne que le minimum pris en charge par ce serveur. Vous pouvez continuer, mais certaines fonctionnalités pourraient ne pas fonctionner.",
+            recommended: "Vous utilisez la version recommandée pour ce serveur.",
             different:
-                "Votre version diffère de celle recommandée pour cette instance. Cela ne signifie pas nécessairement qu’elle est incompatible.",
-            unconfigured: "Cette instance n’a pas indiqué de version recommandée.",
+                "Votre version diffère de celle recommandée pour ce serveur. Cela ne signifie pas nécessairement qu’elle est incompatible.",
+            unconfigured: "Ce serveur n’indique pas de version recommandée.",
         },
     },
     sourcePicker: {

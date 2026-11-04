@@ -3,7 +3,7 @@ import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
     application: {
-        title: "Applicazione desktop",
+        title: "App desktop",
         installed: "Versione installata",
         unknown: "Non disponibile",
         startAtLogin: "Avvia WorkAdventure all’accesso al computer",
@@ -28,16 +28,16 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         browser: "Stai usando WorkAdventure nel browser.",
         recommendedVersion: "Versione consigliata",
         minimumVersion: "Versione minima supportata",
-        download: "Scarica l’applicazione desktop",
+        download: "Scarica l’app desktop",
         managed:
             "Segui la politica di aggiornamento della tua organizzazione. Questa pagina non installa l’applicazione né ripristina una versione precedente.",
         status: {
             belowMinimum:
-                "Questa versione è precedente alla minima supportata da questa istanza. Puoi continuare, ma alcune funzionalità potrebbero non funzionare.",
-            recommended: "Stai usando la versione consigliata per questa istanza.",
+                "Questa versione dell’app è precedente alla minima supportata da questo server. Puoi continuare, ma alcune funzionalità potrebbero non funzionare.",
+            recommended: "Stai usando la versione consigliata per questo server.",
             different:
-                "La tua versione differisce da quella consigliata per questa istanza. Non significa necessariamente che sia incompatibile.",
-            unconfigured: "Questa istanza non ha indicato una versione consigliata.",
+                "La tua versione differisce da quella consigliata per questo server. Non significa necessariamente che sia incompatibile.",
+            unconfigured: "Questo server non indica una versione consigliata.",
         },
     },
     sourcePicker: {

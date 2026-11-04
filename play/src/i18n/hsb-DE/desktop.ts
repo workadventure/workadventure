@@ -33,11 +33,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Dźeržće so aktualizaciskeje politiki swojeje organizacije. Tuta strona nałoženje njeinstaluje a staršu wersiju njewobnowja.",
         status: {
             belowMinimum:
-                "Tuta desktopowa wersija je starša hač najniša podpěrowana wersija tuteje instancy. Móžeće pokročować, ale někotre funkcije snano njefunguja.",
-            recommended: "Wužiwaće doporučenu wersiju za tutu instancu.",
+                "Tuta wersija nałoženja je starša hač najniša wersija, kotruž tutón serwer podpěruje. Móžeće pokročować, ale někotre funkcije snano njefunguja.",
+            recommended: "Wužiwaće doporučenu wersiju za tutón serwer.",
             different:
-                "Waša wersija so wot doporučeneje wersije tuteje instancy rozeznawa. To njerěka, zo je njekompatibelna.",
-            unconfigured: "Tuta instanca njeje doporučenu wersiju podała.",
+                "Waša wersija so wot doporučeneje wersije tutoho serwera rozeznawa. To njerěka, zo je njekompatibelna.",
+            unconfigured: "Tutón serwer doporučenu wersiju njepodawa.",
         },
     },
     sourcePicker: {

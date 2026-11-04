@@ -4,7 +4,7 @@ import type { BaseTranslation } from "../i18n-types";
 // bar, windows of the desktop app that the front renders (Components/Video/PictureInPicture/).
 const desktop: BaseTranslation = {
     application: {
-        title: "Desktop application",
+        title: "Desktop app",
         installed: "Installed version",
         unknown: "Unavailable",
         startAtLogin: "Start WorkAdventure when I log in to my computer",
@@ -27,15 +27,15 @@ const desktop: BaseTranslation = {
         browser: "You are using WorkAdventure in your browser.",
         recommendedVersion: "Recommended version",
         minimumVersion: "Minimum supported version",
-        download: "Download the desktop application",
+        download: "Download the desktop app",
         managed: "Follow your organization’s update policy. This page does not install or downgrade the application.",
         status: {
             belowMinimum:
-                "This desktop version is below the minimum supported by this instance. You can continue, but some features may not work.",
-            recommended: "You are using the version recommended for this instance.",
+                "This version of the app is older than the minimum this server supports. You can continue, but some features may not work.",
+            recommended: "You are using the version recommended for this server.",
             different:
-                "Your version differs from the one recommended for this instance. This does not necessarily mean it is incompatible.",
-            unconfigured: "This instance has not specified a recommended version.",
+                "Your version differs from the one recommended for this server. This does not necessarily mean it is incompatible.",
+            unconfigured: "This server does not specify a recommended version.",
         },
     },
     sourcePicker: {

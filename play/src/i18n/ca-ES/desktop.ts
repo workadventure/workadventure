@@ -32,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Segueix la política d’actualitzacions de la teva organització. Aquesta pàgina no instal·la l’aplicació ni torna a una versió anterior.",
         status: {
             belowMinimum:
-                "Aquesta versió és anterior a la mínima compatible amb aquesta instància. Pots continuar, però algunes funcions podrien no funcionar.",
-            recommended: "Estàs utilitzant la versió recomanada per a aquesta instància.",
+                "Aquesta versió de l’aplicació és anterior a la mínima compatible amb aquest servidor. Pots continuar, però algunes funcions podrien no funcionar.",
+            recommended: "Estàs utilitzant la versió recomanada per a aquest servidor.",
             different:
-                "La teva versió difereix de la recomanada per a aquesta instància. Això no vol dir necessàriament que sigui incompatible.",
-            unconfigured: "Aquesta instància no ha especificat cap versió recomanada.",
+                "La teva versió difereix de la recomanada per a aquest servidor. Això no vol dir necessàriament que sigui incompatible.",
+            unconfigured: "Aquest servidor no especifica cap versió recomanada.",
         },
     },
     sourcePicker: {

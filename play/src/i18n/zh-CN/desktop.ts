@@ -28,10 +28,10 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         download: "下载桌面应用",
         managed: "请遵循组织的更新策略。此页面不会安装应用或降级版本。",
         status: {
-            belowMinimum: "此桌面版本低于该实例支持的最低版本。你可以继续使用，但某些功能可能无法正常工作。",
-            recommended: "你正在使用该实例推荐的版本。",
-            different: "你的版本与该实例推荐的版本不同，但不一定不兼容。",
-            unconfigured: "该实例尚未指定推荐版本。",
+            belowMinimum: "此应用版本低于该服务器支持的最低版本。你可以继续使用，但某些功能可能无法正常工作。",
+            recommended: "你正在使用该服务器推荐的版本。",
+            different: "你的版本与该服务器推荐的版本不同，但不一定不兼容。",
+            unconfigured: "该服务器未指定推荐版本。",
         },
     },
     sourcePicker: {
