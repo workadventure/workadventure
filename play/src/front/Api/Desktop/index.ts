@@ -9,7 +9,8 @@ import {
     silentStore,
 } from "../../Stores/MediaStore";
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
-import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
+import { isInActiveConversationStore, isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
+import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
 import { activeScreenShareSourceStore, requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -276,6 +277,8 @@ class DesktopApi {
                     onboardingStore,
                     meetingInvitationRequestStore,
                     allowPictureInPictureStore,
+                    isInRemoteConversation,
+                    currentPlayerGroupIdStore,
                 ],
                 ([
                     $inMeeting,
@@ -287,8 +290,13 @@ class DesktopApi {
                     $onboarding,
                     $invitation,
                     $allowPictureInPicture,
+                    $remote,
+                    $groupId,
                 ]): Required<DesktopPresence> => ({
                     inMeeting: Boolean($inMeeting),
+                    // Another participant's video box or share, or a bubble that just formed (a bubble
+                    // always has someone else). Alone in a meeting room, inMeeting stays true: this does not.
+                    withOthers: Boolean($remote) || $groupId !== undefined,
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),

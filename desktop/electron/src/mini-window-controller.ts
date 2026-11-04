@@ -83,7 +83,7 @@ function wantedMode(): "closed" | "auto" | "manual" {
         opened,
         // Still in the world during the portal-hop grace period.
         inWorld: p.inWorld || leaveWorldTimer !== undefined,
-        inMeeting: p.inMeeting,
+        withOthers: p.withOthers,
         invitationPending: p.invitationPending,
         autoOpenAllowed: p.autoOpenAllowed,
         waShowing: isMainWindowShowing(),

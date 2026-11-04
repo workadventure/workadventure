@@ -5,7 +5,7 @@ import { miniWindowMode, type MiniWindowState } from "./mini-window-visibility-p
 const awayInMeeting: MiniWindowState = {
     opened: "no",
     inWorld: true,
-    inMeeting: true,
+    withOthers: true,
     autoOpenAllowed: true,
     waShowing: false,
     dismissed: false,
@@ -28,18 +28,18 @@ test("opening by hand: always, and it stays when WA shows again", () => {
     const manual: MiniWindowState = {
         opened: "manual",
         inWorld: true,
-        inMeeting: true,
+        withOthers: true,
         autoOpenAllowed: false,
         waShowing: true,
     };
     expect(miniWindowMode(manual)).toBe("manual");
-    expect(miniWindowMode({ ...manual, inMeeting: false })).toBe("manual");
+    expect(miniWindowMode({ ...manual, withOthers: false })).toBe("manual");
 });
 
 test("invitation: opens even after a close and whatever the setting, as an automatic opening", () => {
     const invited: MiniWindowState = {
         ...awayInMeeting,
-        inMeeting: false,
+        withOthers: false,
         invitationPending: true,
         dismissed: true,
         autoOpenAllowed: false,
@@ -51,13 +51,13 @@ test("invitation: opens even after a close and whatever the setting, as an autom
 test("automatic closing: WA shows again, the meeting ends, or the user leaves the world", () => {
     const openedByItself: MiniWindowState = { ...awayInMeeting, opened: "auto" };
     expect(miniWindowMode({ ...openedByItself, waShowing: true })).toBe("closed");
-    expect(miniWindowMode({ ...openedByItself, inMeeting: false })).toBe("closed");
+    expect(miniWindowMode({ ...openedByItself, withOthers: false })).toBe("closed");
     expect(miniWindowMode({ ...openedByItself, inWorld: false })).toBe("closed");
     expect(miniWindowMode({ ...openedByItself, opened: "manual", inWorld: false })).toBe("closed");
 });
 
 test("meeting ends: a mini window opened by hand stays", () => {
-    expect(miniWindowMode({ ...awayInMeeting, opened: "manual", inMeeting: false })).toBe("manual");
+    expect(miniWindowMode({ ...awayInMeeting, opened: "manual", withOthers: false })).toBe("manual");
 });
 
 test("closing by hand: closed until the user comes back to WA", () => {
@@ -66,6 +66,6 @@ test("closing by hand: closed until the user comes back to WA", () => {
     expect(miniWindowMode({ ...awayInMeeting, dismissed: false })).toBe("auto");
 });
 
-test("outside a meeting: never by itself", () => {
-    expect(miniWindowMode({ ...awayInMeeting, inMeeting: false })).toBe("closed");
+test("alone, in a meeting room or outside a meeting: never by itself", () => {
+    expect(miniWindowMode({ ...awayInMeeting, withOthers: false })).toBe("closed");
 });

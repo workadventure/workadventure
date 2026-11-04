@@ -79,7 +79,7 @@ beforeEach(async () => {
     vi.resetModules();
     fake.miniWindow = undefined;
     fake.main = { minimized: false, focused: true };
-    fake.presence = { inWorld: true, inMeeting: true, autoOpenAllowed: true };
+    fake.presence = { inWorld: true, inMeeting: true, withOthers: true, autoOpenAllowed: true };
     fake.sent = [];
     fake.displays = [1];
     fake.identifying = false;
@@ -172,8 +172,19 @@ test("opened by hand: stays while WA shows and after the meeting, then closes on
 
 test("opened by itself: closes when the meeting ends", async () => {
     await leaveWA();
-    await setPresence({ inMeeting: false });
+    await setPresence({ inMeeting: false, withOthers: false });
     expect(isOpen()).toBe(false);
+});
+
+test("opened by itself: closes when the user is left alone in a meeting room, which goes on", async () => {
+    await leaveWA();
+    expect(isOpen()).toBe(true);
+    await setPresence({ withOthers: false });
+    expect(isOpen()).toBe(false);
+    // Someone comes back: it opens again.
+    await setPresence({ withOthers: true });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(isOpen()).toBe(true);
 });
 
 test("the setting off: nothing opens by itself, opening by hand still works", async () => {
@@ -189,7 +200,7 @@ test("the setting off: nothing opens by itself, opening by hand still works", as
 test("an invitation opens it even after a close by hand", async () => {
     await leaveWA();
     closeByHand();
-    await setPresence({ inMeeting: false, invitationPending: true });
+    await setPresence({ inMeeting: false, withOthers: false, invitationPending: true });
     await vi.advanceTimersByTimeAsync(500);
     expect(isOpen()).toBe(true);
 });

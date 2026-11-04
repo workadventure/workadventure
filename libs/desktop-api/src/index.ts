@@ -109,6 +109,11 @@ export type DesktopAvailability = "online" | "busy" | "back_in_a_moment" | "do_n
  */
 export type DesktopPresence = {
     inMeeting: boolean;
+    /**
+     * Someone else is in the user's meeting or bubble: the browser's picture-in-picture closes without
+     * them, and so does a mini window that opened by itself. In a meeting room, `inMeeting` stays true alone.
+     */
+    withOthers?: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;

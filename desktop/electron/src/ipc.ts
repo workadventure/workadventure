@@ -273,6 +273,7 @@ export default () => {
         }
         setRendererPresence({
             inMeeting: Boolean(raw.inMeeting),
+            withOthers: Boolean(raw.withOthers),
             micEnabled: Boolean(raw.micEnabled),
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
