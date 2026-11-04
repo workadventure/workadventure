@@ -1,6 +1,7 @@
 {
     "name": "workadventure-desktop",
     "productName": "WorkAdventure",
+    "desktopName": "workadventure-desktop.desktop",
     "version": "managedbyci",
     "description": "Desktop application for WorkAdventure",
     "author": "TheCodingMachine <hello@workadventu.re>",
