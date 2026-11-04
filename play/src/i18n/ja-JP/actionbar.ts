@@ -24,7 +24,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     installPwa: "ウェブアプリをインストール",
     desktop: {
         section: "デスクトップアプリ",
-        openRoom: "ルームを開く…",
+        openRoom: "別のルームを開く…",
         openCompanion: "コンパニオンを開く",
     },
     globalMessage: "グローバルメッセージを送信",

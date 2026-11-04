@@ -543,7 +543,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Hibać k rumnosći: {roomNameSelected}... Do skóro... 🫡",
         searchLabel: "Rumnosć pytać",
         searchPlaceholder: "Přez klučowe słowa pisać...",
-        otherWorldHint: "Pytaš rum w druhim swěće? Wočiń jón w nowym rajtarku.",
     },
 };
 

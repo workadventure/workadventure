@@ -28,7 +28,7 @@ const actionbar: BaseTranslation = {
     installPwa: "Instalar aplicativo web",
     desktop: {
         section: "Aplicativo desktop",
-        openRoom: "Abrir uma sala…",
+        openRoom: "Abrir outra sala…",
         openCompanion: "Abrir o painel companheiro",
     },
     globalMessage: "Enviar mensagem global",

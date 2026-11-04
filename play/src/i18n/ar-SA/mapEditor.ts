@@ -538,7 +538,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "الانتقال إلى الغرفة: {roomNameSelected}... إلى اللقاء... 🫡", // Moving to room: {roomNameSelected}... See you soon... 🫡
         searchLabel: "ابحث عن غرفة", // Search for a room
         searchPlaceholder: "اكتب...", // Type...
-        otherWorldHint: "هل تبحث عن غرفة في عالم آخر؟ افتحها في علامة تبويب جديدة.",
     },
 };
 

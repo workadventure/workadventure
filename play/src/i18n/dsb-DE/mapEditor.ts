@@ -544,7 +544,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Hyś k śpě: {roomNameSelected}... Do skóro... 🫡",
         searchLabel: "Śpu pytaś",
         searchPlaceholder: "Pśez klucowe słowa pisaś...",
-        otherWorldHint: "Pytaš śpu w drugem swěśe? Wócyń ju w nowem rejtariku.",
     },
 };
 

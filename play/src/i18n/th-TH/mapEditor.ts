@@ -538,7 +538,6 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "กำลังย้ายไปยังห้อง: {roomNameSelected}... แล้วพบกัน... 🫡",
         searchLabel: "ค้นหาห้อง",
         searchPlaceholder: "พิมพ์คำค้นหา...",
-        otherWorldHint: "กำลังหาห้องในโลกอื่นอยู่ใช่ไหม เปิดในแท็บใหม่ได้เลย",
     },
 };
 

@@ -216,7 +216,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     desktop: {
         section: "แอปเดสก์ท็อป",
-        openRoom: "เปิดห้อง…",
+        openRoom: "เปิดห้องอื่น…",
         openCompanion: "เปิดแผงคู่หู",
     },
 };

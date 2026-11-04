@@ -541,7 +541,6 @@ const mapEditor: BaseTranslation = {
         movingToRoom: "Moving to the room: {roomNameSelected}... See you soon... 🫡",
         searchLabel: "Search a room",
         searchPlaceholder: "Type keywords...",
-        otherWorldHint: "Looking for a room in another world? Open it in a new tab.",
     },
 };
 

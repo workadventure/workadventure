@@ -198,9 +198,6 @@
                                 </div>
                             {/if}
                         </div>
-                        {#if window.WAD?.openLanding}
-                            <p class="m-0 px-6 text-sm text-white/70">{$LL.mapEditor.listRoom.otherWorldHint()}</p>
-                        {/if}
                     </div>
                 {/if}
             </div>
