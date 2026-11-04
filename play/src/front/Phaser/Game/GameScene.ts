@@ -217,7 +217,7 @@ import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenO
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
-import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
+import { audioPlaybackStore, handleSuspendedAudioContext } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -2350,10 +2350,15 @@ export class GameScene extends DirtyScene {
                             // bubble. Resumed here too, in case the switch failed half way.
                             outputSwitch.then(() => context.resume()).catch((e) => console.error(e));
                         } else {
-                            // ??=: a second "suspended" in a row must not replace the registration, or the first one
-                            // could never be removed and the status would stay SOUND_BLOCKED until a reload.
-                            this.unregisterAudioContextPlaybackRetry ??= audioPlaybackStore.register(() => {
-                                context.resume().catch((e) => console.error(e));
+                            // Without the User Activation API (Safari < 16.4), a context that already ran had one.
+                            const hasBeenActive =
+                                "userActivation" in navigator ? navigator.userActivation.hasBeenActive : hasRun;
+                            handleSuspendedAudioContext(context, hasBeenActive, () => {
+                                // ??=: a second "suspended" in a row must not replace the registration, or the first
+                                // one could never be removed and the status would stay SOUND_BLOCKED until a reload.
+                                this.unregisterAudioContextPlaybackRetry ??= audioPlaybackStore.register(() => {
+                                    context.resume().catch((e) => console.error(e));
+                                });
                             });
                         }
                     } else if (state === "running") {
