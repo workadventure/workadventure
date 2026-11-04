@@ -44,6 +44,19 @@
         };
     });
 
+    let windowModeOptions = $derived([
+        {
+            mode: "x11" as const,
+            label: $LL.desktop.application.windowMode.x11(),
+            description: $LL.desktop.application.windowMode.x11Description(),
+        },
+        {
+            mode: "wayland" as const,
+            label: $LL.desktop.application.windowMode.wayland(),
+            description: $LL.desktop.application.windowMode.waylandDescription(),
+        },
+    ]);
+
     function showWindowMode(state: DesktopWindowModeState) {
         windowMode = state;
         windowModeChoice = state.saved;
@@ -97,28 +110,22 @@
         {#if windowMode}
             <fieldset class="flex flex-col gap-1" data-testid="desktop-window-mode">
                 <legend class="font-semibold">{$LL.desktop.application.windowMode.title()}</legend>
-                <InputRadio
-                    id="desktop-window-mode-x11"
-                    value="x11"
-                    bind:group={windowModeChoice}
-                    onchange={saveWindowMode}
-                    disabled={windowMode.setByCommandLine || windowMode.x11Unavailable}
-                    label={$LL.desktop.application.windowMode.x11()}
-                >
-                    <span class="block text-sm opacity-75">{$LL.desktop.application.windowMode.x11Description()}</span>
-                </InputRadio>
-                <InputRadio
-                    id="desktop-window-mode-wayland"
-                    value="wayland"
-                    bind:group={windowModeChoice}
-                    onchange={saveWindowMode}
-                    disabled={windowMode.setByCommandLine}
-                    label={$LL.desktop.application.windowMode.wayland()}
-                >
-                    <span class="block text-sm opacity-75"
-                        >{$LL.desktop.application.windowMode.waylandDescription()}</span
+                {#each windowModeOptions as option (option.mode)}
+                    <!-- One column, title then description: the label lays its children out in a row. -->
+                    <InputRadio
+                        id={`desktop-window-mode-${option.mode}`}
+                        value={option.mode}
+                        bind:group={windowModeChoice}
+                        onchange={saveWindowMode}
+                        disabled={windowMode.setByCommandLine || (option.mode === "x11" && windowMode.x11Unavailable)}
+                        label=""
                     >
-                </InputRadio>
+                        <span class="flex flex-col gap-1">
+                            <span>{option.label}</span>
+                            <span class="text-sm opacity-75">{option.description}</span>
+                        </span>
+                    </InputRadio>
+                {/each}
                 {#if windowMode.setByCommandLine}
                     <p class="text-sm opacity-75">{$LL.desktop.application.windowMode.setByCommandLine()}</p>
                 {:else if windowMode.x11Unavailable}
