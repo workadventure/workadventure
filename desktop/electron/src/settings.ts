@@ -1,5 +1,6 @@
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
+import type { CompanionPlacement } from "./companion-window-policy";
 import {
     getDefaultPortalUrl,
     normalizePersistedLastRoomUrl,
@@ -19,8 +20,8 @@ export type SettingsData = {
     /** Servers outside the built-in domains the user added from the Landing (origins). See origin-verification. */
     trusted_origins?: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
-    /** Last size + position of the resizable companion panel, restored (and clamped) on reopen. */
-    companion_bounds?: { x: number; y: number; width: number; height: number };
+    /** Last size of the resizable companion panel and where it sat on its screen, restored on reopen. */
+    companion_placement?: CompanionPlacement;
 };
 
 let settings: SettingsData;
