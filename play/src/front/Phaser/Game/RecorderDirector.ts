@@ -1,0 +1,85 @@
+import { FilterType } from "@workadventure/messages";
+import { get } from "svelte/store";
+import { getMegaphoneSpaceFields } from "../../Streaming/MegaphoneSpaceFields";
+import type { SpaceInterface } from "../../Space/SpaceInterface";
+import type { GameScene } from "./GameScene";
+
+// How often the camera checks whether the people it films moved.
+const REFRAME_INTERVAL_MS = 1000;
+// Room around the group, as a share of its size.
+const FRAMING_MARGIN = 0.4;
+// The smallest window filmed (one person alone is not filmed from 10 cm).
+const MIN_FRAME = { width: 480, height: 270 };
+// Movements smaller than this do not move the camera (no jitter while people shuffle on the spot).
+const FRAME_STEP = 32;
+
+/**
+ * What the ?recorder page films. It joins the space being recorded by name and frames the members of that space,
+ * following them when they move, so a bubble walking around stays in the picture.
+ */
+export class RecorderDirector {
+    private readonly abortController = new AbortController();
+    private space: SpaceInterface | undefined;
+    private interval: ReturnType<typeof setInterval> | undefined;
+    private lastFrame = "";
+
+    constructor(
+        private readonly scene: GameScene,
+        private readonly spaceName: string,
+        private readonly filterType: FilterType,
+    ) {}
+
+    public async start(): Promise<void> {
+        const propertiesToSync =
+            this.filterType === FilterType.ALL_USERS
+                ? ["cameraState", "microphoneState", "screenSharingState"]
+                : getMegaphoneSpaceFields(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK);
+        this.space = await this.scene.spaceRegistry.joinSpace(
+            this.spaceName,
+            this.filterType,
+            propertiesToSync,
+            this.abortController.signal,
+        );
+        this.frame();
+        this.interval = setInterval(() => this.frame(), REFRAME_INTERVAL_MS);
+        // Resolve once the first zoom is over, so the recording does not open on the whole map.
+        await new Promise((resolve) => {
+            setTimeout(resolve, REFRAME_INTERVAL_MS);
+        });
+    }
+
+    private frame(): void {
+        if (!this.space) return;
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+        for (const user of get(this.space.usersStore).values()) {
+            // spaceUserId is "<room>_<userId>". Users of another map (a megaphone reaches every map) are not on ours.
+            const userId = Number(user.spaceUserId.slice(user.spaceUserId.lastIndexOf("_") + 1));
+            const player = this.scene.MapPlayersByKey.get(userId);
+            if (!player) continue;
+            left = Math.min(left, player.x);
+            top = Math.min(top, player.y);
+            right = Math.max(right, player.x);
+            bottom = Math.max(bottom, player.y);
+        }
+        if (left === Infinity) {
+            // Nobody of the space on this map: keep the last shot.
+            return;
+        }
+        const width = Math.max(MIN_FRAME.width, right - left);
+        const height = Math.max(MIN_FRAME.height, bottom - top);
+        const x = (left + right) / 2;
+        const y = (top + bottom) / 2;
+        const key = [x, y, width, height].map((v) => Math.round(v / FRAME_STEP)).join(",");
+        if (key === this.lastFrame) return;
+        this.lastFrame = key;
+        this.scene.getCameraManager().enterFocusMode({ x, y, width, height }, FRAMING_MARGIN, REFRAME_INTERVAL_MS);
+    }
+
+    public destroy(): void {
+        clearInterval(this.interval);
+        this.abortController.abort();
+    }
+}

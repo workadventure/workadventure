@@ -13,3 +13,10 @@ export const isRecorderMode = params.has("recorder");
 export const recorderToken = isRecorderMode ? (params.get("token") ?? "") : undefined;
 
 export const RECORDER_FPS = 30;
+
+/**
+ * The space being recorded (a meeting area, a bubble, a megaphone), as its users name it, and its filter type. The
+ * recorder joins it by name and never by where it stands: a bubble walks around and a megaphone speaker can be anywhere.
+ */
+export const recorderSpace = isRecorderMode ? (params.get("space") ?? undefined) : undefined;
+export const recorderSpaceFilter = isRecorderMode ? Number(params.get("filter") ?? 0) : 0;

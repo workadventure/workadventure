@@ -28,6 +28,7 @@ import type { Entity } from "../../ECS/Entity";
 import { DEPTH_OVERLAY_INDEX } from "../DepthIndexes";
 import type { ITiledPlace } from "../GameMapPropertiesListener";
 import type { GameScene } from "../GameScene";
+import { isRecorderMode } from "../../../Utils/RecorderMode";
 import { EntitiesManager } from "./EntitiesManager";
 import { AreasManager } from "./AreasManager";
 import { getTileLayerStats, isWorthRenderingOnGpu } from "./TilemapGpuLayerEligibility";
@@ -713,6 +714,11 @@ export class GameMapFrontWrapper {
      * This will trigger events if properties are changing.
      */
     public setPosition(x: number, y: number) {
+        if (isRecorderMode) {
+            // The recorder's position triggers nothing (areas, meeting rooms, Tiled zones): it joins the space it
+            // records by name, see RecorderDirector.
+            return;
+        }
         const map = this.getMap();
         if (!map.width || !map.height) {
             return;
