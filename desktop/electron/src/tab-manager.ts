@@ -29,7 +29,7 @@ export type WorldTab = {
 };
 
 function tabTitle(tab: WorldTab): string {
-    return tab.appTitle || tab.urlLabel || t("tabs.newWorld");
+    return tab.appTitle || tab.urlLabel || t("tabs.newTab");
 }
 
 let shell: BrowserWindow | undefined;
@@ -191,7 +191,7 @@ export function createWorldView(configure: (view: WebContentsView) => void): Wor
         ),
     });
     const id = `tab-${++tabIdCounter}`;
-    const tab: WorldTab = { id, view, urlLabel: t("tabs.newWorld"), url: "" };
+    const tab: WorldTab = { id, view, urlLabel: t("tabs.newTab"), url: "" };
     tabs.push(tab);
     shell.contentView.addChildView(view);
 

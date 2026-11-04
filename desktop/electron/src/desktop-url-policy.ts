@@ -203,7 +203,7 @@ export function normalizePersistedLastRoomUrl(value?: string): string | undefine
         url.searchParams.delete(param);
     }
     // Drop the fragment so hash-only changes (e.g. "#chat=1", "#lang=fr") don't create
-    // spurious Recent worlds entries after every SPA state tweak.
+    // spurious Recent rooms entries after every SPA state tweak.
     url.hash = "";
     return url.toString();
 }
@@ -451,14 +451,14 @@ export function worldKeyOf(value: string): string | undefined {
 // (landing.<code> in the native catalog).
 export function validateDesktopNavigationUrl(value: unknown, config: DesktopConfig): DesktopNavigationValidationResult {
     if (typeof value !== "string" || !value.trim()) {
-        return { ok: false, code: "urlRequired", error: "Please enter a world URL." };
+        return { ok: false, code: "urlRequired", error: "Please enter a room URL." };
     }
 
     let url: URL;
     try {
         url = new URL(value.trim());
     } catch {
-        return { ok: false, code: "urlInvalid", error: "Invalid URL. Please enter a full http(s):// world URL." };
+        return { ok: false, code: "urlInvalid", error: "Invalid URL. Please enter a full http(s):// room URL." };
     }
 
     if (url.protocol !== "http:" && url.protocol !== "https:") {
@@ -473,7 +473,7 @@ export function validateDesktopNavigationUrl(value: unknown, config: DesktopConf
         return {
             ok: false,
             code: "urlNotAllowed",
-            error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re world URL.",
+            error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re room URL.",
         };
     }
 

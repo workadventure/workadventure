@@ -390,10 +390,10 @@ export default () => {
         }
         try {
             const loaded = await loadDesktopTarget(safeUrl);
-            return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
+            return loaded ? { ok: true } : { ok: false, error: t("landing.roomNotLoaded") };
         } catch (error) {
             ElectronLog.error(`app:navigation:joinWorld failed for ${safeUrl}`, error);
-            return { ok: false, error: error instanceof Error ? error.message : t("landing.joinFailed") };
+            return { ok: false, error: error instanceof Error ? error.message : t("landing.openRoomFailed") };
         }
     });
 
@@ -415,10 +415,10 @@ export default () => {
         }
         try {
             const loaded = await loadDesktopTarget(validation.url);
-            return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
+            return loaded ? { ok: true } : { ok: false, error: t("landing.roomNotLoaded") };
         } catch (error) {
             ElectronLog.error(`app:navigation:trustServerAndJoin failed for ${validation.url}`, error);
-            return { ok: false, error: t("landing.joinFailed") };
+            return { ok: false, error: t("landing.openRoomFailed") };
         }
     });
 
@@ -474,7 +474,7 @@ export default () => {
         const lookup = lastWorldLookup;
         const world = lookup?.worlds.find((found) => found.url === rawUrl);
         if (!lookup || !world) {
-            return { ok: false, error: t("landing.joinFailed") };
+            return { ok: false, error: t("landing.signInFailed") };
         }
         // Listed by our own administration over HTTPS: a white-label domain of the service, which the
         // world loads on once signed in. Trusted like the built-in domains, without asking.
@@ -484,10 +484,10 @@ export default () => {
         try {
             return (await signInFromLanding(loginUrlWithHint(world.loginUrl, lookup.email)))
                 ? { ok: true }
-                : { ok: false, error: t("landing.joinFailed") };
+                : { ok: false, error: t("landing.signInFailed") };
         } catch (error) {
             ElectronLog.error(`app:navigation:signInToWorld failed for ${world.url}`, error);
-            return { ok: false, error: t("landing.joinFailed") };
+            return { ok: false, error: t("landing.signInFailed") };
         }
     });
 
@@ -515,7 +515,7 @@ export default () => {
             return { ok: false, error: t("landing.desktopOnly") };
         }
         if (typeof rawUrl !== "string" || !rawUrl.trim()) {
-            return { ok: false, error: "A world URL is required." };
+            return { ok: false, error: "A room URL is required." };
         }
         const pinned = toggleWorldPin(rawUrl);
         return { ok: true, pinned };

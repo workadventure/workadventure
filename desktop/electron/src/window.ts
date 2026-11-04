@@ -713,7 +713,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
 
     // WorkAdventure is a SPA — travelling between rooms/worlds inside a session updates the URL
     // via history.pushState, which fires did-navigate-in-page (NOT did-navigate). Without this
-    // handler, only the initial cold-launch URL ever lands in Recent worlds.
+    // handler, only the initial cold-launch URL ever lands in Recent rooms.
     window.webContents.on("did-navigate-in-page", (event, url, isMainFrame) => {
         if (!isMainFrame) {
             return;

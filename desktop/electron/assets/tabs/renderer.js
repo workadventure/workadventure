@@ -27,7 +27,7 @@
         document.documentElement.lang = native.lang;
         document.documentElement.dir = /^(ar|fa|he|ur)([-_]|$)/i.test(native.lang) ? "rtl" : "ltr";
     }
-    newTabBtn.title = t("tabs.newWorldTab", "New world tab");
+    newTabBtn.title = t("tabs.newTab", "New tab");
     newTabBtn.setAttribute("aria-label", newTabBtn.title);
 
     function render(tabs) {
@@ -43,11 +43,11 @@
             }
             var el = document.createElement("div");
             el.className = "tab" + (tab.active ? " active" : "");
-            el.title = tab.title || t("tabs.world", "World");
+            el.title = tab.title || t("tabs.newTab", "New tab");
 
             var title = document.createElement("span");
             title.className = "tab-title";
-            title.textContent = tab.title || t("tabs.world", "World");
+            title.textContent = tab.title || t("tabs.newTab", "New tab");
             el.appendChild(title);
 
             if (showClose) {

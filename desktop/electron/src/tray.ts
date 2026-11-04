@@ -245,19 +245,19 @@ function updateTrayContextMenu() {
             },
         },
         {
-            label: t("tray.worlds"),
+            label: t("tray.rooms"),
             submenu: [
                 {
-                    label: t("menu.changeWorld"),
+                    label: t("menu.openRoom"),
                     click: openNativeWorldSwitcher,
                 },
                 { type: "separator" },
                 {
-                    label: t("menu.pinnedWorlds"),
+                    label: t("menu.pinnedRooms"),
                     submenu: createPinnedWorldMenuItems(),
                 },
                 {
-                    label: t("menu.recentWorlds"),
+                    label: t("menu.recentRooms"),
                     submenu: createRecentWorldMenuItems(),
                 },
             ],

@@ -69,7 +69,7 @@ function openNativeWorld(url: string): void {
 export function createRecentWorldMenuItems(): MenuItemConstructorOptions[] {
     const recentWorlds = getRecentWorlds();
     if (recentWorlds.length === 0) {
-        return [{ label: t("menu.noRecentWorlds"), enabled: false }];
+        return [{ label: t("menu.noRecentRooms"), enabled: false }];
     }
 
     return recentWorlds.map((world) => ({
@@ -82,7 +82,7 @@ export function createRecentWorldMenuItems(): MenuItemConstructorOptions[] {
 export function createPinnedWorldMenuItems(): MenuItemConstructorOptions[] {
     const pinnedWorlds = getPinnedWorlds();
     if (pinnedWorlds.length === 0) {
-        return [{ label: t("menu.noPinnedWorlds"), enabled: false }];
+        return [{ label: t("menu.noPinnedRooms"), enabled: false }];
     }
 
     return pinnedWorlds.map((world) => ({
@@ -172,7 +172,7 @@ export function createNativeApplicationMenu(): void {
               ]
             : []),
         {
-            label: t("menu.world"),
+            label: t("menu.file"),
             submenu: [
                 {
                     label: t("menu.newTab"),
@@ -202,16 +202,16 @@ export function createNativeApplicationMenu(): void {
                 },
                 { type: "separator" },
                 {
-                    label: t("menu.changeWorld"),
+                    label: t("menu.openRoom"),
                     accelerator: "CmdOrCtrl+Shift+O",
                     click: openNativeWorldSwitcher,
                 },
                 {
-                    label: t("menu.pinnedWorlds"),
+                    label: t("menu.pinnedRooms"),
                     submenu: createPinnedWorldMenuItems(),
                 },
                 {
-                    label: t("menu.recentWorlds"),
+                    label: t("menu.recentRooms"),
                     submenu: createRecentWorldMenuItems(),
                 },
                 {

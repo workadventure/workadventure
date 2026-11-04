@@ -8,15 +8,18 @@
         open,
         idleLabel,
         busyLabel,
+        failedLabel,
         wrap = false,
         error = $bindable(""),
         onpin,
     }: {
         worlds: RowWorld[];
-        /** Recent worlds load directly; the worlds found for an email start a sign-in. */
+        /** Recent rooms load directly; the worlds found for an email start a sign-in. */
         open: (url: string) => Promise<{ ok: boolean; error?: string }> | undefined;
         idleLabel: string;
         busyLabel: string;
+        /** Shown when opening fails without an error of its own. */
+        failedLabel: string;
         /** Centred rows that wrap, for a page with nothing else on it; otherwise one row that scrolls sideways. */
         wrap?: boolean;
         error?: string;
@@ -30,7 +33,7 @@
     async function openWorld(url: string) {
         error = "";
         openingUrl = url;
-        error = await failureOf(open(url), t("landing.joinFailed", "Failed to join world."));
+        error = await failureOf(open(url), failedLabel);
         if (error) {
             openingUrl = null;
         }
@@ -41,7 +44,7 @@
     }
 </script>
 
-<!-- Recent worlds: one row that runs off the edge, as in the mockup, since they are scanned, not browsed.
+<!-- Recent rooms: one row that runs off the edge, as in the mockup, since they are scanned, not browsed.
      The worlds found for an email are the whole page, so they wrap and the page scrolls down instead. -->
 <div
     bind:this={row}
@@ -61,7 +64,7 @@
                 onclick={() => openWorld(world.url)}
             />
             {#if onpin}
-                {@const pinLabel = world.pinned ? t("landing.unpinWorld", "Unpin world") : t("landing.pinWorld", "Pin world")}
+                {@const pinLabel = world.pinned ? t("landing.unpinRoom", "Unpin room") : t("landing.pinRoom", "Pin room")}
                 <!-- Over the tile rather than inside it: a button cannot nest in a button. -->
                 <button
                     type="button"
