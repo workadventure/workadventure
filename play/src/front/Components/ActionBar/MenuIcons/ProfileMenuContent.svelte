@@ -35,7 +35,7 @@
     import Companion from "../../Companion/Companion.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout, IconWorldSearch } from "../../Icons";
+    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout } from "../../Icons";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import Woka from "../../Woka/WokaFromUserId.svelte";
@@ -210,32 +210,18 @@
             <SettingsIcon />
         </ActionBarButton>
 
-        {#if window.WAD?.desktop && (window.WAD.openLanding || window.WAD.windows)}
+        {#if window.WAD?.desktop && window.WAD.windows}
             <HeaderMenuItem label={$LL.actionbar.desktop.section()} />
-            {#if window.WAD.openLanding}
-                <ActionBarButton
-                    label={$LL.actionbar.desktop.openRoom()}
-                    onclick={() => {
-                        window.WAD?.openLanding?.();
-                        openedMenuStore.close("profileMenu");
-                    }}
-                    dataTestId="desktop-open-room"
-                >
-                    <IconWorldSearch font-size="22" />
-                </ActionBarButton>
-            {/if}
-            {#if window.WAD.windows}
-                <ActionBarButton
-                    label={$LL.actionbar.desktop.openCompanion()}
-                    onclick={() => {
-                        window.WAD?.windows?.openCompanion();
-                        openedMenuStore.close("profileMenu");
-                    }}
-                    dataTestId="desktop-open-companion"
-                >
-                    <IconAppWindow font-size="22" />
-                </ActionBarButton>
-            {/if}
+            <ActionBarButton
+                label={$LL.actionbar.desktop.openCompanion()}
+                onclick={() => {
+                    window.WAD?.windows?.openCompanion();
+                    openedMenuStore.close("profileMenu");
+                }}
+                dataTestId="desktop-open-companion"
+            >
+                <IconAppWindow font-size="22" />
+            </ActionBarButton>
         {/if}
 
         {#if showContextualMenuItems}

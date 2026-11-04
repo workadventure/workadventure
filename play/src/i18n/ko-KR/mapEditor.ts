@@ -541,6 +541,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "선택한 방으로 이동 중입니다: {roomNameSelected}... 곧 만나요... 🫡",
         searchLabel: "방 검색",
         searchPlaceholder: "검색어를 입력하세요...",
+        otherWorldHint: "다른 월드의 방을 찾고 있나요? 새 탭에서 열 수 있습니다.",
     },
 };
 

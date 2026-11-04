@@ -75,6 +75,12 @@
         roomListVisibilityStore.set(false);
     }
 
+    // Desktop app: the other worlds, recent rooms and links are on its Landing, in a new tab.
+    function openLanding() {
+        window.WAD?.openLanding?.();
+        close();
+    }
+
     function clickRoom(roomUrl: string, roomName: string) {
         isMoving.set(true);
         roomNameSelected.set(roomName);
@@ -192,11 +198,19 @@
                                 </div>
                             {/if}
                         </div>
+                        {#if window.WAD?.openLanding}
+                            <p class="m-0 px-6 text-sm text-white/70">{$LL.mapEditor.listRoom.otherWorldHint()}</p>
+                        {/if}
                     </div>
                 {/if}
             </div>
             {#snippet buttons()}
-                <div class="flex flex-row justify-center w-full">
+                <div class="flex flex-row justify-center gap-2 w-full">
+                    {#if window.WAD?.openLanding}
+                        <Button size="lg" variant="light" class="w-1/2" onclick={openLanding}>
+                            {$LL.actionbar.desktop.openRoom()}
+                        </Button>
+                    {/if}
                     <Button size="lg" variant="secondary" class="w-1/2 m-auto" onclick={close}>
                         {$LL.mapEditor.listRoom.close()}
                     </Button>

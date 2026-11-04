@@ -543,6 +543,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "ルーム {roomNameSelected} に移動中 ... また会いましょう ... 🫡",
         searchLabel: "ルームを検索",
         searchPlaceholder: "ルーム名 ...",
+        otherWorldHint: "別のワールドのルームをお探しですか？新しいタブで開けます。",
     },
 };
 

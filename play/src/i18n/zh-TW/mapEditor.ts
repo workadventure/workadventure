@@ -530,6 +530,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "正在移動到房間：{roomNameSelected}... 再見... 🫡",
         searchLabel: "搜尋房間",
         searchPlaceholder: "輸入關鍵字...",
+        otherWorldHint: "要找其他世界的房間嗎？可以在新分頁中開啟。",
     },
 };
 

@@ -549,6 +549,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
         movingToRoom: "Movendo para a sala: {roomNameSelected}... Vejo você em breve... 🫡",
         searchLabel: "Pesquisar uma sala",
         searchPlaceholder: "Digite palavras-chave...",
+        otherWorldHint: "Procurando uma sala de outro mundo? Abra-a em uma nova aba.",
     },
 };
 
