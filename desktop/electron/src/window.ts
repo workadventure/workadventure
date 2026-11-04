@@ -36,13 +36,16 @@ import {
     closeTab,
     createWorldView,
     findTabShowingWorld,
+    getActiveTabId,
     getActiveWorldContents,
     getControllingWorldContents,
     getTabByContents,
+    getTabs,
     isActiveWorldContents,
     isControllingWorldContents,
     layoutActiveView,
     onControllingTabChange,
+    onTabsChange,
     resetTabs,
     setShell,
 } from "./tab-manager";
@@ -90,7 +93,7 @@ let pendingDeepLinkUrl: string | undefined;
 let desktopAuthCallbackServer: http.Server | undefined;
 let desktopCallbackServerOrigin: string | undefined;
 let landingRecoveryInProgress = false;
-let activeTabTeardownWired = false;
+let tabListenersWired = false;
 let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
 let reachWorldTimer: ReturnType<typeof setTimeout> | undefined;
 let stopWatchingPresence: (() => void) | undefined;
@@ -735,9 +738,8 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     });
 
     window.webContents.on("did-finish-load", () => {
-        // Only the active (on-screen) view drives the shell window title + viewport refresh.
+        // Only the active (on-screen) view drives the viewport refresh.
         if (webContents === getActiveWorldContents()) {
-            mainWindow?.setTitle(createDesktopWindowTitle());
             refreshRendererViewport("did-finish-load");
         }
     });
@@ -787,8 +789,8 @@ export async function createWindow(initialUrl?: string) {
     // SDP/state to the new one, which re-opens its meeting video itself if it's in a call. Wired once
     // for the app's lifetime (the closure only calls module singletons), so a window re-creation
     // doesn't stack duplicate teardowns.
-    if (!activeTabTeardownWired) {
-        activeTabTeardownWired = true;
+    if (!tabListenersWired) {
+        tabListenersWired = true;
         onControllingTabChange(() => {
             closeAllHudWindows();
             stopCompanion();
@@ -800,6 +802,12 @@ export async function createWindow(initialUrl?: string) {
             // stay blank until something there happened to move.
             resetPresence();
             getControllingWorldContents()?.send("app:request-presence");
+        });
+        // The title bar names the map of the active tab, the name its tab shows; "WorkAdventure"
+        // alone until the map has loaded.
+        onTabsChange(() => {
+            const activeTab = getTabs().find((tab) => tab.id === getActiveTabId());
+            mainWindow?.setTitle(createDesktopWindowTitle(activeTab?.appTitle));
         });
     }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
