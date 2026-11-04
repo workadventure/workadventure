@@ -14,6 +14,7 @@ const api: SettingsApi = {
     setShortcut: (name, accelerator) => ipcRenderer.invoke("app:settings:shortcut", name, accelerator),
     checkForUpdates: () => ipcRenderer.send("app:settings:check-updates"),
     openLogs: () => ipcRenderer.send("app:settings:open-logs"),
+    openDevTools: () => ipcRenderer.send("app:settings:open-devtools"),
 };
 
 contextBridge.exposeInMainWorld("WASettings", api);

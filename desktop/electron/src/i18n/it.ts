@@ -151,6 +151,7 @@ const it: NativeStrings = {
     "settings.checkForUpdates": "Verifica aggiornamenti",
     "settings.troubleshooting": "Risoluzione dei problemi",
     "settings.openLogs": "Apri i log",
+    "settings.openDevTools": "Apri gli strumenti per sviluppatori",
 
     "auth.pageTitle": "Accesso a WorkAdventure",
     "auth.signingInTitle": "Accesso in corso…",

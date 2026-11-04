@@ -153,6 +153,7 @@ const fr: NativeStrings = {
     "settings.checkForUpdates": "Rechercher des mises à jour",
     "settings.troubleshooting": "Dépannage",
     "settings.openLogs": "Ouvrir les journaux",
+    "settings.openDevTools": "Ouvrir les outils de développement",
 
     "auth.pageTitle": "Connexion à WorkAdventure",
     "auth.signingInTitle": "Connexion…",

@@ -139,6 +139,7 @@ const zhCN: NativeStrings = {
     "settings.checkForUpdates": "检查更新",
     "settings.troubleshooting": "故障排除",
     "settings.openLogs": "打开日志",
+    "settings.openDevTools": "打开开发者工具",
 
     "auth.pageTitle": "WorkAdventure 登录",
     "auth.signingInTitle": "正在登录…",

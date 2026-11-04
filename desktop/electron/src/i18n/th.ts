@@ -146,6 +146,7 @@ const th: NativeStrings = {
     "settings.checkForUpdates": "ตรวจหาอัปเดต",
     "settings.troubleshooting": "การแก้ไขปัญหา",
     "settings.openLogs": "เปิดบันทึก",
+    "settings.openDevTools": "เปิดเครื่องมือสำหรับนักพัฒนา",
 
     "auth.pageTitle": "ลงชื่อเข้าใช้ WorkAdventure",
     "auth.signingInTitle": "กำลังลงชื่อเข้าใช้…",

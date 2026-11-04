@@ -148,6 +148,7 @@ const ko: NativeStrings = {
     "settings.checkForUpdates": "업데이트 확인",
     "settings.troubleshooting": "문제 해결",
     "settings.openLogs": "로그 열기",
+    "settings.openDevTools": "개발자 도구 열기",
 
     "auth.pageTitle": "WorkAdventure 로그인",
     "auth.signingInTitle": "로그인하는 중…",

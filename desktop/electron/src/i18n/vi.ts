@@ -152,6 +152,7 @@ const vi: NativeStrings = {
     "settings.checkForUpdates": "Kiểm tra cập nhật",
     "settings.troubleshooting": "Khắc phục sự cố",
     "settings.openLogs": "Mở nhật ký",
+    "settings.openDevTools": "Mở công cụ dành cho nhà phát triển",
 
     "auth.pageTitle": "Đăng nhập WorkAdventure",
     "auth.signingInTitle": "Đang đăng nhập…",

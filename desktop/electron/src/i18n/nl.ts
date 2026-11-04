@@ -152,6 +152,7 @@ const nl: NativeStrings = {
     "settings.checkForUpdates": "Controleren op updates",
     "settings.troubleshooting": "Probleemoplossing",
     "settings.openLogs": "Logboeken openen",
+    "settings.openDevTools": "Ontwikkelaarstools openen",
 
     "auth.pageTitle": "Aanmelden bij WorkAdventure",
     "auth.signingInTitle": "Aanmelden…",

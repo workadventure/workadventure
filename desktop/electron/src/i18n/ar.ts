@@ -145,6 +145,7 @@ const ar: NativeStrings = {
     "settings.checkForUpdates": "التحقق من وجود تحديثات",
     "settings.troubleshooting": "استكشاف الأخطاء وإصلاحها",
     "settings.openLogs": "فتح السجلات",
+    "settings.openDevTools": "فتح أدوات المطوّرين",
 
     "auth.pageTitle": "تسجيل الدخول إلى WorkAdventure",
     "auth.signingInTitle": "جارٍ تسجيل الدخول…",

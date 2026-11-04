@@ -151,6 +151,7 @@ const ja: NativeStrings = {
     "settings.checkForUpdates": "アップデートを確認",
     "settings.troubleshooting": "トラブルシューティング",
     "settings.openLogs": "ログを開く",
+    "settings.openDevTools": "開発者ツールを開く",
 
     "auth.pageTitle": "WorkAdventure サインイン",
     "auth.signingInTitle": "サインインしています…",

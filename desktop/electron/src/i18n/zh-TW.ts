@@ -141,6 +141,7 @@ const zhTW: NativeStrings = {
     "settings.checkForUpdates": "檢查更新",
     "settings.troubleshooting": "疑難排解",
     "settings.openLogs": "開啟記錄檔",
+    "settings.openDevTools": "開啟開發人員工具",
 
     "auth.pageTitle": "WorkAdventure 登入",
     "auth.signingInTitle": "正在登入…",

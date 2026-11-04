@@ -151,6 +151,7 @@ const hsb: NativeStrings = {
     "settings.checkForUpdates": "Za aktualizacijemi pytać",
     "settings.troubleshooting": "Rozrisanje problemow",
     "settings.openLogs": "Protokole wočinić",
+    "settings.openDevTools": "Wuwiwarske nastroje wočinić",
 
     "auth.pageTitle": "Přizjewjenje WorkAdventure",
     "auth.signingInTitle": "Přizjewja so…",

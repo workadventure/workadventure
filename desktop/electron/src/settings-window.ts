@@ -11,6 +11,8 @@ import { isSettableAccelerator, SHORTCUT_NAMES, type ShortcutName } from "./shor
 import { setTabBarEnabled } from "./native-menu";
 import { manualRequestUpdateCheck } from "./auto-updater";
 import { openLog } from "./log";
+import { getActiveWorldContents } from "./tab-manager";
+import { getWindow } from "./window";
 import type { SettingsShortcuts, SettingsState } from "./settings/api";
 
 /**
@@ -130,5 +132,11 @@ export function registerSettingsWindowIpc(): void {
     });
     ipcMain.on("app:settings:open-logs", (event) => {
         if (isFromSettingsWindow(event)) void openLog();
+    });
+    // The active world's page (the landing page when none is open), in a window of its own.
+    ipcMain.on("app:settings:open-devtools", (event) => {
+        if (isFromSettingsWindow(event)) {
+            (getActiveWorldContents() ?? getWindow()?.webContents)?.openDevTools({ mode: "detach" });
+        }
     });
 }

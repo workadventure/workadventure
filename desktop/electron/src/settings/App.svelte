@@ -208,7 +208,10 @@
         </Section>
 
         <Section title={t("settings.troubleshooting")}>
-            <div><Button secondary onclick={() => api.openLogs()}>{t("settings.openLogs")}</Button></div>
+            <div class="flex flex-wrap gap-3">
+                <Button secondary onclick={() => api.openLogs()}>{t("settings.openLogs")}</Button>
+                <Button secondary onclick={() => api.openDevTools()}>{t("settings.openDevTools")}</Button>
+            </div>
         </Section>
     </main>
 {/if}

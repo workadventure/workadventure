@@ -151,6 +151,7 @@ const dsb: NativeStrings = {
     "settings.checkForUpdates": "Za aktualizacijami pytaś",
     "settings.troubleshooting": "Rozwězanje problemow",
     "settings.openLogs": "Protokole wócyniś",
+    "settings.openDevTools": "Wuwijarske rědy wócyniś",
 
     "auth.pageTitle": "Pśizjawjenje WorkAdventure",
     "auth.signingInTitle": "Pśizjawjanje…",

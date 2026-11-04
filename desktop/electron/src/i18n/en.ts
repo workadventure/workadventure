@@ -149,6 +149,7 @@ const en = {
     "settings.checkForUpdates": "Check for updates",
     "settings.troubleshooting": "Troubleshooting",
     "settings.openLogs": "Open logs",
+    "settings.openDevTools": "Open developer tools",
 
     "auth.pageTitle": "WorkAdventure sign-in",
     "auth.signingInTitle": "Signing in…",

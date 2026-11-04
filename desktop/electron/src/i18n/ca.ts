@@ -152,6 +152,7 @@ const ca: NativeStrings = {
     "settings.checkForUpdates": "Cerca actualitzacions",
     "settings.troubleshooting": "Resolució de problemes",
     "settings.openLogs": "Obre els registres",
+    "settings.openDevTools": "Obre les eines de desenvolupament",
 
     "auth.pageTitle": "Inici de sessió a WorkAdventure",
     "auth.signingInTitle": "S'està iniciant la sessió…",

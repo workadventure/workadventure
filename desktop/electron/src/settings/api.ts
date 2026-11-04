@@ -32,4 +32,5 @@ export type SettingsApi = {
     setShortcut: (name: ShortcutName, accelerator: string) => Promise<SettingsShortcuts | undefined>;
     checkForUpdates: () => void;
     openLogs: () => void;
+    openDevTools: () => void;
 };
