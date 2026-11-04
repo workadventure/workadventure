@@ -40,9 +40,9 @@ export default {
         next: "Suivant",
     },
     pictureInPicture: {
-        title: "Image dans l'image",
+        title: "Picture in Picture",
         description:
-            "Utilisez le mode Image dans l'image pour garder les appels vidéo visibles pendant que vous naviguez sur la carte. Idéal pour le multitâche !",
+            "Utilisez le mode Picture in Picture pour garder les appels vidéo visibles pendant que vous naviguez sur la carte. Idéal pour le multitâche !",
         video: "./static/Videos/PictureInPicture.mp4",
         hint: "Cliquez sur le bouton PiP mis en évidence pour l'activer !",
         next: "Suivant",
