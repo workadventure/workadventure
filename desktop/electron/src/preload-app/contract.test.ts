@@ -36,6 +36,7 @@ const CONTRACT_2 = [
     "windows",
     "startAtLogin",
     "openSettings",
+    "openLanding",
 ];
 
 const sent: unknown[][] = [];

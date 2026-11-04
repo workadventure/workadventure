@@ -253,6 +253,8 @@ export type WorkAdventureDesktopApi = {
      * to the front. Absent on desktop apps that have none: their settings are startAtLogin and windowMode.
      */
     openSettings?: () => void;
+    /** Opens the Landing in a new tab, to open a room or sign in to another world. */
+    openLanding?: () => void;
 };
 
 /** Read from the system each time, so a change made in its own startup settings shows. */

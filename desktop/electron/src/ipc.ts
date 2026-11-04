@@ -40,6 +40,7 @@ import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens }
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
 import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
 import { getWindowModeState, restartToApplyWindowMode, setWindowMode } from "./window-mode";
+import { openNativeWorldSwitcher } from "./native-menu";
 import { openSettingsWindow } from "./settings-window";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
@@ -613,6 +614,12 @@ export default () => {
     ipcMain.on("app:settings:open", (event) => {
         if (isFromActiveRenderer(event)) {
             openSettingsWindow();
+        }
+    });
+    // The "Open a room…" entry of WorkAdventure's profile menu, like the application menu's.
+    ipcMain.on("app:landing:open", (event) => {
+        if (isFromActiveRenderer(event)) {
+            openNativeWorldSwitcher();
         }
     });
 

@@ -216,22 +216,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     },
     desktop: {
         section: "Ứng dụng máy tính",
-        changeWorld: "Đổi thế giới",
+        openRoom: "Mở một phòng…",
         openCompanion: "Mở bảng đồng hành",
-        title: "Mở một thế giới khác",
-        description: "Dán URL đầy đủ của thế giới WorkAdventure bạn muốn mở.",
-        urlLabel: "URL thế giới",
-        urlPlaceholder: "https://play.workadventu.re/@/...",
-        urlRequired: "Vui lòng nhập URL của thế giới.",
-        unavailable: "Không thể chuyển thế giới ngoài ứng dụng máy tính.",
-        openFailed: "Không thể mở thế giới này.",
-        openAction: "Mở thế giới",
-        opening: "Đang mở...",
-        createTitle: "Cần một thế giới mới?",
-        createDescription: "Tạo và cấu hình không gian mới từ bảng quản trị WorkAdventure.",
-        createAction: "Tạo thế giới của tôi",
-        openingSignup: "Đang mở trang đăng ký...",
-        signupFailed: "Không thể mở trang đăng ký.",
     },
 };
 export default actionbar;

@@ -121,6 +121,7 @@ const api: WorkAdventureDesktopApi = {
         set: (enabled) => ipcRenderer.invoke("app:start-at-login:set", Boolean(enabled)),
     },
     openSettings: () => ipcRenderer.send("app:settings:open"),
+    openLanding: () => ipcRenderer.send("app:landing:open"),
     ...(windowModeApplies(process.platform, process.env)
         ? {
               windowMode: {
