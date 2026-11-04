@@ -54,7 +54,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "画面を識別できませんでした。",
         cancel: "キャンセル",
     },
-    companion: {
+    miniWindow: {
         annotations: "注釈",
         allowAnnotations: "他の参加者の注釈を許可",
         clearAnnotations: "すべて消去",

@@ -25,7 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Aplicación de escritorio",
         openRoom: "Abrir otra sala…",
-        openCompanion: "Abrir el panel compañero",
+        openMiniWindow: "Abrir la miniventana",
     },
     globalMessage: "Enviar mensaje global",
     mapEditor: "Editor de mapa",

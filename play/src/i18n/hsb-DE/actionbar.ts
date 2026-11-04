@@ -25,7 +25,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "Desktopowe nałoženje",
         openRoom: "Druhi rum wočinić…",
-        openCompanion: "Přewodne wokno wočinić",
+        openMiniWindow: "Mini-wokno wočinić",
     },
     globalMessage: "Globalnu powěsć pósłać",
     mapEditor: "Kartowy editor",

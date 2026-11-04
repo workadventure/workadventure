@@ -8,7 +8,7 @@ export type MeetingTabs = {
 };
 
 /**
- * Which tab drives media (mute/camera shortcuts, tray, companion, PiP, meeting bar).
+ * Which tab drives media (mute/camera shortcuts, tray, mini window, PiP, meeting bar).
  *
  * `meetings` maps a tab id to the order in which it entered its meeting. The latest tab still in a
  * meeting drives media; with none, the active tab does. Only a transition into a meeting moves the

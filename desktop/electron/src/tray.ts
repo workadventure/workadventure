@@ -8,7 +8,7 @@ import { emitCameraToggle, emitMuteToggle } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
 import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
-import { isCompanionVisible, toggleCompanion } from "./companion-controller";
+import { isMiniWindowVisible, toggleMiniWindow } from "./mini-window-controller";
 import { t } from "./i18n";
 import { onShortcutsChange } from "./shortcuts";
 import { openSettingsWindow } from "./settings-window";
@@ -159,19 +159,19 @@ function drawTrayStatusImage(status: TrayStatus): NativeImage {
 }
 
 /**
- * Status, microphone, camera and companion: what is worth reaching for with the window hidden. The
+ * Status, microphone, camera and mini window: what is worth reaching for with the window hidden. The
  * tray's menu starts with them, and so does the Dock icon's menu (macOS).
  */
 function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
     const status = getTrayStatus();
-    // Status / mic / camera / companion only make sense inside a world; gray them out otherwise
+    // Status / mic / camera / mini window only make sense inside a world; gray them out otherwise
     // (landing / login, or no window). "offline" is exactly the not-in-a-world state.
     const inWorld = status !== "offline";
     const media = getMediaState();
     const shortcuts = settings.get("shortcuts");
     return [
         {
-            // Reports the live status; it is changed in WorkAdventure or the companion.
+            // Reports the live status; it is changed in WorkAdventure or the mini window.
             label: trayStatusLabel(status),
             enabled: false,
         },
@@ -200,19 +200,19 @@ function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
             },
         },
         {
-            label: t("tray.companionPanel"),
+            label: t("tray.miniWindow"),
             type: "checkbox",
             enabled: inWorld,
-            checked: isCompanionVisible(),
+            checked: isMiniWindowVisible(),
             click() {
-                toggleCompanion();
+                toggleMiniWindow();
             },
         },
     ];
 }
 
 function updateTrayContextMenu() {
-    // Right-click on the Dock icon: the quick actions, the companion among them.
+    // Right-click on the Dock icon: the quick actions, the mini window among them.
     app.dock?.setMenu(Menu.buildFromTemplate(quickActionMenuItems()));
     if (!tray) {
         return;
@@ -220,7 +220,7 @@ function updateTrayContextMenu() {
 
     // Kept deliberately short and shallow: a menu-bar status item is glanced at mid-meeting, so only the
     // things worth reaching for with a window hidden stay at the top level (status, mic, camera,
-    // companion, show/hide). World switching is real but rare, so it collapses into a submenu, also in
+    // mini window, show/hide). World switching is real but rare, so it collapses into a submenu, also in
     // the application menu (unreachable while the window is hidden). The rest is in the settings window.
     const trayContextMenu = Menu.buildFromTemplate([
         ...quickActionMenuItems(),

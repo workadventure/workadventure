@@ -1,6 +1,6 @@
 import type { BaseTranslation } from "../i18n-types";
 
-// Desktop app (Electron) strings: `companion` and `meetingBar` are the companion and the presenter meeting
+// Desktop app (Electron) strings: `miniWindow` and `meetingBar` are the mini window and the presenter meeting
 // bar, windows of the desktop app that the front renders (Components/Video/PictureInPicture/).
 const desktop: BaseTranslation = {
     application: {
@@ -53,7 +53,7 @@ const desktop: BaseTranslation = {
         identifyError: "Unable to identify the screens.",
         cancel: "Cancel",
     },
-    companion: {
+    miniWindow: {
         annotations: "Annotations",
         allowAnnotations: "Allow others to annotate",
         clearAnnotations: "Clear all",

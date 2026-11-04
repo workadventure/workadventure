@@ -203,7 +203,7 @@ class DesktopApi {
         // left untouched.
         //
         // Never during a meeting: someone following it without touching the keyboard or the mouse
-        // (a presentation, the companion's video) is not away, and BACK_IN_A_MOMENT would cut their
+        // (a presentation, the mini window's video) is not away, and BACK_IN_A_MOMENT would cut their
         // camera and microphone.
         if (window.WAD.onSystemIdle) {
             let autoAwayActive = false;
@@ -242,7 +242,7 @@ class DesktopApi {
 
         // Push live presence (meeting + mic/camera) to main so the tray shows a status dot and
         // reflects the mic/camera state in its quick-action checkmarks.
-        // The screen the user shares, so that the companion never opens by itself over it.
+        // The screen the user shares, so that the mini window never opens by itself over it.
         if (window.WAD.setScreenShareSource) {
             const setScreenShareSource = window.WAD.setScreenShareSource;
             //eslint-disable-next-line svelte/no-ignored-unsubscribe

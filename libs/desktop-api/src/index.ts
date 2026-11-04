@@ -105,20 +105,20 @@ export type DesktopAvailability = "online" | "busy" | "back_in_a_moment" | "do_n
 
 /**
  * The live presence the page pushes to main, which drives the tray status dot, the tray quick-action
- * checkmarks and the companion and meeting bar rules.
+ * checkmarks and the mini window and meeting bar rules.
  */
 export type DesktopPresence = {
     inMeeting: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
-    /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
+    /** True while a game scene is loaded (gates the mini window auto-show to actual worlds). */
     inWorld?: boolean;
     /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
     onboarding?: boolean;
-    /** True while a meeting invitation is pending — force-opens the companion for its banner. */
+    /** True while a meeting invitation is pending — force-opens the mini window for its banner. */
     invitationPending?: boolean;
-    /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
+    /** The "Allow picture-in-picture" setting: the mini window may open by itself during a meeting. */
     autoOpenAllowed?: boolean;
     /** The user's chosen availability, shown by the tray dot. */
     requestedStatus?: DesktopAvailability;
@@ -128,27 +128,27 @@ export type DesktopPresence = {
 export type DesktopScreenShareSource = { sourceId: string; displayId?: number };
 
 /** The floating windows the world page renders as child windows. */
-export type DesktopChildWindowKind = "companion" | "meeting-bar" | "annotation";
+export type DesktopChildWindowKind = "mini-window" | "meeting-bar" | "annotation";
 
 /**
- * The companion and the meeting bar: child windows of the world page that the page renders itself.
+ * The mini window and the meeting bar: child windows of the world page that the page renders itself.
  * The desktop app decides when they open; the page opens them on request and moves the meeting video
- * into the companion when told.
+ * into the mini window when told.
  */
 export type WorkAdventureDesktopWindowsApi = {
     /** Optional native screen overlay; absent on older shells and Linux. No business state crosses IPC. */
     setAnnotationState?: (state: { visible: boolean; interactive: boolean; trackCursor: boolean }) => void;
     onAnnotationCursor?: (callback: (x: number, y: number) => void) => () => void;
-    /** Main asks the page to open a window: `window.open("about:blank", "wa-companion" | "wa-meeting-bar")`. */
+    /** Main asks the page to open a window: `window.open("about:blank", "wa-mini-window" | "wa-meeting-bar")`. */
     onOpen: (callback: (kind: DesktopChildWindowKind) => void) => () => void;
-    /** The app wants the meeting video in the companion (true) or not any more (false). */
+    /** The app wants the meeting video in the mini window (true) or not any more (false). */
     onMeetingWanted: (callback: (wanted: boolean) => void) => () => void;
-    /** The PiP button: open or close the companion by hand. */
-    toggleCompanion: () => void;
-    /** WA's profile menu: open the companion by hand (it stays when WA shows again, a second call keeps it). */
-    openCompanion: () => void;
-    /** The companion's close button: closed until the user comes back to WorkAdventure. */
-    dismissCompanion: () => void;
+    /** The PiP button: open or close the mini window by hand. */
+    toggleMiniWindow: () => void;
+    /** WA's profile menu: open the mini window by hand (it stays when WA shows again, a second call keeps it). */
+    openMiniWindow: () => void;
+    /** The mini window's close button: closed until the user comes back to WorkAdventure. */
+    dismissMiniWindow: () => void;
     /** Bring the WorkAdventure window to the front. */
     focusMain: () => void;
     /** Whether a window shows in the user's own screen share (it cannot be hidden from it). */
@@ -200,7 +200,7 @@ export type WorkAdventureDesktopApi = {
     setUnreadCount?: (count: number) => void;
     /** Push the live presence to main (see DesktopPresence). */
     setPresence?: (presence: DesktopPresence) => void;
-    /** The screen the user shares (null: none), so that the companion never opens by itself over it. */
+    /** The screen the user shares (null: none), so that the mini window never opens by itself over it. */
     setScreenShareSource?: (source: DesktopScreenShareSource | null) => void;
     /**
      * Main asks this renderer to re-send its presence. Presence in the shell is a single global

@@ -1,7 +1,7 @@
 /**
- * When the Companion (People / Chat / meeting video) opens and closes. The desktop app is the only
+ * When the mini window (People / Chat / meeting video) opens and closes. The desktop app is the only
  * decider: the world page reports facts (in a meeting, the "Allow picture-in-picture" setting, a
- * pending invitation) and shows the meeting video in the companion when the app asks it to.
+ * pending invitation) and shows the meeting video in the mini window when the app asks it to.
  *
  *   Automatic opening  In a meeting, WA stops showing (minimized, hidden, or fully covered: tracked
  *                      on macOS and Windows; on Linux only minimizing counts), the setting is on, and
@@ -20,10 +20,10 @@
  * Pure functions (no Electron dependency) so the rules can be unit-tested.
  */
 
-export type CompanionMode = "closed" | "auto" | "manual";
+export type MiniWindowMode = "closed" | "auto" | "manual";
 
-export type CompanionState = {
-    /** How the companion currently open was opened. */
+export type MiniWindowState = {
+    /** How the mini window currently open was opened. */
     opened?: "no" | "auto" | "manual";
     inWorld?: boolean;
     inMeeting?: boolean;
@@ -34,11 +34,11 @@ export type CompanionState = {
     waShowing?: boolean;
     /** Closed by the user since they last came back to WA. */
     dismissed?: boolean;
-    /** Somewhere to open by itself (see companionAutoOpenDisplay). */
+    /** Somewhere to open by itself (see miniWindowAutoOpenDisplay). */
     placeAvailable?: boolean;
 };
 
-export function companionMode(s: CompanionState): CompanionMode {
+export function miniWindowMode(s: MiniWindowState): MiniWindowMode {
     if (!s.inWorld) {
         return "closed";
     }
@@ -51,7 +51,7 @@ export function companionMode(s: CompanionState): CompanionMode {
     if (s.invitationPending) {
         return "auto";
     }
-    // Placement only matters for opening: an open companion stays where it is.
+    // Placement only matters for opening: an open mini window stays where it is.
     const canLand = s.opened === "auto" || Boolean(s.placeAvailable);
     if (s.inMeeting && s.autoOpenAllowed && !s.dismissed && canLand) {
         return "auto";

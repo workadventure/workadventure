@@ -1,7 +1,7 @@
 import type { CalendarEventInterface, TodoListInterface, TodoTaskInterface } from "@workadventure/shared-utils";
 import { describe, expect, it } from "vitest";
 
-import { buildCompanionAgenda } from "../../../../src/front/Api/Desktop/CompanionAgenda";
+import { buildMiniWindowAgenda } from "../../../../src/front/Api/Desktop/MiniWindowAgenda";
 
 // Local times on purpose: the agenda works in local days. Tuesday 13 October 2026, 10:33.
 const NOW = new Date(2026, 9, 13, 10, 33);
@@ -24,13 +24,13 @@ function task(id: string, due?: Date, extra: Partial<TodoTaskInterface> = {}): T
 }
 const list = (id: string, tasks: TodoTaskInterface[]): TodoListInterface => ({ id, title: id, tasks });
 
-describe("buildCompanionAgenda", () => {
+describe("buildMiniWindowAgenda", () => {
     it("is undefined when the world has neither a calendar nor a task list", () => {
-        expect(buildCompanionAgenda({ now: NOW, labels })).toBeUndefined();
+        expect(buildMiniWindowAgenda({ now: NOW, labels })).toBeUndefined();
     });
 
     it("keeps the day's next three meetings, in progress first, and leaves out the ended, all-day and tomorrow ones", () => {
-        const agenda = buildCompanionAgenda({
+        const agenda = buildMiniWindowAgenda({
             now: NOW,
             labels,
             events: [
@@ -49,7 +49,7 @@ describe("buildCompanionAgenda", () => {
 
     it("marks what is in progress or starts within the hour, and offers to join only those two", () => {
         const meetings =
-            buildCompanionAgenda({
+            buildMiniWindowAgenda({
                 now: NOW,
                 labels,
                 events: [
@@ -67,7 +67,7 @@ describe("buildCompanionAgenda", () => {
     });
 
     it("lists the three most urgent open tasks and counts them all", () => {
-        const agenda = buildCompanionAgenda({
+        const agenda = buildMiniWindowAgenda({
             now: NOW,
             labels,
             lists: [

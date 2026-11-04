@@ -213,12 +213,12 @@
         {#if window.WAD?.desktop && window.WAD.windows}
             <HeaderMenuItem label={$LL.actionbar.desktop.section()} />
             <ActionBarButton
-                label={$LL.actionbar.desktop.openCompanion()}
+                label={$LL.actionbar.desktop.openMiniWindow()}
                 onclick={() => {
-                    window.WAD?.windows?.openCompanion();
+                    window.WAD?.windows?.openMiniWindow();
                     openedMenuStore.close("profileMenu");
                 }}
-                dataTestId="desktop-open-companion"
+                dataTestId="desktop-open-mini-window"
             >
                 <IconAppWindow font-size="22" />
             </ActionBarButton>

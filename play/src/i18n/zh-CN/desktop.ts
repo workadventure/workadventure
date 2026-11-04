@@ -49,7 +49,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "无法识别屏幕。",
         cancel: "取消",
     },
-    companion: {
+    miniWindow: {
         annotations: "批注",
         allowAnnotations: "允许他人批注",
         clearAnnotations: "全部清除",

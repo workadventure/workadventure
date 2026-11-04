@@ -29,7 +29,7 @@ const actionbar: BaseTranslation = {
     desktop: {
         section: "Aplicativo desktop",
         openRoom: "Abrir outra sala…",
-        openCompanion: "Abrir o painel companheiro",
+        openMiniWindow: "Abrir a minijanela",
     },
     globalMessage: "Enviar mensagem global",
     mapEditor: "Editor de mapa",

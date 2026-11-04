@@ -66,7 +66,7 @@
     const shortcutLabels: Record<ShortcutName, string> = {
         mute_toggle: t("settings.shortcutMute"),
         camera_toggle: t("settings.shortcutCamera"),
-        companion_toggle: t("settings.shortcutCompanion"),
+        mini_window_toggle: t("settings.shortcutMiniWindow"),
     };
 
     async function setShortcut(name: ShortcutName, accelerator: string) {

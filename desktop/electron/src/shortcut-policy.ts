@@ -3,7 +3,7 @@
  * ("CommandOrControl+Alt+Shift+M", the defaults' form), and an accelerator becomes what the window shows.
  */
 
-export const SHORTCUT_NAMES = ["mute_toggle", "camera_toggle", "companion_toggle"] as const;
+export const SHORTCUT_NAMES = ["mute_toggle", "camera_toggle", "mini_window_toggle"] as const;
 export type ShortcutName = (typeof SHORTCUT_NAMES)[number];
 
 type KeyPress = Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "altKey" | "shiftKey" | "metaKey">;

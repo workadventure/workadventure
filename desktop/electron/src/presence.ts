@@ -174,7 +174,7 @@ export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; 
     return { micEnabled: state.micEnabled, cameraEnabled: state.cameraEnabled, inMeeting: state.inMeeting };
 }
 
-/** Snapshot used by the companion visibility controller. */
+/** Snapshot used by the mini window visibility controller. */
 export function getPresenceSnapshot(): {
     inMeeting: boolean;
     micEnabled: boolean;

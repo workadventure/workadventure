@@ -2,7 +2,7 @@ import { globalShortcut } from "electron";
 import ElectronLog from "electron-log";
 import settings, { SettingsData } from "./settings";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
-import { toggleCompanion } from "./companion-controller";
+import { toggleMiniWindow } from "./mini-window-controller";
 import type { ShortcutName } from "./shortcut-policy";
 
 /** The shortcuts the OS or another app already owns: the settings window says so. */
@@ -39,7 +39,7 @@ export function loadShortcuts() {
 
     registerShortcut("mute_toggle", shortcuts?.mute_toggle, emitMuteToggle);
     registerShortcut("camera_toggle", shortcuts?.camera_toggle, emitCameraToggle);
-    registerShortcut("companion_toggle", shortcuts?.companion_toggle, toggleCompanion);
+    registerShortcut("mini_window_toggle", shortcuts?.mini_window_toggle, toggleMiniWindow);
 }
 
 export function getUnavailableShortcuts(): ShortcutName[] {

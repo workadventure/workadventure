@@ -55,7 +55,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Wobrazowki njedaju se identificěrowaś.",
         cancel: "Pśetergnuś",
     },
-    companion: {
+    miniWindow: {
         annotations: "Komentary",
         allowAnnotations: "Drugim komentěrowanje dowóliś",
         clearAnnotations: "Wšykno wulašowaś",

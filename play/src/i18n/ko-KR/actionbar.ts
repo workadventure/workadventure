@@ -26,7 +26,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     desktop: {
         section: "데스크톱 앱",
         openRoom: "다른 방 열기…",
-        openCompanion: "컴패니언 열기",
+        openMiniWindow: "미니 창 열기",
     },
     globalMessage: "전체 메시지 보내기",
     mapEditor: "맵 에디터",

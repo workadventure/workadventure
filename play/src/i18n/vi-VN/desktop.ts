@@ -53,7 +53,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Không thể nhận diện các màn hình.",
         cancel: "Hủy",
     },
-    companion: {
+    miniWindow: {
         annotations: "Chú thích",
         allowAnnotations: "Cho phép người khác chú thích",
         clearAnnotations: "Xóa tất cả",

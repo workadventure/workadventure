@@ -51,7 +51,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "تعذّر تحديد الشاشات.",
         cancel: "إلغاء",
     },
-    companion: {
+    miniWindow: {
         annotations: "التعليقات",
         allowAnnotations: "السماح للآخرين بالتعليق",
         clearAnnotations: "مسح الكل",

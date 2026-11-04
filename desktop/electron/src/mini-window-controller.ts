@@ -4,18 +4,18 @@ import { closeHudWindow, getHudWindow, isHudWindowOpen } from "./hud-windows";
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 import { getControllingWorldContents } from "./tab-manager";
-import { companionMode } from "./companion-visibility-policy";
-import { companionAutoOpenDisplay } from "./share-surfaces-policy";
+import { miniWindowMode } from "./mini-window-visibility-policy";
+import { miniWindowAutoOpenDisplay } from "./share-surfaces-policy";
 import { canHideWindowsFromCapture } from "./platform-capture-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 import { isIdentifyingScreens } from "./screen-identify";
 import { openChildWindow } from "./child-windows";
 
 /**
- * Drives the Companion — the People / Chat / meeting video window — and is the only place that
- * decides when it opens and closes (rules in companion-visibility-policy). The world page reports
+ * Drives the mini window — the People / Chat / meeting video window — and is the only place that
+ * decides when it opens and closes (rules in mini-window-visibility-policy). The world page reports
  * facts through presence, opens the window when asked (child-windows) and moves the meeting video
- * into it when told to (`app:windows:meeting-wanted`): while the companion is open during a meeting.
+ * into it when told to (`app:windows:meeting-wanted`): while the mini window is open during a meeting.
  */
 
 // Automatic opens wait this long so a quick away-and-back doesn't flash the panel. Manual opens don't.
@@ -26,7 +26,7 @@ const LEAVE_WORLD_GRACE_MS = 1500;
 
 let started = false;
 let opening = false;
-// How the companion currently open was opened ("no" while closed).
+// How the mini window currently open was opened ("no" while closed).
 let opened: "no" | "auto" | "manual" = "no";
 let openTimer: ReturnType<typeof setTimeout> | undefined;
 let leaveWorldTimer: ReturnType<typeof setTimeout> | undefined;
@@ -38,7 +38,7 @@ let sharedScreenDisplayId: number | undefined;
 let dismissed = false;
 // Last `app:windows:meeting-wanted` sent to the world page.
 let videoWanted = false;
-// Companion windows closed by this controller, as opposed to by the user (window close shortcut).
+// Mini windows closed by this controller, as opposed to by the user (window close shortcut).
 const closedByController = new WeakSet<BrowserWindow>();
 const watchedWindows = new WeakSet<BrowserWindow>();
 
@@ -59,9 +59,9 @@ function cursorDisplayId(): number {
     return screen.getDisplayNearestPoint(screen.getCursorScreenPoint()).id;
 }
 
-/** The screen the companion opens on by itself, if any (see companionAutoOpenDisplay). */
+/** The screen the mini window opens on by itself, if any (see miniWindowAutoOpenDisplay). */
 function autoOpenDisplayId(): number | undefined {
-    return companionAutoOpenDisplay({
+    return miniWindowAutoOpenDisplay({
         canHideFromCapture: canHideWindowsFromCapture(process.platform),
         sharing: getPresenceSnapshot().screenSharing,
         identifyingScreens: isIdentifyingScreens(),
@@ -74,12 +74,12 @@ function autoOpenDisplayId(): number | undefined {
 /** The world tells which screen the user shares (undefined: none, a window, or unknown). */
 export function setSharedScreenDisplay(displayId: number | undefined): void {
     sharedScreenDisplayId = displayId;
-    updateCompanion();
+    updateMiniWindow();
 }
 
 function wantedMode(): "closed" | "auto" | "manual" {
     const p = getPresenceSnapshot();
-    return companionMode({
+    return miniWindowMode({
         opened,
         // Still in the world during the portal-hop grace period.
         inWorld: p.inWorld || leaveWorldTimer !== undefined,
@@ -93,24 +93,24 @@ function wantedMode(): "closed" | "auto" | "manual" {
 }
 
 /**
- * The viewers of the user's screen share must not see the companion (their own faces, the chat):
+ * The viewers of the user's screen share must not see the mini window (their own faces, the chat):
  * it is kept out of the capture while the user shares, where the system allows it (macOS, Windows).
  */
 function protectFromCaptureWhileSharing(): void {
-    const companion = getHudWindow("companion");
-    if (!companion) {
+    const miniWindow = getHudWindow("mini-window");
+    if (!miniWindow) {
         return;
     }
     try {
-        companion.setContentProtection(getPresenceSnapshot().screenSharing && shouldProtectWindowFromCapture());
+        miniWindow.setContentProtection(getPresenceSnapshot().screenSharing && shouldProtectWindowFromCapture());
     } catch (error) {
-        ElectronLog.warn("Companion setContentProtection failed", error);
+        ElectronLog.warn("Mini window setContentProtection failed", error);
     }
 }
 
-/** Tell the world page whether to show the meeting video in the companion. */
+/** Tell the world page whether to show the meeting video in the mini window. */
 function syncMeetingVideo(): void {
-    const wanted = opened !== "no" && !opening && isHudWindowOpen("companion") && getPresenceSnapshot().inMeeting;
+    const wanted = opened !== "no" && !opening && isHudWindowOpen("mini-window") && getPresenceSnapshot().inMeeting;
     if (wanted === videoWanted) {
         return;
     }
@@ -118,25 +118,25 @@ function syncMeetingVideo(): void {
     getControllingWorldContents()?.send("app:windows:meeting-wanted", wanted);
 }
 
-function closeCompanionWindow(): void {
+function closeMiniWindow(): void {
     opened = "no";
-    const companion = getHudWindow("companion");
-    if (companion) {
-        closedByController.add(companion);
+    const miniWindow = getHudWindow("mini-window");
+    if (miniWindow) {
+        closedByController.add(miniWindow);
     }
-    closeHudWindow("companion");
+    closeHudWindow("mini-window");
 }
 
 /** The user closing the window themselves (close shortcut) dismisses it like its close button. */
 function watchUserClose(): void {
-    const companion = getHudWindow("companion");
-    if (!companion || watchedWindows.has(companion)) {
+    const miniWindow = getHudWindow("mini-window");
+    if (!miniWindow || watchedWindows.has(miniWindow)) {
         return;
     }
-    watchedWindows.add(companion);
-    companion.once("closed", () => {
-        if (!closedByController.has(companion)) {
-            dismissCompanion();
+    watchedWindows.add(miniWindow);
+    miniWindow.once("closed", () => {
+        if (!closedByController.has(miniWindow)) {
+            dismissMiniWindow();
         }
     });
 }
@@ -156,7 +156,7 @@ function cancelPendingLeaveWorld(): void {
 }
 
 function performOpen(mode: "auto" | "manual"): void {
-    if (opening || isHudWindowOpen("companion")) {
+    if (opening || isHudWindowOpen("mini-window")) {
         return;
     }
     // Re-check under current conditions: the debounce delay may have raced.
@@ -167,37 +167,37 @@ function performOpen(mode: "auto" | "manual"): void {
     opening = true;
     const automatic = mode === "auto" && !getPresenceSnapshot().invitationPending;
     const displayId = (automatic ? autoOpenDisplayId() : undefined) ?? cursorDisplayId();
-    openChildWindow("companion", displayId)
+    openChildWindow("mini-window", displayId)
         .then(() => {
             opening = false;
             watchUserClose();
-            updateCompanion();
+            updateMiniWindow();
         })
         .catch((error) => {
             opening = false;
             opened = "no";
-            ElectronLog.warn("Failed to open companion panel", error);
+            ElectronLog.warn("Failed to open mini window", error);
         });
 }
 
 function handlePresenceChange(): void {
     if (getPresenceSnapshot().inWorld) {
         cancelPendingLeaveWorld();
-    } else if (isHudWindowOpen("companion") && leaveWorldTimer === undefined) {
+    } else if (isHudWindowOpen("mini-window") && leaveWorldTimer === undefined) {
         // Debounced: a portal hop briefly drops inWorld too. If the world comes back before the
-        // timer fires, nothing happens; otherwise the companion closes, whoever opened it.
+        // timer fires, nothing happens; otherwise the mini window closes, whoever opened it.
         leaveWorldTimer = setTimeout(() => {
             leaveWorldTimer = undefined;
             dismissed = false;
-            updateCompanion();
+            updateMiniWindow();
         }, LEAVE_WORLD_GRACE_MS);
     }
-    updateCompanion();
+    updateMiniWindow();
 }
 
 /** The main window got minimized or hidden. */
 export function onMainWindowHidden(): void {
-    updateCompanion();
+    updateMiniWindow();
 }
 
 /**
@@ -209,28 +209,28 @@ export function onPageVisibilityChange(hidden: boolean): void {
         return;
     }
     pageHidden = hidden;
-    updateCompanion();
+    updateMiniWindow();
 }
 
 export function onMainWindowFocus(): void {
     pageHidden = false;
-    updateCompanion();
+    updateMiniWindow();
 }
 
-export function updateCompanion(): void {
+export function updateMiniWindow(): void {
     protectFromCaptureWhileSharing();
-    // Coming back to WA lifts a close by hand: leaving it again reopens the companion.
+    // Coming back to WA lifts a close by hand: leaving it again reopens the mini window.
     if (isMainWindowShowing()) {
         dismissed = false;
     }
 
     const mode = wantedMode();
-    const isOpen = isHudWindowOpen("companion");
+    const isOpen = isHudWindowOpen("mini-window");
 
     if (mode === "closed") {
         cancelPendingOpen();
         if (isOpen) {
-            closeCompanionWindow();
+            closeMiniWindow();
         }
     } else if (!isOpen && !opening && openTimer === undefined) {
         if (mode === "manual") {
@@ -246,53 +246,53 @@ export function updateCompanion(): void {
 }
 
 /** Tray, global shortcut, and the world's PiP button: open by hand, or close by hand. */
-export function toggleCompanion(): void {
-    if (isHudWindowOpen("companion")) {
-        dismissCompanion();
+export function toggleMiniWindow(): void {
+    if (isHudWindowOpen("mini-window")) {
+        dismissMiniWindow();
         return;
     }
     cancelPendingOpen();
     dismissed = false;
     opened = "manual";
-    updateCompanion();
+    updateMiniWindow();
 }
 
 /** Opened by hand from WA's profile menu, the Dock menu or the taskbar task: never closes it, unlike the toggle. */
-export function openCompanion(): void {
+export function openMiniWindow(): void {
     cancelPendingOpen();
     dismissed = false;
-    // An open companion becomes one opened by hand: it stays when WA shows again.
+    // An open mini window becomes one opened by hand: it stays when WA shows again.
     opened = "manual";
-    getHudWindow("companion")?.showInactive();
-    updateCompanion();
+    getHudWindow("mini-window")?.showInactive();
+    updateMiniWindow();
 }
 
 /** Closed by hand (its close button, the window close, the tray): until the user comes back to WA. */
-export function dismissCompanion(): void {
+export function dismissMiniWindow(): void {
     dismissed = true;
-    closeCompanionWindow();
-    updateCompanion();
+    closeMiniWindow();
+    updateMiniWindow();
 }
 
-export function isCompanionVisible(): boolean {
-    return isHudWindowOpen("companion");
+export function isMiniWindowVisible(): boolean {
+    return isHudWindowOpen("mini-window");
 }
 
 /** Start reacting to presence changes. Focus and visibility updates are pushed in from window.ts and ipc.ts. */
-export function startCompanionController(): void {
+export function startMiniWindowController(): void {
     if (started) {
         return;
     }
     started = true;
     onPresenceChange(handlePresenceChange);
-    updateCompanion();
+    updateMiniWindow();
 }
 
 /** Close the panel and reset (used on tab switch, world change and window teardown). */
-export function stopCompanion(): void {
+export function stopMiniWindow(): void {
     cancelPendingOpen();
     cancelPendingLeaveWorld();
     dismissed = false;
-    closeCompanionWindow();
+    closeMiniWindow();
     syncMeetingVideo();
 }

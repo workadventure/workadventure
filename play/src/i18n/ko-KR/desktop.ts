@@ -51,7 +51,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "화면을 식별할 수 없습니다.",
         cancel: "취소",
     },
-    companion: {
+    miniWindow: {
         annotations: "주석",
         allowAnnotations: "다른 사람의 주석 허용",
         clearAnnotations: "모두 지우기",

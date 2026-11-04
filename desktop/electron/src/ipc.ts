@@ -8,12 +8,12 @@ import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadv
 import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
-    dismissCompanion,
-    openCompanion,
+    dismissMiniWindow,
+    openMiniWindow,
     onPageVisibilityChange,
     setSharedScreenDisplay,
-    toggleCompanion,
-} from "./companion-controller";
+    toggleMiniWindow,
+} from "./mini-window-controller";
 import {
     getControllingWorldContents,
     getWindow,
@@ -149,7 +149,7 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
     return parsed ? Number(parsed[1]) : undefined;
 }
 
-/** Bring the WorkAdventure window to the front, on a user's click (companion button, notification). */
+/** Bring the WorkAdventure window to the front, on a user's click (mini window button, notification). */
 function focusMainWindow(): void {
     const mainWindow = getWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -648,21 +648,21 @@ export default () => {
         return isLandingPageUrl(event.senderFrame.url);
     }
 
-    // The companion window (a child window of the world page): opened and closed by hand from the
+    // The mini window (a child window of the world page): opened and closed by hand from the
     // world (its PiP button, its close button) and its "back to WorkAdventure" button.
-    ipcMain.on("app:windows:toggle-companion", (event) => {
+    ipcMain.on("app:windows:toggle-mini-window", (event) => {
         if (isFromMainRenderer(event)) {
-            toggleCompanion();
+            toggleMiniWindow();
         }
     });
-    ipcMain.on("app:windows:open-companion", (event) => {
+    ipcMain.on("app:windows:open-mini-window", (event) => {
         if (isFromMainRenderer(event)) {
-            openCompanion();
+            openMiniWindow();
         }
     });
-    ipcMain.on("app:windows:dismiss-companion", (event) => {
+    ipcMain.on("app:windows:dismiss-mini-window", (event) => {
         if (isFromMainRenderer(event)) {
-            dismissCompanion();
+            dismissMiniWindow();
         }
     });
     // The meeting bar's "Display tabs": shows or hides the tab strip (non-destructive; the native menu
@@ -702,7 +702,7 @@ export default () => {
     }
 
     // The user's share started, changed source, or stopped (null). The app places what floats during
-    // it (share-surfaces-policy): the meeting bar here, the companion through its controller.
+    // it (share-surfaces-policy): the meeting bar here, the mini window through its controller.
     let shareSourceGeneration = 0;
     ipcMain.on("app:screen-share-source", (event, source: unknown) => {
         if (!isFromMainRenderer(event)) return;

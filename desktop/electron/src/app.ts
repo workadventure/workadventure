@@ -6,7 +6,7 @@ import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { getTabs } from "./tab-manager";
 import { createTray } from "./tray";
 import { startIdleMonitor } from "./idle-monitor";
-import { openCompanion, startCompanionController } from "./companion-controller";
+import { openMiniWindow, startMiniWindowController } from "./mini-window-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { initStartAtLogin } from "./auto-launch";
@@ -36,7 +36,7 @@ if (process.platform === "linux") {
     app.commandLine.appendSwitch("enable-features", features.filter(Boolean).join(","));
 }
 
-const OPEN_COMPANION_ARG = "--open-companion";
+const OPEN_MINI_WINDOW_ARG = "--open-mini-window";
 
 function getProtocolUrl(argv: string[]) {
     return argv.find((arg) => arg.startsWith("workadventure://"));
@@ -85,9 +85,9 @@ async function init() {
     registerProtocolHandler();
 
     app.on("second-instance", (event, argv) => {
-        // The taskbar task (Windows): open the companion, and leave the main window where it is.
-        if (argv.includes(OPEN_COMPANION_ARG)) {
-            openCompanion();
+        // The taskbar task (Windows): open the mini window, and leave the main window where it is.
+        if (argv.includes(OPEN_MINI_WINDOW_ARG)) {
+            openMiniWindow();
             return;
         }
         queueProtocolUrl(getProtocolUrl(argv));
@@ -155,15 +155,15 @@ async function init() {
         createTray();
         loadShortcuts();
         if (process.platform === "win32") {
-            // Right-click on the taskbar button: the task relaunches the app, the running one opens the companion.
+            // Right-click on the taskbar button: the task relaunches the app, the running one opens the mini window.
             app.setUserTasks([
                 {
                     program: process.execPath,
-                    arguments: app.isPackaged ? OPEN_COMPANION_ARG : `"${app.getAppPath()}" ${OPEN_COMPANION_ARG}`,
+                    arguments: app.isPackaged ? OPEN_MINI_WINDOW_ARG : `"${app.getAppPath()}" ${OPEN_MINI_WINDOW_ARG}`,
                     iconPath: process.execPath,
                     iconIndex: 0,
-                    title: t("tray.companionPanel"),
-                    description: t("tray.companionPanel"),
+                    title: t("tray.miniWindow"),
+                    description: t("tray.miniWindow"),
                 },
             ]);
         }
@@ -184,9 +184,9 @@ async function init() {
             }
         });
 
-        // The unified Companion auto-shows (People / Chat / Controls) whenever the main window is
+        // The mini window auto-shows (People / Chat / Controls) whenever the main window is
         // backgrounded in a world; also toggled from the tray + optional global shortcut.
-        startCompanionController();
+        startMiniWindowController();
     });
 
     // Quit when all windows are closed.

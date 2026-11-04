@@ -80,7 +80,7 @@ export function onActiveTabChange(listener: () => void): () => void {
 }
 
 // ---- The tab that drives media ----
-// Global controls (mute/camera shortcuts, tray, companion, PiP, meeting bar) follow the world that
+// Global controls (mute/camera shortcuts, tray, mini window, PiP, meeting bar) follow the world that
 // is in a meeting, even while another tab is on screen; with no meeting
 // they follow the active tab. One meeting at a time: when a second tab enters a meeting, the first one
 // is told to drop its microphone, camera and screen share (see setTabInMeeting).

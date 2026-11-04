@@ -25,7 +25,7 @@ const actionbar: BaseTranslation = {
     desktop: {
         section: "Desktop app",
         openRoom: "Open another room…",
-        openCompanion: "Open the companion",
+        openMiniWindow: "Open the mini window",
     },
     globalMessage: "Send global message",
     mapEditor: "Map editor",

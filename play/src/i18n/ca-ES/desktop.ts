@@ -54,7 +54,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "No s'han pogut identificar les pantalles.",
         cancel: "Cancel·la",
     },
-    companion: {
+    miniWindow: {
         annotations: "Anotacions",
         allowAnnotations: "Permet que altres anotin",
         clearAnnotations: "Esborra-ho tot",

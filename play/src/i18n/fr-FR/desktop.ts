@@ -55,7 +55,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Impossible d'identifier les écrans.",
         cancel: "Annuler",
     },
-    companion: {
+    miniWindow: {
         annotations: "Annotations",
         allowAnnotations: "Autoriser les autres à annoter",
         clearAnnotations: "Tout effacer",

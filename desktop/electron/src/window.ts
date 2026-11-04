@@ -30,7 +30,7 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
-import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
+import { onMainWindowFocus, onMainWindowHidden, stopMiniWindow, updateMiniWindow } from "./mini-window-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
     activateTab,
@@ -637,7 +637,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
 
     const window = { webContents };
     window.webContents.setWindowOpenHandler(({ url, frameName }) => {
-        // The companion or the meeting bar: a child window main asked the world page to open.
+        // The mini window or the meeting bar: a child window main asked the world page to open.
         const childOptions = childWindowOptions(url, frameName);
         if (childOptions) {
             return { action: "allow", overrideBrowserWindowOptions: childOptions };
@@ -703,12 +703,12 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         rememberWorldUrl(url);
         // A full navigation replaces the document, so the presence this world pushed (in a meeting,
         // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
-        // main window closes, which used to leave the tray and the companion showing the previous
+        // main window closes, which used to leave the tray and the mini window showing the previous
         // world's state until the new renderer connected. Only the controlling tab drives them, so
         // another tab reloading must not wipe its state.
         if (isControllingWorldContents(webContents)) {
             resetPresence();
-            stopCompanion();
+            stopMiniWindow();
         }
     });
 
@@ -783,7 +783,7 @@ export async function createWindow(initialUrl?: string) {
     // No setMenu(null): on Windows/Linux it would drop the application menu, and with it the World
     // menu's accelerators (new/close/switch tab). autoHideMenuBar keeps the bar out of sight.
     setShell(mainWindow);
-    // The companion (which hosts the meeting video) and the HUD windows belong
+    // The mini window (which hosts the meeting video) and the HUD windows belong
     // to the tab that drives media: the one in a meeting, or the active one when there is none (see
     // tab-manager). Switching to another tab during a meeting leaves them alone. When that tab
     // changes, tear them down: their relays are keyed to it, so leaving them open would misroute
@@ -794,10 +794,10 @@ export async function createWindow(initialUrl?: string) {
         tabListenersWired = true;
         onControllingTabChange(() => {
             closeAllHudWindows();
-            stopCompanion();
+            stopMiniWindow();
             // Presence is a single global describing the controlling tab, and only that renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
-            // later minimize would re-arm the companion for a meeting the new tab isn't in — and the
+            // later minimize would re-arm the mini window for a meeting the new tab isn't in — and the
             // panel would come back showing the previous world's People list. Clear it, then ask the
             // new tab for its own state: it pushes only on change, so without the request it would
             // stay blank until something there happened to move.
@@ -832,7 +832,7 @@ export async function createWindow(initialUrl?: string) {
         resetTabStrip();
         resetTabs();
         closeAllHudWindows();
-        stopCompanion();
+        stopMiniWindow();
         // The renderer that fed presence is gone — drop to the disconnected baseline so the tray dot
         // stops showing a stale "online" and the world-only quick actions gray out.
         resetPresence();
@@ -844,13 +844,13 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("restore", () => refreshRendererViewport("restore"));
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
-    // Any of these can change whether the main window shows, which the companion controller decides
-    // on (companion-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
+    // Any of these can change whether the main window shows, which the mini window controller decides
+    // on (mini-window-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
     mainWindow.on("focus", onMainWindowFocus);
-    mainWindow.on("show", updateCompanion);
+    mainWindow.on("show", updateMiniWindow);
     mainWindow.on("hide", onMainWindowHidden);
     mainWindow.on("minimize", onMainWindowHidden);
-    mainWindow.on("restore", updateCompanion);
+    mainWindow.on("restore", updateMiniWindow);
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {

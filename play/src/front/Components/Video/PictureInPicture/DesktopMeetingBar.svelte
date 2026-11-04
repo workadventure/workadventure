@@ -16,7 +16,7 @@
     import { requestedScreenSharingState, startScreenShareWithSource } from "../../../Stores/ScreenSharingStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { toggleCamera, toggleMicrophone } from "./desktopCompanionState";
+    import { toggleCamera, toggleMicrophone } from "./desktopMiniWindowState";
 
     /**
      * The desktop presenter meeting bar, mounted into a child window of the world page while the user shares
