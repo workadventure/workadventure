@@ -248,6 +248,11 @@ export type WorkAdventureDesktopApi = {
     startAtLogin?: WorkAdventureDesktopStartAtLoginApi;
     /** Linux under Wayland only: run through XWayland or natively (the "Desktop application" settings). */
     windowMode?: WorkAdventureDesktopWindowModeApi;
+    /**
+     * Opens the app's own settings window (start at login, window mode, shortcuts, updates), or brings it
+     * to the front. Absent on desktop apps that have none: their settings are startAtLogin and windowMode.
+     */
+    openSettings?: () => void;
 };
 
 /** Read from the system each time, so a change made in its own startup settings shows. */

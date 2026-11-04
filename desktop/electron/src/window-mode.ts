@@ -3,6 +3,7 @@ import ElectronLog from "electron-log";
 import type { DesktopWindowMode, DesktopWindowModeState } from "@workadventure/desktop-api";
 import settings from "./settings";
 import { t } from "./i18n";
+import { openSettingsWindow } from "./settings-window";
 import {
     X11_RESTART_ARG,
     restartArgs,
@@ -24,15 +25,8 @@ export function getWindowModeState(): DesktopWindowModeState {
     });
 }
 
-const listeners = new Set<() => void>();
-
-export function onWindowModeChange(listener: () => void) {
-    listeners.add(listener);
-}
-
 export function setWindowMode(mode: DesktopWindowMode): DesktopWindowModeState {
     settings.set("window_mode", mode);
-    listeners.forEach((listener) => listener());
     return getWindowModeState();
 }
 
@@ -78,27 +72,19 @@ export async function applyWindowModeAtStartup(): Promise<boolean> {
     if (action === "x11-failed") {
         ElectronLog.warn("The last start in compatibility mode (X11) failed: staying in Wayland mode.");
         settings.set("window_mode", "wayland");
-        void dialog.showMessageBox({ type: "warning", message: t("windowMode.x11Failed") });
+        void dialog
+            .showMessageBox({
+                type: "warning",
+                message: t("windowMode.x11Failed"),
+                buttons: [t("windowMode.openSettings"), t("windowMode.later")],
+                defaultId: 0,
+                cancelId: 1,
+            })
+            .then(({ response }) => {
+                if (response === 0) openSettingsWindow();
+            });
     } else if (process.argv.includes(X11_RESTART_ARG)) {
         ElectronLog.info("Running in compatibility mode (X11).");
     }
     return false;
-}
-
-/** The tray's choice: saves it, then offers the restart with what the mode changes. */
-export async function chooseWindowModeFromTray(mode: DesktopWindowMode): Promise<void> {
-    if (!setWindowMode(mode).restartNeeded) {
-        return;
-    }
-    const { response } = await dialog.showMessageBox({
-        type: "question",
-        message: t("windowMode.restartQuestion"),
-        detail: t(mode === "x11" ? "windowMode.x11Detail" : "windowMode.waylandDetail"),
-        buttons: [t("windowMode.restartNow"), t("windowMode.later")],
-        defaultId: 0,
-        cancelId: 1,
-    });
-    if (response === 0) {
-        restartToApplyWindowMode();
-    }
 }

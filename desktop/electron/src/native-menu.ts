@@ -1,4 +1,4 @@
-import { app, dialog, Menu, type MenuItem, type MenuItemConstructorOptions, type MessageBoxOptions } from "electron";
+import { app, dialog, Menu, type MenuItemConstructorOptions, type MessageBoxOptions } from "electron";
 import ElectronLog from "electron-log";
 
 import { createWindow, getWindow, openWorldTab } from "./window";
@@ -8,24 +8,17 @@ import { setTabStripVisible } from "./tab-strip";
 import settings from "./settings";
 import { t } from "./i18n";
 import { getTrustedServers, onTrustedServersChange, removeTrustedServerOrigin } from "./origin-verification";
+import { openSettingsWindow } from "./settings-window";
 
 /**
- * Toggle the tab bar from the menu. Electron flips `menuItem.checked` to the requested state BEFORE
- * calling this. Turning it off while several tabs are open would strand the background tabs (no
- * strip to switch/close them), so we confirm first and close all but the active one; cancelling
- * reverts the checkbox and keeps the bar visible.
+ * Turn the tab bar on or off, from the menu or the settings window. Turning it off while several tabs
+ * are open would strand the background tabs (no strip to switch/close them), so this confirms first
+ * and closes all but the active one; cancelling keeps the bar. Resolves with whether the bar is on.
  */
-async function toggleTabBar(menuItem: MenuItem): Promise<void> {
-    if (menuItem.checked) {
-        settings.set("tab_bar_enabled", true);
-        setTabStripVisible(true);
-        return;
-    }
-
+export async function setTabBarEnabled(enabled: boolean, parent = getWindow()): Promise<boolean> {
     const openTabs = getTabs().length;
-    if (openTabs > 1) {
+    if (!enabled && openTabs > 1) {
         const others = openTabs - 1;
-        const window = getWindow();
         const options: MessageBoxOptions = {
             type: "question",
             buttons: [
@@ -41,19 +34,21 @@ async function toggleTabBar(menuItem: MenuItem): Promise<void> {
                     ? t("menu.hideTabBarDetail", { total: openTabs, count: others })
                     : t("menu.hideTabBarDetailOne", { total: openTabs }),
         };
-        const { response } = window
-            ? await dialog.showMessageBox(window, options)
+        const { response } = parent
+            ? await dialog.showMessageBox(parent, options)
             : await dialog.showMessageBox(options);
-        if (response !== 1) {
-            // Cancelled: revert the checkbox and leave the bar enabled.
-            menuItem.checked = true;
-            return;
+        if (response === 1) {
+            closeInactiveTabs();
+        } else {
+            enabled = true;
         }
-        closeInactiveTabs();
     }
 
-    settings.set("tab_bar_enabled", false);
-    setTabStripVisible(false);
+    settings.set("tab_bar_enabled", enabled);
+    setTabStripVisible(enabled);
+    // The "Show tab bar" checkbox, wherever the change came from (Electron already ticked it on a click).
+    createNativeApplicationMenu();
+    return enabled;
 }
 
 let isListeningForHistoryChanges = false;
@@ -163,6 +158,8 @@ export function createNativeApplicationMenu(): void {
                       submenu: [
                           { role: "about" as const },
                           { type: "separator" as const },
+                          { label: t("menu.settings"), accelerator: "CmdOrCtrl+,", click: openSettingsWindow },
+                          { type: "separator" as const },
                           { role: "services" as const },
                           { type: "separator" as const },
                           { role: "hide" as const },
@@ -201,7 +198,7 @@ export function createNativeApplicationMenu(): void {
                     label: t("menu.showTabBar"),
                     type: "checkbox",
                     checked: settings.get("tab_bar_enabled") !== false,
-                    click: (menuItem) => void toggleTabBar(menuItem),
+                    click: (menuItem) => void setTabBarEnabled(menuItem.checked),
                 },
                 { type: "separator" },
                 {
@@ -221,9 +218,16 @@ export function createNativeApplicationMenu(): void {
                     label: t("menu.addedServers"),
                     submenu: createAddedServerMenuItems(),
                 },
+                // macOS has it in the app menu. Here the bar hides until Alt, but the shortcut works: the way
+                // in where the desktop shows no tray (GNOME without the AppIndicator extension).
                 ...(process.platform === "darwin"
                     ? []
-                    : ([{ type: "separator" }, { role: "quit" }] as MenuItemConstructorOptions[])),
+                    : ([
+                          { type: "separator" },
+                          { label: t("menu.settings"), accelerator: "CmdOrCtrl+,", click: openSettingsWindow },
+                          { type: "separator" },
+                          { role: "quit" },
+                      ] as MenuItemConstructorOptions[])),
             ],
         },
         { role: "editMenu" },

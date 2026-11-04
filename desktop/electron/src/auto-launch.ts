@@ -4,7 +4,7 @@ import { app } from "electron";
 
 // Start at login. The system holds the setting, not settings.json: turning WorkAdventure off in the
 // system's own startup settings (Login Items, Task Manager, the desktop's autostart) then sticks, and
-// the switches in the tray and in WorkAdventure always show what will happen at the next login.
+// the switches in the settings window and in WorkAdventure always show what will happen at the next login.
 //
 // Deliberately NOT a hidden start (no `isHidden` / `openAsHidden`). Two reasons, and the second is the
 // blocking one:
@@ -21,8 +21,6 @@ import { app } from "electron";
 // The name the auto-launch package gave the file (it took the executable's, not ours). Kept so the
 // entry it wrote is replaced or removed rather than left behind next to a second one.
 const LINUX_AUTOSTART_FILE = "workadventure-desktop.desktop";
-
-const listeners = new Set<() => void>();
 
 /** At startup: on for a fresh install, otherwise left as the user set it, here or in the system. */
 export function initStartAtLogin(firstLaunch: boolean) {
@@ -64,13 +62,6 @@ export function setStartAtLogin(enabled: boolean) {
         // `setLoginItemSettings` doesn't support linux
         app.setLoginItemSettings({ openAtLogin: enabled });
     }
-    for (const listener of listeners) {
-        listener();
-    }
-}
-
-export function onStartAtLoginChange(listener: () => void) {
-    listeners.add(listener);
 }
 
 /** Writes or removes the XDG autostart entry. Synchronous: also called while quitting for an update. */
