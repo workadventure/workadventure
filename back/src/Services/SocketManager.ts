@@ -244,6 +244,7 @@ export class SocketManager {
             applications: user.applications ?? [],
             playerVariable: playerVariablesMessage,
             areaPropertyVariable: areaPropertyVariables,
+            isRecorder: user.isRecorder,
         };
 
         user.write({

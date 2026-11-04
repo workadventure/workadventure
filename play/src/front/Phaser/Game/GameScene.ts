@@ -209,6 +209,7 @@ import {
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { getCustomEntityCollectionUrl } from "../../Utils/MapStorageUrl";
+import { isRecorderMode } from "../../Utils/RecorderMode";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
@@ -4347,8 +4348,14 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined,
+                gameManager.getCompanionTextureId() != undefined && !isRecorderMode
+                    ? this.currentCompanionTexturePromise
+                    : undefined,
             );
+            if (isRecorderMode) {
+                // The egress films the map: the recorder must not show up on it.
+                this.CurrentPlayer.setVisible(false);
+            }
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(PHASER_COLOR_DESIGN_SYSTEM_SECONDARY);
             });

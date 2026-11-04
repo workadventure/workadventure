@@ -60,6 +60,7 @@ import { VariableError } from "../Services/VariableError";
 import { VariablesManager } from "../Services/VariablesManager";
 import type { AreaPropertyVariable } from "../Services/AreaPropertyVariablesManager";
 import { AreaPropertyVariablesManager } from "../Services/AreaPropertyVariablesManager";
+import { verifyRecorderToken } from "../Services/RecorderToken";
 import { AreaZoneTracker } from "./AreaZoneTracker";
 import type { BrothersFinder } from "./BrothersFinder";
 import { Group } from "./Group";
@@ -82,6 +83,9 @@ export class GameRoom implements BrothersFinder {
     public readonly id: string;
     // Users, sorted by ID
     private readonly users: SpatialMap<number, User>;
+    // The LiveKit egresses filming the map (?recorder page). Kept out of `users` so that no bubble, area, zone or
+    // admin list ever sees them.
+    private readonly recorders = new Set<User>();
     private readonly usersByUuid = new Map<string, Set<User>>();
     // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
     // and immediately kill stale connections instead of waiting for ping timeout
@@ -279,6 +283,9 @@ export class GameRoom implements BrothersFinder {
             throw new Error("Missing position message");
         }
         const position = ProtobufUtils.toPointInterface(positionMessage);
+        if (joinRoomMessage.recorderToken !== undefined) {
+            return this.joinAsRecorder(socket, joinRoomMessage, position);
+        }
 
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
@@ -362,12 +369,59 @@ export class GameRoom implements BrothersFinder {
         return user;
     }
 
+    /**
+     * The LiveKit egress filming the map. Refused unless its token carries the LiveKit "recorder" grant: an invisible
+     * user must not be something anyone can ask for.
+     */
+    private async joinAsRecorder(
+        socket: UserSocket,
+        joinRoomMessage: JoinRoomMessage,
+        position: PointInterface,
+    ): Promise<User> {
+        await verifyRecorderToken(joinRoomMessage.recorderToken ?? "");
+        this.nextUserId++;
+        const user = await User.create(
+            this.nextUserId,
+            joinRoomMessage.userUuid,
+            joinRoomMessage.isLogged,
+            joinRoomMessage.IPAddress,
+            position,
+            this.positionNotifier,
+            joinRoomMessage.availabilityStatus,
+            socket,
+            [],
+            false,
+            null,
+            joinRoomMessage.name,
+            [],
+            this._roomUrl,
+            this._roomGroup ?? undefined,
+            this,
+            undefined,
+            undefined,
+            undefined,
+            joinRoomMessage.activatedInviteUser,
+            [],
+            undefined,
+            undefined,
+            joinRoomMessage.tabId,
+            true,
+        );
+        this.recorders.add(user);
+        return user;
+    }
+
     public leave(user: User) {
         if (user.disconnected === true) {
             console.warn("User ", user.id, "already disconnected!");
             return;
         }
         user.disconnected = true;
+
+        if (user.isRecorder) {
+            this.recorders.delete(user);
+            return;
+        }
 
         if (!this.users.has(user.id)) {
             console.warn("User ", user.id, "does not belong to this game room! It should!");
@@ -416,6 +470,7 @@ export class GameRoom implements BrothersFinder {
     public isEmpty(): boolean {
         return (
             this.users.size === 0 &&
+            this.recorders.size === 0 &&
             this.admins.size === 0 &&
             this.roomListeners.size === 0 &&
             this.variableListeners.size === 0 &&
@@ -424,6 +479,9 @@ export class GameRoom implements BrothersFinder {
     }
 
     public updatePosition(user: User, userPosition: PointInterface): void {
+        if (user.isRecorder) {
+            return;
+        }
         const oldPosition = user.getPosition();
         user.setPosition(userPosition);
         this.updateUserGroup(user);
@@ -431,6 +489,9 @@ export class GameRoom implements BrothersFinder {
     }
 
     updatePlayerDetails(user: User, playerDetailsMessage: SetPlayerDetailsMessage) {
+        if (user.isRecorder) {
+            return;
+        }
         const wasSilent = user.silent;
         user.updateDetails(playerDetailsMessage);
         if (user.group !== undefined && user.silent) {

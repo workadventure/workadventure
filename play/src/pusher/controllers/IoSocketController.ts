@@ -267,6 +267,8 @@ export class IoSocketController {
                 microphoneState: z.string().transform((val) => val === "true"),
                 tabId: z.string().min(1),
                 connectionId: z.string().optional(),
+                // The LiveKit token of the ?recorder page (the egress filming the map). Checked by the back.
+                recorderToken: z.string().optional(),
             }),
             upgrade: async ({ query, request, isAborted, upgrade, reject }) => {
                 debug(
@@ -463,6 +465,8 @@ export class IoSocketController {
                         lastActivityAtMs: Date.now(),
                         tabId: query.tabId,
                         connectionId: query.connectionId,
+                        recorderToken: query.recorderToken,
+                        isRecorder: false,
                         attendeesState: false,
                         analyticsEventsEnabled: userData.analyticsEventsEnabled ?? true,
                         queryAbortControllers: new Map<number, AbortController>(),

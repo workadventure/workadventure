@@ -186,6 +186,11 @@ export abstract class Character extends Container implements OutlineableInterfac
                 // The character has been destroyed before the timeout
                 return;
             }
+            if (!this.visible) {
+                // A hidden Woka (the ?recorder page's own one) has no name tag either: the tag is a DOM element,
+                // so hiding the container does not hide it.
+                return;
+            }
 
             const playerNameOutlineColor = get(this.outlineColorStore);
             this.usernameDisplay = new UsernameDisplay(

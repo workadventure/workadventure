@@ -131,6 +131,7 @@ import {
 import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { recorderToken } from "../Utils/RecorderMode";
 import { connectionManager } from "./ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
@@ -328,6 +329,9 @@ export class RoomConnection implements RoomConnection {
         params.set("cameraState", get(requestedCameraState) ? "true" : "false");
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         params.set("tabId", connectionManager.tabId);
+        if (recorderToken !== undefined) {
+            params.set("recorderToken", recorderToken);
+        }
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
 

@@ -141,7 +141,9 @@ export class LiveKitService {
             room: livekitRoomName,
             // Note: everyone can publish in Livekit, moderation is handled at application level. If a user should
             // not have published, its VideoBox will never be visible by anyone anyway.
-            canPublish: true,
+            // The ?recorder page (the egress filming the map) only watches, and stays out of the participant list.
+            canPublish: !user.isRecorder,
+            hidden: user.isRecorder,
             canSubscribe: true,
             roomJoin: true,
             canPublishSources: [

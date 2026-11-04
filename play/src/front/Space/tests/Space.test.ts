@@ -141,6 +141,7 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         cpuLimited: overrides.cpuLimited ?? false,
         cameraHeld: overrides.cameraHeld ?? false,
         microphoneHeld: overrides.microphoneHeld ?? false,
+        isRecorder: overrides.isRecorder ?? false,
     };
 }
 

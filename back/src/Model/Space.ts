@@ -309,6 +309,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     private filterOneUser(user: SpaceUser): boolean {
+        if (user.isRecorder) {
+            // The LiveKit egress filming the map: it receives the space but nobody ever sees it.
+            return false;
+        }
         switch (this._filterType) {
             case FilterType.ALL_USERS: {
                 return true;

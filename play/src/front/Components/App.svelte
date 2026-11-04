@@ -34,6 +34,7 @@
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { isRecorderMode, RECORDER_FPS } from "../Utils/RecorderMode";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
@@ -112,6 +113,8 @@
              * Apply delta smoothing during the game update to help avoid spikes?
              */
             smoothStep: false,
+            // The egress encodes at 30 fps: drawing more frames only takes CPU from the other recordings.
+            limit: isRecorderMode ? RECORDER_FPS : 0,
         };
 
         // the ?phaserMode=canvas parameter can be used to force Canvas usage

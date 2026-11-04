@@ -64,6 +64,10 @@ export type ConnectingSocketData = {
     lastActivityAtMs: number;
     // Unique identifier for the browser tab, captured as early as websocket upgrade.
     tabId: string;
+    // Sent by the ?recorder page; the back decides whether it is valid.
+    recorderToken: string | undefined;
+    // The back accepted recorderToken: this socket is the LiveKit egress filming the map, nobody sees it.
+    isRecorder: boolean;
     // Unique identifier of the front WorkAdventureWebSocket instance. A transport resume is only accepted onto the
     // logical connection carrying the same id. Undefined for fronts predating this parameter.
     connectionId?: string;
