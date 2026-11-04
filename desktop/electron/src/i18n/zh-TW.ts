@@ -102,6 +102,18 @@ const zhTW: NativeStrings = {
     "tray.worlds": "世界",
     "tray.help": "說明",
     "tray.startAtLogin": "登入時啟動",
+    "tray.windowMode": "視窗模式",
+    "tray.windowModeX11": "相容模式 (X11)",
+    "tray.windowModeWayland": "原生 Wayland",
+    "windowMode.restartQuestion": "要重新啟動 WorkAdventure 以使用此視窗模式嗎？",
+    "windowMode.x11Detail":
+        "子母畫面和簡報者工具列將在你上次放置的位置開啟，並保持在其他應用程式上方。麥克風和攝影機快捷鍵只有在 WorkAdventure 位於前景時才能使用。你將離開正在參加的會議。",
+    "windowMode.waylandDetail":
+        "子母畫面每次都將在你的螢幕中央開啟，且不會保持在其他應用程式上方。麥克風和攝影機快捷鍵在任何應用程式中都能使用。你將離開正在參加的會議。",
+    "windowMode.restartNow": "立即重新啟動",
+    "windowMode.later": "稍後",
+    "windowMode.x11Failed":
+        "WorkAdventure 無法以相容模式 (X11) 啟動，因此現在使用原生 Wayland 模式。你可以在設定的「桌面應用程式」中切換回來。",
     "tray.checkForUpdates": "檢查更新",
     "tray.openLogs": "開啟記錄檔",
     "tray.about": "關於",

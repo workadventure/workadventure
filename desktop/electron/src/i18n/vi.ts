@@ -111,6 +111,18 @@ const vi: NativeStrings = {
     "tray.worlds": "Thế giới",
     "tray.help": "Trợ giúp",
     "tray.startAtLogin": "Khởi động khi đăng nhập",
+    "tray.windowMode": "Chế độ cửa sổ",
+    "tray.windowModeX11": "Tương thích (X11)",
+    "tray.windowModeWayland": "Wayland gốc",
+    "windowMode.restartQuestion": "Khởi động lại WorkAdventure để dùng chế độ cửa sổ này?",
+    "windowMode.x11Detail":
+        "Hình trong hình và thanh người trình bày sẽ mở ở vị trí bạn để lại lần trước và luôn nằm trên các ứng dụng khác. Phím tắt micrô và camera sẽ chỉ hoạt động khi WorkAdventure ở phía trước. Bạn sẽ rời khỏi cuộc họp đang tham gia, nếu có.",
+    "windowMode.waylandDetail":
+        "Hình trong hình lần nào cũng sẽ mở ở giữa màn hình của bạn và sẽ không nằm trên các ứng dụng khác. Phím tắt micrô và camera sẽ hoạt động từ mọi ứng dụng. Bạn sẽ rời khỏi cuộc họp đang tham gia, nếu có.",
+    "windowMode.restartNow": "Khởi động lại ngay",
+    "windowMode.later": "Để sau",
+    "windowMode.x11Failed":
+        "WorkAdventure không thể khởi động ở chế độ tương thích (X11), nên hiện đang dùng chế độ Wayland gốc. Bạn có thể chuyển lại trong phần cài đặt, mục Ứng dụng máy tính.",
     "tray.checkForUpdates": "Kiểm tra cập nhật",
     "tray.openLogs": "Mở nhật ký",
     "tray.about": "Giới thiệu",

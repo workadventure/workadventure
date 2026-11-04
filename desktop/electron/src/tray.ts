@@ -13,6 +13,7 @@ import { onWorldHistoryChange } from "./world-history";
 import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
 import { isCompanionVisible, toggleCompanion } from "./companion-controller";
 import { t } from "./i18n";
+import { chooseWindowModeFromTray, getWindowModeState, onWindowModeChange, windowModeAvailable } from "./window-mode";
 
 let tray: Tray | undefined;
 
@@ -212,6 +213,24 @@ function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
     ];
 }
 
+/** Linux under Wayland only. Also in WorkAdventure's settings, with what each mode changes. */
+function createWindowModeMenuItems(): Electron.MenuItemConstructorOptions[] {
+    if (!windowModeAvailable) {
+        return [];
+    }
+    const state = getWindowModeState();
+    const item = (mode: "x11" | "wayland"): Electron.MenuItemConstructorOptions => ({
+        label: t(mode === "x11" ? "tray.windowModeX11" : "tray.windowModeWayland"),
+        type: "radio",
+        checked: state.saved === mode,
+        enabled: !state.setByCommandLine && !(mode === "x11" && state.x11Unavailable),
+        click() {
+            void chooseWindowModeFromTray(mode);
+        },
+    });
+    return [{ label: t("tray.windowMode"), submenu: [item("x11"), item("wayland")] }];
+}
+
 function updateTrayContextMenu() {
     // Right-click on the Dock icon: the quick actions, the companion among them.
     app.dock?.setMenu(Menu.buildFromTemplate(quickActionMenuItems()));
@@ -276,6 +295,7 @@ function updateTrayContextMenu() {
                         setStartAtLogin(item.checked);
                     },
                 },
+                ...createWindowModeMenuItems(),
                 { type: "separator" },
                 {
                     label: t("tray.checkForUpdates"),
@@ -337,6 +357,7 @@ export function createTray() {
     updateTrayContextMenu();
     onWorldHistoryChange(updateTrayContextMenu);
     onStartAtLoginChange(updateTrayContextMenu);
+    onWindowModeChange(updateTrayContextMenu);
     // Presence (meeting / mic / camera / idle) drives both the status dot and the quick-action
     // checkmarks, so rebuild both on every change.
     onPresenceChange(() => {

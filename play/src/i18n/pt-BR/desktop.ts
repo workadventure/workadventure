@@ -7,6 +7,22 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Versão instalada",
         unknown: "Indisponível",
         startAtLogin: "Iniciar o WorkAdventure ao fazer login no computador",
+        windowMode: {
+            title: "Modo de janelas",
+            x11: "Compatibilidade (X11), recomendado",
+            x11Description:
+                "A janela de picture-in-picture e a barra do apresentador abrem onde você as deixou e ficam sobre os outros aplicativos. Os atalhos do microfone e da câmera só funcionam quando o WorkAdventure está em primeiro plano. Usa um pouco mais de recursos gráficos quando suas telas usam escalas diferentes.",
+            wayland: "Wayland nativo",
+            waylandDescription:
+                "Os atalhos do microfone e da câmera funcionam em qualquer aplicativo. A janela de picture-in-picture abre sempre no meio da tela e não pode ficar sobre os outros aplicativos: você terá que movê-la por conta própria. Usa menos recursos gráficos quando suas telas usam escalas diferentes.",
+            waylandAfterRestart:
+                "Depois de reiniciar, a janela de picture-in-picture abrirá no meio da sua tela e não ficará sobre os outros aplicativos.",
+            restartNeeded: "Reinicie o WorkAdventure para usar este modo. Se você estiver em uma reunião, sairá dela.",
+            restartNow: "Reiniciar agora",
+            setByCommandLine:
+                "O modo está definido na linha de comando (--ozone-platform), então esta opção não tem efeito.",
+            x11Unavailable: "O modo de compatibilidade precisa do XWayland, que não está em execução.",
+        },
         browser: "Você está usando o WorkAdventure no navegador.",
         recommendedVersion: "Versão recomendada",
         minimumVersion: "Versão mínima compatível",

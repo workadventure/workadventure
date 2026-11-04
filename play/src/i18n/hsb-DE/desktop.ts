@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Instalowana wersija",
         unknown: "Njedostupne",
         startAtLogin: "WorkAdventure při přizjewjenju na kompjuterje startować",
+        windowMode: {
+            title: "Woknowy modus",
+            x11: "Kompatibilita (X11), doporučena",
+            x11Description:
+                "Wobraz we wobrazu a lajsta za prezentaciju so tam wočinjatej, hdźež sće jej posledni raz wostajili, a wostanjetej nad druhimi nałoženjemi. Tastowe skrótšenki za mikrofon a kameru jenož funguja, hdyž je WorkAdventure w prědku. Wužiwa trochu wjace grafiskeje mocy, hdyž waše wobrazowki rozdźělne skalowanja wužiwaja.",
+            wayland: "Natiwny Wayland",
+            waylandDescription:
+                "Tastowe skrótšenki za mikrofon a kameru funguja z kóždeho nałoženja. Wobraz we wobrazu so kóždy raz w srjedźiznje wobrazowki wočini a njemóže nad druhimi nałoženjemi wostać: dyrbiće jón sami přesunyć. Wužiwa mjenje grafiskeje mocy, hdyž waše wobrazowki rozdźělne skalowanja wužiwaja.",
+            waylandAfterRestart:
+                "Po nowym starće so wobraz we wobrazu w srjedźiznje wašeje wobrazowki wočini a njewostanje nad druhimi nałoženjemi.",
+            restartNeeded:
+                "Startujće WorkAdventure znowa, zo byšće tutón modus wužiwali. Wopušćiće zasedanje, w kotrymž runje sće.",
+            restartNow: "Nětko znowa startować",
+            setByCommandLine:
+                "Modus je na přikazowej lince (--ozone-platform) nastajeny, tohodla tutón wuběr žadyn wuskutk nima.",
+            x11Unavailable: "Kompatibelny modus trjeba XWayland, kotryž njeběži.",
+        },
         browser: "Wužiwaće WorkAdventure we wobhladowaku.",
         recommendedVersion: "Doporučena wersija",
         minimumVersion: "Najniša podpěrowana wersija",

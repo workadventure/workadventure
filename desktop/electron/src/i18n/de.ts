@@ -114,6 +114,18 @@ const de: NativeStrings = {
     "tray.worlds": "Welten",
     "tray.help": "Hilfe",
     "tray.startAtLogin": "Bei der Anmeldung starten",
+    "tray.windowMode": "Fenstermodus",
+    "tray.windowModeX11": "Kompatibilität (X11)",
+    "tray.windowModeWayland": "Natives Wayland",
+    "windowMode.restartQuestion": "WorkAdventure neu starten, um diesen Fenstermodus zu verwenden?",
+    "windowMode.x11Detail":
+        "Bild-in-Bild und die Präsentationsleiste öffnen sich dort, wo Sie sie zuletzt platziert haben, und bleiben über anderen Anwendungen. Die Tastenkürzel für Mikrofon und Kamera funktionieren nur, solange WorkAdventure im Vordergrund ist. Sie verlassen dabei ein laufendes Meeting.",
+    "windowMode.waylandDetail":
+        "Bild-in-Bild öffnet sich jedes Mal in der Mitte Ihres Bildschirms und bleibt nicht über anderen Anwendungen. Die Tastenkürzel für Mikrofon und Kamera funktionieren in jeder Anwendung. Sie verlassen dabei ein laufendes Meeting.",
+    "windowMode.restartNow": "Jetzt neu starten",
+    "windowMode.later": "Später",
+    "windowMode.x11Failed":
+        "WorkAdventure konnte nicht im Kompatibilitätsmodus (X11) starten und verwendet jetzt den nativen Wayland-Modus. Sie können in den Einstellungen unter Desktop-Anwendung zurückwechseln.",
     "tray.checkForUpdates": "Nach Updates suchen",
     "tray.openLogs": "Protokolle öffnen",
     "tray.about": "Über",

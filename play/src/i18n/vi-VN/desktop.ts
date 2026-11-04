@@ -7,6 +7,22 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Phiên bản đã cài",
         unknown: "Không khả dụng",
         startAtLogin: "Khởi động WorkAdventure khi đăng nhập vào máy tính",
+        windowMode: {
+            title: "Chế độ cửa sổ",
+            x11: "Tương thích (X11), được đề xuất",
+            x11Description:
+                "Hình trong hình và thanh người trình bày mở ở vị trí bạn để lại lần trước và luôn nằm trên các ứng dụng khác. Phím tắt micrô và camera chỉ hoạt động khi WorkAdventure ở phía trước. Dùng nhiều tài nguyên đồ họa hơn một chút khi các màn hình của bạn có tỷ lệ hiển thị khác nhau.",
+            wayland: "Wayland gốc",
+            waylandDescription:
+                "Phím tắt micrô và camera hoạt động từ mọi ứng dụng. Hình trong hình lần nào cũng mở ở giữa màn hình và không thể nằm trên các ứng dụng khác: bạn sẽ phải tự di chuyển nó. Dùng ít tài nguyên đồ họa hơn khi các màn hình của bạn có tỷ lệ hiển thị khác nhau.",
+            waylandAfterRestart:
+                "Sau khi khởi động lại, hình trong hình sẽ mở ở giữa màn hình của bạn và sẽ không nằm trên các ứng dụng khác.",
+            restartNeeded:
+                "Khởi động lại WorkAdventure để dùng chế độ này. Bạn sẽ rời khỏi cuộc họp đang tham gia, nếu có.",
+            restartNow: "Khởi động lại ngay",
+            setByCommandLine: "Chế độ được đặt từ dòng lệnh (--ozone-platform), nên lựa chọn này không có tác dụng.",
+            x11Unavailable: "Chế độ tương thích cần XWayland, nhưng XWayland hiện không chạy.",
+        },
         browser: "Bạn đang dùng WorkAdventure trong trình duyệt.",
         recommendedVersion: "Phiên bản được đề xuất",
         minimumVersion: "Phiên bản tối thiểu được hỗ trợ",

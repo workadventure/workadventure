@@ -7,6 +7,20 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "已安裝版本",
         unknown: "無法取得",
         startAtLogin: "登入電腦時啟動 WorkAdventure",
+        windowMode: {
+            title: "視窗模式",
+            x11: "相容模式 (X11)，建議使用",
+            x11Description:
+                "子母畫面和簡報者工具列會在你上次放置的位置開啟，並保持在其他應用程式上方。麥克風和攝影機快捷鍵只有在 WorkAdventure 位於前景時才能使用。當你的螢幕使用不同的縮放比例時，會多耗用一些圖形效能。",
+            wayland: "原生 Wayland",
+            waylandDescription:
+                "麥克風和攝影機快捷鍵在任何應用程式中都能使用。子母畫面每次都會在螢幕中央開啟，且無法保持在其他應用程式上方：你必須自行移動它。當你的螢幕使用不同的縮放比例時，圖形負擔較輕。",
+            waylandAfterRestart: "重新啟動後，子母畫面將在你的螢幕中央開啟，且不會保持在其他應用程式上方。",
+            restartNeeded: "重新啟動 WorkAdventure 以使用此模式。你將離開正在參加的會議。",
+            restartNow: "立即重新啟動",
+            setByCommandLine: "模式已在命令列中設定（--ozone-platform），因此此選項沒有作用。",
+            x11Unavailable: "相容模式需要 XWayland，但它並未執行。",
+        },
         browser: "你正在瀏覽器中使用 WorkAdventure。",
         recommendedVersion: "建議版本",
         minimumVersion: "最低支援版本",

@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Versione installata",
         unknown: "Non disponibile",
         startAtLogin: "Avvia WorkAdventure all’accesso al computer",
+        windowMode: {
+            title: "Modalità finestre",
+            x11: "Compatibilità (X11), consigliata",
+            x11Description:
+                "La finestra picture-in-picture e la barra del presentatore si aprono dove le hai lasciate e restano sopra le altre applicazioni. Le scorciatoie del microfono e della fotocamera funzionano solo quando WorkAdventure è in primo piano. Richiede un po’ più di risorse grafiche quando i tuoi schermi usano scale diverse.",
+            wayland: "Wayland nativo",
+            waylandDescription:
+                "Le scorciatoie del microfono e della fotocamera funzionano da qualsiasi applicazione. La finestra picture-in-picture si apre ogni volta al centro dello schermo e non può restare sopra le altre applicazioni: dovrai spostarla tu. Richiede meno risorse grafiche quando i tuoi schermi usano scale diverse.",
+            waylandAfterRestart:
+                "Dopo il riavvio, la finestra picture-in-picture si aprirà al centro dello schermo e non resterà sopra le altre applicazioni.",
+            restartNeeded:
+                "Riavvia WorkAdventure per usare questa modalità. Uscirai dalla riunione in corso, se ce n’è una.",
+            restartNow: "Riavvia ora",
+            setByCommandLine:
+                "La modalità è impostata dalla riga di comando (--ozone-platform), quindi questa scelta non ha effetto.",
+            x11Unavailable: "La modalità compatibilità richiede XWayland, che non è in esecuzione.",
+        },
         browser: "Stai usando WorkAdventure nel browser.",
         recommendedVersion: "Versione consigliata",
         minimumVersion: "Versione minima supportata",

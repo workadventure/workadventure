@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "インストール済みバージョン",
         unknown: "取得できません",
         startAtLogin: "コンピューターへのログイン時に WorkAdventure を起動",
+        windowMode: {
+            title: "ウィンドウモード",
+            x11: "互換モード (X11)、推奨",
+            x11Description:
+                "ピクチャーインピクチャーとプレゼンターバーは前回の位置に開き、他のアプリより手前に表示されたままになります。マイクとカメラのショートカットは WorkAdventure が前面にあるときだけ機能します。画面ごとに拡大率が異なる場合、グラフィック処理の負荷が少し高くなります。",
+            wayland: "ネイティブ Wayland",
+            waylandDescription:
+                "マイクとカメラのショートカットはどのアプリからでも機能します。ピクチャーインピクチャーは毎回画面の中央に開き、他のアプリより手前に表示し続けることはできないため、自分で移動する必要があります。画面ごとに拡大率が異なる場合、グラフィック処理の負荷が軽くなります。",
+            waylandAfterRestart:
+                "再起動後、ピクチャーインピクチャーは画面の中央に開き、他のアプリより手前に表示されたままにはなりません。",
+            restartNeeded:
+                "このモードを使うには WorkAdventure を再起動してください。参加中のミーティングからは退出します。",
+            restartNow: "今すぐ再起動",
+            setByCommandLine:
+                "モードはコマンドライン (--ozone-platform) で指定されているため、この選択は反映されません。",
+            x11Unavailable: "互換モードには XWayland が必要ですが、実行されていません。",
+        },
         browser: "ブラウザーでWorkAdventureを使用しています。",
         recommendedVersion: "推奨バージョン",
         minimumVersion: "サポート対象の最小バージョン",

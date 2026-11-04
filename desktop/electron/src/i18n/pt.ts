@@ -110,6 +110,18 @@ const pt: NativeStrings = {
     "tray.worlds": "Mundos",
     "tray.help": "Ajuda",
     "tray.startAtLogin": "Iniciar ao fazer login",
+    "tray.windowMode": "Modo de janelas",
+    "tray.windowModeX11": "Compatibilidade (X11)",
+    "tray.windowModeWayland": "Wayland nativo",
+    "windowMode.restartQuestion": "Reiniciar o WorkAdventure para usar este modo de janelas?",
+    "windowMode.x11Detail":
+        "A janela de picture-in-picture e a barra do apresentador abrirão onde você as deixou e ficarão sobre os outros aplicativos. Os atalhos do microfone e da câmera só funcionarão quando o WorkAdventure estiver em primeiro plano. Se você estiver em uma reunião, sairá dela.",
+    "windowMode.waylandDetail":
+        "A janela de picture-in-picture abrirá sempre no meio da sua tela e não ficará sobre os outros aplicativos. Os atalhos do microfone e da câmera funcionarão em qualquer aplicativo. Se você estiver em uma reunião, sairá dela.",
+    "windowMode.restartNow": "Reiniciar agora",
+    "windowMode.later": "Mais tarde",
+    "windowMode.x11Failed":
+        "O WorkAdventure não conseguiu iniciar no modo de compatibilidade (X11), então agora usa o modo Wayland nativo. Você pode voltar a ele nas configurações, em Aplicativo desktop.",
     "tray.checkForUpdates": "Verificar atualizações",
     "tray.openLogs": "Abrir os logs",
     "tray.about": "Sobre",

@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Geïnstalleerde versie",
         unknown: "Niet beschikbaar",
         startAtLogin: "WorkAdventure starten wanneer ik inlog op mijn computer",
+        windowMode: {
+            title: "Venstermodus",
+            x11: "Compatibiliteit (X11), aanbevolen",
+            x11Description:
+                "Het picture-in-picture-venster en de presentatorbalk openen waar je ze het laatst hebt neergezet en blijven boven andere apps. Sneltoetsen voor microfoon en camera werken alleen als WorkAdventure op de voorgrond staat. Vraagt iets meer van de grafische kaart als je schermen verschillende schaalinstellingen hebben.",
+            wayland: "Native Wayland",
+            waylandDescription:
+                "Sneltoetsen voor microfoon en camera werken vanuit elke app. Het picture-in-picture-venster opent elke keer in het midden van het scherm en kan niet boven andere apps blijven: je moet het zelf verplaatsen. Lichter voor de grafische kaart als je schermen verschillende schaalinstellingen hebben.",
+            waylandAfterRestart:
+                "Na het opnieuw starten opent het picture-in-picture-venster in het midden van je scherm en blijft het niet boven andere apps.",
+            restartNeeded:
+                "Start WorkAdventure opnieuw om deze modus te gebruiken. Als je in een vergadering zit, verlaat je die.",
+            restartNow: "Nu opnieuw starten",
+            setByCommandLine:
+                "De modus is ingesteld via de opdrachtregel (--ozone-platform), dus deze keuze heeft geen effect.",
+            x11Unavailable: "De compatibiliteitsmodus heeft XWayland nodig, maar dat draait niet.",
+        },
         browser: "Je gebruikt WorkAdventure in je browser.",
         recommendedVersion: "Aanbevolen versie",
         minimumVersion: "Minimaal ondersteunde versie",
