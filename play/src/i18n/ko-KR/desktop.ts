@@ -7,6 +7,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "설치된 버전",
         unknown: "확인할 수 없음",
         startAtLogin: "컴퓨터에 로그인할 때 WorkAdventure 시작",
+        openSettings: "앱 설정 열기",
         windowMode: {
             title: "창 모드",
             x11: "호환 모드(X11), 권장",

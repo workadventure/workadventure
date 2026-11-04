@@ -7,6 +7,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Instalěrowana wersija",
         unknown: "Njepśistupne",
         startAtLogin: "WorkAdventure pśi pśizjawjenju na licadle startowaś",
+        openSettings: "Nastajenja nałoženja wócyniś",
         windowMode: {
             title: "Woknowy modus",
             x11: "Kompatibilita (X11), dopórucona",

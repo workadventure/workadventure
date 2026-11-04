@@ -8,6 +8,8 @@
     import InputRadio from "../Input/InputRadio.svelte";
 
     const desktop = window.WAD?.desktop ? window.WAD : undefined;
+    // Desktop apps with a settings window of their own show these settings there.
+    const openDesktopSettings = desktop?.openSettings;
     const policy = DESKTOP_VERSION_POLICY;
     const downloadUrl = desktopDownloadUrl(policy);
     let installed = $state<string>();
@@ -26,18 +28,20 @@
                     if (active) installed = version;
                 })
                 .catch((error: unknown) => console.warn("Could not read desktop version", error));
-            desktop.startAtLogin
-                ?.get()
-                .then((enabled) => {
-                    if (active) startAtLogin = enabled;
-                })
-                .catch((error: unknown) => console.warn("Could not read start at login", error));
-            desktop.windowMode
-                ?.get()
-                .then((state) => {
-                    if (active) showWindowMode(state);
-                })
-                .catch((error: unknown) => console.warn("Could not read the window mode", error));
+            if (!openDesktopSettings) {
+                desktop.startAtLogin
+                    ?.get()
+                    .then((enabled) => {
+                        if (active) startAtLogin = enabled;
+                    })
+                    .catch((error: unknown) => console.warn("Could not read start at login", error));
+                desktop.windowMode
+                    ?.get()
+                    .then((state) => {
+                        if (active) showWindowMode(state);
+                    })
+                    .catch((error: unknown) => console.warn("Could not read the window mode", error));
+            }
         }
         return () => {
             active = false;
@@ -98,6 +102,14 @@
             {$LL.desktop.application.installed()}:
             <strong data-testid="desktop-installed-version">{installed ?? $LL.desktop.application.unknown()}</strong>
         </p>
+        {#if openDesktopSettings}
+            <button
+                type="button"
+                class="btn-outline w-fit px-4"
+                data-testid="desktop-open-settings"
+                onclick={() => openDesktopSettings()}>{$LL.desktop.application.openSettings()}</button
+            >
+        {/if}
         {#if startAtLogin !== undefined}
             <InputSwitch
                 id="desktop-start-at-login"

@@ -7,6 +7,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Phiên bản đã cài",
         unknown: "Không khả dụng",
         startAtLogin: "Khởi động WorkAdventure khi đăng nhập vào máy tính",
+        openSettings: "Mở cài đặt ứng dụng",
         windowMode: {
             title: "Chế độ cửa sổ",
             x11: "Tương thích (X11), được đề xuất",

@@ -7,6 +7,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Version installée",
         unknown: "Indisponible",
         startAtLogin: "Lancer WorkAdventure à l’ouverture de ma session",
+        openSettings: "Ouvrir les paramètres de l’application",
         windowMode: {
             title: "Mode des fenêtres",
             x11: "Compatibilité (X11), recommandé",

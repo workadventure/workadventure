@@ -7,6 +7,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "已安裝版本",
         unknown: "無法取得",
         startAtLogin: "登入電腦時啟動 WorkAdventure",
+        openSettings: "開啟應用程式設定",
         windowMode: {
             title: "視窗模式",
             x11: "相容模式 (X11)，建議使用",
