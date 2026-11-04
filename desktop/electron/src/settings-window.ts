@@ -45,8 +45,7 @@ export function openSettingsWindow(): void {
         },
     });
     settingsWindow = window;
-    // Windows/Linux: no World menu (and its tab shortcuts) in this window.
-    window.setMenu(null);
+    removeSettingsWindowMenu();
     // The page links nowhere: whatever tries to navigate or open a window is not the page's doing.
     window.webContents.on("will-navigate", (event) => event.preventDefault());
     window.webContents.setWindowOpenHandler(() => ({ action: "deny" }));
@@ -55,6 +54,16 @@ export function openSettingsWindow(): void {
         if (settingsWindow === window) settingsWindow = undefined;
     });
     window.loadURL(settingsPageUrl.href).catch((error) => ElectronLog.error("Failed to load the settings page", error));
+}
+
+/**
+ * Windows/Linux: no World menu (and its tab shortcuts, such as Ctrl+W) in this window. Each rebuild of
+ * the application menu puts it back on every window, this one included, so native-menu calls this too.
+ */
+export function removeSettingsWindowMenu(): void {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.setMenu(null);
+    }
 }
 
 function isFromSettingsWindow(event: Electron.IpcMainInvokeEvent | Electron.IpcMainEvent): boolean {

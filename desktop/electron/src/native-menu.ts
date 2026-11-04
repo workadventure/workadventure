@@ -8,7 +8,7 @@ import { setTabStripVisible } from "./tab-strip";
 import settings from "./settings";
 import { t } from "./i18n";
 import { getTrustedServers, onTrustedServersChange, removeTrustedServerOrigin } from "./origin-verification";
-import { openSettingsWindow } from "./settings-window";
+import { openSettingsWindow, removeSettingsWindowMenu } from "./settings-window";
 
 /**
  * Turn the tab bar on or off, from the menu or the settings window. Turning it off while several tabs
@@ -235,6 +235,8 @@ export function createNativeApplicationMenu(): void {
     ];
 
     Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    // On Windows/Linux that sets it on every window: take it off the settings window again.
+    removeSettingsWindowMenu();
     if (!isListeningForHistoryChanges) {
         isListeningForHistoryChanges = true;
         onWorldHistoryChange(createNativeApplicationMenu);
