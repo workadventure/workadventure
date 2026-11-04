@@ -117,9 +117,9 @@ const fr: NativeStrings = {
     "tray.windowModeWayland": "Wayland natif",
     "windowMode.restartQuestion": "Redémarrer WorkAdventure pour utiliser ce mode des fenêtres ?",
     "windowMode.x11Detail":
-        "L'image dans l'image et la barre du présentateur s'ouvriront là où vous les avez laissées et resteront au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionneront que lorsque WorkAdventure est au premier plan. Vous quitterez la réunion en cours, le cas échéant.",
+        "Le Picture in Picture et la barre du présentateur s'ouvriront là où vous les avez laissés et resteront au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionneront que lorsque WorkAdventure est au premier plan. Vous quitterez la réunion en cours, le cas échéant.",
     "windowMode.waylandDetail":
-        "L'image dans l'image s'ouvrira à chaque fois au milieu de votre écran et ne restera pas au-dessus des autres applications. Les raccourcis du micro et de la caméra fonctionneront depuis n'importe quelle application. Vous quitterez la réunion en cours, le cas échéant.",
+        "Le Picture in Picture s'ouvrira à chaque fois au milieu de votre écran et ne restera pas au-dessus des autres applications. Les raccourcis du micro et de la caméra fonctionneront depuis n'importe quelle application. Vous quitterez la réunion en cours, le cas échéant.",
     "windowMode.restartNow": "Redémarrer maintenant",
     "windowMode.later": "Plus tard",
     "windowMode.x11Failed":

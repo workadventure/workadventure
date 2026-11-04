@@ -11,12 +11,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             title: "Mode des fenêtres",
             x11: "Compatibilité (X11), recommandé",
             x11Description:
-                "L’image dans l’image et la barre du présentateur s’ouvrent là où vous les avez laissées et restent au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionnent que lorsque WorkAdventure est au premier plan. Sollicite un peu plus la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
+                "Le Picture in Picture et la barre du présentateur s’ouvrent là où vous les avez laissés et restent au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionnent que lorsque WorkAdventure est au premier plan. Sollicite un peu plus la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
             wayland: "Wayland natif",
             waylandDescription:
-                "Les raccourcis du micro et de la caméra fonctionnent depuis n’importe quelle application. L’image dans l’image s’ouvre à chaque fois au milieu de l’écran et ne peut pas rester au-dessus des autres applications : vous devrez la déplacer vous-même. Plus léger pour la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
+                "Les raccourcis du micro et de la caméra fonctionnent depuis n’importe quelle application. Le Picture in Picture s’ouvre à chaque fois au milieu de l’écran et ne peut pas rester au-dessus des autres applications : vous devrez le déplacer vous-même. Plus léger pour la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
             waylandAfterRestart:
-                "Après le redémarrage, l’image dans l’image s’ouvrira au milieu de votre écran et ne restera pas au-dessus des autres applications.",
+                "Après le redémarrage, le Picture in Picture s’ouvrira au milieu de votre écran et ne restera pas au-dessus des autres applications.",
             restartNeeded:
                 "Redémarrez WorkAdventure pour utiliser ce mode. Vous quitterez la réunion en cours, le cas échéant.",
             restartNow: "Redémarrer maintenant",
