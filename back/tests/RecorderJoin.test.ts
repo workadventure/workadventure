@@ -6,6 +6,7 @@ import type { UserSocket } from "../src/Model/User";
 import type { RoomSocket } from "../src/RoomManager";
 import type { EmoteCallback } from "../src/Model/Zone";
 import type * as EnvironmentVariable from "../src/Enum/EnvironmentVariable";
+import { recorderPageUrl } from "../src/Services/RecorderToken";
 
 const API_KEY = "devkey";
 const API_SECRET = "recorder_test_secret_recorder_test";
@@ -79,5 +80,25 @@ describe("GameRoom recorder", () => {
         await expect(
             world.join(socket(), join("spy", 100, await token(true, "another_secret_another_secret_xx"))),
         ).rejects.toThrow();
+    });
+});
+
+describe("recorderPageUrl", () => {
+    it("opens the recording user's map in recorder mode, on the local name of the space", () => {
+        const world = "http://play.example.com";
+        const url = new URL(
+            recorderPageUrl(
+                "http://play.example.com/~/office.wam?foo=1#moveTo=Desk",
+                world,
+                `${world}.http://play.example.com/~/office.wam#8#1793805819841`,
+                0,
+            ),
+        );
+        expect(url.origin + url.pathname).toBe("http://play.example.com/~/office.wam");
+        expect(url.hash).toBe("");
+        expect(url.searchParams.has("recorder")).toBe(true);
+        expect(url.searchParams.has("foo")).toBe(false);
+        expect(url.searchParams.get("space")).toBe("http://play.example.com/~/office.wam#8#1793805819841");
+        expect(url.searchParams.get("filter")).toBe("0");
     });
 });

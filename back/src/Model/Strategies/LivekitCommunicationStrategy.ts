@@ -9,6 +9,8 @@ import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import type { EgressFile } from "../Interfaces/ICommunicationState";
 import type { LiveKitService, RecordingStartInfo } from "../Services/LivekitService";
+import { LIVEKIT_RECORDING_WITH_MAP } from "../../Enum/EnvironmentVariable";
+import { recorderPageUrl } from "../../Services/RecorderToken";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
@@ -284,7 +286,16 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         }
 
         await this.createRoomPromise;
-        return await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid, recordingSessionId);
+        const customBaseUrl = LIVEKIT_RECORDING_WITH_MAP
+            ? recorderPageUrl(user.playUri, this.space.world, this.space.getSpaceName(), this.space.filterType)
+            : undefined;
+        return await this.livekitService.startRecording(
+            this.space.getSpaceName(),
+            user,
+            user.uuid,
+            recordingSessionId,
+            customBaseUrl,
+        );
     }
     async stopRecording(egressId?: string): Promise<void> {
         await this.livekitService.stopRecording(egressId);

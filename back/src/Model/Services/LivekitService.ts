@@ -229,7 +229,8 @@ export class LiveKitService {
         user: SpaceUser,
         folderName: string,
         recordingSessionId: string,
-        layout = "grid",
+        // The ?recorder page that films the map, instead of LiveKit's camera grid.
+        customBaseUrl?: string,
     ): Promise<RecordingStartInfo> {
         try {
             const livekitRoomName = getLivekitRoomName(roomName);
@@ -288,7 +289,8 @@ export class LiveKitService {
             webhookUrl.searchParams.set("recordingSessionId", recordingSessionId);
 
             const result = await this.egressClient.startRoomCompositeEgress(livekitRoomName, outputs, {
-                layout,
+                layout: "grid",
+                customBaseUrl,
                 webhooks: [new WebhookConfig({ url: webhookUrl.toString(), signingKey: this.livekitApiKey })],
             });
 

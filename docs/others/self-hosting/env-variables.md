@@ -194,6 +194,7 @@ Environment variables for the Back service (backend API).
 | `LIVEKIT_RECORDING_S3_SECRET_KEY` | No | The S3 secret key for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_REGION` | No | The S3 region for Livekit recording. |
 | `LIVEKIT_RECORDING_S3_BUCKET` | No | The S3 bucket for Livekit recording. |
+| `LIVEKIT_RECORDING_WITH_MAP` | No | Record the meeting over the live map (an invisible ?recorder page) instead of the plain camera grid. Defaults to false |
 
 ## Map Storage Service
 
