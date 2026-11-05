@@ -34,3 +34,27 @@ test("the mini window opens while WA is hidden and closes once the bubble ends",
     await Map.teleportToPosition(bob, 0, 0);
     await expect.poll(() => isMiniWindowShown(app)).toBe(false);
 });
+
+test("a mini window opened by hand stays once the bubble ends", async ({ browser }) => {
+    const url = publicTestMapUrl("tests/E2E/empty.json", "desktop_mini_window");
+    await using app = await launchDesktopApp(url);
+    const alice = await getWorldPage(app);
+    await logIn(alice, "Alice");
+    await Map.teleportToPosition(alice, 4 * 32, 4 * 32);
+
+    // Opened by hand, as from the profile menu.
+    await alice.evaluate(() => window.WAD?.windows?.openMiniWindow());
+    await expect.poll(() => isMiniWindowShown(app)).toBe(true);
+    // Then the user goes to work in another app.
+    await (await app.browserWindow(alice)).evaluate((window) => window.hide());
+
+    await using bob = await getPage(browser, "Bob", url);
+    await Map.teleportToPosition(bob, 4 * 32 + 16, 4 * 32);
+    await expectWebRtcConnectionsCountToBe(alice, 1, 30_000);
+
+    await Map.teleportToPosition(bob, 0, 0);
+    await expectWebRtcConnectionsCountToBe(alice, 0, 30_000);
+    // Give a wrong close time to happen: leaving a bubble is reported within about 250 ms.
+    await alice.waitForTimeout(2000);
+    expect(await isMiniWindowShown(app)).toBe(true);
+});
