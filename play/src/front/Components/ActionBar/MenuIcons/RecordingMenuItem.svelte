@@ -100,9 +100,15 @@
             return;
         }
 
-        // With the map on offer, a start goes through the picker so the user chooses.
-        if (state.directRow && !(state.directRow.action === "start" && get(recordingWithMapAvailableStore))) {
-            await applyRecordingAction(state.directRow);
+        // With the map on offer, a start goes through the picker so the user chooses. A recording over the map opens
+        // it too: it holds the producer panel (and the stop button).
+        const directRow = state.directRow;
+        if (
+            directRow &&
+            !(directRow.action === "start" && get(recordingWithMapAvailableStore)) &&
+            !(directRow.action === "stop" && get(directRow.space.state.store).recording.production)
+        ) {
+            await applyRecordingAction(directRow);
             return;
         }
 
