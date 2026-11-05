@@ -1604,6 +1604,14 @@ export class GameScene extends DirtyScene {
     }
 
     deleteGroup(groupId: number): void {
+        // Leaving the bubble must not wait for a frame: a hidden page (WA minimized) gets none, and
+        // the desktop app's mini window would stay open on a bubble that ended. The queued event still
+        // clears it, after a GroupCreatedUpdatedEvent queued before it set it again.
+        if (this.currentPlayerGroupId === groupId) {
+            this.currentPlayerGroupId = undefined;
+            currentPlayerGroupIdStore.set(undefined);
+            currentPlayerGroupLockStateStore.set(undefined);
+        }
         this.pendingEvents.enqueue({
             type: "DeleteGroupEvent",
             groupId,

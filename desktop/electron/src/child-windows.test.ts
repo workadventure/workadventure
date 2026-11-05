@@ -9,7 +9,7 @@ const fake = vi.hoisted(() => ({ sent: [] as unknown[][], adopted: [] as unknown
 vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
 vi.mock("./settings", () => ({ default: { get: () => undefined } }));
 vi.mock("./hud-windows", () => ({
-    HUD_SIZES: { companion: { width: 340, height: 480 }, "meeting-bar": { width: 680, height: 76 } },
+    HUD_SIZES: { "mini-window": { width: 340, height: 480 }, "meeting-bar": { width: 680, height: 76 } },
     resolveDisplay: () => ({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } }),
     meetingBarBounds: () => ({ x: 620, y: 980, width: 680, height: 76 }),
     setUpHudWindow: (kind: string, window: unknown) => fake.adopted.push([kind, window]),
@@ -32,26 +32,26 @@ beforeEach(() => {
 });
 
 test("refuses every window.open while main is not asking", () => {
-    expect(childWindowOptions("about:blank", "wa-companion")).toBeUndefined();
+    expect(childWindowOptions("about:blank", "wa-mini-window")).toBeUndefined();
     expect(childWindowOptions("about:blank", "wa-meeting-bar")).toBeUndefined();
-    adoptChildWindow(childWindow(), "wa-companion");
+    adoptChildWindow(childWindow(), "wa-mini-window");
     expect(fake.adopted).toEqual([]);
 });
 
 test("asks the world page, allows only the window asked for, and adopts it", async () => {
-    const opened = openChildWindow("companion", 1);
-    expect(fake.sent).toEqual([["app:windows:open", "companion"]]);
-    expect(childWindowOptions("https://evil.example/", "wa-companion")).toBeUndefined();
+    const opened = openChildWindow("mini-window", 1);
+    expect(fake.sent).toEqual([["app:windows:open", "mini-window"]]);
+    expect(childWindowOptions("https://evil.example/", "wa-mini-window")).toBeUndefined();
     expect(childWindowOptions("about:blank", "other")).toBeUndefined();
     expect(childWindowOptions("about:blank", "wa-meeting-bar")).toBeUndefined();
-    expect(childWindowOptions("about:blank", "wa-companion")).toMatchObject({ frame: false, alwaysOnTop: true });
+    expect(childWindowOptions("about:blank", "wa-mini-window")).toMatchObject({ frame: false, alwaysOnTop: true });
 
     const window = childWindow();
-    adoptChildWindow(window, "wa-companion");
+    adoptChildWindow(window, "wa-mini-window");
     await expect(opened).resolves.toBe(true);
-    expect(fake.adopted).toEqual([["companion", window]]);
+    expect(fake.adopted).toEqual([["mini-window", window]]);
     // The request is over: a second window.open is refused again.
-    expect(childWindowOptions("about:blank", "wa-companion")).toBeUndefined();
+    expect(childWindowOptions("about:blank", "wa-mini-window")).toBeUndefined();
 });
 
 test("places the meeting bar where main computed it, see-through", async () => {
@@ -68,22 +68,22 @@ test("places the meeting bar where main computed it, see-through", async () => {
 
 test("gives up when the world page does not open the window in time", async () => {
     vi.useFakeTimers();
-    const opened = openChildWindow("companion", 1);
+    const opened = openChildWindow("mini-window", 1);
     vi.advanceTimersByTime(3000);
     await expect(opened).resolves.toBe(false);
-    expect(childWindowOptions("about:blank", "wa-companion")).toBeUndefined();
+    expect(childWindowOptions("about:blank", "wa-mini-window")).toBeUndefined();
     vi.useRealTimers();
 });
 
 test("does not ask when no world controls the floating windows", async () => {
     fake.world = false;
-    await expect(openChildWindow("companion", 1)).resolves.toBe(false);
+    await expect(openChildWindow("mini-window", 1)).resolves.toBe(false);
     expect(fake.sent).toEqual([]);
 });
 
 test("does not ask a page that did not say hello (an older WorkAdventure)", async () => {
     fake.hello = false;
-    await expect(openChildWindow("companion", 1)).resolves.toBe(false);
+    await expect(openChildWindow("mini-window", 1)).resolves.toBe(false);
     await expect(openChildWindow("meeting-bar", 1)).resolves.toBe(false);
     expect(fake.sent).toEqual([]);
 });

@@ -32,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Sigue la política de actualizaciones de tu organización. Esta página no instala la aplicación ni vuelve a una versión anterior.",
         status: {
             belowMinimum:
-                "Esta versión es anterior a la mínima compatible con esta instancia. Puedes continuar, pero algunas funciones podrían no funcionar.",
-            recommended: "Estás usando la versión recomendada para esta instancia.",
+                "Esta versión de la aplicación es anterior a la mínima compatible con este servidor. Puedes continuar, pero algunas funciones podrían no funcionar.",
+            recommended: "Estás usando la versión recomendada para este servidor.",
             different:
-                "Tu versión difiere de la recomendada para esta instancia. Esto no significa necesariamente que sea incompatible.",
-            unconfigured: "Esta instancia no ha especificado una versión recomendada.",
+                "Tu versión difiere de la recomendada para este servidor. Esto no significa necesariamente que sea incompatible.",
+            unconfigured: "Este servidor no especifica una versión recomendada.",
         },
     },
     sourcePicker: {
@@ -54,7 +54,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "No se pueden identificar las pantallas.",
         cancel: "Cancelar",
     },
-    companion: {
+    miniWindow: {
         annotations: "Anotaciones",
         allowAnnotations: "Permitir que otros anoten",
         clearAnnotations: "Borrar todo",

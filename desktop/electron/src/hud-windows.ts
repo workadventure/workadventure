@@ -1,11 +1,11 @@
 import { type BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
 import settings from "./settings";
-import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, companionPlacement } from "./companion-window-policy";
+import { MINI_WINDOW_MIN_HEIGHT, MINI_WINDOW_MIN_WIDTH, miniWindowPlacement } from "./mini-window-placement-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
- * The floating windows: the companion and the presenter meeting bar. Both are child windows of the
+ * The floating windows: the mini window and the presenter meeting bar. Both are child windows of the
  * world page, which renders them (child-windows.ts); this registry gives them their floating treatment
  * and lets the controllers find and close them.
  *
@@ -33,7 +33,7 @@ export function resolveDisplay(displayId: number | undefined, label = "HUD"): El
     return screen.getPrimaryDisplay();
 }
 
-export type HudKind = "meeting-bar" | "companion" | "annotation";
+export type HudKind = "meeting-bar" | "mini-window" | "annotation";
 
 export const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     annotation: { width: 1, height: 1 },
@@ -41,7 +41,7 @@ export const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
     // 76: Chromium keeps a window a page resizes at least 100 high, so it could not come back to 76.
     "meeting-bar": { width: 680, height: 100 },
     // Interactive quick-access panel (People / Chat / Controls). Resizable; this is the initial size.
-    companion: { width: 340, height: 480 },
+    "mini-window": { width: 340, height: 480 },
 };
 
 const HUD_MARGIN = 24;
@@ -72,12 +72,12 @@ export function meetingBarBounds(display: Electron.Display): Electron.Rectangle 
 
 /**
  * Everything a floating window gets once created: always on top on every workspace, bounds saved for
- * the companion, capture protection for the meeting bar.
+ * the mini window, capture protection for the meeting bar.
  */
 export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
     newWindow.setMenu(null);
-    if (kind === "companion") {
-        newWindow.setMinimumSize(COMPANION_MIN_WIDTH, COMPANION_MIN_HEIGHT);
+    if (kind === "mini-window") {
+        newWindow.setMinimumSize(MINI_WINDOW_MIN_WIDTH, MINI_WINDOW_MIN_HEIGHT);
         // Persist the panel's size and spot on its screen (debounced): it reopens in the same spot of
         // whichever screen it opens on, e.g. the bottom-right corner of a bigger one.
         let boundsSaveTimer: ReturnType<typeof setTimeout> | undefined;
@@ -90,8 +90,8 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
                 if (!newWindow.isDestroyed()) {
                     const bounds = newWindow.getBounds();
                     settings.set(
-                        "companion_placement",
-                        companionPlacement(bounds, screen.getDisplayMatching(bounds).workArea)
+                        "mini_window_placement",
+                        miniWindowPlacement(bounds, screen.getDisplayMatching(bounds).workArea)
                     );
                 }
             }, 400);
@@ -100,10 +100,10 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
         newWindow.on("move", scheduleSaveBounds);
     }
     // The meeting bar must stay out of the *shared* screen — viewers must not see the presenter's
-    // own controls. The companion is a normal utility panel, only protected while the user shares
-    // (companion-controller), so it can be screenshot otherwise. Protection is also lifted in
+    // own controls. The mini window is a normal utility panel, only protected while the user shares
+    // (mini-window-controller), so it can be screenshot otherwise. Protection is also lifted in
     // development / with WA_ALLOW_WINDOW_CAPTURE=1 so the bars can be captured (see content-protection).
-    if (kind !== "companion" && shouldProtectWindowFromCapture()) {
+    if (kind !== "mini-window" && shouldProtectWindowFromCapture()) {
         try {
             // Excluded from screen capture: the presenter sees the bar, viewers do NOT.
             newWindow.setContentProtection(true);
@@ -113,12 +113,12 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
     }
     try {
         // On macOS this call switches the app's process type, which briefly hides the app's windows and
-        // Dock tiles. The companion opens right as WA gets minimized, whose Dock tile then went missing:
+        // Dock tiles. The mini window opens right as WA gets minimized, whose Dock tile then went missing:
         // it skips the switch (and so does not show over full-screen apps). The meeting bar keeps it to
         // stay over a full-screen presentation.
         newWindow.setVisibleOnAllWorkspaces(true, {
             visibleOnFullScreen: true,
-            skipTransformProcessType: kind === "companion",
+            skipTransformProcessType: kind === "mini-window",
         });
     } catch (error) {
         ElectronLog.debug(`HUD ${kind} setVisibleOnAllWorkspaces failed`, error);

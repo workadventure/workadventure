@@ -15,7 +15,8 @@
 
     let { navigation }: { navigation: WorkAdventureDesktopNavigationApi } = $props();
 
-    const joinFailed = t("landing.joinFailed", "Failed to join world.");
+    const openRoomFailed = t("landing.openRoomFailed", "Couldn't open this room. Please try again.");
+    const signInFailed = t("landing.signInFailed", "Couldn't sign in to this world. Please try again.");
     const linkClass =
         "cursor-pointer text-white underline underline-offset-3 hover:not-disabled:text-accent-hover focus-visible:rounded-[4px] focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-focus-ring";
     const sectionLabelClass = "mb-3 font-title text-[15px] font-medium tracking-[0.05em] uppercase";
@@ -98,14 +99,14 @@
             if (!signIn?.ok) {
                 emailBusyLabel = "";
                 await showFound(address, result.worlds);
-                foundError = signIn?.error || joinFailed;
+                foundError = signIn?.error || signInFailed;
             }
         } catch (err) {
             console.warn("landing.findWorlds rejected", err);
             emailBusyLabel = "";
             emailError =
                 (err instanceof Error && err.message) ||
-                t("landing.lookupFailed", "Couldn't look up your worlds. Paste your world link instead.");
+                t("landing.lookupFailed", "Couldn't look up your worlds. Paste a room link instead.");
         }
     }
 
@@ -127,14 +128,14 @@
     async function join() {
         const target = url.trim();
         if (!target) {
-            joinError = t("landing.urlRequired", "Please enter a world URL.");
+            joinError = t("landing.urlRequired", "Please enter a room link.");
             urlInput?.focus();
             return;
         }
         joinError = "";
         joinBusy = true;
         trust = null;
-        joinError = await failureOf(navigation.joinWorld(target), joinFailed);
+        joinError = await failureOf(navigation.joinWorld(target), openRoomFailed);
         // On success the main process navigates away, so the button stays busy.
         joinBusy = !joinError;
     }
@@ -148,12 +149,12 @@
             const result = await navigation.trustServerAndJoin?.(trust.url);
             if (!result?.ok) {
                 trust = null;
-                joinError = result?.error || joinFailed;
+                joinError = result?.error || openRoomFailed;
             }
         } catch (err) {
             console.warn("landing.trustServerAndJoin rejected", err);
             trust = null;
-            joinError = joinFailed;
+            joinError = openRoomFailed;
         }
         trustBusy = false;
     }
@@ -292,7 +293,7 @@
                 <p class={["mt-3.5 max-w-[66ch] text-[14px] leading-[1.55] text-muted", !hasWorlds && "mx-auto"]}>
                     {t(
                         "landing.intro",
-                        "Sign in with your work email to find your worlds, or open a world from its link. Your last world will reopen automatically next time."
+                        "Sign in with your work email to find your worlds, or open a room from its link. The last room you were in reopens automatically next time."
                     )}
                 </p>
             </div>
@@ -329,12 +330,13 @@
                  keeps a single scanning line instead of two near-identical sections. -->
             {#if hasWorlds}
                 <section aria-labelledby="recent-title">
-                    <h2 class={sectionLabelClass} id="recent-title">{t("landing.recentWorlds", "Recent worlds")}</h2>
+                    <h2 class={sectionLabelClass} id="recent-title">{t("landing.recentRooms", "Recent rooms")}</h2>
                     <WorldRow
                         worlds={worlds.map((world) => ({ ...world, detail: world.url }))}
                         open={navigation.joinWorld}
                         idleLabel={t("landing.explore", "Explore")}
                         busyLabel={t("landing.opening", "Opening…")}
+                        failedLabel={openRoomFailed}
                         bind:error={recentError}
                         onpin={navigation.togglePin ? togglePin : undefined}
                     />
@@ -390,14 +392,14 @@
                 </div>
 
                 <ChoiceCard
-                    title={t("landing.joinTitle", "Open a world link")}
-                    hint={t("landing.joinHint", "Paste the complete URL from your invitation or browser.")}
+                    title={t("landing.joinTitle", "Open a room link")}
+                    hint={t("landing.joinHint", "Paste the complete link from your invitation or browser.")}
                     fitContent={trust !== null}
                     onsubmit={join}
                 >
                     <TextField
                         id="world-url"
-                        label={t("landing.urlLabel", "Enter your world URL")}
+                        label={t("landing.urlLabel", "Room link")}
                         type="url"
                         name="url"
                         placeholder="https://play.workadventu.re/@/..."
@@ -422,7 +424,7 @@
                             <p class="mb-3 text-xs wrap-anywhere text-muted">
                                 {t(
                                     "landing.trustBody",
-                                    "{origin} isn't a WorkAdventure world the app knows. Only add a server you trust, such as your company's."
+                                    "{origin} isn't a WorkAdventure server the app knows. Only add a server you trust, such as your company's."
                                 ).replace("{origin}", trust.origin)}
                             </p>
                             <div class="flex flex-wrap gap-2">
@@ -437,7 +439,7 @@
                     {:else}
                         <div class="mt-auto flex justify-end pt-[clamp(4px,0.8vw,12px)]">
                             <Button type="submit" disabled={joinBusy}>
-                                {joinBusy ? t("landing.opening", "Opening…") : t("landing.openWorld", "Open world")}
+                                {joinBusy ? t("landing.opening", "Opening…") : t("landing.open", "Open")}
                             </Button>
                         </div>
                     {/if}
@@ -476,6 +478,7 @@
                         open={(worldUrl) => navigation.signInToWorld?.(worldUrl)}
                         idleLabel={t("landing.signIn", "Sign in")}
                         busyLabel={t("landing.signingIn", "Signing in…")}
+                        failedLabel={signInFailed}
                         wrap
                         bind:error={foundError}
                     />

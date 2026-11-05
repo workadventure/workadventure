@@ -9,7 +9,8 @@ import {
     silentStore,
 } from "../../Stores/MediaStore";
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
-import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
+import { isInActiveConversationStore, isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
+import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
 import { activeScreenShareSourceStore, requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -203,7 +204,7 @@ class DesktopApi {
         // left untouched.
         //
         // Never during a meeting: someone following it without touching the keyboard or the mouse
-        // (a presentation, the companion's video) is not away, and BACK_IN_A_MOMENT would cut their
+        // (a presentation, the mini window's video) is not away, and BACK_IN_A_MOMENT would cut their
         // camera and microphone.
         if (window.WAD.onSystemIdle) {
             let autoAwayActive = false;
@@ -242,7 +243,7 @@ class DesktopApi {
 
         // Push live presence (meeting + mic/camera) to main so the tray shows a status dot and
         // reflects the mic/camera state in its quick-action checkmarks.
-        // The screen the user shares, so that the companion never opens by itself over it.
+        // The screen the user shares, so that the mini window never opens by itself over it.
         if (window.WAD.setScreenShareSource) {
             const setScreenShareSource = window.WAD.setScreenShareSource;
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -276,6 +277,8 @@ class DesktopApi {
                     onboardingStore,
                     meetingInvitationRequestStore,
                     allowPictureInPictureStore,
+                    isInRemoteConversation,
+                    currentPlayerGroupIdStore,
                 ],
                 ([
                     $inMeeting,
@@ -287,8 +290,13 @@ class DesktopApi {
                     $onboarding,
                     $invitation,
                     $allowPictureInPicture,
+                    $remote,
+                    $groupId,
                 ]): Required<DesktopPresence> => ({
                     inMeeting: Boolean($inMeeting),
+                    // Another participant's video box or share, or a bubble that just formed (a bubble
+                    // always has someone else). Alone in a meeting room, inMeeting stays true: this does not.
+                    withOthers: Boolean($remote) || $groupId !== undefined,
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),

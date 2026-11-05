@@ -11,6 +11,7 @@ import {
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
     isRoomUrl,
+    isSameRoomUrl,
     worldKeyOf,
     normalizePersistedLastRoomUrl,
     normalizePersistedWorldHistory,
@@ -86,12 +87,12 @@ test("validates and normalizes world URLs entered in the desktop navigation UI",
     expect(validateDesktopNavigationUrl("", config)).toStrictEqual({
         ok: false,
         code: "urlRequired",
-        error: "Please enter a world URL.",
+        error: "Please enter a room URL.",
     });
     expect(validateDesktopNavigationUrl("play.workadventu.re/@/team/world/room", config)).toStrictEqual({
         ok: false,
         code: "urlInvalid",
-        error: "Invalid URL. Please enter a full http(s):// world URL.",
+        error: "Invalid URL. Please enter a full http(s):// room URL.",
     });
     expect(validateDesktopNavigationUrl("workadventure://join", config)).toStrictEqual({
         ok: false,
@@ -193,7 +194,7 @@ test("migrates the previous broken local hosted map URL from persisted portal_ur
     // so we swap it for the admin portal when the user still has it in settings.
     expect(normalizePersistedPortalUrl(brokenLocalMapUrl)).toBe("https://admin.workadventu.re/");
     // But as a room URL it's a perfectly valid target — the user must be able to visit it and
-    // have it appear in Recent worlds. If the site is unreachable, did-fail-load bounces to Landing.
+    // have it appear in Recent rooms. If the site is unreachable, did-fail-load bounces to Landing.
     expect(normalizePersistedLastRoomUrl(brokenLocalMapUrl)).toBe(brokenLocalMapUrl);
 });
 
@@ -218,7 +219,7 @@ test("detects WorkAdventure room URLs that are safe to remember", () => {
     expect(isRoomUrl("https://play.workadventu.re/@/team/world/room")).toBe(true);
     expect(isRoomUrl("https://play.workadventu.re/_/global/map.example.com/map.json")).toBe(true);
     // Admin-managed maps (/~/) and custom map-storage prefixes (/*/) are real WA URL shapes
-    // that must land in Recent worlds — previously they were silently dropped.
+    // that must land in Recent rooms — previously they were silently dropped.
     expect(isRoomUrl("https://play.workadventu.re/~/maps/lobby.wam")).toBe(true);
     expect(isRoomUrl("https://play.workadventu.re/*/global/example.com/map.json")).toBe(true);
     expect(isRoomUrl("https://play.workadventu.re/login-screen")).toBe(false);
@@ -237,7 +238,7 @@ test("normalizePersistedLastRoomUrl strips the URL fragment so hash-only changes
 test("normalizePersistedLastRoomUrl keeps URLs that were once seeded as broken portal_url values", () => {
     // These URLs were on the legacy portal_url migration list because an old buggy build
     // saved them as portal_url. They are still legitimate room URLs — the user must be able
-    // to visit them and have them recorded in Recent worlds.
+    // to visit them and have them recorded in Recent rooms.
     expect(normalizePersistedLastRoomUrl("http://play.workadventure.localhost/~/maps/areas.wam")).toBe(
         "http://play.workadventure.localhost/~/maps/areas.wam"
     );
@@ -384,6 +385,14 @@ test("servers the user added become navigable, over https only in production", (
         expect(isAllowedNavigationUrl("https://other.example/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("http://plain.example/@/team/world/room", config)).toBe(false);
     });
+});
+
+test("a room is the same whatever its query or #entry, and another path is another room", () => {
+    const office = "https://play.workadventu.re/@/team/world/office";
+    expect(isSameRoomUrl(office, `${office}?token=abc#desk`)).toBe(true);
+    expect(isSameRoomUrl(office, "https://play.workadventu.re/@/team/world/lobby")).toBe(false);
+    expect(isSameRoomUrl(office, "https://other.example/@/team/world/office")).toBe(false);
+    expect(isSameRoomUrl("", office)).toBe(false);
 });
 
 test("rooms of the same world share a world key, whatever the room, query or hash", () => {

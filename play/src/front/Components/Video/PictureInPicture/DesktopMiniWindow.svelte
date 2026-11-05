@@ -6,43 +6,43 @@
     import { calendarEventsStore, isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { joinMeeting } from "../../Calendar/joinMeeting";
-    import type { CompanionAgendaMeeting } from "../../../Api/Desktop/CompanionAgenda";
+    import type { MiniWindowAgendaMeeting } from "../../../Api/Desktop/MiniWindowAgenda";
     import CompactConversation from "../../../Chat/Components/CompactConversation.svelte";
     import FloatingUiPopupList from "../../Util/FloatingUiPopupList.svelte";
     import DesktopCapturerSourcePicker from "../DesktopCapturerSourcePicker.svelte";
     import { showDesktopCapturerSourcePicker } from "../../../Stores/ScreenSharingStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import {
-        companionAgendaStore,
-        companionMediaStore,
-        companionUsersStore,
-        createCompanionChat,
+        miniWindowAgendaStore,
+        miniWindowMediaStore,
+        miniWindowUsersStore,
+        createMiniWindowChat,
         inviteUser,
         locateUser,
         respondToInvitation,
-        setCompanionStatus,
+        setMiniWindowStatus,
         toggleCamera,
         toggleMicrophone,
         toggleScreenSharing,
-        type CompanionStatus,
-    } from "./desktopCompanionState";
+        type MiniWindowStatus,
+    } from "./desktopMiniWindowState";
 
     /**
-     * The desktop companion, mounted by PictureInPicture.svelte into a child window of the world page. It keeps
-     * the design of the native panel it replaces (desktopCompanion.css): People, Chat and Today slide in over
+     * The desktop mini window, mounted by PictureInPicture.svelte into a child window of the world page. It keeps
+     * the design of the native panel it replaces (desktopMiniWindow.css): People, Chat and Today slide in over
      * the meeting, which is the page's own layout moved into the video area like the browser's
      * picture-in-picture. Same renderer as the page: everything is read from its stores.
      */
     interface Props {
         windows: WorkAdventureDesktopWindowsApi;
-        /** The companion window's document. */
+        /** The mini window's document. */
         ownerDocument: Document;
         videoHost?: HTMLDivElement;
     }
 
     let { windows, ownerDocument, videoHost = $bindable() }: Props = $props();
 
-    const chat = createCompanionChat();
+    const chat = createMiniWindowChat();
     onDestroy(() => chat.destroy());
     const conversations = chat.conversations;
     const chatStatus = chat.status;
@@ -55,13 +55,13 @@
     // The conversation shown; null while a new direct conversation is being created.
     let conversationId: string | null = $state(null);
 
-    let media = $derived($companionMediaStore);
+    let media = $derived($miniWindowMediaStore);
     let inMeeting = $derived(media.inMeeting);
     let baseView: View = $derived(inMeeting ? "video" : "people");
-    let users = $derived($companionUsersStore);
-    let selfName = $derived(users.find((user) => user.isSelf)?.name || $LL.desktop.companion.you());
+    let users = $derived($miniWindowUsersStore);
+    let selfName = $derived(users.find((user) => user.isSelf)?.name || $LL.desktop.miniWindow.you());
     let highlights = $derived($conversations.reduce((total, conversation) => total + conversation.highlightCount, 0));
-    let agenda = $derived($companionAgendaStore);
+    let agenda = $derived($miniWindowAgendaStore);
     let soonMeeting = $derived(agenda?.meetings?.find((meeting) => meeting.soon));
     let shownConversation = $derived($selected && $selected.id === conversationId ? $selected : null);
 
@@ -96,11 +96,11 @@
         return () => ownerDocument.removeEventListener("click", close);
     });
 
-    const statusChoices: Array<{ status: CompanionStatus; label: () => string }> = [
-        { status: "online", label: () => $LL.desktop.companion.statusOnline() },
-        { status: "busy", label: () => $LL.desktop.companion.statusBusy() },
-        { status: "back_in_a_moment", label: () => $LL.desktop.companion.statusBackInAMoment() },
-        { status: "do_not_disturb", label: () => $LL.desktop.companion.statusDoNotDisturb() },
+    const statusChoices: Array<{ status: MiniWindowStatus; label: () => string }> = [
+        { status: "online", label: () => $LL.desktop.miniWindow.statusOnline() },
+        { status: "busy", label: () => $LL.desktop.miniWindow.statusBusy() },
+        { status: "back_in_a_moment", label: () => $LL.desktop.miniWindow.statusBackInAMoment() },
+        { status: "do_not_disturb", label: () => $LL.desktop.miniWindow.statusDoNotDisturb() },
     ];
 
     function openConversation(id: string) {
@@ -133,7 +133,7 @@
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
 
-    function join(meeting: CompanionAgendaMeeting) {
+    function join(meeting: MiniWindowAgendaMeeting) {
         const event = $calendarEventsStore.get(meeting.id);
         if (event) joinMeeting(event);
         // A meeting in this WorkAdventure happens in the app; another one opens in the browser.
@@ -146,7 +146,7 @@
         windows.focusMain();
     }
 
-    let invitationParts = $derived($LL.desktop.companion.invitation({ name: "\u0000" }).split("\u0000"));
+    let invitationParts = $derived($LL.desktop.miniWindow.invitation({ name: "\u0000" }).split("\u0000"));
 </script>
 
 {#snippet closeIcon()}
@@ -179,8 +179,8 @@
                 class="icon-btn nav-btn"
                 type="button"
                 data-active={view === "chat"}
-                title={$LL.desktop.companion.chat()}
-                aria-label={$LL.desktop.companion.chat()}
+                title={$LL.desktop.miniWindow.chat()}
+                aria-label={$LL.desktop.miniWindow.chat()}
                 onclick={() => toggleView("chat")}
             >
                 <svg
@@ -201,8 +201,8 @@
                 class="icon-btn nav-btn"
                 type="button"
                 data-active={view === "people"}
-                title={$LL.desktop.companion.people()}
-                aria-label={$LL.desktop.companion.people()}
+                title={$LL.desktop.miniWindow.people()}
+                aria-label={$LL.desktop.miniWindow.people()}
                 onclick={() => toggleView("people")}
             >
                 <svg
@@ -225,8 +225,8 @@
                     class="icon-btn nav-btn"
                     type="button"
                     data-active={view === "agenda"}
-                    title={$LL.desktop.companion.today()}
-                    aria-label={$LL.desktop.companion.today()}
+                    title={$LL.desktop.miniWindow.today()}
+                    aria-label={$LL.desktop.miniWindow.today()}
                     onclick={() => toggleView("agenda")}
                 >
                     <svg
@@ -253,8 +253,8 @@
                 class:is-forbidden={!media.micEnabled}
                 type="button"
                 data-state={media.micEnabled ? "on" : "off"}
-                title={$LL.desktop.companion.toggleMic()}
-                aria-label={$LL.desktop.companion.toggleMic()}
+                title={$LL.desktop.miniWindow.toggleMic()}
+                aria-label={$LL.desktop.miniWindow.toggleMic()}
                 onclick={toggleMicrophone}
             >
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"
@@ -275,8 +275,8 @@
                 class:is-forbidden={!media.cameraEnabled}
                 type="button"
                 data-state={media.cameraEnabled ? "on" : "off"}
-                title={$LL.desktop.companion.toggleCamera()}
-                aria-label={$LL.desktop.companion.toggleCamera()}
+                title={$LL.desktop.miniWindow.toggleCamera()}
+                aria-label={$LL.desktop.miniWindow.toggleCamera()}
                 onclick={toggleCamera}
             >
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"
@@ -299,13 +299,13 @@
                 type="button"
                 disabled={!media.canScreenShare && !media.screenSharing}
                 title={media.screenSharing
-                    ? $LL.desktop.companion.stopShareScreen()
+                    ? $LL.desktop.miniWindow.stopShareScreen()
                     : media.canScreenShare
-                      ? $LL.desktop.companion.shareScreen()
-                      : $LL.desktop.companion.shareScreenNeedsMeeting()}
+                      ? $LL.desktop.miniWindow.shareScreen()
+                      : $LL.desktop.miniWindow.shareScreenNeedsMeeting()}
                 aria-label={media.screenSharing
-                    ? $LL.desktop.companion.stopShareScreen()
-                    : $LL.desktop.companion.shareScreen()}
+                    ? $LL.desktop.miniWindow.stopShareScreen()
+                    : $LL.desktop.miniWindow.shareScreen()}
                 onclick={toggleScreenSharing}
             >
                 <svg viewBox="0 0 24 24" aria-hidden="true"
@@ -322,8 +322,8 @@
             <button
                 class="icon-btn"
                 type="button"
-                title={$LL.desktop.companion.backToApp()}
-                aria-label={$LL.desktop.companion.backToApp()}
+                title={$LL.desktop.miniWindow.backToApp()}
+                aria-label={$LL.desktop.miniWindow.backToApp()}
                 onclick={() => windows.focusMain()}
             >
                 <svg viewBox="0 0 24 24" aria-hidden="true"
@@ -337,7 +337,7 @@
                 type="button"
                 aria-haspopup="true"
                 aria-expanded={statusMenuOpen}
-                data-testid="companion-status"
+                data-testid="mini-window-status"
                 onclick={(event) => {
                     event.stopPropagation();
                     statusMenuOpen = !statusMenuOpen;
@@ -359,10 +359,10 @@
             <button
                 class="icon-btn"
                 type="button"
-                title={$LL.desktop.companion.close()}
-                aria-label={$LL.desktop.companion.close()}
-                data-testid="companion-close"
-                onclick={() => windows.dismissCompanion()}
+                title={$LL.desktop.miniWindow.close()}
+                aria-label={$LL.desktop.miniWindow.close()}
+                data-testid="mini-window-close"
+                onclick={() => windows.dismissMiniWindow()}
             >
                 {@render closeIcon()}
             </button>
@@ -380,19 +380,19 @@
                     type="button"
                     onclick={() => {
                         if (media.statusLocked) return;
-                        setCompanionStatus(choice.status);
+                        setMiniWindowStatus(choice.status);
                         statusMenuOpen = false;
                     }}><span class="dot" data-status={choice.status}></span><span>{choice.label()}</span></button
                 >
             {/each}
             {#if media.statusLocked}
-                <div class="status-locked">{$LL.desktop.companion.statusLocked()}</div>
+                <div class="status-locked">{$LL.desktop.miniWindow.statusLocked()}</div>
             {/if}
         </div>
     {/if}
 
     {#if windows.visibleInShare(media.screenSharing)}
-        <div class="share-warning">{$LL.desktop.companion.visibleInShare()}</div>
+        <div class="share-warning">{$LL.desktop.miniWindow.visibleInShare()}</div>
     {/if}
 
     {#if soonMeeting && !inMeeting && view !== "agenda"}
@@ -418,7 +418,7 @@
             {#if soonMeeting.joinable}
                 {@const meeting = soonMeeting}
                 <button class="join-btn" type="button" onclick={() => join(meeting)}
-                    >{$LL.desktop.companion.join()}</button
+                    >{$LL.desktop.miniWindow.join()}</button
                 >
             {/if}
         </div>
@@ -428,7 +428,7 @@
         <div class="invitation">
             <div class="invitation-text">
                 {invitationParts[0]}<strong
-                    >{$meetingInvitationRequestStore.senderName || $LL.desktop.companion.someone()}</strong
+                    >{$meetingInvitationRequestStore.senderName || $LL.desktop.miniWindow.someone()}</strong
                 >{invitationParts.slice(1).join("")}
             </div>
             <div class="invitation-actions">
@@ -438,10 +438,10 @@
                     onclick={() => {
                         windows.focusMain();
                         respondToInvitation(true);
-                    }}>{$LL.desktop.companion.accept()}</button
+                    }}>{$LL.desktop.miniWindow.accept()}</button
                 >
                 <button class="inv-btn inv-decline" type="button" onclick={() => respondToInvitation(false)}
-                    >{$LL.desktop.companion.decline()}</button
+                    >{$LL.desktop.miniWindow.decline()}</button
                 >
             </div>
         </div>
@@ -450,39 +450,39 @@
     <div class="body">
         <div class="video-area" class:has-video={inMeeting}>
             <!-- The page's meeting layout lands here (PictureInPicture.svelte). -->
-            <div bind:this={videoHost} class="companion-video-host"></div>
+            <div bind:this={videoHost} class="mini-window-video-host"></div>
         </div>
 
         <section class="view view-people" class:full={!inMeeting} data-open={view === "people"}>
             <div class="view-head">
                 <span class="view-count">{users.length}</span>
-                <span class="view-title">{$LL.desktop.companion.onlineUsers()}</span>
+                <span class="view-title">{$LL.desktop.miniWindow.onlineUsers()}</span>
                 <button
                     class="icon-btn view-close"
                     type="button"
-                    title={$LL.desktop.companion.close()}
-                    aria-label={$LL.desktop.companion.close()}
+                    title={$LL.desktop.miniWindow.close()}
+                    aria-label={$LL.desktop.miniWindow.close()}
                     onclick={() => (view = baseView)}>{@render closeIcon()}</button
                 >
             </div>
-            <div class="list" data-testid="companion-people">
+            <div class="list" data-testid="mini-window-people">
                 {#each users as user (user.id)}
                     <div class="person">
                         {@render avatar(user.name, user.woka, "person-avatar")}
                         <span class="person-name"
                             >{user.isSelf
-                                ? $LL.desktop.companion.you()
-                                : user.name || $LL.desktop.companion.someone()}</span
+                                ? $LL.desktop.miniWindow.you()
+                                : user.name || $LL.desktop.miniWindow.someone()}</span
                         >
                         {#if user.isSelf}
-                            <span class="person-you">{$LL.desktop.companion.youChip()}</span>
+                            <span class="person-you">{$LL.desktop.miniWindow.youChip()}</span>
                         {:else}
                             <div class="person-actions">
                                 <button
                                     type="button"
                                     class="mini-btn"
-                                    title={$LL.desktop.companion.inviteToMeeting()}
-                                    aria-label={$LL.desktop.companion.inviteToMeeting()}
+                                    title={$LL.desktop.miniWindow.inviteToMeeting()}
+                                    aria-label={$LL.desktop.miniWindow.inviteToMeeting()}
                                     onclick={() => inviteUser(user.id)}
                                     ><svg
                                         viewBox="0 0 24 24"
@@ -499,8 +499,8 @@
                                 <button
                                     type="button"
                                     class="mini-btn"
-                                    title={$LL.desktop.companion.message()}
-                                    aria-label={$LL.desktop.companion.message()}
+                                    title={$LL.desktop.miniWindow.message()}
+                                    aria-label={$LL.desktop.miniWindow.message()}
                                     onclick={() => messageUser(user.id)}
                                     ><svg
                                         viewBox="0 0 24 24"
@@ -517,8 +517,8 @@
                                 <button
                                     type="button"
                                     class="mini-btn"
-                                    title={$LL.desktop.companion.locate()}
-                                    aria-label={$LL.desktop.companion.locate()}
+                                    title={$LL.desktop.miniWindow.locate()}
+                                    aria-label={$LL.desktop.miniWindow.locate()}
                                     onclick={() => {
                                         windows.focusMain();
                                         locateUser(user.id);
@@ -541,17 +541,17 @@
                     </div>
                 {/each}
             </div>
-            <div class="empty" class:is-visible={users.length === 0}>{$LL.desktop.companion.noOneAround()}</div>
+            <div class="empty" class:is-visible={users.length === 0}>{$LL.desktop.miniWindow.noOneAround()}</div>
         </section>
 
         <section class="view view-chat" class:full={!inMeeting} data-open={view === "chat"}>
             <div class="view-head">
-                <span class="view-title">{$LL.desktop.companion.chat()}</span>
+                <span class="view-title">{$LL.desktop.miniWindow.chat()}</span>
                 <button
                     class="icon-btn view-close"
                     type="button"
-                    title={$LL.desktop.companion.close()}
-                    aria-label={$LL.desktop.companion.close()}
+                    title={$LL.desktop.miniWindow.close()}
+                    aria-label={$LL.desktop.miniWindow.close()}
                     onclick={() => (view = baseView)}>{@render closeIcon()}</button
                 >
             </div>
@@ -597,7 +597,7 @@
                             <div class="conv-main">
                                 <div class="conv-top">
                                     <span class="conv-name"
-                                        >{conversation.name || $LL.desktop.companion.conversation()}</span
+                                        >{conversation.name || $LL.desktop.miniWindow.conversation()}</span
                                     >
                                 </div>
                                 {#if conversation.preview}<div class="conv-preview">{conversation.preview}</div>{/if}
@@ -610,8 +610,8 @@
                                 <span
                                     class="conv-unread-dot"
                                     title={conversation.unreadCount > 1
-                                        ? $LL.desktop.companion.unreadMessages({ count: conversation.unreadCount })
-                                        : $LL.desktop.companion.unreadMessage()}
+                                        ? $LL.desktop.miniWindow.unreadMessages({ count: conversation.unreadCount })
+                                        : $LL.desktop.miniWindow.unreadMessage()}
                                 ></span>
                             {/if}
                         </button>
@@ -619,10 +619,10 @@
                 </div>
                 <div class="empty" class:is-visible={$conversations.length === 0}>
                     {$chatStatus === "connecting"
-                        ? $LL.desktop.companion.connectingChat()
+                        ? $LL.desktop.miniWindow.connectingChat()
                         : $chatStatus === "unavailable"
-                          ? $LL.desktop.companion.chatUnavailable()
-                          : $LL.desktop.companion.noConversations()}
+                          ? $LL.desktop.miniWindow.chatUnavailable()
+                          : $LL.desktop.miniWindow.noConversations()}
                 </div>
             {:else}
                 <div class="conversation">
@@ -630,8 +630,8 @@
                         <button
                             class="icon-btn"
                             type="button"
-                            title={$LL.desktop.companion.backToConversations()}
-                            aria-label={$LL.desktop.companion.backToConversations()}
+                            title={$LL.desktop.miniWindow.backToConversations()}
+                            aria-label={$LL.desktop.miniWindow.backToConversations()}
                             onclick={() => (inConversation = false)}
                         >
                             <svg
@@ -645,15 +645,15 @@
                             >
                         </button>
                         <div class="conversation-title">
-                            {shownConversation?.name || $LL.desktop.companion.conversation()}
+                            {shownConversation?.name || $LL.desktop.miniWindow.conversation()}
                         </div>
                         {#if conversationId}
                             {@const id = conversationId}
                             <button
                                 class="icon-btn"
                                 type="button"
-                                title={$LL.desktop.companion.openInApp()}
-                                aria-label={$LL.desktop.companion.openInApp()}
+                                title={$LL.desktop.miniWindow.openInApp()}
+                                aria-label={$LL.desktop.miniWindow.openInApp()}
                                 onclick={() => openInApp(() => chat.openInApp(id))}
                             >
                                 <svg
@@ -683,19 +683,19 @@
         {#if agenda}
             <section class="view view-agenda" class:full={!inMeeting} data-open={view === "agenda"}>
                 <div class="view-head">
-                    <span class="view-title">{$LL.desktop.companion.today()}</span>
+                    <span class="view-title">{$LL.desktop.miniWindow.today()}</span>
                     <button
                         class="icon-btn view-close"
                         type="button"
-                        title={$LL.desktop.companion.close()}
-                        aria-label={$LL.desktop.companion.close()}
+                        title={$LL.desktop.miniWindow.close()}
+                        aria-label={$LL.desktop.miniWindow.close()}
                         onclick={() => (view = baseView)}>{@render closeIcon()}</button
                     >
                 </div>
                 <div class="list">
                     {#if agenda.meetings}
                         {@const nextIndex = agenda.meetings[0]?.live ? 1 : 0}
-                        <div class="ag-section">{$LL.desktop.companion.meetings()}</div>
+                        <div class="ag-section">{$LL.desktop.miniWindow.meetings()}</div>
                         {#each agenda.meetings as meeting, index (meeting.id)}
                             <div
                                 class="ag-row"
@@ -713,23 +713,23 @@
                                         class="join-btn"
                                         class:ghost={!meeting.live}
                                         type="button"
-                                        onclick={() => join(meeting)}>{$LL.desktop.companion.join()}</button
+                                        onclick={() => join(meeting)}>{$LL.desktop.miniWindow.join()}</button
                                     >
                                 {/if}
                             </div>
                         {:else}
-                            <div class="ag-empty">{$LL.desktop.companion.noMoreMeetings()}</div>
+                            <div class="ag-empty">{$LL.desktop.miniWindow.noMoreMeetings()}</div>
                         {/each}
                         <button
                             class="ag-more"
                             type="button"
                             onclick={() => openInApp(() => isCalendarVisibleStore.set(true))}
-                            >{$LL.desktop.companion.fullAgenda()}</button
+                            >{$LL.desktop.miniWindow.fullAgenda()}</button
                         >
                     {/if}
                     {#if agenda.tasks}
                         <div class="ag-section">
-                            {$LL.desktop.companion.tasks()}
+                            {$LL.desktop.miniWindow.tasks()}
                             {#if agenda.tasks.open > 0}<span class="view-count">{agenda.tasks.open}</span>{/if}
                         </div>
                         {#each agenda.tasks.items as task (task.id)}
@@ -742,13 +742,13 @@
                                 {#if task.due}<span class="due {task.urgency}">{task.due}</span>{/if}
                             </div>
                         {:else}
-                            <div class="ag-empty">{$LL.desktop.companion.noTasks()}</div>
+                            <div class="ag-empty">{$LL.desktop.miniWindow.noTasks()}</div>
                         {/each}
                         <button
                             class="ag-more"
                             type="button"
                             onclick={() => openInApp(() => isTodoListVisibleStore.set(true))}
-                            >{$LL.desktop.companion.allTasks()}</button
+                            >{$LL.desktop.miniWindow.allTasks()}</button
                         >
                     {/if}
                 </div>

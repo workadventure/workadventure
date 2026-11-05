@@ -35,15 +35,13 @@
     import Companion from "../../Companion/Companion.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout, IconWorldSearch } from "../../Icons";
+    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout } from "../../Icons";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import Woka from "../../Woka/WokaFromUserId.svelte";
-    import DesktopWorldSwitcherModal from "../../Desktop/DesktopWorldSwitcherModal.svelte";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import ContextualMenuItems from "./ContextualMenuItems.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
-    import { modals } from "@wa-modals";
 
     interface Props {
         showContextualMenuItems: boolean;
@@ -153,11 +151,6 @@
         openedMenuStore.close("profileMenu");
         gameManager.leaveGame(PwaInstallSceneName, new PwaInstallScene());
     }
-
-    function openDesktopWorldSwitcher(): void {
-        openedMenuStore.close("profileMenu");
-        modals.open(DesktopWorldSwitcherModal);
-    }
 </script>
 
 <div class="bg-contrast/80 backdrop-blur rounded-md p-1 w-56 text-white select-none" data-testid="profile-menu">
@@ -217,27 +210,18 @@
             <SettingsIcon />
         </ActionBarButton>
 
-        {#if window.WAD?.desktop && window.WAD.navigation}
+        {#if window.WAD?.desktop && window.WAD.windows}
             <HeaderMenuItem label={$LL.actionbar.desktop.section()} />
             <ActionBarButton
-                label={$LL.actionbar.desktop.changeWorld()}
-                onclick={openDesktopWorldSwitcher}
-                dataTestId="desktop-change-world"
+                label={$LL.actionbar.desktop.openMiniWindow()}
+                onclick={() => {
+                    window.WAD?.windows?.openMiniWindow();
+                    openedMenuStore.close("profileMenu");
+                }}
+                dataTestId="desktop-open-mini-window"
             >
-                <IconWorldSearch font-size="22" />
+                <IconAppWindow font-size="22" />
             </ActionBarButton>
-            {#if window.WAD.windows}
-                <ActionBarButton
-                    label={$LL.actionbar.desktop.openCompanion()}
-                    onclick={() => {
-                        window.WAD?.windows?.openCompanion();
-                        openedMenuStore.close("profileMenu");
-                    }}
-                    dataTestId="desktop-open-companion"
-                >
-                    <IconAppWindow font-size="22" />
-                </ActionBarButton>
-            {/if}
         {/if}
 
         {#if showContextualMenuItems}

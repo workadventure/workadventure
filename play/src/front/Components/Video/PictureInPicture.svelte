@@ -16,8 +16,8 @@
         hasPictureInPictureContent,
         isDocumentPictureInPictureSupported,
     } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
-    import DesktopCompanion from "./PictureInPicture/DesktopCompanion.svelte";
-    import desktopCompanionStyles from "./PictureInPicture/desktopCompanion.css?raw";
+    import DesktopMiniWindow from "./PictureInPicture/DesktopMiniWindow.svelte";
+    import desktopMiniWindowStyles from "./PictureInPicture/desktopMiniWindow.css?raw";
     import {
         copyStyleSheets,
         delegateSvelteEvents,
@@ -33,8 +33,8 @@
 
     const debug = Debug("app:PictureInPicture");
 
-    // In the desktop app, the companion window takes the place of the browser's picture-in-picture: the
-    // app decides when it opens and when it shows the meeting (see openCompanionWindow).
+    // In the desktop app, the mini window takes the place of the browser's picture-in-picture: the
+    // app decides when it opens and when it shows the meeting (see openMiniWindow).
     const desktopWindows = window.WAD?.desktop ? window.WAD.windows : undefined;
 
     let divElement: HTMLDivElement;
@@ -44,8 +44,8 @@
     let pipRequested = false;
     let unloading = false;
     let stopPictureInPictureEventDelegation: (() => void) | undefined;
-    let companion: DesktopChildWindow | undefined;
-    let companionProps: { videoHost?: HTMLDivElement } = $state({});
+    let miniWindow: DesktopChildWindow | undefined;
+    let miniWindowProps: { videoHost?: HTMLDivElement } = $state({});
 
     function destroyPictureInPictureComponent(keepRequest = false) {
         stopPictureInPictureEventDelegation?.();
@@ -89,7 +89,7 @@
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
 
-        // The desktop app opens its companion itself (see the PiP button).
+        // The desktop app opens its mini window itself (see the PiP button).
         if (desktopWindows) {
             return;
         }
@@ -175,38 +175,38 @@
     }
 
     /**
-     * The desktop app asked for its companion: open it as a child window of this page, like the browser's
+     * The desktop app asked for its mini window: open it as a child window of this page, like the browser's
      * picture-in-picture, so it renders with this page's stores and plays its MediaStreams directly.
      */
-    function openCompanionWindow() {
-        if (!desktopWindows || companion) return;
+    function openMiniWindow() {
+        if (!desktopWindows || miniWindow) return;
         const windows = desktopWindows;
-        companion = openDesktopChildWindow(
-            "wa-companion",
-            DesktopCompanion,
+        miniWindow = openDesktopChildWindow(
+            "wa-mini-window",
+            DesktopMiniWindow,
             (ownerDocument) => ({
                 windows,
                 ownerDocument,
                 get videoHost() {
-                    return companionProps.videoHost;
+                    return miniWindowProps.videoHost;
                 },
                 set videoHost(element) {
-                    companionProps.videoHost = element;
+                    miniWindowProps.videoHost = element;
                 },
             }),
             {
                 // Closed by the app, or the page goes away: take the videos back first.
                 onClose: () => {
-                    showMeetingInCompanion(false);
-                    companion = undefined;
+                    showMeetingInMiniWindow(false);
+                    miniWindow = undefined;
                 },
-                styles: desktopCompanionStyles,
+                styles: desktopMiniWindowStyles,
             },
         );
     }
 
-    function showMeetingInCompanion(show: boolean) {
-        const host = companionProps.videoHost;
+    function showMeetingInMiniWindow(show: boolean) {
+        const host = miniWindowProps.videoHost;
         if (show && host) {
             host.append(divElement);
             activePictureInPictureStore.set(true);
@@ -227,7 +227,7 @@
         }
 
         if (desktopWindows) {
-            // The desktop app always has its companion, even where DocumentPictureInPicture is missing.
+            // The desktop app always has its mini window, even where DocumentPictureInPicture is missing.
             pictureInPictureSupportedStore.set(true);
         } else if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
@@ -251,9 +251,9 @@
             }
         });
 
-        const unsubscribeMeetingWanted = desktopWindows?.onMeetingWanted(showMeetingInCompanion);
+        const unsubscribeMeetingWanted = desktopWindows?.onMeetingWanted(showMeetingInMiniWindow);
         const unsubscribeOpenWindow = desktopWindows?.onOpen((kind) => {
-            if (kind === "companion") openCompanionWindow();
+            if (kind === "mini-window") openMiniWindow();
         });
 
         try {
@@ -269,7 +269,7 @@
 
         // Browser PiP is closed as soon as the main window regains focus (the DocumentPictureInPicture
         // spec assumes you no longer need it once you're back on the tab). The desktop app decides
-        // for its companion (a companion opened by hand stays), so we skip the reset there.
+        // for its mini window (a mini window opened by hand stays), so we skip the reset there.
         const onFocus = () => {
             if (desktopWindows) return;
             // The picture-in-picture window takes the focus when it opens, so a click on the picture-in-picture
@@ -290,7 +290,7 @@
             unsubscribe();
             unsubscribeMeetingWanted?.();
             unsubscribeOpenWindow?.();
-            companion?.close();
+            miniWindow?.close();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
