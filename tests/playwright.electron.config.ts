@@ -4,7 +4,7 @@ import base from "./playwright.config";
 /**
  * The desktop app (desktop/electron), driven through Playwright's Electron support. Kept out of the
  * browser matrix: the app is Chromium, and the other users of a test are Chromium pages.
- * See tests/desktop_mini_window.electron.ts for what it needs.
+ * See tests/utils/desktop.ts for what it needs.
  */
 const config: PlaywrightTestConfig = {
     ...base,
