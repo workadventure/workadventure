@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import LL from "../../../../i18n/i18n-svelte";
-    import { IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
+    import { IconArrowDown, IconCopy, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
     interface Props {
         downloadUrl?: string;
         downloadName?: string;
         onOpenThread?: () => void;
+        onCopy?: () => Promise<void>;
         onEdit?: () => void;
         onDelete?: () => void;
         onClose: () => void;
@@ -17,6 +18,7 @@
         downloadUrl,
         downloadName,
         onOpenThread,
+        onCopy,
         onEdit,
         onDelete,
         onClose,
@@ -30,6 +32,18 @@
             menu?.querySelector<HTMLElement>("a, button")?.focus();
         }
     });
+
+    let copied = $state(false);
+
+    // Say it worked before going away.
+    function copy() {
+        onCopy?.()
+            .then(() => {
+                copied = true;
+                setTimeout(onClose, 600);
+            })
+            .catch((error) => console.error(error));
+    }
 
     function run(action: (() => void) | undefined) {
         onClose();
@@ -59,6 +73,11 @@
             onclick={() => run(onOpenThread)}
         >
             <IconMessageCircle2 font-size={16} />{$LL.chat.thread.openThreadButtonTitle()}
+        </button>
+    {/if}
+    {#if onCopy}
+        <button type="button" role="menuitem" class="item" data-testid="copyMessageButton" onclick={copy}>
+            <IconCopy font-size={16} />{copied ? $LL.chat.copied() : $LL.chat.copy()}
         </button>
     {/if}
     {#if onEdit}
