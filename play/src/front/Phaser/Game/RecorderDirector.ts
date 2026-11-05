@@ -7,6 +7,8 @@ import type { GameScene } from "./GameScene";
 
 // How often the camera checks whether the people it films moved.
 const REFRAME_INTERVAL_MS = 1000;
+// How long a recorder following someone waits for their bubble before it starts recording anyway.
+const FIRST_BUBBLE_TIMEOUT_MS = 5000;
 // Room around the group, as a share of its size.
 const FRAMING_MARGIN = 0.4;
 // The smallest window filmed (one person alone is not filmed from 10 cm).
@@ -83,7 +85,13 @@ export class RecorderDirector {
 
     public async start(): Promise<void> {
         if (this.firstJoin) {
-            await this.firstJoin;
+            // The person may be in no bubble right now: film the map meanwhile rather than not start at all.
+            await Promise.race([
+                this.firstJoin,
+                new Promise((resolve) => {
+                    setTimeout(resolve, FIRST_BUBBLE_TIMEOUT_MS);
+                }),
+            ]);
         } else if (this.spaceName !== undefined) {
             const propertiesToSync =
                 this.filterType === FilterType.ALL_USERS

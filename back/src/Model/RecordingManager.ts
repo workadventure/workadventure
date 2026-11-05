@@ -1,6 +1,7 @@
 import { randomUUID } from "crypto";
 import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { LIVEKIT_RECORDING_WITH_MAP } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
 import type { ITransitionOrchestrator } from "./Interfaces/ITransitionOrchestrator";
@@ -23,7 +24,26 @@ interface RecordingSession {
     stopAfterStartRequested: boolean;
     stopPromise: Promise<SpaceUser | null> | null;
     withMap: boolean;
+    /** A recording over the map of a bubble follows the person recording (their uuid), not the bubble. */
+    follows?: string;
 }
+
+/**
+ * A bubble breaks up and forms again under another space as people walk, so a recording over the map of a bubble
+ * follows the person who started it (the recorder page goes along, see GameRoom.startFollowing). The space it was
+ * started from keeps the session and gets its webhooks; every bubble the person is in shows it, can stop it and
+ * stays on LiveKit for the recorder page to see the cameras.
+ */
+interface FollowedRecording {
+    owner: RecordingManager;
+    recordingSessionId: string;
+    /** The bubbles the person is in right now. */
+    spaces: Set<RecordingManager>;
+    graceTimer?: ReturnType<typeof setTimeout>;
+}
+const followedRecordings = new Map<string, FollowedRecording>();
+// ponytail: alone (or gone) for this long, the person is done; a "pause" in the UI would let them say so.
+export const FOLLOW_GRACE_MS = 2 * 60 * 1000;
 
 export interface ManagedRecordingState {
     isRecording: boolean;
@@ -50,6 +70,9 @@ export interface IRecordingManager {
     /** Called when a session no longer waits for its egress. */
     onSessionRemoved?: (recordingSessionId: string) => void;
     handleAddUser(user: SpaceUser): void;
+    /** The space said it is a bubble: a recording following one of its users shows here. */
+    handleSpaceKindChanged(): void;
+    readonly followedRecorder: SpaceUser | undefined;
     isRecording: boolean;
     destroy(): void;
 }
@@ -58,6 +81,8 @@ export class RecordingManager implements IRecordingManager {
     private readonly sessions = new Map<string, RecordingSession>();
     private readonly sessionIdsByEgressId = new Map<string, string>();
     private primarySessionId: string | undefined;
+    /** A recording started in another bubble, by someone now in this one. */
+    private followed: { recording: FollowedRecording; recorder: SpaceUser } | undefined;
     public onSessionAdded?: (recordingSessionId: string) => void;
     public onSessionRemoved?: (recordingSessionId: string) => void;
 
@@ -69,6 +94,9 @@ export class RecordingManager implements IRecordingManager {
     ) {}
 
     public async startRecording(user: SpaceUser, withMap = false): Promise<void> {
+        if (this.followed || (this.follows(withMap) && followedRecordings.has(user.uuid))) {
+            throw new Error("Recording already started");
+        }
         const primarySession = this.getPrimarySession();
 
         if (!primarySession) {
@@ -105,6 +133,12 @@ export class RecordingManager implements IRecordingManager {
     }
 
     public async stopRecording(user: SpaceUser): Promise<SpaceUser | null> {
+        if (this.followed) {
+            if (this.followed.recorder.spaceUserId !== user.spaceUserId) {
+                throw new Error("User is not the one recording");
+            }
+            return this.followed.recording.owner.stopFollowed(this.followed.recording);
+        }
         const primarySession = this.getPrimarySession();
         if (!primarySession) {
             console.warn("No recording is currently active.");
@@ -120,7 +154,8 @@ export class RecordingManager implements IRecordingManager {
 
     public async stopRecordingByServer(): Promise<SpaceUser | null> {
         const primarySession = this.getPrimarySession();
-        if (!primarySession) {
+        // The last camera left this bubble, not the recording: it is elsewhere with the person.
+        if (!primarySession || primarySession.follows) {
             return null;
         }
 
@@ -128,16 +163,88 @@ export class RecordingManager implements IRecordingManager {
     }
 
     public async stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null> {
+        if (this.followed?.recorder.spaceUserId === spaceUserId) {
+            this.leaveFollowed();
+            return null;
+        }
         const primarySession = this.getPrimarySession();
         if (!primarySession || primarySession.recorder.spaceUserId !== spaceUserId) {
+            return null;
+        }
+        const followed = primarySession.follows && followedRecordings.get(primarySession.follows);
+        if (followed) {
+            // The person left this bubble: the recording goes with them.
+            this.unfollow(followed);
+            this.publishState();
             return null;
         }
 
         return this.stopSession(primarySession);
     }
 
-    public handleAddUser(_user: SpaceUser): void {
-        // Intentionally empty. Kept for symmetry with deletion hooks.
+    public handleAddUser(user: SpaceUser): void {
+        this.showFollowed(user);
+    }
+
+    public handleSpaceKindChanged(): void {
+        for (const user of this._userRegistry.getUsers().values()) {
+            this.showFollowed(user);
+        }
+    }
+
+    /** The person a recording follows, when it shows in this bubble because of them. */
+    public get followedRecorder(): SpaceUser | undefined {
+        return this.followed?.recorder;
+    }
+
+    private showFollowed(user: SpaceUser): void {
+        const recording = followedRecordings.get(user.uuid);
+        if (!recording || this._space.getState().kind !== "bubble" || recording.spaces.has(this)) {
+            return;
+        }
+        if (recording.owner !== this) {
+            // ponytail: a bubble shows one recording; joining a bubble already recorded leaves this one running unseen.
+            if (this.followed || this.sessions.size > 0) {
+                return;
+            }
+            this.followed = { recording, recorder: user };
+        }
+        recording.spaces.add(this);
+        clearTimeout(recording.graceTimer);
+        recording.graceTimer = undefined;
+        this.publishState();
+    }
+
+    private leaveFollowed(): void {
+        const recording = this.followed?.recording;
+        this.followed = undefined;
+        if (recording) {
+            this.unfollow(recording);
+        }
+        this.publishState();
+    }
+
+    private unfollow(recording: FollowedRecording): void {
+        recording.spaces.delete(this);
+        if (recording.spaces.size > 0 || recording.graceTimer) {
+            return;
+        }
+        recording.graceTimer = setTimeout(() => {
+            recording.owner.stopFollowed(recording).catch((error) => {
+                console.error("Error stopping a recording nobody is in anymore:", error);
+                Sentry.captureException(error);
+            });
+        }, FOLLOW_GRACE_MS);
+        recording.graceTimer.unref?.();
+    }
+
+    private async stopFollowed(recording: FollowedRecording): Promise<SpaceUser | null> {
+        const session = this.sessions.get(recording.recordingSessionId);
+        return session ? this.stopSession(session) : null;
+    }
+
+    private follows(withMap: boolean): boolean {
+        return withMap && LIVEKIT_RECORDING_WITH_MAP && this._space.getState().kind === "bubble";
     }
 
     public getRecordingSessionIds(): string[] {
@@ -149,12 +256,21 @@ export class RecordingManager implements IRecordingManager {
     }
 
     public get isRecording(): boolean {
-        return this.sessions.size > 0;
+        return this.sessions.size > 0 || this.followed !== undefined;
     }
 
     public destroy(): void {
+        if (this.followed) {
+            this.leaveFollowed();
+        }
         const sessions = Array.from(this.sessions.values());
         for (const session of sessions) {
+            const followed = session.follows && followedRecordings.get(session.follows);
+            if (followed) {
+                // This bubble is over, not the recording: it is elsewhere with the person, or waits for them.
+                this.unfollow(followed);
+                continue;
+            }
             this.stopSession(session).catch((error) => {
                 console.error(error);
                 Sentry.captureException(error);
@@ -236,9 +352,17 @@ export class RecordingManager implements IRecordingManager {
             stopAfterStartRequested: false,
             stopPromise: null,
             withMap,
+            follows: this.follows(withMap) ? recorder.uuid : undefined,
         };
 
         this.sessions.set(session.recordingSessionId, session);
+        if (session.follows) {
+            followedRecordings.set(session.follows, {
+                owner: this,
+                recordingSessionId: session.recordingSessionId,
+                spaces: new Set([this]),
+            });
+        }
         this.primarySessionId = session.recordingSessionId;
         this.onSessionAdded?.(session.recordingSessionId);
         return session;
@@ -266,6 +390,16 @@ export class RecordingManager implements IRecordingManager {
         }
 
         this.sessions.delete(recordingSessionId);
+        const followed = session?.follows && followedRecordings.get(session.follows);
+        if (followed && followed.recordingSessionId === recordingSessionId) {
+            followedRecordings.delete(session.follows ?? "");
+            clearTimeout(followed.graceTimer);
+            for (const space of followed.spaces) {
+                if (space !== this) {
+                    space.leaveFollowed();
+                }
+            }
+        }
         this.onSessionRemoved?.(recordingSessionId);
         if (this.primarySessionId === recordingSessionId) {
             this.primarySessionId = undefined;
@@ -429,6 +563,17 @@ export class RecordingManager implements IRecordingManager {
     }
 
     private publishState(): void {
+        this.writeState();
+        const session = this.getPrimarySession();
+        const followed = session?.follows && followedRecordings.get(session.follows);
+        for (const space of followed ? followed.spaces : []) {
+            if (space !== this) {
+                space.writeState();
+            }
+        }
+    }
+
+    private writeState(): void {
         const snapshot = this.buildStateSnapshot();
         this._space.updateState((state) => {
             state.recording = {
@@ -440,8 +585,16 @@ export class RecordingManager implements IRecordingManager {
     }
 
     private buildStateSnapshot(): ManagedRecordingState {
+        if (this.followed) {
+            const session = this.followed.recording.owner.sessions.get(this.followed.recording.recordingSessionId);
+            return session
+                ? { isRecording: true, recorder: this.followed.recorder.spaceUserId, status: session.status }
+                : { isRecording: false, recorder: null, status: "idle" };
+        }
         const primarySession = this.getPrimarySession();
-        if (!primarySession) {
+        const followed = primarySession?.follows && followedRecordings.get(primarySession.follows);
+        // The person took the recording to another bubble: this one is not recorded anymore.
+        if (!primarySession || (followed && !followed.spaces.has(this))) {
             return {
                 isRecording: false,
                 recorder: null,

@@ -693,6 +693,15 @@ export class CommunicationManager implements ICommunicationManager {
     /** The space learnt what it is: a session waiting on that may open now. */
     public handleSpaceKindChanged(): void {
         this._sessionAnalytics.kindChanged();
+        // Now a bubble: a recording following one of its users shows here, on LiveKit.
+        this._recordingManager.handleSpaceKindChanged();
+        const recorder = this._recordingManager.followedRecorder;
+        if (recorder) {
+            this.evaluateAndHandleTransition(recorder).catch((error) => {
+                console.error("Error moving a followed recording's bubble to LiveKit:", error);
+                Sentry.captureException(error);
+            });
+        }
     }
 
     /**
