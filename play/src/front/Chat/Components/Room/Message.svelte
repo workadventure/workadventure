@@ -35,6 +35,8 @@
     import ThreadSummary from "./ThreadSummary.svelte";
     import MessageActionSheet from "./MessageActionSheet.svelte";
     import { longPress } from "./longPress";
+    import { pickOptionsPlacement } from "./optionsPlacement";
+    import type { OptionsPlacement } from "./optionsPlacement";
     import { IconAt, IconTrash } from "@wa-icons";
 
     interface Props {
@@ -197,6 +199,52 @@
             messageRef.querySelector<HTMLElement>(".options a, .options button")?.focus();
         }
     }
+
+    let bubbleRef: HTMLDivElement | undefined = $state();
+    let optionsPlacement: OptionsPlacement = $state("end");
+
+    // Before the bar shows, pick the corner above the bubble where it hides nothing of the message above.
+    function placeOptions() {
+        const bar = messageRef?.querySelector<HTMLElement>(".options");
+        const item = messageRef?.closest("li");
+        if (!messageRef || !bar || !bubbleRef || !item) {
+            return;
+        }
+        const previous = item.previousElementSibling;
+        const previousParts = previous
+            ? Array.from(previous.querySelectorAll(".message, [data-options-obstacle]"))
+            : [];
+        const obstacles = [
+            // Something without marked parts (a poll, a system line) counts as a whole.
+            ...(previous && previousParts.length === 0 ? [previous] : previousParts),
+            // Above the bubble in its own item: the unread divider, the sender's name.
+            ...Array.from(item.querySelectorAll("[data-options-obstacle]")),
+        ].map((element) => element.getBoundingClientRect());
+        const { width, height } = bar.getBoundingClientRect();
+        optionsPlacement = pickOptionsPlacement(
+            bubbleRef.getBoundingClientRect(),
+            { width, height },
+            obstacles,
+            getComputedStyle(messageRef).direction === "rtl",
+        );
+    }
+
+    // While text of this message is being selected, the bar stays hidden: it would cover what is selected.
+    let selecting = $state(false);
+
+    function onMessagePointerDown(event: PointerEvent) {
+        if (event.pointerType === "mouse" && !(event.target instanceof Element && event.target.closest(".options"))) {
+            selecting = true;
+        }
+    }
+
+    function onMessagePointerUp() {
+        if (!selecting) {
+            return;
+        }
+        const selection = window.getSelection();
+        selecting = !!selection && !selection.isCollapsed && !!messageRef?.contains(selection.anchorNode);
+    }
 </script>
 
 {#snippet stamp()}
@@ -220,9 +268,15 @@
     class={`${isMyMessage && "self-end flex-row-reverse relative"} ${
         messageFromSystem && "justify-center"
     } select-text block-user-action messageContainer items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70`}
+    class:selecting
     bind:this={messageRef}
     use:longPress={openActionSheet}
     onkeydown={onMessageKeydown}
+    onpointerenter={placeOptions}
+    onfocusin={placeOptions}
+    onpointerdown={onMessagePointerDown}
+    onpointerup={onMessagePointerUp}
+    onpointerleave={() => (selecting = false)}
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
@@ -251,7 +305,7 @@
                 : ''}"
         >
             {#if showNameHeader}
-                <div class="w-full h-fit text-xs px-2 flex items-end gap-2 overflow-x-hidden">
+                <div class="w-full h-fit text-xs px-2 flex items-end gap-2 overflow-x-hidden" data-options-obstacle>
                     <span class="text-nowrap text-sm font-bold text-white"
                         >{sender?.username}{#if waDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
                                 >({waDisplayNameParens})</span
@@ -269,6 +323,7 @@
                 </div>
             {/if}
             <div
+                bind:this={bubbleRef}
                 title={showTime || replyDepth > 0 ? undefined : timeLabel}
                 class="message rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
@@ -323,19 +378,28 @@
                     <div class="flex justify-end px-2 pb-1 -mt-1">{@render stamp()}</div>
                 {/if}
                 {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
-                    <!-- Straddles the bubble's top edge, like the reactions do its bottom one: it overlaps the message
-                         it acts on, never the one above. -->
+                    <!-- Above the bubble, never on it: on it, the bar hid the text being read or copied. The bottom
+                         padding bridges the gap to the bubble, so the pointer does not lose the hover on its way up. -->
                     <div
-                        class="options absolute -top-3 end-2 z-50 rounded-lg p-0.5 bg-contrast border border-solid border-white/15 shadow-lg ring-2 ring-contrast"
+                        class="options absolute bottom-full z-50 pb-1 {optionsPlacement === 'start'
+                            ? 'start-0'
+                            : 'end-0'}"
                     >
-                        <MessageOptions {message} {messageRef} onOpenThread={openThread} />
+                        <div
+                            class="rounded-lg p-0.5 bg-contrast border border-solid border-white/15 shadow-lg ring-2 ring-contrast"
+                        >
+                            <MessageOptions {message} {messageRef} onOpenThread={openThread} />
+                        </div>
                     </div>
                 {/if}
             </div>
             {#if hasReactions || hasReaders}
                 <!-- The reactions straddle the bubble's bottom edge from its left; in a group, who has read my last
                      message sits at the other end of the same line. -->
-                <div class="relative z-10 flex items-start gap-1 px-1.5 {hasReactions ? '-mt-2.5' : ''}">
+                <div
+                    class="relative z-10 flex items-start gap-1 px-1.5 {hasReactions ? '-mt-2.5' : ''}"
+                    data-options-obstacle
+                >
                     {#if hasReactions}
                         <MessageReactions
                             classes="min-w-0 mt-0! *:bg-contrast-900 *:ring-2 *:ring-contrast"
@@ -380,11 +444,19 @@
         gap: 2px;
         transition-delay: 0.15s;
         opacity: 1;
+        pointer-events: auto;
     }
 
+    /* Hidden, it must not catch the pointer: it sits over the message above. Keyboard focus still reaches it. */
     .options {
         transition: all 0.2s ease-in-out;
         opacity: 0;
+        pointer-events: none;
+    }
+
+    #message.selecting .options {
+        opacity: 0;
+        pointer-events: none;
     }
 
     /* A long press opens the action sheet, which can copy the text: native selection would fight it. */
