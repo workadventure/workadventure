@@ -175,7 +175,7 @@ jobs:
             nbShards: 1
             renderer: headless
             ignoreTags: "@nowebkit|@nodesktop"
-          - browser: ""
+          - browser: chromium
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
@@ -183,7 +183,7 @@ jobs:
             renderer: auto
             ignoreTags: "@nomobile"
             shardWeights: "33:48"
-          - browser: ""
+          - browser: chromium
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 2
@@ -191,14 +191,14 @@ jobs:
             renderer: auto
             ignoreTags: "@nomobile"
             shardWeights: "33:48"
-          - browser: ""
+          - browser: firefox
             parameters: --project=mobilefirefox
             project: mobilefirefox
             shard: 1
             nbShards: 1
             renderer: auto
             ignoreTags: "@nomobile|@nofirefox"
-          - browser: ""
+          - browser: webkit
             parameters: --project=mobilewebkit
             project: mobilewebkit
             shard: 1
@@ -218,12 +218,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts)
-        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.browser == 'chromium' && 'firefox' || '' }}
+        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts, @nomobile)
+        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.project == 'chromium' && 'firefox' || '' }}
         working-directory: tests
       - name: Set up virtual audio output for Firefox
         if: ${{ contains(matrix.project, 'firefox') || matrix.project == 'chromium' }}
@@ -531,6 +536,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -922,6 +932,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
