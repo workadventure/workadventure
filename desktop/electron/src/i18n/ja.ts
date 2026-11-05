@@ -110,6 +110,18 @@ const ja: NativeStrings = {
     "tray.worlds": "ワールド",
     "tray.help": "ヘルプ",
     "tray.startAtLogin": "ログイン時に起動",
+    "tray.windowMode": "ウィンドウモード",
+    "tray.windowModeX11": "互換モード (X11)",
+    "tray.windowModeWayland": "ネイティブ Wayland",
+    "windowMode.restartQuestion": "このウィンドウモードを使うために WorkAdventure を再起動しますか？",
+    "windowMode.x11Detail":
+        "ピクチャーインピクチャーとプレゼンターバーは前回の位置に開き、他のアプリより手前に表示されたままになります。マイクとカメラのショートカットは WorkAdventure が前面にあるときだけ機能します。参加中のミーティングからは退出します。",
+    "windowMode.waylandDetail":
+        "ピクチャーインピクチャーは毎回画面の中央に開き、他のアプリより手前に表示されたままにはなりません。マイクとカメラのショートカットはどのアプリからでも機能します。参加中のミーティングからは退出します。",
+    "windowMode.restartNow": "今すぐ再起動",
+    "windowMode.later": "後で",
+    "windowMode.x11Failed":
+        "WorkAdventure を互換モード (X11) で起動できなかったため、現在はネイティブ Wayland モードを使用しています。設定の「デスクトップアプリ」から元に戻せます。",
     "tray.checkForUpdates": "アップデートを確認",
     "tray.openLogs": "ログを開く",
     "tray.about": "このアプリについて",

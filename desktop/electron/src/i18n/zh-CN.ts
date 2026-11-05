@@ -101,6 +101,18 @@ const zhCN: NativeStrings = {
     "tray.worlds": "世界",
     "tray.help": "帮助",
     "tray.startAtLogin": "登录时启动",
+    "tray.windowMode": "窗口模式",
+    "tray.windowModeX11": "兼容模式 (X11)",
+    "tray.windowModeWayland": "原生 Wayland",
+    "windowMode.restartQuestion": "要重启 WorkAdventure 以使用此窗口模式吗？",
+    "windowMode.x11Detail":
+        "画中画和演示者工具栏将在你上次放置的位置打开，并始终显示在其他应用上方。麦克风和摄像头快捷键仅在 WorkAdventure 位于前台时有效。你将离开正在参加的会议。",
+    "windowMode.waylandDetail":
+        "画中画每次都将在你的屏幕中央打开，且不会保持在其他应用上方。麦克风和摄像头快捷键在任何应用中都有效。你将离开正在参加的会议。",
+    "windowMode.restartNow": "立即重启",
+    "windowMode.later": "稍后",
+    "windowMode.x11Failed":
+        "WorkAdventure 无法以兼容模式 (X11) 启动，因此现在使用原生 Wayland 模式。你可以在设置的“桌面应用”中切换回来。",
     "tray.checkForUpdates": "检查更新",
     "tray.openLogs": "打开日志",
     "tray.about": "关于",

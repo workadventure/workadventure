@@ -111,6 +111,18 @@ const nl: NativeStrings = {
     "tray.worlds": "Werelden",
     "tray.help": "Help",
     "tray.startAtLogin": "Starten bij inloggen",
+    "tray.windowMode": "Venstermodus",
+    "tray.windowModeX11": "Compatibiliteit (X11)",
+    "tray.windowModeWayland": "Native Wayland",
+    "windowMode.restartQuestion": "WorkAdventure opnieuw starten om deze venstermodus te gebruiken?",
+    "windowMode.x11Detail":
+        "Het picture-in-picture-venster en de presentatorbalk openen waar je ze het laatst hebt neergezet en blijven boven andere apps. Sneltoetsen voor microfoon en camera werken alleen als WorkAdventure op de voorgrond staat. Als je in een vergadering zit, verlaat je die.",
+    "windowMode.waylandDetail":
+        "Het picture-in-picture-venster opent elke keer in het midden van je scherm en blijft niet boven andere apps. Sneltoetsen voor microfoon en camera werken vanuit elke app. Als je in een vergadering zit, verlaat je die.",
+    "windowMode.restartNow": "Nu opnieuw starten",
+    "windowMode.later": "Later",
+    "windowMode.x11Failed":
+        "WorkAdventure kon niet starten in de compatibiliteitsmodus (X11) en gebruikt nu de native Wayland-modus. Je kunt terugschakelen in de instellingen, onder Desktopapplicatie.",
     "tray.checkForUpdates": "Controleren op updates",
     "tray.openLogs": "Logboeken openen",
     "tray.about": "Over",

@@ -18,6 +18,7 @@ import { t } from "./i18n";
 import { DESKTOP_APP_NAME } from "./app-name-policy";
 import { createDefaultProtocolClientArgs } from "./protocol-client-policy";
 import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./desktop-url-policy";
+import { applyWindowModeAtStartup } from "./window-mode";
 
 let pendingProtocolTarget: string | undefined;
 
@@ -121,6 +122,11 @@ async function init() {
         const firstLaunch = await settings.init();
 
         setLogLevel(settings.get("log_level") || "info");
+
+        // Linux under Wayland: restarting in X11 mode (the default) ends this start here.
+        if (await applyWindowModeAtStartup()) {
+            return;
+        }
 
         // Not awaited: it ends on a network round-trip to the update feed, and at login the network
         // is often not up yet. Awaiting it here delayed the tray, the menu and the window by however

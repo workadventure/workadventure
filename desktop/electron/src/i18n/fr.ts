@@ -112,6 +112,18 @@ const fr: NativeStrings = {
     "tray.worlds": "Mondes",
     "tray.help": "Aide",
     "tray.startAtLogin": "Lancer à l'ouverture de session",
+    "tray.windowMode": "Mode des fenêtres",
+    "tray.windowModeX11": "Compatibilité (X11)",
+    "tray.windowModeWayland": "Wayland natif",
+    "windowMode.restartQuestion": "Redémarrer WorkAdventure pour utiliser ce mode des fenêtres ?",
+    "windowMode.x11Detail":
+        "Le Picture in Picture et la barre du présentateur s'ouvriront là où vous les avez laissés et resteront au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionneront que lorsque WorkAdventure est au premier plan. Vous quitterez la réunion en cours, le cas échéant.",
+    "windowMode.waylandDetail":
+        "Le Picture in Picture s'ouvrira à chaque fois au milieu de votre écran et ne restera pas au-dessus des autres applications. Les raccourcis du micro et de la caméra fonctionneront depuis n'importe quelle application. Vous quitterez la réunion en cours, le cas échéant.",
+    "windowMode.restartNow": "Redémarrer maintenant",
+    "windowMode.later": "Plus tard",
+    "windowMode.x11Failed":
+        "WorkAdventure n'a pas pu démarrer en mode compatibilité (X11) et utilise maintenant le mode Wayland natif. Vous pouvez revenir en arrière dans les paramètres, sous Application desktop.",
     "tray.checkForUpdates": "Rechercher des mises à jour",
     "tray.openLogs": "Ouvrir les journaux",
     "tray.about": "À propos",

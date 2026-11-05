@@ -246,6 +246,8 @@ export type WorkAdventureDesktopApi = {
     screenPermission?: WorkAdventureDesktopScreenPermissionApi;
     /** Start WorkAdventure when the user logs in to the computer (the "Desktop application" settings). */
     startAtLogin?: WorkAdventureDesktopStartAtLoginApi;
+    /** Linux under Wayland only: run through XWayland or natively (the "Desktop application" settings). */
+    windowMode?: WorkAdventureDesktopWindowModeApi;
 };
 
 /** Read from the system each time, so a change made in its own startup settings shows. */
@@ -253,4 +255,30 @@ export interface WorkAdventureDesktopStartAtLoginApi {
     get: () => Promise<boolean>;
     /** Resolves with the state the system ends up in. */
     set: (enabled: boolean) => Promise<boolean>;
+}
+
+/**
+ * "x11" runs the app through XWayland: its floating windows (picture-in-picture, the presenter bar) can
+ * be placed and kept on top, but global shortcuts only fire while it is in front. "wayland" runs it
+ * natively: shortcuts work from any app, but the compositor places every window, in the middle.
+ */
+export type DesktopWindowMode = "x11" | "wayland";
+
+export interface DesktopWindowModeState {
+    /** The mode the next start uses. */
+    saved: DesktopWindowMode;
+    /** --ozone-platform on the command line decides instead: the choice has no effect. */
+    setByCommandLine: boolean;
+    /** XWayland is not running: compatibility mode cannot start. */
+    x11Unavailable: boolean;
+    /** This run does not use the saved mode yet: a restart applies it. */
+    restartNeeded: boolean;
+}
+
+export interface WorkAdventureDesktopWindowModeApi {
+    get: () => Promise<DesktopWindowModeState>;
+    /** Saves the mode for the next start; resolves with the new state. */
+    set: (mode: DesktopWindowMode) => Promise<DesktopWindowModeState>;
+    /** Restarts the app, which then starts in the saved mode. */
+    restart: () => void;
 }

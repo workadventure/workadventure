@@ -7,6 +7,20 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "已安装版本",
         unknown: "无法获取",
         startAtLogin: "登录电脑时启动 WorkAdventure",
+        windowMode: {
+            title: "窗口模式",
+            x11: "兼容模式 (X11)，推荐",
+            x11Description:
+                "画中画和演示者工具栏会在你上次放置的位置打开，并始终显示在其他应用上方。麦克风和摄像头快捷键仅在 WorkAdventure 位于前台时有效。当你的屏幕使用不同的缩放比例时，会多占用一些图形性能。",
+            wayland: "原生 Wayland",
+            waylandDescription:
+                "麦克风和摄像头快捷键在任何应用中都有效。画中画每次都会在屏幕中央打开，且无法保持在其他应用上方：你需要自己移动它。当你的屏幕使用不同的缩放比例时，图形负担更轻。",
+            waylandAfterRestart: "重启后，画中画将在你的屏幕中央打开，且不会保持在其他应用上方。",
+            restartNeeded: "重启 WorkAdventure 以使用此模式。你将离开正在参加的会议。",
+            restartNow: "立即重启",
+            setByCommandLine: "模式已在命令行中设置（--ozone-platform），因此此选项不起作用。",
+            x11Unavailable: "兼容模式需要 XWayland，但它未在运行。",
+        },
         browser: "你正在浏览器中使用 WorkAdventure。",
         recommendedVersion: "推荐版本",
         minimumVersion: "最低支持版本",

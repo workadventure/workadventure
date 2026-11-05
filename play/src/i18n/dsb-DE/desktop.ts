@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Instalěrowana wersija",
         unknown: "Njepśistupne",
         startAtLogin: "WorkAdventure pśi pśizjawjenju na licadle startowaś",
+        windowMode: {
+            title: "Woknowy modus",
+            x11: "Kompatibilita (X11), dopórucona",
+            x11Description:
+                "Wobraz we wobrazu a lajsta za prezentaciju se tam wócynijotej, źož sćo jej slědny raz wóstajili, a wóstanjotej nad drugimi nałoženjami. Tastowe skrotconki za mikrofon a kameru jano fungěruju, gaž jo WorkAdventure w prědku. Wužywa trochu wěcej grafiskeje mócy, gaž waše wobrazowki rozdźělne skalěrowanja wužywaju.",
+            wayland: "Natiwny Wayland",
+            waylandDescription:
+                "Tastowe skrotconki za mikrofon a kameru fungěruju z kuždego nałoženja. Wobraz we wobrazu se kuždy raz w srjejźi wobrazowki wócynijo a njamóžo nad drugimi nałoženjami wóstaś: musyśo jen sami pśesunuś. Wužywa mjenjej grafiskeje mócy, gaž waše wobrazowki rozdźělne skalěrowanja wužywaju.",
+            waylandAfterRestart:
+                "Pó nowem starśe se wobraz we wobrazu w srjejźi wašeje wobrazowki wócynijo a njewóstanjo nad drugimi nałoženjami.",
+            restartNeeded:
+                "Startujśo WorkAdventure znowego, aby toś ten modus wužywali. Wopušćijośo zasedanje, w kótaremž sćo.",
+            restartNow: "Něnto znowego startowaś",
+            setByCommandLine:
+                "Modus jo na pśikazowej smužce (--ozone-platform) nastajony, togodla toś ten wuběrk žeden wuskutk njama.",
+            x11Unavailable: "Kompatibelny modus trjeba XWayland, kótaryž njeběžy.",
+        },
         browser: "Wužywaśo WorkAdventure we wobglědowaku.",
         recommendedVersion: "Dopórucona wersija",
         minimumVersion: "Nejniša pódpěrana wersija",

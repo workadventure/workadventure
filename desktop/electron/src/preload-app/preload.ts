@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
 import { companionVisibleInShare } from "../share-surfaces-policy";
+import { windowModeApplies } from "../window-mode-policy";
 import type {
     DesktopNativeStrings,
     WorkAdventureDesktopApi,
@@ -119,6 +120,15 @@ const api: WorkAdventureDesktopApi = {
         get: () => ipcRenderer.invoke("app:start-at-login:get"),
         set: (enabled) => ipcRenderer.invoke("app:start-at-login:set", Boolean(enabled)),
     },
+    ...(windowModeApplies(process.platform, process.env)
+        ? {
+              windowMode: {
+                  get: () => ipcRenderer.invoke("app:window-mode:get"),
+                  set: (mode) => ipcRenderer.invoke("app:window-mode:set", mode),
+                  restart: () => ipcRenderer.send("app:window-mode:restart"),
+              },
+          }
+        : {}),
 };
 
 contextBridge.exposeInMainWorld("WAD", api);

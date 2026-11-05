@@ -1,5 +1,6 @@
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
+import type { DesktopWindowMode } from "@workadventure/desktop-api";
 import type { CompanionPlacement } from "./companion-window-policy";
 import {
     getDefaultPortalUrl,
@@ -22,6 +23,10 @@ export type SettingsData = {
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
     /** Last size of the resizable companion panel and where it sat on its screen, restored on reopen. */
     companion_placement?: CompanionPlacement;
+    /** Linux under Wayland: see window-mode-policy. Unset: "x11". */
+    window_mode?: DesktopWindowMode;
+    /** Set before restarting in X11 mode, cleared once that start gets going: still set, it failed. */
+    x11_start_pending?: boolean;
 };
 
 let settings: SettingsData;
@@ -120,8 +125,14 @@ function set<T extends keyof SettingsData>(key: T | SettingsData, value?: Settin
     void Settings.set(settings);
 }
 
+/** Resolves once the settings are on disk: set() writes in the background. */
+function flush(): Promise<void> {
+    return Settings.set(settings);
+}
+
 export default {
     init,
     get,
     set,
+    flush,
 };

@@ -39,6 +39,7 @@ import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from 
 import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
 import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
+import { getWindowModeState, restartToApplyWindowMode, setWindowMode } from "./window-mode";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 
@@ -594,6 +595,18 @@ export default () => {
         }
         setStartAtLogin(enabled === true);
         return isStartAtLoginEnabled();
+    });
+    ipcMain.handle("app:window-mode:get", (event) => (isFromActiveRenderer(event) ? getWindowModeState() : undefined));
+    ipcMain.handle("app:window-mode:set", (event, mode: unknown) => {
+        if (!isFromActiveRenderer(event) || (mode !== "x11" && mode !== "wayland")) {
+            return undefined;
+        }
+        return setWindowMode(mode);
+    });
+    ipcMain.on("app:window-mode:restart", (event) => {
+        if (isFromActiveRenderer(event)) {
+            restartToApplyWindowMode();
+        }
     });
 
     // ---- Picture-in-Picture (native utility window) ----

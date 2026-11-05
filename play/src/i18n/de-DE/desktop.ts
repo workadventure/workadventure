@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Installierte Version",
         unknown: "Nicht verfügbar",
         startAtLogin: "WorkAdventure bei der Anmeldung am Computer starten",
+        windowMode: {
+            title: "Fenstermodus",
+            x11: "Kompatibilität (X11), empfohlen",
+            x11Description:
+                "Bild-in-Bild und die Präsentationsleiste öffnen sich dort, wo Sie sie zuletzt platziert haben, und bleiben über anderen Anwendungen. Die Tastenkürzel für Mikrofon und Kamera funktionieren nur, solange WorkAdventure im Vordergrund ist. Beansprucht die Grafikkarte etwas stärker, wenn Ihre Bildschirme unterschiedlich skaliert sind.",
+            wayland: "Natives Wayland",
+            waylandDescription:
+                "Die Tastenkürzel für Mikrofon und Kamera funktionieren in jeder Anwendung. Bild-in-Bild öffnet sich jedes Mal in der Mitte des Bildschirms und kann nicht über anderen Anwendungen bleiben: Sie müssen es selbst verschieben. Schont die Grafikkarte, wenn Ihre Bildschirme unterschiedlich skaliert sind.",
+            waylandAfterRestart:
+                "Nach dem Neustart öffnet sich Bild-in-Bild in der Mitte Ihres Bildschirms und bleibt nicht über anderen Anwendungen.",
+            restartNeeded:
+                "Starten Sie WorkAdventure neu, um diesen Modus zu verwenden. Sie verlassen dabei ein laufendes Meeting.",
+            restartNow: "Jetzt neu starten",
+            setByCommandLine:
+                "Der Modus ist über die Befehlszeile festgelegt (--ozone-platform), daher hat diese Auswahl keine Wirkung.",
+            x11Unavailable: "Der Kompatibilitätsmodus benötigt XWayland, das nicht läuft.",
+        },
         browser: "Sie verwenden WorkAdventure im Browser.",
         recommendedVersion: "Empfohlene Version",
         minimumVersion: "Älteste unterstützte Version",
