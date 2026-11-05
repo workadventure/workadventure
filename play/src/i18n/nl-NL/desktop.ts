@@ -7,6 +7,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Geïnstalleerde versie",
         unknown: "Niet beschikbaar",
         startAtLogin: "WorkAdventure starten wanneer ik inlog op mijn computer",
+        openSettings: "Instellingen van de app openen",
         windowMode: {
             title: "Venstermodus",
             x11: "Compatibiliteit (X11), aanbevolen",

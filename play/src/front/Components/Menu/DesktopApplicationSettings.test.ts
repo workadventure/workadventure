@@ -35,8 +35,10 @@ describe("desktop application settings", () => {
     it("shows the installed version and warns below the supported minimum without blocking", async () => {
         const getVersion = vi.fn().mockResolvedValue("1.1.0");
         // startAtLogin: undefined, as on a desktop app older than the switch (the mock would invent one).
+        // openSettings: undefined likewise, everywhere the section shows the settings itself.
         window.WAD = mock<WorkAdventureDesktopApi>({
             desktop: true,
+            openSettings: undefined,
             getVersion,
             startAtLogin: undefined,
             windowMode: undefined,
@@ -54,6 +56,7 @@ describe("desktop application settings", () => {
         const set = vi.fn().mockResolvedValue(false);
         window.WAD = mock<WorkAdventureDesktopApi>({
             desktop: true,
+            openSettings: undefined,
             getVersion: vi.fn().mockResolvedValue("1.3.0"),
             startAtLogin: { get: vi.fn().mockResolvedValue(false), set },
             windowMode: undefined,
@@ -78,6 +81,7 @@ describe("desktop application settings", () => {
         const restart = vi.fn();
         window.WAD = mock<WorkAdventureDesktopApi>({
             desktop: true,
+            openSettings: undefined,
             getVersion: vi.fn().mockResolvedValue("1.3.0"),
             startAtLogin: undefined,
             windowMode: { get: vi.fn().mockResolvedValue(state), set, restart },
@@ -102,6 +106,7 @@ describe("desktop application settings", () => {
     it("disables the window mode choice when the command line sets it", async () => {
         window.WAD = mock<WorkAdventureDesktopApi>({
             desktop: true,
+            openSettings: undefined,
             getVersion: vi.fn().mockResolvedValue("1.3.0"),
             startAtLogin: undefined,
             windowMode: {
@@ -122,6 +127,28 @@ describe("desktop application settings", () => {
             "--ozone-platform",
         );
     });
+    it("sends desktop apps with a settings window there, instead of repeating its settings", async () => {
+        const openSettings = vi.fn();
+        const startAtLogin = { get: vi.fn().mockResolvedValue(true), set: vi.fn() };
+        window.WAD = mock<WorkAdventureDesktopApi>({
+            desktop: true,
+            getVersion: vi.fn().mockResolvedValue("1.3.0"),
+            openSettings,
+            startAtLogin,
+            windowMode: undefined,
+        });
+        component = mount(Settings, { target: document.body });
+        const button = await vi.waitFor(() => {
+            const element = document.querySelector<HTMLButtonElement>('[data-testid="desktop-open-settings"]');
+            expect(element).not.toBeNull();
+            return element;
+        });
+        expect(document.querySelector("#desktop-start-at-login")).toBeNull();
+        expect(startAtLogin.get).not.toHaveBeenCalled();
+
+        button?.click();
+        expect(openSettings).toHaveBeenCalledOnce();
+    });
     it("ignores a version response after the panel has closed", async () => {
         let finish: ((version: string) => void) | undefined;
         const version = new Promise<string>((resolve) => {
@@ -129,6 +156,7 @@ describe("desktop application settings", () => {
         });
         window.WAD = mock<WorkAdventureDesktopApi>({
             desktop: true,
+            openSettings: undefined,
             getVersion: () => version,
             startAtLogin: undefined,
             windowMode: undefined,

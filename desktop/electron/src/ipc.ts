@@ -40,6 +40,7 @@ import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens }
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
 import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
 import { getWindowModeState, restartToApplyWindowMode, setWindowMode } from "./window-mode";
+import { openSettingsWindow } from "./settings-window";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
 
@@ -606,6 +607,12 @@ export default () => {
     ipcMain.on("app:window-mode:restart", (event) => {
         if (isFromActiveRenderer(event)) {
             restartToApplyWindowMode();
+        }
+    });
+    // WorkAdventure's "Desktop application" settings point to the app's own window.
+    ipcMain.on("app:settings:open", (event) => {
+        if (isFromActiveRenderer(event)) {
+            openSettingsWindow();
         }
     });
 

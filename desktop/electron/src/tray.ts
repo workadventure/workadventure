@@ -2,9 +2,6 @@ import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 
-import { isStartAtLoginEnabled, onStartAtLoginChange, setStartAtLogin } from "./auto-launch";
-import * as autoUpdater from "./auto-updater";
-import * as log from "./log";
 import settings from "./settings";
 import { createWindow, getWindow } from "./window";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
@@ -13,7 +10,8 @@ import { onWorldHistoryChange } from "./world-history";
 import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
 import { isCompanionVisible, toggleCompanion } from "./companion-controller";
 import { t } from "./i18n";
-import { chooseWindowModeFromTray, getWindowModeState, onWindowModeChange, windowModeAvailable } from "./window-mode";
+import { onShortcutsChange } from "./shortcuts";
+import { openSettingsWindow } from "./settings-window";
 
 let tray: Tray | undefined;
 
@@ -213,24 +211,6 @@ function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
     ];
 }
 
-/** Linux under Wayland only. Also in WorkAdventure's settings, with what each mode changes. */
-function createWindowModeMenuItems(): Electron.MenuItemConstructorOptions[] {
-    if (!windowModeAvailable) {
-        return [];
-    }
-    const state = getWindowModeState();
-    const item = (mode: "x11" | "wayland"): Electron.MenuItemConstructorOptions => ({
-        label: t(mode === "x11" ? "tray.windowModeX11" : "tray.windowModeWayland"),
-        type: "radio",
-        checked: state.saved === mode,
-        enabled: !state.setByCommandLine && !(mode === "x11" && state.x11Unavailable),
-        click() {
-            void chooseWindowModeFromTray(mode);
-        },
-    });
-    return [{ label: t("tray.windowMode"), submenu: [item("x11"), item("wayland")] }];
-}
-
 function updateTrayContextMenu() {
     // Right-click on the Dock icon: the quick actions, the companion among them.
     app.dock?.setMenu(Menu.buildFromTemplate(quickActionMenuItems()));
@@ -238,10 +218,10 @@ function updateTrayContextMenu() {
         return;
     }
 
-    // Kept deliberately short: a menu-bar status item is glanced at mid-meeting, so only the things
-    // worth reaching for with a window hidden stay at the top level (status, mic, camera, companion,
-    // show/hide). World switching and diagnostics are real but rare, so they collapse into submenus;
-    // both also exist in the application menu, which is unreachable while the window is hidden.
+    // Kept deliberately short and shallow: a menu-bar status item is glanced at mid-meeting, so only the
+    // things worth reaching for with a window hidden stay at the top level (status, mic, camera,
+    // companion, show/hide). World switching is real but rare, so it collapses into a submenu, also in
+    // the application menu (unreachable while the window is hidden). The rest is in the settings window.
     const trayContextMenu = Menu.buildFromTemplate([
         ...quickActionMenuItems(),
         { type: "separator" },
@@ -284,47 +264,8 @@ function updateTrayContextMenu() {
         },
         { type: "separator" },
         {
-            label: t("tray.help"),
-            submenu: [
-                {
-                    // Also in WorkAdventure's settings; here for worlds whose server predates that switch.
-                    label: t("tray.startAtLogin"),
-                    type: "checkbox",
-                    checked: isStartAtLoginEnabled(),
-                    click(item) {
-                        setStartAtLogin(item.checked);
-                    },
-                },
-                ...createWindowModeMenuItems(),
-                { type: "separator" },
-                {
-                    label: t("tray.checkForUpdates"),
-                    click() {
-                        void autoUpdater.manualRequestUpdateCheck();
-                    },
-                },
-                {
-                    // Support-only, but this is the ONLY entry point to the log file in the app, so
-                    // it gets demoted rather than dropped.
-                    label: t("tray.openLogs"),
-                    click() {
-                        void log.openLog();
-                    },
-                },
-                {
-                    // Duplicated in the macOS app menu, but absent everywhere on Windows/Linux.
-                    label: t("tray.about"),
-                    click() {
-                        app.setAboutPanelOptions({
-                            applicationName: app.getName(),
-                            applicationVersion: app.getVersion(),
-                            iconPath: path.join(assetsDirectory, "icons", "logo.png"),
-                            copyright: "Copyright © WorkAdventure",
-                        });
-                        app.showAboutPanel();
-                    },
-                },
-            ],
+            label: t("menu.settings"),
+            click: openSettingsWindow,
         },
         {
             label: t("tray.quit"),
@@ -356,8 +297,8 @@ export function createTray() {
     updateTrayIcon();
     updateTrayContextMenu();
     onWorldHistoryChange(updateTrayContextMenu);
-    onStartAtLoginChange(updateTrayContextMenu);
-    onWindowModeChange(updateTrayContextMenu);
+    // The microphone and camera items show their shortcuts.
+    onShortcutsChange(updateTrayContextMenu);
     // Presence (meeting / mic / camera / idle) drives both the status dot and the quick-action
     // checkmarks, so rebuild both on every change.
     onPresenceChange(() => {

@@ -6,8 +6,11 @@
     import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
     import InputSwitch from "../Input/InputSwitch.svelte";
     import InputRadio from "../Input/InputRadio.svelte";
+    import Button from "../UI/Button.svelte";
 
     const desktop = window.WAD?.desktop ? window.WAD : undefined;
+    // Desktop apps with a settings window of their own show these settings there.
+    const openDesktopSettings = desktop?.openSettings;
     const policy = DESKTOP_VERSION_POLICY;
     const downloadUrl = desktopDownloadUrl(policy);
     let installed = $state<string>();
@@ -26,18 +29,20 @@
                     if (active) installed = version;
                 })
                 .catch((error: unknown) => console.warn("Could not read desktop version", error));
-            desktop.startAtLogin
-                ?.get()
-                .then((enabled) => {
-                    if (active) startAtLogin = enabled;
-                })
-                .catch((error: unknown) => console.warn("Could not read start at login", error));
-            desktop.windowMode
-                ?.get()
-                .then((state) => {
-                    if (active) showWindowMode(state);
-                })
-                .catch((error: unknown) => console.warn("Could not read the window mode", error));
+            if (!openDesktopSettings) {
+                desktop.startAtLogin
+                    ?.get()
+                    .then((enabled) => {
+                        if (active) startAtLogin = enabled;
+                    })
+                    .catch((error: unknown) => console.warn("Could not read start at login", error));
+                desktop.windowMode
+                    ?.get()
+                    .then((state) => {
+                        if (active) showWindowMode(state);
+                    })
+                    .catch((error: unknown) => console.warn("Could not read the window mode", error));
+            }
         }
         return () => {
             active = false;
@@ -98,6 +103,14 @@
             {$LL.desktop.application.installed()}:
             <strong data-testid="desktop-installed-version">{installed ?? $LL.desktop.application.unknown()}</strong>
         </p>
+        {#if openDesktopSettings}
+            <Button
+                variant="secondary"
+                class="self-start"
+                dataTestId="desktop-open-settings"
+                onclick={() => openDesktopSettings()}>{$LL.desktop.application.openSettings()}</Button
+            >
+        {/if}
         {#if startAtLogin !== undefined}
             <InputSwitch
                 id="desktop-start-at-login"
@@ -140,12 +153,12 @@
                             <p class="text-warning">{$LL.desktop.application.windowMode.waylandAfterRestart()}</p>
                         {/if}
                         <p>{$LL.desktop.application.windowMode.restartNeeded()}</p>
-                        <button
-                            type="button"
-                            class="btn-outline w-fit px-4"
-                            data-testid="desktop-window-mode-restart-now"
+                        <Button
+                            variant="secondary"
+                            class="self-start"
+                            dataTestId="desktop-window-mode-restart-now"
                             onclick={() => desktop?.windowMode?.restart()}
-                            >{$LL.desktop.application.windowMode.restartNow()}</button
+                            >{$LL.desktop.application.windowMode.restartNow()}</Button
                         >
                     </div>
                 {/if}
@@ -164,12 +177,14 @@
         <p role="status" class:text-warning={status === "belowMinimum"}>{$LL.desktop.application.status[status]()}</p>
     {/if}
     {#if downloadUrl}
-        <a
+        <!-- A link that looks like a button: it opens the page in the browser. -->
+        <Button
+            variant="secondary"
             href={downloadUrl}
             target="_blank"
             rel="noopener noreferrer"
-            class="underline text-light-blue self-start"
-            data-testid="desktop-approved-download">{$LL.desktop.application.download()}</a
+            class="self-start"
+            dataTestId="desktop-approved-download">{$LL.desktop.application.download()}</Button
         >
     {/if}
     <p class="text-sm opacity-75">{$LL.desktop.application.managed()}</p>

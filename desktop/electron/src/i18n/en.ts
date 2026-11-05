@@ -1,4 +1,4 @@
-// Native strings (no world behind them): Landing, tab strip, application menu, tray, sign-in /
+// Native strings (no world behind them): Landing, settings window, tab strip, application menu, tray, sign-in /
 // sign-out screens, screen-identify overlay. English is the reference: every other locale must
 // define exactly these keys (enforced by the NativeStrings type). Placeholders are `{name}`.
 const en = {
@@ -75,6 +75,7 @@ const en = {
     "menu.nextTab": "Next tab",
     "menu.previousTab": "Previous tab",
     "menu.showTabBar": "Show tab bar",
+    "menu.settings": "Settings…",
     "menu.changeWorld": "Change world…",
     "menu.pinnedWorlds": "Pinned worlds",
     "menu.recentWorlds": "Recent worlds",
@@ -107,24 +108,48 @@ const en = {
     "tray.companionPanel": "Companion panel",
     "tray.showHide": "Show / hide",
     "tray.worlds": "Worlds",
-    "tray.help": "Help",
-    "tray.startAtLogin": "Start at login",
-    "tray.windowMode": "Window mode",
-    "tray.windowModeX11": "Compatibility (X11)",
-    "tray.windowModeWayland": "Native Wayland",
-    "windowMode.restartQuestion": "Restart WorkAdventure to use this window mode?",
-    "windowMode.x11Detail":
-        "Picture-in-picture and the presenter bar will open where you left them and stay on top of other apps. Microphone and camera shortcuts will only work while WorkAdventure is in front. You'll leave any meeting you're in.",
-    "windowMode.waylandDetail":
-        "Picture-in-picture will open in the middle of your screen every time and won't stay on top of other apps. Microphone and camera shortcuts will work from any app. You'll leave any meeting you're in.",
-    "windowMode.restartNow": "Restart now",
     "windowMode.later": "Later",
     "windowMode.x11Failed":
-        "WorkAdventure couldn't start in compatibility mode (X11), so it now uses native Wayland mode. You can switch back in the settings, under Desktop application.",
-    "tray.checkForUpdates": "Check for updates",
-    "tray.openLogs": "Open logs",
-    "tray.about": "About",
+        "WorkAdventure couldn't start in compatibility mode (X11), so it now uses native Wayland mode. You can switch back in its settings.",
+    "windowMode.openSettings": "Open settings",
     "tray.quit": "Quit",
+
+    "settings.title": "Settings",
+    "settings.general": "General",
+    "settings.startAtLogin": "Start WorkAdventure when I log in to my computer",
+    "settings.showTabBar": "Show tab bar",
+    "settings.showTabBarHint": "The tab bar shows once several worlds are open.",
+    "settings.windowMode": "Window mode",
+    "settings.windowModeX11": "Compatibility (X11), recommended",
+    "settings.windowModeX11Description":
+        "Picture-in-picture and the presenter bar open where you left them and stay on top of other apps. Microphone and camera shortcuts only work while WorkAdventure is in front. Uses a bit more graphics power when your screens use different scales.",
+    "settings.windowModeWayland": "Native Wayland",
+    "settings.windowModeWaylandDescription":
+        "Microphone and camera shortcuts work from any app. Picture-in-picture opens in the middle of the screen every time and can’t stay on top of other apps: you’ll have to move it yourself. Lighter on graphics when your screens use different scales.",
+    "settings.windowModeSetByCommandLine":
+        "The mode is set on the command line (--ozone-platform), so this choice has no effect.",
+    "settings.windowModeX11Unavailable": "Compatibility mode needs XWayland, which isn’t running.",
+    "settings.windowModeWaylandAfterRestart":
+        "After the restart, picture-in-picture will open in the middle of your screen and won’t stay on top of other apps.",
+    "settings.windowModeRestartNeeded": "Restart WorkAdventure to use this mode. You’ll leave any meeting you’re in.",
+    "settings.restartNow": "Restart now",
+    "settings.shortcuts": "Keyboard Shortcuts",
+    "settings.shortcutsHint": "Click a shortcut, then press the new keys. Esc cancels.",
+    "settings.shortcutMute": "Microphone",
+    "settings.shortcutCamera": "Camera",
+    "settings.shortcutCompanion": "Companion panel",
+    "settings.shortcutNone": "None",
+    "settings.shortcutPress": "Press the keys…",
+    "settings.shortcutClear": "Clear",
+    "settings.shortcutNeedsModifier": "Add a modifier key, such as Ctrl or Alt.",
+    "settings.shortcutDuplicate": "Already used for another action.",
+    "settings.shortcutTaken": "Another app already uses this shortcut, so it doesn't work.",
+    "settings.updates": "Updates",
+    "settings.version": "Version {version}",
+    "settings.checkForUpdates": "Check for updates",
+    "settings.troubleshooting": "Troubleshooting",
+    "settings.openLogs": "Open logs",
+    "settings.openDevTools": "Open developer tools",
 
     "auth.pageTitle": "WorkAdventure sign-in",
     "auth.signingInTitle": "Signing in…",
