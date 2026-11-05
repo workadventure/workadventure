@@ -6,11 +6,12 @@ import type { Subscription } from "rxjs";
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { get, writable } from "svelte/store";
+import { derived, get, writable } from "svelte/store";
 import { cpuLimitedStore } from "../../WebRtc/CpuLimitationDetector";
 import type { SpaceInterface } from "../SpaceInterface";
 import type { LocalStreamStoreValue } from "../../Stores/MediaStore";
 import { effectiveCameraStateStore, effectiveMicrophoneStateStore } from "../../Stores/MediaStore";
+import { heldMediaStore } from "../../Stores/HeldMediaStore";
 import { requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { givenFloorSpaceStore } from "../../Stores/MegaphoneStore";
 import { recordingStore } from "../../Stores/RecordingStore";
@@ -512,6 +513,15 @@ export class SpacePeerManager {
                 this.space.emitUpdateUser({
                     cameraState: state,
                 });
+            }),
+        );
+        // Others are told which device the user's status holds off (away mode...), and that it comes back with them
+        this.unsubscribes.push(
+            derived(heldMediaStore, (held) => held.camera).subscribe((cameraHeld) => {
+                this.space.emitUpdateUser({ cameraHeld });
+            }),
+            derived(heldMediaStore, (held) => held.microphone).subscribe((microphoneHeld) => {
+                this.space.emitUpdateUser({ microphoneHeld });
             }),
         );
         // The back moves the bubble to LiveKit for a member whose encoders cannot keep up (see CpuLimitationDetector)
