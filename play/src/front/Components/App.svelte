@@ -34,7 +34,7 @@
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
-    import { isRecorderMode, RECORDER_FPS } from "../Utils/RecorderMode";
+    import { isRecorderMode, RECORDER_FPS, recorderMapRectStore } from "../Utils/RecorderMode";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
@@ -292,6 +292,9 @@
             class="relative {$fullScreenCowebsite ? 'hidden' : ''}"
             class:game-scene-loaded={$gameSceneIsLoadedStore}
             bind:this={gameDiv}
+            style={$recorderMapRectStore
+                ? `position: fixed; left: ${$recorderMapRectStore.left}px; top: ${$recorderMapRectStore.top}px; width: ${$recorderMapRectStore.width}px; height: ${$recorderMapRectStore.height}px;`
+                : undefined}
         >
             {#if game}
                 <GameOverlay {game} />

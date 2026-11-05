@@ -13,6 +13,7 @@
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import type { RecorderLayoutMode } from "../../../Utils/RecorderLayout";
     import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -31,7 +32,7 @@
         closeFloatingUi = undefined;
     }
 
-    async function applyRecordingAction(row: RecordingSpaceRow, withMap = false): Promise<void> {
+    async function applyRecordingAction(row: RecordingSpaceRow, layout?: RecorderLayoutMode): Promise<void> {
         if (!row.action) {
             return;
         }
@@ -43,7 +44,7 @@
 
         try {
             if (row.action === "start") {
-                await row.space.state.startRecording(withMap);
+                await row.space.state.startRecording(layout);
                 analyticsClient.trackAdminEvent("recording.started");
             } else {
                 await row.space.state.stopRecording();
@@ -76,8 +77,8 @@
             {
                 rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
                 withMapAvailable: get(recordingWithMapAvailableStore),
-                onselect: (row: RecordingSpaceRow, withMap: boolean) => {
-                    applyRecordingAction(row, withMap).catch((error) => {
+                onselect: (row: RecordingSpaceRow, layout: RecorderLayoutMode | undefined) => {
+                    applyRecordingAction(row, layout).catch((error) => {
                         console.error(`Failed to apply recording action`, error);
                     });
                 },

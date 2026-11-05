@@ -1,3 +1,7 @@
+import { writable } from "svelte/store";
+import { parseRecorderLayoutMode } from "./RecorderLayout";
+import type { Rect, RecorderLayoutMode } from "./RecorderLayout";
+
 /**
  * `?recorder` in the URL: the page is filmed by the LiveKit egress. Nobody sits at it, so it shows the map and the
  * camera tiles only: no Woka of its own, no UI, and Phaser capped at 30 fps (the egress encodes at 30 fps; rendering
@@ -20,3 +24,14 @@ export const RECORDER_FPS = 30;
  */
 export const recorderSpace = isRecorderMode ? (params.get("space") ?? undefined) : undefined;
 export const recorderSpaceFilter = isRecorderMode ? Number(params.get("filter") ?? 0) : 0;
+
+/**
+ * The layout of the recording (`?recorderLayout=`, see RecorderLayout). A store and not a constant: a producer will switch it
+ * while recording.
+ */
+export const recorderLayoutModeStore = writable<RecorderLayoutMode>(
+    parseRecorderLayoutMode(params.get("recorderLayout")),
+);
+
+/** Where RecorderLayout leaves the map: the game canvas is sized and placed there (see canvasSize). */
+export const recorderMapRectStore = writable<Rect | undefined>(undefined);

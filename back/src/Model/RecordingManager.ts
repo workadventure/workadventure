@@ -24,6 +24,8 @@ interface RecordingSession {
     stopAfterStartRequested: boolean;
     stopPromise: Promise<SpaceUser | null> | null;
     withMap: boolean;
+    /** With the map: the ?recorderLayout= of the recorder page. */
+    layout: string;
     /** A recording over the map of a bubble follows the person recording (their uuid), not the bubble. */
     follows?: string;
 }
@@ -53,7 +55,7 @@ export interface ManagedRecordingState {
 
 export interface IRecordingManager {
     getRecordingState(): ManagedRecordingState;
-    startRecording(user: SpaceUser, withMap?: boolean): Promise<void>;
+    startRecording(user: SpaceUser, withMap?: boolean, layout?: string): Promise<void>;
     stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
     stopRecordingByServer(): Promise<SpaceUser | null>;
     stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
@@ -93,14 +95,14 @@ export class RecordingManager implements IRecordingManager {
         private readonly _lifecycleManager: IStateLifecycleManager,
     ) {}
 
-    public async startRecording(user: SpaceUser, withMap = false): Promise<void> {
+    public async startRecording(user: SpaceUser, withMap = false, layout = ""): Promise<void> {
         if (this.followed || (this.follows(withMap) && followedRecordings.has(user.uuid))) {
             throw new Error("Recording already started");
         }
         const primarySession = this.getPrimarySession();
 
         if (!primarySession) {
-            const session = this.createSession(user, withMap);
+            const session = this.createSession(user, withMap, layout);
             return this.runStart(session);
         }
 
@@ -341,7 +343,7 @@ export class RecordingManager implements IRecordingManager {
         };
     }
 
-    private createSession(recorder: SpaceUser, withMap: boolean): RecordingSession {
+    private createSession(recorder: SpaceUser, withMap: boolean, layout: string): RecordingSession {
         const session: RecordingSession = {
             createdAt: Date.now(),
             expectedRoomName: getLivekitRoomName(this._space.getSpaceName()),
@@ -352,6 +354,7 @@ export class RecordingManager implements IRecordingManager {
             stopAfterStartRequested: false,
             stopPromise: null,
             withMap,
+            layout,
             follows: this.follows(withMap) ? recorder.uuid : undefined,
         };
 
@@ -435,6 +438,7 @@ export class RecordingManager implements IRecordingManager {
                     session.recorder,
                     session.recordingSessionId,
                     session.withMap,
+                    session.layout,
                 );
                 this.reconcileStartResult(
                     session.recordingSessionId,
@@ -542,6 +546,7 @@ export class RecordingManager implements IRecordingManager {
             session.recorder,
             session.recordingSessionId,
             session.withMap,
+            session.layout,
         );
         this.reconcileStartResult(session.recordingSessionId, recordingStartInfo.egressId, recordingStartInfo.roomName);
     }

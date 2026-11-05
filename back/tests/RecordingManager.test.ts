@@ -124,7 +124,7 @@ describe("RecordingManager", () => {
         const recordingSessionId = getRecordingSessionId(mocks.handleStartRecording);
 
         expect(manager.getRecordingState().status).toBe("starting");
-        expect(mocks.handleStartRecording).toHaveBeenCalledWith(user, recordingSessionId, false);
+        expect(mocks.handleStartRecording).toHaveBeenCalledWith(user, recordingSessionId, false, "");
         expect(publishState).toHaveBeenCalledTimes(1);
         expect(publishState).toHaveBeenNthCalledWith(1, {
             recording: {

@@ -29,7 +29,12 @@ export interface ICommunicationState<T extends ICommunicationStrategy> {
 }
 
 export interface IRecordableState<T extends IRecordableStrategy> extends ICommunicationState<T> {
-    handleStartRecording(user: SpaceUser, recordingSessionId: string, withMap?: boolean): Promise<RecordingStartInfo>;
+    handleStartRecording(
+        user: SpaceUser,
+        recordingSessionId: string,
+        withMap?: boolean,
+        layout?: string,
+    ): Promise<RecordingStartInfo>;
     handleStopRecording(egressId?: string): Promise<void>;
     handleLivekitWebhook(
         rawBody: Buffer | Uint8Array,

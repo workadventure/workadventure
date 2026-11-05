@@ -43,8 +43,14 @@ export async function mintRecorderToken(follow: string): Promise<string> {
  * ?recorder mode, told which space to join. The egress appends its own url and token to this URL.
  * The pusher names spaces "<world>.<local name>"; the page joins by local name.
  */
-export function recorderPageUrl(playUri: string, world: string, spaceName: string, filterType: number): string {
-    const url = recorderMapUrl(playUri);
+export function recorderPageUrl(
+    playUri: string,
+    layout: string,
+    world: string,
+    spaceName: string,
+    filterType: number,
+): string {
+    const url = recorderMapUrl(playUri, layout);
     url.searchParams.set("space", spaceName.startsWith(world + ".") ? spaceName.slice(world.length + 1) : spaceName);
     url.searchParams.set("filter", String(filterType));
     return url.toString();
@@ -54,16 +60,18 @@ export function recorderPageUrl(playUri: string, world: string, spaceName: strin
  * The page a web egress films to follow a user: their map in ?recorder mode, with the recorder token (which names
  * the user to follow). No space: the back sends the page into that user's bubbles.
  */
-export function recorderFollowPageUrl(playUri: string, token: string): string {
-    const url = recorderMapUrl(playUri);
+export function recorderFollowPageUrl(playUri: string, layout: string, token: string): string {
+    const url = recorderMapUrl(playUri, layout);
     url.searchParams.set("token", token);
     return url.toString();
 }
 
-function recorderMapUrl(playUri: string): URL {
+function recorderMapUrl(playUri: string, layout: string): URL {
     const url = new URL(playUri);
     url.hash = "";
     url.search = "";
     url.searchParams.set("recorder", "");
+    // Not "layout": a room composite egress sets its own ?layout= on the page it films.
+    if (layout) url.searchParams.set("recorderLayout", layout);
     return url;
 }

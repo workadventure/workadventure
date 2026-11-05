@@ -48,7 +48,12 @@ const recording: DeepPartial<Translation["recording"]> = {
         spacePicker: {
             megaphone: "Megafon aufnehmen",
             discussion: "Diskussion aufnehmen",
-            withMap: "Mit der Karte",
+            withMap: "Mit der Karte:",
+            layout: {
+                map: "Karte zuerst",
+                balanced: "Ausgewogen",
+                cameras: "Kameras zuerst",
+            },
         },
     },
 };

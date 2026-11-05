@@ -47,7 +47,12 @@ const recording: BaseTranslation = {
         spacePicker: {
             megaphone: "Record megaphone",
             discussion: "Record discussion",
-            withMap: "With the map",
+            withMap: "With the map:",
+            layout: {
+                map: "Map first",
+                balanced: "Balanced",
+                cameras: "Cameras first",
+            },
         },
     },
 };

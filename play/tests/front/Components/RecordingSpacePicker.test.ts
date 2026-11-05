@@ -12,7 +12,11 @@ vi.mock("../../../src/i18n/i18n-svelte", async () => {
                 actionbar: {
                     title: { start: () => "Start", stop: () => "Stop" },
                     desc: { advert: () => "Advert" },
-                    spacePicker: { discussion: () => "Record discussion", withMap: () => "With the map" },
+                    spacePicker: {
+                        discussion: () => "Record discussion",
+                        withMap: () => "With the map:",
+                        layout: { map: () => "Map first", balanced: () => "Balanced", cameras: () => "Cameras first" },
+                    },
                 },
             },
         }),
@@ -44,10 +48,10 @@ describe("recording space picker", () => {
     it("only offers the map when the server allows it", () => {
         component = mount(RecordingSpacePicker, { target, props: { rowsStore: readable([row]) } });
         flushSync();
-        expect(target.querySelector("[data-testid='recording-space-action-start-with-map']")).toBeNull();
+        expect(target.querySelector("[data-testid^='recording-space-action-start-with-map']")).toBeNull();
     });
 
-    it("starts over the map or with the cameras only", () => {
+    it("starts over the map in the chosen layout, or with the cameras only", () => {
         const onselect = vi.fn();
         component = mount(RecordingSpacePicker, {
             target,
@@ -55,12 +59,14 @@ describe("recording space picker", () => {
         });
         flushSync();
 
-        target.querySelector<HTMLButtonElement>("[data-testid='recording-space-action-start-with-map']")?.click();
+        target
+            .querySelector<HTMLButtonElement>("[data-testid='recording-space-action-start-with-map-cameras']")
+            ?.click();
         target.querySelector<HTMLButtonElement>("[data-testid='recording-space-action-start']")?.click();
 
         expect(onselect.mock.calls).toEqual([
-            [row, true],
-            [row, false],
+            [row, "cameras"],
+            [row, undefined],
         ]);
     });
 });

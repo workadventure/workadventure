@@ -121,6 +121,7 @@ describe("recorderPageUrl", () => {
         const url = new URL(
             recorderPageUrl(
                 "http://play.example.com/~/office.wam?foo=1#moveTo=Desk",
+                "cameras",
                 world,
                 `${world}.http://play.example.com/~/office.wam#8#1793805819841`,
                 0,
@@ -130,6 +131,7 @@ describe("recorderPageUrl", () => {
         expect(url.hash).toBe("");
         expect(url.searchParams.has("recorder")).toBe(true);
         expect(url.searchParams.has("foo")).toBe(false);
+        expect(url.searchParams.get("recorderLayout")).toBe("cameras");
         expect(url.searchParams.get("space")).toBe("http://play.example.com/~/office.wam#8#1793805819841");
         expect(url.searchParams.get("filter")).toBe("0");
     });

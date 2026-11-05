@@ -1090,6 +1090,9 @@ message RevokeFloorQuery {
 message StartRecordingQuery {
   // Film the meeting over the live map (the ?recorder page) instead of the camera grid.
   bool withMap = 1;
+  // With the map: where the map goes against the cameras ("map", "balanced" or "cameras"), the ?recorder page's
+  // ?recorderLayout=. Empty means the page's default.
+  string layout = 2;
 }
 message StopRecordingQuery {
 }

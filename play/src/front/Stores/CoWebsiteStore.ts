@@ -4,6 +4,7 @@ import type { CowebsiteOpenedAnalyticsContext } from "../Administration/Cowebsit
 import { buildCowebsiteOpenedProperties } from "../Administration/CowebsiteAnalyticsProperties";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { TimedEventsByKey } from "../Administration/TimedAnalyticsEvent";
+import { recorderMapRectStore } from "../Utils/RecorderMode";
 
 export function createCoWebsiteStore() {
     const { subscribe, update } = writable<Array<CoWebsite>>([]);
@@ -142,8 +143,11 @@ export const windowSize = readable({ width: window.innerWidth, height: window.in
 export const coWebsiteRatio = writable(0.5);
 
 export const canvasSize = derived(
-    [coWebsites, windowSize, coWebsiteRatio, fullScreenCowebsite],
-    ([$coWebsites, $windowSize, $coWebsiteRatio, $fullScreenCowebsite]) => {
+    [coWebsites, windowSize, coWebsiteRatio, fullScreenCowebsite, recorderMapRectStore],
+    ([$coWebsites, $windowSize, $coWebsiteRatio, $fullScreenCowebsite, $recorderMapRect]) => {
+        if ($recorderMapRect) {
+            return { width: $recorderMapRect.width, height: $recorderMapRect.height };
+        }
         if ($coWebsites.length === 0) {
             return { width: window.innerWidth, height: window.innerHeight };
         }

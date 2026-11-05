@@ -43,7 +43,7 @@ describe("SocketManager space state queries", () => {
             manager.handleSpaceStateQuery(
                 createClient({ canRecord: false }),
                 "world.space-name",
-                { query: { $case: "startRecording", startRecording: { withMap: false } } },
+                { query: { $case: "startRecording", startRecording: { withMap: false, layout: "" } } },
                 { signal: new AbortController().signal },
             ),
         ).rejects.toThrow("You are not allowed to record");

@@ -115,9 +115,10 @@ export class SpaceStateManager {
     }
 
     // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).
-    public async startRecording(withMap = false): Promise<void> {
+    // layout: over the map, in this layout (see RecorderLayout). Undefined: the camera grid only.
+    public async startRecording(layout?: string): Promise<void> {
         await this.alter(
-            { $case: "startRecording", startRecording: { withMap } },
+            { $case: "startRecording", startRecording: { withMap: layout !== undefined, layout: layout ?? "" } },
             { timeout: RECORDING_QUERY_TIMEOUT_MS },
         );
     }

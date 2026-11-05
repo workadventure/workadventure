@@ -3,12 +3,15 @@
     import { clickOutside } from "svelte-outside";
     import { LL } from "../../../../i18n/i18n-svelte";
     import type { RecordingSpaceRow } from "../../ActionBar/MenuIcons/RecordingMenuUtils";
+    import { RECORDER_LAYOUT_MODES } from "../../../Utils/RecorderLayout";
+    import type { RecorderLayoutMode } from "../../../Utils/RecorderLayout";
 
     interface Props {
         rowsStore: Readable<RecordingSpaceRow[]>;
-        // Offer a second start button that films the meeting over the live map.
+        // Offer to film the meeting over the live map, in one of its layouts.
         withMapAvailable?: boolean;
-        onselect?: (row: RecordingSpaceRow, withMap: boolean) => void;
+        // layout: over the map, in this layout. Undefined: the camera grid only.
+        onselect?: (row: RecordingSpaceRow, layout: RecorderLayoutMode | undefined) => void;
         onclose?: () => void;
     }
 
@@ -18,12 +21,12 @@
         onclose?.();
     }
 
-    function handleSelect(row: RecordingSpaceRow, withMap = false): void {
+    function handleSelect(row: RecordingSpaceRow, layout?: RecorderLayoutMode): void {
         if (row.disabled || !row.action) {
             return;
         }
 
-        onselect?.(row, withMap);
+        onselect?.(row, layout);
         handleClose();
     }
 
@@ -76,6 +79,22 @@
                         {$LL.recording.actionbar.desc.advert()}
                     {/if}
                 </span>
+                {#if row.action === "start" && withMapAvailable}
+                    <div class="flex flex-row flex-wrap items-center gap-1 pt-1">
+                        <span class="text-xs text-white/70">{$LL.recording.actionbar.spacePicker.withMap()}</span>
+                        {#each RECORDER_LAYOUT_MODES as layout (layout)}
+                            <button
+                                type="button"
+                                data-testid="recording-space-action-start-with-map-{layout}"
+                                class="rounded border border-white/20 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                disabled={row.disabled}
+                                onclick={() => handleSelect(row, layout)}
+                            >
+                                {$LL.recording.actionbar.spacePicker.layout[layout]()}
+                            </button>
+                        {/each}
+                    </div>
+                {/if}
             </div>
 
             {#if row.action}
@@ -93,17 +112,6 @@
                         ? $LL.recording.actionbar.title.stop()
                         : $LL.recording.actionbar.title.start()}
                 </button>
-                {#if row.action === "start" && withMapAvailable}
-                    <button
-                        type="button"
-                        data-testid="recording-space-action-start-with-map"
-                        class="shrink-0 rounded border border-white/20 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={row.disabled}
-                        onclick={() => handleSelect(row, true)}
-                    >
-                        {$LL.recording.actionbar.spacePicker.withMap()}
-                    </button>
-                {/if}
             {/if}
         </div>
     {/each}

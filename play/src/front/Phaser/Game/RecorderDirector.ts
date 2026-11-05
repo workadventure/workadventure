@@ -11,8 +11,11 @@ const REFRAME_INTERVAL_MS = 1000;
 const FIRST_BUBBLE_TIMEOUT_MS = 5000;
 // Room around the group, as a share of its size.
 const FRAMING_MARGIN = 0.4;
-// The smallest window filmed (one person alone is not filmed from 10 cm).
-const MIN_FRAME = { width: 480, height: 270 };
+// The smallest window of the map filmed, in map px: wide enough to see the room around the bubble and who walks in.
+// ponytail: one zoom for every mode, a per-mode or producer-set zoom when someone asks for it.
+// On a small map, it shows at most 3/4 of the map so the bubble still stands out (the whole map would sit in bands).
+const MIN_FRAME = { width: 960, height: 540 };
+const MAX_MIN_FRAME_SHARE_OF_MAP = 0.75;
 // Movements smaller than this do not move the camera (no jitter while people shuffle on the spot).
 const FRAME_STEP = 32;
 
@@ -134,8 +137,10 @@ export class RecorderDirector {
             // Nobody of the space on this map: keep the last shot.
             return;
         }
-        const width = Math.max(MIN_FRAME.width, right - left);
-        const height = Math.max(MIN_FRAME.height, bottom - top);
+        const map = this.scene.Map;
+        const cap = MAX_MIN_FRAME_SHARE_OF_MAP / (1 + FRAMING_MARGIN);
+        const width = Math.max(Math.min(MIN_FRAME.width, map.widthInPixels * cap), right - left);
+        const height = Math.max(Math.min(MIN_FRAME.height, map.heightInPixels * cap), bottom - top);
         const x = (left + right) / 2;
         const y = (top + bottom) / 2;
         const key = [x, y, width, height].map((v) => Math.round(v / FRAME_STEP)).join(",");
