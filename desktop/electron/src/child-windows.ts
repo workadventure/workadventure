@@ -32,7 +32,7 @@ function boundsFor(kind: HudKind, displayId: number | undefined): Electron.Recta
     return kind === "annotation"
         ? display.bounds
         : kind === "companion"
-        ? normalizeCompanionBounds(settings.get("companion_bounds"), display.workArea, HUD_SIZES.companion)
+        ? normalizeCompanionBounds(settings.get("companion_placement"), display.workArea, HUD_SIZES.companion)
         : meetingBarBounds(display);
 }
 
