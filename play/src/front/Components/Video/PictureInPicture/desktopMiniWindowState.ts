@@ -6,6 +6,7 @@ import {
     requestedMicrophoneState,
     requestedStatusStore,
 } from "../../../Stores/MediaStore";
+import { awayPausedMediaStore, comeBackWith } from "../../../Stores/AwayPausedMediaStore";
 import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../../Stores/StreamableCollectionStore";
@@ -52,6 +53,9 @@ export type MiniWindowConversation = {
 export type MiniWindowMedia = {
     micEnabled: boolean;
     cameraEnabled: boolean;
+    /** On for the user, but held off by away mode: nobody hears / sees it until they come back. */
+    micPaused: boolean;
+    cameraPaused: boolean;
     screenSharing: boolean;
     canScreenShare: boolean;
     inMeeting: boolean;
@@ -127,10 +131,13 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
         requestedStatusStore,
         availabilityStatusStore,
         screenSharingAvailableStore,
+        awayPausedMediaStore,
     ],
-    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare]) => ({
+    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare, $paused]) => ({
         micEnabled: Boolean($mic),
         cameraEnabled: Boolean($cam),
+        micPaused: $paused.microphone,
+        cameraPaused: $paused.camera,
         screenSharing: Boolean($share),
         // Like the app's own action bar: sharing needs a bubble or a live stream.
         canScreenShare: Boolean($canShare),
@@ -140,13 +147,16 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
     }),
 );
 
+// A device paused by away mode turns on: the user comes back with it alone.
 export function toggleMicrophone(): void {
-    if (get(requestedMicrophoneState)) requestedMicrophoneState.disableMicrophone();
+    if (get(awayPausedMediaStore).microphone) comeBackWith("microphone");
+    else if (get(requestedMicrophoneState)) requestedMicrophoneState.disableMicrophone();
     else requestedMicrophoneState.enableMicrophone();
 }
 
 export function toggleCamera(): void {
-    if (get(requestedCameraState)) requestedCameraState.disableWebcam();
+    if (get(awayPausedMediaStore).camera) comeBackWith("camera");
+    else if (get(requestedCameraState)) requestedCameraState.disableWebcam();
     else requestedCameraState.enableWebcam();
 }
 

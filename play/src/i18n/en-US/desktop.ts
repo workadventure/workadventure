@@ -61,6 +61,8 @@ const desktop: BaseTranslation = {
         people: "People",
         toggleMic: "Turn microphone on/off",
         toggleCamera: "Turn camera on/off",
+        micPaused: "Microphone paused while you're away: turn it on",
+        cameraPaused: "Camera paused while you're away: turn it on",
         shareScreen: "Share your screen",
         stopShareScreen: "Stop sharing your screen",
         shareScreenNeedsMeeting: "Join a meeting to share your screen",

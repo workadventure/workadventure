@@ -11,6 +11,18 @@ const video: DeepPartial<Translation["video"]> = {
     persistent_connection_issue: "Znowu zwězujo se... Njestabilny zwězk...",
     click_to_unblock: "Klikniśo, aby blokěrowanje wótpórał",
     click_and_drag_to_resize: "Klikniś a śěgnuś, aby wulkosć změnił",
+    away: {
+        subtitle: "Pawza, mjaztym až sćo pšecej",
+        cantSeeOrHear: "Nichten njamóžo was wiźeś abo słyšaś",
+        heardNotSeen: "Wy sćo słyšaś, ale njewiźeś",
+        cantSee: "Nichten njamóžo was wiźeś",
+        seenNotHeard: "Wy sćo wiźeś, ale njesłyšaś",
+        cantHear: "Nichten njamóžo was słyšaś",
+        turnOnBoth: "Kameru a mikrofon zašaltowaś",
+        turnOnCamera: "Kameru zašaltowaś",
+        turnOnMicrophone: "Mikrofon zašaltowaś",
+        turnOn: "Zašaltowaś",
+    },
 };
 
 export default video;

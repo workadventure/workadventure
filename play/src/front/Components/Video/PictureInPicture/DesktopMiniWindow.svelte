@@ -252,9 +252,9 @@
                 class="toolbar-btn"
                 class:is-forbidden={!media.micEnabled}
                 type="button"
-                data-state={media.micEnabled ? "on" : "off"}
-                title={$LL.desktop.miniWindow.toggleMic()}
-                aria-label={$LL.desktop.miniWindow.toggleMic()}
+                data-state={media.micPaused ? "paused" : media.micEnabled ? "on" : "off"}
+                title={media.micPaused ? $LL.desktop.miniWindow.micPaused() : $LL.desktop.miniWindow.toggleMic()}
+                aria-label={media.micPaused ? $LL.desktop.miniWindow.micPaused() : $LL.desktop.miniWindow.toggleMic()}
                 onclick={toggleMicrophone}
             >
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"
@@ -274,9 +274,13 @@
                 class="toolbar-btn"
                 class:is-forbidden={!media.cameraEnabled}
                 type="button"
-                data-state={media.cameraEnabled ? "on" : "off"}
-                title={$LL.desktop.miniWindow.toggleCamera()}
-                aria-label={$LL.desktop.miniWindow.toggleCamera()}
+                data-state={media.cameraPaused ? "paused" : media.cameraEnabled ? "on" : "off"}
+                title={media.cameraPaused
+                    ? $LL.desktop.miniWindow.cameraPaused()
+                    : $LL.desktop.miniWindow.toggleCamera()}
+                aria-label={media.cameraPaused
+                    ? $LL.desktop.miniWindow.cameraPaused()
+                    : $LL.desktop.miniWindow.toggleCamera()}
                 onclick={toggleCamera}
             >
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"

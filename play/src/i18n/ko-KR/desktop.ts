@@ -59,6 +59,8 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         people: "사람",
         toggleMic: "마이크 켜기/끄기",
         toggleCamera: "카메라 켜기/끄기",
+        micPaused: "자리 비움 중 마이크 일시 중지됨: 켜기",
+        cameraPaused: "자리 비움 중 카메라 일시 중지됨: 켜기",
         shareScreen: "화면 공유",
         stopShareScreen: "화면 공유 중지",
         shareScreenNeedsMeeting: "화면을 공유하려면 회의에 참여하세요",

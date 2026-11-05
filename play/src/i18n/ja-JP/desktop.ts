@@ -62,6 +62,8 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         people: "メンバー",
         toggleMic: "マイクのオン/オフ",
         toggleCamera: "カメラのオン/オフ",
+        micPaused: "離席中のためマイクを一時停止中：オンにする",
+        cameraPaused: "離席中のためカメラを一時停止中：オンにする",
         shareScreen: "画面を共有",
         stopShareScreen: "画面共有を停止",
         shareScreenNeedsMeeting: "画面を共有するにはミーティングに参加してください",

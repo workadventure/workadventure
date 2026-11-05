@@ -3,7 +3,7 @@ import { publicTestMapUrl } from "./utils/urls";
 import { getPage, logIn } from "./utils/auth";
 import Map from "./utils/map";
 import { expectWebRtcConnectionsCountToBe } from "./utils/webRtc";
-import { getWorldPage, isMiniWindowShown, launchDesktopApp } from "./utils/desktop";
+import { getMiniWindow, getWorldPage, isMiniWindowShown, launchDesktopApp } from "./utils/desktop";
 
 test("the mini window opens while WA is hidden and closes once the bubble ends", async ({ browser }) => {
     const url = publicTestMapUrl("tests/E2E/empty.json", "desktop_mini_window");
@@ -57,4 +57,30 @@ test("a mini window opened by hand stays once the bubble ends", async ({ browser
     // Give a wrong close time to happen: leaving a bubble is reported within about 250 ms.
     await alice.waitForTimeout(2000);
     expect(await isMiniWindowShown(app)).toBe(true);
+});
+
+test("a visitor shown in the mini window does not end away mode; one click does", async ({ browser }) => {
+    const url = publicTestMapUrl("tests/E2E/empty.json", "desktop_mini_window");
+    await using app = await launchDesktopApp(url);
+    const alice = await getWorldPage(app);
+    await logIn(alice, "Alice");
+    await Map.teleportToPosition(alice, 4 * 32, 4 * 32);
+    // Alice goes to work in another app before anyone comes: away mode. Without a window manager (xvfb), hiding
+    // the window does not take the focus from the page: blur it ourselves.
+    await (await app.browserWindow(alice)).evaluate((window) => window.hide());
+    await alice.evaluate(() => window.dispatchEvent(new Event("blur")));
+
+    await using bob = await getPage(browser, "Bob", url);
+    await Map.teleportToPosition(bob, 4 * 32 + 16, 4 * 32);
+    await expect.poll(() => isMiniWindowShown(app)).toBe(true);
+    const miniWindow = await getMiniWindow(app);
+
+    // Default away settings: the camera is held off, the microphone kept.
+    const shutter = miniWindow.getByTestId("away-paused-overlay");
+    await expect(shutter).toBeVisible();
+    await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(1);
+
+    await miniWindow.getByTestId("away-paused-turn-on").click();
+    await expect(shutter).toBeHidden();
+    await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(0);
 });

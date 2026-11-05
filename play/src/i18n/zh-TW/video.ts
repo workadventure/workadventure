@@ -11,6 +11,18 @@ const video: DeepPartial<Translation["video"]> = {
     persistent_connection_issue: "重新連線中... 連線不穩定...",
     click_to_unblock: "點選解除封鎖",
     click_and_drag_to_resize: "點選並拖曳以調整大小",
+    away: {
+        subtitle: "離開期間已暫停",
+        cantSeeOrHear: "沒有人能看到或聽到你",
+        heardNotSeen: "別人聽得到你，但看不到你",
+        cantSee: "沒有人能看到你",
+        seenNotHeard: "別人看得到你，但聽不到你",
+        cantHear: "沒有人能聽到你",
+        turnOnBoth: "開啟攝影機和麥克風",
+        turnOnCamera: "開啟攝影機",
+        turnOnMicrophone: "開啟麥克風",
+        turnOn: "開啟",
+    },
 };
 
 export default video;

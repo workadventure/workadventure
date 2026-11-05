@@ -175,8 +175,28 @@ button {
 .icon-only-off {
     display: none;
 }
-.toolbar-btn[data-state="on"] .icon-only-on {
+.toolbar-btn[data-state="on"] .icon-only-on,
+.toolbar-btn[data-state="paused"] .icon-only-on {
     display: inline;
+}
+/* On for the user, held off by away mode: amber, with the away dot. */
+.toolbar-btn[data-state="paused"] {
+    position: relative;
+    background: rgba(233, 200, 78, 0.18);
+    color: var(--st-away);
+}
+.toolbar-btn[data-state="paused"]:hover {
+    background: rgba(233, 200, 78, 0.3);
+}
+.toolbar-btn[data-state="paused"]::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--st-away);
 }
 .toolbar-btn[data-state="off"] .icon-only-off {
     display: inline;

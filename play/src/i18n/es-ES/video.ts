@@ -11,6 +11,18 @@ const video: DeepPartial<Translation["video"]> = {
     persistent_connection_issue: "Reconectando... Conexión inestable...",
     click_to_unblock: "Haz clic para desbloquear",
     click_and_drag_to_resize: "Haz clic y arrastra para cambiar el tamaño",
+    away: {
+        subtitle: "En pausa mientras estás ausente",
+        cantSeeOrHear: "Nadie puede verte ni oírte",
+        heardNotSeen: "Te pueden oír, pero no ver",
+        cantSee: "Nadie puede verte",
+        seenNotHeard: "Te pueden ver, pero no oír",
+        cantHear: "Nadie puede oírte",
+        turnOnBoth: "Activar cámara y micro",
+        turnOnCamera: "Activar la cámara",
+        turnOnMicrophone: "Activar el micro",
+        turnOn: "Activar",
+    },
 };
 
 export default video;

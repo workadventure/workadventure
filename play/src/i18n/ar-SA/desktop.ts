@@ -59,6 +59,8 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         people: "الأشخاص",
         toggleMic: "تشغيل/إيقاف الميكروفون",
         toggleCamera: "تشغيل/إيقاف الكاميرا",
+        micPaused: "الميكروفون متوقف مؤقتًا أثناء غيابك: شغّله",
+        cameraPaused: "الكاميرا متوقفة مؤقتًا أثناء غيابك: شغّلها",
         shareScreen: "مشاركة شاشتك",
         stopShareScreen: "إيقاف مشاركة شاشتك",
         shareScreenNeedsMeeting: "انضم إلى اجتماع لمشاركة شاشتك",
