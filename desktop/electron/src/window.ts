@@ -59,6 +59,7 @@ export {
 import { closeAllHudWindows } from "./hud-windows";
 import { adoptChildWindow, childWindowOptions } from "./child-windows";
 import { forgetPage } from "./page-contract";
+import { landingPageUrl } from "./landing-page";
 
 // The shell window stays hidden until the first world page finishes loading. `did-fail-load` covers
 // errors, but not a server that accepts the connection and then goes quiet (captive portal, DNS
@@ -882,11 +883,11 @@ export async function loadLandingPage(query?: { error: string } | { trust: strin
         throw new Error("No active world view");
     }
     cancelReachWorldWatchdog();
-    const landingPath = path.resolve(__dirname, "..", "assets", "landing", "index.html");
+    const landingUrl = landingPageUrl(query);
     try {
-        await contents.loadFile(landingPath, query ? { query } : undefined);
+        await contents.loadURL(landingUrl);
     } catch (error) {
-        ElectronLog.error(`Failed to load Landing page at ${landingPath}`, error);
+        ElectronLog.error(`Failed to load Landing page at ${landingUrl}`, error);
         // Fall back to the portal URL — worst case the user still lands somewhere usable. Guard
         // the fallback too: if BOTH the Landing file and the portal fail to load (e.g. offline on
         // first launch), we must still reveal the window rather than leave it hidden forever.
