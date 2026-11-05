@@ -79,6 +79,7 @@ class OpenIDClient {
         chatRoomId: string | undefined,
         providerId: string | undefined,
         providerScopes: string[] | undefined,
+        loginHint?: string,
     ): Promise<{ loginUri: string; state: string; codeVerifier: string }> {
         return this.initClient().then((client) => {
             if (!OPID_SCOPE.includes("email") || !OPID_SCOPE.includes("openid")) {
@@ -117,6 +118,8 @@ class OpenIDClient {
                 chatRoomId,
                 providerId,
                 providerScopes,
+                // Standard OIDC: the provider pre-fills the email on its login page.
+                login_hint: loginHint,
                 code_challenge,
                 code_challenge_method: "S256",
             });

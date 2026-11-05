@@ -420,6 +420,19 @@ async function openDesktopBrowserFlow(url: string) {
     await openDesktopLogout(url);
 }
 
+/**
+ * Sign in to a world straight from the Landing, through the same browser flow as the world's own Login
+ * button: the user comes back in the world signed in, never as a guest first. False if `loginUrl` is not
+ * a sign-in page the app may open.
+ */
+export async function signInFromLanding(loginUrl: string): Promise<boolean> {
+    if (!isDesktopLoginUrl(loginUrl) || !isAllowedNavigationUrl(loginUrl, getDesktopConfig())) {
+        return false;
+    }
+    await openDesktopLogin(loginUrl);
+    return true;
+}
+
 // Login and logout run in the system browser (RFC 8252: IdPs such as Google refuse embedded web
 // views, and the user keeps their browser session and password manager). Once the browser hits the
 // loopback, pull the app back in front of it.
