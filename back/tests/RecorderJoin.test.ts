@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { AccessToken } from "livekit-server-sdk";
 import { JoinRoomMessage, PositionMessage_Direction } from "@workadventure/messages";
 import { GameRoom } from "../src/Model/GameRoom";
-import type { UserSocket } from "../src/Model/User";
+import type { User, UserSocket } from "../src/Model/User";
+import type { Group } from "../src/Model/Group";
 import type { RoomSocket } from "../src/RoomManager";
 import type { EmoteCallback } from "../src/Model/Zone";
 import type * as EnvironmentVariable from "../src/Enum/EnvironmentVariable";
-import { recorderPageUrl } from "../src/Services/RecorderToken";
+import { mintRecorderToken, recorderPageUrl } from "../src/Services/RecorderToken";
 
 const API_KEY = "devkey";
 const API_SECRET = "recorder_test_secret_recorder_test";
@@ -19,11 +20,14 @@ vi.mock("../src/Enum/EnvironmentVariable", async (importOriginal) => ({
 
 const emote: EmoteCallback = () => {};
 
-function createWorld(onConnect: () => void): Promise<GameRoom> {
+function createWorld(
+    onConnect: (user: User, group: Group) => void,
+    onDisconnect: (user: User, group: Group) => void = () => {},
+): Promise<GameRoom> {
     return GameRoom.create(
         "https://play.workadventu.re/_/global/localhost/test.json",
         onConnect,
-        () => {},
+        onDisconnect,
         160,
         160,
         () => {},
@@ -72,6 +76,34 @@ describe("GameRoom recorder", () => {
 
         world.leave(recorder);
         expect(world.isEmpty()).toBe(false);
+    });
+
+    it("follows one person in and out of their bubbles, whichever bubble it is", async () => {
+        const events: string[] = [];
+        const world = await createWorld(
+            (user, group) => events.push(`${user.uuid} joins ${group.getId()}`),
+            (user, group) => events.push(`${user.uuid} leaves ${group.getId()}`),
+        );
+
+        const alice = await world.join(socket(), join("alice", 100));
+        const bob = await world.join(socket(), join("bob", 101));
+        const first = alice.group?.getId();
+        // Joining while Alice is already in a bubble puts the recorder in it.
+        const recorder = await world.join(socket(), join("recorder", 500, await mintRecorderToken("alice")));
+        world.startFollowing(recorder);
+        expect(events).toContain(`recorder joins ${first}`);
+
+        // The bubble breaks up, and Alice forms a new one with Carol: the recorder moves with her.
+        world.leave(bob);
+        const carol = await world.join(socket(), join("carol", 102));
+        const second = alice.group?.getId();
+        expect(second).not.toBe(first);
+        expect(events.filter((event) => event.startsWith("recorder"))).toEqual([
+            `recorder joins ${first}`,
+            `recorder leaves ${first}`,
+            `recorder joins ${second}`,
+        ]);
+        expect(carol.group?.getId()).toBe(second);
     });
 
     it("refuses a token without the recorder grant or signed with another secret", async () => {

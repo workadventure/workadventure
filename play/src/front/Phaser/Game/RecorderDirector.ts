@@ -2,6 +2,7 @@ import { FilterType } from "@workadventure/messages";
 import { get } from "svelte/store";
 import { getMegaphoneSpaceFields } from "../../Streaming/MegaphoneSpaceFields";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
+import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { GameScene } from "./GameScene";
 
 // How often the camera checks whether the people it films moved.
@@ -14,32 +15,89 @@ const MIN_FRAME = { width: 480, height: 270 };
 const FRAME_STEP = 32;
 
 /**
- * What the ?recorder page films. It joins the space being recorded by name and frames the members of that space,
- * following them when they move, so a bubble walking around stays in the picture.
+ * What the ?recorder page films. It frames the members of the space it is in, following them when they move.
+ * - With `?space=` (an area, a megaphone) it joins that space by name.
+ * - Without, it follows the person who started the recording: the back sends it into each bubble that person joins
+ *   and out of each one they leave, as it does for a user (join/leaveSpaceRequestMessage).
  */
 export class RecorderDirector {
     private readonly abortController = new AbortController();
     private space: SpaceInterface | undefined;
     private interval: ReturnType<typeof setInterval> | undefined;
     private lastFrame = "";
+    // Bubble switches run one after the other: a leave must not overtake the join it undoes.
+    private switching: Promise<void> = Promise.resolve();
+    private firstJoin: Promise<void> | undefined;
+    private readonly subscriptions: { unsubscribe(): void }[] = [];
 
     constructor(
         private readonly scene: GameScene,
-        private readonly spaceName: string,
+        private readonly spaceName: string | undefined,
         private readonly filterType: FilterType,
     ) {}
 
-    public async start(): Promise<void> {
-        const propertiesToSync =
-            this.filterType === FilterType.ALL_USERS
-                ? ["cameraState", "microphoneState", "screenSharingState"]
-                : getMegaphoneSpaceFields(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK);
-        this.space = await this.scene.spaceRegistry.joinSpace(
-            this.spaceName,
-            this.filterType,
-            propertiesToSync,
-            this.abortController.signal,
+    /**
+     * Follow mode. Called as soon as the connection exists: the back sends the first bubble right after the room is
+     * joined, before the scene is ready to film, and these messages are not replayed. They wait for `ready` (the space
+     * registry exists).
+     */
+    public follow(connection: RoomConnection, ready: Promise<void>): void {
+        this.switching = ready;
+        let joined: () => void = () => {};
+        this.firstJoin = new Promise((resolve) => {
+            joined = resolve;
+        });
+        this.subscriptions.push(
+            connection.joinSpaceRequestMessage.subscribe(({ spaceName, propertiesToSync }) => {
+                this.queue(async () => {
+                    await this.leave();
+                    this.space = await this.scene.spaceRegistry.joinSpace(
+                        spaceName,
+                        FilterType.ALL_USERS,
+                        propertiesToSync,
+                        this.abortController.signal,
+                    );
+                    joined();
+                });
+            }),
+            connection.leaveSpaceRequestMessage.subscribe(({ spaceName }) => {
+                this.queue(async () => {
+                    // Keep the last shot until the person is in a bubble again.
+                    if (this.space?.getName() === spaceName) await this.leave();
+                });
+            }),
         );
+    }
+
+    private queue(task: () => Promise<void>): void {
+        this.switching = this.switching
+            .then(task)
+            .catch((e) => console.error("The recorder could not follow the bubble", e));
+    }
+
+    private async leave(): Promise<void> {
+        const space = this.space;
+        this.space = undefined;
+        if (space) await this.scene.spaceRegistry.leaveSpace(space);
+    }
+
+    public async start(): Promise<void> {
+        if (this.firstJoin) {
+            await this.firstJoin;
+        } else if (this.spaceName !== undefined) {
+            const propertiesToSync =
+                this.filterType === FilterType.ALL_USERS
+                    ? ["cameraState", "microphoneState", "screenSharingState"]
+                    : getMegaphoneSpaceFields(this.filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK);
+            this.space = await this.scene.spaceRegistry.joinSpace(
+                this.spaceName,
+                this.filterType,
+                propertiesToSync,
+                this.abortController.signal,
+            );
+        } else {
+            throw new Error("?recorder needs a space to record or a person to follow");
+        }
         this.frame();
         this.interval = setInterval(() => this.frame(), REFRAME_INTERVAL_MS);
         // Resolve once the first zoom is over, so the recording does not open on the whole map.
@@ -80,6 +138,7 @@ export class RecorderDirector {
 
     public destroy(): void {
         clearInterval(this.interval);
+        for (const subscription of this.subscriptions) subscription.unsubscribe();
         this.abortController.abort();
     }
 }

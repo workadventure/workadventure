@@ -85,7 +85,8 @@ export class GameRoom implements BrothersFinder {
     private readonly users: SpatialMap<number, User>;
     // The LiveKit egresses filming the map (?recorder page). Kept out of `users` so that no bubble, area, zone or
     // admin list ever sees them.
-    private readonly recorders = new Set<User>();
+    // Each recorder maps to the uuid of the user it follows from bubble to bubble (none: it joins one named space).
+    private readonly recorders = new Map<User, string | undefined>();
     private readonly usersByUuid = new Map<string, Set<User>>();
     // Users indexed by composite key (userUuid + tabId), used to detect reconnections from the same tab
     // and immediately kill stale connections instead of waiting for ping timeout
@@ -118,6 +119,31 @@ export class GameRoom implements BrothersFinder {
 
     private readonly _destroyRoomStream = new Subject<void>();
     public readonly destroyRoomStream = this._destroyRoomStream.asObservable();
+
+    // A recorder following someone is sent in and out of that person's bubbles along with them, so the recording
+    // survives the bubble breaking up and forming again under another name.
+    private readonly onGroupJoin: ConnectCallback = (user, group) => {
+        this.connectCallback(user, group);
+        for (const recorder of this.recordersFollowing(user)) this.connectCallback(recorder, group);
+    };
+    private readonly onGroupLeave: DisconnectCallback = (user, group) => {
+        this.disconnectCallback(user, group);
+        for (const recorder of this.recordersFollowing(user)) this.disconnectCallback(recorder, group);
+    };
+
+    private recordersFollowing(user: User): User[] {
+        return [...this.recorders].filter(([, follow]) => follow === user.uuid).map(([recorder]) => recorder);
+    }
+
+    /**
+     * Once the recorder has joined the room, put it in the bubble of the person it follows, if they are in one.
+     */
+    public startFollowing(recorder: User): void {
+        const follow = this.recorders.get(recorder);
+        for (const user of (follow && this.usersByUuid.get(follow)) || []) {
+            if (user.group) this.connectCallback(recorder, user.group);
+        }
+    }
 
     private constructor(
         public readonly _roomUrl: string,
@@ -378,7 +404,7 @@ export class GameRoom implements BrothersFinder {
         joinRoomMessage: JoinRoomMessage,
         position: PointInterface,
     ): Promise<User> {
-        await verifyRecorderToken(joinRoomMessage.recorderToken ?? "");
+        const { follow } = await verifyRecorderToken(joinRoomMessage.recorderToken ?? "");
         this.nextUserId++;
         const user = await User.create(
             this.nextUserId,
@@ -407,7 +433,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.tabId,
             true,
         );
-        this.recorders.add(user);
+        this.recorders.set(user, follow);
         return user;
     }
 
@@ -530,8 +556,8 @@ export class GameRoom implements BrothersFinder {
                         this._roomUrl,
                         [user, closestUser],
                         this.groupRadius,
-                        this.connectCallback,
-                        this.disconnectCallback,
+                        this.onGroupJoin,
+                        this.onGroupLeave,
                         this.positionNotifier,
                     );
                     this.groups.set(group.getId(), group);
@@ -614,8 +640,8 @@ export class GameRoom implements BrothersFinder {
                         this._roomUrl,
                         [user, ...followingMembers],
                         this.groupRadius,
-                        this.connectCallback,
-                        this.disconnectCallback,
+                        this.onGroupJoin,
+                        this.onGroupLeave,
                         this.positionNotifier,
                     );
                     this.groups.set(newGroup.getId(), newGroup);

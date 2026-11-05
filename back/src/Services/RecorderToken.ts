@@ -1,4 +1,5 @@
-import { TokenVerifier } from "livekit-server-sdk";
+import { randomUUID } from "crypto";
+import { AccessToken, TokenVerifier } from "livekit-server-sdk";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../Enum/EnvironmentVariable";
 
 /**
@@ -6,7 +7,7 @@ import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET } from "../Enum/EnvironmentVariable
  * grant. Only that token makes a connection invisible, so nobody can hide in a room without our LiveKit secret.
  * Throws if the token is not a valid recorder token.
  */
-export async function verifyRecorderToken(token: string): Promise<void> {
+export async function verifyRecorderToken(token: string): Promise<{ follow: string | undefined }> {
     if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
         throw new Error("Recorder connection refused: LiveKit is not configured");
     }
@@ -14,6 +15,27 @@ export async function verifyRecorderToken(token: string): Promise<void> {
     if (claims.video?.recorder !== true) {
         throw new Error("Recorder connection refused: the token has no recorder grant");
     }
+    // Tokens we mint for a web egress name the user to follow; the ones a RoomComposite egress hands out do not.
+    return { follow: claims.metadata || undefined };
+}
+
+/**
+ * The token a web egress's page presents to be let in as a recorder, following the user `follow` (their uuid)
+ * from bubble to bubble. Signed with our LiveKit secret, so the person to follow cannot be changed in the URL.
+ */
+export async function mintRecorderToken(follow: string): Promise<string> {
+    if (!LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {
+        throw new Error("LiveKit is not configured");
+    }
+    // ponytail: the page re-presents this token when its socket reconnects, hence a full day; scope it to the
+    // recording session if reconnection after a day matters.
+    const token = new AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET, {
+        identity: `recorder-${randomUUID()}`,
+        metadata: follow,
+        ttl: "24h",
+    });
+    token.addGrant({ recorder: true, hidden: true });
+    return token.toJwt();
 }
 
 /**
@@ -22,11 +44,26 @@ export async function verifyRecorderToken(token: string): Promise<void> {
  * The pusher names spaces "<world>.<local name>"; the page joins by local name.
  */
 export function recorderPageUrl(playUri: string, world: string, spaceName: string, filterType: number): string {
+    const url = recorderMapUrl(playUri);
+    url.searchParams.set("space", spaceName.startsWith(world + ".") ? spaceName.slice(world.length + 1) : spaceName);
+    url.searchParams.set("filter", String(filterType));
+    return url.toString();
+}
+
+/**
+ * The page a web egress films to follow a user: their map in ?recorder mode, with the recorder token (which names
+ * the user to follow). No space: the back sends the page into that user's bubbles.
+ */
+export function recorderFollowPageUrl(playUri: string, token: string): string {
+    const url = recorderMapUrl(playUri);
+    url.searchParams.set("token", token);
+    return url.toString();
+}
+
+function recorderMapUrl(playUri: string): URL {
     const url = new URL(playUri);
     url.hash = "";
     url.search = "";
     url.searchParams.set("recorder", "");
-    url.searchParams.set("space", spaceName.startsWith(world + ".") ? spaceName.slice(world.length + 1) : spaceName);
-    url.searchParams.set("filter", String(filterType));
-    return url.toString();
+    return url;
 }

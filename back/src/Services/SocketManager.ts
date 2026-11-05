@@ -252,6 +252,7 @@ export class SocketManager {
             $case: "roomJoinedMessage",
             roomJoinedMessage: RoomJoinedMessage.fromPartial(roomJoinedMessage),
         });
+        if (user.isRecorder) room.startFollowing(user);
 
         return user;
     }

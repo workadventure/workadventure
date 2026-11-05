@@ -2098,6 +2098,13 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                if (isRecorderMode) {
+                    // The back sends the first bubble to follow right after the room is joined: listen before any await.
+                    this.recorderDirector = new RecorderDirector(this, recorderSpace, recorderSpaceFilter);
+                    if (recorderSpace === undefined) {
+                        this.recorderDirector.follow(this.connection, this.connectionAnswerPromiseDeferred.promise);
+                    }
+                }
 
                 // Subscribed before any await: the admin messages of the login come right after the connection.
                 // These streams are completed in the RoomConnection. No need to unsubscribe.
@@ -2616,7 +2623,10 @@ export class GameScene extends DirtyScene {
         this._proximityChatRoomManagerDeferred.resolve(this._proximityChatRoomManager);
 
         this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
-        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoomManager);
+        // The recorder joins only what it films (see RecorderDirector), never the bubbles around it.
+        if (!isRecorderMode) {
+            this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoomManager);
+        }
 
         // Check WebRtc connection
         try {
@@ -4038,13 +4048,8 @@ ${escapedMessage}
      */
     /** ?recorder: join the space being recorded and frame its members (see RecorderDirector). */
     private startRecorderDirector(): void {
-        if (recorderSpace === undefined) {
-            console.error("?recorder without a space to record: nothing to film");
-            return;
-        }
-        this.recorderDirector = new RecorderDirector(this, recorderSpace, recorderSpaceFilter);
         this.recorderDirector
-            .start()
+            ?.start()
             // The LiveKit egress waits for this exact log (awaitStartSignal) before it starts recording.
             .then(() => console.log("START_RECORDING"))
             .catch((e) => console.error("The recorder could not join the space", e));

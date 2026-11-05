@@ -10,7 +10,7 @@ import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import type { EgressFile } from "../Interfaces/ICommunicationState";
 import type { LiveKitService, RecordingStartInfo } from "../Services/LivekitService";
 import { LIVEKIT_RECORDING_WITH_MAP } from "../../Enum/EnvironmentVariable";
-import { recorderPageUrl } from "../../Services/RecorderToken";
+import { mintRecorderToken, recorderFollowPageUrl, recorderPageUrl } from "../../Services/RecorderToken";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
@@ -286,17 +286,28 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         }
 
         await this.createRoomPromise;
-        // The user asked for the map, and this server allows it.
-        const customBaseUrl =
-            LIVEKIT_RECORDING_WITH_MAP && withMap
-                ? recorderPageUrl(user.playUri, this.space.world, this.space.getSpaceName(), this.space.filterType)
-                : undefined;
+        // The user asked for the map, and this server allows it. A bubble breaks up and forms again under another
+        // name as people walk: the page follows the person recording instead of this space.
+        let recorderPage: { customBaseUrl: string } | { webUrl: string } | undefined;
+        if (LIVEKIT_RECORDING_WITH_MAP && withMap) {
+            recorderPage =
+                this.space.getState().kind === "bubble"
+                    ? { webUrl: recorderFollowPageUrl(user.playUri, await mintRecorderToken(user.uuid)) }
+                    : {
+                          customBaseUrl: recorderPageUrl(
+                              user.playUri,
+                              this.space.world,
+                              this.space.getSpaceName(),
+                              this.space.filterType,
+                          ),
+                      };
+        }
         return await this.livekitService.startRecording(
             this.space.getSpaceName(),
             user,
             user.uuid,
             recordingSessionId,
-            customBaseUrl,
+            recorderPage,
         );
     }
     async stopRecording(egressId?: string): Promise<void> {
