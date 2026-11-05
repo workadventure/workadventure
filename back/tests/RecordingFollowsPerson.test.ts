@@ -114,6 +114,24 @@ describe("A recording over the map of a bubble follows the person recording", ()
         await vi.waitFor(() => expect(first.stop).toHaveBeenCalledWith("egress-carol-bubble-1"));
     });
 
+    it("lets only the person recording direct it, from whichever bubble they are in", async () => {
+        const { first } = await startFollowing("erin");
+        expect(first.recording()?.production).toEqual({ layout: "balanced", zoom: "wide", frame: null, pins: [] });
+
+        await first.manager.stopRecordingIfRecorderMatches("erin_1");
+        const second = bubble("erin-bubble-2");
+        const erin = user("erin", "erin_2");
+        second.manager.handleAddUser(erin);
+
+        const production = { layout: "cameras", zoom: "whole", frame: null, pins: ["frank_2"] } as const;
+        expect(() => second.manager.setProduction(user("frank", "frank_2"), { ...production, pins: [] })).toThrow(
+            "Only the person recording",
+        );
+        second.manager.setProduction(erin, { ...production, pins: [...production.pins] });
+        expect(second.recording()?.production).toEqual(production);
+        await second.manager.stopRecording(erin);
+    });
+
     it("waits for the space to say it is a bubble before showing there", async () => {
         const { first } = await startFollowing("dave");
         await first.manager.stopRecordingIfRecorderMatches("dave_1");

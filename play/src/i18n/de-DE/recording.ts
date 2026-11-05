@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Kameras zuerst",
             },
         },
+        producer: {
+            layout: "Layout",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Nah",
+                wide: "Herausgezoomt",
+                whole: "Ganze Karte",
+            },
+            framing: "Bildausschnitt",
+            follow: "Der Blase folgen",
+            frameMyView: "Zeigen, was ich sehe",
+            cameras: "Kameras",
+            pin: "Anheften",
+            unpin: "Lösen",
+            pinHint: "Eine angeheftete Person behält ihre Kachel, auch wenn sie schweigt (bis zu {max}).",
+        },
     },
 };
 

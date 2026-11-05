@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "الكاميرات أولاً",
             },
         },
+        producer: {
+            layout: "التخطيط",
+            zoom: "التكبير",
+            zoomLevel: {
+                tight: "قريب",
+                wide: "مصغّر",
+                whole: "الخريطة كاملة",
+            },
+            framing: "التأطير",
+            follow: "متابعة الفقاعة",
+            frameMyView: "تأطير ما أراه",
+            cameras: "الكاميرات",
+            pin: "تثبيت",
+            unpin: "إلغاء التثبيت",
+            pinHint: "يحتفظ الشخص المثبّت ببلاطته حتى عندما يصمت (حتى {max}).",
+        },
     },
 };
 

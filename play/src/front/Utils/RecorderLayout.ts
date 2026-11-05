@@ -1,3 +1,5 @@
+import { recordingLayoutSchema } from "@workadventure/shared-utils";
+import type { RecordingLayout } from "@workadventure/shared-utils";
 import type { PipGridTile } from "../Components/Video/PictureInPicture/pictureInPictureGridLayout";
 
 /**
@@ -7,8 +9,8 @@ import type { PipGridTile } from "../Components/Video/PictureInPicture/pictureIn
  * - "cameras": up to 16 cameras in a mosaic, the map is its big 2×2 cell.
  * Beyond the mode's tiles, the last people to have spoken get a tile and the others are named only.
  */
-export const RECORDER_LAYOUT_MODES = ["map", "balanced", "cameras"] as const;
-export type RecorderLayoutMode = (typeof RECORDER_LAYOUT_MODES)[number];
+export const RECORDER_LAYOUT_MODES = recordingLayoutSchema.options;
+export type RecorderLayoutMode = RecordingLayout;
 export const DEFAULT_RECORDER_LAYOUT_MODE: RecorderLayoutMode = "balanced";
 
 export const RECORDER_MAX_TILES: Record<RecorderLayoutMode, number> = { map: 4, balanced: 8, cameras: 16 };
@@ -114,6 +116,12 @@ export function computeRecorderLayout(
         },
         tiles: Array.from({ length: n }, (_, i) => tile(i % columns, Math.floor(i / columns))),
     };
+}
+
+/** The pinned items first (they keep a tile even when silent), each group in its own order. */
+export function pinnedFirst<T>(items: T[], pins: string[], idOf: (item: T) => string): T[] {
+    const pinned = new Set(pins);
+    return [...items.filter((item) => pinned.has(idOf(item))), ...items.filter((item) => !pinned.has(idOf(item)))];
 }
 
 function round(rect: Rect): Rect {

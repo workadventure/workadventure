@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "카메라 우선",
             },
         },
+        producer: {
+            layout: "레이아웃",
+            zoom: "확대/축소",
+            zoomLevel: {
+                tight: "가깝게",
+                wide: "멀리",
+                whole: "지도 전체",
+            },
+            framing: "구도",
+            follow: "버블 따라가기",
+            frameMyView: "내가 보는 화면 담기",
+            cameras: "카메라",
+            pin: "고정",
+            unpin: "고정 해제",
+            pinHint: "고정된 사람은 말하지 않아도 타일이 유지됩니다(최대 {max}명).",
+        },
     },
 };
 

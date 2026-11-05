@@ -8,8 +8,8 @@
         orderedStreamableCollectionStore,
     } from "../Stores/OrderedStreamableCollectionStore";
     import { windowSize } from "../Stores/CoWebsiteStore";
-    import { recorderLayoutModeStore, recorderMapRectStore } from "../Utils/RecorderMode";
-    import { computeRecorderLayout, RECORDER_MAX_TILES } from "../Utils/RecorderLayout";
+    import { recorderLayoutModeStore, recorderMapRectStore, recorderPinsStore } from "../Utils/RecorderMode";
+    import { computeRecorderLayout, pinnedFirst, RECORDER_MAX_TILES } from "../Utils/RecorderLayout";
     import { pipGridTemplateColumns } from "./Video/PictureInPicture/pictureInPictureGridLayout";
     import VideoBox from "./Video/VideoBox.svelte";
     import AudioStreamWrapper from "./Video/PictureInPicture/AudioStreamWrapper.svelte";
@@ -27,8 +27,12 @@
             $windowSize.height,
         ),
     );
-    let positions = $derived(new Map($orderedStreamableCollectionStore.map((box, index) => [box, index])));
-    let hidden = $derived($orderedStreamableCollectionStore.slice(layout.tiles.length));
+    // The producer's pins first, then the last people to have spoken.
+    let order = $derived(
+        pinnedFirst($orderedStreamableCollectionStore, $recorderPinsStore, (box) => box.spaceUser.spaceUserId),
+    );
+    let positions = $derived(new Map(order.map((box, index) => [box, index])));
+    let hidden = $derived(order.slice(layout.tiles.length));
 
     // The game canvas goes where the map is shown, so the framing of RecorderDirector centers the bubble there.
     $effect(() => {

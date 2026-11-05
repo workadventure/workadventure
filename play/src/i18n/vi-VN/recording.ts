@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Ưu tiên camera",
             },
         },
+        producer: {
+            layout: "Bố cục",
+            zoom: "Thu phóng",
+            zoomLevel: {
+                tight: "Gần",
+                wide: "Thu nhỏ",
+                whole: "Toàn bộ bản đồ",
+            },
+            framing: "Khung hình",
+            follow: "Theo bong bóng",
+            frameMyView: "Đóng khung những gì tôi thấy",
+            cameras: "Camera",
+            pin: "Ghim",
+            unpin: "Bỏ ghim",
+            pinHint: "Người được ghim giữ ô của mình ngay cả khi im lặng (tối đa {max}).",
+        },
     },
 };
 

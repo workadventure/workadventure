@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Câmeras primeiro",
             },
         },
+        producer: {
+            layout: "Layout",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Perto",
+                wide: "Afastado",
+                whole: "Mapa inteiro",
+            },
+            framing: "Enquadramento",
+            follow: "Seguir a bolha",
+            frameMyView: "Enquadrar o que vejo",
+            cameras: "Câmeras",
+            pin: "Fixar",
+            unpin: "Desafixar",
+            pinHint: "Uma pessoa fixada mantém seu bloco mesmo calada (até {max}).",
+        },
     },
 };
 

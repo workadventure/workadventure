@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Najprjedy kamery",
             },
         },
+        producer: {
+            layout: "Wuhotowanje",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Blisko",
+                wide: "Pomjeńšene",
+                whole: "Cyła karta",
+            },
+            framing: "Wurězk",
+            follow: "Bublinje sćěhować",
+            frameMyView: "Pokazać, štož widźu",
+            cameras: "Kamery",
+            pin: "Připjeć",
+            unpin: "Wotpjeć",
+            pinHint: "Připjata wosoba wobchowa swoju kachlicu, tež hdyž mjelči (hač do {max}).",
+        },
     },
 };
 

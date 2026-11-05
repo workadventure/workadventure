@@ -19,7 +19,7 @@ import {
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import type { SpaceState } from "@workadventure/shared-utils";
-import { emptySpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState, recordingProductionSchema } from "@workadventure/shared-utils";
 // Default import: under Node ESM this CommonJS package exposes no named exports.
 import jsonpatch from "fast-json-patch";
 import { Subject } from "rxjs";
@@ -716,6 +716,11 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return this.startRecording(sender, query.startRecording.withMap, query.startRecording.layout);
             case "stopRecording":
                 return this.stopRecording(sender);
+            case "setRecordingProduction":
+                return this.communicationManager.setRecordingProduction(
+                    sender,
+                    recordingProductionSchema.parse(JSON.parse(query.setRecordingProduction.production)),
+                );
             case "createPoll":
                 return this.proximityPollManager.create(sender, query.createPoll);
             case "votePoll":

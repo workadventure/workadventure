@@ -114,6 +114,7 @@ describe("CommunicationManager", () => {
             finishRecordingByWebhook: mocks.finishRecordingByWebhook,
             handleAddUser: mocks.handleAddUser,
             handleSpaceKindChanged: vi.fn(),
+            setProduction: vi.fn(),
             followedRecorder: undefined,
             isRecording: false,
             destroy: mocks.destroy,

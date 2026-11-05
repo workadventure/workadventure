@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "เน้นกล้อง",
             },
         },
+        producer: {
+            layout: "เลย์เอาต์",
+            zoom: "ซูม",
+            zoomLevel: {
+                tight: "ใกล้",
+                wide: "ซูมออก",
+                whole: "ทั้งแผนที่",
+            },
+            framing: "การจัดเฟรม",
+            follow: "ติดตามบับเบิล",
+            frameMyView: "จัดเฟรมตามที่ฉันเห็น",
+            cameras: "กล้อง",
+            pin: "ปักหมุด",
+            unpin: "เลิกปักหมุด",
+            pinHint: "คนที่ปักหมุดไว้จะยังมีช่องของตัวเองแม้ไม่ได้พูด (สูงสุด {max})",
+        },
     },
 };
 

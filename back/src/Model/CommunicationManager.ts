@@ -9,6 +9,7 @@ import {
     type MicrophoneTrackPublishedMessage,
     FilterType,
 } from "@workadventure/messages";
+import type { RecordingProduction } from "@workadventure/shared-utils";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { adminApi, type RecordingEventPayload } from "../Services/AdminApi";
 import type { LivekitCredentialsResponse } from "../Services/Repository/LivekitCredentialsResponse";
@@ -487,6 +488,9 @@ export class CommunicationManager implements ICommunicationManager {
         this.lifecycleManager
             .getCurrentState()
             .handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
+    }
+    public setRecordingProduction(user: SpaceUser, production: RecordingProduction): void {
+        this._recordingManager.setProduction(user, production);
     }
     public async handleStartRecording(user: SpaceUser, withMap = false, layout = ""): Promise<void> {
         this.cancelPendingTransitionIfNeeded();

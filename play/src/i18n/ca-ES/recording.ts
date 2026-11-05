@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Primer les càmeres",
             },
         },
+        producer: {
+            layout: "Disposició",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "A prop",
+                wide: "Allunyat",
+                whole: "Tot el mapa",
+            },
+            framing: "Enquadrament",
+            follow: "Seguir la bombolla",
+            frameMyView: "Enquadrar el que veig",
+            cameras: "Càmeres",
+            pin: "Fixar",
+            unpin: "Deixar de fixar",
+            pinHint: "Una persona fixada conserva la seva finestra fins i tot callada (fins a {max}).",
+        },
     },
 };
 

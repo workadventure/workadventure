@@ -54,6 +54,22 @@ const recording: BaseTranslation = {
                 cameras: "Cameras first",
             },
         },
+        producer: {
+            layout: "Layout",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Close",
+                wide: "Zoomed out",
+                whole: "Whole map",
+            },
+            framing: "Framing",
+            follow: "Follow the bubble",
+            frameMyView: "Frame what I see",
+            cameras: "Cameras",
+            pin: "Pin",
+            unpin: "Unpin",
+            pinHint: "A pinned person keeps their tile even when silent (up to {max:number}).",
+        },
     },
 };
 

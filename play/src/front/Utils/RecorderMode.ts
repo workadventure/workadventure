@@ -33,5 +33,8 @@ export const recorderLayoutModeStore = writable<RecorderLayoutMode>(
     parseRecorderLayoutMode(params.get("recorderLayout")),
 );
 
+/** The spaceUserIds the producer pinned: they keep their camera tile even when silent. */
+export const recorderPinsStore = writable<string[]>([]);
+
 /** Where RecorderLayout leaves the map: the game canvas is sized and placed there (see canvasSize). */
 export const recorderMapRectStore = writable<Rect | undefined>(undefined);

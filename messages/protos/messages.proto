@@ -1045,6 +1045,7 @@ message SpaceStateQuery {
     UpsertScreenAnnotationQuery upsertScreenAnnotation = 17;
     RemoveScreenAnnotationQuery removeScreenAnnotation = 18;
     ClearScreenAnnotationsQuery clearScreenAnnotations = 19;
+    SetRecordingProductionQuery setRecordingProduction = 20;
   }
 }
 
@@ -1095,6 +1096,11 @@ message StartRecordingQuery {
   string layout = 2;
 }
 message StopRecordingQuery {
+}
+// The person recording over the map changes how it is filmed (the producer panel).
+message SetRecordingProductionQuery {
+  // JSON, see recordingProductionSchema in @workadventure/shared-utils.
+  string production = 1;
 }
 message CreatePollQuery {
   string question = 1;

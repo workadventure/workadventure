@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Les caméras d'abord",
             },
         },
+        producer: {
+            layout: "Mise en page",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Serré",
+                wide: "Dézoomé",
+                whole: "Toute la carte",
+            },
+            framing: "Cadrage",
+            follow: "Suivre la bulle",
+            frameMyView: "Cadrer ce que je vois",
+            cameras: "Caméras",
+            pin: "Épingler",
+            unpin: "Désépingler",
+            pinHint: "Une personne épinglée garde sa tuile même quand elle se tait (jusqu'à {max}).",
+        },
     },
 };
 

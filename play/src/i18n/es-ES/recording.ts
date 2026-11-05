@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Primero las cámaras",
             },
         },
+        producer: {
+            layout: "Diseño",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Cerca",
+                wide: "Alejado",
+                whole: "Todo el mapa",
+            },
+            framing: "Encuadre",
+            follow: "Seguir la burbuja",
+            frameMyView: "Encuadrar lo que veo",
+            cameras: "Cámaras",
+            pin: "Fijar",
+            unpin: "Desfijar",
+            pinHint: "Una persona fijada conserva su recuadro aunque se calle (hasta {max}).",
+        },
     },
 };
 

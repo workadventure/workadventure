@@ -1,6 +1,8 @@
 import { randomUUID } from "crypto";
 import type { SpaceUser } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import { recordingLayoutSchema } from "@workadventure/shared-utils";
+import type { RecordingProduction } from "@workadventure/shared-utils";
 import { LIVEKIT_RECORDING_WITH_MAP } from "../Enum/EnvironmentVariable";
 import type { ICommunicationSpace } from "./Interfaces/ICommunicationSpace";
 import type { ICommunicationState, IRecordableState } from "./Interfaces/ICommunicationState";
@@ -28,6 +30,8 @@ interface RecordingSession {
     layout: string;
     /** A recording over the map of a bubble follows the person recording (their uuid), not the bubble. */
     follows?: string;
+    /** Over the map: how the person recording directs it (the producer panel), shown to the recorder page. */
+    production?: RecordingProduction;
 }
 
 /**
@@ -51,12 +55,15 @@ export interface ManagedRecordingState {
     isRecording: boolean;
     recorder: string | null;
     status: RecordingStatus;
+    production?: RecordingProduction;
 }
 
 export interface IRecordingManager {
     getRecordingState(): ManagedRecordingState;
     startRecording(user: SpaceUser, withMap?: boolean, layout?: string): Promise<void>;
     stopRecording(user: SpaceUser): Promise<SpaceUser | null>;
+    /** The person recording over the map changes how it is filmed. */
+    setProduction(user: SpaceUser, production: RecordingProduction): void;
     stopRecordingByServer(): Promise<SpaceUser | null>;
     stopRecordingIfRecorderMatches(spaceUserId: string): Promise<SpaceUser | null>;
     confirmRecordingStartedByWebhook(recordingSessionId: string, egressId: string, roomName: string): boolean;
@@ -356,6 +363,15 @@ export class RecordingManager implements IRecordingManager {
             withMap,
             layout,
             follows: this.follows(withMap) ? recorder.uuid : undefined,
+            production:
+                withMap && LIVEKIT_RECORDING_WITH_MAP
+                    ? {
+                          layout: recordingLayoutSchema.catch("balanced").parse(layout),
+                          zoom: "wide",
+                          frame: null,
+                          pins: [],
+                      }
+                    : undefined,
         };
 
         this.sessions.set(session.recordingSessionId, session);
@@ -567,6 +583,19 @@ export class RecordingManager implements IRecordingManager {
         }
     }
 
+    public setProduction(user: SpaceUser, production: RecordingProduction): void {
+        // In a bubble the recording followed the person to, the session lives with the bubble it started in.
+        const owner = this.followed?.recording.owner ?? this;
+        const session = this.followed
+            ? owner.sessions.get(this.followed.recording.recordingSessionId)
+            : this.getPrimarySession();
+        if (!session?.production || session.recorder.uuid !== user.uuid) {
+            throw new Error("Only the person recording over the map can direct it");
+        }
+        session.production = production;
+        owner.publishState();
+    }
+
     private publishState(): void {
         this.writeState();
         const session = this.getPrimarySession();
@@ -585,6 +614,7 @@ export class RecordingManager implements IRecordingManager {
                 recorder: snapshot.recorder,
                 recording: snapshot.status === "recording" || snapshot.status === "stopping",
                 status: snapshot.status,
+                ...(snapshot.production ? { production: snapshot.production } : {}),
             };
         });
     }
@@ -593,7 +623,12 @@ export class RecordingManager implements IRecordingManager {
         if (this.followed) {
             const session = this.followed.recording.owner.sessions.get(this.followed.recording.recordingSessionId);
             return session
-                ? { isRecording: true, recorder: this.followed.recorder.spaceUserId, status: session.status }
+                ? {
+                      isRecording: true,
+                      recorder: this.followed.recorder.spaceUserId,
+                      status: session.status,
+                      production: session.production,
+                  }
                 : { isRecording: false, recorder: null, status: "idle" };
         }
         const primarySession = this.getPrimarySession();
@@ -611,6 +646,7 @@ export class RecordingManager implements IRecordingManager {
             isRecording: true,
             recorder: primarySession.recorder.spaceUserId,
             status: primarySession.status,
+            production: primarySession.production,
         };
     }
 

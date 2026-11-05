@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "カメラ優先",
             },
         },
+        producer: {
+            layout: "レイアウト",
+            zoom: "ズーム",
+            zoomLevel: {
+                tight: "寄り",
+                wide: "引き",
+                whole: "マップ全体",
+            },
+            framing: "フレーミング",
+            follow: "バブルを追う",
+            frameMyView: "自分の見ている範囲を映す",
+            cameras: "カメラ",
+            pin: "固定",
+            unpin: "固定解除",
+            pinHint: "固定した人は話していなくてもタイルが残ります（最大 {max} 人）。",
+        },
     },
 };
 

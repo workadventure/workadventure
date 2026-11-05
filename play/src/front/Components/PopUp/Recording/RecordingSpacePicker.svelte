@@ -5,6 +5,7 @@
     import type { RecordingSpaceRow } from "../../ActionBar/MenuIcons/RecordingMenuUtils";
     import { RECORDER_LAYOUT_MODES } from "../../../Utils/RecorderLayout";
     import type { RecorderLayoutMode } from "../../../Utils/RecorderLayout";
+    import RecordingProducerPanel from "./RecordingProducerPanel.svelte";
 
     interface Props {
         rowsStore: Readable<RecordingSpaceRow[]>;
@@ -79,6 +80,9 @@
                         {$LL.recording.actionbar.desc.advert()}
                     {/if}
                 </span>
+                {#if row.status === "recording-self"}
+                    <RecordingProducerPanel space={row.space} />
+                {/if}
                 {#if row.action === "start" && withMapAvailable}
                     <div class="flex flex-row flex-wrap items-center gap-1 pt-1">
                         <span class="text-xs text-white/70">{$LL.recording.actionbar.spacePicker.withMap()}</span>

@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "摄像头优先",
             },
         },
+        producer: {
+            layout: "布局",
+            zoom: "缩放",
+            zoomLevel: {
+                tight: "近景",
+                wide: "拉远",
+                whole: "整张地图",
+            },
+            framing: "取景",
+            follow: "跟随气泡",
+            frameMyView: "按我看到的取景",
+            cameras: "摄像头",
+            pin: "固定",
+            unpin: "取消固定",
+            pinHint: "被固定的人即使不说话也保留画面（最多 {max} 人）。",
+        },
     },
 };
 

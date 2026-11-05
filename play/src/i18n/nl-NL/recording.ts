@@ -55,6 +55,22 @@ const recording: DeepPartial<Translation["recording"]> = {
                 cameras: "Camera's eerst",
             },
         },
+        producer: {
+            layout: "Indeling",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Dichtbij",
+                wide: "Uitgezoomd",
+                whole: "Hele kaart",
+            },
+            framing: "Kader",
+            follow: "De bubbel volgen",
+            frameMyView: "Kaderen wat ik zie",
+            cameras: "Camera's",
+            pin: "Vastzetten",
+            unpin: "Losmaken",
+            pinHint: "Een vastgezette persoon houdt zijn tegel, ook als hij zwijgt (tot {max}).",
+        },
     },
 };
 

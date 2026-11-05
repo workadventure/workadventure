@@ -31,6 +31,7 @@ describe("TransitionPolicy", () => {
         }),
         handleAddUser: () => {},
         handleSpaceKindChanged: () => {},
+        setProduction: () => {},
         followedRecorder: undefined,
         isRecording,
         destroy: () => {},

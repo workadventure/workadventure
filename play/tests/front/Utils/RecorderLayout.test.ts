@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeRecorderLayout, parseRecorderLayoutMode } from "../../../src/front/Utils/RecorderLayout";
+import { computeRecorderLayout, parseRecorderLayoutMode, pinnedFirst } from "../../../src/front/Utils/RecorderLayout";
 
 const W = 1280;
 const H = 720;
@@ -46,5 +46,11 @@ describe("computeRecorderLayout", () => {
         expect(parseRecorderLayoutMode("cameras")).toBe("cameras");
         expect(parseRecorderLayoutMode("whatever")).toBe("balanced");
         expect(parseRecorderLayoutMode(null)).toBe("balanced");
+    });
+
+    it("puts the pinned people first, keeping the speaking order otherwise", () => {
+        const ids = (items: string[]) => pinnedFirst(items, ["d", "b"], (id) => id);
+        expect(ids(["a", "b", "c", "d", "e"])).toEqual(["b", "d", "a", "c", "e"]);
+        expect(pinnedFirst(["a", "c"], ["x"], (id) => id)).toEqual(["a", "c"]);
     });
 });
