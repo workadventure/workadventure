@@ -90,7 +90,8 @@ export class FileController {
         .then((buffer) => {
           // Audio messages are played by an <audio> element, they are not downloaded.
           const targetDevice = new HttpResponseDevice(id, response, false);
-          return targetDevice.copyFromBuffer(Buffer.from(buffer ?? ""));
+          // An expired or unknown message is a 404, not an empty 200.
+          return targetDevice.copyFromBuffer(buffer);
         })
         .catch((e) => {
           console.error(e);
