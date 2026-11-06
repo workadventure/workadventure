@@ -1,5 +1,5 @@
 import fs from "fs";
-import type { Browser, BrowserContext, Page } from "playwright/test";
+import type { Browser, BrowserContext, BrowserContextOptions, Page } from "playwright/test";
 import { expect } from "playwright/test";
 import { oidcAdminTagLogin, oidcMatrixUserLogin, oidcMemberTagLogin, oidcLogin } from "./oidc";
 import Menu from "./menu";
@@ -104,14 +104,16 @@ async function createUser(
         | "John"
         | "UserMatrix2"
         | "User1"
-        | "Carol",
+        | "Carol"
+        | "Dave",
     browser: Browser,
     url: string,
+    contextOptions?: BrowserContextOptions,
 ): Promise<void> {
     if (isJsonCreate(name)) {
         return;
     }
-    const context: BrowserContext = await browser.newContext();
+    const context: BrowserContext = await browser.newContext(contextOptions);
     const page: Page = await context.newPage();
     const targetUrl = new URL(url, play_url).toString();
 
@@ -207,14 +209,20 @@ export async function getPage(
         | "John"
         | "UserMatrix2"
         | "User1"
-        | "Carol",
+        | "Carol"
+        | "Dave",
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void | Promise<void>;
+        /** Extra options for the page's context, e.g. a phone viewport with touch for one test. */
+        contextOptions?: BrowserContextOptions;
     } = {},
 ): Promise<Page> {
-    await createUser(name, browser, url);
-    const newBrowser: BrowserContext = await browser.newContext({ storageState: "./.auth/" + name + ".json" });
+    await createUser(name, browser, url, options.contextOptions);
+    const newBrowser: BrowserContext = await browser.newContext({
+        ...options.contextOptions,
+        storageState: "./.auth/" + name + ".json",
+    });
     // Noise suppression is on by default: turn it off so that each page does not load the noise suppression models.
     // Only when unset, so a test that turns it on keeps its choice across reloads.
     await newBrowser.addInitScript(() => {

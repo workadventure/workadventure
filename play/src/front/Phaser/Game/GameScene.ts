@@ -39,7 +39,7 @@ import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
 import { iceServersManager } from "../../WebRtc/IceServersManager";
-import { UserInputManager } from "../UserInput/UserInputManager";
+import { ActiveEventList, UserInputEvent, UserInputManager } from "../UserInput/UserInputManager";
 import { touchScreenManager } from "../../Touch/TouchScreenManager";
 import { PinchManager } from "../UserInput/PinchManager";
 import { waScaleManager } from "../Services/WaScaleManager";
@@ -70,7 +70,6 @@ import { hasMovedEventName, Player, requestEmoteEventName } from "../Player/Play
 import { ErrorSceneName } from "../Reconnecting/ErrorScene";
 import { ReconnectingSceneName } from "../Reconnecting/ReconnectingScene";
 import { TextUtils } from "../Components/TextUtils";
-import { joystickBaseImg, joystickBaseKey, joystickThumbImg, joystickThumbKey } from "../Components/MobileJoystick";
 import { PropertyUtils } from "../Map/PropertyUtils";
 import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { stripUrlSensitiveParts } from "../../Administration/CowebsiteAnalyticsProperties";
@@ -149,7 +148,6 @@ import {
     mapEditorModeStore,
     mapEditorSelectedToolStore,
     mapEditorWamSettingsEditorToolCurrentMenuItemStore,
-    mapExplorationModeStore,
     WAM_SETTINGS_EDITOR_TOOL_MENU_ITEM,
 } from "../../Stores/MapEditorStore";
 import { refreshPromptStore } from "../../Stores/RefreshPromptStore";
@@ -219,7 +217,7 @@ import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenO
 import { isInsidePersonalAreaStore } from "../../Stores/PersonalDeskStore";
 import { areaPropertyVariablesManagerStore } from "../../Stores/AreaPropertyVariablesStore";
 import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
-import { audioPlaybackStore } from "../../Stores/AudioPlaybackStore";
+import { audioPlaybackStore, handleSuspendedAudioContext } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
@@ -511,10 +509,6 @@ export class GameScene extends DirtyScene {
         this.load.image("iconSilent", "/resources/icons/icon_silent.png");
         this.load.image("iconMeeting", "/resources/icons/icon_meeting.png");
 
-        if (touchScreenManager.supportTouchScreen) {
-            this.load.image(joystickBaseKey, joystickBaseImg);
-            this.load.image(joystickThumbKey, joystickThumbImg);
-        }
         // Load the selected bubble sound from bubbleSoundStore
         const selectedBubbleSound = get(bubbleSoundStore);
         this.load.audio(
@@ -1387,8 +1381,22 @@ export class GameScene extends DirtyScene {
             ? { x: this.CurrentPlayer.x, y: this.CurrentPlayer.y }
             : undefined;
 
-        if (this.hasJoinedRoom) {
-            this.CurrentPlayer.moveUser(delta, this.userInputManager.getEventListForGameTick());
+        if (this.hasJoinedRoom && this.mapEditorModeManager?.isActive()) {
+            // In the map editor, the move keys scroll the map and the avatar stays put.
+            this.cameraManager.move(this.userInputManager.getEventListForGameTick(), delta);
+            this.CurrentPlayer.moveUser(delta, new ActiveEventList());
+        } else if (this.hasJoinedRoom) {
+            const moveEvents = this.userInputManager.getEventListForGameTick();
+            if (
+                moveEvents.get(UserInputEvent.MoveUp) ||
+                moveEvents.get(UserInputEvent.MoveDown) ||
+                moveEvents.get(UserInputEvent.MoveLeft) ||
+                moveEvents.get(UserInputEvent.MoveRight)
+            ) {
+                this.userInputManager.userInputHandler.handlePointerCancelEvent?.();
+                this.cameraManager.resumePlayerFollow();
+            }
+            this.CurrentPlayer.moveUser(delta, moveEvents);
         }
         if (this.mapEditorModeManager?.isActive()) {
             this.mapEditorModeManager.update(time, delta);
@@ -2325,28 +2333,36 @@ export class GameScene extends DirtyScene {
 
                 const context = audioContextManager.getContext();
 
-                let previousState: AudioContextState | undefined;
+                // Whether the context ever ran, not whether it ran just before: two output switches in a row make
+                // Chrome report "suspended" several times in a row, and leave the context suspended.
+                let hasRun = false;
                 const onStateChange = () => {
                     const state = context.state;
-                    const wasRunning = previousState === "running";
-                    previousState = state;
 
                     // Note: some browsers (Vivaldi / Brave) will start in "running" state directly despite
                     // no user activation and this will not stop them from blocking WebRTC sound afterwards.
                     if (state === "suspended") {
                         audioInterruptedStore.setInterrupted(false);
-                        const outputSwitch = wasRunning ? pendingSinkRequests(context) : undefined;
+                        const outputSwitch = hasRun ? pendingSinkRequests(context) : undefined;
                         if (outputSwitch) {
                             // Chrome suspends a running context while it switches the audio output, and resumes it
                             // after. Not blocked playback: flagging it sets the SOUND_BLOCKED status, which leaves the
                             // bubble. Resumed here too, in case the switch failed half way.
                             outputSwitch.then(() => context.resume()).catch((e) => console.error(e));
                         } else {
-                            this.unregisterAudioContextPlaybackRetry = audioPlaybackStore.register(() => {
-                                context.resume().catch((e) => console.error(e));
+                            // Without the User Activation API (Safari < 16.4), a context that already ran had one.
+                            const hasBeenActive =
+                                "userActivation" in navigator ? navigator.userActivation.hasBeenActive : hasRun;
+                            handleSuspendedAudioContext(context, hasBeenActive, () => {
+                                // ??=: a second "suspended" in a row must not replace the registration, or the first
+                                // one could never be removed and the status would stay SOUND_BLOCKED until a reload.
+                                this.unregisterAudioContextPlaybackRetry ??= audioPlaybackStore.register(() => {
+                                    context.resume().catch((e) => console.error(e));
+                                });
                             });
                         }
                     } else if (state === "running") {
+                        hasRun = true;
                         this.unregisterAudioContextPlaybackRetry?.();
                         this.unregisterAudioContextPlaybackRetry = undefined;
                         audioInterruptedStore.setInterrupted(false);
@@ -2810,16 +2826,6 @@ export class GameScene extends DirtyScene {
                     this.gameMapFrontWrapper.getEntitiesManager().makeAllEntitiesInteractive(true);
                 }
                 this.markDirty();
-            }),
-        );
-
-        this.unsubscribers.push(
-            mapExplorationModeStore.subscribe((exploration) => {
-                if (exploration) {
-                    this.cameraManager.setExplorationMode();
-                } else {
-                    this.input.keyboard?.enableGlobalCapture();
-                }
             }),
         );
 
@@ -4720,7 +4726,7 @@ ${escapedMessage}
         });
     }
 
-    handleMouseWheel(deltaY: number) {
+    handleMouseWheel(deltaY: number, pointer?: { x: number; y: number }) {
         // Calculate the velocity of the zoom
         //const velocity = deltaY / 30;
 
@@ -4737,17 +4743,24 @@ ${escapedMessage}
 
         debugZoom("DeltaY: ", deltaY, "Zoom factor", zoomFactor);
 
-        // Apply the zoom
-        this.zoomByFactor(zoomFactor, true);
+        this.zoomByFactor(zoomFactor, true, this.zoomAnchor(pointer));
     }
 
-    zoomByFactor(zoomFactor: number, smooth: boolean) {
+    /** The point a wheel or pinch zoom may keep fixed under the pointer (see CameraManager.zoomByFactorAtPointer). */
+    zoomAnchor(pointer?: { x: number; y: number }): { x: number; y: number } | undefined {
+        // The map editor's view is always free (the explorer list sets a focus target only to centre on hovered
+        // items). In game mode, focus zones keep zooming on the centre.
+        return get(mapEditorModeStore) || !waScaleManager.getFocusTarget() ? pointer : undefined;
+    }
+
+    zoomByFactor(zoomFactor: number, smooth: boolean, pointer?: { x: number; y: number }) {
         if (this.cameraManager.isZoomLocked()) {
             return;
         }
 
         const time = zoomFactor > 1 ? zoomFactor * 250 : (1 / zoomFactor) * 250;
-        this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
+        if (pointer) this.cameraManager.zoomByFactorAtPointer(zoomFactor, smooth ? time : 0, pointer);
+        else this.cameraManager.zoomByFactor(zoomFactor, smooth ? time : 0);
     }
 
     get room(): Room {

@@ -593,8 +593,15 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 );
                 break;
             }
+            case "microphoneTrackPublishedMessage": {
+                this.communicationManager.handleMicrophoneTrackPublished(
+                    backEvent.senderUserId,
+                    event.microphoneTrackPublishedMessage,
+                );
+                break;
+            }
             default: {
-                const _exhaustiveCheck: never = event as never;
+                const _exhaustiveCheck: never = event;
             }
         }
     }

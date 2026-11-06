@@ -70,7 +70,7 @@
 
     const searchAccessibleRooms = () => {
         chat.searchAccessibleRooms($chatSearchBarValue)
-            .then((chatRooms: { id: string; name: string | undefined }[]) => {
+            .then((chatRooms) => {
                 joignableRoom.set(chatRooms);
             })
             .catch((e) => console.error(e))

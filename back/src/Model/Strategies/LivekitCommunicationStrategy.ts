@@ -4,8 +4,10 @@ import type {
     SpaceUser,
 } from "@workadventure/messages";
 import * as Sentry from "@sentry/node";
+import type { S3Upload } from "livekit-server-sdk";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
+import type { EgressFile } from "../Interfaces/ICommunicationState";
 import type { LiveKitService, RecordingStartInfo } from "../Services/LivekitService";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
@@ -286,6 +288,22 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
     }
     async stopRecording(egressId?: string): Promise<void> {
         await this.livekitService.stopRecording(egressId);
+    }
+
+    async startTrackEgress(spaceUserId: string, trackSid: string, filepath: string, s3: S3Upload): Promise<string> {
+        if (!this.createRoomPromise) {
+            throw new Error("Livekit room not created yet");
+        }
+        await this.createRoomPromise;
+        return this.livekitService.startTrackEgress(this.space.getSpaceName(), spaceUserId, trackSid, filepath, s3);
+    }
+
+    async stopEgress(egressId: string): Promise<void> {
+        await this.livekitService.stopEgress(egressId);
+    }
+
+    getEgressFile(egressId: string): Promise<EgressFile | undefined> {
+        return this.livekitService.getEgressFile(egressId);
     }
 
     async handleLivekitWebhook(

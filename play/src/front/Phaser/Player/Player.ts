@@ -16,6 +16,7 @@ import { WOKA_SPEED } from "../../Enum/EnvironmentVariable";
 import { visibilityStore } from "../../Stores/VisibilityStore";
 import { passStatusToOnline } from "../../Rules/StatusRules/statusChangerFunctions";
 import { localUserStore } from "../../Connection/LocalUserStore";
+import { WalkDestinationMarker } from "../Components/WalkDestinationMarker";
 
 export const hasMovedEventName = "hasMoved";
 export const startMovingEventName = "startMoving";
@@ -23,6 +24,7 @@ export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
     private readonly unsubscribeVisibilityStore: Unsubscriber;
+    private readonly destinationMarker: WalkDestinationMarker;
     private isMoving = false;
 
     constructor(
@@ -38,6 +40,7 @@ export class Player extends Character {
         super(Scene, x, y, texturesPromise, name, direction, moving, 1, true, companionTexturePromise, "me");
         //the current player model should be push away by other players to prevent conflict
         this.getBody().setImmovable(false);
+        this.destinationMarker = new WalkDestinationMarker(Scene);
 
         this.unsubscribeVisibilityStore = visibilityStore.subscribe((isVisible) => {
             if (!isVisible) {
@@ -98,16 +101,19 @@ export class Player extends Character {
         }
 
         this.getBody().setDirectControl(true);
+        // Every walk ends here (taps, right-clicks, scripts, reroutes...): mark where it goes until it ends.
+        const destination = path.at(-1);
+        const walk = destination ? this.destinationMarker.show(destination) : undefined;
         return super.setPathToFollow(path, speed).finally(() => {
             this.isMoving = false;
+            if (walk !== undefined) this.destinationMarker.hide(walk);
         });
     }
 
-    public getCurrentPathDestinationPoint(): { x: number; y: number } | undefined {
-        if (!this.pathToFollow) {
-            return undefined;
-        }
-        return this.pathToFollow[this.pathToFollow.length - 1];
+    /** The waypoints still ahead on the current walk, the last one being the destination (empty when not walking). */
+    public getPathAhead(): { x: number; y: number }[] {
+        // The first waypoint is where the current segment started, behind the avatar.
+        return this.pathToFollow?.slice(1) ?? [];
     }
 
     private deduceSpeed(speedUp: boolean, followMode: boolean): number {
@@ -136,12 +142,11 @@ export class Player extends Character {
         y = y * moveAmount;
 
         // Compute moving state
-        const joystickMovement = activeEvents.get(UserInputEvent.JoystickMove);
-        const moving = x !== 0 || y !== 0 || joystickMovement;
+        const moving = x !== 0 || y !== 0;
 
         // Compute direction
         let direction = this._lastDirection;
-        if (moving && !joystickMovement) {
+        if (moving) {
             if (Math.abs(x) > Math.abs(y)) {
                 direction = x < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
             } else {
@@ -294,6 +299,7 @@ export class Player extends Character {
 
     destroy(): void {
         this.unsubscribeVisibilityStore();
+        this.destinationMarker.destroy();
         super.destroy();
     }
 }

@@ -52,7 +52,7 @@ function createMessage(id: string, date: Date, type: ChatMessage["type"]): ChatM
         isQuotedMessage: undefined,
         quotedMessage: undefined,
         reactions: new MapStore(),
-        remove: () => {},
+        remove: () => Promise.resolve(),
         edit: () => Promise.resolve(),
         isDeleted: readable(false),
         isModified: readable(false),

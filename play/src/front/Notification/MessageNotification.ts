@@ -1,6 +1,7 @@
 import { get } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
 import LL from "../../i18n/i18n-svelte";
+import { decodeHtmlEntities } from "../Chat/decodeHtmlEntities";
 import type { NotificationWA } from "./Notification";
 import { defaultOptions } from "./Notification";
 export class MessageNotification implements NotificationWA {
@@ -9,15 +10,19 @@ export class MessageNotification implements NotificationWA {
         private message: string,
         private chatRoomId: string,
         private chatRoomName: string,
+        private isMention = false,
         private options = defaultOptions,
     ) {}
 
     public async sendNotification() {
         try {
             const numberOfChar = 60;
-            const messageToDisplay =
-                this.message.length > numberOfChar ? this.message.slice(0, numberOfChar) + "..." : this.message;
-            const body = `${get(LL).notification.message({ name: this.userName })} : ${messageToDisplay}`;
+            const message = decodeHtmlEntities(this.message);
+            const messageToDisplay = message.length > numberOfChar ? message.slice(0, numberOfChar) + "..." : message;
+            const title = this.isMention
+                ? get(LL).notification.mention({ name: this.userName })
+                : get(LL).notification.message({ name: this.userName });
+            const body = `${title} : ${messageToDisplay}`;
 
             // In the Electron shell, route through the main-process notification: the WA icon is
             // pinned, and the chatRoomId travels as `tag` so a click can focus the app and open

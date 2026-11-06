@@ -22,6 +22,12 @@ import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./
 let pendingProtocolTarget: string | undefined;
 
 app.setName(DESKTOP_APP_NAME);
+// Windows shows a notification only for an AppUserModelId that a Start menu shortcut carries: the
+// NSIS installer gives its shortcut the appId of electron-builder.yml. It also groups the taskbar
+// buttons and names the auto-launch entry.
+if (process.platform === "win32") {
+    app.setAppUserModelId("re.workadventu.desktop");
+}
 
 const OPEN_COMPANION_ARG = "--open-companion";
 
