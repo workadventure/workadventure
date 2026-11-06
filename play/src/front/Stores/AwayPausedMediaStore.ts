@@ -32,12 +32,17 @@ export const awayPausedMediaStore = derived(
 );
 
 /**
- * Come back from away mode with only one device: the other one, if away mode held it, is turned off as if the
- * user had muted it, so that nothing they did not click starts.
+ * Come back from away mode with one device: it is turned on, even if the user had turned it off. The other one,
+ * if away mode held it, is turned off as if the user had muted it, so that nothing they did not click starts.
  */
 export function comeBackWith(device: "camera" | "microphone"): void {
     const paused = get(awayPausedMediaStore);
-    if (device === "camera" && paused.microphone) requestedMicrophoneState.disableMicrophone();
-    if (device === "microphone" && paused.camera) requestedCameraState.disableWebcam();
+    if (device === "camera") {
+        requestedCameraState.enableWebcam();
+        if (paused.microphone) requestedMicrophoneState.disableMicrophone();
+    } else {
+        requestedMicrophoneState.enableMicrophone();
+        if (paused.camera) requestedCameraState.disableWebcam();
+    }
     privacyShutdownStore.comeBack();
 }

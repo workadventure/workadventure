@@ -86,6 +86,15 @@ describe("awayPausedMediaStore", () => {
         expect(get(requestedMicrophoneState)).toBe(false);
     });
 
+    it("turns on the clicked device even if the user had turned it off", () => {
+        requestedCameraState.disableWebcam();
+        requestedMicrophoneState.disableMicrophone();
+        comeBackWith("camera");
+        expect(get(privacyShutdownStore)).toBe(false);
+        expect(get(requestedCameraState)).toBe(true);
+        expect(get(requestedMicrophoneState)).toBe(false);
+    });
+
     it("leaves alone a device away mode does not hold", () => {
         settings.keepCamera = true;
         away.set(false);

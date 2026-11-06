@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage, logIn } from "./utils/auth";
 import Map from "./utils/map";
+import Menu from "./utils/menu";
 import { expectWebRtcConnectionsCountToBe } from "./utils/webRtc";
 import { getMiniWindow, getWorldPage, isMiniWindowShown, launchDesktopApp } from "./utils/desktop";
 
@@ -86,4 +87,36 @@ test("a visitor shown in the mini window does not end away mode; one click does"
     await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(0);
     // Her camera shows in her own tile, sized to it.
     await expect(ownTile.locator("video")).toBeVisible();
+});
+
+test("turning a device on from the mini window ends away mode", async ({ browser }) => {
+    const url = publicTestMapUrl("tests/E2E/empty.json", "desktop_mini_window");
+    await using app = await launchDesktopApp(url);
+    const alice = await getWorldPage(app);
+    await logIn(alice, "Alice");
+    await Map.teleportToPosition(alice, 4 * 32, 4 * 32);
+    // Alice turned her camera and microphone off herself, then went to work in another app: away mode.
+    await Menu.turnOffCamera(alice);
+    await Menu.turnOffMicrophone(alice);
+    await (await app.browserWindow(alice)).evaluate((window) => window.hide());
+    await alice.evaluate(() => window.dispatchEvent(new Event("blur")));
+
+    await using bob = await getPage(browser, "Bob", url);
+    await Map.teleportToPosition(bob, 4 * 32 + 16, 4 * 32);
+    await expect.poll(() => isMiniWindowShown(app)).toBe(true);
+    const miniWindow = await getMiniWindow(app);
+    const ownStatus = miniWindow.getByTestId("mini-window-status").locator(".dot");
+    await expect(ownStatus).toHaveAttribute("data-status", "away");
+    // Nothing is paused: she turned both off herself.
+    await expect(miniWindow.getByTestId("away-paused-overlay")).toBeHidden();
+
+    const camera = miniWindow.getByRole("button", { name: "Turn camera on/off" });
+    await camera.click();
+    await expect(camera).toHaveAttribute("data-state", "on");
+    await expect(ownStatus).not.toHaveAttribute("data-status", "away");
+    await expect(miniWindow.locator(".group\\/screenshare").first().locator("video")).toBeVisible();
+
+    const microphone = miniWindow.getByRole("button", { name: "Turn microphone on/off" });
+    await microphone.click();
+    await expect(microphone).toHaveAttribute("data-state", "on");
 });

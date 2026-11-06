@@ -147,17 +147,16 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
     }),
 );
 
-// A device paused by away mode turns on: the user comes back with it alone.
+// Turning a device on from here, or one away mode holds, is the user coming back: away mode ends.
 export function toggleMicrophone(): void {
-    if (get(awayPausedMediaStore).microphone) comeBackWith("microphone");
-    else if (get(requestedMicrophoneState)) requestedMicrophoneState.disableMicrophone();
-    else requestedMicrophoneState.enableMicrophone();
+    if (get(requestedMicrophoneState) && !get(awayPausedMediaStore).microphone) {
+        requestedMicrophoneState.disableMicrophone();
+    } else comeBackWith("microphone");
 }
 
 export function toggleCamera(): void {
-    if (get(awayPausedMediaStore).camera) comeBackWith("camera");
-    else if (get(requestedCameraState)) requestedCameraState.disableWebcam();
-    else requestedCameraState.enableWebcam();
+    if (get(requestedCameraState) && !get(awayPausedMediaStore).camera) requestedCameraState.disableWebcam();
+    else comeBackWith("camera");
 }
 
 export function toggleScreenSharing(): void {
