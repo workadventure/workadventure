@@ -177,6 +177,8 @@ const menu: BaseTranslation = {
         openChat: "Open Chat",
         openUserList: "Open User List",
         toggleMapEditor: "Show/Hide Map Editor",
+        toggleMicrophone: "Enable/disable your microphone",
+        toggleCamera: "Enable/disable your camera",
         rotatePlayer: "Rotate Player",
         openSayPopup: "Open Say Popup",
         openThinkPopup: "Open Think Popup",

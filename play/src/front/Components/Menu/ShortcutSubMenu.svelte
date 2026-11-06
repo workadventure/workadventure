@@ -55,6 +55,8 @@
         openUserList: $LL.menu.shortcuts.openUserList(),
         rotatePlayer: $LL.menu.shortcuts.rotatePlayer(),
         toggleMapEditor: $LL.menu.shortcuts.toggleMapEditor(),
+        toggleMicrophone: $LL.menu.shortcuts.toggleMicrophone(),
+        toggleCamera: $LL.menu.shortcuts.toggleCamera(),
     });
 
     let fixedLabels: Record<FixedShortcut, string> = $derived({
@@ -92,6 +94,8 @@
             {
                 title: t.groups.communicate(),
                 rows: [
+                    editable("toggleMicrophone"),
+                    editable("toggleCamera"),
                     editable("openChat"),
                     editable("openUserList"),
                     { label: t.openSayPopup(), combos: [single(t.keyNames.enter())] },
