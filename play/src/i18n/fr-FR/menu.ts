@@ -221,6 +221,11 @@ const menu: DeepPartial<Translation["menu"]> = {
         emote6: "Émoticône 6",
         openSayPopup: "Ouvrir la popup en mode dire",
         openThinkPopup: "Ouvrir la popup en mode pense",
+        toggleMicrophone: "Enable/disable your microphone",
+        toggleCamera: "Enable/disable your camera",
+        setShortcut: "Set shortcut",
+        pressKey: "Press a key combination…",
+        reservedKey: "This key is already in use, press another one…",
     },
 };
 
