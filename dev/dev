@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+# A shared socle and one light stack per server, side by side. See dev/README.md.
+set -euo pipefail
+
+DEV_DIR=$(cd "$(dirname "$0")" && pwd)
+REPO=$(dirname "$DEV_DIR")
+# Local overrides (SOCLE_HTTP_PORT=8880...), not committed.
+if [ -f "$DEV_DIR/.env" ]; then set -a; . "$DEV_DIR/.env"; set +a; fi
+
+# The master commit the candidates are merged with (was 6f4d02319 until 2026-10-17). Its images are published on ghcr.io: nothing heavy is built locally.
+export WA_TAG=${WA_TAG:-master-034dee80bbe3b29327de03b650b38e452ecf1293}
+export SOCLE_HTTP_PORT=${SOCLE_HTTP_PORT:-80}
+export SOCLE_LIVEKIT_TCP_PORT=${SOCLE_LIVEKIT_TCP_PORT:-7881}
+export SOCLE_LIVEKIT_UDP_PORT=${SOCLE_LIVEKIT_UDP_PORT:-7882}
+# Public URLs carry the port, except on 80 (browsers drop it, and the OIDC issuer must match exactly).
+if [ "$SOCLE_HTTP_PORT" = 80 ]; then export SOCLE_URL_PORT=""; else export SOCLE_URL_PORT=":$SOCLE_HTTP_PORT"; fi
+
+usage() {
+    cat >&2 <<USAGE
+Usage:
+  dev/dev socle up [--profile tools] [--profile recording] | down
+  dev/dev stack up <name> [--variant ts|server] [--server-dir <dir>] [compose up options]
+  dev/dev stack down <name> [compose down options, e.g. -v to drop its maps]
+  dev/dev status
+  dev/dev env <name>      Playwright variables for a stack: eval "\$(dev/dev env ts)"
+  dev/dev assets <name>   map-storage/tests/assets.zip for that stack (resetWamMaps uploads it)
+  dev/dev test <name> <playwright args>   Playwright against that stack, one campaign at a time on the machine
+  dev/dev synapse reset   Empty the socle's Synapse (before the @matrix specs, after warm-auth)
+USAGE
+    exit 1
+}
+
+# --env-file: the OIDC mock "extends" docker-compose.yaml, whose variables come from .env.template.
+socle() { docker compose --env-file "$REPO/.env.template" -f "$DEV_DIR/socle.yaml" "$@"; }
+stack() { STACK=$1 docker compose -f "$DEV_DIR/stack.yaml" "${@:2}"; }
+
+# Memory used by the running containers of a compose project.
+memory() {
+    local ids
+    ids=$(docker ps -q --filter "label=com.docker.compose.project=$1")
+    [ -n "$ids" ] || { echo "0 MiB"; return; }
+    # shellcheck disable=SC2086
+    docker stats --no-stream --format '{{.MemUsage}}' $ids | awk '{
+        v = $1; u = v; gsub(/[0-9.]/, "", u); v += 0
+        s += (u == "GiB") ? v * 1024 : (u == "KiB") ? v / 1024 : (u == "B") ? 0 : v
+    } END { printf "%.0f MiB\n", s }'
+}
+
+case "${1:-} ${2:-}" in
+"socle up")
+    socle "${@:3}" up -d --build --wait
+    echo "Socle up: http://traefik.workadventure.localhost$SOCLE_URL_PORT"
+    ;;
+"socle down")
+    socle --profile tools --profile recording down "${@:3}"
+    ;;
+"stack up")
+    name=${3:-}
+    [[ "$name" =~ ^[a-z0-9][a-z0-9-]*$ && "$name" != socle ]] || usage
+    docker network inspect wa-socle >/dev/null 2>&1 || { echo "The socle is not running: dev/dev socle up" >&2; exit 1; }
+    shift 3
+    variant=ts
+    export SERVER_DIR="server-$name"
+    while [ $# -gt 0 ]; do
+        case "$1" in
+        --variant) variant=$2; shift 2 ;;
+        --server-dir) SERVER_DIR=$2; shift 2 ;;
+        *) break ;;
+        esac
+    done
+    if [ "$variant" = server ]; then
+        [ -f "$REPO/$SERVER_DIR/dev.env" ] || { echo "Missing $SERVER_DIR/dev.env (see dev/README.md)" >&2; exit 1; }
+        set -a; . "$REPO/$SERVER_DIR/dev.env"; set +a
+        [ -n "${SERVER_COMMAND:-}" ] || { echo "$SERVER_DIR/dev.env must set SERVER_COMMAND" >&2; exit 1; }
+    fi
+    [[ "$variant" =~ ^(ts|server)$ ]] || usage
+    stack "$name" --profile "$variant" up -d --build --wait --remove-orphans "$@"
+    url="http://play.$name.workadventure.localhost$SOCLE_URL_PORT"
+    # Traefik routes a container once it is healthy, a moment after compose returns.
+    for _ in $(seq 60); do curl -sf -o /dev/null "$url/ping" && break; sleep 1; done
+    echo "Stack $name ($variant): $url/"
+    ;;
+"stack down")
+    [ -n "${3:-}" ] || usage
+    stack "$3" --profile ts --profile server down "${@:4}"
+    ;;
+"status "*)
+    printf "%-14s %-12s %-10s %s\n" PROJECT STATUS MEMORY URL
+    for project in $(docker compose ls -a -q | grep '^wa-' || true); do
+        if [ "$project" = wa-socle ]; then url="http://traefik.workadventure.localhost$SOCLE_URL_PORT"
+        else url="http://play.${project#wa-}.workadventure.localhost$SOCLE_URL_PORT/"; fi
+        status=$(docker compose ls -a --filter "name=^$project\$" --format json | sed -E 's/.*"Status":"([^"]*)".*/\1/')
+        printf "%-14s %-12s %-10s %s\n" "$project" "$status" "$(memory "$project")" "$url"
+    done
+    ;;
+"env "*)
+    name=${2:-}
+    [ -n "$name" ] || usage
+    cat <<ENV
+export PLAY_URL=http://play.$name.workadventure.localhost$SOCLE_URL_PORT
+export MAP_STORAGE_ENDPOINT=map-storage.$name.workadventure.localhost$SOCLE_URL_PORT
+export MAPS_DOMAIN=maps.workadventure.localhost$SOCLE_URL_PORT
+export MATRIX_PUBLIC_URI=http://matrix.workadventure.localhost$SOCLE_URL_PORT
+export MATRIX_DOMAIN=matrix.workadventure.localhost
+export DEV_STACK=$name
+# No Klaxoon client id locally: its specs skip, as on forks.
+export NO_KLAXOON_SECRET=true
+# Tokens the specs send from the runner, the same as the stack's (dev/stack.yaml).
+export ADMIN_API_TOKEN=123
+export ROOM_API_HOSTNAME=room-api.$name.workadventure.localhost ROOM_API_PORT=$SOCLE_HTTP_PORT ROOM_API_SECRET_KEY=MYAWESOMEKEY
+ENV
+    # Specs that reboot the back or the pusher restart this stack's containers instead (tests/tests/utils/containers.ts).
+    if docker inspect "wa-$name-server-1" >/dev/null 2>&1; then
+        echo "export DEV_REBOOT_BACK='docker restart wa-$name-server-1' DEV_REBOOT_PLAY='docker restart wa-$name-server-1'"
+    else
+        echo "export DEV_REBOOT_BACK='docker restart wa-$name-back-1' DEV_REBOOT_PLAY='docker restart wa-$name-play-1'"
+    fi
+    ;;
+"assets "*)
+    name=${2:-}
+    [ -n "$name" ] || usage
+    # The test WAMs load their entity collections from http://play.workadventure.localhost, the regular stack:
+    # point them at this stack instead, as the CI does for its own host.
+    tmp=$(mktemp -d)
+    cp -R "$REPO/map-storage/tests/assets/." "$tmp/"
+    grep -rlF "http://play.workadventure.localhost/" "$tmp" | while read -r f; do
+        sed -i.bak "s#http://play.workadventure.localhost/#http://play.$name.workadventure.localhost$SOCLE_URL_PORT/#g" "$f" && rm "$f.bak"
+    done
+    rm -f "$REPO/map-storage/tests/assets.zip"
+    (cd "$tmp" && zip -qr "$REPO/map-storage/tests/assets.zip" .)
+    rm -rf "$tmp"
+    echo "map-storage/tests/assets.zip: collections from play.$name.workadventure.localhost$SOCLE_URL_PORT"
+    ;;
+"synapse reset")
+    # Matrix ids come from the OIDC e-mail, and User1 and UserMatrix share one: whoever logs in first gets @john.doe.
+    # The @matrix specs expect a Synapse where UserMatrix comes first.
+    docker rm -f wa-socle-synapse-1 >/dev/null
+    docker volume rm wa-socle_synapse-data >/dev/null
+    socle up -d --wait synapse
+    ;;
+"test "*)
+    name=${2:-}
+    [ -n "$name" ] || usage
+    # One Playwright campaign at a time: two stacks and two browsers on the same Docker VM fail specs for lack of
+    # memory, and those reruns cost more than waiting. The lock lives in the git dir every worktree shares; a lock
+    # whose process is gone is taken over.
+    lock="$(git -C "$REPO" rev-parse --git-common-dir)/wa-playwright.lock"
+    case "$lock" in /*) ;; *) lock="$REPO/$lock" ;; esac
+    until mkdir "$lock" 2>/dev/null; do
+        holder=$(cat "$lock/owner" 2>/dev/null || true)
+        if [ -n "$holder" ] && ! kill -0 "${holder%% *}" 2>/dev/null; then
+            echo "Stale Playwright slot ($holder): taking it over" >&2; rm -rf "$lock"; continue
+        fi
+        echo "$(date +%H:%M) Playwright slot held by: ${holder:-?}. Waiting..." >&2
+        sleep 30
+    done
+    echo "$$ $name since $(date +%H:%M)" > "$lock/owner"
+    trap 'rm -rf "$lock"' EXIT
+    eval "$("$0" env "$name")"
+    cd "$REPO/tests"
+    # caffeinate: a sleeping Mac turns specs into 15-minute blank pages.
+    # Chromium unless a project is given: the other browsers are not installed on the dev machines.
+    project=(--project=chromium)
+    for a in "${@:3}"; do case "$a" in --project*) project=() ;; esac; done
+    caffeinate -i npx playwright test "${@:3}" ${project[@]+"${project[@]}"} --workers=1
+    ;;
+*)
+    usage
+    ;;
+esac

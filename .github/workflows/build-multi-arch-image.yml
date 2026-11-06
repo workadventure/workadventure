@@ -33,6 +33,19 @@ on:
         required: false
         type: string
         default: ""
+      # Optional, for images built from a stage, with build arguments or extra named contexts (the server rewrites).
+      target:
+        required: false
+        type: string
+        default: ""
+      build-args:
+        required: false
+        type: string
+        default: ""
+      build-contexts:
+        required: false
+        type: string
+        default: ""
 
 jobs:
   build-amd-image:
@@ -46,6 +59,9 @@ jobs:
       context: ${{ inputs.context }}
       short_name: ${{ inputs.short_name }}
       sentry_project: ${{ inputs.sentry_project }}
+      target: ${{ inputs.target }}
+      build-args: ${{ inputs.build-args }}
+      build-contexts: ${{ inputs.build-contexts }}
       push-to-registry: ${{ inputs.push-to-registry }}
       final_build: ${{ inputs.final_build }}
 
@@ -61,6 +77,9 @@ jobs:
       context: ${{ inputs.context }}
       short_name: ${{ inputs.short_name }}
       sentry_project: ${{ inputs.sentry_project }}
+      target: ${{ inputs.target }}
+      build-args: ${{ inputs.build-args }}
+      build-contexts: ${{ inputs.build-contexts }}
       push-to-registry: ${{ inputs.push-to-registry }}
       final_build: ${{ inputs.final_build }}
 

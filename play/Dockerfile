@@ -66,7 +66,7 @@ COPY --from=previous-front /usr/share/nginx/html/assets /usr/share/nginx/html/as
 COPY --from=builder /usr/src/play/dist/public /usr/share/nginx/html
 RUN find /usr/share/nginx/html/assets -type f -mtime +60 -delete
 COPY play/nginx-front.conf /etc/nginx/conf.d/default.conf
-HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 CMD wget -q -O /dev/null http://localhost/index.html || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/index.html || exit 1
 
 # final production image (the default target)
 FROM node:24-trixie-slim

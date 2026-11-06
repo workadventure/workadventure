@@ -1,0 +1,30 @@
+# Go monolith: one image in the play Deployment; back, map-storage and uploader are not deployed.
+server:
+  enabled: true
+play:
+  image:
+    repository: wa-server-go
+    pullPolicy: Never
+    tag: rehearsal
+  # The Go HTTP clients verify TLS: trust the self-signed certificate of the ingress (secret created by deploy.sh).
+  extraEnvVars:
+    - name: SSL_CERT_FILE
+      value: /etc/rehearsal-tls/tls.crt
+    # The TS uploader keeps its files in Redis database 1 (uploader-env.yaml): the Go uploader must read the same.
+    # The chart does not give it to the play pod in server mode yet.
+    - name: REDIS_DB_NUMBER
+      value: "1"
+  extraVolumes:
+    - name: rehearsal-tls
+      secret:
+        secretName: rehearsal-tls
+    # The Go server stores the maps in /maps, like map-storage: it mounts the same volume (the chart does not do it).
+    - name: maps
+      persistentVolumeClaim:
+        claimName: rehearsal-workadventure-mapstorage
+  extraVolumeMounts:
+    - name: rehearsal-tls
+      mountPath: /etc/rehearsal-tls
+      readOnly: true
+    - name: maps
+      mountPath: /maps
