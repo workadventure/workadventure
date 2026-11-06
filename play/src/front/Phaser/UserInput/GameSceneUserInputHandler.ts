@@ -19,6 +19,7 @@ import { followRoleStore, followStateStore, followUsersStore } from "../../Store
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { isKeyFromInteractiveElement } from "../../Utils/isKeyFromInteractiveElement";
 import { findShortcutAction } from "../../Stores/ShortcutsStore";
+import { toggleMedia } from "../../Stores/MediaToggleStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
@@ -26,6 +27,13 @@ import { MapPanShortcut } from "./MapPanShortcut";
 
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
+
+function isKeyFromTextField(event: KeyboardEvent): boolean {
+    return (
+        event.target instanceof Element &&
+        event.target.closest('input, textarea, select, [contenteditable=""], [contenteditable="true"]') !== null
+    );
+}
 
 export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private gameScene: GameScene;
@@ -299,7 +307,8 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return event;
         }
 
-        switch (findShortcutAction(event)) {
+        const action = findShortcutAction(event);
+        switch (action) {
             case "toggleMapEditor": {
                 if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
@@ -332,6 +341,14 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             case "follow": {
                 this.handleKeyF();
+                break;
+            }
+            case "toggleMicrophone":
+            case "toggleCamera": {
+                // Plain letters by default: never steal them from a text field, nor toggle again while the key is held.
+                if (event.repeat || isKeyFromTextField(event)) break;
+                event.preventDefault();
+                toggleMedia(action === "toggleMicrophone" ? "microphone" : "camera");
                 break;
             }
             default: {

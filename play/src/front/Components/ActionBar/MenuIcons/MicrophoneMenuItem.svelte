@@ -1,7 +1,6 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import { derived } from "svelte/store";
-    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import ActionBarButton from "../ActionBarButton.svelte";
     import {
         availabilityStatusStore,
@@ -14,7 +13,8 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
-    import { canComeBackFrom, heldMediaStore, toggleMicrophone } from "../../../Stores/HeldMediaStore";
+    import { canComeBackFrom, heldMediaStore } from "../../../Stores/HeldMediaStore";
+    import { toggleMedia } from "../../../Stores/MediaToggleStore";
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
@@ -89,9 +89,7 @@
     );
 
     function microphoneClick(): void {
-        analyticsClient.trackAdminEvent("media.microphone.toggled");
-        if ($silentStore) return;
-        toggleMicrophone();
+        toggleMedia("microphone");
     }
 </script>
 
