@@ -5,6 +5,7 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import EmojiButton from "./EmojiButton.svelte";
     import MessageMoreMenu from "./MessageMoreMenu.svelte";
     import { confirmDelete } from "./confirmDeleteMessage";
@@ -51,9 +52,16 @@
         message.type !== "text" && $content.url !== undefined && $attachmentStatus.state === "ready",
     );
 
+    // Proximity (bubble) messages are plain text too.
+    let canCopy = $derived((message.type === "text" || message.type === "proximity") && $content.body !== "");
+
+    function copyText(): Promise<void> {
+        return navigator.clipboard.writeText(decodeHtmlEntities($content.body));
+    }
+
     const QUICK_REACTIONS = ["👍", "❤️", "😂"];
 
-    let hasMoreActions = $derived(!!message.openThread || $canEdit || $canDelete || canDownload);
+    let hasMoreActions = $derived(!!message.openThread || canCopy || $canEdit || $canDelete || canDownload);
 
     let moreButton: HTMLButtonElement | undefined = $state();
     let closeMoreMenu: (() => void) | undefined;
@@ -87,6 +95,7 @@
                 onOpenThread: message.openThread
                     ? () => openThread().catch((error) => console.error(error))
                     : undefined,
+                onCopy: canCopy ? copyText : undefined,
                 onEdit: $canEdit ? selectMessageToEdit : undefined,
                 onDelete: $canDelete ? removeMessage : undefined,
                 onClose: () => {
@@ -106,7 +115,7 @@
     }
 </script>
 
-<!-- Quick reactions and the picker, then reply; the rarer actions wait behind "⋯", delete last and apart. -->
+<!-- Quick reactions and the picker, then reply; copy and the rarer actions wait behind "⋯", delete last and apart. -->
 <div class="flex flex-row gap-0.5 items-center">
     {#if $canReact}
         {#each QUICK_REACTIONS as emoji (emoji)}
