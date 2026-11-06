@@ -10,6 +10,8 @@ export const editableShortcutActions = [
     "openUserList",
     "rotatePlayer",
     "toggleMapEditor",
+    "toggleMicrophone",
+    "toggleCamera",
 ] as const;
 export type ShortcutAction = (typeof editableShortcutActions)[number];
 
@@ -40,6 +42,8 @@ export const defaultShortcuts: Record<ShortcutAction, KeyBinding> = {
     openUserList: plainKey("KeyU", "U"),
     rotatePlayer: plainKey("KeyR", "R"),
     toggleMapEditor: plainKey("KeyE", "E"),
+    toggleMicrophone: plainKey("KeyO", "O"),
+    toggleCamera: plainKey("KeyP", "P"),
 };
 
 // null = the user left the action without a shortcut.

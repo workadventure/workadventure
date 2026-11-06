@@ -25,6 +25,12 @@ describe("ShortcutsStore", () => {
         expect(findShortcutAction(keyDown("KeyC", "c", { ctrlKey: true }))).toBeUndefined();
     });
 
+    it("binds the microphone and camera to O and P by default", () => {
+        expect(findShortcutAction(keyDown("KeyO", "o"))).toBe("toggleMicrophone");
+        expect(findShortcutAction(keyDown("KeyP", "p"))).toBe("toggleCamera");
+        expect(findShortcutAction(keyDown("KeyO", "o", { ctrlKey: true }))).toBeUndefined();
+    });
+
     it("moves a key from one action to another and saves it", () => {
         const binding = bindingFromEvent(keyDown("KeyF", "f"));
         expect(binding).not.toBeNull();
