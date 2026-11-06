@@ -1,6 +1,21 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const actionbar: BaseTranslation = {
+    a11y: {
+        close: "Fechar",
+        previous: "Anterior",
+        next: "Próximo",
+        settings: "Configurações",
+        loading: "Carregando…",
+        actions: "Ações",
+        volumeControl: "Controle de volume",
+        rotateAvatar: "Girar o avatar",
+        scrollCamerasLeft: "Role para a esquerda para ver mais câmeras",
+        scrollCamerasRight: "Role para a direita para ver mais câmeras",
+        changeLayout: "Mudar o layout",
+        closeChat: "Fechar o chat",
+        wokaOption: "Avatar {index:number}",
+    },
     understand: "Entendi!",
     edit: "Editar",
     cancel: "Cancelar",

@@ -26,6 +26,7 @@
 -->
 <script lang="ts">
     import { onMount, setContext } from "svelte";
+    import { LL } from "../../../i18n/i18n-svelte";
     import { myCameraPeerStore } from "../../Stores/StreamableCollectionStore";
     import type { VideoBox as VideoBoxModel } from "../../Space/VideoBox";
     import VideoBox from "../Video/VideoBox.svelte";
@@ -532,7 +533,7 @@
             <button
                 type="button"
                 class="scroll-indicator scroll-indicator-left scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
-                aria-label="Scroll left to see more cameras"
+                aria-label={$LL.actionbar.a11y.scrollCamerasLeft()}
                 onclick={scrollCamerasLeft}
             >
                 <span class="scroll-indicator-gradient scroll-indicator-gradient-left"></span>
@@ -545,7 +546,7 @@
             <button
                 type="button"
                 class="scroll-indicator scroll-indicator-right scroll-indicator-button opacity-10 group-hover/cameras-container:opacity-100"
-                aria-label="Scroll right to see more cameras"
+                aria-label={$LL.actionbar.a11y.scrollCamerasRight()}
                 onclick={scrollCamerasRight}
             >
                 <span class="scroll-indicator-gradient scroll-indicator-gradient-right"></span>

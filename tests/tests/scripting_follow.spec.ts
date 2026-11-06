@@ -72,7 +72,7 @@ test.describe("Scripting follow functions", () => {
             });
         });
 
-        await page2.getByRole("button", { name: "Stop following" }).click();
+        await page2.locator(".popup-container").getByRole("button", { name: "Stop following" }).click();
 
         await waitForUnfollowPromise;
     });

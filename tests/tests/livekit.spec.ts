@@ -251,7 +251,7 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(page2, 1);
         await expectLivekitRoomsCountToBe(page, 1);
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
+        await page.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
 
         await expectLivekitRoomsCountToBe(page, 0);
@@ -279,7 +279,7 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(page2, 1);
         await expectLivekitRoomsCountToBe(page, 1);
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
+        await page.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
 
         await expectLivekitRoomsCountToBe(page, 0);

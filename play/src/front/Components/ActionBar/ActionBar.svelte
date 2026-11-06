@@ -46,7 +46,7 @@
 </script>
 
 {#if !$hideActionBarStoreBecauseOfChatBar}
-    <div class="flex flex-col mobile:flex-col-reverse">
+    <div class="flex flex-col mobile:flex-col-reverse" data-testid="action-bar">
         <ResponsiveActionBar bind:rightDiv bind:actionBarWidth>
             {#snippet left()}
                 <div class="justify-start flex-none">

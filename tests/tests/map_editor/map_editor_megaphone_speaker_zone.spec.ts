@@ -88,7 +88,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
+        await page.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
@@ -158,7 +158,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         await expect(page.getByText("Admin2", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
+        await page.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
@@ -238,8 +238,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.clickSendGlobalMessage(pageMeetingA);
         await expect(pageMeetingA.getByRole("button", { name: "Start live message" })).toBeVisible();
         await pageMeetingA.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
-        await expect(pageMeetingA.getByRole("button", { name: "Stop megaphone" })).toBeVisible();
-        await pageMeetingA.getByRole("button", { name: "Stop megaphone" }).click();
+        await expect(
+            pageMeetingA.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }),
+        ).toBeVisible();
+        await pageMeetingA.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(pageMeetingA.getByRole("heading", { name: "Global communication" })).toBeHidden();
 
         await expect(pageOutsideC.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeHidden({
@@ -701,7 +703,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // ============================================================
 
         // Admin2 stops the megaphone
-        await pageListener1.getByRole("button", { name: "Stop megaphone" }).click();
+        await pageListener1.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(pageListener1.getByRole("heading", { name: "Global communication" })).toBeHidden();
 
         // Verify listeners can no longer see Admin2, but still see Admin1
@@ -732,7 +734,7 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         }
 
         // Stop the megaphone for the first speaker
-        await pageSpeaker.getByRole("button", { name: "Stop megaphone" }).click();
+        await pageSpeaker.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
         await expect(pageSpeaker.getByRole("heading", { name: "Global communication" })).toBeHidden();
     });
 

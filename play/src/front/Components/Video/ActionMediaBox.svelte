@@ -143,7 +143,7 @@
     <div
         class="flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded leading-4 text-left text-white disabled:opacity-50"
         role="group"
-        aria-label="Volume control"
+        aria-label={$LL.actionbar.a11y.volumeControl()}
     >
         {#if $volumeStore === 0}
             <button

@@ -2,6 +2,21 @@ import type { Translation } from "../i18n-types";
 import type { DeepPartial } from "../DeepPartial";
 
 const actionbar: DeepPartial<Translation["actionbar"]> = {
+    a11y: {
+        close: "Schließen",
+        previous: "Zurück",
+        next: "Weiter",
+        settings: "Einstellungen",
+        loading: "Wird geladen…",
+        actions: "Aktionen",
+        volumeControl: "Lautstärkeregler",
+        rotateAvatar: "Avatar drehen",
+        scrollCamerasLeft: "Nach links scrollen, um weitere Kameras zu sehen",
+        scrollCamerasRight: "Nach rechts scrollen, um weitere Kameras zu sehen",
+        changeLayout: "Layout ändern",
+        closeChat: "Chat schließen",
+        wokaOption: "Avatar {index}",
+    },
     understand: "Verstanden!",
     edit: "Bearbeiten",
     cancel: "Abbrechen",

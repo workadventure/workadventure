@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
+
     interface Props {
         height?: string;
         width?: string;
@@ -27,7 +29,8 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     viewBox="0 0 24 24"
-    aria-label="Close"
+    role="img"
+    aria-label={$LL.actionbar.a11y.close()}
 >
     <path stroke="none" d="M0 0h24v24H0z" fill="none" />
     <path d="M18 6l-12 12" />

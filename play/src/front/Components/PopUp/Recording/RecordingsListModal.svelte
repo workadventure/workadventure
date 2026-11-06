@@ -388,7 +388,7 @@
                                     <div
                                         class="flex shrink-0 items-center gap-1 self-center rounded border hover:border-white/20 hover:bg-white/5 p-1 mr-2"
                                         role="group"
-                                        aria-label="Actions"
+                                        aria-label={$LL.actionbar.a11y.actions()}
                                     >
                                         <button
                                             type="button"

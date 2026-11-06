@@ -106,6 +106,8 @@
     classList="group/btn-cam"
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
+    pressed={$cameraButtonStateStore === "normal"}
+    ariaLabel={$cameraActionBarTooltipStore.title || $LL.actionbar.help.cam.title()}
     dataTestId="camera-button"
     tooltipTitle={$cameraActionBarTooltipStore.title}
     desc={$cameraActionBarTooltipStore.desc}
