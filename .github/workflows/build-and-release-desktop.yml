@@ -1,13 +1,24 @@
 name: Build & release desktop app
 
+# Builds the desktop app on every change to it. A `desktop-v<version>` tag (pushed by
+# release-please-desktop.yml once the release PR is merged) builds it again and publishes it in
+# workadventure/desktop-releases.
 on:
   push:
     branches:
       - master
       - develop
+    # Path filters are not evaluated for tags. The app only reads desktop/electron (no import or
+    # electron-builder file outside it), so other changes cannot break its build.
+    tags:
+      - "desktop-v*"
+    paths:
+      - "desktop/electron/**"
+      - ".github/workflows/build-and-release-desktop.yml"
   pull_request:
-  release:
-    types: [created]
+    paths:
+      - "desktop/electron/**"
+      - ".github/workflows/build-and-release-desktop.yml"
 
 env:
   YARN_CACHE_FOLDER: ~/.yarn
@@ -17,8 +28,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_on_linux:
-    name: "Build & release desktop app for ${{ matrix.os }}"
+  # The release is a draft of workadventure/desktop-releases until the three OS are uploaded, so an
+  # update never points at a missing binary. Created here rather than by electron-builder: the three
+  # parallel uploads would each create their own draft.
+  draft:
+    name: "Create the draft desktop release"
+    if: ${{ github.repository == 'workadventure/workadventure' && startsWith(github.ref, 'refs/tags/desktop-v') }}
+    environment: desktop-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Get a token for desktop-releases"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      - name: "Create the draft"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo workadventure/desktop-releases > /dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --repo workadventure/desktop-releases --draft \
+              --title "WorkAdventure Desktop ${GITHUB_REF_NAME#desktop-v}" --notes ""
+
+  # One job for both cases: a branch or PR builds the app and keeps it as an artifact, a desktop-v* tag
+  # (draft created) builds it and uploads it to the draft.
+  build:
+    name: "Build desktop app for ${{ matrix.os }}"
+    needs: draft
+    if: ${{ !cancelled() && (needs.draft.result == 'success' || (needs.draft.result == 'skipped' && !startsWith(github.ref, 'refs/tags/'))) }}
+    # Only the release reaches the Environment (and its secrets).
+    environment: ${{ needs.draft.result == 'success' && 'desktop-release' || '' }}
+    env:
+      IS_RELEASE: ${{ needs.draft.result == 'success' }}
 
     strategy:
       # Build each OS independently: a flake on one (e.g. a transient GitHub download of the NSIS
@@ -41,10 +87,16 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: actions/checkout@v4
+
+      - name: "Check the tag matches the app version"
+        if: ${{ env.IS_RELEASE == 'true' }}
+        shell: bash
+        run: test "desktop-v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+        working-directory: "desktop/electron"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -62,10 +114,6 @@ jobs:
       - name: "Revert to Yarn 1"
         run: yarn set version classic
 
-      - name: "Set desktop app version"
-        run: node helpers/set-version.js
-        working-directory: "desktop/electron"
-
       - name: "Install dependencies"
         run: yarn install  --immutable
         working-directory: "desktop/electron"
@@ -79,6 +127,7 @@ jobs:
         working-directory: "desktop/electron"
 
       - name: "Build app for testing"
+        if: ${{ env.IS_RELEASE != 'true' }}
         run: yarn electron-builder --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -88,23 +137,36 @@ jobs:
           # once a Developer ID certificate is configured: it must not reach pull request builds.
           CSC_FOR_PULL_REQUEST: ${{ startsWith(matrix.os, 'macos') }}
         working-directory: "desktop/electron"
-        if: ${{ github.event_name != 'release' }}
 
-      # An unsigned macOS app cannot keep its screen recording, camera or microphone permissions.
+      - name: "Get a token for desktop-releases"
+        if: ${{ env.IS_RELEASE == 'true' }}
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      # macOS keeps the ad hoc signature of electron-builder.yml (mac.identity) until the Developer ID
+      # certificate is configured.
+      - name: "Build & upload app"
+        if: ${{ env.IS_RELEASE == 'true' }}
+        run: yarn electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        working-directory: "desktop/electron"
+
+      # An unsigned macOS app cannot keep its screen recording, camera or microphone permissions. On a
+      # release, a failure here stops the job, so the draft is never published.
       - name: "Check the macOS signature"
-        if: ${{ github.event_name != 'release' && startsWith(matrix.os, 'macos') }}
+        if: ${{ startsWith(matrix.os, 'macos') }}
         run: |
           app=$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)
           codesign --verify --deep --strict "$app"
           codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature"
         working-directory: "desktop/electron"
-
-      - name: "Build & release app"
-        run: yarn electron-builder --publish always
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop/electron"
-        if: ${{ github.event_name == 'release' }}
 
       # electron-builder names the outputs after productName ("WorkAdventure-<version>...") and the
       # .deb after the package name ("workadventure-desktop_<version>_<arch>.deb"). Match by
@@ -142,3 +204,34 @@ jobs:
           name: workadventure-mac.dmg
           path: desktop/electron/build/*.dmg
           if-no-files-found: error
+
+  publish:
+    name: "Publish the desktop release"
+    needs: [draft, build]
+    if: ${{ needs.draft.result == 'success' }}
+    environment: desktop-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Get a token for desktop-releases"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      # The release notes are this version's section of the CHANGELOG written by release-please.
+      - name: "Publish the release with its notes"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          version="${GITHUB_REF_NAME#desktop-v}"
+          awk -v v="$version" '/^## / { if (p) exit; p = index($0, "[" v "]") || index($0, " " v " "); next } p' \
+            desktop/electron/CHANGELOG.md > notes.md
+          gh release edit "$GITHUB_REF_NAME" --repo workadventure/desktop-releases \
+            --notes-file notes.md --draft=false --latest

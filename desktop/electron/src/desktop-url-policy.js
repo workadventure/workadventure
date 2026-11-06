@@ -112,9 +112,17 @@ function createDesktopConfig(env = process.env) {
         portalOrigin,
         allowedOrigins: Array.from(allowedOrigins),
         allowedHostSuffixes,
-        updateFeedUrl:
-            env.updateFeedUrl || env.WA_DESKTOP_UPDATE_URL || "https://desktop-updates.workadventu.re/stable",
+        updateFeed: createUpdateFeed(env.updateFeedUrl || env.WA_DESKTOP_UPDATE_URL),
     };
+}
+
+// The releases of workadventure/desktop-releases (publish in electron-builder.yml). A URL overrides it
+// with a generic feed (a folder holding latest*.yml and the binaries), to test an update locally.
+function createUpdateFeed(overrideUrl) {
+    if (overrideUrl) {
+        return { provider: "generic", url: overrideUrl };
+    }
+    return { provider: "github", owner: "workadventure", repo: "desktop-releases" };
 }
 
 function parseHttpUrl(value) {

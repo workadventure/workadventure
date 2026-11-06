@@ -1,0 +1,69 @@
+name: Release PR for the desktop app
+
+# release-please keeps a release PR open with the next version of desktop/electron (from the
+# conventional commits touching it) and its CHANGELOG. Once that PR is merged, this workflow tags the
+# new version `desktop-v<version>`, which build-and-release-desktop.yml publishes.
+#
+# The token comes from a GitHub App, not GITHUB_TOKEN: neither the release PR nor the tag would
+# start the other workflows otherwise.
+on:
+  push:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}
+
+permissions: {}
+
+jobs:
+  release-please:
+    if: ${{ github.repository == 'workadventure/workadventure' }}
+    # The App key lives in this Environment (deployment branch: master), not in the repository secrets
+    # that a workflow pushed on any branch could read. Separate from desktop-release, whose optional
+    # reviewers would otherwise hold every push to master.
+    environment: desktop-release-please
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Get a token for this repository"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
+
+      - name: "Checkout"
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+
+      # Before release-please: it finds the previous release by this tag (skip-github-release, so it
+      # creates none itself). The first run tags the starting version, 2.0.0.
+      - name: "Tag the desktop app version"
+        run: |
+          tag="desktop-v$(node -p "require('./desktop/electron/package.json').version")"
+          if git ls-remote --exit-code --tags origin "refs/tags/$tag" > /dev/null; then
+            echo "$tag already exists."
+          else
+            git tag "$tag"
+            git push origin "$tag"
+          fi
+
+      # With skip-github-release, release-please never moves its merged PR from "autorelease: pending"
+      # to "autorelease: tagged", and refuses to open the next release PR while one is pending.
+      - name: "Mark the merged release PR as tagged"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          for pr in $(gh pr list --state merged --label "autorelease: pending" --json number --jq '.[].number'); do
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$pr/labels" -f "labels[]=autorelease: tagged" > /dev/null
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/issues/$pr/labels/autorelease:%20pending" > /dev/null
+          done
+
+      - name: "Open or update the release PR"
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}

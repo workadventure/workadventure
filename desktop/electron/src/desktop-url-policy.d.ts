@@ -3,7 +3,7 @@ export type DesktopConfig = {
     portalOrigin: string;
     allowedOrigins: string[];
     allowedHostSuffixes: string[];
-    updateFeedUrl: string;
+    updateFeed: { provider: "generic"; url: string } | { provider: "github"; owner: string; repo: string };
 };
 
 export type DesktopAuthCallback = {

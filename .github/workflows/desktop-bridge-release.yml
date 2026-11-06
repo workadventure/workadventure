@@ -1,0 +1,37 @@
+name: Desktop bridge release
+
+# One-off, run by hand once: the old desktop app (1.x) updates from the latest WorkAdventure release of
+# this repository. Attaching the 2.0.0 Windows and Linux binaries with their latest*.yml to that release
+# moves the old Windows and AppImage installs to 2.0.0, which then updates from
+# workadventure/desktop-releases. See desktop/README.md.
+on:
+  workflow_dispatch:
+    inputs:
+      wa_release:
+        description: "WorkAdventure release to attach the binaries to (the Latest one, e.g. v1.35.0)"
+        required: true
+      desktop_release:
+        description: "Desktop release to take them from"
+        required: true
+        default: "desktop-v2.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  bridge:
+    runs-on: ubuntu-latest
+    steps:
+      # No macOS files: macOS only installs an update signed like the running app, which the old app
+      # and 2.0.0 are not. Mac users reinstall by hand.
+      - name: "Copy the Windows and Linux binaries"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          WA_RELEASE: ${{ inputs.wa_release }}
+          DESKTOP_RELEASE: ${{ inputs.desktop_release }}
+        run: |
+          gh release download "$DESKTOP_RELEASE" --repo workadventure/desktop-releases --dir bridge \
+            --pattern 'latest.yml' --pattern 'latest-linux.yml' \
+            --pattern '*.exe' --pattern '*.exe.blockmap' --pattern '*.AppImage' --pattern '*.deb'
+          ls -l bridge
+          gh release upload "$WA_RELEASE" bridge/* --repo "$GITHUB_REPOSITORY" --clobber
