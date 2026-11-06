@@ -84,8 +84,13 @@ appImage:
     # unsandboxed everywhere.
     executableArgs: []
 
+# Releases live in their own public repository: electron-updater reads the repository's latest release,
+# which in the monorepo is the WorkAdventure server release. The CI uploads to a draft and publishes it
+# once the three OS are built (.github/workflows/build-and-release-desktop.yml). The app updates from
+# there too: electron-builder writes these settings into the app's app-update.yml.
 publish:
     provider: github
     owner: workadventure
-    repo: workadventure
-    releaseType: release
+    repo: desktop-releases
+    tagNamePrefix: desktop-v
+    releaseType: draft

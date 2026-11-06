@@ -1,0 +1,13 @@
+{
+    "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+    "packages": {
+        "desktop/electron": {
+            "release-type": "node",
+            "component": "desktop",
+            "package-name": "workadventure-desktop",
+            "include-component-in-tag": true,
+            "skip-github-release": true,
+            "changelog-path": "CHANGELOG.md"
+        }
+    }
+}
