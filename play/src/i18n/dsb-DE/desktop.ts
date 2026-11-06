@@ -63,6 +63,8 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         people: "Luźe",
         toggleMic: "Mikrofon zašaltowaś/wótšaltowaś",
         toggleCamera: "Kameru zašaltowaś/wótšaltowaś",
+        micPaused: "Mikrofon w pawzy, mjaztym až sćo pšecej: zašaltowaś",
+        cameraPaused: "Kamera w pawzy, mjaztym až sćo pšecej: zašaltowaś",
         shareScreen: "Wašu wobrazowku źěliś",
         stopShareScreen: "Źělenje wobrazowki zastajiś",
         shareScreenNeedsMeeting: "Pśistupśo k zasedanjeju, aby wašu wobrazowku źělił",

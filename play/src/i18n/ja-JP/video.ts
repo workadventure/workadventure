@@ -11,6 +11,18 @@ const video: DeepPartial<Translation["video"]> = {
     persistent_connection_issue: "再接続中... 接続が不安定です...",
     click_to_unblock: "クリックしてブロックを解除",
     click_and_drag_to_resize: "クリックしてドラッグしてサイズを変更",
+    away: {
+        subtitle: "離席中のため一時停止中",
+        cantSeeOrHear: "誰からも見えず、聞こえません",
+        heardNotSeen: "声は聞こえますが、姿は見えません",
+        cantSee: "誰からも見えません",
+        seenNotHeard: "姿は見えますが、声は聞こえません",
+        cantHear: "誰にも聞こえません",
+        turnOnBoth: "カメラとマイクをオン",
+        turnOnCamera: "カメラをオン",
+        turnOnMicrophone: "マイクをオン",
+        turnOn: "オン",
+    },
 };
 
 export default video;

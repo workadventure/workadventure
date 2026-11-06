@@ -18,23 +18,14 @@
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
-    import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import { heldMediaStore } from "../../../Stores/HeldMediaStore";
 
-    const disabledByStatusStore = derived(
-        [availabilityStatusStore, silentStore],
-        ([$availabilityStatusStore, $silentStore]) =>
-            $availabilityStatusStore === AvailabilityStatus.BUSY ||
-            $availabilityStatusStore === AvailabilityStatus.AWAY ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $silentStore,
-    );
-
+    // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [disabledByStatusStore, requestedCameraState, cameraListStore],
-        ([$disabledByStatusStore, $requestedCameraState, $cameraListStore]) => {
-            if ($disabledByStatusStore || ($cameraListStore !== undefined && $cameraListStore.length === 0)) {
+        [requestedCameraState, cameraListStore, silentStore],
+        ([$requestedCameraState, $cameraListStore, $silentStore]) => {
+            if ($silentStore || ($cameraListStore !== undefined && $cameraListStore.length === 0)) {
                 return "disabled";
             }
             return $requestedCameraState ? "normal" : "forbidden";
@@ -42,12 +33,14 @@
     );
 
     const cameraActionBarTooltipStore = derived(
-        [LL, cameraButtonHelpContextStore, disabledByStatusStore, availabilityStatusStore],
-        ([$LL, ctx, disabledByStatus, status]) => {
-            if (disabledByStatus) {
+        [LL, cameraButtonHelpContextStore, heldMediaStore, silentStore, availabilityStatusStore],
+        ([$LL, ctx, held, silent, status]) => {
+            if (held.camera || silent) {
                 return {
                     title: $LL.actionbar.help.camDisabledByStatus.title(),
-                    desc: $LL.actionbar.help.camDisabledByStatus.desc({ status: getStatusLabel(status) }),
+                    desc: $LL.actionbar.help.camDisabledByStatus.desc({
+                        status: getStatusLabel(held.camera ? held.status : status),
+                    }),
                     media: "",
                 };
             }
@@ -106,6 +99,7 @@
     classList="group/btn-cam"
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
+    statusDot={$heldMediaStore.camera ? getColorHexOfStatus($heldMediaStore.status) : undefined}
     dataTestId="camera-button"
     tooltipTitle={$cameraActionBarTooltipStore.title}
     desc={$cameraActionBarTooltipStore.desc}

@@ -16,11 +16,10 @@
     --blue-soft: rgba(65, 86, 246, 0.18);
     --red: #e96d51;
     --red-soft: rgba(233, 109, 81, 0.18);
-    /* WA design-system tokens (match the in-app ActionBar / PiP toolbar). */
-    --secondary: #4156f6;
-    --secondary-hover: #5566ff;
-    --danger: #e96d51;
-    --danger-hover: #ef7e63;
+    /* Hover shades of --blue and --red. Never --secondary or --danger: the app's theme defines them as HSL
+       triples (hsl(var(--blue))), and the meeting tiles shown here use them. */
+    --blue-hover: #5566ff;
+    --red-hover: #ef7e63;
     --chip: rgba(27, 42, 65, 0.8);
 
     /* WA availability dot colors (mirror play getColorHexOfStatus). */
@@ -143,18 +142,18 @@ button {
     background: rgba(255, 255, 255, 0.1);
 }
 .toolbar-btn.is-forbidden {
-    background: var(--danger);
+    background: var(--red);
     color: #fff;
 }
 .toolbar-btn.is-forbidden:hover {
-    background: var(--danger-hover);
+    background: var(--red-hover);
 }
 .toolbar-btn.is-active {
-    background: var(--secondary);
+    background: var(--blue);
     color: #fff;
 }
 .toolbar-btn.is-active:hover {
-    background: var(--secondary-hover);
+    background: var(--blue-hover);
 }
 .toolbar-btn[disabled] {
     opacity: 0.4;
@@ -176,8 +175,29 @@ button {
 .icon-only-off {
     display: none;
 }
-.toolbar-btn[data-state="on"] .icon-only-on {
+.toolbar-btn[data-state="on"] .icon-only-on,
+.toolbar-btn[data-state="paused"] .icon-only-on {
     display: inline;
+}
+/* On for the user, held off by their status: a dimmed icon, with a dot of the status color (--held). Readable
+   even when the status forbids the click (busy...), unlike a disabled button. */
+.toolbar-btn[data-state="paused"] {
+    position: relative;
+    color: var(--muted);
+}
+.toolbar-btn[data-state="paused"][disabled] {
+    opacity: 1;
+}
+.toolbar-btn[data-state="paused"]::after {
+    content: "";
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--held);
+    box-shadow: 0 0 0 2px var(--header);
 }
 .toolbar-btn[data-state="off"] .icon-only-off {
     display: inline;
@@ -223,10 +243,10 @@ button {
 
 /* Close/hide-mini-window button — far right, danger red. */
 .icon-btn.is-danger {
-    color: var(--danger);
+    color: var(--red);
 }
 .icon-btn.is-danger:hover {
-    background: var(--danger);
+    background: var(--red);
     color: #fff;
 }
 
@@ -664,7 +684,7 @@ button {
 }
 /* Active speaker: a solid accent border, over video or placeholder (wins over the self ring). */
 .tile.is-speaking {
-    box-shadow: inset 0 0 0 3px var(--secondary);
+    box-shadow: inset 0 0 0 3px var(--blue);
 }
 .tile .avatar-layer {
     display: flex;
@@ -708,7 +728,7 @@ button {
     display: none;
     align-items: center;
     justify-content: center;
-    background: var(--danger);
+    background: var(--red);
     border-radius: 50%;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
@@ -743,7 +763,7 @@ button {
     color: #fff;
 }
 .tile.is-speaking .name-chip {
-    background: var(--secondary);
+    background: var(--blue);
 }
 /* The name tag is a button (opens the tile action menu) — strip the default button chrome. */
 .tile .name-chip {
@@ -793,7 +813,7 @@ button {
 }
 .tile-menu-slider {
     flex: 1;
-    accent-color: var(--secondary);
+    accent-color: var(--blue);
 }
 .tile-menu-item {
     display: flex;
@@ -823,7 +843,7 @@ button {
     cursor: not-allowed;
 }
 .tile-menu-item.danger {
-    color: var(--danger);
+    color: var(--red);
 }
 .tile .name-chip .name-text {
     flex: 0 1 auto;

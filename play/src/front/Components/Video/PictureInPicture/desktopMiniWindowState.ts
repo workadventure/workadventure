@@ -6,6 +6,7 @@ import {
     requestedMicrophoneState,
     requestedStatusStore,
 } from "../../../Stores/MediaStore";
+import { heldMediaStore, comeBackWith } from "../../../Stores/HeldMediaStore";
 import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../../Stores/StreamableCollectionStore";
@@ -24,6 +25,7 @@ import type { PlayerInterface } from "../../../Phaser/Game/PlayerInterface";
 import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { buildMiniWindowAgenda, type MiniWindowAgenda } from "../../../Api/Desktop/MiniWindowAgenda";
 import { LL } from "../../../../i18n/i18n-svelte";
+import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
 
 /** The availability statuses the user picks, as the mini window's status dots name them. */
 export type MiniWindowStatus = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
@@ -52,10 +54,17 @@ export type MiniWindowConversation = {
 export type MiniWindowMedia = {
     micEnabled: boolean;
     cameraEnabled: boolean;
+    /** On for the user, but held off by their status: nobody hears / sees it until the status changes. */
+    micPaused: boolean;
+    cameraPaused: boolean;
+    /** The status holding them: its dot key, its name, and whether it is away mode, which a click ends. */
+    heldBy: { status: string; label: string; away: boolean };
     screenSharing: boolean;
     canScreenShare: boolean;
     inMeeting: boolean;
     status: MiniWindowStatus;
+    /** The user's availability as the app names it ("Away", "In a meeting"...). */
+    statusLabel: string;
     statusLocked: boolean;
 };
 
@@ -100,6 +109,7 @@ function availabilityKey(status: AvailabilityStatus): string {
         case AvailabilityStatus.DO_NOT_DISTURB:
             return "do_not_disturb";
         case AvailabilityStatus.BACK_IN_A_MOMENT:
+        case AvailabilityStatus.SOUND_BLOCKED:
             return "back_in_a_moment";
         case AvailabilityStatus.AWAY:
             return "away";
@@ -127,26 +137,41 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
         requestedStatusStore,
         availabilityStatusStore,
         screenSharingAvailableStore,
+        heldMediaStore,
     ],
-    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare]) => ({
+    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare, $held]) => ({
         micEnabled: Boolean($mic),
         cameraEnabled: Boolean($cam),
+        micPaused: $held.microphone,
+        cameraPaused: $held.camera,
+        heldBy: {
+            status: availabilityKey($held.status),
+            label: getStatusLabel($held.status),
+            away: $held.status === AvailabilityStatus.AWAY,
+        },
         screenSharing: Boolean($share),
         // Like the app's own action bar: sharing needs a bubble or a live stream.
         canScreenShare: Boolean($canShare),
         inMeeting: Boolean($inMeeting),
         status: requestedStatusKey($requested),
+        statusLabel: getStatusLabel($availability),
         statusLocked: STATUS_LOCKED_SET.has($availability),
     }),
 );
 
+// Turning a device on from here, or one away mode holds, is the user coming back: away mode ends. A device another
+// status holds (busy...) cannot be clicked: the status has to change first.
 export function toggleMicrophone(): void {
-    if (get(requestedMicrophoneState)) requestedMicrophoneState.disableMicrophone();
+    const held = get(heldMediaStore);
+    if (get(requestedMicrophoneState) && !held.microphone) requestedMicrophoneState.disableMicrophone();
+    else if (held.status === AvailabilityStatus.AWAY) comeBackWith("microphone");
     else requestedMicrophoneState.enableMicrophone();
 }
 
 export function toggleCamera(): void {
-    if (get(requestedCameraState)) requestedCameraState.disableWebcam();
+    const held = get(heldMediaStore);
+    if (get(requestedCameraState) && !held.camera) requestedCameraState.disableWebcam();
+    else if (held.status === AvailabilityStatus.AWAY) comeBackWith("camera");
     else requestedCameraState.enableWebcam();
 }
 
