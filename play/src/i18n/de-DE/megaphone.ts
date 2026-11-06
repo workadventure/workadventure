@@ -2,9 +2,29 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "Ankündigung senden",
+        audience: "Wer erhält sie?",
+        thisRoom: "Dieser Raum",
+        wholeWorld: "Ganze Welt",
+        place: "Ort zum Beitreten (optional)",
+        noPlace: "Kein Ort",
+        noPlaceOnMap: "Diese Karte hat noch keinen benannten Bereich.",
+        preview: "Vorschau",
+        sendToRoom: "An diesen Raum senden",
+        sendToWorld: "An die ganze Welt senden",
+        confirmWorld: "Alle Räume der Welt erhalten sie.",
+        confirmSend: "Ja, an die ganze Welt senden",
+        cancel: "Abbrechen",
+        sentToRoom: "Ankündigung an diesen Raum gesendet",
+        sentToWorld: "Ankündigung an die ganze Welt gesendet",
+        join: "{place} beitreten",
+        joinMap: "Beitreten",
+        placeNotFound: "Dieser Ort existiert nicht mehr auf der Karte.",
+        admin: "Administrator",
+        more: "Wartende Ankündigungen: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Zurück zur Kommunikationsauswahl",
-        title: "Globale Kommunikation",
         liveMessage: {
             startMegaphone: "Megaphon starten",
             stopMegaphone: "Megaphon stoppen",
@@ -13,29 +33,9 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             yourCamera: "deine Kamera",
             yourScreen: "deinen Bildschirm",
             title: "Live-Nachricht",
-            button: "Live-Nachricht starten",
             and: "und",
             toAll: "an alle Teilnehmer",
-            notice: `
-            Die Live-Nachricht oder "Megaphon" ermöglicht es dir, eine Live-Nachricht mit deiner Kamera und deinem Mikrofon an alle Personen im Raum oder in der Welt zu senden.
-
-            Diese Nachricht wird unten in der Ecke des Bildschirms angezeigt, wie ein Videoanruf oder eine Sprechblase.
-
-            Ein Beispiel für die Verwendung einer Live-Nachricht: "Hallo zusammen, sollen wir die Konferenz starten? 🎉 Folge meinem Avatar zum Konferenzbereich und öffne die Video-App 🚀"
-            `,
             settings: "Einstellungen",
-        },
-        textMessage: {
-            title: "Textnachricht",
-            notice: `
-            Die Textnachricht ermöglicht es dir, eine Nachricht an alle Personen im Raum oder in der Welt zu senden.
-
-            Diese Nachricht wird als Popup oben auf der Seite angezeigt und von einem Ton begleitet, um zu signalisieren, dass die Information lesbar ist.
-
-            Ein Beispiel für eine Nachricht: "Die Konferenz in Raum 3 beginnt in 2 Minuten 🎉. Du kannst zum Konferenzbereich 3 gehen und die Video-App öffnen 🚀"
-            `,
-            button: "Eine Textnachricht senden",
-            noAccess: "Du hast keinen Zugang zu dieser Funktion 😱 Bitte kontaktiere den Administrator 🙏",
         },
     },
 };

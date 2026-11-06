@@ -20,14 +20,19 @@ vi.mock("../../src/pusher/services/AdminService", () => ({
     adminService: { getUrlRoomsFromSameWorld },
 }));
 
-import { SocketManager } from "../../src/pusher/services/SocketManager";
+import { SocketManager, sameOriginJoinUrl } from "../../src/pusher/services/SocketManager";
 import type { PusherWebSocket } from "../../src/pusher/services/PusherWebSocket";
 
 const ROOM = "https://play.test/~/office.wam";
 
 const admin = () =>
     mock<PusherWebSocket>({
-        getUserData: vi.fn().mockReturnValue({ tags: ["admin"], roomId: ROOM }),
+        getUserData: vi.fn().mockReturnValue({
+            tags: ["admin"],
+            roomId: ROOM,
+            name: "Claire",
+            characterTextures: [{ id: "body1", url: "body1.png" }],
+        }),
     });
 
 const sendToWorld = () =>
@@ -35,6 +40,7 @@ const sendToWorld = () =>
         content: "hello world",
         type: "message",
         broadcastToWorld: true,
+        joinUrl: "",
     });
 
 describe("SocketManager.emitPlayGlobalMessage", () => {
@@ -73,9 +79,25 @@ describe("SocketManager.emitPlayGlobalMessage", () => {
             content: "hello",
             type: "message",
             broadcastToWorld: false,
+            joinUrl: "/~/office.wam#moveTo=Auditorium",
         });
 
         expect(getUrlRoomsFromSameWorld).not.toHaveBeenCalled();
         expect(sent.messages.map((message) => message.roomId)).toEqual([ROOM]);
+        expect(sent.messages[0]).toMatchObject({
+            senderName: "Claire",
+            senderTextures: [{ id: "body1", url: "body1.png" }],
+            broadcastToWorld: false,
+            joinUrl: "https://play.test/~/office.wam#moveTo=Auditorium",
+        });
+    });
+
+    it("only keeps places on the sender's origin", () => {
+        expect(sameOriginJoinUrl("https://play.test/~/hall.wam#moveTo=A", ROOM)).toBe(
+            "https://play.test/~/hall.wam#moveTo=A",
+        );
+        expect(sameOriginJoinUrl("https://evil.test/~/hall.wam", ROOM)).toBe("");
+        expect(sameOriginJoinUrl("javascript:alert(1)", ROOM)).toBe("");
+        expect(sameOriginJoinUrl("", ROOM)).toBe("");
     });
 });

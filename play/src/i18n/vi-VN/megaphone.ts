@@ -2,9 +2,29 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "Gửi thông báo",
+        audience: "Ai sẽ nhận?",
+        thisRoom: "Phòng này",
+        wholeWorld: "Toàn thế giới",
+        place: "Địa điểm để đến (tùy chọn)",
+        noPlace: "Không có địa điểm",
+        noPlaceOnMap: "Bản đồ này chưa có khu vực nào được đặt tên.",
+        preview: "Xem trước",
+        sendToRoom: "Gửi đến phòng này",
+        sendToWorld: "Gửi đến toàn thế giới",
+        confirmWorld: "Mọi phòng trong thế giới sẽ nhận được.",
+        confirmSend: "Có, gửi đến toàn thế giới",
+        cancel: "Hủy",
+        sentToRoom: "Đã gửi thông báo đến phòng này",
+        sentToWorld: "Đã gửi thông báo đến toàn thế giới",
+        join: "Đến {place}",
+        joinMap: "Đến",
+        placeNotFound: "Địa điểm này không còn trên bản đồ.",
+        admin: "Quản trị viên",
+        more: "Thông báo đang chờ: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Quay lại chọn hình thức truyền thông",
-        title: "Truyền thông toàn cầu",
         liveMessage: {
             startMegaphone: "Bật loa phóng thanh",
             stopMegaphone: "Tắt loa phóng thanh",
@@ -13,29 +33,9 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             yourCamera: "camera của bạn",
             yourScreen: "màn hình của bạn",
             title: "Loa phóng thanh",
-            button: "Bắt đầu thông điệp trực tiếp",
             and: "và",
             toAll: "tới tất cả người tham gia",
-            notice: `
-            Thông điệp trực tiếp hay "Loa phóng thanh" cho phép bạn gửi một thông điệp trực tiếp bằng camera và micrô tới tất cả những người đang kết nối trong phòng hoặc trong thế giới.
-
-            Thông điệp này sẽ hiển thị ở góc dưới màn hình, giống một cuộc gọi video hoặc bong bóng thảo luận.
-
-            Ví dụ về một thông điệp trực tiếp: "Chào mọi người, chúng ta bắt đầu hội thảo nhé? 🎉 Hãy đi theo nhân vật của tôi tới khu hội thảo và mở ứng dụng video 🚀"
-            `,
             settings: "Cài đặt",
-        },
-        textMessage: {
-            title: "Tin nhắn văn bản",
-            notice: `
-            Tin nhắn văn bản cho phép bạn gửi một thông điệp tới tất cả những người đang kết nối trong phòng hoặc trong thế giới.
-
-            Thông điệp sẽ hiển thị dưới dạng cửa sổ ở đầu trang, kèm một âm thanh để báo rằng có thông tin cần đọc.
-
-            Ví dụ: "Hội thảo ở phòng 3 bắt đầu sau 2 phút 🎉. Bạn có thể tới khu hội thảo 3 và mở ứng dụng video 🚀"
-            `,
-            button: "Gửi tin nhắn văn bản",
-            noAccess: "Bạn không có quyền dùng tính năng này 😱 Vui lòng liên hệ quản trị viên 🙏",
         },
     },
 };

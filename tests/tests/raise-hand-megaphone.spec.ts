@@ -211,9 +211,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
 
         // Admin1 starts the global megaphone -> becomes the global speaker.
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await expect(speaker.getByRole("button", { name: "Start live message" })).toBeVisible();
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
         await expect(speaker.getByRole("button", { name: "Start megaphone" })).toBeVisible();
         await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
@@ -315,8 +313,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
 
         // Admin1 goes live with the global megaphone.
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
         await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 
@@ -369,8 +366,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(speaker);
 
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
         await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 
@@ -430,8 +426,7 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(speaker);
 
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
         await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 

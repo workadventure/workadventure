@@ -2,9 +2,29 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "Invia un annuncio",
+        audience: "Chi lo riceve?",
+        thisRoom: "Questa stanza",
+        wholeWorld: "Tutto il mondo",
+        place: "Luogo da raggiungere (facoltativo)",
+        noPlace: "Nessun luogo",
+        noPlaceOnMap: "Questa mappa non ha ancora zone con nome.",
+        preview: "Anteprima",
+        sendToRoom: "Invia a questa stanza",
+        sendToWorld: "Invia a tutto il mondo",
+        confirmWorld: "Tutte le stanze del mondo lo riceveranno.",
+        confirmSend: "Sì, invia a tutto il mondo",
+        cancel: "Annulla",
+        sentToRoom: "Annuncio inviato a questa stanza",
+        sentToWorld: "Annuncio inviato a tutto il mondo",
+        join: "Raggiungi {place}",
+        joinMap: "Raggiungi",
+        placeNotFound: "Questo luogo non esiste più sulla mappa.",
+        admin: "Amministratore",
+        more: "Annunci in attesa: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Torna alla selezione comunicazione",
-        title: "Comunicazione globale",
         liveMessage: {
             startMegaphone: "Avvia megafono",
             stopMegaphone: "Ferma megafono",
@@ -13,29 +33,9 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             yourCamera: "la tua fotocamera",
             yourScreen: "il tuo schermo",
             title: "Messaggio in diretta",
-            button: "Avvia messaggio in diretta",
             and: "e",
             toAll: "a tutti i partecipanti",
-            notice: `
-            Il messaggio in diretta o "Megafono" ti consente di inviare un messaggio in diretta con la tua fotocamera e il tuo microfono a tutte le persone collegate nella stanza o nel mondo.
-
-            Questo messaggio verrà visualizzato nell'angolo inferiore dello schermo, come una videochiamata o una discussione a bolle.
-
-            Un esempio di utilizzo di un messaggio in diretta: "Ciao a tutti, iniziamo la conferenza? 🎉 Segui il mio avatar nell'area conferenze e apri l'app video 🚀"
-            `,
             settings: "Impostazioni",
-        },
-        textMessage: {
-            title: "Messaggio di testo",
-            notice: `
-            Il messaggio di testo ti consente di inviare un messaggio a tutte le persone collegate nella stanza o nel mondo.
-
-            Questo messaggio verrà visualizzato come popup nella parte superiore della pagina e sarà accompagnato da un suono per identificare che l'informazione è leggibile.
-
-            Un esempio di messaggio: "La conferenza nella stanza 3 inizia tra 2 minuti 🎉. Puoi andare nell'area conferenze 3 e aprire l'app video 🚀"
-            `,
-            button: "Invia un messaggio di testo",
-            noAccess: "Non hai accesso a questa funzione 😱 Per favore contatta l'amministratore 🙏",
         },
     },
 };
