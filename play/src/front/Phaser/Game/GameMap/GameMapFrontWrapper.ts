@@ -243,7 +243,7 @@ export class GameMapFrontWrapper {
             gpuTileset ?? terrains,
             (layer.x || 0) * 32,
             (layer.y || 0) * 32,
-            gpuTileset !== undefined,
+            false,
         );
     }
 
