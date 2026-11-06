@@ -33,7 +33,6 @@ import { closeHudWindow, getHudWindow, meetingBarBounds, resolveDisplay } from "
 import { openChildWindow } from "./child-windows";
 import { DESKTOP_CONTRACT, recordHello } from "./page-contract";
 import { nativeStrings, t } from "./i18n";
-import { sanitizeStringTable } from "./native-locale-policy";
 import { getPinnedWorlds, getRecentWorlds, isWorldPinned, toggleWorldPin } from "./world-history";
 import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens } from "./screen-identify";
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
