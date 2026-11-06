@@ -107,6 +107,7 @@ test("turning a device on from the mini window ends away mode", async ({ browser
     const miniWindow = await getMiniWindow(app);
     const ownStatus = miniWindow.getByTestId("mini-window-status").locator(".dot");
     await expect(ownStatus).toHaveAttribute("data-status", "away");
+    await expect(miniWindow.getByTestId("mini-window-status")).toHaveAttribute("title", "Away");
     // Nothing is paused: she turned both off herself.
     await expect(miniWindow.getByTestId("away-paused-overlay")).toBeHidden();
 

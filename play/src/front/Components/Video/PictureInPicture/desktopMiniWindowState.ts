@@ -25,6 +25,7 @@ import type { PlayerInterface } from "../../../Phaser/Game/PlayerInterface";
 import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { buildMiniWindowAgenda, type MiniWindowAgenda } from "../../../Api/Desktop/MiniWindowAgenda";
 import { LL } from "../../../../i18n/i18n-svelte";
+import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
 
 /** The availability statuses the user picks, as the mini window's status dots name them. */
 export type MiniWindowStatus = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
@@ -60,6 +61,8 @@ export type MiniWindowMedia = {
     canScreenShare: boolean;
     inMeeting: boolean;
     status: MiniWindowStatus;
+    /** The user's availability as the app names it ("Away", "In a meeting"...). */
+    statusLabel: string;
     statusLocked: boolean;
 };
 
@@ -143,6 +146,7 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
         canScreenShare: Boolean($canShare),
         inMeeting: Boolean($inMeeting),
         status: requestedStatusKey($requested),
+        statusLabel: getStatusLabel($availability),
         statusLocked: STATUS_LOCKED_SET.has($availability),
     }),
 );

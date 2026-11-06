@@ -339,6 +339,7 @@
             <button
                 class="status-btn"
                 type="button"
+                title={media.statusLabel}
                 aria-haspopup="true"
                 aria-expanded={statusMenuOpen}
                 data-testid="mini-window-status"
