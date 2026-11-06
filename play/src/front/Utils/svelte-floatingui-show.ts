@@ -14,6 +14,8 @@ export const floatingUiComponents = writable(
             action: ContentAction;
             arrowAction: ArrowAction | undefined;
             zIndex: number;
+            /** The document of the reference element: the popup renders there (the desktop companion is another one). */
+            ownerDocument: Document;
         }
     >(),
 );
@@ -74,15 +76,15 @@ export function showFloatingUi(
             };
             // Listen to touchstart too: on the game canvas Phaser swallows the compatibility
             // mousedown, so a mousedown-only listener never fires on touch devices.
-            document.addEventListener("mousedown", clickOutsideHandler);
-            document.addEventListener("touchstart", clickOutsideHandler);
+            referenceNode.ownerDocument.addEventListener("mousedown", clickOutsideHandler);
+            referenceNode.ownerDocument.addEventListener("touchstart", clickOutsideHandler);
         }
 
         return {
             destroy() {
                 if (clickOutsideHandler) {
-                    document.removeEventListener("mousedown", clickOutsideHandler);
-                    document.removeEventListener("touchstart", clickOutsideHandler);
+                    referenceNode.ownerDocument.removeEventListener("mousedown", clickOutsideHandler);
+                    referenceNode.ownerDocument.removeEventListener("touchstart", clickOutsideHandler);
                 }
                 deinitFloatingUi();
             },
@@ -107,6 +109,7 @@ export function showFloatingUi(
             action: contentAction,
             arrowAction: withArrow ? arrowAction : undefined,
             zIndex,
+            ownerDocument: referenceNode.ownerDocument,
         });
         return components;
     });

@@ -226,11 +226,11 @@
             >
                 <IconWorldSearch font-size="22" />
             </ActionBarButton>
-            {#if window.WAD.companion?.open}
+            {#if window.WAD.windows}
                 <ActionBarButton
                     label={$LL.actionbar.desktop.openCompanion()}
                     onclick={() => {
-                        window.WAD?.companion?.open?.();
+                        window.WAD?.windows?.openCompanion();
                         openedMenuStore.close("profileMenu");
                     }}
                     dataTestId="desktop-open-companion"

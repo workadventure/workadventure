@@ -57,10 +57,11 @@ async function init() {
     }
 
     autoUpdater.logger = log;
-    autoUpdater.setFeedURL({
-        provider: "generic",
-        url: createDesktopConfig().updateFeedUrl,
-    });
+    // Every user is offered the latest release; an organization can point its installs elsewhere.
+    const feedUrl = createDesktopConfig().updateFeedUrl;
+    if (feedUrl) {
+        autoUpdater.setFeedURL({ provider: "generic", url: feedUrl });
+    }
 
     autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
         void (async () => {

@@ -71,6 +71,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     otherMeetingMuted:
         "Sie sind jetzt hier in einem Meeting. Ihr Mikrofon, Ihre Kamera und Ihre Bildschirmfreigabe wurden in {world} ausgeschaltet.",
+    desktopAppOutdated: "Eine neue Version der WorkAdventure-App ist verfügbar: {url}",
 };
 
 export default warning;

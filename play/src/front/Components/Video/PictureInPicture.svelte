@@ -1,37 +1,29 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import { onDestroy, onMount, tick } from "svelte";
-    import { on } from "svelte/events";
     import Debug from "debug";
-    import { derived, get } from "svelte/store";
-    import {
-        isInRemoteConversation,
-        myCameraPeerStore,
-        streamableCollectionStore,
-    } from "../../Stores/StreamableCollectionStore";
+    import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import {
         activePictureInPictureStore,
         askPictureInPictureActivatingStore,
-        pictureInPictureLayoutStore,
         pictureInPictureSupportedStore,
     } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-    import {
-        isScreenSharingSupported,
-        requestedScreenSharingState,
-        startScreenShareWithSource,
-    } from "../../Stores/ScreenSharingStore";
-    import { recordingStore } from "../../Stores/RecordingStore";
-    import { presenterHudBridge } from "../../Api/Desktop/PresenterHudBridge";
-    import { NativePictureInPictureClient, getDesktopPipApi } from "./PictureInPicture/NativePictureInPictureClient";
     import {
         hasPictureInPictureContent,
         isDocumentPictureInPictureSupported,
     } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
+    import DesktopCompanion from "./PictureInPicture/DesktopCompanion.svelte";
+    import desktopCompanionStyles from "./PictureInPicture/desktopCompanion.css?raw";
+    import {
+        copyStyleSheets,
+        delegateSvelteEvents,
+        openDesktopChildWindow,
+        type DesktopChildWindow,
+    } from "./PictureInPicture/childWindow";
 
     interface Props {
         children?: Snippet<[{ inPictureInPicture: boolean }]>;
@@ -41,10 +33,9 @@
 
     const debug = Debug("app:PictureInPicture");
 
-    // The desktop app decides when its companion shows the meeting video (pip.onWanted).
-    const desktopPip = getDesktopPipApi();
-    const useNativeDesktopPip = desktopPip !== undefined;
-    let nativeClient: NativePictureInPictureClient | undefined;
+    // In the desktop app, the companion window takes the place of the browser's picture-in-picture: the
+    // app decides when it opens and when it shows the meeting (see openCompanionWindow).
+    const desktopWindows = window.WAD?.desktop ? window.WAD.windows : undefined;
 
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
@@ -52,73 +43,13 @@
     let mapImage: string | undefined = $state(undefined);
     let pipRequested = false;
     let unloading = false;
-    let stopPictureInPictureEventDelegation: Array<() => void> = [];
-
-    const delegatedPictureInPictureEvents = [
-        "beforeinput",
-        "click",
-        "change",
-        "contextmenu",
-        "dblclick",
-        "focusin",
-        "focusout",
-        "input",
-        "keydown",
-        "keyup",
-        "mousedown",
-        "mousemove",
-        "mouseout",
-        "mouseover",
-        "mouseup",
-        "pointerdown",
-        "pointermove",
-        "pointerout",
-        "pointerover",
-        "pointerup",
-        "touchend",
-        "touchmove",
-        "touchstart",
-    ];
-
-    // Keep PiP in the current Play renderer instead of opening a second web window.
-    // A second renderer would create another websocket/WebRTC session, duplicating presence, audio/video state, and room side effects.
-    function copySteelSheet(pipWindow: Window) {
-        [...document.styleSheets].forEach((styleSheet) => {
-            try {
-                const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join("");
-                const style = document.createElement("style");
-
-                style.textContent = cssRules;
-                pipWindow.document.head.appendChild(style);
-            } catch (e) {
-                console.error("Could not copy stylesheet: ", e);
-                const link = document.createElement("link");
-                link.rel = "stylesheet";
-                link.type = styleSheet.type;
-                link.media = styleSheet.media.mediaText;
-                link.href = styleSheet.href || "";
-                pipWindow.document.head.appendChild(link);
-            }
-        });
-    }
-
-    function attachPictureInPictureEventDelegation(pipWindow: Window) {
-        detachPictureInPictureEventDelegation();
-
-        // Svelte 5 delegates DOM handlers to the mount document. The PiP DOM is reparented into a
-        // separate document, so a no-op svelte/events listener is enough to run Svelte's delegation there.
-        stopPictureInPictureEventDelegation = delegatedPictureInPictureEvents.map((eventName) =>
-            on(pipWindow.document, eventName, () => {}),
-        );
-    }
-
-    function detachPictureInPictureEventDelegation() {
-        stopPictureInPictureEventDelegation.forEach((stopEventDelegation) => stopEventDelegation());
-        stopPictureInPictureEventDelegation = [];
-    }
+    let stopPictureInPictureEventDelegation: (() => void) | undefined;
+    let companion: DesktopChildWindow | undefined;
+    let companionProps: { videoHost?: HTMLDivElement } = $state({});
 
     function destroyPictureInPictureComponent(keepRequest = false) {
-        detachPictureInPictureEventDelegation();
+        stopPictureInPictureEventDelegation?.();
+        stopPictureInPictureEventDelegation = undefined;
 
         if (!parentDivElement) {
             return;
@@ -150,7 +81,7 @@
     }
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
-        if (!isTalking && !useNativeDesktopPip) {
+        if (!isTalking && !desktopWindows) {
             destroyPictureInPictureComponent();
         }
     });
@@ -159,7 +90,7 @@
         debug("Request Picture in Picture mode");
 
         // The desktop app opens its companion itself (see the PiP button).
-        if (useNativeDesktopPip) {
+        if (desktopWindows) {
             return;
         }
 
@@ -214,7 +145,7 @@
                 // the builder listen the pipWindow and will start the dom building
                 pipWindow = newPipWindow;
 
-                copySteelSheet(pipWindow);
+                copyStyleSheets(pipWindow);
                 pipWindow.document.body.style.display = "flex";
                 pipWindow.document.body.style.flexDirection = "column";
                 pipWindow.document.body.style.justifyContent = "center";
@@ -227,7 +158,8 @@
                 // documentPictureInPicture 'enter' / LiveKit may run isElementInPiP immediately;
                 // if <video> nodes are not under pipWin.document yet, contains(el) is false.
                 pipWindow.document.body.append(divElement);
-                attachPictureInPictureEventDelegation(pipWindow);
+                stopPictureInPictureEventDelegation?.();
+                stopPictureInPictureEventDelegation = delegateSvelteEvents(pipWindow);
 
                 activePictureInPictureStore.set(true);
                 await tick();
@@ -242,6 +174,49 @@
             });
     }
 
+    /**
+     * The desktop app asked for its companion: open it as a child window of this page, like the browser's
+     * picture-in-picture, so it renders with this page's stores and plays its MediaStreams directly.
+     */
+    function openCompanionWindow() {
+        if (!desktopWindows || companion) return;
+        const windows = desktopWindows;
+        companion = openDesktopChildWindow(
+            "wa-companion",
+            DesktopCompanion,
+            (ownerDocument) => ({
+                windows,
+                ownerDocument,
+                get videoHost() {
+                    return companionProps.videoHost;
+                },
+                set videoHost(element) {
+                    companionProps.videoHost = element;
+                },
+            }),
+            {
+                // Closed by the app, or the page goes away: take the videos back first.
+                onClose: () => {
+                    showMeetingInCompanion(false);
+                    companion = undefined;
+                },
+                styles: desktopCompanionStyles,
+            },
+        );
+    }
+
+    function showMeetingInCompanion(show: boolean) {
+        const host = companionProps.videoHost;
+        if (show && host) {
+            host.append(divElement);
+            activePictureInPictureStore.set(true);
+        } else if (parentDivElement) {
+            // eslint-disable-next-line svelte/no-dom-manipulating
+            parentDivElement.append(divElement);
+            activePictureInPictureStore.set(false);
+        }
+    }
+
     onMount(() => {
         try {
             // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -251,73 +226,16 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
-        if (useNativeDesktopPip) {
-            // The desktop shell always supports PiP via the utility BrowserWindow path; do not
-            // signal "unsupported" even if DocumentPictureInPicture is missing in this Chromium.
+        if (desktopWindows) {
+            // The desktop app always has its companion, even where DocumentPictureInPicture is missing.
             pictureInPictureSupportedStore.set(true);
-            const screenShareSupported = isScreenSharingSupported();
-            const deviceState = derived(
-                [requestedMicrophoneState, requestedCameraState, requestedScreenSharingState, recordingStore],
-                ([$mic, $cam, $share, $recording]) => ({
-                    micEnabled: Boolean($mic),
-                    cameraEnabled: Boolean($cam),
-                    screenSharing: Boolean($share),
-                    canScreenShare: screenShareSupported,
-                    recording: Boolean($recording?.isRecording),
-                }),
-            );
-            nativeClient = new NativePictureInPictureClient({
-                streamables: streamableCollectionStore,
-                selfBox: myCameraPeerStore,
-                deviceState,
-                commandHandlers: {
-                    toggleMic: () => {
-                        if (get(requestedMicrophoneState)) {
-                            requestedMicrophoneState.disableMicrophone();
-                        } else {
-                            requestedMicrophoneState.enableMicrophone();
-                        }
-                    },
-                    toggleCamera: () => {
-                        if (get(requestedCameraState)) {
-                            requestedCameraState.disableWebcam();
-                        } else {
-                            requestedCameraState.enableWebcam();
-                        }
-                    },
-                    toggleScreenshare: () => {
-                        if (get(requestedScreenSharingState)) {
-                            requestedScreenSharingState.disableScreenSharing();
-                        } else {
-                            requestedScreenSharingState.enableScreenSharing();
-                        }
-                    },
-                    pickScreenSource: (source) => {
-                        // Source was chosen in the PiP utility window. Start the share with this
-                        // source directly, bypassing the in-app picker UI so the user never has
-                        // to switch focus back to the main window.
-                        startScreenShareWithSource({
-                            id: source.id,
-                            name: source.name,
-                            thumbnailURL: "",
-                            display_id: source.displayId,
-                        });
-                    },
-                    // TODO(presenter-bar): wire chat + reactions. Provide the `chatMessages` dep
-                    // (mirror of the proximity ProximityChatRoom messages) and the `sendChat` /
-                    // `sendReaction` handlers (ProximityChatRoom.sendMessage + emote), then add the
-                    // chat panel + reaction buttons to the PiP renderer. The protocol is already in
-                    // place (DesktopPipState.chatMessages + DesktopPipCommand send-chat/send-reaction).
-                },
-            });
-            presenterHudBridge.start();
         } else if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
         }
 
         const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
-            if (useNativeDesktopPip) {
+            if (desktopWindows) {
                 return;
             }
             if (active) {
@@ -328,12 +246,15 @@
         });
 
         const unsubscribe = visibilityStore.subscribe((visible) => {
-            if (!useNativeDesktopPip && visible) {
+            if (!desktopWindows && visible) {
                 destroyPictureInPictureComponent();
             }
         });
 
-        const unsubscribeWanted = desktopPip?.onWanted(setNativeMeetingVideo);
+        const unsubscribeMeetingWanted = desktopWindows?.onMeetingWanted(showMeetingInCompanion);
+        const unsubscribeOpenWindow = desktopWindows?.onOpen((kind) => {
+            if (kind === "companion") openCompanionWindow();
+        });
 
         try {
             const currentScene = gameManager.getCurrentGameScene();
@@ -350,7 +271,7 @@
         // spec assumes you no longer need it once you're back on the tab). The desktop app decides
         // for its companion (a companion opened by hand stays), so we skip the reset there.
         const onFocus = () => {
-            if (useNativeDesktopPip) return;
+            if (desktopWindows) return;
             // The picture-in-picture window takes the focus when it opens, so a click on the picture-in-picture
             // button first focuses this window, which closes the picture-in-picture window. If the button opened it,
             // forget its request only after that click: forgetting it now would make the click open the window again.
@@ -367,8 +288,9 @@
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
-            unsubscribeWanted?.();
-            presenterHudBridge.stop();
+            unsubscribeMeetingWanted?.();
+            unsubscribeOpenWindow?.();
+            companion?.close();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
@@ -379,47 +301,23 @@
             window.removeEventListener("focus", onFocus);
             window.removeEventListener("beforeunload", onBeforeUnload);
             window.removeEventListener("click", forgetPictureInPictureRequest);
-            if (nativeClient) {
-                nativeClient.stop();
-                nativeClient = undefined;
-            }
         };
     });
-
-    function setNativeMeetingVideo(wanted: boolean) {
-        if (!nativeClient) return;
-        if (wanted && !nativeClient.isActive()) {
-            nativeClient
-                .start(() => activePictureInPictureStore.set(false))
-                .then((started) => activePictureInPictureStore.set(started))
-                .catch((error: unknown) => {
-                    debug("Native Picture-in-Picture failed to start", error);
-                    activePictureInPictureStore.set(false);
-                });
-        } else if (!wanted && nativeClient.isActive()) {
-            nativeClient.stop();
-            activePictureInPictureStore.set(false);
-        }
-    }
 
     onDestroy(() => {
         destroyPictureInPictureComponent();
         unsubscribeIsInRemoteConversation();
-        if (nativeClient) {
-            nativeClient.stop();
-            nativeClient = undefined;
-        }
     });
 </script>
 
 <div bind:this={parentDivElement} class="h-full w-full">
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
-        {#if $pictureInPictureLayoutStore}
+        {#if $activePictureInPictureStore}
             <div
-                class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
+                class="pip-map-background fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
                 style="background-image: url({mapImage});"
             ></div>
         {/if}
-        {@render children?.({ inPictureInPicture: $pictureInPictureLayoutStore })}
+        {@render children?.({ inPictureInPicture: $activePictureInPictureStore })}
     </div>
 </div>

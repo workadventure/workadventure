@@ -22,8 +22,7 @@ export interface CompanionAgendaInput {
 
 /**
  * What the desktop companion shows of the agenda and the tasks: the day's next meetings and the most
- * urgent tasks, formatted here (the companion has no date formatting of its own). Undefined when the
- * world has neither.
+ * urgent tasks, formatted for display. Undefined when the world has neither.
  */
 export function buildCompanionAgenda(input: CompanionAgendaInput): CompanionAgenda | undefined {
     if (!input.events && !input.lists) return undefined;

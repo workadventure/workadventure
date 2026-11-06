@@ -14,9 +14,12 @@ export class BubbleNotification implements NotificationWA {
         }
         // In the Electron shell, prefer the main-side notification: it pins the WA icon (the web
         // Notification path shows the browser's default), and clicking focuses the main window.
+        // A shell of contract 1 only has notify(text).
         const wad = window.WAD;
-        if (wad?.desktop && wad.notify) {
-            wad.notify({ title: this.title, body: "" });
+        if (wad?.desktop && wad.notifyMessage) {
+            wad.notifyMessage({ title: this.title, body: "" });
+        } else if (wad?.desktop) {
+            wad.notify(this.title);
         } else {
             new Notification(this.title, this.options);
         }
