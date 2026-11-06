@@ -1,18 +1,12 @@
 import type {Response} from "express";
 import {mimeTypeManager} from "../Service/MimeType";
-import type {TargetDevice} from "../Service/TargetDevice";
 
-export class HttpResponseDevice implements TargetDevice {
+export class HttpResponseDevice {
     /**
      * @param forceDownload When true, the file is sent as an attachment. Temporary audio messages
      *                      are played by an <audio> element and are served without it.
      */
     constructor(private id: string, private response: Response, private forceDownload = true) {
-    }
-
-    copyFromLink(link: string): void {
-        this.setSecurityHeaders();
-        this.response.redirect(link);
     }
 
     copyFromBuffer(buffer: Buffer | undefined | null): void {

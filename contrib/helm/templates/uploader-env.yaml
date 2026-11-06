@@ -6,8 +6,7 @@ metadata:
   labels:
     {{- include "workadventure.labels" . | nindent 4 }}
 data:
-  UPLOADER_URL: {{ include "workadventure.uploaderUrl" . | quote }}
-  {{- if and (not .Values.uploader.env.REDIS_HOST) (not .Values.uploader.env.AWS_ACCESS_KEY_ID) }}
+  {{- if not .Values.uploader.env.REDIS_HOST }}
   REDIS_HOST: {{ .Release.Name }}-redis-master
   REDIS_PORT: "6379"
   REDIS_DB_NUMBER: "1"
