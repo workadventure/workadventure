@@ -179,14 +179,14 @@ button {
 .toolbar-btn[data-state="paused"] .icon-only-on {
     display: inline;
 }
-/* On for the user, held off by away mode: amber, with the away dot. */
+/* On for the user, held off by their status: a dimmed icon, with a dot of the status color (--held). Readable
+   even when the status forbids the click (busy...), unlike a disabled button. */
 .toolbar-btn[data-state="paused"] {
     position: relative;
-    background: rgba(233, 200, 78, 0.18);
-    color: var(--st-away);
+    color: var(--muted);
 }
-.toolbar-btn[data-state="paused"]:hover {
-    background: rgba(233, 200, 78, 0.3);
+.toolbar-btn[data-state="paused"][disabled] {
+    opacity: 1;
 }
 .toolbar-btn[data-state="paused"]::after {
     content: "";
@@ -196,7 +196,8 @@ button {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: var(--st-away);
+    background: var(--held);
+    box-shadow: 0 0 0 2px var(--header);
 }
 .toolbar-btn[data-state="off"] .icon-only-off {
     display: inline;

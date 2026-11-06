@@ -12,6 +12,8 @@
         disabledHelp?: boolean;
         tooltipDelay?: number;
         state?: "normal" | "active" | "forbidden" | "live" | "disabled" | "disabledForbidden";
+        // Held off by the user's status (busy, away...): a dimmed icon, a dot of this status color, no click.
+        statusDot?: string;
         dataTestId?: string;
         classList?: string;
         hideIconInActionBar?: boolean;
@@ -51,6 +53,7 @@
         disabledHelp = false,
         tooltipDelay = 500,
         state: buttonState = "normal",
+        statusDot = undefined,
         dataTestId = undefined,
         classList = "group",
         hideIconInActionBar = false,
@@ -81,7 +84,7 @@
     let helpActive = $state(false);
 
     function handleClick(event: MouseEvent) {
-        if (buttonState === "disabled" || buttonState === "disabledForbidden") {
+        if (buttonState === "disabled" || buttonState === "disabledForbidden" || statusDot) {
             return;
         }
         helpActive = false;
@@ -116,7 +119,8 @@
             class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
                     {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
-                    {buttonState === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
+                    {statusDot ? 'cursor-not-allowed' : ''}
+                    {buttonState === 'normal' && !isGradient && !statusDot ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {buttonState === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {buttonState === 'live' ? 'bg-success hover:bg-success-600 cursor-pointer' : ''}
@@ -127,7 +131,7 @@
                 {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center outline-none focus:outline-none gap-2 select-none"
-            disabled={buttonState === "disabled" || buttonState === "disabledForbidden"}
+            disabled={buttonState === "disabled" || buttonState === "disabledForbidden" || statusDot !== undefined}
             onclick={(event) => {
                 event.preventDefault();
                 handleClick(event);
@@ -144,7 +148,16 @@
             data-testid={dataTestId}
         >
             {#if !hideIconInActionBar}
-                {@render children?.()}
+                {#if statusDot}
+                    <span class="flex opacity-50">{@render children?.()}</span>
+                    <span
+                        class="absolute top-1 end-1 h-2 w-2 rounded-full"
+                        style:background-color={statusDot}
+                        data-testid="status-dot"
+                    ></span>
+                {:else}
+                    {@render children?.()}
+                {/if}
             {/if}
             {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
@@ -163,7 +176,7 @@
 {:else}
     <button
         class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
-                    {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {buttonState === 'disabled' || statusDot ? 'opacity-50 cursor-not-allowed' : ''}
                     {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
                     {buttonState === 'active' && !isGradient
             ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'

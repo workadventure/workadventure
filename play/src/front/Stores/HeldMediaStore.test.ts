@@ -26,7 +26,7 @@ vi.mock("./MediaStore", async () => {
     const camera = device();
     const microphone = device();
     return {
-        requestedStatusStore: writable(null),
+        availabilityStatusStore: writable(0),
         requestedCameraState: { ...camera, enableWebcam: camera.enable, disableWebcam: camera.disable },
         requestedMicrophoneState: {
             ...microphone,
@@ -41,45 +41,66 @@ vi.mock("./PrivacyShutdownStore", async () => {
     return { privacyShutdownStore: { subscribe: store.subscribe, set: store.set, comeBack: () => store.set(false) } };
 });
 
-import { requestedCameraState, requestedMicrophoneState, requestedStatusStore } from "./MediaStore";
+import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
-import { awayPausedMediaStore, comeBackWith } from "./AwayPausedMediaStore";
+import { heldMediaStore, comeBackWith } from "./HeldMediaStore";
 
-const away = privacyShutdownStore as unknown as { set: (value: boolean) => void };
-const status = requestedStatusStore as unknown as Writable<unknown>;
+const privacyShutdown = privacyShutdownStore as unknown as { set: (value: boolean) => void };
+const availability = availabilityStatusStore as unknown as Writable<AvailabilityStatus>;
 
-describe("awayPausedMediaStore", () => {
+/** Away mode, as the app sets it: the privacy shutdown, which the availability reports unless a status wins. */
+function goAway(status = AvailabilityStatus.AWAY): void {
+    privacyShutdown.set(true);
+    availability.set(status);
+}
+
+describe("heldMediaStore", () => {
     beforeEach(() => {
         settings.keepCamera = false;
         settings.keepMicrophone = false;
-        status.set(null);
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
-        away.set(true);
+        goAway();
     });
 
-    it("pauses each device the away settings hold, and none the user turned off", () => {
-        expect(get(awayPausedMediaStore)).toEqual({ camera: true, microphone: true });
+    it("in away mode, holds each device its setting does not keep, and none the user turned off", () => {
+        expect(get(heldMediaStore)).toEqual({ camera: true, microphone: true, status: AvailabilityStatus.AWAY });
 
         settings.keepMicrophone = true;
-        away.set(false);
-        away.set(true);
-        expect(get(awayPausedMediaStore)).toEqual({ camera: true, microphone: false });
+        goAway(AvailabilityStatus.ONLINE);
+        goAway();
+        expect(get(heldMediaStore)).toEqual({ camera: true, microphone: false, status: AvailabilityStatus.AWAY });
 
         requestedCameraState.disableWebcam();
-        expect(get(awayPausedMediaStore)).toEqual({ camera: false, microphone: false });
+        expect(get(heldMediaStore)).toEqual({ camera: false, microphone: false, status: AvailabilityStatus.AWAY });
     });
 
-    it("pauses nothing outside away mode, or under a status that turns media off anyway", () => {
-        away.set(false);
-        expect(get(awayPausedMediaStore)).toEqual({ camera: false, microphone: false });
-
-        away.set(true);
-        status.set(AvailabilityStatus.DO_NOT_DISTURB);
-        expect(get(awayPausedMediaStore)).toEqual({ camera: false, microphone: false });
+    it("names away mode even when the availability shows a meeting", () => {
+        goAway(AvailabilityStatus.LIVEKIT);
+        expect(get(heldMediaStore)).toEqual({ camera: true, microphone: true, status: AvailabilityStatus.AWAY });
     });
 
-    it("comes back with only the clicked device; the other paused one is turned off", () => {
+    it("under a status like do not disturb, holds both devices whatever the away settings", () => {
+        settings.keepCamera = true;
+        settings.keepMicrophone = true;
+        goAway(AvailabilityStatus.DO_NOT_DISTURB);
+        expect(get(heldMediaStore)).toEqual({
+            camera: true,
+            microphone: true,
+            status: AvailabilityStatus.DO_NOT_DISTURB,
+        });
+
+        requestedMicrophoneState.disableMicrophone();
+        expect(get(heldMediaStore).microphone).toBe(false);
+    });
+
+    it("holds nothing when the user is online", () => {
+        privacyShutdown.set(false);
+        availability.set(AvailabilityStatus.ONLINE);
+        expect(get(heldMediaStore)).toEqual({ camera: false, microphone: false, status: AvailabilityStatus.ONLINE });
+    });
+
+    it("comes back with only the clicked device; the other held one is turned off", () => {
         comeBackWith("camera");
         expect(get(privacyShutdownStore)).toBe(false);
         expect(get(requestedCameraState)).toBe(true);
@@ -97,8 +118,8 @@ describe("awayPausedMediaStore", () => {
 
     it("leaves alone a device away mode does not hold", () => {
         settings.keepCamera = true;
-        away.set(false);
-        away.set(true);
+        goAway(AvailabilityStatus.ONLINE);
+        goAway();
         comeBackWith("microphone");
         expect(get(requestedCameraState)).toBe(true);
         expect(get(requestedMicrophoneState)).toBe(true);

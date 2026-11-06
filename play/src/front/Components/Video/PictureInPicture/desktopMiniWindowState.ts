@@ -6,7 +6,7 @@ import {
     requestedMicrophoneState,
     requestedStatusStore,
 } from "../../../Stores/MediaStore";
-import { awayPausedMediaStore, comeBackWith } from "../../../Stores/AwayPausedMediaStore";
+import { heldMediaStore, comeBackWith } from "../../../Stores/HeldMediaStore";
 import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../../Stores/StreamableCollectionStore";
@@ -54,9 +54,11 @@ export type MiniWindowConversation = {
 export type MiniWindowMedia = {
     micEnabled: boolean;
     cameraEnabled: boolean;
-    /** On for the user, but held off by away mode: nobody hears / sees it until they come back. */
+    /** On for the user, but held off by their status: nobody hears / sees it until the status changes. */
     micPaused: boolean;
     cameraPaused: boolean;
+    /** The status holding them: its dot key, its name, and whether it is away mode, which a click ends. */
+    heldBy: { status: string; label: string; away: boolean };
     screenSharing: boolean;
     canScreenShare: boolean;
     inMeeting: boolean;
@@ -107,6 +109,7 @@ function availabilityKey(status: AvailabilityStatus): string {
         case AvailabilityStatus.DO_NOT_DISTURB:
             return "do_not_disturb";
         case AvailabilityStatus.BACK_IN_A_MOMENT:
+        case AvailabilityStatus.SOUND_BLOCKED:
             return "back_in_a_moment";
         case AvailabilityStatus.AWAY:
             return "away";
@@ -134,13 +137,18 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
         requestedStatusStore,
         availabilityStatusStore,
         screenSharingAvailableStore,
-        awayPausedMediaStore,
+        heldMediaStore,
     ],
-    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare, $paused]) => ({
+    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare, $held]) => ({
         micEnabled: Boolean($mic),
         cameraEnabled: Boolean($cam),
-        micPaused: $paused.microphone,
-        cameraPaused: $paused.camera,
+        micPaused: $held.microphone,
+        cameraPaused: $held.camera,
+        heldBy: {
+            status: availabilityKey($held.status),
+            label: getStatusLabel($held.status),
+            away: $held.status === AvailabilityStatus.AWAY,
+        },
         screenSharing: Boolean($share),
         // Like the app's own action bar: sharing needs a bubble or a live stream.
         canScreenShare: Boolean($canShare),
@@ -151,16 +159,20 @@ export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
     }),
 );
 
-// Turning a device on from here, or one away mode holds, is the user coming back: away mode ends.
+// Turning a device on from here, or one away mode holds, is the user coming back: away mode ends. A device another
+// status holds (busy...) cannot be clicked: the status has to change first.
 export function toggleMicrophone(): void {
-    if (get(requestedMicrophoneState) && !get(awayPausedMediaStore).microphone) {
-        requestedMicrophoneState.disableMicrophone();
-    } else comeBackWith("microphone");
+    const held = get(heldMediaStore);
+    if (get(requestedMicrophoneState) && !held.microphone) requestedMicrophoneState.disableMicrophone();
+    else if (held.status === AvailabilityStatus.AWAY) comeBackWith("microphone");
+    else requestedMicrophoneState.enableMicrophone();
 }
 
 export function toggleCamera(): void {
-    if (get(requestedCameraState) && !get(awayPausedMediaStore).camera) requestedCameraState.disableWebcam();
-    else comeBackWith("camera");
+    const held = get(heldMediaStore);
+    if (get(requestedCameraState) && !held.camera) requestedCameraState.disableWebcam();
+    else if (held.status === AvailabilityStatus.AWAY) comeBackWith("camera");
+    else requestedCameraState.enableWebcam();
 }
 
 export function toggleScreenSharing(): void {

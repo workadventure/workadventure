@@ -56,6 +56,21 @@
     let conversationId: string | null = $state(null);
 
     let media = $derived($miniWindowMediaStore);
+    // A device held by away mode turns on with one click; by another status (busy...), says which and stays off.
+    let micTitle = $derived(
+        !media.micPaused
+            ? $LL.desktop.miniWindow.toggleMic()
+            : media.heldBy.away
+              ? $LL.desktop.miniWindow.micPaused()
+              : $LL.actionbar.help.micDisabledByStatus.desc({ status: media.heldBy.label }),
+    );
+    let cameraTitle = $derived(
+        !media.cameraPaused
+            ? $LL.desktop.miniWindow.toggleCamera()
+            : media.heldBy.away
+              ? $LL.desktop.miniWindow.cameraPaused()
+              : $LL.actionbar.help.camDisabledByStatus.desc({ status: media.heldBy.label }),
+    );
     let inMeeting = $derived(media.inMeeting);
     let baseView: View = $derived(inMeeting ? "video" : "people");
     let users = $derived($miniWindowUsersStore);
@@ -253,8 +268,10 @@
                 class:is-forbidden={!media.micEnabled}
                 type="button"
                 data-state={media.micPaused ? "paused" : media.micEnabled ? "on" : "off"}
-                title={media.micPaused ? $LL.desktop.miniWindow.micPaused() : $LL.desktop.miniWindow.toggleMic()}
-                aria-label={media.micPaused ? $LL.desktop.miniWindow.micPaused() : $LL.desktop.miniWindow.toggleMic()}
+                style:--held={`var(--st-${media.heldBy.status})`}
+                disabled={media.micPaused && !media.heldBy.away}
+                title={micTitle}
+                aria-label={micTitle}
                 onclick={toggleMicrophone}
             >
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"
@@ -275,12 +292,10 @@
                 class:is-forbidden={!media.cameraEnabled}
                 type="button"
                 data-state={media.cameraPaused ? "paused" : media.cameraEnabled ? "on" : "off"}
-                title={media.cameraPaused
-                    ? $LL.desktop.miniWindow.cameraPaused()
-                    : $LL.desktop.miniWindow.toggleCamera()}
-                aria-label={media.cameraPaused
-                    ? $LL.desktop.miniWindow.cameraPaused()
-                    : $LL.desktop.miniWindow.toggleCamera()}
+                style:--held={`var(--st-${media.heldBy.status})`}
+                disabled={media.cameraPaused && !media.heldBy.away}
+                title={cameraTitle}
+                aria-label={cameraTitle}
                 onclick={toggleCamera}
             >
                 <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"

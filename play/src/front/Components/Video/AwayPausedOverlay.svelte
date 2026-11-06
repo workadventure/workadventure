@@ -1,7 +1,8 @@
 <script lang="ts">
+    import { AvailabilityStatus } from "@workadventure/messages";
     import { LL } from "../../../i18n/i18n-svelte";
     import { requestedCameraState, requestedMicrophoneState } from "../../Stores/MediaStore";
-    import { awayPausedMediaStore } from "../../Stores/AwayPausedMediaStore";
+    import { heldMediaStore } from "../../Stores/HeldMediaStore";
     import { privacyShutdownStore } from "../../Stores/PrivacyShutdownStore";
     import { IconEyeOff, IconMicrophoneOff } from "@wa-icons";
 
@@ -10,7 +11,9 @@
      * click to come back. A shutter over the whole tile when the camera is paused, a strip at its top when only the
      * microphone is. Overlaid so that coming back moves nothing. Devices the user turned off are never mentioned.
      */
-    let paused = $derived($awayPausedMediaStore);
+    let paused = $derived(
+        $heldMediaStore.status === AvailabilityStatus.AWAY ? $heldMediaStore : { camera: false, microphone: false },
+    );
     let text = $derived(
         paused.camera
             ? paused.microphone

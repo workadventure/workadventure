@@ -54,8 +54,8 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.expectCameraDisabled(page);
-            await Menu.expectMicrophoneDisabled(page);
+            await Menu.expectCameraHeldByStatus(page);
+            await Menu.expectMicrophoneHeldByStatus(page);
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -311,8 +311,8 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.expectCameraDisabled(page);
-            await Menu.expectMicrophoneDisabled(page);
+            await Menu.expectCameraHeldByStatus(page);
+            await Menu.expectMicrophoneHeldByStatus(page);
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -415,8 +415,8 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.expectCameraDisabled(page);
-            await Menu.expectMicrophoneDisabled(page);
+            await Menu.expectCameraHeldByStatus(page);
+            await Menu.expectMicrophoneHeldByStatus(page);
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({

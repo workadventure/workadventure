@@ -6,7 +6,6 @@ import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import * as Sentry from "@sentry/svelte";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { localUserStore } from "../Connection/LocalUserStore";
-import { Room } from "../Connection/Room";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { openTimedEventPerMeeting } from "../Administration/CurrentMeeting";
 import type { EndTimedAnalyticsEvent } from "../Administration/TimedAnalyticsEvent";
@@ -32,6 +31,7 @@ import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
 import { createSilentStore } from "./SilentStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { mediaHeldByStatus } from "./MediaHeldByStatus";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
 import { hideHelpCameraSettings } from "./HelpSettingsStore";
@@ -571,31 +571,11 @@ export const mediaStreamConstraintsStore = derived(
         // Shared conditions for disabling media
         const isInExternalService = $inExternalServiceStore === true;
         const isEnergySaving = $cameraEnergySavingStore === true && $enableCameraSceneVisibilityStore === false;
-        const isUnavailableStatus =
-            $availabilityStatusStore === AvailabilityStatus.DENY_PROXIMITY_MEETING ||
-            $availabilityStatusStore === AvailabilityStatus.SILENT ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-            $availabilityStatusStore === AvailabilityStatus.BUSY;
-        const shouldDisableMicrophoneForPrivacy =
-            $privacyShutdownStore === true &&
-            !localUserStore.getMicrophonePrivacySettings(
-                $currentRoomStore?.defaultMicrophonePrivacySettings ?? Room.DEFAULT_MICROPHONE_PRIVACY_SETTINGS,
-            );
-        const shouldDisableCameraForPrivacy =
-            $privacyShutdownStore === true &&
-            !localUserStore.getCameraPrivacySettings(
-                $currentRoomStore?.defaultCameraPrivacySettings ?? Room.DEFAULT_CAMERA_PRIVACY_SETTINGS,
-            );
+        const heldByStatus = mediaHeldByStatus($availabilityStatusStore, $privacyShutdownStore, $currentRoomStore);
 
         // Every reason, other than the user muting it, to cut the microphone
         const isMicrophoneForcedOff =
-            $myMicrophoneStore === false ||
-            isInExternalService ||
-            shouldDisableMicrophoneForPrivacy ||
-            isEnergySaving ||
-            isUnavailableStatus;
+            $myMicrophoneStore === false || isInExternalService || heldByStatus.microphone || isEnergySaving;
 
         // Audio constraints always apply
         if ($requestedMicrophoneState === false || isMicrophoneForcedOff) {
@@ -616,9 +596,8 @@ export const mediaStreamConstraintsStore = derived(
                 $requestedCameraState === false ||
                 $myCameraStore === false ||
                 isInExternalService ||
-                shouldDisableCameraForPrivacy ||
-                isEnergySaving ||
-                isUnavailableStatus
+                heldByStatus.camera ||
+                isEnergySaving
             ) {
                 currentVideoConstraint = false;
             }
