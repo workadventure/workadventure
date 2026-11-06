@@ -47,4 +47,19 @@ export class StringUtils {
         }
         return false;
     }
+
+    /**
+     * Turns an area name into a name that works after the "#" of a room URL (e.g. "Main Hall" -> "main-hall").
+     * The hash is matched as-is, without URL decoding, and split on "&" and "=" (see UrlManager.getHashParameters),
+     * so only lowercase ASCII letters, digits, "-" and "_" are kept. Accents are dropped, not the letters.
+     */
+    public static toUrlHashName(name: string): string {
+        return name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .trim()
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^a-z0-9_-]/g, "");
+    }
 }
