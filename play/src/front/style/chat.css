@@ -296,6 +296,69 @@ pre {
     overflow-x: auto;
     padding: 0.2em 0.5em;
 }
+/* Markdown in a message: the design system styles h1…h6 as screen titles, scale them to the text. */
+.message-bubble :is(h1, h2, h3, h4, h5, h6) {
+    font-family: inherit;
+    font-weight: 700;
+    line-height: 1.3;
+    text-transform: none;
+    margin: 0.6em 0 0.25em;
+}
+.message-bubble h1 {
+    font-size: 1.25em;
+}
+.message-bubble h2 {
+    font-size: 1.125em;
+}
+.message-bubble :is(h3, h4, h5, h6) {
+    font-size: 1em;
+}
+.message-bubble :is(ul, ol) {
+    margin: 0.25em 0 0.4em;
+    padding-inline-start: 1.25em;
+}
+.message-bubble ul {
+    list-style: disc;
+}
+.message-bubble ol {
+    list-style: decimal;
+}
+.message-bubble blockquote {
+    margin: 0.4em 0;
+    padding-inline-start: 0.6em;
+    border-inline-start: 3px solid rgb(255 255 255 / 0.3);
+    color: rgb(255 255 255 / 0.8);
+}
+.message-bubble hr {
+    margin: 0.5em 0;
+    border: 0;
+    border-top: 1px solid rgb(255 255 255 / 0.15);
+}
+/* A wide table scrolls inside the bubble instead of having its words cut to fit. */
+.message-bubble table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 0.4em 0;
+    font-size: 0.93em;
+}
+.message-bubble :is(th, td) {
+    /* The bubble breaks anywhere for long links; a cell would shrink to one letter per line. */
+    overflow-wrap: normal;
+    padding: 0.25em 0.5em;
+    border: 1px solid rgb(255 255 255 / 0.15);
+    vertical-align: top;
+}
+/* marked sets align="…" from the |:--:| row; without it, cells read from the start. */
+.message-bubble :is(th, td):not([align]) {
+    text-align: start;
+}
+.message-bubble th {
+    font-weight: 700;
+    white-space: nowrap;
+    background: rgb(255 255 255 / 0.06);
+}
 ::-webkit-scrollbar {
     width: 2px;
     height: 6px;
