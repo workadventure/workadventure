@@ -725,7 +725,9 @@ export class RoomConnection implements RoomConnection {
                     break;
                 }
                 case "moveToPositionMessage": {
-                    if (message.moveToPositionMessage && message.moveToPositionMessage.position) {
+                    // Subscribers (the InviteManager) may open locks at the destination before we go there
+                    this._moveToPositionMessageStream.next(message.moveToPositionMessage);
+                    if (message.moveToPositionMessage.position) {
                         gameManager
                             .getCurrentGameScene()
                             .moveTo(message.moveToPositionMessage.position, false, WOKA_SPEED * 2.5)
@@ -733,7 +735,6 @@ export class RoomConnection implements RoomConnection {
                                 console.warn(error);
                             });
                     }
-                    this._moveToPositionMessageStream.next(message.moveToPositionMessage);
                     break;
                 }
                 case "locatePositionMessage": {

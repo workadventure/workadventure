@@ -15,6 +15,8 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 const MEETING_INVITATION_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const MEETING_INVITATION_MAX_REQUESTS = 50;
 const MEETING_INVITATION_MAX_PER_USER = 3;
+// How long an accepted invitation lets the invitee into a locked bubble or area. Same value as in the back.
+const LOCK_PASS_DURATION_MS = 2 * 60 * 1000;
 
 interface InviteRequestLogEntry {
     at: number;
@@ -24,6 +26,8 @@ interface InviteRequestLogEntry {
 export class InviteManager {
     private subscriptions: Subscription[] = [];
     private inviteRequestLog: InviteRequestLogEntry[] = [];
+    // Set when we accept an invitation, until the position of the person who invited us comes back
+    private lockPassExpiresAt: number | undefined;
 
     constructor(private connection: RoomConnection) {
         // Show meeting invitation request received toast when the meeting invitation request is received
@@ -82,6 +86,21 @@ export class InviteManager {
             }),
         );
 
+        // Open the locked areas where the person who invited us stands, before we go there
+        this.subscriptions.push(
+            this.connection.moveToPositionMessageStream.subscribe((message) => {
+                const expiresAt = this.lockPassExpiresAt;
+                this.lockPassExpiresAt = undefined;
+                if (!message.position || expiresAt === undefined || expiresAt <= Date.now()) {
+                    return;
+                }
+                gameManager
+                    .getCurrentGameScene()
+                    .getGameMapFrontWrapper()
+                    .areasManager?.grantLockPass(message.position, expiresAt - Date.now());
+            }),
+        );
+
         // Clear the invitation if the user left the room
         this.subscriptions.push(
             this.connection.userLeftMessageStream.subscribe((payload) => {
@@ -92,9 +111,13 @@ export class InviteManager {
         );
     }
 
+    /**
+     * Accepts the invitation and walks to the person who invited us, even through a lock (see AreasManager.grantLockPass).
+     */
     public handleAccept(request: MeetingInvitationRequestReceivedMessage): void {
         this.connection.emitMeetingInvitationResponse(true, request.senderUserUuid);
         analyticsClient.trackAdminEvent("invite.accepted", { inviteType: "meeting" });
+        this.lockPassExpiresAt = Date.now() + LOCK_PASS_DURATION_MS;
         // TODO: Change emitAskPosition to a server query to allow for error handling
         // NOTE: For now, if the user leaves while their position is being requested, nothing happens
         this.connection.emitAskPosition(

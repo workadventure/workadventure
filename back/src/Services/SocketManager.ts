@@ -67,7 +67,7 @@ import { z } from "zod";
 import type { ServiceError } from "@grpc/grpc-js";
 import { asError } from "catch-unknown";
 import type { Movable } from "@workadventure/shared-utils";
-import { GameRoom } from "../Model/GameRoom";
+import { GameRoom, LOCK_PASS_DURATION_MS } from "../Model/GameRoom";
 import type { UserSocket } from "../Model/User";
 import { User } from "../Model/User";
 import { ProtobufUtils } from "../Model/Websocket/ProtobufUtils";
@@ -1374,6 +1374,7 @@ export class SocketManager {
         if (invitees.size === 0) {
             return;
         }
+        room.recordMeetingInvitation(sender.uuid, message.receiverUserUuid);
         for (const invitee of invitees) {
             if (invitee.id === sender.id) {
                 continue;
@@ -1395,6 +1396,13 @@ export class SocketManager {
         responder: User,
         message: MeetingInvitationResponseMessage,
     ): void {
+        // Only a real invitation opens the locks: the bubble (here) and the locked area (see AreasManager in play).
+        if (room.takeMeetingInvitation(message.requestSenderUserUuid, responder.uuid) && message.accept) {
+            responder.lockPass = {
+                inviterUuid: message.requestSenderUserUuid,
+                expiresAt: Date.now() + LOCK_PASS_DURATION_MS,
+            };
+        }
         const requesters = room.getUsersByUuid(message.requestSenderUserUuid);
         if (requesters.size === 0) {
             return;

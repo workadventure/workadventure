@@ -77,6 +77,7 @@ export type DisconnectCallback = (user: User, group: Group) => void;
 const MEETING_INVITATION_MAX_REQUESTS = 50;
 const MEETING_INVITATION_MAX_REQUESTS_PER_USER = 3;
 const MEETING_INVITATION_REQUEST_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+export const LOCK_PASS_DURATION_MS = 2 * 60 * 1000; // 2 minutes
 
 export class GameRoom implements BrothersFinder {
     public readonly id: string;
@@ -105,6 +106,8 @@ export class GameRoom implements BrothersFinder {
     private eventListeners: Map<string, Set<EventSocket>> = new Map<string, Set<EventSocket>>();
     // They key to limit the number of meeting invitation requests per sender
     private meetingInvitationRequestLogBySender = new Map<string, { at: Date; receiverUserUuid: string }[]>();
+    // Invitations not answered yet: invitee uuid => sender uuid => sent at (ms).
+    private pendingMeetingInvitations = new Map<string, Map<string, number>>();
 
     private readonly _userLeaveStream = new Subject<User>();
     public readonly userLeaveStream = this._userLeaveStream.asObservable();
@@ -636,7 +639,7 @@ export class GameRoom implements BrothersFinder {
         }
 
         for (const group of this.groups.queryCircle(userPosition.x, userPosition.y, this.groupRadius)) {
-            if (group.isFull() || group.isLocked()) {
+            if (!group.canBeJoinedBy(user)) {
                 continue;
             }
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), group.getPosition());
@@ -1599,6 +1602,29 @@ export class GameRoom implements BrothersFinder {
         } else {
             this.meetingInvitationRequestLogBySender.set(senderUserUuid, [{ at: new Date(), receiverUserUuid }]);
         }
+    }
+
+    public recordMeetingInvitation(senderUserUuid: string, receiverUserUuid: string): void {
+        let bySender = this.pendingMeetingInvitations.get(receiverUserUuid);
+        if (!bySender) {
+            bySender = new Map();
+            this.pendingMeetingInvitations.set(receiverUserUuid, bySender);
+        }
+        bySender.set(senderUserUuid, Date.now());
+    }
+
+    /**
+     * Removes the invitation sent by the sender to the receiver.
+     * @returns true if such an invitation was sent less than 10 minutes ago
+     */
+    public takeMeetingInvitation(senderUserUuid: string, receiverUserUuid: string): boolean {
+        const bySender = this.pendingMeetingInvitations.get(receiverUserUuid);
+        const sentAt = bySender?.get(senderUserUuid);
+        bySender?.delete(senderUserUuid);
+        if (bySender?.size === 0) {
+            this.pendingMeetingInvitations.delete(receiverUserUuid);
+        }
+        return sentAt !== undefined && sentAt > Date.now() - MEETING_INVITATION_REQUEST_WINDOW_MS;
     }
 
     // Antispam: clear the meeting invitation request log for a sender (e.g. when an invite is accepted)
