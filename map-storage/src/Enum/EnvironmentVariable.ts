@@ -43,6 +43,7 @@ export const DIRECT_UPLOAD_URL = env.DIRECT_UPLOAD_URL;
 export const USE_DOMAIN_NAME_IN_PATH = env.USE_DOMAIN_NAME_IN_PATH;
 export const PATH_PREFIX = env.PATH_PREFIX;
 export const STORAGE_DIRECTORY = env.STORAGE_DIRECTORY;
+export const GRPC_BIND_HOST = env.GRPC_BIND_HOST ?? "[::]";
 // By default, cache only 10 seconds in the CDN
 export const CACHE_CONTROL = env.CACHE_CONTROL;
 export const WEB_HOOK_URL = env.WEB_HOOK_URL;

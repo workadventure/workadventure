@@ -42,6 +42,7 @@ export const BBB_SECRET = env.BBB_SECRET;
 export const ENABLE_MAP_EDITOR = env.ENABLE_MAP_EDITOR;
 export const HTTP_PORT = env.HTTP_PORT;
 export const GRPC_PORT = env.GRPC_PORT;
+export const GRPC_BIND_HOST = env.GRPC_BIND_HOST ?? "[::]";
 export const MAX_PER_GROUP = env.MAX_PER_GROUP;
 export const REDIS_HOST = env.REDIS_HOST;
 export const REDIS_PORT = env.REDIS_PORT;
