@@ -24,6 +24,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { localAnnotationTargetStore, screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
+    import { getColorHexOfStatus } from "../../Utils/AvailabilityStatus";
     import ActionMediaBox from "./ActionMediaBox.svelte";
     import AwayPausedOverlay from "./AwayPausedOverlay.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
@@ -35,7 +36,8 @@
     import ScreenAnnotationToolbar from "./ScreenAnnotationToolbar.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
     import EncoderStatsBox from "./EncoderStatsBox.svelte";
-    import { IconArrowsMinimize, IconArrowsMaximize, IconMicrophoneOff, IconPencil } from "@wa-icons";
+    import { awayNotice } from "./awayNotice";
+    import { IconArrowsMinimize, IconArrowsMaximize, IconEyeOff, IconMicrophoneOff, IconPencil } from "@wa-icons";
 
     interface Props {
         fullScreen?: boolean;
@@ -120,6 +122,21 @@
     // speaking. Only for remote cameras: the local user's space state is a constant, and a screen share carries tab audio.
     let remoteMicrophoneMuted = $derived(
         streamable?.videoType === "video" && !isLocalUser && $microphoneStateStore === false,
+    );
+    let availabilityStatusStore = $derived(extendedSpaceUser?.reactiveUser.availabilityStatus);
+    let cameraHeldStore = $derived(extendedSpaceUser?.reactiveUser.cameraHeld);
+    let microphoneHeldStore = $derived(extendedSpaceUser?.reactiveUser.microphoneHeld);
+    // Someone walking up to a user in away mode is told why they get no answer. Only on another user's camera tile.
+    let away = $derived(
+        streamable?.videoType === "video" && !isLocalUser && effectiveStatus === "connected" && !$isBlockedStore
+            ? awayNotice(
+                  $LL,
+                  $availabilityStatusStore,
+                  name ?? "unknown",
+                  $cameraHeldStore ?? false,
+                  $microphoneHeldStore ?? false,
+              )
+            : undefined,
     );
     // Like audioStateMismatch, but with a 3 seconds delay.
     let showAudioStateMismatch = $state(false);
@@ -460,10 +477,12 @@
                                     picture={pictureStore}
                                     isPlayingAudio={showVoiceIndicator ?? false}
                                     {isHandRaised}
-                                    isCameraDisabled={(!(videoEnabled ?? false) && !miniMode) ||
-                                        effectiveStatus !== "connected"}
+                                    isCameraDisabled={!away &&
+                                        ((!(videoEnabled ?? false) && !miniMode) || effectiveStatus !== "connected")}
                                     isBlocked={$isBlockedStore ?? false}
-                                    position={videoEnabled && !$isBlockedStore && effectiveStatus === "connected"
+                                    position={(videoEnabled || away) &&
+                                    !$isBlockedStore &&
+                                    effectiveStatus === "connected"
                                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                                     grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
@@ -497,13 +516,58 @@
                                                 barColor="white"
                                             />
                                         {:else if streamable?.videoType === "video"}
-                                            <IconMicrophoneOff
-                                                aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                                data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
-                                                class="{showAudioStateMismatch
-                                                    ? 'text-red-500 '
-                                                    : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
-                                            />
+                                            <span class="relative flex">
+                                                <IconMicrophoneOff
+                                                    aria-label={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                                    data-testid={$LL.video.user_is_muted({ name: name ?? "unknown" })}
+                                                    class="{showAudioStateMismatch
+                                                        ? 'text-red-500 '
+                                                        : ''}{$microphoneHeldStore
+                                                        ? 'opacity-50 '
+                                                        : ''}[filter:drop-shadow(0_0_3px_rgb(0,0,0))_drop-shadow(0_0_6px_rgb(0,0,0))_drop-shadow(0_0_9px_rgb(0,0,0))]"
+                                                />
+                                                <!-- Held off by their status, as on the action bar's buttons: comes back with them -->
+                                                {#if $microphoneHeldStore && $availabilityStatusStore !== undefined}
+                                                    <span
+                                                        class="absolute -top-0.5 -end-0.5 h-2 w-2 rounded-full"
+                                                        style:background-color={getColorHexOfStatus(
+                                                            $availabilityStatusStore,
+                                                        )}
+                                                    ></span>
+                                                {/if}
+                                            </span>
+                                        {/if}
+                                    </div>
+                                {/if}
+                                {#if away && $cameraHeldStore}
+                                    <!-- The shutter of the user's own tile (AwayPausedOverlay), seen from the visitor's side -->
+                                    <div
+                                        class="absolute inset-0 z-[251] pointer-events-none flex flex-col items-center justify-center rounded-lg border border-dashed border-warning/60 px-4 pb-8 text-center text-white"
+                                    >
+                                        <div
+                                            role="status"
+                                            class="pointer-events-auto flex flex-col items-center gap-0.5"
+                                            title="{away.text}. {away.detail}"
+                                            data-testid="away-notice"
+                                        >
+                                            <IconEyeOff class="text-warning shrink-0" font-size="20" />
+                                            <div class="hidden @[14rem]/videomediabox:block text-sm leading-tight">
+                                                {away.text}
+                                            </div>
+                                            <div class="hidden @[14rem]/videomediabox:block text-xs text-white/60">
+                                                {away.detail}
+                                            </div>
+                                        </div>
+                                    </div>
+                                {:else if away}
+                                    <div
+                                        role="status"
+                                        class="absolute top-2 left-2 right-10 w-fit z-[251] rounded bg-contrast/80 backdrop-blur px-2 py-1 text-xs text-white"
+                                        data-testid="away-notice"
+                                    >
+                                        <div>{away.text}</div>
+                                        {#if away.detail}
+                                            <div class="text-white/60">{away.detail}</div>
                                         {/if}
                                     </div>
                                 {/if}

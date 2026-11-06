@@ -23,6 +23,12 @@ const video: DeepPartial<Translation["video"]> = {
         turnOnMicrophone: "Ativar microfone",
         turnOn: "Ativar",
     },
+    remoteAway: {
+        inAnotherWindow: "{name} está em outra janela ou aba",
+        cameraAndMicPaused: "Câmera e microfone pausados até a volta",
+        cameraPaused: "Câmera pausada até a volta",
+        micPaused: "Microfone pausado até a volta",
+    },
 };
 
 export default video;
