@@ -15,15 +15,14 @@ import { chatVisibilityStore } from "../../Stores/ChatStore";
 import { popupStore } from "../../Stores/PopupStore";
 import SayPopUp from "../../Components/PopUp/SayPopUp.svelte";
 import { isPopupJustClosed } from "../Game/Say/SayManager";
-import LL from "../../../i18n/i18n-svelte";
 import { followRoleStore, followStateStore, followUsersStore } from "../../Stores/FollowStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { isKeyFromInteractiveElement } from "../../Utils/isKeyFromInteractiveElement";
+import { findShortcutAction } from "../../Stores/ShortcutsStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
 import { MapPanShortcut } from "./MapPanShortcut";
-import type { Shortcut } from "./UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
@@ -39,7 +38,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private readonly pointerCapture: MapDragPointerCapture;
     private readonly panShortcut: MapPanShortcut;
     private readonly spaceKey: Phaser.Input.Keyboard.Key | undefined;
-    public shortcuts: Shortcut[] = [];
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
@@ -67,75 +65,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             this.pointerCapture.destroy();
             this.panShortcut.destroy();
         });
-
-        this.initShortcuts();
-    }
-
-    public initShortcuts() {
-        this.shortcuts = [
-            {
-                key: "C",
-                description: get(LL).menu.shortcuts.openChat(),
-            },
-            {
-                key: "U",
-                description: get(LL).menu.shortcuts.openUserList(),
-            },
-            {
-                key: "E",
-                description: get(LL).menu.shortcuts.toggleMapEditor(),
-            },
-            {
-                key: "R",
-                description: get(LL).menu.shortcuts.rotatePlayer(),
-            },
-            {
-                key: "1",
-                description: get(LL).menu.shortcuts.emote1(),
-            },
-            {
-                key: "2",
-                description: get(LL).menu.shortcuts.emote2(),
-            },
-            {
-                key: "3",
-                description: get(LL).menu.shortcuts.emote3(),
-            },
-            {
-                key: "4",
-                description: get(LL).menu.shortcuts.emote4(),
-            },
-            {
-                key: "5",
-                description: get(LL).menu.shortcuts.emote5(),
-            },
-            {
-                key: "6",
-                description: get(LL).menu.shortcuts.emote6(),
-            },
-            // Enter
-            {
-                key: "Enter",
-                description: get(LL).menu.shortcuts.openSayPopup(),
-            },
-            // Ctrl + Enter
-            {
-                key: "Enter",
-                description: get(LL).menu.shortcuts.openThinkPopup(),
-                ctrlKey: true,
-            },
-            // Cmd (Mac) / Ctrl (Windows & Linux) + D
-            {
-                key: "D",
-                description: get(LL).menu.shortcuts.walkMyDesk(),
-                ctrlKey: true,
-            },
-            // F
-            {
-                key: "F",
-                description: get(LL).menu.shortcuts.follow(),
-            },
-        ];
     }
 
     public handleMouseWheelEvent(
@@ -370,40 +299,47 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             return event;
         }
 
-        switch (event.code) {
-            case "KeyE": {
+        switch (findShortcutAction(event)) {
+            case "toggleMapEditor": {
                 if (get(mapManagerActivated) == false) return event;
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
-            case "KeyR": {
+            case "rotatePlayer": {
                 this.gameScene.CurrentPlayer?.rotate();
                 break;
             }
-            case "KeyC":
+            case "openChat":
                 this.handleKeyC();
                 break;
-            case "KeyU":
+            case "openUserList":
                 this.handleKeyU();
                 break;
-            case "KeyD": {
-                // Handle Cmd (Mac) / Ctrl (Windows & Linux) + D for "walk my desk"
-                if (event.metaKey || event.ctrlKey) {
-                    // Prevent the shortcut from being triggered when typing in input fields
-                    if (
-                        event.target instanceof HTMLInputElement ||
-                        event.target instanceof HTMLTextAreaElement ||
-                        event.target instanceof HTMLSelectElement
-                    ) {
-                        return event;
-                    }
-                    event.preventDefault();
-                    this.gameScene.walkToPersonalDesk().catch((error) => {
-                        console.warn("Error walking to personal desk", error);
-                    });
+            case "walkMyDesk": {
+                // Prevent the shortcut from being triggered when typing in input fields
+                if (
+                    event.target instanceof HTMLInputElement ||
+                    event.target instanceof HTMLTextAreaElement ||
+                    event.target instanceof HTMLSelectElement
+                ) {
+                    return event;
                 }
+                event.preventDefault();
+                this.gameScene.walkToPersonalDesk().catch((error) => {
+                    console.warn("Error walking to personal desk", error);
+                });
                 break;
             }
+            case "follow": {
+                this.handleKeyF();
+                break;
+            }
+            default: {
+                break;
+            }
+        }
+
+        switch (event.code) {
             case "Digit1":
             case "Digit2":
             case "Digit3":
@@ -420,10 +356,6 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                     console.warn(`Invalid emote index: ${emoteIndex}`);
                     Sentry.captureException(new Error(`Invalid emote index: ${emoteIndex}`));
                 }
-                break;
-            }
-            case "KeyF": {
-                this.handleKeyF();
                 break;
             }
             default: {
