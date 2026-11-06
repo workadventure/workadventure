@@ -205,8 +205,7 @@ test.describe("Recording test", () => {
         await Megaphone.isCorrectlySaved(broadcaster);
         await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
 
-        await Menu.clickSendGlobalMessage(broadcaster);
-        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickGoLive(broadcaster);
         await Menu.clickStartMegaphone(broadcaster);
         await waitForMegaphoneToBeStreaming(broadcaster);
 
@@ -325,8 +324,7 @@ test.describe("Recording test", () => {
         await Megaphone.isCorrectlySaved(broadcaster);
         await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
 
-        await Menu.clickSendGlobalMessage(broadcaster);
-        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickGoLive(broadcaster);
         await Menu.clickStartMegaphone(broadcaster);
         await waitForMegaphoneToBeStreaming(broadcaster);
 
@@ -381,8 +379,7 @@ test.describe("Recording test", () => {
         await Map.teleportToPosition(memberListener, memberListenerFarPosition.x, memberListenerFarPosition.y);
 
         // Start the megaphone and close the setup modal without stopping the stream.
-        await Menu.clickSendGlobalMessage(page);
-        await Menu.clickStartLiveMessage(page);
+        await Menu.clickGoLive(page);
         await Menu.clickStartMegaphone(page);
         await page.keyboard.press("Escape");
 

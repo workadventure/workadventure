@@ -88,6 +88,20 @@ const debug = Debug("socket");
 export type AdminSocket = WebSocket<AdminSocketData>;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
 
+/**
+ * The place an announcement leads to, as an absolute URL, if it stays on the sender's origin; "" otherwise.
+ * The "Join" button walks or travels there without reloading, so it must never lead to another site.
+ */
+export function sameOriginJoinUrl(joinUrl: string, senderRoomUrl: string): string {
+    if (!joinUrl) return "";
+    try {
+        const url = new URL(joinUrl, senderRoomUrl);
+        return url.origin === new URL(senderRoomUrl).origin ? url.toString() : "";
+    } catch {
+        return "";
+    }
+}
+
 export class SocketManager implements ZoneEventListener {
     private static readonly RECORDING_QUERY_TIMEOUT_MS = 60_000;
     private rooms: Map<string, PusherRoom> = new Map<string, PusherRoom>();
@@ -1185,6 +1199,7 @@ export class SocketManager implements ZoneEventListener {
         }
 
         const clientRoomUrl = socketData.roomId;
+        const joinUrl = sameOriginJoinUrl(playGlobalMessageEvent.joinUrl, clientRoomUrl);
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
@@ -1206,6 +1221,10 @@ export class SocketManager implements ZoneEventListener {
                 message: playGlobalMessageEvent.content,
                 type: playGlobalMessageEvent.type,
                 roomId: roomUrl,
+                senderName: socketData.name,
+                senderTextures: socketData.characterTextures,
+                broadcastToWorld: playGlobalMessageEvent.broadcastToWorld,
+                joinUrl,
             };
             apiRoom.sendAdminMessageToRoom(roomMessage, () => {
                 return;

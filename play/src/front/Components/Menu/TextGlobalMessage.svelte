@@ -6,28 +6,8 @@
     import type { PlayGlobalMessageInterface } from "../../Connection/ConnexionModels";
     import { LL } from "../../../i18n/i18n-svelte";
 
-    //toolbar
-    const toolbarOptions = [
-        ["bold", "italic", "underline", "strike"], // toggled buttons
-        ["blockquote", "code-block"],
-
-        [{ header: 1 }, { header: 2 }], // custom button values
-        [{ list: "ordered" }, { list: "bullet" }],
-        [{ script: "sub" }, { script: "super" }], // superscript/subscript
-        [{ indent: "-1" }, { indent: "+1" }], // outdent/indent
-        [{ direction: "rtl" }], // text direction
-
-        [{ size: ["small", false, "large", "huge"] }], // custom dropdown
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
-
-        [{ color: [] }, { background: [] }], // dropdown with defaults from theme
-        [{ font: [] }],
-        [{ align: [] }],
-
-        ["clean"], // remove formatting button
-
-        ["link", "image", "video"],
-    ];
+    // A reduced toolbar: an announcement is a few lines, not a page.
+    const toolbarOptions = [["bold", "italic"], ["link"], [{ list: "ordered" }, { list: "bullet" }], ["clean"]];
 
     const gameScene = gameManager.getCurrentGameScene();
     const MESSAGE_TYPE = "message";
@@ -35,17 +15,19 @@
     let QUILL_EDITOR: HTMLDivElement | undefined = $state();
 
     export type TextGlobalMessageHandle = {
-        sendTextMessage(broadcastToWorld: boolean): void;
+        sendTextMessage(broadcastToWorld: boolean, joinUrl?: string): void;
     };
 
     interface Props {
         handleSending?: TextGlobalMessageHandle;
+        /** Called with the Quill delta (as JSON) on every change, or "" when the editor is empty. */
+        onchange?: (delta: string) => void;
     }
 
-    let { handleSending = $bindable() }: Props = $props();
+    let { handleSending = $bindable(), onchange }: Props = $props();
 
     handleSending = {
-        sendTextMessage(broadcastToWorld: boolean) {
+        sendTextMessage(broadcastToWorld: boolean, joinUrl = "") {
             if (gameScene == undefined) {
                 return;
             }
@@ -55,12 +37,17 @@
                 type: MESSAGE_TYPE,
                 content: text,
                 broadcastToWorld: broadcastToWorld,
+                joinUrl,
             };
 
             quill.deleteText(0, quill.getLength());
             gameScene.connection?.emitGlobalMessage(textGlobalMessage);
         },
     };
+
+    function onTextChange() {
+        onchange?.(quill.getText().trim() === "" ? "" : JSON.stringify(quill.getContents()));
+    }
 
     //Quill
     onMount(() => {
@@ -74,10 +61,12 @@
                 toolbar: toolbarOptions,
             },
         });
+        quill.on("text-change", onTextChange);
         menuInputFocusStore.set(true);
     });
 
     onDestroy(() => {
+        quill?.off("text-change", onTextChange);
         menuInputFocusStore.set(false);
     });
 </script>

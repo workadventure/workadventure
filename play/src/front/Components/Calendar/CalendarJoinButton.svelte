@@ -4,7 +4,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { scriptUtils } from "../../Api/ScriptUtils";
     import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
-    import { gameManager } from "../../Phaser/Game/GameManager";
+    import { goToJoinUrl, moveTargetOf } from "../../Utils/JoinUrl";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -32,19 +32,15 @@
     function goThere(clickEvent: MouseEvent) {
         onjoin?.();
         if (!meeting?.joinUrl) return;
-        const url = new URL(meeting.joinUrl);
         // Another WorkAdventure, or a link the module could not resolve (the admin's redirect): follow it.
+        const url = new URL(meeting.joinUrl);
         if (url.origin !== window.location.origin) return;
         clickEvent.preventDefault();
-        const scene = gameManager.getCurrentGameScene();
-        if (url.pathname === window.location.pathname) {
-            const target = new URLSearchParams(url.hash.slice(1)).get("moveTo");
-            if (target) scene.walkToMoveTarget(target);
-            // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
-            else isCalendarVisibleStore.set(false);
-        } else {
-            scene.onMapExit(url).catch((e) => console.error(e));
+        // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
+        if (url.pathname === window.location.pathname && moveTargetOf(meeting.joinUrl) === undefined) {
+            isCalendarVisibleStore.set(false);
         }
+        goToJoinUrl(meeting.joinUrl);
     }
 </script>
 
