@@ -215,7 +215,10 @@ export const screenSharingLocalStreamStore = derived<Readable<MediaStreamConstra
                 audio: boolean | MediaTrackConstraints;
             } = {
                 video: !!constraints.video,
-                audio: !!constraints.audio,
+                // Shared audio is usually music or a video: the voice processing meant for microphones would damage it
+                audio: constraints.audio
+                    ? { echoCancellation: false, noiseSuppression: false, autoGainControl: false }
+                    : false,
             };
             currentStreamPromise = navigator.mediaDevices.getDisplayMedia(displayMediaConstraints);
         } else if (window.WAD?.getDesktopCapturerSources) {
