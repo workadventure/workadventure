@@ -75,12 +75,15 @@ test("a visitor shown in the mini window does not end away mode; one click does"
     await expect.poll(() => isMiniWindowShown(app)).toBe(true);
     const miniWindow = await getMiniWindow(app);
 
-    // Default away settings: the camera is held off, the microphone kept.
-    const shutter = miniWindow.getByTestId("away-paused-overlay");
+    // Default away settings: the camera is held off, the microphone kept. Alice's own tile comes first.
+    const ownTile = miniWindow.locator(".group\\/screenshare").first();
+    const shutter = ownTile.getByTestId("away-paused-overlay");
     await expect(shutter).toBeVisible();
     await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(1);
 
     await miniWindow.getByTestId("away-paused-turn-on").click();
     await expect(shutter).toBeHidden();
     await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(0);
+    // Her camera shows in her own tile, sized to it.
+    await expect(ownTile.locator("video")).toBeVisible();
 });

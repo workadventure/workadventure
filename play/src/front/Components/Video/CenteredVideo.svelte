@@ -6,6 +6,7 @@
     import type { VideoBoxStatus } from "../../Space/VideoBox";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
+    import { observeElementSize } from "./PictureInPicture/childWindow";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -76,6 +77,16 @@
     let overlayWidth: number = $state(0);
     let overlayHeight: number = $state(0);
     let videoRatio: number = $state(0);
+    let container: HTMLDivElement | undefined = $state();
+
+    // In picture-in-picture the video lives in another window, where bind:clientWidth no longer reports.
+    $effect(() => {
+        if (!$activePictureInPictureStore || !container) return;
+        return observeElementSize(container, (width, height) => {
+            containerWidth = width;
+            containerHeight = height;
+        });
+    });
 
     $effect(() => {
         if (videoEnabled && containerWidth && containerHeight) {
@@ -144,6 +155,7 @@
     class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
+    bind:this={container}
     class:flex={$activePictureInPictureStore}
     class:flex-col={$activePictureInPictureStore}
     class:justify-center={$activePictureInPictureStore}
