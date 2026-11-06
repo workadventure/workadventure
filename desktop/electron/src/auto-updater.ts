@@ -1,7 +1,6 @@
 import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import isDev from "electron-is-dev";
 import * as util from "util";
 
 import { createAndShowNotification } from "./notification";
@@ -19,7 +18,7 @@ export async function checkForUpdates() {
     }
 
     // Don't do auto-updates in development
-    if (isDev) {
+    if (!app.isPackaged) {
         return;
     }
 
@@ -51,7 +50,7 @@ async function init() {
     // In dev (electron .) the app.version is whatever package.json says — often "managedbyci"
     // which electron-updater rejects with ERR_UPDATER_INVALID_VERSION. The unhandledRejection
     // handler then pops a modal dialog that blocks the boot. Skip entirely in dev.
-    if (isDev) {
+    if (!app.isPackaged) {
         log.info("Auto-updater disabled in development.");
         return;
     }
