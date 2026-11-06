@@ -108,18 +108,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Seleziona il punto di ingresso attraverso il quale gli utenti arriveranno",
     },
     globalMessage: {
-        text: "Testo",
-        audio: "Audio",
         warning: "Trasmetti a tutte le stanze del mondo",
         enter: "Inserisci il tuo messaggio qui...",
         send: "Invia",
-    },
-    globalAudio: {
-        uploadInfo: "Carica un file",
-        error: "Nessun file selezionato. Devi caricare un file prima di inviarlo.",
-        errorUpload:
-            "Errore di caricamento del file. Controlla il tuo file e riprova. Se il problema persiste, contatta l'amministratore.",
-        dragAndDrop: "Trascina e rilascia o clicca qui per caricare il tuo file 🎧",
     },
     contact: {
         gettingStarted: {

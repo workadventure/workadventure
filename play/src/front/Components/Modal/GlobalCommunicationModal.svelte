@@ -20,7 +20,6 @@
     import microphoneImg from "../images/mic.svg";
     import cameraImg from "../images/cam.svg";
     import TextGlobalMessage, { type TextGlobalMessageHandle } from "../Menu/TextGlobalMessage.svelte";
-    import AudioGlobalMessage, { type AudioGlobalMessageHandle } from "../Menu/AudioGlobalMessage.svelte";
     import { srcObject } from "../Video/utils";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
@@ -34,14 +33,11 @@
     import Select from "../Input/Select.svelte";
     import InputCheckbox from "../Input/InputCheckbox.svelte";
     import Button from "../UI/Button.svelte";
-    import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconMusicShare, IconSpeakerPhone } from "@wa-icons";
+    import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconSpeakerPhone } from "@wa-icons";
 
     let inputSendTextActive = $state(false);
-    let uploadAudioActive = $state(false);
     let broadcastToWorld = $state(false);
-    let sending = $state(false);
     let handleSendText: TextGlobalMessageHandle | undefined = $state();
-    let handleSendAudio: AudioGlobalMessageHandle | undefined = $state();
     let stream: MediaStream | undefined = $state();
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
@@ -72,47 +68,23 @@
         streamingMegaphoneStore.set(true);
         displayedMegaphoneScreenStore.set(true);
         inputSendTextActive = false;
-        uploadAudioActive = false;
         analyticsClient.trackAdminEvent("megaphone.opened");
     }
 
     function activateInputText() {
         displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = true;
-        uploadAudioActive = false;
         analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
-    }
-
-    function activateUploadAudio() {
-        displayedMegaphoneScreenStore.set(false);
-        inputSendTextActive = false;
-        uploadAudioActive = true;
-        analyticsClient.trackAdminEvent("global_audio.opened");
     }
 
     function back() {
         displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = false;
-        uploadAudioActive = false;
     }
 
-    async function send(): Promise<void> {
-        if (inputSendTextActive) {
-            analyticsClient.trackAdminEvent("global_message.text_sent");
-            handleSendText?.sendTextMessage(broadcastToWorld);
-        }
-        if (uploadAudioActive) {
-            analyticsClient.trackAdminEvent("global_message.sound_sent");
-            sending = true;
-            try {
-                // On failure, stay open: the error is shown under the upload area.
-                if (!(await handleSendAudio?.sendAudioMessage(broadcastToWorld))) {
-                    return;
-                }
-            } finally {
-                sending = false;
-            }
-        }
+    function send(): void {
+        analyticsClient.trackAdminEvent("global_message.text_sent");
+        handleSendText?.sendTextMessage(broadcastToWorld);
         close();
     }
 
@@ -201,7 +173,7 @@
                     {$LL.megaphone.modal.title()}
                 </h2>
 
-                {#if $displayedMegaphoneScreenStore || inputSendTextActive || uploadAudioActive}
+                {#if $displayedMegaphoneScreenStore || inputSendTextActive}
                     <!-- svelte-ignore a11y_invalid_attribute -->
                     <a
                         href="#"
@@ -234,11 +206,11 @@
             </div>
         </header>
         <div class="px-5 h-full">
-            {#if !$displayedMegaphoneScreenStore && !inputSendTextActive && !uploadAudioActive}
+            {#if !$displayedMegaphoneScreenStore && !inputSendTextActive}
                 <div class="flex flex-col md:flex-row md:justify-center h-full">
                     <div
                         id="content-liveMessage"
-                        class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
+                        class="flex flex-col md:w-1/2 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
                             <IconSpeakerPhone class="h-8 w-8 mr-1 inline" font-size="22" />
@@ -259,7 +231,7 @@
                         {#if !$megaphoneCanBeUsedStore}
                             <p class="help-text !text-danger-800">
                                 <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
+                                {$LL.megaphone.modal.textMessage.noAccess()}
                             </p>
                         {/if}
 
@@ -284,7 +256,7 @@
 
                     <div
                         id="content-textMessage"
-                        class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
+                        class="flex flex-col md:w-1/2 w-full px-5 mb-6 h-full justify-between"
                     >
                         <h4 class="text-white mb-2">
                             <IconMessageShare class="h-8 w-8 mr-1 inline" />
@@ -327,56 +299,10 @@
                             ></video>
                         </div>
                     </div>
-
-                    <div
-                        id="content-soundMessage"
-                        class="flex flex-col md:w-1/3 w-full px-5 mb-6 h-full justify-between"
-                    >
-                        <h4 class="text-white mb-2">
-                            <IconMusicShare class="h-8 w-8 mr-1 inline" />
-                            {$LL.megaphone.modal.audioMessage.title()}
-                        </h4>
-
-                        <Button
-                            variant="light"
-                            appearance="border"
-                            size="lg"
-                            class="mb-4"
-                            onclick={activateUploadAudio}
-                            disabled={!$userIsAdminStore}
-                        >
-                            {$LL.megaphone.modal.audioMessage.button()}
-                        </Button>
-
-                        {#if !$userIsAdminStore}
-                            <p class="help-text !text-danger-800">
-                                <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                                {$LL.megaphone.modal.audioMessage.noAccess()}
-                            </p>
-                        {/if}
-
-                        <p class="text-white text-sm whitespace-pre-line">
-                            {$LL.megaphone.modal.audioMessage.notice()}
-                        </p>
-
-                        <div class="mt-auto pt-4">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_audio_message.mp4"
-                                class="w-full cursor-pointer rounded"
-                                controls
-                                muted
-                                onmouseover={playVideo}
-                                onmouseout={stopVideo}
-                                onfocus={playVideo}
-                                onblur={stopVideo}
-                                onclick={fullScreenVideo}
-                            ></video>
-                        </div>
-                    </div>
                 </div>
             {/if}
 
-            {#if inputSendTextActive || uploadAudioActive}
+            {#if inputSendTextActive}
                 <div id="active-globalMessage" class="flex flex-col p-5">
                     {#if inputSendTextActive}
                         <h3 class="text-white mb-2">
@@ -385,18 +311,6 @@
                         </h3>
                         <TextGlobalMessage bind:handleSending={handleSendText} />
                     {/if}
-
-                    {#if uploadAudioActive}
-                        <div class="flex flex-col justify-center items-center">
-                            <h3 class="text-white">
-                                <IconMessageShare class="h-8 w-8 mr-1" font-size="22" />
-                                {$LL.megaphone.modal.audioMessage.title()}
-                            </h3>
-                            <div class="text-white">
-                                <AudioGlobalMessage bind:handleSending={handleSendAudio} />
-                            </div>
-                        </div>
-                    {/if}
                     <div class="flex justify-center">
                         <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
                     </div>
@@ -404,10 +318,9 @@
                         <section class="centered-column">
                             <Button
                                 variant="light"
-                                disabled={sending}
                                 onclick={(event) => {
                                     event.preventDefault();
-                                    send().catch((e) => console.error(e));
+                                    send();
                                 }}
                             >
                                 {$LL.menu.globalMessage.send()}

@@ -105,18 +105,9 @@ const menu: BaseTranslation = {
         selectEntryPointSelect: "Select the entry point through which users will arrive",
     },
     globalMessage: {
-        text: "Text",
-        audio: "Audio",
         warning: "Broadcast to all rooms of the world",
         enter: "Enter your message here...",
         send: "Send",
-    },
-    globalAudio: {
-        uploadInfo: "Upload a file",
-        error: "No file selected. You need to upload a file before sending it.",
-        errorUpload:
-            "Uploading file error. Please check your file and try again. If the problem persists, contact the administrator.",
-        dragAndDrop: "Drag and drop or click here to upload your file 🎧",
     },
     contact: {
         gettingStarted: {

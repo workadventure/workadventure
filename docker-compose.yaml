@@ -70,7 +70,6 @@ services:
       # "front" container in production. The pusher reads index.html from Vite (same container).
       ASSETS_URL: http://front.workadventure.localhost
       ASSETS_INTERNAL_URL: http://localhost:8080
-      UPLOADER_URL: http://uploader.workadventure.localhost
       ICON_URL: http://icon.workadventure.localhost
       STUN_SERVER: "${STUN_SERVER:-}"
       TURN_SERVER: "${TURN_SERVER:-}"
@@ -326,39 +325,6 @@ services:
       - "traefik.http.routers.map-storage-ui.entryPoints=web"
       - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
       - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
-
-  uploader:
-    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie
-    command: npm run dev
-    #command: npm run profile
-    working_dir: /usr/src/app/uploader
-    environment:
-      DEBUG: "*"
-      STARTUP_COMMAND_1: ../npm-install.sh
-      UPLOADER_URL: http://uploader.workadventure.localhost
-      #AWS
-      AWS_ACCESS_KEY_ID: "${AWS_ACCESS_KEY_ID:-}"
-      AWS_SECRET_ACCESS_KEY: "${AWS_SECRET_ACCESS_KEY:-}"
-      AWS_DEFAULT_REGION: "${AWS_DEFAULT_REGION:-}"
-      AWS_BUCKET: "${AWS_BUCKET:-}"
-      AWS_ENDPOINT: "${AWS_ENDPOINT:-}"
-      UPLOADER_AWS_SIGNED_URL_EXPIRATION: "${UPLOADER_AWS_SIGNED_URL_EXPIRATION:-}"
-      #REDIS
-      REDIS_HOST: "${UPLOADER_REDIS_HOST:-}"
-      REDIS_PORT: "${UPLOADER_REDIS_PORT:-}"
-      REDIS_DB_NUMBER: "${UPLOADER_REDIS_DB_NUMBER:-}"
-      ENABLE_CHAT_UPLOAD: "$ENABLE_CHAT_UPLOAD"
-      UPLOAD_MAX_FILESIZE: "${UPLOAD_MAX_FILESIZE:-}"
-    volumes:
-      - .:/usr/src/app
-    tmpfs: /tmp
-    ports:
-      - "9234:9229"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
-      - "traefik.http.routers.uploader.entryPoints=web"
-      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
   messages:
     image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie-build

@@ -107,18 +107,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "wubjer startowy dypk, přez kotryž wužiwarjo přidu",
     },
     globalMessage: {
-        text: "tekst",
-        audio: "audijo",
         warning: "na wšitke rumy tuteho swěta pósłać",
         enter: "Zapisaj tu swoju powěsć...",
         send: "wotposłać",
-    },
-    globalAudio: {
-        uploadInfo: "dataju nakładować",
-        error: "Žanu dataju wuzwolili. Dyrbiš před rozpósłanjom dataju nakładować.",
-        errorUpload:
-            "Zmylki při nakładowanju dataje. Prošu přepruwujće Wašu dataju a spytajće to znowa. Jeli problem dale wobsteji, wobroćće so na administratora.",
-        dragAndDrop: "Dataju tu ćahnyć a pušćić abo kliknyć, zo byšće dataju nakładował 🎧",
     },
     contact: {
         gettingStarted: {

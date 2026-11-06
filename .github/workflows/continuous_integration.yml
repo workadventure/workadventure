@@ -136,33 +136,6 @@ jobs:
         run: npm run pretty-check
         working-directory: "back"
 
-  continuous-integration-uploader:
-    name: "Continuous Integration Uploader"
-
-    runs-on: "ubuntu-latest"
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v3
-        with:
-          node-version: 24
-          cache: "npm"
-
-
-      - name: "Install dependencies"
-        run: npm ci --workspace=workadventureuploader
-
-      - name: "Lint"
-        run: npm run lint
-        working-directory: "uploader"
-
-      - name: "Test"
-        run: npm test
-        working-directory: "uploader"
-
   continuous-integration-lib-map-editor:
     name: "Continuous Integration Map Editor Library"
 

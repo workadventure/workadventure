@@ -405,17 +405,6 @@
       }
     },
     {
-      "title": "global_audio.opened",
-      "properties": {
-        "eventName": {
-          "const": "global_audio.opened"
-        },
-        "properties": {
-          "$ref": "#/$defs/global_audio.opened"
-        }
-      }
-    },
-    {
       "title": "global_message.opened",
       "properties": {
         "eventName": {
@@ -423,17 +412,6 @@
         },
         "properties": {
           "$ref": "#/$defs/global_message.opened"
-        }
-      }
-    },
-    {
-      "title": "global_message.sound_sent",
-      "properties": {
-        "eventName": {
-          "const": "global_message.sound_sent"
-        },
-        "properties": {
-          "$ref": "#/$defs/global_message.sound_sent"
         }
       }
     },
@@ -2030,9 +2008,7 @@
               "feedback.opened",
               "feedback.submitted",
               "file.drag_dropped",
-              "global_audio.opened",
               "global_message.opened",
-              "global_message.sound_sent",
               "global_message.text_sent",
               "invite.accepted",
               "invite.opened",
@@ -2722,13 +2698,6 @@
       "description": "The user dropped a file into the world.",
       "title": "file.drag_dropped"
     },
-    "global_audio.opened": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": true,
-      "description": "The user opened the global audio panel.",
-      "title": "global_audio.opened"
-    },
     "global_message.opened": {
       "type": "object",
       "properties": {
@@ -2744,13 +2713,6 @@
       "additionalProperties": true,
       "title": "global_message.opened",
       "description": "The user opened the global message composer."
-    },
-    "global_message.sound_sent": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": true,
-      "description": "The user broadcast a sound to the world.",
-      "title": "global_message.sound_sent"
     },
     "global_message.text_sent": {
       "type": "object",

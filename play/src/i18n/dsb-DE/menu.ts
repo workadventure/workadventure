@@ -107,18 +107,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Wuzwól startowe město, pśez kótarež wužywarje pśidu",
     },
     globalMessage: {
-        text: "Tekst",
-        audio: "Audio",
         warning: "Na wšykne śpy swěta pósłaś",
         enter: "Zapódajśo how swóju powěsć...",
         send: "Wótpósłaś",
-    },
-    globalAudio: {
-        uploadInfo: "Dataju górjej lodowaś",
-        error: "Žedna dataja njejo wuzwólona. Pśed wótpósłanim musyš dataju górjej lodowaś.",
-        errorUpload:
-            "Zmólka pśi górjejlodowanju dataje. Pśespytuj dataju a wopytaj wótnowotki. Jolic až problem buźo dalej wobstojaś, wobroś se na administratora.",
-        dragAndDrop: "Dataju how śěgnuś a pušćiś abo kliknuś, aby dataju górjej lodował 🎧",
     },
     contact: {
         gettingStarted: {
