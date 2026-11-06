@@ -1,38 +1,122 @@
+import { promises as fs } from "fs";
+import path from "path";
+import { app } from "electron";
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
-import type { Server } from "./preload-local-app/types";
+import { LEGACY_LOGIN_ITEM_NAME, LEGACY_USER_DATA_DIR, migrateLegacySettings } from "./legacy-settings-policy";
+import {
+    createDesktopConfig,
+    getDefaultPortalUrl,
+    normalizePersistedLastRoomUrl,
+    normalizePersistedPortalUrl,
+    normalizePersistedWorldHistory,
+} from "./desktop-url-policy";
 
 export type SettingsData = {
     log_level: ElectronLog.LogLevel;
     auto_launch_enabled: boolean;
-    servers: Server[];
-    shortcuts: Record<"mute_toggle" | "camera_toggle", string>;
+    /** Show the multi-tab strip at the top of the shell. Most users run single-tab, so it can be
+     * turned off via the "Show tab bar" menu item. Defaults to on for backward compatibility. */
+    tab_bar_enabled: boolean;
+    portal_url: string;
+    last_room_url?: string;
+    world_history: string[];
+    pinned_worlds: string[];
+    /** White-label origins confirmed by the portal's admin → expiry (ms epoch). See origin-verification. */
+    verified_origins?: Record<string, number>;
+    /** Self-hosted servers the user added by hand from the Landing (origins). See origin-verification. */
+    trusted_origins?: string[];
+    shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
+    /** Last size + position of the resizable companion panel, restored (and clamped) on reopen. */
+    companion_bounds?: { x: number; y: number; width: number; height: number };
 };
 
 let settings: SettingsData;
 
 const defaultSettings: SettingsData = {
     log_level: "info",
-    auto_launch_enabled: true,
-    servers: [
-        {
-            _id: `${Date.now()}-1`,
-            name: "WA Demo",
-            url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
-        },
-    ],
+    // Auto-launch is OPT-IN: silently adding WorkAdventure to OS startup is non-compliant with
+    // macOS Sonoma+ background-item guidelines and Windows install best practices. Users explicitly
+    // opt in via the preferences UI.
+    auto_launch_enabled: false,
+    tab_bar_enabled: true,
+    portal_url: process.env.WA_DESKTOP_PORTAL_URL || getDefaultPortalUrl(),
+    world_history: [],
+    pinned_worlds: [],
     shortcuts: {
-        mute_toggle: "",
-        camera_toggle: "",
+        // Global (work while another app has focus) — that is the point: muting during a meeting
+        // usually happens while the user is in some other window. Three-modifier chords are all but
+        // unclaimed on macOS/Windows, so registering them OS-wide steals nothing well-known. Notably
+        // NOT Cmd+Shift+A / Cmd+Shift+V (Zoom's combos): those are Finder's Go→Applications and
+        // paste-as-plain-text in Chrome/Slack/VS Code, which a global grab would shadow everywhere.
+        mute_toggle: "CommandOrControl+Alt+Shift+M",
+        camera_toggle: "CommandOrControl+Alt+Shift+C",
+        // Opt-in, unlike the two above: no default global accelerator; the tray "Companion panel"
+        // item toggles it without a shortcut.
+        companion_toggle: "",
     },
 };
+
+/**
+ * Keep only the accelerators a user actually configured, so persisted blanks don't mask a new
+ * default. Every install that ran a build before mic/camera had default bindings has
+ * `mute_toggle: ""` on disk, and `""` is a present key — a plain spread would let it win over the
+ * default forever and ship the feature to new profiles only. A blank can only mean "never set":
+ * the shortcut-editing UI is unreachable in this shell, so nothing can deliberately clear one.
+ */
+function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | undefined) {
+    const configured: Partial<SettingsData["shortcuts"]> = {};
+    for (const [name, accelerator] of Object.entries(persisted || {})) {
+        if (typeof accelerator === "string" && accelerator.length > 0) {
+            configured[name as keyof SettingsData["shortcuts"]] = accelerator;
+        }
+    }
+    return configured;
+}
+
+/** What a 1.x install left in its own userData folder, for the first launch of 2.0. */
+async function readLegacySettings(): Promise<Partial<SettingsData>> {
+    const file = path.join(app.getPath("appData"), LEGACY_USER_DATA_DIR, "settings.json");
+    let legacy: unknown;
+    try {
+        legacy = JSON.parse(await fs.readFile(file, "utf8"));
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+            ElectronLog.warn(`Could not read the 1.x settings in ${file}:`, error);
+        }
+        return {};
+    }
+    ElectronLog.info(`Migrating the 1.x settings from ${file}.`);
+    // 1.x registered auto-launch under its own name, pointing at its own executable, which the 2.0
+    // installer removed. updateAutoLaunch() registers 2.0 under its name if the user kept it on.
+    if (process.platform === "win32") {
+        app.setLoginItemSettings({ openAtLogin: false, name: LEGACY_LOGIN_ITEM_NAME });
+    }
+    return migrateLegacySettings(legacy, createDesktopConfig()) as Partial<SettingsData>;
+}
 
 async function init() {
     let _settings = await Settings.get();
     if (Object.keys(_settings).length === 0) {
-        _settings = defaultSettings;
+        _settings = { ...defaultSettings, ...(await readLegacySettings()) };
     }
-    settings = _settings as SettingsData;
+    const persistedSettings = _settings as Partial<SettingsData>;
+    const persistedWorldHistory = Array.isArray(persistedSettings.world_history) ? persistedSettings.world_history : [];
+    const persistedPinnedWorlds = Array.isArray(persistedSettings.pinned_worlds) ? persistedSettings.pinned_worlds : [];
+    settings = {
+        ...defaultSettings,
+        ...persistedSettings,
+        shortcuts: {
+            ...defaultSettings.shortcuts,
+            ...configuredShortcuts(persistedSettings.shortcuts),
+        },
+    };
+    settings.portal_url = normalizePersistedPortalUrl(process.env.WA_DESKTOP_PORTAL_URL || settings.portal_url);
+    settings.last_room_url = normalizePersistedLastRoomUrl(settings.last_room_url);
+    settings.world_history = normalizePersistedWorldHistory([settings.last_room_url, ...persistedWorldHistory]);
+    // Pinned worlds are sanitized the same way; a modest cap keeps the sidebar/menus tidy.
+    settings.pinned_worlds = normalizePersistedWorldHistory(persistedPinnedWorlds, 12);
+    await Settings.set(settings);
 }
 
 function get(): SettingsData;

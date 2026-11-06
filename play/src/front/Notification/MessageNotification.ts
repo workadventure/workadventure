@@ -16,10 +16,6 @@ export class MessageNotification implements NotificationWA {
 
     public async sendNotification() {
         try {
-            // The page-wide service worker (Network/ServiceWorker.ts) owns the "/" scope and the notificationclick
-            // handler. Registering another script here would replace it.
-            const registration = await navigator.serviceWorker.ready;
-
             const numberOfChar = 60;
             const message = decodeHtmlEntities(this.message);
             const messageToDisplay = message.length > numberOfChar ? message.slice(0, numberOfChar) + "..." : message;
@@ -27,6 +23,19 @@ export class MessageNotification implements NotificationWA {
                 ? get(LL).notification.mention({ name: this.userName })
                 : get(LL).notification.message({ name: this.userName });
             const body = `${title} : ${messageToDisplay}`;
+
+            // In the Electron shell, route through the main-process notification: the WA icon is
+            // pinned, and the chatRoomId travels as `tag` so a click can focus the app and open
+            // the originating room. The service-worker path is web-only.
+            const wad = window.WAD;
+            if (wad?.desktop && wad.notify) {
+                wad.notify({ title: this.chatRoomName, body, tag: this.chatRoomId });
+                return;
+            }
+
+            // The page-wide service worker (Network/ServiceWorker.ts) owns the "/" scope and the notificationclick
+            // handler. Registering another script here would replace it.
+            const registration = await navigator.serviceWorker.ready;
 
             const data = {
                 chatRoomId: this.chatRoomId,
