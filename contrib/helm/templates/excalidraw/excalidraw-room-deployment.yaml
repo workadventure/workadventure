@@ -1,0 +1,89 @@
+{{- if .Values.excalidraw.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "workadventure.fullname" . }}-excalidraw-room
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+    role: excalidraw-room
+spec:
+  {{- if not .Values.excalidraw.excalidrawRoom.autoscaling.enabled }}
+  replicas: {{ .Values.excalidraw.excalidrawRoom.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "workadventure.selectorLabels" . | nindent 6 }}
+      role: excalidraw-room
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ (include (print $.Template.BasePath "/excalidraw/excalidraw-room-env.yaml") .) | sha256sum }}
+        checksum/secret: {{ (include (print $.Template.BasePath "/excalidraw/excalidraw-room-secret-env.yaml") .) | sha256sum }}
+        {{- if .Values.forceRedeploy }}
+        forceRedeploy: {{ randAlphaNum 10 | quote }}
+        {{- end }}
+        {{- with .Values.excalidraw.excalidrawRoom.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "workadventure.selectorLabels" . | nindent 8 }}
+        role: excalidraw-room
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "workadventure.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.excalidraw.excalidrawRoom.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}-excalidraw-room
+          securityContext:
+            {{- toYaml .Values.excalidraw.excalidrawRoom.securityContext | nindent 12 }}
+          image: "{{ .Values.excalidraw.excalidrawRoom.image.repository }}:{{ .Values.excalidraw.excalidrawRoom.image.tag | default .Values.appVersion }}"
+          imagePullPolicy: {{ .Values.excalidraw.excalidrawRoom.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "workadventure.fullname" . }}-env-excalidraw-room
+            - secretRef:
+                name: {{ include "workadventure.fullname" . }}-secret-env-excalidraw-room
+            {{- if .Values.excalidraw.excalidrawRoom.externalConfigMapName }}
+            - configMapRef:
+                name: {{ .Values.excalidraw.excalidrawRoom.externalConfigMapName }}
+            {{- end }}
+            {{- if .Values.excalidraw.excalidrawRoom.externalSecretName }}
+            - secretRef:
+                name: {{ .Values.excalidraw.excalidrawRoom.externalSecretName }}
+            {{- end }}
+          {{- if .Values.excalidraw.excalidrawRoom.extraEnvVars }}
+          env:
+            {{- include "common.tplvalues.render" (dict "value" .Values.excalidraw.excalidrawRoom.extraEnvVars "context" $) | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.excalidraw.excalidrawRoom.service.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.excalidraw.excalidrawRoom.resources | nindent 12 }}
+      {{- with .Values.excalidraw.excalidrawRoom.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.excalidraw.excalidrawRoom.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.excalidraw.excalidrawRoom.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

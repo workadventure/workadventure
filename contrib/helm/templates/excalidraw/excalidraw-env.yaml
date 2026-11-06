@@ -1,0 +1,22 @@
+{{- if .Values.excalidraw.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-excalidraw
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  VITE_APP_BACKEND_V2_GET_URL: "{{ include "workadventure.excalidrawStorageUrl" . }}api/v2/scenes/"
+  VITE_APP_BACKEND_V2_POST_URL: "{{ include "workadventure.excalidrawStorageUrl" . }}api/v2/scenes/"
+  VITE_APP_WS_SERVER_URL: "{{ include "workadventure.excalidrawRoomUrl" . }}"
+  VITE_APP_HTTP_STORAGE_BACKEND_URL: "{{ include "workadventure.excalidrawStorageUrl" . }}api/v2"
+
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.excalidraw.excalidraw.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}

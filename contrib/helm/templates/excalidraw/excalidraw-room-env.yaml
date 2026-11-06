@@ -1,0 +1,17 @@
+{{- if .Values.excalidraw.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-excalidraw-room
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.excalidraw.excalidrawRoom.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}

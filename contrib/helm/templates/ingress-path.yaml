@@ -59,4 +59,27 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-room-api
                 port:
                   number: {{ .Values.play.roomApiService.port }}
+          {{- if and .Values.excalidraw.enabled .Values.excalidraw.ingress -}}
+          - path: /excalidraw-storage{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-excalidraw-storage
+                port:
+                  number: {{ .Values.excalidraw.excalidrawStorage.service.port }}
+          - path: /excalidraw-room{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-excalidraw-room
+                port:
+                  number: {{ .Values.excalidraw.excalidrawRoom.service.port }}
+          - path: /excalidraw{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-excalidraw
+                port:
+                  number: {{ .Values.excalidraw.excalidraw.service.port }}
+          {{- end }}
 {{- end }}

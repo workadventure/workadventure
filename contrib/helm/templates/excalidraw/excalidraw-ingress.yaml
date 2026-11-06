@@ -1,0 +1,50 @@
+{{- if and .Values.excalidraw.enabled (and (or .Values.ingress.enabled .Values.excalidraw.ingress.enabled) (not .Values.singleDomain)) -}}
+{{- $fullName := include "workadventure.fullname" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}-excalidraw
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+  {{- with .Values.ingress.annotationsRoot }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- $ingressClassName := coalesce .Values.excalidraw.ingress.className .Values.ingress.className -}}
+  {{- if $ingressClassName }}
+  ingressClassName: {{ $ingressClassName }}
+  {{- end }}
+  {{- $tls := coalesce .Values.excalidraw.ingress.tls .Values.ingress.tls false -}}
+  {{- if $tls }}
+  tls:
+    - hosts:
+        - {{ (include "workadventure.excalidrawDomainName" .) | quote }}
+      secretName: {{ .Values.excalidraw.ingress.secretName | default (printf "%s-excalidraw-cert" (include "workadventure.fullname" .)) }}
+  {{- end }}
+  rules:
+    - host: {{ (include "workadventure.excalidrawDomainName" .) | quote }}
+      http:
+        paths:
+          - path: /excalidraw-storage{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-excalidraw-storage
+                port:
+                  number: {{ .Values.excalidraw.excalidrawStorage.service.port }}
+          - path: /excalidraw-room{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-excalidraw-room
+                port:
+                  number: {{ .Values.excalidraw.excalidrawRoom.service.port }}
+          - path: /{{ .Values.ingress.rewritePathSuffix }}
+            pathType: {{ .Values.ingress.pathType }}
+            backend:
+              service:
+                name: {{ include "workadventure.fullname" . }}-excalidraw
+                port:
+                  number: {{ .Values.excalidraw.excalidraw.service.port }}
+{{- end }}
