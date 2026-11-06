@@ -16,12 +16,19 @@
                 break;
             case "requesting":
             case "active":
-            case "ending":
                 gameManager.getCurrentGameScene().connection?.emitFollowAbort();
                 followUsersStore.stopFollowing();
                 break;
         }
     }
+
+    let help = $derived(
+        $followStateStore !== "active"
+            ? $LL.actionbar.help.follow
+            : $followRoleStore === "leader"
+              ? $LL.actionbar.help.stopLeading
+              : $LL.actionbar.help.unfollow,
+    );
 </script>
 
 <ActionBarButton
@@ -30,13 +37,11 @@
         followClick();
     }}
     classList="group/btn-follow"
-    tooltipTitle={$followStateStore === "active"
-        ? $LL.actionbar.help.unfollow.title()
-        : $LL.actionbar.help.follow.title()}
+    tooltipTitle={help.title()}
     disabledHelp={$openedMenuStore !== undefined}
     state={$followStateStore === "active" ? "active" : "normal"}
     media="./static/Videos/Follow.mp4"
-    desc={$followStateStore === "active" ? $LL.actionbar.help.unfollow.desc() : $LL.actionbar.help.follow.desc()}
+    desc={help.desc()}
 >
     <FollowIcon />
 </ActionBarButton>
