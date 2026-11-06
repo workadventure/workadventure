@@ -186,6 +186,7 @@ const menu: BaseTranslation = {
         openUserList: "Abrir Lista de Usuários",
         toggleMapEditor: "Mostrar/Ocultar Editor de Mapas",
         rotatePlayer: "Girar Jogador",
+        wokaEmoteWheel: "Roda de emotes",
         emote1: "Emote 1",
         emote2: "Emote 2",
         emote3: "Emote 3",

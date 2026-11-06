@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidEmote, MAX_EMOTE_LENGTH } from "../src/Services/EmoteValidator";
+import { isValidEmote, isValidWokaEmote, MAX_EMOTE_LENGTH } from "../src/Services/EmoteValidator";
 
 describe("EmoteValidator", () => {
     it("accepts the emojis of the default emote menu", () => {
@@ -29,5 +29,24 @@ describe("EmoteValidator", () => {
 
     it("refuses overly long emotes", () => {
         expect(isValidEmote("👍".repeat(MAX_EMOTE_LENGTH))).toBe(false);
+    });
+});
+
+describe("isValidWokaEmote", () => {
+    it("accepts a known animation, with or without an emoji riding along", () => {
+        expect(isValidWokaEmote("dance", "")).toBe(true);
+        expect(isValidWokaEmote("dance", "🕺")).toBe(true);
+    });
+
+    it("refuses an animation it has never heard of", () => {
+        // What a front deployed ahead of this back sends. The emote then degrades to its emoji
+        // rather than being dropped, which is handled in SocketManager.
+        expect(isValidWokaEmote("breakdance", "🕺")).toBe(false);
+        expect(isValidWokaEmote("", "🕺")).toBe(false);
+    });
+
+    it("refuses an animation carrying something that is not an emoji", () => {
+        expect(isValidWokaEmote("dance", "<img src=x onerror=alert(1)>")).toBe(false);
+        expect(isValidWokaEmote("dance", "hello")).toBe(false);
     });
 });
