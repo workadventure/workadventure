@@ -126,6 +126,18 @@ test("uses the hosted admin portal by default in production, the local one in de
     });
 });
 
+test("updates from the desktop-releases repository unless a feed URL overrides it", () => {
+    expect(createDesktopConfig({}).updateFeed).toStrictEqual({
+        provider: "github",
+        owner: "workadventure",
+        repo: "desktop-releases",
+    });
+    expect(createDesktopConfig({ WA_DESKTOP_UPDATE_URL: "http://localhost:8080/" }).updateFeed).toStrictEqual({
+        provider: "generic",
+        url: "http://localhost:8080/",
+    });
+});
+
 test("keeps .workadventure.localhost in dev defaults for local development", () => {
     withNodeEnv("development", () => {
         const config = createDesktopConfig({});

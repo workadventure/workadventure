@@ -48,19 +48,15 @@ export async function manualRequestUpdateCheck() {
 }
 
 async function init() {
-    // In dev (electron .) the app.version is whatever package.json says — often "managedbyci"
-    // which electron-updater rejects with ERR_UPDATER_INVALID_VERSION. The unhandledRejection
-    // handler then pops a modal dialog that blocks the boot. Skip entirely in dev.
+    // In dev (electron .) there is no release to compare with, and a failed check pops the
+    // unhandledRejection dialog that blocks the boot. Skip entirely in dev.
     if (isDev) {
         log.info("Auto-updater disabled in development.");
         return;
     }
 
     autoUpdater.logger = log;
-    autoUpdater.setFeedURL({
-        provider: "generic",
-        url: createDesktopConfig().updateFeedUrl,
-    });
+    autoUpdater.setFeedURL(createDesktopConfig().updateFeed);
 
     autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
         void (async () => {
