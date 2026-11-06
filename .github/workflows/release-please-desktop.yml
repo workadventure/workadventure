@@ -19,6 +19,10 @@ permissions: {}
 jobs:
   release-please:
     if: ${{ github.repository == 'workadventure/workadventure' }}
+    # The App key lives in this Environment (deployment branch: master), not in the repository secrets
+    # that a workflow pushed on any branch could read. Separate from desktop-release, whose optional
+    # reviewers would otherwise hold every push to master.
+    environment: desktop-release-please
     runs-on: ubuntu-latest
     steps:
       - name: "Get a token for this repository"
@@ -27,6 +31,9 @@ jobs:
         with:
           app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
           private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+          permission-issues: write
 
       - name: "Checkout"
         uses: actions/checkout@v4
