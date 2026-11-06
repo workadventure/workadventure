@@ -5,9 +5,9 @@
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import EmojiButton from "./EmojiButton.svelte";
     import MessageMoreMenu from "./MessageMoreMenu.svelte";
-    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import { confirmDelete } from "./confirmDeleteMessage";
     import { IconArrowBackUp, IconDots } from "@wa-icons";
 
