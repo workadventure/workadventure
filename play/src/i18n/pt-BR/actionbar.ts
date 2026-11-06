@@ -161,6 +161,14 @@ const actionbar: BaseTranslation = {
             title: "Câmera desabilitada",
             desc: 'Sua câmera está desabilitada porque você está no status "{status}".',
         },
+        micPausedByStatus: {
+            title: "Microfone pausado",
+            desc: 'Seu microfone está pausado porque você está no status "{status}". Clique para ativá-lo e ficar disponível.',
+        },
+        camPausedByStatus: {
+            title: "Câmera pausada",
+            desc: 'Sua câmera está pausada porque você está no status "{status}". Clique para ativá-la e ficar disponível.',
+        },
         share: {
             title: "Compartilhar sua tela",
             desc: "Quer compartilhar sua tela com outros usuários? Você pode! Você pode mostrar sua tela para as pessoas na sua bolha ou sala de reunião, e pode escolher compartilhar sua tela inteira ou apenas uma janela específica.",

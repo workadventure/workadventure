@@ -156,6 +156,14 @@ const actionbar: BaseTranslation = {
             title: "Camera disabled",
             desc: 'Your camera is disabled because you are in "{status}" status.',
         },
+        micPausedByStatus: {
+            title: "Microphone paused",
+            desc: 'Your microphone is paused because you are in "{status}" status. Click to turn it on and become available.',
+        },
+        camPausedByStatus: {
+            title: "Camera paused",
+            desc: 'Your camera is paused because you are in "{status}" status. Click to turn it on and become available.',
+        },
         share: {
             title: "Share your screen",
             desc: "Want to share your screen with other users? You can! You can show your screen to the people in your bubble or meeting room, and you can choose to share your entire screen or just a specific window.",

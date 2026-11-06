@@ -17,7 +17,6 @@
         isDocumentPictureInPictureSupported,
     } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
     import DesktopMiniWindow from "./PictureInPicture/DesktopMiniWindow.svelte";
-    import desktopMiniWindowStyles from "./PictureInPicture/desktopMiniWindow.css?raw";
     import {
         copyStyleSheets,
         delegateSvelteEvents,
@@ -200,7 +199,6 @@
                     showMeetingInMiniWindow(false);
                     miniWindow = undefined;
                 },
-                styles: desktopMiniWindowStyles,
             },
         );
     }

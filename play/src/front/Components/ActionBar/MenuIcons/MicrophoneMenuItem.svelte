@@ -14,7 +14,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
-    import { heldMediaStore } from "../../../Stores/HeldMediaStore";
+    import { canComeBackFrom, heldMediaStore, toggleMicrophone } from "../../../Stores/HeldMediaStore";
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
@@ -33,6 +33,13 @@
     const microphoneActionBarTooltipStore = derived(
         [LL, microphoneButtonHelpContextStore, heldMediaStore, silentStore, availabilityStatusStore],
         ([$LL, ctx, held, silent, status]) => {
+            if (held.microphone && canComeBackFrom(held.status)) {
+                return {
+                    title: $LL.actionbar.help.micPausedByStatus.title(),
+                    desc: $LL.actionbar.help.micPausedByStatus.desc({ status: getStatusLabel(held.status) }),
+                    media: "",
+                };
+            }
             if (held.microphone || silent) {
                 return {
                     title: $LL.actionbar.help.micDisabledByStatus.title(),
@@ -84,11 +91,7 @@
     function microphoneClick(): void {
         analyticsClient.trackAdminEvent("media.microphone.toggled");
         if ($silentStore) return;
-        if ($requestedMicrophoneState === true) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
-        }
+        toggleMicrophone();
     }
 </script>
 
@@ -98,6 +101,8 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$microphoneButtonStateStore}
     statusDot={$heldMediaStore.microphone ? getColorHexOfStatus($heldMediaStore.status) : undefined}
+    statusDotClickable={canComeBackFrom($heldMediaStore.status)}
+    ariaLabel={$LL.actionbar.help.mic.title()}
     dataTestId="microphone-button"
     tooltipTitle={$microphoneActionBarTooltipStore.title}
     desc={$microphoneActionBarTooltipStore.desc}

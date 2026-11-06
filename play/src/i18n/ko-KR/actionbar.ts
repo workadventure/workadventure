@@ -157,6 +157,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "카메라 비활성화됨",
             desc: '현재 상태가 "{status}"이기 때문에 카메라가 비활성화되어 있습니다.',
         },
+        micPausedByStatus: {
+            title: "마이크 일시 중지됨",
+            desc: '현재 상태가 "{status}"이기 때문에 마이크가 일시 중지되어 있습니다. 클릭하면 켜지고 온라인 상태로 돌아갑니다.',
+        },
+        camPausedByStatus: {
+            title: "카메라 일시 중지됨",
+            desc: '현재 상태가 "{status}"이기 때문에 카메라가 일시 중지되어 있습니다. 클릭하면 켜지고 온라인 상태로 돌아갑니다.',
+        },
         share: {
             title: "화면 공유",
             desc: "다른 사용자와 화면을 공유하고 싶으신가요? 가능합니다! 버블이나 회의실에 있는 사람들에게 화면을 보여줄 수 있고, 전체 화면 또는 특정 창만 선택해 공유할 수도 있습니다.",

@@ -3,6 +3,9 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import { get, type Writable } from "svelte/store";
 
 const settings = vi.hoisted(() => ({ keepCamera: false, keepMicrophone: false }));
+const status = vi.hoisted(() => ({ passStatusToOnline: vi.fn() }));
+
+vi.mock("../Rules/StatusRules/statusChangerFunctions", () => ({ passStatusToOnline: status.passStatusToOnline }));
 
 vi.mock("../Connection/LocalUserStore", () => ({
     localUserStore: {
@@ -43,7 +46,7 @@ vi.mock("./PrivacyShutdownStore", async () => {
 
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
-import { heldMediaStore, comeBackWith } from "./HeldMediaStore";
+import { heldMediaStore, comeBackWith, toggleCamera, toggleMicrophone } from "./HeldMediaStore";
 
 const privacyShutdown = privacyShutdownStore as unknown as { set: (value: boolean) => void };
 const availability = availabilityStatusStore as unknown as Writable<AvailabilityStatus>;
@@ -58,6 +61,7 @@ describe("heldMediaStore", () => {
     beforeEach(() => {
         settings.keepCamera = false;
         settings.keepMicrophone = false;
+        status.passStatusToOnline.mockClear();
         requestedCameraState.enableWebcam();
         requestedMicrophoneState.enableMicrophone();
         goAway();
@@ -102,6 +106,7 @@ describe("heldMediaStore", () => {
 
     it("comes back with only the clicked device; the other held one is turned off", () => {
         comeBackWith("camera");
+        expect(status.passStatusToOnline).toHaveBeenCalled();
         expect(get(privacyShutdownStore)).toBe(false);
         expect(get(requestedCameraState)).toBe(true);
         expect(get(requestedMicrophoneState)).toBe(false);
@@ -123,5 +128,37 @@ describe("heldMediaStore", () => {
         comeBackWith("microphone");
         expect(get(requestedCameraState)).toBe(true);
         expect(get(requestedMicrophoneState)).toBe(true);
+    });
+
+    it("a click on a device held by a status the user picked makes them available, with that device only", () => {
+        goAway(AvailabilityStatus.DO_NOT_DISTURB);
+        toggleCamera();
+        expect(status.passStatusToOnline).toHaveBeenCalled();
+        expect(get(requestedCameraState)).toBe(true);
+        expect(get(requestedMicrophoneState)).toBe(false);
+    });
+
+    it("turning a device on under such a status makes the user available too", () => {
+        requestedMicrophoneState.disableMicrophone();
+        goAway(AvailabilityStatus.BACK_IN_A_MOMENT);
+        toggleMicrophone();
+        expect(status.passStatusToOnline).toHaveBeenCalled();
+        expect(get(requestedMicrophoneState)).toBe(true);
+    });
+
+    it("a silent zone keeps its hold: a click does not change the status", () => {
+        privacyShutdown.set(false);
+        availability.set(AvailabilityStatus.SILENT);
+        toggleCamera();
+        expect(status.passStatusToOnline).not.toHaveBeenCalled();
+        expect(get(heldMediaStore).camera).toBe(true);
+    });
+
+    it("a device on and not held goes off, without touching the status", () => {
+        privacyShutdown.set(false);
+        availability.set(AvailabilityStatus.ONLINE);
+        toggleCamera();
+        expect(get(requestedCameraState)).toBe(false);
+        expect(status.passStatusToOnline).not.toHaveBeenCalled();
     });
 });

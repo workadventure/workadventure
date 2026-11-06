@@ -230,10 +230,9 @@ class Menu {
             case "disabled":
                 await expect(button).toHaveClass(/opacity-50/);
                 break;
-            // On for the user, held off by their status: the status dot, and no click.
+            // On for the user, held off by their status: the status dot.
             case "held":
                 await expect(button.getByTestId("status-dot")).toBeVisible();
-                await expect(button).toBeDisabled();
                 break;
             default: {
                 const _exhaustiveCheck: never = state;

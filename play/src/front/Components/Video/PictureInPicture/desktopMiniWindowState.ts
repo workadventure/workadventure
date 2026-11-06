@@ -1,16 +1,10 @@
 import { derived, get, readable, writable, type Readable, type Unsubscriber } from "svelte/store";
 import { AvailabilityStatus, AskPositionMessage_AskType } from "@workadventure/messages";
-import {
-    availabilityStatusStore,
-    requestedCameraState,
-    requestedMicrophoneState,
-    requestedStatusStore,
-} from "../../../Stores/MediaStore";
-import { heldMediaStore, comeBackWith } from "../../../Stores/HeldMediaStore";
+import { availabilityStatusStore, requestedStatusStore } from "../../../Stores/MediaStore";
 import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../../Stores/StreamableCollectionStore";
-import { requestedScreenSharingState, screenSharingAvailableStore } from "../../../Stores/ScreenSharingStore";
+import { requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../../Stores/GameSceneStore";
 import { meetingInvitationRequestStore } from "../../../Stores/MeetingInvitationStore";
 import { calendarEventsStore, isActivatedStore as isCalendarActivatedStore } from "../../../Stores/CalendarStore";
@@ -25,7 +19,7 @@ import type { PlayerInterface } from "../../../Phaser/Game/PlayerInterface";
 import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../../Chat/Connection/ChatConnection";
 import { buildMiniWindowAgenda, type MiniWindowAgenda } from "../../../Api/Desktop/MiniWindowAgenda";
 import { LL } from "../../../../i18n/i18n-svelte";
-import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
+import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
 
 /** The availability statuses the user picks, as the mini window's status dots name them. */
 export type MiniWindowStatus = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
@@ -52,15 +46,7 @@ export type MiniWindowConversation = {
 };
 
 export type MiniWindowMedia = {
-    micEnabled: boolean;
-    cameraEnabled: boolean;
-    /** On for the user, but held off by their status: nobody hears / sees it until the status changes. */
-    micPaused: boolean;
-    cameraPaused: boolean;
-    /** The status holding them: its dot key, its name, and whether it is away mode, which a click ends. */
-    heldBy: { status: string; label: string; away: boolean };
     screenSharing: boolean;
-    canScreenShare: boolean;
     inMeeting: boolean;
     status: MiniWindowStatus;
     /** The user's availability as the app names it ("Away", "In a meeting"...). */
@@ -118,6 +104,17 @@ function availabilityKey(status: AvailabilityStatus): string {
     }
 }
 
+/** A status dot's color: the app's own color for the status the dot stands for. */
+export function statusDotColor(dot: string): string {
+    const statuses: Record<string, AvailabilityStatus> = {
+        busy: AvailabilityStatus.BUSY,
+        back_in_a_moment: AvailabilityStatus.BACK_IN_A_MOMENT,
+        do_not_disturb: AvailabilityStatus.DO_NOT_DISTURB,
+        away: AvailabilityStatus.AWAY,
+    };
+    return getColorHexOfStatus(statuses[dot] ?? AvailabilityStatus.ONLINE);
+}
+
 export function setMiniWindowStatus(status: MiniWindowStatus): void {
     const requested: Record<MiniWindowStatus, RequestedStatus | null> = {
         online: null,
@@ -129,56 +126,15 @@ export function setMiniWindowStatus(status: MiniWindowStatus): void {
 }
 
 export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
-    [
-        isInActiveConversationStore,
-        requestedMicrophoneState,
-        requestedCameraState,
-        requestedScreenSharingState,
-        requestedStatusStore,
-        availabilityStatusStore,
-        screenSharingAvailableStore,
-        heldMediaStore,
-    ],
-    ([$inMeeting, $mic, $cam, $share, $requested, $availability, $canShare, $held]) => ({
-        micEnabled: Boolean($mic),
-        cameraEnabled: Boolean($cam),
-        micPaused: $held.microphone,
-        cameraPaused: $held.camera,
-        heldBy: {
-            status: availabilityKey($held.status),
-            label: getStatusLabel($held.status),
-            away: $held.status === AvailabilityStatus.AWAY,
-        },
+    [isInActiveConversationStore, requestedScreenSharingState, requestedStatusStore, availabilityStatusStore],
+    ([$inMeeting, $share, $requested, $availability]) => ({
         screenSharing: Boolean($share),
-        // Like the app's own action bar: sharing needs a bubble or a live stream.
-        canScreenShare: Boolean($canShare),
         inMeeting: Boolean($inMeeting),
         status: requestedStatusKey($requested),
         statusLabel: getStatusLabel($availability),
         statusLocked: STATUS_LOCKED_SET.has($availability),
     }),
 );
-
-// Turning a device on from here, or one away mode holds, is the user coming back: away mode ends. A device another
-// status holds (busy...) cannot be clicked: the status has to change first.
-export function toggleMicrophone(): void {
-    const held = get(heldMediaStore);
-    if (get(requestedMicrophoneState) && !held.microphone) requestedMicrophoneState.disableMicrophone();
-    else if (held.status === AvailabilityStatus.AWAY) comeBackWith("microphone");
-    else requestedMicrophoneState.enableMicrophone();
-}
-
-export function toggleCamera(): void {
-    const held = get(heldMediaStore);
-    if (get(requestedCameraState) && !held.camera) requestedCameraState.disableWebcam();
-    else if (held.status === AvailabilityStatus.AWAY) comeBackWith("camera");
-    else requestedCameraState.enableWebcam();
-}
-
-export function toggleScreenSharing(): void {
-    if (get(requestedScreenSharingState)) requestedScreenSharingState.disableScreenSharing();
-    else requestedScreenSharingState.enableScreenSharing();
-}
 
 export const miniWindowAgendaStore: Readable<MiniWindowAgenda | undefined> = derived(
     [

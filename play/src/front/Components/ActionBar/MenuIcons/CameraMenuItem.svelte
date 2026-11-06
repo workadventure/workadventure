@@ -19,7 +19,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
-    import { heldMediaStore } from "../../../Stores/HeldMediaStore";
+    import { canComeBackFrom, heldMediaStore, toggleCamera } from "../../../Stores/HeldMediaStore";
 
     // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
@@ -35,6 +35,13 @@
     const cameraActionBarTooltipStore = derived(
         [LL, cameraButtonHelpContextStore, heldMediaStore, silentStore, availabilityStatusStore],
         ([$LL, ctx, held, silent, status]) => {
+            if (held.camera && canComeBackFrom(held.status)) {
+                return {
+                    title: $LL.actionbar.help.camPausedByStatus.title(),
+                    desc: $LL.actionbar.help.camPausedByStatus.desc({ status: getStatusLabel(held.status) }),
+                    media: "",
+                };
+            }
             if (held.camera || silent) {
                 return {
                     title: $LL.actionbar.help.camDisabledByStatus.title(),
@@ -86,11 +93,7 @@
     function cameraClick(): void {
         analyticsClient.trackAdminEvent("media.camera.toggled");
         if ($silentStore) return;
-        if ($requestedCameraState === true) {
-            requestedCameraState.disableWebcam();
-        } else {
-            requestedCameraState.enableWebcam();
-        }
+        toggleCamera();
     }
 </script>
 
@@ -100,6 +103,8 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$cameraButtonStateStore}
     statusDot={$heldMediaStore.camera ? getColorHexOfStatus($heldMediaStore.status) : undefined}
+    statusDotClickable={canComeBackFrom($heldMediaStore.status)}
+    ariaLabel={$LL.actionbar.help.cam.title()}
     dataTestId="camera-button"
     tooltipTitle={$cameraActionBarTooltipStore.title}
     desc={$cameraActionBarTooltipStore.desc}

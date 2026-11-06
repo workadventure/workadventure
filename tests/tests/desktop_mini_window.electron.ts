@@ -80,11 +80,15 @@ test("a visitor shown in the mini window does not end away mode; one click does"
     const ownTile = miniWindow.locator(".group\\/screenshare").first();
     const shutter = ownTile.getByTestId("away-paused-overlay");
     await expect(shutter).toBeVisible();
-    await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(1);
+    // The header's buttons: the meeting layout shown below brings its own, hidden.
+    const header = miniWindow.locator("header");
+    const heldCamera = header.getByTestId("camera-button").getByTestId("status-dot");
+    await expect(heldCamera).toBeVisible();
+    await expect(header.getByTestId("microphone-button").getByTestId("status-dot")).toBeHidden();
 
     await miniWindow.getByTestId("away-paused-turn-on").click();
     await expect(shutter).toBeHidden();
-    await expect(miniWindow.locator('.toolbar-btn[data-state="paused"]')).toHaveCount(0);
+    await expect(heldCamera).toBeHidden();
     // Her camera shows in her own tile, sized to it.
     await expect(ownTile.locator("video")).toBeVisible();
 });
@@ -111,13 +115,13 @@ test("turning a device on from the mini window ends away mode", async ({ browser
     // Nothing is paused: she turned both off herself.
     await expect(miniWindow.getByTestId("away-paused-overlay")).toBeHidden();
 
-    const camera = miniWindow.getByRole("button", { name: "Turn camera on/off" });
-    await camera.click();
-    await expect(camera).toHaveAttribute("data-state", "on");
+    // The header's buttons: the meeting layout shown below brings its own, hidden.
+    const header = miniWindow.locator("header");
+    await header.getByTestId("camera-button").click();
+    await expect(header.getByTestId("camera-button")).not.toHaveClass(/bg-danger/);
     await expect(ownStatus).not.toHaveAttribute("data-status", "away");
     await expect(miniWindow.locator(".group\\/screenshare").first().locator("video")).toBeVisible();
 
-    const microphone = miniWindow.getByRole("button", { name: "Turn microphone on/off" });
-    await microphone.click();
-    await expect(microphone).toHaveAttribute("data-state", "on");
+    await header.getByTestId("microphone-button").click();
+    await expect(header.getByTestId("microphone-button")).not.toHaveClass(/bg-danger/);
 });

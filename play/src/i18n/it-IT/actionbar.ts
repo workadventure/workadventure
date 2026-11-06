@@ -157,6 +157,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Fotocamera disabilitata",
             desc: 'La tua fotocamera è disabilitata perché sei nello stato "{status}".',
         },
+        micPausedByStatus: {
+            title: "Microfono in pausa",
+            desc: 'Il tuo microfono è in pausa perché sei nello stato "{status}". Fai clic per attivarlo e tornare disponibile.',
+        },
+        camPausedByStatus: {
+            title: "Fotocamera in pausa",
+            desc: 'La tua fotocamera è in pausa perché sei nello stato "{status}". Fai clic per attivarla e tornare disponibile.',
+        },
         share: {
             title: "Condividi il tuo schermo",
             desc: "Vuoi condividere il tuo schermo con altri utenti? Puoi farlo! Puoi mostrare il tuo schermo alle persone nella tua bolla o sala riunioni, e puoi scegliere di condividere l'intero schermo o solo una finestra specifica.",
