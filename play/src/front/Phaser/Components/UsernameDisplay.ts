@@ -15,6 +15,9 @@ const USERNAME_FONT_WEIGHT = 500;
 const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 const PLAYER_NAME_PADDING = 4;
+// While the zoom keeps changing, names are only rescaled through their CSS transform (compositor only). Their real
+// layout size, which re-lays out and re-rasterizes every name, is applied once the zoom has been still this long.
+const ZOOM_SETTLE_DELAY_MS = 150;
 
 type Position = { x: number; y: number };
 
@@ -29,6 +32,10 @@ export class UsernameDisplay {
     private readonly statusDisplay: UsernameStatusDisplay;
     private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
     private readonly raisedHandDisplay: UsernameRaisedHandDisplay;
+    // The dom scale the layout (font-size, padding, …) was last applied with. Until the next applyStyles(), the
+    // difference with the current dom scale is made up by the transform.
+    private appliedDomScale = 1;
+    private zoomSettleTimeout: ReturnType<typeof setTimeout> | undefined;
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
         this.displayScale = this.getDisplayScale(zoomModifier);
@@ -37,8 +44,13 @@ export class UsernameDisplay {
         // transform for the new zoom. Applying immediately would measure the previous frame's scale.
         this.gameScene.usernameDomLayer.invalidateAncestorScale();
         this.scene.events.once(Phaser.Scenes.Events.RENDER, () => {
-            this.applyStyles();
+            this.applyTransform();
         });
+        clearTimeout(this.zoomSettleTimeout);
+        this.zoomSettleTimeout = setTimeout(() => {
+            this.zoomSettleTimeout = undefined;
+            this.applyStyles();
+        }, ZOOM_SETTLE_DELAY_MS);
     };
     private toForeFront: boolean = false;
     private depth: number = 0;
@@ -140,6 +152,7 @@ export class UsernameDisplay {
     }
 
     public destroy(): void {
+        clearTimeout(this.zoomSettleTimeout);
         this.element.remove();
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
@@ -214,7 +227,7 @@ export class UsernameDisplay {
     }
 
     private applyTransform(): void {
-        const scale = this.getTransformScale();
+        const scale = (this.getTransformScale() * this.getDomScale()) / this.appliedDomScale;
         const position = this.getDomPosition();
         this.element.style.transform = `translate3d(${position.x}px, ${position.y}px, 0) translate(-50%, -50%) scale(${scale})`;
     }
@@ -232,6 +245,7 @@ export class UsernameDisplay {
 
     private applyStyles(): void {
         const domScale = this.getDomScale();
+        this.appliedDomScale = domScale;
         this.element.style.setProperty("--username-dom-scale", domScale.toString());
         this.element.style.height = `${PLAYER_NAME_HEIGHT * domScale}px`;
         this.element.style.gap = `${PLAYER_NAME_GAP * domScale}px`;
