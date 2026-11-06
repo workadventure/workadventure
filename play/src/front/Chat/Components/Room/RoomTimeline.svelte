@@ -982,6 +982,7 @@
                             <div
                                 class="flex items-center gap-2 px-4 pt-2 pb-1 text-xs font-bold uppercase tracking-wider text-danger"
                                 data-testid="unreadMessagesDivider"
+                                data-options-obstacle
                             >
                                 <span class="h-px flex-1 bg-danger/70"></span>
                                 {$LL.chat.timeLine.unreadDivider()}
@@ -990,8 +991,9 @@
                         {/if}
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
-                                <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
-                                    >{item.label}</span
+                                <span
+                                    class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
+                                    data-options-obstacle>{item.label}</span
                                 >
                             </div>
                         {:else if item.timelineItem.kind === "system"}
