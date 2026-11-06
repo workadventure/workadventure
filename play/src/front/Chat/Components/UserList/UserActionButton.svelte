@@ -232,7 +232,11 @@
                         event.stopPropagation();
                         if (user.uuid) {
                             const scene = gameManager.getCurrentGameScene();
-                            const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
+                            const sent = scene.inviteManager?.requestMeetingInvitation(
+                                user.uuid,
+                                undefined,
+                                user.playUri,
+                            );
                             if (sent) {
                                 try {
                                     scene.playSound("meeting-in", 0.15);
@@ -277,7 +281,11 @@
                         event.stopPropagation();
                         if (user.uuid) {
                             const scene = gameManager.getCurrentGameScene();
-                            const sent = scene.inviteManager?.requestMeetingInvitation(user.uuid);
+                            const sent = scene.inviteManager?.requestMeetingInvitation(
+                                user.uuid,
+                                undefined,
+                                user.playUri,
+                            );
                             if (sent) {
                                 try {
                                     scene.playSound("meeting-in", 0.15);
