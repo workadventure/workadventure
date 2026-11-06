@@ -2,6 +2,24 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "デスクトップアプリ",
+        installed: "インストール済みバージョン",
+        unknown: "取得できません",
+        browser: "ブラウザーでWorkAdventureを使用しています。",
+        recommendedVersion: "推奨バージョン",
+        minimumVersion: "サポート対象の最小バージョン",
+        download: "デスクトップアプリをダウンロード",
+        managed: "組織の更新ポリシーに従ってください。このページはアプリのインストールやダウングレードを行いません。",
+        status: {
+            belowMinimum:
+                "このデスクトップバージョンは、このインスタンスがサポートする最小バージョンより古いものです。続行できますが、一部の機能が動作しない場合があります。",
+            recommended: "このインスタンスの推奨バージョンを使用しています。",
+            different:
+                "使用中のバージョンは、このインスタンスの推奨バージョンと異なります。必ずしも互換性がないとは限りません。",
+            unconfigured: "このインスタンスには推奨バージョンが設定されていません。",
+        },
+    },
     sourcePicker: {
         title: "画面を共有",
         subtitle: "他の参加者に表示する内容を選択してください。",
@@ -18,6 +36,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "キャンセル",
     },
     companion: {
+        annotations: "注釈",
+        allowAnnotations: "他の参加者の注釈を許可",
+        clearAnnotations: "すべて消去",
         chat: "チャット",
         people: "メンバー",
         toggleMic: "マイクのオン/オフ",
@@ -105,14 +126,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "ペン",
         text: "テキスト",
         line: "直線",
+        arrow: "矢印",
         rect: "四角形",
         eraser: "消しゴム",
         red: "赤",
+        yellow: "黄",
         green: "緑",
         blue: "青",
         white: "白",
         black: "黒",
         allowOthers: "他の参加者の注釈を許可",
+        clearAll: "すべて消去",
         toggleMic: "マイクのオン/オフ",
         toggleCamera: "カメラのオン/オフ",
         stopSharing: "画面共有を停止",

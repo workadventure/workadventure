@@ -2,6 +2,25 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "Desktopapplicatie",
+        installed: "Geïnstalleerde versie",
+        unknown: "Niet beschikbaar",
+        browser: "Je gebruikt WorkAdventure in je browser.",
+        recommendedVersion: "Aanbevolen versie",
+        minimumVersion: "Minimaal ondersteunde versie",
+        download: "Desktopapplicatie downloaden",
+        managed:
+            "Volg het updatebeleid van je organisatie. Deze pagina installeert geen applicatie en zet geen oudere versie terug.",
+        status: {
+            belowMinimum:
+                "Deze desktopversie is ouder dan de minimaal ondersteunde versie van deze instantie. Je kunt doorgaan, maar sommige functies werken mogelijk niet.",
+            recommended: "Je gebruikt de aanbevolen versie voor deze instantie.",
+            different:
+                "Je versie wijkt af van de aanbeveling voor deze instantie. Dat betekent niet noodzakelijk dat deze incompatibel is.",
+            unconfigured: "Deze instantie heeft geen aanbevolen versie opgegeven.",
+        },
+    },
     sourcePicker: {
         title: "Je scherm delen",
         subtitle: "Kies wat de andere deelnemers te zien krijgen.",
@@ -18,6 +37,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "Annuleren",
     },
     companion: {
+        annotations: "Annotaties",
+        allowAnnotations: "Anderen laten annoteren",
+        clearAnnotations: "Alles wissen",
         chat: "Chat",
         people: "Personen",
         toggleMic: "Microfoon aan/uit",
@@ -105,14 +127,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "Pen",
         text: "Tekst",
         line: "Lijn",
+        arrow: "Pijl",
         rect: "Rechthoek",
         eraser: "Gum",
         red: "Rood",
+        yellow: "Geel",
         green: "Groen",
         blue: "Blauw",
         white: "Wit",
         black: "Zwart",
         allowOthers: "Anderen laten annoteren",
+        clearAll: "Alles wissen",
         toggleMic: "Microfoon aan/uit",
         toggleCamera: "Camera aan/uit",
         stopSharing: "Stoppen met scherm delen",

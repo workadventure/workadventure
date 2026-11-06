@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
@@ -14,6 +15,8 @@
     let trigger: HTMLButtonElement;
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
+
+    onDestroy(() => closeEmojiPicker?.());
 
     function togglePicker() {
         if (closeEmojiPicker) {

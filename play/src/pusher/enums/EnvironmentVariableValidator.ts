@@ -10,7 +10,37 @@ import {
     toNumber,
 } from "@workadventure/shared-utils/src/EnvironmentVariables/EnvironmentVariableUtils";
 
+import { compareDesktopToRelease, DESKTOP_RELEASE_PATTERN } from "../../common/DesktopVersionPolicy";
+
+const desktopRelease = z
+    .string()
+    .regex(DESKTOP_RELEASE_PATTERN, "Use an exact stable version, e.g. 1.2.3")
+    .or(z.literal(""))
+    .optional()
+    .transform(emptyStringToUndefined);
+
 export const EnvironmentVariables = z.object({
+    DESKTOP_APP_RECOMMENDED_VERSION: desktopRelease.describe(
+        "Desktop release validated for this instance (exact X.Y.Z).",
+    ),
+    DESKTOP_APP_MINIMUM_VERSION: desktopRelease.describe(
+        "Minimum supported desktop release; shows a non-blocking warning.",
+    ),
+    DESKTOP_APP_DOWNLOAD_URL: z
+        .string()
+        .url()
+        .refine((value) => {
+            try {
+                const url = new URL(value);
+                return url.protocol === "https:" && !url.username && !url.password;
+            } catch {
+                return false;
+            }
+        }, "Use an HTTPS download URL without credentials")
+        .or(z.literal(""))
+        .optional()
+        .transform(emptyStringToUndefined)
+        .describe("Approved desktop download page for this instance. Required when a version is configured."),
     // Pusher related environment variables
     SECRET_KEY: z
         .string()
@@ -558,6 +588,27 @@ export const EnvironmentVariables = z.object({
         .optional()
         .transform(emptyStringToUndefined)
         .describe("The S3 CDN endpoint for Livekit recording."),
+});
+
+export const ValidatedEnvironmentVariables = EnvironmentVariables.superRefine((env, context) => {
+    if ((env.DESKTOP_APP_RECOMMENDED_VERSION || env.DESKTOP_APP_MINIMUM_VERSION) && !env.DESKTOP_APP_DOWNLOAD_URL) {
+        context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["DESKTOP_APP_DOWNLOAD_URL"],
+            message: "Provide the approved download URL when pinning a desktop version",
+        });
+    }
+    if (
+        env.DESKTOP_APP_RECOMMENDED_VERSION &&
+        env.DESKTOP_APP_MINIMUM_VERSION &&
+        compareDesktopToRelease(env.DESKTOP_APP_RECOMMENDED_VERSION, env.DESKTOP_APP_MINIMUM_VERSION) === -1
+    ) {
+        context.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ["DESKTOP_APP_RECOMMENDED_VERSION"],
+            message: "Recommended desktop version must be at least the minimum supported version",
+        });
+    }
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

@@ -1,5 +1,7 @@
 <script lang="ts">
     import { onMount, tick } from "svelte";
+    import { screenAnnotationManager } from "../../../Space/ScreenAnnotation/ScreenAnnotationManager";
+    import { localAnnotationActiveStore, screenAnnotationEnabledStore } from "../../../Stores/ScreenAnnotationStore";
     import {
         cameraListStore,
         microphoneListStore,
@@ -32,6 +34,9 @@
     }
 
     let { windows, ownerDocument }: Props = $props();
+
+    // Read the id on each store update: the bar can open before the share's space is known.
+    let othersAllowed = $derived($screenAnnotationEnabledStore.get(screenAnnotationManager.localUserId ?? "") ?? false);
 
     // The desktop app opens the window this high (the pill is pinned to its bottom): a page cannot make a
     // window less than 100 high.
@@ -357,6 +362,36 @@
                 /></svg
             >
         </span>
+        <button
+            type="button"
+            class="bar-btn"
+            class:is-active={$localAnnotationActiveStore}
+            data-testid="desktop-annotate"
+            title={$LL.desktop.meetingBar.annotate()}
+            aria-label={$LL.desktop.meetingBar.annotate()}
+            aria-pressed={$localAnnotationActiveStore}
+            onclick={() => screenAnnotationManager.toggleDrawingOnMyShare()}
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l12-12-4-4L4 16z" /></svg>
+        </button>
+        <button
+            type="button"
+            class="bar-btn"
+            class:is-active={othersAllowed}
+            data-testid="desktop-allow-annotations"
+            aria-pressed={othersAllowed}
+            title={othersAllowed ? $LL.screenAnnotation.disallowAnnotations() : $LL.screenAnnotation.allowAnnotations()}
+            aria-label={othersAllowed
+                ? $LL.screenAnnotation.disallowAnnotations()
+                : $LL.screenAnnotation.allowAnnotations()}
+            onclick={() => screenAnnotationManager.setOthersAllowed(!othersAllowed)}
+        >
+            <svg viewBox="0 0 24 24" aria-hidden="true"
+                ><circle cx="9" cy="7" r="3" /><path
+                    d="M3 21v-2a6 6 0 0 1 12 0v2M17 4a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-3-5"
+                /></svg
+            >
+        </button>
         <button
             class="bar-btn"
             class:is-forbidden={!micEnabled}
