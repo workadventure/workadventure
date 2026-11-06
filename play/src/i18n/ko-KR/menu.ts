@@ -106,17 +106,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "사용자가 도착할 진입 지점을 선택하세요",
     },
     globalMessage: {
-        text: "텍스트",
-        audio: "오디오",
         warning: "월드의 모든 방에 브로드캐스트",
         enter: "여기에 메시지를 입력하세요...",
         send: "보내기",
-    },
-    globalAudio: {
-        uploadInfo: "파일 업로드",
-        error: "파일이 선택되지 않았습니다. 보내기 전에 파일을 업로드해야 합니다.",
-        errorUpload: "파일 업로드 오류입니다. 파일을 확인하고 다시 시도하세요. 문제가 지속되면 관리자에게 문의하세요.",
-        dragAndDrop: "파일을 드래그 앤 드롭하거나 여기를 클릭하여 업로드하세요 🎧",
     },
     contact: {
         gettingStarted: {

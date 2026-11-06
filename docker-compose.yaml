@@ -70,7 +70,6 @@ services:
       # "front" container in production. The pusher reads index.html from Vite (same container).
       ASSETS_URL: http://front.workadventure.localhost
       ASSETS_INTERNAL_URL: http://localhost:8080
-      UPLOADER_URL: http://uploader.workadventure.localhost
       ICON_URL: http://icon.workadventure.localhost
       STUN_SERVER: "${STUN_SERVER:-}"
       TURN_SERVER: "${TURN_SERVER:-}"
@@ -326,30 +325,6 @@ services:
       - "traefik.http.routers.map-storage-ui.entryPoints=web"
       - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
       - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
-
-  uploader:
-    image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie
-    command: npm run dev
-    #command: npm run profile
-    working_dir: /usr/src/app/uploader
-    environment:
-      DEBUG: "*"
-      STARTUP_COMMAND_1: ../npm-install.sh
-      #REDIS
-      REDIS_HOST: "${UPLOADER_REDIS_HOST:-}"
-      REDIS_PORT: "${UPLOADER_REDIS_PORT:-}"
-      REDIS_DB_NUMBER: "${UPLOADER_REDIS_DB_NUMBER:-}"
-      UPLOAD_MAX_FILESIZE: "${UPLOAD_MAX_FILESIZE:-}"
-    volumes:
-      - .:/usr/src/app
-    tmpfs: /tmp
-    ports:
-      - "9234:9229"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.uploader.rule=Host(`uploader.workadventure.localhost`)"
-      - "traefik.http.routers.uploader.entryPoints=web"
-      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
   messages:
     image: ghcr.io/thecodingmachine/nodejs:v2-24-trixie-build

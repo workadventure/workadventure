@@ -107,18 +107,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Selecteer het toegangspunt waar gebruikers zullen arriveren",
     },
     globalMessage: {
-        text: "Tekst",
-        audio: "Audio",
         warning: "Uitzenden naar alle kamers in de wereld",
         enter: "Voer hier je bericht in...",
         send: "Verzenden",
-    },
-    globalAudio: {
-        uploadInfo: "Upload een bestand",
-        error: "Geen bestand geselecteerd. Je moet een bestand uploaden voordat je het kunt verzenden.",
-        errorUpload:
-            "Fout bij het uploaden van bestand. Controleer je bestand en probeer het opnieuw. Als het probleem aanhoudt, neem dan contact op met de beheerder.",
-        dragAndDrop: "Sleep hier je bestand of klik hier om je bestand te uploaden 🎧",
     },
     contact: {
         gettingStarted: {

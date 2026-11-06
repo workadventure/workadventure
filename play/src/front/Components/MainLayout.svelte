@@ -7,7 +7,6 @@
     import { helpSettingsPopupBlockedStore } from "../Stores/HelpSettingsPopupBlockedStore";
     import { menuVisiblilityStore, warningBannerStore } from "../Stores/MenuStore";
     import { textMessageStore } from "../Stores/TypeMessageStore/TextMessageStore";
-    import { soundPlayingStore } from "../Stores/SoundPlayingStore";
     import { modalVisibilityStore, roomListVisibilityStore, showLimitRoomModalStore } from "../Stores/ModalStore";
     import { actionsMenuStore } from "../Stores/ActionsMenuStore";
     import { wokaMenuStore } from "../Stores/WokaMenuStore";
@@ -56,7 +55,6 @@
     import VisitCard from "./VisitCard/VisitCard.svelte";
     import WarningBanner from "./WarningContainer/WarningBanner.svelte";
     import TextMessageContainer from "./TypeMessage/TextMessageContainer.svelte";
-    import AudioPlaying from "./UI/AudioPlaying.svelte";
     import LimitRoomModal from "./Modal/LimitRoomModal.svelte";
     import ActionsMenu from "./ActionsMenu/ActionsMenu.svelte";
     import WokaMenu from "./ActionsMenu/WokaMenu.svelte";
@@ -397,10 +395,6 @@
 
             {#if $helpSettingsPopupBlockedStore}
                 <HelpPopUpBlocked />
-            {/if}
-
-            {#if $soundPlayingStore}
-                <AudioPlaying url={$soundPlayingStore} />
             {/if}
 
             {#if $showLimitRoomModalStore}

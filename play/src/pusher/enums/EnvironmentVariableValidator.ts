@@ -344,7 +344,6 @@ export const EnvironmentVariables = z.object({
     DEBUG_MODE: BoolAsString.optional()
         .transform((val) => toBool(val, false))
         .describe("Enable debug mode with additional console logging. Defaults to false"),
-    UPLOADER_URL: AbsoluteOrRelativeUrl.describe("URL of the file uploader service"),
     ICON_URL: AbsoluteOrRelativeUrl.describe("Base URL for icon resources"),
     STUN_SERVER: z
         .string()

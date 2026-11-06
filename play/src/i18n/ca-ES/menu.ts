@@ -108,18 +108,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Seleccioneu el punt d'entrada pel qual arribaran els usuaris",
     },
     globalMessage: {
-        text: "Text",
-        audio: "Audio",
         warning: "Emissió a totes les habitacions del món",
         enter: "Introduïu el vostre missatge aquí...",
         send: "Enviar",
-    },
-    globalAudio: {
-        uploadInfo: "Pujar un arxiu",
-        error: "Cap arxiu seleccionat. Teniu que pujar un arxiu abans d'enviar-lo.",
-        errorUpload:
-            "Error en carregar el fitxer. Comproveu el vostre fitxer i torneu-ho a provar. Si el problema persisteix, poseu-vos en contacte amb l'administrador.",
-        dragAndDrop: "Arrossegar i deixar anar o fer clic aquí per pujar el vostre fitxer 🎧",
     },
     contact: {
         gettingStarted: {

@@ -106,18 +106,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Chọn điểm vào mà người dùng sẽ xuất hiện",
     },
     globalMessage: {
-        text: "Văn bản",
-        audio: "Âm thanh",
         warning: "Phát tới tất cả các phòng của thế giới",
         enter: "Nhập tin nhắn của bạn tại đây...",
         send: "Gửi",
-    },
-    globalAudio: {
-        uploadInfo: "Tải lên một tệp",
-        error: "Chưa chọn tệp. Bạn cần tải lên một tệp trước khi gửi.",
-        errorUpload:
-            "Lỗi tải tệp lên. Vui lòng kiểm tra tệp và thử lại. Nếu sự cố vẫn tiếp diễn, hãy liên hệ quản trị viên.",
-        dragAndDrop: "Kéo thả hoặc bấm vào đây để tải tệp của bạn lên 🎧",
     },
     contact: {
         gettingStarted: {
