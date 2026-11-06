@@ -10,10 +10,16 @@ import {
 import * as Sentry from "@sentry/node";
 import { CLIENT_DISCONNECTION_RETENTION_MS } from "../enums/EnvironmentVariable";
 import { NoncedMessageStore } from "../../common/NoncedMessageStore";
+import { WS_CLOSE_CODE_SESSION_DESTROYED } from "../../common/WebSocketCloseCodes";
 
 import type { SocketData } from "../models/Websocket/SocketData";
 
 export type RawSocket = WebSocket<SocketData>;
+
+// What one socket may keep for a resume within CLIENT_DISCONNECTION_RETENTION_MS. Steady traffic is batched every
+// 100 ms (well under 1,000 frames per 30 s); on 2026-09-08 an uncapped store took a pusher to a 1 GB heap.
+export const RESUME_STORE_MAX_MESSAGES = 2_000;
+export const RESUME_STORE_MAX_BYTES = 4 * 1024 * 1024;
 
 export class PusherWebSocket {
     private static readonly KEEP_ALIVE_INTERVAL_MS = 25_000;
@@ -35,6 +41,8 @@ export class PusherWebSocket {
     private transportAvailable = true;
     private readonly outgoingMessagesStore = new NoncedMessageStore<Uint8Array<ArrayBuffer>>(
         CLIENT_DISCONNECTION_RETENTION_MS,
+        RESUME_STORE_MAX_MESSAGES,
+        RESUME_STORE_MAX_BYTES,
     );
 
     public constructor(socket: RawSocket) {
@@ -53,13 +61,22 @@ export class PusherWebSocket {
             message,
         }).finish();
         this.nextOutgoingNonce += 1;
-        this.outgoingMessagesStore.add(nonce, payloadWithNonce);
+        // Over its caps, the store drops everything. Frames already handed to uWS only lose their replay on a resume,
+        // but frames still waiting for a drain are lost for good: this session can no longer go on.
+        const stored = this.outgoingMessagesStore.add(nonce, payloadWithNonce);
 
         if (!this.transportAvailable || this.waitingForDrain || nonce > this.lastSentNonce + 1) {
+            if (!stored) {
+                this.closeAfterLostMessages();
+            }
             return 0;
         }
 
-        return this.sendStoredPayload(nonce, payloadWithNonce);
+        const sendStatus = this.sendStoredPayload(nonce, payloadWithNonce);
+        if (!stored && sendStatus === 2) {
+            this.closeAfterLostMessages();
+        }
+        return sendStatus;
     }
 
     public handleDrain(): void {
@@ -315,6 +332,22 @@ export class PusherWebSocket {
             event: "",
             payload: [],
         };
+    }
+
+    private closeAfterLostMessages(): void {
+        if (!this.transportAvailable) {
+            // Nothing to close: hasEveryNonceAfter() will refuse the resume, and the retention timeout ends the session.
+            return;
+        }
+        const { userUuid, tabId } = this.socket.getUserData();
+        console.warn(`Closing the WebSocket of user ${userUuid} on tab ${tabId}: too many messages waiting for it`);
+        Sentry.captureMessage("Closing a WebSocket that fell too far behind to be resumed", {
+            tags: { userUuid, tabId },
+        });
+        // Not this.end(): it flags the socket as disconnecting, and SocketManager.cleanupSocket() skips flagged sockets,
+        // which would leave the user in the room. Ending the transport runs the close handler (synchronously in uWS),
+        // which destroys the session like any 4000 close; the client then joins from scratch instead of resuming.
+        this.socket.end(WS_CLOSE_CODE_SESSION_DESTROYED, "Too many messages waiting for this client");
     }
 
     private sendStoredPayload(nonce: number, payload: Uint8Array<ArrayBuffer>): ReturnType<RawSocket["send"]> {
