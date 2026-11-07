@@ -1163,6 +1163,7 @@ export class RoomConnection implements RoomConnection {
                     type: message.type,
                     content: message.content,
                     broadcastToWorld: message.broadcastToWorld,
+                    joinUrl: message.joinUrl,
                 },
             },
         });

@@ -1,9 +1,29 @@
 import type { BaseTranslation } from "../i18n-types";
 
 const megaphone: BaseTranslation = {
+    announcement: {
+        title: "Send an announcement",
+        audience: "Who receives it?",
+        thisRoom: "This room",
+        wholeWorld: "Whole world",
+        place: "Place to join (optional)",
+        noPlace: "No place",
+        noPlaceOnMap: "This map has no named area yet.",
+        preview: "Preview",
+        sendToRoom: "Send to this room",
+        sendToWorld: "Send to the whole world",
+        confirmWorld: "Every room of the world will receive it.",
+        confirmSend: "Yes, send to the whole world",
+        cancel: "Cancel",
+        sentToRoom: "Announcement sent to this room",
+        sentToWorld: "Announcement sent to the whole world",
+        join: "Join {place}",
+        joinMap: "Join",
+        placeNotFound: "This place no longer exists on the map.",
+        admin: "Administrator",
+        more: "Announcements waiting: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Back to select communication",
-        title: "Global communication",
         liveMessage: {
             startMegaphone: "Start megaphone",
             stopMegaphone: "Stop megaphone",
@@ -12,29 +32,9 @@ const megaphone: BaseTranslation = {
             yourCamera: "your camera",
             yourScreen: "your screen",
             title: "Megaphone",
-            button: "Start live message",
             and: "and",
             toAll: "to all participants",
-            notice: `
-            The live message or "Megaphone" allows you to send a live message with your camera and microphone to all the people connected in the room or the world.
-
-            This message will be displayed at the bottom corner of the screen, like a video call or bubble discussion.
-
-            An example of a live message use case: "Hello everyone, shall we start the conference? 🎉 Follow my avatar to the conference area and open the video app 🚀"
-            `,
             settings: "Settings",
-        },
-        textMessage: {
-            title: "Text message",
-            notice: `
-            The text message allows you to send a message to all the people connected in the room or the world.
-
-            This message will be displayed as a popup at the top of the page and will be accompanied by a sound to identify that the information is readable.
-
-            An example of a message: "The conference in room 3 starts in 2 minutes 🎉. You can go to conference area 3 and open the video app 🚀"
-            `,
-            button: "Send a text message",
-            noAccess: "You don't have access to this feature 😱 Please contact the administrator 🙏",
         },
     },
 };

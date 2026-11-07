@@ -95,6 +95,8 @@ export interface PlayGlobalMessageInterface {
     type: string;
     content: string;
     broadcastToWorld: boolean;
+    /** "<room URL>#moveTo=<area>", or "" for an announcement that leads nowhere. */
+    joinUrl: string;
 }
 
 export interface OnConnectInterface {

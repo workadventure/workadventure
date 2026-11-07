@@ -2,7 +2,6 @@
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
     import {
-        globalMessageVisibleStore,
         mapManagerActivated,
         mapEditorMenuVisibleStore,
         openedMenuStore,
@@ -22,7 +21,9 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconDesk, IconDeskExit, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
+    import { IconMapSearch, IconDesk, IconDeskExit, IconSpeakerPhone, IconMapEditor, IconMessageShare } from "@wa-icons";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
+    import { megaphoneCanBeUsedStore } from "../../../Stores/MegaphoneStore";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -34,8 +35,8 @@
         showModalGlobalComminucationVisibilityStore.set(false);
     }
 
-    function toggleGlobalMessage() {
-        if ($showModalGlobalComminucationVisibilityStore) {
+    function toggleGlobalCommunication(mode: "text" | "live") {
+        if ($showModalGlobalComminucationVisibilityStore === mode) {
             showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
@@ -44,7 +45,8 @@
         resetChatVisibility();
         resetModalVisibility();
         mapEditorModeStore.switchMode(false);
-        showModalGlobalComminucationVisibilityStore.set(true);
+        if (mode === "text") analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
+        showModalGlobalComminucationVisibilityStore.set(mode);
     }
 
     function toggleMapEditorMode() {
@@ -141,8 +143,24 @@
         <IconMapSearch font-size="20" />
     </ActionBarButton>
 {/if}
-{#if $globalMessageVisibleStore}
-    <ActionBarButton onclick={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
+<!-- Each entry only for those allowed to use it, rather than a window of greyed-out buttons. -->
+{#if $userIsAdminStore}
+    <ActionBarButton
+        onclick={() => toggleGlobalCommunication("text")}
+        label={$LL.actionbar.sendAnnouncement()}
+        state={$showModalGlobalComminucationVisibilityStore === "text" ? "active" : "normal"}
+        dataTestId="send-announcement-button"
+    >
+        <IconMessageShare font-size="20" />
+    </ActionBarButton>
+{/if}
+{#if $megaphoneCanBeUsedStore}
+    <ActionBarButton
+        onclick={() => toggleGlobalCommunication("live")}
+        label={$LL.actionbar.goLive()}
+        state={$showModalGlobalComminucationVisibilityStore === "live" ? "active" : "normal"}
+        dataTestId="go-live-button"
+    >
         <IconSpeakerPhone font-size="20" />
     </ActionBarButton>
 {/if}

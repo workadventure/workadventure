@@ -19,25 +19,19 @@
     import LL from "../../../i18n/i18n-svelte";
     import microphoneImg from "../images/mic.svg";
     import cameraImg from "../images/cam.svg";
-    import TextGlobalMessage, { type TextGlobalMessageHandle } from "../Menu/TextGlobalMessage.svelte";
     import { srcObject } from "../Video/utils";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { megaphoneCanBeUsedStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
-    import { userIsAdminStore } from "../../Stores/GameStore";
+    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { startMegaphoneLive, stopMegaphoneLive } from "../ActionBar/MenuIcons/megaphoneActions";
     import Tooltip from "../Util/Tooltip.svelte";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
-    import InputCheckbox from "../Input/InputCheckbox.svelte";
     import Button from "../UI/Button.svelte";
-    import { IconAlertTriangle, IconInfoCircle, IconMessageShare, IconSpeakerPhone } from "@wa-icons";
+    import { IconAlertTriangle, IconSpeakerPhone } from "@wa-icons";
 
-    let inputSendTextActive = $state(false);
-    let broadcastToWorld = $state(false);
-    let handleSendText: TextGlobalMessageHandle | undefined = $state();
     let stream: MediaStream | undefined = $state();
 
     const unsubscribeLocalStreamStore = localStreamStore.subscribe((value) => {
@@ -53,6 +47,9 @@
         displayedMegaphoneScreenStore.set(false);
     });
 
+    // "Go live" in the map menu opens this sheet straight on the megaphone.
+    activateLiveMessage();
+
     function close() {
         streamingMegaphoneStore.set(false);
         showModalGlobalComminucationVisibilityStore.set(false);
@@ -67,46 +64,7 @@
     function activateLiveMessage() {
         streamingMegaphoneStore.set(true);
         displayedMegaphoneScreenStore.set(true);
-        inputSendTextActive = false;
         analyticsClient.trackAdminEvent("megaphone.opened");
-    }
-
-    function activateInputText() {
-        displayedMegaphoneScreenStore.set(false);
-        inputSendTextActive = true;
-        analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
-    }
-
-    function back() {
-        displayedMegaphoneScreenStore.set(false);
-        inputSendTextActive = false;
-    }
-
-    function send(): void {
-        analyticsClient.trackAdminEvent("global_message.text_sent");
-        handleSendText?.sendTextMessage(broadcastToWorld);
-        close();
-    }
-
-    // function to play video
-    function playVideo(event: Event) {
-        if (!(event.target instanceof HTMLVideoElement)) return;
-        // play video
-        event.target.play().catch(() => console.error("error playing video"));
-    }
-
-    // function to stop video
-    function stopVideo(event: Event) {
-        if (!(event.target instanceof HTMLVideoElement)) return;
-        // stop video
-        event.target.pause();
-    }
-
-    // function to put full screen video
-    function fullScreenVideo(event: MouseEvent) {
-        if (!(event.target instanceof HTMLVideoElement)) return;
-        // full screen video
-        event.target.requestFullscreen().catch(() => console.error("error playing video"));
     }
 
     // Sync with MediaSettingsList: prefer used store, then requested, then current stream
@@ -169,175 +127,18 @@
         </div> -->
         <header class="flex flex-row items-start justify-between p-2">
             <div class="flex flex-col gap-2 p-4">
-                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl">
-                    {$LL.megaphone.modal.title()}
+                <h2 class="text-center text-white mobile text-base md:text-xl lg:text-2xl flex items-center gap-2">
+                    <IconSpeakerPhone font-size="22" />
+                    {$LL.megaphone.modal.liveMessage.title()}
                 </h2>
-
-                {#if $displayedMegaphoneScreenStore || inputSendTextActive}
-                    <!-- svelte-ignore a11y_invalid_attribute -->
-                    <a
-                        href="#"
-                        class="px-4 py-2 text-white no-underline bg-white/10 rounded hover:bg-white/20 flex flex-row items-center text-xs m-0 w-fit"
-                        onclick={(event) => {
-                            event.preventDefault();
-                            event.stopPropagation();
-                            back();
-                        }}
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="12px"
-                            height="12px"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="feather feather-arrow-left cursor-pointer"
-                            ><line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" /></svg
-                        >
-                        <span class="ml-1 cursor-pointer">{$LL.megaphone.modal.backToSelectCommunication()}</span>
-                    </a>
-                {/if}
             </div>
             <div class="group/btn-chat transition-all" id="btn-chat">
                 <ButtonClose onclick={close} />
             </div>
         </header>
         <div class="px-5 h-full">
-            {#if !$displayedMegaphoneScreenStore && !inputSendTextActive}
-                <div class="flex flex-col md:flex-row md:justify-center h-full">
-                    <div
-                        id="content-liveMessage"
-                        class="flex flex-col md:w-1/2 w-full px-5 mb-6 h-full justify-between"
-                    >
-                        <h4 class="text-white mb-2">
-                            <IconSpeakerPhone class="h-8 w-8 mr-1 inline" font-size="22" />
-                            {$LL.megaphone.modal.liveMessage.title()}
-                        </h4>
-
-                        <Button
-                            variant="light"
-                            appearance="border"
-                            size="lg"
-                            class="mt-2 mb-4"
-                            onclick={activateLiveMessage}
-                            disabled={!$megaphoneCanBeUsedStore}
-                        >
-                            {$LL.megaphone.modal.liveMessage.button()}
-                        </Button>
-
-                        {#if !$megaphoneCanBeUsedStore}
-                            <p class="help-text !text-danger-800">
-                                <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                                {$LL.megaphone.modal.textMessage.noAccess()}
-                            </p>
-                        {/if}
-
-                        <p class="text-white text-sm whitespace-pre-line">
-                            {$LL.megaphone.modal.liveMessage.notice()}
-                        </p>
-
-                        <div class="mt-auto pt-4">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_live_message.mp4"
-                                class="w-full cursor-pointer rounded"
-                                controls
-                                muted
-                                onmouseover={playVideo}
-                                onmouseout={stopVideo}
-                                onfocus={playVideo}
-                                onblur={stopVideo}
-                                onclick={fullScreenVideo}
-                            ></video>
-                        </div>
-                    </div>
-
-                    <div
-                        id="content-textMessage"
-                        class="flex flex-col md:w-1/2 w-full px-5 mb-6 h-full justify-between"
-                    >
-                        <h4 class="text-white mb-2">
-                            <IconMessageShare class="h-8 w-8 mr-1 inline" />
-                            {$LL.megaphone.modal.textMessage.title()}
-                        </h4>
-
-                        <Button
-                            variant="light"
-                            appearance="border"
-                            size="lg"
-                            class="mb-4"
-                            onclick={activateInputText}
-                            disabled={!$userIsAdminStore}
-                        >
-                            {$LL.megaphone.modal.textMessage.button()}
-                        </Button>
-
-                        {#if !$userIsAdminStore}
-                            <p class="help-text !text-danger-800">
-                                <IconInfoCircle class="mr-2 mb-1 min-w-6" font-size="18" />
-                                {$LL.megaphone.modal.textMessage.noAccess()}
-                            </p>
-                        {/if}
-
-                        <p class="text-white text-sm whitespace-pre-line">
-                            {$LL.megaphone.modal.textMessage.notice()}
-                        </p>
-
-                        <div class="mt-auto pt-4">
-                            <video
-                                src="https://workadventure-chat-uploads.s3.eu-west-1.amazonaws.com/upload/video/global_text_message.mp4"
-                                class="w-full cursor-pointer rounded"
-                                controls
-                                muted
-                                onmouseover={playVideo}
-                                onmouseout={stopVideo}
-                                onfocus={playVideo}
-                                onblur={stopVideo}
-                                onclick={fullScreenVideo}
-                            ></video>
-                        </div>
-                    </div>
-                </div>
-            {/if}
-
-            {#if inputSendTextActive}
-                <div id="active-globalMessage" class="flex flex-col p-5">
-                    {#if inputSendTextActive}
-                        <h3 class="text-white mb-2">
-                            <textMessageIcon class="h-8 w-8 mr-1" font-size="22"></textMessageIcon>
-                            {$LL.megaphone.modal.textMessage.title()}
-                        </h3>
-                        <TextGlobalMessage bind:handleSending={handleSendText} />
-                    {/if}
-                    <div class="flex justify-center">
-                        <InputCheckbox label={$LL.menu.globalMessage.warning()} bind:value={broadcastToWorld} />
-                    </div>
-                    <div class="flex justify-center">
-                        <section class="centered-column">
-                            <Button
-                                variant="light"
-                                onclick={(event) => {
-                                    event.preventDefault();
-                                    send();
-                                }}
-                            >
-                                {$LL.menu.globalMessage.send()}
-                            </Button>
-                        </section>
-                    </div>
-                </div>
-            {/if}
             {#if $displayedMegaphoneScreenStore}
                 <div id="active-liveMessage" class="flex flex-col p-5 text-white">
-                    <div>
-                        <h3>
-                            <IconSpeakerPhone class="h-8 w-8 mr-1 text-white" font-size="22" />
-                            {$LL.megaphone.modal.liveMessage.title()}
-                        </h3>
-                    </div>
-
                     <div class="flex flex-col md:flex-row justify-center">
                         <div class="flex flex-col mr-5">
                             <video

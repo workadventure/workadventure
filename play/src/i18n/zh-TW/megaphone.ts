@@ -2,9 +2,29 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "發送公告",
+        audience: "誰會收到？",
+        thisRoom: "此房間",
+        wholeWorld: "整個世界",
+        place: "前往的地點（選填）",
+        noPlace: "無地點",
+        noPlaceOnMap: "此地圖還沒有命名區域。",
+        preview: "預覽",
+        sendToRoom: "發送到此房間",
+        sendToWorld: "發送到整個世界",
+        confirmWorld: "世界中的所有房間都會收到。",
+        confirmSend: "是，發送到整個世界",
+        cancel: "取消",
+        sentToRoom: "公告已發送到此房間",
+        sentToWorld: "公告已發送到整個世界",
+        join: "前往{place}",
+        joinMap: "前往",
+        placeNotFound: "該地點已不在地圖上。",
+        admin: "管理員",
+        more: "等待中的公告：{count}",
+    },
     modal: {
-        backToSelectCommunication: "返回選擇通訊方式",
-        title: "全域通訊",
         liveMessage: {
             startMegaphone: "開始擴音器",
             stopMegaphone: "停止擴音器",
@@ -13,29 +33,9 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             yourCamera: "您的攝影機",
             yourScreen: "您的螢幕",
             title: "擴音器",
-            button: "開始即時訊息",
             and: "和",
             toAll: "向所有參與者",
-            notice: `
-            即時訊息或「擴音器」允許您使用攝影機和麥克風，向房間或世界中所有連線的人員傳送即時訊息。
-
-            此訊息將顯示在螢幕底部角落，就像視訊通話或討論氣泡一樣。
-
-            即時訊息的使用範例：「大家好，我們開始會議好嗎？🎉 跟隨我的頭像前往會議區域並開啟視訊應用程式 🚀」
-            `,
             settings: "設定",
-        },
-        textMessage: {
-            title: "文字訊息",
-            notice: `
-            文字訊息允許您向房間或世界中所有連線的人員傳送訊息。
-
-            此訊息將以彈出視窗的形式顯示在頁面頂部，並伴有聲音以提示訊息可供閱讀。
-
-            訊息範例：「3 號房間的會議將在 2 分鐘後開始 🎉。您可以前往會議區域 3 並開啟視訊應用程式 🚀」
-            `,
-            button: "傳送文字訊息",
-            noAccess: "您無權存取此功能 😱 請聯絡管理員 🙏",
         },
     },
 };

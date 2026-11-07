@@ -146,6 +146,11 @@ export class AdminController extends BaseHttpController {
                                         message: text,
                                         roomId: roomId,
                                         type: "", // TODO: what to put here?
+                                        // Sent from the admin API, not by a player: no sender, no place.
+                                        senderName: "",
+                                        senderTextures: [],
+                                        broadcastToWorld: false,
+                                        joinUrl: "",
                                     },
                                     (err) => {
                                         if (err) {
