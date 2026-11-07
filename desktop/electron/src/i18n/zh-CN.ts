@@ -81,7 +81,6 @@ const zhCN: NativeStrings = {
     "tray.status.idle": "空闲",
     "tray.status.online": "在线",
     "tray.status.offline": "离线",
-    "tray.statusLocked": "会议期间无法更改状态",
     "tray.microphone": "麦克风",
     "tray.camera": "摄像头",
     "tray.companionPanel": "伴侣面板",

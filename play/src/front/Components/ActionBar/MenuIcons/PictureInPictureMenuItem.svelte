@@ -9,7 +9,6 @@
         allowPictureInPictureStore,
         askPictureInPictureActivatingStore,
     } from "../../../Stores/PeerStore";
-    import { getDesktopPipApi } from "../../Video/PictureInPicture/NativePictureInPictureClient";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
@@ -20,12 +19,12 @@
     const { onclick }: Props = $props();
 
     // The desktop app decides when its companion opens: the button opens or closes it by hand.
-    const desktopPip = getDesktopPipApi();
+    const desktopWindows = window.WAD?.desktop ? window.WAD.windows : undefined;
 
     function pictureInPictureClick() {
         // Analytics
         analyticsClient.trackAdminEvent("meeting.picture_in_picture.toggled", {
-            open: desktopPip ? !$activePictureInPictureStore : !$askPictureInPictureActivatingStore,
+            open: desktopWindows ? !$activePictureInPictureStore : !$askPictureInPictureActivatingStore,
         });
 
         // Create request to the navigateur to enter picture in picture mode
@@ -36,8 +35,8 @@
             allowPictureInPictureStore.set(true);
         }
 
-        if (desktopPip) {
-            desktopPip.toggle();
+        if (desktopWindows) {
+            desktopWindows.toggleCompanion();
             return;
         }
         askPictureInPictureActivatingStore.set(!$askPictureInPictureActivatingStore);

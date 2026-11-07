@@ -85,7 +85,6 @@ const ar: NativeStrings = {
     "tray.status.idle": "خامل",
     "tray.status.online": "متاح",
     "tray.status.offline": "غير متصل",
-    "tray.statusLocked": "لا يمكن تغيير الحالة أثناء الاجتماع",
     "tray.microphone": "الميكروفون",
     "tray.camera": "الكاميرا",
     "tray.companionPanel": "اللوحة المرافقة",

@@ -92,7 +92,6 @@ const de: NativeStrings = {
     "tray.status.idle": "Inaktiv",
     "tray.status.online": "Verfügbar",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Der Status kann während eines Meetings nicht geändert werden",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",
     "tray.companionPanel": "Begleitfenster",

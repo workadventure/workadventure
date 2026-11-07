@@ -69,6 +69,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     otherMeetingMuted:
         "Sćo něnto how na zmakanju. Waš mikrofon, kamera a źělenje wobrazowki su se w {world} wótšaltowali.",
+    desktopAppOutdated: "Nowa wersija aplikacije WorkAdventure jo k dispoziciji: {url}",
 };
 
 export default warning;

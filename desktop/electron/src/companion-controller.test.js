@@ -25,7 +25,13 @@ vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
 vi.mock("./hud-windows", () => ({
     isHudWindowOpen: () => fake.companion !== undefined,
     getHudWindow: () => fake.companion,
-    openHudWindow: () => {
+    closeHudWindow: () => {
+        fake.companion = undefined;
+    },
+}));
+// Opening the window goes through the world page (window.open), faked here.
+vi.mock("./child-windows", () => ({
+    openChildWindow: () => {
         const listeners = {};
         fake.companion = {
             once: (event, callback) => (listeners[event] = callback),
@@ -37,9 +43,6 @@ vi.mock("./hud-windows", () => ({
             },
         };
         return Promise.resolve(true);
-    },
-    closeHudWindow: () => {
-        fake.companion = undefined;
     },
 }));
 vi.mock("./presence", () => ({

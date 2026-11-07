@@ -12,93 +12,6 @@ export interface DesktopCapturerSource {
     display_id?: number;
 }
 
-export interface DesktopWindowState {
-    focused: boolean;
-    visible: boolean;
-    minimized: boolean;
-}
-
-export type DesktopPipSdp = {
-    type: "offer" | "answer" | "pranswer" | "rollback";
-    sdp?: string;
-};
-
-export type DesktopPipTile = {
-    /** Stable per-streamable id. Used by the PiP renderer to dedupe and reconcile placeholders. */
-    tileKey: string;
-    /** Empty string when this is a placeholder tile (peer present but no video track published). */
-    trackId: string;
-    name: string;
-    isSelf: boolean;
-    hasAudio: boolean;
-    hasVideo: boolean;
-    /** Base64 data URL of the participant's Woka; optional — the tile falls back to a colour disc. */
-    woka?: string;
-    /** True while the participant is speaking (voice indicator) — drives the active-speaker border. */
-    speaking?: boolean;
-    /** Local playback volume for this participant (0..1), for the tile menu's volume control. */
-    volume?: number;
-    /** True when the participant has a visit card (enables the "visit card" tile-menu action). */
-    hasVisitCard?: boolean;
-    /** The screen share shown large, like in the browser's picture-in-picture: the first remote one. */
-    highlighted?: boolean;
-};
-
-/** A proximity-chat message mirrored into the floating desktop window. */
-export type DesktopPipChatMessage = {
-    id: string;
-    author: string;
-    text: string;
-    isSelf: boolean;
-};
-
-export type DesktopPipState = {
-    tiles: DesktopPipTile[];
-    micEnabled: boolean;
-    cameraEnabled: boolean;
-    screenSharing: boolean;
-    canScreenShare: boolean;
-    /** Optional: recording state (true if a recording is currently active). */
-    recording?: boolean;
-    canRecord?: boolean;
-    /** Recent proximity-chat messages (oldest first) shown in the floating window. */
-    chatMessages?: DesktopPipChatMessage[];
-    /** True when the local user can moderate the meeting (mute-everybody / kick tile actions). */
-    canModerate?: boolean;
-    /** True when the local user may ask others to mute (non-admin ask-to-mute tile actions). */
-    canAskToMute?: boolean;
-};
-
-export type DesktopPipCommand =
-    | { type: "toggle-mic" }
-    | { type: "toggle-camera" }
-    | { type: "toggle-screenshare" }
-    | { type: "pick-source"; sourceId: string; sourceName: string; displayId?: number }
-    | { type: "focus-main" }
-    | { type: "close" }
-    | { type: "send-chat"; text: string }
-    | { type: "send-reaction"; emote: string }
-    | { type: "pick-device"; kind: "camera" | "microphone"; deviceId: string };
-
-export type WorkAdventureDesktopPipApi = {
-    readonly supported: true;
-    /** Start the meeting video in the companion; false unless the app asked for it (onWanted). */
-    open: () => Promise<boolean>;
-    close: () => Promise<void>;
-    /** The PiP button: open or close the companion by hand. */
-    toggle: () => void;
-    /** The app wants the meeting video in the companion (true) or not any more (false). */
-    onWanted: (callback: (wanted: boolean) => void) => () => void;
-    sendOffer: (sdp: DesktopPipSdp) => void;
-    sendIce: (candidate: RTCIceCandidateInit) => void;
-    sendState: (state: DesktopPipState) => void;
-    onAnswer: (callback: (sdp: DesktopPipSdp) => void) => () => void;
-    onIce: (callback: (candidate: RTCIceCandidateInit) => void) => () => void;
-    onClosed: (callback: () => void) => () => void;
-    onRequestClose: (callback: () => void) => () => void;
-    onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
-};
-
 /**
  * `trustOrigin`: the address is unknown to the portal's admin (a self-hosted server); only returned to
  * the native Landing, which may then offer to add that server (trustServerAndJoin).
@@ -115,37 +28,11 @@ export type WorkAdventureDesktopNavigationApi = {
     joinWorld: (url: string) => Promise<DesktopNavigationResult>;
     /** Add a self-hosted server the user confirmed on the native Landing, then open the world. */
     trustServerAndJoin?: (url: string) => Promise<DesktopNavigationResult>;
-    getRecentWorlds: () => Promise<DesktopRecentWorld[]>;
+    getRecentWorlds?: () => Promise<DesktopRecentWorld[]>;
     getPinnedWorlds?: () => Promise<DesktopRecentWorld[]>;
     togglePin?: (url: string) => Promise<{ ok: boolean; pinned?: boolean; error?: string }>;
     isPinned?: (url: string) => Promise<boolean>;
     openAdminSignup: () => Promise<DesktopNavigationResult>;
-};
-
-/**
- * State pushed to the floating presenter HUD window (meeting bar) shown on the shared screen. It is
- * content-protected: visible to the presenter, excluded from the captured pixels.
- */
-export type DesktopPresenterHudState = {
-    micEnabled: boolean;
-    cameraEnabled: boolean;
-    screenSharing: boolean;
-    /** Available cam/mic input devices + current selection, for the bar's "Change cam / mic" picker. */
-    devices?: {
-        cameras: { id: string; label: string }[];
-        microphones: { id: string; label: string }[];
-        currentCameraId?: string;
-        currentMicrophoneId?: string;
-    };
-};
-
-/**
- * Drives the presenter HUD (Zoom-style meeting bar), placed on the shared display. Commands raised by
- * the bar reuse the {@link DesktopPipCommand} union.
- */
-export type WorkAdventureDesktopHudApi = {
-    pushState: (state: DesktopPresenterHudState) => void;
-    onCommand: (callback: (command: DesktopPipCommand) => void) => () => void;
 };
 
 export type DesktopNotificationPayload = {
@@ -155,61 +42,6 @@ export type DesktopNotificationPayload = {
     tag?: string;
     /** Silent notifications don't play a sound / bounce the dock. */
     silent?: boolean;
-};
-
-/** A room/nearby participant shown in the companion People tab. */
-export type CompanionUser = {
-    id: string;
-    name: string;
-    status: string;
-    color?: string;
-    isSelf: boolean;
-    inBubble?: boolean;
-    /** Base64 data URL of the user's Woka avatar; optional — the panel falls back to a colour disc. */
-    woka?: string;
-};
-
-export type CompanionMessage = {
-    id: string;
-    author: string;
-    text: string;
-    isSelf: boolean;
-    /** Epoch ms of the message; 0 when unknown. Drives per-message time + date separators. */
-    ts: number;
-    /** Proximity system notice (e.g. "New discussion with X") — rendered centered, not as a bubble. */
-    system?: boolean;
-};
-
-export type CompanionConversation = {
-    id: string;
-    name: string;
-    kind: "nearby" | "direct" | "room";
-    preview: string;
-    lastActivityAt: number;
-    unreadCount: number;
-    highlightCount: number;
-    /** Base64 data URL of the conversation avatar (e.g. the local Woka for the proximity chat). */
-    woka?: string;
-};
-
-export type CompanionSelectedConversation = {
-    id: string;
-    name: string;
-    messages: CompanionMessage[];
-};
-
-export type CompanionMedia = {
-    micEnabled: boolean;
-    cameraEnabled: boolean;
-    screenSharing: boolean;
-    canScreenShare: boolean;
-    inMeeting: boolean;
-    status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
-    statusLocked: boolean;
-};
-
-export type CompanionInvitation = {
-    name: string;
 };
 
 /** A meeting of the day in the companion's Today view; texts formatted by the world. */
@@ -246,65 +78,55 @@ export type CompanionAgenda = {
     tasks?: { open: number; items: CompanionAgendaTask[] };
 };
 
-export type CompanionState = {
-    world: { name: string; participantCount: number };
-    users: CompanionUser[];
-    conversations: CompanionConversation[];
-    selectedConversation?: CompanionSelectedConversation | null;
-    media: CompanionMedia;
-    invitation?: CompanionInvitation | null;
-    /** Matrix chat availability, so the empty conversation list isn't mistaken for "no chat". */
-    chatStatus?: "connecting" | "online" | "unavailable";
-    /** The day's meetings and the most urgent tasks; absent when the world has neither. */
-    agenda?: CompanionAgenda;
-};
+/** The floating windows the world page renders as child windows. */
+export type DesktopChildWindowKind = "companion" | "meeting-bar";
 
-export type CompanionCommand =
-    | { type: "focus-main" }
-    | { type: "close" }
-    | { type: "toggle-mic" }
-    | { type: "toggle-camera" }
-    | { type: "toggle-screenshare" }
-    | { type: "set-status"; status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb" }
-    | { type: "select-conversation"; conversationId: string }
-    | { type: "send-message"; conversationId: string; text: string }
-    | { type: "open-conversation-in-main"; conversationId: string }
-    | { type: "dm"; userId: string }
-    | { type: "locate"; userId: string }
-    | { type: "invite"; userId: string }
-    | {
-          type: "tile-action";
-          tileKey: string;
-          action: "mute-audio" | "mute-video" | "mute-audio-all" | "mute-video-all" | "kick" | "report" | "visit-card";
-      }
-    | { type: "tile-volume"; tileKey: string; value: number }
-    | { type: "accept-invitation" }
-    | { type: "decline-invitation" }
-    | { type: "join-meeting"; eventId: string }
-    | { type: "open-agenda" }
-    | { type: "open-tasks" };
-
-/** Drives the companion quick-access panel (People / Chat / Controls / Mentions). */
-export type WorkAdventureDesktopCompanionApi = {
-    pushState: (state: CompanionState) => void;
-    /** Open the companion by hand (it stays when WA shows again). Absent from older desktop apps. */
-    open?: () => void;
-    onCommand: (callback: (command: CompanionCommand) => void) => () => void;
+/**
+ * The companion and the meeting bar: child windows of the world page that the page renders itself.
+ * The desktop app decides when they open; the page opens them on request and moves the meeting video
+ * into the companion when told.
+ */
+export type WorkAdventureDesktopWindowsApi = {
+    /** Main asks the page to open a window: `window.open("about:blank", "wa-companion" | "wa-meeting-bar")`. */
+    onOpen: (callback: (kind: DesktopChildWindowKind) => void) => () => void;
+    /** The app wants the meeting video in the companion (true) or not any more (false). */
+    onMeetingWanted: (callback: (wanted: boolean) => void) => () => void;
+    /** The PiP button: open or close the companion by hand. */
+    toggleCompanion: () => void;
+    /** WA's profile menu: open the companion by hand (it stays when WA shows again, a second call keeps it). */
+    openCompanion: () => void;
+    /** The companion's close button: closed until the user comes back to WorkAdventure. */
+    dismissCompanion: () => void;
+    /** Bring the WorkAdventure window to the front. */
+    focusMain: () => void;
+    /** Whether a window shows in the user's own screen share (it cannot be hidden from it). */
+    visibleInShare: (sharing: boolean) => boolean;
+    /** Whether the desktop tab strip shows (the meeting bar's "Display tabs"). */
+    tabStripShown: () => Promise<boolean>;
+    toggleTabStrip: () => void;
 };
 
 export type WorkAdventureDesktopApi = {
     desktop: boolean;
+    /**
+     * The handshake, on every page load: the page says which contract it speaks, the app answers with its
+     * own. Absent on desktop apps of contract 1 (older than the handshake); null for a page the app does
+     * not take as a world.
+     */
+    hello?: (page: { contract: number }) => { contract: number } | null;
     isDevelopment: () => Promise<boolean>;
     getVersion: () => Promise<string>;
-    /** String form kept for backward compat; object form adds title, click routing (tag) and silence. */
-    notify: (payload: string | DesktopNotificationPayload) => void;
-    /** Subscribe to notification-click events (tag is the value passed to notify). */
+    /** Contract 1 (frozen): an OS notification whose body is the text, titled "WorkAdventure". */
+    notify: (text: string) => void;
+    /** A notification with a title, click routing (tag) and silence. Absent on desktop shells of contract 1. */
+    notifyMessage?: (payload: DesktopNotificationPayload) => void;
+    /** Subscribe to notification-click events (tag is the value passed to notifyMessage). */
     onNotificationClick?: (callback: (tag: string | undefined) => void) => () => void;
     /** Keep the display awake while in an active meeting. Main manages a single blocker id. */
     setKeepAwake?: (enabled: boolean) => void;
     /** Dock (macOS) / taskbar (Windows) unread badge; 0 clears. Linux is a silent no-op. */
     setUnreadCount?: (count: number) => void;
-    /** Push live presence (meeting + mic/camera + screen-share + availability) to main for the tray dot, floating toolbar and Set-status submenu. */
+    /** Push live presence (meeting + mic/camera + screen-share + availability) to main for the tray dot and the floating windows. */
     setPresence?: (presence: {
         inMeeting: boolean;
         micEnabled: boolean;
@@ -316,7 +138,6 @@ export type WorkAdventureDesktopApi = {
         /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
         autoOpenAllowed?: boolean;
         requestedStatus?: "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
-        statusLocked?: boolean;
     }) => void;
     /** The screen the user shares (null: none), so that the companion never opens by itself over it. */
     setScreenShareSource?: (source: { sourceId: string; displayId?: number } | null) => void;
@@ -326,12 +147,8 @@ export type WorkAdventureDesktopApi = {
      * re-sync when it becomes active again. Returns an unsubscriber.
      */
     onRequestPresence?: (callback: () => void) => () => void;
-    /** Subscribe to availability changes requested from the tray "Set status" submenu. */
-    onSetStatus?: (callback: (status: "online" | "busy" | "back_in_a_moment" | "do_not_disturb") => void) => () => void;
     /** Set the current world's display name on the active tab. */
     setTabTitle?: (title: string) => void;
-    /** Push the companion / meeting bar strings in the WorkAdventure language (flat key → text). */
-    setHudStrings?: (strings: Record<string, string>) => void;
     /** Subscribe to system idle/active transitions (main powerMonitor). Returns unsubscriber. */
     onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
     /** Another tab entered a meeting: turn off microphone, camera and screen share here. */
@@ -340,8 +157,6 @@ export type WorkAdventureDesktopApi = {
     onOtherMeetingMuted?: (callback: (worldName: string) => void) => () => void;
     onMuteToggle: (callback: () => void) => void;
     onCameraToggle: (callback: () => void) => void;
-    getWindowState: () => Promise<DesktopWindowState>;
-    onWindowStateChange: (callback: (state: DesktopWindowState) => void) => () => void;
     /** Absent where the system picks the source (Linux under Wayland): getDisplayMedia is used instead. */
     getDesktopCapturerSources?: (options: SourcesOptions) => Promise<DesktopCapturerSource[]>;
     /**
@@ -352,10 +167,8 @@ export type WorkAdventureDesktopApi = {
     identifyScreens?: () => Promise<DesktopCapturerSource | null>;
     /** Dismiss any open "identify screens" overlays (no-op if none). Optional; absent on older shells. */
     cancelIdentifyScreens?: () => void;
-    pip?: WorkAdventureDesktopPipApi;
     navigation?: WorkAdventureDesktopNavigationApi;
-    presenterHud?: WorkAdventureDesktopHudApi;
-    companion?: WorkAdventureDesktopCompanionApi;
+    windows?: WorkAdventureDesktopWindowsApi;
     /** macOS screen recording permission ("not-needed" elsewhere). Absent on older desktop shells. */
     screenPermission?: {
         get: () => Promise<"granted" | "missing" | "not-needed">;
