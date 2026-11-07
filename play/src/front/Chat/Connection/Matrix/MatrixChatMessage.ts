@@ -1,5 +1,5 @@
 import type { MatrixEvent, Room } from "matrix-js-sdk";
-import { Direction, EventType, MatrixEventEvent, MsgType, RelationType } from "matrix-js-sdk";
+import { Direction, EventTimeline, EventType, MatrixEventEvent, RelationType } from "matrix-js-sdk";
 import type { Readable, Writable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
@@ -15,6 +15,15 @@ import type {
     ChatUser,
 } from "../ChatConnection";
 import { canRenderImageOrVideoInline } from "../../../Utils/InlineMimeType";
+import LL from "../../../../i18n/i18n-svelte";
+import {
+    getMatrixMessageContent,
+    MATRIX_HTML_FORMAT,
+    markOwnMentions,
+    pillRoomMention,
+    ROOM_MENTION_ID,
+} from "../../Mentions";
+import { HtmlUtils } from "../../../WebRtc/HtmlUtils";
 import { chatUserFactoryFromEvent } from "./MatrixChatUser";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import { MatrixChatRelation } from "./MatrixChatRelation";
@@ -125,7 +134,7 @@ export class MatrixChatMessage implements ChatMessage {
 
     private getMessageContent(): ChatMessageContent {
         if (this.event.isDecryptionFailure()) {
-            return { body: "🔐 Failed to decrypt", url: undefined };
+            return { body: `🔐 ${get(LL).chat.e2ee.undecryptable()}`, url: undefined };
         }
 
         // getContent() returns the effective content: the latest edit's `m.new_content` when the event has
@@ -135,12 +144,26 @@ export class MatrixChatMessage implements ChatMessage {
         // via the MatrixEventEvent.Replaced listener.
         const content = this.event.getContent();
         const quotedMessage = this.getQuotedMessage();
+        const myUserId = this.room.client.getSafeUserId();
+        // Evaluated from the push rules, the way the server counts the unread highlights: this covers m.mentions,
+        // @room and the keywords set up in Element. Recalculated because the cached actions may predate decryption.
+        const mentionsMe =
+            !this.isMyMessage && this.room.client.getPushActionsForEvent(this.event, true)?.tweaks.highlight === true;
+        // An @room counts, and is drawn as a pill, only when its sender may notify the whole room: the server checks
+        // the same power level before notifying anyone.
+        const roomMention = content["m.mentions"]?.room === true && this.senderMayNotifyRoom();
+        const withPills = (html: string) =>
+            markOwnMentions(
+                roomMention ? pillRoomMention(html) : html,
+                mentionsMe ? [myUserId, ROOM_MENTION_ID] : [myUserId],
+            );
 
         if (quotedMessage !== undefined && content.formatted_body) {
             this.quotedMessage = quotedMessage;
             return {
-                body: content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, ""),
+                body: withPills(content.formatted_body.replace(/^(<mx-reply>).*(<\/mx-reply>)/, "")),
                 url: undefined,
+                mentionsMe,
             };
         }
 
@@ -159,7 +182,35 @@ export class MatrixChatMessage implements ChatMessage {
             };
         }
 
-        return { body: content.body, url: undefined };
+        // A message mentioning someone is rendered from its HTML, where the mentions are pills (whether they come
+        // from our composer or from Element). The other ones keep being rendered from their markdown body.
+        const html =
+            content.format === MATRIX_HTML_FORMAT && typeof content.formatted_body === "string"
+                ? content.formatted_body
+                : undefined;
+        const mentionsUsers = (content["m.mentions"]?.user_ids?.length ?? 0) > 0;
+        let formattedBody: string | undefined;
+        if (roomMention) {
+            // Element sends a lone @room without any HTML.
+            formattedBody = withPills(html ?? content.body);
+        } else if (mentionsUsers && html !== undefined) {
+            formattedBody = withPills(html);
+        } else if (html !== undefined) {
+            // The body is plain text (ours since the composer sends it so, Element's always): its markdown is what we
+            // render, so a "<b>" typed in it must stay text. Older messages of ours, without HTML, keep their
+            // already escaped body.
+            formattedBody = HtmlUtils.escapeHtml(content.body);
+        }
+        return { body: content.body, url: undefined, formattedBody, mentionsMe };
+    }
+
+    private senderMayNotifyRoom(): boolean {
+        const sender = this.event.getSender();
+        return (
+            sender !== undefined &&
+            (this.room.getLiveTimeline().getState(EventTimeline.FORWARDS)?.mayTriggerNotifOfType("room", sender) ??
+                false)
+        );
     }
 
     private loadImageMediaIfNeeded() {
@@ -249,8 +300,15 @@ export class MatrixChatMessage implements ChatMessage {
         }
         const sortedReactionByKey = reactionByKey.getSortedAnnotationsByKey() ?? [];
         sortedReactionByKey.forEach(([reactionKey, events]) => {
+            // One reaction per key, holding every user who reacted with it.
+            let reaction: MatrixChatMessageReaction | undefined;
             events.forEach((event) => {
-                this.reactions.set(reactionKey, new MatrixChatMessageReaction(this.room, event, this.canReact));
+                if (reaction) {
+                    reaction.addUser(event);
+                    return;
+                }
+                reaction = new MatrixChatMessageReaction(this.room, event, this.canReact);
+                this.reactions.set(reactionKey, reaction);
             });
         });
     }
@@ -335,8 +393,8 @@ export class MatrixChatMessage implements ChatMessage {
         return "text";
     }
 
-    remove() {
-        this.room.client.redactEvent(this.room.roomId, this.id).catch((error) => console.error(error));
+    async remove(): Promise<void> {
+        await this.room.client.redactEvent(this.room.roomId, this.id);
     }
 
     async edit(newContent: string): Promise<void> {
@@ -344,11 +402,13 @@ export class MatrixChatMessage implements ChatMessage {
             throw new Error("Missing permission to edit this message");
         }
         try {
+            const edited = getMatrixMessageContent(newContent);
             await this.room.client.sendEvent(this.room.roomId, EventType.RoomMessage, {
-                msgtype: MsgType.Text,
+                ...edited,
+                // Whoever the message already mentioned was notified then: an edit must not notify them again.
+                "m.mentions": {},
                 "m.relates_to": { rel_type: RelationType.Replace, event_id: this.id },
-                "m.new_content": { msgtype: MsgType.Text, body: newContent },
-                body: newContent,
+                "m.new_content": edited,
             });
         } catch (error) {
             console.error(error);

@@ -508,6 +508,7 @@
                                             <button
                                                 class="svg p-4 h-full w-full hover:bg-white/10 flex justify-start items-center z-25 rounded-lg text-base"
                                                 onclick={removeHighlight}
+                                                data-testid="highlight-minimize-button"
                                             >
                                                 <IconArrowsMinimize font-size="20" class="text-white" />
                                             </button>

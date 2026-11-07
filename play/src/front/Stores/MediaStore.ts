@@ -281,14 +281,21 @@ export const usedMicrophoneDeviceIdStore: Writable<string | undefined> = writabl
 export const inOpenWebsite = writable(false);
 
 /**
+ * A store containing the video quality setting.
+ */
+export const videoQualityStore = createVideoQualityStore();
+
+/**
  * A store that contains video constraints.
  */
 export const videoConstraintStore = derived(
-    [requestedCameraDeviceIdStore, frameRateStore],
-    ([$cameraDeviceIdStore, $frameRateStore]) => {
+    [requestedCameraDeviceIdStore, frameRateStore, videoQualityStore],
+    ([$cameraDeviceIdStore, $frameRateStore, $videoQualityStore]) => {
+        // "low" never sends more than 360p, on LiveKit as in P2P: capturing more would only be thrown away
+        const low = $videoQualityStore === "low";
         const constraints = {
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: low ? 640 : 1280 },
+            height: { ideal: low ? 360 : 720 },
             frameRate: { ideal: 30 },
             facingMode: "user",
             resizeMode: "crop-and-scale",
@@ -1796,11 +1803,6 @@ function createVideoQualityStore() {
         },
     };
 }
-
-/**
- * A store containing the video quality setting.
- */
-export const videoQualityStore = createVideoQualityStore();
 
 export const lastNewMediaDeviceDetectedStore = writable<MediaDeviceInfo[]>([]);
 

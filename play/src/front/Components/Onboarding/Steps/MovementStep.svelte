@@ -98,7 +98,7 @@
     }
 </script>
 
-<!-- Mobile onboarding: panel at top so user sees joystick and character. Desktop: panel on the right. -->
+<!-- Mobile onboarding: panel at top so user sees the map and character. Desktop: panel on the right. -->
 <div
     class="z-[3001] pointer-events-auto {$isMobileOnboarding
         ? 'fixed left-4 right-4 top-4'
@@ -116,7 +116,7 @@
             </h3>
             <p class="text-sm text-white/90">
                 {$isMobileOnboarding || touchScreenManager.supportTouchScreen
-                    ? $LL.onboarding.movement.descriptionMobile()
+                    ? $LL.onboarding.movement.descriptionTouch()
                     : $LL.onboarding.movement.descriptionDesktop()}
             </p>
             {#if !$isMobileOnboarding && !touchScreenManager.supportTouchScreen}

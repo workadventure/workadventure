@@ -170,6 +170,13 @@ enum VideoQualityLimitationReason {
   VIDEO_QUALITY_LIMITATION_REASON_OTHER = 3;
 }
 
+// The sender's video quality setting.
+enum VideoQualityLevel {
+  VIDEO_QUALITY_LEVEL_LOW = 0;
+  VIDEO_QUALITY_LEVEL_RECOMMENDED = 1;
+  VIDEO_QUALITY_LEVEL_HIGH = 2;
+}
+
 message VideoQualitySampleMessage {
   uint64 clientEventTimeMs = 1;
   optional uint64 sampleSeq = 2;
@@ -237,6 +244,13 @@ message VideoQualitySampleMessage {
   // LiveKit streams only: region of the LiveKit server the client is connected to (serverInfo.region). Set by
   // LiveKit Cloud, usually empty on a self-hosted server.
   optional string livekitRegion = 45;
+  // Outbound streams only: the sender's quality setting, the camera's for a camera, the screen share's for a screen
+  // share.
+  optional VideoQualityLevel qualitySetting = 46;
+  // Outbound streams only: size the camera or screen capture delivers (MediaTrackSettings), where frameWidth and
+  // frameHeight are the largest layer the encoder sends.
+  optional uint32 captureWidth = 47;
+  optional uint32 captureHeight = 48;
 }
 
 message VideoQualityReportMessage {
@@ -414,6 +428,9 @@ message CreateAreaMessage {
   // AreaDataProperty values (libs/map-editor): a discriminated union on `type`, not free-form JSON.
   // See ModifyAreaMessage.properties for where they are checked.
   repeated google.protobuf.Value properties = 7;
+  // Set by the map-storage when its property hooks changed `properties` (a new chat room, the copy of
+  // an uploaded file...): the client that created the area must then apply them too.
+  optional bool modifyServerData = 8;
 }
 
 message CreateEntityMessage {
@@ -428,6 +445,8 @@ message CreateEntityMessage {
   optional string name = 7;
   uint32 width = 8;
   uint32 height = 9;
+  // See CreateAreaMessage.modifyServerData.
+  optional bool modifyServerData = 10;
 }
 
 message DeleteEntityMessage {
@@ -465,6 +484,14 @@ message UploadEntityMessage {
   optional string ownerId = 10;
 }
 
+// What an uploaded file is for, which decides where map-storage stores it and which formats it accepts.
+enum UploadedFileKind {
+  // A file of the "open file" property, stored privately.
+  Document = 0;
+  // A sound of the "play audio" property, stored as a public map asset.
+  Sound = 1;
+}
+
 message UploadFileMessage {
   bytes file = 1;
   string id = 2;
@@ -472,6 +499,7 @@ message UploadFileMessage {
   string propertyId = 4;
   optional string areaId = 5;
   optional string entityId = 6;  
+  UploadedFileKind kind = 7;
 }
 
 message ModifyCustomEntityMessage {
@@ -1454,6 +1482,7 @@ message SpaceEvent {
     SpaceIsTyping spaceIsTyping = 2;
     MuteAudioForEverybodyPublicMessage muteAudioForEverybody = 3;
     MuteVideoForEverybodyPublicMessage muteVideoForEverybody = 4;
+    SpaceMessageReaction spaceMessageReaction = 5;
   }
 }
 
@@ -1514,6 +1543,24 @@ message SpaceMessage {
   string message = 1;
   repeated CharacterTextureMessage characterTextures = 2;
   optional string name = 3;
+  // Id picked by the sender and kept by every receiver, so that a reply or a reaction can point at this message.
+  optional string id = 4;
+  // Set when this message replies to another message of the same space.
+  optional SpaceMessageQuote quote = 5;
+}
+
+// The message a SpaceMessage replies to. The excerpt is shown when the receiver does not have the quoted message (it joined the bubble later).
+message SpaceMessageQuote {
+  string messageId = 1;
+  string excerpt = 2;
+  optional string senderName = 3;
+}
+
+// A user adds (added = true) or removes their reaction to the SpaceMessage whose id is messageId.
+message SpaceMessageReaction {
+  string messageId = 1;
+  string reaction = 2;
+  bool added = 3;
 }
 
 message SpaceIsTyping {
@@ -1550,7 +1597,18 @@ message BackEventMessage {
 message BackEvent {
   oneof event {
     MeetingConnectionRestartMessage meetingConnectionRestartMessage = 2;
+    MicrophoneTrackPublishedMessage microphoneTrackPublishedMessage = 3;
   }
+}
+
+// Names the sender's microphone among its LiveKit publications (the scripting audio is published as a microphone
+// too). Sent on every microphone publication; the back uses it when the space is recorded automatically.
+message MicrophoneTrackPublishedMessage {
+  string trackSid = 1;
+  // The browser's language (navigator.language).
+  string language = 2;
+  // The noise suppression applied before publishing: "workadventure", "voiceIsolation" or "none".
+  string noiseSuppression = 3;
 }
 
 message PrivateEvent {

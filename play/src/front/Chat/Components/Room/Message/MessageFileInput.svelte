@@ -67,7 +67,10 @@
         <IconPaperclip class="hover:!cursor-pointer" font-size={18} />
     </button>
     <button
+        type="button"
         class="absolute top-0 right-0 m-1 hover:bg-white/10 cursor-pointer"
+        aria-label={$LL.chat.fileAttachment.cancel()}
+        title={$LL.chat.fileAttachment.cancel()}
         onclick={() => unselectChatMessageToReplyIfSelected()}
     >
         <IconX class=" text-white/50 hover:text-white transition-all" font-size={16} />
