@@ -540,7 +540,6 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Speaker (Admin1) starts the megaphone session
         await Menu.clickGoLive(pageSpeaker);
 
-
         await expect(pageSpeaker.getByRole("button", { name: "Start megaphone" })).toBeVisible();
         await pageSpeaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 

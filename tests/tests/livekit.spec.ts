@@ -259,7 +259,6 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
 
         await Menu.clickGoLive(page);
 
-
         await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
         await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
 

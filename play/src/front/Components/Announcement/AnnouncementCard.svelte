@@ -95,7 +95,9 @@
                             : 'bg-success/40'}"
                     >
                         <IconWorld font-size="12" />
-                        {broadcastToWorld ? $LL.megaphone.announcement.wholeWorld() : $LL.megaphone.announcement.thisRoom()}
+                        {broadcastToWorld
+                            ? $LL.megaphone.announcement.wholeWorld()
+                            : $LL.megaphone.announcement.thisRoom()}
                     </span>
                 {/if}
             </div>

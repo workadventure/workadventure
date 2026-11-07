@@ -68,7 +68,9 @@
 
 <svelte:window onkeydown={onKeyDown} />
 
-<div class="absolute z-[308] w-full h-full inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+<div
+    class="absolute z-[308] w-full h-full inset-0 flex items-center justify-center overflow-hidden pointer-events-none"
+>
     <div
         class="pointer-events-auto bg-contrast/80 backdrop-blur rounded-md max-h-screen overflow-y-auto w-full md:w-[46rem] text-white"
         data-testid="announcement-composer"

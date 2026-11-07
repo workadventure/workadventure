@@ -1125,7 +1125,15 @@ export class SocketManager {
         }
     }
 
-    async sendAdminRoomMessage({ roomId, message, type, senderName, senderTextures, broadcastToWorld, joinUrl }: AdminRoomMessage) {
+    async sendAdminRoomMessage({
+        roomId,
+        message,
+        type,
+        senderName,
+        senderTextures,
+        broadcastToWorld,
+        joinUrl,
+    }: AdminRoomMessage) {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500

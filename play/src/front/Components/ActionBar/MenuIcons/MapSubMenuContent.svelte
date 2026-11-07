@@ -1,11 +1,7 @@
 <script lang="ts">
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
-    import {
-        mapManagerActivated,
-        mapEditorMenuVisibleStore,
-        openedMenuStore,
-    } from "../../../Stores/MenuStore";
+    import { mapManagerActivated, mapEditorMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
@@ -18,12 +14,19 @@
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
+    import { megaphoneCanBeUsedStore } from "../../../Stores/MegaphoneStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconDesk, IconDeskExit, IconSpeakerPhone, IconMapEditor, IconMessageShare } from "@wa-icons";
-    import { userIsAdminStore } from "../../../Stores/GameStore";
-    import { megaphoneCanBeUsedStore } from "../../../Stores/MegaphoneStore";
+    import {
+        IconMapSearch,
+        IconDesk,
+        IconDeskExit,
+        IconSpeakerPhone,
+        IconMapEditor,
+        IconMessageShare,
+    } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
