@@ -2,6 +2,7 @@ import type { Writable } from "svelte/store";
 import { writable } from "svelte/store";
 import { Subject } from "rxjs";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { resolveSoundUrl } from "../Utils/UrlPlaceholderResolver";
 import { videoStreamElementsStore } from "./PeerStore";
 import { activeSecondaryZoneActionBarStore } from "./MenuStore";
 
@@ -101,9 +102,7 @@ function createAudioManagerFileStore() {
         subscribe,
         playAudio: (url: string | number | boolean, mapUrl: string, volume: number | undefined, loop = false): void => {
             update((file: string) => {
-                const audioPath = String(url);
-
-                file = new URL(audioPath, mapUrl).toString();
+                file = resolveSoundUrl(String(url), mapUrl);
 
                 audioManagerVolumeStore.setSoundVolume(volume ?? 1);
                 audioManagerVolumeStore.setLoop(loop);

@@ -1,69 +1,41 @@
 import type { Subscription } from "rxjs";
-import { Deferred } from "@workadventure/shared-utils";
 import type { Readable, Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
+import { derived } from "svelte/store";
 import { iframeListener } from "../../Api/IframeListener";
-import { videoStreamElementsStore } from "../../Stores/PeerStore";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
+import type { Streamable } from "../../Space/Streamable";
 import { InputPCMStreamer } from "./InputPCMStreamer";
 
 /**
  * Class in charge of receiving audio streams from the users and forwarding them to the scripting API for analysis.
  */
 export class ScriptingInputAudioStreamManager {
+    private pcmStreamer: InputPCMStreamer | undefined;
     private appendPCMDataStreamUnsubscriber: Subscription | undefined;
-    private pcmStreamerDeferred: Deferred<InputPCMStreamer> = new Deferred<InputPCMStreamer>();
-    private pcmStreamerResolved = false;
-    private pcmStreamerResolving = false;
-    private isListening = false;
-    private currentMeetingId: string | undefined;
-    private streams: Map<Readable<MediaStream | undefined>, Unsubscriber> = new Map();
-    private videoPeerAddedUnsubscriber: Subscription;
-    private videoPeerRemovedUnsubscriber: Subscription;
+    private peerAudioStreamsUnsubscriber: Unsubscriber | undefined;
 
-    constructor(space: SpaceInterface) {
-        this.videoPeerAddedUnsubscriber = space.spacePeerManager.videoPeerAdded.subscribe((streamable) => {
-            if (this.isListening) {
-                if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
-                    this.addMediaStreamStore(streamable.media.streamStore);
-                }
-            }
-        });
-
-        this.videoPeerRemovedUnsubscriber = space.spacePeerManager.videoPeerRemoved.subscribe((streamable) => {
-            if (this.isListening) {
-                if (streamable.media.type === "webrtc" || streamable.media.type === "livekit") {
-                    this.removeMediaStreamStore(streamable.media.streamStore);
-                }
-            }
-        });
-    }
+    constructor(private readonly space: SpaceInterface) {}
 
     public async startListeningToAudioStream(sampleRate: number, meetingId?: string): Promise<void> {
-        if (this.isListening) {
+        if (this.pcmStreamer) {
             throw new Error("Already listening");
         }
 
-        this.isListening = true;
-        this.currentMeetingId = meetingId;
-
-        // Start listening to the stream
-        if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
-            throw new Error("Already listening");
-        }
         const pcmStreamer = new InputPCMStreamer(sampleRate);
-        this.pcmStreamerResolving = true;
+        this.pcmStreamer = pcmStreamer;
         await pcmStreamer.initWorklet();
-        this.pcmStreamerResolved = true;
-        this.pcmStreamerResolving = false;
-        this.pcmStreamerDeferred.resolve(pcmStreamer);
+        if (this.pcmStreamer !== pcmStreamer) {
+            // stopListeningToAudioStream() was called while the worklet was loading
+            pcmStreamer.close();
+            return;
+        }
 
         this.appendPCMDataStreamUnsubscriber = pcmStreamer.pcmDataStream.subscribe((data) => {
-            if (this.currentMeetingId !== undefined) {
+            if (meetingId !== undefined) {
                 iframeListener.postMessage(
                     {
                         type: "appendMeetingPCMData",
-                        data: { meetingId: this.currentMeetingId, data: data as Float32Array<ArrayBuffer> },
+                        data: { meetingId, data: data as Float32Array<ArrayBuffer> },
                     },
                     undefined /*, [data.buffer]*/,
                 );
@@ -82,99 +54,61 @@ export class ScriptingInputAudioStreamManager {
             // and should be attached to the main process and detachable again to the scripting iframe).
         });
 
-        // Let's add all the peers to the stream
-        get(videoStreamElementsStore).forEach((peer) => {
-            const streamable = get(peer.streamable);
-            if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
-                this.addMediaStreamStore(streamable.media.streamStore);
+        let listenedStreams = new Set<MediaStream>();
+        this.peerAudioStreamsUnsubscriber = this.peerAudioStreams().subscribe((streams) => {
+            const nextStreams = new Set(streams);
+            for (const stream of listenedStreams) {
+                if (!nextStreams.has(stream)) {
+                    pcmStreamer.removeMediaStream(stream);
+                }
             }
+            for (const stream of nextStreams) {
+                if (!listenedStreams.has(stream)) {
+                    pcmStreamer.addMediaStream(stream);
+                }
+            }
+            listenedStreams = nextStreams;
         });
     }
 
     public stopListeningToAudioStream(): void {
-        this.isListening = false;
-        this.currentMeetingId = undefined;
-
         this.appendPCMDataStreamUnsubscriber?.unsubscribe();
         this.appendPCMDataStreamUnsubscriber = undefined;
-
-        // Let's remove all the peers to the stream
-        get(videoStreamElementsStore).forEach((peer) => {
-            const streamable = get(peer.streamable);
-            if (streamable && (streamable.media.type === "webrtc" || streamable.media.type === "livekit")) {
-                this.removeMediaStreamStore(streamable.media.streamStore);
-            }
-        });
-
-        if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
-            this.pcmStreamerDeferred.promise
-                .then((pcmStreamer) => {
-                    pcmStreamer.close();
-                    this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
-                })
-                .catch((e) => {
-                    console.error("Error while stopping stream", e);
-                });
-        } else {
-            console.error("stopListeningToStreamInBubble called while no stream is running");
-        }
-
-        this.pcmStreamerResolved = false;
-        this.pcmStreamerResolving = false;
-        this.pcmStreamerDeferred = new Deferred<InputPCMStreamer>();
+        this.peerAudioStreamsUnsubscriber?.();
+        this.peerAudioStreamsUnsubscriber = undefined;
+        this.pcmStreamer?.close();
+        this.pcmStreamer = undefined;
     }
 
-    private addMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
-        let lastValue: MediaStream | undefined = undefined;
-        const unsubscriber = streamStore.subscribe((stream) => {
-            if (stream) {
-                this.pcmStreamerDeferred.promise
-                    .then((pcmStreamer) => {
-                        pcmStreamer.addMediaStream(stream);
-                        lastValue = stream;
-                    })
-                    .catch((e) => {
-                        console.error("Error while adding stream", e);
-                    });
-            } else {
-                this.pcmStreamerDeferred.promise
-                    .then((pcmStreamer) => {
-                        if (lastValue) {
-                            pcmStreamer.removeMediaStream(lastValue);
-                            lastValue = undefined;
-                        }
-                    })
-                    .catch((e) => {
-                        console.error("Error while removing stream", e);
-                    });
-            }
-        });
-        this.streams.set(streamStore, unsubscriber);
-    }
-
-    private removeMediaStreamStore(streamStore: Readable<MediaStream | undefined>): void {
-        const unsubscriber = this.streams.get(streamStore);
-        if (unsubscriber) {
-            unsubscriber();
-            this.streams.delete(streamStore);
-        } else {
-            console.error("Stream not found. Unable to remove.");
-        }
+    /**
+     * The audio stream currently played for each user of the space.
+     * A user's video box switches streamables over time (from P2P to LiveKit, on a reconnection...): we follow the
+     * one the box plays rather than the one it played when the listening started.
+     */
+    private peerAudioStreams(): Readable<MediaStream[]> {
+        return derived<SpaceInterface["videoStreamStore"], MediaStream[]>(
+            this.space.videoStreamStore,
+            ($videoBoxes, set) =>
+                derived(
+                    Array.from($videoBoxes.values(), (videoBox) =>
+                        derived<Readable<Streamable | undefined>, MediaStream | undefined>(
+                            videoBox.streamable,
+                            ($streamable, setStream) => {
+                                if ($streamable?.media.type !== "webrtc" && $streamable?.media.type !== "livekit") {
+                                    setStream(undefined);
+                                    return;
+                                }
+                                return $streamable.media.streamStore.subscribe(setStream);
+                            },
+                        ),
+                    ),
+                    ($streams) => $streams.filter((stream) => stream !== undefined),
+                ).subscribe(set),
+            [],
+        );
     }
 
     public close(): void {
-        this.videoPeerAddedUnsubscriber.unsubscribe();
-        this.videoPeerRemovedUnsubscriber.unsubscribe();
-        this.appendPCMDataStreamUnsubscriber?.unsubscribe();
-
-        if (this.pcmStreamerResolved || this.pcmStreamerResolving) {
-            this.pcmStreamerDeferred.promise
-                .then((pcmStreamer) => {
-                    pcmStreamer.close();
-                })
-                .catch((e) => {
-                    console.error("Error while closing stream", e);
-                });
-        }
+        this.stopListeningToAudioStream();
     }
 }

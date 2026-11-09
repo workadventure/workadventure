@@ -44,4 +44,16 @@ describe("form focus after screen annotations", () => {
         stop();
         expect(setFocused).toHaveBeenLastCalledWith(false);
     });
+
+    it("treats a chat message's action buttons as form focus", () => {
+        const message = document.createElement("div");
+        message.className = "block-user-action";
+        const button = document.createElement("button");
+        message.append(button);
+        document.body.append(message);
+        const setFocused = vi.fn();
+        stop = trackFormFocus(document, setFocused);
+        button.focus();
+        expect(setFocused).toHaveBeenLastCalledWith(true);
+    });
 });

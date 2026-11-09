@@ -22,18 +22,19 @@ async function createRoom(page: Page): Promise<CreatedRoom> {
     await page.getByTestId("createRoomName").fill(roomName);
     await page.getByTestId("createRoomButton").click();
 
-    await expect(page.getByText(roomName)).toBeAttached();
-
-    // Read the real Matrix room id from the manage-participants modal (mirrors matrixChatModeration.spec.ts).
+    // The new room opens by itself: read its real Matrix id from the room panel's overview.
     // Going through the UI guarantees the room exists server-side before we query it via the admin API.
-    await page.getByTestId(roomName).hover();
-    await page.getByTestId(roomName).getByTestId("toggleRoomMenu").click();
-    await page.getByTestId(roomName).getByTestId("manageParticipantOption").click();
+    await expect(page.getByTestId("roomName")).toHaveText(roomName);
+    await page.getByTestId("toggleRoomSidePanelButton").click();
     await expect(page.getByTestId("roomID")).toBeVisible();
     const roomId = ChatUtils.parseMatrixRoomIdFromRoomLabelText(
         (await page.getByTestId("roomID").textContent())?.trim() ?? "",
     );
-    await page.getByTestId("closeModal").click();
+    // On a narrow chat the panel covers the conversation header: close it, then back to the list.
+    const closePanel = page.getByTestId("closeRoomSidePanelButton");
+    await ((await closePanel.isVisible()) ? closePanel.click() : page.getByTestId("toggleRoomSidePanelButton").click());
+    await page.getByTestId("chatBackward").click();
+    await expect(page.getByText(roomName)).toBeAttached();
 
     const token = await matrixApi.getRoomCreatorToken(roomId);
 
@@ -123,6 +124,7 @@ test.describe("chat room settings @matrix @nowebkit", () => {
         await page.getByTestId("roomSettingsNameInput").fill(newName);
         await page.getByTestId("roomSettingsTopicInput").fill(newTopic);
         await page.getByTestId("roomSettingsHistoryVisibilitySelect").selectOption("invited");
+        await page.getByTestId("roomSettingsDetailedPermissions").click();
         await page.getByTestId("roomPermission-sendReactions").selectOption("MODERATOR");
 
         await page.getByTestId("roomSettingsSaveButton").click();

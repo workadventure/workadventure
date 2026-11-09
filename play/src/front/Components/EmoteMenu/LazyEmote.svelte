@@ -8,6 +8,7 @@
         onLoad: () => void;
         onLoaded: () => void;
         onError: () => void;
+        keyboardNavigation?: boolean;
     }
 
     let {
@@ -16,6 +17,7 @@
         onLoad = () => {},
         onLoaded = () => {},
         onError = () => {},
+        keyboardNavigation = false,
     }: Props = $props();
 </script>
 
@@ -27,4 +29,5 @@
     component={() => import("../EmoteMenu/EmoteMenu.svelte")}
     {onEmojiClick}
     {onClose}
+    {keyboardNavigation}
 />

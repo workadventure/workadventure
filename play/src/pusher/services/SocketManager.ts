@@ -1189,7 +1189,12 @@ export class SocketManager implements ZoneEventListener {
 
         if (playGlobalMessageEvent.broadcastToWorld) {
             const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en", [], true);
-            tabUrlRooms = shortDescriptions.map((shortDescription) => shortDescription.roomUrl);
+            // The back identifies rooms by their absolute URL, but LocalAdmin lists map-storage rooms
+            // as relative paths ("/~/office.wam"). Resolve them against the sender's room, or the back
+            // finds no room and the message is silently dropped. Absolute URLs are left unchanged.
+            tabUrlRooms = shortDescriptions.map((shortDescription) =>
+                new URL(shortDescription.roomUrl, clientRoomUrl).toString(),
+            );
         } else {
             tabUrlRooms = [clientRoomUrl];
         }

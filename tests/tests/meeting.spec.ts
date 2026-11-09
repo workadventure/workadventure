@@ -5,6 +5,7 @@ import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import { evaluateScript } from "./utils/scripting";
 import chatUtils from "./chat/chatUtils";
+import { clickCoordinates } from "./utils/gameCoordinates";
 
 test.describe("Meeting actions test @nomobile @nowebkit", () => {
     test.beforeEach(
@@ -342,12 +343,8 @@ test.describe("Meeting actions test @nomobile @nowebkit", () => {
             await userBob.getByTestId("messageInput").fill("Hello banned!");
             await userBob.getByTestId("messageInput").press("Enter");
 
-            await page.locator("canvas").click({
-                position: {
-                    x: 266,
-                    y: 240,
-                },
-            });
+            // Click Bob's Woka (where he was teleported) to open his menu.
+            await clickCoordinates(page, { x: 192, y: 160 });
 
             await page.getByTestId("wokamenu-block-user-button").click();
             await page.getByTestId("blockmenu-block-user-button").click();

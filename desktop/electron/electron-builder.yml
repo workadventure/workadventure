@@ -1,3 +1,4 @@
+# Also the Windows AppUserModelId, set in src/app.ts: keep both in sync.
 appId: re.workadventu.desktop
 
 # Top level, not under linux: macOS only gets CFBundleURLTypes (and so `open-url` deep links) from

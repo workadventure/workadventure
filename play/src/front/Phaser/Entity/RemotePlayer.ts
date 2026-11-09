@@ -27,10 +27,6 @@ import { analyticsClient } from "../../Administration/AnalyticsClient";
 import { IconCamera, IconUserPlus } from "@wa-icons";
 import { modals } from "@wa-modals";
 
-export enum RemotePlayerEvent {
-    Clicked = "Clicked",
-}
-
 /**
  * Class representing the sprite of a remote player (a player that plays on another computer)
  */
@@ -71,7 +67,6 @@ export class RemotePlayer extends Character implements ActivatableInterface {
             this.say(sayMessage.message, sayMessage.type);
         }
 
-        this.bindEventHandlers();
         this.pathFollowingUpdateCallback = (_time: number, delta: number) => this.followPath(delta);
     }
 
@@ -258,7 +253,7 @@ export class RemotePlayer extends Character implements ActivatableInterface {
                         return;
                     }
 
-                    openDirectChatRoom(this.chatID!).catch((error) => {
+                    openDirectChatRoom(this.chatID!, this.playerName).catch((error) => {
                         console.error("Error opening direct chat room:", error);
                         Sentry.captureException(error, {
                             extra: {
@@ -293,13 +288,5 @@ export class RemotePlayer extends Character implements ActivatableInterface {
         });
 
         return actions;
-    }
-
-    private bindEventHandlers(): void {
-        this.on(Phaser.Input.Events.POINTER_DOWN, (event: Phaser.Input.Pointer) => {
-            if (event.downElement.nodeName === "CANVAS" && event.leftButtonDown()) {
-                this.emit(RemotePlayerEvent.Clicked);
-            }
-        });
     }
 }

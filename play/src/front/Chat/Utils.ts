@@ -1,5 +1,5 @@
 import * as Sentry from "@sentry/svelte";
-import { get } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { MatrixClient } from "matrix-js-sdk";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { iframeListener } from "../Api/IframeListener";
@@ -72,7 +72,11 @@ export const openTab = (url: string) => {
     scriptUtils.openTab(url);
 };
 
-export const openDirectChatRoom = async (chatID: string) => {
+/** Chat ids whose direct room is being opened, so every "Send a message" button for them can say so. */
+export const openingDirectChatIdsStore = writable<ReadonlySet<string>>(new Set());
+
+export const openDirectChatRoom = async (chatID: string, name?: string) => {
+    openingDirectChatIdsStore.update((ids) => new Set(ids).add(chatID));
     try {
         if (!get(userIsConnected)) {
             modals.open(RequiresLoginForChatModal);
@@ -92,9 +96,17 @@ export const openDirectChatRoom = async (chatID: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
-        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId: chatID }));
+        warningMessageStore.addWarningMessage(
+            name ? get(LL).chat.failedToOpenDirectChat({ name }) : get(LL).chat.failedToOpenRoom(),
+        );
         console.error(error);
         Sentry.captureException(error);
+    } finally {
+        openingDirectChatIdsStore.update((ids) => {
+            const next = new Set(ids);
+            next.delete(chatID);
+            return next;
+        });
     }
 };
 
@@ -113,7 +125,7 @@ export const openChatRoom = async (roomId: string) => {
         navChat.switchToChat();
         chatVisibilityStore.set(true);
     } catch (error) {
-        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom({ roomId }));
+        warningMessageStore.addWarningMessage(get(LL).chat.failedToOpenRoom());
         console.error(error);
         Sentry.captureException(error);
     }
