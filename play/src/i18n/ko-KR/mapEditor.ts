@@ -84,6 +84,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             volumeLabel: "볼륨",
             audioLinkLabel: "오디오 링크",
             audioLinkPlaceholder: "https://xxx.yyy/something.mp3",
+            sourceUpload: "파일 업로드",
+            sourceUrl: "URL 사용",
             defaultButtonLabel: "음악 재생",
             error: "사운드를 불러오지 못했습니다",
             actionButtonLabel: "음악 재생",

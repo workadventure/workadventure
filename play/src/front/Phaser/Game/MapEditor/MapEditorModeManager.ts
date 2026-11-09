@@ -32,6 +32,7 @@ import { TrashEditorTool } from "./Tools/TrashEditorTool";
 import { ExplorerTool } from "./Tools/ExplorerTool";
 import { CloseTool } from "./Tools/CloseTool";
 import { UpdateAreaFrontCommand } from "./Commands/Area/UpdateAreaFrontCommand";
+import { UpdateEntityFrontCommand } from "./Commands/Entity/UpdateEntityFrontCommand";
 
 export enum EditorToolName {
     AreaEditor = "AreaEditor",
@@ -106,7 +107,7 @@ export class MapEditorModeManager {
             [EditorToolName.FloorEditor]: new FloorEditorTool(this),
             [EditorToolName.WAMSettingsEditor]: new WAMSettingsEditorTool(this),
             [EditorToolName.TrashEditor]: new TrashEditorTool(this, areaEditorTool),
-            [EditorToolName.ExploreTheRoom]: new ExplorerTool(this, this.scene),
+            [EditorToolName.ExploreTheRoom]: new ExplorerTool(this.scene),
             [EditorToolName.CloseMapEditor]: new CloseTool(),
         };
         this.activeTool = undefined;
@@ -376,6 +377,8 @@ export class MapEditorModeManager {
                         ) {
                             command.setNewConfig(message.modifyAreaMessage);
                             await command.execute();
+                        } else {
+                            await this.applyServerChangesToCreatedProperties(message);
                         }
 
                         return;
@@ -390,6 +393,41 @@ export class MapEditorModeManager {
                 }
             }).catch((e) => console.error(e));
         });
+    }
+
+    /**
+     * The map-storage may change the properties of an area or entity this client created (a new chat room, its own
+     * copy of an uploaded file for a copied property): apply what it sent back, without sending it again.
+     */
+    private async applyServerChangesToCreatedProperties(
+        message: NonNullable<EditMapCommandMessage["editMapMessage"]>["message"],
+    ): Promise<void> {
+        const wamFile = this.scene.getGameMap().getWamFile();
+        if (!wamFile) {
+            return;
+        }
+        if (message?.$case === "createAreaMessage" && message.createAreaMessage.modifyServerData === true) {
+            const { id, properties } = message.createAreaMessage;
+            await new UpdateAreaFrontCommand(
+                wamFile,
+                { id, properties },
+                undefined,
+                undefined,
+                this.editorTools.AreaEditor as AreaEditorTool,
+                this.scene.getGameMapFrontWrapper(),
+            ).execute();
+        } else if (message?.$case === "createEntityMessage" && message.createEntityMessage.modifyServerData === true) {
+            const { id, properties } = message.createEntityMessage;
+            await new UpdateEntityFrontCommand(
+                wamFile,
+                id,
+                { properties },
+                undefined,
+                undefined,
+                this.scene.getGameMapFrontWrapper().getEntitiesManager(),
+                this.scene,
+            ).execute();
+        }
     }
 
     private async revertPendingCommands(): Promise<void> {
@@ -433,15 +471,9 @@ export class MapEditorModeManager {
             return false;
         }
 
-        // Only restore exploration when it is the currently active tool. Relying on the
-        // last used tool could switch the active editor tool (Area/Floor/Entity...) to
-        // exploration mode when the Woka menu is closed, which is not desired.
-        if (this.activeTool === EditorToolName.ExploreTheRoom) {
-            this.scene.getCameraManager().setExplorationMode();
-            return true;
-        }
-
-        return false;
+        // The whole map editor has a free view: stop following the remote player, stay where the view is.
+        this.scene.getCameraManager().setExplorationMode();
+        return true;
     }
 
     private emitMapEditorUpdate(command: FrontCommandInterface, delay = 0): void {

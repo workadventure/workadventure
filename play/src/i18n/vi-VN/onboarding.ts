@@ -13,7 +13,7 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "Di chuyển",
         descriptionDesktop:
             "Dùng các phím mũi tên hoặc WASD để di chuyển nhân vật trên bản đồ. Bạn cũng có thể bấm chuột phải để di chuyển. Thử di chuyển ngay nào!",
-        descriptionMobile: "Dùng cần điều khiển hoặc chạm vào bản đồ để di chuyển nhân vật. Thử di chuyển ngay nào!",
+        descriptionTouch: "Chạm vào bản đồ để đi đến đó, và kéo để nhìn xung quanh. Thử di chuyển ngay nào!",
         next: "Tiếp theo",
     },
     communication: {
