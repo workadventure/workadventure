@@ -1,6 +1,11 @@
+import { promises as fs } from "fs";
+import path from "path";
+import { app } from "electron";
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
+import { LEGACY_LOGIN_ITEM_NAME, LEGACY_USER_DATA_DIR, migrateLegacySettings } from "./legacy-settings-policy";
 import {
+    createDesktopConfig,
     getDefaultPortalUrl,
     normalizePersistedLastRoomUrl,
     normalizePersistedPortalUrl,
@@ -69,10 +74,31 @@ function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | und
     return configured;
 }
 
+/** What a 1.x install left in its own userData folder, for the first launch of 2.0. */
+async function readLegacySettings(): Promise<Partial<SettingsData>> {
+    const file = path.join(app.getPath("appData"), LEGACY_USER_DATA_DIR, "settings.json");
+    let legacy: unknown;
+    try {
+        legacy = JSON.parse(await fs.readFile(file, "utf8"));
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+            ElectronLog.warn(`Could not read the 1.x settings in ${file}:`, error);
+        }
+        return {};
+    }
+    ElectronLog.info(`Migrating the 1.x settings from ${file}.`);
+    // 1.x registered auto-launch under its own name, pointing at its own executable, which the 2.0
+    // installer removed. updateAutoLaunch() registers 2.0 under its name if the user kept it on.
+    if (process.platform === "win32") {
+        app.setLoginItemSettings({ openAtLogin: false, name: LEGACY_LOGIN_ITEM_NAME });
+    }
+    return migrateLegacySettings(legacy, createDesktopConfig()) as Partial<SettingsData>;
+}
+
 async function init() {
     let _settings = await Settings.get();
     if (Object.keys(_settings).length === 0) {
-        _settings = defaultSettings;
+        _settings = { ...defaultSettings, ...(await readLegacySettings()) };
     }
     const persistedSettings = _settings as Partial<SettingsData>;
     const persistedWorldHistory = Array.isArray(persistedSettings.world_history) ? persistedSettings.world_history : [];

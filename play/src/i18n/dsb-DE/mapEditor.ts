@@ -83,6 +83,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Audio wótegraś z głosnosću, ak dajo se nastajiś.",
             audioLinkLabel: "Audiolink",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Dataju nagraś",
+            sourceUrl: "URL wužywaś",
             defaultButtonLabel: "Muziku wótegraś",
             volumeLabel: "Głosnosć",
             error: "Zuk njedajo se zacytaś",

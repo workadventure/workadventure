@@ -12,6 +12,7 @@
         screenAnnotationLocallyHiddenStore,
     } from "../../Stores/ScreenAnnotationStore";
     import { clamp01, drawElement, hitTest } from "./annotationRender";
+    import { observeElementSize } from "./PictureInPicture/childWindow";
 
     interface Props {
         // spaceUserId of the user sharing the screen this overlay annotates.
@@ -197,7 +198,7 @@
         if (!ctx) {
             return;
         }
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = canvas.ownerDocument.defaultView?.devicePixelRatio || 1;
         const pixelWidth = Math.max(1, Math.round(clientWidth * dpr));
         const pixelHeight = Math.max(1, Math.round(clientHeight * dpr));
         if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
@@ -265,9 +266,20 @@
     $effect(() => {
         // Re-render on window resize / browser zoom (the device pixel ratio may change without
         // the bound clientWidth/clientHeight changing).
+        const target = canvas?.ownerDocument.defaultView;
         const onResize = () => render();
-        window.addEventListener("resize", onResize);
-        return () => window.removeEventListener("resize", onResize);
+        target?.addEventListener("resize", onResize);
+        return () => target?.removeEventListener("resize", onResize);
+    });
+
+    // Measured from the canvas's own window: in the desktop overlay it lives in a child window, where
+    // bind:clientWidth never reports. A 0 size left a 1x1 canvas stretched over the screen, all red.
+    $effect(() => {
+        if (!canvas) return;
+        return observeElementSize(canvas, (width, height) => {
+            clientWidth = width;
+            clientHeight = height;
+        });
     });
 
     onDestroy(() => {
@@ -281,8 +293,6 @@
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <canvas
     bind:this={canvas}
-    bind:clientWidth
-    bind:clientHeight
     data-testid="annotation-canvas"
     data-element-count={$screenAnnotationFinishedCountStore.get(targetUserId) ?? 0}
     class="absolute inset-0 h-full w-full"

@@ -16,6 +16,18 @@
     let { isOpen, crypto, processCallback }: Props = $props();
 
     let passphraseInput: string | undefined = $state();
+    let passphraseConfirmInput: string | undefined = $state();
+    let passphrasesMatch = $derived(
+        (passphraseInput ?? "").trim().length > 0 && passphraseInput === passphraseConfirmInput,
+    );
+    // The key is only installed once the user kept it (downloaded or copied): cancelling before that, or closing
+    // the popup, must not leave the account locked by a key nobody has.
+    let settled = false;
+    function settle(key: GeneratedSecretStorageKey | undefined) {
+        if (settled) return;
+        settled = true;
+        processCallback(key);
+    }
     let generatedSecretStorageKey: GeneratedSecretStorageKey | undefined = $state();
     let error = $state(false);
     let isPrivateKeyDownloaded = $state(false);
@@ -33,12 +45,17 @@
     }
 
     function closeModalAndContinueToWorkAdventure() {
-        processCallback(generatedSecretStorageKey);
+        settle(isPrivateKeyDownloaded ? generatedSecretStorageKey : undefined);
+        modals.close();
+    }
+
+    function cancel() {
+        settle(undefined);
         modals.close();
     }
 
     onBeforeClose(() => {
-        processCallback(generatedSecretStorageKey);
+        settle(isPrivateKeyDownloaded ? generatedSecretStorageKey : undefined);
     });
 
     function downloadPrivateKeyFile() {
@@ -76,23 +93,51 @@
     {#snippet content()}
         <div>
             <p>{$LL.chat.e2ee.createRecoveryKey.description()}</p>
+            <label for="newPassphrase" class="m-0">{$LL.chat.e2ee.createRecoveryKey.passphraseLabel()}</label>
             <input
+                id="newPassphrase"
+                type="password"
+                autocomplete="new-password"
                 data-testid="passphraseInput"
                 class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
                 bind:value={passphraseInput}
+                disabled={generatedSecretStorageKey !== undefined}
                 onfocusin={focusChatInput}
                 onfocusout={unfocusChatInput}
             />
+            <label for="newPassphraseConfirm" class="m-0 mt-2">{$LL.chat.e2ee.createRecoveryKey.confirmLabel()}</label>
+            <input
+                id="newPassphraseConfirm"
+                type="password"
+                autocomplete="new-password"
+                data-testid="passphraseConfirmInput"
+                class="w-full rounded-md text-white placeholder:text-sm px-3 py-2 p border-light-purple border border-solid bg-contrast"
+                bind:value={passphraseConfirmInput}
+                disabled={generatedSecretStorageKey !== undefined}
+                onfocusin={focusChatInput}
+                onfocusout={unfocusChatInput}
+            />
+            {#if (passphraseConfirmInput ?? "").length > 0 && !passphrasesMatch}
+                <p class="m-0 mt-1 text-sm text-warning-400">{$LL.chat.e2ee.createRecoveryKey.mismatch()}</p>
+            {/if}
             {#if generatedSecretStorageKey?.encodedPrivateKey}
                 <p>{$LL.chat.e2ee.createRecoveryKey.privateKeyDescription()}</p>
                 <div class="flex justify-between">
                     <p class="text-green-500 m-0 content-center select-text">
                         {generatedSecretStorageKey.encodedPrivateKey}
                     </p>
-                    <button data-testid="downloadRecoveryKeyButton" onclick={downloadPrivateKeyFile}>
+                    <button
+                        data-testid="downloadRecoveryKeyButton"
+                        aria-label={$LL.chat.e2ee.createRecoveryKey.download()}
+                        title={$LL.chat.e2ee.createRecoveryKey.download()}
+                        onclick={downloadPrivateKeyFile}
+                    >
                         <IconFileDownload />
                     </button>
                 </div>
+                {#if isPrivateKeyDownloaded}
+                    <p class="text-sm text-success-400">{$LL.chat.e2ee.createRecoveryKey.downloadedAndCopied()}</p>
+                {/if}
             {/if}
             {#if error}
                 <p class="text-red-500">{$LL.chat.e2ee.createRecoveryKey.error()}</p>
@@ -100,13 +145,13 @@
         </div>
     {/snippet}
     {#snippet action()}
-        <button class="flex-1 justify-center" onclick={() => closeModalAndContinueToWorkAdventure()}>
+        <button class="flex-1 justify-center" onclick={cancel}>
             {$LL.chat.e2ee.createRecoveryKey.buttons.cancel()}
         </button>
         {#if generatedSecretStorageKey === undefined}
             <Button
                 variant="secondary"
-                disabled={passphraseInput === undefined || passphraseInput?.trim().length === 0}
+                disabled={!passphrasesMatch}
                 class="disabled:text-gray-400 disabled:bg-gray-500 bg-secondary flex-1"
                 onclick={() => generateRecoveryKey(passphraseInput)}
                 >{$LL.chat.e2ee.createRecoveryKey.buttons.generate()}

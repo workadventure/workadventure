@@ -4,6 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name}님이 대화를 원합니다",
     message: "{name}님이 메시지를 보냅니다",
+    mention: "{name}님이 회원님을 멘션했습니다",
     askToMuteMicrophone: "마이크를 음소거할까요?",
     askToMuteCamera: "카메라를 음소거할까요?",
     microphoneMuted: "운영자가 마이크를 음소거했습니다",
