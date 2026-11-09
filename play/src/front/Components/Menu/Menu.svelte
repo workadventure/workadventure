@@ -43,23 +43,19 @@
     let unsubscriberSubMenuStore: Unsubscriber;
     let unsubscriberActiveSubMenuStore: Unsubscriber;
 
-    onMount(async () => {
+    onMount(() => {
         unsubscriberActiveSubMenuStore = activeSubMenuStore.subscribe((value) => {
             if ($subMenusStore.length >= value - 1) {
-                switchMenu($subMenusStore[value]).catch((e) =>
-                    console.error("Failed to switch menu on activeSubMenuStore change", e),
-                );
+                switchMenu($subMenusStore[value]);
             }
         });
         unsubscriberSubMenuStore = subMenusStore.subscribe(() => {
             if (!$subMenusStore.includes(activeSubMenu)) {
-                switchMenu($subMenusStore[$activeSubMenuStore]).catch((e) =>
-                    console.error("Failed to switch menu on subMenusStore change", e),
-                );
+                switchMenu($subMenusStore[$activeSubMenuStore]);
             }
         });
 
-        await switchMenu($subMenusStore[$activeSubMenuStore]);
+        switchMenu($subMenusStore[$activeSubMenuStore]);
     });
 
     onDestroy(() => {
@@ -72,7 +68,7 @@
         }
     });
 
-    async function switchMenu(menu: MenuItem) {
+    function switchMenu(menu: MenuItem) {
         if (menu.type === "translated") {
             activeSubMenu = menu;
             activeSubMenuStore.activateByMenuItem(menu);
@@ -180,9 +176,7 @@
                                 onclick={(event) => {
                                     event.preventDefault();
                                     event.stopPropagation();
-                                    switchMenu(submenu).catch((error) => {
-                                        console.error("Failed to switch menu", error);
-                                    });
+                                    switchMenu(submenu);
                                 }}
                                 transition:fly={{ delay: i * 75, x: 200, duration: 150 }}
                             >
