@@ -6,7 +6,6 @@
         AreaDataPropertiesKeys,
         AreaDataProperty,
         OpenWebsitePropertyData,
-        PlayAudioPropertyData,
     } from "@workadventure/map-editor";
     import { PersonalAreaAccessClaimMode, SpeakerMegaphonePropertyData } from "@workadventure/map-editor";
     import type { KlaxoonEvent } from "@workadventure/shared-utils";
@@ -543,11 +542,6 @@
         });
     }
 
-    // Fixme: this is a hack to force the map editor to update the property
-    function onUpdateAudioProperty(property: PlayAudioPropertyData) {
-        onUpdateProperty(property);
-    }
-
     function toggleDescriptionField() {
         showDescriptionField = !showDescriptionField;
     }
@@ -869,7 +863,9 @@
         />
 
         <div class="properties-container flex flex-col gap-8 p-1">
-            {#each properties as property, i (property.id)}
+            <!-- Keyed by area too: a copied area can share property ids with its original, and the property
+                 editors keep state that must not leak from one area to the next. -->
+            {#each properties as property, i (`${$mapEditorSelectedAreaPreviewStore?.getId()}:${property.id}`)}
                 {#if property.type !== "areaDescriptionProperties"}
                     <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2">
                         {#if properties[i].type === "focusable"}
@@ -903,14 +899,14 @@
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                             />
-                        {:else if property.type === "playAudio"}
+                        {:else if properties[i].type === "playAudio"}
                             <PlayAudioPropertyEditor
-                                property={{ ...property, hideButtonLabel: true }}
+                                bind:property={properties[i]}
                                 isArea={true}
                                 onclose={() => {
                                     onDeleteProperty(property.id);
                                 }}
-                                onaudiolink={onUpdateAudioProperty}
+                                onchange={() => onUpdateProperty(property)}
                             />
                         {:else if properties[i].type === "openWebsite"}
                             <OpenWebsitePropertyEditor

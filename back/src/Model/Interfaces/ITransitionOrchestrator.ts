@@ -1,4 +1,5 @@
 import type { SpaceUser } from "@workadventure/messages";
+import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 import type { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationState, StateTransitionResult } from "./ICommunicationState";
 import type { ICommunicationSpace } from "./ICommunicationSpace";
@@ -12,6 +13,8 @@ export interface TransitionContext {
     users: ReadonlyMap<string, SpaceUser>;
     usersToNotify: ReadonlyMap<string, SpaceUser>;
     playUri?: string;
+    /** The world's LiveKit settings, when already fetched: a LiveKit state is then created without asking again. */
+    livekitCredentials?: LivekitCredentialsResponse;
 }
 
 /**

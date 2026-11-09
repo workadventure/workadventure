@@ -865,10 +865,10 @@ describe("SpaceToBackForwarder", () => {
             return { send, forwardSpy };
         };
 
-        it("should drop kickOffUser sent by a non-admin", () => {
+        it("should forward kickOffUser sent by a non-admin, the back checks the meeting room moderator tag", () => {
             const { send, forwardSpy } = kickOffUser([]);
-            expect(send).toThrow();
-            expect(forwardSpy).not.toHaveBeenCalled();
+            send();
+            expect(forwardSpy).toHaveBeenCalledOnce();
         });
 
         it("should forward kickOffUser sent by an admin", () => {

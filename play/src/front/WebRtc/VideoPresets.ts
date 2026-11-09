@@ -107,11 +107,14 @@ interface BitrateCurve {
     fps: (pixels: number, quality: VideoQualitySetting) => number;
 }
 
-// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide): within 20 % of its table up to 1080p
+// Fitted on the LiveKit bitrate guide (https://livekit.io/webrtc/bitrate-guide), within 20 % of its tables up to 1080p:
+// "recommended" on the webcam one, "high" on the gaming one. "low" gets the bitrate of "recommended" at each size, and
+// saves by capturing 360p (videoConstraintStore) and by its frame rate. Below what libwebrtc wants for a size (190 kbps
+// for VP9 at 360p, 300 kbps for VP8), the encoder sends a smaller picture than the one we ask for.
 const cameraCurve: BitrateCurve = {
     anchorCodec: "vp9",
     anchorPixels: 1280 * 720,
-    anchor: { low: 400_000, recommended: 700_000, high: 1_800_000 },
+    anchor: { low: 700_000, recommended: 700_000, high: 1_800_000 },
     exponent: 0.75,
     // Small tiles are cheaper to watch at a lower frame rate
     fps: (pixels, quality) => {
@@ -141,6 +144,11 @@ const screenShareCurve: BitrateCurve = {
 
 /**
  * Select the most appropriate bandwidth and fps for your resolution and the codec you encode with.
+ *
+ * `spatialLayers` budgets an SVC stream, whose single maxBitrate covers every spatial layer, each half the size of the
+ * next: each layer gets what it would get alone. The curve is a one-resolution budget, and short of the sum libwebrtc
+ * keeps the top layer off: a 720p VP9 stream needs 891 kbps for its three layers, where the 720p layer alone is
+ * budgeted 700 kbps.
  */
 export function selectVideoPreset(
     displayHeight: number,
@@ -148,16 +156,18 @@ export function selectVideoPreset(
     isScreenShare: boolean,
     quality: VideoQualitySetting,
     codec: VideoCodec,
+    spatialLayers = 1,
 ): {
     bitrate: number;
     fps: number;
 } {
     const curve = isScreenShare ? screenShareCurve : cameraCurve;
     const pixels = Math.min(displayWidth * displayHeight, MAX_PIXELS);
-    const bitrate =
-        curve.anchor[quality] *
-        Math.pow(pixels / curve.anchorPixels, curve.exponent) *
-        (BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec]);
+    let bitrate = 0;
+    for (let layer = 0; layer < spatialLayers; layer++) {
+        bitrate += curve.anchor[quality] * Math.pow(pixels / 4 ** layer / curve.anchorPixels, curve.exponent);
+    }
+    bitrate *= BITRATE_FACTOR[codec] / BITRATE_FACTOR[curve.anchorCodec];
     return { bitrate: Math.round(bitrate), fps: curve.fps(pixels, quality) };
 }
 
