@@ -344,6 +344,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 1;
+                                updateVideoQuality();
                             }}>{$LL.menu.settings.videoBandwidth.low()}</span
                         >
                     </li>
@@ -360,6 +361,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 2;
+                                updateVideoQuality();
                             }}>{$LL.menu.settings.videoBandwidth.recommended()}</span
                         >
                     </li>
@@ -376,6 +378,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 3;
+                                updateVideoQuality();
                             }}>{$LL.menu.settings.videoBandwidth.high()}</span
                         >
                     </li>
@@ -413,6 +416,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 1;
+                                updateScreenShareQuality();
                             }}>{$LL.menu.settings.shareScreenBandwidth.low()}</span
                         >
                     </li>
@@ -429,6 +433,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 2;
+                                updateScreenShareQuality();
                             }}>{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
                         >
                     </li>
@@ -445,6 +450,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 3;
+                                updateScreenShareQuality();
                             }}>{$LL.menu.settings.shareScreenBandwidth.high()}</span
                         >
                     </li>
