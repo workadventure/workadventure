@@ -155,7 +155,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "Hồ sơ",
         settings: "Cài đặt",
         credit: "Ghi công",
-        globalMessages: "Thông báo toàn cầu",
         contact: "Liên hệ",
         report: "Báo lỗi",
         help: "Trợ giúp & hướng dẫn",

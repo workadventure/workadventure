@@ -2700,19 +2700,10 @@
     },
     "global_message.opened": {
       "type": "object",
-      "properties": {
-        "source": {
-          "type": "string",
-          "enum": [
-            "menu",
-            "action_bar"
-          ],
-          "description": "Which control opened the composer."
-        }
-      },
+      "properties": {},
       "additionalProperties": true,
-      "title": "global_message.opened",
-      "description": "The user opened the global message composer."
+      "description": "The user opened the global message composer.",
+      "title": "global_message.opened"
     },
     "global_message.text_sent": {
       "type": "object",

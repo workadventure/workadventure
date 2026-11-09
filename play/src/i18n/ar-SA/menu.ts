@@ -154,7 +154,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "الملف الشخصي", // Profile
         settings: "الإعدادات", // Settings
         credit: "حول هذه الخريطة", // About this map
-        globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
         help: "مساعدة وشروحات",

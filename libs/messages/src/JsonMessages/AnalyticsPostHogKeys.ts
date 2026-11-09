@@ -131,10 +131,7 @@ export const POSTHOG_EVENT_KEYS: Partial<
   "file.drag_dropped": "wa_drag_drop_file",
 
 
-  "global_message.opened": {
-    on: "source",
-    byValue: { menu: "wa_menu_globalmessage", action_bar: "wa_action_globalmessage" },
-  },
+  "global_message.opened": "wa_action_globalmessage",
   "global_message.text_sent": "wa_menu_globalmessage_send",
 
   "invite.opened": "wa-opened-invite",

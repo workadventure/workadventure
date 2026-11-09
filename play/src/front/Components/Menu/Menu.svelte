@@ -93,10 +93,6 @@
                     activeComponent = ContactSubMenu;
                     analyticsClient.trackAdminEvent("menu.contact.opened");
                     break;
-                case SubMenusInterface.globalMessages:
-                    activeComponent = (await import("./GlobalMessagesSubMenu.svelte")).default;
-                    analyticsClient.trackAdminEvent("global_message.opened", { source: "menu" });
-                    break;
                 case SubMenusInterface.report:
                     activeComponent = ReportSubMenu;
                     analyticsClient.trackAdminEvent("feedback.opened", { feedbackSource: "external_report_url" });

@@ -156,7 +156,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "Profil",
         settings: "Paramètres",
         credit: "Crédits",
-        globalMessages: "Messages globaux",
         contact: "Contact",
         report: "Remonter un bug",
         help: "Besoin d'aide ?",

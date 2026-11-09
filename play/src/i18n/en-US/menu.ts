@@ -153,7 +153,6 @@ const menu: BaseTranslation = {
         profile: "Profile",
         settings: "Settings",
         credit: "Credit",
-        globalMessages: "Global Messages",
         contact: "Contact",
         report: "Report Issues",
         help: "Help & tutorials",

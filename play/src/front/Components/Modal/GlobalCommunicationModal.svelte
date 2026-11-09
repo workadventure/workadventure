@@ -74,7 +74,7 @@
     function activateInputText() {
         displayedMegaphoneScreenStore.set(false);
         inputSendTextActive = true;
-        analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
+        analyticsClient.trackAdminEvent("global_message.opened");
     }
 
     function back() {
