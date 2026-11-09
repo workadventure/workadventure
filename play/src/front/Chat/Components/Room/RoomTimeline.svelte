@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onDestroy, onMount, tick, untrack } from "svelte";
     import { get, readable } from "svelte/store";
+    import { defaultColor } from "@workadventure/shared-utils";
     import { getChatInteraction } from "../../ChatInteractionContext";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import {
@@ -15,19 +16,43 @@
     import { shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
-    import { roomSidePanelStore, type RoomTimelineFocusRequest } from "../../Stores/RoomSidePanelStore";
+    import {
+        roomSidePanelStore,
+        type RoomSidePanelSection,
+        type RoomTimelineFocusRequest,
+    } from "../../Stores/RoomSidePanelStore";
     import { getMatrixSecurity } from "../../Connection/Matrix/getMatrixSecurity";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { ProximityChatRoom } from "../../Connection/Proximity/ProximityChatRoom";
     import LL from "../../../../i18n/i18n-svelte";
+    import { createUnreadElsewhereStore, getUnreadConversationsElsewhere } from "../../Stores/UnreadMessagesCountStore";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import UnreadConversationsPopover from "../UnreadConversationsPopover.svelte";
+    import UnreadCount from "../UnreadCount.svelte";
+    import { hasPendingMentionElsewhere } from "../../Stores/ChatMessageBannerStore";
+    import Button from "../../../Components/UI/Button.svelte";
+    import Avatar from "../Avatar.svelte";
+    import RefreshChat from "../RefreshChat.svelte";
+    import ChatMessageBanner from "./ChatMessageBanner.svelte";
+    import ConversationSubtitle from "./ConversationSubtitle.svelte";
     import Message from "./Message.svelte";
     import MessageInputBar from "./MessageInputBar.svelte";
     import MessageSystem from "./MessageSystem.svelte";
     import PollCard from "./PollCard.svelte";
     import QuestionCard from "./QuestionCard.svelte";
     import TypingUsers from "./TypingUsers.svelte";
-    import { shouldReserveFloatingCloseButtonSpace } from "./RoomTimelineHeaderLayout";
-    import { IconChevronLeft, IconChevronRight, IconLoader, IconMailBox, IconInfoCircle } from "@wa-icons";
+    import EnteredZoneBanner from "./EnteredZoneBanner.svelte";
+    import RoomTimelineLoading from "./RoomTimelineLoading.svelte";
+    import { shouldReserveFloatingCloseButtonSpace, shouldShowBackToRoomList } from "./RoomTimelineHeaderLayout";
+    import { countIncomingMessagesAfter, findFirstUnreadKey, isReadMarkerLoaded } from "./RoomTimelineNewMessages";
+    import {
+        IconArrowDown,
+        IconChevronLeft,
+        IconChevronRight,
+        IconLoader,
+        IconMailBox,
+        IconInfoCircle,
+    } from "@wa-icons";
 
     const { reply: selectedChatMessageToReply, timelineFocus: roomTimelineFocusStore, compact } = getChatInteraction();
 
@@ -38,6 +63,8 @@
         timelineTestId?: string;
         showRoomSidePanelToggle?: boolean;
         compactHeader?: boolean;
+        /** True when the room list is displayed next to this timeline (two-column layout). */
+        roomListVisible?: boolean;
     }
 
     let {
@@ -47,6 +74,7 @@
         timelineTestId = "roomTimeline",
         showRoomSidePanelToggle = false,
         compactHeader = false,
+        roomListVisible = false,
     }: Props = $props();
 
     const chatConnection = gameManager.chatConnection;
@@ -57,6 +85,10 @@
     const TIME_GAP_THRESHOLD = 5 * 60 * 1000;
 
     const AUTO_SCROLL_THRESHOLD_PX = 20;
+    /** The jump button is 32 px tall and sits 12 px above the input: below this, it covers the header. */
+    const JUMP_BUTTON_MIN_LIST_HEIGHT_PX = 48;
+    /** Room left above the "New messages" line when a room opens on it. */
+    const UNREAD_DIVIDER_TOP_MARGIN_PX = 8;
     /** No scroll event for this long means our own smooth animation has landed. */
     const PROGRAMMATIC_SCROLL_SETTLE_MS = 150;
     /** Release the anchor once the content has stopped resizing for this long. */
@@ -77,6 +109,14 @@
     let messageInputBarRef: MessageInputBar | undefined = $state();
     let lastTimelineFocusSequence = $state(0);
     let initialMessagesLoaded = $state(false);
+    /** The room opened but its history did not come: the list is empty for that reason, not because the room is. */
+    let historyLoadFailed = $state(false);
+    /** Messages from others that arrived while the user was reading history (autoScroll off). */
+    let newMessagesCount = $state(0);
+    /** More than a screen above the bottom: worth offering a way back even with nothing new. */
+    let farFromBottom = $state(false);
+    /** Height of the visible list: the applications panel can squeeze it down to nothing. */
+    let messageListHeight = $state(0);
 
     // Imperative, deliberately not $state: read and written from DOM handlers, never from the template.
     let scrollTimer: ReturnType<typeof setTimeout> | undefined;
@@ -100,8 +140,60 @@
     const emptyThreadSummaries = readable<readonly ChatThreadSummary[]>([]);
     const emptyUnreadQuestionCount = readable(0);
 
+    let unreadElsewhereButton: HTMLButtonElement | undefined = $state();
+    let closeUnreadConversations: (() => void) | undefined = $state();
+
+    function hideUnreadConversations(): void {
+        const close = closeUnreadConversations;
+        closeUnreadConversations = undefined;
+        close?.();
+    }
+
+    function toggleUnreadConversations(): void {
+        if (closeUnreadConversations !== undefined) {
+            hideUnreadConversations();
+            return;
+        }
+        if (!unreadElsewhereButton) {
+            return;
+        }
+        closeUnreadConversations = showFloatingUi(
+            unreadElsewhereButton,
+            UnreadConversationsPopover,
+            {
+                conversations: getUnreadConversationsElsewhere(
+                    chatConnection,
+                    get(gameScene.proximityChatRoomManager.roomsStore),
+                    room,
+                ),
+                onSelect: hideUnreadConversations,
+            },
+            { placement: direction === "rtl" ? "bottom-end" : "bottom-start" },
+            6,
+            false,
+            true,
+            () => {
+                closeUnreadConversations = undefined;
+            },
+        );
+    }
+
+    // The popup lives at the app root: it must not outlive this timeline (room switch, chat closed)…
+    onDestroy(hideUnreadConversations);
+
+    let unreadElsewhereStore = $derived(
+        createUnreadElsewhereStore(gameScene.proximityChatRoomManager.roomsStore, room),
+    );
+    // …nor the count it was opened from.
+    $effect(() => {
+        if ($unreadElsewhereStore === 0) {
+            untrack(hideUnreadConversations);
+        }
+    });
     let roomSidePanelToggleIsOpen = $derived($roomSidePanelStore.isOpen ?? false);
     let roomName = $derived(room?.name);
+    let roomTypeStore = $derived(room.type);
+    let avatarColorStore = $derived(room.avatarFallbackColor);
     let typingMembers = $derived(room.typingMembers);
     let timelineItems = $derived(room.timelineItems);
     let initializationState = $derived(room.initializationState);
@@ -113,6 +205,23 @@
     let proximitySidePanelRoom = $derived(hasProximityChatSidePanel(room) ? room : undefined);
     let unreadQuestionCountStore = $derived(proximitySidePanelRoom?.unreadQuestionCount ?? emptyUnreadQuestionCount);
     let unreadSidePanelCount = $derived(unreadThreadCount + $unreadQuestionCountStore);
+    /** Side panel sections promoted to text buttons when the header is wide enough. */
+    let headerSections = $derived<{ section: RoomSidePanelSection; label: string }[]>(
+        proximitySidePanelRoom
+            ? [
+                  { section: "participants", label: $LL.chat.roomPanel.sections.participants() },
+                  { section: "polls", label: $LL.chat.roomPanel.sections.polls() },
+                  { section: "questions", label: $LL.chat.question.title() },
+              ]
+            : [
+                  { section: "participants", label: $LL.chat.roomPanel.sections.participants() },
+                  { section: "threads", label: $LL.chat.roomPanel.sections.threads() },
+                  { section: "polls", label: $LL.chat.roomPanel.sections.polls() },
+              ],
+    );
+    let showBackButton = $derived(
+        shouldShowBackToRoomList(roomListVisible, room.conversationKind === "thread", backAction !== undefined),
+    );
     let shouldReserveHeaderEndSpace = $derived(
         shouldReserveFloatingCloseButtonSpace(
             $hideActionBarStoreBecauseOfChatBar,
@@ -128,7 +237,7 @@
 
     type RenderItem =
         | { kind: "separator"; key: string; label: string }
-        | { kind: "item"; key: string; timelineItem: ChatTimelineItem; showHeader: boolean };
+        | { kind: "item"; key: string; timelineItem: ChatTimelineItem; showHeader: boolean; showTime: boolean };
 
     function isValidDate(d: Date) {
         return d instanceof Date && !Number.isNaN(d.getTime());
@@ -214,14 +323,33 @@
                 key: `${timelineItem.kind}-${timelineItem.id}`,
                 timelineItem,
                 showHeader: !isRepeatedSender,
+                showTime: true,
             });
             previousMessage = currentMessage;
         }
+
+        // A run of messages from one sender shows its time once, on its last message.
+        out.forEach((item, index) => {
+            const next = out[index + 1];
+            if (item.kind === "item" && next?.kind === "item" && !next.showHeader) {
+                item.showTime = false;
+            }
+        });
 
         return out;
     });
 
     const MAX_INITIAL_FILL_ROUNDS = 5;
+    /**
+     * Extra pages fetched on open to reach the read marker. Bounded because each one is a sequential
+     * round trip: past it the room opens at the bottom, as before.
+     */
+    const MAX_READ_MARKER_ROUNDS = 3;
+
+    // Snapshot on open: setTimelineAsRead() moves the marker to the end as soon as the room is ready,
+    // and the line must stay where the user stopped reading for as long as the room stays open.
+    const readMarker = untrack(() => room.getReadMarker?.());
+    let firstUnreadKey = $derived(readMarker ? findFirstUnreadKey(renderItems, readMarker, myChatID) : undefined);
 
     onMount(() => {
         // Catches every height change: async markdown, lazy-loaded highlight.js, images, edits.
@@ -250,6 +378,12 @@
      */
     function syncContentResizeObservations() {
         if (!contentResizeObserver || !messageListRef) return;
+        // The list's own box too: when something above the input opens (applications, attachments),
+        // the list shrinks without any message changing, and a pinned list must stay pinned.
+        if (!observedItems.has(messageListRef)) {
+            observedItems.add(messageListRef);
+            contentResizeObserver.observe(messageListRef);
+        }
         for (const item of messageListRef.querySelectorAll<HTMLLIElement>("li[data-event-id]")) {
             if (observedItems.has(item)) continue;
             observedItems.add(item);
@@ -275,9 +409,18 @@
         }
     }
 
+    async function loadUntilReadMarker(remainingRounds: number) {
+        if (!readMarker || remainingRounds === 0 || !get(room.hasPreviousMessage)) return;
+        if (isReadMarkerLoaded(renderItems, readMarker)) return;
+        await room.loadMorePreviousMessages();
+        await tick();
+        await loadUntilReadMarker(remainingRounds - 1);
+    }
+
     async function initMessages() {
         if (!messageListRef) return;
         initialMessagesLoaded = false;
+        historyLoadFailed = false;
 
         try {
             await room.ensureTimelineInitialized();
@@ -286,16 +429,22 @@
             }
 
             await fillViewport(MAX_INITIAL_FILL_ROUNDS);
+            await loadUntilReadMarker(MAX_READ_MARKER_ROUNDS);
         } catch (error) {
             console.error(`Failed to load messages: ${error}`);
+            // A failed initialization has its own error state; this one covers the pages fetched after it.
+            historyLoadFailed = get(room.initializationState) === "ready";
         } finally {
             // Must be set even on failure, otherwise the $roomTimelineFocusStore effect stays frozen.
             initialMessagesLoaded = true;
         }
     }
 
-    function retryInitialization() {
-        room.ensureTimelineInitialized().catch((error) => console.error(error));
+    // Reruns the whole open: initMessages() retries the initialization too, then fetches the first pages.
+    function retryLoading() {
+        initMessages()
+            .catch((error) => console.error(error))
+            .finally(() => focusPendingTimelineRequestOrScrollToBottom().catch((error) => console.error(error)));
     }
 
     function hasPendingTimelineFocusRequest(
@@ -312,14 +461,49 @@
             return;
         }
 
+        if (scrollToFirstUnread()) return;
+
         // Instant: a smooth scroll from top to bottom on a fresh room looks wrong, and it opens a
         // ~300ms window where handleScroll's debounce can paginate from scrollTop = 0.
         scrollToMessageListBottom("auto");
     }
 
+    /** Opens on the "New messages" line when the unread messages do not fit on one screen. */
+    function scrollToFirstUnread(): boolean {
+        const divider = messageListRef?.querySelector<HTMLElement>("[data-testid='unreadMessagesDivider']");
+        if (!messageListRef || !divider) return false;
+        const dividerTop =
+            divider.getBoundingClientRect().top - messageListRef.getBoundingClientRect().top + messageListRef.scrollTop;
+        if (messageListRef.scrollHeight - dividerTop <= messageListRef.clientHeight) return false;
+
+        // Explicit un-pin, as in focusTimelineEvent: the resize observer must not drag us to the bottom.
+        autoScroll = false;
+        releaseScrollAnchor();
+        beginProgrammaticScroll("resync");
+        messageListRef.scrollTop = dividerTop - UNREAD_DIVIDER_TOP_MARGIN_PX;
+        return true;
+    }
+
+    // The read receipt clears the unread count and the "new messages" line: send one for what is on screen.
+    // On opening, on every new message while the room stays open, and on coming back to a hidden tab.
+    let pageVisible = $state(document.visibilityState === "visible");
+    let lastRenderedKey = $derived(renderItems[renderItems.length - 1]?.key);
+
+    let readReceipts = $derived(room.readReceipts);
+    let roomType = $derived(room.type);
+    // In a group, the readers' faces go under my last message only; the others keep their tick.
+    let lastOwnMessageId = $derived.by(() => {
+        for (let i = renderItems.length - 1; i >= 0; i--) {
+            const item = renderItems[i];
+            if (item.kind === "item" && item.timelineItem.kind === "message" && item.timelineItem.message.isMyMessage) {
+                return item.timelineItem.message.id;
+            }
+        }
+        return undefined;
+    });
     $effect(() => {
-        if ($initializationState === "ready") {
-            room.setTimelineAsRead();
+        if ($initializationState === "ready" && pageVisible && lastRenderedKey !== undefined) {
+            untrack(() => room.setTimelineAsRead());
         }
     });
 
@@ -337,8 +521,15 @@
         }
 
         // False by construction during back-pagination: prepending does not change the last item.
-        const isNewLastItem = lastKey !== undefined && lastKey !== lastSeenLastItemKey;
+        const previousLastKey = lastSeenLastItemKey;
+        const isNewLastItem = lastKey !== undefined && lastKey !== previousLastKey;
         lastSeenLastItemKey = lastKey;
+
+        if (isNewLastItem) {
+            untrack(() => {
+                if (!autoScroll) newMessagesCount += countIncomingMessagesAfter(items, previousLastKey, myChatID);
+            });
+        }
 
         const lastItem = items[items.length - 1];
         const lastMessage =
@@ -360,6 +551,10 @@
         if (isNewLastItem && untrack(() => autoScroll)) {
             scrollToMessageListBottom();
         }
+    });
+
+    $effect(() => {
+        if (autoScroll) newMessagesCount = 0;
     });
 
     function isAtBottom(): boolean {
@@ -477,6 +672,10 @@
     }
 
     function handleScroll() {
+        if (messageListRef) {
+            const { scrollHeight, scrollTop, clientHeight } = messageListRef;
+            farFromBottom = scrollHeight - scrollTop - clientHeight > clientHeight;
+        }
         if (programmaticScrollKind !== undefined) {
             // Keep extending the settle window while our own animation is still emitting events.
             armProgrammaticScrollSettle();
@@ -577,6 +776,8 @@
     }
 </script>
 
+<svelte:document onvisibilitychange={() => (pageVisible = document.visibilityState === "visible")} />
+
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
     class="flex flex-col flex-auto min-h-0 h-full w-full max-w-full"
@@ -590,30 +791,100 @@
 >
     {#if room !== undefined}
         {#if !compactHeader}
-            <div class="flex flex-col gap-2">
+            <!-- A container, so the header can show more once the conversation itself is wide enough. -->
+            <div class="@container flex flex-col gap-2">
                 <div
                     class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
                         ? 'pe-14'
                         : ''}"
                 >
-                    {#if chatRoomsEnableInAdmin || (compact && backAction)}
-                        <button
-                            class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white shrink-0"
-                            data-testid={backButtonTestId}
-                            onclick={goBackAndClearSelectedChatMessage}
-                        >
-                            {#if direction === "rtl"}
-                                <IconChevronRight font-size="20" />
-                            {:else}
-                                <IconChevronLeft font-size="20" />
+                    <!-- No arrow while the room list is beside the timeline: the title then sits on the left, by its avatar. -->
+                    {#if (chatRoomsEnableInAdmin || (compact && backAction)) && showBackButton}
+                        <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
+                        <div class="relative shrink-0">
+                            <button
+                                class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white {$unreadElsewhereStore >
+                                0
+                                    ? 'bg-white/10'
+                                    : ''}"
+                                data-testid={backButtonTestId}
+                                aria-label={$unreadElsewhereStore > 0
+                                    ? $hasPendingMentionElsewhere
+                                        ? $LL.chat.a11y.backWithMentionElsewhere()
+                                        : $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
+                                    : $LL.chat.roomPanel.back()}
+                                onclick={goBackAndClearSelectedChatMessage}
+                            >
+                                {#if direction === "rtl"}
+                                    <IconChevronRight font-size="20" />
+                                {:else}
+                                    <IconChevronLeft font-size="20" />
+                                {/if}
+                            </button>
+                            {#if $unreadElsewhereStore > 0}
+                                <!-- A target of its own: the arrow always goes back to the list, the count jumps to a conversation. -->
+                                <button
+                                    type="button"
+                                    class="absolute top-0 end-0 rounded-full p-0.5"
+                                    data-testid="unreadElsewhereButton"
+                                    aria-label={$LL.chat.a11y.showUnreadConversations()}
+                                    aria-haspopup="true"
+                                    aria-expanded={closeUnreadConversations !== undefined}
+                                    bind:this={unreadElsewhereButton}
+                                    onclick={toggleUnreadConversations}
+                                >
+                                    <!-- "@" until the conversation that mentioned the user is opened. -->
+                                    <UnreadCount
+                                        count={$unreadElsewhereStore}
+                                        size="sm"
+                                        ariaLabel=""
+                                        variant={$hasPendingMentionElsewhere ? "mention" : "default"}
+                                        text={$hasPendingMentionElsewhere ? "@" : undefined}
+                                    />
+                                </button>
                             {/if}
-                        </button>
-                    {:else}
+                        </div>
+                    {:else if !roomListVisible}
                         <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
                     {/if}
-                    <div class="text-sm font-bold min-w-0 grow text-center px-2 truncate" data-testid="roomName">
-                        {$roomName}
+                    {#if roomListVisible}
+                        <span class="shrink-0 ps-2">
+                            <Avatar
+                                compact
+                                pictureStore={room.pictureStore}
+                                fallbackName={$roomName}
+                                color={$roomTypeStore === "direct" ? ($avatarColorStore ?? defaultColor) : null}
+                            />
+                        </span>
+                    {/if}
+                    <div class="min-w-0 grow px-2 {roomListVisible ? 'text-start' : 'text-center'}">
+                        <div class="text-sm font-bold truncate" data-testid="roomName">
+                            {$roomName}
+                        </div>
+                        <ConversationSubtitle {room} centered={!roomListVisible} />
                     </div>
+
+                    {#if roomListVisible && showRoomSidePanelToggle && !compact}
+                        <div
+                            class="hidden @min-[600px]:flex items-center gap-1 shrink-0"
+                            data-testid="roomHeaderSections"
+                        >
+                            {#each headerSections as { section, label } (section)}
+                                {@const isActive =
+                                    roomSidePanelToggleIsOpen && $roomSidePanelStore.activeSection === section}
+                                <button
+                                    type="button"
+                                    class="px-3 h-9 rounded text-sm font-bold whitespace-nowrap !text-white hover:bg-white/10 {isActive
+                                        ? 'bg-white/10'
+                                        : ''}"
+                                    aria-pressed={isActive}
+                                    onclick={() => roomSidePanelStore.setActiveSection(section)}
+                                >
+                                    {label}
+                                </button>
+                            {/each}
+                        </div>
+                    {/if}
 
                     {#if showRoomSidePanelToggle && !compact}
                         <button
@@ -636,10 +907,12 @@
                                 ></span>
                             {/if}
                         </button>
-                    {:else}
+                    {:else if !roomListVisible}
                         <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
                     {/if}
                 </div>
+                <EnteredZoneBanner {room} />
+                <ChatMessageBanner />
                 {#if shouldDisplayLoader}
                     <div class="flex justify-center items-center w-full pb-1 bg-transparent">
                         <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
@@ -649,29 +922,34 @@
         {/if}
         <div
             bind:this={messageListRef}
+            bind:clientHeight={messageListHeight}
             class="flex overflow-auto h-full justify-center items-end relative"
             onscroll={handleScroll}
             onwheel={cancelProgrammaticScroll}
             ontouchstart={cancelProgrammaticScroll}
         >
             <ul
-                class="list-none p-0 flex-1 flex flex-col max-w-full max-h-full pt-10 gap-1 {$timelineItems.length === 0
-                    ? 'items-center justify-center pb-4'
-                    : 'max-w-6xl'}"
+                class="list-none p-0 flex-1 min-w-0 flex flex-col max-h-full pt-10 gap-1 {$timelineItems.length === 0
+                    ? 'max-w-full items-center justify-center pb-4'
+                    : 'max-w-3xl'}"
             >
-                {#if $initializationState === "loading" || $initializationState === "idle"}
+                {#if $initializationState === "loading" || $initializationState === "idle" || (!initialMessagesLoaded && $timelineItems.length === 0)}
+                    <!-- Until the first pages are in, an empty list means "not loaded yet", never "no message". -->
+                    <RoomTimelineLoading />
+                {:else if $initializationState === "error" || (historyLoadFailed && $timelineItems.length === 0)}
                     <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
-                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={32} />
-                    </li>
-                {:else if $initializationState === "error"}
-                    <li class="flex flex-col items-center justify-center gap-3 text-center px-3 max-w-md">
-                        <div class="text-lg font-bold text-center">{$LL.chat.connectionError()}</div>
+                        <div class="text-lg font-bold text-center">
+                            {$initializationState === "error"
+                                ? $LL.chat.connectionError()
+                                : $LL.chat.timeLine.loadError()}
+                        </div>
                         <div class="text-sm opacity-50 text-center">
                             {$initializationError?.message ?? ""}
                         </div>
                         <button
                             class="px-3 py-2 rounded bg-white/10 hover:bg-white/20 text-sm"
-                            onclick={retryInitialization}
+                            data-testid="retryLoadingMessagesButton"
+                            onclick={retryLoading}
                         >
                             {$LL.chat.timeLine.retry()}
                         </button>
@@ -709,10 +987,22 @@
                 {/if}
                 {#each renderItems as item (item.key)}
                     <li class="last:pb-3" data-event-id={item.kind === "item" ? item.timelineItem.id : undefined}>
+                        {#if item.key === firstUnreadKey}
+                            <div
+                                class="flex items-center gap-2 px-4 pt-2 pb-1 text-xs font-bold uppercase tracking-wider text-danger"
+                                data-testid="unreadMessagesDivider"
+                                data-options-obstacle
+                            >
+                                <span class="h-px flex-1 bg-danger/70"></span>
+                                {$LL.chat.timeLine.unreadDivider()}
+                                <span class="h-px flex-1 bg-danger/70"></span>
+                            </div>
+                        {/if}
                         {#if item.kind === "separator"}
                             <div class="flex justify-center items-center pt-3 pb-1 px-6">
-                                <span class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
-                                    >{item.label}</span
+                                <span
+                                    class="text-xs font-condensed min-w-32 text-center block opacity-75 py-1.5 px-3"
+                                    data-options-obstacle>{item.label}</span
                                 >
                             </div>
                         {:else if item.timelineItem.kind === "system"}
@@ -727,6 +1017,11 @@
                                 showHeader={item.showHeader}
                                 membersForMessageAvatars={room.membersForMessageAvatars}
                                 showThreadSummary={room.conversationKind === "room"}
+                                readReceipts={$readReceipts}
+                                showReaders={$roomType === "multiple" &&
+                                    item.timelineItem.message.id === lastOwnMessageId}
+                                isDirect={$roomType === "direct"}
+                                showTime={item.showTime}
                             />
                         {/if}
                     </li>
@@ -734,16 +1029,51 @@
             </ul>
         </div>
 
-        {#if $initializationState === "ready" && $typingMembers.length > 0}
-            <TypingUsers typingMembers={$typingMembers} />
+        <!-- Not over a list squeezed out of sight: the button would float over the applications panel. -->
+        {#if !autoScroll && (newMessagesCount > 0 || farFromBottom) && messageListHeight > JUMP_BUTTON_MIN_LIST_HEIGHT_PX}
+            <!-- Zero-height anchor: the button floats over the bottom of the list without being part of its scroll. -->
+            <div class="relative h-0">
+                {#snippet newMessagesLabel()}
+                    {$LL.chat.timeLine.newMessages({ count: newMessagesCount })}
+                {/snippet}
+                <!-- Without a label, no empty label span: it would push the arrow off-center. -->
+                <Button
+                    variant="secondary"
+                    size="sm"
+                    square={newMessagesCount === 0}
+                    children={newMessagesCount > 0 ? newMessagesLabel : undefined}
+                    class="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full shadow-lg whitespace-nowrap"
+                    dataTestId="jumpToLatestMessages"
+                    title={$LL.chat.timeLine.jumpToLatest()}
+                    aria-label={newMessagesCount > 0 ? undefined : $LL.chat.timeLine.jumpToLatest()}
+                    onclick={() => scrollToMessageListBottom()}
+                >
+                    {#snippet icon()}
+                        <IconArrowDown font-size="16" />
+                    {/snippet}
+                </Button>
+            </div>
         {/if}
-        {#key room}
-            <MessageInputBar
-                disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}
-                {room}
-                bind:this={messageInputBarRef}
+
+        <!-- Full width and never squeezed: a long message list must not shrink the input -->
+        <div class="w-full shrink-0">
+            {#if $shouldRetrySendingEvents}
+                <!-- The input is disabled until the unsent messages are retried: say so here, where the user is. -->
+                <RefreshChat />
+            {/if}
+            <!-- A copy: the proximity room pushes into the same array, which a prop would not see change. -->
+            <TypingUsers
+                typingMembers={$initializationState === "ready" ? [...$typingMembers] : []}
+                isDirect={$roomTypeStore === "direct"}
             />
-        {/key}
+            {#key room}
+                <MessageInputBar
+                    disabled={$shouldRetrySendingEvents || $initializationState !== "ready"}
+                    {room}
+                    bind:this={messageInputBarRef}
+                />
+            {/key}
+        </div>
     {/if}
 </div>
 

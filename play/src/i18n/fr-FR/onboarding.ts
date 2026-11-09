@@ -12,8 +12,8 @@ export default {
         title: "Se déplacer",
         descriptionDesktop:
             "Utilisez les touches fléchées ou WASD pour déplacer votre personnage. Vous pouvez aussi cliquer droit pour vous déplacer. Essayez de bouger maintenant !",
-        descriptionMobile:
-            "Utilisez le joystick ou appuyez sur la carte pour déplacer votre personnage. Essayez de bouger maintenant !",
+        descriptionTouch:
+            "Appuyez sur la carte pour vous y rendre, et faites-la glisser pour regarder autour de vous. Essayez de bouger maintenant !",
         next: "Suivant",
     },
     communication: {

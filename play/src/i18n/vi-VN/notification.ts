@@ -4,6 +4,7 @@ import type { Translation } from "../i18n-types";
 const notification: DeepPartial<Translation["notification"]> = {
     discussion: "{name} muốn trò chuyện với bạn",
     message: "{name} đã gửi một tin nhắn",
+    mention: "{name} đã nhắc đến bạn",
     askToMuteMicrophone: "Tôi có thể tắt micrô của bạn không?",
     askToMuteCamera: "Tôi có thể tắt camera của bạn không?",
     microphoneMuted: "Micrô của bạn đã bị người điều hành tắt",

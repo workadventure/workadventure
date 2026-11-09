@@ -1,3 +1,4 @@
+import { v4 } from "uuid";
 import type { AreaData } from "./types";
 import { SpeakerMegaphonePropertyData } from "./types";
 
@@ -42,4 +43,12 @@ export function getSpeakerMegaphoneAreaInfo(
         };
     }
     return undefined;
+}
+
+/**
+ * Deep-copies the properties of an area or entity for its copy, giving each one a new id. Uploaded files, unnamed
+ * meeting rooms and the property editors are keyed by property id: a copy keeping the ids would share them.
+ */
+export function withNewPropertyIds<T extends { id: string }>(properties: T[]): T[] {
+    return structuredClone(properties).map((property) => ({ ...property, id: v4() }));
 }
