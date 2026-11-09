@@ -11,9 +11,11 @@
         onEmojiClick: (event: EmojiClickEvent) => void;
         // onClose is triggered when the "Esc" key is pressed
         onClose: () => void;
+        // Opened from the keyboard: the search field takes the focus, and tabbing out of the picker closes it.
+        keyboardNavigation?: boolean;
     }
 
-    let { onEmojiClick = () => {}, onClose = () => {} }: Props = $props();
+    let { onEmojiClick = () => {}, onClose = () => {}, keyboardNavigation = false }: Props = $props();
 
     let emojiPicker: Picker;
 
@@ -186,6 +188,9 @@
     onMount(() => {
         emojiPicker.addEventListener("emoji-click", emojiClickEventHandler);
         emoteMenuStore.openEmoteMenu();
+        if (keyboardNavigation) {
+            emojiPicker.shadowRoot?.querySelector<HTMLInputElement>("#search")?.focus({ preventScroll: true });
+        }
     });
 
     onDestroy(() => {
@@ -206,7 +211,16 @@
         }
     }}
 />
-<emoji-picker id="emoji-picker" class="pointer-events-auto" use:clickOutside={close} bind:this={emojiPicker}
+<emoji-picker
+    id="emoji-picker"
+    class="pointer-events-auto"
+    use:clickOutside={close}
+    bind:this={emojiPicker}
+    onfocusout={(event: FocusEvent) => {
+        if (keyboardNavigation && event.relatedTarget instanceof Node && !emojiPicker.contains(event.relatedTarget)) {
+            close();
+        }
+    }}
 ></emoji-picker>
 
 <style>

@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import type { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
     import { onDestroy, onMount } from "svelte";
@@ -10,9 +11,11 @@
     interface Props {
         content: Readable<ChatMessageContent>;
         hasDepth: false;
+        /** The message's time and tick, floated at the end of the last line. */
+        trailing?: Snippet;
     }
 
-    let { content, hasDepth }: Props = $props();
+    let { content, hasDepth, trailing }: Props = $props();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -58,14 +61,15 @@
     let unsubscriber: Unsubscriber | undefined;
     onMount(() => {
         unsubscriber = content.subscribe((value) => {
-            let promiseHtml = getMarked(value.body).then((marked) => marked.parse(value.body));
+            const source = value.formattedBody ?? value.body;
+            let promiseHtml = getMarked(source).then((marked) => marked.parse(source));
             promiseHtml
                 .then((result) => {
                     html = result;
                 })
                 .catch((error) => {
                     console.error("Failed to parse markdown content", error);
-                    html = $content.body;
+                    html = source;
                 });
         });
     });
@@ -87,6 +91,11 @@
         }
         const anchor = target.closest("a");
         if (!(anchor instanceof HTMLAnchorElement)) {
+            return;
+        }
+        // A mention pill names a user, it is not a page to open.
+        if (anchor.dataset.mention !== undefined || anchor.href.startsWith("https://matrix.to/#/@")) {
+            event.preventDefault();
             return;
         }
 
@@ -126,7 +135,12 @@
     onclick={onBubbleClick}
 >
     {@html sanitizeHTML(html)}
+    {@render trailing?.()}
 </div>
 
 <style>
+    /* The last paragraph flows inline so the floated stamp shares its last line when there is room. */
+    .message-bubble > :global(p:last-of-type:nth-last-child(2)) {
+        display: inline;
+    }
 </style>

@@ -10,7 +10,10 @@ vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
 vi.mock("./settings", () => ({ default: { get: () => undefined } }));
 vi.mock("./hud-windows", () => ({
     HUD_SIZES: { "mini-window": { width: 340, height: 480 }, "meeting-bar": { width: 680, height: 76 } },
-    resolveDisplay: () => ({ workArea: { x: 0, y: 0, width: 1920, height: 1080 } }),
+    resolveDisplay: () => ({
+        bounds: { x: 0, y: 0, width: 1920, height: 1080 },
+        workArea: { x: 0, y: 33, width: 1920, height: 1047 },
+    }),
     meetingBarBounds: () => ({ x: 620, y: 980, width: 680, height: 76 }),
     setUpHudWindow: (kind: string, window: unknown) => fake.adopted.push([kind, window]),
 }));
@@ -63,6 +66,19 @@ test("places the meeting bar where main computed it, see-through", async () => {
         resizable: false,
     });
     adoptChildWindow(childWindow(), "wa-meeting-bar");
+    await expect(opened).resolves.toBe(true);
+});
+
+test("covers the whole display with the annotation overlay, menu bar included", async () => {
+    const opened = openChildWindow("annotation", 1);
+    expect(childWindowOptions("about:blank", "wa-annotation")).toMatchObject({
+        x: 0,
+        y: 0,
+        width: 1920,
+        height: 1080,
+        enableLargerThanScreen: true,
+    });
+    adoptChildWindow(childWindow(), "wa-annotation");
     await expect(opened).resolves.toBe(true);
 });
 
