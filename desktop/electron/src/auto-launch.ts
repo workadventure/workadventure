@@ -24,9 +24,12 @@ const LINUX_AUTOSTART_FILE = "workadventure-desktop.desktop";
 
 const listeners = new Set<() => void>();
 
-/** At startup: on for a fresh install, otherwise left as the user set it, here or in the system. */
-export function initStartAtLogin(firstLaunch: boolean) {
-    if (firstLaunch) {
+/**
+ * At startup: on for a fresh install or an update from 1.x that had it on (`turnOn`), otherwise left
+ * as the user set it, here or in the system.
+ */
+export function initStartAtLogin(turnOn: boolean) {
+    if (turnOn) {
         setStartAtLogin(true);
     } else if (process.platform === "linux" && isStartAtLoginEnabled()) {
         // Rewritten with the current path: an AppImage can move, and older versions wrote a temporary one.

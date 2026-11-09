@@ -46,8 +46,8 @@ further here.
     - Location: [`play/src/front/Stores/MediaStore.ts`](../../../play/src/front/Stores/MediaStore.ts) and
       [`play/src/front/Stores/ScreenSharingStore.ts`](../../../play/src/front/Stores/ScreenSharingStore.ts)
 - **Persistence**: values saved to `localStorage` via `LocalUserStore`
-- **When read**: at track publication (LiveKit) or peer creation and every encoding update (P2P). A change of setting
-  applies to the next stream, not to the running one.
+- **When read**: at track publication (LiveKit) or peer creation and every encoding update (P2P). A change of the
+  camera setting also republishes a LiveKit camera; a change of the screen share setting applies to the next share.
 
 ## Codec Selection
 
@@ -264,12 +264,16 @@ A straight line on a log-log chart: the budget grows with the pixel count at a r
 at one reference size (`anchorPixels`) by three `anchor` values, one per quality setting. Anything larger than 1080p is
 budgeted like 1080p.
 
+This is the budget of one resolution. A stream that carries several in one `maxBitrate` (an SVC camera on LiveKit) is
+budgeted as the sum over its layers, each a quarter of the pixels of the one above (see
+[LiveKit Implementation](#livekit-implementation)).
+
 Two curves exist, one per stream category:
 
 | Parameter | Camera | Screen share |
 |---|---|---|
 | `anchorPixels` | 1280 × 720 | 1920 × 1080 |
-| `anchor.low` | 400 kbps | 1 Mbps |
+| `anchor.low` | 700 kbps | 1 Mbps |
 | `anchor.recommended` | 700 kbps | 3 Mbps |
 | `anchor.high` | 1.8 Mbps | 4.5 Mbps |
 | `exponent` | 0.75 | 0.5 |
@@ -283,10 +287,16 @@ At equal perceived quality, the bitrate a codec needs does not grow linearly wit
 `pixels ^ 0.5`: most of its cost is in edges and keyframes, not in the area. This is the only real difference between
 the two curves. Nothing in VP9 or AV1 requires discrete resolution steps.
 
-The camera curve is fitted on the [LiveKit bitrate guide](https://livekit.io/webrtc/bitrate-guide), which is the
-table WorkAdventure used before. The fit is within 20 % of that table at every standard size up to 1080p, and a unit
-test in [`VideoPresets.test.ts`](../../../play/src/front/WebRtc/VideoPresets.test.ts) keeps it there: retuning the
-exponent or an anchor makes the test fail if the curve drifts away from the reference.
+The camera curve is fitted on the [LiveKit bitrate guide](https://livekit.io/webrtc/bitrate-guide): "recommended" on
+its webcam table (VMAF 90), "high" on its gaming table (VMAF 85). The fit is within 20 % at every standard size up to
+1080p, and a unit test in [`VideoPresets.test.ts`](../../../play/src/front/WebRtc/VideoPresets.test.ts) keeps it there:
+retuning the exponent or an anchor makes the test fail if the curve drifts away from the reference.
+
+A camera on "low" gets the bitrate of "recommended" at each size. It saves by capturing 360p (see Capture resolution of
+cameras) and by its lower frame rate, not by paying each size less: libwebrtc has a minimum bitrate per size (190 kbps
+for VP9 at 640 × 360, 300 kbps for VP8, `GetDefaultSinglecastBitrateLimits`), and below it the encoder sends a smaller
+picture than the one we ask for, reporting `qualityLimitationReason: "bandwidth"`. The guide's numbers are for 30 fps,
+so at 15 fps "low" gets about twice the bits per frame.
 
 ### Why a curve rather than a table
 
@@ -344,6 +354,9 @@ Camera, recommended:
 | 1280 × 720 | 700 kbps | 1 Mbps |
 | 1920 × 1080 and above | 1.29 Mbps | 1.84 Mbps |
 
+A VP9 camera sent as SVC on LiveKit (see LiveKit Implementation) adds its two lower layers to its budget: 672 kbps at
+960 × 540, 1,035 kbps at 1280 × 720, 1.9 Mbps at 1920 × 1080.
+
 Screen share, recommended:
 
 | Captured size | AV1 | VP9 | H.264 or VP8 |
@@ -354,6 +367,12 @@ Screen share, recommended:
 
 These are caps (`maxBitrate`). The encoder uses less when the content allows it, and the browser's congestion control
 lowers the actual bitrate further when the network cannot carry it.
+
+### Capture resolution of cameras
+
+`videoConstraintStore` asks the camera for 1280 × 720, and for 640 × 360 on "low", which therefore never sends more
+than 360p, on either transport. These are `ideal` values cropped and scaled to 16:9 by the browser: a camera can still
+deliver another size (640 × 480 is seen in production), and every budget follows the size actually delivered.
 
 ### Capture resolution of screen shares
 
@@ -407,8 +426,27 @@ times.
 - Computes the budget with `selectVideoPreset()` for the captured size and that codec.
 - Publishes the camera with `videoEncoding.maxBitrate` / `maxFramerate`, and the screen share with
   `screenShareEncoding.maxBitrate` / `maxFramerate` and the user's `degradationPreference`.
-- Simulcast is enabled. Our budget applies to the **top** layer only; `livekit-client` derives the lower layers from
-  its own presets.
+- Cameras go out as simulcast: separate streams at 180p, 360p and the captured size, so that dynacast pauses the ones
+  nobody watches. Our budget applies to the **top** stream; `livekit-client` gives the lower ones its own presets
+  (160 kbps and 450 kbps in 16:9). VP9 and AV1 cameras do it with `scalabilityMode: "L1T3"` on each stream, which
+  `livekit-client` only honours on a LiveKit server newer than 1.13.6 and outside Safari and iOS
+  (`supportsSvcSimulcast()`).
+- Elsewhere, VP9 and AV1 cameras go out as SVC: one stream, `L3T3_KEY`, that always carries its three layers. A screen
+  share is always one `L1T3` stream. The SVC `maxBitrate`
+  covers every spatial layer, so the camera budget is the curve summed over its three layers (`spatialLayers` in
+  `selectVideoPreset()`): 1,035 kbps at 720p "recommended" rather than 700. With the one-layer budget, libwebrtc never
+  enables the top layer (a 720p VP9 stream needs 891 kbps for its three layers, a 1080p one 1,425 kbps), and the encoder
+  reports `qualityLimitationReason: "bandwidth"` while the network has room to spare. libwebrtc also pads an SVC stream
+  up to 1.2 × that rate to probe for the top layer, so the one-layer budget saves no upload: a 720p camera capped at
+  700 kbps sends about 1 Mbps either way, 450 kbps of it padding.
+- A camera on "low" is captured at 360p (see Capture resolution of cameras) and sent as 360p + 180p simulcast:
+  thumbnails take the 180p stream and dynacast pauses the 360p one while nobody highlights the camera. The 180p stream
+  is budgeted on our curve too (`lowCameraLowerLayer()`): `livekit-client`'s own 180p preset is sized for VP8 and runs
+  at 20 fps, above the frame rate of "low". On the SVC fallback, "low" is a single `L1T3` stream: its 360p budget
+  (247 kbps for VP9) is below the 299 kbps libwebrtc needs to turn the second SVC layer on at that size.
+- The budget, the codec and the layers are fixed at `publishTrack()`. When the quality setting or the captured size no
+  longer matches the publication, the camera is unpublished and published again (`cameraPublicationKey()`), instead of
+  swapping the new track into the old publication.
 - The camera declares VP8 as a backup codec (`backupCodecPolicy: SIMULCAST`): if a subscriber cannot decode VP9,
   LiveKit asks the publisher to also encode VP8, instead of downgrading everyone. When the primary codec is already
   VP8, LiveKit disables the backup itself.
@@ -430,8 +468,8 @@ times.
 - **Congestion control** still applies on top of every cap: the browser lowers the actual bitrate when the network
   cannot carry it, and libwebrtc lowers resolution or frame rate when the CPU cannot keep up (reported as
   `qualityLimitationReason` in the encoder stats and in the video quality analytics).
-- **Dynamic updates**: the quality setting is applied at publication time on LiveKit, and at every encoding update on
-  P2P. Live changes of the setting reach LiveKit tracks at their next publication.
+- **Dynamic updates**: on P2P the quality setting is applied at every encoding update. On LiveKit a change of the
+  camera setting publishes the camera again; a change of the screen share setting reaches it at its next publication.
 
 ## Future work
 

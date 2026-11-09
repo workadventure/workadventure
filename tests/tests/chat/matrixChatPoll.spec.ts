@@ -15,7 +15,7 @@ async function openFreshMatrixRoom(page: Page, roomName: string, invitedUsers: s
     await ChatUtils.openCreateRoomDialog(page);
     await page.getByTestId("createRoomName").fill(roomName);
 
-    const usersInput = page.getByPlaceholder("Users");
+    const usersInput = page.getByPlaceholder("Search for people…");
     if (invitedUsers.length === 0) {
         await usersInput.click();
         await usersInput.press("Enter");
@@ -135,10 +135,12 @@ test.describe("Matrix chat polls @oidc @matrix @nowebkit", () => {
         await expectParticipantsCount(page, 1);
 
         await page.getByTestId("endPollButton").click();
+        await page.getByTestId("confirmDialogConfirm").click();
         await expect(page.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(page.getByTestId("endPollButton")).toBeHidden();
 
         await page.getByTestId("deletePollButton").click();
+        await page.getByTestId("confirmDialogConfirm").click();
         await expect(page.getByTestId("pollQuestion")).toBeHidden();
     });
 
@@ -161,6 +163,7 @@ test.describe("Matrix chat polls @oidc @matrix @nowebkit", () => {
         await expect(page.getByTestId("pollCard")).not.toContainText("1 (100%)");
 
         await page.getByTestId("endPollButton").click();
+        await page.getByTestId("confirmDialogConfirm").click();
         await expect(page.getByTestId("pollClosedNotice")).toBeVisible();
         await expect(page.getByTestId("pollCard")).toContainText("1 (100%)");
     });

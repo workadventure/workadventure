@@ -109,10 +109,9 @@ export class WamManager {
             }
             case "createAreaMessage": {
                 const message = editMapMessage.createAreaMessage;
-                const areaObjectConfig: AreaData = {
-                    ...message,
-                    visible: true,
-                };
+                const { id, x, y, width, height, name } = message;
+                const properties = message.properties as AreaData["properties"];
+                const areaObjectConfig: AreaData = { id, x, y, width, height, name, properties, visible: true };
                 await new CreateAreaCommand(wamFile, areaObjectConfig, editMapCommandMessage.id).execute();
                 break;
             }
