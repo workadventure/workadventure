@@ -68,9 +68,6 @@ export class Space {
                             }
                         }
                     }
-
-                    // Notify the subscribers about the update
-                    this._userJoinedSubscriber?.next(user);
                     break;
                 }
                 case "onSetMetadata": {

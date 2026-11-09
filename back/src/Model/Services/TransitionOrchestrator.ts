@@ -49,7 +49,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
                 context.space,
                 context.users,
                 context.usersToNotify,
-                { playUri: context.playUri },
+                { playUri: context.playUri, livekitCredentials: context.livekitCredentials },
             );
 
             // Check if aborted during async state creation
@@ -117,7 +117,7 @@ export class TransitionOrchestrator implements ITransitionOrchestrator {
                             context.space,
                             context.users,
                             context.usersToNotify,
-                            { playUri: context.playUri },
+                            { playUri: context.playUri, livekitCredentials: context.livekitCredentials },
                         );
 
                         // Final check before resolving

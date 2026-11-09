@@ -2,6 +2,8 @@
     import type { Snippet } from "svelte";
     interface Props {
         id?: string;
+        /** Radios of one group share a name, so checking one unchecks the others. */
+        name?: string;
         label: string;
         onchange?: () => void;
         onfocusin?: (event: FocusEvent) => void;
@@ -15,6 +17,7 @@
 
     let {
         id = undefined,
+        name = undefined,
         label,
         onchange = () => {},
         onfocusin,
@@ -35,6 +38,7 @@
             id={uniqueId}
             class="sr-only peer"
             type="radio"
+            {name}
             bind:group
             {value}
             {onchange}
