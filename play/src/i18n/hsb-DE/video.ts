@@ -27,7 +27,6 @@ const video: DeepPartial<Translation["video"]> = {
         inAnotherWindow: "{name} je w druhim woknje abo rajtarku",
         cameraAndMicPaused: "Kamera a mikrofon w přestawce hač do wróćenja",
         cameraPaused: "Kamera w přestawce hač do wróćenja",
-        micPaused: "Mikrofon w přestawce hač do wróćenja",
     },
 };
 

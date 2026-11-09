@@ -27,7 +27,6 @@ const video: DeepPartial<Translation["video"]> = {
         inAnotherWindow: "{name} đang ở cửa sổ hoặc tab khác",
         cameraAndMicPaused: "Camera và micro tạm dừng đến khi quay lại",
         cameraPaused: "Camera tạm dừng đến khi quay lại",
-        micPaused: "Micro tạm dừng đến khi quay lại",
     },
 };
 

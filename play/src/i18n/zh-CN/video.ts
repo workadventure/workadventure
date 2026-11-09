@@ -27,7 +27,6 @@ const video: DeepPartial<Translation["video"]> = {
         inAnotherWindow: "{name} 在其他窗口或标签页中",
         cameraAndMicPaused: "摄像头和麦克风已暂停，回来后恢复",
         cameraPaused: "摄像头已暂停，回来后恢复",
-        micPaused: "麦克风已暂停，回来后恢复",
     },
 };
 

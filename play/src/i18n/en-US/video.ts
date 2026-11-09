@@ -26,7 +26,6 @@ const video: BaseTranslation = {
         inAnotherWindow: "{name} is in another window or tab",
         cameraAndMicPaused: "Camera and mic paused until they're back",
         cameraPaused: "Camera paused until they're back",
-        micPaused: "Mic paused until they're back",
     },
 };
 

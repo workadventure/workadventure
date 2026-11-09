@@ -27,7 +27,6 @@ const video: DeepPartial<Translation["video"]> = {
         inAnotherWindow: "{name} في نافذة أو علامة تبويب أخرى",
         cameraAndMicPaused: "الكاميرا والميكروفون متوقفان مؤقتًا حتى العودة",
         cameraPaused: "الكاميرا متوقفة مؤقتًا حتى العودة",
-        micPaused: "الميكروفون متوقف مؤقتًا حتى العودة",
     },
 };
 

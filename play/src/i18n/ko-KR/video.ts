@@ -27,7 +27,6 @@ const video: DeepPartial<Translation["video"]> = {
         inAnotherWindow: "{name}님은 다른 창이나 탭에 있습니다",
         cameraAndMicPaused: "돌아올 때까지 카메라와 마이크 일시 중지됨",
         cameraPaused: "돌아올 때까지 카메라 일시 중지됨",
-        micPaused: "돌아올 때까지 마이크 일시 중지됨",
     },
 };
 

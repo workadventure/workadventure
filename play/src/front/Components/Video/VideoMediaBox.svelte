@@ -4,6 +4,7 @@
     import * as Sentry from "@sentry/svelte";
     import type { Subscription } from "rxjs";
     import { get } from "svelte/store";
+    import { AvailabilityStatus } from "@workadventure/messages";
     import SoundMeterWidget from "../SoundMeterWidget.svelte";
     import { highlightedEmbedScreen } from "../../Stores/HighlightedEmbedScreenStore";
     import type { VideoBox, VideoBoxStreamableEntry } from "../../Space/VideoBox";
@@ -36,7 +37,6 @@
     import ScreenAnnotationToolbar from "./ScreenAnnotationToolbar.svelte";
     import WebRtcStats from "./WebRtcStatsBox.svelte";
     import EncoderStatsBox from "./EncoderStatsBox.svelte";
-    import { awayNotice } from "./awayNotice";
     import { IconArrowsMinimize, IconArrowsMaximize, IconEyeOff, IconMicrophoneOff, IconPencil } from "@wa-icons";
 
     interface Props {
@@ -126,17 +126,13 @@
     let availabilityStatusStore = $derived(extendedSpaceUser?.reactiveUser.availabilityStatus);
     let cameraHeldStore = $derived(extendedSpaceUser?.reactiveUser.cameraHeld);
     let microphoneHeldStore = $derived(extendedSpaceUser?.reactiveUser.microphoneHeld);
-    // Someone walking up to a user in away mode is told why they get no answer. Only on another user's camera tile.
+    // Someone walking up to a user in away mode sees why they get no answer. Only on another user's camera tile.
     let away = $derived(
-        streamable?.videoType === "video" && !isLocalUser && effectiveStatus === "connected" && !$isBlockedStore
-            ? awayNotice(
-                  $LL,
-                  $availabilityStatusStore,
-                  name ?? "unknown",
-                  $cameraHeldStore ?? false,
-                  $microphoneHeldStore ?? false,
-              )
-            : undefined,
+        streamable?.videoType === "video" && !isLocalUser && $availabilityStatusStore === AvailabilityStatus.AWAY,
+    );
+    // A camera away mode holds off gets the shutter of the user's own tile, instead of the centered Woka of a camera turned off
+    let awayCameraHeld = $derived(
+        away && ($cameraHeldStore ?? false) && effectiveStatus === "connected" && !$isBlockedStore,
     );
     // Like audioStateMismatch, but with a 3 seconds delay.
     let showAudioStateMismatch = $state(false);
@@ -477,16 +473,33 @@
                                     picture={pictureStore}
                                     isPlayingAudio={showVoiceIndicator ?? false}
                                     {isHandRaised}
-                                    isCameraDisabled={!away &&
+                                    isCameraDisabled={!awayCameraHeld &&
                                         ((!(videoEnabled ?? false) && !miniMode) || effectiveStatus !== "connected")}
                                     isBlocked={$isBlockedStore ?? false}
-                                    position={(videoEnabled || away) &&
+                                    position={(videoEnabled || awayCameraHeld) &&
                                     !$isBlockedStore &&
                                     effectiveStatus === "connected"
                                         ? "absolute bottom-0 left-0 @[17.5rem]/videomediabox:bottom-2 @[17.5rem]/videomediabox:left-2"
                                         : "absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"}
                                     grayscale={effectiveStatus === "connecting" || effectiveStatus === "reconnecting"}
                                 >
+                                    {#snippet leading()}
+                                        <!-- Only by the centered Woka: a visible camera or the held overlay already tells -->
+                                        {#if away && !videoEnabled && !awayCameraHeld}
+                                            <span
+                                                role="img"
+                                                aria-label={$LL.video.remoteAway.inAnotherWindow({
+                                                    name: name ?? "unknown",
+                                                })}
+                                                title={$LL.video.remoteAway.inAnotherWindow({
+                                                    name: name ?? "unknown",
+                                                })}
+                                                class="me-1.5 inline-block h-2 w-2 shrink-0 rounded-full align-middle"
+                                                style:background-color={getColorHexOfStatus(AvailabilityStatus.AWAY)}
+                                                data-testid="away-notice"
+                                            ></span>
+                                        {/if}
+                                    {/snippet}
                                     <RaisedHandBadge
                                         spaceUserId={raisedHandSpaceUserId}
                                         spaceName={raisedHandSpaceName}
@@ -539,36 +552,31 @@
                                         {/if}
                                     </div>
                                 {/if}
-                                {#if away && $cameraHeldStore}
+                                {#if awayCameraHeld}
                                     <!-- The shutter of the user's own tile (AwayPausedOverlay), seen from the visitor's side -->
+                                    {@const awayText = $LL.video.remoteAway.inAnotherWindow({
+                                        name: name ?? "unknown",
+                                    })}
+                                    {@const awayDetail = $microphoneHeldStore
+                                        ? $LL.video.remoteAway.cameraAndMicPaused()
+                                        : $LL.video.remoteAway.cameraPaused()}
                                     <div
                                         class="absolute inset-0 z-[251] pointer-events-none flex flex-col items-center justify-center rounded-lg border border-dashed border-warning/60 px-4 pb-8 text-center text-white"
+                                        data-testid="away-camera-held"
                                     >
+                                        <!-- Small tiles keep only the icon, with the text in its tooltip -->
                                         <div
-                                            role="status"
                                             class="pointer-events-auto flex flex-col items-center gap-0.5"
-                                            title="{away.text}. {away.detail}"
-                                            data-testid="away-notice"
+                                            title="{awayText}. {awayDetail}"
                                         >
                                             <IconEyeOff class="text-warning shrink-0" font-size="20" />
                                             <div class="hidden @[14rem]/videomediabox:block text-sm leading-tight">
-                                                {away.text}
+                                                {awayText}
                                             </div>
                                             <div class="hidden @[14rem]/videomediabox:block text-xs text-white/60">
-                                                {away.detail}
+                                                {awayDetail}
                                             </div>
                                         </div>
-                                    </div>
-                                {:else if away}
-                                    <div
-                                        role="status"
-                                        class="absolute top-2 left-2 right-10 w-fit z-[251] rounded bg-contrast/80 backdrop-blur px-2 py-1 text-xs text-white"
-                                        data-testid="away-notice"
-                                    >
-                                        <div>{away.text}</div>
-                                        {#if away.detail}
-                                            <div class="text-white/60">{away.detail}</div>
-                                        {/if}
                                     </div>
                                 {/if}
                                 {#if webRtcStats}
