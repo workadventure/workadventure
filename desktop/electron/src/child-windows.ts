@@ -94,6 +94,8 @@ export function childWindowOptions(url: string, frameName: string): BrowserWindo
             transparent: true,
             hasShadow: false,
             focusable: false,
+            // Without it, macOS pushes the window below the menu bar: every annotation lands that much lower.
+            enableLargerThanScreen: true,
             backgroundColor: "#00000000",
         };
     return kind === "companion"
