@@ -74,6 +74,7 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bob.getByTestId("annotation-toggle")).toHaveCount(0);
 
         // Alice draws one stroke (drawing mode is already active from the pencil button).
+        await alice.getByTestId("annotation-pen-button").click();
         await alice.getByTestId("annotation-tool-pen").click();
         await drawStroke(alice, aliceCanvas);
 
@@ -201,6 +202,7 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
 
         const aliceCanvas = alice.locator("#highlighted-media").getByTestId("annotation-canvas");
         const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
+        await alice.getByTestId("annotation-pen-button").click();
         await alice.getByTestId("annotation-tool-temporaryPen").click();
         await drawStroke(alice, aliceCanvas);
 

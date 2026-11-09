@@ -19,10 +19,13 @@ type DraftOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
 /** A reversible local-user action for the undo / redo history: a drawn stroke, or an erased one. */
 type UndoOp = { kind: "add" | "remove"; element: ScreenAnnotationElement };
 
+// A temporary pen stroke shows for 3 s after its last change, then fades out in 1.5 s.
+const TEMPORARY_PEN_HOLD_MS = 3000;
+const TEMPORARY_PEN_FADE_MS = 1500;
 // Drafts that are never saved: how long each shows after its last change.
 const TRANSIENT_LIFETIMES = new Map([
     ["pointer", 1500],
-    ["temporaryPen", 3000],
+    ["temporaryPen", TEMPORARY_PEN_HOLD_MS + TEMPORARY_PEN_FADE_MS],
 ]);
 
 /**
@@ -54,6 +57,8 @@ class ScreenAnnotationManager {
     // Ids of the elements we asked the back to erase: any other that leaves the state was erased by someone else.
     private erasing = new Set<string>();
     private expirations = new Map<string, ReturnType<typeof setTimeout>>();
+    // When each draft shown last changed: a temporary pen stroke fades out from it.
+    private shownAt = new WeakMap<ScreenAnnotationElement, number>();
 
     private clearExpiry(target: string, key: string): void {
         const timerKey = JSON.stringify([target, key]);
@@ -231,6 +236,7 @@ class ScreenAnnotationManager {
         this.drafts.set(target, drafts);
         this.clearExpiry(target, key);
         drafts.set(key, draft);
+        this.shownAt.set(draft, Date.now());
         const lifetime = TRANSIENT_LIFETIMES.get(draft.tool);
         if (lifetime !== undefined) {
             const timerKey = JSON.stringify([target, key]);
@@ -243,6 +249,16 @@ class ScreenAnnotationManager {
                 }, lifetime),
             );
         }
+    }
+
+    /** How opaque to draw an element: a temporary pen stroke fades out before it disappears. */
+    public opacity(element: ScreenAnnotationElement): number {
+        const shownAt = this.shownAt.get(element);
+        if (element.tool !== "temporaryPen" || shownAt === undefined) {
+            return 1;
+        }
+        const fadeEnd = shownAt + TEMPORARY_PEN_HOLD_MS + TEMPORARY_PEN_FADE_MS;
+        return Math.min(1, Math.max(0, (fadeEnd - Date.now()) / TEMPORARY_PEN_FADE_MS));
     }
 
     private publish(): void {

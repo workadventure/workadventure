@@ -213,8 +213,10 @@
         // a stroke being drawn must never be invisible to its own author.
         if (!locallyHidden) {
             for (const element of elements) {
+                ctx.globalAlpha = screenAnnotationManager.opacity(element);
                 drawElement(ctx, element);
             }
+            ctx.globalAlpha = 1;
         }
         if (draft) {
             drawElement(ctx, draft);
@@ -225,6 +227,20 @@
         // render() reads elements, draft, clientWidth and clientHeight, so this effect
         // automatically re-runs whenever any of them changes.
         render();
+    });
+
+    // A temporary pen stroke fades out: redraw on every frame while one shows. The canvas's own window paces it:
+    // in the desktop overlay, the main window may be hidden.
+    $effect(() => {
+        const view = canvas?.ownerDocument.defaultView;
+        if (!view || locallyHidden || !elements.some((element) => element.tool === "temporaryPen")) {
+            return;
+        }
+        let frame = view.requestAnimationFrame(function redraw() {
+            render();
+            frame = view.requestAnimationFrame(redraw);
+        });
+        return () => view.cancelAnimationFrame(frame);
     });
 
     // Drawing mode ended mid-stroke (Escape, the presenter stopped letting the others draw...): the stroke is

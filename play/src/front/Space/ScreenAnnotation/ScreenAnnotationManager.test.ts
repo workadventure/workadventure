@@ -222,7 +222,13 @@ describe("ScreenAnnotationManager", () => {
         sendDraft("viewer", stroke);
         sendDraft("viewer", { ...stroke, id: "t2" });
         expect(elementIds()).toEqual(["t1", "t2"]);
-        vi.advanceTimersByTime(3001);
+        // Shown for 3 s, then faded out in 1.5 s.
+        const [shown] = get(screenAnnotationElementsStore).get(PRESENTER) ?? [];
+        vi.advanceTimersByTime(3000);
+        expect(screenAnnotationManager.opacity(shown)).toBe(1);
+        vi.advanceTimersByTime(750);
+        expect(screenAnnotationManager.opacity(shown)).toBe(0.5);
+        vi.advanceTimersByTime(751);
         expect(elementIds()).toEqual([]);
 
         const mine = { ...element("mine", ME), tool: "temporaryPen" };
@@ -235,7 +241,7 @@ describe("ScreenAnnotationManager", () => {
         screenAnnotationManager.undoLastLocalElement(PRESENTER);
         expect(stateManager.upsertScreenAnnotation).not.toHaveBeenCalled();
         expect(stateManager.removeScreenAnnotation).not.toHaveBeenCalled();
-        vi.advanceTimersByTime(3001);
+        vi.advanceTimersByTime(4501);
         expect(elementIds()).toEqual([]);
     });
 
