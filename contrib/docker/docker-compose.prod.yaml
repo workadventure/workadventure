@@ -72,7 +72,6 @@ services:
       - CLIENT_DISCONNECTION_RETENTION_MS
       - REDIS_HOST=redis
       - ENABLE_TUTORIAL=${ENABLE_TUTORIAL:-true}
-      - UPLOADER_URL=/uploader
       # Report issues menu
       - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}
@@ -220,39 +219,6 @@ services:
       traefik.http.routers.back-ssl.service: "back"
       traefik.http.routers.back-ssl.tls: "true"
       traefik.http.routers.back-ssl.tls.certresolver: "myresolver"
-    restart: ${RESTART_POLICY}
-
-  uploader:
-    image: thecodingmachine/workadventure-uploader:${VERSION}
-    environment:
-      - UPLOADER_URL=https://${DOMAIN}/uploader
-      #AWS
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION}
-      - AWS_BUCKET=${AWS_BUCKET}
-      - AWS_URL=${AWS_URL}
-      - AWS_ENDPOINT=${AWS_ENDPOINT}
-      #REDIS
-      - REDIS_HOST=${UPLOADER_REDIS_HOST}
-      - REDIS_PORT=${UPLOADER_REDIS_PORT}
-      #CHAT
-      - ADMIN_API_URL=${ADMIN_API_URL}
-      - ENABLE_CHAT_UPLOAD=${ENABLE_CHAT_UPLOAD}
-      - UPLOAD_MAX_FILESIZE=${UPLOAD_MAX_FILESIZE}
-    labels:
-      traefik.enable: "true"
-      traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes: "/uploader"
-      traefik.http.routers.uploader.rule: "Host(`${DOMAIN}`) && PathPrefix(`/uploader`)"
-      traefik.http.routers.uploader.middlewares: "strip-uploader-prefix@docker"
-      traefik.http.routers.uploader.entryPoints: "web"
-      traefik.http.services.uploader.loadbalancer.server.port: "8080"
-      traefik.http.routers.uploader-ssl.middlewares: "strip-uploader-prefix@docker"
-      traefik.http.routers.uploader-ssl.rule: "Host(`${DOMAIN}`) && PathPrefix(`/uploader`)"
-      traefik.http.routers.uploader-ssl.entryPoints: "websecure"
-      traefik.http.routers.uploader-ssl.service: "uploader"
-      traefik.http.routers.uploader-ssl.tls: "true"
-      traefik.http.routers.uploader-ssl.tls.certresolver: "myresolver"
     restart: ${RESTART_POLICY}
 
   icon:

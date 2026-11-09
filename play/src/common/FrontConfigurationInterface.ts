@@ -5,7 +5,6 @@ export interface FrontConfigurationInterface {
     PUSHER_URL: string;
     FRONT_URL: string;
     ADMIN_URL: string | undefined;
-    UPLOADER_URL: string;
     ICON_URL: string;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
     JITSI_URL: string | undefined;

@@ -106,18 +106,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "ユーザーが到着するエントリポイントを選択してください",
     },
     globalMessage: {
-        text: "テキスト",
-        audio: "オーディオ",
         warning: "ワールドのすべてのルームに送信",
         enter: "メッセージを入力してください",
         send: "送信",
-    },
-    globalAudio: {
-        uploadInfo: "ファイルをアップロードします",
-        error: "ファイルが選択されていません。送信する前にファイルをアップロードする必要があります。",
-        errorUpload:
-            "ファイルのアップロードエラーです。ファイルを確認して、もう一度やり直してください。問題が解決しない場合は、管理者に連絡してください。",
-        dragAndDrop: "ファイルをアップロードするには、ドラッグアンドドロップするか、ここをクリックしてください 🎧",
     },
     contact: {
         gettingStarted: {
@@ -163,7 +154,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "プロファイル",
         settings: "設定",
         credit: "クレジット",
-        globalMessages: "グローバルメッセージ",
         contact: "コンタクト",
         report: "問題の報告",
         help: "ヘルプとチュートリアル",

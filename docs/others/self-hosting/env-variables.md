@@ -74,7 +74,6 @@ Environment variables for the Play service (frontend and pusher).
 | `DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining in-memory buffers on SIGTERM / SIGINT before the process exits. Shared by every service that flushes on shutdown, not analytics alone. Must stay comfortably BELOW your orchestrator's grace period (Kubernetes terminationGracePeriodSeconds defaults to 30s), not merely equal to it: the drain has to finish and the process exit before SIGKILL lands, or the intervals it just closed die with it. Defaults to 20000, i.e. 10s of headroom under the Kubernetes default. Raising it above the grace period cannot buy more draining — it only converts a clean exit into a kill. |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |
-| `UPLOADER_URL` | Yes | URL of the file uploader service |
 | `ICON_URL` | Yes | Base URL for icon resources |
 | `STUN_SERVER` | No | Comma separated list of STUN server URLs for WebRTC NAT traversal (format: 'stun:hostname:port') |
 | `TURN_SERVER` | No | Comma separated list of TURN server URLs for WebRTC relay (format: 'turn:hostname:port') |

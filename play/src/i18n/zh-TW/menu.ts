@@ -103,17 +103,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "選擇使用者將抵達的進入點",
     },
     globalMessage: {
-        text: "文字",
-        audio: "音訊",
         warning: "廣播到世界的所有房間",
         enter: "在此輸入您的訊息...",
         send: "傳送",
-    },
-    globalAudio: {
-        uploadInfo: "上傳檔案",
-        error: "未選擇檔案。傳送前必須上傳一個檔案。",
-        errorUpload: "上傳檔案錯誤。請檢查您的檔案，然後重試。如果問題仍然存在，請聯絡管理員。",
-        dragAndDrop: "拖放或點選此處上傳您的檔案 🎧",
     },
     contact: {
         gettingStarted: {
@@ -159,7 +151,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "個人資料",
         settings: "設定",
         credit: "致謝",
-        globalMessages: "全域訊息",
         contact: "聯絡",
         report: "回報問題",
         help: "說明和教學",
