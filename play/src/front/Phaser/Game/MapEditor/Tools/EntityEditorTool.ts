@@ -5,6 +5,7 @@ import type { EditMapCommandMessage } from "@workadventure/messages";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
+import { withNewPropertyIds } from "@workadventure/map-editor/src/Utils";
 import {
     mapEditorCopiedEntityDataPropertiesStore,
     mapEditorDeleteCustomEntityEventStore,
@@ -377,6 +378,10 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
         const entityId = uuidv4();
 
         const properties = get(mapEditorCopiedEntityDataPropertiesStore);
+        if (properties) {
+            // This entity takes the properties (and the file uploaded for them), the next one placed gets new ids.
+            mapEditorCopiedEntityDataPropertiesStore.set(withNewPropertyIds(properties));
+        }
 
         const entityData: WAMEntityData = {
             x: Math.floor(x - this.entityPrefabPreview.displayWidth * 0.5),

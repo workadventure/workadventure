@@ -78,3 +78,24 @@ export function signalAudioPlaybackBlocked(): void {
         blockedLatchUnregister = undefined;
     });
 }
+
+/**
+ * Handles an AudioContext the browser reported as "suspended". Before any user activation, that is the autoplay policy:
+ * flagBlocked() is called (it raises the "sound blocked" toast and status). After one, the autoplay policy no longer
+ * applies: the browser suspended the context itself (audio device unplugged or switched, system sleep…). The context is
+ * resumed, and flagged as blocked only if that fails, instead of dropping the user from their bubble for nothing.
+ */
+export function handleSuspendedAudioContext(
+    context: Pick<AudioContext, "resume">,
+    hasBeenActive: boolean,
+    flagBlocked: () => void,
+): void {
+    if (!hasBeenActive) {
+        flagBlocked();
+        return;
+    }
+    context.resume().catch((e: unknown) => {
+        console.warn("Could not resume a suspended AudioContext", e);
+        flagBlocked();
+    });
+}

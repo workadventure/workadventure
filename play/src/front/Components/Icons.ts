@@ -1,5 +1,6 @@
 /* eslint-disable import/no-unresolved */
 export { default as IconCheck } from "~icons/tabler/check";
+export { default as IconChecks } from "~icons/tabler/checks";
 export { default as IconX } from "~icons/tabler/x";
 export { default as IconPaperclip } from "~icons/tabler/paperclip";
 export { default as IconCornerDownRight } from "~icons/tabler/corner-down-right";
@@ -17,6 +18,7 @@ export { default as IconArrowLeft } from "~icons/tabler/arrow-left";
 export { default as IconArrowBackUp } from "~icons/tabler/arrow-back-up";
 export { default as IconArrowDown } from "~icons/tabler/arrow-down";
 export { default as IconArrowUp } from "~icons/tabler/arrow-up";
+export { default as IconAt } from "~icons/tabler/at";
 export { default as IconThumbUp } from "~icons/tabler/thumb-up";
 export { default as IconMoodSmile } from "~icons/tabler/mood-smile";
 export { default as IconPencil } from "~icons/tabler/pencil";

@@ -26,6 +26,7 @@ import type {
 import LL from "../../../../i18n/i18n-svelte";
 import { selectedChatMessageToReply } from "../../Stores/ChatStore";
 import type { PictureStore } from "../../../Stores/PictureStore";
+import { getMatrixMessageContent, type MentionCandidate } from "../../Mentions";
 import type { MatrixChatMessage } from "./MatrixChatMessage";
 import { MatrixChatMessageReaction } from "./MatrixChatMessageReaction";
 import type { MatrixChatRoom } from "./MatrixChatRoom";
@@ -42,6 +43,7 @@ export class MatrixChatThread implements ChatThread {
     readonly pictureStore: PictureStore;
     readonly avatarFallbackColor: Readable<string | undefined>;
     readonly membersForMessageAvatars: Readable<readonly ChatRoomMember[]> | undefined;
+    readonly mentionCandidates: Readable<readonly MentionCandidate[]>;
     readonly peerWaDisplayNameIfDifferent: Readable<string | undefined> | undefined;
     readonly canSendMessages: Readable<boolean>;
     readonly canSendReactions: Readable<boolean>;
@@ -75,6 +77,8 @@ export class MatrixChatThread implements ChatThread {
 
     private initializationPromise: Promise<void> | undefined;
 
+    // Max consecutive backward pages that yield no displayable message before loadMorePreviousMessages stops.
+    private static readonly MAX_EMPTY_PAGINATION_DEPTH = 10;
     private readonly replyMessages = new SearchableArrayStore(
         (item: MatrixChatMessage) => item.id,
         (item: MatrixChatMessage) => {
@@ -101,6 +105,7 @@ export class MatrixChatThread implements ChatThread {
         this.pictureStore = parentRoom.pictureStore;
         this.avatarFallbackColor = parentRoom.avatarFallbackColor;
         this.membersForMessageAvatars = parentRoom.membersForMessageAvatars;
+        this.mentionCandidates = parentRoom.mentionCandidates;
         this.peerWaDisplayNameIfDifferent = parentRoom.peerWaDisplayNameIfDifferent;
         this.canSendMessages = parentRoom.canSendMessages;
         this.canSendReactions = parentRoom.canSendReactions;
@@ -455,25 +460,25 @@ export class MatrixChatThread implements ChatThread {
         return eventRelation?.rel_type === "m.replace";
     }
 
-    async loadMorePreviousMessages() {
+    async loadMorePreviousMessages(depth = 0) {
         if (!get(this.hasPreviousMessage)) {
             return;
         }
 
         const existingEventsBeforePagination = this.timelineWindow.getEvents();
-        await this.timelineWindow.paginate(Direction.Backward, 8);
+        // Same page size as MatrixChatRoom.PAGINATION_PAGE_SIZE: small pages cost one round trip per few events.
+        await this.timelineWindow.paginate(Direction.Backward, 50);
         this.timelineWindow.unpaginate(existingEventsBeforePagination.length, false);
         const paginatedEvents = this.timelineWindow.getEvents();
-        const messages = await Promise.all(
-            paginatedEvents.map((event) => this.readEventsToAddMessagesAndReactions(event)),
-        );
-        this.replyMessages.unshift(
-            ...messages.filter((message): message is MatrixChatMessage => message !== undefined),
-        );
+        const messages = (
+            await Promise.all(paginatedEvents.map((event) => this.readEventsToAddMessagesAndReactions(event)))
+        ).filter((message): message is MatrixChatMessage => message !== undefined);
+        this.replyMessages.unshift(...messages);
         this.hasPreviousMessage.set(this.timelineWindow.canPaginate(Direction.Backward));
 
-        if (messages.length === 0) {
-            await this.loadMorePreviousMessages();
+        // Same cap as MatrixChatRoom: skip pages with no displayable message, but bound the recursion.
+        if (messages.length === 0 && depth < MatrixChatThread.MAX_EMPTY_PAGINATION_DEPTH) {
+            await this.loadMorePreviousMessages(depth + 1);
         }
     }
 
@@ -554,7 +559,7 @@ export class MatrixChatThread implements ChatThread {
     }
 
     private getMessageContent(message: string): RoomMessageEventContent {
-        const content: RoomMessageEventContent = { body: message, msgtype: MsgType.Text, formatted_body: message };
+        const content = getMatrixMessageContent(message);
         this.applyThreadRelationContent(content);
         return content;
     }
@@ -633,7 +638,7 @@ export class MatrixChatThread implements ChatThread {
             quotedMessage: undefined,
             type: "text",
             reactions: new MapStore(),
-            remove: () => undefined,
+            remove: () => Promise.resolve(),
             edit: () => Promise.resolve(),
             isDeleted: readable(false),
             isModified: readable(false),

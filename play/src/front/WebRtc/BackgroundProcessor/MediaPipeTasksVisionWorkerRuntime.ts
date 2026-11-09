@@ -7,11 +7,11 @@ import {
     type SegmenterModel,
     type TasksVisionAssetUrls,
 } from "./tasksVisionAssets";
-import type {
-    SerializedWorkerError,
-    TasksVisionWorkerDelegate,
-    TasksVisionWorkerRequest,
-    TasksVisionWorkerResponse,
+import {
+    serializeError,
+    type TasksVisionWorkerDelegate,
+    type TasksVisionWorkerRequest,
+    type TasksVisionWorkerResponse,
 } from "./MediaPipeTasksVisionWorkerProtocol";
 import type { BackgroundConfig } from "./createBackgroundTransformer";
 
@@ -25,13 +25,6 @@ type FrameSource = ImageBitmap | VideoFrame;
 export type PostToMainThread = (message: TasksVisionWorkerResponse, transfer?: Transferable[]) => void;
 
 class UnsupportedError extends Error {}
-
-function serializeError(error: unknown): SerializedWorkerError {
-    if (error instanceof Error) {
-        return { name: error.name, message: error.message, stack: error.stack };
-    }
-    return { name: "Error", message: String(error) };
-}
 
 function closeQuietly(name: string, resource: { close(): void } | null): void {
     try {
@@ -456,11 +449,13 @@ export class MediaPipeTasksVisionWorkerRuntime {
         if (this.recovery || this.fatal) {
             return;
         }
-        console.error(
-            `[MediaPipe Tasks Vision Worker] Frame processing failed (webGlContextLost=${this.gl?.isContextLost() ?? true}):`,
-            error,
+        // Root of the cause chain reported if recovery fails.
+        const renderError = new Error(
+            `Frame processing failed (webGlContextLost=${this.gl?.isContextLost() ?? true})`,
+            { cause: error },
         );
-        this.recovery = this.recover()
+        console.error(`[MediaPipe Tasks Vision Worker] ${renderError.message}:`, error);
+        this.recovery = this.recover(renderError)
             .catch((recoveryError: unknown) => {
                 this.reportFatal(new Error("MediaPipe Tasks Vision recovery failed", { cause: recoveryError }));
             })
@@ -469,9 +464,10 @@ export class MediaPipeTasksVisionWorkerRuntime {
             });
     }
 
-    private async recover(): Promise<void> {
+    /** `cause` is what made this attempt necessary: the failed frame, or the previous attempt. */
+    private async recover(cause: Error): Promise<void> {
         if (this.consecutiveRecoveryAttempts >= MAX_CONSECUTIVE_RECOVERY_ATTEMPTS) {
-            throw new Error("MediaPipe recovery attempts exhausted");
+            throw new Error("MediaPipe recovery attempts exhausted", { cause });
         }
         this.consecutiveRecoveryAttempts++;
         this.successfulFramesSinceRecovery = 0;
@@ -481,7 +477,9 @@ export class MediaPipeTasksVisionWorkerRuntime {
             await this.updateBackgroundImage();
         } catch (error) {
             console.error("[MediaPipe Tasks Vision Worker] Recovery attempt failed:", error);
-            return this.recover();
+            return this.recover(
+                new Error(`Recovery attempt ${this.consecutiveRecoveryAttempts} failed: ${String(error)}`, { cause }),
+            );
         }
         console.info(
             `[MediaPipe Tasks Vision Worker] Recovered after attempt ${this.consecutiveRecoveryAttempts}/${MAX_CONSECUTIVE_RECOVERY_ATTEMPTS}`,
