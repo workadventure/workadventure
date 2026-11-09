@@ -52,7 +52,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
                 author: "Eve",
             });
         });
-        await expect(page.locator("#chat").locator(`#typing-user-${btoa("Eve")}`)).toBeVisible();
+        await expect(page.locator("#chat").getByTestId("typingIndicator")).toContainText("Eve is typing");
 
         // Test stop typing
         await evaluateScript(page, async () => {
@@ -61,7 +61,7 @@ test.describe("#Scripting chat functions @nowebkit @nomobile", () => {
                 author: "Eve",
             });
         });
-        await expect(page.locator("#chat").locator(`#typing-user-${btoa("Eve")}`)).toBeHidden();
+        await expect(page.locator("#chat").getByTestId("typingIndicator")).not.toContainText("Eve");
 
         // Test close chat scripting
         await evaluateScript(page, async () => {

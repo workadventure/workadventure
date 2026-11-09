@@ -1,6 +1,8 @@
 import { writable, type Writable } from "svelte/store";
 import { localUserStore } from "../Connection/LocalUserStore";
+import { analyticsClient } from "../Administration/AnalyticsClient";
 import type { VideoCodec } from "./VideoPresets";
+import { isIOS } from "./DeviceUtils";
 import type { EncoderCategory } from "./LocalEncoderStats";
 
 /**
@@ -22,12 +24,18 @@ export interface CodecPerformance {
     powerEfficient: boolean;
 }
 
-const PROBED_CODECS = ["av1", "vp9", "h264"] as const;
+// H.265 is never negotiated: it is probed only for media.codec.probed, to measure how many users could use it
+const PROBED_CODECS = ["av1", "vp9", "h264", "h265"] as const;
 type ProbedCodec = (typeof PROBED_CODECS)[number];
 
 // With no profile-level-id, libwebrtc reads H.264 as Constrained Baseline: LiveKit's profile, not the Baseline P2P
 // negotiates, and the one Chrome encodes in software on macOS and Windows
-const CONTENT_TYPES: Record<ProbedCodec, string> = { av1: "video/AV1", vp9: "video/VP9", h264: "video/H264" };
+const CONTENT_TYPES: Record<ProbedCodec, string> = {
+    av1: "video/AV1",
+    vp9: "video/VP9",
+    h264: "video/H264",
+    h265: "video/H265",
+};
 
 // The sizes we decide at: 720p for a P2P connection and a LiveKit camera, larger LiveKit screen share captures
 const PROBED_SIZES: [number, number][] = [
@@ -138,4 +146,55 @@ export const demotedCodecStore: Record<EncoderCategory, Writable<VideoCodec | un
     screenSharing: writable(undefined),
 };
 
-probeCodecPerformance().catch((e) => console.error("Codec performance probe failed", e));
+// First match wins: Edge and Firefox before Chrome, whose token they may carry; Android and ChromeOS before Linux
+const BROWSERS = [
+    ["edge", /EdgA?\//],
+    ["firefox", /Firefox\//],
+    ["chrome", /Chrome\//],
+    ["safari", /Safari\//],
+] as const;
+const OPERATING_SYSTEMS = [
+    ["android", /Android/],
+    ["chromeos", /CrOS/],
+    ["windows", /Windows/],
+    ["mac", /Mac/],
+    ["linux", /Linux/],
+] as const;
+
+function codecSupport(
+    direction: CodecDirection,
+    codec: ProbedCodec,
+): "hardware" | "software" | "unsupported" | "unknown" {
+    const result = results.get(key(direction, codec, 0));
+    if (!result) {
+        return "unknown";
+    }
+    if (!result.supported) {
+        return "unsupported";
+    }
+    return result.powerEfficient ? "hardware" : "software";
+}
+
+/**
+ * The media.codec.probed event: what each codec runs on at 720p, with the browser and OS to break it down by.
+ */
+export function codecSupportReport() {
+    const userAgent = navigator.userAgent;
+    return {
+        browser: BROWSERS.find(([, pattern]) => pattern.test(userAgent))?.[0] ?? "other",
+        // Before the list: an iPhone says "like Mac OS X", an iPad passes for a Mac
+        os: isIOS() ? "ios" : (OPERATING_SYSTEMS.find(([, pattern]) => pattern.test(userAgent))?.[0] ?? "other"),
+        av1Encode: codecSupport("encode", "av1"),
+        av1Decode: codecSupport("decode", "av1"),
+        vp9Encode: codecSupport("encode", "vp9"),
+        vp9Decode: codecSupport("decode", "vp9"),
+        h264Encode: codecSupport("encode", "h264"),
+        h264Decode: codecSupport("decode", "h264"),
+        h265Encode: codecSupport("encode", "h265"),
+        h265Decode: codecSupport("decode", "h265"),
+    } as const;
+}
+
+probeCodecPerformance()
+    .then(() => analyticsClient.trackAdminEvent("media.codec.probed", codecSupportReport()))
+    .catch((e) => console.error("Codec performance probe failed", e));

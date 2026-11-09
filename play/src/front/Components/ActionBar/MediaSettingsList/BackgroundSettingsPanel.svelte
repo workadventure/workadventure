@@ -3,7 +3,7 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import {
         backgroundConfigStore,
-        backgroundPresets,
+        availableBackgroundImagesStore,
         backgroundProcessingSupportedStore,
     } from "../../../Stores/BackgroundTransformStore";
     import type { BackgroundMode } from "../../../WebRtc/BackgroundProcessor/createBackgroundTransformer";
@@ -117,19 +117,21 @@
         </div>
 
         <!-- Images Section -->
-        <div class="relative z-10 flex flex-col gap-2">
-            <SectionTitle title={$LL.actionbar.background.images()} />
-            <div class="grid grid-cols-3 gap-1 px-1">
-                {#each backgroundPresets.images as preset (preset.url)}
-                    <BackgroundPresetButton
-                        thumbnail={preset.thumbnail}
-                        name={preset.name}
-                        isSelected={$backgroundConfigStore.mode === "image" &&
-                            $backgroundConfigStore.backgroundImage === preset.url}
-                        onclick={() => setBackgroundImage(preset.url)}
-                    />
-                {/each}
+        {#if $availableBackgroundImagesStore.length > 0}
+            <div class="relative z-10 flex flex-col gap-2">
+                <SectionTitle title={$LL.actionbar.background.images()} />
+                <div class="grid grid-cols-3 gap-1 px-1">
+                    {#each $availableBackgroundImagesStore as image, index (index)}
+                        <BackgroundPresetButton
+                            thumbnail={image.thumbnailUrl}
+                            label={$LL.actionbar.background.image({ index: index + 1 })}
+                            isSelected={$backgroundConfigStore.mode === "image" &&
+                                $backgroundConfigStore.backgroundImage === image.url}
+                            onclick={() => setBackgroundImage(image.url)}
+                        />
+                    {/each}
+                </div>
             </div>
-        </div>
+        {/if}
     </div>
 {/if}

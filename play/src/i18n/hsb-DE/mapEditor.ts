@@ -83,6 +83,8 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             description: "Awdijo z nastajomnej sylnosću zwuka wothrawać.",
             audioLinkLabel: "Awdiolink",
             audioLinkPlaceholder: "https://xxx.yyy/smthing.mp3",
+            sourceUpload: "Dataju nahrać",
+            sourceUrl: "URL wužiwać",
             defaultButtonLabel: "Hudźbu wothrać",
             volumeLabel: "sylnosć zwuka",
             error: "Zwuk njemóže so začitać",
