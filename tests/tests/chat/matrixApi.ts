@@ -264,6 +264,40 @@ class MatrixApi {
         }
     }
 
+    /**
+     * Creates a Matrix user outside WorkAdventure (someone on Element, say) and returns its access token.
+     */
+    public async createUser(localpart: string, displayname: string): Promise<{ userId: string; token: string }> {
+        try {
+            await this.ensureAdminAccessToken();
+            const userId = `@${localpart}:${matrix_domain}`;
+            await axios.put(
+                `${USERS_ENDPOINT}/${encodeURIComponent(userId)}`,
+                { displayname },
+                this.getAuthenticatedHeader(),
+            );
+            return { userId, token: await this.loginAsUser(userId) };
+        } catch (error) {
+            throw asError(error);
+        }
+    }
+
+    /**
+     * Makes a local user join a public room right away, with no invitation to accept.
+     */
+    public async joinRoomAs(userId: string, roomId: string): Promise<void> {
+        try {
+            await this.ensureAdminAccessToken();
+            await axios.post(
+                `${matrix_server_url}/_synapse/admin/v1/join/${this.encodeRoomIdForPath(roomId)}`,
+                { user_id: userId },
+                this.getAuthenticatedHeader(),
+            );
+        } catch (error) {
+            throw asError(error);
+        }
+    }
+
     public async overrideRateLimitForUser(userId: string) {
         try {
             await this.ensureAdminAccessToken();

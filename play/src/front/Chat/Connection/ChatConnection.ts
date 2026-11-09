@@ -2,9 +2,12 @@ import type { Readable, Writable } from "svelte/store";
 import type { AvailabilityStatus } from "@workadventure/messages";
 import type { MapStore } from "@workadventure/store-utils";
 import type { MatrixClient, StateEvents } from "matrix-js-sdk";
+import type { UnreadSummary } from "../Components/unreadCount";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../../types/component";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { PictureStore } from "../../Stores/PictureStore";
+import type { MentionCandidate } from "../Mentions";
+import type { ProximityChatRoomKind } from "./Proximity/ProximityChatRoomManager";
 
 export type memberTypingInformation = { id: string; name: string | null; pictureStore: PictureStore };
 export type ChatUser = {
@@ -87,6 +90,17 @@ export type ChatRoomSettingsUpdate = {
     access?: ChatRoomSettingsAccess;
     historyVisibility?: historyVisibility;
     restrictedRoomId?: string;
+    /** A new picture for the room. */
+    avatar?: File;
+    /** Whether the folder in `restrictedRoomId` suggests this room to its members. */
+    suggested?: boolean;
+};
+
+/** The folder holding a room, as its settings show it. */
+export type ChatRoomFolderPlacement = {
+    folderName: string;
+    suggested: boolean;
+    canChangeSuggested: boolean;
 };
 export type ChatRoomSettingsErrorCode = "roomNameEmpty" | "restrictedAccessNeedsParentSpace";
 
@@ -119,6 +133,8 @@ export interface ChatConversation {
     readonly parentRoom?: ChatRoom;
     readonly hasUnreadMessages: Readable<boolean>;
     readonly unreadNotificationCount: Readable<number>;
+    /** Some unread message mentions the current user: the unread badge takes the mention color. */
+    readonly hasUnreadMentions?: Readable<boolean>;
     /** Unread @-mentions / highlights only (subset of unreadNotificationCount). Optional: not every
      * conversation kind tracks highlights separately. */
     readonly unreadHighlightCount?: Readable<number>;
@@ -141,6 +157,8 @@ export interface ChatConversation {
     readonly messages: Readable<readonly ChatMessage[]>;
     readonly timelineItems: Readable<readonly ChatTimelineItem[]>;
     readonly sendMessage: (message: string) => void;
+    /** Who the composer offers to mention after an "@". Only subscribed to once an "@" is typed. */
+    readonly mentionCandidates?: Readable<readonly MentionCandidate[]>;
     readonly sendFiles: (files: FileList) => Promise<void>;
     readonly canSendMessages?: Readable<boolean>;
     readonly canSendReactions?: Readable<boolean>;
@@ -149,13 +167,57 @@ export interface ChatConversation {
     readonly loadMorePreviousMessages: () => Promise<void>;
     readonly isEncrypted: Readable<boolean>;
     readonly typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    /** Who is typing, known before the members are loaded: what the room list shows. */
+    readonly typingNames?: Readable<string[]>;
     readonly startTyping: () => Promise<object>;
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    /** The same, as a store: a list sorted on it moves a conversation up when a message arrives. */
+    readonly lastMessageTimestampStore?: Readable<number>;
     readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
     readonly ensureTimelineEventVisible?: (eventId: string) => Promise<boolean>;
+    /**
+     * Where the user stopped reading, or undefined when nothing is unread or the backend has no read
+     * marker (proximity rooms). Must be read before setTimelineAsRead(), which moves it to the end.
+     */
+    readonly getReadMarker?: () => ChatReadMarker | undefined;
+    /** The last message received, for a preview in a list. Only listens to the room while subscribed. */
+    readonly lastMessagePreview?: Readable<ChatMessagePreview | undefined>;
+    /** Who has read what, from the other members' read receipts. Only listens to the room while subscribed. */
+    readonly readReceipts?: Readable<ChatReadReceipts>;
 }
+
+export type ChatMessagePreview = {
+    body: string;
+    senderName: string | undefined;
+    timestamp: number;
+    /** Only when I wrote it. */
+    readState?: ChatReadState;
+};
+
+/** "read": everyone else has read it, which is only ever known in a direct or small room. */
+export type ChatReadState = "sent" | "read";
+
+export type ChatReader = {
+    userId: string;
+    /** When they read it, or when they wrote something after it. */
+    readAt: number | undefined;
+};
+
+export type ChatReadReceipts = {
+    /** Who has read this message or a later one, the most recent reader first. */
+    readersOf: (messageId: string) => readonly ChatReader[];
+    /** The other members, when the room is small enough to wait for all of them; undefined otherwise. */
+    otherMemberIds: readonly string[] | undefined;
+};
+
+export type ChatReadMarker = {
+    /** Last event the user has read. It may be an event the timeline does not display (reaction, join…). */
+    eventId: string;
+    /** When the user read it: every message sent later is unread. Used when eventId is not displayed. */
+    timestamp?: number;
+};
 
 export interface ChatRoom extends ChatConversation {
     readonly conversationKind: "room";
@@ -189,6 +251,8 @@ export interface ChatRoomMembershipManagement {
     readonly ensureMembersInitialized: () => Promise<void>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
+    /** Who sent the pending invitation, when known. */
+    readonly inviterName?: string;
 }
 
 export interface ChatRoomNotificationControl {
@@ -208,6 +272,7 @@ export type ProximityChatSidePanelParticipant = {
 };
 
 export interface ProximityChatSidePanelRoom extends ChatRoom, ChatRoomNotificationControl {
+    readonly kind?: Readable<ProximityChatRoomKind>;
     readonly currentMeetingParticipantsStore: Readable<readonly ProximityChatSidePanelParticipant[]>;
     readonly qaItems?: Readable<readonly ChatQuestionItem[]>;
     readonly unreadQuestionCount?: Readable<number>;
@@ -222,8 +287,8 @@ export interface ChatRoomModeration {
     readonly inviteUsers: (userIds: string[]) => Promise<void>;
     readonly hasPermissionTo: (action: ModerationAction, member?: ChatRoomMember) => Readable<boolean>;
     readonly hasPermissionForRoomStateEvent: (eventType: keyof StateEvents) => Readable<boolean>;
-    readonly kick: (userID: string) => Promise<void>;
-    readonly ban: (userID: string) => Promise<void>;
+    readonly kick: (userID: string, reason?: string) => Promise<void>;
+    readonly ban: (userID: string, reason?: string) => Promise<void>;
     readonly unban: (userID: string) => Promise<void>;
     readonly changePermissionLevelFor: (member: ChatRoomMember, permissionLevel: ChatPermissionLevel) => Promise<void>;
     readonly getAllowedRolesToAssign: () => ChatPermissionLevel[];
@@ -235,6 +300,8 @@ export interface ChatRoomSettingsManagement {
     readonly permissionsState: Readable<ChatRoomPermissionsState>;
     readonly updateRoomSettings: (settings: ChatRoomSettingsUpdate) => Promise<void>;
     readonly updateRoomPowerLevels: (permissions: ChatRoomPermissionsState) => Promise<void>;
+    readonly myPermissionLevel: Readable<ChatPermissionLevel | undefined>;
+    readonly getFolderPlacement: () => ChatRoomFolderPlacement | undefined;
 }
 
 //Readonly attributes
@@ -248,7 +315,7 @@ export interface ChatMessage {
     quotedMessage: ChatMessage | undefined;
     type: ChatMessageType;
     reactions: MapStore<string, ChatMessageReaction>;
-    remove: () => void;
+    remove: () => Promise<void>;
     edit: (newContent: string) => Promise<void>;
     /** Only on messages carrying a file (image, file, audio, video). */
     attachment?: ChatMessageAttachment;
@@ -257,6 +324,8 @@ export interface ChatMessage {
     canEdit: Readable<boolean>;
     addReaction: (reaction: string) => Promise<void>;
     canReact: Readable<boolean>;
+    /** Absent: replying is always possible. */
+    canReply?: Readable<boolean>;
     canDelete: Readable<boolean>;
     threadSummary?: Readable<ChatThreadSummary | null>;
     openThread?: () => Promise<ChatThread | undefined>;
@@ -265,6 +334,8 @@ export interface ChatMessage {
 export interface ChatMessageReaction {
     readonly key: string;
     readonly users: MapStore<string, ChatUser>;
+    // Key of the current user in `users`
+    readonly myChatId: string;
     readonly react: () => void;
     readonly reacted: Readable<boolean>;
     readonly canReact: Readable<boolean>;
@@ -287,6 +358,7 @@ export type ChatThreadSummary = {
     lastActivityTimestamp: number;
     hasUnreadMessages: boolean;
     unreadNotificationCount: number;
+    hasUnreadMentions: boolean;
     isDegraded?: boolean;
     degradedReason?: "root_missing";
 };
@@ -472,6 +544,10 @@ export type ChatMessageContent = {
     body: string;
     url: string | undefined;
     thumbnailUrl?: string;
+    /** HTML rendered instead of the body, when the message holds mention pills. Run against DOMPurify too. */
+    formattedBody?: string;
+    /** The message mentions the current user (by name, or the whole room). */
+    mentionsMe?: boolean;
 };
 export const historyVisibilityOptions = ["joined", "invited", "world_readable"] as const;
 export type historyVisibility = (typeof historyVisibilityOptions)[number];
@@ -482,18 +558,31 @@ export type ChatRoomPrivacyState = {
     restrictedRoomId?: string;
 };
 
+/** A room the user can join, with what is known about it before joining. */
+export type JoinableRoomInfo = {
+    id: string;
+    name: string;
+    avatarUrl: string;
+    topic?: string;
+    memberCount?: number;
+    /** Name of a joined folder that lists the room, when one does. */
+    folderName?: string;
+};
+
 export interface RoomFolder extends ChatRoom, ChatRoomMembershipManagement, ChatRoomModeration {
     id: string;
     name: Readable<string>;
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     folders: Readable<RoomFolder[]>;
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
-    suggestedRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
-    joinableRooms: Readable<{ name: string; id: string; avatarUrl: string }[]>;
+    suggestedRooms: Readable<JoinableRoomInfo[]>;
+    joinableRooms: Readable<JoinableRoomInfo[]>;
     joinableRoomsLoading: Readable<boolean>;
     hasChildRoomsError: Writable<boolean>;
     ensureChildrenLoaded: () => void;
     ensureJoinableRoomsLoaded: () => Promise<void>;
+    /** Unread messages of every joined room below this folder, sub-folders included, even before they are loaded. */
+    getUnreadSummary: () => UnreadSummary;
 }
 
 export interface CreateRoomOptions {
@@ -555,17 +644,13 @@ export interface ChatConnectionInterface {
     rooms: Readable<(ChatRoom & ChatRoomMembershipManagement & ChatRoomModeration & ChatRoomNotificationControl)[]>;
     invitations: Readable<(ChatRoom & ChatRoomMembershipManagement)[]>;
     folders: Readable<RoomFolder[]>;
-    createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
+    /** Resolves once the room is created and, when it shows up in time, with the room as placed in the room list. */
+    createRoom: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string; room?: ChatRoom }>;
     createFolder: (roomOptions: CreateRoomOptions) => Promise<{ room_id: string }>;
     createDirectRoom(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
     roomCreationInProgress: Readable<boolean>;
     getDirectRoomFor(userChatId: string): Promise<(ChatRoom & ChatRoomMembershipManagement) | undefined>;
-    searchAccessibleRooms(searchText: string): Promise<
-        {
-            id: string;
-            name: string | undefined;
-        }[]
-    >;
+    searchAccessibleRooms(searchText: string): Promise<JoinableRoomInfo[]>;
 
     joinRoom(roomId: string): Promise<ChatRoom | undefined>;
 
@@ -581,9 +666,14 @@ export interface ChatConnectionInterface {
     getRoomByID(roomId: string): ChatRoom;
     retrySendingEvents: () => Promise<void>;
     shouldRetrySendingEvents: Readable<boolean>;
+    /**
+     * Retries the backed-off connection to the chat server right away, for a user who explicitly asks to.
+     * Returns false when there is no connection attempt to retry (the chat never started): only a reload helps then.
+     */
+    retryConnection: () => boolean;
     nbUnreadRoomsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
-    nbUnreadInvitationsMessages: Readable<number>;
+    nbPendingInvitations: Readable<number>;
 
     /**
      * Matrix backend only — see {@link MatrixChatCapabilities}.

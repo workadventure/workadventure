@@ -3,10 +3,11 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { warningMessageStore } from "../../Stores/ErrorStore";
-    import { IconRefresh, IconLoader } from "@wa-icons";
+    import { IconAlertTriangle, IconLoader } from "@wa-icons";
 
+    // A slim bar where the user is (room list or conversation) instead of a full-screen veil over the room list,
+    // which hid everything and was not even visible once a conversation was open in one column.
     const chat = gameManager.chatConnection;
-    let dismissError = $state(false);
     let isRefreshing = $state(false);
 
     function refreshChat() {
@@ -22,33 +23,22 @@
 </script>
 
 <div
-    class="{dismissError
-        ? 'bottom-0'
-        : 'h-full'} absolute z-[999999999] gap-2 py-4 left-0 flex flex-col flex-1 w-full backdrop-blur-2xl items-center justify-center"
+    class="flex items-center gap-2 border border-solid border-x-0 border-t-0 border-danger-900/50 bg-danger-900/25 px-3 py-2 text-sm text-white"
+    role="alert"
+    data-testid="unsentMessagesBar"
 >
-    <div class="flex flex-col gap-2 items-center justify-center">
-        {#if !dismissError}
-            <IconRefresh font-size={50} />
-        {/if}
-        <h3>{$LL.chat.whoops()}</h3>
-    </div>
-    <button class="bg-danger w-44 text-white rounded-md px-4 py-2" onclick={refreshChat} disabled={isRefreshing}>
+    <IconAlertTriangle font-size="16" class="shrink-0 text-danger-400" />
+    <span class="min-w-0 flex-1">{$LL.chat.unsentMessages()}</span>
+    <button
+        type="button"
+        class="m-0 flex shrink-0 items-center gap-1 rounded bg-white/10 px-2 py-1 text-xs font-bold hover:bg-white/20 disabled:opacity-50"
+        onclick={refreshChat}
+        disabled={isRefreshing}
+        data-testid="retryUnsentMessages"
+    >
         {#if isRefreshing}
-            <IconLoader class="animate-spin" />
-        {:else}
-            <span class="text-center w-full">
-                {$LL.chat.refreshChat()}
-            </span>
+            <IconLoader class="animate-spin" font-size="14" />
         {/if}
+        {$LL.chat.retrySending()}
     </button>
-    {#if !dismissError}
-        <button
-            class="rounded-md px-4 py-2"
-            onclick={() => {
-                dismissError = true;
-            }}
-        >
-            {$LL.chat.dismiss()}
-        </button>
-    {/if}
 </div>

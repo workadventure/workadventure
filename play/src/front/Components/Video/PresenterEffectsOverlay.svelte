@@ -1,6 +1,7 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import { presenterEffectsStore } from "../../Stores/PresenterEffectStore";
+    import { observeElementSize } from "./PictureInPicture/childWindow";
 
     interface Props {
         /** spaceUserId of the presenter whose effect to render on this shared-screen tile. */
@@ -14,6 +15,17 @@
     let clientWidth = $state(0);
     let clientHeight = $state(0);
     let loupeVideo: HTMLVideoElement | undefined = $state();
+    let container: HTMLDivElement | undefined = $state();
+
+    // Measured from the element's own window: bind:clientWidth never reports in the desktop overlay's
+    // child window, which left the effects unrendered there.
+    $effect(() => {
+        if (!container) return;
+        return observeElementSize(container, (width, height) => {
+            clientWidth = width;
+            clientHeight = height;
+        });
+    });
 
     let activeEffect = $derived($presenterEffectsStore.get(targetUserId));
     let streamValue = $derived(stream ? $stream : undefined);
@@ -59,8 +71,7 @@
 
 <div
     class="pointer-events-none absolute inset-0 overflow-hidden"
-    bind:clientWidth
-    bind:clientHeight
+    bind:this={container}
     data-testid="presenter-effects-overlay"
 >
     {#if activeEffect && clientWidth > 0 && clientHeight > 0}
