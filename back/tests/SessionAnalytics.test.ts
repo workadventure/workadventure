@@ -30,6 +30,30 @@ const harness = (kind: SpaceKind) => {
 };
 
 describe("SessionAnalytics", () => {
+    it("tells who listens when a session opens, under its meeting.ended id, and when it closes", () => {
+        const { analytics, enqueue } = harness("bubble");
+        const onSessionChanged = vi.fn();
+        analytics.onSessionChanged = onSessionChanged;
+
+        analytics.join(member("1"), true);
+        expect(onSessionChanged).not.toHaveBeenCalled();
+        analytics.join(member("2"), true);
+        analytics.leave("room_2");
+
+        const meeting = rowsOf(enqueue).find((row) => row.eventName === "meeting.ended");
+        expect(onSessionChanged.mock.calls).toEqual([
+            [
+                {
+                    eventId: meeting?.eventId,
+                    kind: "bubble",
+                    openedAtMs: Date.parse("2026-04-24T12:00:00.000Z"),
+                    roomId: "https://play.example/room",
+                },
+            ],
+            [undefined],
+        ]);
+    });
+
     it("reports one meeting and three participations for a bubble of three", () => {
         const { analytics, enqueue, tick } = harness("bubble");
 
