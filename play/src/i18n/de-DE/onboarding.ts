@@ -12,8 +12,8 @@ export default {
         title: "Bewegen",
         descriptionDesktop:
             "Verwenden Sie die Pfeiltasten oder WASD, um Ihren Charakter zu bewegen. Sie können auch mit Rechtsklick bewegen. Versuchen Sie jetzt, sich zu bewegen!",
-        descriptionMobile:
-            "Verwenden Sie den Joystick oder tippen Sie auf die Karte, um Ihren Charakter zu bewegen. Versuchen Sie jetzt, sich zu bewegen!",
+        descriptionTouch:
+            "Tippen Sie auf die Karte, um dorthin zu gehen, und ziehen Sie, um sich umzusehen. Versuchen Sie jetzt, sich zu bewegen!",
         next: "Weiter",
     },
     communication: {

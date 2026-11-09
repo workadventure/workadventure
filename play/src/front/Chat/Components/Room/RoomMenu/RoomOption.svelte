@@ -24,6 +24,9 @@
 </script>
 
 <button
+    type="button"
+    role="menuitem"
+    tabindex="-1"
     class="flex gap-2 {tagText ? 'items-start' : 'items-center'} {bg} m-0 p-2 w-full text-sm rounded text-left"
     data-testid={dataTestId}
     onclick={(event) => {

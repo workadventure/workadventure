@@ -91,4 +91,92 @@ describe("MatrixChatRoom", () => {
             expect(get(room.members)).toHaveLength(2);
         });
     });
+
+    describe("getReadMarker", () => {
+        const createRoomStub = (receipt: { eventId: string; data: { ts: number } } | null, lastEventId: string) => {
+            const getReadReceiptForUserId = vi.fn(() => receipt);
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            Object.assign(room, {
+                matrixRoom: {
+                    client: { getUserId: () => "@me:matrix.org" },
+                    getReadReceiptForUserId,
+                    getLastLiveEvent: () => ({ getId: () => lastEventId }),
+                },
+            });
+            return { room, getReadReceiptForUserId };
+        };
+
+        it("returns the event and time of my server-side read receipt", () => {
+            const { room, getReadReceiptForUserId } = createRoomStub({ eventId: "$a", data: { ts: 1000 } }, "$z");
+
+            expect(room.getReadMarker()).toEqual({ eventId: "$a", timestamp: 1000 });
+            // Synthesized receipts are local echoes of my own sends, not reading.
+            expect(getReadReceiptForUserId).toHaveBeenCalledWith("@me:matrix.org", true);
+        });
+
+        it("returns undefined when I have read up to the last event", () => {
+            expect(createRoomStub({ eventId: "$z", data: { ts: 1000 } }, "$z").room.getReadMarker()).toBeUndefined();
+        });
+
+        it("returns undefined when I never sent a receipt", () => {
+            expect(createRoomStub(null, "$z").room.getReadMarker()).toBeUndefined();
+        });
+    });
+    describe("room type", () => {
+        // A bare instance with only what getMatrixRoomType reads: a room of two members, not marked as a
+        // direct message anywhere, with or without an m.room.name.
+        const createRoomStub = (name: string | undefined) => {
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            const nameEvent = name === undefined ? null : { getContent: () => ({ name }) };
+            Object.assign(room, {
+                id: "!room:matrix.org",
+                matrixRoom: {
+                    getDMInviter: () => undefined,
+                    getJoinedMemberCount: () => 1,
+                    getInvitedMemberCount: () => 1,
+                    getMembers: () => [],
+                    currentState: { getStateEvents: () => [] },
+                    client: { getAccountData: () => undefined },
+                    getLiveTimeline: () => ({
+                        getState: () => ({
+                            getStateEvents: (type: string) => (type === "m.room.name" ? nameEvent : []),
+                        }),
+                    }),
+                },
+            });
+            return room as unknown as { getMatrixRoomType: () => "direct" | "multiple" };
+        };
+
+        it("keeps a named group room with two members a group room", () => {
+            expect(createRoomStub("Budget 2027").getMatrixRoomType()).toBe("multiple");
+        });
+
+        it("still files an unnamed, unmarked two-person room as a direct message", () => {
+            expect(createRoomStub(undefined).getMatrixRoomType()).toBe("direct");
+        });
+    });
+    describe("inviterName", () => {
+        // A bare instance whose room only knows my own member event (sent by inviterId) and the inviter's.
+        const createRoomStub = (inviterId: string | undefined, inviterName: string | undefined) => {
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            const members: Record<string, unknown> = {
+                "@me:matrix.org": { events: { member: { getSender: () => inviterId } } },
+            };
+            if (inviterId && inviterName) members[inviterId] = { name: inviterName };
+            Object.assign(room, {
+                matrixRoom: { myUserId: "@me:matrix.org", getMember: (userId: string) => members[userId] ?? null },
+            });
+            return room;
+        };
+
+        it("names the member who sent the invitation", () => {
+            expect(createRoomStub("@alice:matrix.org", "Alice Martin").inviterName).toBe("Alice Martin");
+        });
+
+        it("returns undefined when the inviter has no display name or the room was not an invitation", () => {
+            expect(createRoomStub("@alice:matrix.org", "@alice:matrix.org").inviterName).toBeUndefined();
+            expect(createRoomStub("@alice:matrix.org", undefined).inviterName).toBeUndefined();
+            expect(createRoomStub("@me:matrix.org", undefined).inviterName).toBeUndefined();
+        });
+    });
 });

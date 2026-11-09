@@ -20,3 +20,11 @@ export function resolveUrlPlaceholders(rawUrl: string, mapStorageUrl?: string): 
 
     return url;
 }
+
+/**
+ * Where a sound of the map is played from. Placeholders are resolved first: resolving against the
+ * map URL first would percent-encode their braces.
+ */
+export function resolveSoundUrl(rawUrl: string, mapUrl: string): string {
+    return new URL(resolveUrlPlaceholders(rawUrl), mapUrl).toString();
+}

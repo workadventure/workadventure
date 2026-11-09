@@ -226,6 +226,11 @@ livekit-server:
 ```
 
 > [!NOTE]
+> Since LiveKit 1.12, TURN does not relay to private IP addresses. If your LiveKit nodes only have private IPs (an
+> on-premise cluster for instance), list them in `livekit-server.livekit.turn.allow_restricted_peer_cidrs`
+> (e.g. `["10.0.0.0/8"]`), or users that can only reach LiveKit through TURN will not connect.
+
+> [!NOTE]
 > The LiveKit TURN server is only used internally by LiveKit. It cannot be used as a TURN server for WorkAdventure (for conversations where there are less than 4 people). The TURN variables used by WorkAdventure (`TURN_SERVER`, `TURN_USER`, `TURN_PASSWORD`, `TURN_STATIC_AUTH_SECRET`) still need to point to a valid Coturn server.
 
 ### Enabling meeting recording (LiveKit Egress)

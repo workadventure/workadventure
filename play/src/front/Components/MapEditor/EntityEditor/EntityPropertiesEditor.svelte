@@ -438,7 +438,9 @@
         />
 
         <div class="properties-container flex flex-col gap-8 p-1">
-            {#each properties as property, i (property.id)}
+            <!-- Keyed by entity too: a copied entity can share property ids with its original, and the property
+                 editors keep state that must not leak from one entity to the next. -->
+            {#each properties as property, i (`${$mapEditorSelectedEntityStore?.entityId}:${property.id}`)}
                 {#if property.type !== "entityDescriptionProperties"}
                     <div class="property-box border border-solid border-white/20 bg-white/5 rounded p-2">
                         {#if properties[i].type === "playAudio"}

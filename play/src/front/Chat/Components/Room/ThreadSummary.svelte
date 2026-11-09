@@ -28,7 +28,9 @@
         >
         {#if summary.hasUnreadMessages}
             <span
-                class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-success px-1.5 text-xs font-bold text-contrast"
+                class="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full {summary.hasUnreadMentions
+                    ? 'bg-danger-1000 text-white'
+                    : 'bg-success text-contrast'} px-1.5 text-xs font-bold"
                 data-testid="threadSummaryUnread"
                 aria-label={$LL.chat.thread.unreadAriaLabel({ count: summary.unreadNotificationCount })}
             >

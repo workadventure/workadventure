@@ -144,10 +144,8 @@ export class AreaEditorTool extends MapEditorTool {
             }
             case "createAreaMessage": {
                 const data = editMapCommandMessage.editMapMessage?.message.createAreaMessage;
-                const config: AreaData = {
-                    ...data,
-                    visible: true,
-                };
+                const { id, x, y, width, height, name, properties } = data;
+                const config: AreaData = { id, x, y, width, height, name, properties, visible: true };
                 // execute command locally
                 await this.mapEditorModeManager.executeLocalCommand(
                     new CreateAreaFrontCommand(

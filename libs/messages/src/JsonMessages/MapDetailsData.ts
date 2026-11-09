@@ -147,6 +147,17 @@ const CustomizeSceneData = z.object({
   }),
 });
 
+const CameraBackgroundData = z.object({
+  url: extendApi(z.string(), {
+    description: "The URL of the background image",
+    example: "https://example.com/office.jpg",
+  }),
+  thumbnailUrl: extendApi(z.string(), {
+    description: "The URL of a small preview of the image (150×100)",
+    example: "https://example.com/office-thumbnail.jpg",
+  }),
+});
+
 export const isMapDetailsData = z.object({
   mapUrl: extendApi(z.string().optional(), {
     description: "The full URL to the JSON map file",
@@ -335,6 +346,10 @@ export const isMapDetailsData = z.object({
       "Initial value of the 'keep camera enabled when the tab is away' privacy setting, before the user sets their own preference",
     example: false,
   }),
+  cameraBackgrounds: extendApi(CameraBackgroundData.array().optional(), {
+    description:
+      "The complete, ordered list of camera background images offered to users. When absent, WorkAdventure's built-in images are offered. An empty list offers no image.",
+  }),
   defaultMicrophonePrivacySettings: extendApi(z.boolean().optional(), {
     description:
       "Initial value of the 'keep microphone enabled when the tab is away' privacy setting, before the user sets their own preference",
@@ -359,4 +374,5 @@ export type RequiredMetaTagsData = z.infer<typeof RequiredMetaTagsData>;
 export type LegalsData = z.infer<typeof isLegalsData>;
 export type CustomizeSceneData = z.infer<typeof CustomizeSceneData>;
 export type RecordingData = z.infer<typeof RecordingData>;
+export type CameraBackgroundData = z.infer<typeof CameraBackgroundData>;
 export type RecordingButtonState = z.infer<typeof RecordingButtonState>;
