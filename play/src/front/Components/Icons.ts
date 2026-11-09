@@ -89,6 +89,7 @@ export { default as IconZoomInArea } from "~icons/tabler/zoom-in-area";
 export { default as IconFocus } from "~icons/tabler/photo-sensor";
 export { default as IconMicrophoneOff } from "~icons/tabler/microphone-off";
 export { default as IconCamera } from "~icons/tabler/video";
+export { default as IconCameraOff } from "~icons/tabler/video-off";
 export { default as IconDoorOut } from "~icons/tabler/door-exit";
 export { default as IconDoorIn } from "~icons/tabler/door-enter";
 export { default as IconFileMusic } from "~icons/tabler/file-music";

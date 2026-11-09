@@ -23,7 +23,7 @@
 
 <svelte:window onkeydown={onKeyDown} />
 
-<div class="main-text-message w-full max-w-xl pointer-events-auto animate-bounce-in" out:fade={{ duration: 150 }}>
+<div class="main-text-message w-fit max-w-xl pointer-events-auto animate-bounce-in" out:fade={{ duration: 150 }}>
     <AnnouncementCard
         text={message.text}
         senderName={message.senderName}

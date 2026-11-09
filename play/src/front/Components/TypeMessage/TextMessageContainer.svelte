@@ -10,7 +10,7 @@
 
 {#if latest}
     <!-- Below the action bar rather than over it. -->
-    <div class="fixed left-0 right-0 top-20 w-full z-[900] pointer-events-none px-2 flex flex-col items-center gap-2">
+    <div class="fixed left-0 right-0 top-28 w-full z-[900] pointer-events-none px-2 flex flex-col items-center gap-2">
         {#key latest.id}
             <TextMessage message={latest} />
         {/key}

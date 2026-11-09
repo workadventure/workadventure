@@ -74,11 +74,11 @@
         : 'border-success'}"
     data-testid="announcement-card"
 >
-    <div class="flex items-start gap-3 p-3">
-        <div class="h-9 w-9 shrink-0 rounded-md bg-white/10 flex items-center justify-center overflow-hidden">
+    <div class="flex items-start gap-2 px-3 py-2">
+        <div class="h-7 w-7 shrink-0 rounded-md bg-white/10 flex items-center justify-center overflow-hidden">
             {#await wokaPromise then woka}
                 {#if woka}
-                    <img src={woka} alt="" class="h-9 w-9 [image-rendering:pixelated]" draggable="false" />
+                    <img src={woka} alt="" class="h-7 w-7 [image-rendering:pixelated]" draggable="false" />
                 {:else}
                     <IconSpeakerPhone font-size="20" />
                 {/if}
