@@ -26,6 +26,15 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
     },
     modal: {
         liveMessage: {
+            microphoneOff: "マイクオフ",
+            cameraOff: "カメラオフ",
+            cameraOffHint: "マイクだけでもライブ配信できます。",
+            devices: "カメラとマイク",
+            whoHears: "誰に聞こえますか？",
+            thisRoom: "このルーム",
+            wholeWorld: "ワールドのすべてのルーム",
+            live: "ライブ",
+            stop: "停止",
             startMegaphone: "メガホンを開始",
             stopMegaphone: "メガホンを停止",
             goingToStream: "ストリーミング配信",

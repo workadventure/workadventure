@@ -79,14 +79,14 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.clickGoLive(page);
 
         // Click on the button to start megaphone
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(page.getByTestId("go-live-start")).toBeVisible();
+        await page.getByTestId("go-live-start").click({ timeout: 10_000 });
 
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(page.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await page.getByTestId("go-live-stop").click();
+        await expect(page.getByTestId("go-live-sheet")).toBeHidden();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -144,16 +144,16 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         await Menu.clickGoLive(page);
 
         // Click on the button to start megaphone
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(page.getByTestId("go-live-start")).toBeVisible();
+        await page.getByTestId("go-live-start").click({ timeout: 10_000 });
 
         // click on the megaphone button to start the streaming session
         await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
         await expect(page.getByText("Admin2", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(page.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await page.getByTestId("go-live-stop").click();
+        await expect(page.getByTestId("go-live-sheet")).toBeHidden();
         // TODO IN THE FUTURE (PlayWright doesn't support it) : Add test if sound is correctly played
     });
 
@@ -199,8 +199,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Outside user C starts megaphone (becomes speaker)
         await Menu.clickGoLive(pageOutsideC);
-        await expect(pageOutsideC.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await pageOutsideC.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(pageOutsideC.getByTestId("go-live-start")).toBeVisible();
+        await pageOutsideC.getByTestId("go-live-start").click({ timeout: 10_000 });
         await pageOutsideC.locator(".close-btn").first().click();
 
         await expect(pageMeetingA.locator("#cameras-container").getByText("Alice", { exact: true })).toBeVisible({
@@ -209,8 +209,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Meeting user A starts megaphone then screen share
         await Menu.clickGoLive(pageMeetingA);
-        await expect(pageMeetingA.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await pageMeetingA.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(pageMeetingA.getByTestId("go-live-start")).toBeVisible();
+        await pageMeetingA.getByTestId("go-live-start").click({ timeout: 10_000 });
         await pageMeetingA.locator(".close-btn").first().click();
 
         await pageMeetingA.getByTestId("screenShareButton").click();
@@ -226,9 +226,9 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // A stops megaphone → becomes listener, screen share no longer published → outside must not see it
         await Menu.clickGoLive(pageMeetingA);
-        await expect(pageMeetingA.getByRole("button", { name: "Stop megaphone" })).toBeVisible();
-        await pageMeetingA.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(pageMeetingA.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await expect(pageMeetingA.getByTestId("go-live-stop")).toBeVisible();
+        await pageMeetingA.getByTestId("go-live-stop").click();
+        await expect(pageMeetingA.getByTestId("go-live-sheet")).toBeHidden();
 
         await expect(pageOutsideC.locator("#highlighted-media").getByText("Admin1", { exact: true })).toBeHidden({
             timeout: 20_000,
@@ -239,8 +239,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // A starts megaphone again (and screen share if still needed)
         await Menu.clickGoLive(pageMeetingA);
-        await expect(pageMeetingA.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await pageMeetingA.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(pageMeetingA.getByTestId("go-live-start")).toBeVisible();
+        await pageMeetingA.getByTestId("go-live-start").click({ timeout: 10_000 });
         await pageMeetingA.locator(".close-btn").first().click();
 
         await pageMeetingA.getByTestId("screenShareButton").click();
@@ -540,8 +540,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // Speaker (Admin1) starts the megaphone session
         await Menu.clickGoLive(pageSpeaker);
 
-        await expect(pageSpeaker.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await pageSpeaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(pageSpeaker.getByTestId("go-live-start")).toBeVisible();
+        await pageSpeaker.getByTestId("go-live-start").click({ timeout: 10_000 });
 
         // Verify all listeners can see the speaker (Admin1)
         for (const { page } of listeners) {
@@ -643,8 +643,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Admin2 becomes a second speaker
         await Menu.clickGoLive(pageListener1);
-        await expect(pageListener1.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await pageListener1.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(pageListener1.getByTestId("go-live-start")).toBeVisible();
+        await pageListener1.getByTestId("go-live-start").click({ timeout: 10_000 });
 
         // Verify all other listeners can now see both speakers (Admin1 and Admin2)
         const remainingListeners = [
@@ -682,8 +682,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         // ============================================================
 
         // Admin2 stops the megaphone
-        await pageListener1.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(pageListener1.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await pageListener1.getByTestId("go-live-stop").click();
+        await expect(pageListener1.getByTestId("go-live-sheet")).toBeHidden();
 
         // Verify listeners can no longer see Admin2, but still see Admin1
         for (const { page } of remainingListeners) {
@@ -713,8 +713,8 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
         }
 
         // Stop the megaphone for the first speaker
-        await pageSpeaker.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(pageSpeaker.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await pageSpeaker.getByTestId("go-live-stop").click();
+        await expect(pageSpeaker.getByTestId("go-live-sheet")).toBeHidden();
     });
 
     /**

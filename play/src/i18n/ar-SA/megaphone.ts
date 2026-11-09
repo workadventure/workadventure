@@ -26,6 +26,15 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
     },
     modal: {
         liveMessage: {
+            microphoneOff: "الميكروفون مغلق",
+            cameraOff: "الكاميرا مغلقة",
+            cameraOffHint: "يمكنك البث المباشر بالميكروفون فقط.",
+            devices: "الكاميرا والميكروفون",
+            whoHears: "من يسمعك؟",
+            thisRoom: "هذه الغرفة",
+            wholeWorld: "كل غرف العالم",
+            live: "مباشر",
+            stop: "إيقاف",
             startMegaphone: "ابدأ الميكروفون", // Start megaphone
             stopMegaphone: "إيقاف الميغافون",
             goingToStream: "ستقوم بالبث", // You are going to stream

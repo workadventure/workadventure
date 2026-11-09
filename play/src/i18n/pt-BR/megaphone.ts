@@ -25,6 +25,15 @@ const megaphone: BaseTranslation = {
     },
     modal: {
         liveMessage: {
+            microphoneOff: "Microfone desligado",
+            cameraOff: "Câmera desligada",
+            cameraOffHint: "Você pode entrar ao vivo só com o microfone.",
+            devices: "Câmera e microfone",
+            whoHears: "Quem ouve você?",
+            thisRoom: "Esta sala",
+            wholeWorld: "Todas as salas do mundo",
+            live: "Ao vivo",
+            stop: "Parar",
             startMegaphone: "Iniciar megafone",
             stopMegaphone: "Parar megafone",
             goingToStream: "Você vai transmitir",

@@ -115,8 +115,8 @@ class Menu {
     }
 
     async clickStartMegaphone(page: Page) {
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(page.getByTestId("go-live-start")).toBeVisible();
+        await page.getByTestId("go-live-start").click({ timeout: 10_000 });
     }
 
     // "Go live" is only in the map menu of the users allowed to use the megaphone.

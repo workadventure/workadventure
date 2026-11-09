@@ -248,8 +248,8 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(page2, 1);
         await expectLivekitRoomsCountToBe(page, 1);
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(page.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await page.getByTestId("go-live-stop").click();
+        await expect(page.getByTestId("go-live-sheet")).toBeHidden();
 
         await expectLivekitRoomsCountToBe(page, 0);
         await expectLivekitRoomsCountToBe(page2, 0);
@@ -259,8 +259,8 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
 
         await Menu.clickGoLive(page);
 
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(page.getByTestId("go-live-start")).toBeVisible();
+        await page.getByTestId("go-live-start").click({ timeout: 10_000 });
 
         await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
         await expect(userAlice.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
@@ -273,8 +273,8 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(page2, 1);
         await expectLivekitRoomsCountToBe(page, 1);
 
-        await page.getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(page.getByRole("heading", { name: "Megaphone" })).toBeHidden();
+        await page.getByTestId("go-live-stop").click();
+        await expect(page.getByTestId("go-live-sheet")).toBeHidden();
 
         await expectLivekitRoomsCountToBe(page, 0);
         await expectLivekitRoomsCountToBe(page2, 0);

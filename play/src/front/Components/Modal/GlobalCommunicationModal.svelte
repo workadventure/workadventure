@@ -250,7 +250,7 @@
                             data-testid="go-live-on-air"
                         >
                             <span class="font-bold">● {$LL.megaphone.modal.liveMessage.live()}</span>
-                            <Button variant="light" appearance="border" onclick={stopLive}>
+                            <Button variant="light" appearance="border" onclick={stopLive} dataTestId="go-live-stop">
                                 {$LL.megaphone.modal.liveMessage.stop()}
                             </Button>
                         </div>

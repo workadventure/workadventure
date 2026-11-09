@@ -26,6 +26,15 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
     },
     modal: {
         liveMessage: {
+            microphoneOff: "麦克风已关闭",
+            cameraOff: "摄像头已关闭",
+            cameraOffHint: "你可以只用麦克风进行直播。",
+            devices: "摄像头和麦克风",
+            whoHears: "谁能听到你？",
+            thisRoom: "此房间",
+            wholeWorld: "世界中的所有房间",
+            live: "直播中",
+            stop: "停止",
             startMegaphone: "开始扩音器",
             stopMegaphone: "停止扩音器",
             goingToStream: "您将进行流媒体传输",

@@ -339,7 +339,7 @@ test.describe("Recording test", () => {
         // Give the megaphone recording enough time to produce media before the source stops.
         await recorder.waitForTimeout(5000);
 
-        await broadcaster.getByRole("button", { name: "Stop megaphone" }).click();
+        await broadcaster.getByTestId("go-live-stop").click();
 
         await expect(recorder.getByTestId("recording-completed-modal")).toBeVisible({ timeout: 30_000 });
         await recorder.getByTestId("recording-completed-modal-open-recordings-list-button").click();

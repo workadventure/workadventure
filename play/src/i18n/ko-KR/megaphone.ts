@@ -26,6 +26,15 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
     },
     modal: {
         liveMessage: {
+            microphoneOff: "마이크 꺼짐",
+            cameraOff: "카메라 꺼짐",
+            cameraOffHint: "마이크만으로도 라이브를 시작할 수 있습니다.",
+            devices: "카메라 및 마이크",
+            whoHears: "누가 듣나요?",
+            thisRoom: "이 방",
+            wholeWorld: "월드의 모든 방",
+            live: "라이브",
+            stop: "중지",
             startMegaphone: "확성기 시작",
             stopMegaphone: "확성기 중지",
             goingToStream: "스트리밍하려는 것",
