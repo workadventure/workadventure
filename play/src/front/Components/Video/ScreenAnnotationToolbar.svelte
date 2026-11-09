@@ -85,8 +85,9 @@
 
     // The app's look (ActionBarButton, the desktop meeting bar), with the theme's colors. Rings, not outlines:
     // the app removes the outline of a focused button.
-    const button =
-        "inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1.5 rounded-[6px] p-1.5 text-neutral-100 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white aria-pressed:bg-secondary aria-pressed:hover:bg-secondary-600";
+    const baseButton =
+        "inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1.5 rounded-[6px] p-1.5 text-neutral-100 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white";
+    const button = `${baseButton} aria-pressed:bg-secondary aria-pressed:hover:bg-secondary-600`;
     const separator = "mx-0.5 h-6 w-px bg-neutral-800";
 </script>
 
@@ -99,7 +100,7 @@
 >
     <button
         type="button"
-        class={button}
+        class="{baseButton} aria-pressed:bg-danger aria-pressed:hover:bg-danger-600"
         data-testid="annotation-toggle"
         aria-pressed={active}
         title={active ? $LL.screenAnnotation.stopAnnotating() : $LL.screenAnnotation.startAnnotating()}
