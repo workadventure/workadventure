@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount, tick } from "svelte";
+    import { onMount, setContext, tick } from "svelte";
     import type { DesktopCapturerSource, WorkAdventureDesktopWindowsApi } from "@workadventure/desktop-api";
     import { screenAnnotationManager } from "../../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { localAnnotationActiveStore, screenAnnotationEnabledStore } from "../../../Stores/ScreenAnnotationStore";
@@ -13,16 +13,37 @@
         usedCameraDeviceIdStore,
         usedMicrophoneDeviceIdStore,
     } from "../../../Stores/MediaStore";
-    import { requestedScreenSharingState, startScreenShareWithSource } from "../../../Stores/ScreenSharingStore";
+    import {
+        inExternalServiceStore,
+        myCameraStore,
+        myMicrophoneStore,
+        proximityMeetingStore,
+    } from "../../../Stores/MyMediaStore";
+    import { startScreenShareWithSource } from "../../../Stores/ScreenSharingStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { LL } from "../../../../i18n/i18n-svelte";
-    import { toggleCamera, toggleMicrophone } from "../../../Stores/HeldMediaStore";
+    import MicrophoneMenuItem from "../../ActionBar/MenuIcons/MicrophoneMenuItem.svelte";
+    import CameraMenuItem from "../../ActionBar/MenuIcons/CameraMenuItem.svelte";
+    import ScreenSharingMenuItem from "../../ActionBar/MenuIcons/ScreenSharingMenuItem.svelte";
+    import {
+        IconCamera,
+        IconCheck,
+        IconDeviceComputerCamera,
+        IconDeviceDesktopUp,
+        IconDots,
+        IconGripVertical,
+        IconMicrophone,
+        IconPencil,
+        IconSettings,
+        IconUsersGroup,
+        IconX,
+    } from "@wa-icons";
 
     /**
      * The desktop presenter meeting bar, mounted into a child window of the world page while the user shares
-     * their screen. It keeps the design of the native bar it replaces (desktopMeetingBar.css). The desktop app
-     * places it on the shared screen and keeps it out of the capture; the window grows upwards while the menu,
-     * the source picker or the device list is open.
+     * their screen. Styled with the app's Tailwind theme (the page's styles are copied in), with the app's own
+     * media buttons. The desktop app places it on the shared screen and keeps it out of the capture; the window
+     * grows upwards while the menu, the source picker or the device list is open.
      */
     interface Props {
         windows: WorkAdventureDesktopWindowsApi;
@@ -31,6 +52,9 @@
     }
 
     let { windows, ownerDocument }: Props = $props();
+
+    // The app's ActionBarButtons in this window are compact, as in the mini window.
+    setContext("compactActionBar", true);
 
     // Read the id on each store update: the bar can open before the share's space is known.
     let othersAllowed = $derived($screenAnnotationEnabledStore.get(screenAnnotationManager.localUserId ?? "") ?? false);
@@ -44,16 +68,16 @@
     let pickerOpen = $state(false);
     let devicesOpen = $state(false);
     let tabStripShown = $state(false);
-    let pickerKind: "screen" | "window" = $state("screen");
+    const sourceKinds = ["screen", "window"] as const;
+    let pickerKind: (typeof sourceKinds)[number] = $state("screen");
     let sources: Array<DesktopCapturerSource & { kind: "screen" | "window" }> | undefined = $state();
     let sourcesError = $state(false);
     let moreButton: HTMLButtonElement | undefined = $state();
     let menuElement: HTMLDivElement | undefined = $state();
+    let devicesElement: HTMLDivElement | undefined = $state();
     let menuLeft = $state(6);
     let caretLeft = $state(0);
 
-    let micEnabled = $derived($requestedMicrophoneState);
-    let cameraEnabled = $derived($requestedCameraState);
     let shownSources = $derived(sources?.filter((source) => source.kind === pickerKind));
 
     // Bottom-anchored: the window grows upwards, the pill staying where the user left it. Not before the
@@ -70,8 +94,6 @@
     });
 
     onMount(() => {
-        ownerDocument.documentElement.lang = document.documentElement.lang;
-        ownerDocument.documentElement.dir = document.documentElement.dir;
         const onKeydown = (event: KeyboardEvent) => {
             if (event.key !== "Escape") return;
             if (menuOpen) menuOpen = false;
@@ -82,7 +104,7 @@
         const onMousedown = (event: MouseEvent) => {
             const target = event.target as Node;
             if (menuOpen && !moreButton?.contains(target) && !menuElement?.contains(target)) menuOpen = false;
-            if (devicesOpen && !ownerDocument.getElementById("devices")?.contains(target)) devicesOpen = false;
+            if (devicesOpen && !devicesElement?.contains(target)) devicesOpen = false;
         };
         ownerDocument.addEventListener("keydown", onKeydown);
         ownerDocument.addEventListener("mousedown", onMousedown, true);
@@ -155,7 +177,44 @@
         }
         devicesOpen = false;
     }
+
+    // The look of the app's compact ActionBarButton (as in the mini window), with the theme's colors.
+    const barButton = "inline-flex size-9 items-center justify-center rounded text-neutral-100 [&>svg]:size-6";
+    const activeButton = "bg-secondary hover:bg-secondary-600";
+    const surface = "rounded-xl bg-contrast/90 shadow-xl backdrop-blur";
+    const panel = `${surface} mb-2 flex min-h-0 flex-col`;
+    const panelHead = "flex items-center justify-between gap-2 border-b border-white/10 px-2.5 py-2";
+    const closeButton = "inline-flex size-6 items-center justify-center rounded bg-white/5 hover:bg-white/15";
+    const menuItem = "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-sm hover:bg-white/10";
+    const menuIcon = "inline-flex w-8.5 shrink-0 justify-center [&>svg]:size-4.5";
+    const separator = "mx-1.5 my-1 h-px bg-white/10";
+    const muted = "text-xs text-white/60";
 </script>
+
+{#snippet panelHeader(title: string, closeLabel: string, close: () => void, withKinds: boolean)}
+    <div class={panelHead}>
+        <span class="text-xs font-bold">{title}</span>
+        {#if withKinds}
+            <div class="flex gap-1">
+                {#each sourceKinds as kind (kind)}
+                    <button
+                        class="rounded-full px-2.5 py-1 text-xxs {pickerKind === kind
+                            ? 'bg-secondary'
+                            : 'bg-white/5 hover:bg-white/10'}"
+                        type="button"
+                        onclick={() => (pickerKind = kind)}
+                        >{kind === "screen"
+                            ? $LL.desktop.meetingBar.screens()
+                            : $LL.desktop.meetingBar.windows()}</button
+                    >
+                {/each}
+            </div>
+        {/if}
+        <button class={closeButton} type="button" aria-label={closeLabel} onclick={close}>
+            <IconX class="size-4" />
+        </button>
+    </div>
+{/snippet}
 
 {#snippet deviceGroup(
     kind: "camera" | "microphone",
@@ -163,306 +222,218 @@
     currentId: string | undefined,
     enabled: boolean,
 )}
-    <div class="dv-group">
-        <span class="dv-group-ico">
-            {#if kind === "camera"}
-                <svg viewBox="0 0 24 24" aria-hidden="true"
-                    ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                        d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"
-                    /><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" /></svg
-                >
-            {:else}
-                <svg viewBox="0 0 24 24" aria-hidden="true"
-                    ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                        d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"
-                    /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M8 21l8 0" /><path d="M12 17l0 4" /></svg
-                >
-            {/if}
-        </span>
+    <div class="flex items-center gap-1.5 px-1 pt-2 pb-1 text-xxs font-bold tracking-wide text-white/60 uppercase">
+        {#if kind === "camera"}<IconCamera class="size-3.5" />{:else}<IconMicrophone class="size-3.5" />{/if}
         <span>{kind === "camera" ? $LL.desktop.meetingBar.camera() : $LL.desktop.meetingBar.microphone()}</span>
     </div>
     {#if !enabled}
-        <div class="dv-empty">
+        <div class="{muted} px-2.5 py-2">
             {kind === "camera" ? $LL.desktop.meetingBar.cameraOff() : $LL.desktop.meetingBar.microphoneOff()}
         </div>
     {:else if !devices || devices.length === 0}
-        <div class="dv-empty">
+        <div class="{muted} px-2.5 py-2">
             {kind === "camera" ? $LL.desktop.meetingBar.noCamera() : $LL.desktop.meetingBar.noMicrophone()}
         </div>
     {:else}
         {#each devices as device (device.deviceId)}
             <button
                 type="button"
-                class="dv-item"
-                class:is-current={device.deviceId === currentId}
+                class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-xs hover:bg-white/10"
                 onclick={() => pickDevice(kind, device.deviceId)}
             >
-                <span class="dv-check"
-                    ><svg viewBox="0 0 24 24" aria-hidden="true"
-                        ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M5 12l5 5l10 -10" /></svg
-                    ></span
-                >
-                <span class="dv-name">{device.label || device.deviceId}</span>
+                <IconCheck class="size-4 shrink-0 text-secondary {device.deviceId === currentId ? '' : 'invisible'}" />
+                <span class="truncate">{device.label || device.deviceId}</span>
             </button>
         {/each}
     {/if}
 {/snippet}
 
-<div
-    id="picker"
-    class:visible={pickerOpen}
-    role="dialog"
-    aria-label={$LL.desktop.meetingBar.switchSharedScreenDialog()}
->
-    <div class="pk-header">
-        <span class="pk-title">{$LL.desktop.meetingBar.switchWhatYouShare()}</span>
-        <div class="pk-tabs">
-            <button
-                class="pk-tab"
-                class:active={pickerKind === "screen"}
-                type="button"
-                onclick={() => (pickerKind = "screen")}>{$LL.desktop.meetingBar.screens()}</button
-            >
-            <button
-                class="pk-tab"
-                class:active={pickerKind === "window"}
-                type="button"
-                onclick={() => (pickerKind = "window")}>{$LL.desktop.meetingBar.windows()}</button
-            >
-        </div>
-        <button
-            class="pk-close"
-            type="button"
-            aria-label={$LL.desktop.meetingBar.cancel()}
-            onclick={() => (pickerOpen = false)}>×</button
-        >
-    </div>
-    {#if sourcesError}
-        <div class="pk-body empty">{$LL.desktop.meetingBar.unableToListSources()}</div>
-    {:else if !shownSources}
-        <div class="pk-body loading">{$LL.desktop.meetingBar.loadingSources()}</div>
-    {:else if shownSources.length === 0}
-        <div class="pk-body">
-            <div class="pk-note">
-                {pickerKind === "screen" ? $LL.desktop.meetingBar.noScreen() : $LL.desktop.meetingBar.noWindow()}
-            </div>
-        </div>
-    {:else}
-        <div class="pk-body">
-            {#each shownSources as source, index (source.id)}
-                <button class="pk-tile" type="button" title={source.name} onclick={() => pickSource(source)}>
-                    <img alt={source.name} src={source.thumbnailURL} />
-                    <span class="pk-tile-name"
-                        >{pickerKind === "screen"
-                            ? `${index + 1} · ${source.name || $LL.desktop.meetingBar.screen()}`
-                            : source.name || $LL.desktop.meetingBar.untitled()}</span
-                    >
-                </button>
-            {/each}
+<!-- Bottom-anchored: the pill stays pinned to the window's bottom edge, so the panels open above it. -->
+<div class="flex h-screen flex-col justify-end text-white">
+    {#if pickerOpen}
+        <div class="{panel} mx-1 flex-1" role="dialog" aria-label={$LL.desktop.meetingBar.switchSharedScreenDialog()}>
+            {@render panelHeader(
+                $LL.desktop.meetingBar.switchWhatYouShare(),
+                $LL.desktop.meetingBar.cancel(),
+                () => (pickerOpen = false),
+                true,
+            )}
+            {#if sourcesError}
+                <div class="{muted} grid flex-1 place-items-center">{$LL.desktop.meetingBar.unableToListSources()}</div>
+            {:else if !shownSources}
+                <div class="{muted} grid flex-1 place-items-center">{$LL.desktop.meetingBar.loadingSources()}</div>
+            {:else}
+                <div class="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-y-auto p-2">
+                    {#each shownSources as source, index (source.id)}
+                        <button
+                            class="flex flex-col overflow-hidden rounded-md border border-solid border-white/5 bg-white/5 text-start hover:border-secondary/60 hover:bg-secondary/20"
+                            type="button"
+                            title={source.name}
+                            onclick={() => pickSource(source)}
+                        >
+                            <img
+                                class="block aspect-video w-full bg-black object-cover"
+                                alt={source.name}
+                                src={source.thumbnailURL}
+                            />
+                            <span class="truncate px-1.5 py-1 text-xxs"
+                                >{pickerKind === "screen"
+                                    ? `${index + 1} · ${source.name || $LL.desktop.meetingBar.screen()}`
+                                    : source.name || $LL.desktop.meetingBar.untitled()}</span
+                            >
+                        </button>
+                    {:else}
+                        <div class="{muted} col-span-full p-1.5 text-center">
+                            {pickerKind === "screen"
+                                ? $LL.desktop.meetingBar.noScreen()
+                                : $LL.desktop.meetingBar.noWindow()}
+                        </div>
+                    {/each}
+                </div>
+            {/if}
         </div>
     {/if}
-</div>
 
-<div id="devices" class:visible={devicesOpen} role="dialog" aria-label={$LL.desktop.meetingBar.changeDevicesDialog()}>
-    <div class="pk-header">
-        <span class="pk-title">{$LL.desktop.meetingBar.cameraAndMicrophone()}</span>
-        <button
-            class="pk-close"
-            type="button"
-            aria-label={$LL.desktop.meetingBar.close()}
-            onclick={() => (devicesOpen = false)}>×</button
+    {#if devicesOpen}
+        <div
+            class="{panel} w-full max-w-90 self-center"
+            role="dialog"
+            aria-label={$LL.desktop.meetingBar.changeDevicesDialog()}
+            bind:this={devicesElement}
         >
-    </div>
-    <div class="dv-body">
-        {@render deviceGroup("camera", $cameraListStore, $usedCameraDeviceIdStore, cameraEnabled)}
-        {@render deviceGroup("microphone", $microphoneListStore, $usedMicrophoneDeviceIdStore, micEnabled)}
-    </div>
-</div>
+            {@render panelHeader(
+                $LL.desktop.meetingBar.cameraAndMicrophone(),
+                $LL.desktop.meetingBar.close(),
+                () => (devicesOpen = false),
+                false,
+            )}
+            <div class="min-h-0 flex-1 overflow-y-auto px-2 pt-1.5 pb-2">
+                {@render deviceGroup("camera", $cameraListStore, $usedCameraDeviceIdStore, $requestedCameraState)}
+                {@render deviceGroup(
+                    "microphone",
+                    $microphoneListStore,
+                    $usedMicrophoneDeviceIdStore,
+                    $requestedMicrophoneState,
+                )}
+            </div>
+        </div>
+    {/if}
 
-<div
-    id="menu"
-    class:visible={menuOpen}
-    role="menu"
-    aria-label={$LL.desktop.meetingBar.moreOptions()}
-    bind:this={menuElement}
-    style="left: {menuLeft}px"
->
-    <button
-        class="mn-item"
-        type="button"
-        role="menuitemcheckbox"
-        aria-checked={tabStripShown}
-        onclick={() => {
-            windows.toggleTabStrip();
-            menuOpen = false;
-        }}
-    >
-        <span class="mn-toggle" aria-hidden="true"></span>
-        <span class="mn-label">{$LL.desktop.meetingBar.displayTabs()}</span>
-    </button>
-    <div class="mn-sep"></div>
-    <button class="mn-item" type="button" onclick={openPicker}>
-        <span class="mn-ico"
-            ><svg viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                    d="M3 5m0 1a1 1 0 0 1 1 -1h16a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1z"
-                /><path d="M7 20h10" /><path d="M9 16v4" /><path d="M15 16v4" /><path d="M9 11l3 -3l3 3" /></svg
-            ></span
-        >
-        <span class="mn-label">{$LL.desktop.meetingBar.switchSharedScreen()}</span>
-    </button>
-    <button class="mn-item" type="button" onclick={openDevices}>
-        <span class="mn-ico"
-            ><svg viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                    d="M12 12m-5 0a5 5 0 1 0 10 0a5 5 0 1 0 -10 0"
-                /><path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0" /><path
-                    d="M5 19h14a2 2 0 0 0 -2 -2h-10a2 2 0 0 0 -2 2"
-                /></svg
-            ></span
-        >
-        <span class="mn-label">{$LL.desktop.meetingBar.changeDevices()}</span>
-    </button>
-    <div class="mn-sep"></div>
-    <button
-        class="mn-item"
-        type="button"
-        onclick={() => {
-            menuOpen = false;
-            windows.focusMain();
-        }}
-    >
-        <span class="mn-ico"
-            ><svg viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                    d="M10.325 4.317c.426 -1.756 2.924 -1.756 3.35 0a1.724 1.724 0 0 0 2.573 1.066c1.543 -.94 3.31 .826 2.37 2.37a1.724 1.724 0 0 0 1.065 2.572c1.756 .426 1.756 2.924 0 3.35a1.724 1.724 0 0 0 -1.066 2.573c.94 1.543 -.826 3.31 -2.37 2.37a1.724 1.724 0 0 0 -2.572 1.065c-.426 1.756 -2.924 1.756 -3.35 0a1.724 1.724 0 0 0 -2.573 -1.066c-1.543 .94 -3.31 -.826 -2.37 -2.37a1.724 1.724 0 0 0 -1.065 -2.572c-1.756 -.426 -1.756 -2.924 0 -3.35a1.724 1.724 0 0 0 1.066 -2.573c-.94 -1.543 .826 -3.31 2.37 -2.37c1 .608 2.296 .07 2.572 -1.065z"
-                /><path d="M9 12a3 3 0 1 0 6 0a3 3 0 0 0 -6 0" /></svg
-            ></span
-        >
-        <span class="mn-label">{$LL.desktop.meetingBar.otherSettings()}</span>
-    </button>
-    <span class="mn-caret" aria-hidden="true" style="left: {caretLeft}px"></span>
-</div>
-
-<div id="bar" data-testid="desktop-meeting-bar">
-    <div class="pill">
-        <span class="bar-handle" aria-hidden="true">
-            <svg viewBox="0 0 24 24"
-                ><circle cx="8" cy="5" r="1.5" /><circle cx="16" cy="5" r="1.5" /><circle
-                    cx="8"
-                    cy="12"
-                    r="1.5"
-                /><circle cx="16" cy="12" r="1.5" /><circle cx="8" cy="19" r="1.5" /><circle
-                    cx="16"
-                    cy="19"
-                    r="1.5"
-                /></svg
-            >
-        </span>
-        <button
-            type="button"
-            class="bar-btn"
-            class:is-active={$localAnnotationActiveStore}
-            data-testid="desktop-annotate"
-            title={$LL.desktop.meetingBar.annotate()}
-            aria-label={$LL.desktop.meetingBar.annotate()}
-            aria-pressed={$localAnnotationActiveStore}
-            onclick={() => screenAnnotationManager.toggleDrawingOnMyShare()}
-        >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l12-12-4-4L4 16z" /></svg>
-        </button>
-        <button
-            type="button"
-            class="bar-btn"
-            class:is-active={othersAllowed}
-            data-testid="desktop-allow-annotations"
-            aria-pressed={othersAllowed}
-            title={othersAllowed ? $LL.screenAnnotation.disallowAnnotations() : $LL.screenAnnotation.allowAnnotations()}
-            aria-label={othersAllowed
-                ? $LL.screenAnnotation.disallowAnnotations()
-                : $LL.screenAnnotation.allowAnnotations()}
-            onclick={() => screenAnnotationManager.setOthersAllowed(!othersAllowed)}
-        >
-            <svg viewBox="0 0 24 24" aria-hidden="true"
-                ><circle cx="9" cy="7" r="3" /><path
-                    d="M3 21v-2a6 6 0 0 1 12 0v2M17 4a3 3 0 0 1 0 6M21 21v-2a6 6 0 0 0-3-5"
-                /></svg
-            >
-        </button>
-        <button
-            class="bar-btn"
-            class:is-forbidden={!micEnabled}
-            type="button"
-            data-state={micEnabled ? "on" : "off"}
-            title={$LL.desktop.meetingBar.toggleMic()}
-            aria-label={$LL.desktop.meetingBar.toggleMic()}
-            onclick={toggleMicrophone}
-        >
-            <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                    d="M9 2m0 3a3 3 0 0 1 3 -3h0a3 3 0 0 1 3 3v5a3 3 0 0 1 -3 3h0a3 3 0 0 1 -3 -3z"
-                /><path d="M5 10a7 7 0 0 0 14 0" /><path d="M8 21l8 0" /><path d="M12 17l0 4" /></svg
-            >
-            <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 3l18 18" /><path
-                    d="M9 5a3 3 0 0 1 6 0v5a3 3 0 0 1 -.13 .874m-2 2a3 3 0 0 1 -3.87 -2.872v-1"
-                /><path d="M5 10a7 7 0 0 0 10.846 5.85m2 -2a6.967 6.967 0 0 0 1.152 -3.85" /><path d="M8 21l8 0" /><path
-                    d="M12 17l0 4"
-                /></svg
-            >
-        </button>
-        <button
-            class="bar-btn"
-            class:is-forbidden={!cameraEnabled}
-            type="button"
-            data-state={cameraEnabled ? "on" : "off"}
-            title={$LL.desktop.meetingBar.toggleCamera()}
-            aria-label={$LL.desktop.meetingBar.toggleCamera()}
-            onclick={toggleCamera}
-        >
-            <svg class="icon-only-on" viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                    d="M15 10l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -1.447 .894l-4.553 -2.276v-4z"
-                /><path d="M3 6m0 2a2 2 0 0 1 2 -2h8a2 2 0 0 1 2 2v8a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2z" /></svg
-            >
-            <svg class="icon-only-off" viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path d="M3 3l18 18" /><path
-                    d="M15 11v-1l4.553 -2.276a1 1 0 0 1 1.447 .894v6.764a1 1 0 0 1 -.675 .946"
-                /><path d="M10 6h3a2 2 0 0 1 2 2v3m0 4v1a2 2 0 0 1 -2 2h-8a2 2 0 0 1 -2 -2v-8a2 2 0 0 1 2 -2h1" /></svg
-            >
-        </button>
-        <button
-            class="bar-btn is-active"
-            type="button"
-            title={$LL.desktop.meetingBar.stopSharing()}
-            aria-label={$LL.desktop.meetingBar.stopSharing()}
-            onclick={() => requestedScreenSharingState.disableScreenSharing()}
-        >
-            <svg viewBox="0 0 24 24" aria-hidden="true"
-                ><path stroke="none" d="M0 0h24v24H0z" fill="none" /><path
-                    d="M21 12v3a1 1 0 0 1 -1 1h-16a1 1 0 0 1 -1 -1v-10a1 1 0 0 1 1 -1h9"
-                /><path d="M7 20l10 0" /><path d="M9 16l0 4" /><path d="M15 16l0 4" /><path d="M17 4h4v4" /><path
-                    d="M16 9l5 -5"
-                /></svg
-            >
-        </button>
-        <button
-            class="bar-btn"
-            type="button"
-            title={$LL.desktop.meetingBar.moreOptions()}
+    {#if menuOpen}
+        <!-- Right-aligned to the "…" (left set by toggleMenu), just above the bar. -->
+        <div
+            class="{surface} fixed bottom-14 z-10 flex min-w-56 flex-col p-1.5"
+            role="menu"
             aria-label={$LL.desktop.meetingBar.moreOptions()}
-            aria-haspopup="true"
-            aria-expanded={menuOpen}
-            bind:this={moreButton}
-            onclick={toggleMenu}
+            bind:this={menuElement}
+            style:left="{menuLeft}px"
         >
-            <svg viewBox="0 0 24 24" aria-hidden="true" style="fill:currentColor;stroke:none"
-                ><circle cx="5" cy="12" r="1.7" /><circle cx="12" cy="12" r="1.7" /><circle
-                    cx="19"
-                    cy="12"
-                    r="1.7"
-                /></svg
+            <button
+                class={menuItem}
+                type="button"
+                role="menuitemcheckbox"
+                aria-checked={tabStripShown}
+                onclick={() => {
+                    windows.toggleTabStrip();
+                    menuOpen = false;
+                }}
             >
-        </button>
+                <span
+                    class="relative h-4.5 w-8.5 shrink-0 rounded-full transition-colors {tabStripShown
+                        ? 'bg-secondary'
+                        : 'bg-white/20'}"
+                    aria-hidden="true"
+                >
+                    <span
+                        class="absolute top-0.5 left-0.5 size-3.5 rounded-full bg-white transition-transform {tabStripShown
+                            ? 'translate-x-4'
+                            : ''}"
+                    ></span>
+                </span>
+                <span class="flex-1">{$LL.desktop.meetingBar.displayTabs()}</span>
+            </button>
+            <div class={separator}></div>
+            <button class={menuItem} type="button" onclick={openPicker}>
+                <span class={menuIcon}><IconDeviceDesktopUp /></span>
+                <span class="flex-1">{$LL.desktop.meetingBar.switchSharedScreen()}</span>
+            </button>
+            <button class={menuItem} type="button" onclick={openDevices}>
+                <span class={menuIcon}><IconDeviceComputerCamera /></span>
+                <span class="flex-1">{$LL.desktop.meetingBar.changeDevices()}</span>
+            </button>
+            <div class={separator}></div>
+            <button
+                class={menuItem}
+                type="button"
+                onclick={() => {
+                    menuOpen = false;
+                    windows.focusMain();
+                }}
+            >
+                <span class={menuIcon}><IconSettings /></span>
+                <span class="flex-1">{$LL.desktop.meetingBar.otherSettings()}</span>
+            </button>
+            <!-- Joins the menu to the "…" button, so it is clear which button opened it. -->
+            <span
+                class="pointer-events-none absolute -bottom-2 size-0 -translate-x-1/2 border-x-7 border-t-8 border-solid border-x-transparent border-t-contrast/90"
+                aria-hidden="true"
+                style:left="{caretLeft}px"
+            ></span>
+        </div>
+    {/if}
+
+    <div class="flex shrink-0 justify-center px-1 pt-1 pb-2" data-testid="desktop-meeting-bar">
+        <!-- Drags the window; the buttons opt out. -->
+        <div class="{surface} inline-flex items-center px-2 py-1 [-webkit-app-region:drag]">
+            <IconGripVertical class="me-1.5 size-5 cursor-grab text-white/60" aria-hidden="true" />
+            <div class="flex items-center gap-0.5 [-webkit-app-region:no-drag]">
+                <button
+                    type="button"
+                    class="{barButton} {$localAnnotationActiveStore ? activeButton : 'hover:bg-white/10'}"
+                    data-testid="desktop-annotate"
+                    title={$LL.desktop.meetingBar.annotate()}
+                    aria-label={$LL.desktop.meetingBar.annotate()}
+                    aria-pressed={$localAnnotationActiveStore}
+                    onclick={() => screenAnnotationManager.toggleDrawingOnMyShare()}
+                >
+                    <IconPencil />
+                </button>
+                <button
+                    type="button"
+                    class="{barButton} {othersAllowed ? activeButton : 'hover:bg-white/10'}"
+                    data-testid="desktop-allow-annotations"
+                    aria-pressed={othersAllowed}
+                    title={othersAllowed
+                        ? $LL.screenAnnotation.disallowAnnotations()
+                        : $LL.screenAnnotation.allowAnnotations()}
+                    aria-label={othersAllowed
+                        ? $LL.screenAnnotation.disallowAnnotations()
+                        : $LL.screenAnnotation.allowAnnotations()}
+                    onclick={() => screenAnnotationManager.setOthersAllowed(!othersAllowed)}
+                >
+                    <IconUsersGroup />
+                </button>
+                <!-- The app's own media buttons, as in its action bar. -->
+                {#if !$inExternalServiceStore && $proximityMeetingStore && $myMicrophoneStore}
+                    <MicrophoneMenuItem />
+                {/if}
+                {#if !$inExternalServiceStore && $myCameraStore}
+                    <CameraMenuItem />
+                {/if}
+                <ScreenSharingMenuItem />
+                <button
+                    type="button"
+                    class="{barButton} hover:bg-white/10"
+                    title={$LL.desktop.meetingBar.moreOptions()}
+                    aria-label={$LL.desktop.meetingBar.moreOptions()}
+                    aria-haspopup="true"
+                    aria-expanded={menuOpen}
+                    bind:this={moreButton}
+                    onclick={toggleMenu}
+                >
+                    <IconDots />
+                </button>
+            </div>
+        </div>
     </div>
 </div>

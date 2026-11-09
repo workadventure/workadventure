@@ -82,11 +82,24 @@
     function toggleOthersAllowed(): void {
         screenAnnotationManager.setOthersAllowed(!othersAllowed);
     }
+
+    // The app's look (ActionBarButton, the desktop meeting bar), with the theme's colors. Rings, not outlines:
+    // the app removes the outline of a focused button.
+    const button =
+        "inline-flex min-h-9 min-w-9 shrink-0 items-center justify-center gap-1.5 rounded p-1.5 text-neutral-100 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-white aria-pressed:bg-secondary aria-pressed:hover:bg-secondary-600";
+    const separator = "mx-0.5 h-6 w-px bg-white/20";
 </script>
 
-<div class="annotation-toolbar" class:at-top={placement === "top"} data-testid="annotation-toolbar">
+<div
+    class={[
+        "pointer-events-auto absolute left-1/2 z-[255] flex w-max max-w-[calc(100%-24px)] -translate-x-1/2 flex-wrap items-center justify-center gap-1 rounded-xl border border-solid border-white/10 bg-contrast/90 p-2 text-neutral-100 shadow-xl backdrop-blur",
+        placement === "top" ? "top-3" : "bottom-3",
+    ]}
+    data-testid="annotation-toolbar"
+>
     <button
         type="button"
+        class={button}
         data-testid="annotation-toggle"
         aria-pressed={active}
         title={active ? $LL.screenAnnotation.stopAnnotating() : $LL.screenAnnotation.startAnnotating()}
@@ -96,11 +109,12 @@
         {#if active}<IconX font-size="20" />{:else}<IconPencil font-size="20" />{/if}
     </button>
     {#if active}
-        <span class="separator" aria-hidden="true"></span>
+        <span class={separator} aria-hidden="true"></span>
         {#each tools as toolItem (toolItem.id)}
             {@const ToolIcon = toolItem.icon}
             <button
                 type="button"
+                class={button}
                 data-testid={`annotation-tool-${toolItem.id}`}
                 aria-pressed={currentTool === toolItem.id}
                 title={toolItem.label}
@@ -108,12 +122,12 @@
                 onclick={() => selectTool(toolItem.id)}><ToolIcon font-size="20" /></button
             >
         {/each}
-        <span class="separator" aria-hidden="true"></span>
-        <div class="colors" data-testid="annotation-colors">
+        <span class={separator} aria-hidden="true"></span>
+        <div class="flex items-center gap-1.5 px-1" data-testid="annotation-colors">
             {#each ANNOTATION_COLORS as color (color)}
                 <button
                     type="button"
-                    class="color"
+                    class="size-5.5 shrink-0 rounded-full border-2 border-solid border-white/40 focus-visible:ring-2 focus-visible:ring-white aria-pressed:border-white aria-pressed:ring-2 aria-pressed:ring-secondary aria-pressed:ring-offset-2 aria-pressed:ring-offset-contrast"
                     style:background-color={color}
                     aria-pressed={currentColor === color}
                     title={$LL.screenAnnotation.color()}
@@ -123,10 +137,11 @@
             {/each}
         </div>
         {#if isPresenter && presenterEffects}
-            <span class="separator" aria-hidden="true"></span>
+            <span class={separator} aria-hidden="true"></span>
             {#each presenterTools as presenterTool (presenterTool)}
                 <button
                     type="button"
+                    class={button}
                     aria-pressed={$presenterToolStore === presenterTool}
                     title={$LL.screenAnnotation.presenter[presenterTool]()}
                     aria-label={$LL.screenAnnotation.presenter[presenterTool]()}
@@ -139,9 +154,10 @@
                 </button>
             {/each}
         {/if}
-        <span class="separator" aria-hidden="true"></span>
+        <span class={separator} aria-hidden="true"></span>
         <button
             type="button"
+            class={button}
             data-testid="annotation-undo"
             title={$LL.screenAnnotation.undo()}
             aria-label={$LL.screenAnnotation.undo()}
@@ -149,6 +165,7 @@
         >
         <button
             type="button"
+            class={button}
             title={$LL.desktop.meetingBar.redo()}
             aria-label={$LL.desktop.meetingBar.redo()}
             onclick={() => screenAnnotationManager.redoLastLocalElement(targetUserId)}
@@ -156,6 +173,7 @@
         >
         <button
             type="button"
+            class={button}
             title={$LL.desktop.meetingBar.hideAnnotations()}
             aria-label={$LL.desktop.meetingBar.hideAnnotations()}
             aria-pressed={$screenAnnotationLocallyHiddenStore}
@@ -164,10 +182,10 @@
         >
     {/if}
     {#if isPresenter}
-        <span class="separator" aria-hidden="true"></span>
+        <span class={separator} aria-hidden="true"></span>
         <button
             type="button"
-            class="permission"
+            class="{button} max-w-60 text-start text-xs"
             data-testid="annotation-allow-toggle"
             aria-pressed={othersAllowed}
             title={othersAllowed ? $LL.screenAnnotation.disallowAnnotations() : $LL.screenAnnotation.allowAnnotations()}
@@ -182,6 +200,7 @@
         </button>
         <button
             type="button"
+            class={button}
             data-testid="annotation-clear-all"
             title={$LL.screenAnnotation.clearAll()}
             aria-label={$LL.screenAnnotation.clearAll()}
@@ -189,90 +208,3 @@
         >
     {/if}
 </div>
-
-<style>
-    .annotation-toolbar {
-        position: absolute;
-        bottom: 12px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 255;
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
-        gap: 4px;
-        width: max-content;
-        max-width: calc(100% - 24px);
-        padding: 8px;
-        border: 1px solid #64748b;
-        border-radius: 12px;
-        background: #0f172af5;
-        color: #f8fafc;
-        box-shadow: 0 4px 16px #0006;
-        pointer-events: auto;
-    }
-    .annotation-toolbar.at-top {
-        top: 12px;
-        bottom: auto;
-    }
-    button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-        flex-shrink: 0;
-        min-width: 36px;
-        height: 36px;
-        padding: 6px;
-        border: 1px solid transparent;
-        border-radius: 6px;
-        background: transparent;
-        color: #f8fafc;
-        cursor: pointer;
-    }
-    button:hover {
-        background: #334155;
-    }
-    button[aria-pressed="true"] {
-        background: var(--color-secondary);
-        border-color: var(--color-secondary);
-        color: #fff;
-    }
-    button:focus-visible {
-        outline: 2px solid #fff;
-        outline-offset: 2px;
-    }
-    .separator {
-        width: 1px;
-        height: 24px;
-        margin: 0 3px;
-        background: #64748b;
-    }
-    .colors {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0 4px;
-    }
-    button.color {
-        min-width: 22px;
-        width: 22px;
-        height: 22px;
-        padding: 0;
-        border: 2px solid #64748b;
-        border-radius: 50%;
-    }
-    button.color[aria-pressed="true"] {
-        border-color: #fff;
-        outline: 2px solid var(--color-secondary);
-        outline-offset: 2px;
-    }
-    .permission {
-        height: auto;
-        min-height: 36px;
-        max-width: 240px;
-        font-size: 12px;
-        text-align: start;
-    }
-</style>
