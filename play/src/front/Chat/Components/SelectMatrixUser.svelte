@@ -117,9 +117,11 @@
     });
 </script>
 
+<!-- No "No options" box: with an empty field it stays open over what follows (the create view's button). -->
 <Select
     bind:value
     multiple
+    hideEmptyState
     class="border border-solid !bg-contrast !rounded-md"
     inputStyles="box-shadow:none !important"
     --border-focused="2px solid hsl(var(--secondary-600))"

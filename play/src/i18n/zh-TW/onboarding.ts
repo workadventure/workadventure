@@ -10,7 +10,7 @@ export default {
     movement: {
         title: "移動",
         descriptionDesktop: "使用方向鍵或 WASD 移動您的角色。您也可以按滑鼠右鍵來移動。現在試試移動吧！",
-        descriptionMobile: "使用搖桿或點選地圖來移動您的角色。現在試試移動吧！",
+        descriptionTouch: "點選地圖即可走到該處，拖曳可以環顧四周。現在試試移動吧！",
         next: "下一步",
     },
     communication: {
