@@ -199,7 +199,6 @@ export const POSTHOG_EVENT_KEYS: Partial<
 
   "megaphone.opened": "wa_action_megaphone",
 
-  "menu.chat.opened": "wa_menu_chat",
   "menu.contact.opened": "wa_menu_contact",
   "menu.credit.opened": "wa_menu_credit",
   "menu.custom.opened": "wa_menu_custom",

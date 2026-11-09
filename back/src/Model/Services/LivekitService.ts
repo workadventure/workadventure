@@ -8,6 +8,7 @@ import {
     EgressStatus,
     WebhookReceiver,
     EncodedFileOutput,
+    DirectFileOutput,
     S3Upload,
     EncodedFileType,
     ImageOutput,
@@ -15,6 +16,7 @@ import {
 } from "livekit-server-sdk";
 import type { CreateOptions, EgressInfo, EncodedOutputs, WebhookEvent } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
+import type { EgressFile } from "../Interfaces/ICommunicationState";
 import {
     LIVEKIT_RECORDING_S3_ENDPOINT,
     LIVEKIT_RECORDING_S3_BUCKET,
@@ -164,6 +166,53 @@ export class LiveKitService {
 
     private getParticipantIdentity(participantName: string): string {
         return participantName;
+    }
+
+    /**
+     * Records one participant's microphone to its own file, as the browser encoded it: the Opus packets are copied
+     * into an Ogg file, with no headless browser and no transcoding. The egress ends by itself when the track is
+     * unpublished. Returns the egress id.
+     */
+    async startTrackEgress(
+        roomName: string,
+        spaceUserId: string,
+        trackSid: string,
+        filepath: string,
+        s3: S3Upload,
+    ): Promise<string> {
+        const livekitRoomName = getLivekitRoomName(roomName);
+        // The track id comes from the participant's own client: record it only if it is that participant's microphone.
+        const participant = await this.roomServiceClient.getParticipant(
+            livekitRoomName,
+            this.getParticipantIdentity(spaceUserId),
+        );
+        if (!participant.tracks.some((track) => track.sid === trackSid && track.source === TrackSource.MICROPHONE)) {
+            throw new Error(`Track ${trackSid} is not the microphone of ${spaceUserId} in room ${livekitRoomName}`);
+        }
+        const info = await this.egressClient.startTrackEgress(
+            livekitRoomName,
+            new DirectFileOutput({ filepath, output: { case: "s3", value: s3 }, disableManifest: true }),
+            trackSid,
+        );
+        return info.egressId;
+    }
+
+    async stopEgress(egressId: string): Promise<void> {
+        await this.egressClient.stopEgress(egressId);
+    }
+
+    /**
+     * When an ended egress recorded, by its own clock. Its start and end bracket the audio of its file; the file's own
+     * startedAt does not: it comes seconds after the file's first sample.
+     */
+    async getEgressFile(egressId: string): Promise<EgressFile | undefined> {
+        const [info] = await this.egressClient.listEgress({ egressId });
+        if (!info?.startedAt || !info.endedAt) {
+            return undefined;
+        }
+        const startedAtMs = Number(info.startedAt / 1_000_000n);
+        const endedAtMs = Number(info.endedAt / 1_000_000n);
+        return { startedAtMs, endedAtMs, durationMs: endedAtMs - startedAtMs };
     }
 
     getLivekitFrontendUrl(): string {
