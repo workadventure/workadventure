@@ -92,7 +92,7 @@ async function readLegacySettings(): Promise<Partial<SettingsData>> {
     if (process.platform === "win32") {
         app.setLoginItemSettings({ openAtLogin: false, name: LEGACY_LOGIN_ITEM_NAME });
     }
-    return migrateLegacySettings(legacy, createDesktopConfig()) as Partial<SettingsData>;
+    return migrateLegacySettings(legacy, createDesktopConfig());
 }
 
 async function init() {
