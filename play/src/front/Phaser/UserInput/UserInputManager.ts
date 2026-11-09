@@ -1,23 +1,16 @@
 import * as Phaser from "phaser";
 import type { Unsubscriber } from "svelte/store";
-import { get } from "svelte/store";
-import { touchScreenManager } from "../../Touch/TouchScreenManager";
-import { MobileJoystick } from "../Components/MobileJoystick";
 import { enableUserInputsStore } from "../../Stores/UserInputStore";
 import type { UserInputHandlerInterface } from "../../Interfaces/UserInputHandlerInterface";
-import { mapEditorModeStore } from "../../Stores/MapEditorStore";
-import LL from "../../../i18n/i18n-svelte";
 
 import Key = Phaser.Input.Keyboard.Key;
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
 
-type Direction = "left" | "right" | "up" | "down";
-
 // Event listeners are valid for the lifetime of the Phaser object and will be garbage collected when the object is destroyed
 /* eslint-disable listeners/no-missing-remove-event-listener, listeners/no-inline-function-event-listener */
 
-interface UserInputManagerDatum extends Shortcut {
+interface UserInputManagerDatum {
     keyInstance?: Key;
     event: UserInputEvent;
 }
@@ -30,20 +23,11 @@ export enum UserInputEvent {
     SpeedUp,
     Interact,
     Follow,
-    JoystickMove,
 }
 
 // The reason why the controls are disabled
 // The MessageEventSource type means the controls where disabled by the scripting API in the related iframe
 type DisableControlsReason = "store" | "explorerTool" | "errorScreen" | MessageEventSource;
-
-export interface Shortcut {
-    key: string;
-    description: string;
-    ctrlKey?: boolean;
-    altKey?: boolean;
-    shiftKey?: boolean;
-}
 
 //we cannot use a map structure so we have to create a replacement
 export class ActiveEventList {
@@ -79,15 +63,14 @@ export class UserInputManager {
     private isInputDisabled: boolean;
     private isRightClickDisabled: boolean;
 
-    private joystick?: MobileJoystick;
-    private joystickEvents = new ActiveEventList();
-    private joystickForceThreshold = 60;
-    private joystickForceAccuX = 0;
-    private joystickForceAccuY = 0;
-
     public userInputHandler: UserInputHandlerInterface;
     private enableUserInputsStoreUnsubscribe: Unsubscriber;
     private readonly disableControlsReasons: Set<DisableControlsReason> = new Set();
+    private readonly onPointerGameOut = () => {
+        if (this.userInputHandler.handlePointerOutEvent) this.userInputHandler.handlePointerOutEvent();
+        else this.cancelPointerGesture();
+    };
+    private readonly cancelPointerGesture = () => this.userInputHandler.handlePointerCancelEvent?.();
 
     constructor(scene: Phaser.Scene, userInputHandler: UserInputHandlerInterface) {
         this.scene = scene;
@@ -97,9 +80,6 @@ export class UserInputManager {
         this.isRightClickDisabled = false;
         this.initKeyBoardEvent();
         this.bindInputEventHandlers();
-        if (touchScreenManager.supportTouchScreen) {
-            this.initVirtualJoystick();
-        }
 
         this.enableUserInputsStoreUnsubscribe = enableUserInputsStore.subscribe((enable) => {
             if (enable) {
@@ -110,119 +90,61 @@ export class UserInputManager {
         });
     }
 
-    private initVirtualJoystick() {
-        this.joystick = new MobileJoystick(this.scene);
-        if (!touchScreenManager.primaryTouchDevice) {
-            this.joystick.visible = false; // Hide the joystick if the device is not primarily a touch device
-        }
-        this.joystick.on("update", () => {
-            this.joystickForceAccuX = this.joystick?.forceX ? this.joystickForceAccuX : 0;
-            this.joystickForceAccuY = this.joystick?.forceY ? this.joystickForceAccuY : 0;
-            const cursorKeys = this.joystick?.createCursorKeys();
-            for (const name in cursorKeys) {
-                const key = cursorKeys[name as Direction];
-                switch (name) {
-                    case "up":
-                        this.joystickEvents.set(UserInputEvent.MoveUp, key.isDown);
-                        break;
-                    case "left":
-                        this.joystickEvents.set(UserInputEvent.MoveLeft, key.isDown);
-                        break;
-                    case "down":
-                        this.joystickEvents.set(UserInputEvent.MoveDown, key.isDown);
-                        break;
-                    case "right":
-                        this.joystickEvents.set(UserInputEvent.MoveRight, key.isDown);
-                        break;
-                }
-            }
-        });
-        this.joystick.on("pointerup", () => {
-            this.joystick?.hide(1_000); // Hide the joystick after 1 second of inactivity
-        });
-    }
-
     initKeyBoardEvent() {
         this.keysCode = [
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Z, false),
-                key: "Z",
-                description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.W, false),
-                key: "W",
-                description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.Q, false),
-                key: "Q",
-                description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.A, false),
-                key: "A",
-                description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.S, false),
-                key: "S",
-                description: get(LL).menu.shortcuts.moveDown(),
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.D, false),
-                key: "D",
-                description: get(LL).menu.shortcuts.moveRight(),
             },
 
             {
                 event: UserInputEvent.MoveUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.UP, false),
-                key: "Up",
-                description: get(LL).menu.shortcuts.moveUp(),
             },
             {
                 event: UserInputEvent.MoveLeft,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.LEFT, false),
-                key: "Left",
-                description: get(LL).menu.shortcuts.moveLeft(),
             },
             {
                 event: UserInputEvent.MoveDown,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.DOWN, false),
-                key: "Down",
-                description: get(LL).menu.shortcuts.moveDown(),
             },
             {
                 event: UserInputEvent.MoveRight,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.RIGHT, false),
-                key: "Right",
-                description: get(LL).menu.shortcuts.moveRight(),
             },
 
             {
                 event: UserInputEvent.SpeedUp,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT, false),
-                key: "Shift",
-                description: get(LL).menu.shortcuts.speedUp(),
             },
             {
                 event: UserInputEvent.Interact,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE, false),
-                key: "Space",
-                description: get(LL).menu.shortcuts.interact(),
             },
             {
                 event: UserInputEvent.Follow,
                 keyInstance: this.scene.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.F, false),
-                key: "F",
-                description: get(LL).menu.shortcuts.follow(),
             },
         ];
     }
@@ -240,6 +162,7 @@ export class UserInputManager {
             console.warn(e);
         }
         this.isInputDisabled = true;
+        this.cancelPointerGesture();
     }
 
     /**
@@ -258,10 +181,6 @@ export class UserInputManager {
             console.warn(e);
         }
         this.isInputDisabled = false;
-    }
-
-    get keysCodeList(): Shortcut[] {
-        return this.keysCode;
     }
 
     get isControlsEnabled() {
@@ -285,29 +204,6 @@ export class UserInputManager {
         if (this.isInputDisabled) {
             return eventsMap;
         }
-        this.joystickEvents.forEach((value, key) => {
-            if (value && this.joystick) {
-                switch (key) {
-                    case UserInputEvent.MoveUp:
-                    case UserInputEvent.MoveDown:
-                        this.joystickForceAccuY += this.joystick.forceY;
-                        if (Math.abs(this.joystickForceAccuY) > this.joystickForceThreshold) {
-                            eventsMap.set(key, value);
-                            this.joystickForceAccuY = 0;
-                        }
-                        break;
-                    case UserInputEvent.MoveLeft:
-                    case UserInputEvent.MoveRight:
-                        this.joystickForceAccuX += this.joystick.forceX;
-                        if (Math.abs(this.joystickForceAccuX) > this.joystickForceThreshold) {
-                            eventsMap.set(key, value);
-                            this.joystickForceAccuX = 0;
-                        }
-                        break;
-                }
-            }
-        });
-        eventsMap.set(UserInputEvent.JoystickMove, this.joystickEvents.any());
         this.keysCode.forEach((d) => {
             if (d.keyInstance?.isDown) {
                 // Fix mac keyboard issue
@@ -341,12 +237,17 @@ export class UserInputManager {
     }
 
     destroy(): void {
+        this.cancelPointerGesture();
+        this.scene.input.off(Phaser.Input.Events.GAME_OUT, this.onPointerGameOut);
+        this.scene.input.off(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.cancelPointerGesture);
+        this.scene.game.events.off(Phaser.Core.Events.BLUR, this.cancelPointerGesture);
         this.enableUserInputsStoreUnsubscribe();
-        this.joystick?.destroy();
-        this.joystick = undefined;
     }
 
     private bindInputEventHandlers() {
+        this.scene.input.on(Phaser.Input.Events.GAME_OUT, this.onPointerGameOut);
+        this.scene.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, this.cancelPointerGesture);
+        this.scene.game.events.on(Phaser.Core.Events.BLUR, this.cancelPointerGesture);
         this.scene.input.on(
             Phaser.Input.Events.POINTER_WHEEL,
             (pointer: Pointer, gameObjects: GameObject[], deltaX: number, deltaY: number, deltaZ: number) => {
@@ -371,17 +272,6 @@ export class UserInputManager {
                 return;
             }
             this.userInputHandler.handlePointerDownEvent(pointer, gameObjects);
-
-            if (!pointer.wasTouch || get(mapEditorModeStore)) {
-                return;
-            }
-
-            // Let's only display the joystick if there is one finger on the screen
-            if (pointer.event instanceof TouchEvent && pointer.event.touches.length === 1) {
-                this.joystick?.showAt(pointer.x, pointer.y);
-            } else {
-                this.joystick?.hide(30_000);
-            }
         });
 
         this.scene.input.on(Phaser.Input.Events.POINTER_MOVE, (pointer: Pointer, gameObjects: GameObject[]) => {

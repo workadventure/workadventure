@@ -1,4 +1,5 @@
 import type { SpaceUser } from "@workadventure/messages";
+import type { LivekitCredentialsResponse } from "../../Services/Repository/LivekitCredentialsResponse";
 import { getCapability } from "../../Services/Capabilities";
 import { adminApi } from "../../Services/AdminApi";
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_HOST } from "../../Enum/EnvironmentVariable";
@@ -15,6 +16,13 @@ const LIVKEIT_CREDENTIALS_VERSION = "v1";
 
 export interface StateFactoryOptions {
     playUri?: string;
+    /** The world's LiveKit settings when the caller already asked the admin for them. */
+    livekitCredentials?: LivekitCredentialsResponse;
+}
+
+/** Whether the admin gives each world its LiveKit settings (/api/livekit/credentials), rather than the environment. */
+export function livekitCredentialsFromAdmin(): boolean {
+    return getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVKEIT_CREDENTIALS_VERSION;
 }
 
 /**
@@ -36,7 +44,7 @@ export class StateFactory {
             case CommunicationType.WEBRTC:
                 return new WebRTCState(space, users, usersToNotify);
             case CommunicationType.LIVEKIT:
-                return this.createLivekitState(space, users, usersToNotify, options?.playUri);
+                return this.createLivekitState(space, users, usersToNotify, options);
             case CommunicationType.NONE:
                 return new VoidState();
         }
@@ -49,13 +57,16 @@ export class StateFactory {
         space: ICommunicationSpace,
         users: ReadonlyMap<string, SpaceUser>,
         usersToNotify: ReadonlyMap<string, SpaceUser>,
-        playUri?: string,
+        options?: StateFactoryOptions,
     ): Promise<LivekitState> {
-        if (getCapability(LIVEKIT_CREDENTIALS_CAPABILITY) === LIVKEIT_CREDENTIALS_VERSION) {
-            if (!playUri) {
+        if (options?.livekitCredentials) {
+            return new LivekitState(space, options.livekitCredentials, users, usersToNotify);
+        }
+        if (livekitCredentialsFromAdmin()) {
+            if (!options?.playUri) {
                 throw new Error("playUri is required when using AdminAPI for Livekit credentials");
             }
-            const credentials = await adminApi.fetchLivekitCredentials(space.getSpaceName(), playUri);
+            const credentials = await adminApi.fetchLivekitCredentials(space.getSpaceName(), options.playUri);
             return new LivekitState(space, credentials, users, usersToNotify);
         } else {
             if (!LIVEKIT_HOST || !LIVEKIT_API_KEY || !LIVEKIT_API_SECRET) {

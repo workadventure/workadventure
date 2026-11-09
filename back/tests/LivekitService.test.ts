@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { RecordingWebhookPhase } from "@workadventure/messages";
 import type { EgressInfo } from "livekit-server-sdk";
-import { EgressStatus } from "livekit-server-sdk";
+import type { DirectFileOutput } from "livekit-server-sdk";
+import { EgressStatus, S3Upload, TrackSource } from "livekit-server-sdk";
 import type { LivekitWebhookError } from "../src/Model/Services/LivekitService";
 import { LiveKitService } from "../src/Model/Services/LivekitService";
 
@@ -229,5 +230,89 @@ describe("LiveKitService", () => {
         ).rejects.toMatchObject({
             kind: "unauthorized",
         } satisfies Partial<LivekitWebhookError>);
+    });
+});
+
+describe("LiveKitService track egress", () => {
+    function createTrackEgressService(tracks: { sid: string; source: TrackSource }[]) {
+        const startTrackEgress = vi.fn((_roomName: string, _output: DirectFileOutput, _trackId: string) =>
+            Promise.resolve({ egressId: "EG_track" })
+        );
+        const service = new LiveKitService(
+            "http://livekit.local",
+            "api-key",
+            "api-secret",
+            "ws://livekit.local",
+            "https://play.local",
+            () => ({ getParticipant: vi.fn().mockResolvedValue({ tracks }) } as never),
+            () => ({ startTrackEgress } as never),
+            () => ({ receive: vi.fn() })
+        );
+        return { service, startTrackEgress };
+    }
+
+    it("records the participant's microphone to its own file in the bucket", async () => {
+        const { service, startTrackEgress } = createTrackEgressService([
+            { sid: "TR_mic", source: TrackSource.MICROPHONE },
+        ]);
+
+        await expect(
+            service.startTrackEgress("space", "user-1", "TR_mic", "folder/speaker.ogg", new S3Upload({ bucket: "audio" }))
+        ).resolves.toBe("EG_track");
+
+        const [roomName, output, trackId] = startTrackEgress.mock.calls[0];
+        expect(roomName).toBe("space");
+        expect(trackId).toBe("TR_mic");
+        expect(output.filepath).toBe("folder/speaker.ogg");
+        expect(output.output).toMatchObject({ case: "s3", value: { bucket: "audio" } });
+    });
+
+    it("refuses a track that is not the participant's microphone", async () => {
+        const { service, startTrackEgress } = createTrackEgressService([
+            { sid: "TR_camera", source: TrackSource.CAMERA },
+        ]);
+
+        await expect(
+            service.startTrackEgress("space", "user-1", "TR_camera", "folder/speaker.ogg", new S3Upload({}))
+        ).rejects.toThrow("is not the microphone");
+        expect(startTrackEgress).not.toHaveBeenCalled();
+    });
+});
+
+describe("LiveKitService egress times", () => {
+    function createServiceListing(egresses: unknown[]) {
+        return new LiveKitService(
+            "http://livekit.local",
+            "api-key",
+            "api-secret",
+            "ws://livekit.local",
+            "https://play.local",
+            () => ({} as never),
+            () => ({ listEgress: vi.fn().mockResolvedValue(egresses) } as never),
+            () => ({ receive: vi.fn() })
+        );
+    }
+
+    it("reports the egress's own start and end, which bracket its file", async () => {
+        const service = createServiceListing([
+            {
+                startedAt: 1_000_000_000_000n,
+                endedAt: 1_049_000_000_000n,
+                // The file's startedAt comes seconds after its first sample: not the one to align on
+                fileResults: [{ startedAt: 1_003_000_000_000n, endedAt: 1_049_000_000_000n, duration: 46_000_000_000n }],
+            },
+        ]);
+
+        await expect(service.getEgressFile("EG_1")).resolves.toEqual({
+            startedAtMs: 1_000_000,
+            endedAtMs: 1_049_000,
+            durationMs: 49_000,
+        });
+    });
+
+    it("reports nothing for an egress that has not ended", async () => {
+        const service = createServiceListing([{ startedAt: 1_000_000_000_000n, endedAt: 0n, fileResults: [] }]);
+
+        await expect(service.getEgressFile("EG_1")).resolves.toBeUndefined();
     });
 });

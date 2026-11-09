@@ -36,7 +36,6 @@
         PROXIMITY_FILE_TRANSFER_MAX_FILES,
         validateProximityFiles,
     } from "../../Connection/Proximity/ProximityFileTransferService";
-    import { DEFAULT_PROXIMITY_SPACE_NAME } from "../../Connection/Proximity/ProximityChatRoomManager";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { draftMessageService } from "../../Services/DraftMessageService";
@@ -55,10 +54,13 @@
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
+    import { messageInputText } from "./messageInputText";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
     import MessageFileInput from "./Message/MessageFileInput.svelte";
     import MessageInput from "./MessageInput.svelte";
+    import MentionSuggestions from "./MentionSuggestions.svelte";
     import {
         IconAlertTriangle,
         IconHelpCircle,
@@ -87,8 +89,13 @@
     let disposed = false;
     let message = $state("");
     let messageInput: HTMLDivElement | undefined = $state();
+    let mentionSuggestions: MentionSuggestions | undefined = $state();
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
+    // When "typing" was last sent, 0 when the others think we are not typing.
+    let lastStartTypingAt = 0;
+    // Typing requests go out one after the other: a late "start" must not land after the "stop" that follows it.
+    let typingRequests: Promise<unknown> = Promise.resolve();
     let files: { id: string; file: File }[] = $state([]);
     let sendingFiles = $state(false);
     let filesPreview: {
@@ -99,6 +106,8 @@
         url: string | undefined;
     }[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
+    // Receivers drop a typing user who sent nothing for a while (12 s in the proximity chat): refresh well before.
+    const TYPING_REFRESH_INTERVAL = 5000;
     const inactiveProximityState = readable(false);
 
     let applicationComponentOpened = $state(false);
@@ -109,7 +118,6 @@
     // values below derived purely from `room` are computed once and never recompute. They are plain consts,
     // not `$derived`. The stores they hold (e.g. canSendMessages) are still auto-subscribed with `$` at use sites.
     const isProximityChatRoom = room instanceof ProximityChatRoom;
-    const isDefaultProximityRoom = room instanceof ProximityChatRoom && room.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
     const proximityChatDisabled = room instanceof ProximityChatRoom ? room.isChatDisabled : inactiveProximityState;
     const proximityRoomJoined = room instanceof ProximityChatRoom ? room.isJoined : inactiveProximityState;
     const proximityFilesAllowed = room instanceof ProximityChatRoom ? room.canSendFiles : readable(true);
@@ -130,7 +138,6 @@
         shouldDisableMessageInput({
             disabled,
             isProximityChatRoom,
-            isDefaultProximityRoom,
             isProximityChatDisabled: $proximityChatDisabled,
             isProximityRoomJoined: $proximityRoomJoined,
         }) || !$canSendMessages,
@@ -148,8 +155,8 @@
         new Set(files.filter(({ file }) => fileValidation.tooLargeFiles.includes(file)).map(({ id }) => id)),
     );
     let fileErrors: { title: string; hint?: string }[] = $derived([
-        // The chat can grow past the limit after the files were picked.
-        ...(tooManyUsersForFiles
+        // The chat can grow past the limit after the files were picked. Without files, text still goes through.
+        ...(tooManyUsersForFiles && files.length > 0
             ? [{ title: $LL.chat.fileAttachment.tooManyUsers({ max: PROXIMITY_FILE_TRANSFER_MAX_USERS }) }]
             : []),
         ...(fileValidation.tooLargeFiles.length > 0
@@ -192,24 +199,15 @@
     });
 
     function sendMessageOrEscapeLine(keyDownEvent: KeyboardEvent) {
+        // While members are suggested after an "@", the arrows, Enter, Tab and Escape pick one.
+        if (mentionSuggestions?.handleKeydown(keyDownEvent)) {
+            return;
+        }
         if (!$canSendMessages) {
             return;
         }
-        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
         const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
-        if (keyDownEvent.key === "Enter" || isEmptyMessage) {
-            room.stopTyping().catch((error) => console.error(error));
-        } else {
-            room.startTyping()
-                .then(() => {
-                    stopTypingTimeOutID = setTimeout(() => {
-                        room.stopTyping().catch((error) => console.error(error));
-                        stopTypingTimeOutID = undefined;
-                    }, TYPINT_TIMEOUT);
-                })
-                .catch((error) => console.error(error));
-        }
 
         if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
             return;
@@ -232,6 +230,7 @@
         if (!$canSendMessages || sendingFiles || fileErrors.length > 0) {
             return;
         }
+        stopTyping();
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -242,29 +241,40 @@
         // send files
         if (files && files.length > 0) {
             const idsToSend = files.map((f) => f.id);
-            const fileList: FileList = files.reduce((fileListAcc, currentFile) => {
-                fileListAcc.items.add(currentFile.file);
-                return fileListAcc;
-            }, new DataTransfer()).files;
-
             sendingFiles = true;
-            try {
-                await room.sendFiles(fileList);
-                files = files.filter((f) => !idsToSend.includes(f.id));
-                filesPreview = filesPreview.filter((p) => !idsToSend.includes(p.id));
-            } catch (error) {
-                console.error(error);
-                warningMessageStore.addWarningMessage($LL.chat.failedToSendAttachments(), { closable: true });
-            } finally {
-                // A second send cannot start while this guarded upload is in progress.
-                // eslint-disable-next-line require-atomic-updates
-                sendingFiles = false;
+            // One file at a time: those that fail stay in the preview, named in the warning, so nothing is lost.
+            const sentFiles = files.filter((file) => idsToSend.includes(file.id));
+            const results = await Promise.allSettled(
+                sentFiles.map((file) => {
+                    const single = new DataTransfer();
+                    single.items.add(file.file);
+                    return room.sendFiles(single.files);
+                }),
+            );
+            const sentIds = sentFiles.filter((_, index) => results[index].status === "fulfilled").map((f) => f.id);
+            const failedNames = sentFiles
+                .filter((_, index) => results[index].status === "rejected")
+                .map((file) => file.file.name);
+            files = files.filter((f) => !sentIds.includes(f.id));
+            filesPreview = filesPreview.filter((p) => !sentIds.includes(p.id));
+            if (failedNames.length > 0) {
+                results.forEach((result) => {
+                    if (result.status === "rejected") console.error(result.reason);
+                });
+                warningMessageStore.addWarningMessage(
+                    $LL.chat.failedToSendNamedAttachments({ names: failedNames.join(", ") }),
+                    { closable: true },
+                );
             }
+            // A second send cannot start while this guarded upload is in progress.
+            // eslint-disable-next-line require-atomic-updates
+            sendingFiles = false;
         }
 
         // send message
-        if (messageToSend.trim().length !== 0) {
-            room?.sendMessage(messageToSend);
+        const text = messageInputText(messageToSend);
+        if (text !== undefined) {
+            room?.sendMessage(text);
             analyticsClient.trackAdminEvent("chat.message_sent", {
                 chatContext: room instanceof ProximityChatRoom ? "proximity" : "room",
             });
@@ -272,9 +282,6 @@
                 messageInput.innerText = "";
             }
             message = "";
-            if (stopTypingTimeOutID) {
-                clearTimeout(stopTypingTimeOutID);
-            }
         }
     }
 
@@ -287,9 +294,32 @@
         // We remove the <br> tags and the whitespace to check if the message is empty
         const messageToSend = message.replace(/<br>/g, "").trim();
         if (messageToSend == "" || messageToSend == undefined) {
-            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
-            room.stopTyping().catch((error) => console.error(error));
+            stopTyping();
+        } else {
+            startTyping();
         }
+    }
+
+    function sendTyping(typing: boolean) {
+        typingRequests = typingRequests
+            .then(() => (typing ? room.startTyping() : room.stopTyping()))
+            .catch((error) => console.error(error));
+    }
+
+    function startTyping() {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+        stopTypingTimeOutID = setTimeout(stopTyping, TYPINT_TIMEOUT);
+        if (Date.now() - lastStartTypingAt < TYPING_REFRESH_INTERVAL) return;
+        lastStartTypingAt = Date.now();
+        sendTyping(true);
+    }
+
+    function stopTyping() {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+        stopTypingTimeOutID = undefined;
+        if (lastStartTypingAt === 0) return;
+        lastStartTypingAt = 0;
+        sendTyping(false);
     }
 
     onMount(async () => {
@@ -315,11 +345,7 @@
             replyingToMessageId: replyMessageId ?? null,
         });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
-        if (stopTypingTimeOutID) {
-            clearTimeout(stopTypingTimeOutID);
-            stopTypingTimeOutID = undefined;
-        }
-        room.stopTyping().catch((error) => console.error(error));
+        stopTyping();
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
         selectedChatChatMessageToReplyUnsubscriber();
@@ -409,6 +435,7 @@
         event.stopImmediatePropagation();
         event.preventDefault();
         chatInputFocusStore.set(false);
+        stopTyping();
     }
 
     function openFileAttachmentComponent() {
@@ -598,6 +625,9 @@
     const applicationDescriptionClass =
         "text-xs p-0 m-0 min-h-12 w-full leading-tight whitespace-normal break-words text-gray-400";
 </script>
+
+<!-- Closing or leaving the tab while typing: the others would otherwise wait for the timeout. -->
+<svelte:window onpagehide={stopTyping} />
 
 {#if files.length > 0}
     <div class="w-full min-w-0 p-1">
@@ -916,7 +946,7 @@
     />
 {/if}
 <div
-    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative"
+    class="flex w-full flex-none items-center border border-solid border-b-0 border-x-0 border-t-1 border-white/10 bg-contrast/50 relative pr-2"
     bind:this={messageBarRef}
 >
     {#if $selectedChatMessageToReply !== null}
@@ -937,12 +967,20 @@
                             class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
                             style:overflow-wrap="anywhere"
                         >
-                            {$quotedMessageContent?.body}
+                            {decodeHtmlEntities($quotedMessageContent?.body ?? "")}
                         </p>
                     </div>
                 </div>
             </div>
         </div>
+    {/if}
+    {#if room.mentionCandidates}
+        <MentionSuggestions
+            bind:this={mentionSuggestions}
+            candidates={room.mentionCandidates}
+            {messageInput}
+            onInsert={() => (message = messageInput?.innerHTML ?? "")}
+        />
     {/if}
     <MessageInput
         onkeydown={sendMessageOrEscapeLine}
@@ -955,13 +993,19 @@
         disabled={messageInputDisabled}
         inputClass="message-input flex-grow !m-0 px-4 py-2.5 max-h-36 overflow-auto h-full rounded-lg block text-sm text-white placeholder:text-white/50 placeholder:text-sm border border-white/10 !bg-white/5 resize-none outline-none shadow-none focus:ring-0 focus:border-white/20"
         dataText={$LL.chat.enter()}
+        disabledText={isProximityChatRoom && !$proximityRoomJoined
+            ? $LL.chat.getCloserToWrite()
+            : $canSendMessages
+              ? $LL.chat.cannotSendNow()
+              : $LL.chat.cannotSendHere()}
         dataTestid="messageInput"
     />
     {#if chatInteraction.compact}
         {#if fileAttachementEnabled && !fileAttachmentComponentOpened}
             <button
                 type="button"
-                class="p-2 m-0 shrink-0 hover:bg-white/10 rounded-md"
+                class="p-2 m-0 shrink-0 hover:bg-white/10 rounded-md disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                disabled={messageInputDisabled}
                 aria-label={$LL.chat.fileAttachment.title()}
                 onclick={openFileAttachmentComponent}
             >
@@ -971,8 +1015,9 @@
     {:else}
         <button
             data-testid="addApplicationButton"
-            class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+            class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             class:bg-secondary-800={applicationComponentOpened}
+            disabled={messageInputDisabled}
             onclick={toggleApplicationComponent}
         >
             <IconX
@@ -983,7 +1028,8 @@
         </button>
     {/if}
     <button
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0"
+        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+        disabled={messageInputDisabled}
         onclick={openCloseEmojiPicker}
     >
         <IconMoodSmile font-size={18} />
@@ -991,7 +1037,7 @@
     {#if message.trim().length !== 0 || files.length !== 0 || (applicationProperty && applicationProperty.link.length !== 0)}
         <button
             data-testid="sendMessageButton"
-            class="disabled:opacity-30 disabled:!cursor-not-allowed disabled:text-white py-0 px-3 m-0 bg-secondary h-full rounded-md"
+            class="disabled:opacity-30 disabled:!cursor-not-allowed disabled:text-white p-0 m-0 h-11 w-11 shrink-0 flex items-center justify-center bg-secondary rounded-md"
             disabled={sendingFiles ||
                 shouldDisableSendButton({
                     applicationPropertyInProcessing,
