@@ -2,7 +2,9 @@
 export function trackFormFocus(document: Document, setFocused: (focused: boolean) => void): () => void {
     let focused: Element | undefined;
     const editable = (element: Element): boolean =>
-        element.matches("input, textarea, select, [role='textbox'], .block-user-action, [contenteditable='true']");
+        // A chat message and its action buttons too: Enter or Space there must not reach the game shortcuts.
+        element.matches("input, textarea, select, [role='textbox'], [contenteditable='true']") ||
+        element.closest(".block-user-action") !== null;
     const onFocusIn = (event: FocusEvent) => {
         // Use the event's document realm: PiP inputs can belong to another window.
         const target = event.target;

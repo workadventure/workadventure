@@ -6,6 +6,8 @@
     import RoomUserList from "./UserList/RoomUserList.svelte";
     import RoomList from "./RoomList.svelte";
     import ChatLoader from "./ChatLoader.svelte";
+    import ChatSettings from "./ChatSettings.svelte";
+    import CreateRoomView from "./Room/CreateRoomView.svelte";
 
     interface Props {
         sideBarWidth: number;
@@ -32,6 +34,12 @@
             {:then userProviderMerger}
                 <RoomUserList {userProviderMerger} />
             {/await}
+        {:else if $navChat.key === "settings"}
+            <ChatSettings />
+        {:else if $navChat.key === "create"}
+            {#key $navChat}
+                <CreateRoomView kind={$navChat.kind} parentID={$navChat.parentID} parentName={$navChat.parentName} />
+            {/key}
         {:else if $navChat.key === "externalModule"}
             {@const NavChat = $navChat.component}
             <NavChat {...rest} {...$navChat.props} />

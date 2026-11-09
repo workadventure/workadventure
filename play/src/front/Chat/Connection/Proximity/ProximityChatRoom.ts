@@ -5,7 +5,7 @@ import type { Readable, Writable, Unsubscriber } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import { v4 as uuidv4 } from "uuid";
 import { Subscription } from "rxjs";
-import type { CharacterTextureMessage } from "@workadventure/messages";
+import type { CharacterTextureMessage, SpaceMessageQuote } from "@workadventure/messages";
 import { AvailabilityStatus, FilterType, type SpaceKind } from "@workadventure/messages";
 import { asError } from "catch-unknown";
 import { eventToAbortReason } from "@workadventure/shared-utils/src/Abort/raceAbort";
@@ -22,6 +22,7 @@ import type {
     ChatMessage,
     ChatMessageAttachment,
     ChatMessageContent,
+    ChatMessagePreview,
     ChatMessageReaction,
     ChatPollCreateOptions,
     ChatPollCreationCapability,
@@ -38,9 +39,16 @@ import type { SpaceInterface, SpaceUserExtended } from "../../../Space/SpaceInte
 import type { MeetingParticipant } from "../../../Stores/MeetingInvitationStore";
 import type { SpaceRegistryInterface } from "../../../Space/SpaceRegistry/SpaceRegistryInterface";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
-import { isAChatRoomIsVisible, navChat, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+import {
+    isAChatRoomIsVisible,
+    navChat,
+    selectedChatMessageToReply,
+    shouldRestoreChatStateStore,
+} from "../../Stores/ChatStore";
 import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
 import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+import { addPendingMention, chatMessageBannerStore } from "../../Stores/ChatMessageBannerStore";
+import { planMessageNotification, type MessageNotificationPlan } from "../../MessageNotificationPolicy";
 import { mapExtendedSpaceUserToChatUser } from "../../UserProvider/ChatUserMapper";
 import { gameManager } from "../../../Phaser/Game/GameManager";
 import { availabilityStatusStore, requestedCameraState, requestedMicrophoneState } from "../../../Stores/MediaStore";
@@ -65,6 +73,15 @@ import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerMana
 import { BubbleNotification as BasicNotification } from "../../../Notification/BubbleNotification";
 import { iceServersManager } from "../../../WebRtc/IceServersManager";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
+import {
+    getMentionedIds,
+    markOwnMentions,
+    type MentionCandidate,
+    mentionsToPlainText,
+    ROOM_MENTION,
+    ROOM_MENTION_ID,
+    withoutRoomMention,
+} from "../../Mentions";
 import { DEFAULT_PROXIMITY_SPACE_NAME, type ProximityChatRoomKind } from "./ProximityChatRoomManager";
 import { ProximityChatQuestion } from "./ProximityChatQuestion";
 import { canCreateProximityContent } from "./ProximityCreationPermissions";
@@ -80,18 +97,26 @@ import {
     type ProximityFileTransferUpdate,
 } from "./ProximityFileTransferService";
 import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
+import { applyProximityReaction } from "./ProximityChatMessageReaction";
+import { TypingExpiry } from "./TypingExpiry";
 
 const debug = Debug("ProximityChatRoom");
 
+// Long enough to recognise the quoted message, short enough to keep the reply event small.
+const QUOTE_EXCERPT_MAX_LENGTH = 200;
+
 export class ProximityChatMessage implements ChatMessage {
-    isQuotedMessage = undefined;
-    quotedMessage = undefined;
+    isQuotedMessage: boolean | undefined = undefined;
+    quotedMessage: ChatMessage | undefined = undefined;
     isDeleted = writable(false);
     isModified = writable(false);
     canEdit = writable(false);
-    canReact = writable(false);
+    canReact: Readable<boolean>;
     canDelete = writable(false);
     reactions: MapStore<string, ChatMessageReaction> = new MapStore();
+    // False once I left the bubble the message was sent in: its participants would never see a reaction or a reply.
+    private readonly inConversation = writable(true);
+    readonly canReply: Readable<boolean> = { subscribe: this.inConversation.subscribe };
     constructor(
         public id: string,
         public sender: AnyKindOfUser,
@@ -100,17 +125,29 @@ export class ProximityChatMessage implements ChatMessage {
         public isMyMessage: boolean,
         public type: ChatMessageType,
         public attachment?: ChatMessageAttachment,
-    ) {}
+        // Only messages every participant knows under the same id can be reacted to.
+        private readonly toggleReaction?: (messageId: string, key: string) => void,
+    ) {
+        this.canReact = derived(
+            this.inConversation,
+            (inConversation) => inConversation && toggleReaction !== undefined,
+        );
+    }
 
-    remove(): void {
+    leaveConversation(): void {
+        this.inConversation.set(false);
+    }
+
+    remove(): Promise<void> {
         console.info("Function not implemented.");
+        return Promise.resolve();
     }
     edit(newContent: string): Promise<void> {
         console.info("Function not implemented.", newContent);
         return Promise.resolve();
     }
     addReaction(reaction: string): Promise<void> {
-        console.info("Function not implemented.", reaction);
+        this.toggleReaction?.(this.id, reaction);
         return Promise.resolve();
     }
 }
@@ -152,13 +189,41 @@ export class ProximityChatRoom implements ChatRoom {
     hasUnreadMessages = writable(false);
     unreadMessagesCount = writable(0);
     unreadNotificationCount = writable(0);
+    // Set when an unread message mentions us, cleared when a new unread streak starts: whoever marks the room as
+    // read only resets hasUnreadMessages.
+    private readonly unreadMention = writable(false);
+    readonly hasUnreadMentions = derived(
+        [this.hasUnreadMessages, this.unreadMention],
+        ([hasUnreadMessages, unreadMention]) => hasUnreadMessages && unreadMention,
+    );
     initializationState = readable<"ready">("ready");
     initializationError = readable<Error | undefined>(undefined);
     pictureStore = readable(undefined);
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
+    // Arrivals and departures are not messages.
+    readonly lastMessagePreview: Readable<ChatMessagePreview | undefined> = derived(this.messages, (messages) => {
+        const message = messages.filter(({ type }) => type !== "incoming" && type !== "outcoming").pop();
+        const body = message ? get(message.content).body : "";
+        return message && body
+            ? { body, senderName: message.sender?.username, timestamp: message.date?.getTime() ?? 0 }
+            : undefined;
+    });
     /** Space users of the current space (forwarded from _space.usersStore on join, empty map on leave). */
     public readonly spaceUsersStore = new ForwardableStore<Map<string, SpaceUserExtended>>(new Map());
+    readonly mentionCandidates: Readable<readonly MentionCandidate[]> = derived(this.spaceUsersStore, (users) => [
+        ...(this.isCurrentUserAdmin(this.getCurrentSpaceUser(users)) ? [ROOM_MENTION] : []),
+        ...Array.from(users.values())
+            .filter((user) => user.spaceUserId !== this._spaceUserId)
+            .map((user) => ({
+                id: user.spaceUserId,
+                name: user.name,
+                pictureStore: user.pictureStore,
+                color: user.color,
+                // Everyone in the bubble is here.
+                online: true,
+            })),
+    ]);
     // The polls and questions of the space state (owned by the back).
     // One store per slice, set only when the slice changed: a raised hand must not rebuild the polls.
     private readonly pollsStore = writable<SpaceState["polls"]>({});
@@ -190,6 +255,8 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: SpaceInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private readonly typingExpiry = new TypingExpiry((id) => this.removeTypingUserbyID(id));
+    private spaceMessageReactionSubscription: Subscription | undefined;
     private spaceStateUnsubscriber: Unsubscriber | undefined;
     private roomSidePanelUnsubscriber: Unsubscriber;
     private selectedRoomUnsubscriber: Unsubscriber;
@@ -248,6 +315,18 @@ export class ProximityChatRoom implements ChatRoom {
         return this.spaceName === DEFAULT_PROXIMITY_SPACE_NAME;
     }
 
+    private planNotification(mentionsMe: boolean): MessageNotificationPlan {
+        const chatVisible = get(chatVisibilityStore);
+        return planMessageNotification({
+            chatVisible,
+            roomDisplayed: chatVisible && get(selectedRoomStore)?.id === this.id,
+            // Like in Matrix rooms, a mention gets through a muted chat.
+            muted: get(this.areNotificationsMuted),
+            mentionsMe,
+            direct: false,
+        });
+    }
+
     private get unknownUserName(): string {
         return this.unknownUser.username ?? get(LL).chat.question.unknownAuthor();
     }
@@ -283,24 +362,24 @@ export class ProximityChatRoom implements ChatRoom {
         private wamSettings: WAMSettings | undefined,
         private tags: string[],
         private notifyNewMessage = (message: ProximityChatMessage) => {
-            const canPlaySound = localUserStore.getChatSounds();
-            const isRoomIsDisplayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
-            const isNotificationIsMuted = get(this.areNotificationsMuted);
+            const { body, mentionsMe = false } = get(message.content);
+            const plan = this.planNotification(mentionsMe);
 
-            if (canPlaySound && !isRoomIsDisplayed && !isNotificationIsMuted) {
+            if (plan.sound && localUserStore.getChatSounds()) {
                 gameManager.getCurrentGameScene().playSound("new-message");
             }
 
-            if (isNotificationIsMuted || isRoomIsDisplayed) {
+            if (!plan.browser) {
                 return;
             }
 
             notificationManager.createNotification(
                 new MessageNotification(
                     message.sender.username ?? this.unknownUserName,
-                    get(message.content).body,
+                    mentionsToPlainText(body),
                     this.id,
                     get(this.name),
+                    mentionsMe,
                 ),
             );
         },
@@ -355,7 +434,15 @@ export class ProximityChatRoom implements ChatRoom {
             new Date(),
             true,
             action,
+            undefined,
+            action === "proximity" ? this.toggleReaction : undefined,
         );
+
+        const quote = action === "proximity" && broadcast ? this.quoteOfSelectedReply() : undefined;
+        if (quote) {
+            newMessage.quotedMessage = this.createQuotedMessage(quote);
+            selectedChatMessageToReply.set(null);
+        }
 
         // Add message to the list
         this.messages.push(newMessage);
@@ -373,6 +460,8 @@ export class ProximityChatRoom implements ChatRoom {
                     message: message,
                     characterTextures: spaceUser?.characterTextures ?? [],
                     name: chatUser.username ?? this.unknownUserName,
+                    id: newMessage.id,
+                    quote,
                 },
             });
         }
@@ -380,7 +469,7 @@ export class ProximityChatRoom implements ChatRoom {
         if (action === "proximity") {
             // Send local message to WorkAdventure scripting API
             try {
-                iframeListener.sendUserInputChat(message, undefined);
+                iframeListener.sendUserInputChat(mentionsToPlainText(message), undefined);
             } catch (e) {
                 console.error("Error while sending message to WorkAdventure scripting API", e);
             }
@@ -421,19 +510,31 @@ export class ProximityChatRoom implements ChatRoom {
         senderUserId: string,
         characterTextures: CharacterTextureMessage[],
         name: string,
+        messageId?: string,
+        quote?: SpaceMessageQuote,
     ): void {
         // Ignore messages from the current user
         if (senderUserId === this._spaceUserId) {
             return;
         }
 
+        const spaceUser = this.users?.get(senderUserId);
+
         // Create content message
+        const mentionedIds = getMentionedIds(message);
+        // Only an admin of the map may mention everyone. The message comes straight from a peer, with no server to
+        // enforce it: check the sender here (an unknown sender is not an admin), and leave a plain "@room" otherwise.
+        const roomMention = mentionedIds.includes(ROOM_MENTION_ID) && (spaceUser?.tags ?? []).includes("admin");
+        const mentionsMe = roomMention || mentionedIds.includes(this._spaceUserId);
         const newChatMessageContent = {
-            body: message,
+            body: markOwnMentions(roomMention ? message : withoutRoomMention(message), [
+                this._spaceUserId,
+                ROOM_MENTION_ID,
+            ]),
             url: undefined,
+            mentionsMe,
         };
 
-        const spaceUser = this.users?.get(senderUserId);
         let chatUser: AnyKindOfUser = { ...this.unknownUser, spaceUserId: senderUserId };
         if (spaceUser) {
             chatUser = mapExtendedSpaceUserToChatUser(spaceUser);
@@ -456,15 +557,21 @@ export class ProximityChatRoom implements ChatRoom {
             chatUser.username = name;
         }
 
-        // Create message
+        // Create message. Older clients send no id: such a message cannot be reacted to, the others would not find it.
+        const isNewId = messageId !== undefined && messageId !== "" && !this.messages.has(messageId);
         const newMessage = new ProximityChatMessage(
-            uuidv4(),
+            isNewId ? messageId : uuidv4(),
             chatUser,
             writable(newChatMessageContent),
             new Date(),
             false,
             "proximity",
+            undefined,
+            isNewId ? this.toggleReaction : undefined,
         );
+        if (quote) {
+            newMessage.quotedMessage = this.createQuotedMessage(quote);
+        }
 
         // Add message to the list
         this.messages.push(newMessage);
@@ -475,12 +582,18 @@ export class ProximityChatRoom implements ChatRoom {
         this.notifyNewMessage(newMessage);
 
         if (get(selectedRoomStore) !== this) {
+            if (!get(this.hasUnreadMessages)) {
+                this.unreadMention.set(false);
+            }
             this.hasUnreadMessages.set(true);
             this.unreadNotificationCount.set(get(this.unreadNotificationCount) + 1);
+            if (mentionsMe) {
+                this.unreadMention.set(true);
+            }
         }
         // Send bubble message to WorkAdventure scripting API
         try {
-            iframeListener.sendUserInputChat(message, senderUserId);
+            iframeListener.sendUserInputChat(mentionsToPlainText(message), senderUserId);
         } catch (e) {
             console.error("Error while sending message to WorkAdventure scripting API", e);
         }
@@ -534,6 +647,7 @@ export class ProximityChatRoom implements ChatRoom {
                     size: offer.file.size,
                     delivery: attachmentRecipients,
                 },
+                this.toggleReaction,
             );
             this.messages.push(message);
             this.lastMessageTimestamp = message.date.getTime();
@@ -898,6 +1012,7 @@ export class ProximityChatRoom implements ChatRoom {
                     decline: () => this.refuseIncomingFileOffer(offer.transferId),
                 },
             },
+            this.toggleReaction,
         );
 
         this.fileTransfers.set(offer.transferId, { message, content, status, decision, sizeBytes: offer.size });
@@ -1008,6 +1123,86 @@ export class ProximityChatRoom implements ChatRoom {
         }
     }
 
+    /**
+     * Adds or removes my reaction locally, then tells the other participants.
+     * The pusher does not echo a public event back to its sender.
+     */
+    private readonly toggleReaction = (messageId: string, key: string): void => {
+        const message = this.messages.get(messageId);
+        if (!message || !get(message.canReact)) {
+            return;
+        }
+        const added = !message.reactions.get(key)?.users.has(this._spaceUserId);
+        this.applyReaction(message, key, this._spaceUserId, added);
+        this._space?.emitPublicMessage({
+            $case: "spaceMessageReaction",
+            spaceMessageReaction: { messageId, reaction: key, added },
+        });
+    };
+
+    private applyRemoteReaction(
+        senderUserId: string,
+        { messageId, reaction, added }: { messageId: string; reaction: string; added: boolean },
+    ): void {
+        if (senderUserId === this._spaceUserId || this.isBlackListedSpaceUser(senderUserId)) {
+            return;
+        }
+        const message = this.messages.get(messageId);
+        if (!message || !get(message.canReact)) {
+            return;
+        }
+        this.applyReaction(message, reaction, senderUserId, added);
+    }
+
+    private applyReaction(message: ChatMessage, key: string, spaceUserId: string, added: boolean): void {
+        const spaceUser = this.users?.get(spaceUserId);
+        const user = spaceUser ? mapExtendedSpaceUserToChatUser(spaceUser) : { ...this.unknownUser, spaceUserId };
+        // Anonymous users have no chat id.
+        const chatUser = { ...user, chatId: user.chatId || spaceUserId };
+        applyProximityReaction(
+            message.reactions,
+            key,
+            spaceUserId,
+            chatUser,
+            added,
+            this._spaceUserId,
+            (reactionKey) => this.toggleReaction(message.id, reactionKey),
+            message.canReact,
+        );
+    }
+
+    /** The quote to send with my next message, if a message of this room is selected for a reply. */
+    private quoteOfSelectedReply(): SpaceMessageQuote | undefined {
+        const selected = get(selectedChatMessageToReply);
+        const message = selected ? this.messages.get(selected.id) : undefined;
+        if (!message || message !== selected) {
+            return undefined;
+        }
+        return {
+            messageId: message.id,
+            excerpt: get(message.content).body.slice(0, QUOTE_EXCERPT_MAX_LENGTH),
+            senderName: message.sender?.username,
+        };
+    }
+
+    /**
+     * The quoted copy shown inside a reply: the original message when it is still in the timeline,
+     * otherwise the excerpt carried by the reply (the receiver joined the bubble after the original).
+     */
+    private createQuotedMessage(quote: SpaceMessageQuote): ProximityChatMessage {
+        const original = this.messages.get(quote.messageId);
+        const quoted = new ProximityChatMessage(
+            quote.messageId,
+            original?.sender ?? { ...this.unknownUser, username: quote.senderName || this.unknownUserName },
+            original?.content ?? writable({ body: quote.excerpt.slice(0, QUOTE_EXCERPT_MAX_LENGTH), url: undefined }),
+            original?.date ?? new Date(),
+            original?.isMyMessage ?? false,
+            "proximity",
+        );
+        quoted.isQuotedMessage = true;
+        return quoted;
+    }
+
     private isBlackListedSpaceUser(spaceUserId: string): boolean {
         const uuid = this.users?.get(spaceUserId)?.uuid;
         return uuid !== undefined && blackListManager.isBlackListed(uuid);
@@ -1056,6 +1251,8 @@ export class ProximityChatRoom implements ChatRoom {
             new Date(),
             false,
             "proximity",
+            undefined,
+            type === "bubble" ? this.toggleReaction : undefined,
         );
 
         // Add message to the list
@@ -1069,6 +1266,7 @@ export class ProximityChatRoom implements ChatRoom {
                 spaceMessage: {
                     message: message,
                     characterTextures: [],
+                    id: newMessage.id,
                 },
             });
         }
@@ -1120,6 +1318,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
             return typingMembers;
         });
+        this.typingExpiry.refresh(senderUserId);
     }
 
     private removeTypingUser(senderUserId: string): void {
@@ -1129,12 +1328,11 @@ export class ProximityChatRoom implements ChatRoom {
             userIdToRemove = sender.spaceUserId.toString();
         }
 
-        this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== userIdToRemove);
-        });
+        this.removeTypingUserbyID(userIdToRemove);
     }
 
     private removeTypingUserbyID(id: string) {
+        this.typingExpiry.forget(id);
         this.typingMembers.update((typingMembers) => {
             return typingMembers.filter((user) => user.id !== id);
         });
@@ -1147,12 +1345,11 @@ export class ProximityChatRoom implements ChatRoom {
             }
             return typingMembers;
         });
+        this.typingExpiry.refresh(id);
     }
 
     removeExternalTypingUser(id: string) {
-        this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== id);
-        });
+        this.removeTypingUserbyID(id);
     }
 
     public setDisplayName(displayName: string): void {
@@ -1271,31 +1468,64 @@ export class ProximityChatRoom implements ChatRoom {
                 event.sender,
                 event.spaceMessage.characterTextures ?? [],
                 event.spaceMessage.name ?? "",
+                event.spaceMessage.id,
+                event.spaceMessage.quote,
             );
 
             // Get the last message to use for notification
             const lastMessage = this.messages.length > 0 ? this.messages[this.messages.length - 1] : undefined;
 
             // if the proximity chat is not open, open it to see the message
-            if (!get(this.intentionallyClosed)) {
+            const intentionallyClosed = get(this.intentionallyClosed);
+            if (!intentionallyClosed) {
                 chatVisibilityStore.set(true);
                 chatNotificationStore.clearRoom(this.id);
             } else {
                 const previousCount = get(this.unreadMessagesCount);
                 this.unreadMessagesCount.set(previousCount + 1);
-
-                // Show proximity notification when unread count increases
-                if (lastMessage && lastMessage.sender) {
-                    const userName = lastMessage.sender.username ?? this.unknownUserName;
-                    const messageBody = get(lastMessage.content).body;
-                    const numberOfChar = 60;
-                    const messageToDisplay =
-                        messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
-                    chatNotificationStore.addNotification(userName, messageToDisplay, this, lastMessage.id);
-                }
             }
             if (get(selectedRoomStore) == undefined) selectedRoomStore.set(this);
+
+            // Over the map while the chat is closed; in the chat, a banner for a mention only.
+            const mentionsMe = lastMessage !== undefined && get(lastMessage.content).mentionsMe === true;
+            const plan = this.planNotification(mentionsMe);
+            if (lastMessage?.sender && plan.banner) {
+                if (mentionsMe) {
+                    addPendingMention(this.id);
+                }
+                chatMessageBannerStore.show({
+                    room: this,
+                    message: lastMessage,
+                    senderName: lastMessage.sender.username ?? this.unknownUserName,
+                    body: get(lastMessage.content).body,
+                    mentionsMe,
+                    roomName: get(this.name),
+                    author: { pictureStore: lastMessage.sender.pictureStore, color: lastMessage.sender.color },
+                });
+            } else if (lastMessage?.sender && plan.toast) {
+                const userName = lastMessage.sender.username ?? this.unknownUserName;
+                const messageBody = mentionsToPlainText(get(lastMessage.content).body);
+                const numberOfChar = 60;
+                const messageToDisplay =
+                    messageBody.length > numberOfChar ? messageBody.slice(0, numberOfChar) + "..." : messageBody;
+                chatNotificationStore.addNotification(
+                    userName,
+                    messageToDisplay,
+                    this,
+                    lastMessage.id,
+                    true,
+                    undefined,
+                    mentionsMe
+                        ? { pictureStore: lastMessage.sender.pictureStore, color: lastMessage.sender.color }
+                        : undefined,
+                );
+            }
         });
+
+        this.spaceMessageReactionSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription = this._space
+            .observePublicEvent("spaceMessageReaction")
+            .subscribe((event) => this.applyRemoteReaction(event.sender, event.spaceMessageReaction));
 
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = this._space.observePublicEvent("spaceIsTyping").subscribe((event) => {
@@ -1525,6 +1755,8 @@ export class ProximityChatRoom implements ChatRoom {
         this.spaceMessageSubscription = undefined;
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceIsTypingSubscription = undefined;
+        this.spaceMessageReactionSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription = undefined;
         this.spaceStateUnsubscriber?.();
         this.spaceStateUnsubscriber = undefined;
         this.cleanupFileTransferService();
@@ -1704,6 +1936,17 @@ export class ProximityChatRoom implements ChatRoom {
             return false;
         }
 
+        // The messages stay readable, but the people they were sent to are gone: no more reactions or replies.
+        for (const message of get(this.messages)) {
+            if (message instanceof ProximityChatMessage) {
+                message.leaveConversation();
+            }
+        }
+        const replyTo = get(selectedChatMessageToReply);
+        if (replyTo && this.messages.get(replyTo.id) === replyTo) {
+            selectedChatMessageToReply.set(null);
+        }
+
         this.isChatDisabled.set(false);
         this.intentionallyClosed.set(false);
         this.unreadMessagesCount.set(0);
@@ -1754,7 +1997,7 @@ export class ProximityChatRoom implements ChatRoom {
                     }
                 }
             }
-            this.typingMembers.set([]);
+            this.clearTypingMembers();
         }
         this.hasUserInProximityChat.set(false);
 
@@ -1775,6 +2018,7 @@ export class ProximityChatRoom implements ChatRoom {
 
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription?.unsubscribe();
         this.spaceStateUnsubscriber?.();
         this.spaceStateUnsubscriber = undefined;
         this.cleanupFileTransferService();
@@ -1876,9 +2120,16 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space;
     }
 
+    private clearTypingMembers(): void {
+        this.typingExpiry.clear();
+        this.typingMembers.set([]);
+    }
+
     public destroy(): void {
+        this.clearTypingMembers();
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
+        this.spaceMessageReactionSubscription?.unsubscribe();
         this.spaceStateUnsubscriber?.();
         this.roomSidePanelUnsubscriber();
         this.selectedRoomUnsubscriber();

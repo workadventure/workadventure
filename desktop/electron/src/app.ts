@@ -22,6 +22,12 @@ import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./
 let pendingProtocolTarget: string | undefined;
 
 app.setName(DESKTOP_APP_NAME);
+// Windows shows a notification only for an AppUserModelId that a Start menu shortcut carries: the
+// NSIS installer gives its shortcut the appId of electron-builder.yml. It also groups the taskbar
+// buttons and names the auto-launch entry.
+if (process.platform === "win32") {
+    app.setAppUserModelId("re.workadventu.desktop");
+}
 
 // GNOME under Wayland gives apps no global key grabs: global shortcuts only work through its shortcut
 // service (the GlobalShortcuts portal), which Electron uses only with these features. The portal knows
@@ -118,7 +124,7 @@ async function init() {
 
     // This method will be called when Electron has finished loading
     await app.whenReady().then(async () => {
-        const firstLaunch = await settings.init();
+        const turnOnStartAtLogin = await settings.init();
 
         setLogLevel(settings.get("log_level") || "info");
 
@@ -127,7 +133,7 @@ async function init() {
         // long that request took to fail.
         void autoUpdater.init();
 
-        initStartAtLogin(firstLaunch);
+        initStartAtLogin(turnOnStartAtLogin);
 
         // load ipc handler
         ipc();

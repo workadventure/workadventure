@@ -49,6 +49,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
             ),
         );
         this.startHandlingChatRoomMemberEvents();
+        this.onRoomMemberTyping(undefined, this.roomMember);
         const matrixUser = this.matrixClient.getUser(this.id);
         if (matrixUser) {
             matrixUser.on(UserEvent.AvatarUrl, this.handleMatrixUserAvatar);
@@ -140,6 +141,28 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.refreshAvatarFromRoomMember();
     }
 
+    /**
+     * The room state was replaced (refreshLiveTimeline, a gappy sync): it brings new RoomMember objects, and only
+     * those receive the next membership or power level events.
+     */
+    rebind(roomMember: RoomMember): void {
+        if (roomMember === this.roomMember) {
+            return;
+        }
+        this.roomMember.off(RoomMemberEvent.Membership, this.handleRoomMemberMembership);
+        this.roomMember.off(RoomMemberEvent.PowerLevel, this.handleRoomMemberPowerLevel);
+        this.roomMember.off(RoomMemberEvent.Name, this.handleRoomMemberName);
+        this.roomMember.off(RoomMemberEvent.Typing, this.handleRoomMemberTyping);
+        this.roomMember = roomMember;
+        this.startHandlingChatRoomMemberEvents();
+        this.membership.set(roomMember.membership ?? "unknown");
+        this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(roomMember.powerLevel));
+        this.name.set(roomMember.name);
+        this.refreshAvatarFromRoomMember();
+        // The SDK only emits Typing on a change: a stop seen first by the new member would never reach us.
+        this.onRoomMemberTyping(undefined, roomMember);
+    }
+
     private startHandlingChatRoomMemberEvents(): void {
         this.roomMember.on(RoomMemberEvent.Membership, this.handleRoomMemberMembership);
         this.roomMember.on(RoomMemberEvent.PowerLevel, this.handleRoomMemberPowerLevel);
@@ -157,7 +180,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     private onRoomMemberPowerLevel(ev: MatrixEvent, member: RoomMember) {
         this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
     }
-    private onRoomMemberTyping(ev: MatrixEvent, member: RoomMember) {
+    private onRoomMemberTyping(ev: MatrixEvent | undefined, member: RoomMember) {
         const memberInformation: memberTypingInformation | null = member.typing
             ? {
                   id: this.id,
