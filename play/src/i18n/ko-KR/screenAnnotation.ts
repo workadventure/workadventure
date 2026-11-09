@@ -8,6 +8,7 @@ const screenAnnotation: DeepPartial<Translation["screenAnnotation"]> = {
     tools: {
         pointer: "포인터",
         pen: "펜",
+        temporaryPen: "임시 펜",
         line: "선",
         arrow: "화살표",
         rect: "사각형",

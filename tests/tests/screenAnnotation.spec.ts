@@ -25,6 +25,14 @@ async function drawStroke(page: Page, canvas: Locator): Promise<void> {
     await page.mouse.up();
 }
 
+/** Whether anything is painted on the annotation canvas (the count attribute only counts saved elements). */
+async function hasInk(canvas: Locator): Promise<boolean> {
+    return canvas.evaluate((element: HTMLCanvasElement) => {
+        const pixels = element.getContext("2d")?.getImageData(0, 0, element.width, element.height).data;
+        return pixels?.some((value, index) => index % 4 === 3 && value > 0) ?? false;
+    });
+}
+
 test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => {
     test("Annotations drawn on a shared screen are synchronized between participants", async ({ browser }) => {
         // Alice and Bob join the same proximity bubble.
@@ -165,5 +173,44 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bob.locator("#highlighted-media").getByText("Alice")).toHaveCount(0, { timeout: 15_000 });
         await expect(bob.getByTestId("annotation-canvas")).toHaveCount(0);
         await expect(bob.getByTestId("annotation-toolbar")).toHaveCount(0);
+    });
+
+    test("A temporary pen stroke shows for a few seconds and is never saved", async ({ browser }) => {
+        await using alice = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationTemporary"),
+        );
+        await Map.teleportToPosition(alice, 160, 160);
+
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationTemporary"),
+        );
+        await Map.teleportToPosition(bob, 160, 160);
+
+        await expect(alice.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
+
+        await alice.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(alice, "screenShareButton", "active");
+        await expect(bob.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
+        // See the first test: the action bar tooltip would swallow the click.
+        await alice.mouse.move(300, 300);
+        await alice.getByTestId("screenshare-annotate-button").click();
+
+        const aliceCanvas = alice.locator("#highlighted-media").getByTestId("annotation-canvas");
+        const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
+        await alice.getByTestId("annotation-tool-temporaryPen").click();
+        await drawStroke(alice, aliceCanvas);
+
+        // Bob sees the stroke, which is not saved...
+        await expect.poll(() => hasInk(bobCanvas), { timeout: 15_000 }).toBe(true);
+        await expect(bobCanvas).toHaveAttribute("data-element-count", "0");
+        await expect(aliceCanvas).toHaveAttribute("data-element-count", "0");
+
+        // ...and it disappears on both sides a few seconds later.
+        await expect.poll(() => hasInk(bobCanvas), { timeout: 10_000 }).toBe(false);
+        await expect.poll(() => hasInk(aliceCanvas), { timeout: 10_000 }).toBe(false);
     });
 });

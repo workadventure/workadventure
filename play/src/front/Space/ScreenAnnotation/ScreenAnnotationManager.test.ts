@@ -36,6 +36,7 @@ const annotations = writable<SpaceState["annotations"]>({});
 const stateManager = {
     observe: () => annotations,
     upsertScreenAnnotation: vi.fn(() => Promise.resolve()),
+    removeScreenAnnotation: vi.fn(() => Promise.resolve()),
     clearScreenAnnotations: vi.fn(() => Promise.resolve()),
 };
 const space = {
@@ -111,6 +112,8 @@ describe("ScreenAnnotationManager", () => {
         annotations.set({});
         emitPublicMessage.mockClear();
         stateManager.clearScreenAnnotations.mockClear();
+        stateManager.upsertScreenAnnotation.mockClear();
+        stateManager.removeScreenAnnotation.mockClear();
         screenAnnotationManager.bindToSpace(space, new Subject<Streamable>());
     });
 
@@ -191,6 +194,49 @@ describe("ScreenAnnotationManager", () => {
 
         sharing.source.set({ id: "screen:2" });
         expect(stateManager.clearScreenAnnotations).toHaveBeenCalledOnce();
+    });
+
+    it("never undoes or redoes what another user erased", () => {
+        setState(true);
+        screenAnnotationManager.upsertElement(PRESENTER, element("first", ME));
+        screenAnnotationManager.upsertElement(PRESENTER, element("second", ME));
+        setState(true, element("first", ME), element("second", ME));
+        // The presenter erases our second stroke: our undo skips it and takes back the first one.
+        setState(true, element("first", ME));
+        screenAnnotationManager.undoLastLocalElement(PRESENTER);
+        expect(stateManager.removeScreenAnnotation.mock.calls).toEqual([[PRESENTER, "first"]]);
+        setState(true);
+
+        // Redo brings back what we undid, never what the presenter erased.
+        stateManager.upsertScreenAnnotation.mockClear();
+        screenAnnotationManager.redoLastLocalElement(PRESENTER);
+        screenAnnotationManager.redoLastLocalElement(PRESENTER);
+        expect(stateManager.upsertScreenAnnotation).toHaveBeenCalledOnce();
+        expect(stateManager.upsertScreenAnnotation).toHaveBeenCalledWith(PRESENTER, element("first", ME));
+    });
+
+    it("shows every temporary stroke for a few seconds, ours included, and never saves it", () => {
+        vi.useFakeTimers();
+        setState(true);
+        const stroke = { ...element("t1", "viewer"), tool: "temporaryPen" };
+        sendDraft("viewer", stroke);
+        sendDraft("viewer", { ...stroke, id: "t2" });
+        expect(elementIds()).toEqual(["t1", "t2"]);
+        vi.advanceTimersByTime(3001);
+        expect(elementIds()).toEqual([]);
+
+        const mine = { ...element("mine", ME), tool: "temporaryPen" };
+        screenAnnotationManager.upsertElement(PRESENTER, mine);
+        expect(emitPublicMessage).toHaveBeenCalledWith({
+            $case: "screenAnnotation",
+            screenAnnotation: { targetUserId: PRESENTER, operation: { $case: "draft", draft: mine } },
+        });
+        expect(elementIds()).toEqual(["mine"]);
+        screenAnnotationManager.undoLastLocalElement(PRESENTER);
+        expect(stateManager.upsertScreenAnnotation).not.toHaveBeenCalled();
+        expect(stateManager.removeScreenAnnotation).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(3001);
+        expect(elementIds()).toEqual([]);
     });
 
     it("drops the draft of a refused element", async () => {

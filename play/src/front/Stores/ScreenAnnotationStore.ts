@@ -10,8 +10,9 @@ import type { ScreenAnnotationElement } from "@workadventure/messages";
  */
 
 // UI tool selection. "pen" | "line" | "arrow" | "rect" | "text" produce drawable elements;
-// "eraser" removes elements; "pointer" only broadcasts an ephemeral position. Neither is persisted.
-export const ANNOTATION_TOOLS = ["pointer", "pen", "line", "arrow", "rect", "text", "eraser"] as const;
+// "eraser" removes elements; "pointer" only broadcasts an ephemeral position; "temporaryPen" draws a stroke that
+// disappears after a few seconds. The last three are never persisted.
+export const ANNOTATION_TOOLS = ["pointer", "pen", "temporaryPen", "line", "arrow", "rect", "text", "eraser"] as const;
 export type AnnotationTool = (typeof ANNOTATION_TOOLS)[number];
 
 export function isAnnotationTool(tool: string): tool is AnnotationTool {

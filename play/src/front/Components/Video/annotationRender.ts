@@ -47,7 +47,8 @@ export function distanceToSegment(
 
 /** True when the normalized point `p` is within {@link HIT_THRESHOLD} of the element (for erasing). */
 export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoint, aspect: number): boolean {
-    if (element.tool === "pointer") return false;
+    // The eraser goes through what disappears on its own.
+    if (element.tool === "pointer" || element.tool === "temporaryPen") return false;
     const points = element.points;
     if (points.length === 0) {
         return false;

@@ -25,6 +25,7 @@
         IconTypography,
         IconUsersGroup,
         IconFocusCentered,
+        IconHighlight,
         IconSearch,
         IconX,
     } from "@wa-icons";
@@ -49,6 +50,7 @@
     let tools = $derived<{ id: AnnotationTool; icon: typeof IconPencil; label: string }[]>([
         { id: "pointer", icon: IconPointer, label: $LL.screenAnnotation.tools.pointer() },
         { id: "pen", icon: IconPencil, label: $LL.screenAnnotation.tools.pen() },
+        { id: "temporaryPen", icon: IconHighlight, label: $LL.screenAnnotation.tools.temporaryPen() },
         { id: "line", icon: IconLine, label: $LL.screenAnnotation.tools.line() },
         { id: "arrow", icon: IconArrowNarrowRight, label: $LL.screenAnnotation.tools.arrow() },
         { id: "rect", icon: IconSquare, label: $LL.screenAnnotation.tools.rect() },

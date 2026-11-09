@@ -45,6 +45,10 @@
     let textInput: { x: number; y: number; value: string } | undefined = $state();
     let textInputElement: HTMLInputElement | undefined = $state();
 
+    function freehand(tool: string): boolean {
+        return tool === "pen" || tool === "temporaryPen";
+    }
+
     function pointerToNorm(event: PointerEvent): ScreenAnnotationPoint {
         if (!canvas) {
             return { x: 0, y: 0 };
@@ -117,7 +121,7 @@
             tool,
             color,
             width,
-            points: tool === "pen" ? [p] : [p, p],
+            points: freehand(tool) ? [p] : [p, p],
             text: undefined,
         };
     }
@@ -164,10 +168,9 @@
             return;
         }
         const p = pointerToNorm(event);
-        draft =
-            draft.tool === "pen"
-                ? { ...draft, points: [...draft.points, p] }
-                : { ...draft, points: [draft.points[0], p] };
+        draft = freehand(draft.tool)
+            ? { ...draft, points: [...draft.points, p] }
+            : { ...draft, points: [draft.points[0], p] };
 
         const now = Date.now();
         if (now - lastEmit > EMIT_INTERVAL_MS) {
