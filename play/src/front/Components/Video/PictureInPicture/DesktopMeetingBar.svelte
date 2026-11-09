@@ -181,11 +181,12 @@
     // The look of the app's compact ActionBarButton (as in the mini window), with the theme's colors.
     const barButton = "inline-flex size-9 items-center justify-center rounded text-neutral-100 [&>svg]:size-6";
     const activeButton = "bg-secondary hover:bg-secondary-600";
-    const surface = "rounded-xl bg-contrast/90 shadow-xl backdrop-blur";
+    // The design system's radii: rounded-sm 4px, rounded 8px, rounded-md 12px.
+    const surface = "rounded-md bg-contrast/90 shadow-[0_6px_24px_rgba(0,0,0,0.45)] backdrop-blur";
     const panel = `${surface} mb-2 flex min-h-0 flex-col`;
     const panelHead = "flex items-center justify-between gap-2 border-b border-white/10 px-2.5 py-2";
-    const closeButton = "inline-flex size-6 items-center justify-center rounded bg-white/5 hover:bg-white/15";
-    const menuItem = "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-start text-sm hover:bg-white/10";
+    const closeButton = "inline-flex size-6 items-center justify-center rounded-sm bg-white/5 hover:bg-white/15";
+    const menuItem = "flex w-full items-center gap-2.5 rounded px-2.5 py-2 text-start text-sm hover:bg-white/10";
     const menuIcon = "inline-flex w-8.5 shrink-0 justify-center [&>svg]:size-4.5";
     const separator = "mx-1.5 my-1 h-px bg-white/10";
     const muted = "text-xs text-white/60";
@@ -238,7 +239,7 @@
         {#each devices as device (device.deviceId)}
             <button
                 type="button"
-                class="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-start text-xs hover:bg-white/10"
+                class="flex w-full items-center gap-2 rounded px-2.5 py-2 text-start text-xs hover:bg-white/10"
                 onclick={() => pickDevice(kind, device.deviceId)}
             >
                 <IconCheck class="size-4 shrink-0 text-secondary {device.deviceId === currentId ? '' : 'invisible'}" />
@@ -266,7 +267,7 @@
                 <div class="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-y-auto p-2">
                     {#each shownSources as source, index (source.id)}
                         <button
-                            class="flex flex-col overflow-hidden rounded-md border border-solid border-white/5 bg-white/5 text-start hover:border-secondary/60 hover:bg-secondary/20"
+                            class="flex flex-col overflow-hidden rounded-[6px] border border-solid border-white/5 bg-white/5 text-start hover:border-secondary/60 hover:bg-secondary/20"
                             type="button"
                             title={source.name}
                             onclick={() => pickSource(source)}
