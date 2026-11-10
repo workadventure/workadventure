@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Tekstowu powěsć pósłać",
             noAccess: "Nimaće přistup k tutej funkciji 😱 Prošu stajće so z administratorom do zwiska 🙏",
         },
-        audioMessage: {
-            title: "Awdijowa powěsć",
-            notice: `
-            Awdijowa powěsć je powěsć typa "MP3, OGG...", kotraž so na wšěch wužiwarjow pósćele, kotřiž su w rumje abo w swěće zwjazani.
-
-            Tuta awdijowa powěsć budźe so sćahnyć a startować na wšěch ludźach, kotřiž dostanu tutu powěźeńku.
-
-            Přikład awdijoweje powěsće móže awdijowy nagraće być, kotrež wukazuje, zo konferenca započnje so za někotre minuty.
-            `,
-            button: "Awdijowu powěsć pósłać",
-            noAccess: "Nimaće přistup k tutej funkciji 😱 Prošu stajće so z administratorom do zwiska 🙏",
-        },
     },
 };
 
