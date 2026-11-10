@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Enviar un missatge de text",
             noAccess: "No tens accés a aquesta funció 😱 Si us plau, contacta amb l'administrador 🙏",
         },
-        audioMessage: {
-            title: "Missatge d'àudio",
-            notice: `
-            El missatge d'àudio és un missatge de tipus "MP3, OGG..." enviat a tots els usuaris connectats a la sala o al món.
-
-            Aquest missatge d'àudio es descarregarà i es reproduirà per a totes les persones que rebin aquesta notificació.
-
-            Un missatge d'àudio pot consistir en una gravació d'àudio que indica que una conferència començarà en uns minuts.
-            `,
-            button: "Enviar un missatge d'àudio",
-            noAccess: "No tens accés a aquesta funció 😱 Si us plau, contacta amb l'administrador 🙏",
-        },
     },
 };
 

@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "傳送文字訊息",
             noAccess: "您無權存取此功能 😱 請聯絡管理員 🙏",
         },
-        audioMessage: {
-            title: "音訊訊息",
-            notice: `
-            音訊訊息是傳送給房間或世界中所有連線使用者的「MP3、OGG...」類型的訊息。
-
-            此音訊訊息將被下載並播放給所有收到此通知的人員。
-
-            音訊訊息可以包含一段音訊錄音，提示會議將在幾分鐘後開始。
-            `,
-            button: "傳送音訊訊息",
-            noAccess: "您無權存取此功能 😱 請聯絡管理員 🙏",
-        },
     },
 };
 
