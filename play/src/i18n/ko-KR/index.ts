@@ -28,6 +28,7 @@ import messageScreen from "./messageScreen";
 import locate from "./locate";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import desktop from "./desktop";
 import recording from "./recording";
 
 const ko_KR = deepmerge(en_US, {
@@ -60,6 +61,7 @@ const ko_KR = deepmerge(en_US, {
     randomNames,
     onboarding,
     recording,
+    desktop,
 });
 
 export default ko_KR;
