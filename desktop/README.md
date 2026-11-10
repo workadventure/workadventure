@@ -41,11 +41,13 @@ sudo apt update && sudo apt install workadventure-desktop
 On Ubuntu 24.04 and later, prefer the `.deb` to the AppImage: AppArmor stops the AppImage from
 starting the Chromium sandbox, so it runs with `--no-sandbox`.
 
-How it is published: on each release, the `apt_repository` job of
-`.github/workflows/build-and-release-desktop.yml` adds the `.deb` to the `apt-repo` branch (only the
-index, signed with the `APT_SIGNING_KEY` secret). apt.workadventu.re serves that branch and redirects
-`releases/download/…` to the GitHub release that holds the `.deb`. The `.deb`'s scripts and the
-repository's public key are in `electron/deb/`.
+How it is published: once a desktop release is published (see [Releases](#releases)), the
+`apt_repository` job of `.github/workflows/build-and-release-desktop.yml` adds its `.deb` to the
+`apt-repo` branch of [workadventure/desktop-releases](https://github.com/workadventure/desktop-releases)
+(only the index, signed with the `APT_SIGNING_KEY` secret).
+apt.workadventu.re serves that branch and redirects `releases/download/…` to the release of
+`desktop-releases` that holds the `.deb`. The `.deb`'s scripts and the repository's public key are in
+`electron/deb/`.
 
 ## API for the front
 

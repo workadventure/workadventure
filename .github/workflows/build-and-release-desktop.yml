@@ -261,24 +261,32 @@ jobs:
           gh release edit "$GITHUB_REF_NAME" --repo workadventure/desktop-releases \
             --notes-file notes.md --draft=false --latest
 
-  # apt.workadventu.re serves the apt-repo branch (the signed index, a few KB) and redirects
-  # releases/download/... to the GitHub release, where electron-builder uploaded the .deb: apt checks
-  # each download against the SHA256 in the signed index. The .deb's after-install script adds the
-  # repository (desktop/electron/deb/).
+  # apt.workadventu.re serves the apt-repo branch of workadventure/desktop-releases (the signed index, a
+  # few KB) and redirects releases/download/... to the release there, where electron-builder uploaded the
+  # .deb: apt checks each download against the SHA256 in the signed index. The .deb's after-install
+  # script adds the repository (desktop/electron/deb/).
   apt_repository:
     name: "Add the .deb to the APT repository"
-    needs: build
-    # Not drafts (their downloads are not public yet) nor pre-releases (AppImage users do not get them).
-    if: ${{ github.event_name == 'release' && !github.event.release.draft && !github.event.release.prerelease }}
+    # After publish: a draft's downloads are not public yet. Skipped with it on branches and PRs.
+    needs: publish
+    environment: desktop-release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     # Two releases at once would both push to the branch.
     concurrency: apt-repository
 
     steps:
       - name: "Checkout"
         uses: actions/checkout@v4
+
+      - name: "Get a token for desktop-releases"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
 
       - name: "Download the .deb"
         uses: actions/download-artifact@v4
@@ -290,16 +298,18 @@ jobs:
       - name: "Add it to the apt-repo branch and sign the index"
         env:
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           TAG: ${{ github.ref_name }}
         run: |
           : "${APT_SIGNING_KEY:?Add the APT_SIGNING_KEY secret: the armored private key, without a passphrase}"
           key="$PWD/desktop/electron/deb/workadventure-desktop.gpg"
-          if git fetch --depth 1 origin apt-repo; then
-            git worktree add -B apt-repo "$RUNNER_TEMP/apt" FETCH_HEAD
-          else
-            git worktree add --orphan -b apt-repo "$RUNNER_TEMP/apt"
-          fi
           cd "$RUNNER_TEMP"
+          git init -q -b apt-repo apt
+          git -C apt remote add origin "https://x-access-token:${GH_TOKEN}@github.com/workadventure/desktop-releases.git"
+          # The branch only exists after the first release.
+          if git -C apt fetch -q --depth 1 origin apt-repo; then
+            git -C apt reset -q --hard FETCH_HEAD
+          fi
           mkdir -p apt/packages
           # One file per release: a re-run replaces its own, and every earlier version stays installable.
           dpkg-scanpackages "releases/download/$TAG" > "apt/packages/$TAG"
