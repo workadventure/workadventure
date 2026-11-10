@@ -32,8 +32,8 @@ const admin = () =>
 
 const sendToWorld = () =>
     new SocketManager().emitPlayGlobalMessage(admin(), {
-        content: "/download-audio-message/abc",
-        type: "audio",
+        content: "hello world",
+        type: "message",
         broadcastToWorld: true,
     });
 

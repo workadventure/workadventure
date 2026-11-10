@@ -16,7 +16,6 @@ export const DESKTOP_VERSION_POLICY = {
 export const DEBUG_MODE = env.DEBUG_MODE;
 export const PUSHER_URL = env.PUSHER_URL;
 export const ADMIN_URL = env.ADMIN_URL;
-export const UPLOADER_URL = env.UPLOADER_URL;
 export const ICON_URL = env.ICON_URL;
 export const SKIP_RENDER_OPTIMIZATIONS = env.SKIP_RENDER_OPTIMIZATIONS;
 export const JITSI_URL = env.JITSI_URL;
