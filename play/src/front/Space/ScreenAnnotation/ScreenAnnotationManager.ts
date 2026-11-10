@@ -19,8 +19,8 @@ type DraftOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
 /** A reversible local-user action for the undo / redo history: a drawn stroke, or an erased one. */
 type UndoOp = { kind: "add" | "remove"; element: ScreenAnnotationElement };
 
-// A highlight (a drag in pointer mode) shows for 3 s after its last change, then fades out in 1.5 s.
-const HIGHLIGHT_HOLD_MS = 3000;
+// A highlight (a drag in pointer mode) shows for 2 s after its last change, then fades out in 1.5 s.
+const HIGHLIGHT_HOLD_MS = 2000;
 const HIGHLIGHT_FADE_MS = 1500;
 // Drafts that are never saved: how long each shows after its last change.
 const TRANSIENT_LIFETIMES = new Map([
