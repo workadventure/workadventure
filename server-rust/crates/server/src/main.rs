@@ -106,14 +106,6 @@ async fn serve(config: Config) {
         tokio::spawn(async move { axum::serve(grpc, app).await });
     }
 
-    if state.config.uploader_port != 0 {
-        let addr = SocketAddr::from(([0, 0, 0, 0], state.config.uploader_port));
-        let uploads = tokio::net::TcpListener::bind(addr).await.expect("bind SERVER_UPLOADER_PORT");
-        tracing::info!(%addr, "uploader listening");
-        let app = wa_server::uploader::router(state.clone());
-        tokio::spawn(async move { axum::serve(uploads, app).await });
-    }
-
     if state.config.ws_port != 0 && state.config.ws_port != state.config.http_port {
         let addr = SocketAddr::from(([0, 0, 0, 0], state.config.ws_port));
         let ws = tokio::net::TcpListener::bind(addr).await.expect("bind PUSHER_WS_PORT");

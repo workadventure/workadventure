@@ -1,6 +1,6 @@
 # PARITY — candidat Rust, jalon 1 (parité production)
 
-Matrice de parité avec la production TypeScript (pusher + back + map-storage + uploader + Room API). Une ligne par
+Matrice de parité avec la production TypeScript (pusher + back + map-storage + Room API ; l'uploader a été retiré, master `b6ada89c9f`). Une ligne par
 fonction : contrat, état réel, preuve, écart, prochaine action. Mise à jour à chaque tranche ; l'état est celui du
 commit indiqué en tête du dernier passage.
 
@@ -64,7 +64,7 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | `GET /ping-backs`, `/dump`, `/debug/*` (back) | exploitation TS | `hors périmètre explicite` | — | un seul processus : pas de back à sonder ; outils de débogage propres au Node | — |
 | `GET /openapi/pusher`, `/openapi/admin`, `/swagger-ui/` (`ENABLE_OPENAPI_ENDPOINT`) | documentation | `validé` | `swagger_doc` 1/1 | documents générés des sources TS (`tools/gen-openapi.sh`) et embarqués ; l'interface Swagger vient d'un CDN épinglé (swagger-ui-dist 5.32.6) au lieu de `node_modules` | regénérer quand les sources changent |
 | map-storage : `GET *.wam`, `PUT`, `PATCH *.wam`, `DELETE`, `/move`, `/copy`, `/upload`, `/download`, `/upload-endpoint`, `/maps`, `/private/files/*`, fichiers servis | map-storage | `validé` | `map_storage_upload` 21/21 | `USE_DOMAIN_NAME_IN_PATH` (dossier par domaine), `AUTHENTICATION_VALIDATOR_URL` (A26), webhook sortant (A27), gabarit WAM (A28) codés, non vérifiés avec l'admin ; S3 absent ; `GET /validate`, `GET /` (UI), `/health/live`, auth Digest absents | parcours SaaS, puis S3 |
-| uploader (port 3003) : `/upload-audio-message`, `/download-audio-message/:id`, `/upload-file`, `/upload-file/:id`, `/ping` | fichiers du chat, Redis `REDIS_DB_NUMBER` | `implémenté non vérifié` | test `uploaded_names_never_choose_a_dangerous_type` | stockage S3 (`AWS_BUCKET`) absent ; contrôle de taille par l'admin (A29) codé | `proximityChatFileTransfer.spec` ; S3 si la production l'utilise |
+| uploader retiré (port 3003 et ses routes `/upload-audio-message`, `/download-audio-message/:id`, `/upload-file`, `/upload-file/:id`, `/ping`) : messages audio globaux et fichiers du chat supprimés côté TS (master `b6ada89c9f`, #7002) | `uploader.rs` supprimé ; `iso_now`/`iso_at` déplacés dans `clock.rs` | retiré | `front.rs` : `window_env_has_real_types_and_no_undefined_keys` (pas de `UPLOADER_URL` côté front) | `SERVER_UPLOADER_PORT`, `UPLOADER_URL`, `UPLOAD_MAX_FILESIZE` ne sont plus lus ; `REDIS_DB_NUMBER` n'est plus lu | — |
 
 ## 3. Messages WebSocket client → serveur
 
@@ -154,7 +154,7 @@ enregistrement, persistance Redis et Room API ne sont pas `validé`.
 | WebSocket aussi sur 3001 (`PUSHER_WS_PORT`) | `implémenté non vérifié` (le routeur entier sur le second port, désactivable par 0) | répétition minikube |
 | map-storage sur 3002, actif par défaut | `implémenté non vérifié` (`SERVER_MAP_STORAGE_PORT`, défaut 3002) | vérifier dans le chart |
 | `PATH_PREFIX` de map-storage (`/map-storage` en single-domain) | `validé` | test `map_storage_lives_under_path_prefix…` |
-| uploader sur 3003 (`SERVER_UPLOADER_PORT`), Room API gRPC sur 50051 (`ROOM_API_PORT`) | `implémenté non vérifié` / `validé` (room-api 5/5) | `proximityChatFileTransfer.spec` pour l'uploader |
+| Room API gRPC sur 50051 (`ROOM_API_PORT`) ; pas d'uploader (3003 retiré) | `validé` (room-api 5/5) | room-api |
 | `/ping` liveness, `/ready` readiness (503 avant le gabarit), `PROMETHEUS_PORT` | `validé` | — |
 | sous-commande `healthcheck` du binaire (GET 127.0.0.1:<port>/ping, code 0/1) | `implémenté non vérifié` | essayer dans l'image prod |
 | gabarit et fichiers du front depuis `ASSETS_INTERNAL_URL` | `validé` (stacks du socle) | — |
@@ -177,3 +177,13 @@ One row per TS change ported after the merge of master (`ba54d9b1c`). The behavi
 | `8bc544ce0f` | an "open file" upload or delete whose property id holds `/` or `\` is refused; with `USE_DOMAIN_NAME_IN_PATH` the editor's files (open file documents, custom entity images and their `entities.json`) are written and deleted in the folder of the map's world, where map-storage serves them | `validé` | tests `an_uploaded_file_stays_in_its_folder_whatever_the_client_names`, `the_editor_files_of_a_world_stay_in_its_folder` | the path is built in `wa_core::wam::uploaded_file_path`; the storage also refuses any `..` component. The world folder was a gap of this port, not of TS: the editor wrote at the storage root, shared by every world, while serving read from the host's folder |
 | `95f0b95567` | a "play audio" sound uploaded from the map editor (mp3, ogg, wav, m4a, flac) is stored as a public map asset, `assets/sounds/<name>-<propertyId>.<ext>`, in the map's world folder; map-storage serves it without a token, with the type of the TS `mime` package (`audio/mpeg`, `audio/ogg`, `audio/wav`, `audio/mp4`, `audio/x-flac`) and answers a `Range` (206, `Accept-Ranges: bytes`, 416 past the end), which Firefox needs for audio; an uploaded file (`name` of an open file, `audioName` of a play audio) is deleted once its property no longer uses it: property, area or entity gone, file removed, replaced, or swapped for a URL | `validé` | tests `an_uploaded_sound_is_a_public_map_asset_that_firefox_can_play`, `an_uploaded_sound_goes_once_its_property_stops_using_it`, `deleting_an_area_or_unlinking_a_file_names_the_private_files_to_remove`, `a_single_byte_range_is_answered_as_send_does` | the files to delete are computed in `wa_core::wam` while the edit applies, from the name and property id as TS does (no longer from the link), then removed by the room's I/O task before the next command; a property id the upload would have refused deletes nothing instead of failing the edit. Ranges as `send` reads them, except that several ranges always get the whole file (range-parser would combine overlapping ones) and `If-Range` is not checked |
 | `e2c5f174df` | `UploadFileMessage.kind` (`UploadedFileKind`: Document, Sound) says what an uploaded file is for: it goes to that kind's folder (`private/files`, `assets/sounds`) only if its extension is one of that kind's formats; a format the kind does not accept and a kind this version does not know are refused; deleting takes the kind from the property type (open file, play audio) | `validé` | tests `each_kind_of_upload_has_its_folder_and_formats`, `an_uploaded_sound_is_a_public_map_asset_that_firefox_can_play` | prost generates `UploadedFileKind` from messages.proto at build; the protobuf-free core has its own `FileKind`, which the server maps the generated enum onto (an unknown value fails `try_from`), with the folder and formats of `UPLOADED_FILE_FORMATS` (the front's `accept` strings stay in the front) |
+
+## Annonce de master efb70df99d : annotations d'écran (non portées)
+
+Les protos de master ajoutent les annotations d'écran (`SetScreenAnnotationOthersAllowed`, `UpsertScreenAnnotation`,
+`RemoveScreenAnnotation`, `ClearScreenAnnotations`, événements `ScreenAnnotation` et `PresenterEffect`) et l'état
+`annotations` de l'espace. Ce serveur les refuse explicitement (`space_actor.rs`, `state_query`, erreur renvoyée au
+seul émetteur) et ne relaie pas les événements publics correspondants : relayer sans la règle « les autres peuvent
+annoter » du back TypeScript serait un contournement. **À vérifier** : le port complet (état, règles, limites), et
+la régénération de `tools/space-state.schema.json` et `tools/admin-answers.schema.json`, impossible ici faute du
+build `messages` (`ts-proto-generated`).

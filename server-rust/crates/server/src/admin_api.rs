@@ -1,4 +1,4 @@
-//! The remote admin (SaaS), when ADMIN_API_URL is set: the calls of the pusher, back and uploader to it, as
+//! The remote admin (SaaS), when ADMIN_API_URL is set: the calls of the pusher and back to it, as
 //! dev/contracts/admin-api.md lists them (A1…A24). Without it, LocalAdmin (local_admin.rs) answers instead.
 //!
 //! Most calls carry `Authorization: <ADMIN_API_TOKEN>` (raw); three go to the public ADMIN_URL (A16, A17, A18).

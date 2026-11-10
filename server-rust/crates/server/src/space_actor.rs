@@ -128,6 +128,11 @@ fn state_query(query: Option<pb::space_state_query::Query>) -> Result<StateQuery
         Q::AnswerQuestion(q) => StateQuery::AnswerQuestion(q.question_id),
         Q::DeleteQuestion(q) => StateQuery::DeleteQuestion(q.question_id),
         Q::SetKind(q) => StateQuery::SetKind(q.kind),
+        // Screen annotations (master efb70df99d): not ported yet, refused explicitly rather than half-applied.
+        Q::SetScreenAnnotationOthersAllowed(_)
+        | Q::UpsertScreenAnnotation(_)
+        | Q::RemoveScreenAnnotation(_)
+        | Q::ClearScreenAnnotations(_) => return Err("Screen annotations are not supported by this server yet"),
     })
 }
 
@@ -480,7 +485,7 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                                             hook.query_pairs_mut()
                                                 .append_pair("space", &key)
                                                 .append_pair("recordingSessionId", &plan.session_id);
-                                            let stamp = crate::uploader::iso_now()[..19].to_owned();
+                                            let stamp = crate::clock::iso_now()[..19].to_owned();
                                             let body = livekit::composite_egress(
                                                 &room,
                                                 &plan.recorder_uuid,
@@ -628,6 +633,9 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                         }
                     }
                     Some(E::SpaceMessageReaction(_)) => {}
+                    // Screen annotations and presenter effects (master efb70df99d): not ported yet. Not relayed,
+                    // since relaying would skip the "others may annotate" rule the TypeScript back applies.
+                    Some(E::ScreenAnnotation(_) | E::PresenterEffect(_)) => continue,
                     None => continue,
                 }
                 let frame = wire::sub(pb::sub_message::Message::PublicEvent(pb::PublicEvent {
@@ -681,7 +689,7 @@ fn recording_event(r: &wa_core::space::Recording, egress_id: &str, info: &serde_
     let ns = |v: &serde_json::Value| v.as_i64().or_else(|| v.as_str().and_then(|s| s.parse().ok())).unwrap_or(0);
     let iso = |v: serde_json::Value| -> serde_json::Value {
         let ms = ns(&v) / 1_000_000;
-        if ms <= 0 { serde_json::Value::Null } else { crate::uploader::iso_at(ms as u64).into() }
+        if ms <= 0 { serde_json::Value::Null } else { crate::clock::iso_at(ms as u64).into() }
     };
     let files: Vec<serde_json::Value> = f("fileResults", "file_results")
         .as_array()

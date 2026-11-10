@@ -1,5 +1,5 @@
 //! Configuration, read from the environment variables of the four TypeScript services (pusher, back,
-//! map-storage, uploader), with the same names and defaults. Variables that only made sense between those
+//! map-storage), with the same names and defaults. Variables that only made sense between those
 //! services (API_URL, GRPC_PORT...) are accepted and ignored.
 
 use std::collections::HashMap;
@@ -41,8 +41,6 @@ pub struct Config {
     /// PUSHER_WS_PORT: the WebSocket port of the pusher, which the chart routes `/ws/` to; 0 or the HTTP port
     /// to serve WebSockets on the HTTP port only.
     pub ws_port: u16,
-    /// SERVER_UPLOADER_PORT: the uploader (the chart's uploader Service), 0 to disable.
-    pub uploader_port: u16,
     /// STORAGE_DIRECTORY: where the maps live.
     pub storage_directory: String,
 
@@ -143,7 +141,6 @@ impl Config {
             map_storage_prefix: env.str("PATH_PREFIX").map(|p| p.trim_end_matches('/').to_owned()).unwrap_or_default(),
             use_domain_name_in_path: env.bool("USE_DOMAIN_NAME_IN_PATH", false),
             ws_port: env.number("PUSHER_WS_PORT", 3001),
-            uploader_port: env.number("SERVER_UPLOADER_PORT", 3003),
             storage_directory: env.str("STORAGE_DIRECTORY").unwrap_or_else(|| "./public".into()),
             redis_host: env.str("REDIS_HOST"),
             redis_port: env.number("REDIS_PORT", 6379),

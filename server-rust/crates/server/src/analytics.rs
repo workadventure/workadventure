@@ -18,7 +18,7 @@ use crate::admin_api::AdminApi;
 use crate::config::Config;
 use crate::redis_store::now_ms;
 use crate::session::SessionInfo;
-use crate::uploader::iso_at;
+use crate::clock::iso_at;
 
 const MAX_ATTEMPTS: u32 = 4;
 const MAX_EVENTS_PER_REPORT: usize = 100;

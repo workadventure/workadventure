@@ -150,7 +150,6 @@ pub fn front_env(c: &Config) -> Value {
         "PUSHER_URL": c.pusher_url,
         "FRONT_URL": c.front_url,
         "ADMIN_URL": raw("ADMIN_URL"),
-        "UPLOADER_URL": raw("UPLOADER_URL").unwrap_or_default(),
         "ICON_URL": raw("ICON_URL").unwrap_or_default(),
         "SKIP_RENDER_OPTIMIZATIONS": b("SKIP_RENDER_OPTIMIZATIONS", false),
         "JITSI_URL": raw("JITSI_URL"),
@@ -797,7 +796,7 @@ mod tests {
     #[test]
     fn window_env_has_real_types_and_no_undefined_keys() {
         let c = Config::load(Env::new(
-            [("SECRET_KEY", "s"), ("UPLOADER_URL", "/uploader"), ("ICON_URL", "/icon")]
+            [("SECRET_KEY", "s"), ("ICON_URL", "/icon")]
                 .iter()
                 .map(|(k, v)| (k.to_string(), v.to_string()))
                 .collect(),
@@ -809,6 +808,8 @@ mod tests {
         assert_eq!(env["ENABLE_CHAT"], json!(true));
         assert_eq!(env["LIVEKIT_PIXEL_DENSITY"], json!(2.0 / 3.0));
         assert!(env.get("JITSI_URL").is_none());
+        // The uploader is gone (master b6ada89c9f): nothing announces an UPLOADER_URL to the front.
+        assert!(env.get("UPLOADER_URL").is_none());
         // The front no longer reads it (94fd550008): a server setting, not the front's.
         assert!(env.get("NODE_ENV").is_none());
         assert!(page_script(&c, None).starts_with("window.env = {"));

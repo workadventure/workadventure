@@ -60,7 +60,7 @@ pub fn now_ms() -> u64 {
 impl RedisStore {
     /// Must run inside the runtime: the connection is made on first use, and remade after a failure.
     pub fn new(config: &Config) -> Arc<Self> {
-        // DB 0: the back and the pusher never read REDIS_DB_NUMBER (only the uploader does).
+        // DB 0: the back and the pusher never read REDIS_DB_NUMBER.
         let conn = connect(config, None);
         if conn.is_none() {
             tracing::warn!("REDIS_HOST is not set: no variables will be persisted");
