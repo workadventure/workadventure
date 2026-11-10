@@ -36,8 +36,14 @@ export class NoVideoOutputDetector {
             }
             // Let's wait 3 seconds before displaying a warning.
             this.noVideoTimeout = setTimeout(() => {
-                this.onNoVideo();
                 this.noVideoTimeout = undefined;
+                // A hidden page renders no frame at all (minimized window, the desktop app's window behind
+                // its companion, a background tab): there is nothing to judge until it shows again.
+                if (document.visibilityState === "hidden") {
+                    document.addEventListener("visibilitychange", this.onVisibilityChange);
+                    return;
+                }
+                this.onNoVideo();
             }, 5000);
 
             if (this.callbackId !== undefined) {
@@ -57,7 +63,15 @@ export class NoVideoOutputDetector {
         }
     }
 
+    private readonly onVisibilityChange = () => {
+        if (document.visibilityState === "visible") {
+            document.removeEventListener("visibilitychange", this.onVisibilityChange);
+            this.expectVideoWithin5Seconds();
+        }
+    };
+
     public destroy() {
+        document.removeEventListener("visibilitychange", this.onVisibilityChange);
         if (this.noVideoTimeout) {
             clearTimeout(this.noVideoTimeout);
             this.noVideoTimeout = undefined;

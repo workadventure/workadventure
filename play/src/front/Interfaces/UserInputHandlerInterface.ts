@@ -1,11 +1,9 @@
 import * as Phaser from "phaser";
-import type { Shortcut } from "../Phaser/UserInput/UserInputManager";
 
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
 
 export interface UserInputHandlerInterface {
-    shortcuts: Shortcut[];
     handleMouseWheelEvent: (
         pointer: Pointer,
         gameObjects: GameObject[],

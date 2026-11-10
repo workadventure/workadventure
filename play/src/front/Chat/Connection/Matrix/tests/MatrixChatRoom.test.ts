@@ -155,4 +155,28 @@ describe("MatrixChatRoom", () => {
             expect(createRoomStub(undefined).getMatrixRoomType()).toBe("direct");
         });
     });
+    describe("inviterName", () => {
+        // A bare instance whose room only knows my own member event (sent by inviterId) and the inviter's.
+        const createRoomStub = (inviterId: string | undefined, inviterName: string | undefined) => {
+            const room = Object.create(MatrixChatRoom.prototype) as MatrixChatRoom;
+            const members: Record<string, unknown> = {
+                "@me:matrix.org": { events: { member: { getSender: () => inviterId } } },
+            };
+            if (inviterId && inviterName) members[inviterId] = { name: inviterName };
+            Object.assign(room, {
+                matrixRoom: { myUserId: "@me:matrix.org", getMember: (userId: string) => members[userId] ?? null },
+            });
+            return room;
+        };
+
+        it("names the member who sent the invitation", () => {
+            expect(createRoomStub("@alice:matrix.org", "Alice Martin").inviterName).toBe("Alice Martin");
+        });
+
+        it("returns undefined when the inviter has no display name or the room was not an invitation", () => {
+            expect(createRoomStub("@alice:matrix.org", "@alice:matrix.org").inviterName).toBeUndefined();
+            expect(createRoomStub("@alice:matrix.org", undefined).inviterName).toBeUndefined();
+            expect(createRoomStub("@me:matrix.org", undefined).inviterName).toBeUndefined();
+        });
+    });
 });

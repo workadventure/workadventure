@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Gửi tin nhắn văn bản",
             noAccess: "Bạn không có quyền dùng tính năng này 😱 Vui lòng liên hệ quản trị viên 🙏",
         },
-        audioMessage: {
-            title: "Tin nhắn âm thanh",
-            notice: `
-            Tin nhắn âm thanh là tệp dạng "MP3, OGG..." được gửi tới tất cả người dùng đang kết nối trong phòng hoặc trong thế giới.
-
-            Tệp âm thanh này sẽ được tải xuống và phát cho tất cả những người nhận thông báo.
-
-            Một tin nhắn âm thanh có thể là đoạn ghi âm báo rằng hội thảo sẽ bắt đầu sau vài phút.
-            `,
-            button: "Gửi tin nhắn âm thanh",
-            noAccess: "Bạn không có quyền dùng tính năng này 😱 Vui lòng liên hệ quản trị viên 🙏",
-        },
     },
 };
 
