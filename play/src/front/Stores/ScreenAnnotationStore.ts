@@ -28,7 +28,7 @@ export const screenAnnotationFinishedCountStore = writable<Map<string, number>>(
 export const screenAnnotationEnabledStore = writable<Map<string, boolean>>(new Map());
 
 // Local tool selection (the local user has a single active tool, shared across targets).
-export const currentAnnotationToolStore = writable<AnnotationTool>("pen");
+export const currentAnnotationToolStore = writable<AnnotationTool>("pointer");
 export const currentAnnotationColorStore = writable<string>("#ff3b30");
 // Stroke width normalized against the smallest side of the visible video area.
 export const currentAnnotationWidthStore = writable<number>(0.005);
