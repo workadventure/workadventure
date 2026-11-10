@@ -24,6 +24,8 @@
     let { targetUserId, canDraw }: Props = $props();
 
     const EMIT_INTERVAL_MS = 50;
+    // A drag in pointer mode draws a highlight: a thick translucent stroke that fades out.
+    const HIGHLIGHT_WIDTH = 0.02;
 
     let canvas: HTMLCanvasElement | undefined = $state();
     let clientWidth = $state(0);
@@ -40,13 +42,14 @@
     let draft: ScreenAnnotationElement | undefined = $state();
     let drawing = false;
     let lastEmit = 0;
+    let lastPointerEmit = 0;
 
     // Floating text input state (in normalized coordinates).
     let textInput: { x: number; y: number; value: string } | undefined = $state();
     let textInputElement: HTMLInputElement | undefined = $state();
 
     function freehand(tool: string): boolean {
-        return tool === "pen" || tool === "temporaryPen";
+        return tool === "pen" || tool === "highlight";
     }
 
     function pointerToNorm(event: PointerEvent): ScreenAnnotationPoint {
@@ -103,7 +106,6 @@
         const p = pointerToNorm(event);
         if (tool === "pointer") {
             movePointer(p);
-            return;
         }
         if (tool === "eraser") {
             eraseAt(p);
@@ -115,13 +117,14 @@
         }
         drawing = true;
         canvas.setPointerCapture(event.pointerId);
+        const draftTool = tool === "pointer" ? "highlight" : tool;
         draft = {
             id: screenAnnotationManager.nextElementId(),
             authorUserId: screenAnnotationManager.localUserId ?? "local",
-            tool,
+            tool: draftTool,
             color,
-            width,
-            points: freehand(tool) ? [p] : [p, p],
+            width: draftTool === "highlight" ? HIGHLIGHT_WIDTH : width,
+            points: freehand(draftTool) ? [p] : [p, p],
             text: undefined,
         };
     }
@@ -131,9 +134,9 @@
 
     function movePointer(p: ScreenAnnotationPoint): void {
         const now = Date.now();
-        if (pointerId && now - lastEmit < EMIT_INTERVAL_MS) return;
+        if (pointerId && now - lastPointerEmit < EMIT_INTERVAL_MS) return;
         pointerId ??= screenAnnotationManager.nextElementId();
-        lastEmit = now;
+        lastPointerEmit = now;
         screenAnnotationManager.emitDraft(targetUserId, {
             id: pointerId,
             authorUserId: screenAnnotationManager.localUserId ?? "local",
@@ -162,7 +165,6 @@
     function onPointerMove(event: PointerEvent): void {
         if (inputEnabled && tool === "pointer") {
             movePointer(pointerToNorm(event));
-            return;
         }
         if (!drawing || !draft) {
             return;
@@ -229,11 +231,11 @@
         render();
     });
 
-    // A temporary pen stroke fades out: redraw on every frame while one shows. The canvas's own window paces it:
+    // A highlight fades out: redraw on every frame while one shows. The canvas's own window paces it:
     // in the desktop overlay, the main window may be hidden.
     $effect(() => {
         const view = canvas?.ownerDocument.defaultView;
-        if (!view || locallyHidden || !elements.some((element) => element.tool === "temporaryPen")) {
+        if (!view || locallyHidden || !elements.some((element) => element.tool === "highlight")) {
             return;
         }
         let frame = view.requestAnimationFrame(function redraw() {

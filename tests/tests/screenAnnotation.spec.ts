@@ -25,11 +25,13 @@ async function drawStroke(page: Page, canvas: Locator): Promise<void> {
     await page.mouse.up();
 }
 
-/** Whether anything is painted on the annotation canvas (the count attribute only counts saved elements). */
-async function hasInk(canvas: Locator): Promise<boolean> {
+/** How many pixels are painted on the annotation canvas (the count attribute only counts saved elements). */
+async function inkPixels(canvas: Locator): Promise<number> {
     return canvas.evaluate((element: HTMLCanvasElement) => {
-        const pixels = element.getContext("2d")?.getImageData(0, 0, element.width, element.height).data;
-        return pixels?.some((value, index) => index % 4 === 3 && value > 0) ?? false;
+        const pixels = element.getContext("2d")?.getImageData(0, 0, element.width, element.height).data ?? [];
+        let count = 0;
+        for (let index = 3; index < pixels.length; index += 4) if (pixels[index] > 0) count++;
+        return count;
     });
 }
 
@@ -74,7 +76,6 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bob.getByTestId("annotation-toggle")).toHaveCount(0);
 
         // Alice draws one stroke (drawing mode is already active from the pencil button).
-        await alice.getByTestId("annotation-pen-button").click();
         await alice.getByTestId("annotation-tool-pen").click();
         await drawStroke(alice, aliceCanvas);
 
@@ -176,18 +177,18 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bob.getByTestId("annotation-toolbar")).toHaveCount(0);
     });
 
-    test("A temporary pen stroke shows for a few seconds and is never saved", async ({ browser }) => {
+    test("A drag in pointer mode highlights for a few seconds and is never saved", async ({ browser }) => {
         await using alice = await getPage(
             browser,
             "Alice",
-            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationTemporary"),
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationHighlight"),
         );
         await Map.teleportToPosition(alice, 160, 160);
 
         await using bob = await getPage(
             browser,
             "Bob",
-            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationTemporary"),
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationHighlight"),
         );
         await Map.teleportToPosition(bob, 160, 160);
 
@@ -202,17 +203,16 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
 
         const aliceCanvas = alice.locator("#highlighted-media").getByTestId("annotation-canvas");
         const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
-        await alice.getByTestId("annotation-pen-button").click();
-        await alice.getByTestId("annotation-tool-temporaryPen").click();
+        await alice.getByTestId("annotation-tool-pointer").click();
         await drawStroke(alice, aliceCanvas);
 
-        // Bob sees the stroke, which is not saved...
-        await expect.poll(() => hasInk(bobCanvas), { timeout: 15_000 }).toBe(true);
+        // Bob sees the highlight (far more ink than the pointer alone), which is not saved...
+        await expect.poll(() => inkPixels(bobCanvas), { timeout: 15_000 }).toBeGreaterThan(2000);
         await expect(bobCanvas).toHaveAttribute("data-element-count", "0");
         await expect(aliceCanvas).toHaveAttribute("data-element-count", "0");
 
         // ...and it disappears on both sides a few seconds later.
-        await expect.poll(() => hasInk(bobCanvas), { timeout: 10_000 }).toBe(false);
-        await expect.poll(() => hasInk(aliceCanvas), { timeout: 10_000 }).toBe(false);
+        await expect.poll(() => inkPixels(bobCanvas), { timeout: 10_000 }).toBe(0);
+        await expect.poll(() => inkPixels(aliceCanvas), { timeout: 10_000 }).toBe(0);
     });
 });

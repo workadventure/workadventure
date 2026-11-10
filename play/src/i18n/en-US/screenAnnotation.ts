@@ -7,7 +7,6 @@ const screenAnnotation: BaseTranslation = {
     tools: {
         pointer: "Pointer",
         pen: "Pen",
-        temporaryPen: "Temporary pen",
         line: "Line",
         arrow: "Arrow",
         rect: "Rectangle",

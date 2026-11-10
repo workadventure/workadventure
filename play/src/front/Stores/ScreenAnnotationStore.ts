@@ -10,9 +10,9 @@ import type { ScreenAnnotationElement } from "@workadventure/messages";
  */
 
 // UI tool selection. "pen" | "line" | "arrow" | "rect" | "text" produce drawable elements;
-// "eraser" removes elements; "pointer" only broadcasts an ephemeral position; "temporaryPen" draws a stroke that
-// disappears after a few seconds. The last three are never persisted.
-export const ANNOTATION_TOOLS = ["pointer", "pen", "temporaryPen", "line", "arrow", "rect", "text", "eraser"] as const;
+// "eraser" removes elements; "pointer" shows the cursor to the others, and a drag draws a highlight that fades out.
+// Neither of the last two is persisted.
+export const ANNOTATION_TOOLS = ["pointer", "pen", "line", "arrow", "rect", "text", "eraser"] as const;
 export type AnnotationTool = (typeof ANNOTATION_TOOLS)[number];
 
 export function isAnnotationTool(tool: string): tool is AnnotationTool {
@@ -29,8 +29,6 @@ export const screenAnnotationEnabledStore = writable<Map<string, boolean>>(new M
 
 // Local tool selection (the local user has a single active tool, shared across targets).
 export const currentAnnotationToolStore = writable<AnnotationTool>("pen");
-// The pen the toolbar's pen button selects: the last one picked in its menu.
-export const lastPenToolStore = writable<Extract<AnnotationTool, "pen" | "temporaryPen">>("pen");
 export const currentAnnotationColorStore = writable<string>("#ff3b30");
 // Stroke width normalized against the smallest side of the visible video area.
 export const currentAnnotationWidthStore = writable<number>(0.005);

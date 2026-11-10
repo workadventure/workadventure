@@ -48,7 +48,7 @@ export function distanceToSegment(
 /** True when the normalized point `p` is within {@link HIT_THRESHOLD} of the element (for erasing). */
 export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoint, aspect: number): boolean {
     // The eraser goes through what disappears on its own.
-    if (element.tool === "pointer" || element.tool === "temporaryPen") return false;
+    if (element.tool === "pointer" || element.tool === "highlight") return false;
     const points = element.points;
     if (points.length === 0) {
         return false;
@@ -95,6 +95,14 @@ export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoi
  * caller only needs to size the canvas correctly (including devicePixelRatio).
  */
 export function drawElement(ctx: CanvasRenderingContext2D, element: ScreenAnnotationElement): void {
+    if (element.tool === "highlight") {
+        // A highlighter stroke: translucent, so what it covers stays readable.
+        ctx.save();
+        ctx.globalAlpha *= 0.4;
+        drawElement(ctx, { ...element, tool: "pen" });
+        ctx.restore();
+        return;
+    }
     const w = ctx.canvas.width;
     const h = ctx.canvas.height;
     const minSide = Math.min(w, h);

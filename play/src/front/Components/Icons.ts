@@ -22,7 +22,6 @@ export { default as IconAt } from "~icons/tabler/at";
 export { default as IconThumbUp } from "~icons/tabler/thumb-up";
 export { default as IconMoodSmile } from "~icons/tabler/mood-smile";
 export { default as IconPencil } from "~icons/tabler/pencil";
-export { default as IconHighlight } from "~icons/tabler/highlight";
 export { default as IconTrash } from "~icons/tabler/trash";
 export { default as IconSend } from "~icons/tabler/send";
 export { default as IconPhotoOff } from "~icons/tabler/photo-off";

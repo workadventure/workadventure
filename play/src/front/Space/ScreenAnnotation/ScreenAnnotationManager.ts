@@ -19,13 +19,13 @@ type DraftOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
 /** A reversible local-user action for the undo / redo history: a drawn stroke, or an erased one. */
 type UndoOp = { kind: "add" | "remove"; element: ScreenAnnotationElement };
 
-// A temporary pen stroke shows for 3 s after its last change, then fades out in 1.5 s.
-const TEMPORARY_PEN_HOLD_MS = 3000;
-const TEMPORARY_PEN_FADE_MS = 1500;
+// A highlight (a drag in pointer mode) shows for 3 s after its last change, then fades out in 1.5 s.
+const HIGHLIGHT_HOLD_MS = 3000;
+const HIGHLIGHT_FADE_MS = 1500;
 // Drafts that are never saved: how long each shows after its last change.
 const TRANSIENT_LIFETIMES = new Map([
     ["pointer", 1500],
-    ["temporaryPen", TEMPORARY_PEN_HOLD_MS + TEMPORARY_PEN_FADE_MS],
+    ["highlight", HIGHLIGHT_HOLD_MS + HIGHLIGHT_FADE_MS],
 ]);
 
 /**
@@ -46,7 +46,7 @@ class ScreenAnnotationManager {
     private elementCounter = 0;
     private annotations: SpaceState["annotations"] = {};
     // Per target, the element each other member is drawing (keyed by author: one draft each at most), and the
-    // temporary pen strokes, ours included (keyed by author and element id: several show until they expire).
+    // highlights, ours included (keyed by author and element id: several show until they expire).
     private drafts = new Map<string, Map<string, ScreenAnnotationElement>>();
     // Per-target undo / redo history of the LOCAL user's reversible actions (draw a stroke / erase
     // one). undo reverses the last op, redo re-applies it; a fresh action clears the redo side.
@@ -57,7 +57,7 @@ class ScreenAnnotationManager {
     // Ids of the elements we asked the back to erase: any other that leaves the state was erased by someone else.
     private erasing = new Set<string>();
     private expirations = new Map<string, ReturnType<typeof setTimeout>>();
-    // When each draft shown last changed: a temporary pen stroke fades out from it.
+    // When each draft shown last changed: a highlight fades out from it.
     private shownAt = new WeakMap<ScreenAnnotationElement, number>();
 
     private clearExpiry(target: string, key: string): void {
@@ -211,7 +211,7 @@ class ScreenAnnotationManager {
                     return;
                 }
                 // Keyed by sender too: the id comes from the sender, it must not replace another user's draft.
-                this.showDraft(target, draft.tool === "temporaryPen" ? JSON.stringify([sender, draft.id]) : sender, {
+                this.showDraft(target, draft.tool === "highlight" ? JSON.stringify([sender, draft.id]) : sender, {
                     ...draft,
                     authorUserId: sender,
                 });
@@ -230,7 +230,7 @@ class ScreenAnnotationManager {
         this.publish();
     }
 
-    /** Shows a draft. A transient one (pointer, temporary pen) goes away on its own once it stops changing. */
+    /** Shows a draft. A transient one (pointer, highlight) goes away on its own once it stops changing. */
     private showDraft(target: string, key: string, draft: ScreenAnnotationElement): void {
         const drafts = this.drafts.get(target) ?? new Map<string, ScreenAnnotationElement>();
         this.drafts.set(target, drafts);
@@ -251,14 +251,14 @@ class ScreenAnnotationManager {
         }
     }
 
-    /** How opaque to draw an element: a temporary pen stroke fades out before it disappears. */
+    /** How opaque to draw an element: a highlight fades out before it disappears. */
     public opacity(element: ScreenAnnotationElement): number {
         const shownAt = this.shownAt.get(element);
-        if (element.tool !== "temporaryPen" || shownAt === undefined) {
+        if (element.tool !== "highlight" || shownAt === undefined) {
             return 1;
         }
-        const fadeEnd = shownAt + TEMPORARY_PEN_HOLD_MS + TEMPORARY_PEN_FADE_MS;
-        return Math.min(1, Math.max(0, (fadeEnd - Date.now()) / TEMPORARY_PEN_FADE_MS));
+        const fadeEnd = shownAt + HIGHLIGHT_HOLD_MS + HIGHLIGHT_FADE_MS;
+        return Math.min(1, Math.max(0, (fadeEnd - Date.now()) / HIGHLIGHT_FADE_MS));
     }
 
     private publish(): void {
@@ -308,7 +308,7 @@ class ScreenAnnotationManager {
     /** Commits a finished element (or a new version of one of ours). */
     public upsertElement(targetUserId: string, element: ScreenAnnotationElement): void {
         if (element.tool === "pointer") return;
-        if (element.tool === "temporaryPen") {
+        if (element.tool === "highlight") {
             // Never saved nor undoable: its last version shows everywhere, ours included, until it expires.
             this.emitDraft(targetUserId, element);
             this.showDraft(targetUserId, JSON.stringify([element.authorUserId, element.id]), element);

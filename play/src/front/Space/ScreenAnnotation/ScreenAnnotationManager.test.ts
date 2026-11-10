@@ -215,10 +215,10 @@ describe("ScreenAnnotationManager", () => {
         expect(stateManager.upsertScreenAnnotation).toHaveBeenCalledWith(PRESENTER, element("first", ME));
     });
 
-    it("shows every temporary stroke for a few seconds, ours included, and never saves it", () => {
+    it("shows every highlight for a few seconds, ours included, and never saves it", () => {
         vi.useFakeTimers();
         setState(true);
-        const stroke = { ...element("t1", "viewer"), tool: "temporaryPen" };
+        const stroke = { ...element("t1", "viewer"), tool: "highlight" };
         sendDraft("viewer", stroke);
         sendDraft("viewer", { ...stroke, id: "t2" });
         expect(elementIds()).toEqual(["t1", "t2"]);
@@ -231,7 +231,7 @@ describe("ScreenAnnotationManager", () => {
         vi.advanceTimersByTime(751);
         expect(elementIds()).toEqual([]);
 
-        const mine = { ...element("mine", ME), tool: "temporaryPen" };
+        const mine = { ...element("mine", ME), tool: "highlight" };
         screenAnnotationManager.upsertElement(PRESENTER, mine);
         expect(emitPublicMessage).toHaveBeenCalledWith({
             $case: "screenAnnotation",
