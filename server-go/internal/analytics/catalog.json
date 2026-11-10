@@ -2762,34 +2762,7 @@
    "additionalProperties": true
   }
  },
- "global_audio.opened": {
-  "source": "front",
-  "properties": {
-   "type": "object",
-   "properties": {},
-   "additionalProperties": true
-  }
- },
  "global_message.opened": {
-  "source": "front",
-  "properties": {
-   "type": "object",
-   "properties": {
-    "source": {
-     "type": "string",
-     "enum": [
-      "menu",
-      "action_bar"
-     ]
-    }
-   },
-   "required": [
-    "source"
-   ],
-   "additionalProperties": true
-  }
- },
- "global_message.sound_sent": {
   "source": "front",
   "properties": {
    "type": "object",

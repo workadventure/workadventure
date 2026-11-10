@@ -141,6 +141,39 @@ const SpaceKindMegaphone SpaceKind = "megaphone"
 const SpaceKindSpeakerZone SpaceKind = "speaker_zone"
 
 type SpaceState struct {
+	// Annotations corresponds to the JSON schema field "annotations".
+	Annotations map[string]struct {
+		// Elements corresponds to the JSON schema field "elements".
+		Elements map[string]struct {
+			// At corresponds to the JSON schema field "at".
+			At int `json:"at"`
+
+			// AuthorUserID corresponds to the JSON schema field "authorUserId".
+			AuthorUserID string `json:"authorUserId"`
+
+			// Color corresponds to the JSON schema field "color".
+			Color string `json:"color"`
+
+			// ID corresponds to the JSON schema field "id".
+			ID string `json:"id"`
+
+			// Points corresponds to the JSON schema field "points".
+			Points []SpaceStateAnnotationsValueElementsValuePointsElem `json:"points"`
+
+			// Text corresponds to the JSON schema field "text".
+			Text *string `json:"text,omitempty,omitzero"`
+
+			// Tool corresponds to the JSON schema field "tool".
+			Tool SpaceStateAnnotationsValueElementsValueTool `json:"tool"`
+
+			// Width corresponds to the JSON schema field "width".
+			Width float64 `json:"width"`
+		} `json:"elements"`
+
+		// OthersAllowed corresponds to the JSON schema field "othersAllowed".
+		OthersAllowed bool `json:"othersAllowed"`
+	} `json:"annotations,omitempty,omitzero"`
+
 	// FloorHolders corresponds to the JSON schema field "floorHolders".
 	FloorHolders []FloorHolderEntry `json:"floorHolders"`
 
@@ -159,3 +192,19 @@ type SpaceState struct {
 	// Recording corresponds to the JSON schema field "recording".
 	Recording RecordingState `json:"recording"`
 }
+
+type SpaceStateAnnotationsValueElementsValuePointsElem struct {
+	// X corresponds to the JSON schema field "x".
+	X float64 `json:"x"`
+
+	// Y corresponds to the JSON schema field "y".
+	Y float64 `json:"y"`
+}
+
+type SpaceStateAnnotationsValueElementsValueTool string
+
+const SpaceStateAnnotationsValueElementsValueToolArrow SpaceStateAnnotationsValueElementsValueTool = "arrow"
+const SpaceStateAnnotationsValueElementsValueToolLine SpaceStateAnnotationsValueElementsValueTool = "line"
+const SpaceStateAnnotationsValueElementsValueToolPen SpaceStateAnnotationsValueElementsValueTool = "pen"
+const SpaceStateAnnotationsValueElementsValueToolRect SpaceStateAnnotationsValueElementsValueTool = "rect"
+const SpaceStateAnnotationsValueElementsValueToolText SpaceStateAnnotationsValueElementsValueTool = "text"

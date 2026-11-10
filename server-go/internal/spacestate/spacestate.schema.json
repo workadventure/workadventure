@@ -33,6 +33,95 @@
           "additionalProperties": {
             "$ref": "#/definitions/ProximityQuestion"
           }
+        },
+        "annotations": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "othersAllowed": {
+                "type": "boolean"
+              },
+              "elements": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLengthUTF16": 1,
+                      "maxLengthUTF16": 200
+                    },
+                    "authorUserId": {
+                      "type": "string",
+                      "minLengthUTF16": 1
+                    },
+                    "tool": {
+                      "type": "string",
+                      "enum": [
+                        "pen",
+                        "line",
+                        "arrow",
+                        "rect",
+                        "text"
+                      ]
+                    },
+                    "color": {
+                      "type": "string",
+                      "minLengthUTF16": 1,
+                      "maxLengthUTF16": 32
+                    },
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0,
+                      "maximum": 0.05
+                    },
+                    "points": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "x": {
+                            "type": "number"
+                          },
+                          "y": {
+                            "type": "number"
+                          }
+                        },
+                        "required": [
+                          "x",
+                          "y"
+                        ]
+                      },
+                      "minItems": 1,
+                      "maxItems": 5000
+                    },
+                    "text": {
+                      "type": "string",
+                      "maxLengthUTF16": 500
+                    },
+                    "at": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "authorUserId",
+                    "tool",
+                    "color",
+                    "width",
+                    "points",
+                    "at"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "othersAllowed",
+              "elements"
+            ]
+          },
+          "default": {}
         }
       },
       "required": [
