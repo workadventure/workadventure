@@ -27,6 +27,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "載入中...",
     typing: "正在輸入...",
+    typingIndicator: {
+        one: "{names} 正在輸入",
+        several: "{names} 正在輸入",
+        others: "另外 {count} 人",
+        someone: "有人",
+        row: "{name} 正在輸入…",
+        rowSeveral: "{count} 人正在輸入…",
+        direct: "正在輸入…",
+    },
     users: "使用者",
     chat: "聊天",
     resizeChat: "調整聊天大小（方向鍵調整，Enter 切換全螢幕）",
@@ -75,6 +84,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "邀請",
     roomInvitation: {
         notification: "您已被邀請加入房間 {roomName}",
+        direct: "私訊",
+        room: "房間",
+        folder: "資料夾",
+        invitedBy: "由 {name} 邀請",
+        notificationFrom: "{inviter} 邀請您加入房間 {roomName}",
+        notificationDirect: "{name} 想和您聊天",
         notificationTitle: "新邀請",
         unknownRoom: "一個房間",
     },
@@ -139,6 +154,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{count} 則新訊息",
         jumpToLatest: "跳到最新訊息",
         unreadDivider: "新訊息",
+        loadingMessages: "正在載入訊息…",
+        loadError: "無法載入訊息",
     },
     form: {
         placeholder: "輸入您的訊息...",
@@ -378,7 +395,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "推薦房間",
         suggestedDescription: "此房間將推薦給加入同一空間的使用者。",
-        users: "使用者",
         historyVisibility: {
             label: "先前訊息的可見性",
             world_readable: "所有訊息都可見",
@@ -455,12 +471,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "參與者",
         error: "無法傳送邀請",
-        title: "管理參與者",
-        invitations: "邀請",
         participants: "參與者",
-        join: "已加入",
         invite: "已邀請",
         ban: "已封鎖",
         kick: "已踢出",
@@ -476,7 +488,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "解除封鎖",
             invite: "邀請",
             cancelInvitation: "取消邀請",
-            close: "關閉",
         },
         roles: {
             USER: "使用者",
@@ -512,6 +523,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "已加密",
             notEncrypted: "未加密",
             readOnly: "唯讀",
+            copyRoomId: "複製房間 ID",
         },
         settings: {
             roomType: "房間類型",
@@ -572,6 +584,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "無法載入投票。請重試。",
         pollsPartial: "部分投票無法載入其詳細結果。",
         pollFocusError: "無法在時間軸中開啟此投票。",
+        closeFolderMembers: "關閉資料夾成員",
+        folderMembersHint: "資料夾成員可以加入其中對成員開放的房間。",
     },
     roomMenu: {
         leaveRoom: {

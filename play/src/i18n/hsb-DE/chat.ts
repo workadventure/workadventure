@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "so natwari...",
     typing: "tipuje...",
+    typingIndicator: {
+        one: "{names} pisa",
+        several: "{names} pisaja",
+        others: "{count} dalši",
+        someone: "Něchtó",
+        row: "{name} pisa…",
+        rowSeveral: "{count} ludźo pisaja…",
+        direct: "pisa…",
+    },
     users: "wužiwar",
     chat: "Chat",
     resizeChat: "Wulkosć chata změnić (šipki za změnjenje, Enter za połnu wobrazowku)",
@@ -77,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Přeprošenja",
     roomInvitation: {
         notification: "Sy bu do ruma {roomName} přeprošony",
+        direct: "Priwatna rozmołwa",
+        room: "Rum",
+        folder: "Rjadowak",
+        invitedBy: "přeprošeny wot {name}",
+        notificationFrom: "{inviter} je was do ruma {roomName} přeprosył",
+        notificationDirect: "{name} chce z wami chatować",
         notificationTitle: "Nowe přeprošenje",
         unknownRoom: "Rum",
     },
@@ -141,6 +156,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "Nowe powěsće: {count}",
         jumpToLatest: "K najnowšim powěsćam",
         unreadDivider: "Nowe powěsće",
+        loadingMessages: "Powěsće so začituja…",
+        loadError: "Powěsće njedachu so začitać",
     },
     form: {
         placeholder: "Zapodaj swoju powěsć...",
@@ -380,7 +397,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Doporuceny rum",
         suggestedDescription: "Tutón rum so doporucuje wužiwarjam, kotrež so přizamknuja k samemu rumnjej.",
-        users: "Wužiwarjo",
         historyVisibility: {
             label: "Štó móže historiju čitać",
             world_readable: "Kóždy",
@@ -457,13 +473,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Wobdźělnicy",
         error: "Njemóžno, přeprošenja pósłać",
-        title: "Wobdźělnikow zastojować",
-        invitations: "Přeprošenja",
         participants: "Wobdźělnicy",
         roomID: "ID ruma: {roomId}",
-        join: "Přitomny",
         invite: "Přeprošeny",
         ban: "Zablokowany",
         kick: "Wuzamknyć",
@@ -478,7 +490,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Deblokować",
             invite: "Přeprosyć",
             cancelInvitation: "Přeprošenje anulować",
-            close: "Začinić",
         },
         roles: {
             USER: "Wužiwar",
@@ -514,6 +525,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Zaklučowany",
             notEncrypted: "Njezaklučowany",
             readOnly: "Jenož čitać",
+            copyRoomId: "ID rumy kopěrować",
         },
         settings: {
             roomType: "Družina rumnosće",
@@ -574,6 +586,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Wothłosowanja njeda so čitać. Prošu spytajće hišće raz.",
         pollsPartial: "Za někotre wothłosowanja njebuchu so jich detelnje wuslědki čitać.",
         pollFocusError: "Tute wothłosowanje njeda so w časowej lince wočinić.",
+        closeFolderMembers: "Čłonow zarjadnika začinić",
+        folderMembersHint: "Čłonojo zarjadnika móža do jeho rumow zastupić, kotrež su za čłonow wotewrjene.",
     },
     roomMenu: {
         leaveRoom: {

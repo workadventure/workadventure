@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "불러오는 중...",
     typing: "입력 중...",
+    typingIndicator: {
+        one: "{names} 님이 입력 중",
+        several: "{names} 님이 입력 중",
+        others: "외 {count}명",
+        someone: "누군가",
+        row: "{name} 님이 입력 중…",
+        rowSeveral: "{count}명이 입력 중…",
+        direct: "입력 중…",
+    },
     users: "사용자",
     chat: "채팅",
     resizeChat: "채팅 크기 조정 (화살표 키로 조정, Enter로 전체 화면)",
@@ -76,6 +85,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "초대",
     roomInvitation: {
         notification: "방 {roomName}에 초대되었습니다",
+        direct: "개인 메시지",
+        room: "방",
+        folder: "폴더",
+        invitedBy: "{name}님의 초대",
+        notificationFrom: "{inviter}님이 방 {roomName}에 초대했습니다",
+        notificationDirect: "{name}님이 대화를 원합니다",
         notificationTitle: "새 초대",
         unknownRoom: "방",
     },
@@ -141,6 +156,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "새 메시지 {count}개",
         jumpToLatest: "최신 메시지로 이동",
         unreadDivider: "새 메시지",
+        loadingMessages: "메시지를 불러오는 중…",
+        loadError: "메시지를 불러올 수 없습니다",
     },
     form: {
         placeholder: "메시지를 입력하세요...",
@@ -381,7 +398,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "추천 방",
         suggestedDescription: "이 방은 같은 스페이스에 있는 사용자에게 추천됩니다.",
-        users: "사용자",
         historyVisibility: {
             label: "이전 메시지의 가시성",
             world_readable: "모든 메시지가 보입니다",
@@ -458,12 +474,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "참가자",
         error: "초대를 보낼 수 없습니다",
-        title: "참가자 관리",
-        invitations: "초대",
         participants: "참가자",
-        join: "참가함",
         invite: "초대됨",
         ban: "차단됨",
         kick: "내보냄",
@@ -479,7 +491,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "차단 해제",
             invite: "초대",
             cancelInvitation: "초대 취소",
-            close: "닫기",
         },
         roles: {
             USER: "사용자",
@@ -515,6 +526,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "암호화됨",
             notEncrypted: "암호화되지 않음",
             readOnly: "읽기 전용",
+            copyRoomId: "방 ID 복사",
         },
         settings: {
             roomType: "룸 유형",
@@ -575,6 +587,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "투표를 불러올 수 없습니다. 다시 시도하세요.",
         pollsPartial: "일부 투표에서 상세 결과를 불러오지 못했습니다.",
         pollFocusError: "타임라인에서 이 투표를 열 수 없습니다.",
+        closeFolderMembers: "폴더 멤버 닫기",
+        folderMembersHint: "폴더 멤버는 멤버에게 공개된 폴더의 방에 참여할 수 있습니다.",
     },
     roomMenu: {
         leaveRoom: {

@@ -1,0 +1,23 @@
+// The generators run the TypeScript sources of this checkout. Without this file, `@workadventure/*` resolves through
+// the node_modules links of whichever checkout holds node_modules (a worktree has none: the main checkout's libs,
+// another commit). Here the workspace packages point at the libs of this repository, as `npm ci` links them in CI.
+{
+  "extends": "../../play/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@wa-icons": ["../../play/src/front/Components/Icons.ts"],
+      "@wa-modals": ["../../play/src/front/Components/Modal/modalManager.ts"],
+      "@workadventure/map-editor": ["../../libs/map-editor/src/index.ts"],
+      "@workadventure/map-editor/*": ["../../libs/map-editor/*"],
+      "@workadventure/math-utils": ["../../libs/math-utils/src/index.ts"],
+      "@workadventure/math-utils/*": ["../../libs/math-utils/*"],
+      "@workadventure/messages": ["../../libs/messages/src/index.ts"],
+      "@workadventure/messages/*": ["../../libs/messages/*"],
+      "@workadventure/shared-utils": ["../../libs/shared-utils/src/index.ts"],
+      "@workadventure/shared-utils/*": ["../../libs/shared-utils/*"],
+      "@workadventure/store-utils": ["../../libs/store-utils/src/index.ts"],
+      "@workadventure/store-utils/*": ["../../libs/store-utils/*"]
+    }
+  }
+}

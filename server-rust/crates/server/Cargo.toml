@@ -1,0 +1,56 @@
+[package]
+name = "wa-server"
+description = "The WorkAdventure server: pusher, back, map-storage and uploader in one process."
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[[bin]]
+name = "workadventure-server"
+path = "src/main.rs"
+
+[dependencies]
+wa-core.workspace = true
+# OpenID: id_token signatures (JWKS) and the sealed PKCE cookie, on the crypto rustls already uses.
+jsonwebtoken = { version = "10", default-features = false, features = ["aws_lc_rs"] }
+aws-lc-rs = "1"
+# The recordings bucket, with the SDK the team knows (path-style, any S3-compatible endpoint).
+aws-sdk-s3 = { version = "1", default-features = false, features = ["rt-tokio", "default-https-client", "sigv4a"] }
+# LiveKit: participant tokens, rooms, egress and webhooks, with the SDK LiveKit publishes.
+livekit-api = { version = "0.9", default-features = false, features = ["services", "access-token", "webhooks", "rustls-tls-native-roots"] }
+livekit-protocol = "0.8"
+aws-credential-types = { version = "1", features = ["hardcoded-credentials"] }
+wa-proto.workspace = true
+axum.workspace = true
+base64 = "0.22"
+bytes.workspace = true
+dashmap.workspace = true
+form_urlencoded = "1"
+percent-encoding = "2"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+hmac = "0.13"
+parking_lot.workspace = true
+prometheus.workspace = true
+prost.workspace = true
+prost-types = "0.14"
+# TLS for the sites the editor embeds (embeddableWebsiteQuery) and, later, the admin API and OIDC providers.
+reqwest = { version = "0.13", default-features = false, features = ["stream", "json", "query", "rustls"] }
+serde.workspace = true
+serde_json.workspace = true
+sha1 = "0.11"
+sha2 = "0.11"
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+uuid = { version = "1", features = ["v4"] }
+zip = { version = "9", default-features = false, features = ["deflate"] }
+redis = { version = "1.7.1", default-features = false, features = ["tokio-comp", "connection-manager"] }
+tonic = { version = "0.14.6", default-features = false, features = ["server", "router"] }
+
+[dev-dependencies]
+wa-bot = { path = "../bot" }
+tokio-tungstenite = "0.29"
+
+[lints]
+workspace = true

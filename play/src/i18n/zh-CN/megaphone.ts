@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "发送文本消息",
             noAccess: "您无权访问此功能 😱 请联系管理员 🙏",
         },
-        audioMessage: {
-            title: "音频消息",
-            notice: `
-            音频消息是发送给房间或世界中所有连接用户的"MP3, OGG..."类型的消息。
-
-            此音频消息将被下载并播放给所有收到此通知的人员。
-
-            音频消息可以包含一个音频录音，指示会议将在几分钟后开始。
-            `,
-            button: "发送音频消息",
-            noAccess: "您无权访问此功能 😱 请联系管理员 🙏",
-        },
     },
 };
 

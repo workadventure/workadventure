@@ -57,6 +57,7 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
         screenSharingConstraintsStore: writable({ video: false, audio: false }),
         screenSharingAvailableStore: writable(false),
         screenSharingLocalVideoBox: writable(undefined),
+        activeScreenShareSourceStore: writable(undefined),
         screenShareQualityStore: {
             subscribe: writable("recommended").subscribe,
             setQuality: vi.fn(),

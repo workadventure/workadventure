@@ -1,0 +1,178 @@
+//! The map editor's own files: custom entities (CustomEntityCollectionService: images under
+//! `assets/entities/`, listed in `assets/entities/entities.json`, which the front loads) and the files of
+//! openFile and playAudio properties (CustomFileService: `private/files/` for documents, `assets/sounds/` for
+//! sounds). All of them live in the map's world folder (`dir`, empty without USE_DOMAIN_NAME_IN_PATH), where
+//! map-storage serves them for that world's host.
+
+use serde_json::{Value, json};
+use wa_core::wam::{Editor, FileKind, uploaded_file_path};
+use wa_proto::messages as pb;
+
+use crate::map_storage::Storage;
+use crate::wire;
+
+const COLLECTION: &str = "assets/entities/entities.json";
+
+fn empty_collection() -> Value {
+    json!({"version": "1.0", "collection": [], "collectionName": "custom entities", "tags": []})
+}
+
+fn basename(path: &str) -> &str {
+    path.rsplit(['/', '\\']).next().unwrap_or(path)
+}
+
+fn extension_in(name: &str, allowed: &[&str]) -> bool {
+    name.rsplit_once('.').is_some_and(|(_, ext)| allowed.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
+/// Where a link points to, as a decoded path.
+pub fn link_path(link: &str) -> String {
+    let rest = link.split_once("://").map_or(link, |(_, r)| r);
+    let path = rest.find('/').map_or("", |i| &rest[i..]);
+    let path = path.split(['?', '#']).next().unwrap_or(path);
+    percent_encoding::percent_decode_str(path).decode_utf8_lossy().into_owned()
+}
+
+/// copySharedFile: a copied property still links to the file uploaded for the property it was copied from (files
+/// are named after the property id). Gives it its own copy of that file, so that deleting or replacing one of them
+/// leaves the other alone, and returns the property with the link to the copy; None when it already owns its file.
+pub async fn copy_shared_file(storage: &Storage, dir: &str, property: &Value) -> Option<Value> {
+    let (name, kind) = wa_core::wam::uploaded_file(property)?;
+    let field = if property["type"] == "openFile" { "link" } else { "audioLink" };
+    let link = property[field].as_str().filter(|l| !l.is_empty())?;
+    let id = property["id"].as_str()?;
+    let (stem, ext) = basename(name).rsplit_once('.')?;
+    let linked = basename(&link_path(link)).to_owned();
+    let linked_id = linked.strip_prefix(&format!("{stem}-"))?.strip_suffix(&format!(".{ext}"))?;
+    if linked_id == id {
+        return None;
+    }
+    let from = wa_core::wam::uploaded_file_path(name, linked_id, kind).ok()?;
+    let to = wa_core::wam::uploaded_file_path(name, id, kind).ok()?;
+    let mut url = reqwest::Url::parse(link).ok()?;
+    url.path_segments_mut().ok()?.pop().push(&format!("{stem}-{id}.{ext}"));
+    let Some(bytes) = storage.read(&format!("{dir}{from}")).await else {
+        tracing::warn!(%from, "the file of a copied property is missing");
+        return None;
+    };
+    if let Err(e) = storage.put_asset(format!("{dir}{to}"), bytes).await {
+        tracing::error!(%to, error = %e, "could not copy the file of a copied property");
+        return None;
+    }
+    let mut copied = property.clone();
+    copied[field] = Value::String(url.to_string());
+    Some(copied)
+}
+
+/// `uploadEntityMessage`: anyone may add one; its owner is the sender (set by the caller).
+pub async fn upload(storage: &Storage, dir: &str, m: &pb::UploadEntityMessage) -> Result<(), String> {
+    let image = basename(&m.image_path).to_owned();
+    if !extension_in(&image, &["jpg", "jpeg", "png", "webp"]) {
+        return Err(format!("Invalid image extension for {image}"));
+    }
+    storage.put_asset(format!("{dir}assets/entities/{image}"), m.file.to_vec()).await.map_err(|e| e.to_string())?;
+    let direction = ["Up", "Right", "Down", "Left"].get(m.direction as usize).copied().unwrap_or("Down");
+    let mut entry = json!({
+        "id": m.id, "name": m.name, "tags": m.tags, "imagePath": m.image_path,
+        "direction": direction, "color": m.color, "ownerId": m.owner_id,
+    });
+    if let Some(grid) = &m.collision_grid {
+        entry["collisionGrid"] = wire::json_from(grid);
+    }
+    if let Some(depth) = m.depth_offset {
+        entry["depthOffset"] = depth.into();
+    }
+    storage
+        .update_json(&format!("{dir}{COLLECTION}"), empty_collection(), move |c| {
+            let list = c["collection"].as_array_mut().ok_or("Invalid custom entity collection")?;
+            list.retain(|e| e["id"] != entry["id"]);
+            list.push(entry);
+            Ok(())
+        })
+        .await
+}
+
+/// canUserEditCustomEntity: an editor, or the one who uploaded it.
+fn allowed(entry: &Value, editor: Editor<'_>) -> Result<(), String> {
+    if editor.can_edit || entry["ownerId"].as_str().is_some_and(|o| o == editor.uuid) {
+        Ok(())
+    } else {
+        Err(format!("User {} is not allowed to edit this custom entity", editor.uuid))
+    }
+}
+
+pub async fn modify(
+    storage: &Storage,
+    dir: &str,
+    m: &pb::ModifyCustomEntityMessage,
+    editor: Editor<'_>,
+) -> Result<(), String> {
+    let (id, name, tags) = (m.id.clone(), m.name.clone(), m.tags.clone());
+    let grid = m.collision_grid.as_ref().map(wire::json_from);
+    let depth = m.depth_offset;
+    let (can_edit, uuid) = (editor.can_edit, editor.uuid.to_owned());
+    storage
+        .update_json(&format!("{dir}{COLLECTION}"), empty_collection(), move |c| {
+            let entry = c["collection"]
+                .as_array_mut()
+                .and_then(|l| l.iter_mut().find(|e| e["id"] == id.as_str()))
+                .ok_or(format!("Custom entity {id} not found"))?;
+            allowed(entry, Editor { uuid: &uuid, tags: &[], can_edit })?;
+            entry["name"] = name.into();
+            entry["tags"] = tags.into();
+            // Replaced, so an unset grid erases it (CustomEntityCollectionService.modifyEntity).
+            match grid {
+                Some(g) => entry["collisionGrid"] = g,
+                None => drop(entry.as_object_mut().and_then(|e| e.remove("collisionGrid"))),
+            }
+            match depth {
+                Some(d) => entry["depthOffset"] = d.into(),
+                None => drop(entry.as_object_mut().and_then(|e| e.remove("depthOffset"))),
+            }
+            Ok(())
+        })
+        .await
+}
+
+/// Removes the entry and its image; the caller removes the map's entities made from it.
+pub async fn delete(storage: &Storage, dir: &str, id: &str, editor: Editor<'_>) -> Result<(), String> {
+    let (id, can_edit, uuid) = (id.to_owned(), editor.can_edit, editor.uuid.to_owned());
+    let image = storage
+        .update_json(&format!("{dir}{COLLECTION}"), empty_collection(), move |c| {
+            let list = c["collection"].as_array_mut().ok_or("Invalid custom entity collection")?;
+            let i = list.iter().position(|e| e["id"] == id.as_str()).ok_or(format!("Custom entity {id} not found"))?;
+            allowed(&list[i], Editor { uuid: &uuid, tags: &[], can_edit })?;
+            let entry = list.remove(i);
+            Ok(entry["imagePath"].as_str().map(|p| basename(p).to_owned()))
+        })
+        .await?;
+    if let Some(image) = image {
+        storage.remove_asset(&format!("{dir}assets/entities/{image}")).await;
+    }
+    Ok(())
+}
+
+/// `uploadFileMessage`: the file of an openFile or playAudio property, as `<folder>/<name>-<propertyId><ext>` in
+/// the folder of the kind the client says it is. A kind this version does not know is refused.
+pub async fn upload_file(storage: &Storage, dir: &str, m: &pb::UploadFileMessage) -> Result<(), String> {
+    let kind = match pb::UploadedFileKind::try_from(m.kind) {
+        Ok(pb::UploadedFileKind::Document) => FileKind::Document,
+        Ok(pb::UploadedFileKind::Sound) => FileKind::Sound,
+        Err(_) => return Err(format!("Unknown kind {} for the file \"{}\"", m.kind, m.name)),
+    };
+    let path = uploaded_file_path(&m.name, &m.property_id, kind)?;
+    storage.put_asset(format!("{dir}{path}"), m.file.to_vec()).await.map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn links_become_storage_paths() {
+        assert_eq!(link_path("http://maps.test:8880/private/files/a%20b-1.pdf?x=1"), "/private/files/a b-1.pdf");
+        assert_eq!(basename("dir/img.PNG"), "img.PNG");
+        assert!(extension_in("img.PNG", &["png"]));
+        assert!(!extension_in("img.exe", &["png"]));
+    }
+}

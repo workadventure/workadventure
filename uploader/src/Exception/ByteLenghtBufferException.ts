@@ -1,1 +1,0 @@
-export class ByteLenghtBufferException extends Error {}

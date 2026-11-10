@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "กำลังโหลด...",
     typing: "กำลังพิมพ์...",
+    typingIndicator: {
+        one: "{names} กำลังพิมพ์",
+        several: "{names} กำลังพิมพ์",
+        others: "อีก {count} คน",
+        someone: "ใครบางคน",
+        row: "{name} กำลังพิมพ์…",
+        rowSeveral: "{count} คนกำลังพิมพ์…",
+        direct: "กำลังพิมพ์…",
+    },
     users: "ผู้ใช้",
     chat: "แชท",
     resizeChat: "ปรับขนาดแชท (ปุ่มลูกศรเพื่อปรับขนาด, Enter เพื่อเต็มหน้าจอ)",
@@ -77,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "คำเชิญ",
     roomInvitation: {
         notification: "คุณได้รับเชิญเข้าห้อง {roomName}",
+        direct: "ข้อความส่วนตัว",
+        room: "ห้อง",
+        folder: "โฟลเดอร์",
+        invitedBy: "เชิญโดย {name}",
+        notificationFrom: "{inviter} เชิญคุณเข้าห้อง {roomName}",
+        notificationDirect: "{name} ต้องการแชทกับคุณ",
         notificationTitle: "คำเชิญใหม่",
         unknownRoom: "ห้องหนึ่ง",
     },
@@ -141,6 +156,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "ข้อความใหม่ {count} ข้อความ",
         jumpToLatest: "ไปที่ข้อความล่าสุด",
         unreadDivider: "ข้อความใหม่",
+        loadingMessages: "กำลังโหลดข้อความ…",
+        loadError: "ไม่สามารถโหลดข้อความได้",
     },
     form: {
         placeholder: "พิมพ์ข้อความของคุณ...",
@@ -380,7 +397,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "ห้องแนะนำ",
         suggestedDescription: "ห้องนี้จะถูกแนะนำให้กับผู้ใช้ที่อยู่ในสเปซเดียวกัน",
-        users: "ผู้ใช้",
         historyVisibility: {
             label: "การมองเห็นข้อความก่อนหน้า",
             world_readable: "ข้อความทั้งหมดมองเห็นได้",
@@ -457,12 +473,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "ผู้เข้าร่วม",
         error: "ไม่สามารถส่งคำเชิญได้",
-        title: "จัดการผู้เข้าร่วม",
-        invitations: "คำเชิญ",
         participants: "ผู้เข้าร่วม",
-        join: "เข้าร่วมแล้ว",
         invite: "เชิญแล้ว",
         ban: "ถูกแบน",
         kick: "ถูกเชิญออก",
@@ -478,7 +490,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "เลิกแบน",
             invite: "เชิญ",
             cancelInvitation: "ยกเลิกคำเชิญ",
-            close: "ปิด",
         },
         roles: {
             USER: "ผู้ใช้",
@@ -514,6 +525,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "เข้ารหัสแล้ว",
             notEncrypted: "ไม่ได้เข้ารหัส",
             readOnly: "อ่านอย่างเดียว",
+            copyRoomId: "คัดลอก ID ห้อง",
         },
         settings: {
             roomType: "ประเภทห้อง",
@@ -574,6 +586,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "ไม่สามารถโหลดโพลได้ ลองใหม่อีกครั้ง",
         pollsPartial: "โพลบางรายการไม่สามารถโหลดผลลัพธ์แบบละเอียดได้",
         pollFocusError: "ไม่สามารถเปิดโพลนี้ในไทม์ไลน์ได้",
+        closeFolderMembers: "ปิดสมาชิกโฟลเดอร์",
+        folderMembersHint: "สมาชิกโฟลเดอร์สามารถเข้าร่วมห้องของโฟลเดอร์ที่เปิดให้สมาชิกได้",
     },
     roomMenu: {
         leaveRoom: {
