@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Verzend een tekstbericht",
             noAccess: "Je hebt geen toegang tot deze functie 😱 Neem contact op met de beheerder 🙏",
         },
-        audioMessage: {
-            title: "Audio bericht",
-            notice: `
-            Het audiobericht is een bericht van het type "MP3, OGG..." dat naar alle gebruikers wordt gestuurd die zijn verbonden in de kamer of in de wereld.
-
-            Dit audiobericht wordt gedownload en afgespeeld bij alle mensen die deze melding ontvangen.
-
-            Een audiobericht kan bestaan uit een audiorecording die aangeeft dat een conferentie over enkele minuten begint.
-            `,
-            button: "Verzend een audiobericht",
-            noAccess: "Je hebt geen toegang tot deze functie 😱 Neem contact op met de beheerder 🙏",
-        },
     },
 };
 

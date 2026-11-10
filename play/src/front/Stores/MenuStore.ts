@@ -63,7 +63,6 @@ export enum SubMenusInterface {
     settings = "settings",
     profile = "profile",
     aboutRoom = "credit",
-    globalMessages = "globalMessages",
     contact = "contact",
     report = "report",
     shortcuts = "shortcuts",
@@ -117,11 +116,6 @@ function createSubMenusStore() {
             type: "translated",
             key: SubMenusInterface.aboutRoom,
             visible: alwaysVisible,
-        },
-        {
-            type: "translated",
-            key: SubMenusInterface.globalMessages,
-            visible: userIsAdminStore,
         },
         {
             type: "translated",

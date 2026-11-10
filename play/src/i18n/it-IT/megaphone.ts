@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Invia un messaggio di testo",
             noAccess: "Non hai accesso a questa funzione 😱 Per favore contatta l'amministratore 🙏",
         },
-        audioMessage: {
-            title: "Messaggio audio",
-            notice: `
-            Il messaggio audio è un messaggio di tipo "MP3, OGG..." inviato a tutti gli utenti collegati nella stanza o nel mondo.
-
-            Questo messaggio audio verrà scaricato e avviato a tutte le persone che ricevono questa notifica.
-
-            Un messaggio audio può consistere in una registrazione audio che indica che una conferenza inizierà tra pochi minuti.
-            `,
-            button: "Invia un messaggio audio",
-            noAccess: "Non hai accesso a questa funzione 😱 Per favore contatta l'amministratore 🙏",
-        },
     },
 };
 
