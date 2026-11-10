@@ -157,7 +157,7 @@ const zhCN: NativeStrings = {
     "update.installAndRestart": "安装并重启",
     "update.installLater": "稍后安装",
     "update.availableTitle": "WorkAdventure 有可用更新",
-    "update.availableBody": "请从 WorkAdventure 官网下载并安装最新版本。",
+    "update.availableBody": "它将随系统更新一起安装。如需立即安装，请运行：sudo apt update && sudo apt upgrade",
     "update.none": "暂无可用更新。",
 };
 

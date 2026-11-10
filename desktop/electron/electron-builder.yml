@@ -76,6 +76,15 @@ linux:
     target:
         - AppImage
         - deb
+    # The public key of apt.workadventu.re, which the deb's after-install script installs (see deb/).
+    extraResources:
+        - from: deb/workadventure-desktop.gpg
+          to: workadventure-desktop.gpg
+
+deb:
+    # electron-builder's own scripts plus the APT repository, so that apt upgrade updates the app.
+    afterInstall: deb/after-install.tpl
+    afterRemove: deb/after-remove.tpl
 
 appImage:
     # The AppImage launcher (AppRun) already adds --no-sandbox when the Chromium sandbox cannot start,

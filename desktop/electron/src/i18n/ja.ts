@@ -171,7 +171,7 @@ const ja: NativeStrings = {
     "update.installLater": "後でインストール",
     "update.availableTitle": "WorkAdventure のアップデートがあります",
     "update.availableBody":
-        "WorkAdventure のウェブサイトから最新バージョンをダウンロードしてインストールしてください。",
+        "システムのアップデートと一緒にインストールされます。今すぐインストールするには: sudo apt update && sudo apt upgrade",
     "update.none": "利用可能なアップデートはありません。",
 };
 

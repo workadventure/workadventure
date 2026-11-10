@@ -169,7 +169,8 @@ const vi: NativeStrings = {
     "update.installAndRestart": "Cài đặt và khởi động lại",
     "update.installLater": "Cài đặt sau",
     "update.availableTitle": "Có bản cập nhật WorkAdventure",
-    "update.availableBody": "Tải xuống và cài đặt phiên bản mới nhất từ trang web WorkAdventure.",
+    "update.availableBody":
+        "Bản cập nhật sẽ được cài đặt cùng các bản cập nhật hệ thống. Để cài đặt ngay: sudo apt update && sudo apt upgrade",
     "update.none": "Không có bản cập nhật nào.",
 };
 
