@@ -1,17 +1,32 @@
 import type { NativeStrings } from "./en";
 
 const de: NativeStrings = {
-    "landing.heading": "Ihr Arbeitsplatz, nur eine URL entfernt.",
+    "landing.heading": "Ihr Arbeitsplatz, nur eine E-Mail entfernt.",
     "landing.intro":
-        "Öffnen Sie eine Welt, der Sie bereits angehören, oder erstellen Sie eine neue Welt für Ihr Team. Ihre letzte Welt wird beim nächsten Mal automatisch wieder geöffnet.",
+        "Melden Sie sich mit Ihrer geschäftlichen E-Mail-Adresse an, um Ihre Welten zu finden, oder öffnen Sie eine Welt über ihren Link. Ihre letzte Welt wird beim nächsten Mal automatisch wieder geöffnet.",
     "landing.recentWorlds": "Zuletzt besuchte Welten",
-    "landing.joinTitle": "Einer Welt beitreten",
+    "landing.emailTitle": "Mit Ihrer E-Mail-Adresse anmelden",
+    "landing.emailHint": "Wir finden die Welten, denen Sie angehören, und melden Sie an.",
+    "landing.emailLabel": "Ihre geschäftliche E-Mail-Adresse",
+    "landing.continue": "Weiter",
+    "landing.searching": "Suche läuft…",
+    "landing.emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
+    "landing.yourWorlds": "Ihre Welten",
+    "landing.useAnotherEmail": "Andere E-Mail-Adresse verwenden",
+    "landing.signIn": "Anmelden",
+    "landing.signingIn": "Anmeldung läuft…",
+    "landing.noWorldFound": "Keine Welt für {email} gefunden",
+    "landing.noWorldHint":
+        "Prüfen Sie die Adresse oder bitten Sie Ihren Administrator, Sie einzuladen. Sie können auch eine Welt für Ihr Team erstellen.",
+    "landing.lookupFailed":
+        "Die Suche nach Ihren Welten ist fehlgeschlagen. Fügen Sie stattdessen den Link zu Ihrer Welt ein.",
+    "landing.lookupThrottled": "Zu viele Suchanfragen. Bitte warten Sie eine Minute und versuchen Sie es erneut.",
+    "landing.joinTitle": "Link zu einer Welt öffnen",
     "landing.joinHint": "Fügen Sie die vollständige URL aus Ihrer Einladung oder Ihrem Browser ein.",
     "landing.urlLabel": "Geben Sie die URL Ihrer Welt ein",
     "landing.openWorld": "Welt öffnen",
     "landing.or": "oder",
-    "landing.createTitle": "Welt erstellen",
-    "landing.createHint": "Richten Sie in der WorkAdventure-Verwaltungskonsole ein neues virtuelles Büro ein.",
+    "landing.newHere": "Neu bei WorkAdventure?",
     "landing.createWorld": "Welt erstellen",
     "landing.explore": "Entdecken",
     "landing.opening": "Wird geöffnet…",

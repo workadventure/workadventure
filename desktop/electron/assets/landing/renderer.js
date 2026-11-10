@@ -17,6 +17,18 @@
     var recentSection = document.getElementById("recent");
     var worldRow = document.getElementById("world-row");
     var recentErrorEl = document.getElementById("recent-error");
+    var emailForm = document.getElementById("email-form");
+    var emailInput = document.getElementById("email");
+    var emailBtn = document.getElementById("email-btn");
+    var emailErrorEl = document.getElementById("email-error");
+    var foundSection = document.getElementById("found");
+    var foundTitle = document.getElementById("found-title");
+    var foundRow = document.getElementById("found-row");
+    var foundErrorEl = document.getElementById("found-error");
+    var noWorld = document.getElementById("no-world");
+    var noWorldCreate = document.getElementById("no-world-create");
+    var foundEmail = document.getElementById("found-email");
+    var foundBack = document.getElementById("found-back");
     var trustPanel = document.getElementById("trust-panel");
     var trustBody = document.getElementById("trust-body");
     var trustConfirm = document.getElementById("trust-confirm");
@@ -89,7 +101,24 @@
         return Math.abs(hash);
     }
 
-    function buildWorldCard(world) {
+    // How a row of cards opens its worlds: recent worlds load directly, the worlds found for an email
+    // start a sign-in first.
+    var recentCards = {
+        row: worldRow,
+        errorEl: recentErrorEl,
+        idleLabel: t("landing.explore", "Explore"),
+        busyLabel: t("landing.opening", "Opening…"),
+        open: api.joinWorld,
+    };
+    var foundCards = {
+        row: foundRow,
+        errorEl: foundErrorEl,
+        idleLabel: t("landing.signIn", "Sign in"),
+        busyLabel: t("landing.signingIn", "Signing in…"),
+        open: api.signInToWorld,
+    };
+
+    function buildWorldCard(world, cards) {
         var card = document.createElement("button");
         card.type = "button";
         card.className = "world";
@@ -101,6 +130,20 @@
         art.style.setProperty("--h", String(hash % 360));
         art.style.setProperty("--ox", (hash % 26) + "px");
         art.style.setProperty("--oy", ((hash >> 5) % 26) + "px");
+        if (world.thumbnail) {
+            var thumb = document.createElement("img");
+            thumb.className = "world-thumb";
+            thumb.alt = "";
+            thumb.loading = "lazy";
+            thumb.referrerPolicy = "no-referrer";
+            thumb.addEventListener("error", function () {
+                thumb.remove();
+                art.classList.remove("has-thumb");
+            });
+            thumb.src = world.thumbnail;
+            art.classList.add("has-thumb");
+            art.appendChild(thumb);
+        }
         card.appendChild(art);
 
         var scrim = document.createElement("span");
@@ -112,11 +155,15 @@
         var name = document.createElement("span");
         name.className = "world-name";
         name.textContent = world.label;
-        var url = document.createElement("span");
-        url.className = "world-url";
-        url.textContent = world.url;
         copy.appendChild(name);
-        copy.appendChild(url);
+        // The second line: the URL for recent worlds, the organization (or nothing) for the worlds found.
+        var detail = world.detail === undefined ? world.url : world.detail;
+        if (detail) {
+            var detailLine = document.createElement("span");
+            detailLine.className = "world-url";
+            detailLine.textContent = detail;
+            copy.appendChild(detailLine);
+        }
         card.appendChild(copy);
 
         var hover = document.createElement("span");
@@ -127,7 +174,7 @@
         var hoverRow = document.createElement("span");
         hoverRow.className = "world-hover-row";
         var hoverLabel = document.createElement("span");
-        hoverLabel.textContent = t("landing.explore", "Explore");
+        hoverLabel.textContent = cards.idleLabel;
         hoverRow.appendChild(hoverLabel);
         // 6x12 chevron with a 2px stroke, per the design. The path spans x=1..5 so the stroke's
         // 1px half-width lands exactly on the viewBox edges instead of being clipped.
@@ -141,29 +188,30 @@
         card.appendChild(hover);
 
         card.addEventListener("click", function () {
-            showError(recentErrorEl, "");
-            setWorldsBusy(true);
+            showError(cards.errorEl, "");
+            setRowBusy(cards.row, true);
             // Only the label changes — writing to `hover` itself would wipe the chevron.
-            hoverLabel.textContent = t("landing.opening", "Opening…");
-            api.joinWorld(world.url)
+            hoverLabel.textContent = cards.busyLabel;
+            cards
+                .open(world.url)
                 .then(function (result) {
                     if (!result || !result.ok) {
                         throw new Error((result && result.error) || t("landing.joinFailed", "Failed to join world."));
                     }
                 })
                 .catch(function (err) {
-                    console.warn("landing.joinWorld rejected", err);
-                    showError(recentErrorEl, (err && err.message) || t("landing.joinFailed", "Failed to join world."));
-                    setWorldsBusy(false);
-                    hoverLabel.textContent = t("landing.explore", "Explore");
+                    console.warn("landing: opening a world card rejected", err);
+                    showError(cards.errorEl, (err && err.message) || t("landing.joinFailed", "Failed to join world."));
+                    setRowBusy(cards.row, false);
+                    hoverLabel.textContent = cards.idleLabel;
                 });
         });
 
         return card;
     }
 
-    function setWorldsBusy(busy) {
-        Array.prototype.forEach.call(worldRow.querySelectorAll("button"), function (btn) {
+    function setRowBusy(row, busy) {
+        Array.prototype.forEach.call(row.querySelectorAll("button"), function (btn) {
             btn.disabled = busy;
         });
     }
@@ -221,7 +269,7 @@
             var wrap = document.createElement("div");
             wrap.style.position = "relative";
             wrap.style.flex = "0 0 auto";
-            wrap.appendChild(buildWorldCard(world));
+            wrap.appendChild(buildWorldCard(world, recentCards));
             if (typeof api.togglePin === "function") {
                 wrap.appendChild(buildPin(world));
             }
@@ -274,6 +322,130 @@
                 joinBtn.removeAttribute("disabled");
                 joinBtn.textContent = t("landing.openWorld", "Open world");
             });
+    });
+
+    // ── Email lookup ────────────────────────────────────────────────────────────────────────────
+    function setEmailBusy(label) {
+        emailBtn.disabled = Boolean(label);
+        emailBtn.textContent = label || t("landing.continue", "Continue");
+    }
+
+    function hideFound() {
+        delete page.dataset.view;
+        foundSection.hidden = true;
+        foundRow.textContent = "";
+        showError(foundErrorEl, "");
+    }
+
+    function showFound(email, worlds) {
+        hideFound();
+        var none = worlds.length === 0;
+        foundTitle.textContent = "";
+        if (none) {
+            // The label is set in capitals; the address keeps its own case, as typed.
+            var parts = t("landing.noWorldFound", "No world found for {email}").split("{email}");
+            parts.forEach(function (part, index) {
+                if (index > 0) {
+                    var address = document.createElement("span");
+                    address.className = "found-email";
+                    address.textContent = email;
+                    foundTitle.appendChild(address);
+                }
+                foundTitle.appendChild(document.createTextNode(part));
+            });
+        } else {
+            foundTitle.textContent = t("landing.yourWorlds", "Your worlds");
+        }
+        noWorld.hidden = !none;
+        foundRow.hidden = none;
+        foundEmail.textContent = email;
+        // The organization only tells worlds apart when there is more than one.
+        var organizations = {};
+        worlds.forEach(function (world) {
+            organizations[world.organization] = true;
+        });
+        var showOrganization = Object.keys(organizations).length > 1;
+        worlds.forEach(function (world) {
+            foundRow.appendChild(
+                buildWorldCard(
+                    {
+                        url: world.url,
+                        label: world.name,
+                        detail: showOrganization ? world.organization : "",
+                        thumbnail: world.thumbnail,
+                    },
+                    foundCards
+                )
+            );
+        });
+        foundSection.hidden = false;
+        if (none) {
+            // Narrow windows stack the cards, which pushes the answer below the fold.
+            foundSection.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            return;
+        }
+        // Worlds to choose from: they are all that is left on the page, and the focus goes to the first one
+        // (the email field it was on is now hidden).
+        page.dataset.view = "worlds";
+        window.scrollTo(0, 0);
+        var first = foundRow.querySelector(".world");
+        if (first) {
+            first.focus();
+        }
+    }
+
+    foundBack.addEventListener("click", function () {
+        hideFound();
+        emailInput.focus();
+        emailInput.select();
+    });
+
+    emailForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var email = (emailInput.value || "").trim();
+        if (!email || !emailInput.checkValidity()) {
+            showError(emailErrorEl, t("landing.emailInvalid", "Please enter a valid email address."));
+            emailInput.focus();
+            return;
+        }
+        showError(emailErrorEl, "");
+        hideFound();
+        setEmailBusy(t("landing.searching", "Searching…"));
+        api.findWorlds(email)
+            .then(function (result) {
+                if (!result || !result.ok) {
+                    throw new Error((result && result.error) || "");
+                }
+                if (result.worlds.length !== 1) {
+                    setEmailBusy("");
+                    showFound(email, result.worlds);
+                    return;
+                }
+                // A single world: no choice to make, so its sign-in starts at once (the main process then
+                // replaces this page with the "signing in" one). On failure, the card stays to retry.
+                setEmailBusy(t("landing.signingIn", "Signing in…"));
+                return api.signInToWorld(result.worlds[0].url).then(function (signIn) {
+                    if (!signIn || !signIn.ok) {
+                        setEmailBusy("");
+                        showFound(email, result.worlds);
+                        showError(foundErrorEl, (signIn && signIn.error) || t("landing.joinFailed", "Failed to join world."));
+                    }
+                });
+            })
+            .catch(function (err) {
+                console.warn("landing.findWorlds rejected", err);
+                setEmailBusy("");
+                showError(
+                    emailErrorEl,
+                    (err && err.message) || t("landing.lookupFailed", "Couldn't look up your worlds. Paste your world link instead.")
+                );
+            });
+    });
+
+    // Editing the address withdraws the answer: it was about the address typed before.
+    emailInput.addEventListener("input", function () {
+        hideFound();
+        showError(emailErrorEl, "");
     });
 
     function showTrustPanel(url, origin) {
@@ -332,14 +504,15 @@
         console.warn("Landing renderer: failed to read initial trust param", err);
     }
 
-    createBtn.addEventListener("click", function () {
-        showError(createErrorEl, "");
-        createBtn.setAttribute("disabled", "disabled");
+    // "Create a world" sits in the footer and, after a lookup that found nothing, next to that answer.
+    function openSignup(button, errorElement) {
+        showError(errorElement, "");
+        button.setAttribute("disabled", "disabled");
         api.openAdminSignup()
             .then(function (result) {
                 if (!result || !result.ok) {
                     showError(
-                        createErrorEl,
+                        errorElement,
                         (result && result.error) || t("landing.signupFailed", "The signup page could not be opened.")
                     );
                 }
@@ -347,15 +520,22 @@
             .catch(function (err) {
                 console.warn("landing.openAdminSignup rejected", err);
                 showError(
-                    createErrorEl,
+                    errorElement,
                     (err && err.message) || t("landing.signupFailed", "The signup page could not be opened.")
                 );
             })
             .finally(function () {
                 setTimeout(function () {
-                    createBtn.removeAttribute("disabled");
+                    button.removeAttribute("disabled");
                 }, 500);
             });
+    }
+
+    createBtn.addEventListener("click", function () {
+        openSignup(createBtn, createErrorEl);
+    });
+    noWorldCreate.addEventListener("click", function () {
+        openSignup(noWorldCreate, foundErrorEl);
     });
 
     // macOS screen recording permission: asked once here, before a share needs it (macOS restarts the
@@ -415,11 +595,11 @@
 
     refreshWorlds();
 
-    // Autofocus the URL field so the user can just paste and hit Enter. Not while asking to add a server:
+    // Autofocus the email field so the user can just type it and hit Enter. Not while asking to add a server:
     // the question keeps the focus (on Cancel, so Enter never adds one by accident).
     setTimeout(function () {
         if (trustPanel.hidden) {
-            input.focus();
+            emailInput.focus();
         }
     }, 50);
 })();

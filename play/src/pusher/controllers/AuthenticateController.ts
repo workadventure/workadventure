@@ -120,6 +120,8 @@ export class AuthenticateController extends BaseHttpController {
                     chatRoomId: z.string().optional(),
                     providerId: z.string().optional(),
                     providerScopes: z.string().array().optional(), // Optional scopes to request
+                    // The email the user already typed (desktop app), so the login page does not ask again.
+                    login_hint: z.string().max(320).optional(),
                     desktop: z.literal("true").optional(),
                     desktopCallbackUrl: z.string().optional(),
                 }),
@@ -154,6 +156,7 @@ export class AuthenticateController extends BaseHttpController {
                 query.chatRoomId,
                 query.providerId,
                 query.providerScopes,
+                query.login_hint,
             );
             res.cookie("playUri", query.playUri, {
                 ...OIDC_COOKIE_OPTIONS,

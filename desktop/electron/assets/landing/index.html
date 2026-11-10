@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
             http-equiv="Content-Security-Policy"
-            content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self';"
+            content="default-src 'self'; img-src 'self' data: https: http:; style-src 'self' 'unsafe-inline'; script-src 'self';"
         />
         <title>WorkAdventure</title>
         <style>
@@ -157,8 +157,121 @@
             }
 
             /* ── Recent worlds ─────────────────────────────────────────────────────────────── */
-            .recent[hidden] {
+            .recent[hidden],
+            .found[hidden],
+            .no-world[hidden] {
                 display: none;
+            }
+
+            /* ── Email lookup: no world for that address ──────────────────────────────────── */
+            .no-world {
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 12px 20px;
+                max-width: 760px;
+            }
+
+            .found-email {
+                text-transform: none;
+            }
+
+            /* ── The worlds found for an email, on their own ──────────────────────────────────
+               The answer is the only thing left to do, so the rest of the page steps aside. */
+            .found-for {
+                display: none;
+                margin: -4px 0 14px;
+                color: var(--text-muted);
+                font-size: var(--text-sm);
+            }
+
+            .found-for .link {
+                margin-left: 10px;
+            }
+
+            .page[data-view="worlds"] .found-for {
+                display: block;
+            }
+
+            .page[data-view="worlds"] .intro,
+            .page[data-view="worlds"] .recent,
+            .page[data-view="worlds"] .permission,
+            .page[data-view="worlds"] .choices,
+            .page[data-view="worlds"] .create {
+                display: none;
+            }
+
+            .page[data-view="worlds"] main {
+                justify-content: center;
+                padding-top: 0;
+            }
+
+            .page[data-view="worlds"] .found {
+                text-align: center;
+            }
+
+            .page[data-view="worlds"] .found .world-row {
+                justify-content: safe center;
+            }
+
+            /* The map's own thumbnail, when the world has one, over the generated art (kept as the
+               fallback if the image fails to load). */
+            .world-thumb {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .world-art.has-thumb::after {
+                display: none;
+            }
+
+            .no-world p {
+                flex: 1 1 320px;
+                margin: 0;
+                color: var(--text-muted);
+                font-size: var(--text-sm);
+                line-height: calc(var(--text-sm-line) / var(--text-sm));
+            }
+
+            /* ── "New to WorkAdventure? Create a world" ───────────────────────────────────── */
+            .create {
+                color: var(--text-muted);
+                font-size: var(--text-sm);
+            }
+
+            .page[data-state="empty"] .create,
+            .page[data-state="empty"] .found {
+                text-align: center;
+            }
+
+            /* `safe` keeps the first cards reachable when the row overflows and scrolls. */
+            .page[data-state="empty"] .found .world-row,
+            .page[data-state="empty"] .no-world {
+                justify-content: safe center;
+                margin-inline: auto;
+            }
+
+            .link {
+                padding: 0;
+                color: var(--text);
+                background: none;
+                border: 0;
+                text-decoration: underline;
+                text-underline-offset: 3px;
+                cursor: pointer;
+            }
+
+            .link:hover:not(:disabled) {
+                color: var(--primary-hover);
+            }
+
+            .link:focus-visible {
+                outline: 3px solid var(--focus);
+                outline-offset: 2px;
+                border-radius: 4px;
             }
 
             /* A single row that runs off the edge, as in the mockup — recents are scanned, not
@@ -445,7 +558,8 @@
                 font-size: 12px;
             }
 
-            input[type="url"] {
+            input[type="url"],
+            input[type="email"] {
                 width: 100%;
                 height: 40px;
                 padding: 0 13px;
@@ -458,11 +572,13 @@
                 transition: border-color 140ms ease, box-shadow 140ms ease;
             }
 
-            input[type="url"]::placeholder {
+            input[type="url"]::placeholder,
+            input[type="email"]::placeholder {
                 color: #64748b;
             }
 
-            input[type="url"]:focus-visible {
+            input[type="url"]:focus-visible,
+            input[type="email"]:focus-visible {
                 border-color: rgba(139, 143, 255, 0.85);
                 box-shadow: 0 0 0 3px rgba(91, 95, 240, 0.22);
             }
@@ -663,10 +779,10 @@
         <div class="page" id="page" data-state="empty">
             <main>
                 <div class="intro">
-                    <h1 data-i18n="landing.heading">Your workplace, one URL away.</h1>
+                    <h1 data-i18n="landing.heading">Your workplace, one email away.</h1>
                     <p data-i18n="landing.intro">
-                        Open a world you already belong to, or create a new space for your team. Your last world will
-                        reopen automatically next time.
+                        Sign in with your work email to find your worlds, or open a world from its link. Your last
+                        world will reopen automatically next time.
                     </p>
                 </div>
 
@@ -702,8 +818,29 @@
                 </section>
 
                 <div class="choices">
+                    <form class="choice" id="email-form" novalidate>
+                        <h2 data-i18n="landing.emailTitle">Sign in with your email</h2>
+                        <p data-i18n="landing.emailHint">We'll find the worlds you belong to and sign you in.</p>
+                        <div class="field">
+                            <label for="email" data-i18n="landing.emailLabel">Your work email</label>
+                            <input
+                                type="email"
+                                id="email"
+                                name="email"
+                                placeholder="you@company.com"
+                                autocomplete="email"
+                                aria-describedby="email-error"
+                                required
+                            />
+                        </div>
+                        <div class="error" id="email-error" role="alert" aria-live="polite"></div>
+                        <div class="choice-actions">
+                            <button class="btn" type="submit" id="email-btn" data-i18n="landing.continue">Continue</button>
+                        </div>
+                    </form>
+                    <div class="or" aria-hidden="true" data-i18n="landing.or">or</div>
                     <form class="choice" id="join-form" novalidate>
-                        <h2 data-i18n="landing.joinTitle">Join a world</h2>
+                        <h2 data-i18n="landing.joinTitle">Open a world link</h2>
                         <p data-i18n="landing.joinHint">Paste the complete URL from your invitation or browser.</p>
                         <div class="field">
                             <label for="world-url" data-i18n="landing.urlLabel">Enter your world URL</label>
@@ -733,17 +870,34 @@
                             <button class="btn" type="submit" id="join-btn" data-i18n="landing.openWorld">Open world</button>
                         </div>
                     </form>
+                </div>
 
-                    <div class="or" aria-hidden="true" data-i18n="landing.or">or</div>
+                <!-- The email lookup's answer: the worlds to sign in to, or why there are none. -->
+                <section class="found" id="found" aria-labelledby="found-title" hidden>
+                    <h2 class="section-label" id="found-title"></h2>
+                    <p class="found-for" id="found-for">
+                        <span class="found-email" id="found-email"></span>
+                        <button class="link" type="button" id="found-back" data-i18n="landing.useAnotherEmail">
+                            Use another email
+                        </button>
+                    </p>
+                    <div class="world-row" id="found-row"></div>
+                    <div class="no-world" id="no-world" hidden>
+                        <p data-i18n="landing.noWorldHint">
+                            Check the address, or ask your administrator to invite you. You can also create a world for
+                            your team.
+                        </p>
+                        <button class="btn btn-secondary" type="button" id="no-world-create" data-i18n="landing.createWorld">
+                            Create a world
+                        </button>
+                    </div>
+                    <div class="error recent-error" id="found-error" role="alert" aria-live="polite"></div>
+                </section>
 
-                    <section class="choice" aria-labelledby="create-world-title">
-                        <h2 id="create-world-title" data-i18n="landing.createTitle">Create a world</h2>
-                        <p data-i18n="landing.createHint">Set up a new virtual office from the WorkAdventure administration console.</p>
-                        <div class="error" id="create-error" role="alert" aria-live="polite"></div>
-                        <div class="choice-actions">
-                            <button class="btn" type="button" id="create-btn" data-i18n="landing.createWorld">Create world</button>
-                        </div>
-                    </section>
+                <div class="create">
+                    <span data-i18n="landing.newHere">New to WorkAdventure?</span>
+                    <button class="link" type="button" id="create-btn" data-i18n="landing.createWorld">Create a world</button>
+                    <div class="error" id="create-error" role="alert" aria-live="polite"></div>
                 </div>
             </main>
         </div>
