@@ -5,9 +5,12 @@ import {
     RENDER_RECOVERY_INTERVAL_MS,
     RENDER_RECOVERY_MAX_ATTEMPTS,
 } from "../../../src/front/WebRtc/AudioContextManager";
-import { bindAudioOutput } from "../../../src/front/WebRtc/AudioOutputManager";
+import { applySinkId, bindAudioOutput } from "../../../src/front/WebRtc/AudioOutputManager";
 
-vi.mock("../../../src/front/WebRtc/AudioOutputManager", () => ({ bindAudioOutput: vi.fn() }));
+vi.mock("../../../src/front/WebRtc/AudioOutputManager", () => ({
+    applySinkId: vi.fn(() => Promise.resolve("applied")),
+    bindAudioOutput: vi.fn(),
+}));
 
 // jsdom has no AudioContext
 vi.stubGlobal(
@@ -112,6 +115,36 @@ describe("AudioContextManager", () => {
             expect(context.suspend).toHaveBeenCalledTimes(RENDER_RECOVERY_MAX_ATTEMPTS);
 
             stop();
+            vi.useRealTimers();
+        });
+
+        it("moves the context to the default output only when its own output device is gone", async () => {
+            vi.useFakeTimers();
+            const speaker = { kind: "audiooutput", deviceId: "headset" };
+            const enumerateDevices = vi.fn(() => Promise.resolve([speaker]));
+            vi.stubGlobal("navigator", { mediaDevices: { enumerateDevices } });
+
+            // Still plugged: the failure may pass, the user's choice is kept
+            const present = fakeContext();
+            Object.assign(present.context, { sinkId: "headset" });
+            const stopPresent = recoverFromRenderErrors(present.asAudioContext);
+            present.context.dispatchEvent(new Event("error"));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(applySinkId).not.toHaveBeenCalled();
+
+            // Unplugged: Chrome will not fall back by itself
+            enumerateDevices.mockResolvedValue([]);
+            const gone = fakeContext();
+            Object.assign(gone.context, { sinkId: "headset" });
+            const stopGone = recoverFromRenderErrors(gone.asAudioContext);
+            gone.context.dispatchEvent(new Event("error"));
+            gone.context.dispatchEvent(new Event("error"));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(vi.mocked(applySinkId).mock.calls).toEqual([[gone.asAudioContext, ""]]);
+
+            stopPresent();
+            stopGone();
+            vi.unstubAllGlobals();
             vi.useRealTimers();
         });
 

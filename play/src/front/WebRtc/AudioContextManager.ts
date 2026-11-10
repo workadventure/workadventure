@@ -1,17 +1,34 @@
 import * as Sentry from "@sentry/svelte";
 import type { Unsubscriber } from "svelte/store";
-import { bindAudioOutput } from "./AudioOutputManager";
+import { applySinkId, bindAudioOutput } from "./AudioOutputManager";
 
 export const RENDER_RECOVERY_INTERVAL_MS = 1_000;
 export const RENDER_RECOVERY_MAX_ATTEMPTS = 30;
+
+/**
+ * Moves a context to the system default output when the device it was set on is gone. Chrome does not fall back by
+ * itself from an output set with setSinkId(), and the selected speaker only follows once the device list refreshed.
+ * A device that is still there is left alone: the failure may pass, and the user chose it.
+ */
+async function fallBackIfOutputIsGone(context: AudioContext): Promise<void> {
+    const sinkId = context.sinkId;
+    // "" and "default" already follow the system output. An object is a context without an output.
+    if (typeof sinkId !== "string" || sinkId === "" || sinkId === "default") {
+        return;
+    }
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    if (!devices.some((device) => device.kind === "audiooutput" && device.deviceId === sinkId)) {
+        await applySinkId(context, "");
+    }
+}
 
 /**
  * Restarts a context after a render error (Chrome's "The AudioContext encountered an error from the audio device or
  * the WebAudio renderer": the system audio output failed), until the returned function is called.
  *
  * Chrome stops rendering and leaves the context suspended. A single resume() at that moment is not enough: the output
- * may still be unavailable, and nothing retries once it is back. Until the context renders again, every analyser on it
- * reads zeros: the volume meters stay flat and the "no microphone sound" warning shows for nothing.
+ * may still be unavailable, and nothing retries once it is back. Until the context renders again, nothing plays
+ * through it. If its output device is gone, it is moved to the system default first.
  *
  * "Renders again" is checked on the clock (currentTime moves), not on the state alone.
  */
@@ -56,6 +73,9 @@ export function recoverFromRenderErrors(context: AudioContext): Unsubscriber {
         breadcrumb("AudioContext render error", "warning");
         // One recovery at a time: Chrome reports the same failure several times in a row
         if (timer === undefined) {
+            fallBackIfOutputIsGone(context).catch((e: unknown) =>
+                console.debug("[AudioContextManager] Could not check the audio output of the AudioContext", e),
+            );
             schedule(RENDER_RECOVERY_MAX_ATTEMPTS);
         }
     };
@@ -164,13 +184,7 @@ class AudioContextManager {
         const key = sampleRate ?? 0;
         let context = this.analysisContexts.get(key);
         if (!context) {
-            const options: AudioContextOptions = sampleRate ? { sampleRate } : {};
-            try {
-                context = new AudioContext({ ...options, sinkId: { type: "none" } });
-            } catch (e) {
-                console.warn("[AudioContextManager] Could not create an AudioContext without an output", e);
-                context = new AudioContext(options);
-            }
+            context = new AudioContext({ ...(sampleRate ? { sampleRate } : {}), sinkId: { type: "none" } });
             this.analysisContexts.set(key, context);
             // Nothing else resumes it: the "sound blocked" flow of the GameScene only watches the playback context
             this.outputBindings.set(context, resumeOnUserGesture(context));
