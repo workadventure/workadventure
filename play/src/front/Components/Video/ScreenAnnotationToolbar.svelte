@@ -22,7 +22,6 @@
         IconPencil,
         IconSquare,
         IconTrash,
-        IconTypography,
         IconUsersGroup,
         IconFocusCentered,
         IconSearch,
@@ -52,7 +51,6 @@
         { id: "line", icon: IconLine, label: $LL.screenAnnotation.tools.line() },
         { id: "arrow", icon: IconArrowNarrowRight, label: $LL.screenAnnotation.tools.arrow() },
         { id: "rect", icon: IconSquare, label: $LL.screenAnnotation.tools.rect() },
-        { id: "text", icon: IconTypography, label: $LL.screenAnnotation.tools.text() },
         { id: "eraser", icon: IconEraser, label: $LL.screenAnnotation.tools.eraser() },
     ]);
 

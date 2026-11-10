@@ -28,11 +28,10 @@ export const PROXIMITY_QA_BODY_MAX_LENGTH = 500;
 export const PROXIMITY_QA_SENDER_NAME_MAX_LENGTH = 256;
 
 // Screen-share annotations (see screenAnnotationSchema).
-export const SCREEN_ANNOTATION_TOOLS = ["pen", "line", "arrow", "rect", "text"] as const;
+export const SCREEN_ANNOTATION_TOOLS = ["pen", "line", "arrow", "rect"] as const;
 export const SCREEN_ANNOTATION_ID_MAX_LENGTH = 200;
 export const SCREEN_ANNOTATION_MAX_WIDTH = 0.05;
 export const SCREEN_ANNOTATION_MAX_POINTS = 5000;
-export const SCREEN_ANNOTATION_TEXT_MAX_LENGTH = 500;
 // Per shared screen: past it, the oldest elements are dropped to make room.
 export const SCREEN_ANNOTATION_MAX_ELEMENTS = 500;
 
@@ -113,7 +112,6 @@ export const screenAnnotationElementSchema = z.object({
         .array(z.object({ x: z.number().finite(), y: z.number().finite() }))
         .min(1)
         .max(SCREEN_ANNOTATION_MAX_POINTS),
-    text: z.string().max(SCREEN_ANNOTATION_TEXT_MAX_LENGTH).optional(),
     // When the back stored it: the drawing order, and which elements go first past the limit.
     at: z.number().int(),
 });

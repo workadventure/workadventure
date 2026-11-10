@@ -10,7 +10,6 @@ const screenAnnotation: BaseTranslation = {
         line: "Line",
         arrow: "Arrow",
         rect: "Rectangle",
-        text: "Text",
         eraser: "Eraser",
     },
     color: "Color",
