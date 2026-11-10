@@ -6,7 +6,6 @@
         ANNOTATION_COLORS,
         currentAnnotationColorStore,
         currentAnnotationToolStore,
-        lastPenToolStore,
         localAnnotationTargetStore,
         screenAnnotationEnabledStore,
         screenAnnotationLocallyHiddenStore,
@@ -26,7 +25,6 @@
         IconTypography,
         IconUsersGroup,
         IconFocusCentered,
-        IconHighlight,
         IconSearch,
         IconX,
     } from "@wa-icons";
@@ -48,15 +46,9 @@
     let currentColor = $derived($currentAnnotationColorStore);
     let othersAllowed = $derived($screenAnnotationEnabledStore.get(targetUserId) ?? false);
 
-    let pens = $derived<{ id: AnnotationTool; icon: typeof IconPencil; label: string }[]>([
-        { id: "pen", icon: IconPencil, label: $LL.screenAnnotation.tools.pen() },
-        { id: "temporaryPen", icon: IconHighlight, label: $LL.screenAnnotation.tools.temporaryPen() },
-    ]);
-    let lastPen = $derived(pens.find((pen) => pen.id === $lastPenToolStore) ?? pens[0]);
-    // The pens share one button ("pen"), showing the last one picked: it selects it and opens a menu of both.
     let tools = $derived<{ id: AnnotationTool; icon: typeof IconPencil; label: string }[]>([
         { id: "pointer", icon: IconPointer, label: $LL.screenAnnotation.tools.pointer() },
-        { ...lastPen, id: "pen" },
+        { id: "pen", icon: IconPencil, label: $LL.screenAnnotation.tools.pen() },
         { id: "line", icon: IconLine, label: $LL.screenAnnotation.tools.line() },
         { id: "arrow", icon: IconArrowNarrowRight, label: $LL.screenAnnotation.tools.arrow() },
         { id: "rect", icon: IconSquare, label: $LL.screenAnnotation.tools.rect() },
@@ -71,38 +63,7 @@
 
     function selectTool(toolId: AnnotationTool): void {
         currentAnnotationToolStore.set(toolId);
-        if (toolId === "pen" || toolId === "temporaryPen") lastPenToolStore.set(toolId);
     }
-
-    let penMenuOpen = $state(false);
-    let penGroup: HTMLElement | undefined = $state();
-
-    $effect(() => {
-        if (!active) penMenuOpen = false;
-    });
-
-    // A click elsewhere or Escape closes the pen menu. Listened to in the toolbar's own document: in the desktop
-    // overlay it is a child window's.
-    $effect(() => {
-        const group = penGroup;
-        if (!penMenuOpen || !group) return;
-        const view = group.ownerDocument.defaultView;
-        const onPointerDown = (event: PointerEvent) => {
-            if (!event.composedPath().includes(group)) penMenuOpen = false;
-        };
-        const onKeyDown = (event: KeyboardEvent) => {
-            if (event.key !== "Escape") return;
-            // Only the menu closes, not drawing mode.
-            event.stopPropagation();
-            penMenuOpen = false;
-        };
-        view?.addEventListener("pointerdown", onPointerDown, true);
-        view?.addEventListener("keydown", onKeyDown, true);
-        return () => {
-            view?.removeEventListener("pointerdown", onPointerDown, true);
-            view?.removeEventListener("keydown", onKeyDown, true);
-        };
-    });
 
     function selectColor(color: string): void {
         currentAnnotationColorStore.set(color);
@@ -152,56 +113,15 @@
         <span class={separator} aria-hidden="true"></span>
         {#each tools as toolItem (toolItem.id)}
             {@const ToolIcon = toolItem.icon}
-            {#if toolItem.id === "pen"}
-                <div class="relative flex" bind:this={penGroup}>
-                    <button
-                        type="button"
-                        class={button}
-                        data-testid="annotation-pen-button"
-                        aria-pressed={currentTool === "pen" || currentTool === "temporaryPen"}
-                        aria-expanded={penMenuOpen}
-                        title={toolItem.label}
-                        aria-label={toolItem.label}
-                        onclick={() => {
-                            selectTool($lastPenToolStore);
-                            penMenuOpen = !penMenuOpen;
-                        }}><ToolIcon font-size="20" /></button
-                    >
-                    {#if penMenuOpen}
-                        <div
-                            class={[
-                                "absolute left-1/2 flex -translate-x-1/2 flex-col gap-1 rounded-md border border-solid border-neutral-800 bg-contrast/90 p-1 shadow-[0_4px_16px_#0006] backdrop-blur",
-                                placement === "top" ? "top-full mt-3" : "bottom-full mb-3",
-                            ]}
-                            data-testid="annotation-pen-menu"
-                        >
-                            {#each pens as pen (pen.id)}
-                                {@const PenIcon = pen.icon}
-                                <button
-                                    type="button"
-                                    class="{button} justify-start whitespace-nowrap pe-3 text-sm"
-                                    data-testid={`annotation-tool-${pen.id}`}
-                                    aria-pressed={currentTool === pen.id}
-                                    onclick={() => {
-                                        selectTool(pen.id);
-                                        penMenuOpen = false;
-                                    }}><PenIcon font-size="20" />{pen.label}</button
-                                >
-                            {/each}
-                        </div>
-                    {/if}
-                </div>
-            {:else}
-                <button
-                    type="button"
-                    class={button}
-                    data-testid={`annotation-tool-${toolItem.id}`}
-                    aria-pressed={currentTool === toolItem.id}
-                    title={toolItem.label}
-                    aria-label={toolItem.label}
-                    onclick={() => selectTool(toolItem.id)}><ToolIcon font-size="20" /></button
-                >
-            {/if}
+            <button
+                type="button"
+                class={button}
+                data-testid={`annotation-tool-${toolItem.id}`}
+                aria-pressed={currentTool === toolItem.id}
+                title={toolItem.label}
+                aria-label={toolItem.label}
+                onclick={() => selectTool(toolItem.id)}><ToolIcon font-size="20" /></button
+            >
         {/each}
         <span class={separator} aria-hidden="true"></span>
         <div class="flex items-center gap-1.5 px-1" data-testid="annotation-colors">
