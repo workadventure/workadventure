@@ -67,11 +67,26 @@ export async function getWorldPage(app: ElectronApplication): Promise<Page> {
 }
 
 /** The mini window is a window.open of the world page, named wa-mini-window (desktop child-windows.ts). */
-export async function isMiniWindowShown(app: ElectronApplication): Promise<boolean> {
+export async function findMiniWindow(app: ElectronApplication): Promise<Page | undefined> {
     for (const page of app.windows()) {
-        if ((await page.evaluate(() => window.name)) === "wa-mini-window") {
-            return (await app.browserWindow(page)).evaluate((window) => window.isVisible());
+        // A window closing meanwhile is not the mini window any more.
+        const name = await page.evaluate(() => window.name).catch(() => undefined);
+        if (name === "wa-mini-window") {
+            return page;
         }
     }
-    return false;
+    return undefined;
+}
+
+export async function getMiniWindow(app: ElectronApplication): Promise<Page> {
+    const page = await findMiniWindow(app);
+    if (!page) {
+        throw new Error("No mini window");
+    }
+    return page;
+}
+
+export async function isMiniWindowShown(app: ElectronApplication): Promise<boolean> {
+    const page = await findMiniWindow(app);
+    return page ? (await app.browserWindow(page)).evaluate((window) => window.isVisible()) : false;
 }

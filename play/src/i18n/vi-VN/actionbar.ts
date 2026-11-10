@@ -152,6 +152,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Camera đã tắt",
             desc: 'Camera của bạn bị tắt vì bạn đang ở trạng thái "{status}".',
         },
+        micPausedByStatus: {
+            title: "Micrô tạm dừng",
+            desc: 'Micrô của bạn đang tạm dừng vì bạn đang ở trạng thái "{status}". Nhấp để bật và trở lại trạng thái trực tuyến.',
+        },
+        camPausedByStatus: {
+            title: "Camera tạm dừng",
+            desc: 'Camera của bạn đang tạm dừng vì bạn đang ở trạng thái "{status}". Nhấp để bật và trở lại trạng thái trực tuyến.',
+        },
         share: {
             title: "Chia sẻ màn hình của bạn",
             desc: "Muốn chia sẻ màn hình với những người dùng khác? Hoàn toàn được! Bạn có thể cho những người trong bong bóng hoặc phòng họp của bạn xem màn hình của mình, và có thể chọn chia sẻ toàn bộ màn hình hoặc chỉ một cửa sổ cụ thể.",

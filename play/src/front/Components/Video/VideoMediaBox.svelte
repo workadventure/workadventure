@@ -25,6 +25,7 @@
     import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnnotationManager";
     import { localAnnotationTargetStore, screenAnnotationEnabledStore } from "../../Stores/ScreenAnnotationStore";
     import ActionMediaBox from "./ActionMediaBox.svelte";
+    import AwayPausedOverlay from "./AwayPausedOverlay.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
     import UpDownChevron from "./UpDownChevron.svelte";
@@ -583,6 +584,10 @@
             {/each}
         {/if}
     </div>
+
+    {#if isLocalUser && streamable?.videoType === "video"}
+        <AwayPausedOverlay />
+    {/if}
 
     {#if inCameraContainer && videoEnabled && $isBlockedStore === false}
         {@const isScreenShare = streamable?.videoType === "screenSharing"}

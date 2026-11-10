@@ -156,6 +156,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "摄像头已禁用",
             desc: '您的摄像头已禁用，因为您处于"{status}"状态。',
         },
+        micPausedByStatus: {
+            title: "麦克风已暂停",
+            desc: '您的麦克风已暂停，因为您处于"{status}"状态。点击即可打开并恢复为在线状态。',
+        },
+        camPausedByStatus: {
+            title: "摄像头已暂停",
+            desc: '您的摄像头已暂停，因为您处于"{status}"状态。点击即可打开并恢复为在线状态。',
+        },
         share: {
             title: "共享您的屏幕",
             desc: "想与其他用户共享您的屏幕吗？您可以！您可以向气泡或会议室中的人显示您的屏幕，并且您可以选择共享整个屏幕或仅共享特定窗口。",

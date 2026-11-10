@@ -159,6 +159,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Kamera deaktiviert",
             desc: 'Ihre Kamera ist deaktiviert, weil Sie sich im Status "{status}" befinden.',
         },
+        micPausedByStatus: {
+            title: "Mikrofon pausiert",
+            desc: 'Ihr Mikrofon ist pausiert, weil Sie sich im Status "{status}" befinden. Klicken Sie, um es einzuschalten und wieder verfügbar zu sein.',
+        },
+        camPausedByStatus: {
+            title: "Kamera pausiert",
+            desc: 'Ihre Kamera ist pausiert, weil Sie sich im Status "{status}" befinden. Klicken Sie, um sie einzuschalten und wieder verfügbar zu sein.',
+        },
         share: {
             title: "Ihren Bildschirm teilen",
             desc: "Möchten Sie Ihren Bildschirm mit anderen Benutzern teilen? Sie können! Sie können Ihren Bildschirm den Personen in Ihrer Blase oder Ihrem Besprechungsraum zeigen, und Sie können wählen, ob Sie Ihren gesamten Bildschirm oder nur ein bestimmtes Fenster teilen möchten.",

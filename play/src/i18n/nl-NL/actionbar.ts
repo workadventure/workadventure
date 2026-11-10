@@ -158,6 +158,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Camera uitgeschakeld",
             desc: 'Je camera is uitgeschakeld omdat je in de status "{status}" bent.',
         },
+        micPausedByStatus: {
+            title: "Microfoon gepauzeerd",
+            desc: 'Je microfoon is gepauzeerd omdat je in de status "{status}" bent. Klik om hem aan te zetten en weer beschikbaar te zijn.',
+        },
+        camPausedByStatus: {
+            title: "Camera gepauzeerd",
+            desc: 'Je camera is gepauzeerd omdat je in de status "{status}" bent. Klik om hem aan te zetten en weer beschikbaar te zijn.',
+        },
         share: {
             title: "Je scherm delen",
             desc: "Wil je je scherm delen met andere gebruikers? Dat kan! Je kunt je scherm tonen aan de mensen in je bubbel of vergaderruimte, en je kunt kiezen om je hele scherm of alleen een specifiek venster te delen.",

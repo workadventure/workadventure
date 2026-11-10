@@ -158,6 +158,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Kamera deaktiwowana",
             desc: 'Waša kamera je deaktiwowana, dokelž sće w statusu "{status}".',
         },
+        micPausedByStatus: {
+            title: "Mikrofon w přestawce",
+            desc: 'Waš mikrofon je w přestawce, dokelž sće w statusu "{status}". Klikńće, zo byšće jón zašaltowali a zaso k dispoziciji byli.',
+        },
+        camPausedByStatus: {
+            title: "Kamera w přestawce",
+            desc: 'Waša kamera je w přestawce, dokelž sće w statusu "{status}". Klikńće, zo byšće ju zašaltowali a zaso k dispoziciji byli.',
+        },
         share: {
             title: "Wašu wobrazowku dźělić",
             desc: "Chceće wašu wobrazowku z druhimi wužiwarjemi dźělić? Móžeće! Móžeće wašu wobrazowku ludźom we wašej bublinje abo wašej wobdźělnej rumnosći pokazać, a móžeće wubrać, zo byšće cyłu wobrazowku abo jenož wěsty wokno dźělili.",

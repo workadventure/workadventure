@@ -158,6 +158,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Càmera desactivada",
             desc: 'La teva càmera està desactivada perquè estàs en estat "{status}".',
         },
+        micPausedByStatus: {
+            title: "Micròfon en pausa",
+            desc: 'El teu micròfon està en pausa perquè estàs en estat "{status}". Fes clic per activar-lo i tornar a estar disponible.',
+        },
+        camPausedByStatus: {
+            title: "Càmera en pausa",
+            desc: 'La teva càmera està en pausa perquè estàs en estat "{status}". Fes clic per activar-la i tornar a estar disponible.',
+        },
         share: {
             title: "Compartir la teva pantalla",
             desc: "Vols compartir la teva pantalla amb altres usuaris? Pots! Pots mostrar la teva pantalla a les persones de la teva bombolla o sala de reunions, i pots triar compartir tota la teva pantalla o només una finestra específica.",

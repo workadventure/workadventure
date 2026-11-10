@@ -156,6 +156,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "攝影機已停用",
             desc: "您的攝影機已停用，因為您處於「{status}」狀態。",
         },
+        micPausedByStatus: {
+            title: "麥克風已暫停",
+            desc: "您的麥克風已暫停，因為您處於「{status}」狀態。點擊即可開啟並恢復為線上狀態。",
+        },
+        camPausedByStatus: {
+            title: "攝影機已暫停",
+            desc: "您的攝影機已暫停，因為您處於「{status}」狀態。點擊即可開啟並恢復為線上狀態。",
+        },
         share: {
             title: "分享您的螢幕",
             desc: "想與其他使用者分享您的螢幕嗎？沒問題！您可以向氣泡或會議室中的人顯示您的螢幕，並可選擇分享整個螢幕或僅分享特定視窗。",

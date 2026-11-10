@@ -1,5 +1,5 @@
 import { get, writable } from "svelte/store";
-import { videoStreamElementsStore, activePictureInPictureStore } from "./PeerStore";
+import { videoStreamElementsStore } from "./PeerStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { focusStore } from "./FocusStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
@@ -10,13 +10,13 @@ import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
  *
  * "Engaged with anyone" covers:
  *  - the main window is focused
- *  - the desktop PiP utility window is open (user is actively watching/controlling the call)
+ *  - the user came back from the mini window (`comeBack()`), until they switch windows or the conversation ends
  *  - a proximity bubble has formed (someone is with the user, even before media flows)
  *  - peers are publishing video (covers active LiveKit room when tracks have subscribed)
  *  - a live stream is running
  *
- * Only focus and the desktop PiP can turn privacy OFF once it is on; the last three only keep it
- * off while the user leaves.
+ * Only focus and `comeBack()` can turn privacy OFF once it is on; the last three only keep it off while the
+ * user leaves. An open mini window does not: it pops up while the user may be away from their desk.
  *
  * NOTE: we deliberately import LEAF stores (currentPlayerGroupIdStore) rather than
  * `isInActiveConversationStore` from StreamableCollectionStore. The latter would close a
@@ -28,31 +28,27 @@ import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
 function createPrivacyShutdownStore() {
     const { subscribe, set } = writable(false);
     let current = false;
+    let cameBack = false;
+    let wasEngaged = false;
 
     function recompute() {
-        if (get(focusStore)) {
+        const engaged =
+            get(currentPlayerGroupIdStore) !== undefined ||
+            get(videoStreamElementsStore).length > 0 ||
+            get(isLiveStreamingStore);
+        // The conversation the user came back for is over.
+        if (wasEngaged && !engaged) cameBack = false;
+        wasEngaged = engaged;
+
+        if (get(focusStore) || cameBack) {
             return apply(false);
         }
-        const nativePipOpen = Boolean(window.WAD?.desktop && window.WAD.windows) && get(activePictureInPictureStore);
-        // Once the camera is off for privacy, only coming back (or the desktop PiP, which the user is
-        // looking at) turns it on again. The other signals only keep it on while the user is still
-        // engaged; otherwise someone walking up to an AWAY user would switch their camera back on.
-        if (current && !nativePipOpen) {
+        // Once the camera is off for privacy, only coming back turns it on again. Otherwise someone walking up
+        // to an AWAY user would switch their camera back on.
+        if (current) {
             return;
         }
-        if (nativePipOpen) {
-            return apply(false);
-        }
-        if (get(currentPlayerGroupIdStore) !== undefined) {
-            return apply(false);
-        }
-        if (get(videoStreamElementsStore).length > 0) {
-            return apply(false);
-        }
-        if (get(isLiveStreamingStore)) {
-            return apply(false);
-        }
-        apply(true);
+        apply(!engaged);
     }
 
     function apply(next: boolean) {
@@ -63,14 +59,24 @@ function createPrivacyShutdownStore() {
 
     // Singletons — ok to not unsubscribe.
     /* eslint-disable svelte/no-ignored-unsubscribe */
-    focusStore.subscribe(recompute);
-    activePictureInPictureStore.subscribe(recompute);
+    focusStore.subscribe(() => {
+        // Switching windows ends a comeback: the main window decides again.
+        cameBack = false;
+        recompute();
+    });
     currentPlayerGroupIdStore.subscribe(recompute);
     videoStreamElementsStore.subscribe(recompute);
     isLiveStreamingStore.subscribe(recompute);
     /* eslint-enable svelte/no-ignored-unsubscribe */
 
-    return { subscribe };
+    return {
+        subscribe,
+        /** The user, still in another app, asked to be seen and heard (from the mini window). */
+        comeBack() {
+            cameBack = true;
+            recompute();
+        },
+    };
 }
 
 export const privacyShutdownStore = createPrivacyShutdownStore();

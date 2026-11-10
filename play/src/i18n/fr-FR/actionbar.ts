@@ -156,6 +156,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Caméra désactivée",
             desc: "Votre caméra est désactivée car votre statut est « {status} ».",
         },
+        micPausedByStatus: {
+            title: "Micro en pause",
+            desc: "Votre micro est en pause car votre statut est « {status} ». Cliquez pour l'activer et redevenir disponible.",
+        },
+        camPausedByStatus: {
+            title: "Caméra en pause",
+            desc: "Votre caméra est en pause car votre statut est « {status} ». Cliquez pour l'activer et redevenir disponible.",
+        },
         share: {
             title: "Partager votre écran",
             desc: "Vous voulez partager votre écran avec les autres utilisateurs ? C'est possible ! Vous pourrez montrer votre écran aux personnes de votre bulle ou de votre salle de réunion et vous pouvez choisir de partager l'intégralité de votre écran ou seulement une fenêtre spécifique.",
