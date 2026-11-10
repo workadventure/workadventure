@@ -359,13 +359,7 @@
  "file.drag_dropped": {
   "source": "front"
  },
- "global_audio.opened": {
-  "source": "front"
- },
  "global_message.opened": {
-  "source": "front"
- },
- "global_message.sound_sent": {
   "source": "front"
  },
  "global_message.text_sent": {
