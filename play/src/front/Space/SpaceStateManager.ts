@@ -1,11 +1,11 @@
 import type { SpaceState } from "@workadventure/shared-utils";
-import { emptySpaceState, spaceStateSchema } from "@workadventure/shared-utils";
+import { emptySpaceState, screenAnnotationElementSchema, spaceStateSchema } from "@workadventure/shared-utils";
 import type { Operation } from "fast-json-patch";
 import { applyPatch } from "fast-json-patch";
 import type { Readable } from "svelte/store";
 import { derived, get, readable, writable } from "svelte/store";
 import * as Sentry from "@sentry/svelte";
-import type { SpaceKind, SpaceStateQuery, SpaceUser } from "@workadventure/messages";
+import type { ScreenAnnotationElement, SpaceKind, SpaceStateQuery, SpaceUser } from "@workadventure/messages";
 import { notificationPlayingStore } from "../Stores/NotificationStore";
 import { LL } from "../../i18n/i18n-svelte";
 import type { FloorSpeaker, RaisedHand } from "./SpaceInterface";
@@ -213,6 +213,59 @@ export class SpaceStateManager {
 
     public deleteQuestion(questionId: string): Promise<void> {
         return this.change({ $case: "deleteQuestion", deleteQuestion: { questionId } });
+    }
+
+    public setScreenAnnotationOthersAllowed(allowed: boolean): Promise<void> {
+        const mySpaceUserId = this.mySpaceUserId;
+        return this.change(
+            { $case: "setScreenAnnotationOthersAllowed", setScreenAnnotationOthersAllowed: { allowed } },
+            (state) => {
+                state.annotations[mySpaceUserId] ??= { othersAllowed: false, elements: {} };
+                state.annotations[mySpaceUserId].othersAllowed = allowed;
+            },
+        );
+    }
+
+    public upsertScreenAnnotation(targetUserId: string, element: ScreenAnnotationElement): Promise<void> {
+        const mySpaceUserId = this.mySpaceUserId;
+        // A refused element (the presenter just stopped letting the others draw...) is not worth a notification:
+        // like the removal below, the caller handles it.
+        const query = { $case: "upsertScreenAnnotation" as const, upsertScreenAnnotation: { targetUserId, element } };
+        return this.alter(query, {
+            optimisticChange: (state) => {
+                const parsed = screenAnnotationElementSchema.safeParse({
+                    ...element,
+                    authorUserId: mySpaceUserId,
+                    at: Date.now(),
+                });
+                if (!parsed.success) {
+                    return;
+                }
+                state.annotations[targetUserId] ??= { othersAllowed: false, elements: {} };
+                state.annotations[targetUserId].elements[element.id] = parsed.data;
+            },
+        });
+    }
+
+    public removeScreenAnnotation(targetUserId: string, elementId: string): Promise<void> {
+        return this.alter(
+            { $case: "removeScreenAnnotation", removeScreenAnnotation: { targetUserId, elementId } },
+            {
+                optimisticChange: (state) => {
+                    delete state.annotations[targetUserId]?.elements[elementId];
+                },
+            },
+        );
+    }
+
+    public clearScreenAnnotations(): Promise<void> {
+        const mySpaceUserId = this.mySpaceUserId;
+        return this.change({ $case: "clearScreenAnnotations", clearScreenAnnotations: {} }, (state) => {
+            const annotations = state.annotations[mySpaceUserId];
+            if (annotations) {
+                annotations.elements = {};
+            }
+        });
     }
 
     /**

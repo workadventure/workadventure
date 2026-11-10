@@ -1,6 +1,7 @@
 <script lang="ts">
     import { derived, readable } from "svelte/store";
     import type { Readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import type {
         ChatMessage,
         ChatMessageType,
@@ -15,7 +16,7 @@
 
     import { resolveChatUserColor } from "../../Connection/Matrix/services/WaMatrixProfileService";
     import { getMatrixClientForChatTint } from "../../Utils";
-    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../../Stores/SelectedThreadStore";
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
@@ -35,7 +36,12 @@
     import ThreadSummary from "./ThreadSummary.svelte";
     import MessageActionSheet from "./MessageActionSheet.svelte";
     import { longPress } from "./longPress";
+    import { pickOptionsPlacement } from "./optionsPlacement";
+    import type { OptionsPlacement } from "./optionsPlacement";
     import { IconAt, IconTrash } from "@wa-icons";
+
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply, edit: selectedChatMessageToEdit } = chatInteraction;
 
     interface Props {
         message: ChatMessage;
@@ -48,6 +54,10 @@
         /** Under my own messages: who has read them. */
         readReceipts?: ChatReadReceipts;
         showReaders?: boolean;
+        /** 1:1 conversations: nobody's name is shown, we know who is talking. */
+        isDirect?: boolean;
+        /** Off for all but the last message of a run from one sender: the time shows on hover instead. */
+        showTime?: boolean;
     }
 
     let {
@@ -58,6 +68,8 @@
         showThreadSummary = true,
         readReceipts = undefined,
         showReaders = false,
+        isDirect = false,
+        showTime = true,
     }: Props = $props();
 
     let messageRef: HTMLDivElement | undefined = $state();
@@ -80,6 +92,10 @@
     let mentionsMe = $derived(!isMyMessage && $content.mentionsMe === true);
     // A message that mentions us always shows who wrote it, and says so, even in a run of messages from one sender.
     let showSenderHeader = $derived(showHeader || mentionsMe);
+    // My own name is never shown, nor the other person's in a 1:1: the time and the receipt live in the bubble.
+    let showNameHeader = $derived(
+        replyDepth <= 0 && showSenderHeader && !isMyMessage && !isQuotedMessage && !messageFromSystem && !isDirect,
+    );
 
     const messageType: { [key in ChatMessageType]: WorkAdventureComponent } = {
         image: MessageImage,
@@ -99,6 +115,29 @@
                 return Array.from($reactions.values()).filter((reaction) => reaction.users.size > 0);
             },
         ),
+    );
+    let hasReactions = $derived($reactionsWithUsers.length > 0 && !$isDeleted);
+    let hasReadReceipt = $derived(
+        readReceipts !== undefined &&
+            isMyMessage &&
+            replyDepth === 0 &&
+            !isQuotedMessage &&
+            !$isDeleted &&
+            !messageFromSystem,
+    );
+    // My last message in a group shows the readers' faces under it; until someone reads it, the tick stays in the bubble.
+    let hasReaders = $derived(
+        hasReadReceipt && showReaders && readReceipts !== undefined && readReceipts.readersOf(id).length > 0,
+    );
+    let timeLabel = $derived(date?.toLocaleTimeString($locale, { hour: "2-digit", minute: "2-digit" }));
+    let isEditing = $derived($selectedChatMessageToEdit !== null && $selectedChatMessageToEdit.id === id);
+    let hasStamp = $derived(
+        replyDepth === 0 && !isQuotedMessage && !messageFromSystem && (showTime || ($isModified && !$isDeleted)),
+    );
+    // A text message takes the stamp at the end of its last line, like most messengers; the other kinds (images,
+    // files…) and messages ending with a quote get it on a line of its own.
+    let stampInText = $derived(
+        hasStamp && !$isDeleted && !isEditing && !quotedMessage && (type === "text" || type === "proximity"),
     );
     const emptyThreadSummary = readable<ChatThreadSummary | null>(null);
 
@@ -127,6 +166,10 @@
         }
 
         selectedChatMessageToReply.set(null);
+        if (chatInteraction.openThread) {
+            chatInteraction.openThread(thread);
+            return;
+        }
 
         if ($isThreadPanelEnabledStore) {
             selectedRoomStore.set(thread.parentRoom);
@@ -164,7 +207,67 @@
             messageRef.querySelector<HTMLElement>(".options a, .options button")?.focus();
         }
     }
+
+    let bubbleRef: HTMLDivElement | undefined = $state();
+    let optionsPlacement: OptionsPlacement = $state("end");
+
+    // Before the bar shows, pick the corner above the bubble where it hides nothing of the message above.
+    function placeOptions() {
+        const bar = messageRef?.querySelector<HTMLElement>(".options");
+        const item = messageRef?.closest("li");
+        if (!messageRef || !bar || !bubbleRef || !item) {
+            return;
+        }
+        const previous = item.previousElementSibling;
+        const previousParts = previous
+            ? Array.from(previous.querySelectorAll(".message, [data-options-obstacle]"))
+            : [];
+        const obstacles = [
+            // Something without marked parts (a poll, a system line) counts as a whole.
+            ...(previous && previousParts.length === 0 ? [previous] : previousParts),
+            // Above the bubble in its own item: the unread divider, the sender's name.
+            ...Array.from(item.querySelectorAll("[data-options-obstacle]")),
+        ].map((element) => element.getBoundingClientRect());
+        const { width, height } = bar.getBoundingClientRect();
+        optionsPlacement = pickOptionsPlacement(
+            bubbleRef.getBoundingClientRect(),
+            { width, height },
+            obstacles,
+            getComputedStyle(messageRef).direction === "rtl",
+        );
+    }
+
+    // While text of this message is being selected, the bar stays hidden: it would cover what is selected.
+    let selecting = $state(false);
+
+    function onMessagePointerDown(event: PointerEvent) {
+        if (event.pointerType === "mouse" && !(event.target instanceof Element && event.target.closest(".options"))) {
+            selecting = true;
+        }
+    }
+
+    function onMessagePointerUp() {
+        if (!selecting) {
+            return;
+        }
+        const selection = window.getSelection();
+        selecting = !!selection && !selection.isCollapsed && !!messageRef?.contains(selection.anchorNode);
+    }
 </script>
+
+{#snippet stamp()}
+    <span class="float-right ms-2 mt-1 inline-flex items-center gap-1 text-xxs leading-4 text-white/60">
+        {#if $isModified && !$isDeleted}
+            <span>({$LL.chat.messageEdited()})</span>
+        {/if}
+        {#if showTime}
+            <span class="font-condensed text-nowrap">{timeLabel}</span>
+        {/if}
+        {#if showTime && hasReadReceipt && !hasReaders && readReceipts !== undefined}
+            <MessageReadReceipt messageId={id} receipts={readReceipts} showReaders={false} members={roomMembersList} />
+        {/if}
+    </span>
+{/snippet}
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
@@ -173,9 +276,15 @@
     class={`${isMyMessage && "self-end flex-row-reverse relative"} ${
         messageFromSystem && "justify-center"
     } select-text block-user-action messageContainer items-center rounded focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70`}
+    class:selecting
     bind:this={messageRef}
     use:longPress={openActionSheet}
     onkeydown={onMessageKeydown}
+    onpointerenter={placeOptions}
+    onfocusin={placeOptions}
+    onpointerdown={onMessagePointerDown}
+    onpointerup={onMessagePointerUp}
+    onpointerleave={() => (selecting = false)}
 >
     <div
         style={replyDepth === 0 ? "max-width: calc( 100% - 50px );" : "padding-left: 0"}
@@ -183,8 +292,8 @@
             ? 'group-hover/message:pb-4'
             : ''} {isMyMessage ? 'justify-end grid-container-inverted pr-4' : 'justify-start pl-3'}"
     >
-        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showSenderHeader}
-            <AvatarBox class="overflow-hidden mt-4 shrink-0">
+        {#if (!isMyMessage || isQuotedMessage) && sender !== undefined && replyDepth === 0 && showSenderHeader && !isDirect}
+            <AvatarBox class="overflow-hidden {showNameHeader ? 'mt-4' : ''} shrink-0">
                 <Avatar
                     compact
                     pictureStore={messageAvatarPictureStore}
@@ -199,43 +308,31 @@
         <div
             class="flex flex-col justify-end {replyDepth === 0
                 ? 'max-w-[min(100%,65ch)]'
-                : 'max-w-full'} {replyDepth === 0 && !showSenderHeader && (!isMyMessage || isQuotedMessage)
+                : 'max-w-full'} {replyDepth === 0 && !showSenderHeader && (!isMyMessage || isQuotedMessage) && !isDirect
                 ? 'ml-12'
                 : ''}"
         >
-            {#if replyDepth <= 0 && showSenderHeader}
-                <div
-                    class="w-full h-fit text-xs px-2 flex justify-between items-end gap-2 overflow-x-hidden"
-                    class:flex-row-reverse={isMyMessage}
-                    hidden={isQuotedMessage || messageFromSystem}
-                >
-                    <span class="flex min-w-0 items-center gap-2">
-                        <span
-                            hidden={messageFromSystem}
-                            class="text-nowrap text-sm font-bold {!isMyMessage ? 'text-white' : 'text-white/75'}"
-                            >{isMyMessage ? $LL.chat.you() : sender?.username}{#if waDisplayNameParens}<span
-                                    class="text-xs font-normal opacity-75 ml-0.5">({waDisplayNameParens})</span
-                                >{/if}</span
-                        >
-                        {#if mentionsMe}
-                            <span
-                                class="flex items-center gap-1 text-nowrap text-xs font-medium text-danger-500"
-                                data-testid="messageMentionsMe"
-                            >
-                                <IconAt font-size={14} />
-                                {$LL.chat.mention.mentionedYou()}
-                            </span>
-                        {/if}
-                    </span>
-                    <span class={`text-xs font-condensed text-nowrap opacity-75 ${isMyMessage ? "mr-1" : "ml-1"}`}
-                        >{date?.toLocaleTimeString($locale, {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                        })}</span
+            {#if showNameHeader}
+                <div class="w-full h-fit text-xs px-2 flex items-end gap-2 overflow-x-hidden" data-options-obstacle>
+                    <span class="text-nowrap text-sm font-bold text-white"
+                        >{sender?.username}{#if waDisplayNameParens}<span class="text-xs font-normal opacity-75 ml-0.5"
+                                >({waDisplayNameParens})</span
+                            >{/if}</span
                     >
+                    {#if mentionsMe}
+                        <span
+                            class="flex items-center gap-1 text-nowrap text-xs font-medium text-danger-500"
+                            data-testid="messageMentionsMe"
+                        >
+                            <IconAt font-size={14} />
+                            {$LL.chat.mention.mentionedYou()}
+                        </span>
+                    {/if}
                 </div>
             {/if}
             <div
+                bind:this={bubbleRef}
+                title={showTime || replyDepth > 0 ? undefined : timeLabel}
                 class="message rounded-md
                     {$isDeleted && !isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
                     {$isDeleted && isMyMessage && !messageFromSystem && replyDepth === 0 ? 'bg-white/10' : ''}
@@ -245,7 +342,8 @@
                     {isMyMessage && !messageFromSystem && !$isDeleted && replyDepth === 0
                     ? 'bg-secondary/90 rounded-br-none'
                     : ''}
-                    {!isQuotedMessage ? 'my' : ''}"
+                    {!isQuotedMessage ? 'my' : ''}
+                    {hasReactions ? 'pb-2' : ''}"
             >
                 {#if $isDeleted}
                     <p class="py-2 px-2 m-0 text-xs flex items-center italic gap-2 opacity-50">
@@ -264,12 +362,12 @@
                     {/if}
 
                     {@const MessageComponent = messageType[type]}
-                    <MessageComponent {content} {message} />
+                    <MessageComponent {content} {message} trailing={stampInText ? stamp : undefined} />
                     {#if message.attachment?.delivery}
                         <MessageAttachmentRecipients recipients={message.attachment.delivery} />
                     {/if}
 
-                    {#if $isModified}
+                    {#if $isModified && replyDepth > 0}
                         <div class="text-white/50 text-xxs p-0 m-0 px-2 pb-1 text-right">
                             ({$LL.chat.messageEdited()})
                         </div>
@@ -283,23 +381,50 @@
                         </div>
                     </div>
                 {/if}
+
+                {#if hasStamp && !stampInText}
+                    <div class="flex justify-end px-2 pb-1 -mt-1">{@render stamp()}</div>
+                {/if}
+                {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+                    <!-- Above the bubble, never on it: on it, the bar hid the text being read or copied. The bottom
+                         padding bridges the gap to the bubble, so the pointer does not lose the hover on its way up. -->
+                    <div
+                        class="options absolute bottom-full z-50 pb-1 {optionsPlacement === 'start'
+                            ? 'start-0'
+                            : 'end-0'}"
+                    >
+                        <div
+                            class="rounded-lg p-0.5 bg-contrast border border-solid border-white/15 shadow-lg ring-2 ring-contrast"
+                        >
+                            <MessageOptions {message} {messageRef} onOpenThread={openThread} />
+                        </div>
+                    </div>
+                {/if}
             </div>
-            {#if $reactionsWithUsers.length > 0 && !$isDeleted}
-                <MessageReactions
-                    classes={isMyMessage ? "justify-end *:bg-secondary/30" : "*:bg-contrast/30"}
-                    reactions={$reactionsWithUsers}
-                />
-            {/if}
-            {#if readReceipts && isMyMessage && replyDepth === 0 && !isQuotedMessage && !$isDeleted && !messageFromSystem}
-                <MessageReadReceipt messageId={id} receipts={readReceipts} {showReaders} members={roomMembersList} />
-            {/if}
-            {#if !isQuotedMessage && !$isDeleted && message.type !== "incoming" && message.type !== "outcoming" && ($selectedChatMessageToEdit === null || $selectedChatMessageToEdit.id !== id)}
+            {#if hasReactions || hasReaders}
+                <!-- The reactions straddle the bubble's bottom edge from its left; in a group, who has read my last
+                     message sits at the other end of the same line. -->
                 <div
-                    class="options -top-2 absolute z-50 rounded p-1 {!isMyMessage
-                        ? 'right-2 bg-contrast/80'
-                        : 'right-6 bg-secondary/80'}"
+                    class="relative z-10 flex items-start gap-1 px-1.5 {hasReactions ? '-mt-2.5' : ''}"
+                    data-options-obstacle
                 >
-                    <MessageOptions {message} {messageRef} onOpenThread={openThread} />
+                    {#if hasReactions}
+                        <MessageReactions
+                            classes="min-w-0 mt-0! *:bg-contrast-900 *:ring-2 *:ring-contrast"
+                            reactions={$reactionsWithUsers}
+                        />
+                    {/if}
+                    {#if hasReaders && readReceipts !== undefined}
+                        <div class="ms-auto {hasReactions ? 'mt-2.5' : ''}">
+                            <MessageReadReceipt
+                                messageId={id}
+                                receipts={readReceipts}
+                                showReaders
+                                showSeenByLabel={!hasReactions}
+                                members={roomMembersList}
+                            />
+                        </div>
+                    {/if}
                 </div>
             {/if}
 
@@ -327,11 +452,19 @@
         gap: 2px;
         transition-delay: 0.15s;
         opacity: 1;
+        pointer-events: auto;
     }
 
+    /* Hidden, it must not catch the pointer: it sits over the message above. Keyboard focus still reaches it. */
     .options {
         transition: all 0.2s ease-in-out;
         opacity: 0;
+        pointer-events: none;
+    }
+
+    #message.selecting .options {
+        opacity: 0;
+        pointer-events: none;
     }
 
     /* A long press opens the action sheet, which can copy the text: native selection would fight it. */

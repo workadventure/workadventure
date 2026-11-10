@@ -112,20 +112,20 @@ jobs:
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
-  build-uploader:
+  build-maps:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
     with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/uploader-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/uploader'
-      dockerio-image-name: 'thecodingmachine/workadventure-uploader'
+      ghcr-dev-build-image-name: 'ghcr.io/workadventure/maps-dev-build'
+      ghcr-image-name: 'ghcr.io/workadventure/maps'
+      dockerio-image-name: 'thecodingmachine/workadventure-maps'
       final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
-      dockerfile: uploader/Dockerfile
-      short_name: uploader
-      sentry_project: uploader
+      dockerfile: maps/Dockerfile
+      short_name: maps
+      sentry_project: maps
       # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
-      context: ./
+      context: ./maps
 
   build-map-storage:
     uses: ./.github/workflows/build-multi-arch-image.yml
@@ -227,7 +227,7 @@ jobs:
             nbShards: 1
             renderer: headless
             ignoreTags: "@nowebkit|@nodesktop"
-          - browser: ""
+          - browser: chromium
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
@@ -235,7 +235,7 @@ jobs:
             renderer: auto
             ignoreTags: "@nomobile"
             shardWeights: "33:48"
-          - browser: ""
+          - browser: chromium
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 2
@@ -243,14 +243,14 @@ jobs:
             renderer: auto
             ignoreTags: "@nomobile"
             shardWeights: "33:48"
-          - browser: ""
+          - browser: firefox
             parameters: --project=mobilefirefox
             project: mobilefirefox
             shard: 1
             nbShards: 1
             renderer: auto
             ignoreTags: "@nomobile|@nofirefox"
-          - browser: ""
+          - browser: webkit
             parameters: --project=mobilewebkit
             project: mobilewebkit
             shard: 1
@@ -261,7 +261,6 @@ jobs:
       - build-play
       - build-back
       - build-maps
-      - build-uploader
       - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
@@ -270,12 +269,17 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts)
-        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.browser == 'chromium' && 'firefox' || '' }}
+        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts, @nomobile)
+        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.project == 'chromium' && 'firefox' || '' }}
         working-directory: tests
       - name: Set up virtual audio output for Firefox
         if: ${{ contains(matrix.project, 'firefox') || matrix.project == 'chromium' }}
@@ -342,12 +346,6 @@ jobs:
         with:
           name: map-storage
           path: /tmp
-      - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
-        uses: actions/download-artifact@v4
-        with:
-          name: uploader
-          path: /tmp
       - name: Load image
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         run: |
@@ -355,7 +353,6 @@ jobs:
           docker image load --input /tmp/back.tar.gz
           docker image load --input /tmp/maps.tar.gz
           docker image load --input /tmp/map-storage.tar.gz
-          docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
@@ -678,7 +675,6 @@ jobs:
   #   needs:
   #     - build-back
   #     - build-maps
-  #     - build-uploader
   #     - build-map-storage
   #   steps:
   #     - name: Set target branch for GitLab pipeline
@@ -831,7 +827,6 @@ jobs:
       - build-play
       - build-back
       - build-maps
-      - build-uploader
       - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
@@ -840,6 +835,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -1097,6 +1097,7 @@ jobs:
       - build-front
       - build-server
       - build-maps
+      - build-map-storage
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
 
@@ -1380,6 +1381,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -1501,50 +1507,3 @@ jobs:
           prune-untagged: true
           prune-tags-regexes: ".*"
 
-      - name: Prune play
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: play-dev-build
-          dry-run: false # Dry-run first, then change to `false`
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"
-
-      - name: Prune back
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: back-dev-build
-          dry-run: false # Dry-run first, then change to `false`
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"
-
-      - name: Prune map-storage
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: map-storage-dev-build
-          dry-run: false # Dry-run first, then change to `false`
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"
-
-      - name: Prune uploader
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: uploader-dev-build
-          dry-run: false # Dry-run first, then change to `false`
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"

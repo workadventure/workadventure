@@ -106,18 +106,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "اختر نقطة الدخول التي سيصل من خلالها المستخدمون",
     },
     globalMessage: {
-        text: "نص", // Text
-        audio: "صوت", // Audio
         warning: "إرسال إلى جميع الغرف في هذا العالم", // Send to all rooms in this world
         enter: "أدخل رسالتك هنا...", // Enter your message here...
         send: "إرسال", // Send
-    },
-    globalAudio: {
-        uploadInfo: "رفع الملف", // Upload file
-        error: "لم يتم اختيار ملف. يجب عليك رفع ملف قبل الإرسال.", // No file selected. You must upload a file before sending.
-        errorUpload:
-            "خطأ في رفع الملف. يرجى التحقق من ملفك والمحاولة مرة أخرى. إذا استمرت المشكلة، يرجى الاتصال بالمسؤول.", // Error uploading file. Please check your file and try again. If the problem persists, contact the administrator.
-        dragAndDrop: "اسحب الملف هنا أو انقر لرفعه 🎧", // Drag and drop file here or click to upload 🎧
     },
     contact: {
         gettingStarted: {
@@ -163,7 +154,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "الملف الشخصي", // Profile
         settings: "الإعدادات", // Settings
         credit: "حول هذه الخريطة", // About this map
-        globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
         help: "مساعدة وشروحات",
@@ -172,12 +162,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     shortcuts: {
         title: "اختصارات لوحة المفاتيح",
-        keys: "الاختصار",
-        actions: "الإجراء",
-        moveUp: "تحرك للأعلى",
-        moveDown: "تحرك للأسفل",
-        moveLeft: "تحرك لليسار",
-        moveRight: "تحرك لليمين",
         speedUp: "الركض",
         interact: "تفاعل",
         follow: "اتبع",
@@ -185,15 +169,52 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "فتح قائمة المستخدمين",
         toggleMapEditor: "إظهار/إخفاء محرر الخرائط",
         rotatePlayer: "تدوير اللاعب",
-        emote1: "تعبير 1",
-        emote2: "تعبير 2",
-        emote3: "تعبير 3",
-        emote4: "تعبير 4",
-        emote5: "تعبير 5",
-        emote6: "تعبير 6",
         openSayPopup: "فتح نافذة قل",
         openThinkPopup: "فتح نافذة فكر",
         walkMyDesk: "الذهاب إلى مكتبي",
+        edit: {
+            start: "تعديل",
+            title: "وضع التعديل",
+            help: "انقر على اختصار ثم اضغط على التركيبة الجديدة. Escape للإلغاء. تُحفظ اختياراتك في هذا المتصفح.",
+            resetAll: "إعادة تعيين الكل",
+            done: "تم",
+            pressKey: "اضغط على مفتاح…",
+            none: "لا شيء",
+            change: "تغيير اختصار «{action}»",
+            reset: "استعادة الاختصار الافتراضي لـ «{action}»",
+            locked: "غير قابل للتعديل",
+            modified: "معدّل",
+            usedBy: "{keys} مستخدم بالفعل لـ «{action}». الاستبدال سيترك «{action}» بلا اختصار.",
+            usedByFixed: "{keys} مستخدم بالفعل لـ «{action}» ولا يمكن تغييره.",
+            reserved: "{keys} محجوز للمتصفح. اختر مفتاحًا آخر.",
+            replace: "استبدال",
+            cancel: "إلغاء",
+        },
+        subtitle: "تُعطَّل أثناء الكتابة في حقل نصي.",
+        searchLabel: "البحث عن اختصار",
+        searchPlaceholder: "ابحث عن إجراء أو مفتاح…",
+        noResult: "لا يوجد اختصار يطابق «{query}».",
+        or: "أو",
+        layout: "تخطيط لوحة المفاتيح",
+        walk: "المشي",
+        sendEmote: "إرسال رمز تعبيري",
+        groups: {
+            move: "التنقل",
+            communicate: "التواصل",
+            express: "التعبير",
+            interact: "التفاعل",
+        },
+        hints: {
+            speedUp: "اضغط مع الاستمرار أثناء التنقل",
+            follow: "بالقرب من شخص ما",
+            emotes: "بترتيب شريط الرموز التعبيرية",
+            mapEditor: "إذا كان بإمكانك تعديل الخريطة",
+        },
+        keyNames: {
+            shift: "Shift",
+            enter: "Enter",
+            space: "مسافة",
+        },
     },
 };
 

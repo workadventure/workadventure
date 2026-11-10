@@ -136,112 +136,6 @@ jobs:
         run: npm run pretty-check
         working-directory: "back"
 
-  continuous-integration-uploader:
-    name: "Continuous Integration Uploader"
-
-    runs-on: "ubuntu-latest"
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v3
-        with:
-          node-version: 24
-          cache: "npm"
-
-
-      - name: "Install dependencies"
-        run: npm ci --workspace=workadventureuploader
-
-      - name: "Lint"
-        run: npm run lint
-        working-directory: "uploader"
-
-      - name: "Test"
-        run: npm test
-        working-directory: "uploader"
-
-  continuous-integration-server-go:
-    name: "Continuous Integration server-go"
-
-    runs-on: "ubuntu-latest"
-
-    defaults:
-      run:
-        working-directory: server-go
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Setup Go"
-        uses: actions/setup-go@v7
-        with:
-          go-version-file: server-go/go.mod
-          cache-dependency-path: server-go/go.sum
-
-      - name: "gofmt"
-        run: |
-          unformatted="$(gofmt -l .)"
-          if [ -n "$unformatted" ]; then
-            echo "gofmt needed on:"
-            echo "$unformatted"
-            exit 1
-          fi
-
-      - name: "go vet"
-        run: go vet ./...
-
-      - name: "golangci-lint"
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: v2.14.0
-          working-directory: server-go
-
-      # Same protoc and plugin versions as the headers of internal/pb: regenerating must not change a file.
-      - name: "Install Protoc"
-        uses: arduino/setup-protoc@v3
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          version: '33.1'
-
-      - name: "Check the generated protobuf code is up to date"
-        run: |
-          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
-          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
-          PATH="$(go env GOPATH)/bin:$PATH"
-          export PATH
-          go generate ./internal/pb
-          git diff --exit-code -- internal/pb
-
-      # internal/analytics checks catalog.json against the TS catalog and skips itself without these node_modules.
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: "npm"
-
-      - name: "Install the messages library dependencies (analytics catalog test)"
-        run: npm ci --workspace=@workadventure/messages --ignore-scripts
-        working-directory: "."
-
-      - name: "Test"
-        run: go test -race -count=1 -coverprofile=cover.out ./...
-
-      - name: "Coverage"
-        run: |
-          grep -v '/internal/pb/' cover.out > cover.filtered.out
-          {
-            echo "### server-go coverage (without internal/pb)"
-            echo
-            go tool cover -func=cover.filtered.out | tail -n 1
-          } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: "govulncheck"
-        run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
-
   continuous-integration-lib-map-editor:
     name: "Continuous Integration Map Editor Library"
 
@@ -531,73 +425,32 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 24
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
+          cache: "npm"
+          cache-dependency-path: "desktop/electron/package-lock.json"
 
       - name: "Install dependencies"
-        run: yarn install
+        run: npm ci
         working-directory: "desktop/electron"
 
       - name: "Build"
-        run: yarn run build
+        run: npm run build
         working-directory: "desktop/electron"
 
       - name: "Typecheck"
-        run: yarn run typecheck
+        run: npm run typecheck
         working-directory: "desktop/electron"
 
       - name: "Lint"
-        run: yarn run lint
+        run: npm run lint
         working-directory: "desktop/electron"
 
-      - name: "Jasmine"
-        run: yarn run test
+      - name: "Unit tests"
+        run: npm run test
         working-directory: "desktop/electron"
 
       - name: "Prettier"
-        run: yarn run pretty-check
+        run: npm run pretty-check
         working-directory: "desktop/electron"
-
-  continuous-integration-desktop-local-app:
-    name: "Continuous Integration Desktop Local App"
-
-    runs-on: "ubuntu-latest"
-
-    steps:
-      - name: "Checkout"
-        uses: "actions/checkout@v5"
-
-      - name: "Setup NodeJS"
-        uses: actions/setup-node@v3
-        with:
-          node-version: 24
-          cache: "yarn"
-          cache-dependency-path: '**/yarn.lock'
-
-
-      - name: "Install dependencies"
-        run: yarn install
-        working-directory: "desktop/local-app"
-
-      - name: "Build"
-        run: yarn build
-        working-directory: "desktop/local-app"
-
-      - name: "Typecheck"
-        run: yarn check
-        working-directory: "desktop/local-app"
-
-      - name: "Lint"
-        run: yarn lint
-        working-directory: "desktop/local-app"
-
-      - name: "Jasmine"
-        run: yarn test
-        working-directory: "desktop/local-app"
-
-      - name: "Prettier"
-        run: yarn pretty-check
-        working-directory: "desktop/local-app"
 
   continuous-integration-end-to-end-tests:
     name: "Continuous Integration checking End To End tests"

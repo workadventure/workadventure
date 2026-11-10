@@ -18,12 +18,13 @@
     import { v4 as uuid } from "uuid";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { defaultNativeIntegrationAppName } from "@workadventure/shared-utils";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import {
         hasChatRoomPollCreation,
         hasProximityChatSidePanel,
         type ChatConversation,
     } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToReply } from "../../Stores/ChatStore";
+
     import { roomSidePanelStore } from "../../Stores/RoomSidePanelStore";
     import { chatInputFocusStore } from "../../../Stores/ChatStore";
     import { warningMessageStore } from "../../../Stores/ErrorStore";
@@ -53,6 +54,7 @@
     import excalidrawSvg from "../../../Components/images/applications/icon_excalidraw.svg";
     import cardsPng from "../../../Components/images/applications/icon_cards.svg";
     import tldrawJpeg from "../../../Components/images/applications/icon_tldraw.jpeg";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import { shouldDisableMessageInput, shouldDisableSendButton } from "./MessageInputBarDisabling";
     import { messageInputText } from "./messageInputText";
     import ApplicationFormWrapper from "./Application/ApplicationFormWrapper.svelte";
@@ -71,6 +73,9 @@
     } from "@wa-icons";
     import { modals } from "@wa-modals";
 
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply } = chatInteraction;
+
     interface Props {
         room: ChatConversation;
         disabled: boolean;
@@ -81,11 +86,16 @@
     // Room is keyed in the parent component, so it will be re-created when the room changes.
     const room = (() => roomProp)();
 
+    let disposed = false;
     let message = $state("");
     let messageInput: HTMLDivElement | undefined = $state();
     let mentionSuggestions: MentionSuggestions | undefined = $state();
     let messageBarRef: HTMLDivElement;
     let stopTypingTimeOutID: undefined | ReturnType<typeof setTimeout>;
+    // When "typing" was last sent, 0 when the others think we are not typing.
+    let lastStartTypingAt = 0;
+    // Typing requests go out one after the other: a late "start" must not land after the "stop" that follows it.
+    let typingRequests: Promise<unknown> = Promise.resolve();
     let files: { id: string; file: File }[] = $state([]);
     let sendingFiles = $state(false);
     let filesPreview: {
@@ -96,6 +106,8 @@
         url: string | undefined;
     }[] = $state([]);
     const TYPINT_TIMEOUT = 10000;
+    // Receivers drop a typing user who sent nothing for a while (12 s in the proximity chat): refresh well before.
+    const TYPING_REFRESH_INTERVAL = 5000;
     const inactiveProximityState = readable(false);
 
     let applicationComponentOpened = $state(false);
@@ -175,7 +187,7 @@
     );
     const canOpenQuestions = canOpenQuestionsPanel(room);
     let replyMessageId: string | null = null;
-    const draftId = `${room.id}-${localUserStore.getChatId() ?? "0"}`;
+    const draftId = `${chatInteraction.compact ? "companion-" : ""}${room.id}-${localUserStore.getChatId() ?? "0"}`;
 
     const applicationManager = gameManager.getCurrentGameScene().applicationManager;
 
@@ -194,21 +206,8 @@
         if (!$canSendMessages) {
             return;
         }
-        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
 
         const isEmptyMessage = message.replace(/<br>/g, "").trim() == "" || message == undefined;
-        if (keyDownEvent.key === "Enter" || isEmptyMessage) {
-            room.stopTyping().catch((error) => console.error(error));
-        } else {
-            room.startTyping()
-                .then(() => {
-                    stopTypingTimeOutID = setTimeout(() => {
-                        room.stopTyping().catch((error) => console.error(error));
-                        stopTypingTimeOutID = undefined;
-                    }, TYPINT_TIMEOUT);
-                })
-                .catch((error) => console.error(error));
-        }
 
         if (keyDownEvent.key === "Enter" && keyDownEvent.shiftKey) {
             return;
@@ -231,6 +230,7 @@
         if (!$canSendMessages || sendingFiles || fileErrors.length > 0) {
             return;
         }
+        stopTyping();
         if (applicationProperty && applicationProperty.link.length !== 0) {
             room?.sendMessage(applicationProperty.link);
         }
@@ -282,9 +282,6 @@
                 messageInput.innerText = "";
             }
             message = "";
-            if (stopTypingTimeOutID) {
-                clearTimeout(stopTypingTimeOutID);
-            }
         }
     }
 
@@ -297,24 +294,49 @@
         // We remove the <br> tags and the whitespace to check if the message is empty
         const messageToSend = message.replace(/<br>/g, "").trim();
         if (messageToSend == "" || messageToSend == undefined) {
-            if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
-            room.stopTyping().catch((error) => console.error(error));
+            stopTyping();
+        } else {
+            startTyping();
         }
+    }
+
+    function sendTyping(typing: boolean) {
+        typingRequests = typingRequests
+            .then(() => (typing ? room.startTyping() : room.stopTyping()))
+            .catch((error) => console.error(error));
+    }
+
+    function startTyping() {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+        stopTypingTimeOutID = setTimeout(stopTyping, TYPINT_TIMEOUT);
+        if (Date.now() - lastStartTypingAt < TYPING_REFRESH_INTERVAL) return;
+        lastStartTypingAt = Date.now();
+        sendTyping(true);
+    }
+
+    function stopTyping() {
+        if (stopTypingTimeOutID) clearTimeout(stopTypingTimeOutID);
+        stopTypingTimeOutID = undefined;
+        if (lastStartTypingAt === 0) return;
+        lastStartTypingAt = 0;
+        sendTyping(false);
     }
 
     onMount(async () => {
         fileAttachementEnabled = gameManager.getCurrentGameScene().room.isChatUploadEnabled;
         const draft = await draftMessageService.loadDraft(draftId);
+        if (disposed) return;
         if (draft) {
             message = draft.message ?? "";
             if (draft.replyingToMessageId) {
                 const loadReplyMessage = await room.getMessageById?.(draft.replyingToMessageId);
-                selectedChatMessageToReply.set(loadReplyMessage ?? null);
+                if (!disposed) selectedChatMessageToReply.set(loadReplyMessage ?? null);
             }
         }
     });
 
     onDestroy(() => {
+        disposed = true;
         draftMessageService.saveDraft({
             id: draftId,
             roomId: room.id,
@@ -323,14 +345,11 @@
             replyingToMessageId: replyMessageId ?? null,
         });
         if (setTimeOutProperty) clearTimeout(setTimeOutProperty);
-        if (stopTypingTimeOutID) {
-            clearTimeout(stopTypingTimeOutID);
-            stopTypingTimeOutID = undefined;
-        }
-        room.stopTyping().catch((error) => console.error(error));
+        stopTyping();
         closeEmojiPicker?.();
         closeEmojiPicker = undefined;
         selectedChatChatMessageToReplyUnsubscriber();
+        if (chatInteraction.compact) chatInputFocusStore.set(false);
     });
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
@@ -416,6 +435,7 @@
         event.stopImmediatePropagation();
         event.preventDefault();
         chatInputFocusStore.set(false);
+        stopTyping();
     }
 
     function openFileAttachmentComponent() {
@@ -605,6 +625,9 @@
     const applicationDescriptionClass =
         "text-xs p-0 m-0 min-h-12 w-full leading-tight whitespace-normal break-words text-gray-400";
 </script>
+
+<!-- Closing or leaving the tab while typing: the others would otherwise wait for the timeout. -->
+<svelte:window onpagehide={stopTyping} />
 
 {#if files.length > 0}
     <div class="w-full min-w-0 p-1">
@@ -944,7 +967,7 @@
                             class=" text-xs text-white/30 rounded-md p-2 m-0 truncate w-full text-ellipsis"
                             style:overflow-wrap="anywhere"
                         >
-                            {$quotedMessageContent?.body}
+                            {decodeHtmlEntities($quotedMessageContent?.body ?? "")}
                         </p>
                     </div>
                 </div>
@@ -977,19 +1000,33 @@
               : $LL.chat.cannotSendHere()}
         dataTestid="messageInput"
     />
-    <button
-        data-testid="addApplicationButton"
-        class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-        class:bg-secondary-800={applicationComponentOpened}
-        disabled={messageInputDisabled}
-        onclick={toggleApplicationComponent}
-    >
-        <IconX
-            font-size={18}
-            class={applicationComponentOpened ? "rotate-0" : "rotate-45"}
-            style="transition: all .2s ease-out;"
-        />
-    </button>
+    {#if chatInteraction.compact}
+        {#if fileAttachementEnabled && !fileAttachmentComponentOpened}
+            <button
+                type="button"
+                class="p-2 m-0 shrink-0 hover:bg-white/10 rounded-md disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                disabled={messageInputDisabled}
+                aria-label={$LL.chat.fileAttachment.title()}
+                onclick={openFileAttachmentComponent}
+            >
+                <IconPaperclip font-size={18} />
+            </button>
+        {/if}
+    {:else}
+        <button
+            data-testid="addApplicationButton"
+            class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+            class:bg-secondary-800={applicationComponentOpened}
+            disabled={messageInputDisabled}
+            onclick={toggleApplicationComponent}
+        >
+            <IconX
+                font-size={18}
+                class={applicationComponentOpened ? "rotate-0" : "rotate-45"}
+                style="transition: all .2s ease-out;"
+            />
+        </button>
+    {/if}
     <button
         class="p-0 m-0 h-11 w-11 flex items-center justify-center hover:bg-white/10 rounded-md shrink-0 disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent"
         disabled={messageInputDisabled}

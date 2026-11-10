@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "无法加载声音",
         notAllowed: "▶️ 音频未允许。按 [空格] 或点击此处播放！",
     },
-    message: "音频消息",
     disable: "关掉你的麦克风",
 };
 
