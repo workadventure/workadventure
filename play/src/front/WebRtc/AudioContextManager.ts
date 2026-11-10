@@ -1,5 +1,71 @@
+import * as Sentry from "@sentry/svelte";
 import type { Unsubscriber } from "svelte/store";
 import { bindAudioOutput } from "./AudioOutputManager";
+
+export const RENDER_RECOVERY_INTERVAL_MS = 1_000;
+export const RENDER_RECOVERY_MAX_ATTEMPTS = 30;
+
+/**
+ * Restarts a context after a render error (Chrome's "The AudioContext encountered an error from the audio device or
+ * the WebAudio renderer": the system audio output failed), until the returned function is called.
+ *
+ * Chrome stops rendering and leaves the context suspended. A single resume() at that moment is not enough: the output
+ * may still be unavailable, and nothing retries once it is back. Until the context renders again, every analyser on it
+ * reads zeros: the volume meters stay flat and the "no microphone sound" warning shows for nothing.
+ *
+ * "Renders again" is checked on the clock (currentTime moves), not on the state alone.
+ */
+export function recoverFromRenderErrors(context: AudioContext): Unsubscriber {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    const breadcrumb = (message: string, level: "info" | "warning" = "info") =>
+        Sentry.addBreadcrumb({
+            category: "audio-context",
+            level,
+            message,
+            data: { state: context.state, sampleRate: context.sampleRate, sinkId: context.sinkId },
+        });
+
+    const schedule = (attemptsLeft: number) => {
+        // Read now, compared after the delay: the clock only moves while the context renders
+        const time = context.currentTime;
+        timer = setTimeout(() => check(attemptsLeft, time), RENDER_RECOVERY_INTERVAL_MS);
+    };
+
+    const check = (attemptsLeft: number, previousTime: number) => {
+        timer = undefined;
+        if (context.state === "closed") {
+            return;
+        }
+        if (context.state === "running" && context.currentTime > previousTime) {
+            breadcrumb("AudioContext renders again after a render error");
+            return;
+        }
+        if (attemptsLeft === 0) {
+            breadcrumb("AudioContext did not recover from a render error", "warning");
+            console.warn("[AudioContextManager] AudioContext did not recover from a render error");
+            return;
+        }
+        // "running" with a frozen clock: resume() would do nothing, only a suspend/resume cycle restarts the output
+        const restart = context.state === "running" ? context.suspend().then(() => context.resume()) : context.resume();
+        restart.catch((e: unknown) => console.debug("[AudioContextManager] Could not restart the AudioContext", e));
+        schedule(attemptsLeft - 1);
+    };
+
+    const onError = () => {
+        breadcrumb("AudioContext render error", "warning");
+        // One recovery at a time: Chrome reports the same failure several times in a row
+        if (timer === undefined) {
+            schedule(RENDER_RECOVERY_MAX_ATTEMPTS);
+        }
+    };
+
+    context.addEventListener("error", onError);
+    return () => {
+        context.removeEventListener("error", onError);
+        clearTimeout(timer);
+    };
+}
 
 export interface AudioContextProbe {
     readonly isPlaybackAvailable: boolean;
@@ -41,7 +107,12 @@ class AudioContextManager {
             const options = sampleRate ? { sampleRate } : undefined;
             context = new AudioContext(options);
             this.audioContexts.set(key, context);
-            this.outputBindings.set(context, bindAudioOutput(context));
+            const unbindOutput = bindAudioOutput(context);
+            const stopRecovery = recoverFromRenderErrors(context);
+            this.outputBindings.set(context, () => {
+                unbindOutput();
+                stopRecovery();
+            });
             console.debug(
                 `[AudioContextManager] Created new AudioContext with ${
                     sampleRate ? `sample rate ${sampleRate}` : "default sample rate"
