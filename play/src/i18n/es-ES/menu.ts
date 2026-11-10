@@ -108,18 +108,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Seleccione el punto de entrada por el que llegarán los usuarios",
     },
     globalMessage: {
-        text: "Texto",
-        audio: "Audio",
         warning: "Transmitir a todas las habitaciones del mundo",
         enter: "Introduzca su mensaje aquí...",
         send: "Enviar",
-    },
-    globalAudio: {
-        uploadInfo: "Suba un archivo",
-        error: "Ningún archivo seleccionado. Tiene que subir un archivo antes de enviarlo.",
-        errorUpload:
-            "Error al cargar el archivo. Por favor revise su archivo y vuelva a intentarlo. Si el problema persiste, póngase en contacto con el administrador.",
-        dragAndDrop: "Arrastrar y soltar o hacer clic aquí para subir su archivo 🎧",
     },
     contact: {
         gettingStarted: {
@@ -165,7 +156,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "Perfil",
         settings: "Ajustes",
         credit: "Créditos",
-        globalMessages: "Mensajes Globales",
         contact: "Contacto",
         report: "Reportar problemas",
         help: "Ayuda y tutoriales",

@@ -1,5 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
-import { audioContextManager } from "../../../src/front/WebRtc/AudioContextManager";
+import {
+    audioContextManager,
+    recoverFromRenderErrors,
+    RENDER_RECOVERY_INTERVAL_MS,
+    RENDER_RECOVERY_MAX_ATTEMPTS,
+} from "../../../src/front/WebRtc/AudioContextManager";
 import { bindAudioOutput } from "../../../src/front/WebRtc/AudioOutputManager";
 
 vi.mock("../../../src/front/WebRtc/AudioOutputManager", () => ({ bindAudioOutput: vi.fn() }));
@@ -7,7 +12,7 @@ vi.mock("../../../src/front/WebRtc/AudioOutputManager", () => ({ bindAudioOutput
 // jsdom has no AudioContext
 vi.stubGlobal(
     "AudioContext",
-    class {
+    class extends EventTarget {
         state = "running";
         close() {
             this.state = "closed";
@@ -33,5 +38,75 @@ describe("AudioContextManager", () => {
 
         await audioContextManager.closeAllContexts();
         expect(unbind48k).toHaveBeenCalledOnce();
+    });
+
+    describe("recoverFromRenderErrors", () => {
+        function fakeContext() {
+            const context = Object.assign(new EventTarget(), {
+                state: "running",
+                currentTime: 10,
+                resume: vi.fn(() => Promise.resolve()),
+                suspend: vi.fn(() => Promise.resolve()),
+            });
+            return { context, asAudioContext: context as unknown as AudioContext };
+        }
+
+        it("resumes a context left suspended by a render error until its clock moves again", () => {
+            vi.useFakeTimers();
+            const { context, asAudioContext } = fakeContext();
+            const stop = recoverFromRenderErrors(asAudioContext);
+
+            // Chrome reports the failure several times in a row, then suspends the context
+            context.dispatchEvent(new Event("error"));
+            context.dispatchEvent(new Event("error"));
+            context.state = "suspended";
+
+            vi.advanceTimersByTime(RENDER_RECOVERY_INTERVAL_MS);
+            expect(context.resume).toHaveBeenCalledTimes(1);
+
+            // The output is still unavailable: resume() changed nothing
+            vi.advanceTimersByTime(RENDER_RECOVERY_INTERVAL_MS);
+            expect(context.resume).toHaveBeenCalledTimes(2);
+
+            context.state = "running";
+            context.currentTime = 11;
+            vi.advanceTimersByTime(RENDER_RECOVERY_INTERVAL_MS * 5);
+            expect(context.resume).toHaveBeenCalledTimes(2);
+
+            stop();
+            vi.useRealTimers();
+        });
+
+        it("cycles a context that says it runs while its clock is frozen, and gives up eventually", async () => {
+            vi.useFakeTimers();
+            const { context, asAudioContext } = fakeContext();
+            const stop = recoverFromRenderErrors(asAudioContext);
+
+            context.dispatchEvent(new Event("error"));
+            await vi.advanceTimersByTimeAsync(RENDER_RECOVERY_INTERVAL_MS);
+            expect(context.suspend).toHaveBeenCalledTimes(1);
+            expect(context.resume).toHaveBeenCalledTimes(1);
+
+            await vi.advanceTimersByTimeAsync(RENDER_RECOVERY_INTERVAL_MS * RENDER_RECOVERY_MAX_ATTEMPTS * 2);
+            expect(context.suspend).toHaveBeenCalledTimes(RENDER_RECOVERY_MAX_ATTEMPTS);
+
+            stop();
+            vi.useRealTimers();
+        });
+
+        it("leaves a context that recovered by itself alone", () => {
+            vi.useFakeTimers();
+            const { context, asAudioContext } = fakeContext();
+            const stop = recoverFromRenderErrors(asAudioContext);
+
+            context.dispatchEvent(new Event("error"));
+            context.currentTime = 11;
+            vi.advanceTimersByTime(RENDER_RECOVERY_INTERVAL_MS * 3);
+            expect(context.resume).not.toHaveBeenCalled();
+            expect(context.suspend).not.toHaveBeenCalled();
+
+            stop();
+            vi.useRealTimers();
+        });
     });
 });
