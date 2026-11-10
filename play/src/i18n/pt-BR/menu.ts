@@ -107,9 +107,7 @@ const menu: BaseTranslation = {
         selectEntryPointSelect: "Selecione o ponto de entrada pelo qual os usuários chegarão",
     },
     globalMessage: {
-        warning: "Transmissão para todas as salas do mundo",
         enter: "Digite sua mensagem aqui...",
-        send: "Enviar",
     },
     contact: {
         gettingStarted: {

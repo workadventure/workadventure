@@ -38,12 +38,14 @@
         onjoin,
     }: Props = $props();
 
+    // undefined when the text is not a Quill delta (a message sent through the admin API): shown as plain text.
     let html = $derived.by(() => {
         try {
             const delta = JSON.parse(text) as { ops: ConstructorParameters<typeof QuillDeltaToHtmlConverter>[0] };
+            if (!Array.isArray(delta?.ops)) return undefined;
             return new QuillDeltaToHtmlConverter(delta.ops, { inlineStyles: true }).convert();
         } catch {
-            return "";
+            return undefined;
         }
     });
     let place = $derived(joinUrl ? moveTargetOf(joinUrl) : undefined);
@@ -82,6 +84,8 @@
                 {:else}
                     <IconSpeakerPhone font-size="20" />
                 {/if}
+            {:catch}
+                <IconSpeakerPhone font-size="20" />
             {/await}
         </div>
         <div class="flex-1 min-w-0">
@@ -101,7 +105,9 @@
                     </span>
                 {/if}
             </div>
-            <div class="announcement-text mt-1 max-h-48 overflow-auto break-words">{@html html}</div>
+            <div class="announcement-text mt-1 max-h-48 overflow-auto break-words">
+                {#if html !== undefined}{@html html}{:else}<span class="whitespace-pre-line">{text}</span>{/if}
+            </div>
             {#if joinUrl}
                 <button
                     type="button"

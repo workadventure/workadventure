@@ -64,15 +64,15 @@ Rooms where the megaphone is disabled do not receive the broadcast.
 
 ![](../images/editor/megaphone_live_settings.png)
 
-3. Turn on your camera or your microphone in the action bar (**Start megaphone** stays disabled until one of them is on).
-   You can also share your screen. Choose your camera and microphone in this window if needed, then click **Start megaphone**.
+3. Turn on your camera or your microphone in the action bar (**Go live** stays disabled until one of them is on).
+   You can also share your screen. Choose your camera and microphone in this window if needed, then click **Go live**.
 
 Everyone reached by the megaphone now receives what you have turned on: your camera, your microphone and your screen.
 Your video tile carries a megaphone badge (and is framed in yellow when your camera is on), and the megaphone button appears in the action bar, highlighted.
 
 ![](../images/editor/megaphone_live.png)
 
-To stop, click the megaphone button in the action bar (1), or **Stop megaphone** in the **Megaphone** window.
+To stop, click the megaphone button in the action bar (1), or **Stop** in the **Go live** window.
 Administrators can also send a written announcement to everyone, with **Send an announcement** in the same menu (see [Sending a message to everyone](/user/global-messages)).
 
 The participants see your video tile with the same megaphone badge:

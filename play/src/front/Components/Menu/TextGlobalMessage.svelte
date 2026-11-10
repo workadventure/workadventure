@@ -57,6 +57,8 @@
         quill = new Quill(QUILL_EDITOR, {
             placeholder: $LL.menu.globalMessage.enter(),
             theme: "snow",
+            // Also what a paste may bring in: the toolbar alone does not restrict it.
+            formats: ["bold", "italic", "link", "list"],
             modules: {
                 toolbar: toolbarOptions,
             },

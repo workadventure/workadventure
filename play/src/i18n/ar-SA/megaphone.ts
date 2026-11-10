@@ -35,16 +35,7 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             wholeWorld: "كل غرف العالم",
             live: "مباشر",
             stop: "إيقاف",
-            startMegaphone: "ابدأ الميكروفون", // Start megaphone
-            stopMegaphone: "إيقاف الميغافون",
-            goingToStream: "ستقوم بالبث", // You are going to stream
-            yourMicrophone: "الميكروفون الخاص بك", // Your microphone
-            yourCamera: "الكاميرا الخاصة بك", // Your camera
-            yourScreen: "شاشتك", // Your screen
             title: "رسالة مباشرة", // Live message
-            and: "و", // and
-            toAll: "إلى جميع المشاركين", // to all participants
-            settings: "الإعدادات", // Settings
         },
     },
 };

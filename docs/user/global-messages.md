@@ -17,9 +17,13 @@ Only users with the `admin` tag can send them. To broadcast your camera and micr
 5. Check the **Preview**: it shows the card exactly as people will receive it.
 6. Click **Send to this room**, or **Send to the whole world** and confirm.
 
+![Writing an announcement, with a place to join](images/global-messages-composer.png)
+
 ## Receiving an announcement
 
 Everyone connected to the room (or to the world) sees the announcement below the action bar, with a short sound. It shows who sent it, at what time, and whether it went to the room or the whole world. They close it with the cross or **Escape**.
+
+![The announcement, received below the action bar](images/global-messages-received.png)
 
 When it has a place, **Join** walks their Woka to that area. From another room of the world, it takes them to the right map first, without reloading the page. If the area was renamed or deleted in the meantime, a message says the place no longer exists.
 
