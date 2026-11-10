@@ -58,7 +58,6 @@ commonEnv:
   ENABLE_CHAT: "true"
   ENABLE_CHAT_UPLOAD: "true"
   ENABLE_TUTORIAL: "true"
-  UPLOAD_MAX_FILESIZE: "10485760"
 
 commonSecretEnv:
   MAP_STORAGE_API_TOKEN: ""
@@ -460,94 +459,6 @@ back:
   externalSecretName: ""
 
 # #########################################################
-# uploader service
-# #########################################################
-uploader:
-  replicaCount: 1
-
-  image:
-    repository: thecodingmachine/workadventure-uploader
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is appVersion.
-    tag: ""
-
-  podAnnotations: {}
-
-  podSecurityContext: {}
-    # fsGroup: 2000
-
-  securityContext: {}
-    # capabilities:
-    #   drop:
-    #   - ALL
-    # readOnlyRootFilesystem: true
-    # runAsNonRoot: true
-    # runAsUser: 1000
-
-  service:
-    type: ClusterIP
-    port: 8080
-
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  autoscaling:
-    enabled: false
-    minReplicas: 1
-    maxReplicas: 10
-    targetCPUUtilizationPercentage: 70
-    targetMemoryUtilizationPercentage: 80
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}
-
-  # see configuration reference: https://github.com/workadventure/workadventure/blob/master/contrib/docker/.env.prod.template
-  env: {}
-    # AWS_DEFAULT_REGION:
-    # AWS_BUCKET:
-    # AWS_URL:
-    # AWS_ENDPOINT:
-    # # or
-    # REDIS_HOST:
-    # REDIS_PORT:
-
-  # Those environment variables should be added in "Kubernetes" format (e.g. [name: "...", valueFrom: {...}]).
-  extraEnvVars: []
-
-  secretEnv: {}
-    # AWS_ACCESS_KEY_ID:
-    # AWS_SECRET_ACCESS_KEY:
-
-  # The name of a configMap that should be added to the service.
-  externalConfigMapName: ""
-  # The name of a secret that should be added to the service.
-  externalSecretName: ""
-
-  ingress:
-    # This setting is used to enable the uploader ingress in multiDomain mode.
-    # This is ignored in singleDomain mode (see (root).ingress.enabled instead).
-    enabled: true
-    tls: false
-    secretName: ""
-    # Domain name to be used for the container.
-    # If not set, the play domain name is built from the root "domainName" value and the "singleDomain" value.
-    domainName: ""
-    # ClassName to use for the container. If not set, will fallback to (root.ingress.className)
-    className: ""
-
-# #########################################################
 # maps service
 # #########################################################
 # Note: the maps container only contains test maps.
@@ -844,7 +755,7 @@ ingress:
   # Annotations used in multi-domain mode for all routes (and in single-domain mode for "/ws" and "/" route).
   annotationsRoot:
     {}
-  # Annotations used only in single-domain mode for "/api", "/uploader", "/icon" and "/map-storage" paths (that are using the rewritePathSuffix).
+  # Annotations used only in single-domain mode for "/api", "/icon" and "/map-storage" paths (that are using the rewritePathSuffix).
   annotationsPath:
     nginx.ingress.kubernetes.io/use-regex: "true"
     nginx.ingress.kubernetes.io/rewrite-target: /$2

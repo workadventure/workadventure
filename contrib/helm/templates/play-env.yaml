@@ -11,7 +11,6 @@ metadata:
 data:
   API_URL: {{ range $replica, $f := until (int .Values.back.replicaCount) }}{{ include "workadventure.fullname" $ }}-back-{{ $replica }}:50051{{ if ne $replica (sub (int $.Values.back.replicaCount) 1)  }}{{ "," }}{{ end }}{{ end }}
   ICON_URL: {{ include "workadventure.iconUrl" . | quote }}
-  UPLOADER_URL: {{ include "workadventure.uploaderUrl" . | quote }}
   PUSHER_URL: {{ include "workadventure.pusherUrl" . | quote }}
   FRONT_URL: {{ include "workadventure.playUrl" . | quote }}
   {{- if .Values.front.enabled }}
