@@ -116,3 +116,14 @@ func envMap(t *testing.T, env FrontEnv) map[string]any {
 	_ = json.Unmarshal(b, &m)
 	return m
 }
+
+// The uploader is gone (TS master removed it): the front no longer gets an UPLOADER_URL to call.
+func TestTheFrontGetsNoUploaderURL(t *testing.T) {
+	b, err := json.Marshal(FrontEnv{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), "UPLOADER_URL") {
+		t.Fatalf("the front env still announces an uploader: %s", b)
+	}
+}

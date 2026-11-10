@@ -101,7 +101,7 @@ func run() error {
 	vars := variableStore(cfg)
 	wsServer := ws.NewServer(cfg, ws.Deps{Auth: tokens, Admin: adm, Rooms: rooms, Spaces: spaces, Maps: maps, Vars: vars,
 		APIVersion: apiVersion, Analytics: events, Matrix: matrixClient(cfg, vars), Recordings: recordings})
-	srv := buildServers(cfg, sentryx.Middleware(httpapi.New(cfg, tokens, adm, front, wsServer, version)), maps, buildUploader(cfg, vars),
+	srv := buildServers(cfg, sentryx.Middleware(httpapi.New(cfg, tokens, adm, front, wsServer, version)), maps,
 		buildRoomAPI(cfg, rooms, wsServer))
 	if err := srv.serve(ctx); err != nil {
 		return err

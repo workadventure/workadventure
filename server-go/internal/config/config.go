@@ -24,7 +24,6 @@ import (
 	"github.com/caarlos0/env/v11"
 
 	"github.com/workadventure/workadventure/server-go/internal/mapstorage"
-	"github.com/workadventure/workadventure/server-go/internal/uploader"
 )
 
 type Config struct {
@@ -41,12 +40,6 @@ type Config struct {
 	LiveKitHost, LiveKitAPIKey, LiveKitAPISecret string
 	MaxUsersForWebRTC                            int
 	LiveKitSwitchOnCPULimitation                 bool
-
-	// The uploader (SERVER_UPLOADER_PORT; the chart's server mode points the uploader Service at 3003).
-	UploaderPort    int
-	Uploader        uploader.Options
-	UploaderS3      UploaderS3 // AWS_*: the uploader's bucket
-	UploaderRedisDB int        // REDIS_DB_NUMBER: only the uploader read it (files in Redis); the variables stay on 0
 
 	RoomAPIPort      int
 	RoomAPISecretKey string
@@ -184,11 +177,6 @@ type vars struct {
 	AuthenticationUser               string  `env:"AUTHENTICATION_USER"`
 	AuthenticationValidatorURL       string  `env:"AUTHENTICATION_VALIDATOR_URL"`
 	AutologinURL                     string  `env:"AUTOLOGIN_URL"`
-	AWSAccessKeyID                   string  `env:"AWS_ACCESS_KEY_ID"`
-	AWSBucket                        string  `env:"AWS_BUCKET"`
-	AWSDefaultRegion                 string  `env:"AWS_DEFAULT_REGION"`
-	AWSEndpoint                      string  `env:"AWS_ENDPOINT"`
-	AWSSecretAccessKey               string  `env:"AWS_SECRET_ACCESS_KEY"`
 	BBBSecret                        string  `env:"BBB_SECRET"`
 	BBBURL                           string  `env:"BBB_URL"`
 	BypassPWA                        bool    `env:"BYPASS_PWA"`
@@ -321,7 +309,6 @@ type vars struct {
 	ServerName                       string  `env:"SERVER_NAME" envDefault:"WorkAdventure Server"`
 	ServerRoomAPIPort                int     `env:"SERVER_ROOM_API_PORT"`
 	RoomAPIPort                      int     `env:"ROOM_API_PORT" envDefault:"50051"`
-	ServerUploaderPort               int     `env:"SERVER_UPLOADER_PORT" envDefault:"3003"`
 	SkipCameraPage                   bool    `env:"SKIP_CAMERA_PAGE"`
 	SkipRenderOptimizations          bool    `env:"SKIP_RENDER_OPTIMIZATIONS"`
 	SocketIdleTimer                  int     `env:"SOCKET_IDLE_TIMER" envDefault:"120"`
@@ -336,9 +323,6 @@ type vars struct {
 	TurnServer                       string  `env:"TURN_SERVER"`
 	TurnStaticAuthSecret             string  `env:"TURN_STATIC_AUTH_SECRET"`
 	TurnUser                         string  `env:"TURN_USER"`
-	UploaderAWSSignedURLExpiration   int     `env:"UPLOADER_AWS_SIGNED_URL_EXPIRATION" envDefault:"60"`
-	UploaderURL                      string  `env:"UPLOADER_URL"`
-	UploadMaxFilesize                int     `env:"UPLOAD_MAX_FILESIZE"`
 	UseDomainNameInPath              bool    `env:"USE_DOMAIN_NAME_IN_PATH"`
 	WAMTemplateURL                   string  `env:"WAM_TEMPLATE_URL"`
 	WebHookAPIToken                  string  `env:"WEB_HOOK_API_TOKEN"`
@@ -437,7 +421,6 @@ func parse(environ map[string]string) (*Config, error) {
 		MapStoragePort:               v.ServerMapStoragePort,
 		RoomAPIPort:                  cmp.Or(v.ServerRoomAPIPort, v.RoomAPIPort),
 		RoomAPISecretKey:             v.RoomAPISecretKey,
-		UploaderPort:                 v.ServerUploaderPort,
 		LiveKitHost:                  v.LivekitHost,
 		LiveKitAPIKey:                v.LivekitAPIKey,
 		LiveKitAPISecret:             v.LivekitAPISecret,
@@ -449,7 +432,6 @@ func parse(environ map[string]string) (*Config, error) {
 		RedisHost:                    v.RedisHost,
 		RedisPassword:                v.RedisPassword,
 		RedisPort:                    v.RedisPort,
-		UploaderRedisDB:              v.RedisDbNumber,
 		StoreVariablesForLocalMaps:   v.StoreVariablesForLocalMaps,
 		MapStorage: mapstorage.Options{
 			Auth: mapstorage.Auth{
@@ -564,11 +546,6 @@ func parse(environ map[string]string) (*Config, error) {
 		oneOf(&errs, "OPID_WOKA_NAME_POLICY", v.OPIDWokaNamePolicy, policies...),
 		"user_input",
 	)
-	c.Uploader = uploader.Options{AdminAPIURL: c.AdminAPIURL, PublicURL: v.UploaderURL, AllowedOrigin: firstNonEmpty(v.AllowedCORSOrigin, v.PlayURL, "*"),
-		EnableUpload: c.EnableChatUpload, MaxFileSize: int64(v.UploadMaxFilesize)}
-	c.UploaderS3 = UploaderS3{Endpoint: v.AWSEndpoint, Region: v.AWSDefaultRegion, Bucket: v.AWSBucket,
-		AccessKey: v.AWSAccessKeyID, Secret: v.AWSSecretAccessKey,
-		URLTTL: time.Duration(v.UploaderAWSSignedURLExpiration) * time.Second}
 	c.RecordingConfigured = v.LivekitRecordingS3Endpoint != "" && v.LivekitRecordingS3Bucket != "" &&
 		v.LivekitRecordingS3AccessKey != "" && v.LivekitRecordingS3SecretKey != "" &&
 		v.LivekitRecordingS3Region != ""
@@ -627,7 +604,6 @@ func frontEnv(v *vars, c *Config, environ map[string]string) FrontEnv {
 		PusherURL:                      c.PusherURL,
 		FrontURL:                       c.FrontURL,
 		AdminURL:                       optional(v.AdminURL),
-		UploaderURL:                    v.UploaderURL,
 		IconURL:                        v.IconURL,
 		SkipRenderOptimizations:        v.SkipRenderOptimizations,
 		JitsiURL:                       optional(v.JitsiURL),
@@ -710,7 +686,6 @@ type FrontEnv struct {
 	PusherURL                      string   `json:"PUSHER_URL"`
 	FrontURL                       string   `json:"FRONT_URL"`
 	AdminURL                       *string  `json:"ADMIN_URL,omitempty"`
-	UploaderURL                    string   `json:"UPLOADER_URL"`
 	IconURL                        string   `json:"ICON_URL"`
 	SkipRenderOptimizations        bool     `json:"SKIP_RENDER_OPTIMIZATIONS"`
 	JitsiURL                       *string  `json:"JITSI_URL,omitempty"`
@@ -805,16 +780,6 @@ func webHook(v *vars) mapstorage.WebHook {
 		return mapstorage.WebHook{}
 	}
 	return mapstorage.WebHook{URL: v.WebHookURL, Token: v.WebHookAPIToken}
-}
-
-// UploaderS3 is the bucket of the uploader (S3StorageProvider), used when bucket, keys and region are all set.
-type UploaderS3 struct {
-	Endpoint, Region, Bucket, AccessKey, Secret string
-	URLTTL                                      time.Duration
-}
-
-func (u UploaderS3) Enabled() bool {
-	return u.Bucket != "" && u.AccessKey != "" && u.Secret != "" && u.Region != ""
 }
 
 // Complete says whether the recording bucket is set (LIVEKIT_RECORDING_S3_*).

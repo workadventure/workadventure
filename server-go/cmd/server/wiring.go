@@ -23,7 +23,6 @@ import (
 	"github.com/workadventure/workadventure/server-go/internal/roomapi"
 	"github.com/workadventure/workadventure/server-go/internal/s3"
 	"github.com/workadventure/workadventure/server-go/internal/store"
-	"github.com/workadventure/workadventure/server-go/internal/uploader"
 	"github.com/workadventure/workadventure/server-go/internal/ws"
 )
 
@@ -120,27 +119,6 @@ func matrixClient(cfg *config.Config, vars store.Hash) *matrix.Client {
 	return m
 }
 
-// buildUploader is the uploader (chat files, audio messages): in the bucket when AWS_* are set, in Redis otherwise.
-func buildUploader(cfg *config.Config, vars store.Hash) http.Handler {
-	up := cfg.Uploader
-	if b := cfg.UploaderS3; b.Enabled() {
-		endpoint := b.Endpoint
-		if endpoint == "" {
-			endpoint = "https://s3." + b.Region + ".amazonaws.com"
-		}
-		up.S3, up.S3URLTTL = s3.New(endpoint, b.Region, b.Bucket, b.AccessKey, b.Secret), b.URLTTL
-		go func() { // like S3StorageProvider, once, without waiting: a bucket that refuses keeps its rules
-			if err := up.S3.PutCORS(context.Background()); err != nil {
-				slog.Warn("cannot set the CORS rules of the uploader's bucket", "error", err)
-			}
-		}()
-	}
-	if r, ok := vars.(*store.Redis); ok {
-		up.Redis = r.WithDB(cfg.UploaderRedisDB)
-	}
-	return uploader.New(up).Handler()
-}
-
 // buildRoomAPI is the Room API (gRPC), nil when neither ROOM_API_SECRET_KEY nor an admin authorizes it.
 func buildRoomAPI(cfg *config.Config, rooms *registry.Refs[string, *core.Room], w *ws.Server) *grpc.Server {
 	if cfg.RoomAPISecretKey == "" && cfg.AdminAPIURL == "" {
@@ -160,9 +138,9 @@ type servers struct {
 	roomAPIAddr string
 }
 
-// buildServers puts each handler on its port: the main one (pusher, front), map-storage's, the uploader's, the
-// metrics', and the Room API's. A port shared with the main one is served by the main handler.
-func buildServers(cfg *config.Config, main http.Handler, maps *mapstorage.Store, upload http.Handler, roomAPI *grpc.Server) *servers {
+// buildServers puts each handler on its port: the main one (pusher, front), map-storage's, the metrics', and the
+// Room API's. A port shared with the main one is served by the main handler.
+func buildServers(cfg *config.Config, main http.Handler, maps *mapstorage.Store, roomAPI *grpc.Server) *servers {
 	// ReadHeaderTimeout: a client that never finishes its headers must not hold a connection forever.
 	newServer := func(port int, h http.Handler) *http.Server {
 		return &http.Server{Addr: ":" + strconv.Itoa(port), Handler: h, ReadHeaderTimeout: 10 * time.Second}
@@ -174,9 +152,6 @@ func buildServers(cfg *config.Config, main http.Handler, maps *mapstorage.Store,
 	}
 	if cfg.MapStoragePort != 0 && cfg.MapStoragePort != cfg.HTTPPort && cfg.MapStoragePort != cfg.WSPort {
 		s.http = append(s.http, newServer(cfg.MapStoragePort, maps.Handler(cfg.MapStorage)))
-	}
-	if cfg.UploaderPort != 0 && cfg.UploaderPort != cfg.HTTPPort && cfg.UploaderPort != cfg.WSPort && cfg.UploaderPort != cfg.MapStoragePort {
-		s.http = append(s.http, newServer(cfg.UploaderPort, upload))
 	}
 	if cfg.PrometheusPort != 0 {
 		// The dedicated metrics port also serves the Go profiler, behind the same token as the metrics (none: no profiler).
