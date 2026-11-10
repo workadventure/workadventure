@@ -9,11 +9,13 @@ import tailwindcss from "@tailwindcss/vite";
 process.env.ELECTRON_ENTRY ??= "dist/main.js";
 
 // Same layout as the former tsup build: dist/main.js, dist/preload-*/preload.js, and the Landing in
-// dist/landing. Main runs first and empties dist, so the next builds must not empty it again.
-export default defineConfig({
+// dist/landing. Main runs first and empties dist, so the next builds must not empty it again. Only on a
+// build: `npm run dev` rebuilds main alone on each change, and emptying dist then deletes the preloads.
+export default defineConfig(({ command }) => ({
     main: {
         build: {
             outDir: "dist",
+            emptyOutDir: command === "build",
             rolldownOptions: { input: { main: "src/main.ts" } },
         },
     },
@@ -42,4 +44,4 @@ export default defineConfig({
             rolldownOptions: { input: fileURLToPath(new URL("./src/landing/index.html", import.meta.url)) },
         },
     },
-});
+}));
