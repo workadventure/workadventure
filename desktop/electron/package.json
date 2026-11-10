@@ -10,7 +10,7 @@
     "scripts": {
         "build": "tsup-node ./src/main.ts ./src/preload-app/preload.ts ./src/preload-tabs/preload.ts ./src/preload-screen-identify/preload.ts",
         "dev": "npm run build -- --watch --onSuccess 'electron dist/main.js'",
-        "bundle": "npm run build && electron-builder install-app-deps && electron-builder",
+        "bundle": "npm run build && electron-builder",
         "typecheck": "tsc --noEmit",
         "test": "vitest run",
         "lint": "eslint src/ . --ext .ts",
@@ -20,13 +20,10 @@
     },
     "dependencies": {
         "auto-launch": "^5.0.5",
-        "electron-is-dev": "^2.0.0",
         "electron-log": "^4.4.6",
         "electron-settings": "^4.0.2",
         "electron-updater": "^6.8.10",
-        "electron-util": "^0.17.2",
-        "electron-window-state": "^5.0.3",
-        "node-fetch": "^3.2.10"
+        "electron-window-state": "^5.0.3"
     },
     "devDependencies": {
         "@types/auto-launch": "^5.0.2",
