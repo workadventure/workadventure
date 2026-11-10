@@ -106,18 +106,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "اختر نقطة الدخول التي سيصل من خلالها المستخدمون",
     },
     globalMessage: {
-        text: "نص", // Text
-        audio: "صوت", // Audio
         warning: "إرسال إلى جميع الغرف في هذا العالم", // Send to all rooms in this world
         enter: "أدخل رسالتك هنا...", // Enter your message here...
         send: "إرسال", // Send
-    },
-    globalAudio: {
-        uploadInfo: "رفع الملف", // Upload file
-        error: "لم يتم اختيار ملف. يجب عليك رفع ملف قبل الإرسال.", // No file selected. You must upload a file before sending.
-        errorUpload:
-            "خطأ في رفع الملف. يرجى التحقق من ملفك والمحاولة مرة أخرى. إذا استمرت المشكلة، يرجى الاتصال بالمسؤول.", // Error uploading file. Please check your file and try again. If the problem persists, contact the administrator.
-        dragAndDrop: "اسحب الملف هنا أو انقر لرفعه 🎧", // Drag and drop file here or click to upload 🎧
     },
     contact: {
         gettingStarted: {
@@ -163,7 +154,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "الملف الشخصي", // Profile
         settings: "الإعدادات", // Settings
         credit: "حول هذه الخريطة", // About this map
-        globalMessages: "رسائل عالمية", // Global messages
         contact: "اتصال", // Contact
         report: "الإبلاغ عن خطأ", // Report an error
         help: "مساعدة وشروحات",

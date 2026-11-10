@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "إرسال رسالة نصية", // Send a text message
             noAccess: "ليس لديك حق الوصول إلى هذه الميزة 😱 يرجى الاتصال بالمسؤول 🙏", // You do not have access to this feature 😱 Please contact the administrator 🙏
         },
-        audioMessage: {
-            title: "رسالة صوتية", // Audio message
-            notice: `
-            الرسالة الصوتية هي رسالة من نوع "MP3, OGG..." يتم إرسالها إلى جميع المستخدمين في الغرفة أو في العالم.
-
-            سيتم تنزيل هذه الرسالة الصوتية وإرسالها إلى جميع الأشخاص الذين يتلقون هذا الإشعار.
-
-            يمكن أن تتكون الرسالة الصوتية من تسجيل صوتي يشير إلى أن المؤتمر سيبدأ في غضون دقائق قليلة.
-            `, // The audio message is a message of type "MP3, OGG..." that is sent to all users in the room or in the world. This audio message will be downloaded and sent to all people who receive this notification. An audio message can consist of an audio recording indicating that a conference will start in a few minutes.
-            button: "إرسال رسالة صوتية", // Send an audio message
-            noAccess: "ليس لديك حق الوصول إلى هذه الميزة 😱 يرجى الاتصال بالمسؤول 🙏", // You do not have access to this feature 😱 Please contact the administrator 🙏
-        },
     },
 };
 

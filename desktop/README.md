@@ -23,11 +23,11 @@ npm run bundle
 
 ## API for the front
 
-The world renderer gets `window.WAD` (see `electron/src/preload-app/types.ts`, mirrored in
-`play/src/front/Interfaces/DesktopAppInterfaces.ts`):
+The world renderer gets `window.WAD`, typed in `libs/desktop-api` (`@workadventure/desktop-api`), which both the
+preload and play import:
 
 ```ts
 if (window.WAD?.desktop) {
-    window.WAD.notify({ title: "WorkAdventure", body: "Hello from the front" });
+    window.WAD.notify("Hello from the front");
 }
 ```
