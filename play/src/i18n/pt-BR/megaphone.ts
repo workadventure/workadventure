@@ -36,18 +36,6 @@ const megaphone: BaseTranslation = {
             button: "Enviar uma mensagem de texto",
             noAccess: "Você não tem acesso a este recurso 😱 Por favor, entre em contato com o administrador 🙏",
         },
-        audioMessage: {
-            title: "Mensagem de áudio",
-            notice: `
-            A mensagem de áudio é uma mensagem do tipo "MP3, OGG..." enviada para todos os usuários conectados na sala ou no mundo.
-
-            Esta mensagem de áudio será baixada e reproduzida para todas as pessoas que receberem esta notificação.
-
-            Uma mensagem de áudio pode consistir em uma gravação de áudio que indica que uma conferência começará em alguns minutos.
-            `,
-            button: "Enviar uma mensagem de áudio",
-            noAccess: "Você não tem acesso a este recurso 😱 Por favor, entre em contato com o administrador 🙏",
-        },
     },
 };
 

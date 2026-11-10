@@ -34,7 +34,6 @@ import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFi
 import Debug from "debug";
 import { asError } from "catch-unknown";
 import { textMessageStore } from "../../Stores/TypeMessageStore/TextMessageStore";
-import { soundPlayingStore } from "../../Stores/SoundPlayingStore";
 import { connectionManager } from "../../Connection/ConnectionManager";
 import { urlManager } from "../../Url/UrlManager";
 import { mediaManager } from "../../WebRtc/MediaManager";
@@ -56,7 +55,6 @@ import {
     MAX_PER_GROUP,
     POSITION_DELAY,
     PUBLIC_MAP_STORAGE_PREFIX,
-    UPLOADER_URL,
     WOKA_SPEED,
 } from "../../Enum/EnvironmentVariable";
 import { Room } from "../../Connection/Room";
@@ -4661,14 +4659,12 @@ ${escapedMessage}
     }
 
     /**
-     * Displays a message sent by an admin: a text or an audio message.
+     * Displays a text message sent by an admin. Audio messages are no longer supported and are ignored.
      */
     private showUserMessage({ type, message }: SendUserMessage) {
         if (type === "message") {
             textMessageStore.addMessage(message);
             this.playSound("new-message", 0.2);
-        } else if (type === "audio") {
-            soundPlayingStore.playSound(UPLOADER_URL + message);
         }
     }
 
