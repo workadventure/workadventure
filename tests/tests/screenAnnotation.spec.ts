@@ -156,6 +156,7 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
         await bob.getByTestId("annotation-toggle").click({ timeout: 15_000 });
         await expect(bobCanvas).toHaveCSS("pointer-events", "auto");
+        await bob.getByTestId("annotation-tool-pen").click();
         await drawStroke(bob, bobCanvas);
         await expect(bobCanvas).toHaveAttribute("data-element-count", "1");
 
