@@ -69,6 +69,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     },
     otherMeetingMuted:
         "Je zit nu hier in een vergadering. Je microfoon, camera en schermdeling zijn uitgeschakeld in {world}.",
+    desktopAppOutdated: "Er is een nieuwe versie van de WorkAdventure-app beschikbaar: {url}",
 };
 
 export default warning;

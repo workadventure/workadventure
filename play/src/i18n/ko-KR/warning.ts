@@ -67,6 +67,7 @@ const warning: DeepPartial<Translation["warning"]> = {
         neverShowPage: "다시 묻지 않기",
     },
     otherMeetingMuted: "이제 여기에서 회의 중입니다. {world}에서 마이크, 카메라, 화면 공유가 꺼졌습니다.",
+    desktopAppOutdated: "WorkAdventure 앱의 새 버전을 사용할 수 있습니다: {url}",
 };
 
 export default warning;

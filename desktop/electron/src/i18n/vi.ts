@@ -90,7 +90,6 @@ const vi: NativeStrings = {
     "tray.status.idle": "Không hoạt động",
     "tray.status.online": "Sẵn sàng",
     "tray.status.offline": "Ngoại tuyến",
-    "tray.statusLocked": "Không thể thay đổi trạng thái trong cuộc họp",
     "tray.microphone": "Micrô",
     "tray.camera": "Camera",
     "tray.companionPanel": "Bảng đồng hành",

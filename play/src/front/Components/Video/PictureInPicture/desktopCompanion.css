@@ -1,3 +1,5 @@
+/* The desktop companion's own design (the native panel it replaces), injected into the companion window
+   only (DesktopCompanion.svelte): it never reaches the main page. */
 :root {
     color-scheme: dark;
     --bg: #0f1826;
@@ -29,7 +31,13 @@
     --st-away: #e9c84e;
     --st-offline: #6b7280;
 
-    font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:
+        Inter,
+        ui-sans-serif,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
 }
 
 * {
@@ -188,7 +196,9 @@ button {
     border: 0;
     border-radius: 8px;
     color: #fff;
-    transition: background-color 120ms ease, color 120ms ease;
+    transition:
+        background-color 120ms ease,
+        color 120ms ease;
 }
 
 .icon-btn:hover {
@@ -258,12 +268,24 @@ button {
     border-radius: 50%;
     background: var(--st-offline);
 }
-.dot[data-status="online"] { background: var(--st-online); }
-.dot[data-status="busy"] { background: var(--st-busy); }
-.dot[data-status="back_in_a_moment"] { background: var(--st-back_in_a_moment); }
-.dot[data-status="do_not_disturb"] { background: var(--st-do_not_disturb); }
-.dot[data-status="away"] { background: var(--st-away); }
-.dot[data-status="offline"] { background: var(--st-offline); }
+.dot[data-status="online"] {
+    background: var(--st-online);
+}
+.dot[data-status="busy"] {
+    background: var(--st-busy);
+}
+.dot[data-status="back_in_a_moment"] {
+    background: var(--st-back_in_a_moment);
+}
+.dot[data-status="do_not_disturb"] {
+    background: var(--st-do_not_disturb);
+}
+.dot[data-status="away"] {
+    background: var(--st-away);
+}
+.dot[data-status="offline"] {
+    background: var(--st-offline);
+}
 
 /* ── Status dropdown ────────────────────────────────────────────────────── */
 .status-menu {
@@ -1236,4 +1258,15 @@ button {
 }
 ::-webkit-scrollbar-thumb:hover {
     background: var(--surface-hover);
+}
+
+/* The page's meeting layout, moved into the video area by PictureInPicture.svelte. Its controls are the
+   header's here, and its map backdrop would cover the whole window. */
+.companion-video-host {
+    position: absolute;
+    inset: 0;
+}
+.companion-video-host .pip-action-bar,
+.companion-video-host .pip-map-background {
+    display: none;
 }

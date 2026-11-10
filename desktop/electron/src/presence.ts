@@ -33,10 +33,8 @@ type PresenceState = {
     invitationPending: boolean;
     /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
     autoOpenAllowed: boolean;
-    /** The user's current chosen availability (the tray Status radio reflects this). */
+    /** The user's chosen availability, shown by the tray dot. */
     requestedStatus: TrayAvailability;
-    /** True while WA locks the status bar (in a meeting / silent zone) — the tray submenu grays out. */
-    statusLocked: boolean;
 };
 
 const state: PresenceState = {
@@ -50,7 +48,6 @@ const state: PresenceState = {
     invitationPending: false,
     autoOpenAllowed: true,
     requestedStatus: "online",
-    statusLocked: false,
 };
 
 const TRAY_AVAILABILITY_VALUES: readonly TrayAvailability[] = ["online", "busy", "back_in_a_moment", "do_not_disturb"];
@@ -102,7 +99,6 @@ export function setRendererPresence(next: {
     invitationPending?: boolean;
     autoOpenAllowed?: boolean;
     requestedStatus?: unknown;
-    statusLocked?: boolean;
 }): void {
     const inMeeting = Boolean(next.inMeeting);
     const micEnabled = Boolean(next.micEnabled);
@@ -113,7 +109,6 @@ export function setRendererPresence(next: {
     const invitationPending = Boolean(next.invitationPending);
     const autoOpenAllowed = next.autoOpenAllowed !== false;
     const requestedStatus = coerceAvailability(next.requestedStatus);
-    const statusLocked = Boolean(next.statusLocked);
     if (
         state.inMeeting === inMeeting &&
         state.micEnabled === micEnabled &&
@@ -123,8 +118,7 @@ export function setRendererPresence(next: {
         state.onboarding === onboarding &&
         state.invitationPending === invitationPending &&
         state.autoOpenAllowed === autoOpenAllowed &&
-        state.requestedStatus === requestedStatus &&
-        state.statusLocked === statusLocked
+        state.requestedStatus === requestedStatus
     ) {
         return;
     }
@@ -137,7 +131,6 @@ export function setRendererPresence(next: {
     state.invitationPending = invitationPending;
     state.autoOpenAllowed = autoOpenAllowed;
     state.requestedStatus = requestedStatus;
-    state.statusLocked = statusLocked;
     emit();
 }
 
@@ -166,7 +159,6 @@ export function resetPresence(): void {
     state.invitationPending = false;
     state.autoOpenAllowed = true;
     state.requestedStatus = "online";
-    state.statusLocked = false;
     emit();
 }
 
@@ -195,11 +187,6 @@ export function getTrayStatus(): TrayStatus {
 
 export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; inMeeting: boolean } {
     return { micEnabled: state.micEnabled, cameraEnabled: state.cameraEnabled, inMeeting: state.inMeeting };
-}
-
-/** The user's chosen availability + whether WA currently locks it (tray Status submenu). */
-export function getAvailabilityInfo(): { status: TrayAvailability; locked: boolean } {
-    return { status: state.requestedStatus, locked: state.statusLocked };
 }
 
 /** Snapshot used by the companion visibility controller. */

@@ -90,7 +90,6 @@ const ca: NativeStrings = {
     "tray.status.idle": "Inactiu",
     "tray.status.online": "Disponible",
     "tray.status.offline": "Desconnectat",
-    "tray.statusLocked": "No es pot canviar l'estat durant una reunió",
     "tray.microphone": "Micròfon",
     "tray.camera": "Càmera",
     "tray.companionPanel": "Tauler complementari",

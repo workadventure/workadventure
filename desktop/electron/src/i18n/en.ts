@@ -88,7 +88,6 @@ const en = {
     "tray.status.idle": "Idle",
     "tray.status.online": "Available",
     "tray.status.offline": "Offline",
-    "tray.statusLocked": "Status can't be changed during a meeting",
     "tray.microphone": "Microphone",
     "tray.camera": "Camera",
     "tray.companionPanel": "Companion panel",

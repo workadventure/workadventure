@@ -81,7 +81,6 @@ const zhTW: NativeStrings = {
     "tray.status.idle": "閒置",
     "tray.status.online": "線上",
     "tray.status.offline": "離線",
-    "tray.statusLocked": "會議期間無法變更狀態",
     "tray.microphone": "麥克風",
     "tray.camera": "攝影機",
     "tray.companionPanel": "夥伴面板",

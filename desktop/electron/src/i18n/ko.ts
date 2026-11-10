@@ -87,7 +87,6 @@ const ko: NativeStrings = {
     "tray.status.idle": "자리 비움",
     "tray.status.online": "온라인",
     "tray.status.offline": "오프라인",
-    "tray.statusLocked": "회의 중에는 상태를 변경할 수 없습니다",
     "tray.microphone": "마이크",
     "tray.camera": "카메라",
     "tray.companionPanel": "컴패니언 패널",
