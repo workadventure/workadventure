@@ -222,7 +222,11 @@
         if (!locallyHidden) {
             for (const element of elements) {
                 ctx.globalAlpha = screenAnnotationManager.opacity(element);
-                drawElement(ctx, element);
+                drawElement(
+                    ctx,
+                    element,
+                    element.tool === "pointer" ? screenAnnotationManager.userName(element.authorUserId) : undefined,
+                );
             }
             ctx.globalAlpha = 1;
         }

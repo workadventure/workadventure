@@ -251,6 +251,11 @@ class ScreenAnnotationManager {
         }
     }
 
+    /** The name of a member of the bound space: shown next to their pointer. */
+    public userName(spaceUserId: string): string | undefined {
+        return this.space?.getSpaceUserBySpaceUserId(spaceUserId)?.name;
+    }
+
     /** How opaque to draw an element: a highlight fades out before it disappears. */
     public opacity(element: ScreenAnnotationElement): number {
         const shownAt = this.shownAt.get(element);
