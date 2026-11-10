@@ -1,7 +1,7 @@
 import { type BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
 import settings from "./settings";
-import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH } from "./companion-window-policy";
+import { COMPANION_MIN_HEIGHT, COMPANION_MIN_WIDTH, companionPlacement } from "./companion-window-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 
 /**
@@ -78,7 +78,8 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
     newWindow.setMenu(null);
     if (kind === "companion") {
         newWindow.setMinimumSize(COMPANION_MIN_WIDTH, COMPANION_MIN_HEIGHT);
-        // Persist the resizable panel's bounds (debounced) so it reopens where the user left it.
+        // Persist the panel's size and spot on its screen (debounced): it reopens in the same spot of
+        // whichever screen it opens on, e.g. the bottom-right corner of a bigger one.
         let boundsSaveTimer: ReturnType<typeof setTimeout> | undefined;
         const scheduleSaveBounds = () => {
             if (boundsSaveTimer !== undefined) {
@@ -87,7 +88,11 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
             boundsSaveTimer = setTimeout(() => {
                 boundsSaveTimer = undefined;
                 if (!newWindow.isDestroyed()) {
-                    settings.set("companion_bounds", newWindow.getBounds());
+                    const bounds = newWindow.getBounds();
+                    settings.set(
+                        "companion_placement",
+                        companionPlacement(bounds, screen.getDisplayMatching(bounds).workArea)
+                    );
                 }
             }, 400);
         };
