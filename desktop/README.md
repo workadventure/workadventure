@@ -10,15 +10,15 @@ presenter meeting bar, global mute/camera shortcuts and a tray.
 
 ```bash
 cd electron
-yarn install
+npm install
 # start the app in watch mode (WA_DESKTOP_PORTAL_URL defaults to the local admin in development)
-NODE_ENV=development yarn dev
+NODE_ENV=development npm run dev
 
 # checks
-yarn typecheck && yarn lint && yarn test && yarn pretty-check
+npm run typecheck && npm run lint && npm test && npm run pretty-check
 
 # or create an executable
-yarn bundle
+npm run bundle
 ```
 
 ## API for the front
