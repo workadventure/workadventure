@@ -12,6 +12,7 @@
     import Button from "../UI/Button.svelte";
     import Chip from "../UI/Chip.svelte";
     import InputSearch from "../Input/InputSearch.svelte";
+    import { IconSearch, IconX } from "@wa-icons";
 
     interface RoomData {
         name: string;
@@ -81,6 +82,10 @@
         close();
     }
 
+    function isCurrentRoom(roomUrl: string): boolean {
+        return currentRoomUrl === new URL(roomUrl, window.location.href).toString();
+    }
+
     function clickRoom(roomUrl: string, roomName: string) {
         isMoving.set(true);
         roomNameSelected.set(roomName);
@@ -90,132 +95,116 @@
     }
 </script>
 
+<svelte:window onkeydown={(event) => event.key === "Escape" && close()} />
+
 <div class="absolute top-0 bottom-0 w-full h-full flex items-center justify-center">
     <div class="w-11/12 lg:w-2/3 relative h-fit">
-        <PopUpContainer extraClasses="w-full relative" fullContent={true}>
-            <div class="flex flex-col items-center pointer-events-auto w-full">
+        <PopUpContainer extraClasses="w-full relative" fullContent={true} showButtons={!!window.WAD?.openLanding}>
+            <div class="flex flex-col pointer-events-auto w-full text-start">
                 {#if $isMoving}
-                    <h1>{$LL.mapEditor.listRoom.movingToRoom({ roomNameSelected: $roomNameSelected })}</h1>
+                    <h1 class="text-center">
+                        {$LL.mapEditor.listRoom.movingToRoom({ roomNameSelected: $roomNameSelected })}
+                    </h1>
                 {:else}
-                    <!-- room card -->
-                    <div class="h-fit w-full flex flex-col items-center gap-8">
-                        <div class="w-full flex flex-col items-start gap-2 px-6">
-                            <label for="search" class="text-white pl-2">{$LL.mapEditor.listRoom.searchLabel()}</label>
-                            <div class="relative flex grow w-full">
-                                <InputSearch
-                                    id="search"
-                                    type="text"
-                                    size="lg"
-                                    placeholder={$LL.mapEditor.listRoom.searchPlaceholder()}
-                                    bind:value={search}
-                                    oninput={onUpdateSearch}
-                                    class="grow peer w-full"
-                                />
-                                <svg
-                                    class="icon icon-tabler icon-tabler-search stroke-contrast-400 absolute top-0 bottom-0 right-5 m-auto peer-focus:stroke-secondary peer-hover:stroke-secondary-500 transition-all peer-focus:-translate-x-1"
-                                    fill="none"
-                                    height="20"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round"
-                                    stroke-width="1.5"
-                                    viewBox="0 0 24 24"
-                                    width="20"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                >
-                                    <path d="M0 0h24v24H0z" fill="none" stroke="none" />
-                                    <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                                    <path d="M21 21l-6 -6" />
-                                </svg>
-                            </div>
+                    <div class="flex items-center gap-2 mb-4">
+                        <div class="relative flex grow">
+                            <!-- The list is opened to pick a room: typing filters it straight away. -->
+                            <InputSearch
+                                id="search"
+                                type="text"
+                                size="lg"
+                                autofocus
+                                aria-label={$LL.mapEditor.listRoom.searchLabel()}
+                                placeholder={$LL.mapEditor.listRoom.searchLabel()}
+                                bind:value={search}
+                                oninput={onUpdateSearch}
+                                class="grow w-full"
+                            />
+                            <IconSearch
+                                font-size="20"
+                                class="absolute top-0 bottom-0 end-5 m-auto text-contrast-400 pointer-events-none"
+                            />
                         </div>
-                        <div class="flex flex-row flex-nowrap space-x-4 justify-center items-center w-full min-h-52">
-                            {#if $isFetching}
-                                <h3>{$LL.mapEditor.listRoom.isFetching()}</h3>
-                            {:else if !$isFetching && $roomListFiltered.size === 0}
-                                <h3>{$LL.mapEditor.listRoom.noRoomFound()}</h3>
-                            {:else}
-                                <div class="relative w-full flex space-x-6 snap-mandatory snap-x overflow-x-auto">
-                                    <div class="snap-center shrink-0">
-                                        <div class="shrink-0"></div>
-                                    </div>
-                                    {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
-                                        <!-- svelte-ignore a11y_click_events_have_key_events -->
-                                        <!-- svelte-ignore a11y_no_static_element_interactions -->
-                                        <div
-                                            id={roomUrl}
-                                            class="flex flex-col items-center snap-center shrink-0 first:pl-8 last:pr-8 rounded-lg overflow-hidden"
-                                            onclick={() => clickRoom(roomData.roomUrl, roomData.name)}
-                                        >
-                                            <div
-                                                class="w-full rounded-lg relative overflow-hidden group cursor-pointer"
-                                            >
-                                                <div
-                                                    class="absolute z-10 left-0 bottom-0-0 w-full h-full bg-gradient-to-t to-90% to-transparent {currentRoomUrl ===
-                                                    new URL(roomData.roomUrl, window.location.href).toString()
-                                                        ? 'from-secondary-900'
-                                                        : 'from-contrast'}"
-                                                ></div>
-                                                <img
-                                                    draggable="false"
-                                                    src={roomData.thumbnail ?? defaultMapImg}
-                                                    alt={roomData.name}
-                                                    class="shrink-0 w-80 h-52 shadow-xl bg-white object-cover group-hover:scale-110 transition-all z-0"
-                                                    onerror={(e) => {
-                                                        const img = e.currentTarget as HTMLImageElement;
-                                                        img.onerror = null;
-                                                        img.src = defaultMapImg;
-                                                    }}
-                                                />
-                                                <span
-                                                    class="absolute z-20 bottom-0 max-w-full w-full flex items-center justify-center text-ellipsis overflow-hidden text-white text-xs font-bold px-2 py-3 bg-se"
-                                                >
-                                                    {roomData.name}
-                                                </span>
-                                                {#if currentRoomUrl === new URL(roomData.roomUrl, window.location.href).toString()}
-                                                    <Chip
-                                                        variant="secondary"
-                                                        class="z-20 bg-secondary text-white rounded-[8px] absolute top-3 right-3"
-                                                    >
-                                                        <div class="px-2">Active</div>
-                                                    </Chip>
-                                                {/if}
-                                            </div>
-                                            <div class="py-2 text-center">
-                                                {#if roomData.areasSearchable || roomData.entitiesSearchable}
-                                                    <div class="pointer-events-none m-0 px-3">
-                                                        {$LL.mapEditor.listRoom.items({
-                                                            countEntity: roomData.entitiesSearchable ?? 0,
-                                                            countArea: roomData.areasSearchable ?? 0,
-                                                        })}
-                                                    </div>
-                                                {/if}
-                                            </div>
-                                        </div>
-                                    {/each}
-                                    <div class="snap-center shrink-0">
-                                        <div class="shrink-0"></div>
-                                    </div>
-                                </div>
-                            {/if}
-                        </div>
+                        <button
+                            type="button"
+                            class="shrink-0 m-0 p-2 rounded flex items-center justify-center text-white hover:bg-white/10"
+                            aria-label={$LL.mapEditor.listRoom.close()}
+                            title={$LL.mapEditor.listRoom.close()}
+                            data-testid="roomListClose"
+                            onclick={close}
+                        >
+                            <IconX font-size="20" />
+                        </button>
                     </div>
+                    {#if $isFetching}
+                        <p class="m-0 py-16 text-center text-white/75">{$LL.mapEditor.listRoom.isFetching()}</p>
+                    {:else if $roomListFiltered.size === 0}
+                        <p class="m-0 py-16 text-center text-white/75">{$LL.mapEditor.listRoom.noRoomFound()}</p>
+                    {:else}
+                        <div
+                            class="grid gap-4 grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] max-h-[60vh] overflow-y-auto p-1"
+                        >
+                            {#each Array.from($roomListFiltered) as [roomUrl, roomData] (roomUrl)}
+                                {@const isCurrent = isCurrentRoom(roomData.roomUrl)}
+                                <button
+                                    type="button"
+                                    id={roomUrl}
+                                    class="group m-0 p-0 flex flex-col text-start bg-transparent border-none rounded-lg cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
+                                    aria-current={isCurrent ? "true" : undefined}
+                                    onclick={() => clickRoom(roomData.roomUrl, roomData.name)}
+                                >
+                                    <span
+                                        class="relative block w-full aspect-video rounded-lg overflow-hidden bg-white {isCurrent
+                                            ? 'ring-2 ring-secondary'
+                                            : ''}"
+                                    >
+                                        <img
+                                            draggable="false"
+                                            src={roomData.thumbnail ?? defaultMapImg}
+                                            alt=""
+                                            class="w-full h-full object-cover group-hover:scale-105 transition-all"
+                                            onerror={(e) => {
+                                                const img = e.currentTarget as HTMLImageElement;
+                                                img.onerror = null;
+                                                img.src = defaultMapImg;
+                                            }}
+                                        />
+                                        {#if isCurrent}
+                                            <span class="absolute top-2 end-2 flex">
+                                                <Chip variant="secondary">{$LL.camera.active()}</Chip>
+                                            </span>
+                                        {/if}
+                                    </span>
+                                    <span class="mt-2 px-1 text-sm font-bold text-white truncate w-full">
+                                        {roomData.name}
+                                    </span>
+                                    {#if roomData.description}
+                                        <span class="px-1 text-xs text-white/60 line-clamp-2"
+                                            >{roomData.description}</span
+                                        >
+                                    {/if}
+                                    {#if roomData.areasSearchable || roomData.entitiesSearchable}
+                                        <span class="px-1 text-xs text-white/60">
+                                            {$LL.mapEditor.listRoom.items({
+                                                countEntity: roomData.entitiesSearchable ?? 0,
+                                                countArea: roomData.areasSearchable ?? 0,
+                                            })}
+                                        </span>
+                                    {/if}
+                                </button>
+                            {/each}
+                        </div>
+                    {/if}
                 {/if}
             </div>
+            <!-- The cross closes the list; the bar only holds the desktop app's own entry point. -->
             {#snippet buttons()}
-                <div class="flex flex-row justify-center gap-2 w-full">
-                    {#if window.WAD?.openLanding}
-                        <Button size="lg" variant="light" class="w-1/2" onclick={openLanding}>
-                            {$LL.actionbar.desktop.openRoom()}
-                        </Button>
-                    {/if}
-                    <Button size="lg" variant="secondary" class="w-1/2 m-auto" onclick={close}>
-                        {$LL.mapEditor.listRoom.close()}
+                <div class="flex flex-row justify-center w-full">
+                    <Button size="lg" variant="light" class="w-1/2" onclick={openLanding}>
+                        {$LL.actionbar.desktop.openRoom()}
                     </Button>
                 </div>
             {/snippet}
         </PopUpContainer>
     </div>
 </div>
-
-<style>
-</style>
