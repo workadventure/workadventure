@@ -165,6 +165,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         openChat: "開啟聊天",
         openUserList: "開啟使用者清單",
         toggleMapEditor: "顯示／隱藏地圖編輯器",
+        toggleMicrophone: "開啟／關閉麥克風",
+        toggleCamera: "開啟／關閉攝影機",
         rotatePlayer: "旋轉玩家",
         openSayPopup: "開啟「說」彈出視窗",
         openThinkPopup: "開啟「想」彈出視窗",

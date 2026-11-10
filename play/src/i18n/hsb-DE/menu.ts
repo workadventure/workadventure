@@ -169,6 +169,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         openChat: "chat wočinić",
         openUserList: "lisćinu wužiwarjow wočinić",
         toggleMapEditor: "kartowy editor pokazać/schować",
+        toggleMicrophone: "mikrofon zapinać/wupinać",
+        toggleCamera: "kameru zapinać/wupinać",
         rotatePlayer: "hrajerja wobwjertować",
         openSayPopup: 'popup „rěkać" wočinić',
         openThinkPopup: 'popup „myslić" wočinić',

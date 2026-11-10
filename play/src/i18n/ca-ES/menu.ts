@@ -170,6 +170,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         openChat: "Obrir el xat",
         openUserList: "Obrir la llista d'usuaris",
         toggleMapEditor: "Mostrar/Ocultar l'editor de mapes",
+        toggleMicrophone: "Activar/Desactivar el micròfon",
+        toggleCamera: "Activar/Desactivar la càmera",
         rotatePlayer: "Girar el jugador",
         openSayPopup: "Obrir la finestra emergent en mode dir",
         openThinkPopup: "Obrir la finestra emergent en mode pensar",

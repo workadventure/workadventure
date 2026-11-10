@@ -169,6 +169,8 @@ const menu: BaseTranslation = {
         openChat: "Abrir Chat",
         openUserList: "Abrir Lista de Usuários",
         toggleMapEditor: "Mostrar/Ocultar Editor de Mapas",
+        toggleMicrophone: "Ativar/Desativar Microfone",
+        toggleCamera: "Ativar/Desativar Câmera",
         rotatePlayer: "Girar Jogador",
         openSayPopup: "Abrir Popup de Fala",
         openThinkPopup: "Abrir Popup de Pensamento",

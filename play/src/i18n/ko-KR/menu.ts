@@ -168,6 +168,8 @@ const menu: DeepPartial<Translation["menu"]> = {
         openChat: "채팅 열기",
         openUserList: "사용자 목록 열기",
         toggleMapEditor: "지도 편집기 표시/숨기기",
+        toggleMicrophone: "마이크 켜기/끄기",
+        toggleCamera: "카메라 켜기/끄기",
         rotatePlayer: "플레이어 회전",
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
