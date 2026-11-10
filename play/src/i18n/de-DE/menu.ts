@@ -108,18 +108,9 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Wählen Sie den Einstiegspunkt aus, über den die Benutzer ankommen",
     },
     globalMessage: {
-        text: "Text",
-        audio: "Audio",
         warning: "An alle Räume in dieser Welt senden",
         enter: "Trage hier deine Nachricht ein...",
         send: "Senden",
-    },
-    globalAudio: {
-        uploadInfo: "Datei hochladen",
-        error: "Keine Datei ausgewählt. Du musst vor dem Versenden eine Datei hochladen.",
-        errorUpload:
-            "Fehler beim Hochladen der Datei. Bitte überprüfe deine Datei und versuche es erneut. Wenn das Problem weiterhin besteht, wende dich an den Administrator.",
-        dragAndDrop: "Datei hierher ziehen oder klicken, um sie hochzuladen 🎧",
     },
     contact: {
         gettingStarted: {
@@ -166,7 +157,6 @@ const menu: DeepPartial<Translation["menu"]> = {
         profile: "Profil",
         settings: "Einstellungen",
         credit: "Über diese Karte",
-        globalMessages: "Globale Nachrichten",
         contact: "Kontakt",
         report: "Einen Fehler melden",
         help: "Hilfe & Tutorials",
