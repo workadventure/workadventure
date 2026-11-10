@@ -31,6 +31,8 @@ export type SettingsData = {
     /** Servers outside the built-in domains the user added from the Landing (origins). See origin-verification. */
     trusted_origins?: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
+    /** Set once the user edits a shortcut in the settings window: from then on a blank one was cleared. */
+    shortcuts_edited?: boolean;
     /** Last size of the resizable companion panel and where it sat on its screen, restored on reopen. */
     companion_placement?: CompanionPlacement;
     /** Linux under Wayland: see window-mode-policy. Unset: "x11". */
@@ -65,13 +67,13 @@ const defaultSettings: SettingsData = {
  * Keep only the accelerators a user actually configured, so persisted blanks don't mask a new
  * default. Every install that ran a build before mic/camera had default bindings has
  * `mute_toggle: ""` on disk, and `""` is a present key — a plain spread would let it win over the
- * default forever and ship the feature to new profiles only. A blank can only mean "never set":
- * the shortcut-editing UI is unreachable in this shell, so nothing can deliberately clear one.
+ * default forever and ship the feature to new profiles only. Until the user edits the shortcuts in
+ * the settings window (`shortcuts_edited`), a blank can only mean "never set"; after that, it was cleared.
  */
-function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | undefined) {
+function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | undefined, edited: boolean) {
     const configured: Partial<SettingsData["shortcuts"]> = {};
     for (const [name, accelerator] of Object.entries(persisted || {})) {
-        if (typeof accelerator === "string" && accelerator.length > 0) {
+        if (typeof accelerator === "string" && (edited || accelerator.length > 0)) {
             configured[name as keyof SettingsData["shortcuts"]] = accelerator;
         }
     }
@@ -119,7 +121,7 @@ async function init(): Promise<boolean> {
         ...persistedSettings,
         shortcuts: {
             ...defaultSettings.shortcuts,
-            ...configuredShortcuts(persistedSettings.shortcuts),
+            ...configuredShortcuts(persistedSettings.shortcuts, persistedSettings.shortcuts_edited === true),
         },
     };
     settings.portal_url = normalizePersistedPortalUrl(process.env.WA_DESKTOP_PORTAL_URL || settings.portal_url);

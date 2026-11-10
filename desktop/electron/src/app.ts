@@ -11,6 +11,7 @@ import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { initStartAtLogin } from "./auto-launch";
 import ipc from "./ipc";
+import { registerSettingsWindowIpc } from "./settings-window";
 import settings from "./settings";
 import { setLogLevel } from "./log";
 import { loadShortcuts } from "./shortcuts";
@@ -143,6 +144,7 @@ async function init() {
 
         // load ipc handler
         ipc();
+        registerSettingsWindowIpc();
 
         // In development (unpackaged) the macOS dock shows the default Electron icon — the bundle's
         // .icns is only applied to a packaged .app. Set it explicitly so dev matches the shipped icon.

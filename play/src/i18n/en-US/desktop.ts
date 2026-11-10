@@ -8,6 +8,7 @@ const desktop: BaseTranslation = {
         installed: "Installed version",
         unknown: "Unavailable",
         startAtLogin: "Start WorkAdventure when I log in to my computer",
+        openSettings: "Open the app settings",
         windowMode: {
             title: "Window mode",
             x11: "Compatibility (X11), recommended",
