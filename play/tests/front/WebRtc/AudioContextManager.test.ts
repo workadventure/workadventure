@@ -14,6 +14,12 @@ vi.stubGlobal(
     "AudioContext",
     class extends EventTarget {
         state = "running";
+        constructor(public options?: AudioContextOptions) {
+            super();
+        }
+        resume() {
+            return Promise.resolve();
+        }
         close() {
             this.state = "closed";
             return Promise.resolve();
@@ -22,6 +28,20 @@ vi.stubGlobal(
 );
 
 describe("AudioContextManager", () => {
+    // First: closeAllContexts(), in the next test, shuts the singleton down
+    it("analyses audio on contexts without an output, apart from the ones that play", () => {
+        const analysis = audioContextManager.getAnalysisContext();
+        expect(audioContextManager.getAnalysisContext()).toBe(analysis);
+        expect(analysis).toHaveProperty("options", { sinkId: { type: "none" } });
+
+        const analysis16k = audioContextManager.getAnalysisContext(16_000);
+        expect(analysis16k).not.toBe(analysis);
+        expect(analysis16k).toHaveProperty("options", { sampleRate: 16_000, sinkId: { type: "none" } });
+
+        // Never bound to the selected speaker
+        expect(bindAudioOutput).not.toHaveBeenCalled();
+    });
+
     it("keeps each context on the selected audio output until it is closed", async () => {
         const unbindDefault = vi.fn();
         const unbind48k = vi.fn();
@@ -31,6 +51,7 @@ describe("AudioContextManager", () => {
         expect(audioContextManager.getContext()).toBe(context);
         const context48k = audioContextManager.getContext(48_000);
         expect(vi.mocked(bindAudioOutput).mock.calls).toEqual([[context], [context48k]]);
+        expect(audioContextManager.getAnalysisContext()).not.toBe(context);
 
         await audioContextManager.closeContext();
         expect(unbindDefault).toHaveBeenCalledOnce();

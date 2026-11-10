@@ -73,6 +73,27 @@ export interface AudioContextProbe {
     dispose: () => void;
 }
 /**
+ * Resumes a context on the first user gesture when the browser created it suspended (no user activation yet), until
+ * the returned function is called.
+ */
+function resumeOnUserGesture(context: AudioContext): Unsubscriber {
+    const controller = new AbortController();
+    const resume = () => {
+        context
+            .resume()
+            .then(() => controller.abort())
+            .catch((e: unknown) => console.debug("[AudioContextManager] Could not resume the AudioContext", e));
+    };
+    // Without a user activation, this promise stays pending until a later call succeeds
+    resume();
+    for (const type of ["pointerdown", "keydown"] as const) {
+        // Unregistered through the signal
+        document.addEventListener(type, resume, { signal: controller.signal, capture: true });
+    }
+    return () => controller.abort();
+}
+
+/**
  * Singleton manager for AudioContext instances.
  * This manager ensures that we create only one AudioContext per sample rate,
  * and only when needed (lazy initialization).
@@ -82,8 +103,10 @@ export interface AudioContextProbe {
  */
 class AudioContextManager {
     private audioContexts: Map<number, AudioContext> = new Map();
+    private analysisContexts: Map<number, AudioContext> = new Map();
     // What plays through a context (the WebAudio playback fallback, the scripting API's PCM streams) bypasses media
-    // elements, so each context follows the selected audio output itself, until it is closed.
+    // elements, so each context follows the selected audio output itself, until it is closed. Analysis contexts only
+    // keep here what resumes them.
     private outputBindings: Map<AudioContext, Unsubscriber> = new Map();
     private isShuttingDown = false;
 
@@ -124,6 +147,39 @@ class AudioContextManager {
     }
 
     /**
+     * Get or create an AudioContext that only analyses audio and never plays any: volume meters, microphone signal
+     * and background noise detection.
+     *
+     * It has no audio output where the browser allows it (Chrome 110+; elsewhere it is an ordinary context, which no
+     * one binds to an output). The contexts of getContext() follow the selected speaker: when that device goes away,
+     * Chrome stops them, and every analyser on them reads zeros. What listens to the microphone must not depend on a
+     * speaker.
+     * @param sampleRate The desired sample rate (default: browser's default)
+     */
+    public getAnalysisContext(sampleRate?: number): AudioContext {
+        if (this.isShuttingDown) {
+            throw new Error("AudioContextManager is shutting down, cannot create new contexts");
+        }
+
+        const key = sampleRate ?? 0;
+        let context = this.analysisContexts.get(key);
+        if (!context) {
+            const options: AudioContextOptions = sampleRate ? { sampleRate } : {};
+            try {
+                context = new AudioContext({ ...options, sinkId: { type: "none" } });
+            } catch (e) {
+                console.warn("[AudioContextManager] Could not create an AudioContext without an output", e);
+                context = new AudioContext(options);
+            }
+            this.analysisContexts.set(key, context);
+            // Nothing else resumes it: the "sound blocked" flow of the GameScene only watches the playback context
+            this.outputBindings.set(context, resumeOnUserGesture(context));
+        }
+
+        return context;
+    }
+
+    /**
      * Close and remove an AudioContext with the specified sample rate.
      * This should be called when the context is no longer needed.
      * @param sampleRate The sample rate of the context to close (default: browser's default)
@@ -155,7 +211,7 @@ class AudioContextManager {
         this.isShuttingDown = true;
         const closePromises: Promise<void>[] = [];
 
-        this.audioContexts.forEach((context, key) => {
+        [...this.audioContexts, ...this.analysisContexts].forEach(([key, context]) => {
             if (context.state !== "closed") {
                 closePromises.push(
                     context.close().catch((err) => {
@@ -166,8 +222,9 @@ class AudioContextManager {
         });
 
         await Promise.all(closePromises);
-        // Clear the map after all contexts are closed
+        // Clear the maps after all contexts are closed
         this.audioContexts.clear();
+        this.analysisContexts.clear();
         this.outputBindings.forEach((unbind) => unbind());
         this.outputBindings.clear();
         console.debug("[AudioContextManager] All AudioContexts closed");
