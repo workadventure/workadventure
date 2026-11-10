@@ -64,6 +64,23 @@ function disposeWithContext(page: Page): Page {
     return page;
 }
 
+type UserName =
+    | "Alice"
+    | "Bob"
+    | "Charlie"
+    | "Eve"
+    | "Mallory"
+    | "Admin1"
+    | "Admin2"
+    | "Member1"
+    | "UserMatrix"
+    | "UserLogin1"
+    | "John"
+    | "UserMatrix2"
+    | "User1"
+    | "Carol"
+    | "Dave";
+
 function selectWoka(name: string): number {
     let res = 0;
     for (let i = 0; i < name.length; i++) {
@@ -89,37 +106,11 @@ function isJsonCreate(name: string): boolean {
     return (state.origins ?? []).some((entry) => entry.origin === new URL(play_url).origin);
 }
 
-async function createUser(
-    name:
-        | "Alice"
-        | "Bob"
-        | "Charlie"
-        | "Eve"
-        | "Mallory"
-        | "Admin1"
-        | "Admin2"
-        | "Member1"
-        | "UserMatrix"
-        | "UserLogin1"
-        | "John"
-        | "UserMatrix2"
-        | "User1"
-        | "Carol"
-        | "Dave",
-    browser: Browser,
-    url: string,
-    contextOptions?: BrowserContextOptions,
-): Promise<void> {
-    if (isJsonCreate(name)) {
-        return;
-    }
-    const context: BrowserContext = await browser.newContext(contextOptions);
-    const page: Page = await context.newPage();
-    const targetUrl = new URL(url, play_url).toString();
-
-    await page.goto(targetUrl);
-
-    // login
+/**
+ * Goes through the screens of a page that shows the login screen (name, Woka, camera and microphone) up to
+ * the map, then through the OpenID login of the users that have one.
+ */
+export async function logIn(page: Page, name: UserName): Promise<void> {
     const loginSceneNameInput = page.getByTestId("loginSceneNameInput");
     const loginSubmitButton = page.locator("button.loginSceneFormSubmit");
 
@@ -143,7 +134,7 @@ async function createUser(
     await dismissNoMicrophoneSoundToast(page);
     await skipOnboardingWhenShown(page);
 
-    if (browser.browserType().name() !== "webkit") {
+    if (page.context().browser()?.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
         await Menu.expectButtonState(page, "camera-button", "normal");
     } else {
@@ -176,6 +167,23 @@ async function createUser(
         default:
             break;
     }
+}
+
+async function createUser(
+    name: UserName,
+    browser: Browser,
+    url: string,
+    contextOptions?: BrowserContextOptions,
+): Promise<void> {
+    if (isJsonCreate(name)) {
+        return;
+    }
+    const context: BrowserContext = await browser.newContext(contextOptions);
+    const page: Page = await context.newPage();
+    const targetUrl = new URL(url, play_url).toString();
+
+    await page.goto(targetUrl);
+    await logIn(page, name);
 
     await page.context().storageState({ path: "./.auth/" + name + ".json" });
 
@@ -196,22 +204,7 @@ async function waitForMatrixLogin(page: Page): Promise<void> {
 
 export async function getPage(
     browser: Browser,
-    name:
-        | "Alice"
-        | "Bob"
-        | "Charlie"
-        | "Eve"
-        | "Mallory"
-        | "Admin1"
-        | "Admin2"
-        | "Member1"
-        | "UserMatrix"
-        | "UserLogin1"
-        | "John"
-        | "UserMatrix2"
-        | "User1"
-        | "Carol"
-        | "Dave",
+    name: UserName,
     url: string,
     options: {
         pageCreatedHook?: (page: Page) => void | Promise<void>;
