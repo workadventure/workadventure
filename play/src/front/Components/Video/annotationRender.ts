@@ -89,6 +89,14 @@ export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoi
     return false;
 }
 
+/** Black or white text, whichever reads better on `color` (white unless it is a light #rrggbb color). */
+function textColorOn(color: string): string {
+    const hex = /^#([0-9a-f]{6})$/i.exec(color)?.[1];
+    if (!hex) return "#ffffff";
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return 0.299 * r + 0.587 * g + 0.114 * b > 128 ? "#000000" : "#ffffff";
+}
+
 /**
  * Render a single annotation element onto a 2D canvas context.
  * Coordinates are normalized 0..1 and mapped to the context's backing-store pixel size, so the
@@ -141,11 +149,12 @@ export function drawElement(ctx: CanvasRenderingContext2D, element: ScreenAnnota
             const labelHeight = fontSize + padding * 2;
             // To the left of the arrow when it would leave the canvas on the right.
             const x = points[0].x * w + size * 1.1 + labelWidth > w ? -labelWidth - padding : size * 1.1;
-            ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+            // In the pointer's color, outlined in white like the arrow.
             ctx.beginPath();
             ctx.roundRect(x, size * 0.5, labelWidth, labelHeight, labelHeight / 2);
             ctx.fill();
-            ctx.fillStyle = "#ffffff";
+            ctx.stroke();
+            ctx.fillStyle = textColorOn(element.color);
             ctx.textBaseline = "middle";
             ctx.fillText(label, x + padding, size * 0.5 + labelHeight / 2);
         }

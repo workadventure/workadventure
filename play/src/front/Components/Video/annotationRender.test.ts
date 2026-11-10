@@ -2,11 +2,12 @@ import { describe, expect, it } from "vitest";
 import type { ScreenAnnotationElement } from "@workadventure/messages";
 import { drawElement } from "./annotationRender";
 
-/** Draws a pointer at `x` (normalized) on a 1000x600 canvas and returns where its label text starts. */
-function labelX(x: number, label?: string): number | undefined {
+/** Draws a pointer at `x` (normalized) on a 1000x600 canvas and returns where its label text starts, and its color. */
+function drawPointer(x: number, label?: string, color = "#ff3b30"): { x?: number; color?: unknown } {
     let origin = 0;
-    let textX: number | undefined;
+    const text: { x?: number; color?: unknown } = {};
     const ctx = {
+        fillStyle: "" as unknown,
         canvas: { width: 1000, height: 600 },
         save() {},
         restore() {},
@@ -22,25 +23,32 @@ function labelX(x: number, label?: string): number | undefined {
         },
         measureText: (text: string) => ({ width: text.length * 10 }),
         fillText(_text: string, dx: number) {
-            textX = origin + dx;
+            text.x = origin + dx;
+            text.color = ctx.fillStyle;
         },
-    } as unknown as CanvasRenderingContext2D;
+    };
     const pointer: ScreenAnnotationElement = {
         id: "p",
         authorUserId: "bob",
         tool: "pointer",
-        color: "#ff3b30",
+        color,
         width: 0.005,
         points: [{ x, y: 0.5 }],
     };
-    drawElement(ctx, pointer, label);
-    return textX;
+    drawElement(ctx as unknown as CanvasRenderingContext2D, pointer, label);
+    return text;
 }
 
 describe("drawElement", () => {
     it("shows who points to the right of the pointer, or to its left near the right edge", () => {
-        expect(labelX(0.5)).toBeUndefined();
-        expect(labelX(0.5, "Bob")).toBeGreaterThan(500);
-        expect(labelX(0.99, "Bob")).toBeLessThan(990);
+        expect(drawPointer(0.5).x).toBeUndefined();
+        expect(drawPointer(0.5, "Bob").x).toBeGreaterThan(500);
+        expect(drawPointer(0.99, "Bob").x).toBeLessThan(990);
+    });
+
+    it("writes the name in black or white, whichever reads better on the pointer's color", () => {
+        expect(drawPointer(0.5, "Bob", "#ff3b30").color).toBe("#ffffff");
+        expect(drawPointer(0.5, "Bob", "#ffcc00").color).toBe("#000000");
+        expect(drawPointer(0.5, "Bob", "not-a-hex").color).toBe("#ffffff");
     });
 });
