@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mount, tick, unmount } from "svelte";
 import { mock } from "vitest-mock-extended";
-import type { WorkAdventureDesktopApi } from "@workadventure/desktop-api";
+import type { DesktopWindowModeState, WorkAdventureDesktopApi } from "@workadventure/desktop-api";
 import { loadLocale } from "../../../i18n/i18n-util.sync";
 import { setLocale } from "../../../i18n/i18n-svelte";
 vi.mock("../../Enum/EnvironmentVariable", () => ({
@@ -35,7 +35,12 @@ describe("desktop application settings", () => {
     it("shows the installed version and warns below the supported minimum without blocking", async () => {
         const getVersion = vi.fn().mockResolvedValue("1.1.0");
         // startAtLogin: undefined, as on a desktop app older than the switch (the mock would invent one).
-        window.WAD = mock<WorkAdventureDesktopApi>({ desktop: true, getVersion, startAtLogin: undefined });
+        window.WAD = mock<WorkAdventureDesktopApi>({
+            desktop: true,
+            getVersion,
+            startAtLogin: undefined,
+            windowMode: undefined,
+        });
         component = mount(Settings, { target: document.body });
         await vi.waitFor(() =>
             expect(document.querySelector('[data-testid="desktop-installed-version"]')?.textContent).toBe("1.1.0"),
@@ -51,6 +56,7 @@ describe("desktop application settings", () => {
             desktop: true,
             getVersion: vi.fn().mockResolvedValue("1.3.0"),
             startAtLogin: { get: vi.fn().mockResolvedValue(false), set },
+            windowMode: undefined,
         });
         component = mount(Settings, { target: document.body });
         await vi.waitFor(() => expect(document.querySelector("#desktop-start-at-login")).not.toBeNull());
@@ -61,6 +67,61 @@ describe("desktop application settings", () => {
         await vi.waitFor(() => expect(set).toHaveBeenCalledWith(true));
         await vi.waitFor(() => expect(input?.checked).toBe(false));
     });
+    it("lets Linux users under Wayland choose the window mode, warning before a Wayland restart", async () => {
+        const state: DesktopWindowModeState = {
+            saved: "x11",
+            setByCommandLine: false,
+            x11Unavailable: false,
+            restartNeeded: false,
+        };
+        const set = vi.fn().mockResolvedValue({ ...state, saved: "wayland", restartNeeded: true });
+        const restart = vi.fn();
+        window.WAD = mock<WorkAdventureDesktopApi>({
+            desktop: true,
+            getVersion: vi.fn().mockResolvedValue("1.3.0"),
+            startAtLogin: undefined,
+            windowMode: { get: vi.fn().mockResolvedValue(state), set, restart },
+        });
+        component = mount(Settings, { target: document.body });
+        await vi.waitFor(() => expect(document.querySelector("#desktop-window-mode-x11")).not.toBeNull());
+        expect(document.querySelector<HTMLInputElement>("#desktop-window-mode-x11")?.checked).toBe(true);
+        expect(document.querySelector('[data-testid="desktop-window-mode-restart"]')).toBeNull();
+
+        document.querySelector<HTMLInputElement>("#desktop-window-mode-wayland")?.click();
+        await vi.waitFor(() => expect(set).toHaveBeenCalledWith("wayland"));
+        const notice = await vi.waitFor(() => {
+            const element = document.querySelector('[data-testid="desktop-window-mode-restart"]');
+            expect(element).not.toBeNull();
+            return element;
+        });
+        expect(notice?.textContent).toContain("open in the middle of your screen");
+
+        document.querySelector<HTMLButtonElement>('[data-testid="desktop-window-mode-restart-now"]')?.click();
+        expect(restart).toHaveBeenCalledOnce();
+    });
+    it("disables the window mode choice when the command line sets it", async () => {
+        window.WAD = mock<WorkAdventureDesktopApi>({
+            desktop: true,
+            getVersion: vi.fn().mockResolvedValue("1.3.0"),
+            startAtLogin: undefined,
+            windowMode: {
+                get: vi.fn().mockResolvedValue({
+                    saved: "x11",
+                    setByCommandLine: true,
+                    x11Unavailable: false,
+                    restartNeeded: false,
+                }),
+                set: vi.fn(),
+                restart: vi.fn(),
+            },
+        });
+        component = mount(Settings, { target: document.body });
+        await vi.waitFor(() => expect(document.querySelector("#desktop-window-mode-wayland")).not.toBeNull());
+        expect(document.querySelector<HTMLInputElement>("#desktop-window-mode-wayland")?.disabled).toBe(true);
+        expect(document.querySelector('[data-testid="desktop-window-mode"]')?.textContent).toContain(
+            "--ozone-platform",
+        );
+    });
     it("ignores a version response after the panel has closed", async () => {
         let finish: ((version: string) => void) | undefined;
         const version = new Promise<string>((resolve) => {
@@ -70,6 +131,7 @@ describe("desktop application settings", () => {
             desktop: true,
             getVersion: () => version,
             startAtLogin: undefined,
+            windowMode: undefined,
         });
         component = mount(Settings, { target: document.body });
         await tick();

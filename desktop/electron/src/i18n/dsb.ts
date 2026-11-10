@@ -110,6 +110,18 @@ const dsb: NativeStrings = {
     "tray.worlds": "Swěty",
     "tray.help": "Pomoc",
     "tray.startAtLogin": "Pśi pśizjawjenju startowaś",
+    "tray.windowMode": "Woknowy modus",
+    "tray.windowModeX11": "Kompatibilita (X11)",
+    "tray.windowModeWayland": "Natiwny Wayland",
+    "windowMode.restartQuestion": "WorkAdventure znowego startowaś, aby se toś ten woknowy modus wužywał?",
+    "windowMode.x11Detail":
+        "Wobraz we wobrazu a lajsta za prezentaciju se tam wócynijotej, źož sćo jej slědny raz wóstajili, a wóstanjotej nad drugimi nałoženjami. Tastowe skrotconki za mikrofon a kameru budu jano fungěrowaś, gaž jo WorkAdventure w prědku. Wopušćijośo zasedanje, w kótaremž sćo.",
+    "windowMode.waylandDetail":
+        "Wobraz we wobrazu se kuždy raz w srjejźi wašeje wobrazowki wócynijo a njewóstanjo nad drugimi nałoženjami. Tastowe skrotconki za mikrofon a kameru budu z kuždego nałoženja fungěrowaś. Wopušćijośo zasedanje, w kótaremž sćo.",
+    "windowMode.restartNow": "Něnto znowego startowaś",
+    "windowMode.later": "Pózdźej",
+    "windowMode.x11Failed":
+        "WorkAdventure njedajo se w kompatibelnem modusu (X11) startowaś, togodla něnto natiwny modus Wayland wužywa. W nastajenjach pód Desktopowe nałoženje móžośo zasej slědk pśešaltowaś.",
     "tray.checkForUpdates": "Za aktualizacijami pytaś",
     "tray.openLogs": "Protokole wócyniś",
     "tray.about": "Wó",

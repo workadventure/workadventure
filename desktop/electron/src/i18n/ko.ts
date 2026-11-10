@@ -107,6 +107,18 @@ const ko: NativeStrings = {
     "tray.worlds": "월드",
     "tray.help": "도움말",
     "tray.startAtLogin": "로그인 시 시작",
+    "tray.windowMode": "창 모드",
+    "tray.windowModeX11": "호환 모드(X11)",
+    "tray.windowModeWayland": "네이티브 Wayland",
+    "windowMode.restartQuestion": "이 창 모드를 사용하려면 WorkAdventure를 다시 시작할까요?",
+    "windowMode.x11Detail":
+        "화면 속 화면과 발표자 표시줄이 마지막으로 둔 위치에 열리고 다른 앱 위에 계속 표시됩니다. 마이크 및 카메라 단축키는 WorkAdventure가 앞에 있을 때만 작동합니다. 참여 중인 회의에서 나가게 됩니다.",
+    "windowMode.waylandDetail":
+        "화면 속 화면이 매번 화면 가운데에 열리며 다른 앱 위에 계속 표시되지 않습니다. 마이크 및 카메라 단축키가 모든 앱에서 작동합니다. 참여 중인 회의에서 나가게 됩니다.",
+    "windowMode.restartNow": "지금 다시 시작",
+    "windowMode.later": "나중에",
+    "windowMode.x11Failed":
+        "WorkAdventure를 호환 모드(X11)로 시작할 수 없어 지금은 네이티브 Wayland 모드를 사용합니다. 설정의 데스크톱 앱에서 다시 전환할 수 있습니다.",
     "tray.checkForUpdates": "업데이트 확인",
     "tray.openLogs": "로그 열기",
     "tray.about": "정보",

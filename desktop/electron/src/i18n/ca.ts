@@ -111,6 +111,18 @@ const ca: NativeStrings = {
     "tray.worlds": "Mons",
     "tray.help": "Ajuda",
     "tray.startAtLogin": "Inicia en iniciar la sessió",
+    "tray.windowMode": "Mode de finestres",
+    "tray.windowModeX11": "Compatibilitat (X11)",
+    "tray.windowModeWayland": "Wayland natiu",
+    "windowMode.restartQuestion": "Vols reiniciar WorkAdventure per utilitzar aquest mode de finestres?",
+    "windowMode.x11Detail":
+        "La finestra d'imatge en imatge i la barra del presentador s'obriran on les vas deixar i es mantindran per sobre de les altres aplicacions. Les dreceres del micròfon i de la càmera només funcionaran quan WorkAdventure sigui en primer pla. Si ets en una reunió, en sortiràs.",
+    "windowMode.waylandDetail":
+        "La finestra d'imatge en imatge s'obrirà sempre al centre de la pantalla i no es mantindrà per sobre de les altres aplicacions. Les dreceres del micròfon i de la càmera funcionaran des de qualsevol aplicació. Si ets en una reunió, en sortiràs.",
+    "windowMode.restartNow": "Reinicia ara",
+    "windowMode.later": "Més tard",
+    "windowMode.x11Failed":
+        "WorkAdventure no s'ha pogut iniciar en mode de compatibilitat (X11), així que ara fa servir el mode Wayland natiu. Pots tornar a canviar-lo a la configuració, a Aplicació d'escriptori.",
     "tray.checkForUpdates": "Cerca actualitzacions",
     "tray.openLogs": "Obre els registres",
     "tray.about": "Quant a",

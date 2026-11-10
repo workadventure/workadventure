@@ -105,6 +105,18 @@ const ar: NativeStrings = {
     "tray.worlds": "العوالم",
     "tray.help": "مساعدة",
     "tray.startAtLogin": "التشغيل عند تسجيل الدخول",
+    "tray.windowMode": "وضع النوافذ",
+    "tray.windowModeX11": "التوافق (X11)",
+    "tray.windowModeWayland": "Wayland الأصلي",
+    "windowMode.restartQuestion": "هل تريد إعادة تشغيل WorkAdventure لاستخدام وضع النوافذ هذا؟",
+    "windowMode.x11Detail":
+        "ستُفتح نافذة صورة داخل صورة وشريط مقدّم العرض في المكان الذي تركتهما فيه، وسيبقيان فوق التطبيقات الأخرى. لن تعمل اختصارات الميكروفون والكاميرا إلا عندما يكون WorkAdventure في المقدمة. ستغادر أي اجتماع تشارك فيه.",
+    "windowMode.waylandDetail":
+        "ستُفتح نافذة صورة داخل صورة في منتصف شاشتك في كل مرة ولن تبقى فوق التطبيقات الأخرى. ستعمل اختصارات الميكروفون والكاميرا من أي تطبيق. ستغادر أي اجتماع تشارك فيه.",
+    "windowMode.restartNow": "إعادة التشغيل الآن",
+    "windowMode.later": "لاحقًا",
+    "windowMode.x11Failed":
+        "تعذّر تشغيل WorkAdventure في وضع التوافق (X11)، لذا يستخدم الآن وضع Wayland الأصلي. يمكنك التبديل مرة أخرى من الإعدادات، ضمن تطبيق سطح المكتب.",
     "tray.checkForUpdates": "التحقق من وجود تحديثات",
     "tray.openLogs": "فتح السجلات",
     "tray.about": "حول",

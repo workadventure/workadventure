@@ -109,6 +109,18 @@ const en = {
     "tray.worlds": "Worlds",
     "tray.help": "Help",
     "tray.startAtLogin": "Start at login",
+    "tray.windowMode": "Window mode",
+    "tray.windowModeX11": "Compatibility (X11)",
+    "tray.windowModeWayland": "Native Wayland",
+    "windowMode.restartQuestion": "Restart WorkAdventure to use this window mode?",
+    "windowMode.x11Detail":
+        "Picture-in-picture and the presenter bar will open where you left them and stay on top of other apps. Microphone and camera shortcuts will only work while WorkAdventure is in front. You'll leave any meeting you're in.",
+    "windowMode.waylandDetail":
+        "Picture-in-picture will open in the middle of your screen every time and won't stay on top of other apps. Microphone and camera shortcuts will work from any app. You'll leave any meeting you're in.",
+    "windowMode.restartNow": "Restart now",
+    "windowMode.later": "Later",
+    "windowMode.x11Failed":
+        "WorkAdventure couldn't start in compatibility mode (X11), so it now uses native Wayland mode. You can switch back in the settings, under Desktop application.",
     "tray.checkForUpdates": "Check for updates",
     "tray.openLogs": "Open logs",
     "tray.about": "About",

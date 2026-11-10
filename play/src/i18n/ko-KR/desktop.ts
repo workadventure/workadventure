@@ -7,6 +7,21 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "설치된 버전",
         unknown: "확인할 수 없음",
         startAtLogin: "컴퓨터에 로그인할 때 WorkAdventure 시작",
+        windowMode: {
+            title: "창 모드",
+            x11: "호환 모드(X11), 권장",
+            x11Description:
+                "화면 속 화면과 발표자 표시줄이 마지막으로 둔 위치에 열리고 다른 앱 위에 계속 표시됩니다. 마이크 및 카메라 단축키는 WorkAdventure가 앞에 있을 때만 작동합니다. 화면마다 배율이 다르면 그래픽 성능을 조금 더 사용합니다.",
+            wayland: "네이티브 Wayland",
+            waylandDescription:
+                "마이크 및 카메라 단축키가 모든 앱에서 작동합니다. 화면 속 화면은 매번 화면 가운데에 열리며 다른 앱 위에 계속 표시될 수 없으므로 직접 옮겨야 합니다. 화면마다 배율이 다르면 그래픽 부담이 적습니다.",
+            waylandAfterRestart:
+                "다시 시작한 후에는 화면 속 화면이 화면 가운데에 열리며 다른 앱 위에 계속 표시되지 않습니다.",
+            restartNeeded: "이 모드를 사용하려면 WorkAdventure를 다시 시작하세요. 참여 중인 회의에서 나가게 됩니다.",
+            restartNow: "지금 다시 시작",
+            setByCommandLine: "모드가 명령줄(--ozone-platform)에서 설정되어 있으므로 이 선택은 적용되지 않습니다.",
+            x11Unavailable: "호환 모드에는 XWayland가 필요하지만 실행 중이 아닙니다.",
+        },
         browser: "브라우저에서 WorkAdventure를 사용하고 있습니다.",
         recommendedVersion: "권장 버전",
         minimumVersion: "최소 지원 버전",

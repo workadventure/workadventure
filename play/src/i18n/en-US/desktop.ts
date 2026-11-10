@@ -8,6 +8,21 @@ const desktop: BaseTranslation = {
         installed: "Installed version",
         unknown: "Unavailable",
         startAtLogin: "Start WorkAdventure when I log in to my computer",
+        windowMode: {
+            title: "Window mode",
+            x11: "Compatibility (X11), recommended",
+            x11Description:
+                "Picture-in-picture and the presenter bar open where you left them and stay on top of other apps. Microphone and camera shortcuts only work while WorkAdventure is in front. Uses a bit more graphics power when your screens use different scales.",
+            wayland: "Native Wayland",
+            waylandDescription:
+                "Microphone and camera shortcuts work from any app. Picture-in-picture opens in the middle of the screen every time and can’t stay on top of other apps: you’ll have to move it yourself. Lighter on graphics when your screens use different scales.",
+            waylandAfterRestart:
+                "After the restart, picture-in-picture will open in the middle of your screen and won’t stay on top of other apps.",
+            restartNeeded: "Restart WorkAdventure to use this mode. You’ll leave any meeting you’re in.",
+            restartNow: "Restart now",
+            setByCommandLine: "The mode is set on the command line (--ozone-platform), so this choice has no effect.",
+            x11Unavailable: "Compatibility mode needs XWayland, which isn’t running.",
+        },
         browser: "You are using WorkAdventure in your browser.",
         recommendedVersion: "Recommended version",
         minimumVersion: "Minimum supported version",
