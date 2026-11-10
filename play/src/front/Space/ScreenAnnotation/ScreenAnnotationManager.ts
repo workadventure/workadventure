@@ -283,7 +283,11 @@ class ScreenAnnotationManager {
                 }
             }
             if (drafts.size > 0) {
-                elements.set(target, [...(elements.get(target) ?? []), ...drafts.values()]);
+                // Pointers last, so they are drawn on top of everything (the highlight dragged under one included).
+                const ordered = [...drafts.values()].sort(
+                    (a, b) => Number(a.tool === "pointer") - Number(b.tool === "pointer"),
+                );
+                elements.set(target, [...(elements.get(target) ?? []), ...ordered]);
             }
         }
         screenAnnotationElementsStore.set(elements);

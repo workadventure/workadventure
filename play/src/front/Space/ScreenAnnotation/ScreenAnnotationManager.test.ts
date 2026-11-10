@@ -245,6 +245,13 @@ describe("ScreenAnnotationManager", () => {
         expect(elementIds()).toEqual([]);
     });
 
+    it("shows the pointers on top of everything, the highlight dragged under them included", () => {
+        setState(true, element("saved", "viewer"));
+        sendDraft("viewer", { ...element("p", "viewer"), tool: "pointer" });
+        sendDraft("viewer", { ...element("h", "viewer"), tool: "highlight" });
+        expect(elementIds()).toEqual(["saved", "h", "p"]);
+    });
+
     it("drops the draft of a refused element", async () => {
         stateManager.upsertScreenAnnotation.mockReturnValueOnce(Promise.reject(new Error("refused")));
         screenAnnotationManager.upsertElement(PRESENTER, element("mine", ME));
