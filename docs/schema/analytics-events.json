@@ -405,17 +405,6 @@
       }
     },
     {
-      "title": "global_audio.opened",
-      "properties": {
-        "eventName": {
-          "const": "global_audio.opened"
-        },
-        "properties": {
-          "$ref": "#/$defs/global_audio.opened"
-        }
-      }
-    },
-    {
       "title": "global_message.opened",
       "properties": {
         "eventName": {
@@ -423,17 +412,6 @@
         },
         "properties": {
           "$ref": "#/$defs/global_message.opened"
-        }
-      }
-    },
-    {
-      "title": "global_message.sound_sent",
-      "properties": {
-        "eventName": {
-          "const": "global_message.sound_sent"
-        },
-        "properties": {
-          "$ref": "#/$defs/global_message.sound_sent"
         }
       }
     },
@@ -819,6 +797,17 @@
         },
         "properties": {
           "$ref": "#/$defs/media.codec.degraded"
+        }
+      }
+    },
+    {
+      "title": "media.codec.probed",
+      "properties": {
+        "eventName": {
+          "const": "media.codec.probed"
+        },
+        "properties": {
+          "$ref": "#/$defs/media.codec.probed"
         }
       }
     },
@@ -2019,9 +2008,7 @@
               "feedback.opened",
               "feedback.submitted",
               "file.drag_dropped",
-              "global_audio.opened",
               "global_message.opened",
-              "global_message.sound_sent",
               "global_message.text_sent",
               "invite.accepted",
               "invite.opened",
@@ -2057,6 +2044,7 @@
               "media.background_effect.sample",
               "media.camera.toggled",
               "media.codec.degraded",
+              "media.codec.probed",
               "media.connection_retry",
               "media.device_error",
               "media.livekit.connected",
@@ -2710,35 +2698,12 @@
       "description": "The user dropped a file into the world.",
       "title": "file.drag_dropped"
     },
-    "global_audio.opened": {
-      "type": "object",
-      "properties": {},
-      "additionalProperties": true,
-      "description": "The user opened the global audio panel.",
-      "title": "global_audio.opened"
-    },
     "global_message.opened": {
       "type": "object",
-      "properties": {
-        "source": {
-          "type": "string",
-          "enum": [
-            "menu",
-            "action_bar"
-          ],
-          "description": "Which control opened the composer."
-        }
-      },
-      "additionalProperties": true,
-      "title": "global_message.opened",
-      "description": "The user opened the global message composer."
-    },
-    "global_message.sound_sent": {
-      "type": "object",
       "properties": {},
       "additionalProperties": true,
-      "description": "The user broadcast a sound to the world.",
-      "title": "global_message.sound_sent"
+      "description": "The user opened the global message composer.",
+      "title": "global_message.opened"
     },
     "global_message.text_sent": {
       "type": "object",
@@ -3254,6 +3219,118 @@
       "additionalProperties": true,
       "title": "media.codec.degraded",
       "description": "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload."
+    },
+    "media.codec.probed": {
+      "type": "object",
+      "properties": {
+        "browser": {
+          "type": "string",
+          "enum": [
+            "chrome",
+            "edge",
+            "firefox",
+            "safari",
+            "other"
+          ],
+          "description": "Browser family, from the user agent. chrome covers every Chromium browser but Edge; every iOS browser is safari, since all of them run WebKit."
+        },
+        "os": {
+          "type": "string",
+          "enum": [
+            "windows",
+            "mac",
+            "linux",
+            "chromeos",
+            "android",
+            "ios",
+            "other"
+          ],
+          "description": "Operating system family, from the user agent."
+        },
+        "av1Encode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Encoding AV1 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "av1Decode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Decoding AV1 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "vp9Encode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Encoding VP9 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "vp9Decode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Decoding VP9 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "h264Encode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Encoding H.264 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "h264Decode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Decoding H.264 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "h265Encode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Encoding H.265 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        },
+        "h265Decode": {
+          "type": "string",
+          "enum": [
+            "hardware",
+            "software",
+            "unsupported",
+            "unknown"
+          ],
+          "description": "Decoding H.265 in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities)."
+        }
+      },
+      "additionalProperties": true,
+      "title": "media.codec.probed",
+      "description": "What this browser can do with each video codec in a WebRTC call, as MediaCapabilities answers at 720p: the verdict the codec preference lists are filtered on. Once per page load. H.265 is probed but never negotiated: it is here to measure how many users could use it."
     },
     "media.connection_retry": {
       "type": "object",
@@ -3939,6 +4016,44 @@
             "null"
           ],
           "description": "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate)."
+        },
+        "captureWidth": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: width the camera or screen capture delivers (MediaTrackSettings.width), where frameWidth is the largest layer the encoder sends. A capture larger than what is sent was scaled down by the encoder or by its layer setup."
+        },
+        "captureHeight": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: height the camera or screen capture delivers (MediaTrackSettings.height)."
+        },
+        "qualitySetting": {
+          "anyOf": [
+            {
+              "type": "string",
+              "enum": [
+                "low",
+                "recommended",
+                "high"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "Outbound only: the sender's quality setting when the sample was taken: the camera's for a camera, the screen share's for a screen share."
         },
         "encodeMsPerFrame": {
           "type": [

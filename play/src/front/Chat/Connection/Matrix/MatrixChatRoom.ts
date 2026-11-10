@@ -128,7 +128,9 @@ export class MatrixChatRoom
     readonly unreadNotificationCount: Writable<number>;
     readonly hasUnreadMentions: Writable<boolean>;
     readonly lastMessagePreview: Readable<ChatMessagePreview | undefined>;
+    readonly lastMessageTimestampStore: Readable<number>;
     readonly readReceipts: Readable<ChatReadReceipts>;
+    readonly unreadHighlightCount: Writable<number>;
     readonly initializationState: Writable<ChatRoomInitializationState> = writable("idle");
     readonly initializationError: Writable<Error | undefined> = writable(undefined);
     pictureStore: LazyPictureStore;
@@ -160,6 +162,7 @@ export class MatrixChatRoom
     readonly canSendMessages: Readable<boolean>;
     readonly canSendReactions: Readable<boolean>;
     typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    readonly typingNames: Readable<string[]>;
     isRoomFolder = false;
     areNotificationsMuted = writable(false);
     currentRoomMember: Readable<MatrixChatRoomMember | undefined>;
@@ -174,6 +177,7 @@ export class MatrixChatRoom
     private handleStateEvent = this.onRoomStateEvent.bind(this);
     private handleNewMember = this.onRoomNewMember.bind(this);
     private handleRoomStateMembers = this.onRoomStateMembers.bind(this);
+    private handleCurrentStateUpdated = this.onCurrentStateUpdated.bind(this);
     private handleMyMembership = this.onRoomMyMembership.bind(this);
     private updateUnreadNotificationCount = this.onRoomUpdateUnreadNotificationCount.bind(this);
     private readonly openThreadConversations = new Map<string, MatrixChatThread>();
@@ -279,6 +283,7 @@ export class MatrixChatRoom
         this.hasUnreadMessages = writable(matrixRoom.getUnreadNotificationCount() > 0);
         this.unreadNotificationCount = writable(matrixRoom.getUnreadNotificationCount());
         this.hasUnreadMentions = writable(matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight) > 0);
+        this.unreadHighlightCount = writable(matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight));
         const roomAvatarStore: PictureStore = readable(
             matrixRoom.getAvatarUrl(matrixRoom.client.baseUrl, 24, 24, "scale") ?? undefined,
         );
@@ -308,6 +313,16 @@ export class MatrixChatRoom
                 matrixRoom.off(RoomEvent.Redaction, update);
                 matrixRoom.off(RoomEvent.Receipt, update);
                 matrixRoom.client.off(MatrixEventEvent.Decrypted, updateOnDecrypted);
+            };
+        });
+        this.lastMessageTimestampStore = readable(matrixRoom.getLastActiveTimestamp(), (set) => {
+            const update = () => set(matrixRoom.getLastActiveTimestamp());
+            update();
+            matrixRoom.on(RoomEvent.Timeline, update);
+            matrixRoom.on(RoomEvent.LocalEchoUpdated, update);
+            return () => {
+                matrixRoom.off(RoomEvent.Timeline, update);
+                matrixRoom.off(RoomEvent.LocalEchoUpdated, update);
             };
         });
         this.readReceipts = readable<ChatReadReceipts>(this.computeReadReceipts(), (set) => {
@@ -579,6 +594,23 @@ export class MatrixChatRoom
             },
             [],
         );
+        this.typingNames = readable<string[]>([], (set) => {
+            const update = () =>
+                set(
+                    this.matrixRoom
+                        .getMembers()
+                        .filter((member) => member.typing && member.userId !== this.matrixRoom.myUserId)
+                        .map((member) => member.name),
+                );
+            const onTyping = (_event: MatrixEvent, member: RoomMember) => {
+                if (member.roomId === this.id) {
+                    update();
+                }
+            };
+            update();
+            this.matrixRoom.client.on(RoomMemberEvent.Typing, onTyping);
+            return () => this.matrixRoom.client.off(RoomMemberEvent.Typing, onTyping);
+        });
         this.isRoomFolder = matrixRoom.isSpaceRoom();
         this.inMemoryEventsContent = new Map<EventId, MatrixEvent>();
 
@@ -1206,6 +1238,20 @@ export class MatrixChatRoom
         this.matrixRoom.on(RoomEvent.MyMembership, this.handleMyMembership);
         this.matrixRoom.on(RoomEvent.UnreadNotifications, this.updateUnreadNotificationCount);
         this.matrixRoom.currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+        this.matrixRoom.on(RoomEvent.CurrentStateUpdated, this.handleCurrentStateUpdated);
+    }
+
+    /** A new live timeline (refreshLiveTimeline, a gappy sync) comes with a new state and new RoomMember objects. */
+    private onCurrentStateUpdated(_room: Room, previousState: RoomState, currentState: RoomState): void {
+        previousState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
+        currentState.on(RoomStateEvent.Members, this.handleRoomStateMembers);
+        for (const member of get(this.members)) {
+            const roomMember = currentState.getMember(member.id);
+            if (roomMember) {
+                member.rebind(roomMember);
+            }
+        }
+        this.setCurrentUserRoomMember(currentState.getMember(this.matrixRoom.client.getSafeUserId()) ?? undefined);
     }
 
     private startHandlingChatRoomInitializedEvents() {
@@ -1625,6 +1671,7 @@ export class MatrixChatRoom
         // The server counts the messages that highlight us (mentions, @room) apart: that count also covers the
         // threads and, unlike the total, survives a room muted to mentions only.
         this.hasUnreadMentions.set(this.matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight) > 0);
+        this.unreadHighlightCount.set(this.matrixRoom.getUnreadNotificationCount(NotificationCountType.Highlight));
     }
 
     public async retrySendingEvents(): Promise<void> {
@@ -1909,6 +1956,7 @@ export class MatrixChatRoom
         this.hasUnreadMessages.set(false);
         this.unreadNotificationCount.set(0);
         this.hasUnreadMentions.set(false);
+        this.unreadHighlightCount.set(0);
         // Read receipt must target the live timeline; getLastLiveEvent() matches the data.liveEvent semantics used in onRoomTimeline.
         this.matrixRoom.client
             .sendReadReceipt(this.matrixRoom.getLastLiveEvent() ?? null, ReceiptType.Read)
@@ -2180,6 +2228,15 @@ export class MatrixChatRoom
             );
     }
 
+    /** Display name of whoever sent my pending invitation, when the invite state carries it. */
+    get inviterName(): string | undefined {
+        const myUserId = this.matrixRoom.myUserId;
+        const inviterId = this.matrixRoom.getMember(myUserId)?.events.member?.getSender();
+        if (!inviterId || inviterId === myUserId) return undefined;
+        const name = this.matrixRoom.getMember(inviterId)?.name;
+        return name && name !== inviterId ? name : undefined;
+    }
+
     private getMatrixRoomType(): "direct" | "multiple" {
         if (this.hasMatrixSpaceParent()) {
             return "multiple";
@@ -2352,6 +2409,7 @@ export class MatrixChatRoom
         this.currentUserRoomMember?.off(RoomMemberEvent.PowerLevel, this.handleCurrentUserRoomMemberPowerLevel);
         this.currentUserRoomMember = undefined;
         this.matrixRoom.currentState.off(RoomStateEvent.Members, this.handleRoomStateMembers);
+        this.matrixRoom.off(RoomEvent.CurrentStateUpdated, this.handleCurrentStateUpdated);
         this.matrixRoom.off(RoomEvent.Timeline, this.handleRoomTimeline);
         this.matrixRoom.off(PollEvent.New, this.handleNewPoll);
         this.matrixRoom.off(RoomEvent.Name, this.handleRoomName);

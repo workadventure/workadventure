@@ -1,0 +1,488 @@
+// Package admin answers the questions the server asks the administration: who is this member, what is this map.
+// Local is the OSS mode, used when ADMIN_API_URL is empty (LocalAdmin of the pusher).
+package admin
+
+import (
+	"context"
+	"crypto/hmac"
+	"crypto/sha1" //nolint:gosec // HMAC-SHA1 is what TURN REST credentials (coturn use-auth-secret) are made of
+	_ "embed"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"net/url"
+	"path"
+	"regexp"
+	"slices"
+	"strconv"
+	"strings"
+	"time"
+
+	"github.com/workadventure/workadventure/server-go/internal/config"
+)
+
+// Texture is a woka layer or companion texture (WokaDetail / CompanionDetail).
+// Texture is a woka or companion texture of the admin's answers (WokaDetail, CompanionDetail: one shape).
+type Texture = WokaDetail
+
+// The admin's answers are generated from their zod schemas (admin.gen.go, server-go/schemas).
+
+// MemberData is the member as seen by the admin (FetchMemberDataByUuidResponse, status "ok"). Its JSON is part of
+// the /me response.
+type MemberData struct {
+	Status                   string        `json:"status"`
+	Email                    string        `json:"email"`
+	UserUUID                 string        `json:"userUuid"`
+	Tags                     []string      `json:"tags"`
+	VisitCardURL             *string       `json:"visitCardUrl"`
+	IsCharacterTexturesValid bool          `json:"isCharacterTexturesValid"`
+	CharacterTextures        []Texture     `json:"characterTextures"`
+	IsCompanionTextureValid  bool          `json:"isCompanionTextureValid"`
+	CompanionTexture         *Texture      `json:"companionTexture,omitempty"`
+	UserRoomToken            string        `json:"userRoomToken,omitempty"`
+	ActivatedInviteUser      bool          `json:"activatedInviteUser"`
+	CanEdit                  bool          `json:"canEdit"`
+	World                    string        `json:"world"`
+	Applications             []Application `json:"applications"`
+	CanRecord                bool          `json:"canRecord"`
+	AnalyticsEventsEnabled   bool          `json:"analyticsEventsEnabled"`
+	Username                 string        `json:"username,omitempty"`
+	ChatID                   string        `json:"chatID,omitempty"`
+}
+
+// Refusal is the admin's answer that the request may not go on (ErrorApiData: type error, retry, redirect or
+// unauthorized, in an HTTP 200): /me returns it as is, the WebSocket shows it as an error screen.
+type Refusal struct{ Data map[string]any }
+
+func (r *Refusal) Error() string {
+	t, _ := r.Data["type"].(string)
+	code, _ := r.Data["code"].(string)
+	return "refused by the admin: " + t + " " + code
+}
+
+// refusal is an ErrorApiErrorData built here, when the admin cannot be asked (AdminApi.ts never throws on A2 and A3).
+func refusal(code, title, details string) *Refusal {
+	return &Refusal{Data: map[string]any{"status": "error", "type": "error", "code": code, "title": title, "subtitle": "", "details": details,
+		"image": "", "imageLogo": ""}}
+}
+
+// MapQuery is what /map knows (the rendered page and the server ask with the play URI only).
+type MapQuery struct{ PlayURI, UserID, AccessToken, Locale string }
+
+// MemberQuery is what the server knows about a client when it asks the admin for its member data.
+type MemberQuery struct {
+	Identifier, AccessToken, PlayURI, IPAddress, Locale, ChatID string
+	CharacterTextureIDs                                         []string
+	CompanionTextureID                                          string
+	Tags                                                        []string
+}
+
+// Admin is the port to the administration: Local without one (OSS), HTTP with ADMIN_API_URL (SaaS).
+type Admin interface {
+	// Capabilities are what the admin offers; the page gets them as window.capabilities.
+	Capabilities() map[string]string
+	// MemberData is /api/room/access. A refusal of the admin is a *Refusal.
+	MemberData(ctx context.Context, q MemberQuery) (MemberData, error)
+	// MapDetails is /api/map: MapDetailsData, RoomRedirect or ErrorApiData, thirdParty included (never send it on).
+	MapDetails(ctx context.Context, q MapQuery) (MapDetails, error)
+	WokaList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)
+	CompanionList(ctx context.Context, roomURL, uuid string) (json.RawMessage, error)
+	IceServers(ctx context.Context, roomURL, uuid string, userID int32) ([]IceServer, error)
+	// VerifyDomain says whether a play URI may be where the login flow sends the browser back.
+	VerifyDomain(ctx context.Context, playURI string) bool
+	// Report is A5: a player reports another one.
+	Report(ctx context.Context, r Report) error
+	// Ban is A7: nil when the admin recorded the ban (it then refuses the user in MemberData), ErrBanRefused when
+	// it answered that it would not record it, any other error when it could not be asked.
+	Ban(ctx context.Context, b Ban) error
+	// RoomTags is A8, the tags the map editor suggests.
+	RoomTags(ctx context.Context, roomURL string) []string
+	// SameWorld is A6: the rooms of the world of roomURL. ok is false without an admin: the server lists its maps.
+	SameWorld(ctx context.Context, roomURL string, tags []string, bypassTagFilter bool) (rooms []RoomDescription, ok bool, err error)
+	// ChatMembers is A12, the members of the world in the chat, offline ones included.
+	ChatMembers(ctx context.Context, roomURL, search string) (ChatMembers, error)
+	// SearchMembers is A13 and GetMember A15, for the map editor (owners, rights) and a personal desk's owner.
+	SearchMembers(ctx context.Context, roomURL, search string) ([]Member, error)
+	GetMember(ctx context.Context, uuid string) (Member, error)
+	// SearchTags is A14.
+	SearchTags(ctx context.Context, roomURL, search string) ([]string, error)
+	// UpdateChatID is A16: the player got its Matrix id.
+	UpdateChatID(ctx context.Context, email, chatID, roomURL string) error
+	// RefreshOAuthToken is A17: a new token of a third party (Teams, Google...) for an external module.
+	RefreshOAuthToken(ctx context.Context, token, provider, userIdentifier string) (newToken, message string, err error)
+	// SaveUser is A9 to A11: what a logged player chose (name, textures, companion), when the admin keeps it.
+	SaveUser(ctx context.Context, what SaveWhat, userIdentifier, roomURL string, value any) error
+	// Challenge is A4, Cloudflare's challenge for a world's custom hostname.
+	Challenge(ctx context.Context, host string) (string, error)
+}
+
+// SaveWhat is one of A9, A10, A11.
+type SaveWhat int
+
+const (
+	SaveName SaveWhat = iota
+	SaveTextures
+	SaveCompanion
+)
+
+// ChatMembers is WorldChatMembersData.
+// ChatMembers is the admin's chat members of a world (WorldChatMembersData), Member one of its members (MemberData).
+type (
+	ChatMembers = WorldChatMembers
+	Member      = ChatMember
+)
+
+var errNoAdmin = errors.New("No admin backoffice set!")
+
+// ErrBanRefused is the admin answering a ban with an error body: the moderator is not an admin of the world in its
+// eyes, or the room or the user is unknown. Unlike an admin that cannot be reached, it is a decision.
+var ErrBanRefused = errors.New("the admin refused the ban")
+
+type Report struct{ ReportedUUID, Comment, ReporterUUID, RoomURL string }
+
+type Ban struct{ UUID, PlayURI, Name, Message, ByUUID, IPAddress string }
+
+// RoomDescription is a ShortMapDescription.
+type RoomDescription struct {
+	Name                              string  `json:"name"`
+	RoomURL                           string  `json:"roomUrl"`
+	WamURL                            *string `json:"wamUrl"`
+	Description, Copyright, Thumbnail *string
+}
+
+//go:embed data/woka.json
+var wokaJSON []byte
+
+//go:embed data/companions.json
+var companionsJSON []byte
+
+var wokaPartNames = []string{"woka", "body", "eyes", "hair", "clothes", "hat", "accessory"}
+
+type textureList struct {
+	Collections []struct {
+		Textures []Texture `json:"textures"`
+	} `json:"collections"`
+}
+
+type Local struct {
+	cfg        *config.Config
+	wokas      map[string]string // texture id → url, in part order
+	companions map[string]string
+}
+
+func NewLocal(cfg *config.Config) (*Local, error) {
+	l := &Local{cfg: cfg, wokas: map[string]string{}, companions: map[string]string{}}
+	var parts map[string]textureList
+	if err := json.Unmarshal(wokaJSON, &parts); err != nil {
+		return nil, fmt.Errorf("woka.json: %w", err)
+	}
+	for _, p := range wokaPartNames {
+		for _, c := range parts[p].Collections {
+			for _, t := range c.Textures {
+				if _, seen := l.wokas[t.ID]; !seen {
+					l.wokas[t.ID] = t.URL
+				}
+			}
+		}
+	}
+	var companions []struct {
+		Textures []Texture `json:"textures"`
+	}
+	if err := json.Unmarshal(companionsJSON, &companions); err != nil {
+		return nil, fmt.Errorf("companions.json: %w", err)
+	}
+	for _, c := range companions {
+		for _, t := range c.Textures {
+			if _, seen := l.companions[t.ID]; !seen {
+				l.companions[t.ID] = t.URL
+			}
+		}
+	}
+	return l, nil
+}
+
+func (l *Local) Capabilities() map[string]string {
+	return map[string]string{"api/woka/list": "v1", "api/companion/list": "v1"}
+}
+func (l *Local) WokaList(context.Context, string, string) (json.RawMessage, error) {
+	return wokaJSON, nil
+}
+func (l *Local) CompanionList(context.Context, string, string) (json.RawMessage, error) {
+	return companionsJSON, nil
+}
+
+func (l *Local) Report(context.Context, Report) error {
+	return errors.New("no admin backoffice to report to")
+}
+func (l *Local) Ban(context.Context, Ban) error            { return errNoAdmin }
+func (l *Local) RoomTags(context.Context, string) []string { return []string{} }
+
+func (l *Local) ChatMembers(context.Context, string, string) (ChatMembers, error) {
+	return ChatMembers{}, nil
+}
+func (l *Local) SearchMembers(context.Context, string, string) ([]Member, error) {
+	return nil, errNoAdmin
+}
+func (l *Local) GetMember(context.Context, string) (Member, error)            { return Member{}, errNoAdmin }
+func (l *Local) SearchTags(context.Context, string, string) ([]string, error) { return []string{}, nil }
+func (l *Local) UpdateChatID(context.Context, string, string, string) error   { return nil }
+func (l *Local) RefreshOAuthToken(context.Context, string, string, string) (string, string, error) {
+	return "", "", errNoAdmin
+}
+func (l *Local) SaveUser(context.Context, SaveWhat, string, string, any) error { return nil }
+func (l *Local) Challenge(context.Context, string) (string, error)             { return "", errNoAdmin }
+func (l *Local) SameWorld(context.Context, string, []string, bool) ([]RoomDescription, bool, error) {
+	return nil, false, nil
+}
+
+// VerifyDomain is LocalVerifyDomainService: the play URI is on the host of the server.
+func (l *Local) VerifyDomain(_ context.Context, playURI string) bool {
+	u, err := url.Parse(playURI)
+	p, err2 := url.Parse(l.cfg.PusherURL)
+	return err == nil && err2 == nil && u.Hostname() != "" && u.Hostname() == p.Hostname()
+}
+
+var editablePath = regexp.MustCompile(`/~/(.+)`)
+
+func (l *Local) MemberData(_ context.Context, q MemberQuery) (MemberData, error) {
+	roomURL, err := url.Parse(q.PlayURI)
+	if err != nil || roomURL.Scheme == "" || roomURL.Host == "" {
+		return MemberData{}, fmt.Errorf("invalid room URL %q", q.PlayURI)
+	}
+	canEdit := editablePath.MatchString(roomURL.Path) && l.cfg.EnableMapEditor &&
+		(l.cfg.MapEditorAllowAllUsers || slices.Contains(l.cfg.MapEditorAllowedUsers, q.Identifier) ||
+			slices.Contains(q.Tags, "admin") || slices.Contains(q.Tags, "editor"))
+
+	textures := make([]Texture, 0, len(q.CharacterTextureIDs))
+	valid := true
+	for _, id := range q.CharacterTextureIDs {
+		u, ok := l.wokas[id]
+		if !ok {
+			valid = false
+			break
+		}
+		if !slices.ContainsFunc(textures, func(t Texture) bool { return t.ID == id }) {
+			textures = append(textures, Texture{ID: id, URL: u})
+		}
+	}
+	if !valid {
+		textures = []Texture{}
+	}
+	var companion *Texture
+	companionValid := true
+	if q.CompanionTextureID != "" {
+		if u, ok := l.companions[q.CompanionTextureID]; ok {
+			companion = &Texture{ID: q.CompanionTextureID, URL: u}
+		} else {
+			companionValid = false
+		}
+	}
+	tags := q.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+	return MemberData{
+		Status: "ok", Email: q.Identifier, UserUUID: q.Identifier, Tags: tags,
+		IsCharacterTexturesValid: valid, CharacterTextures: textures,
+		IsCompanionTextureValid: companionValid, CompanionTexture: companion,
+		ActivatedInviteUser: true, CanEdit: canEdit, World: roomURL.Scheme + "://" + roomURL.Host,
+		Applications: l.applications(),
+		CanRecord:    l.cfg.RecordingConfigured && q.AccessToken != "",
+		// No admin back office: nobody to report analytics to.
+		AnalyticsEventsEnabled: false,
+	}, nil
+}
+
+func (l *Local) applications() []Application {
+	env := l.cfg.FrontEnv
+	type app struct {
+		on bool
+		Application
+	}
+	all := []app{
+		{env.KlaxoonEnabled, Application{Name: "Klaxoon", Doc: ptr("https://klaxoon.com"), Image: ptr("https://static.klaxoon.com/favicon.ico"), Description: ptr("Klaxoon (Brainstorming, Quiz, Survey)")}},
+		{env.YoutubeEnabled, Application{Name: "Youtube", Doc: ptr("https://youtube.com"), Image: ptr("https://www.youtube.com/favicon.ico"), Description: ptr("Youtube (Video sharing)")}},
+		{env.GoogleDriveEnabled, Application{Name: "Google Drive", Doc: ptr("https://drive.google.com"), Description: ptr("Google Drive (Docs, Sheets, Slides)")}},
+		{env.GoogleDocsEnabled, Application{Name: "Google Docs", Doc: ptr("https://docs.google.com"), Description: ptr("Google Docs (Word Processor)")}},
+		{env.GoogleSheetsEnabled, Application{Name: "Google Sheets", Doc: ptr("https://sheets.google.com"), Description: ptr("Google Sheets (Spreadsheet)")}},
+		{env.GoogleSlidesEnabled, Application{Name: "Google Slides", Doc: ptr("https://slides.google.com"), Description: ptr("Google Slides (Presentation)")}},
+		{env.EraserEnabled, Application{Name: "Eraser", Doc: ptr("https://workadventu.re"), Description: ptr("Eraser (White board)")}},
+		{env.ExcalidrawEnabled, Application{Name: "Excalidraw", Doc: ptr("https://excalidraw.com"), Description: ptr("Excalidraw (White board)")}},
+		{env.CardsEnabled, Application{Name: "Cards", Doc: ptr("https://workadventu.re"), Description: ptr("Cards (learning tool)")}},
+		{env.TldrawEnabled, Application{Name: "tldraw", Doc: ptr("https://tldraw.com"), Description: ptr("tldraw (White board)")}},
+	}
+	out := []Application{}
+	for _, a := range all {
+		if a.on {
+			a.Enabled, a.Default = true, true
+			out = append(out, a.Application)
+		}
+	}
+	return out
+}
+
+var publicMapPath = regexp.MustCompile(`/_/[^/]+/(.+)`)
+
+// MapDetails is the admin's answer for a room (A2): its map, a redirect, or an error page for the front. The fields
+// the server itself reads are typed; Raw is the whole answer, which /map gives the front (without thirdParty).
+type MapDetails struct {
+	Raw                           map[string]any
+	MapURL, WamURL, RedirectURL   string
+	PrimaryColor, BackgroundColor string
+	Metatags                      map[string]any
+	ThirdParty                    map[string]any // Jitsi and BBB of the room, secrets included: never sent on
+}
+
+// Details types an answer of /api/map.
+func Details(raw map[string]any) MapDetails {
+	d := MapDetails{Raw: raw}
+	d.MapURL, _ = raw["mapUrl"].(string)
+	d.WamURL, _ = raw["wamUrl"].(string)
+	d.RedirectURL, _ = raw["redirectUrl"].(string)
+	d.PrimaryColor, _ = raw["primaryColor"].(string)
+	d.BackgroundColor, _ = raw["backgroundColor"].(string)
+	d.Metatags, _ = raw["metatags"].(map[string]any)
+	d.ThirdParty, _ = raw["thirdParty"].(map[string]any)
+	return d
+}
+
+// IsRoom says whether the answer describes a map (Tiled or WAM), rather than a redirect or an error.
+func (d MapDetails) IsRoom() bool {
+	_, isMap := d.Raw["mapUrl"]
+	_, isWam := d.Raw["wamUrl"]
+	return isMap || isWam
+}
+
+func (l *Local) MapDetails(_ context.Context, q MapQuery) (MapDetails, error) {
+	raw, err := l.mapDetails(q)
+	return Details(raw), err
+}
+
+func (l *Local) mapDetails(q MapQuery) (map[string]any, error) {
+	roomURL, err := url.Parse(q.PlayURI)
+	if err != nil {
+		return nil, err
+	}
+	if roomURL.Path == "/" || roomURL.Path == "" {
+		redirect := *roomURL
+		redirect.Path = l.cfg.StartRoomURL
+		return map[string]any{"redirectUrl": redirect.String()}, nil
+	}
+	details := map[string]any{}
+	if m := editablePath.FindStringSubmatch(roomURL.Path); m != nil {
+		if path.Ext(roomURL.Path) == ".tmj" {
+			return map[string]any{"redirectUrl": regexp.MustCompile(`\.tmj`).ReplaceAllString(roomURL.String(), ".wam")}, nil
+		}
+		details["wamUrl"] = l.cfg.PublicMapStorageURL + "/" + m[1]
+		details["canEdit"] = l.cfg.EnableMapEditor
+		details["group"] = "default"
+	} else if m := publicMapPath.FindStringSubmatch(roomURL.Path); m != nil {
+		details["mapUrl"] = roomURL.Scheme + "://" + m[1]
+		details["canEdit"] = false
+		details["group"] = nil
+	} else {
+		return map[string]any{
+			"status": "error", "type": "error", "code": "UNSUPPORTED_URL_FORMAT", "title": "Unsupported URL format",
+			"details": "Unsupported path: " + roomURL.Path, "subtitle": "",
+		}, nil
+	}
+	c := l.cfg
+	buttonState := "hidden"
+	if c.RecordingConfigured {
+		buttonState = "enabled"
+	}
+	for k, v := range map[string]any{
+		"authenticationMandatory":          c.DisableAnonymous,
+		"contactPage":                      nil,
+		"opidLogoutRedirectUrl":            nil,
+		"opidUsernamePolicy":               c.OpidWokaNamePolicy,
+		"loadingLogo":                      nil,
+		"loginSceneLogo":                   nil,
+		"errorSceneLogo":                   nil,
+		"showPoweredBy":                    true,
+		"loadingCowebsiteLogo":             nil,
+		"enableChat":                       c.EnableChat,
+		"enableChatUpload":                 c.EnableChatUpload,
+		"enableChatOnlineList":             c.EnableChatOnlineList,
+		"enableChatDisconnectedList":       c.EnableChatDisconnectedList,
+		"enableSay":                        c.EnableSay,
+		"enableIssueReport":                c.EnableIssueReport,
+		"enableMatrixChat":                 c.MatrixEnabled,
+		"skipCameraPage":                   c.SkipCameraPage,
+		"defaultCameraPrivacySettings":     c.DefaultCameraPrivacySettings,
+		"defaultMicrophonePrivacySettings": c.DefaultMicrophonePrivacySettings,
+		"bypassPwa":                        c.BypassPWA,
+		"metatags":                         DefaultMetaTags(),
+		"recording":                        map[string]any{"buttonState": buttonState, "disabledReason": nil},
+		"metadata":                         map[string]any{"enableTutorial": c.EnableTutorial},
+	} {
+		details[k] = v
+	}
+	for k, v := range map[string]string{
+		"defaultWokaName":           c.DefaultWokaName,
+		"defaultWokaTexture":        c.DefaultWokaTexture,
+		"provideDefaultWokaName":    c.ProvideDefaultWokaName,
+		"provideDefaultWokaTexture": c.ProvideDefaultWokaTexture,
+	} {
+		if v != "" {
+			details[k] = v
+		}
+	}
+	return details, nil
+}
+
+// DefaultMetaTags is MetaTagsDefaultValue.
+func DefaultMetaTags() map[string]any {
+	return map[string]any{
+		"title":         "WorkAdventure",
+		"description":   "Organize your online event in WorkAdventure to recreate spontaneous social interactions. Connect, collaborate and have fun with your teammates and attendees.",
+		"author":        "WorkAdventure team",
+		"provider":      "WorkAdventure",
+		"favIcons":      []map[string]string{{"rel": "icon", "sizes": "512x512", "src": "/static/images/favicons/favicon-512x512.svg"}},
+		"manifestIcons": []map[string]string{{"src": "/static/images/favicons/icon-512x512.png", "sizes": "512x512", "type": "image/png"}},
+		"appName":       "WorkAdventure",
+		"shortAppName":  "WA",
+		"themeColor":    "#1B2A41",
+		"cardImage":     "https://workadventu.re/images/general/logo-og.png",
+	}
+}
+
+// IceServer is a STUN or TURN server given to the browser for WebRTC.
+type IceServer struct {
+	URLs                 []string
+	Username, Credential string
+}
+
+// IceServers is IceServersService.generateIceServers: STUN_SERVER, then TURN_SERVER with either static
+// credentials or, with TURN_STATIC_AUTH_SECRET, 24-hour credentials in the coturn "REST API" format.
+func (l *Local) IceServers(_ context.Context, _, _ string, userID int32) ([]IceServer, error) {
+	return l.iceServers(userID), nil
+}
+
+func (l *Local) iceServers(userID int32) []IceServer {
+	split := func(v string) []string {
+		parts := strings.Split(v, ",")
+		for i := range parts {
+			parts[i] = strings.TrimSpace(parts[i])
+		}
+		return parts
+	}
+	var servers []IceServer
+	if l.cfg.StunServer != "" {
+		servers = append(servers, IceServer{URLs: split(l.cfg.StunServer)})
+	}
+	if l.cfg.TurnServer != "" {
+		user, password := l.cfg.TurnUser, l.cfg.TurnPassword
+		if secret := l.cfg.TurnStaticAuthSecret; secret != "" {
+			user = strconv.FormatInt(time.Now().Unix()+24*3600, 10) + ":" + strconv.Itoa(int(userID))
+			mac := hmac.New(sha1.New, []byte(secret))
+			mac.Write([]byte(user))
+			password = base64.StdEncoding.EncodeToString(mac.Sum(nil))
+		}
+		servers = append(servers, IceServer{URLs: split(l.cfg.TurnServer), Username: user, Credential: password})
+	}
+	return servers
+}
+
+func ptr(s string) *string { return &s }

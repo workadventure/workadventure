@@ -103,18 +103,14 @@ export function withoutRoomMention(html: string): string {
 }
 
 /**
- * The content of a text message typed in our composer. Mentioned users go in m.mentions, which is what makes the
- * server notify them (intentional mentions, Matrix v1.7), and their pills become matrix.to links in an HTML
- * formatted_body, which is what Element renders as pills.
+ * The content of a text message typed in our composer, which hands over its innerHTML (entities escaped). The body
+ * is plain text, as Matrix expects it: other clients and notifications show it as is. The HTML formatted_body is the
+ * markdown rendered, mentioned users being matrix.to links (what Element draws as pills) and listed in m.mentions,
+ * which is what makes the server notify them (intentional mentions, Matrix v1.7).
  */
-export function getMatrixMessageContent(message: string): RoomMessageEventContent {
+export function getMatrixMessageContent(composerHtml: string): RoomMessageEventContent {
+    const message = composerHtml.replace(/<br\s*\/?>/gi, "\n");
     const ids = getMentionedIds(message);
-    if (ids.length === 0) {
-        // m.mentions is set even when empty: like Element, we tell the server not to guess mentions from the
-        // display names found in the text.
-        return { msgtype: MsgType.Text, body: message, formatted_body: message, "m.mentions": {} };
-    }
-
     const userIds = ids.filter((id) => id !== ROOM_MENTION_ID);
     const markdown = message.replace(PILL_REGEX, (pill, attributes: string, name: string) => {
         const id = getPillId(attributes);
@@ -129,6 +125,7 @@ export function getMatrixMessageContent(message: string): RoomMessageEventConten
         body: mentionsToPlainText(message),
         format: MATRIX_HTML_FORMAT,
         formatted_body: new Marked({ breaks: true }).parse(markdown, { async: false }).trim(),
+        // Set even when empty: like Element, we tell the server not to guess mentions from the names in the text.
         "m.mentions": {
             ...(userIds.length > 0 ? { user_ids: userIds } : {}),
             ...(ids.includes(ROOM_MENTION_ID) ? { room: true } : {}),

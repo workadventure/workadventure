@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "Laden...",
     typing: "is aan het typen...",
+    typingIndicator: {
+        one: "{names} is aan het typen",
+        several: "{names} zijn aan het typen",
+        others: "{count} anderen",
+        someone: "Iemand",
+        row: "{name} is aan het typen…",
+        rowSeveral: "{count} mensen zijn aan het typen…",
+        direct: "is aan het typen…",
+    },
     users: "Gebruikers",
     chat: "Chat",
     resizeChat: "Chatgrootte wijzigen (pijltjestoetsen om te wijzigen, Enter voor volledig scherm)",
@@ -77,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Uitnodigingen",
     roomInvitation: {
         notification: "Je bent uitgenodigd voor de kamer {roomName}",
+        direct: "Privégesprek",
+        room: "Kamer",
+        folder: "Map",
+        invitedBy: "uitgenodigd door {name}",
+        notificationFrom: "{inviter} heeft je uitgenodigd voor de kamer {roomName}",
+        notificationDirect: "{name} wil met je chatten",
         notificationTitle: "Nieuwe uitnodiging",
         unknownRoom: "Een kamer",
     },
@@ -141,6 +156,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{{count:1 nieuw bericht|?? nieuwe berichten}}",
         jumpToLatest: "Naar de nieuwste berichten",
         unreadDivider: "Nieuwe berichten",
+        loadingMessages: "Berichten laden…",
+        loadError: "De berichten konden niet worden geladen",
     },
     form: {
         placeholder: "Voer je bericht in...",
@@ -380,7 +397,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Aanbevolen kamer",
         suggestedDescription: "Deze kamer zal worden aanbevolen aan gebruikers die deelnemen aan dezelfde ruimte.",
-        users: "Gebruikers",
         historyVisibility: {
             label: "Wie kan de geschiedenis lezen?",
             world_readable: "Iedereen",
@@ -457,13 +473,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Deelnemers",
         error: "Uitnodigingen konden niet worden verzonden",
-        title: "Deelnemers beheren",
-        invitations: "Uitnodigingen",
         participants: "Deelnemers",
         roomID: "Kamer-ID: {roomId}",
-        join: "Aanwezig",
         invite: "Uitgenodigd",
         ban: "Verbannen",
         kick: "Verwijderd",
@@ -478,7 +490,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Opheffen van verbanning",
             invite: "Uitnodigen",
             cancelInvitation: "Uitnodiging intrekken",
-            close: "Sluiten",
         },
         roles: {
             USER: "Gebruiker",
@@ -514,6 +525,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Versleuteld",
             notEncrypted: "Niet versleuteld",
             readOnly: "Alleen-lezen",
+            copyRoomId: "Kamer-ID kopiëren",
         },
         settings: {
             roomType: "Kamertype",
@@ -574,6 +586,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Kan peilingen niet laden. Probeer het opnieuw.",
         pollsPartial: "Voor sommige peilingen konden de gedetailleerde resultaten niet worden geladen.",
         pollFocusError: "Kan deze peiling niet openen in de tijdlijn.",
+        closeFolderMembers: "Mapleden sluiten",
+        folderMembersHint: "Mapleden kunnen deelnemen aan de kamers ervan die open zijn voor leden.",
     },
     roomMenu: {
         leaveRoom: {

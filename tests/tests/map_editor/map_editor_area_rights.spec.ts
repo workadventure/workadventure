@@ -12,7 +12,6 @@ import { evaluateScript } from "../utils/scripting";
 import { getPage } from "../utils/auth";
 import { isMobile } from "../utils/isMobile";
 import { clickCoordinates } from "../utils/gameCoordinates";
-import { dismissNoMicrophoneSoundToastWhenShown } from "../utils/noMicrophoneSoundToast";
 
 test.setTimeout(240_000); // Fix Webkit that can take more than 60s
 test.use({
@@ -281,7 +280,6 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
         await using page2 = await getPage(browser, "Member1", Map.url("empty"));
 
         // Required for Firefox that somehow does not manage to start the webcam twice (hence the "no sound" warning displayed that we must hide if it appears)
-        await dismissNoMicrophoneSoundToastWhenShown(page2);
 
         // From browser 2
         // Try to remove entity and click on it to

@@ -82,11 +82,16 @@ export function longPress(node: HTMLElement, onLongPress: () => boolean) {
         return handled;
     });
     const onPointerDown = (event: PointerEvent) => {
-        if (
-            event.pointerType !== "touch" ||
-            !event.isPrimary ||
-            (event.target instanceof Element && event.target.closest("a, button, input, textarea, [contenteditable]"))
-        ) {
+        if (event.pointerType !== "touch" || !event.isPrimary) {
+            return;
+        }
+        // A control hidden until hover (opacity 0, like the message options over a short bubble) is not what the finger
+        // aimed at: the press belongs to the message under it.
+        const control =
+            event.target instanceof Element
+                ? event.target.closest("a, button, input, textarea, [contenteditable]")
+                : null;
+        if (control && control.checkVisibility({ opacityProperty: true })) {
             return;
         }
         gesture.start(event.clientX, event.clientY);

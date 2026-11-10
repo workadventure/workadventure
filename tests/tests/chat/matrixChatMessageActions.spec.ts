@@ -56,14 +56,16 @@ test.describe("Matrix chat message actions @oidc @matrix @nowebkit", () => {
         await expect(reply).toHaveAttribute("aria-label", "Reply");
         const react = options.getByTestId("openEmojiPickerButton");
         await expect(react).toHaveAttribute("aria-label", "React");
-        await expect(options.getByTestId("editMessageButton")).toHaveAttribute("aria-label", "Edit");
-        await expect(options.getByTestId("removeMessageButton")).toHaveAttribute("aria-label", "Delete");
+        await expect(options.getByRole("button", { name: "React with 👍" })).toBeVisible();
+        // Edit and delete wait behind "⋯".
+        await expect(options.getByTestId("moreMessageActionsButton")).toHaveAttribute("aria-label", "Message actions");
         // The focused action is outlined (a ring, drawn as a box-shadow).
         await expect(reply).not.toHaveCSS("box-shadow", "none");
         await expect(react).toHaveCSS("box-shadow", "none");
 
-        // Tab walks through the actions of this message, in order.
+        // Tab walks through the actions of this message, in order, from the first quick reaction.
         const actions = await options.locator("a, button").all();
+        await actions[0].focus();
         for (const action of actions.slice(1)) {
             await page.keyboard.press("Tab");
             await expect(action).toBeFocused();
@@ -76,7 +78,7 @@ test.describe("Matrix chat message actions @oidc @matrix @nowebkit", () => {
         await expect(messageContainer).toBeFocused();
         await expect(options).toHaveCSS("opacity", "0");
         await page.keyboard.press("Enter");
-        await expect(reply).toBeFocused();
+        await expect(actions[0]).toBeFocused();
 
         // The emoji picker takes the focus, and gives it back to React when closed.
         await react.focus();

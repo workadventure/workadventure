@@ -10,6 +10,9 @@ Environment variables for the Play service (frontend and pusher).
 
 | Variable | Required | Description |
 |----------|----------|-------------|
+| `DESKTOP_APP_RECOMMENDED_VERSION` | No | Desktop release validated for this instance (exact X.Y.Z). |
+| `DESKTOP_APP_MINIMUM_VERSION` | No | Minimum supported desktop release; shows a non-blocking warning. |
+| `DESKTOP_APP_DOWNLOAD_URL` | No | Approved desktop download page for this instance. Required when a version is configured. |
 | `SECRET_KEY` | Yes | Secret key used to encode JWT tokens. Set this to a random unguessable string. |
 | `API_URL` | Yes | URL of the back server API |
 | `ADMIN_API_URL` | No | The URL to the admin API. If in the same network, you can use a local name here. |
@@ -74,7 +77,6 @@ Environment variables for the Play service (frontend and pusher).
 | `DRAIN_TIMEOUT_MS` | No | Maximum time in milliseconds spent draining in-memory buffers on SIGTERM / SIGINT before the process exits. Shared by every service that flushes on shutdown, not analytics alone. Must stay comfortably BELOW your orchestrator's grace period (Kubernetes terminationGracePeriodSeconds defaults to 30s), not merely equal to it: the drain has to finish and the process exit before SIGKILL lands, or the intervals it just closed die with it. Defaults to 20000, i.e. 10s of headroom under the Kubernetes default. Raising it above the grace period cannot buy more draining — it only converts a clean exit into a kill. |
 | `START_ROOM_URL` | No | Default room URL where users start when accessing the platform |
 | `DEBUG_MODE` | No | Enable debug mode with additional console logging. Defaults to false |
-| `UPLOADER_URL` | Yes | URL of the file uploader service |
 | `ICON_URL` | Yes | Base URL for icon resources |
 | `STUN_SERVER` | No | Comma separated list of STUN server URLs for WebRTC NAT traversal (format: 'stun:hostname:port') |
 | `TURN_SERVER` | No | Comma separated list of TURN server URLs for WebRTC relay (format: 'turn:hostname:port') |
@@ -239,6 +241,15 @@ Environment variables for the Map Storage service.
 | `SECRET_KEY` | No | The JWT token to use when the map-storage is used as a file server. This token will be used to authenticate the user when accessing files. |
 | `GRPC_MAX_MESSAGE_SIZE` | Yes | The maximum size of a gRPC message. Defaults to 20 MB. |
 | `BODY_PARSER_JSON_SIZE_LIMIT` | No | The maximum size of JSON request bodies accepted by the body parser (used in PUT / PATCH HTTP requests). Defaults to 100mb. Examples: '50mb', '200mb', '1gb' |
+
+## Go Server
+
+The Go server (`server-go/`) replaces the play, back, map-storage and uploader containers and reads their variables. It also reads these ones:
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `TRUSTED_PROXIES` | No | Comma-separated CIDRs of the reverse proxies in front of the server. The client IP (IP bans, logs) is the right-most X-Forwarded-For address that is not one of them, the peer included. Defaults to the private ranges: 127.0.0.0/8,::1/128,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16,fc00::/7 |
+| `RESUME_BUFFER_BUDGET_BYTES` | No | Maximum bytes all the connections keep, together, to replay messages after a short disconnection. Once spent, new connections get no replay buffer and reconnect from scratch after a drop. 0 for no cap. Defaults to 268435456 (256 MiB) |
 
 ## Deprecated Variables
 

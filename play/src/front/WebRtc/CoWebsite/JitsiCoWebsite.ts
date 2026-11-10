@@ -11,6 +11,12 @@ export const JitsiConfig = z
         startWithAudioMuted: z.boolean().optional(),
         startWithVideoMuted: z.boolean().optional(),
         prejoinPageEnabled: z.boolean().optional(),
+        prejoinConfig: z
+            .object({
+                enabled: z.boolean().optional(),
+            })
+            .passthrough()
+            .optional(),
         disableDeepLinking: z.boolean().optional(),
         gravatar: z
             .object({
@@ -52,7 +58,11 @@ const getDefaultConfig = (): JitsiConfig => {
     return {
         startWithAudioMuted: !get(requestedMicrophoneState),
         startWithVideoMuted: !get(requestedCameraState),
+        // Older Jitsi Meet versions read prejoinPageEnabled, newer ones read prejoinConfig.enabled.
         prejoinPageEnabled: false,
+        prejoinConfig: {
+            enabled: false,
+        },
         disableDeepLinking: false,
         gravatar: {
             disabled: true,
@@ -67,13 +77,17 @@ export const mergeConfig = (config?: object) => {
     }
 
     const parsedConfig = JitsiConfig.parse(config);
+    // A map enabling the prejoin page through either option enables it on every Jitsi Meet version.
+    const prejoinEnabled = parsedConfig.prejoinPageEnabled === true || parsedConfig.prejoinConfig?.enabled === true;
 
     return {
         ...currentDefaultConfig,
         ...config,
         startWithAudioMuted: parsedConfig.startWithAudioMuted ? true : currentDefaultConfig.startWithAudioMuted,
         startWithVideoMuted: parsedConfig.startWithVideoMuted ? true : currentDefaultConfig.startWithVideoMuted,
-        prejoinPageEnabled: parsedConfig.prejoinPageEnabled ? true : currentDefaultConfig.prejoinPageEnabled,
+        prejoinPageEnabled: prejoinEnabled,
+        // Keeps the map's other prejoin settings, such as hideDisplayName.
+        prejoinConfig: { ...parsedConfig.prejoinConfig, enabled: prejoinEnabled },
     };
 };
 

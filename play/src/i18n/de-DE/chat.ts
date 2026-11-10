@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "Lädt...",
     typing: "schreibt...",
+    typingIndicator: {
+        one: "{names} schreibt",
+        several: "{names} schreiben",
+        others: "{count} weitere",
+        someone: "Jemand",
+        row: "{name} schreibt…",
+        rowSeveral: "{count} Personen schreiben…",
+        direct: "schreibt…",
+    },
     users: "Benutzer",
     chat: "Chat",
     resizeChat: "Chat-Größe ändern (Pfeiltasten zum Ändern, Eingabe für Vollbild)",
@@ -77,6 +86,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Einladungen",
     roomInvitation: {
         notification: "Du wurdest in den Raum {roomName} eingeladen",
+        direct: "Direktnachricht",
+        room: "Raum",
+        folder: "Ordner",
+        invitedBy: "eingeladen von {name}",
+        notificationFrom: "{inviter} hat dich in den Raum {roomName} eingeladen",
+        notificationDirect: "{name} möchte mit dir chatten",
         notificationTitle: "Neue Einladung",
         unknownRoom: "Ein Raum",
     },
@@ -142,6 +157,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{{count:1 neue Nachricht|?? neue Nachrichten}}",
         jumpToLatest: "Zu den neuesten Nachrichten springen",
         unreadDivider: "Neue Nachrichten",
+        loadingMessages: "Nachrichten werden geladen…",
+        loadError: "Die Nachrichten konnten nicht geladen werden",
     },
     form: {
         placeholder: "Gib deine Nachricht ein...",
@@ -382,7 +399,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Empfohlener Raum",
         suggestedDescription: "Dieser Raum wird Benutzern empfohlen, die demselben Bereich beitreten.",
-        users: "Benutzer",
         historyVisibility: {
             label: "Wer kann den Verlauf lesen",
             world_readable: "Jeder",
@@ -459,13 +475,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Teilnehmer",
         error: "Einladungen konnten nicht gesendet werden",
-        title: "Teilnehmer verwalten",
-        invitations: "Einladungen",
         participants: "Teilnehmer",
         roomID: "Raum-ID: {roomId}",
-        join: "Anwesend",
         invite: "Eingeladen",
         ban: "Gesperrt",
         kick: "Entfernt",
@@ -480,7 +492,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Entsperren",
             invite: "Einladen",
             cancelInvitation: "Einladung zurückziehen",
-            close: "Schließen",
         },
         roles: {
             USER: "Benutzer",
@@ -516,6 +527,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Verschlüsselt",
             notEncrypted: "Nicht verschlüsselt",
             readOnly: "Nur lesbar",
+            copyRoomId: "Raum-ID kopieren",
         },
         settings: {
             roomType: "Raumtyp",
@@ -577,6 +589,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Umfragen konnten nicht geladen werden. Bitte erneut versuchen.",
         pollsPartial: "Für einige Umfragen konnten die detaillierten Ergebnisse nicht geladen werden.",
         pollFocusError: "Diese Umfrage konnte in der Zeitleiste nicht geöffnet werden.",
+        closeFolderMembers: "Ordnermitglieder schließen",
+        folderMembersHint: "Ordnermitglieder können seinen Räumen beitreten, die für Mitglieder offen sind.",
     },
     roomMenu: {
         leaveRoom: {
