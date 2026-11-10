@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "サウンドをロードできませんでした",
         notAllowed: "▶️ オーディオは許可されていません。[スペース]キーを押すか、ここをクリックして再生してください！",
     },
-    message: "オーディオメッセージ",
     disable: "マイクをオフにする",
 };
 
