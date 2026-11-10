@@ -53,10 +53,6 @@ export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoi
     if (points.length === 0) {
         return false;
     }
-    if (element.tool === "text") {
-        const anchor = points[0];
-        return Math.abs(p.x - anchor.x) < 0.08 && p.y > anchor.y - 0.05 && p.y < anchor.y + 0.02;
-    }
     if (element.tool === "rect" && points.length >= 2) {
         const edges: [ScreenAnnotationPoint, ScreenAnnotationPoint][] = [
             [
@@ -159,16 +155,6 @@ export function drawElement(ctx: CanvasRenderingContext2D, element: ScreenAnnota
             ctx.fillText(label, x + padding, size * 0.5 + labelHeight / 2);
         }
         ctx.restore();
-        return;
-    }
-
-    if (element.tool === "text") {
-        // Font size is fully normalized (relative to the smallest side) so it renders at the same
-        // relative size for every viewer, regardless of device pixel ratio.
-        const fontSize = Math.max(element.width * minSide * 4, minSide * 0.025);
-        ctx.font = `${fontSize}px sans-serif`;
-        ctx.textBaseline = "alphabetic";
-        ctx.fillText(element.text ?? "", points[0].x * w, points[0].y * h);
         return;
     }
 

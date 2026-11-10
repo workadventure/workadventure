@@ -44,10 +44,6 @@
     let lastEmit = 0;
     let lastPointerEmit = 0;
 
-    // Floating text input state (in normalized coordinates).
-    let textInput: { x: number; y: number; value: string } | undefined = $state();
-    let textInputElement: HTMLInputElement | undefined = $state();
-
     function freehand(tool: string): boolean {
         return tool === "pen" || tool === "highlight";
     }
@@ -79,34 +75,8 @@
         }
     }
 
-    function openTextInput(p: ScreenAnnotationPoint): void {
-        textInput = { x: p.x, y: p.y, value: "" };
-    }
-
-    function commitText(): void {
-        const current = textInput;
-        textInput = undefined;
-        if (!current || current.value.trim() === "") {
-            return;
-        }
-        const element: ScreenAnnotationElement = {
-            id: screenAnnotationManager.nextElementId(),
-            authorUserId: screenAnnotationManager.localUserId ?? "local",
-            tool: "text",
-            color,
-            width,
-            points: [{ x: current.x, y: current.y }],
-            text: current.value,
-        };
-        screenAnnotationManager.upsertElement(targetUserId, element);
-    }
-
     function onPointerDown(event: PointerEvent): void {
         if (!inputEnabled || !canvas) {
-            return;
-        }
-        if (textInput) {
-            commitText();
             return;
         }
         const p = pointerToNorm(event);
@@ -115,10 +85,6 @@
         }
         if (tool === "eraser") {
             eraseAt(p);
-            return;
-        }
-        if (tool === "text") {
-            openTextInput(p);
             return;
         }
         drawing = true;
@@ -131,7 +97,6 @@
             color,
             width: draftTool === "highlight" ? HIGHLIGHT_WIDTH : width,
             points: freehand(draftTool) ? [p] : [p, p],
-            text: undefined,
         };
     }
 
@@ -260,7 +225,6 @@
     $effect(() => {
         if (!inputEnabled) {
             dropDraft();
-            textInput = undefined;
         }
     });
 
@@ -276,8 +240,7 @@
         if (!inputEnabled) {
             return;
         }
-        // Escape leaves drawing mode, Ctrl+Z undoes and Ctrl+Shift+Z redoes (the text input handles its own
-        // keys first, and any other text field keeps its own undo).
+        // Escape leaves drawing mode, Ctrl+Z undoes and Ctrl+Shift+Z redoes (a text field keeps its own undo).
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 localAnnotationTargetStore.set(undefined);
@@ -293,13 +256,6 @@
         const target = canvas?.ownerDocument.defaultView;
         target?.addEventListener("keydown", onKeyDown);
         return () => target?.removeEventListener("keydown", onKeyDown);
-    });
-
-    $effect(() => {
-        // Focus the floating text input as soon as it appears.
-        if (textInput) {
-            textInputElement?.focus();
-        }
     });
 
     $effect(() => {
@@ -325,7 +281,6 @@
         // A stroke still in progress when the overlay unmounts (e.g. the screen is un-highlighted
         // mid-drag) is never finished: the others drop what they saw of it.
         dropDraft();
-        textInput = undefined;
     });
 </script>
 
@@ -343,30 +298,3 @@
     onpointerup={onPointerUp}
     onpointercancel={onPointerUp}
 ></canvas>
-
-{#if textInput}
-    <input
-        bind:this={textInputElement}
-        value={textInput.value}
-        oninput={(event) => {
-            if (textInput) textInput.value = event.currentTarget.value;
-        }}
-        type="text"
-        data-testid="annotation-text-input"
-        class="absolute z-[260] bg-transparent border border-dashed border-white/70 outline-none px-1 text-sm pointer-events-auto"
-        style={`left: ${textInput.x * clientWidth}px; top: ${textInput.y * clientHeight}px; color: ${color}; transform: translateY(-100%);`}
-        maxlength={500}
-        onpointerdown={(e) => e.stopPropagation()}
-        onkeydown={(e) => {
-            // Phaser listens on the window: typing must never reach game shortcuts or movement.
-            e.stopPropagation();
-            if (e.key === "Enter") {
-                commitText();
-            } else if (e.key === "Escape") {
-                e.stopPropagation();
-                textInput = undefined;
-            }
-        }}
-        onblur={commitText}
-    />
-{/if}

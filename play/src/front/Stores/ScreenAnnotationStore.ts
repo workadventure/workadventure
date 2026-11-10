@@ -9,10 +9,10 @@ import type { ScreenAnnotationElement } from "@workadventure/messages";
  * mixing annotations. {@link ScreenAnnotationManager} publishes them from the space state.
  */
 
-// UI tool selection. "pen" | "line" | "arrow" | "rect" | "text" produce drawable elements;
+// UI tool selection. "pen" | "line" | "arrow" | "rect" produce drawable elements;
 // "eraser" removes elements; "pointer" shows the cursor to the others, and a drag draws a highlight that fades out.
 // Neither of the last two is persisted.
-export const ANNOTATION_TOOLS = ["pointer", "pen", "line", "arrow", "rect", "text", "eraser"] as const;
+export const ANNOTATION_TOOLS = ["pointer", "pen", "line", "arrow", "rect", "eraser"] as const;
 export type AnnotationTool = (typeof ANNOTATION_TOOLS)[number];
 
 export function isAnnotationTool(tool: string): tool is AnnotationTool {

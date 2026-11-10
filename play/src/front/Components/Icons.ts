@@ -163,7 +163,6 @@ export { default as IconStack2 } from "~icons/tabler/stack-2";
 export { default as IconLine } from "~icons/tabler/line";
 export { default as IconArrowNarrowRight } from "~icons/tabler/arrow-narrow-right";
 export { default as IconSquare } from "~icons/tabler/square";
-export { default as IconTypography } from "~icons/tabler/typography";
 export { default as IconEraser } from "~icons/tabler/eraser";
 export { default as IconPalette } from "~icons/tabler/palette";
 

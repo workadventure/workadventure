@@ -11,7 +11,6 @@ const screenAnnotation: DeepPartial<Translation["screenAnnotation"]> = {
         line: "直線",
         arrow: "箭頭",
         rect: "矩形",
-        text: "文字",
         eraser: "橡皮擦",
     },
     color: "顏色",
