@@ -168,7 +168,8 @@ const en = {
     "update.installAndRestart": "Install and restart",
     "update.installLater": "Install later",
     "update.availableTitle": "WorkAdventure update available",
-    "update.availableBody": "Download and install the latest version from the WorkAdventure website.",
+    "update.availableBody":
+        "It will be installed with your system updates. To install it now: sudo apt update && sudo apt upgrade",
     "update.none": "No update available.",
 };
 

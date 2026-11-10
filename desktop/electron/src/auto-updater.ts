@@ -95,6 +95,7 @@ async function init() {
         }
     });
 
+    // The .deb: apt brings the update, from the repository its after-install script adds (deb/).
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;
         autoUpdater.autoInstallOnAppQuit = false;

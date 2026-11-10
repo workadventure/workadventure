@@ -171,7 +171,8 @@ const hsb: NativeStrings = {
     "update.installAndRestart": "Instalować a znowa startować",
     "update.installLater": "Pozdźišo instalować",
     "update.availableTitle": "Aktualizacija WorkAdventure je k dispoziciji",
-    "update.availableBody": "Sćehńće a instalujće najnowšu wersiju z websydła WorkAdventure.",
+    "update.availableBody":
+        "Aktualizacija so ze systemowymi aktualizacijemi instaluje. Zo byšće ju hnydom instalował: sudo apt update && sudo apt upgrade",
     "update.none": "Žana aktualizacija k dispoziciji.",
 };
 
