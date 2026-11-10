@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "Zuk njejo se dał zacytaś",
         notAllowed: "▶️ Zuk njejo dowólony. Tłocćo [SPACE] abo klikniśo how, aby se wótgrał!",
     },
-    message: "Powědana powěsć",
     disable: "Wušaltujśo mikrofon",
 };
 

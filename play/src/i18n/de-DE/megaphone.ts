@@ -37,18 +37,6 @@ const megaphone: DeepPartial<Translation["megaphone"]> = {
             button: "Eine Textnachricht senden",
             noAccess: "Du hast keinen Zugang zu dieser Funktion 😱 Bitte kontaktiere den Administrator 🙏",
         },
-        audioMessage: {
-            title: "Audionachricht",
-            notice: `
-            Die Audionachricht ist eine Nachricht vom Typ "MP3, OGG...", die an alle Benutzer im Raum oder in der Welt gesendet wird.
-
-            Diese Audionachricht wird heruntergeladen und an alle Personen gesendet, die diese Benachrichtigung erhalten.
-
-            Eine Audionachricht kann aus einer Audioaufnahme bestehen, die darauf hinweist, dass eine Konferenz in wenigen Minuten beginnt.
-            `,
-            button: "Eine Audionachricht senden",
-            noAccess: "Du hast keinen Zugang zu dieser Funktion 😱 Bitte kontaktiere den Administrator 🙏",
-        },
     },
 };
 

@@ -1947,21 +1947,8 @@ export const ANALYTICS_EVENTS = {
     "The user opened the todo list module.",
   ),
   "file.drag_dropped": signal("The user dropped a file into the world."),
-  "global_audio.opened": signal("The user opened the global audio panel."),
-  "global_message.opened": event({
-    properties: z.object({
-      source: z
-        .enum(["menu", "action_bar"])
-        .describe("Which control opened the composer."),
-    }),
-    // A property rather than two events, because PostHog has counted these two
-    // paths separately since long before this pipeline (wa_menu_globalmessage and
-    // wa_action_globalmessage) and the admin could not tell them apart at all.
-    // Declaring the discriminator lets both sinks answer the same question.
-    description: "The user opened the global message composer.",
-  }),
-  "global_message.sound_sent": signal(
-    "The user broadcast a sound to the world.",
+  "global_message.opened": signal(
+    "The user opened the global message composer.",
   ),
   "global_message.text_sent": signal(
     "The user broadcast a text message to the world.",

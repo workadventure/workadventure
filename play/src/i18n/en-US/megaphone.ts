@@ -36,18 +36,6 @@ const megaphone: BaseTranslation = {
             button: "Send a text message",
             noAccess: "You don't have access to this feature 😱 Please contact the administrator 🙏",
         },
-        audioMessage: {
-            title: "Audio message",
-            notice: `
-            The audio message is a message of type "MP3, OGG..." sent to all users connected in the room or in the world.
-
-            This audio message will be downloaded and launched to all people receiving this notification.
-
-            An audio message can consist of an audio recording that indicates a conference will begin in a few minutes.
-            `,
-            button: "Send an audio message",
-            noAccess: "You don't have access to this feature 😱 Please contact the administrator 🙏",
-        },
     },
 };
 
