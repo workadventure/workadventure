@@ -30,7 +30,6 @@ import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/Ch
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
 import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
 import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMeetingBar.svelte";
-import desktopMeetingBarStyles from "../../Components/Video/PictureInPicture/desktopMeetingBar.css?raw";
 
 import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
 import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
@@ -326,13 +325,15 @@ class DesktopApi {
         if (windows) {
             const stopAnnotations = startSvelteAnnotations(windows);
             window.addEventListener("pagehide", stopAnnotations, { once: true });
+            // Both float over the user's screen: only their content shows.
+            const transparentWindow = "html, body { background: transparent !important; }";
             let annotation: DesktopChildWindow | undefined;
             let meetingBar: DesktopChildWindow | undefined;
             windows.onOpen((kind) => {
                 if (kind === "annotation") {
                     if (!annotation)
                         annotation = openDesktopChildWindow("wa-annotation", DesktopAnnotationOverlay, () => ({}), {
-                            styles: "html, body { background: transparent !important; margin: 0; overflow: hidden; }",
+                            styles: transparentWindow,
                             onClose: () => {
                                 annotation = undefined;
                             },
@@ -344,12 +345,7 @@ class DesktopApi {
                     "wa-meeting-bar",
                     DesktopMeetingBar,
                     (ownerDocument) => ({ windows, ownerDocument }),
-                    {
-                        onClose: () => (meetingBar = undefined),
-                        styles: desktopMeetingBarStyles,
-                        // Its own design only: the app's styles would fight it.
-                        pageStyles: false,
-                    },
+                    { onClose: () => (meetingBar = undefined), styles: transparentWindow },
                 );
             });
         }
