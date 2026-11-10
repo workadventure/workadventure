@@ -1,10 +1,10 @@
 <script lang="ts">
     import { onDestroy, onMount } from "svelte";
+    import type { DesktopCapturerSource } from "@workadventure/desktop-api";
     import {
         desktopCapturerSourcePromiseResolve,
         showDesktopCapturerSourcePicker,
     } from "../../Stores/ScreenSharingStore";
-    import type { DesktopCapturerSource } from "../../Interfaces/DesktopAppInterfaces";
     import { LL } from "../../../i18n/i18n-svelte";
     import { getDesktopCapturerSourceKind, type DesktopCapturerSourceKind } from "./DesktopCapturerSourcePickerPolicy";
 

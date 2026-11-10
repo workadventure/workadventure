@@ -3,7 +3,7 @@
 // another userData folder: without this, an updated install starts with an empty profile.
 
 import { isAllowedNavigationUrl, normalizePersistedWorldHistory, type DesktopConfig } from "./desktop-url-policy";
-import { addTrustedServer, trustableOrigin } from "./verified-origins-policy";
+import { addTrustedServer, trustableOrigin } from "./trusted-servers-policy";
 
 export const LEGACY_USER_DATA_DIR = "workadventure-desktop";
 

@@ -2,6 +2,7 @@ import { BrowserWindow, WebContentsView } from "electron";
 import ElectronLog from "electron-log";
 import path from "path";
 import { formatWorldHistoryLabel, worldKeyOf } from "./desktop-url-policy";
+import type { TabInfo } from "./preload-tabs/types";
 import { createWorldViewWebPreferences } from "./world-view-policy";
 import { createMeetingTabs } from "./meeting-tab-policy";
 import { t } from "./i18n";
@@ -30,13 +31,6 @@ export type WorldTab = {
 function tabTitle(tab: WorldTab): string {
     return tab.appTitle || tab.urlLabel || t("tabs.newWorld");
 }
-
-/** Lightweight tab descriptor for the tab-strip renderer. */
-export type TabInfo = {
-    id: string;
-    title: string;
-    active: boolean;
-};
 
 let shell: BrowserWindow | undefined;
 const tabs: WorldTab[] = [];

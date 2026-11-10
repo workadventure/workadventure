@@ -7,6 +7,7 @@ const desktop: BaseTranslation = {
         title: "Desktop application",
         installed: "Installed version",
         unknown: "Unavailable",
+        startAtLogin: "Start WorkAdventure when I log in to my computer",
         browser: "You are using WorkAdventure in your browser.",
         recommendedVersion: "Recommended version",
         minimumVersion: "Minimum supported version",

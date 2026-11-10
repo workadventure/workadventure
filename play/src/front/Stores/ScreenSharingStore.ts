@@ -1,7 +1,7 @@
 import type { Readable } from "svelte/store";
 import { get, derived, readable, writable } from "svelte/store";
 import { asError } from "catch-unknown";
-import type { DesktopCapturerSource } from "../Interfaces/DesktopAppInterfaces";
+import type { DesktopCapturerSource } from "@workadventure/desktop-api";
 import { localUserStore } from "../Connection/LocalUserStore";
 import type { VideoQualitySetting } from "../Connection/LocalUserStore";
 import { screenShareMaxResolution } from "../WebRtc/VideoPresets";

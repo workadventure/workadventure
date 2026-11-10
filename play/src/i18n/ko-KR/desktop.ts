@@ -6,6 +6,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         title: "데스크톱 앱",
         installed: "설치된 버전",
         unknown: "확인할 수 없음",
+        startAtLogin: "컴퓨터에 로그인할 때 WorkAdventure 시작",
         browser: "브라우저에서 WorkAdventure를 사용하고 있습니다.",
         recommendedVersion: "권장 버전",
         minimumVersion: "최소 지원 버전",

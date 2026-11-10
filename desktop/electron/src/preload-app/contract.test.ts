@@ -34,6 +34,7 @@ const CONTRACT_2 = [
     "screenPermission",
     "navigation",
     "windows",
+    "startAtLogin",
 ];
 
 const sent: unknown[][] = [];

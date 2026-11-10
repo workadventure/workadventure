@@ -6,6 +6,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         title: "Desktop-Anwendung",
         installed: "Installierte Version",
         unknown: "Nicht verfügbar",
+        startAtLogin: "WorkAdventure bei der Anmeldung am Computer starten",
         browser: "Sie verwenden WorkAdventure im Browser.",
         recommendedVersion: "Empfohlene Version",
         minimumVersion: "Älteste unterstützte Version",

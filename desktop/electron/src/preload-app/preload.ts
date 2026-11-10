@@ -1,7 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
 import { companionVisibleInShare } from "../share-surfaces-policy";
-import type { DesktopNativeStrings, WorkAdventureDesktopApi, WorkAdventureDesktopWindowsApi } from "./types";
+import type {
+    DesktopNativeStrings,
+    WorkAdventureDesktopApi,
+    WorkAdventureDesktopWindowsApi,
+} from "@workadventure/desktop-api";
 
 function subscribe(channel: string, callback: (...args: unknown[]) => void): () => void {
     const listener = (_event: Electron.IpcRendererEvent, ...args: unknown[]) => callback(...args);
@@ -105,6 +109,10 @@ const api: WorkAdventureDesktopApi = {
         get: () => ipcRenderer.invoke("app:screen-permission:get"),
         request: () => ipcRenderer.invoke("app:screen-permission:request"),
         ensure: () => ipcRenderer.invoke("app:screen-permission:ensure"),
+    },
+    startAtLogin: {
+        get: () => ipcRenderer.invoke("app:start-at-login:get"),
+        set: (enabled) => ipcRenderer.invoke("app:start-at-login:set", Boolean(enabled)),
     },
 };
 
