@@ -1,5 +1,5 @@
-/* The desktop companion's own design (the native panel it replaces), injected into the companion window
-   only (DesktopCompanion.svelte): it never reaches the main page. */
+/* The desktop mini window's own design (the native panel it replaces), injected into the mini window
+   only (DesktopMiniWindow.svelte): it never reaches the main page. */
 :root {
     color-scheme: dark;
     --bg: #0f1826;
@@ -221,7 +221,7 @@ button {
     color: #cfe0ff;
 }
 
-/* Close/hide-companion button — far right, danger red. */
+/* Close/hide-mini-window button — far right, danger red. */
 .icon-btn.is-danger {
     color: var(--danger);
 }
@@ -337,7 +337,7 @@ button {
     font-size: 11px;
 }
 
-/* ── Share warning (Linux: the companion shows in the user's share) ─────── */
+/* ── Share warning (Linux: the mini window shows in the user's share) ─────── */
 .share-warning {
     padding: 7px 12px;
     background: rgba(233, 200, 78, 0.16);
@@ -1262,11 +1262,11 @@ button {
 
 /* The page's meeting layout, moved into the video area by PictureInPicture.svelte. Its controls are the
    header's here, and its map backdrop would cover the whole window. */
-.companion-video-host {
+.mini-window-video-host {
     position: absolute;
     inset: 0;
 }
-.companion-video-host .pip-action-bar,
-.companion-video-host .pip-map-background {
+.mini-window-video-host .pip-action-bar,
+.mini-window-video-host .pip-map-background {
     display: none;
 }

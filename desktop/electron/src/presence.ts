@@ -19,6 +19,7 @@ type PresenceState = Required<DesktopPresence> & { idle: boolean };
 
 const state: PresenceState = {
     inMeeting: false,
+    withOthers: false,
     micEnabled: false,
     cameraEnabled: false,
     screenSharing: false,
@@ -76,6 +77,7 @@ export function onPresenceChange(listener: () => void): () => void {
 /** Renderer-sourced presence (in-meeting + media + availability). Emits only on a real change. */
 export function setRendererPresence(next: {
     inMeeting?: boolean;
+    withOthers?: boolean;
     micEnabled?: boolean;
     cameraEnabled?: boolean;
     screenSharing?: boolean;
@@ -86,6 +88,7 @@ export function setRendererPresence(next: {
     requestedStatus?: unknown;
 }): void {
     const inMeeting = Boolean(next.inMeeting);
+    const withOthers = Boolean(next.withOthers);
     const micEnabled = Boolean(next.micEnabled);
     const cameraEnabled = Boolean(next.cameraEnabled);
     const screenSharing = Boolean(next.screenSharing);
@@ -96,6 +99,7 @@ export function setRendererPresence(next: {
     const requestedStatus = coerceAvailability(next.requestedStatus);
     if (
         state.inMeeting === inMeeting &&
+        state.withOthers === withOthers &&
         state.micEnabled === micEnabled &&
         state.cameraEnabled === cameraEnabled &&
         state.screenSharing === screenSharing &&
@@ -108,6 +112,7 @@ export function setRendererPresence(next: {
         return;
     }
     state.inMeeting = inMeeting;
+    state.withOthers = withOthers;
     state.micEnabled = micEnabled;
     state.cameraEnabled = cameraEnabled;
     state.screenSharing = screenSharing;
@@ -135,6 +140,7 @@ export function setIdle(idle: boolean): void {
  */
 export function resetPresence(): void {
     state.inMeeting = false;
+    state.withOthers = false;
     state.micEnabled = false;
     state.cameraEnabled = false;
     state.screenSharing = false;
@@ -174,9 +180,10 @@ export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; 
     return { micEnabled: state.micEnabled, cameraEnabled: state.cameraEnabled, inMeeting: state.inMeeting };
 }
 
-/** Snapshot used by the companion visibility controller. */
+/** Snapshot used by the mini window visibility controller. */
 export function getPresenceSnapshot(): {
     inMeeting: boolean;
+    withOthers: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
@@ -187,6 +194,7 @@ export function getPresenceSnapshot(): {
 } {
     return {
         inMeeting: state.inMeeting,
+        withOthers: state.withOthers,
         micEnabled: state.micEnabled,
         cameraEnabled: state.cameraEnabled,
         screenSharing: state.screenSharing,

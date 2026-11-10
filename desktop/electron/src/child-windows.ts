@@ -1,22 +1,22 @@
 import type { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
 import ElectronLog from "electron-log";
 import settings from "./settings";
-import { normalizeCompanionBounds } from "./companion-window-policy";
+import { normalizeMiniWindowBounds } from "./mini-window-placement-policy";
 import { HUD_SIZES, type HudKind, meetingBarBounds, resolveDisplay, setUpHudWindow } from "./hud-windows";
 import { getControllingWorldContents } from "./tab-manager";
 import { pageSaidHello } from "./page-contract";
 
 /**
- * The companion and the meeting bar are child windows of the world page, rendered by play's own Svelte
+ * The mini window and the meeting bar are child windows of the world page, rendered by play's own Svelte
  * components in the world's renderer, like the browser's Document PiP: they read the page's stores and
- * play its MediaStreams directly. Main still decides when they open (companion-controller, the share
+ * play its MediaStreams directly. Main still decides when they open (mini-window-controller, the share
  * surfaces): it asks the world page to call window.open, and the window-open handler only lets that one
  * through while the request is pending.
  */
 
 /** window.open target name the world page uses for each window. */
 export const CHILD_WINDOW_FRAME_NAMES: Record<HudKind, string> = {
-    companion: "wa-companion",
+    "mini-window": "wa-mini-window",
     "meeting-bar": "wa-meeting-bar",
     annotation: "wa-annotation",
 };
@@ -31,8 +31,8 @@ function boundsFor(kind: HudKind, displayId: number | undefined): Electron.Recta
     const display = resolveDisplay(displayId, kind);
     return kind === "annotation"
         ? display.bounds
-        : kind === "companion"
-        ? normalizeCompanionBounds(settings.get("companion_placement"), display.workArea, HUD_SIZES.companion)
+        : kind === "mini-window"
+        ? normalizeMiniWindowBounds(settings.get("mini_window_placement"), display.workArea, HUD_SIZES["mini-window"])
         : meetingBarBounds(display);
 }
 
@@ -98,7 +98,7 @@ export function childWindowOptions(url: string, frameName: string): BrowserWindo
             enableLargerThanScreen: true,
             backgroundColor: "#00000000",
         };
-    return kind === "companion"
+    return kind === "mini-window"
         ? { ...common, resizable: true, backgroundColor: "#1b1b29" }
         : // The bar sizes itself to its content (the pill, a menu, the source picker): only that shows.
           { ...common, resizable: false, transparent: true, hasShadow: false, backgroundColor: "#00000000" };

@@ -38,7 +38,7 @@ export class NoVideoOutputDetector {
             this.noVideoTimeout = setTimeout(() => {
                 this.noVideoTimeout = undefined;
                 // A hidden page renders no frame at all (minimized window, the desktop app's window behind
-                // its companion, a background tab): there is nothing to judge until it shows again.
+                // its mini window, a background tab): there is nothing to judge until it shows again.
                 if (document.visibilityState === "hidden") {
                     document.addEventListener("visibilitychange", this.onVisibilityChange);
                     return;

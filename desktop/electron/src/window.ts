@@ -19,6 +19,7 @@ import {
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
     isRoomUrl,
+    isSameRoomUrl,
     resolveInitialTarget,
     stripSensitiveQueryParams,
     worldKeyOf,
@@ -29,20 +30,23 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
-import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
+import { onMainWindowFocus, onMainWindowHidden, stopMiniWindow, updateMiniWindow } from "./mini-window-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
     activateTab,
     closeTab,
     createWorldView,
     findTabShowingWorld,
+    getActiveTabId,
     getActiveWorldContents,
     getControllingWorldContents,
     getTabByContents,
+    getTabs,
     isActiveWorldContents,
     isControllingWorldContents,
     layoutActiveView,
     onControllingTabChange,
+    onTabsChange,
     resetTabs,
     setShell,
 } from "./tab-manager";
@@ -90,7 +94,7 @@ let pendingDeepLinkUrl: string | undefined;
 let desktopAuthCallbackServer: http.Server | undefined;
 let desktopCallbackServerOrigin: string | undefined;
 let landingRecoveryInProgress = false;
-let activeTabTeardownWired = false;
+let tabListenersWired = false;
 let initialRevealTimer: ReturnType<typeof setTimeout> | undefined;
 let reachWorldTimer: ReturnType<typeof setTimeout> | undefined;
 let stopWatchingPresence: (() => void) | undefined;
@@ -633,7 +637,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
 
     const window = { webContents };
     window.webContents.setWindowOpenHandler(({ url, frameName }) => {
-        // The companion or the meeting bar: a child window main asked the world page to open.
+        // The mini window or the meeting bar: a child window main asked the world page to open.
         const childOptions = childWindowOptions(url, frameName);
         if (childOptions) {
             return { action: "allow", overrideBrowserWindowOptions: childOptions };
@@ -699,18 +703,18 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         rememberWorldUrl(url);
         // A full navigation replaces the document, so the presence this world pushed (in a meeting,
         // People list, mic/cam) describes a world that is gone. Nothing else clears it until the
-        // main window closes, which used to leave the tray and the companion showing the previous
+        // main window closes, which used to leave the tray and the mini window showing the previous
         // world's state until the new renderer connected. Only the controlling tab drives them, so
         // another tab reloading must not wipe its state.
         if (isControllingWorldContents(webContents)) {
             resetPresence();
-            stopCompanion();
+            stopMiniWindow();
         }
     });
 
     // WorkAdventure is a SPA — travelling between rooms/worlds inside a session updates the URL
     // via history.pushState, which fires did-navigate-in-page (NOT did-navigate). Without this
-    // handler, only the initial cold-launch URL ever lands in Recent worlds.
+    // handler, only the initial cold-launch URL ever lands in Recent rooms.
     window.webContents.on("did-navigate-in-page", (event, url, isMainFrame) => {
         if (!isMainFrame) {
             return;
@@ -735,9 +739,8 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     });
 
     window.webContents.on("did-finish-load", () => {
-        // Only the active (on-screen) view drives the shell window title + viewport refresh.
+        // Only the active (on-screen) view drives the viewport refresh.
         if (webContents === getActiveWorldContents()) {
-            mainWindow?.setTitle(createDesktopWindowTitle());
             refreshRendererViewport("did-finish-load");
         }
     });
@@ -780,26 +783,32 @@ export async function createWindow(initialUrl?: string) {
     // No setMenu(null): on Windows/Linux it would drop the application menu, and with it the World
     // menu's accelerators (new/close/switch tab). autoHideMenuBar keeps the bar out of sight.
     setShell(mainWindow);
-    // The companion (which hosts the meeting video) and the HUD windows belong
+    // The mini window (which hosts the meeting video) and the HUD windows belong
     // to the tab that drives media: the one in a meeting, or the active one when there is none (see
     // tab-manager). Switching to another tab during a meeting leaves them alone. When that tab
     // changes, tear them down: their relays are keyed to it, so leaving them open would misroute
     // SDP/state to the new one, which re-opens its meeting video itself if it's in a call. Wired once
     // for the app's lifetime (the closure only calls module singletons), so a window re-creation
     // doesn't stack duplicate teardowns.
-    if (!activeTabTeardownWired) {
-        activeTabTeardownWired = true;
+    if (!tabListenersWired) {
+        tabListenersWired = true;
         onControllingTabChange(() => {
             closeAllHudWindows();
-            stopCompanion();
+            stopMiniWindow();
             // Presence is a single global describing the controlling tab, and only that renderer is
             // allowed to push it. Left alone it would still describe the tab we just left, so a
-            // later minimize would re-arm the companion for a meeting the new tab isn't in — and the
+            // later minimize would re-arm the mini window for a meeting the new tab isn't in — and the
             // panel would come back showing the previous world's People list. Clear it, then ask the
             // new tab for its own state: it pushes only on change, so without the request it would
             // stay blank until something there happened to move.
             resetPresence();
             getControllingWorldContents()?.send("app:request-presence");
+        });
+        // The title bar names the map of the active tab, the name its tab shows; "WorkAdventure"
+        // alone until the map has loaded.
+        onTabsChange(() => {
+            const activeTab = getTabs().find((tab) => tab.id === getActiveTabId());
+            mainWindow?.setTitle(createDesktopWindowTitle(activeTab?.appTitle));
         });
     }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
@@ -823,7 +832,7 @@ export async function createWindow(initialUrl?: string) {
         resetTabStrip();
         resetTabs();
         closeAllHudWindows();
-        stopCompanion();
+        stopMiniWindow();
         // The renderer that fed presence is gone — drop to the disconnected baseline so the tray dot
         // stops showing a stale "online" and the world-only quick actions gray out.
         resetPresence();
@@ -835,13 +844,13 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("restore", () => refreshRendererViewport("restore"));
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
-    // Any of these can change whether the main window shows, which the companion controller decides
-    // on (companion-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
+    // Any of these can change whether the main window shows, which the mini window controller decides
+    // on (mini-window-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
     mainWindow.on("focus", onMainWindowFocus);
-    mainWindow.on("show", updateCompanion);
+    mainWindow.on("show", updateMiniWindow);
     mainWindow.on("hide", onMainWindowHidden);
     mainWindow.on("minimize", onMainWindowHidden);
-    mainWindow.on("restore", updateCompanion);
+    mainWindow.on("restore", updateMiniWindow);
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {
@@ -966,10 +975,11 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
 }
 
 /**
- * Switch to the tab that already shows the world of `url`, if any (true). The requesting tab is
- * closed when it held no world: a Landing opened only to pick that world.
+ * Switch to the tab that already shows the world of `url`, if any (true), and take it to that room
+ * when it shows another one. The requesting tab is closed when it held no world: a Landing opened
+ * only to pick that world.
  */
-export function switchToOpenWorld(url: string, requester?: Electron.WebContents): boolean {
+export async function switchToOpenWorld(url: string, requester?: Electron.WebContents): Promise<boolean> {
     const existing = findTabShowingWorld(url);
     if (!existing || existing.view.webContents === requester) {
         return false;
@@ -982,6 +992,9 @@ export function switchToOpenWorld(url: string, requester?: Electron.WebContents)
         closeTab(requestingTab.id);
     }
     showWindow();
+    if (!isSameRoomUrl(existing.url, url)) {
+        await loadDesktopTarget(url);
+    }
     return true;
 }
 
@@ -996,7 +1009,7 @@ export async function openWorldTab(url?: string): Promise<void> {
         await createWindow(url);
         return;
     }
-    if (url && switchToOpenWorld(url)) {
+    if (url && (await switchToOpenWorld(url))) {
         return;
     }
     if (settings.get("tab_bar_enabled") === false) {

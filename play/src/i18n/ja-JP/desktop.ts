@@ -32,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         managed: "組織の更新ポリシーに従ってください。このページはアプリのインストールやダウングレードを行いません。",
         status: {
             belowMinimum:
-                "このデスクトップバージョンは、このインスタンスがサポートする最小バージョンより古いものです。続行できますが、一部の機能が動作しない場合があります。",
-            recommended: "このインスタンスの推奨バージョンを使用しています。",
+                "このアプリのバージョンは、このサーバーがサポートする最小バージョンより古いものです。続行できますが、一部の機能が動作しない場合があります。",
+            recommended: "このサーバーの推奨バージョンを使用しています。",
             different:
-                "使用中のバージョンは、このインスタンスの推奨バージョンと異なります。必ずしも互換性がないとは限りません。",
-            unconfigured: "このインスタンスには推奨バージョンが設定されていません。",
+                "使用中のバージョンは、このサーバーの推奨バージョンと異なります。必ずしも互換性がないとは限りません。",
+            unconfigured: "このサーバーには推奨バージョンが設定されていません。",
         },
     },
     sourcePicker: {
@@ -54,7 +54,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "画面を識別できませんでした。",
         cancel: "キャンセル",
     },
-    companion: {
+    miniWindow: {
         annotations: "注釈",
         allowAnnotations: "他の参加者の注釈を許可",
         clearAnnotations: "すべて消去",

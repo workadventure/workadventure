@@ -4,7 +4,7 @@ import { app } from "electron";
 import ElectronLog from "electron-log";
 import Settings from "electron-settings";
 import type { DesktopWindowMode } from "@workadventure/desktop-api";
-import type { CompanionPlacement } from "./companion-window-policy";
+import type { MiniWindowPlacement } from "./mini-window-placement-policy";
 import {
     LEGACY_LOGIN_ITEM_NAME,
     LEGACY_USER_DATA_DIR,
@@ -30,11 +30,11 @@ export type SettingsData = {
     pinned_worlds: string[];
     /** Servers outside the built-in domains the user added from the Landing (origins). See origin-verification. */
     trusted_origins?: string[];
-    shortcuts: Record<"mute_toggle" | "camera_toggle" | "companion_toggle", string>;
+    shortcuts: Record<"mute_toggle" | "camera_toggle" | "mini_window_toggle", string>;
     /** Set once the user edits a shortcut in the settings window: from then on a blank one was cleared. */
     shortcuts_edited?: boolean;
-    /** Last size of the resizable companion panel and where it sat on its screen, restored on reopen. */
-    companion_placement?: CompanionPlacement;
+    /** Last size of the resizable mini window and where it sat on its screen, restored on reopen. */
+    mini_window_placement?: MiniWindowPlacement;
     /** Linux under Wayland: see window-mode-policy. Unset: "x11". */
     window_mode?: DesktopWindowMode;
     /** Set before restarting in X11 mode, cleared once that start gets going: still set, it failed. */
@@ -57,9 +57,9 @@ const defaultSettings: SettingsData = {
         // paste-as-plain-text in Chrome/Slack/VS Code, which a global grab would shadow everywhere.
         mute_toggle: "CommandOrControl+Alt+Shift+M",
         camera_toggle: "CommandOrControl+Alt+Shift+C",
-        // Opt-in, unlike the two above: no default global accelerator; the tray "Companion panel"
+        // Opt-in, unlike the two above: no default global accelerator; the tray "Mini window"
         // item toggles it without a shortcut.
-        companion_toggle: "",
+        mini_window_toggle: "",
     },
 };
 

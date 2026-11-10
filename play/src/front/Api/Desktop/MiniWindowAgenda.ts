@@ -2,8 +2,8 @@ import type { CalendarEventInterface, TodoListInterface } from "@workadventure/s
 import { formatTime, formatTimeUntil, meetingPlace, startOfDay } from "../../Components/Calendar/agenda";
 import { buildTodo, dueGroup, formatDue } from "../../Components/TodoList/todo";
 
-/** A meeting of the day in the companion's Today view; texts formatted by the world. */
-export type CompanionAgendaMeeting = {
+/** A meeting of the day in the mini window's Today view; texts formatted by the world. */
+export type MiniWindowAgendaMeeting = {
     id: string;
     title: string;
     /** Start time, "10:45". */
@@ -18,8 +18,8 @@ export type CompanionAgendaMeeting = {
     inApp: boolean;
 };
 
-/** An open task in the companion's Today view (read-only, like in WorkAdventure). */
-export type CompanionAgendaTask = {
+/** An open task in the mini window's Today view (read-only, like in WorkAdventure). */
+export type MiniWindowAgendaTask = {
     id: string;
     title: string;
     /** The task list it belongs to. */
@@ -31,16 +31,16 @@ export type CompanionAgendaTask = {
 };
 
 /** Each part is absent when the world has no calendar / no task list connected. */
-export type CompanionAgenda = {
-    meetings?: CompanionAgendaMeeting[];
-    tasks?: { open: number; items: CompanionAgendaTask[] };
+export type MiniWindowAgenda = {
+    meetings?: MiniWindowAgendaMeeting[];
+    tasks?: { open: number; items: MiniWindowAgendaTask[] };
 };
 
 const SHOWN = 3;
-// A meeting starting within the hour gets the strip under the companion's header.
+// A meeting starting within the hour gets the strip under the mini window's header.
 const SOON_MS = 60 * 60 * 1000;
 
-export interface CompanionAgendaInput {
+export interface MiniWindowAgendaInput {
     /** undefined: no calendar connected in this world. */
     events?: Iterable<CalendarEventInterface>;
     /** undefined: no task list connected in this world. */
@@ -50,13 +50,13 @@ export interface CompanionAgendaInput {
 }
 
 /**
- * What the desktop companion shows of the agenda and the tasks: the day's next meetings and the most
+ * What the desktop mini window shows of the agenda and the tasks: the day's next meetings and the most
  * urgent tasks, formatted for display. Undefined when the world has neither.
  */
-export function buildCompanionAgenda(input: CompanionAgendaInput): CompanionAgenda | undefined {
+export function buildMiniWindowAgenda(input: MiniWindowAgendaInput): MiniWindowAgenda | undefined {
     if (!input.events && !input.lists) return undefined;
     const { now, labels } = input;
-    const agenda: CompanionAgenda = {};
+    const agenda: MiniWindowAgenda = {};
 
     if (input.events) {
         const today = startOfDay(now).getTime();
@@ -66,7 +66,7 @@ export function buildCompanionAgenda(input: CompanionAgendaInput): CompanionAgen
             .slice(0, SHOWN);
         // Join is offered on the meeting in progress and on the next one to start.
         const nextIndex = upcoming[0] && upcoming[0].start <= now ? 1 : 0;
-        agenda.meetings = upcoming.map((event, index): CompanionAgendaMeeting => {
+        agenda.meetings = upcoming.map((event, index): MiniWindowAgendaMeeting => {
             const live = event.start <= now;
             const place = meetingPlace(event);
             const when = live
@@ -90,7 +90,7 @@ export function buildCompanionAgenda(input: CompanionAgendaInput): CompanionAgen
         const open = [...todo.focus, ...todo.sections.flatMap((section) => section.items)];
         agenda.tasks = {
             open: open.length,
-            items: open.slice(0, SHOWN).map(({ task, list }): CompanionAgendaTask => {
+            items: open.slice(0, SHOWN).map(({ task, list }): MiniWindowAgendaTask => {
                 const group = dueGroup(task, now);
                 return {
                     id: task.id,

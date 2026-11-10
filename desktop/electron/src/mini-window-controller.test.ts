@@ -1,16 +1,16 @@
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 // The controller's sequences over time (debounce, close by hand until the return, leaving the world),
-// with Electron and the windows faked. The rules themselves are in companion-visibility-policy.test.ts.
+// with Electron and the windows faked. The rules themselves are in mini-window-visibility-policy.test.ts.
 
-type FakeCompanion = {
+type FakeMiniWindow = {
     once: (event: string, callback: () => void) => void;
     setContentProtection: () => void;
     userClose: () => void;
 };
 
 const fake = vi.hoisted(() => ({
-    companion: undefined as FakeCompanion | undefined,
+    miniWindow: undefined as FakeMiniWindow | undefined,
     main: { minimized: false, focused: true },
     presence: {},
     presenceListener: () => {},
@@ -29,24 +29,24 @@ vi.mock("electron", () => ({
 }));
 vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
 vi.mock("./hud-windows", () => ({
-    isHudWindowOpen: () => fake.companion !== undefined,
-    getHudWindow: () => fake.companion,
+    isHudWindowOpen: () => fake.miniWindow !== undefined,
+    getHudWindow: () => fake.miniWindow,
     closeHudWindow: () => {
-        fake.companion = undefined;
+        fake.miniWindow = undefined;
     },
 }));
 // Opening the window goes through the world page (window.open), faked here.
 vi.mock("./child-windows", () => ({
     openChildWindow: () => {
         const listeners: Record<string, () => void> = {};
-        fake.companion = {
+        fake.miniWindow = {
             once: (event: string, callback: () => void) => {
                 listeners[event] = callback;
             },
             setContentProtection: () => {},
             // The user closing the window (close shortcut), as opposed to the controller.
             userClose: () => {
-                fake.companion = undefined;
+                fake.miniWindow = undefined;
                 listeners.closed?.();
             },
         };
@@ -72,34 +72,34 @@ vi.mock("./content-protection", () => ({ shouldProtectWindowFromCapture: () => f
 vi.mock("./platform-capture-policy", () => ({ canHideWindowsFromCapture: () => fake.canHide }));
 vi.mock("./screen-identify", () => ({ isIdentifyingScreens: () => fake.identifying }));
 
-let controller: typeof import("./companion-controller");
+let controller: typeof import("./mini-window-controller");
 
 beforeEach(async () => {
     vi.useFakeTimers();
     vi.resetModules();
-    fake.companion = undefined;
+    fake.miniWindow = undefined;
     fake.main = { minimized: false, focused: true };
-    fake.presence = { inWorld: true, inMeeting: true, autoOpenAllowed: true };
+    fake.presence = { inWorld: true, inMeeting: true, withOthers: true, autoOpenAllowed: true };
     fake.sent = [];
     fake.displays = [1];
     fake.identifying = false;
     fake.canHide = true;
-    controller = await import("./companion-controller");
-    controller.startCompanionController();
+    controller = await import("./mini-window-controller");
+    controller.startMiniWindowController();
 });
 
 afterEach(() => {
     vi.useRealTimers();
 });
 
-const isOpen = () => fake.companion !== undefined;
+const isOpen = () => fake.miniWindow !== undefined;
 const videoWanted = () => fake.sent.at(-1) === true;
 
 function closeByHand() {
-    if (!fake.companion) {
-        throw new Error("The companion is not open");
+    if (!fake.miniWindow) {
+        throw new Error("The mini window is not open");
     }
-    fake.companion.userClose();
+    fake.miniWindow.userClose();
 }
 
 async function leaveWA() {
@@ -154,7 +154,7 @@ test("closed by hand: stays closed while away, reopens on leaving again after co
 });
 
 test("opened by hand: stays while WA shows and after the meeting, then closes on a second toggle", async () => {
-    controller.toggleCompanion();
+    controller.toggleMiniWindow();
     await vi.advanceTimersByTimeAsync(0);
     expect(isOpen()).toBe(true);
     expect(videoWanted()).toBe(true);
@@ -166,14 +166,25 @@ test("opened by hand: stays while WA shows and after the meeting, then closes on
     expect(isOpen()).toBe(true);
     expect(videoWanted()).toBe(false);
 
-    controller.toggleCompanion();
+    controller.toggleMiniWindow();
     expect(isOpen()).toBe(false);
 });
 
 test("opened by itself: closes when the meeting ends", async () => {
     await leaveWA();
-    await setPresence({ inMeeting: false });
+    await setPresence({ inMeeting: false, withOthers: false });
     expect(isOpen()).toBe(false);
+});
+
+test("opened by itself: closes when the user is left alone in a meeting room, which goes on", async () => {
+    await leaveWA();
+    expect(isOpen()).toBe(true);
+    await setPresence({ withOthers: false });
+    expect(isOpen()).toBe(false);
+    // Someone comes back: it opens again.
+    await setPresence({ withOthers: true });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(isOpen()).toBe(true);
 });
 
 test("the setting off: nothing opens by itself, opening by hand still works", async () => {
@@ -181,7 +192,7 @@ test("the setting off: nothing opens by itself, opening by hand still works", as
     await leaveWA();
     expect(isOpen()).toBe(false);
 
-    controller.toggleCompanion();
+    controller.toggleMiniWindow();
     await vi.advanceTimersByTimeAsync(0);
     expect(isOpen()).toBe(true);
 });
@@ -189,13 +200,13 @@ test("the setting off: nothing opens by itself, opening by hand still works", as
 test("an invitation opens it even after a close by hand", async () => {
     await leaveWA();
     closeByHand();
-    await setPresence({ inMeeting: false, invitationPending: true });
+    await setPresence({ inMeeting: false, withOthers: false, invitationPending: true });
     await vi.advanceTimersByTimeAsync(500);
     expect(isOpen()).toBe(true);
 });
 
 test("leaving the world closes it, even opened by hand; a portal hop does not", async () => {
-    controller.toggleCompanion();
+    controller.toggleMiniWindow();
     await vi.advanceTimersByTimeAsync(0);
 
     await setPresence({ inWorld: false });
@@ -232,7 +243,7 @@ test("during the user's share on a single screen, nothing opens by itself; by ha
     await leaveWA();
     expect(isOpen()).toBe(false);
 
-    controller.toggleCompanion();
+    controller.toggleMiniWindow();
     await vi.advanceTimersByTimeAsync(0);
     expect(isOpen()).toBe(true);
 });
@@ -245,7 +256,7 @@ test("during the user's share with another screen, it opens by itself", async ()
     expect(isOpen()).toBe(true);
 });
 
-test("a companion already open stays when the user starts sharing their only screen", async () => {
+test("a mini window already open stays when the user starts sharing their only screen", async () => {
     await leaveWA();
     await setPresence({ screenSharing: true });
     controller.setSharedScreenDisplay(1);

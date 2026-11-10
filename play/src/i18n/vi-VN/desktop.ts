@@ -31,11 +31,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         managed: "Hãy tuân theo chính sách cập nhật của tổ chức. Trang này không cài đặt hoặc hạ phiên bản ứng dụng.",
         status: {
             belowMinimum:
-                "Phiên bản này cũ hơn phiên bản tối thiểu được phiên bản triển khai này hỗ trợ. Bạn có thể tiếp tục, nhưng một số tính năng có thể không hoạt động.",
-            recommended: "Bạn đang dùng phiên bản được đề xuất cho phiên bản triển khai này.",
+                "Phiên bản ứng dụng này cũ hơn phiên bản tối thiểu mà máy chủ này hỗ trợ. Bạn có thể tiếp tục, nhưng một số tính năng có thể không hoạt động.",
+            recommended: "Bạn đang dùng phiên bản được đề xuất cho máy chủ này.",
             different:
-                "Phiên bản của bạn khác với phiên bản được đề xuất. Điều này không nhất thiết có nghĩa là không tương thích.",
-            unconfigured: "Phiên bản triển khai này chưa chỉ định phiên bản được đề xuất.",
+                "Phiên bản của bạn khác với phiên bản được đề xuất cho máy chủ này. Điều này không nhất thiết có nghĩa là không tương thích.",
+            unconfigured: "Máy chủ này không chỉ định phiên bản được đề xuất.",
         },
     },
     sourcePicker: {
@@ -53,7 +53,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Không thể nhận diện các màn hình.",
         cancel: "Hủy",
     },
-    companion: {
+    miniWindow: {
         annotations: "Chú thích",
         allowAnnotations: "Cho phép người khác chú thích",
         clearAnnotations: "Xóa tất cả",

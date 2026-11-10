@@ -8,12 +8,12 @@ import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadv
 import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
-    dismissCompanion,
-    openCompanion,
+    dismissMiniWindow,
+    openMiniWindow,
     onPageVisibilityChange,
     setSharedScreenDisplay,
-    toggleCompanion,
-} from "./companion-controller";
+    toggleMiniWindow,
+} from "./mini-window-controller";
 import {
     getControllingWorldContents,
     getWindow,
@@ -40,6 +40,7 @@ import { handleScreenIdentifyCancel, handleScreenIdentifyPick, identifyScreens }
 import { ensureScreenPermission, requestScreenPermission, screenPermission } from "./screen-permission";
 import { isStartAtLoginEnabled, setStartAtLogin } from "./auto-launch";
 import { getWindowModeState, restartToApplyWindowMode, setWindowMode } from "./window-mode";
+import { openNativeWorldSwitcher } from "./native-menu";
 import { openSettingsWindow } from "./settings-window";
 
 const DEFAULT_ADMIN_SIGNUP_URL = "https://admin.workadventu.re/funnel/connection";
@@ -148,7 +149,7 @@ async function resolveDisplayIdFromScreenSource(sourceId: string): Promise<numbe
     return parsed ? Number(parsed[1]) : undefined;
 }
 
-/** Bring the WorkAdventure window to the front, on a user's click (companion button, notification). */
+/** Bring the WorkAdventure window to the front, on a user's click (mini window button, notification). */
 function focusMainWindow(): void {
     const mainWindow = getWindow();
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -272,6 +273,7 @@ export default () => {
         }
         setRendererPresence({
             inMeeting: Boolean(raw.inMeeting),
+            withOthers: Boolean(raw.withOthers),
             micEnabled: Boolean(raw.micEnabled),
             cameraEnabled: Boolean(raw.cameraEnabled),
             screenSharing: Boolean(raw.screenSharing),
@@ -385,15 +387,15 @@ export default () => {
             return { ok: false, error: t(`landing.${validation.code}`) };
         }
         const safeUrl = validation.url;
-        if (switchToOpenWorld(safeUrl, event.sender)) {
+        if (await switchToOpenWorld(safeUrl, event.sender)) {
             return { ok: true };
         }
         try {
             const loaded = await loadDesktopTarget(safeUrl);
-            return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
+            return loaded ? { ok: true } : { ok: false, error: t("landing.roomNotLoaded") };
         } catch (error) {
             ElectronLog.error(`app:navigation:joinWorld failed for ${safeUrl}`, error);
-            return { ok: false, error: error instanceof Error ? error.message : t("landing.joinFailed") };
+            return { ok: false, error: error instanceof Error ? error.message : t("landing.openRoomFailed") };
         }
     });
 
@@ -410,15 +412,15 @@ export default () => {
         if (!validation.ok) {
             return { ok: false, error: t(`landing.${validation.code}`) };
         }
-        if (switchToOpenWorld(validation.url, event.sender)) {
+        if (await switchToOpenWorld(validation.url, event.sender)) {
             return { ok: true };
         }
         try {
             const loaded = await loadDesktopTarget(validation.url);
-            return loaded ? { ok: true } : { ok: false, error: t("landing.worldNotLoaded") };
+            return loaded ? { ok: true } : { ok: false, error: t("landing.roomNotLoaded") };
         } catch (error) {
             ElectronLog.error(`app:navigation:trustServerAndJoin failed for ${validation.url}`, error);
-            return { ok: false, error: t("landing.joinFailed") };
+            return { ok: false, error: t("landing.openRoomFailed") };
         }
     });
 
@@ -474,7 +476,7 @@ export default () => {
         const lookup = lastWorldLookup;
         const world = lookup?.worlds.find((found) => found.url === rawUrl);
         if (!lookup || !world) {
-            return { ok: false, error: t("landing.joinFailed") };
+            return { ok: false, error: t("landing.signInFailed") };
         }
         // Listed by our own administration over HTTPS: a white-label domain of the service, which the
         // world loads on once signed in. Trusted like the built-in domains, without asking.
@@ -484,10 +486,10 @@ export default () => {
         try {
             return (await signInFromLanding(loginUrlWithHint(world.loginUrl, lookup.email)))
                 ? { ok: true }
-                : { ok: false, error: t("landing.joinFailed") };
+                : { ok: false, error: t("landing.signInFailed") };
         } catch (error) {
             ElectronLog.error(`app:navigation:signInToWorld failed for ${world.url}`, error);
-            return { ok: false, error: t("landing.joinFailed") };
+            return { ok: false, error: t("landing.signInFailed") };
         }
     });
 
@@ -515,7 +517,7 @@ export default () => {
             return { ok: false, error: t("landing.desktopOnly") };
         }
         if (typeof rawUrl !== "string" || !rawUrl.trim()) {
-            return { ok: false, error: "A world URL is required." };
+            return { ok: false, error: "A room URL is required." };
         }
         const pinned = toggleWorldPin(rawUrl);
         return { ok: true, pinned };
@@ -615,6 +617,12 @@ export default () => {
             openSettingsWindow();
         }
     });
+    // The "Open a room…" entry of WorkAdventure's profile menu, like the application menu's.
+    ipcMain.on("app:landing:open", (event) => {
+        if (isFromActiveRenderer(event)) {
+            openNativeWorldSwitcher();
+        }
+    });
 
     // ---- Picture-in-Picture (native utility window) ----
     // The PiP utility window is a frameless, always-on-top BrowserWindow that mirrors video tracks
@@ -641,21 +649,21 @@ export default () => {
         return isLandingPageUrl(event.senderFrame.url);
     }
 
-    // The companion window (a child window of the world page): opened and closed by hand from the
+    // The mini window (a child window of the world page): opened and closed by hand from the
     // world (its PiP button, its close button) and its "back to WorkAdventure" button.
-    ipcMain.on("app:windows:toggle-companion", (event) => {
+    ipcMain.on("app:windows:toggle-mini-window", (event) => {
         if (isFromMainRenderer(event)) {
-            toggleCompanion();
+            toggleMiniWindow();
         }
     });
-    ipcMain.on("app:windows:open-companion", (event) => {
+    ipcMain.on("app:windows:open-mini-window", (event) => {
         if (isFromMainRenderer(event)) {
-            openCompanion();
+            openMiniWindow();
         }
     });
-    ipcMain.on("app:windows:dismiss-companion", (event) => {
+    ipcMain.on("app:windows:dismiss-mini-window", (event) => {
         if (isFromMainRenderer(event)) {
-            dismissCompanion();
+            dismissMiniWindow();
         }
     });
     // The meeting bar's "Display tabs": shows or hides the tab strip (non-destructive; the native menu
@@ -695,7 +703,7 @@ export default () => {
     }
 
     // The user's share started, changed source, or stopped (null). The app places what floats during
-    // it (share-surfaces-policy): the meeting bar here, the companion through its controller.
+    // it (share-surfaces-policy): the meeting bar here, the mini window through its controller.
     let shareSourceGeneration = 0;
     ipcMain.on("app:screen-share-source", (event, source: unknown) => {
         if (!isFromMainRenderer(event)) return;

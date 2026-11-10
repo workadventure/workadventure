@@ -22,23 +22,23 @@ import { gameManager } from "../../../Phaser/Game/GameManager";
 import { CharacterLayerManager } from "../../../Phaser/Entity/CharacterLayerManager";
 import type { PlayerInterface } from "../../../Phaser/Game/PlayerInterface";
 import type { ChatConnectionInterface, ChatMessage, ChatRoom } from "../../../Chat/Connection/ChatConnection";
-import { buildCompanionAgenda, type CompanionAgenda } from "../../../Api/Desktop/CompanionAgenda";
+import { buildMiniWindowAgenda, type MiniWindowAgenda } from "../../../Api/Desktop/MiniWindowAgenda";
 import { LL } from "../../../../i18n/i18n-svelte";
 
-/** The availability statuses the user picks, as the companion's status dots name them. */
-export type CompanionStatus = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+/** The availability statuses the user picks, as the mini window's status dots name them. */
+export type MiniWindowStatus = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
 
-export type CompanionUser = {
+export type MiniWindowUser = {
     id: string;
     name: string;
-    /** A CompanionStatus, or "away". */
+    /** A MiniWindowStatus, or "away". */
     status: string;
     isSelf: boolean;
     /** Data URL of the user's Woka; the row falls back to an initials disc. */
     woka?: string;
 };
 
-export type CompanionConversation = {
+export type MiniWindowConversation = {
     id: string;
     name: string;
     kind: "nearby" | "direct" | "room";
@@ -49,19 +49,19 @@ export type CompanionConversation = {
     woka?: string;
 };
 
-export type CompanionMedia = {
+export type MiniWindowMedia = {
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
     canScreenShare: boolean;
     inMeeting: boolean;
-    status: CompanionStatus;
+    status: MiniWindowStatus;
     statusLocked: boolean;
 };
 
 export const NEARBY_CONVERSATION_ID = "nearby";
 
-// WA locks the status in a meeting or a silent zone: the companion's status menu grays out.
+// WA locks the status in a meeting or a silent zone: the mini window's status menu grays out.
 const STATUS_LOCKED_SET: ReadonlySet<AvailabilityStatus> = new Set([
     AvailabilityStatus.LISTENER,
     AvailabilityStatus.SPEAKER,
@@ -72,7 +72,7 @@ const STATUS_LOCKED_SET: ReadonlySet<AvailabilityStatus> = new Set([
     AvailabilityStatus.SILENT,
 ]);
 
-function requestedStatusKey(status: RequestedStatus | null): CompanionStatus {
+function requestedStatusKey(status: RequestedStatus | null): MiniWindowStatus {
     switch (status) {
         case AvailabilityStatus.BUSY:
             return "busy";
@@ -108,8 +108,8 @@ function availabilityKey(status: AvailabilityStatus): string {
     }
 }
 
-export function setCompanionStatus(status: CompanionStatus): void {
-    const requested: Record<CompanionStatus, RequestedStatus | null> = {
+export function setMiniWindowStatus(status: MiniWindowStatus): void {
+    const requested: Record<MiniWindowStatus, RequestedStatus | null> = {
         online: null,
         busy: AvailabilityStatus.BUSY,
         back_in_a_moment: AvailabilityStatus.BACK_IN_A_MOMENT,
@@ -118,7 +118,7 @@ export function setCompanionStatus(status: CompanionStatus): void {
     resetAllStatusStoreExcept(requested[status]);
 }
 
-export const companionMediaStore: Readable<CompanionMedia> = derived(
+export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(
     [
         isInActiveConversationStore,
         requestedMicrophoneState,
@@ -155,7 +155,7 @@ export function toggleScreenSharing(): void {
     else requestedScreenSharingState.enableScreenSharing();
 }
 
-export const companionAgendaStore: Readable<CompanionAgenda | undefined> = derived(
+export const miniWindowAgendaStore: Readable<MiniWindowAgenda | undefined> = derived(
     [
         isCalendarActivatedStore,
         calendarEventsStore,
@@ -169,13 +169,13 @@ export const companionAgendaStore: Readable<CompanionAgenda | undefined> = deriv
         }),
     ],
     ([$calendarOn, $events, $todoOn, $lists, $LL, $now]) =>
-        buildCompanionAgenda({
+        buildMiniWindowAgenda({
             events: $calendarOn ? $events.values() : undefined,
             lists: $todoOn ? $lists.values() : undefined,
             now: $now,
             labels: {
-                inProgress: $LL.desktop.companion.inProgress(),
-                until: (time) => $LL.desktop.companion.until({ time }),
+                inProgress: $LL.desktop.miniWindow.inProgress(),
+                until: (time) => $LL.desktop.miniWindow.until({ time }),
             },
         }),
 );
@@ -202,17 +202,17 @@ function ensureWoka(signature: string, textures: PlayerInterface["characterTextu
 }
 
 /** The people of the world, the user first. */
-export const companionUsersStore: Readable<CompanionUser[]> = derived(
+export const miniWindowUsersStore: Readable<MiniWindowUser[]> = derived(
     [playersStore, availabilityStatusStore, currentPlayerWokaStore, wokaCache],
     ([$players, $availability, $selfWoka, $wokas]) => {
-        const self: CompanionUser = {
+        const self: MiniWindowUser = {
             id: "self",
             name: gameManager.getPlayerName() || "",
             status: availabilityKey($availability),
             isSelf: true,
             woka: $selfWoka,
         };
-        const others = [...$players.values()].map((player): CompanionUser => {
+        const others = [...$players.values()].map((player): MiniWindowUser => {
             const signature = wokaSignature(player.characterTextures);
             ensureWoka(signature, player.characterTextures);
             return {
@@ -264,7 +264,7 @@ export function respondToInvitation(accept: boolean): void {
     meetingInvitationRequestStore.set(null);
 }
 
-function sortConversations(list: CompanionConversation[]): CompanionConversation[] {
+function sortConversations(list: MiniWindowConversation[]): MiniWindowConversation[] {
     return [...list].sort((a, b) => {
         const aUnread = a.unreadCount > 0 || a.highlightCount > 0 ? 1 : 0;
         const bUnread = b.unreadCount > 0 || b.highlightCount > 0 ? 1 : 0;
@@ -281,17 +281,17 @@ function lastMessage(messages: readonly ChatMessage[]): { preview: string; at: n
 }
 
 /**
- * The chat of the companion: the bubble's proximity chat and the Matrix conversations, and the one that
- * is open. Made when the companion opens, destroyed when it closes (every subscription goes with it).
+ * The chat of the mini window: the bubble's proximity chat and the Matrix conversations, and the one that
+ * is open. Made when the mini window opens, destroyed when it closes (every subscription goes with it).
  */
-export function createCompanionChat() {
+export function createMiniWindowChat() {
     const unsubscribers: Unsubscriber[] = [];
     let connection: ChatConnectionInterface | undefined;
     let disposed = false;
     let connectionGeneration = 0;
 
-    const matrixConversations = writable<CompanionConversation[]>([]);
-    const nearby = writable<CompanionConversation | null>(null);
+    const matrixConversations = writable<MiniWindowConversation[]>([]);
+    const nearby = writable<MiniWindowConversation | null>(null);
     const status = writable<"connecting" | "online" | "unavailable">("connecting");
     const selectedId = writable<string | null>(null);
     const selected = writable<{ id: string; name: string; room: ChatRoom } | null>(null);
@@ -366,7 +366,7 @@ export function createCompanionChat() {
                             ];
                             const emit = () =>
                                 set(
-                                    entries.map(({ room, kind }): CompanionConversation => {
+                                    entries.map(({ room, kind }): MiniWindowConversation => {
                                         const last = lastMessage(get(room.messages));
                                         return {
                                             id: room.id,
@@ -389,7 +389,7 @@ export function createCompanionChat() {
                             emit();
                             return () => roomUnsubscribers.forEach((unsubscribe) => unsubscribe());
                         },
-                        [] as CompanionConversation[],
+                        [] as MiniWindowConversation[],
                     ).subscribe((list) => matrixConversations.set(list));
                     roomsUnsubscribe = () => {
                         statusUnsubscribe();

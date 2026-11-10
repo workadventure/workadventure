@@ -30,10 +30,10 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         managed: "조직의 업데이트 정책을 따르세요. 이 페이지는 앱을 설치하거나 이전 버전으로 변경하지 않습니다.",
         status: {
             belowMinimum:
-                "이 데스크톱 버전은 이 인스턴스의 최소 지원 버전보다 낮습니다. 계속할 수 있지만 일부 기능이 작동하지 않을 수 있습니다.",
-            recommended: "이 인스턴스의 권장 버전을 사용하고 있습니다.",
-            different: "사용 중인 버전이 이 인스턴스의 권장 버전과 다릅니다. 반드시 호환되지 않는다는 뜻은 아닙니다.",
-            unconfigured: "이 인스턴스에 권장 버전이 지정되지 않았습니다.",
+                "이 앱 버전은 이 서버가 지원하는 최소 버전보다 오래되었습니다. 계속할 수 있지만 일부 기능이 작동하지 않을 수 있습니다.",
+            recommended: "이 서버의 권장 버전을 사용하고 있습니다.",
+            different: "사용 중인 버전이 이 서버의 권장 버전과 다릅니다. 반드시 호환되지 않는다는 뜻은 아닙니다.",
+            unconfigured: "이 서버에 권장 버전이 지정되지 않았습니다.",
         },
     },
     sourcePicker: {
@@ -51,7 +51,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "화면을 식별할 수 없습니다.",
         cancel: "취소",
     },
-    companion: {
+    miniWindow: {
         annotations: "주석",
         allowAnnotations: "다른 사람의 주석 허용",
         clearAnnotations: "모두 지우기",

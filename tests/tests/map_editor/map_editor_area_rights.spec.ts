@@ -100,8 +100,10 @@ test.describe("Map editor area with rights @oidc @nomobile @nowebkit", () => {
     test("MapEditor is disabled for basic user because there are no thematics", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Alice", Map.url("empty"));
-        // In the new design, you cannot access the map menu if the user is a basic user
-        await expect(page.getByTestId("map-menu")).toBeHidden();
+        // A basic user has the Tools menu (Room list, Explore the room), but no map editor in it
+        await Menu.openMapMenu(page);
+        await expect(page.getByRole("button", { name: "Map editor" })).toBeHidden();
+        await Menu.closeMapMenu(page);
         /*await Menu.openMapEditor(page);
 
     const entityEditorButton = await page.locator(

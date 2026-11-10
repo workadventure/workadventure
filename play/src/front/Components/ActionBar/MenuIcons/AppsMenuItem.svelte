@@ -1,13 +1,14 @@
 <script lang="ts">
     import { getContext, setContext } from "svelte";
     import { clickOutside } from "svelte-outside";
-    import { openedMenuStore, roomListActivated } from "../../../Stores/MenuStore";
+    import { openedMenuStore, userIsConnected } from "../../../Stores/MenuStore";
     import AppsIcon from "../../Icons/AppsIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { isActivatedStore as isCalendarActivatedStore } from "../../../Stores/CalendarStore";
     import { isActivatedStore as isTodoListActivatedStore } from "../../../Stores/TodoListStore";
-    import { roomListVisibilityStore } from "../../../Stores/ModalStore";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
+    import { gameManager } from "../../../Phaser/Game/GameManager";
     import { externalSvelteComponentService } from "../../../Stores/Utils/externalSvelteComponentService";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
     import { getAdditionalMenuItemStore } from "../../../Stores/AdditionalItemsMenuStore";
@@ -22,6 +23,16 @@
 
     const externalActionBarSvelteComponent = externalSvelteComponentService.getComponentsByZone("actionBarAppsMenu");
     const additionalMenuItemsStore = getAdditionalMenuItemStore("appsMenu");
+    // The same conditions as the items of AppsMenuContent: without any, there is no menu to open.
+    const recording = gameManager.currentStartedRoom.recording;
+    const hasApps = $derived(
+        (recording?.buttonState !== "hidden" && $userIsConnected) ||
+            $isCalendarActivatedStore ||
+            $isTodoListActivatedStore ||
+            $userIsAdminStore ||
+            $externalActionBarSvelteComponent.size > 0 ||
+            $additionalMenuItemsStore.size > 0,
+    );
 
     const [floatingUiRef, floatingUiContent, arrowAction] = createFloatingUiActions(
         {
@@ -32,31 +43,28 @@
     );
 </script>
 
-{#if !inProfileMenu}
+{#if hasApps && !inProfileMenu}
     <ActionBarButton
-        onclick={() => {
-            if ($roomListVisibilityStore) return roomListVisibilityStore.set(false);
-            openedMenuStore.toggle("appMenu");
-        }}
+        onclick={() => openedMenuStore.toggle("appMenu")}
         classList="group/btn-apps"
         context="actionBar"
         tooltipTitle={$LL.actionbar.help.apps.title()}
-        disabledHelp={$openedMenuStore === "appMenu" || $roomListVisibilityStore}
-        state={$openedMenuStore === "appMenu" || $roomListVisibilityStore ? "active" : "normal"}
+        disabledHelp={$openedMenuStore === "appMenu"}
+        state={$openedMenuStore === "appMenu" ? "active" : "normal"}
         dataTestId="apps-button"
         action={floatingUiRef}
         media="./static/images/tooltip-exemple.gif"
         desc={$LL.actionbar.help.apps.desc()}
     >
         <AppsIcon
-            strokeColor={$openedMenuStore === "appMenu" || $roomListVisibilityStore
+            strokeColor={$openedMenuStore === "appMenu"
                 ? "stroke-white fill-white"
                 : "stroke-white fill-transparent group-hover/btn-apps:fill-white"}
             hover="group-hover/btn-apps:fill-white"
         />
     </ActionBarButton>
 
-    {#if $openedMenuStore === "appMenu" && ($roomListActivated || $isCalendarActivatedStore || $isTodoListActivatedStore || $externalActionBarSvelteComponent.size > 0 || $additionalMenuItemsStore.size > 0)}
+    {#if $openedMenuStore === "appMenu"}
         <nav
             class="absolute"
             use:floatingUiContent
@@ -76,7 +84,7 @@
             </div>
         </nav>
     {/if}
-{:else}
+{:else if hasApps}
     <HeaderMenuItem label={$LL.actionbar.help.apps.title()} />
     <AppsMenuContent />
 {/if}

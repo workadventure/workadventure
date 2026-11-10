@@ -35,7 +35,7 @@ const DELEGATED_EVENTS = [
 /**
  * Report the element's client size now and on each resize, observed from the element's own window.
  * Svelte's `bind:clientWidth` observes from this page, which stops reporting once the element is moved
- * into a child window (picture-in-picture, desktop companion): call again after such a move.
+ * into a child window (picture-in-picture, desktop mini window): call again after such a move.
  */
 export function observeElementSize(element: HTMLElement, onSize: (width: number, height: number) => void): () => void {
     const update = () => onSize(element.clientWidth, element.clientHeight);

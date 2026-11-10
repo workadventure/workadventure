@@ -36,6 +36,7 @@ const CONTRACT_2 = [
     "windows",
     "startAtLogin",
     "openSettings",
+    "openLanding",
 ];
 
 const sent: unknown[][] = [];
@@ -84,9 +85,9 @@ test("the floating windows API keeps its members", () => {
     for (const name of [
         "onOpen",
         "onMeetingWanted",
-        "toggleCompanion",
-        "openCompanion",
-        "dismissCompanion",
+        "toggleMiniWindow",
+        "openMiniWindow",
+        "dismissMiniWindow",
         "focusMain",
         "visibleInShare",
         "tabStripShown",

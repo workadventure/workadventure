@@ -28,10 +28,10 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         download: "下載桌面應用程式",
         managed: "請遵循組織的更新政策。此頁面不會安裝應用程式或降級版本。",
         status: {
-            belowMinimum: "此桌面版本低於該執行個體支援的最低版本。你可以繼續使用，但某些功能可能無法正常運作。",
-            recommended: "你正在使用該執行個體建議的版本。",
-            different: "你的版本與該執行個體建議的版本不同，但不一定不相容。",
-            unconfigured: "該執行個體尚未指定建議版本。",
+            belowMinimum: "此應用程式版本低於該伺服器支援的最低版本。你可以繼續使用，但某些功能可能無法正常運作。",
+            recommended: "你正在使用該伺服器建議的版本。",
+            different: "你的版本與該伺服器建議的版本不同，但不一定不相容。",
+            unconfigured: "該伺服器未指定建議版本。",
         },
     },
     sourcePicker: {
@@ -49,7 +49,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "無法識別螢幕。",
         cancel: "取消",
     },
-    companion: {
+    miniWindow: {
         annotations: "標註",
         allowAnnotations: "允許他人標註",
         clearAnnotations: "全部清除",
