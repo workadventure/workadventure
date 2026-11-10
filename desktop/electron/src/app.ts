@@ -29,6 +29,17 @@ if (process.platform === "win32") {
     app.setAppUserModelId("re.workadventu.desktop");
 }
 
+// GNOME under Wayland gives apps no global key grabs: global shortcuts only work through its shortcut
+// service (the GlobalShortcuts portal), which Electron uses only with these features. The portal knows
+// the app by its .desktop file, hence "desktopName" in package.json.
+if (process.platform === "linux") {
+    const features = [
+        app.commandLine.getSwitchValue("enable-features"),
+        "GlobalShortcutsPortal,GlobalShortcutsPortalPreferredTrigger",
+    ];
+    app.commandLine.appendSwitch("enable-features", features.filter(Boolean).join(","));
+}
+
 const OPEN_COMPANION_ARG = "--open-companion";
 
 function getProtocolUrl(argv: string[]) {
