@@ -25,6 +25,16 @@ async function drawStroke(page: Page, canvas: Locator): Promise<void> {
     await page.mouse.up();
 }
 
+/** How many pixels are painted on the annotation canvas (the count attribute only counts saved elements). */
+async function inkPixels(canvas: Locator): Promise<number> {
+    return canvas.evaluate((element: HTMLCanvasElement) => {
+        const pixels = element.getContext("2d")?.getImageData(0, 0, element.width, element.height).data ?? [];
+        let count = 0;
+        for (let index = 3; index < pixels.length; index += 4) if (pixels[index] > 0) count++;
+        return count;
+    });
+}
+
 test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => {
     test("Annotations drawn on a shared screen are synchronized between participants", async ({ browser }) => {
         // Alice and Bob join the same proximity bubble.
@@ -85,6 +95,13 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bobCanvas).toHaveAttribute("data-element-count", "2");
         await expect(aliceCanvas).toHaveAttribute("data-element-count", "2", { timeout: 15_000 });
 
+        // Ctrl+Z takes back Bob's arrow, never Alice's stroke; Ctrl+Shift+Z brings it back.
+        await bob.keyboard.press("Control+z");
+        await expect(aliceCanvas).toHaveAttribute("data-element-count", "1", { timeout: 15_000 });
+        await bob.keyboard.press("Control+z");
+        await bob.keyboard.press("Control+Shift+z");
+        await expect(aliceCanvas).toHaveAttribute("data-element-count", "2", { timeout: 15_000 });
+
         // The presenter clears everything.
         await alice.getByTestId("annotation-clear-all").click();
         await expect(aliceCanvas).toHaveAttribute("data-element-count", "0");
@@ -139,6 +156,7 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
         await bob.getByTestId("annotation-toggle").click({ timeout: 15_000 });
         await expect(bobCanvas).toHaveCSS("pointer-events", "auto");
+        await bob.getByTestId("annotation-tool-pen").click();
         await drawStroke(bob, bobCanvas);
         await expect(bobCanvas).toHaveAttribute("data-element-count", "1");
 
@@ -165,5 +183,44 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bob.locator("#highlighted-media").getByText("Alice")).toHaveCount(0, { timeout: 15_000 });
         await expect(bob.getByTestId("annotation-canvas")).toHaveCount(0);
         await expect(bob.getByTestId("annotation-toolbar")).toHaveCount(0);
+    });
+
+    test("A drag in pointer mode highlights for a few seconds and is never saved", async ({ browser }) => {
+        await using alice = await getPage(
+            browser,
+            "Alice",
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationHighlight"),
+        );
+        await Map.teleportToPosition(alice, 160, 160);
+
+        await using bob = await getPage(
+            browser,
+            "Bob",
+            publicTestMapUrl("tests/E2E/empty.json", "screenAnnotationHighlight"),
+        );
+        await Map.teleportToPosition(bob, 160, 160);
+
+        await expect(alice.locator("#cameras-container").getByText("You")).toBeVisible({ timeout: 30_000 });
+
+        await alice.getByTestId("screenShareButton").click();
+        await Menu.expectButtonState(alice, "screenShareButton", "active");
+        await expect(bob.locator("#highlighted-media").getByText("Alice")).toBeVisible({ timeout: 30_000 });
+        // See the first test: the action bar tooltip would swallow the click.
+        await alice.mouse.move(300, 300);
+        await alice.getByTestId("screenshare-annotate-button").click();
+
+        const aliceCanvas = alice.locator("#highlighted-media").getByTestId("annotation-canvas");
+        const bobCanvas = bob.locator("#highlighted-media").getByTestId("annotation-canvas");
+        await alice.getByTestId("annotation-tool-pointer").click();
+        await drawStroke(alice, aliceCanvas);
+
+        // Bob sees the highlight (far more ink than the pointer alone), which is not saved...
+        await expect.poll(() => inkPixels(bobCanvas), { timeout: 15_000 }).toBeGreaterThan(2000);
+        await expect(bobCanvas).toHaveAttribute("data-element-count", "0");
+        await expect(aliceCanvas).toHaveAttribute("data-element-count", "0");
+
+        // ...and it disappears on both sides a few seconds later.
+        await expect.poll(() => inkPixels(bobCanvas), { timeout: 10_000 }).toBe(0);
+        await expect.poll(() => inkPixels(aliceCanvas), { timeout: 10_000 }).toBe(0);
     });
 });

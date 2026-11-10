@@ -1492,7 +1492,8 @@ message ScreenAnnotationElement {
   string id = 1;
   // spaceUserId of the user who drew this element.
   string authorUserId = 2;
-  // "pen" | "line" | "arrow" | "rect" | "text"
+  // "pen" | "line" | "arrow" | "rect" | "text". Drafts only, never saved: "pointer" and "highlight" (a drag in
+  // pointer mode, which fades out a few seconds after it is drawn).
   string tool = 3;
   // CSS color (hex).
   string color = 4;

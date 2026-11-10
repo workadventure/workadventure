@@ -19,6 +19,15 @@ type DraftOperation = NonNullable<ScreenAnnotationEvent["operation"]>;
 /** A reversible local-user action for the undo / redo history: a drawn stroke, or an erased one. */
 type UndoOp = { kind: "add" | "remove"; element: ScreenAnnotationElement };
 
+// A highlight (a drag in pointer mode) shows for 2 s after its last change, then fades out in 1.5 s.
+const HIGHLIGHT_HOLD_MS = 2000;
+const HIGHLIGHT_FADE_MS = 1500;
+// Drafts that are never saved: how long each shows after its last change.
+const TRANSIENT_LIFETIMES = new Map([
+    ["pointer", 1500],
+    ["highlight", HIGHLIGHT_HOLD_MS + HIGHLIGHT_FADE_MS],
+]);
+
 /**
  * Singleton in charge of the screen-sharing annotations of the bound video space.
  *
@@ -36,7 +45,8 @@ class ScreenAnnotationManager {
     private unsubscribers: (() => void)[] = [];
     private elementCounter = 0;
     private annotations: SpaceState["annotations"] = {};
-    // Per target, the element each other member is drawing (keyed by author: one draft each at most).
+    // Per target, the element each other member is drawing (keyed by author: one draft each at most), and the
+    // highlights, ours included (keyed by author and element id: several show until they expire).
     private drafts = new Map<string, Map<string, ScreenAnnotationElement>>();
     // Per-target undo / redo history of the LOCAL user's reversible actions (draw a stroke / erase
     // one). undo reverses the last op, redo re-applies it; a fresh action clears the redo side.
@@ -44,12 +54,16 @@ class ScreenAnnotationManager {
     private undoStacks = new Map<string, UndoOp[]>();
     private redoStacks = new Map<string, UndoOp[]>();
     private replaying = false;
-    private pointerExpirations = new Map<string, ReturnType<typeof setTimeout>>();
+    // Ids of the elements we asked the back to erase: any other that leaves the state was erased by someone else.
+    private erasing = new Set<string>();
+    private expirations = new Map<string, ReturnType<typeof setTimeout>>();
+    // When each draft shown last changed: a highlight fades out from it.
+    private shownAt = new WeakMap<ScreenAnnotationElement, number>();
 
-    private clearPointerTimer(target: string, author: string): void {
-        const key = JSON.stringify([target, author]);
-        clearTimeout(this.pointerExpirations.get(key));
-        this.pointerExpirations.delete(key);
+    private clearExpiry(target: string, key: string): void {
+        const timerKey = JSON.stringify([target, key]);
+        clearTimeout(this.expirations.get(timerKey));
+        this.expirations.delete(timerKey);
     }
 
     // `screenSharingPeerRemoved` is passed in (rather than read from `space.spacePeerManager`)
@@ -61,6 +75,15 @@ class ScreenAnnotationManager {
 
         this.unsubscribers.push(
             space.state.observe("annotations").subscribe((annotations) => {
+                // What someone else erased (the presenter, "clear all", the end of the share) leaves our history:
+                // undo and redo replay our own actions, they never bring back what another user erased.
+                for (const [target, { elements }] of Object.entries(this.annotations)) {
+                    for (const id of Object.keys(elements)) {
+                        if (!annotations[target]?.elements[id] && !this.erasing.delete(id)) {
+                            this.forgetInHistory(target, id);
+                        }
+                    }
+                }
                 this.annotations = annotations;
                 // A finished element replaces its draft.
                 for (const [target, drafts] of this.drafts) {
@@ -135,8 +158,9 @@ class ScreenAnnotationManager {
         this.space = undefined;
         this.annotations = {};
         this.drafts.clear();
-        for (const timer of this.pointerExpirations.values()) clearTimeout(timer);
-        this.pointerExpirations.clear();
+        for (const timer of this.expirations.values()) clearTimeout(timer);
+        this.expirations.clear();
+        this.erasing.clear();
         this.undoStacks.clear();
         this.redoStacks.clear();
         resetAllAnnotations();
@@ -174,45 +198,67 @@ class ScreenAnnotationManager {
         const drafts = this.drafts.get(target);
         switch (operation?.$case) {
             case "draft": {
+                const draft = operation.draft;
                 const allowed = sender === target || this.annotations[target]?.othersAllowed === true;
                 const valid = screenAnnotationElementSchema.safeParse({
-                    ...operation.draft,
-                    // Pointers are transient, so they are deliberately absent from the persisted schema.
-                    tool: operation.draft.tool === "pointer" ? "pen" : operation.draft.tool,
+                    ...draft,
+                    // Transient tools are deliberately absent from the persisted schema.
+                    tool: TRANSIENT_LIFETIMES.has(draft.tool) ? "pen" : draft.tool,
                     authorUserId: sender,
                     at: 0,
                 }).success;
-                if (!allowed || !valid || this.annotations[target]?.elements[operation.draft.id]) {
+                if (!allowed || !valid || this.annotations[target]?.elements[draft.id]) {
                     return;
                 }
-                const next = drafts ?? new Map<string, ScreenAnnotationElement>();
-                this.clearPointerTimer(target, sender);
-                next.set(sender, { ...operation.draft, authorUserId: sender });
-                if (operation.draft.tool === "pointer") {
-                    const key = JSON.stringify([target, sender]);
-                    this.pointerExpirations.set(
-                        key,
-                        setTimeout(() => {
-                            next.delete(sender);
-                            this.pointerExpirations.delete(key);
-                            this.publish();
-                        }, 1500),
-                    );
-                }
-                this.drafts.set(target, next);
+                // Keyed by sender too: the id comes from the sender, it must not replace another user's draft.
+                this.showDraft(target, draft.tool === "highlight" ? JSON.stringify([sender, draft.id]) : sender, {
+                    ...draft,
+                    authorUserId: sender,
+                });
                 break;
             }
             case "dropDraftId":
                 if (drafts?.get(sender)?.id !== operation.dropDraftId) {
                     return;
                 }
-                this.clearPointerTimer(target, sender);
+                this.clearExpiry(target, sender);
                 drafts.delete(sender);
                 break;
             default:
                 return;
         }
         this.publish();
+    }
+
+    /** Shows a draft. A transient one (pointer, highlight) goes away on its own once it stops changing. */
+    private showDraft(target: string, key: string, draft: ScreenAnnotationElement): void {
+        const drafts = this.drafts.get(target) ?? new Map<string, ScreenAnnotationElement>();
+        this.drafts.set(target, drafts);
+        this.clearExpiry(target, key);
+        drafts.set(key, draft);
+        this.shownAt.set(draft, Date.now());
+        const lifetime = TRANSIENT_LIFETIMES.get(draft.tool);
+        if (lifetime !== undefined) {
+            const timerKey = JSON.stringify([target, key]);
+            this.expirations.set(
+                timerKey,
+                setTimeout(() => {
+                    drafts.delete(key);
+                    this.expirations.delete(timerKey);
+                    this.publish();
+                }, lifetime),
+            );
+        }
+    }
+
+    /** How opaque to draw an element: a highlight fades out before it disappears. */
+    public opacity(element: ScreenAnnotationElement): number {
+        const shownAt = this.shownAt.get(element);
+        if (element.tool !== "highlight" || shownAt === undefined) {
+            return 1;
+        }
+        const fadeEnd = shownAt + HIGHLIGHT_HOLD_MS + HIGHLIGHT_FADE_MS;
+        return Math.min(1, Math.max(0, (fadeEnd - Date.now()) / HIGHLIGHT_FADE_MS));
     }
 
     private publish(): void {
@@ -225,14 +271,18 @@ class ScreenAnnotationManager {
             enabled.set(target, annotations.othersAllowed);
         }
         for (const [target, drafts] of this.drafts) {
-            for (const author of drafts.keys()) {
-                if (author !== target && this.annotations[target]?.othersAllowed !== true) {
-                    this.clearPointerTimer(target, author);
-                    drafts.delete(author);
+            for (const [key, draft] of drafts) {
+                if (draft.authorUserId !== target && this.annotations[target]?.othersAllowed !== true) {
+                    this.clearExpiry(target, key);
+                    drafts.delete(key);
                 }
             }
             if (drafts.size > 0) {
-                elements.set(target, [...(elements.get(target) ?? []), ...drafts.values()]);
+                // Pointers last, so they are drawn on top of everything (the highlight dragged under one included).
+                const ordered = [...drafts.values()].sort(
+                    (a, b) => Number(a.tool === "pointer") - Number(b.tool === "pointer"),
+                );
+                elements.set(target, [...(elements.get(target) ?? []), ...ordered]);
             }
         }
         screenAnnotationElementsStore.set(elements);
@@ -262,6 +312,13 @@ class ScreenAnnotationManager {
     /** Commits a finished element (or a new version of one of ours). */
     public upsertElement(targetUserId: string, element: ScreenAnnotationElement): void {
         if (element.tool === "pointer") return;
+        if (element.tool === "highlight") {
+            // Never saved nor undoable: its last version shows everywhere, ours included, until it expires.
+            this.emitDraft(targetUserId, element);
+            this.showDraft(targetUserId, JSON.stringify([element.authorUserId, element.id]), element);
+            this.publish();
+            return;
+        }
         this.recordLocalOp(targetUserId, { kind: "add", element });
         this.space?.state.upsertScreenAnnotation(targetUserId, element).catch((error) => {
             // Its draft would otherwise stay on the others' screens.
@@ -290,7 +347,9 @@ class ScreenAnnotationManager {
             return;
         }
         this.recordLocalOp(targetUserId, { kind: "remove", element });
+        this.erasing.add(elementId);
         this.space?.state.removeScreenAnnotation(targetUserId, elementId).catch((error) => {
+            this.erasing.delete(elementId);
             console.warn("Annotation removal refused", error);
         });
     }
@@ -314,6 +373,14 @@ class ScreenAnnotationManager {
     private clearHistory(targetUserId: string): void {
         this.undoStacks.delete(targetUserId);
         this.redoStacks.delete(targetUserId);
+    }
+
+    /** Drop every action on an element from the history: someone else erased it. */
+    private forgetInHistory(targetUserId: string, elementId: string): void {
+        for (const stacks of [this.undoStacks, this.redoStacks]) {
+            const stack = stacks.get(targetUserId)?.filter((op) => op.element.id !== elementId);
+            if (stack) stacks.set(targetUserId, stack);
+        }
     }
 
     /**

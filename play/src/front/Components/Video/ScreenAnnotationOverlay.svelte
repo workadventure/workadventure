@@ -24,6 +24,8 @@
     let { targetUserId, canDraw }: Props = $props();
 
     const EMIT_INTERVAL_MS = 50;
+    // A drag in pointer mode draws a highlight: a thick translucent stroke that fades out.
+    const HIGHLIGHT_WIDTH = 0.02;
 
     let canvas: HTMLCanvasElement | undefined = $state();
     let clientWidth = $state(0);
@@ -40,10 +42,21 @@
     let draft: ScreenAnnotationElement | undefined = $state();
     let drawing = false;
     let lastEmit = 0;
+    let lastPointerEmit = 0;
 
     // Floating text input state (in normalized coordinates).
     let textInput: { x: number; y: number; value: string } | undefined = $state();
     let textInputElement: HTMLInputElement | undefined = $state();
+
+    function freehand(tool: string): boolean {
+        return tool === "pen" || tool === "highlight";
+    }
+
+    // By tag name: in the desktop app's child window, instanceof HTMLInputElement is false for its own inputs.
+    function inTextField(event: KeyboardEvent): boolean {
+        const element = event.target as Partial<HTMLElement> | null;
+        return !!element?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(element?.tagName ?? "");
+    }
 
     function pointerToNorm(event: PointerEvent): ScreenAnnotationPoint {
         if (!canvas) {
@@ -99,7 +112,6 @@
         const p = pointerToNorm(event);
         if (tool === "pointer") {
             movePointer(p);
-            return;
         }
         if (tool === "eraser") {
             eraseAt(p);
@@ -111,13 +123,14 @@
         }
         drawing = true;
         canvas.setPointerCapture(event.pointerId);
+        const draftTool = tool === "pointer" ? "highlight" : tool;
         draft = {
             id: screenAnnotationManager.nextElementId(),
             authorUserId: screenAnnotationManager.localUserId ?? "local",
-            tool,
+            tool: draftTool,
             color,
-            width,
-            points: tool === "pen" ? [p] : [p, p],
+            width: draftTool === "highlight" ? HIGHLIGHT_WIDTH : width,
+            points: freehand(draftTool) ? [p] : [p, p],
             text: undefined,
         };
     }
@@ -127,9 +140,9 @@
 
     function movePointer(p: ScreenAnnotationPoint): void {
         const now = Date.now();
-        if (pointerId && now - lastEmit < EMIT_INTERVAL_MS) return;
+        if (pointerId && now - lastPointerEmit < EMIT_INTERVAL_MS) return;
         pointerId ??= screenAnnotationManager.nextElementId();
-        lastEmit = now;
+        lastPointerEmit = now;
         screenAnnotationManager.emitDraft(targetUserId, {
             id: pointerId,
             authorUserId: screenAnnotationManager.localUserId ?? "local",
@@ -158,16 +171,14 @@
     function onPointerMove(event: PointerEvent): void {
         if (inputEnabled && tool === "pointer") {
             movePointer(pointerToNorm(event));
-            return;
         }
         if (!drawing || !draft) {
             return;
         }
         const p = pointerToNorm(event);
-        draft =
-            draft.tool === "pen"
-                ? { ...draft, points: [...draft.points, p] }
-                : { ...draft, points: [draft.points[0], p] };
+        draft = freehand(draft.tool)
+            ? { ...draft, points: [...draft.points, p] }
+            : { ...draft, points: [draft.points[0], p] };
 
         const now = Date.now();
         if (now - lastEmit > EMIT_INTERVAL_MS) {
@@ -210,8 +221,10 @@
         // a stroke being drawn must never be invisible to its own author.
         if (!locallyHidden) {
             for (const element of elements) {
+                ctx.globalAlpha = screenAnnotationManager.opacity(element);
                 drawElement(ctx, element);
             }
+            ctx.globalAlpha = 1;
         }
         if (draft) {
             drawElement(ctx, draft);
@@ -222,6 +235,20 @@
         // render() reads elements, draft, clientWidth and clientHeight, so this effect
         // automatically re-runs whenever any of them changes.
         render();
+    });
+
+    // A highlight fades out: redraw on every frame while one shows. The canvas's own window paces it:
+    // in the desktop overlay, the main window may be hidden.
+    $effect(() => {
+        const view = canvas?.ownerDocument.defaultView;
+        if (!view || locallyHidden || !elements.some((element) => element.tool === "highlight")) {
+            return;
+        }
+        let frame = view.requestAnimationFrame(function redraw() {
+            render();
+            frame = view.requestAnimationFrame(redraw);
+        });
+        return () => view.cancelAnimationFrame(frame);
     });
 
     // Drawing mode ended mid-stroke (Escape, the presenter stopped letting the others draw...): the stroke is
@@ -245,10 +272,18 @@
         if (!inputEnabled) {
             return;
         }
-        // Escape leaves drawing mode (the text input handles its own Escape first).
+        // Escape leaves drawing mode, Ctrl+Z undoes and Ctrl+Shift+Z redoes (the text input handles its own
+        // keys first, and any other text field keeps its own undo).
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 localAnnotationTargetStore.set(undefined);
+            } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !inTextField(event)) {
+                event.preventDefault();
+                if (event.shiftKey) {
+                    screenAnnotationManager.redoLastLocalElement(targetUserId);
+                } else {
+                    screenAnnotationManager.undoLastLocalElement(targetUserId);
+                }
             }
         };
         const target = canvas?.ownerDocument.defaultView;
