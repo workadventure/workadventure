@@ -191,17 +191,22 @@ export class CameraManager extends EventEmitter {
     /**
      * In game mode the view stays on the map. On an axis where the map is smaller than the view, the map is centred
      * in the area the follow offset leaves visible: the bounds grow to the view's size around that centre, where
-     * Phaser's clamping would otherwise pin the map to the top-left corner.
+     * Phaser's clamping would otherwise pin the map to the top-left corner. On an axis where the map is larger, the
+     * bounds are the map widened by the follow offset: at the edge of the map, the player still reaches the free part
+     * of the screen (under the cameras or a whiteboard), with the void around the map showing, instead of staying
+     * hidden behind them.
      */
     private readonly updateGameBounds = (): void => {
         if (this.mapEditorOpen) return;
         const { displayWidth, displayHeight, followOffset } = this.camera;
         const { width: mapWidth, height: mapHeight } = this.mapSize;
+        const offsetX = Math.abs(this.targetFollowOffset?.x ?? 0);
+        const offsetY = Math.abs(this.targetFollowOffset?.y ?? 0);
         const bounds = {
-            x: displayWidth > mapWidth ? mapWidth / 2 - followOffset.x - displayWidth / 2 : 0,
-            y: displayHeight > mapHeight ? mapHeight / 2 - followOffset.y - displayHeight / 2 : 0,
-            width: Math.max(mapWidth, displayWidth),
-            height: Math.max(mapHeight, displayHeight),
+            x: displayWidth > mapWidth ? mapWidth / 2 - followOffset.x - displayWidth / 2 : -offsetX,
+            y: displayHeight > mapHeight ? mapHeight / 2 - followOffset.y - displayHeight / 2 : -offsetY,
+            width: displayWidth > mapWidth ? displayWidth : mapWidth + 2 * offsetX,
+            height: displayHeight > mapHeight ? displayHeight : mapHeight + 2 * offsetY,
         };
         const last = this.gameBounds;
         if (

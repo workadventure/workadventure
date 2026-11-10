@@ -10,6 +10,7 @@ import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
 import { mapStorageServer } from "./MapStorageServer";
 
 import { proxyFiles } from "./FileFetcher/FileFetcher";
+import { registerWhiteboardFileRoutes } from "./Services/WhiteboardFiles";
 import { UploadController } from "./Upload/UploadController";
 import { fileSystem } from "./fileSystem";
 import { passportStrategies } from "./Services/Authentication";
@@ -176,6 +177,9 @@ app.get("/health/live", (req, res, next) => {
         })
         .catch(next);
 });
+
+// Before the UploadController: its PUT and DELETE on any path would take the whiteboard images for map uploads.
+registerWhiteboardFileRoutes(app, fileSystem);
 
 const mapListService = new MapListService(fileSystem, new WebHookService(WEB_HOOK_URL));
 new UploadController(app, fileSystem, mapListService);

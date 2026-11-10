@@ -47,6 +47,14 @@
     let streamableEntries = $derived($streamablesStore);
     let activeStreamableEntry = $derived(streamableEntries.find((entry) => !entry.isPending));
     let streamable = $derived(activeStreamableEntry?.streamable ?? $streamableStore);
+    // A component (a whiteboard) fills the box with its own toolbars: our overlays move out of their way, to the
+    // bottom centre, which Excalidraw leaves free at every size.
+    let isComponentMedia = $derived(streamable?.media.type === "component");
+    // A component with its own shape (a whiteboard) is smaller than this box: CenteredVideo makes the component
+    // itself the screen blocker, so the map recentres around what is really on screen.
+    let componentBlocks = $derived(
+        streamable?.media.type === "component" && streamable.media.aspectRatio !== undefined,
+    );
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
@@ -349,7 +357,7 @@
 </script>
 
 <div
-    {@attach blocker}
+    {@attach componentBlocks ? undefined : blocker}
     class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox z-20 select-none"
 >
     <div
@@ -441,7 +449,7 @@
                             }, 200);
                         }}
                     >
-                        {#if !streamableEntry.isPending && activeUserName}
+                        {#if !streamableEntry.isPending && activeUserName && !isComponentMedia}
                             <UserName
                                 name={name ?? "unknown"}
                                 picture={pictureStore}
@@ -497,11 +505,21 @@
                             {#if encoderStats}
                                 <EncoderStatsBox {encoderStats} />
                             {/if}
-
+                        {/if}
+                        {#if !streamableEntry.isPending && activeUserName}
                             <!-- The menu to go fullscreen -->
                             {#if !inCameraContainer && videoEnabled}
                                 <div
-                                    class="absolute m-auto top-0 right-0 left-0 h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                                    class="absolute h-14 w-fit rounded-lg bg-contrast/50 backdrop-blur transition-all opacity-0 hover:!opacity-100 group-hover/centered-video:opacity-20 [@media(pointer:coarse)]:opacity-100 flex items-center justify-center cursor-pointer"
+                                    class:m-auto={!isComponentMedia}
+                                    class:top-0={!isComponentMedia}
+                                    class:right-0={!isComponentMedia}
+                                    class:left-0={!isComponentMedia}
+                                    class:bottom-2={isComponentMedia}
+                                    class:inset-x-0={isComponentMedia}
+                                    class:mx-auto={isComponentMedia}
+                                    class:z-10={isComponentMedia}
+                                    class:!opacity-60={isComponentMedia}
                                 >
                                     <div class="h-full w-full flex flex-row justify-evenly cursor-pointer">
                                         {#if !fullScreen && !$highlightFullScreen}

@@ -76,7 +76,11 @@ export async function getEmbedLink(
 /**
  * Throws when the link does not belong to the given application (id or display name).
  */
-export function validateLinkForApplication(url: URL, application: string): void {
+export function validateLinkForApplication(
+    url: URL,
+    application: string,
+    properties?: { excalidrawDomains?: string[] },
+): void {
     switch (application) {
         case defaultNativeIntegrationAppName.KLAXOON:
         case defaultNativeIntegrationAppId.KLAXOON:
@@ -108,7 +112,7 @@ export function validateLinkForApplication(url: URL, application: string): void 
             break;
         case defaultNativeIntegrationAppName.EXCALIDRAW:
         case defaultNativeIntegrationAppId.EXCALIDRAW:
-            ExcalidrawService.validateLink(url);
+            ExcalidrawService.validateLink(url, properties?.excalidrawDomains);
             break;
         case defaultNativeIntegrationAppName.CARDS:
         case defaultNativeIntegrationAppId.CARDS:
