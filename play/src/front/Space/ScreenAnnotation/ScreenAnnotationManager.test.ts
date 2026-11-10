@@ -222,9 +222,9 @@ describe("ScreenAnnotationManager", () => {
         sendDraft("viewer", stroke);
         sendDraft("viewer", { ...stroke, id: "t2" });
         expect(elementIds()).toEqual(["t1", "t2"]);
-        // Shown for 3 s, then faded out in 1.5 s.
+        // Shown for 2 s, then faded out in 1.5 s.
         const [shown] = get(screenAnnotationElementsStore).get(PRESENTER) ?? [];
-        vi.advanceTimersByTime(3000);
+        vi.advanceTimersByTime(2000);
         expect(screenAnnotationManager.opacity(shown)).toBe(1);
         vi.advanceTimersByTime(750);
         expect(screenAnnotationManager.opacity(shown)).toBe(0.5);
@@ -241,7 +241,7 @@ describe("ScreenAnnotationManager", () => {
         screenAnnotationManager.undoLastLocalElement(PRESENTER);
         expect(stateManager.upsertScreenAnnotation).not.toHaveBeenCalled();
         expect(stateManager.removeScreenAnnotation).not.toHaveBeenCalled();
-        vi.advanceTimersByTime(4501);
+        vi.advanceTimersByTime(3501);
         expect(elementIds()).toEqual([]);
     });
 

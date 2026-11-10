@@ -52,6 +52,12 @@
         return tool === "pen" || tool === "highlight";
     }
 
+    // By tag name: in the desktop app's child window, instanceof HTMLInputElement is false for its own inputs.
+    function inTextField(event: KeyboardEvent): boolean {
+        const element = event.target as Partial<HTMLElement> | null;
+        return !!element?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(element?.tagName ?? "");
+    }
+
     function pointerToNorm(event: PointerEvent): ScreenAnnotationPoint {
         if (!canvas) {
             return { x: 0, y: 0 };
@@ -270,10 +276,18 @@
         if (!inputEnabled) {
             return;
         }
-        // Escape leaves drawing mode (the text input handles its own Escape first).
+        // Escape leaves drawing mode, Ctrl+Z undoes and Ctrl+Shift+Z redoes (the text input handles its own
+        // keys first, and any other text field keeps its own undo).
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 localAnnotationTargetStore.set(undefined);
+            } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !inTextField(event)) {
+                event.preventDefault();
+                if (event.shiftKey) {
+                    screenAnnotationManager.redoLastLocalElement(targetUserId);
+                } else {
+                    screenAnnotationManager.undoLastLocalElement(targetUserId);
+                }
             }
         };
         const target = canvas?.ownerDocument.defaultView;

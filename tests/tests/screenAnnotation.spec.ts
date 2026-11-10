@@ -95,6 +95,13 @@ test.describe("Screen-sharing annotation @nomobile @nowebkit @nofirefox", () => 
         await expect(bobCanvas).toHaveAttribute("data-element-count", "2");
         await expect(aliceCanvas).toHaveAttribute("data-element-count", "2", { timeout: 15_000 });
 
+        // Ctrl+Z takes back Bob's arrow, never Alice's stroke; Ctrl+Shift+Z brings it back.
+        await bob.keyboard.press("Control+z");
+        await expect(aliceCanvas).toHaveAttribute("data-element-count", "1", { timeout: 15_000 });
+        await bob.keyboard.press("Control+z");
+        await bob.keyboard.press("Control+Shift+z");
+        await expect(aliceCanvas).toHaveAttribute("data-element-count", "2", { timeout: 15_000 });
+
         // The presenter clears everything.
         await alice.getByTestId("annotation-clear-all").click();
         await expect(aliceCanvas).toHaveAttribute("data-element-count", "0");
