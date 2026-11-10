@@ -77,7 +77,7 @@ Your video tile carries a megaphone badge (and is framed in yellow when your cam
 ![](../images/editor/megaphone_live.png)
 
 To stop, click the megaphone button in the action bar (1), or **Stop megaphone** in the **Global communication** window.
-From this window, administrators can also send a **text message** or an **audio message** to everyone.
+From this window, administrators can also send a **text message** to everyone.
 
 The participants see your video tile with the same megaphone badge:
 
