@@ -32,6 +32,7 @@
     import { chatSidebarWidthStore } from "../Chat/ChatSidebarWidthStore";
     import { EditorToolName } from "../Phaser/Game/MapEditor/MapEditorModeManager";
     import { streamableCollectionStore } from "../Stores/StreamableCollectionStore";
+    import { trackFormFocus } from "../Utils/trackFormFocus";
     import { inputFormFocusStore } from "../Stores/UserInputStore";
     import { showRecordingList } from "../Stores/RecordingStore";
     import { toastStore } from "../Stores/ToastStoreSingleton";
@@ -121,36 +122,6 @@
         wasHighlightFullscreenActive = active;
     });
 
-    const handleFocusInEvent = (event: FocusEvent) => {
-        if (
-            event.target instanceof HTMLInputElement ||
-            event.target instanceof HTMLTextAreaElement ||
-            event.target instanceof HTMLSelectElement ||
-            (event.target instanceof HTMLDivElement &&
-                (event.target.getAttribute("role") === "textbox" ||
-                    event.target.getAttribute("contenteditable") === "true")) ||
-            // A chat message and its action buttons: Enter or Space there must not reach the game shortcuts.
-            (event.target instanceof Element && event.target.closest(".block-user-action") !== null)
-        ) {
-            inputFormFocusStore.set(true);
-        }
-    };
-
-    const handleFocusOutEvent = (event: FocusEvent) => {
-        if (
-            event.target instanceof HTMLInputElement ||
-            event.target instanceof HTMLTextAreaElement ||
-            event.target instanceof HTMLSelectElement ||
-            (event.target instanceof HTMLDivElement &&
-                (event.target.getAttribute("role") === "textbox" ||
-                    event.target.getAttribute("contenteditable") === "true")) ||
-            // A chat message and its action buttons: Enter or Space there must not reach the game shortcuts.
-            (event.target instanceof Element && event.target.closest(".block-user-action") !== null)
-        ) {
-            inputFormFocusStore.set(false);
-        }
-    };
-
     function getMapEditorRightReservedSpace({
         isMapEditorActive,
         isMapEditorPanelVisible,
@@ -172,18 +143,16 @@
         );
     }
 
+    let stopTrackingFormFocus: (() => void) | undefined;
     let stopCalendarReminders: (() => void) | undefined;
 
     onMount(() => {
-        document.addEventListener("focusin", handleFocusInEvent);
-        document.addEventListener("focusout", handleFocusOutEvent);
+        stopTrackingFormFocus = trackFormFocus(document, (focused) => inputFormFocusStore.set(focused));
         stopCalendarReminders = startCalendarReminders();
     });
 
     onDestroy(() => {
-        document.removeEventListener("focusin", handleFocusInEvent);
-        document.removeEventListener("focusout", handleFocusOutEvent);
-        inputFormFocusStore.set(false);
+        stopTrackingFormFocus?.();
         if (participantListAutoHideTimer) {
             clearTimeout(participantListAutoHideTimer);
         }

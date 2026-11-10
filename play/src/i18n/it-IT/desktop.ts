@@ -2,6 +2,25 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "Applicazione desktop",
+        installed: "Versione installata",
+        unknown: "Non disponibile",
+        browser: "Stai usando WorkAdventure nel browser.",
+        recommendedVersion: "Versione consigliata",
+        minimumVersion: "Versione minima supportata",
+        download: "Scarica l’applicazione desktop",
+        managed:
+            "Segui la politica di aggiornamento della tua organizzazione. Questa pagina non installa l’applicazione né ripristina una versione precedente.",
+        status: {
+            belowMinimum:
+                "Questa versione è precedente alla minima supportata da questa istanza. Puoi continuare, ma alcune funzionalità potrebbero non funzionare.",
+            recommended: "Stai usando la versione consigliata per questa istanza.",
+            different:
+                "La tua versione differisce da quella consigliata per questa istanza. Non significa necessariamente che sia incompatibile.",
+            unconfigured: "Questa istanza non ha indicato una versione consigliata.",
+        },
+    },
     sourcePicker: {
         title: "Condividi il tuo schermo",
         subtitle: "Scegli cosa vedranno gli altri partecipanti.",
@@ -18,6 +37,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "Annulla",
     },
     companion: {
+        annotations: "Annotazioni",
+        allowAnnotations: "Consenti agli altri di annotare",
+        clearAnnotations: "Cancella tutto",
         chat: "Chat",
         people: "Persone",
         toggleMic: "Attiva/disattiva il microfono",
@@ -105,14 +127,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "Penna",
         text: "Testo",
         line: "Linea",
+        arrow: "Freccia",
         rect: "Rettangolo",
         eraser: "Gomma",
         red: "Rosso",
+        yellow: "Giallo",
         green: "Verde",
         blue: "Blu",
         white: "Bianco",
         black: "Nero",
         allowOthers: "Consenti agli altri di annotare",
+        clearAll: "Cancella tutto",
         toggleMic: "Attiva/disattiva il microfono",
         toggleCamera: "Attiva/disattiva la fotocamera",
         stopSharing: "Interrompi la condivisione dello schermo",

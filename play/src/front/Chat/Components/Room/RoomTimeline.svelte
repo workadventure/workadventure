@@ -2,6 +2,7 @@
     import { onDestroy, onMount, tick, untrack } from "svelte";
     import { get, readable } from "svelte/store";
     import { defaultColor } from "@workadventure/shared-utils";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import {
         hasProximityChatSidePanel,
@@ -12,12 +13,11 @@
         type ChatTimelineItem,
     } from "../../Connection/ChatConnection";
     import getCloseImg from "../../images/get-close.png";
-    import { selectedChatMessageToReply, shouldRestoreChatStateStore } from "../../Stores/ChatStore";
+    import { shouldRestoreChatStateStore } from "../../Stores/ChatStore";
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { hideActionBarStoreBecauseOfChatBar } from "../../ChatSidebarWidthStore";
     import {
         roomSidePanelStore,
-        roomTimelineFocusStore,
         type RoomSidePanelSection,
         type RoomTimelineFocusRequest,
     } from "../../Stores/RoomSidePanelStore";
@@ -54,12 +54,15 @@
         IconInfoCircle,
     } from "@wa-icons";
 
+    const { reply: selectedChatMessageToReply, timelineFocus: roomTimelineFocusStore, compact } = getChatInteraction();
+
     interface Props {
         room: ChatConversation;
         backAction?: () => void;
         backButtonTestId?: string;
         timelineTestId?: string;
         showRoomSidePanelToggle?: boolean;
+        compactHeader?: boolean;
         /** True when the room list is displayed next to this timeline (two-column layout). */
         roomListVisible?: boolean;
     }
@@ -70,6 +73,7 @@
         backButtonTestId = "chatBackward",
         timelineTestId = "roomTimeline",
         showRoomSidePanelToggle = false,
+        compactHeader = false,
         roomListVisible = false,
     }: Props = $props();
 
@@ -652,7 +656,7 @@
         selectedChatMessageToReply.set(null);
         if (backAction) {
             backAction();
-            shouldRestoreChatStateStore.set(false);
+            if (!compact) shouldRestoreChatStateStore.set(false);
             return;
         }
         if (room.conversationKind === "thread" && room.parentRoom) {
@@ -776,7 +780,7 @@
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
-    class="flex flex-col flex-auto h-full w-full max-w-full"
+    class="flex flex-col flex-auto min-h-0 h-full w-full max-w-full"
     data-testid={timelineTestId}
     ondragover={(event) => event.preventDefault()}
     ondrop={(event) => {
@@ -786,131 +790,136 @@
     }}
 >
     {#if room !== undefined}
-        <!-- A container, so the header can show more once the conversation itself is wide enough. -->
-        <div class="@container flex flex-col gap-2">
-            <div
-                class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
-                    ? 'pe-14'
-                    : ''}"
-            >
-                <!-- No arrow while the room list is beside the timeline: the title then sits on the left, by its avatar. -->
-                {#if chatRoomsEnableInAdmin && showBackButton}
-                    <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
-                    <div class="relative shrink-0">
-                        <button
-                            class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white {$unreadElsewhereStore >
-                            0
-                                ? 'bg-white/10'
-                                : ''}"
-                            data-testid={backButtonTestId}
-                            aria-label={$unreadElsewhereStore > 0
-                                ? $hasPendingMentionElsewhere
-                                    ? $LL.chat.a11y.backWithMentionElsewhere()
-                                    : $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
-                                : $LL.chat.roomPanel.back()}
-                            onclick={goBackAndClearSelectedChatMessage}
-                        >
-                            {#if direction === "rtl"}
-                                <IconChevronRight font-size="20" />
-                            {:else}
-                                <IconChevronLeft font-size="20" />
-                            {/if}
-                        </button>
-                        {#if $unreadElsewhereStore > 0}
-                            <!-- A target of its own: the arrow always goes back to the list, the count jumps to a conversation. -->
+        {#if !compactHeader}
+            <!-- A container, so the header can show more once the conversation itself is wide enough. -->
+            <div class="@container flex flex-col gap-2">
+                <div
+                    class="p-2 flex items-center border border-solid border-x-0 border-b border-t-0 border-white/10 {shouldReserveHeaderEndSpace
+                        ? 'pe-14'
+                        : ''}"
+                >
+                    <!-- No arrow while the room list is beside the timeline: the title then sits on the left, by its avatar. -->
+                    {#if (chatRoomsEnableInAdmin || (compact && backAction)) && showBackButton}
+                        <!-- Lit up while other conversations have unread messages, so they are not missed from here. -->
+                        <div class="relative shrink-0">
                             <button
-                                type="button"
-                                class="absolute top-0 end-0 rounded-full p-0.5"
-                                data-testid="unreadElsewhereButton"
-                                aria-label={$LL.chat.a11y.showUnreadConversations()}
-                                aria-haspopup="true"
-                                aria-expanded={closeUnreadConversations !== undefined}
-                                bind:this={unreadElsewhereButton}
-                                onclick={toggleUnreadConversations}
-                            >
-                                <!-- "@" until the conversation that mentioned the user is opened. -->
-                                <UnreadCount
-                                    count={$unreadElsewhereStore}
-                                    size="sm"
-                                    ariaLabel=""
-                                    variant={$hasPendingMentionElsewhere ? "mention" : "default"}
-                                    text={$hasPendingMentionElsewhere ? "@" : undefined}
-                                />
-                            </button>
-                        {/if}
-                    </div>
-                {:else if !roomListVisible}
-                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
-                {/if}
-                {#if roomListVisible}
-                    <span class="shrink-0 ps-2">
-                        <Avatar
-                            compact
-                            pictureStore={room.pictureStore}
-                            fallbackName={$roomName}
-                            color={$roomTypeStore === "direct" ? ($avatarColorStore ?? defaultColor) : null}
-                        />
-                    </span>
-                {/if}
-                <div class="min-w-0 grow px-2 {roomListVisible ? 'text-start' : 'text-center'}">
-                    <div class="text-sm font-bold truncate" data-testid="roomName">
-                        {$roomName}
-                    </div>
-                    <ConversationSubtitle {room} centered={!roomListVisible} />
-                </div>
-
-                {#if roomListVisible && showRoomSidePanelToggle}
-                    <div class="hidden @min-[600px]:flex items-center gap-1 shrink-0" data-testid="roomHeaderSections">
-                        {#each headerSections as { section, label } (section)}
-                            {@const isActive =
-                                roomSidePanelToggleIsOpen && $roomSidePanelStore.activeSection === section}
-                            <button
-                                type="button"
-                                class="px-3 h-9 rounded text-sm font-bold whitespace-nowrap !text-white hover:bg-white/10 {isActive
+                                class="back-roomlist p-3 hover:bg-white/10 rounded aspect-square w-12 h-12 !text-white {$unreadElsewhereStore >
+                                0
                                     ? 'bg-white/10'
                                     : ''}"
-                                aria-pressed={isActive}
-                                onclick={() => roomSidePanelStore.setActiveSection(section)}
+                                data-testid={backButtonTestId}
+                                aria-label={$unreadElsewhereStore > 0
+                                    ? $hasPendingMentionElsewhere
+                                        ? $LL.chat.a11y.backWithMentionElsewhere()
+                                        : $LL.chat.a11y.backWithUnreadElsewhere({ count: $unreadElsewhereStore })
+                                    : $LL.chat.roomPanel.back()}
+                                onclick={goBackAndClearSelectedChatMessage}
                             >
-                                {label}
+                                {#if direction === "rtl"}
+                                    <IconChevronRight font-size="20" />
+                                {:else}
+                                    <IconChevronLeft font-size="20" />
+                                {/if}
                             </button>
-                        {/each}
+                            {#if $unreadElsewhereStore > 0}
+                                <!-- A target of its own: the arrow always goes back to the list, the count jumps to a conversation. -->
+                                <button
+                                    type="button"
+                                    class="absolute top-0 end-0 rounded-full p-0.5"
+                                    data-testid="unreadElsewhereButton"
+                                    aria-label={$LL.chat.a11y.showUnreadConversations()}
+                                    aria-haspopup="true"
+                                    aria-expanded={closeUnreadConversations !== undefined}
+                                    bind:this={unreadElsewhereButton}
+                                    onclick={toggleUnreadConversations}
+                                >
+                                    <!-- "@" until the conversation that mentioned the user is opened. -->
+                                    <UnreadCount
+                                        count={$unreadElsewhereStore}
+                                        size="sm"
+                                        ariaLabel=""
+                                        variant={$hasPendingMentionElsewhere ? "mention" : "default"}
+                                        text={$hasPendingMentionElsewhere ? "@" : undefined}
+                                    />
+                                </button>
+                            {/if}
+                        </div>
+                    {:else if !roomListVisible}
+                        <div class="p-3 rounded aspect-square w-12 h-12 shrink-0"></div>
+                    {/if}
+                    {#if roomListVisible}
+                        <span class="shrink-0 ps-2">
+                            <Avatar
+                                compact
+                                pictureStore={room.pictureStore}
+                                fallbackName={$roomName}
+                                color={$roomTypeStore === "direct" ? ($avatarColorStore ?? defaultColor) : null}
+                            />
+                        </span>
+                    {/if}
+                    <div class="min-w-0 grow px-2 {roomListVisible ? 'text-start' : 'text-center'}">
+                        <div class="text-sm font-bold truncate" data-testid="roomName">
+                            {$roomName}
+                        </div>
+                        <ConversationSubtitle {room} centered={!roomListVisible} />
+                    </div>
+
+                    {#if roomListVisible && showRoomSidePanelToggle && !compact}
+                        <div
+                            class="hidden @min-[600px]:flex items-center gap-1 shrink-0"
+                            data-testid="roomHeaderSections"
+                        >
+                            {#each headerSections as { section, label } (section)}
+                                {@const isActive =
+                                    roomSidePanelToggleIsOpen && $roomSidePanelStore.activeSection === section}
+                                <button
+                                    type="button"
+                                    class="px-3 h-9 rounded text-sm font-bold whitespace-nowrap !text-white hover:bg-white/10 {isActive
+                                        ? 'bg-white/10'
+                                        : ''}"
+                                    aria-pressed={isActive}
+                                    onclick={() => roomSidePanelStore.setActiveSection(section)}
+                                >
+                                    {label}
+                                </button>
+                            {/each}
+                        </div>
+                    {/if}
+
+                    {#if showRoomSidePanelToggle && !compact}
+                        <button
+                            type="button"
+                            class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {roomSidePanelToggleIsOpen
+                                ? 'bg-white/10'
+                                : ''}"
+                            data-testid="toggleRoomSidePanelButton"
+                            title={roomSidePanelToggleIsOpen
+                                ? $LL.chat.roomPanel.toggleClose()
+                                : $LL.chat.roomPanel.toggleOpen()}
+                            aria-pressed={roomSidePanelToggleIsOpen}
+                            onclick={() => roomSidePanelStore.toggle()}
+                        >
+                            <IconInfoCircle font-size="20" />
+                            {#if unreadSidePanelCount > 0}
+                                <span
+                                    class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
+                                    data-testid="toggleRoomSidePanelUnreadBadge"
+                                ></span>
+                            {/if}
+                        </button>
+                    {:else if !roomListVisible}
+                        <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
+                    {/if}
+                </div>
+                <EnteredZoneBanner {room} />
+                <ChatMessageBanner />
+                {#if shouldDisplayLoader}
+                    <div class="flex justify-center items-center w-full pb-1 bg-transparent">
+                        <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
                     </div>
                 {/if}
-
-                {#if showRoomSidePanelToggle}
-                    <button
-                        type="button"
-                        class="relative p-3 rounded aspect-square w-12 h-12 shrink-0 !text-white hover:bg-white/10 {roomSidePanelToggleIsOpen
-                            ? 'bg-white/10'
-                            : ''}"
-                        data-testid="toggleRoomSidePanelButton"
-                        title={roomSidePanelToggleIsOpen
-                            ? $LL.chat.roomPanel.toggleClose()
-                            : $LL.chat.roomPanel.toggleOpen()}
-                        aria-pressed={roomSidePanelToggleIsOpen}
-                        onclick={() => roomSidePanelStore.toggle()}
-                    >
-                        <IconInfoCircle font-size="20" />
-                        {#if unreadSidePanelCount > 0}
-                            <span
-                                class="absolute right-2 top-2 h-2.5 w-2.5 rounded-full border border-solid border-contrast bg-success"
-                                data-testid="toggleRoomSidePanelUnreadBadge"
-                            ></span>
-                        {/if}
-                    </button>
-                {:else if !roomListVisible}
-                    <div class="p-3 rounded aspect-square w-12 h-12 shrink-0" aria-hidden="true"></div>
-                {/if}
             </div>
-            <EnteredZoneBanner {room} />
-            <ChatMessageBanner />
-            {#if shouldDisplayLoader}
-                <div class="flex justify-center items-center w-full pb-1 bg-transparent">
-                    <IconLoader class="animate-[spin_2s_linear_infinite]" font-size={25} />
-                </div>
-            {/if}
-        </div>
+        {/if}
         <div
             bind:this={messageListRef}
             bind:clientHeight={messageListHeight}

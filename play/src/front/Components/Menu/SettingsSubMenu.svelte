@@ -43,6 +43,7 @@
     import InputRadioBox from "../Input/InputRadioBox.svelte";
     import Select from "../Input/Select.svelte";
     import Chip from "../UI/Chip.svelte";
+    import DesktopApplicationSettings from "./DesktopApplicationSettings.svelte";
     import {
         IconAntennaBarsLow,
         IconAntennaBarsMid,
@@ -825,6 +826,7 @@
             />
         </div>
     </section>
+    <DesktopApplicationSettings />
 </div>
 
 <style>

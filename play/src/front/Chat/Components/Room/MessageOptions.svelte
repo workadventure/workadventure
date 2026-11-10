@@ -1,15 +1,18 @@
 <script lang="ts">
     import { onDestroy } from "svelte";
     import { readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import type { ChatAttachmentStatus, ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
-    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import EmojiButton from "./EmojiButton.svelte";
     import MessageMoreMenu from "./MessageMoreMenu.svelte";
     import { confirmDelete } from "./confirmDeleteMessage";
     import { IconArrowBackUp, IconDots } from "@wa-icons";
+
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply, edit: selectedChatMessageToEdit } = chatInteraction;
 
     interface Props {
         message: ChatMessage;

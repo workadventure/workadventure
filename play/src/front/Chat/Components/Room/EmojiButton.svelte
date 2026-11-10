@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import type { EmojiClickEvent } from "emoji-picker-element/shared";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LazyEmote from "../../../Components/EmoteMenu/LazyEmote.svelte";
@@ -15,6 +16,8 @@
     let trigger: HTMLButtonElement;
 
     let closeEmojiPicker: (() => void) | undefined = undefined;
+
+    onDestroy(() => closeEmojiPicker?.());
 
     function togglePicker(event: MouseEvent) {
         // A click from Enter or Space has no pointer position: the picker then takes the focus, and gives it back.

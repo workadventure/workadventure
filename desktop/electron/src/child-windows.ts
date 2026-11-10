@@ -18,6 +18,7 @@ import { pageSaidHello } from "./page-contract";
 export const CHILD_WINDOW_FRAME_NAMES: Record<HudKind, string> = {
     companion: "wa-companion",
     "meeting-bar": "wa-meeting-bar",
+    annotation: "wa-annotation",
 };
 
 // The world page answers within a frame or two; past this, the open failed.
@@ -28,7 +29,9 @@ const pending = new Map<HudKind, PendingOpen>();
 
 function boundsFor(kind: HudKind, displayId: number | undefined): Electron.Rectangle {
     const display = resolveDisplay(displayId, kind);
-    return kind === "companion"
+    return kind === "annotation"
+        ? display.bounds
+        : kind === "companion"
         ? normalizeCompanionBounds(settings.get("companion_bounds"), display.workArea, HUD_SIZES.companion)
         : meetingBarBounds(display);
 }
@@ -83,6 +86,18 @@ export function childWindowOptions(url: string, frameName: string): BrowserWindo
         alwaysOnTop: true,
         show: false,
     };
+    if (kind === "annotation")
+        return {
+            ...common,
+            movable: false,
+            resizable: false,
+            transparent: true,
+            hasShadow: false,
+            focusable: false,
+            // Without it, macOS pushes the window below the menu bar: every annotation lands that much lower.
+            enableLargerThanScreen: true,
+            backgroundColor: "#00000000",
+        };
     return kind === "companion"
         ? { ...common, resizable: true, backgroundColor: "#1b1b29" }
         : // The bar sizes itself to its content (the pill, a menu, the source picker): only that shows.

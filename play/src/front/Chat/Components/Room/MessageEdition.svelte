@@ -1,14 +1,18 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { get } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import type { ChatMessage } from "../../Connection/ChatConnection";
-    import { selectedChatMessageToEdit } from "../../Stores/ChatStore";
+
     import LL from "../../../../i18n/i18n-svelte";
     import Button from "../../../Components/UI/Button.svelte";
     import Alert from "../../../Components/UI/Alert.svelte";
     import { HtmlUtils } from "../../../WebRtc/HtmlUtils";
     import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import MessageInput from "./MessageInput.svelte";
+
+    const chatInteraction = getChatInteraction();
+    const { edit: selectedChatMessageToEdit } = chatInteraction;
 
     interface Props {
         message: ChatMessage;

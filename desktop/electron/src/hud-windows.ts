@@ -33,9 +33,10 @@ export function resolveDisplay(displayId: number | undefined, label = "HUD"): El
     return screen.getPrimaryDisplay();
 }
 
-export type HudKind = "meeting-bar" | "companion";
+export type HudKind = "meeting-bar" | "companion" | "annotation";
 
 export const HUD_SIZES: Record<HudKind, { width: number; height: number }> = {
+    annotation: { width: 1, height: 1 },
     // The pill, pinned to the bottom; the page grows the window when a panel opens. 100 high, not the pill's
     // 76: Chromium keeps a window a page resizes at least 100 high, so it could not come back to 76.
     "meeting-bar": { width: 680, height: 100 },
@@ -121,7 +122,7 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
         // relativeLevel +1 lifts the HUD one layer above other "screen-saver" windows, so they cannot
         // land on top of it and absorb the presenter's clicks. macOS reads the relativeLevel; on
         // other platforms the second-layer bump is a no-op but the moveTop below still runs.
-        newWindow.setAlwaysOnTop(true, "screen-saver", 1);
+        newWindow.setAlwaysOnTop(true, "screen-saver", kind === "annotation" ? 0 : 1);
     } catch (error) {
         ElectronLog.debug(`HUD ${kind} setAlwaysOnTop failed`, error);
     }
@@ -135,6 +136,7 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
 
     // Never steal focus from the app the presenter is currently driving. moveTop: a window of the same
     // level created just before can otherwise sit above until the next window ordering event.
+    if (kind === "annotation") newWindow.setIgnoreMouseEvents(true, { forward: true });
     newWindow.showInactive();
     newWindow.moveTop();
 }
@@ -146,5 +148,6 @@ export function closeHudWindow(kind: HudKind): void {
 }
 
 export function closeAllHudWindows(): void {
+    closeHudWindow("annotation");
     closeHudWindow("meeting-bar");
 }

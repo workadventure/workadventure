@@ -2,6 +2,24 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
+    application: {
+        title: "Ứng dụng máy tính",
+        installed: "Phiên bản đã cài",
+        unknown: "Không khả dụng",
+        browser: "Bạn đang dùng WorkAdventure trong trình duyệt.",
+        recommendedVersion: "Phiên bản được đề xuất",
+        minimumVersion: "Phiên bản tối thiểu được hỗ trợ",
+        download: "Tải ứng dụng máy tính",
+        managed: "Hãy tuân theo chính sách cập nhật của tổ chức. Trang này không cài đặt hoặc hạ phiên bản ứng dụng.",
+        status: {
+            belowMinimum:
+                "Phiên bản này cũ hơn phiên bản tối thiểu được phiên bản triển khai này hỗ trợ. Bạn có thể tiếp tục, nhưng một số tính năng có thể không hoạt động.",
+            recommended: "Bạn đang dùng phiên bản được đề xuất cho phiên bản triển khai này.",
+            different:
+                "Phiên bản của bạn khác với phiên bản được đề xuất. Điều này không nhất thiết có nghĩa là không tương thích.",
+            unconfigured: "Phiên bản triển khai này chưa chỉ định phiên bản được đề xuất.",
+        },
+    },
     sourcePicker: {
         title: "Chia sẻ màn hình của bạn",
         subtitle: "Chọn nội dung mà những người tham gia khác sẽ thấy.",
@@ -18,6 +36,9 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         cancel: "Hủy",
     },
     companion: {
+        annotations: "Chú thích",
+        allowAnnotations: "Cho phép người khác chú thích",
+        clearAnnotations: "Xóa tất cả",
         chat: "Trò chuyện",
         people: "Mọi người",
         toggleMic: "Bật/tắt micrô",
@@ -105,14 +126,17 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         pen: "Bút",
         text: "Văn bản",
         line: "Đường thẳng",
+        arrow: "Mũi tên",
         rect: "Hình chữ nhật",
         eraser: "Tẩy",
         red: "Đỏ",
+        yellow: "Vàng",
         green: "Xanh lá",
         blue: "Xanh dương",
         white: "Trắng",
         black: "Đen",
         allowOthers: "Cho phép người khác chú thích",
+        clearAll: "Xóa tất cả",
         toggleMic: "Bật/tắt micrô",
         toggleCamera: "Bật/tắt camera",
         stopSharing: "Dừng chia sẻ màn hình",

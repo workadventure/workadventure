@@ -37,6 +37,7 @@ import type { ManagedRecordingState } from "./RecordingManager";
 import { RaiseHandManager } from "./RaiseHandManager";
 import { ProximityPollManager } from "./ProximityPollManager";
 import { ProximityQAManager } from "./ProximityQAManager";
+import { ScreenAnnotationManager } from "./ScreenAnnotationManager";
 
 const debug = Debug("space");
 
@@ -55,6 +56,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     private readonly raiseHandManager: RaiseHandManager;
     private readonly proximityPollManager: ProximityPollManager;
     private readonly proximityQAManager: ProximityQAManager;
+    private readonly screenAnnotationManager: ScreenAnnotationManager;
     private communicationManager: ICommunicationManager;
     private usersToNotify: Map<SpacesWatcher, Map<string, SpaceUser>>;
     // Number of users publishing at least one stream (camera, screen or microphone)
@@ -81,6 +83,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         this.raiseHandManager = new RaiseHandManager(this);
         this.proximityPollManager = new ProximityPollManager(this);
         this.proximityQAManager = new ProximityQAManager(this);
+        this.screenAnnotationManager = new ScreenAnnotationManager(this);
         debug(`${name} => created`);
     }
 
@@ -731,6 +734,26 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
                 return this.proximityQAManager.delete(sender, query.deleteQuestion.questionId);
             case "setKind":
                 return this.setKind(query.setKind.kind);
+            case "setScreenAnnotationOthersAllowed":
+                return this.screenAnnotationManager.setOthersAllowed(
+                    sender,
+                    query.setScreenAnnotationOthersAllowed.allowed,
+                );
+            case "upsertScreenAnnotation": {
+                const { targetUserId, element } = query.upsertScreenAnnotation;
+                if (!element) {
+                    throw new Error("Missing annotation element");
+                }
+                return this.screenAnnotationManager.upsert(sender, targetUserId, element);
+            }
+            case "removeScreenAnnotation":
+                return this.screenAnnotationManager.remove(
+                    sender,
+                    query.removeScreenAnnotation.targetUserId,
+                    query.removeScreenAnnotation.elementId,
+                );
+            case "clearScreenAnnotations":
+                return this.screenAnnotationManager.clear(sender);
             default: {
                 const _exhaustiveCheck: never = query;
                 throw new Error("Unknown space state query");
@@ -880,6 +903,7 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         // The manager closes the session it owns.
         this.communicationManager.destroy();
         this.raiseHandManager.destroy();
+        this.screenAnnotationManager.destroy();
         this.userRemoved$.complete();
         this.userUpdated$.complete();
         debug(`${this.name} => destroyed`);
