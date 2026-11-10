@@ -52,7 +52,7 @@ import type {
     WorldUser,
     WorldUsersAnswer,
 } from "@workadventure/messages";
-import { noUndefined } from "@workadventure/messages";
+import { AvailabilityStatus, noUndefined } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type { AxiosResponse } from "axios";
@@ -721,6 +721,10 @@ export class SocketManager implements ZoneEventListener {
         playerDetailsMessage: SetPlayerDetailsMessage,
     ): Promise<void> {
         const socketData = client.getUserData();
+        // A space joined later (a bubble, for instance) takes its first status from here.
+        if (playerDetailsMessage.availabilityStatus !== AvailabilityStatus.UNCHANGED) {
+            socketData.availabilityStatus = playerDetailsMessage.availabilityStatus;
+        }
         const pusherToBackMessage: PusherToBackMessage["message"] = {
             $case: "setPlayerDetailsMessage",
             setPlayerDetailsMessage: playerDetailsMessage,

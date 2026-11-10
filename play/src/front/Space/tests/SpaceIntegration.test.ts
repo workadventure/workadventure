@@ -287,6 +287,8 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            cameraHeld: false,
+            microphoneHeld: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -344,6 +346,8 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            cameraHeld: false,
+            microphoneHeld: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -396,6 +400,8 @@ describe("", () => {
             showVoiceIndicator: false,
             attendeesState: false,
             cpuLimited: false,
+            cameraHeld: false,
+            microphoneHeld: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -542,6 +548,8 @@ describe("", () => {
                 jitsiParticipantId: undefined,
                 attendeesState: false,
                 cpuLimited: false,
+                cameraHeld: false,
+                microphoneHeld: false,
             },
             $case: "muteVideo",
             muteVideo: {
