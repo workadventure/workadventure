@@ -176,7 +176,7 @@ import {
     type ProximityChatRoomKind,
 } from "../../Chat/Connection/Proximity/ProximityChatRoomManager";
 import { ProximitySpaceManager } from "../../WebRtc/ProximitySpaceManager";
-import { audioContextManager } from "../../WebRtc/AudioContextManager";
+import { audioContextManager, recoverFromRenderErrors } from "../../WebRtc/AudioContextManager";
 import { bindAudioOutput, pendingSinkRequests } from "../../WebRtc/AudioOutputManager";
 import { noMicrophoneSoundWarningVisibleStore } from "../../Stores/NoMicrophoneSoundWarningVisibleStore";
 import type { SpaceRegistryInterface } from "../../Space/SpaceRegistry/SpaceRegistryInterface";
@@ -434,6 +434,8 @@ export class GameScene extends DirtyScene {
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
     private unregisterAudioContextPlaybackRetry: Unsubscriber | undefined;
+    /** Phaser's own AudioContext. Undefined when Phaser falls back to HTML5 audio. */
+    private soundContext: AudioContext | undefined;
     private _proximityChatRoom: ProximityChatRoom | undefined;
     private _proximityChatRoomManager: ProximityChatRoomManager | undefined;
     private _userProviderMergerDeferred: Deferred<UserProviderMerger> = new Deferred();
@@ -526,7 +528,10 @@ export class GameScene extends DirtyScene {
         // Bubble, meeting and scripting API sounds play through Phaser's own AudioContext (absent when Phaser falls back
         // to HTML5 audio), bypassing media elements: it follows the selected audio output itself.
         if (this.sound instanceof Phaser.Sound.WebAudioSoundManager) {
-            this.unsubscribers.push(bindAudioOutput(this.sound.context));
+            this.soundContext = this.sound.context;
+            this.unsubscribers.push(bindAudioOutput(this.soundContext));
+            // A failure of the system audio output suspends this context like every other one of the page
+            this.unsubscribers.push(recoverFromRenderErrors(this.soundContext));
         }
 
         this.load.on(Phaser.Loader.Events.FILE_LOAD_ERROR, (file: { src: string }) => {
@@ -1183,6 +1188,10 @@ export class GameScene extends DirtyScene {
 
     public playSound(sound: string, volume: number = 0.2) {
         if (!statusChanger.allowNotificationSound()) return;
+        // Phaser only resumes its context while the game has the focus. Without it, a context the browser suspended
+        // (an audio device plugged or unplugged) holds the sound back until the user returns, long after the event.
+        // On a running context, resume() does nothing.
+        this.soundContext?.resume().catch((e: unknown) => console.warn("Could not resume Phaser's AudioContext", e));
         this.sound.play(sound, {
             volume,
         });
