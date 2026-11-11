@@ -155,7 +155,7 @@ export async function openRecordingSpacePicker(page: Page, action: RecordingSpac
 
 export async function waitForMegaphoneToBeStreaming(page: Page) {
     // The modal must remain open: closing it resets the local streaming megaphone state.
-    await expect(page.getByRole("button", { name: "Stop megaphone" })).toBeVisible();
+    await expect(page.getByTestId("go-live-stop")).toBeVisible();
 }
 
 async function ensureRecordingSpacePickerOpen(page: Page, action: RecordingSpacePickerAction) {

@@ -104,36 +104,32 @@ class Menu {
         await expect(page.locator("section.side-bar-container .side-bar")).toBeHidden();
     }
 
-    async clickSendGlobalMessage(page: Page) {
+    async clickGoLive(page: Page) {
         await this.openMapMenu(page);
-        await page.getByRole("button", { name: "Send global message" }).click();
-        //await page.getByTestId('global-message').click({timeout: 30_000});
+        await page.getByTestId("go-live-button").click();
     }
 
-    async clickStartLiveMessage(page: Page) {
-        await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
-        await page.getByRole("button", { name: "Start live message" }).click();
+    async clickSendAnnouncement(page: Page) {
+        await this.openMapMenu(page);
+        await page.getByTestId("send-announcement-button").click();
     }
 
     async clickStartMegaphone(page: Page) {
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(page.getByTestId("go-live-start")).toBeVisible();
+        await page.getByTestId("go-live-start").click({ timeout: 10_000 });
     }
 
+    // "Go live" is only in the map menu of the users allowed to use the megaphone.
     async isThereMegaphoneButton(page: Page) {
         await this.openMapMenu(page);
-        await page.getByRole("button", { name: "Send global message" }).click();
-        await expect(page.getByRole("button", { name: "Start live message" })).toBeEnabled();
-        await page.locator(".close-btn").first().click();
-        //await this.closeMapMenu(page);
+        await expect(page.getByTestId("go-live-button")).toBeVisible();
+        await this.closeMapMenu(page);
     }
 
     async isNotThereMegaphoneButton(page: Page) {
         await this.openMapMenu(page);
-        await page.getByRole("button", { name: "Send global message" }).click();
-        await expect(page.getByRole("button", { name: "Start live message" })).toBeDisabled();
-        await page.locator(".close-btn").first().click();
-        //await this.closeMapMenu(page);
+        await expect(page.getByTestId("go-live-button")).toBeHidden();
+        await this.closeMapMenu(page);
     }
 
     async clickOnStatus(page: Page, status: string) {

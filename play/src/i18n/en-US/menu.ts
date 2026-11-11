@@ -105,9 +105,7 @@ const menu: BaseTranslation = {
         selectEntryPointSelect: "Select the entry point through which users will arrive",
     },
     globalMessage: {
-        warning: "Broadcast to all rooms of the world",
         enter: "Enter your message here...",
-        send: "Send",
     },
     contact: {
         gettingStarted: {

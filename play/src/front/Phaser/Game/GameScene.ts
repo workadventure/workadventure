@@ -4670,9 +4670,9 @@ ${escapedMessage}
     /**
      * Displays a text message sent by an admin. Audio messages are no longer supported and are ignored.
      */
-    private showUserMessage({ type, message }: SendUserMessage) {
-        if (type === "message") {
-            textMessageStore.addMessage(message);
+    private showUserMessage(userMessage: SendUserMessage) {
+        if (userMessage.type === "message") {
+            textMessageStore.addMessage(userMessage);
             this.playSound("new-message", 0.2);
         }
     }

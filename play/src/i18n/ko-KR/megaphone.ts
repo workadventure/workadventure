@@ -2,40 +2,40 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "공지 보내기",
+        audience: "누구에게 보낼까요?",
+        thisRoom: "이 방",
+        wholeWorld: "월드 전체",
+        place: "이동할 장소 (선택)",
+        noPlace: "장소 없음",
+        noPlaceOnMap: "이 맵에는 아직 이름이 있는 구역이 없습니다.",
+        preview: "미리 보기",
+        sendToRoom: "이 방에 보내기",
+        sendToWorld: "월드 전체에 보내기",
+        confirmWorld: "월드의 모든 방이 받게 됩니다.",
+        confirmSend: "네, 월드 전체에 보내기",
+        cancel: "취소",
+        sentToRoom: "이 방에 공지를 보냈습니다",
+        sentToWorld: "월드 전체에 공지를 보냈습니다",
+        join: "{place}(으)로 이동",
+        joinMap: "이동",
+        placeNotFound: "이 장소는 더 이상 맵에 없습니다.",
+        admin: "관리자",
+        more: "대기 중인 공지: {count}",
+    },
     modal: {
-        backToSelectCommunication: "통신 선택으로 돌아가기",
-        title: "전역 통신",
         liveMessage: {
-            startMegaphone: "확성기 시작",
-            stopMegaphone: "확성기 중지",
-            goingToStream: "스트리밍하려는 것",
-            yourMicrophone: "마이크",
-            yourCamera: "카메라",
-            yourScreen: "화면",
+            microphoneOff: "마이크 꺼짐",
+            cameraOff: "카메라 꺼짐",
+            cameraOffHint: "마이크만으로도 라이브를 시작할 수 있습니다.",
+            devices: "카메라 및 마이크",
+            whoHears: "누가 듣나요?",
+            thisRoom: "이 방",
+            wholeWorld: "월드의 모든 방",
+            live: "라이브",
+            stop: "중지",
             title: "실시간 메시지",
-            button: "실시간 메시지 시작",
-            and: "및",
-            toAll: "모든 참가자에게",
-            notice: `
-            실시간 메시지 또는 "확성기"를 사용하면 카메라와 마이크를 사용하여 방이나 월드에 연결된 모든 사람들에게 실시간 메시지를 보낼 수 있습니다.
-
-            이 메시지는 화면 하단 모서리에 화상 통화나 말풍선 대화처럼 표시됩니다.
-
-            실시간 메시지 사용 사례 예: "안녕하세요 여러분, 회의를 시작할까요? 🎉 제 아바타를 따라 회의 구역으로 가서 비디오 앱을 여세요 🚀"
-            `,
-            settings: "설정",
-        },
-        textMessage: {
-            title: "텍스트 메시지",
-            notice: `
-            텍스트 메시지를 사용하면 방이나 월드에 연결된 모든 사람들에게 메시지를 보낼 수 있습니다.
-
-            이 메시지는 페이지 상단에 팝업으로 표시되며 정보를 읽을 수 있음을 알리는 소리가 함께 재생됩니다.
-
-            메시지 예: "3번 방에서 2분 후에 회의가 시작됩니다 🎉. 회의 구역 3으로 가서 비디오 앱을 여세요 🚀"
-            `,
-            button: "텍스트 메시지 보내기",
-            noAccess: "이 기능에 액세스할 수 없습니다 😱 관리자에게 문의하세요 🙏",
         },
     },
 };

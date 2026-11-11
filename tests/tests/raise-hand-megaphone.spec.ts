@@ -211,11 +211,9 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
 
         // Admin1 starts the global megaphone -> becomes the global speaker.
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await expect(speaker.getByRole("button", { name: "Start live message" })).toBeVisible();
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
-        await expect(speaker.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
+        await expect(speaker.getByTestId("go-live-start")).toBeVisible();
+        await speaker.getByTestId("go-live-start").click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 
         // Bob joins away from the speaker zone and receives the global megaphone (sees Admin1).
@@ -315,9 +313,8 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
 
         // Admin1 goes live with the global megaphone.
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
-        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
+        await speaker.getByTestId("go-live-start").click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 
         // Alice and Bob meet away from the speaker: they receive the megaphone and form a bubble.
@@ -369,9 +366,8 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(speaker);
 
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
-        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
+        await speaker.getByTestId("go-live-start").click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 
         // Bob, alone, receives the megaphone and raises his hand: the only space to take it is the megaphone.
@@ -430,9 +426,8 @@ test.describe("Raise hand in megaphone @oidc @nomobile @nowebkit", () => {
         await Menu.closeMapEditor(speaker);
 
         await Menu.isThereMegaphoneButton(speaker);
-        await Menu.clickSendGlobalMessage(speaker);
-        await speaker.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
-        await speaker.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await Menu.clickGoLive(speaker);
+        await speaker.getByTestId("go-live-start").click({ timeout: 10_000 });
         await speaker.locator(".close-btn").first().click();
 
         // Alice joins the speaker: they form a bubble, while she keeps listening to the megaphone.

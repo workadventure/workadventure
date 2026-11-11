@@ -683,6 +683,8 @@ message PlayGlobalMessage {
   string type = 1;
   string content = 2;
   bool broadcastToWorld = 3;
+  // Optional place the announcement leads to: "<room URL>#moveTo=<area>", on the sender's domain. Empty for none.
+  string joinUrl = 4;
 }
 
 /************ Queries and answers ****************/
@@ -1376,6 +1378,12 @@ message TeleportMessageMessage{
 message SendUserMessage{
   string type = 1;
   string message = 2;
+  // The optional fields below are empty for messages sent through the admin API, and ignored by older fronts.
+  string senderName = 3;
+  repeated CharacterTextureMessage senderTextures = 4;
+  bool broadcastToWorld = 5;
+  // "<room URL>#moveTo=<area>" on the same domain, checked by the pusher. Empty for none.
+  string joinUrl = 6;
 }
 
 message WorldFullWarningMessage{
@@ -2027,6 +2035,11 @@ message AdminRoomMessage {
   string message = 1;
   string roomId = 2;
   string type = 3;
+  // Set when an admin sends the message from the game; see SendUserMessage.
+  string senderName = 4;
+  repeated CharacterTextureMessage senderTextures = 5;
+  bool broadcastToWorld = 6;
+  string joinUrl = 7;
 }
 
 // A message sent by an administrator to absolutely everybody

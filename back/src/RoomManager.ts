@@ -595,7 +595,7 @@ const roomManager = {
     },
     sendAdminMessageToRoom(call: ServerUnaryCall<AdminRoomMessage, Empty>, callback: sendUnaryData<Empty>): void {
         // FIXME: we could improve return message by returning a Success|ErrorMessage message
-        socketManager.sendAdminRoomMessage(call.request.roomId, call.request.message, call.request.type).catch((e) => {
+        socketManager.sendAdminRoomMessage(call.request).catch((e) => {
             console.error(e);
             Sentry.captureException(e);
         });

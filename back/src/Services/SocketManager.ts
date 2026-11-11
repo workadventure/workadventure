@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import type {
+    AdminRoomMessage,
     ZoneMessage,
     AskPositionMessage,
     MeetingInvitationRequestMessage,
@@ -1124,7 +1125,15 @@ export class SocketManager {
         }
     }
 
-    async sendAdminRoomMessage(roomId: string, message: string, type: string) {
+    async sendAdminRoomMessage({
+        roomId,
+        message,
+        type,
+        senderName,
+        senderTextures,
+        broadcastToWorld,
+        joinUrl,
+    }: AdminRoomMessage) {
         const room = await this.roomsPromises.get(roomId);
         if (!room) {
             //todo: this should cause the http call to return a 500
@@ -1144,10 +1153,7 @@ export class SocketManager {
         room.getUsers().forEach((recipient) => {
             recipient.write({
                 $case: "sendUserMessage",
-                sendUserMessage: {
-                    message,
-                    type,
-                },
+                sendUserMessage: { message, type, senderName, senderTextures, broadcastToWorld, joinUrl },
             });
         });
     }

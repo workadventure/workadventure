@@ -1,7 +1,7 @@
 import type { CalendarEventInterface } from "@workadventure/shared-utils";
 import { scriptUtils } from "../../Api/ScriptUtils";
 import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
-import { gameManager } from "../../Phaser/Game/GameManager";
+import { goToJoinUrl, moveTargetOf } from "../../Utils/JoinUrl";
 
 /**
  * A meeting in this WorkAdventure: walk to its area, or travel to its map, without reloading the page.
@@ -9,15 +9,11 @@ import { gameManager } from "../../Phaser/Game/GameManager";
  */
 export function goToWorkAdventureMeeting(url: URL): boolean {
     if (url.origin !== window.location.origin) return false;
-    const scene = gameManager.getCurrentGameScene();
-    if (url.pathname === window.location.pathname) {
-        const target = new URLSearchParams(url.hash.slice(1)).get("moveTo");
-        if (target) scene.walkToMoveTarget(target);
-        // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
-        else isCalendarVisibleStore.set(false);
-    } else {
-        scene.onMapExit(url).catch((e) => console.error(e));
+    // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
+    if (url.pathname === window.location.pathname && moveTargetOf(url.href) === undefined) {
+        isCalendarVisibleStore.set(false);
     }
+    goToJoinUrl(url.href);
     return true;
 }
 
