@@ -24,6 +24,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     installPwa: "تثبيت تطبيق الويب",
     sendAnnouncement: "إرسال إعلان",
     goLive: "بث مباشر",
+    desktop: {
+        section: "تطبيق سطح المكتب",
+        openRoom: "فتح غرفة أخرى…",
+        openMiniWindow: "فتح النافذة المصغّرة",
+    },
     mapEditor: "محرر الخرائط",
     mapEditorMobileLocked: "محرر الخرائط مقفل في الوضع المحمول",
     mapEditorLocked: "محرر الخرائط مغلق 🔐",
@@ -151,6 +156,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "الكاميرا معطلة",
             desc: 'الكاميرا معطلة لأن حالتك هي "{status}".',
+        },
+        micPausedByStatus: {
+            title: "الميكروفون متوقف مؤقتًا",
+            desc: 'الميكروفون متوقف مؤقتًا لأن حالتك هي "{status}". انقر لتشغيله وتصبح متاحًا.',
+        },
+        camPausedByStatus: {
+            title: "الكاميرا متوقفة مؤقتًا",
+            desc: 'الكاميرا متوقفة مؤقتًا لأن حالتك هي "{status}". انقر لتشغيلها وتصبح متاحًا.',
         },
         share: {
             title: "مشاركة الشاشة",

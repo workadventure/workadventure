@@ -24,6 +24,11 @@ const actionbar: BaseTranslation = {
     installPwa: "Install Web App",
     sendAnnouncement: "Send an announcement",
     goLive: "Go live",
+    desktop: {
+        section: "Desktop app",
+        openRoom: "Open another room…",
+        openMiniWindow: "Open the mini window",
+    },
     mapEditor: "Map editor",
     mapEditorMobileLocked: "Map editor is locked on mobile mode",
     mapEditorLocked: "Map editor is locked 🔐",
@@ -152,6 +157,14 @@ const actionbar: BaseTranslation = {
         camDisabledByStatus: {
             title: "Camera disabled",
             desc: 'Your camera is disabled because you are in "{status}" status.',
+        },
+        micPausedByStatus: {
+            title: "Microphone paused",
+            desc: 'Your microphone is paused because you are in "{status}" status. Click to turn it on and become available.',
+        },
+        camPausedByStatus: {
+            title: "Camera paused",
+            desc: 'Your camera is paused because you are in "{status}" status. Click to turn it on and become available.',
         },
         share: {
             title: "Share your screen",

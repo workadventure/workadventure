@@ -30,6 +30,9 @@ services:
   play:
     image: thecodingmachine/workadventure-play:${VERSION}
     environment:
+      - DESKTOP_APP_RECOMMENDED_VERSION
+      - DESKTOP_APP_MINIMUM_VERSION
+      - DESKTOP_APP_DOWNLOAD_URL
       - DEBUG_MODE
       - JITSI_URL
       - JITSI_PRIVATE_MODE

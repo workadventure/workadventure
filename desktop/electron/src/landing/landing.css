@@ -1,0 +1,48 @@
+@import "tailwindcss";
+/* The design system's tokens only (type scale, fonts, radii, colours). Its base and component layers
+   style the marketing site and would fight this page. */
+@import "@workadventure/design-system/theme.css";
+/* The faces behind the design system's --font-main and --font-title. Bundled with the page, which only
+   loads from 'self'; each subset (latin-ext for Sorbian, cyrillic, ...) is downloaded only when the
+   text needs it. The static Oswald matches the theme's "Oswald" (the variable package names its
+   family "Oswald Variable"). */
+@import "@fontsource/roboto-condensed/400.css";
+@import "@fontsource/roboto-condensed/700.css";
+@import "@fontsource/oswald/500.css";
+
+/* The Landing mockup's palette, which the design system does not have (its closest are `secondary`
+   for the accent and `danger-600` for the alert). */
+@theme {
+    --color-card: rgb(22 35 60 / 0.72);
+    --color-card-border: rgb(255 255 255 / 0.07);
+    --color-muted: #93a3ba;
+    --color-accent: #5b5ff0;
+    --color-accent-hover: #6f73ff;
+    --color-alert: #ff8c78;
+    --color-focus-ring: rgb(139 143 255 / 0.5);
+    --color-star: #f5c451;
+}
+
+@layer base {
+    /* No `height: 100%` on html/body: the background is painted over html's box, which then grows with
+       the page, so the gradient spans the whole page instead of repeating every window height. */
+    body {
+        @apply font-main text-white;
+        min-width: 320px;
+        /* Tailwind's preflight sets 1.5; the mockup's text runs at the font's own. */
+        line-height: normal;
+        /* Stands in for the mockup's blurred world art until a real capture exists. */
+        background:
+            radial-gradient(1200px 620px at 20% -10%, rgba(74, 106, 168, 0.42), transparent 70%),
+            radial-gradient(900px 520px at 88% 108%, rgba(56, 84, 140, 0.34), transparent 70%),
+            linear-gradient(160deg, #10203a 0%, #0c1626 55%, #0a1220 100%);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+            transition: none !important;
+        }
+    }
+}

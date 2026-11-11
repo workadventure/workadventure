@@ -3,8 +3,7 @@
     import Button from "../UI/Button.svelte";
     import LL from "../../../i18n/i18n-svelte";
     import { scriptUtils } from "../../Api/ScriptUtils";
-    import { isCalendarVisibleStore } from "../../Stores/CalendarStore";
-    import { goToJoinUrl, moveTargetOf } from "../../Utils/JoinUrl";
+    import { goToWorkAdventureMeeting } from "./joinMeeting";
     import { IconDoorIn, IconVideo } from "@wa-icons";
 
     interface Props {
@@ -31,16 +30,7 @@
     // A meeting in this WorkAdventure: walk to its area, or travel to its map, without reloading the page.
     function goThere(clickEvent: MouseEvent) {
         onjoin?.();
-        if (!meeting?.joinUrl) return;
-        // Another WorkAdventure, or a link the module could not resolve (the admin's redirect): follow it.
-        const url = new URL(meeting.joinUrl);
-        if (url.origin !== window.location.origin) return;
-        clickEvent.preventDefault();
-        // Already in the meeting's map, which has no area to walk to: just get the agenda out of the way.
-        if (url.pathname === window.location.pathname && moveTargetOf(meeting.joinUrl) === undefined) {
-            isCalendarVisibleStore.set(false);
-        }
-        goToJoinUrl(meeting.joinUrl);
+        if (meeting?.joinUrl && goToWorkAdventureMeeting(new URL(meeting.joinUrl))) clickEvent.preventDefault();
     }
 </script>
 

@@ -24,6 +24,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     installPwa: "Web-App installieren",
     sendAnnouncement: "Ankündigung senden",
     goLive: "Live gehen",
+    desktop: {
+        section: "Desktop-App",
+        openRoom: "Anderen Raum öffnen…",
+        openMiniWindow: "Mini-Fenster öffnen",
+    },
     mapEditor: "Karteneditor",
     mapEditorMobileLocked: "Karteneditor ist im mobilen Modus gesperrt",
     mapEditorLocked: "Karteneditor ist gesperrt 🔐",
@@ -154,6 +159,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Kamera deaktiviert",
             desc: 'Ihre Kamera ist deaktiviert, weil Sie sich im Status "{status}" befinden.',
+        },
+        micPausedByStatus: {
+            title: "Mikrofon pausiert",
+            desc: 'Ihr Mikrofon ist pausiert, weil Sie sich im Status "{status}" befinden. Klicken Sie, um es einzuschalten und wieder verfügbar zu sein.',
+        },
+        camPausedByStatus: {
+            title: "Kamera pausiert",
+            desc: 'Ihre Kamera ist pausiert, weil Sie sich im Status "{status}" befinden. Klicken Sie, um sie einzuschalten und wieder verfügbar zu sein.',
         },
         share: {
             title: "Ihren Bildschirm teilen",

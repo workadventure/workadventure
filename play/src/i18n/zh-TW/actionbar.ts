@@ -24,6 +24,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     installPwa: "安裝網頁應用程式",
     sendAnnouncement: "發送公告",
     goLive: "開始直播",
+    desktop: {
+        section: "桌面應用程式",
+        openRoom: "開啟其他房間…",
+        openMiniWindow: "開啟迷你視窗",
+    },
     mapEditor: "地圖編輯器",
     mapEditorMobileLocked: "地圖編輯器在行動模式下已鎖定",
     mapEditorLocked: "地圖編輯器已鎖定 🔐",
@@ -151,6 +156,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "攝影機已停用",
             desc: "您的攝影機已停用，因為您處於「{status}」狀態。",
+        },
+        micPausedByStatus: {
+            title: "麥克風已暫停",
+            desc: "您的麥克風已暫停，因為您處於「{status}」狀態。點擊即可開啟並恢復為線上狀態。",
+        },
+        camPausedByStatus: {
+            title: "攝影機已暫停",
+            desc: "您的攝影機已暫停，因為您處於「{status}」狀態。點擊即可開啟並恢復為線上狀態。",
         },
         share: {
             title: "分享您的螢幕",

@@ -35,7 +35,7 @@
     import Companion from "../../Companion/Companion.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import { IconBug, IconFileDownload, IconHelpCircle, IconLogout } from "../../Icons";
+    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout } from "../../Icons";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import Woka from "../../Woka/WokaFromUserId.svelte";
@@ -209,6 +209,20 @@
         >
             <SettingsIcon />
         </ActionBarButton>
+
+        {#if window.WAD?.desktop && window.WAD.windows}
+            <HeaderMenuItem label={$LL.actionbar.desktop.section()} />
+            <ActionBarButton
+                label={$LL.actionbar.desktop.openMiniWindow()}
+                onclick={() => {
+                    window.WAD?.windows?.openMiniWindow();
+                    openedMenuStore.close("profileMenu");
+                }}
+                dataTestId="desktop-open-mini-window"
+            >
+                <IconAppWindow font-size="22" />
+            </ActionBarButton>
+        {/if}
 
         {#if showContextualMenuItems}
             <div class="items-center">

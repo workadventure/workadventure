@@ -188,8 +188,8 @@ class Menu {
         await this.expectButtonState(page, "camera-button", "forbidden");
     }
 
-    async expectCameraDisabled(page: Page) {
-        await this.expectButtonState(page, "camera-button", "disabled");
+    async expectCameraHeldByStatus(page: Page) {
+        await this.expectButtonState(page, "camera-button", "held");
     }
 
     async expectMicrophoneOn(page: Page) {
@@ -200,11 +200,15 @@ class Menu {
         await this.expectButtonState(page, "microphone-button", "forbidden");
     }
 
-    async expectMicrophoneDisabled(page: Page) {
-        await this.expectButtonState(page, "microphone-button", "disabled");
+    async expectMicrophoneHeldByStatus(page: Page) {
+        await this.expectButtonState(page, "microphone-button", "held");
     }
 
-    async expectButtonState(page: Page, buttonTestId: string, state: "normal" | "active" | "forbidden" | "disabled") {
+    async expectButtonState(
+        page: Page,
+        buttonTestId: string,
+        state: "normal" | "active" | "forbidden" | "disabled" | "held",
+    ) {
         const button = page.getByTestId(buttonTestId);
         switch (state) {
             case "normal":
@@ -221,6 +225,10 @@ class Menu {
                 break;
             case "disabled":
                 await expect(button).toHaveClass(/opacity-50/);
+                break;
+            // On for the user, held off by their status: the status dot.
+            case "held":
+                await expect(button.getByTestId("status-dot")).toBeVisible();
                 break;
             default: {
                 const _exhaustiveCheck: never = state;

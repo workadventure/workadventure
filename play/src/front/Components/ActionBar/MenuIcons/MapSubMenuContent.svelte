@@ -1,20 +1,26 @@
 <script lang="ts">
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
-    import { mapManagerActivated, mapEditorMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
+    import {
+        mapManagerActivated,
+        mapEditorMenuVisibleStore,
+        openedMenuStore,
+        roomListActivated,
+    } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
         modalIframeStore,
         modalVisibilityStore,
+        roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../../Stores/ModalStore";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
     import { mapEditorModeStore, mapExplorationModeStore } from "../../../Stores/MapEditorStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
-    import { userIsAdminStore } from "../../../Stores/GameStore";
     import { megaphoneCanBeUsedStore } from "../../../Stores/MegaphoneStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -26,6 +32,7 @@
         IconSpeakerPhone,
         IconMapEditor,
         IconMessageShare,
+        IconWorldSearch,
     } from "@wa-icons";
 
     function resetChatVisibility() {
@@ -36,6 +43,14 @@
         modalVisibilityStore.set(false);
         modalIframeStore.set(null);
         showModalGlobalComminucationVisibilityStore.set(false);
+    }
+
+    function showRoomList() {
+        analyticsClient.trackAdminEvent("room_list.opened");
+        resetChatVisibility();
+        resetModalVisibility();
+        roomListVisibilityStore.set(true);
+        openedMenuStore.closeAll();
     }
 
     function toggleGlobalCommunication(mode: "text" | "live") {
@@ -144,6 +159,16 @@
         state={$mapExplorationModeStore ? "active" : "normal"}
     >
         <IconMapSearch font-size="20" />
+    </ActionBarButton>
+{/if}
+{#if $roomListActivated || $userIsAdminStore}
+    <ActionBarButton
+        onclick={showRoomList}
+        label={$LL.actionbar.help.roomList.title()}
+        state={$roomListActivated ? "normal" : "disabled"}
+        dataTestId="room-list-button"
+    >
+        <IconWorldSearch font-size="20" />
     </ActionBarButton>
 {/if}
 <!-- Each entry only for those allowed to use it, rather than a window of greyed-out buttons. -->

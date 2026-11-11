@@ -24,6 +24,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     installPwa: "安装网页应用",
     sendAnnouncement: "发送公告",
     goLive: "开始直播",
+    desktop: {
+        section: "桌面应用",
+        openRoom: "打开其他房间…",
+        openMiniWindow: "打开迷你窗口",
+    },
     mapEditor: "地图编辑器",
     mapEditorMobileLocked: "地图编辑器在移动模式下已锁定",
     mapEditorLocked: "地图编辑器已锁定 🔐",
@@ -151,6 +156,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "摄像头已禁用",
             desc: '您的摄像头已禁用，因为您处于"{status}"状态。',
+        },
+        micPausedByStatus: {
+            title: "麦克风已暂停",
+            desc: '您的麦克风已暂停，因为您处于"{status}"状态。点击即可打开并恢复为在线状态。',
+        },
+        camPausedByStatus: {
+            title: "摄像头已暂停",
+            desc: '您的摄像头已暂停，因为您处于"{status}"状态。点击即可打开并恢复为在线状态。',
         },
         share: {
             title: "共享您的屏幕",

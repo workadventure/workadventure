@@ -2,7 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
 import Map from "./utils/map";
-import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoundToast";
 import { publicTestMapUrl } from "./utils/urls";
 
 declare global {
@@ -56,7 +55,6 @@ test.describe("Camera taken by another application @nomobile @nowebkit @nofirefo
         test.setTimeout(180_000);
         const url = publicTestMapUrl("tests/E2E/empty.json", "camera-taken");
         await using alice = await getPage(browser, "Alice", url, { pageCreatedHook: cameraTakenOnDemand });
-        await dismissNoMicrophoneSoundToastWhenShown(alice);
         await Map.teleportToPosition(alice, 48, 48);
         await using bob = await getPage(browser, "Bob", url);
         await Map.teleportToPosition(bob, 64, 48);

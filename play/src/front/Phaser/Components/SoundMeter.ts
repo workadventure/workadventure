@@ -15,7 +15,7 @@ export class SoundMeter {
     constructor(mediaStream: MediaStream) {
         this.instant = 0.0;
         this.clip = 0.0;
-        this.connectToSource(mediaStream, audioContextManager.getContext());
+        this.connectToSource(mediaStream, audioContextManager.getAnalysisContext());
     }
 
     public getVolume(): number[] {

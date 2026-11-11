@@ -24,6 +24,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     installPwa: "Instal·lar l'aplicació web",
     sendAnnouncement: "Enviar un anunci",
     goLive: "Emetre en directe",
+    desktop: {
+        section: "Aplicació d’escriptori",
+        openRoom: "Obre una altra sala…",
+        openMiniWindow: "Obre la minifinestra",
+    },
     mapEditor: "Editor de mapa",
     mapEditorMobileLocked: "L'editor de mapa està bloquejat en mode mòbil",
     mapEditorLocked: "L'editor de mapa està bloquejat 🔐",
@@ -153,6 +158,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Càmera desactivada",
             desc: 'La teva càmera està desactivada perquè estàs en estat "{status}".',
+        },
+        micPausedByStatus: {
+            title: "Micròfon en pausa",
+            desc: 'El teu micròfon està en pausa perquè estàs en estat "{status}". Fes clic per activar-lo i tornar a estar disponible.',
+        },
+        camPausedByStatus: {
+            title: "Càmera en pausa",
+            desc: 'La teva càmera està en pausa perquè estàs en estat "{status}". Fes clic per activar-la i tornar a estar disponible.',
         },
         share: {
             title: "Compartir la teva pantalla",

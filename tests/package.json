@@ -26,6 +26,7 @@
     "test": "dotenv -e ../.env -- playwright test",
     "test-headed": "dotenv -e ../.env -- playwright test --headed",
     "test-headed-chrome": "dotenv -e ../.env -- playwright test --headed --project=chromium",
+    "test-electron": "dotenv -e ../.env -- playwright test -c playwright.electron.config.ts",
     "test-headed-firefox": "dotenv -e ../.env -- playwright test --headed --project=firefox",
     "test-headed-webkit": "dotenv -e ../.env -- playwright test --headed --project=webkit",
     "test-headed-mobile": "dotenv -e ../.env -- playwright test --headed --project=mobilechromium --project=mobilefirefox --project=mobilewebkit",
