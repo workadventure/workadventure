@@ -37,7 +37,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "Kameru / mikrofon wobdźěłać",
     allSettings: "Wšě nastajenja",
     installPwa: "Web-App instalować",
-    globalMessage: "Globalnu powěsć pósłać",
+    sendAnnouncement: "Připowědźenje pósłać",
+    goLive: "Live hić",
+    desktop: {
+        section: "Desktopowe nałoženje",
+        openRoom: "Druhi rum wočinić…",
+        openMiniWindow: "Mini-wokno wočinić",
+    },
     mapEditor: "Kartowy editor",
     mapEditorMobileLocked: "Kartowy editor je w mobilnym modusu zawrjeny",
     mapEditorLocked: "Kartowy editor je zawrjeny 🔐",
@@ -167,6 +173,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Kamera deaktiwowana",
             desc: 'Waša kamera je deaktiwowana, dokelž sće w statusu "{status}".',
+        },
+        micPausedByStatus: {
+            title: "Mikrofon w přestawce",
+            desc: 'Waš mikrofon je w přestawce, dokelž sće w statusu "{status}". Klikńće, zo byšće jón zašaltowali a zaso k dispoziciji byli.',
+        },
+        camPausedByStatus: {
+            title: "Kamera w přestawce",
+            desc: 'Waša kamera je w přestawce, dokelž sće w statusu "{status}". Klikńće, zo byšće ju zašaltowali a zaso k dispoziciji byli.',
         },
         share: {
             title: "Wašu wobrazowku dźělić",

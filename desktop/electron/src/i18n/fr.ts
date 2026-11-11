@@ -1,0 +1,181 @@
+import type { NativeStrings } from "./en";
+
+const fr: NativeStrings = {
+    "landing.heading": "Une adresse e-mail suffit pour rejoindre votre espace de travail.",
+    "landing.intro":
+        "Connectez-vous avec votre adresse e-mail professionnelle pour trouver vos mondes, ou ouvrez une salle à partir de son lien. La dernière salle où vous étiez se rouvrira automatiquement la prochaine fois.",
+    "landing.recentRooms": "Salles récentes",
+    "landing.emailTitle": "Se connecter par e-mail",
+    "landing.emailHint": "Nous trouvons les mondes dont vous êtes membre et vous connectons.",
+    "landing.emailLabel": "Votre adresse e-mail professionnelle",
+    "landing.continue": "Continuer",
+    "landing.searching": "Recherche…",
+    "landing.emailInvalid": "Veuillez saisir une adresse e-mail valide.",
+    "landing.yourWorlds": "Vos mondes",
+    "landing.useAnotherEmail": "Utiliser une autre adresse",
+    "landing.signIn": "Se connecter",
+    "landing.signingIn": "Connexion…",
+    "landing.noWorldFound": "Aucun monde trouvé pour {email}",
+    "landing.noWorldHint":
+        "Vérifiez l'adresse ou demandez à votre administrateur de vous inviter. Vous pouvez aussi créer un monde pour votre équipe.",
+    "landing.lookupFailed": "Impossible de rechercher vos mondes. Collez plutôt le lien d'une salle.",
+    "landing.lookupThrottled": "Trop de recherches. Veuillez patienter une minute, puis réessayer.",
+    "landing.joinTitle": "Ouvrir le lien d'une salle",
+    "landing.joinHint": "Collez le lien complet de votre invitation ou de votre navigateur.",
+    "landing.urlLabel": "Lien de la salle",
+    "landing.open": "Ouvrir",
+    "landing.or": "ou",
+    "landing.newHere": "Nouveau sur WorkAdventure ?",
+    "landing.createWorld": "Créer un monde",
+    "landing.explore": "Explorer",
+    "landing.opening": "Ouverture…",
+    "landing.pinRoom": "Épingler la salle",
+    "landing.unpinRoom": "Désépingler la salle",
+    "landing.urlRequired": "Veuillez saisir le lien d'une salle.",
+    "landing.urlInvalid":
+        "Ce lien n'est pas valide. Copiez le lien complet de la salle depuis votre invitation ou votre navigateur.",
+    "landing.urlProtocol": "Le lien doit commencer par https:// ou http://.",
+    "landing.urlHost":
+        "Ce lien est incomplet ou contient un nom d'utilisateur ou un mot de passe. Copiez le lien de la salle depuis votre invitation.",
+    "landing.urlNotAllowed":
+        "Cette adresse n'est pas sur un serveur WorkAdventure connu de l'application. Vérifiez le lien ou demandez à votre administrateur.",
+    "landing.trustTitle": "Ajouter ce serveur ?",
+    "landing.trustBody":
+        "{origin} n'est pas un serveur WorkAdventure connu de l'application. N'ajoutez qu'un serveur de confiance, comme celui de votre entreprise.",
+    "landing.trustConfirm": "Ajouter et ouvrir",
+    "landing.trustCancel": "Annuler",
+    "landing.openRoomFailed": "Impossible d'ouvrir cette salle. Réessayez.",
+    "landing.signInFailed": "Impossible de se connecter à ce monde. Réessayez.",
+    "landing.signupFailed": "Impossible d'ouvrir la page d'inscription.",
+    "landing.desktopOnly": "Cette action n'est disponible que dans l'application de bureau.",
+    "landing.roomNotLoaded": "Cette salle n'a pas pu être chargée. Vérifiez le lien et réessayez.",
+    "landing.loadFailure":
+        "Cette salle n'a pas pu être chargée. Son serveur est peut-être hors ligne, ou le lien est incorrect.",
+    "landing.loadTimeout":
+        "Cette salle met trop de temps à charger. Son serveur est peut-être hors ligne, ou votre connexion est interrompue.",
+
+    "landing.screenPermissionTitle": "Autoriser le partage d'écran",
+    "landing.screenPermissionBody":
+        "macOS demande l'autorisation d'enregistrer votre écran avant le premier partage, puis redémarre WorkAdventure. Donnez-la maintenant plutôt qu'en pleine conversation.",
+    "landing.screenPermissionAllow": "Autoriser",
+    "landing.screenPermissionLater": "Plus tard",
+    "landing.screenPermissionNext":
+        "Activez WorkAdventure dans les Réglages Système : macOS proposera ensuite de le redémarrer.",
+    "screenPermission.title": "WorkAdventure n'a pas l'autorisation d'enregistrer votre écran",
+    "screenPermission.detail":
+        "Activez WorkAdventure dans Réglages Système › Confidentialité et sécurité › Enregistrement de l'écran, puis redémarrez-le : macOS n'applique cette autorisation qu'au lancement de l'app.",
+    "screenPermission.openSettings": "Ouvrir les Réglages Système",
+    "screenPermission.restart": "Redémarrer WorkAdventure",
+    "screenPermission.cancel": "Annuler",
+
+    "tabs.newTab": "Nouvel onglet",
+    "tabs.closeTab": "Fermer l'onglet",
+
+    "menu.file": "Fichier",
+    "menu.newTab": "Nouvel onglet",
+    "menu.closeTab": "Fermer l'onglet",
+    "menu.nextTab": "Onglet suivant",
+    "menu.previousTab": "Onglet précédent",
+    "menu.showTabBar": "Afficher la barre d'onglets",
+    "menu.settings": "Paramètres…",
+    "menu.openRoom": "Ouvrir une salle…",
+    "menu.pinnedRooms": "Salles épinglées",
+    "menu.recentRooms": "Salles récentes",
+    "menu.noPinnedRooms": "Aucune salle épinglée",
+    "menu.noRecentRooms": "Aucune salle récente",
+    "menu.addedServers": "Serveurs ajoutés",
+    "menu.noAddedServers": "Aucun serveur ajouté",
+    "menu.removeServer": "Retirer {origin}…",
+    "menu.removeServerTitle": "Retirer ce serveur ?",
+    "menu.removeServerDetail":
+        "{origin} ne s'ouvrira plus dans l'application tant que vous ne l'aurez pas ajouté à nouveau.",
+    "menu.removeServerConfirm": "Retirer",
+    "menu.hideTabBarTitle": "Masquer la barre d'onglets ?",
+    "menu.cancel": "Annuler",
+    "menu.closeOneOtherTab": "Fermer l'autre onglet et masquer la barre",
+    "menu.closeOtherTabs": "Fermer les {count} autres onglets et masquer la barre",
+    "menu.hideTabBarDetailOne":
+        "Vous avez {total} onglets ouverts. Si vous masquez la barre d'onglets, cet onglet restera ouvert et l'autre sera fermé.",
+    "menu.hideTabBarDetail":
+        "Vous avez {total} onglets ouverts. Si vous masquez la barre d'onglets, cet onglet restera ouvert et les {count} autres seront fermés.",
+
+    "tray.status.meeting": "En réunion",
+    "tray.status.do_not_disturb": "Ne pas déranger",
+    "tray.status.busy": "Occupé",
+    "tray.status.back_in_a_moment": "De retour bientôt",
+    "tray.status.idle": "Inactif",
+    "tray.status.online": "Disponible",
+    "tray.status.offline": "Hors ligne",
+    "tray.microphone": "Microphone",
+    "tray.camera": "Caméra",
+    "tray.miniWindow": "Mini-fenêtre",
+    "tray.showHide": "Afficher / masquer",
+    "tray.rooms": "Salles",
+    "windowMode.later": "Plus tard",
+    "windowMode.x11Failed":
+        "WorkAdventure n'a pas pu démarrer en mode compatibilité (X11) et utilise maintenant le mode Wayland natif. Vous pouvez revenir en arrière dans ses paramètres.",
+    "windowMode.openSettings": "Ouvrir les paramètres",
+    "tray.quit": "Quitter",
+
+    "settings.title": "Paramètres",
+    "settings.general": "Général",
+    "settings.startAtLogin": "Lancer WorkAdventure à l’ouverture de ma session",
+    "settings.showTabBar": "Afficher la barre d'onglets",
+    "settings.showTabBarHint": "La barre d'onglets apparaît dès que plusieurs onglets sont ouverts.",
+    "settings.windowMode": "Mode des fenêtres",
+    "settings.windowModeX11": "Compatibilité (X11), recommandé",
+    "settings.windowModeX11Description":
+        "Le Picture in Picture et la barre du présentateur s’ouvrent là où vous les avez laissés et restent au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionnent que lorsque WorkAdventure est au premier plan. Sollicite un peu plus la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
+    "settings.windowModeWayland": "Wayland natif",
+    "settings.windowModeWaylandDescription":
+        "Les raccourcis du micro et de la caméra fonctionnent depuis n’importe quelle application. Le Picture in Picture s’ouvre à chaque fois au milieu de l’écran et ne peut pas rester au-dessus des autres applications : vous devrez le déplacer vous-même. Plus léger pour la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
+    "settings.windowModeSetByCommandLine":
+        "Le mode est défini sur la ligne de commande (--ozone-platform) : ce choix n’a pas d’effet.",
+    "settings.windowModeX11Unavailable": "Le mode compatibilité nécessite XWayland, qui n’est pas lancé.",
+    "settings.windowModeWaylandAfterRestart":
+        "Après le redémarrage, le Picture in Picture s’ouvrira au milieu de votre écran et ne restera pas au-dessus des autres applications.",
+    "settings.windowModeRestartNeeded":
+        "Redémarrez WorkAdventure pour utiliser ce mode. Vous quitterez la réunion en cours, le cas échéant.",
+    "settings.restartNow": "Redémarrer maintenant",
+    "settings.shortcuts": "Raccourcis clavier",
+    "settings.shortcutsHint": "Cliquez sur un raccourci, puis appuyez sur les nouvelles touches. Échap pour annuler.",
+    "settings.shortcutMute": "Microphone",
+    "settings.shortcutCamera": "Caméra",
+    "settings.shortcutMiniWindow": "Mini-fenêtre",
+    "settings.shortcutNone": "Aucun",
+    "settings.shortcutPress": "Appuyez sur les touches…",
+    "settings.shortcutClear": "Effacer",
+    "settings.shortcutNeedsModifier": "Ajoutez une touche de modification, comme Ctrl ou Alt.",
+    "settings.shortcutDuplicate": "Déjà utilisé pour une autre action.",
+    "settings.shortcutTaken": "Une autre application utilise déjà ce raccourci : il ne fonctionne pas.",
+    "settings.updates": "Mises à jour",
+    "settings.version": "Version {version}",
+    "settings.checkForUpdates": "Rechercher des mises à jour",
+    "settings.troubleshooting": "Dépannage",
+    "settings.openLogs": "Ouvrir les journaux",
+    "settings.openDevTools": "Ouvrir les outils de développement",
+
+    "auth.pageTitle": "Connexion à WorkAdventure",
+    "auth.signingInTitle": "Connexion…",
+    "auth.signingInMessage":
+        "Terminez la connexion dans votre navigateur. Vous reviendrez automatiquement dans l'application.",
+    "auth.signingOutTitle": "Déconnexion…",
+    "auth.signingOutMessage":
+        "Terminez la déconnexion dans votre navigateur. Vous reviendrez automatiquement dans l'application.",
+    "auth.reopenBrowser": "Rouvrir le navigateur",
+    "auth.signedIn": "Connecté. Vous pouvez revenir à WorkAdventure.",
+    "auth.signedOut": "Déconnecté. Vous pouvez revenir à WorkAdventure.",
+    "auth.closeWindow": "Vous pouvez fermer cette fenêtre.",
+
+    "screenIdentify.clickToShare": "Cliquez pour partager cet écran · {size}",
+    "update.checking": "Recherche de mises à jour…",
+    "update.title": "Mise à jour de WorkAdventure",
+    "update.ready": "La mise à jour est prête. Redémarrez WorkAdventure pour l'installer.",
+    "update.installAndRestart": "Installer et redémarrer",
+    "update.installLater": "Installer plus tard",
+    "update.availableTitle": "Mise à jour de WorkAdventure disponible",
+    "update.availableBody": "Téléchargez et installez la dernière version depuis le site de WorkAdventure.",
+    "update.none": "Aucune mise à jour disponible.",
+};
+
+export default fr;

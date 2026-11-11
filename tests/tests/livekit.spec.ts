@@ -15,7 +15,6 @@ import Megaphone from "./utils/map-editor/megaphone";
 import MapEditor from "./utils/mapeditor";
 import Menu from "./utils/menu";
 import AreaLivekit from "./utils/AreaLivekit";
-import { dismissNoMicrophoneSoundToastWhenShown } from "./utils/noMicrophoneSoundToast";
 
 test.setTimeout(240_000);
 
@@ -61,9 +60,6 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expect(page.locator("#cameras-container").getByText("Bob")).toBeVisible({ timeout: 30_000 });
         await expect(page.locator("#cameras-container").getByText("Eve")).toBeVisible({ timeout: 30_000 });
         await expect(page.locator("#cameras-container").getByText("Mallory")).toBeVisible({ timeout: 30_000 });
-
-        // Required because the "No sound" popup can clutter the view and prevent us clicking the "All settings" close button.
-        await dismissNoMicrophoneSoundToastWhenShown(page);
 
         // Let's enable the video quality display and test it works
         await Menu.openMenu(page);
@@ -226,10 +222,7 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await using userEve = await getPage(browser, "Eve", Map.url("empty"));
         await Map.teleportToPosition(userEve, 0, 4 * 32);
 
-        await Menu.clickSendGlobalMessage(page);
-
-        // Click on the button to start live message
-        await Menu.clickStartLiveMessage(page);
+        await Menu.clickGoLive(page);
 
         await expectLivekitRoomsCountToBe(page, 0);
         await expectLivekitRoomsCountToBe(page2, 0);
@@ -251,8 +244,8 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(page2, 1);
         await expectLivekitRoomsCountToBe(page, 1);
 
-        await page.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
+        await page.getByTestId("go-live-stop").click();
+        await expect(page.getByTestId("go-live-sheet")).toBeHidden();
 
         await expectLivekitRoomsCountToBe(page, 0);
         await expectLivekitRoomsCountToBe(page2, 0);
@@ -260,13 +253,10 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(userBob, 0);
         await expectLivekitRoomsCountToBe(userEve, 0);
 
-        await Menu.clickSendGlobalMessage(page);
+        await Menu.clickGoLive(page);
 
-        await expect(page.getByRole("button", { name: "Start live message" })).toBeVisible();
-        await page.getByRole("button", { name: "Start live message" }).click({ timeout: 10_000 });
-
-        await expect(page.getByRole("button", { name: "Start megaphone" })).toBeVisible();
-        await page.getByRole("button", { name: "Start megaphone" }).click({ timeout: 10_000 });
+        await expect(page.getByTestId("go-live-start")).toBeVisible();
+        await page.getByTestId("go-live-start").click({ timeout: 10_000 });
 
         await expect(page2.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
         await expect(userAlice.getByText("Admin1", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
@@ -279,8 +269,8 @@ test.describe("Meeting actions test @nomobile @nofirefox @nowebkit", () => {
         await expectLivekitRoomsCountToBe(page2, 1);
         await expectLivekitRoomsCountToBe(page, 1);
 
-        await page.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
-        await expect(page.getByRole("heading", { name: "Global communication" })).toBeHidden();
+        await page.getByTestId("go-live-stop").click();
+        await expect(page.getByTestId("go-live-sheet")).toBeHidden();
 
         await expectLivekitRoomsCountToBe(page, 0);
         await expectLivekitRoomsCountToBe(page2, 0);

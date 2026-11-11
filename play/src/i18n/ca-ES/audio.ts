@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "No s'ha pogut carregar el so",
         notAllowed: "▶️ L'àudio no està permès. Premeu [ESPAI] o feu clic aquí per reproduir-lo!",
     },
-    message: "Missatge d'audio",
     disable: "Apagueu el micròfon",
 };
 

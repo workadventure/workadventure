@@ -45,21 +45,6 @@ jobs:
       push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
       context: ./
 
-  build-uploader:
-    uses: ./.github/workflows/build-multi-arch-image.yml
-    secrets: inherit
-    with:
-      ghcr-dev-build-image-name: 'ghcr.io/workadventure/uploader-dev-build'
-      ghcr-image-name: 'ghcr.io/workadventure/uploader'
-      dockerio-image-name: 'thecodingmachine/workadventure-uploader'
-      final_build: ${{ github.event_name == 'push' || github.event_name == 'release' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas') || contains(github.event.pull_request.labels.*.name, 'build') || contains(github.event.pull_request.labels.*.name, 'linked_to_saas_branch')) }}
-      dockerfile: uploader/Dockerfile
-      short_name: uploader
-      sentry_project: uploader
-      # We only push to the registry if we are in the WorkAdventure organization. Otherwise, we will use artifacts because GITHUB_TOKEN from a public fork have no write access, even to the local user repository.
-      push-to-registry: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login == 'workadventure') || (github.event_name != 'pull_request' && github.repository_owner == 'workadventure') }}
-      context: ./
-
   build-maps:
     uses: ./.github/workflows/build-multi-arch-image.yml
     secrets: inherit
@@ -91,7 +76,7 @@ jobs:
       context: ./
 
   end-to-end-tests:
-    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}"
+    name: "End to end tests with ${{ matrix.project }} ${{ matrix.shard }}/${{ matrix.nbShards }}${{ matrix.electron && ' + Electron' || '' }}"
     strategy:
       fail-fast: false
       matrix:
@@ -168,14 +153,17 @@ jobs:
             renderer: auto
             ignoreTags: "@nofirefox|@nodesktop"
             shardWeights: "53:38:26:86"
-          - browser: webkit
+          # Also runs the desktop app tests (*.electron.ts), whose other users are Chromium pages: this job
+          # ends long before the longest ones, so they add no wall time, and no other job pays for them.
+          - browser: webkit chromium
             parameters: --project=webkit
             project: webkit
             shard: 1
             nbShards: 1
             renderer: headless
             ignoreTags: "@nowebkit|@nodesktop"
-          - browser: ""
+            electron: true
+          - browser: chromium
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 1
@@ -183,7 +171,7 @@ jobs:
             renderer: auto
             ignoreTags: "@nomobile"
             shardWeights: "33:48"
-          - browser: ""
+          - browser: chromium
             parameters: --project=mobilechromium
             project: mobilechromium
             shard: 2
@@ -191,14 +179,14 @@ jobs:
             renderer: auto
             ignoreTags: "@nomobile"
             shardWeights: "33:48"
-          - browser: ""
+          - browser: firefox
             parameters: --project=mobilefirefox
             project: mobilefirefox
             shard: 1
             nbShards: 1
             renderer: auto
             ignoreTags: "@nomobile|@nofirefox"
-          - browser: ""
+          - browser: webkit
             parameters: --project=mobilewebkit
             project: mobilewebkit
             shard: 1
@@ -209,7 +197,6 @@ jobs:
       - build-play
       - build-back
       - build-maps
-      - build-uploader
       - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
@@ -218,13 +205,22 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
       - name: Install Playwright
-        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts)
-        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.browser == 'chromium' && 'firefox' || '' }}
+        # The Chromium project also launches Firefox users (livekit_video_layers.spec.ts, @nomobile)
+        run: npx playwright install --with-deps ${{ matrix.browser }} ${{ matrix.project == 'chromium' && 'firefox' || '' }}
         working-directory: tests
+      - name: Build the desktop app
+        if: ${{ matrix.electron }}
+        run: npm ci && npm run build
+        working-directory: desktop/electron
       - name: Set up virtual audio output for Firefox
         if: ${{ contains(matrix.project, 'firefox') || matrix.project == 'chromium' }}
         run: |
@@ -290,12 +286,6 @@ jobs:
         with:
           name: map-storage
           path: /tmp
-      - name: Download artifact
-        if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
-        uses: actions/download-artifact@v4
-        with:
-          name: uploader
-          path: /tmp
       - name: Load image
         if: ${{ (github.event_name != 'pull_request' || github.event.pull_request.head.repo.owner.login != 'workadventure') && (github.event_name == 'pull_request' || github.repository_owner != 'workadventure') }}
         run: |
@@ -303,7 +293,6 @@ jobs:
           docker image load --input /tmp/back.tar.gz
           docker image load --input /tmp/maps.tar.gz
           docker image load --input /tmp/map-storage.tar.gz
-          docker image load --input /tmp/uploader.tar.gz
           docker image ls -a
       - name: Start WorkAdventure
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml up -d --scale egress=2
@@ -343,6 +332,17 @@ jobs:
           FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
           # Secrets are withheld from forks AND from Dependabot PRs, so test for the secret itself.
           NO_KLAXOON_SECRET: ${{ secrets.KLAXOON_CLIENT_ID == '' }}
+      - name: Run the desktop app tests
+        # Even when the browser tests failed: those say nothing about the desktop app.
+        if: ${{ !cancelled() && matrix.electron }}
+        run: xvfb-run -a npm run test-electron
+        working-directory: tests
+        env:
+          RENDERER_MODE: auto
+          # Next to the browser tests' report, so the artifact below holds both.
+          PLAYWRIGHT_HTML_OUTPUT_DIR: playwright-report/electron
+          NO_FLAKY: ${{ steps.check-no-flaky.outputs.has_no_flaky_label }}
+          FULL_TRACE: ${{ steps.check-no-flaky.outputs.has_full_trace_label }}
       - name: Display docker compose logs on failure
         run: docker compose -f docker-compose.yaml -f docker-compose.e2e.yml -f docker-compose.livekit.yaml logs
         if: failure()
@@ -369,7 +369,6 @@ jobs:
   #   needs:
   #     - build-back
   #     - build-maps
-  #     - build-uploader
   #     - build-map-storage
   #   steps:
   #     - name: Set target branch for GitLab pipeline
@@ -522,7 +521,6 @@ jobs:
       - build-play
       - build-back
       - build-maps
-      - build-uploader
       - build-map-storage
     timeout-minutes: 60
     runs-on: ubuntu-24.04
@@ -531,6 +529,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -647,7 +650,6 @@ jobs:
       - build-play
       - build-back
       - build-maps
-      - build-uploader
       - build-map-storage
     runs-on: ubuntu-24.04
     if: ${{ github.event_name == 'push' || github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'deploy') || contains(github.event.pull_request.labels.*.name, 'deploy-with-livekit-saas')) }}
@@ -922,6 +924,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 24
+          # tests/ is a workspace: its `npm ci` installs from the root lock
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            libs/room-api-clients/room-api-client-js/package-lock.json
       - name: Install dependencies
         run: npm ci
         working-directory: tests
@@ -1044,15 +1051,3 @@ jobs:
           prune-untagged: true
           prune-tags-regexes: ".*"
 
-
-      - name: Prune uploader
-        uses: vlaurin/action-ghcr-prune@v0.6.0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          organization: workadventure
-          container: uploader-dev-build
-          dry-run: false # Dry-run first, then change to `false`
-          keep-younger-than: 7 # days
-          keep-last: 5
-          prune-untagged: true
-          prune-tags-regexes: ".*"

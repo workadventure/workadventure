@@ -49,6 +49,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
             ),
         );
         this.startHandlingChatRoomMemberEvents();
+        this.onRoomMemberTyping(undefined, this.roomMember);
         const matrixUser = this.matrixClient.getUser(this.id);
         if (matrixUser) {
             matrixUser.on(UserEvent.AvatarUrl, this.handleMatrixUserAvatar);
@@ -158,6 +159,8 @@ export class MatrixChatRoomMember implements ChatRoomMember {
         this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(roomMember.powerLevel));
         this.name.set(roomMember.name);
         this.refreshAvatarFromRoomMember();
+        // The SDK only emits Typing on a change: a stop seen first by the new member would never reach us.
+        this.onRoomMemberTyping(undefined, roomMember);
     }
 
     private startHandlingChatRoomMemberEvents(): void {
@@ -177,7 +180,7 @@ export class MatrixChatRoomMember implements ChatRoomMember {
     private onRoomMemberPowerLevel(ev: MatrixEvent, member: RoomMember) {
         this.permissionLevel.set(MatrixChatRoomMember.getPermissionLevel(member.powerLevel));
     }
-    private onRoomMemberTyping(ev: MatrixEvent, member: RoomMember) {
+    private onRoomMemberTyping(ev: MatrixEvent | undefined, member: RoomMember) {
         const memberInformation: memberTypingInformation | null = member.typing
             ? {
                   id: this.id,

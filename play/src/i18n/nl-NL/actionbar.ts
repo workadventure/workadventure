@@ -37,7 +37,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "Bewerk camera / microfoon",
     allSettings: "Alle instellingen",
     installPwa: "Web-app installeren",
-    globalMessage: "Globaal bericht verzenden",
+    sendAnnouncement: "Aankondiging versturen",
+    goLive: "Live gaan",
+    desktop: {
+        section: "Desktop-app",
+        openRoom: "Andere kamer openen…",
+        openMiniWindow: "Minivenster openen",
+    },
     mapEditor: "Kaarteditor",
     mapEditorMobileLocked: "Kaarteditor is vergrendeld in mobiele modus",
     mapEditorLocked: "Kaarteditor is vergrendeld 🔐",
@@ -167,6 +173,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Camera uitgeschakeld",
             desc: 'Je camera is uitgeschakeld omdat je in de status "{status}" bent.',
+        },
+        micPausedByStatus: {
+            title: "Microfoon gepauzeerd",
+            desc: 'Je microfoon is gepauzeerd omdat je in de status "{status}" bent. Klik om hem aan te zetten en weer beschikbaar te zijn.',
+        },
+        camPausedByStatus: {
+            title: "Camera gepauzeerd",
+            desc: 'Je camera is gepauzeerd omdat je in de status "{status}" bent. Klik om hem aan te zetten en weer beschikbaar te zijn.',
         },
         share: {
             title: "Je scherm delen",

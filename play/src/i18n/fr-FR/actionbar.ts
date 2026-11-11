@@ -39,7 +39,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "Caméra / micro",
     allSettings: "Tous les paramètres",
     installPwa: "Installer l'application web",
-    globalMessage: "Envoyer un message global",
+    sendAnnouncement: "Envoyer une annonce",
+    goLive: "Passer en direct",
+    desktop: {
+        section: "Application de bureau",
+        openRoom: "Ouvrir une autre salle…",
+        openMiniWindow: "Ouvrir la mini-fenêtre",
+    },
     mapEditor: "Éditer la carte",
     mapEditorMobileLocked: "L'éditeur de carte est verrouillé en mode mobile",
     mapEditorLocked: "L'éditeur de carte est verrouillé 🔐",
@@ -165,6 +171,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Caméra désactivée",
             desc: "Votre caméra est désactivée car votre statut est « {status} ».",
+        },
+        micPausedByStatus: {
+            title: "Micro en pause",
+            desc: "Votre micro est en pause car votre statut est « {status} ». Cliquez pour l'activer et redevenir disponible.",
+        },
+        camPausedByStatus: {
+            title: "Caméra en pause",
+            desc: "Votre caméra est en pause car votre statut est « {status} ». Cliquez pour l'activer et redevenir disponible.",
         },
         share: {
             title: "Partager votre écran",

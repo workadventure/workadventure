@@ -135,6 +135,9 @@ export interface ChatConversation {
     readonly unreadNotificationCount: Readable<number>;
     /** Some unread message mentions the current user: the unread badge takes the mention color. */
     readonly hasUnreadMentions?: Readable<boolean>;
+    /** Unread @-mentions / highlights only (subset of unreadNotificationCount). Optional: not every
+     * conversation kind tracks highlights separately. */
+    readonly unreadHighlightCount?: Readable<number>;
     readonly initializationState: Readable<ChatRoomInitializationState>;
     readonly initializationError?: Readable<Error | undefined>;
     readonly ensureInitialized: () => Promise<void>;
@@ -164,10 +167,14 @@ export interface ChatConversation {
     readonly loadMorePreviousMessages: () => Promise<void>;
     readonly isEncrypted: Readable<boolean>;
     readonly typingMembers: Readable<Array<{ id: string; name: string | null; pictureStore: PictureStore }>>;
+    /** Who is typing, known before the members are loaded: what the room list shows. */
+    readonly typingNames?: Readable<string[]>;
     readonly startTyping: () => Promise<object>;
     readonly stopTyping: () => Promise<object>;
     readonly isRoomFolder: boolean;
     readonly lastMessageTimestamp: number;
+    /** The same, as a store: a list sorted on it moves a conversation up when a message arrives. */
+    readonly lastMessageTimestampStore?: Readable<number>;
     readonly getMessageById?: (messageId: string) => Promise<ChatMessage | undefined>;
     readonly ensureTimelineEventVisible?: (eventId: string) => Promise<boolean>;
     /**
@@ -244,6 +251,8 @@ export interface ChatRoomMembershipManagement {
     readonly ensureMembersInitialized: () => Promise<void>;
     readonly joinRoom: () => Promise<void>;
     readonly leaveRoom: () => Promise<void>;
+    /** Who sent the pending invitation, when known. */
+    readonly inviterName?: string;
 }
 
 export interface ChatRoomNotificationControl {
@@ -664,7 +673,7 @@ export interface ChatConnectionInterface {
     retryConnection: () => boolean;
     nbUnreadRoomsMessages: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
-    nbUnreadInvitationsMessages: Readable<number>;
+    nbPendingInvitations: Readable<number>;
 
     /**
      * Matrix backend only — see {@link MatrixChatCapabilities}.

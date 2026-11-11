@@ -6,6 +6,7 @@
     import type { VideoBoxStatus } from "../../Space/VideoBox";
     import { activePictureInPictureStore } from "../../Stores/PeerStore";
     import { visibilityStore } from "../../Stores/VisibilityStore";
+    import { observeElementSize } from "./PictureInPicture/childWindow";
     import WebRtcVideo from "./VideoTags/WebRtcVideo.svelte";
     import LivekitVideo from "./VideoTags/LivekitVideo.svelte";
     import ScriptingVideo from "./VideoTags/ScriptingVideo.svelte";
@@ -18,7 +19,8 @@
      *
      * It also handles displaying a warning if no video frame is received after 3 seconds.
      *
-     * @slot - The content to display on top of the video.
+     * @slot - The content to display on top of the video. Its parameter tells whether the video image is displayed:
+     * only then does the content area match the image exactly.
      */
     interface Props {
         videoEnabled: boolean;
@@ -37,7 +39,7 @@
         status: VideoBoxStatus;
         // If true, the video box is a megaphone space
         isMegaphoneSpace: boolean;
-        children?: Snippet;
+        children?: Snippet<[boolean]>;
     }
 
     let {
@@ -75,6 +77,16 @@
     let overlayWidth: number = $state(0);
     let overlayHeight: number = $state(0);
     let videoRatio: number = $state(0);
+    let container: HTMLDivElement | undefined = $state();
+
+    // In picture-in-picture the video lives in another window, where bind:clientWidth no longer reports.
+    $effect(() => {
+        if (!$activePictureInPictureStore || !container) return;
+        return observeElementSize(container, (width, height) => {
+            containerWidth = width;
+            containerHeight = height;
+        });
+    });
 
     $effect(() => {
         if (videoEnabled && containerWidth && containerHeight) {
@@ -134,12 +146,16 @@
     let shouldMountVideoElement = $derived(hasVideoLayout && ($visibilityStore || $activePictureInPictureStore));
 
     let displayNoVideoWarning = $state(false);
+    let videoDisplayed = $derived(
+        videoEnabled && !displayNoVideoWarning && !isBlocked && status === "connected" && hasVideoLayout,
+    );
 </script>
 
 <div
     class="h-full w-full relative {(!cover || videoRatio < 1) && withBackground ? 'bg-contrast/80 rounded-lg' : ''}"
     bind:clientWidth={containerWidth}
     bind:clientHeight={containerHeight}
+    bind:this={container}
     class:flex={$activePictureInPictureStore}
     class:flex-col={$activePictureInPictureStore}
     class:justify-center={$activePictureInPictureStore}
@@ -288,7 +304,7 @@
                   (verticalAlign === "center" ? " top: " + (containerHeight - overlayHeight) / 2 + "px;" : "")
                 : ""}
         >
-            {@render children?.()}
+            {@render children?.(videoDisplayed)}
         </div>
     {/if}
 </div>

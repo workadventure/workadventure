@@ -37,7 +37,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "Cài đặt cam / mic",
     allSettings: "Tất cả cài đặt",
     installPwa: "Cài đặt ứng dụng web",
-    globalMessage: "Gửi thông báo toàn cầu",
+    sendAnnouncement: "Gửi thông báo",
+    goLive: "Phát trực tiếp",
     mapEditor: "Trình chỉnh sửa bản đồ",
     mapEditorMobileLocked: "Trình chỉnh sửa bản đồ bị khóa ở chế độ di động",
     mapEditorLocked: "Trình chỉnh sửa bản đồ đang bị khóa 🔐",
@@ -167,6 +168,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Camera đã tắt",
             desc: 'Camera của bạn bị tắt vì bạn đang ở trạng thái "{status}".',
         },
+        micPausedByStatus: {
+            title: "Micrô tạm dừng",
+            desc: 'Micrô của bạn đang tạm dừng vì bạn đang ở trạng thái "{status}". Nhấp để bật và trở lại trạng thái trực tuyến.',
+        },
+        camPausedByStatus: {
+            title: "Camera tạm dừng",
+            desc: 'Camera của bạn đang tạm dừng vì bạn đang ở trạng thái "{status}". Nhấp để bật và trở lại trạng thái trực tuyến.',
+        },
         share: {
             title: "Chia sẻ màn hình của bạn",
             desc: "Muốn chia sẻ màn hình với những người dùng khác? Hoàn toàn được! Bạn có thể cho những người trong bong bóng hoặc phòng họp của bạn xem màn hình của mình, và có thể chọn chia sẻ toàn bộ màn hình hoặc chỉ một cửa sổ cụ thể.",
@@ -229,6 +238,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Bạn chưa có bàn làm việc cá nhân",
         errorMoving: "Không thể đi tới bàn làm việc cá nhân của bạn",
         errorUnclaiming: "Không thể trả lại bàn làm việc cá nhân của bạn",
+    },
+    desktop: {
+        section: "Ứng dụng máy tính",
+        openRoom: "Mở phòng khác…",
+        openMiniWindow: "Mở cửa sổ thu nhỏ",
     },
 };
 export default actionbar;

@@ -12,11 +12,15 @@
         disabledHelp?: boolean;
         tooltipDelay?: number;
         state?: "normal" | "active" | "forbidden" | "live" | "disabled" | "disabledForbidden";
+        // Held off by the user's status (busy, away...): a dimmed icon, a dot of this status color, no click...
+        statusDot?: string;
+        // ...unless a click ends what holds it (away mode).
+        statusDotClickable?: boolean;
+        // The name of an icon-only button (a menu row is named by its text).
+        ariaLabel?: string;
         dataTestId?: string;
         // On/off state of a toggle (camera, microphone...), exposed as aria-pressed. Leave undefined for plain buttons.
         pressed?: boolean;
-        // Accessible name for an icon-only button without a tooltip title.
-        ariaLabel?: string;
         classList?: string;
         hideIconInActionBar?: boolean;
         bgColor?: string;
@@ -55,9 +59,11 @@
         disabledHelp = false,
         tooltipDelay = 500,
         state: buttonState = "normal",
+        statusDot = undefined,
+        statusDotClickable = false,
+        ariaLabel = undefined,
         dataTestId = undefined,
         pressed = undefined,
-        ariaLabel = undefined,
         classList = "group",
         hideIconInActionBar = false,
         bgColor = undefined,
@@ -86,11 +92,17 @@
     let accessibleName = $derived(ariaLabel ?? (label ? undefined : tooltipTitle || undefined));
 
     let isInMenu = $derived(context !== undefined ? context === "menu" : getContext("inMenu"));
+    // In the desktop mini window's header: smaller buttons without the bar around them, and the browser's own
+    // tooltip, as the help tooltip does not fit such a small window.
+    const compact = getContext("compactActionBar") === true;
+    let heldOff = $derived(statusDot !== undefined && !statusDotClickable);
+    // The help tooltip's text, without its video or image and the text that goes with them.
+    let nativeTitle = $derived((media ? tooltipTitle : [tooltipTitle, desc].filter(Boolean).join("\n")) || ariaLabel);
 
     let helpActive = $state(false);
 
     function handleClick(event: MouseEvent) {
-        if (buttonState === "disabled" || buttonState === "disabledForbidden") {
+        if (buttonState === "disabled" || buttonState === "disabledForbidden" || heldOff) {
             return;
         }
         helpActive = false;
@@ -107,14 +119,17 @@
 {#if !isInMenu}
     <div
         class={[
-            "relative bg-contrast/80 backdrop-blur py-2 ps-1 pe-1 pointer-events-auto group-[.invisible]/visibilitychecker:px-2",
+            "relative pointer-events-auto",
             classList,
-            {
-                "first-of-type:rounded-s-lg first-of-type:ps-2": first === undefined,
-                "last-of-type:rounded-e-lg last-of-type:pe-2": last === undefined,
-                "rounded-s-lg ps-2": first === true,
-                "rounded-e-lg pe-2": last === true,
-            },
+            !compact && [
+                "bg-contrast/80 backdrop-blur py-2 ps-1 pe-1 group-[.invisible]/visibilitychecker:px-2",
+                {
+                    "first-of-type:rounded-s-lg first-of-type:ps-2": first === undefined,
+                    "last-of-type:rounded-e-lg last-of-type:pe-2": last === undefined,
+                    "rounded-s-lg ps-2": first === true,
+                    "rounded-e-lg pe-2": last === true,
+                },
+            ],
         ]}
         use:action
         style={styleVars}
@@ -122,23 +137,27 @@
     >
         <button
             type="button"
-            class="h-12 @sm/actions:h-10 @xl/actions:h-12 p-1 m-0 rounded relative
+            class="{compact ? 'h-9' : 'h-12 @sm/actions:h-10 @xl/actions:h-12'} p-1 m-0 rounded relative
                     {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
                     {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
-                    {buttonState === 'normal' && !isGradient ? 'hover:bg-white/10 cursor-pointer' : ''}
+                    {heldOff ? 'cursor-not-allowed' : ''}
+                    {buttonState === 'normal' && !isGradient && !heldOff ? 'hover:bg-white/10 cursor-pointer' : ''}
                     {buttonState === 'active' ? 'bg-secondary hover:bg-secondary-600 cursor-pointer' : ''}
                     {buttonState === 'forbidden' ? 'bg-danger hover:bg-danger-600 cursor-pointer' : ''}
                     {buttonState === 'live' ? 'bg-success hover:bg-success-600 cursor-pointer' : ''}
                     {!label
-                ? 'w-12 @sm/actions:w-10 @xl/actions:w-12'
+                ? compact
+                    ? 'w-9'
+                    : 'w-12 @sm/actions:w-10 @xl/actions:w-12'
                 : 'px-4 text-base @sm/actions:text-sm @xl/actions:text-base whitespace-nowrap'}
                 {isGradient ? 'gradient overflow-hidden font-bold' : ''}
                 {bgColor && !isGradient ? 'bg-[var(--bg-color)]' : ''}
                 {textColor ? 'text-[var(--text-color)]' : 'text-neutral-100'}
                     flex items-center justify-center gap-2 select-none"
-            disabled={buttonState === "disabled" || buttonState === "disabledForbidden"}
+            disabled={buttonState === "disabled" || buttonState === "disabledForbidden" || heldOff}
             aria-label={accessibleName}
             aria-pressed={pressed}
+            title={compact ? nativeTitle : undefined}
             onclick={(event) => {
                 event.preventDefault();
                 handleClick(event);
@@ -155,11 +174,20 @@
             data-testid={dataTestId}
         >
             {#if !hideIconInActionBar}
-                {@render children?.()}
+                {#if statusDot}
+                    <span class="flex opacity-50">{@render children?.()}</span>
+                    <span
+                        class="absolute top-1 end-1 h-2 w-2 rounded-full"
+                        style:background-color={statusDot}
+                        data-testid="status-dot"
+                    ></span>
+                {:else}
+                    {@render children?.()}
+                {/if}
             {/if}
             {#if label}<span class={boldLabel ? "font-bold" : ""}>{label}</span>{/if}
         </button>
-        {#if helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || tooltip)}
+        {#if !compact && helpActive && !$helpTextDisabledStore && !disabledHelp && (tooltipTitle || tooltipDesc || tooltip)}
             <HelpTooltip
                 title={tooltipTitle}
                 helpMedia={media}
@@ -174,7 +202,8 @@
 {:else}
     <button
         class="group flex p-2 gap-2 mb-1 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm text-neutral-100 w-full pointer-events-auto text-start rounded select-none
-                    {buttonState === 'disabled' ? 'opacity-50 cursor-not-allowed' : ''}
+                    {buttonState === 'disabled' || statusDot ? 'opacity-50' : ''}
+                    {buttonState === 'disabled' || heldOff ? 'cursor-not-allowed' : ''}
                     {buttonState === 'disabledForbidden' ? 'bg-danger opacity-70 cursor-not-allowed' : ''}
                     {buttonState === 'active' && !isGradient
             ? 'bg-secondary hover:bg-secondary-600 cursor-pointer'

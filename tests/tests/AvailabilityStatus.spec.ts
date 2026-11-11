@@ -54,8 +54,8 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.expectCameraDisabled(page);
-            await Menu.expectMicrophoneDisabled(page);
+            await Menu.expectCameraHeldByStatus(page);
+            await Menu.expectMicrophoneHeldByStatus(page);
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -311,8 +311,8 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.expectCameraDisabled(page);
-            await Menu.expectMicrophoneDisabled(page);
+            await Menu.expectCameraHeldByStatus(page);
+            await Menu.expectMicrophoneHeldByStatus(page);
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({
@@ -415,8 +415,33 @@ test.describe("Availability Status", () => {
             await Menu.clickOnStatus(page, statusName);
             //await Menu.closeNotificationPopUp(page);
 
-            await Menu.expectCameraDisabled(page);
-            await Menu.expectMicrophoneDisabled(page);
+            await Menu.expectCameraHeldByStatus(page);
+            await Menu.expectMicrophoneHeldByStatus(page);
+        });
+
+        test("a click on the held camera turns it on and makes you available @nowebkit", async ({
+            browser,
+            browserName,
+        }) => {
+            test.skip(browserName === "webkit", "WebKit limitations");
+            await using page = await getPage(
+                browser,
+                "Alice",
+                publicTestMapUrl("tests/E2E/empty.json", "availability-status"),
+            );
+            await Menu.turnOnCamera(page);
+            await Menu.turnOnMicrophone(page);
+            await Menu.openMenu(page);
+            await Menu.clickOnStatus(page, "Do not disturb");
+            await Menu.expectCameraHeldByStatus(page);
+
+            await page.getByTestId("camera-button").click();
+            await expect(page.getByTestId("camera-button").getByTestId("status-dot")).toBeHidden();
+            await Menu.expectCameraOn(page);
+            // Only the clicked device starts: the microphone the status held is now off.
+            await Menu.expectMicrophoneOff(page);
+            await Menu.openMenu(page);
+            await Menu.expectSelectedStatus(page, "Online");
         });
 
         test("should keep same webcam and microphone config when you go back to online status @nowebkit", async ({

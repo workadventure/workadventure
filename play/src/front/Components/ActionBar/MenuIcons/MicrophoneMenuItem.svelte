@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { AvailabilityStatus } from "@workadventure/messages";
     import type { Readable } from "svelte/store";
     import { derived } from "svelte/store";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
@@ -14,26 +13,17 @@
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
-    import { getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
+    import { canComeBackFrom, heldMediaStore, toggleMicrophone } from "../../../Stores/HeldMediaStore";
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
 
-    const disabledByStatusStore = derived(
-        [availabilityStatusStore, silentStore],
-        ([$availabilityStatusStore, $silentStore]) =>
-            $availabilityStatusStore === AvailabilityStatus.BUSY ||
-            $availabilityStatusStore === AvailabilityStatus.AWAY ||
-            $availabilityStatusStore === AvailabilityStatus.BACK_IN_A_MOMENT ||
-            $availabilityStatusStore === AvailabilityStatus.SOUND_BLOCKED ||
-            $availabilityStatusStore === AvailabilityStatus.DO_NOT_DISTURB ||
-            $silentStore,
-    );
-
+    // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [disabledByStatusStore, requestedMicrophoneState, microphoneListStore],
-        ([$disabledByStatusStore, $requestedMicrophoneState, $microphoneListStore]) => {
-            if ($disabledByStatusStore || ($microphoneListStore !== undefined && $microphoneListStore.length === 0)) {
+        [requestedMicrophoneState, microphoneListStore, silentStore],
+        ([$requestedMicrophoneState, $microphoneListStore, $silentStore]) => {
+            if ($silentStore || ($microphoneListStore !== undefined && $microphoneListStore.length === 0)) {
                 return "disabled";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
@@ -41,12 +31,21 @@
     );
 
     const microphoneActionBarTooltipStore = derived(
-        [LL, microphoneButtonHelpContextStore, disabledByStatusStore, availabilityStatusStore],
-        ([$LL, ctx, disabledByStatus, status]) => {
-            if (disabledByStatus) {
+        [LL, microphoneButtonHelpContextStore, heldMediaStore, silentStore, availabilityStatusStore],
+        ([$LL, ctx, held, silent, status]) => {
+            if (held.microphone && canComeBackFrom(held.status)) {
+                return {
+                    title: $LL.actionbar.help.micPausedByStatus.title(),
+                    desc: $LL.actionbar.help.micPausedByStatus.desc({ status: getStatusLabel(held.status) }),
+                    media: "",
+                };
+            }
+            if (held.microphone || silent) {
                 return {
                     title: $LL.actionbar.help.micDisabledByStatus.title(),
-                    desc: $LL.actionbar.help.micDisabledByStatus.desc({ status: getStatusLabel(status) }),
+                    desc: $LL.actionbar.help.micDisabledByStatus.desc({
+                        status: getStatusLabel(held.microphone ? held.status : status),
+                    }),
                     media: "",
                 };
             }
@@ -92,11 +91,7 @@
     function microphoneClick(): void {
         analyticsClient.trackAdminEvent("media.microphone.toggled");
         if ($silentStore) return;
-        if ($requestedMicrophoneState === true) {
-            requestedMicrophoneState.disableMicrophone();
-        } else {
-            requestedMicrophoneState.enableMicrophone();
-        }
+        toggleMicrophone();
     }
 </script>
 
@@ -106,6 +101,8 @@
     disabledHelp={$openedMenuStore !== undefined}
     state={$microphoneButtonStateStore}
     pressed={$microphoneButtonStateStore === "normal"}
+    statusDot={$heldMediaStore.microphone ? getColorHexOfStatus($heldMediaStore.status) : undefined}
+    statusDotClickable={canComeBackFrom($heldMediaStore.status)}
     ariaLabel={$microphoneActionBarTooltipStore.title || $LL.actionbar.help.mic.title()}
     dataTestId="microphone-button"
     tooltipTitle={$microphoneActionBarTooltipStore.title}

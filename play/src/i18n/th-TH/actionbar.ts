@@ -38,7 +38,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "แก้ไขกล้อง / ไมค์",
     allSettings: "การตั้งค่าทั้งหมด",
     installPwa: "ติดตั้งเว็บแอป",
-    globalMessage: "ส่งข้อความทั่วถึง",
+    sendAnnouncement: "ส่งประกาศ",
+    goLive: "เริ่มถ่ายทอดสด",
     mapEditor: "ตัวแก้ไขแผนที่",
     mapEditorMobileLocked: "ตัวแก้ไขแผนที่ถูกล็อกในโหมดมือถือ",
     mapEditorLocked: "ตัวแก้ไขแผนที่ถูกล็อก 🔐",
@@ -167,6 +168,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "กล้องถูกปิดใช้งาน",
             desc: 'กล้องของคุณถูกปิดเพราะคุณอยู่ในสถานะ "{status}"',
         },
+        micPausedByStatus: {
+            title: "ไมโครโฟนหยุดชั่วคราว",
+            desc: 'ไมโครโฟนของคุณหยุดชั่วคราวเพราะคุณอยู่ในสถานะ "{status}" คลิกเพื่อเปิดและกลับมาออนไลน์',
+        },
+        camPausedByStatus: {
+            title: "กล้องหยุดชั่วคราว",
+            desc: 'กล้องของคุณหยุดชั่วคราวเพราะคุณอยู่ในสถานะ "{status}" คลิกเพื่อเปิดและกลับมาออนไลน์',
+        },
         share: {
             title: "แชร์หน้าจอของคุณ",
             desc: "อยากแชร์หน้าจอให้ผู้ใช้คนอื่นดูไหม? ทำได้เลย! คุณสามารถแสดงหน้าจอให้คนในบับเบิลหรือห้องประชุมของคุณดู และเลือกได้ว่าจะแชร์ทั้งหน้าจอหรือเฉพาะหน้าต่างใดหน้าต่างหนึ่ง",
@@ -229,6 +238,11 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "คุณยังไม่มีโต๊ะส่วนตัว",
         errorMoving: "ไม่สามารถไปยังโต๊ะส่วนตัวของคุณได้",
         errorUnclaiming: "ไม่สามารถยกเลิกการจองโต๊ะส่วนตัวของคุณได้",
+    },
+    desktop: {
+        section: "แอปเดสก์ท็อป",
+        openRoom: "เปิดห้องอื่น…",
+        openMiniWindow: "เปิดหน้าต่างขนาดเล็ก",
     },
 };
 export default actionbar;

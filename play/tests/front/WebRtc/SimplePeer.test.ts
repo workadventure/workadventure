@@ -75,6 +75,11 @@ vi.mock("../../../src/front/Stores/StreamableCollectionStore", async () => {
     const { writable } = await import("svelte/store");
     return { streamableCollectionStore: writable([]) };
 });
+// Reached again through MediaStore -> ... -> GameScene -> Space -> SpacePeerManager, while MediaStore is still loading.
+vi.mock("../../../src/front/Stores/HeldMediaStore", async () => {
+    const { writable } = await import("svelte/store");
+    return { heldMediaStore: writable({ camera: false, microphone: false, status: undefined }) };
+});
 
 import { SimplePeer } from "../../../src/front/WebRtc/SimplePeer";
 import { iceServersManager } from "../../../src/front/WebRtc/IceServersManager";

@@ -27,6 +27,15 @@ const chat: BaseTranslation = {
     },
     loader: "Loading...",
     typing: "is typing...",
+    typingIndicator: {
+        one: "{names} is typing",
+        several: "{names} are typing",
+        others: "{count:number} others",
+        someone: "Someone",
+        row: "{name} is typing…",
+        rowSeveral: "{count:number} people are typing…",
+        direct: "typing…",
+    },
     users: "Users",
     chat: "Chat",
     resizeChat: "Resize the chat (arrow keys to resize, Enter for full screen)",
@@ -76,6 +85,12 @@ const chat: BaseTranslation = {
     invitations: "Invitations",
     roomInvitation: {
         notification: "You have been invited to the room {roomName}",
+        direct: "Direct message",
+        room: "Room",
+        folder: "Folder",
+        invitedBy: "invited by {name}",
+        notificationFrom: "{inviter} invited you to the room {roomName}",
+        notificationDirect: "{name} wants to chat with you",
         notificationTitle: "New invitation",
         unknownRoom: "A room",
     },
@@ -140,6 +155,8 @@ const chat: BaseTranslation = {
         newMessages: "{{count:1 new message|?? new messages}}",
         jumpToLatest: "Jump to latest messages",
         unreadDivider: "New messages",
+        loadingMessages: "Loading messages…",
+        loadError: "Couldn't load the messages",
     },
     form: {
         placeholder: "Enter your message...",
@@ -176,7 +193,7 @@ const chat: BaseTranslation = {
             excalidraw: {
                 title: "Excalidraw",
                 description:
-                    "Send an source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+                    "Send an open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
             },
             cards: {
                 title: "Cards",

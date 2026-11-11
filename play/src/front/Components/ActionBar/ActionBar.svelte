@@ -40,6 +40,17 @@
 
     let isSmallScreen = $derived(actionBarWidth < 640);
 
+    // On a small bar, Tools goes straight to the burger menu: it would push out Login and the map's own
+    // buttons, which matter more there (the map editor is not available on mobile anyway).
+    let barMenuItems = $derived(
+        isSmallScreen ? $rightActionBarMenuItems.filter((item) => item.id !== "maps") : $rightActionBarMenuItems,
+    );
+    $effect(() => {
+        if (isSmallScreen) {
+            $rightActionBarMenuItems.find((item) => item.id === "maps")?.fallsInBurgerMenuStore.set(true);
+        }
+    });
+
     function onMenuItemVisibilityChange(isVisible: boolean, button: RightMenuItem) {
         button.fallsInBurgerMenuStore.set(!isVisible);
     }
@@ -148,7 +159,7 @@
                 <div id="action-wrapper" class="flex flex-1 justify-end gap-1 @md/actions:gap-2 @xl/actions:gap-4">
                     <div class="flex flex-row flex-0 gap-0">
                         {#if rightDiv}
-                            {#each $rightActionBarMenuItems as button, index (button.id)}
+                            {#each barMenuItems as button, index (button.id)}
                                 {@const ButtonComponent = button.component}
                                 <VisibilityChecker
                                     parent={rightDiv}
@@ -156,7 +167,7 @@
                                 >
                                     <ButtonComponent
                                         {...button.props}
-                                        classList={button.props.last && index !== $rightActionBarMenuItems.length - 1
+                                        classList={button.props.last && index !== barMenuItems.length - 1
                                             ? "me-1 @md/actions:me-2 @xl/actions:me-4"
                                             : ""}
                                     />

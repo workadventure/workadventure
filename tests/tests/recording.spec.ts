@@ -205,8 +205,7 @@ test.describe("Recording test", () => {
         await Megaphone.isCorrectlySaved(broadcaster);
         await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
 
-        await Menu.clickSendGlobalMessage(broadcaster);
-        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickGoLive(broadcaster);
         await Menu.clickStartMegaphone(broadcaster);
         await waitForMegaphoneToBeStreaming(broadcaster);
 
@@ -325,8 +324,7 @@ test.describe("Recording test", () => {
         await Megaphone.isCorrectlySaved(broadcaster);
         await Menu.closeMapEditorConfigureMyRoomPopUp(broadcaster);
 
-        await Menu.clickSendGlobalMessage(broadcaster);
-        await Menu.clickStartLiveMessage(broadcaster);
+        await Menu.clickGoLive(broadcaster);
         await Menu.clickStartMegaphone(broadcaster);
         await waitForMegaphoneToBeStreaming(broadcaster);
 
@@ -341,7 +339,7 @@ test.describe("Recording test", () => {
         // Give the megaphone recording enough time to produce media before the source stops.
         await recorder.waitForTimeout(5000);
 
-        await broadcaster.locator("#active-liveMessage").getByRole("button", { name: "Stop megaphone" }).click();
+        await broadcaster.getByTestId("go-live-stop").click();
 
         await expect(recorder.getByTestId("recording-completed-modal")).toBeVisible({ timeout: 30_000 });
         await recorder.getByTestId("recording-completed-modal-open-recordings-list-button").click();
@@ -381,8 +379,7 @@ test.describe("Recording test", () => {
         await Map.teleportToPosition(memberListener, memberListenerFarPosition.x, memberListenerFarPosition.y);
 
         // Start the megaphone and close the setup modal without stopping the stream.
-        await Menu.clickSendGlobalMessage(page);
-        await Menu.clickStartLiveMessage(page);
+        await Menu.clickGoLive(page);
         await Menu.clickStartMegaphone(page);
         await page.keyboard.press("Escape");
 

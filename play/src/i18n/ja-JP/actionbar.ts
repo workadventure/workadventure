@@ -37,7 +37,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "カメラ / マイクを編集",
     allSettings: "すべての設定",
     installPwa: "ウェブアプリをインストール",
-    globalMessage: "グローバルメッセージを送信",
+    sendAnnouncement: "お知らせを送信",
+    goLive: "ライブ配信",
+    desktop: {
+        section: "デスクトップアプリ",
+        openRoom: "別のルームを開く…",
+        openMiniWindow: "ミニウィンドウを開く",
+    },
     mapEditor: "マップエディター",
     mapEditorMobileLocked: "マップエディターはモバイルモードでロックされています",
     mapEditorLocked: "マップエディターはロックされています 🔐",
@@ -166,6 +172,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "カメラが無効になっています",
             desc: 'ステータスが"{status}"のため、カメラが無効になっています。',
+        },
+        micPausedByStatus: {
+            title: "マイクを一時停止中",
+            desc: 'ステータスが"{status}"のため、マイクを一時停止しています。クリックするとオンになり、対応可能な状態に戻ります。',
+        },
+        camPausedByStatus: {
+            title: "カメラを一時停止中",
+            desc: 'ステータスが"{status}"のため、カメラを一時停止しています。クリックするとオンになり、対応可能な状態に戻ります。',
         },
         share: {
             title: "画面を共有",

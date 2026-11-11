@@ -9,9 +9,6 @@ on:
   release:
     types: [created]
 
-env:
-  YARN_CACHE_FOLDER: ~/.yarn
-
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -21,8 +18,11 @@ jobs:
     name: "Build & release desktop app for ${{ matrix.os }}"
 
     strategy:
+      # Build each OS independently: a flake on one (e.g. a transient GitHub download of the NSIS
+      # tool on Windows) should not cancel the ubuntu/macOS builds.
+      fail-fast: false
       matrix:
-        node-version: [16.x]
+        node-version: [22.x]
         runtime: [ linux-x64, win-x64, osx-x64 ]
         include:
         - runtime: linux-x64
@@ -44,76 +44,126 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: "desktop/electron/package-lock.json"
 
       - name: Caching
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.YARN_CACHE_FOLDER }}
             ~/.cache/electron
             ~/.cache/electron-builder
-          key: ${{ runner.OS }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.OS }}-electron-${{ hashFiles('desktop/electron/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-yarn-
-
-      - name: "Revert to Yarn 1"
-        run: yarn set version classic
-
-      - name: "local-app: Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "desktop/local-app"
-
-      - name: "local-app: Build"
-        run: yarn build
-        working-directory: "desktop/local-app"
+            ${{ runner.OS }}-electron-
 
       - name: "Set desktop app version"
         run: node helpers/set-version.js
         working-directory: "desktop/electron"
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
+        run: npm ci
+        working-directory: "desktop/electron"
+
+      # electron-vite only strips the types: without these, a type error or a broken contract.test.ts
+      # (what window.WAD exposes to world pages) would reach a release.
+      - name: "Type-check and test"
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: npm run typecheck && npm test
         working-directory: "desktop/electron"
 
       - name: "Build typescript"
-        run: yarn build
-        working-directory: "desktop/electron"
-
-      - name: "Install electron tools"
-        run: yarn electron-builder install-app-deps
+        run: npm run build
         working-directory: "desktop/electron"
 
       - name: "Build app for testing"
-        run: yarn electron-builder --publish never
+        run: npx electron-builder --publish never
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # electron-builder skips signing on pull requests, the ad hoc one too (mac.identity "-"): the
+          # artifact was then unsigned, and macOS cannot attach the screen recording, camera or
+          # microphone permissions to an unsigned app. The ad hoc signature uses no secret. Revisit
+          # once a Developer ID certificate is configured: it must not reach pull request builds.
+          CSC_FOR_PULL_REQUEST: ${{ startsWith(matrix.os, 'macos') }}
         working-directory: "desktop/electron"
         if: ${{ github.event_name != 'release' }}
 
+      # An unsigned macOS app cannot keep its screen recording, camera or microphone permissions.
+      - name: "Check the macOS signature"
+        if: ${{ github.event_name != 'release' && startsWith(matrix.os, 'macos') }}
+        run: |
+          app=$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)
+          codesign --verify --deep --strict "$app"
+          codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature"
+        working-directory: "desktop/electron"
+
+      # A fuse that does not fit the package (an app.asar that fails its integrity check, say) makes
+      # the app abort at startup, on every user's machine: start it and check it still runs 15 s later.
+      - name: "Check the packaged app starts"
+        if: ${{ github.event_name != 'release' }}
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) app=build/linux-unpacked/workadventure-desktop ;;
+            macOS) app="$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)/Contents/MacOS/WorkAdventure" ;;
+            Windows) app=build/win-unpacked/WorkAdventure.exe ;;
+          esac
+          npx @electron/fuses read --app "$app"
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            xvfb-run -a "$app" --no-sandbox > startup.log 2>&1 &
+          else
+            "$app" > startup.log 2>&1 &
+          fi
+          pid=$!
+          sleep 15
+          if ! kill -0 "$pid" 2>/dev/null; then
+            cat startup.log
+            echo "The packaged app exited during startup"
+            exit 1
+          fi
+          kill "$pid" || true
+        working-directory: "desktop/electron"
+
       - name: "Build & release app"
-        run: yarn electron-builder --publish always
+        run: npx electron-builder --publish always
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         working-directory: "desktop/electron"
         if: ${{ github.event_name == 'release' }}
 
+      # electron-builder names the outputs after productName ("WorkAdventure-<version>...") and the
+      # .deb after the package name ("workadventure-desktop_<version>_<arch>.deb"). Match by
+      # extension (top level of build/ only — the unpacked app dirs are one level deeper) so the
+      # globs survive version/arch changes. if-no-files-found: error turns a future naming drift into
+      # a loud failure instead of a green run that silently uploaded nothing.
       - name: Upload Linux .AppImage artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
           name: workadventure-desktop-linux-x64.AppImage
-          path: desktop/electron/build/workadventure-desktop-*-x86_64.AppImage
+          path: desktop/electron/build/*.AppImage
+          if-no-files-found: error
+
+      - name: Upload Linux .deb artifact
+        uses: actions/upload-artifact@v4
+        if: startsWith(matrix.os, 'ubuntu')
+        with:
+          name: workadventure-desktop-linux-amd64.deb
+          path: desktop/electron/build/*.deb
+          if-no-files-found: error
 
       - name: Upload Windows .exe artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'windows')
         with:
           name: workadventure-desktop-win-x64.exe
-          path: desktop/electron/build/workadventure-desktop-*.exe
+          path: desktop/electron/build/*.exe
+          if-no-files-found: error
 
       - name: Upload MacOS .dmg artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'macos')
         with:
           name: workadventure-mac.dmg
-          path: desktop/electron/build/workadventure-desktop-*.dmg
+          path: desktop/electron/build/*.dmg
+          if-no-files-found: error

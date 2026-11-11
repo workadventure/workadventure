@@ -2,27 +2,38 @@
     import { warningMessageStore } from "../../../Stores/ErrorStore";
     import { isInsidePersonalAreaStore, personalAreaDataStore } from "../../../Stores/PersonalDeskStore";
     import {
-        globalMessageVisibleStore,
         mapManagerActivated,
         mapEditorMenuVisibleStore,
         openedMenuStore,
+        roomListActivated,
     } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import {
         modalIframeStore,
         modalVisibilityStore,
+        roomListVisibilityStore,
         showModalGlobalComminucationVisibilityStore,
     } from "../../../Stores/ModalStore";
+    import { userIsAdminStore } from "../../../Stores/GameStore";
     import { mapEditorModeStore, mapExplorationModeStore } from "../../../Stores/MapEditorStore";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { isTodoListVisibleStore } from "../../../Stores/TodoListStore";
     import { isCalendarVisibleStore } from "../../../Stores/CalendarStore";
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
+    import { megaphoneCanBeUsedStore } from "../../../Stores/MegaphoneStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
-    import { IconMapSearch, IconDesk, IconDeskExit, IconSpeakerPhone, IconMapEditor } from "@wa-icons";
+    import {
+        IconMapSearch,
+        IconDesk,
+        IconDeskExit,
+        IconSpeakerPhone,
+        IconMapEditor,
+        IconMessageShare,
+        IconWorldSearch,
+    } from "@wa-icons";
 
     function resetChatVisibility() {
         chatVisibilityStore.set(false);
@@ -34,8 +45,16 @@
         showModalGlobalComminucationVisibilityStore.set(false);
     }
 
-    function toggleGlobalMessage() {
-        if ($showModalGlobalComminucationVisibilityStore) {
+    function showRoomList() {
+        analyticsClient.trackAdminEvent("room_list.opened");
+        resetChatVisibility();
+        resetModalVisibility();
+        roomListVisibilityStore.set(true);
+        openedMenuStore.closeAll();
+    }
+
+    function toggleGlobalCommunication(mode: "text" | "live") {
+        if ($showModalGlobalComminucationVisibilityStore === mode) {
             showModalGlobalComminucationVisibilityStore.set(false);
             return;
         }
@@ -44,7 +63,8 @@
         resetChatVisibility();
         resetModalVisibility();
         mapEditorModeStore.switchMode(false);
-        showModalGlobalComminucationVisibilityStore.set(true);
+        if (mode === "text") analyticsClient.trackAdminEvent("global_message.opened", { source: "action_bar" });
+        showModalGlobalComminucationVisibilityStore.set(mode);
     }
 
     function toggleMapEditorMode() {
@@ -141,8 +161,34 @@
         <IconMapSearch font-size="20" />
     </ActionBarButton>
 {/if}
-{#if $globalMessageVisibleStore}
-    <ActionBarButton onclick={toggleGlobalMessage} label={$LL.actionbar.globalMessage()}>
+{#if $roomListActivated || $userIsAdminStore}
+    <ActionBarButton
+        onclick={showRoomList}
+        label={$LL.actionbar.help.roomList.title()}
+        state={$roomListActivated ? "normal" : "disabled"}
+        dataTestId="room-list-button"
+    >
+        <IconWorldSearch font-size="20" />
+    </ActionBarButton>
+{/if}
+<!-- Each entry only for those allowed to use it, rather than a window of greyed-out buttons. -->
+{#if $userIsAdminStore}
+    <ActionBarButton
+        onclick={() => toggleGlobalCommunication("text")}
+        label={$LL.actionbar.sendAnnouncement()}
+        state={$showModalGlobalComminucationVisibilityStore === "text" ? "active" : "normal"}
+        dataTestId="send-announcement-button"
+    >
+        <IconMessageShare font-size="20" />
+    </ActionBarButton>
+{/if}
+{#if $megaphoneCanBeUsedStore}
+    <ActionBarButton
+        onclick={() => toggleGlobalCommunication("live")}
+        label={$LL.actionbar.goLive()}
+        state={$showModalGlobalComminucationVisibilityStore === "live" ? "active" : "normal"}
+        dataTestId="go-live-button"
+    >
         <IconSpeakerPhone font-size="20" />
     </ActionBarButton>
 {/if}

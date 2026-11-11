@@ -28,6 +28,8 @@ import mapEditor from "./mapEditor";
 import externalModule from "./externalModule";
 import randomNames from "./randomNames";
 import onboarding from "./onboarding";
+import screenAnnotation from "./screenAnnotation";
+import desktop from "./desktop";
 import recording from "./recording";
 
 const es_ES = deepmerge(en_US, {
@@ -60,6 +62,8 @@ const es_ES = deepmerge(en_US, {
     randomNames,
     onboarding,
     recording,
+    screenAnnotation,
+    desktop,
 });
 
 export default es_ES;

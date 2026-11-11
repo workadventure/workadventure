@@ -18,6 +18,8 @@
         position: string;
         grayscale: boolean;
         isBlocked: boolean;
+        // Before the name, e.g. a status dot
+        leading?: Snippet;
         children?: Snippet;
     }
 
@@ -30,6 +32,7 @@
         position = "",
         grayscale = false,
         isBlocked = false,
+        leading,
         children,
     }: Props = $props();
 </script>
@@ -47,6 +50,7 @@
                     <Woka src={$picture ?? ""} customWidth="100%" {grayscale} />
                 </div>
                 <div class="flex items-center {isHandRaised ? 'rounded bg-success text-black pl-2' : ''}">
+                    {@render leading?.()}
                     <span class="select-none">{name}</span>
                     {@render children?.()}
                 </div>
@@ -74,6 +78,7 @@
                         <Woka src={$picture} customWidth="42px" {grayscale} />
                     </div>
                 {/if}
+                {@render leading?.()}
                 <span class="text-xs @[17.5rem]/videomediabox:text-sm">{name}</span>
 
                 <!--{#if $requestedScreenSharingState === true}-->

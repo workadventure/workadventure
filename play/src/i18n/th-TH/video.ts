@@ -11,6 +11,23 @@ const video: DeepPartial<Translation["video"]> = {
     persistent_connection_issue: "กำลังเชื่อมต่อใหม่... การเชื่อมต่อไม่เสถียร...",
     click_and_drag_to_resize: "คลิกแล้วลากเพื่อปรับขนาด",
     click_to_unblock: "คลิกเพื่อเลิกบล็อก",
+    away: {
+        subtitle: "หยุดชั่วคราวขณะที่คุณไม่อยู่",
+        cantSeeOrHear: "ไม่มีใครเห็นหรือได้ยินคุณ",
+        heardNotSeen: "ได้ยินคุณ แต่ไม่เห็นคุณ",
+        cantSee: "ไม่มีใครเห็นคุณ",
+        seenNotHeard: "เห็นคุณ แต่ไม่ได้ยินคุณ",
+        cantHear: "ไม่มีใครได้ยินคุณ",
+        turnOnBoth: "เปิดกล้องและไมค์",
+        turnOnCamera: "เปิดกล้อง",
+        turnOnMicrophone: "เปิดไมค์",
+        turnOn: "เปิด",
+    },
+    remoteAway: {
+        inAnotherWindow: "{name} อยู่ในหน้าต่างหรือแท็บอื่น",
+        cameraAndMicPaused: "กล้องและไมค์หยุดชั่วคราวจนกว่าจะกลับมา",
+        cameraPaused: "กล้องหยุดชั่วคราวจนกว่าจะกลับมา",
+    },
 };
 
 export default video;

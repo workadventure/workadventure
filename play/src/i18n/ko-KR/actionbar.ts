@@ -38,7 +38,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "카메라 / 마이크 설정",
     allSettings: "모든 설정",
     installPwa: "웹 앱 설치",
-    globalMessage: "전체 메시지 보내기",
+    sendAnnouncement: "공지 보내기",
+    goLive: "라이브 시작",
+    desktop: {
+        section: "데스크톱 앱",
+        openRoom: "다른 방 열기…",
+        openMiniWindow: "미니 창 열기",
+    },
     mapEditor: "맵 에디터",
     mapEditorMobileLocked: "모바일 모드에서는 맵 에디터를 사용할 수 없습니다",
     mapEditorLocked: "맵 에디터가 잠겨 있습니다 🔐",
@@ -167,6 +173,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "카메라 비활성화됨",
             desc: '현재 상태가 "{status}"이기 때문에 카메라가 비활성화되어 있습니다.',
+        },
+        micPausedByStatus: {
+            title: "마이크 일시 중지됨",
+            desc: '현재 상태가 "{status}"이기 때문에 마이크가 일시 중지되어 있습니다. 클릭하면 켜지고 온라인 상태로 돌아갑니다.',
+        },
+        camPausedByStatus: {
+            title: "카메라 일시 중지됨",
+            desc: '현재 상태가 "{status}"이기 때문에 카메라가 일시 중지되어 있습니다. 클릭하면 켜지고 온라인 상태로 돌아갑니다.',
         },
         share: {
             title: "화면 공유",
