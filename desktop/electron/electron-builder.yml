@@ -82,9 +82,10 @@ linux:
           to: workadventure-desktop.gpg
 
 deb:
-    # electron-builder's own scripts plus the APT repository, so that apt upgrade updates the app.
-    afterInstall: deb/after-install.tpl
-    afterRemove: deb/after-remove.tpl
+    # electron-builder's own scripts plus the APT repository (deb/), so that apt upgrade updates the app.
+    # Written by `npm run build` (deb/build-scripts.mjs).
+    afterInstall: build/deb-scripts/after-install.tpl
+    afterRemove: build/deb-scripts/after-remove.tpl
 
 appImage:
     # The AppImage launcher (AppRun) already adds --no-sandbox when the Chromium sandbox cannot start,

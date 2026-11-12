@@ -10,6 +10,7 @@
     "license": "SEE LICENSE IN LICENSE.txt",
     "scripts": {
         "build": "electron-vite build",
+        "postbuild": "node deb/build-scripts.mjs",
         "dev": "electron-vite dev --watch",
         "bundle": "npm run build && electron-builder",
         "typecheck": "tsc --noEmit && svelte-check --fail-on-warnings",
