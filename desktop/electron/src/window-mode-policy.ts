@@ -61,3 +61,22 @@ export function restartArgs(argv: string[], inX11: boolean): string[] {
     const args = argv.slice(1).filter((arg) => arg !== X11_ARG && arg !== X11_RESTART_ARG);
     return inX11 ? [...args, X11_ARG, X11_RESTART_ARG] : args;
 }
+
+/**
+ * The command that restarts the app: bash waits for the process `pid` to end, then becomes `exe`.
+ *
+ * Not app.relaunch(): it starts the new process with no_new_privs, which every process the app starts
+ * then inherits, and which takes their root rights away from setuid programs. An AppImage mounts itself
+ * with one (fusermount), so its restart ended on "Cannot mount AppImage, please check your FUSE setup".
+ * A snap starts through one (snap-confine), so in any package the browser opened to sign in (Firefox is
+ * a snap on Ubuntu) never showed up.
+ *
+ * A child of this process inherits its open files (Chromium does not open them close-on-exec), among
+ * them the pipe that keeps the AppImage's mount alive: bash closes them all first.
+ */
+export function restartCommand(pid: number, exe: string, args: string[]): { command: string; args: string[] } {
+    const script =
+        'for fd in $(ls /proc/$$/fd); do [ "$fd" -gt 2 ] && eval "exec $fd>&-"; done; ' +
+        'while kill -0 "$0" 2>/dev/null; do sleep 0.1; done; exec "$@"';
+    return { command: "bash", args: ["-c", script, String(pid), exe, ...args] };
+}

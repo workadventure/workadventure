@@ -1,3 +1,4 @@
+import { spawn } from "child_process";
 import { app, dialog } from "electron";
 import ElectronLog from "electron-log";
 import type { DesktopWindowMode, DesktopWindowModeState } from "@workadventure/desktop-api";
@@ -7,6 +8,7 @@ import { openSettingsWindow } from "./settings-window";
 import {
     X11_RESTART_ARG,
     restartArgs,
+    restartCommand,
     startupWindowModeAction,
     windowModeApplies,
     windowModeState,
@@ -32,7 +34,11 @@ export function setWindowMode(mode: DesktopWindowMode): DesktopWindowModeState {
 
 function relaunch(inX11: boolean): void {
     // An AppImage runs from a mount that goes away with this process: restart the AppImage itself.
-    app.relaunch({ execPath: process.env.APPIMAGE || process.execPath, args: restartArgs(process.argv, inX11) });
+    const exe = process.env.APPIMAGE || process.execPath;
+    const { command, args } = restartCommand(process.pid, exe, restartArgs(process.argv, inX11));
+    spawn(command, args, { detached: true, stdio: "ignore" })
+        .on("error", (error) => ElectronLog.error("Could not restart the app.", error))
+        .unref();
 }
 
 /** Restarts the app, which then starts in the saved mode. */
