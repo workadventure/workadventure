@@ -1,7 +1,12 @@
-import { describe, expect, test } from "vitest";
+import { spawn } from "child_process";
+import fs from "fs";
+import os from "os";
+import path from "path";
+import { describe, expect, test, vi } from "vitest";
 import {
     X11_RESTART_ARG,
     restartArgs,
+    restartCommand,
     startupWindowModeAction,
     windowModeApplies,
     windowModeState,
@@ -128,5 +133,26 @@ describe("restartArgs", () => {
 
     test("drops X11's to let the next start decide", () => {
         expect(restartArgs(x11Restart, false)).toStrictEqual(plainStart.slice(1));
+    });
+});
+
+// The command is a bash script reading /proc: it only ever runs on Linux.
+describe.skipIf(process.platform !== "linux")("restartCommand", () => {
+    test("waits for the old process, then starts the new one without its open files", async () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), "wa-restart-"));
+        const out = path.join(dir, "out");
+        const oldApp = spawn("sleep", ["30"]);
+        // The "new app" writes down the files it has open, then its arguments.
+        const newApp = `ls /proc/$$/fd > "$0.tmp"; printf '%s\\n' "$@" >> "$0.tmp"; mv "$0.tmp" "$0"`;
+        const { command, args } = restartCommand(oldApp.pid ?? 0, "bash", ["-c", newApp, out, "a b", "c"]);
+        // Descriptor 3 is one the restarted app must not get.
+        spawn(command, args, { detached: true, stdio: ["ignore", "ignore", "ignore", fs.openSync(dir, "r")] }).unref();
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        expect(fs.existsSync(out)).toBe(false);
+
+        oldApp.kill();
+        await vi.waitFor(() => expect(fs.existsSync(out)).toBe(true), 5000);
+        expect(fs.readFileSync(out, "utf8")).toBe("0\n1\n2\na b\nc\n");
     });
 });
