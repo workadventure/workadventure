@@ -3,6 +3,7 @@
     import LL from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import Button from "../UI/Button.svelte";
+    import { announce } from "../../Stores/LiveAnnouncerStore";
     import PopUpContainer from "./PopUpContainer.svelte";
 
     interface Props {
@@ -44,6 +45,13 @@
     function closeBanner() {
         onclose?.();
     }
+
+    // The request shows without taking the focus: say who asks, the answer is one Tab away.
+    $effect(() => {
+        if ($followStateStore === "requesting" && $followRoleStore === "follower") {
+            announce($LL.follow.interactMenu.title.follow({ leader: name($followUsersStore[0]) }), "assertive");
+        }
+    });
 
     let showButtons = $derived(
         ($followStateStore === "requesting" && $followRoleStore === "follower") ||

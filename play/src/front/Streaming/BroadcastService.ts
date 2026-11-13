@@ -123,7 +123,12 @@ export class BroadcastService {
         this.unsubscribes.push(
             space.observeUserJoined.subscribe((user) => {
                 if (user.megaphoneState) {
-                    notificationPlayingStore.playNotification(get(LL).notification.announcement(), "megaphone");
+                    notificationPlayingStore.playNotification(
+                        get(LL).notification.announcement(),
+                        "megaphone",
+                        undefined,
+                        get(LL).notification.a11y.megaphone({ name: user.name }),
+                    );
                     this.playMegaphoneNotificationSound().catch((e) => console.error(e));
                 }
             }),

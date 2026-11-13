@@ -17,6 +17,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     removedFromConversation: "Een moderator heeft je uit het gesprek gehaald.",
     actionFailed: "Deze actie kon niet worden voltooid",
     announcement: "Aankondiging",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "Privébericht van {sender}: {excerpt}",
+        mention: "{sender} heeft je genoemd in {room}: {excerpt}",
+        roomMessage: "{sender} in {room}: {excerpt}",
+        bubbleLocked: "Het gesprek is vergrendeld: niemand anders kan deelnemen",
+        bubbleUnlocked: "Het gesprek is ontgrendeld",
+        handRaised: "{name} heeft de hand opgestoken",
+        megaphone: "{name} spreekt via de megafoon",
+    },
     help: {
         title: "Toegang tot meldingen geweigerd",
         permissionDenied: "Toegang geweigerd",

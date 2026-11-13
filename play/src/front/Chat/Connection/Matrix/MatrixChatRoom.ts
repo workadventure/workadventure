@@ -88,6 +88,7 @@ import { notificationManager } from "../../../Notification/NotificationManager";
 import type { LazyPictureStore, PictureStore } from "../../../Stores/PictureStore";
 import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
 import { chatVisibilityStore } from "../../../Stores/ChatStore";
+import { announceChatMessage } from "../../../Stores/LiveAnnouncerStore";
 import type { UserProviderMerger } from "../../UserProviderMerger/UserProviderMerger";
 import { waitForGameSceneStore } from "../../../Stores/GameSceneStore";
 import { ProximityChatRoom } from "../Proximity/ProximityChatRoom";
@@ -223,6 +224,14 @@ export class MatrixChatRoom
                 mentionsMe,
                 direct,
             });
+            const displayed = get(selectedRoomStore)?.id === this.id && get(chatVisibilityStore);
+            if (displayed || plan.toast || plan.banner) {
+                announceChatMessage(message.sender?.username ?? "unknown", messageBody, get(this.name), {
+                    displayed,
+                    direct,
+                    mentionsMe,
+                });
+            }
             if (plan.sound && localUserStore.getChatSounds()) {
                 try {
                     gameManager.getCurrentGameScene().playSound("new-message");

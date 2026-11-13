@@ -12,6 +12,16 @@ const notification: BaseTranslation = {
     givenTheFloorEnableMicrophone: "É a sua vez de falar — ative o microfone",
     floorRevoked: "Você não tem mais a palavra",
     announcement: "Anúncio",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "Mensagem privada de {sender}: {excerpt}",
+        mention: "{sender} mencionou você em {room}: {excerpt}",
+        roomMessage: "{sender} em {room}: {excerpt}",
+        bubbleLocked: "A conversa está bloqueada: ninguém mais pode entrar",
+        bubbleUnlocked: "A conversa está desbloqueada",
+        handRaised: "{name} levantou a mão",
+        megaphone: "{name} está falando pelo megafone",
+    },
     help: {
         title: "Acesso às notificações negado",
         permissionDenied: "Permissão negada",

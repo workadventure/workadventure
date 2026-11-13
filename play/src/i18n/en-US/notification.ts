@@ -16,6 +16,16 @@ const notification: BaseTranslation = {
     removedFromConversation: "A moderator removed you from the conversation.",
     actionFailed: "This action could not be completed",
     announcement: "Announcement",
+    a11y: {
+        chatMessage: "{sender:string}: {excerpt:string}",
+        directMessage: "Private message from {sender:string}: {excerpt:string}",
+        mention: "{sender:string} mentioned you in {room:string}: {excerpt:string}",
+        roomMessage: "{sender:string} in {room:string}: {excerpt:string}",
+        bubbleLocked: "The conversation is locked: nobody else can join",
+        bubbleUnlocked: "The conversation is unlocked",
+        handRaised: "{name:string} raised their hand",
+        megaphone: "{name:string} is speaking through the megaphone",
+    },
     help: {
         title: "Notifications access denied",
         permissionDenied: "Permission denied",

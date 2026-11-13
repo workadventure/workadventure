@@ -17,6 +17,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     removedFromConversation: "管理員已將你移出對話。",
     actionFailed: "無法完成此操作",
     announcement: "公告",
+    a11y: {
+        chatMessage: "{sender}：{excerpt}",
+        directMessage: "來自 {sender} 的私訊：{excerpt}",
+        mention: "{sender} 在 {room} 中提到了你：{excerpt}",
+        roomMessage: "{room} 中的 {sender}：{excerpt}",
+        bubbleLocked: "對話已鎖定：其他人無法加入",
+        bubbleUnlocked: "對話已解鎖",
+        handRaised: "{name} 舉手了",
+        megaphone: "{name} 正在透過擴音器說話",
+    },
     help: {
         title: "通知存取被拒絕",
         permissionDenied: "權限被拒絕",

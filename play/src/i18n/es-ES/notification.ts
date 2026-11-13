@@ -17,6 +17,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     removedFromConversation: "Un moderador te ha retirado de la conversación.",
     actionFailed: "No se ha podido completar esta acción",
     announcement: "Anuncio",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "Mensaje privado de {sender}: {excerpt}",
+        mention: "{sender} te ha mencionado en {room}: {excerpt}",
+        roomMessage: "{sender} en {room}: {excerpt}",
+        bubbleLocked: "La conversación está bloqueada: nadie más puede unirse",
+        bubbleUnlocked: "La conversación está desbloqueada",
+        handRaised: "{name} ha levantado la mano",
+        megaphone: "{name} habla por el megáfono",
+    },
     help: {
         title: "Acceso a las notificaciones denegado",
         permissionDenied: "Permiso denegado",

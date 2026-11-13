@@ -13,6 +13,16 @@ const notification: DeepPartial<Translation["notification"]> = {
     givenTheFloorEnableMicrophone: "말할 차례입니다 — 마이크를 켜세요",
     floorRevoked: "더 이상 발언권이 없습니다",
     announcement: "공지사항",
+    a11y: {
+        chatMessage: "{sender}: {excerpt}",
+        directMessage: "{sender}님의 개인 메시지: {excerpt}",
+        mention: "{sender}님이 {room}에서 회원님을 언급했습니다: {excerpt}",
+        roomMessage: "{room}의 {sender}: {excerpt}",
+        bubbleLocked: "대화가 잠겼습니다. 다른 사람은 참여할 수 없습니다",
+        bubbleUnlocked: "대화 잠금이 해제되었습니다",
+        handRaised: "{name}님이 손을 들었습니다",
+        megaphone: "{name}님이 메가폰으로 말하고 있습니다",
+    },
     help: {
         title: "알림 접근이 거부됨",
         permissionDenied: "권한이 거부됨",
