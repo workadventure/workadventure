@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { acceleratorFromKeyPress, acceleratorLabel, isSettableAccelerator } from "./shortcut-policy";
+import { acceleratorFromKeyPress, acceleratorLabel, defaultShortcuts, isSettableAccelerator } from "./shortcut-policy";
 
 const press = (key: string, code: string, mods: Partial<Record<"ctrl" | "alt" | "shift" | "meta", boolean>> = {}) => ({
     key,
@@ -74,4 +74,15 @@ test("acceleratorLabel uses the system's names", () => {
     expect(acceleratorLabel("CommandOrControl+Alt+Shift+M", "linux")).toBe("Ctrl+Alt+Shift+M");
     expect(acceleratorLabel("Super+K", "win32")).toBe("Win+K");
     expect(acceleratorLabel("Super+K", "linux")).toBe("Super+K");
+});
+
+test("a new profile has no shortcut on Linux, where the desktop would ask to approve them at the first launch", () => {
+    expect(defaultShortcuts("linux")).toEqual({ mute_toggle: "", camera_toggle: "", mini_window_toggle: "" });
+    for (const platform of ["darwin", "win32"]) {
+        expect(defaultShortcuts(platform)).toEqual({
+            mute_toggle: "CommandOrControl+Alt+Shift+M",
+            camera_toggle: "CommandOrControl+Alt+Shift+C",
+            mini_window_toggle: "",
+        });
+    }
 });
