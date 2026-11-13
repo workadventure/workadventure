@@ -1,18 +1,8 @@
-import { promises as fs } from "fs";
-import path from "path";
-import { app } from "electron";
-import ElectronLog from "electron-log";
+import type ElectronLog from "electron-log";
 import Settings from "electron-settings";
 import type { DesktopWindowMode } from "@workadventure/desktop-api";
 import type { MiniWindowPlacement } from "./mini-window-placement-policy";
 import {
-    LEGACY_LOGIN_ITEM_NAME,
-    LEGACY_USER_DATA_DIR,
-    migrateLegacySettings,
-    type MigratedSettings,
-} from "./legacy-settings-policy";
-import {
-    createDesktopConfig,
     getDefaultPortalUrl,
     normalizePersistedLastRoomUrl,
     normalizePersistedPortalUrl,
@@ -70,39 +60,10 @@ function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | und
     return configured;
 }
 
-/** What a 1.x install left in its own userData folder, for the first launch of 2.0. */
-async function readLegacySettings(): Promise<MigratedSettings> {
-    const file = path.join(app.getPath("appData"), LEGACY_USER_DATA_DIR, "settings.json");
-    let legacy: unknown;
-    try {
-        legacy = JSON.parse(await fs.readFile(file, "utf8"));
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
-            ElectronLog.warn(`Could not read the 1.x settings in ${file}:`, error);
-        }
-        return {};
-    }
-    ElectronLog.info(`Migrating the 1.x settings from ${file}.`);
-    // 1.x registered auto-launch under its own name, pointing at its own executable, which the 2.0
-    // installer removed. init() has 2.0 registered under its name if the user kept it on.
-    if (process.platform === "win32") {
-        app.setLoginItemSettings({ openAtLogin: false, name: LEGACY_LOGIN_ITEM_NAME });
-    }
-    return migrateLegacySettings(legacy, createDesktopConfig());
-}
-
-/**
- * Loads the settings. True when start at login is to be turned on: on the first launch of a fresh
- * install, or of an update from 1.x that had it on (its default).
- */
+/** Loads the settings. True on the first launch of a fresh install, to turn start at login on. */
 async function init(): Promise<boolean> {
-    let _settings = await Settings.get();
-    let turnOnStartAtLogin = false;
-    if (Object.keys(_settings).length === 0) {
-        const { auto_launch_enabled, ...legacy } = await readLegacySettings();
-        turnOnStartAtLogin = auto_launch_enabled !== false;
-        _settings = { ...defaultSettings, ...legacy };
-    }
+    const _settings = await Settings.get();
+    const turnOnStartAtLogin = Object.keys(_settings).length === 0;
     const persistedSettings = _settings as Partial<SettingsData>;
     const persistedWorldHistory = Array.isArray(persistedSettings.world_history) ? persistedSettings.world_history : [];
     const persistedPinnedWorlds = Array.isArray(persistedSettings.pinned_worlds) ? persistedSettings.pinned_worlds : [];

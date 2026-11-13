@@ -78,8 +78,8 @@ linux:
         - deb
     # The public key of apt.workadventu.re, which the deb's after-install script installs (see deb/).
     extraResources:
-        - from: deb/workadventure-desktop.gpg
-          to: workadventure-desktop.gpg
+        - from: deb/workadventure.gpg
+          to: workadventure.gpg
 
 deb:
     # electron-builder's own scripts plus the APT repository (deb/), so that apt upgrade updates the app.

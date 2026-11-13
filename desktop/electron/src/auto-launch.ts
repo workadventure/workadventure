@@ -18,19 +18,14 @@ import { app } from "electron";
 // renders it — but that is not what a login item does.) Reaching a world in the background needs the
 // connection taken out of the render loop, on the front side.
 
-// The name the auto-launch package gave the file (it took the executable's, not ours). Kept so the
-// entry it wrote is replaced or removed rather than left behind next to a second one.
-const LINUX_AUTOSTART_FILE = "workadventure-desktop.desktop";
+const LINUX_AUTOSTART_FILE = "workadventure.desktop";
 
-/**
- * At startup: on for a fresh install or an update from 1.x that had it on (`turnOn`), otherwise left
- * as the user set it, here or in the system.
- */
+/** At startup: on for a fresh install (`turnOn`), otherwise left as the user set it, here or in the system. */
 export function initStartAtLogin(turnOn: boolean) {
     if (turnOn) {
         setStartAtLogin(true);
     } else if (process.platform === "linux" && isStartAtLoginEnabled()) {
-        // Rewritten with the current path: an AppImage can move, and older versions wrote a temporary one.
+        // Rewritten with the current path: an AppImage can move.
         setStartAtLogin(true);
     }
 }
