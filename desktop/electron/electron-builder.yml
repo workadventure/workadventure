@@ -75,7 +75,12 @@ linux:
     maintainer: TheCodingMachine <hello@workadventu.re>
     target:
         - AppImage
-        - deb
+        # arm64 too, cross-built on the x64 runner: the app has no native module of its own. Both debs go
+        # in the same APT index, where apt keeps the entries of its own architecture.
+        - target: deb
+          arch:
+              - x64
+              - arm64
     # The public key of apt.workadventu.re, which the deb's after-install script installs (see deb/).
     extraResources:
         - from: deb/workadventure.gpg
