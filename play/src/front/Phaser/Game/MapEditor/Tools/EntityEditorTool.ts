@@ -387,7 +387,8 @@ export class EntityEditorTool extends EntityRelatedEditorTool {
             x: Math.floor(x - this.entityPrefabPreview.displayWidth * 0.5),
             y: Math.floor(y - this.entityPrefabPreview.displayHeight * 0.5),
             prefabRef: this.entityPrefab,
-            properties: properties ?? [],
+            // Objects that come with a behaviour (chairs you can sit on) start with the properties of their prefab.
+            properties: properties ?? withNewPropertyIds(this.entityPrefab.properties ?? []),
             name: properties?.find((p) => p.type === "openFile")?.name ?? undefined,
         };
 

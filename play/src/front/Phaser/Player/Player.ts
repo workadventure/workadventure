@@ -1,3 +1,4 @@
+import * as Phaser from "phaser";
 import type { Unsubscriber } from "svelte/store";
 import { get } from "svelte/store";
 import type { CancelablePromise } from "cancelable-promise";
@@ -19,10 +20,24 @@ import { localUserStore } from "../../Connection/LocalUserStore";
 import { WalkDestinationMarker } from "../Components/WalkDestinationMarker";
 
 export const hasMovedEventName = "hasMoved";
+
+/** Gliding onto a seat takes this long per pixel, within the bounds below. */
+const SEAT_GLIDE_MS_PER_PIXEL = 9;
+const SEAT_GLIDE_MIN_MS = 140;
+const SEAT_GLIDE_MAX_MS = 280;
+
+function directionTowards(dx: number, dy: number): PositionMessage_Direction {
+    if (Math.abs(dx) > Math.abs(dy)) {
+        return dx < 0 ? PositionMessage_Direction.LEFT : PositionMessage_Direction.RIGHT;
+    }
+    return dy < 0 ? PositionMessage_Direction.UP : PositionMessage_Direction.DOWN;
+}
 export const startMovingEventName = "startMoving";
 export const requestEmoteEventName = "requestEmote";
 
 export class Player extends Character {
+    private seatGlide: Phaser.Tweens.Tween | undefined;
+
     private readonly unsubscribeVisibilityStore: Unsubscriber;
     private readonly destinationMarker: WalkDestinationMarker;
     private isMoving = false;
@@ -53,6 +68,12 @@ export class Player extends Character {
     public moveUser(delta: number, activeUserInputEvents: ActiveEventList): void {
         const state = get(followStateStore);
         const role = get(followRoleStore);
+
+        // Gliding onto a seat: any key takes the controls back, otherwise let the glide finish.
+        if (this.seatGlide) {
+            if (!activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) return;
+            this.cancelSeatGlide();
+        }
 
         if (this.pathToFollow && activeUserInputEvents.anyExcept(UserInputEvent.SpeedUp)) {
             this.finishFollowingPath(true);
@@ -283,6 +304,79 @@ export class Player extends Character {
         this.finishFollowingPath(true);
         this.emit(hasMovedEventName, { moving: false, direction: this._lastDirection, x: this.x, y: this.y });
         this.scene.markDirty();
+    }
+
+    /**
+     * Glides the player onto a seat instead of jumping onto it: a short eased walk, then the player
+     * turns to the way the seat faces and settles in. The positions along the way are sent like any
+     * walk, so the other players see the glide too. Any key pressed meanwhile cancels it.
+     */
+    public glideToSeat(x: number, y: number, direction: PositionMessage_Direction): void {
+        this.cancelSeatGlide();
+        const distance = Math.hypot(x - this.x, y - this.y);
+        if (distance < 1) {
+            this.sitAt(x, y, direction);
+            this.settle();
+            return;
+        }
+
+        const travel = directionTowards(x - this.x, y - this.y);
+        this._lastDirection = travel;
+        this.playAnimation(travel, true);
+        this.seatGlide = this.scene.tweens.add({
+            targets: this,
+            x,
+            y,
+            duration: Phaser.Math.Clamp(distance * SEAT_GLIDE_MS_PER_PIXEL, SEAT_GLIDE_MIN_MS, SEAT_GLIDE_MAX_MS),
+            ease: "Sine.easeInOut",
+            onUpdate: () => {
+                // Through setPosition, so the depth and the name follow the player.
+                this.setPosition(this.x, this.y);
+                this.emit(hasMovedEventName, { moving: true, direction: travel, x: this.x, y: this.y });
+                this.scene.markDirty();
+            },
+            onComplete: () => {
+                this.seatGlide = undefined;
+                this.sitAt(x, y, direction);
+                this.settle();
+            },
+        });
+    }
+
+    public get isGlidingToSeat(): boolean {
+        return this.seatGlide !== undefined;
+    }
+
+    public cancelSeatGlide(): void {
+        if (!this.seatGlide) return;
+        this.seatGlide.stop();
+        this.seatGlide = undefined;
+    }
+
+    /** A small dip as the player sits down, so that sitting reads as a motion rather than a jump. */
+    private settle(): void {
+        const scaleY = this.scaleY;
+        this.scene.tweens.add({
+            targets: this,
+            scaleY: scaleY * 0.94,
+            duration: 90,
+            yoyo: true,
+            ease: "Quad.easeOut",
+            onUpdate: () => this.scene.markDirty(),
+            onComplete: () => {
+                this.scaleY = scaleY;
+            },
+        });
+    }
+
+    /**
+     * Moves the player onto a seat, facing the way the seat faces. The position and direction are
+     * sent like any other move, which is how the other players see them seated.
+     */
+    public sitAt(x: number, y: number, direction: PositionMessage_Direction): void {
+        this._lastDirection = direction;
+        this.teleportTo(x, y);
+        this.playAnimation(direction, false);
     }
 
     public get walkingSpeed(): number | undefined {

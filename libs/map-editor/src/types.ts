@@ -239,6 +239,20 @@ export const LockableAreaPropertyData = PropertyBase.extend({
     allowedTags: z.array(z.string()).optional(),
 });
 
+/**
+ * A place to sit: a player who stops on it snaps onto the seat and turns to face `direction`.
+ * On an object, `seats` places are spread along the object (a couch has 2); on an area, along the area.
+ * Seats are passive: they add no action to the object.
+ */
+export const SeatPropertyData = PropertyBase.extend({
+    type: z.literal("seat"),
+    /** The way a seated player faces. */
+    direction: z.enum(["down", "up", "left", "right"]).default("down"),
+    /** Number of places on this object or area, side by side. */
+    seats: z.number().int().min(1).max(8).default(1),
+    triggerMessage: z.string().optional(),
+});
+
 export const AreaDataProperty = z.discriminatedUnion("type", [
     StartPropertyData,
     ExitPropertyData,
@@ -260,6 +274,7 @@ export const AreaDataProperty = z.discriminatedUnion("type", [
     LivekitRoomPropertyData,
     MaxUsersInAreaPropertyData,
     LockableAreaPropertyData,
+    SeatPropertyData,
 ]);
 
 export const AreaDataProperties = z.array(AreaDataProperty);
@@ -289,6 +304,7 @@ export const EntityDataProperty = z.discriminatedUnion("type", [
     OpenFilePropertyData,
     EntityDescriptionPropertyData,
     LivekitRoomPropertyData,
+    SeatPropertyData,
 ]);
 
 export const EntityDataProperties = z.array(EntityDataProperty);
@@ -309,6 +325,8 @@ export const EntityRawPrefab = z.object({
     // collections and on custom entities uploaded before this field existed: those can only be
     // modified or deleted by a user with map edit rights.
     ownerId: z.string().optional(),
+    // Properties a new object of this kind starts with (each placed object gets fresh property ids).
+    properties: EntityDataProperties.optional(),
 });
 
 export const EntityPrefabType = z.union([z.literal("Default"), z.literal("Custom")]);
@@ -471,7 +489,8 @@ export type EntityDataPropertiesKeys =
     | "playAudio"
     | "openWebsite"
     | "openFile"
-    | "livekitRoomProperty";
+    | "livekitRoomProperty"
+    | "seat";
 export type AreaCoordinates = z.infer<typeof AreaCoordinates>;
 export type AreaData = z.infer<typeof AreaData>;
 export type AreaDataProperties = z.infer<typeof AreaDataProperties>;
@@ -490,6 +509,7 @@ export type LivekitRoomPropertyData = z.infer<typeof LivekitRoomPropertyData>;
 export type PlayAudioPropertyData = z.infer<typeof PlayAudioPropertyData>;
 export type OpenWebsitePropertyData = z.infer<typeof OpenWebsitePropertyData>;
 export type OpenFilePropertyData = z.infer<typeof OpenFilePropertyData>;
+export type SeatPropertyData = z.infer<typeof SeatPropertyData>;
 export type WAMSettings = z.infer<typeof WAMSettings>;
 export type WAMFileFormat = z.infer<typeof WAMFileFormat>;
 export type MapsCacheSingleMapFormat = z.infer<typeof MapsCacheSingleMapFormat>;

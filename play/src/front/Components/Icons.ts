@@ -173,3 +173,4 @@ export { default as IconPointer } from "~icons/tabler/pointer";
 export { default as IconArrowForwardUp } from "~icons/tabler/arrow-forward-up";
 
 export { default as IconEyeOff } from "~icons/tabler/eye-off";
+export { default as IconArmchair } from "~icons/tabler/armchair";

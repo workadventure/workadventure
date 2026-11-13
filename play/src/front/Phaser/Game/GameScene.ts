@@ -222,6 +222,7 @@ import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
 import { EntityAudioManager } from "./EntityAudioManager";
+import { SeatManager } from "./SeatManager";
 import { OutlineManager } from "./UI/OutlineManager";
 import { soundManager } from "./SoundManager";
 import { SharedVariablesManager } from "./SharedVariablesManager";
@@ -372,6 +373,7 @@ export class GameScene extends DirtyScene {
     private mapTransitioning = false; //used to prevent transitions happening at the same time.
     private emoteManager!: EmoteManager;
     private entityAudioManager!: EntityAudioManager;
+    private seatManager: SeatManager | undefined;
     private cameraManager!: CameraManager;
     private mapEditorModeManager: MapEditorModeManager | undefined;
     private entitiesCollectionsManager!: EntitiesCollectionsManager;
@@ -1242,6 +1244,7 @@ export class GameScene extends DirtyScene {
         this.pinchManager?.destroy();
         this.emoteManager?.destroy();
         this.entityAudioManager?.destroy();
+        this.seatManager?.destroy();
         this.cameraManager?.destroy();
         this.mapEditorModeManager?.destroy();
         this.gameMapPropertiesListener?.destroy();
@@ -2345,6 +2348,10 @@ export class GameScene extends DirtyScene {
                 this.emoteManager = new EmoteManager(this, this.connection);
                 this.entityAudioManager = new EntityAudioManager(this, this.connection);
                 this.CurrentPlayer.on(hasMovedEventName, () => this.entityAudioManager.onPlayerMoved());
+                this.seatManager = new SeatManager(this);
+                this.CurrentPlayer.on(hasMovedEventName, (event: HasPlayerMovedInterface) =>
+                    this.seatManager?.onPlayerMoved(event),
+                );
 
                 const context = audioContextManager.getContext();
 

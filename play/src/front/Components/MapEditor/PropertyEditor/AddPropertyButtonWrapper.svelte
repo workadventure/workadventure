@@ -34,6 +34,7 @@
         IconShieldLock,
         IconLockHash,
         IconLock,
+        IconArmchair,
     } from "@wa-icons";
 
     interface Props {
@@ -421,6 +422,19 @@
             onclick?.(event);
         }}
         img={IconFile}
+    />
+{/if}
+{#if property === "seat"}
+    <AddPropertyButton
+        headerText={$LL.mapEditor.properties.seat.label()}
+        descriptionText={$LL.mapEditor.properties.seat.description()}
+        style={`z-index: 205;${isActive ? "background-color: #4156f6;" : ""}`}
+        {disabled}
+        onclick={(event) => {
+            onclick?.(event);
+        }}
+        testId="seat"
+        img={IconArmchair}
     />
 {/if}
 {#if property === "livekitRoomProperty"}

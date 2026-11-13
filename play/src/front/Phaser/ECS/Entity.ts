@@ -361,6 +361,8 @@ export class Entity extends Image implements ActivatableInterface, OutlineableIn
             if (value !== undefined && value !== null) {
                 // If the entity has a description property and it's empty, we don't consider it as a property
                 if (value.type === "entityDescriptionProperties" && value.description === "") continue;
+                // Seats work by walking onto them: they don't make the object clickable or show a prompt.
+                if (value.type === "seat") continue;
                 return true;
             }
         }

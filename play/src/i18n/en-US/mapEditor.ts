@@ -92,6 +92,19 @@ const mapEditor: BaseTranslation = {
             audibleRadiusLabel: "Audible radius (in pixels)",
             audibleRadiusPlaceholder: "Heard everywhere if empty",
         },
+        seat: {
+            label: "Seat",
+            description: "Players who stop on it sit down, facing the chosen direction.",
+            areaHint: "Draw this area over a chair painted in the map: players who stop on it sit down.",
+            directionLabel: "Seated players face",
+            directions: {
+                down: "Down (towards the viewer)",
+                up: "Up (back to the viewer)",
+                left: "Left",
+                right: "Right",
+            },
+            seatsLabel: "Number of places side by side",
+        },
         openWebsite: {
             label: "Open Link",
             description: "Open website within WorkAdventure or as a new tab.",

@@ -83,8 +83,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     protected pathWalkingSpeed?: number;
     private currentPathSegmentDistanceFromStart = 0;
     private pathFollowingResolve?: (result: PathFollowResult) => void;
+    /** Set while the character sits on a seat: drawn just in front of or behind the seat. */
+    private seatedDepth: number | undefined;
     private readonly syncDisplayPositionWithPhysics = (): void => {
-        this.setDepthIfNeeded(this.y + 16);
+        this.setDepthIfNeeded(this.getStandingOrSeatedDepth());
         this.updateUsernameDisplayPosition();
     };
 
@@ -226,7 +228,7 @@ export abstract class Character extends Container implements OutlineableInterfac
         body.setSize(CHARACTER_BODY_WIDTH, CHARACTER_BODY_HEIGHT); //edit the hitbox to better match the character model
         body.setOffset(CHARACTER_BODY_OFFSET_X, CHARACTER_BODY_OFFSET_Y);
         this.scene.events.on(Phaser.Scenes.Events.POST_UPDATE, this.syncDisplayPositionWithPhysics);
-        this.setDepthIfNeeded(this.y + 16);
+        this.setDepthIfNeeded(this.getStandingOrSeatedDepth());
     }
 
     private waitAndGetSnapshot(): Promise<string> {
@@ -257,6 +259,24 @@ export abstract class Character extends Container implements OutlineableInterfac
                     resolve(defaultWoka);
                 });
         });
+    }
+
+    private getStandingOrSeatedDepth(): number {
+        return this.seatedDepth ?? this.y + 16;
+    }
+
+    /**
+     * Draws the character at the given depth while seated, so that it sits in front of a seat or
+     * behind its backrest. Undefined stands it back up: the depth follows its position again.
+     */
+    public setSeatedDepth(depth: number | undefined): void {
+        if (this.seatedDepth === depth) return;
+        this.seatedDepth = depth;
+        this.setDepthIfNeeded(this.getStandingOrSeatedDepth());
+    }
+
+    public get isSeated(): boolean {
+        return this.seatedDepth !== undefined;
     }
 
     private setDepthIfNeeded(depth: number): void {
@@ -414,7 +434,7 @@ export abstract class Character extends Container implements OutlineableInterfac
 
     setPosition(x: number, y: number): this {
         super.setPosition(Math.round(x), Math.round(y));
-        this.setDepth(this.y + 16);
+        this.setDepth(this.getStandingOrSeatedDepth());
         this.usernameDisplay?.setPlayerDepth(this.depth);
         this.updateUsernameDisplayPosition();
         this.movedSubject?.next({ x: this.x, y: this.y });

@@ -19,6 +19,7 @@
     import TextArea from "../../Input/TextArea.svelte";
     import InputSwitch from "../../Input/InputSwitch.svelte";
     import OpenFilePropertyEditor from "../PropertyEditor/OpenFilePropertyEditor.svelte";
+    import SeatPropertyEditor from "../PropertyEditor/SeatPropertyEditor.svelte";
     import type { Entity } from "../../../Phaser/ECS/Entity";
     import { gameManager } from "../../../Phaser/Game/GameManager";
 
@@ -242,6 +243,13 @@
                     volume: 1,
                     playForAllUsers: true,
                 };
+            case "seat":
+                return {
+                    id,
+                    type,
+                    direction: "down",
+                    seats: 1,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -304,6 +312,14 @@
                     onAddProperty("playAudio");
                 }}
             />
+            {#if !properties.some((p) => p.type === "seat")}
+                <AddPropertyButtonWrapper
+                    property="seat"
+                    onclick={() => {
+                        onAddProperty("seat");
+                    }}
+                />
+            {/if}
         </div>
         <div class="properties-buttons flex flex-row flex-wrap m-2">
             <AddPropertyButtonWrapper
@@ -462,6 +478,14 @@
                             />
                         {:else if properties[i].type === "openFile"}
                             <OpenFilePropertyEditor
+                                bind:property={properties[i]}
+                                onclose={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                onchange={() => onUpdateProperty(properties[i])}
+                            />
+                        {:else if properties[i].type === "seat"}
+                            <SeatPropertyEditor
                                 bind:property={properties[i]}
                                 onclose={() => {
                                     onDeleteProperty(property.id);

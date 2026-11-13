@@ -42,6 +42,7 @@
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import MaxUsersInAreaPropertyEditor from "../PropertyEditor/MaxUsersInAreaPropertyEditor.svelte";
     import LockableAreaPropertyEditor from "../PropertyEditor/LockableAreaPropertyEditor.svelte";
+    import SeatPropertyEditor from "../PropertyEditor/SeatPropertyEditor.svelte";
     import { getAreaMapEditors, hasMeetingProperty } from "../../../Rules/MeetingRules";
 
     let properties: AreaDataProperties = $state([]);
@@ -401,6 +402,13 @@
                     // Note: lock state is stored in area property variables, not in the WAM
                     allowedTags: [],
                 };
+            case "seat":
+                return {
+                    id,
+                    type,
+                    direction: "down",
+                    seats: 1,
+                };
             default:
                 throw new Error(`Unknown property type ${type}`);
         }
@@ -677,6 +685,14 @@
                     property="tooltipPropertyData"
                     onclick={() => {
                         onAddProperty("tooltipPropertyData");
+                    }}
+                />
+            {/if}
+            {#if !properties.some((p) => p.type === "seat")}
+                <AddPropertyButtonWrapper
+                    property="seat"
+                    onclick={() => {
+                        onAddProperty("seat");
                     }}
                 />
             {/if}
@@ -1024,6 +1040,15 @@
                                 }}
                                 onchange={() => onUpdateProperty(property)}
                                 onhighlightareaonenter={() => onAddProperty("highlight")}
+                            />
+                        {:else if properties[i].type === "seat"}
+                            <SeatPropertyEditor
+                                bind:property={properties[i]}
+                                isArea={true}
+                                onclose={() => {
+                                    onDeleteProperty(property.id);
+                                }}
+                                onchange={() => onUpdateProperty(property)}
                             />
                         {:else if properties[i].type === "lockableAreaPropertyData"}
                             <LockableAreaPropertyEditor

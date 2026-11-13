@@ -96,6 +96,8 @@ export class EntitiesCollectionsManager {
                                 collisionGrid: entity.collisionGrid,
                                 type: entity.type,
                                 ownerId: entity.ownerId,
+                                // Custom entities never have any: map-storage builds them field by field.
+                                properties: entity.type === "Default" ? entity.properties : undefined,
                             });
                             entity.tags.forEach((tag: string) => tagSet.add(tag));
                         });
