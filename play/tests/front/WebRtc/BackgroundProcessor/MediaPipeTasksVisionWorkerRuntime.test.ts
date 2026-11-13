@@ -339,7 +339,9 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         const segmenter = await mediaPipeMocks.createFromOptions.mock.results[0].value;
 
         const written: VideoFrame[] = [];
-        const input = createVideoFrame(1_000_000);
+        // 30 days of uptime in microseconds: above the 2^31 - 1 ms MediaPipe can take.
+        const thirtyDaysUs = 30 * 24 * 3600 * 1_000_000;
+        const input = createVideoFrame(thirtyDaysUs);
         const readable = new ReadableStream<VideoFrame>({
             start(controller) {
                 controller.enqueue(input);
@@ -353,9 +355,10 @@ describe("MediaPipeTasksVisionWorkerRuntime", () => {
         send({ type: "start-stream", streamId: 1, readable, writable });
 
         await vi.waitFor(() => expect(written).toHaveLength(1));
-        expect(segmenter.segmentForVideo).toHaveBeenCalledWith(input, 1000, expect.any(Function));
+        expect(segmenter.segmentForVideo).toHaveBeenCalledWith(input, expect.any(Number), expect.any(Function));
+        expect(segmenter.segmentForVideo.mock.calls[0][1]).toBeLessThan(2 ** 31);
         expect(written[0]).not.toBe(input);
-        expect(written[0].timestamp).toBe(1_000_000);
+        expect(written[0].timestamp).toBe(thirtyDaysUs);
         // eslint-disable-next-line @typescript-eslint/unbound-method
         expect(input.close).toHaveBeenCalledOnce();
 
