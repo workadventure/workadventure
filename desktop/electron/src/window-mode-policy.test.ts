@@ -8,7 +8,7 @@ import {
 } from "./window-mode-policy";
 
 const wayland = { XDG_SESSION_TYPE: "wayland", DISPLAY: ":0" };
-const plainStart = ["/opt/WorkAdventure/workadventure-desktop", "workadventure://play.example.com/@/org/world"];
+const plainStart = ["/opt/WorkAdventure/workadventure", "workadventure://play.example.com/@/org/world"];
 const x11Restart = [...plainStart, "--ozone-platform=x11", X11_RESTART_ARG];
 
 describe("windowModeApplies", () => {

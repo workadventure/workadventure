@@ -173,7 +173,7 @@ jobs:
         shell: bash
         run: |
           case "${{ runner.os }}" in
-            Linux) app=build/linux-unpacked/workadventure-desktop ;;
+            Linux) app=build/linux-unpacked/workadventure ;;
             macOS) app="$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)/Contents/MacOS/WorkAdventure" ;;
             Windows) app=build/win-unpacked/WorkAdventure.exe ;;
           esac
@@ -194,7 +194,7 @@ jobs:
         working-directory: "desktop/electron"
 
       # electron-builder names the outputs after productName ("WorkAdventure-<version>...") and the
-      # .deb after the package name ("workadventure-desktop_<version>_<arch>.deb"). Match by
+      # .deb after the package name ("workadventure_<version>_<arch>.deb"). Match by
       # extension (top level of build/ only — the unpacked app dirs are one level deeper) so the
       # globs survive version/arch changes. if-no-files-found: error turns a future naming drift into
       # a loud failure instead of a green run that silently uploaded nothing.
@@ -302,7 +302,7 @@ jobs:
           TAG: ${{ github.ref_name }}
         run: |
           : "${APT_SIGNING_KEY:?Add the APT_SIGNING_KEY secret: the armored private key, without a passphrase}"
-          key="$PWD/desktop/electron/deb/workadventure-desktop.gpg"
+          key="$PWD/desktop/electron/deb/workadventure.gpg"
           cd "$RUNNER_TEMP"
           git init -q -b apt-repo apt
           git -C apt remote add origin "https://x-access-token:${GH_TOKEN}@github.com/workadventure/desktop-releases.git"
@@ -315,7 +315,7 @@ jobs:
           dpkg-scanpackages "releases/download/$TAG" > "apt/packages/$TAG"
           cd apt
           cat packages/* > Packages
-          cp "$key" workadventure-desktop.gpg
+          cp "$key" workadventure.gpg
           {
             echo "Origin: WorkAdventure"
             echo "Label: WorkAdventure"
@@ -327,7 +327,7 @@ jobs:
           gpg --batch --yes --clearsign -o InRelease Release
           gpg --batch --yes --armor --detach-sign -o Release.gpg Release
           # Every install trusts the key shipped in the .deb: it must be the one that signs.
-          gpgv --keyring "$PWD/workadventure-desktop.gpg" InRelease
+          gpgv --keyring "$PWD/workadventure.gpg" InRelease
           git add -A
-          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "workadventure-desktop $TAG"
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "workadventure $TAG"
           git push origin apt-repo

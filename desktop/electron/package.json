@@ -1,7 +1,7 @@
 {
-    "name": "workadventure-desktop",
+    "name": "workadventure",
     "productName": "WorkAdventure",
-    "desktopName": "workadventure-desktop.desktop",
+    "desktopName": "workadventure.desktop",
     "version": "2.0.0-beta.1",
     "description": "Desktop application for WorkAdventure",
     "author": "TheCodingMachine <hello@workadventu.re>",

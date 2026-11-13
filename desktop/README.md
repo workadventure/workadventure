@@ -27,15 +27,15 @@ Installing the `.deb` from a GitHub release also adds the WorkAdventure APT repo
 then updates with the rest of the system (`sudo apt upgrade` or the Software Updater):
 
 ```bash
-sudo apt install ./workadventure-desktop_<version>_amd64.deb
+sudo apt install ./workadventure_<version>_amd64.deb
 ```
 
 Or add the repository yourself, then install:
 
 ```bash
-sudo curl -fsSLo /usr/share/keyrings/workadventure-desktop.gpg https://apt.workadventu.re/workadventure-desktop.gpg
-printf 'Types: deb\nURIs: https://apt.workadventu.re/\nSuites: ./\nSigned-By: /usr/share/keyrings/workadventure-desktop.gpg\n' | sudo tee /etc/apt/sources.list.d/workadventure-desktop.sources
-sudo apt update && sudo apt install workadventure-desktop
+sudo curl -fsSLo /usr/share/keyrings/workadventure.gpg https://apt.workadventu.re/workadventure.gpg
+printf 'Types: deb\nURIs: https://apt.workadventu.re/\nSuites: ./\nSigned-By: /usr/share/keyrings/workadventure.gpg\n' | sudo tee /etc/apt/sources.list.d/workadventure.sources
+sudo apt update && sudo apt install workadventure
 ```
 
 On Ubuntu 24.04 and later, prefer the `.deb` to the AppImage: AppArmor stops the AppImage from
@@ -80,19 +80,3 @@ the beta number (`2.0.0-beta.1` → `2.0.0-beta.2`). Set it to `false` and the n
 
 To test an update locally, point the app at a folder served over HTTP holding the `latest*.yml` files
 and the binaries: `WA_DESKTOP_UPDATE_URL=http://localhost:8080/`.
-
-### Moving the 1.x installs (bridge release)
-
-The previous desktop app (1.x) was published in the WorkAdventure releases of this repository and updates
-from the latest one. To move it to 2.0.0, once only:
-
-1. Wait for `desktop-v2.0.0` to be published in `desktop-releases`.
-2. Right after the next WorkAdventure release is published (it must be the "Latest" one), run the
-   **Desktop bridge release** workflow with its tag. It attaches the 2.0.0 Windows and Linux binaries
-   and their `latest.yml` / `latest-linux.yml` to it. Windows and AppImage installs then update to
-   2.0.0 at their next hourly check, and follow `desktop-releases` from then on.
-3. Mac users reinstall 2.0.0 by hand: macOS only installs an update signed like the running app.
-
-Only installs that check while that release is the Latest one move: once a newer WorkAdventure release
-is published, the others stay on 1.x until reinstalled (re-run the workflow on the new release to
-widen the window). Nothing else publishes the desktop app in the WorkAdventure releases anymore.
