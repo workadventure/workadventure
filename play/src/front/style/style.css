@@ -48,6 +48,11 @@ textarea,
     }
 }
 
+/* The page can be zoomed (WCAG 1.4.4): the map keeps pinch and drag for itself, the browser zooms the rest of the UI. */
+#game canvas {
+    touch-action: none;
+}
+
 body .message-info {
     width: 20%;
     height: auto;
