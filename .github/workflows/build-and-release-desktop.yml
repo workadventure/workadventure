@@ -216,11 +216,12 @@ jobs:
           path: desktop/electron/build/*.deb
           if-no-files-found: error
 
+      # x64 and arm64 installers in one artifact.
       - name: Upload Windows .exe artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'windows')
         with:
-          name: workadventure-desktop-win-x64.exe
+          name: workadventure-desktop-win.exe
           path: desktop/electron/build/*.exe
           if-no-files-found: error
 
@@ -232,9 +233,36 @@ jobs:
           path: desktop/electron/build/*.dmg
           if-no-files-found: error
 
+  # The arm64 installer is cross-built on the x64 runner, where its app cannot start: install it on arm64
+  # Windows and check it still runs 15 s later. On a release too: a failure here skips publish.
+  windows_arm64:
+    name: "Check the arm64 Windows installer"
+    needs: build
+    runs-on: windows-11-arm
+    steps:
+      - name: "Download the installers"
+        uses: actions/download-artifact@v4
+        with:
+          name: workadventure-desktop-win.exe
+
+      - name: "Install and start the app"
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem *-arm64-setup.exe
+          Start-Process -Wait -FilePath $setup.FullName -ArgumentList '/S'
+          $app = (Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter WorkAdventure.exe | Select-Object -First 1).FullName
+          # The x64 app would start here too, under emulation: check the PE machine type is arm64 (0xAA64).
+          $f = [IO.File]::OpenRead($app); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close()
+          $machine = [BitConverter]::ToUInt16($b, [BitConverter]::ToInt32($b, 0x3C) + 4)
+          if ($machine -ne 0xAA64) { throw ("{0} is not an arm64 executable (machine 0x{1:X})" -f $app, $machine) }
+          $p = Start-Process -FilePath $app -PassThru -RedirectStandardOutput startup.log -RedirectStandardError startup.err
+          Start-Sleep 15
+          if ($p.HasExited) { Get-Content startup.log, startup.err; throw "The packaged app exited during startup" }
+          Stop-Process -Id $p.Id
+
   publish:
     name: "Publish the desktop release"
-    needs: [draft, build]
+    needs: [draft, build, windows_arm64]
     if: ${{ needs.draft.result == 'success' }}
     environment: desktop-release
     runs-on: ubuntu-latest
