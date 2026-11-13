@@ -18,6 +18,7 @@ import {
     normalizePersistedPortalUrl,
     normalizePersistedWorldHistory,
 } from "./desktop-url-policy";
+import { defaultShortcuts } from "./shortcut-policy";
 
 export type SettingsData = {
     log_level: ElectronLog.LogLevel;
@@ -49,18 +50,7 @@ const defaultSettings: SettingsData = {
     portal_url: process.env.WA_DESKTOP_PORTAL_URL || getDefaultPortalUrl(),
     world_history: [],
     pinned_worlds: [],
-    shortcuts: {
-        // Global (work while another app has focus) — that is the point: muting during a meeting
-        // usually happens while the user is in some other window. Three-modifier chords are all but
-        // unclaimed on macOS/Windows, so registering them OS-wide steals nothing well-known. Notably
-        // NOT Cmd+Shift+A / Cmd+Shift+V (Zoom's combos): those are Finder's Go→Applications and
-        // paste-as-plain-text in Chrome/Slack/VS Code, which a global grab would shadow everywhere.
-        mute_toggle: "CommandOrControl+Alt+Shift+M",
-        camera_toggle: "CommandOrControl+Alt+Shift+C",
-        // Opt-in, unlike the two above: no default global accelerator; the tray "Mini window"
-        // item toggles it without a shortcut.
-        mini_window_toggle: "",
-    },
+    shortcuts: defaultShortcuts(process.platform),
 };
 
 /**

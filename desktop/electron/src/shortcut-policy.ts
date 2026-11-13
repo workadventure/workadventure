@@ -6,6 +6,27 @@
 export const SHORTCUT_NAMES = ["mute_toggle", "camera_toggle", "mini_window_toggle"] as const;
 export type ShortcutName = (typeof SHORTCUT_NAMES)[number];
 
+/**
+ * The shortcuts of a new profile. Global (they work while another app has focus) — that is the point:
+ * muting during a meeting usually happens while the user is in some other window. Three-modifier chords
+ * are all but unclaimed on macOS/Windows, so registering them OS-wide steals nothing well-known. Notably
+ * NOT Cmd+Shift+A / Cmd+Shift+V (Zoom's combos): those are Finder's Go→Applications and
+ * paste-as-plain-text in Chrome/Slack/VS Code, which a global grab would shadow everywhere.
+ *
+ * None on Linux: under Wayland the desktop asks the user to approve every global shortcut an app
+ * registers, and at the first launch that dialog comes out of nowhere. The user who sets a shortcut in
+ * the settings window expects it. (In X11 mode they would only work while WorkAdventure is in front.)
+ */
+export function defaultShortcuts(platform: string): Record<ShortcutName, string> {
+    const none = platform === "linux";
+    return {
+        mute_toggle: none ? "" : "CommandOrControl+Alt+Shift+M",
+        camera_toggle: none ? "" : "CommandOrControl+Alt+Shift+C",
+        // Opt-in everywhere: the tray "Mini window" item toggles it without a shortcut.
+        mini_window_toggle: "",
+    };
+}
+
 type KeyPress = Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "altKey" | "shiftKey" | "metaKey">;
 
 const NAMED_KEYS: Record<string, string> = {
