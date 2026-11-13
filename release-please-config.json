@@ -7,7 +7,9 @@
             "package-name": "workadventure",
             "include-component-in-tag": true,
             "skip-github-release": true,
-            "changelog-path": "CHANGELOG.md"
+            "changelog-path": "CHANGELOG.md",
+            "versioning": "prerelease",
+            "prerelease": true
         }
     }
 }

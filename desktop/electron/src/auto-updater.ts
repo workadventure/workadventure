@@ -56,6 +56,10 @@ async function init() {
     }
 
     autoUpdater.logger = log;
+    // A beta install (2.0.0-beta.1) turns allowPrerelease on, and electron-updater then skips every release
+    // whose tag is not bare semver: ours are desktop-v<version>, so a beta would never update. Betas are
+    // published as the latest release, so the stable path finds them too.
+    autoUpdater.allowPrerelease = false;
     // Every user is offered the latest release; an organization can point its installs elsewhere.
     const feedUrl = createDesktopConfig().updateFeedUrl;
     if (feedUrl) {

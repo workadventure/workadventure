@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.0.0 (2026-11-06)
+## 2.0.0-beta.1 (2026-11-13)
 
 First release of the new desktop app: WorkAdventure worlds in tabs, sign-in through the system browser,
 `workadventure://` links, a companion window during meetings, picture-in-picture, global mute and camera
