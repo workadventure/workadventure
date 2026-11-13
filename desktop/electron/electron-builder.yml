@@ -74,9 +74,12 @@ linux:
     category: Network;InstantMessaging
     maintainer: TheCodingMachine <hello@workadventu.re>
     target:
-        - AppImage
         # arm64 too, cross-built on the x64 runner: the app has no native module of its own. Both debs go
         # in the same APT index, where apt keeps the entries of its own architecture.
+        - target: AppImage
+          arch:
+              - x64
+              - arm64
         - target: deb
           arch:
               - x64
