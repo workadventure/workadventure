@@ -75,6 +75,9 @@ auto-updater looks for updates.
    draft release of `desktop-releases`, published (with the CHANGELOG section as notes) once all three
    are there.
 
+The app is in beta: with `"prerelease": true` in `release-please-config.json`, every release PR bumps
+the beta number (`2.0.0-beta.1` → `2.0.0-beta.2`). Set it to `false` and the next release PR is `2.0.0`.
+
 To test an update locally, point the app at a folder served over HTTP holding the `latest*.yml` files
 and the binaries: `WA_DESKTOP_UPDATE_URL=http://localhost:8080/`.
 

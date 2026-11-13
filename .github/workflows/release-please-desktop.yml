@@ -41,7 +41,7 @@ jobs:
           token: ${{ steps.app-token.outputs.token }}
 
       # Before release-please: it finds the previous release by this tag (skip-github-release, so it
-      # creates none itself). The first run tags the starting version, 2.0.0.
+      # creates none itself). The first run tags the starting version, 2.0.0-beta.1.
       - name: "Tag the desktop app version"
         run: |
           tag="desktop-v$(node -p "require('./desktop/electron/package.json').version")"
