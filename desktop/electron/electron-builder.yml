@@ -15,6 +15,11 @@ files:
 directories:
     output: ./build
 
+# No version in the file names, so that releases/latest/download/<name> always serves the latest release:
+# the download page of workadventu.re links there. The release tag holds the version, which is all the
+# auto-updater and the APT index need (both build their URLs from releases/download/<tag>/).
+artifactName: "${productName}-${arch}.${ext}"
+
 # Flipped in the packaged Electron binary only (`npm run dev` is unaffected); the same set as a new
 # Electron Forge app. The signed app can no longer be turned into a Node.js runtime
 # (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect) to run other code under its camera, microphone and
@@ -37,7 +42,7 @@ win:
     # One installer per architecture, cross-built on the x64 runner: a universal installer would double the
     # download for everyone. Both go in latest.yml, where electron-updater takes the file whose name holds
     # its own architecture: keep ${arch} in the name.
-    artifactName: "${productName}-${version}-${arch}-setup.${ext}"
+    artifactName: "${productName}-${arch}-setup.${ext}"
     target:
         - target: nsis
           arch:

@@ -193,10 +193,9 @@ jobs:
           kill "$pid" || true
         working-directory: "desktop/electron"
 
-      # electron-builder names the outputs after productName ("WorkAdventure-<version>...") and the
-      # .deb after the package name ("workadventure_<version>_<arch>.deb"). Match by
-      # extension (top level of build/ only — the unpacked app dirs are one level deeper) so the
-      # globs survive version/arch changes. if-no-files-found: error turns a future naming drift into
+      # electron-builder names the outputs "WorkAdventure-<arch>..." (artifactName in electron-builder.yml).
+      # Match by extension (top level of build/ only — the unpacked app dirs are one level deeper) so the
+      # globs survive naming changes. if-no-files-found: error turns a future naming drift into
       # a loud failure instead of a green run that silently uploaded nothing.
       # x64 and arm64 in one artifact, as for the .deb below.
       - name: Upload Linux .AppImage artifact
