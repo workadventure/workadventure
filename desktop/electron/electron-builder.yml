@@ -34,9 +34,18 @@ dmg:
 
 win:
     icon: "assets/icons/logo.ico"
-    artifactName: "${productName}-${version}-setup.${ext}"
+    # One installer per architecture, cross-built on the x64 runner: a universal installer would double the
+    # download for everyone. Both go in latest.yml, where electron-updater takes the file whose name holds
+    # its own architecture: keep ${arch} in the name.
+    artifactName: "${productName}-${version}-${arch}-setup.${ext}"
     target:
-        - nsis
+        - target: nsis
+          arch:
+              - x64
+              - arm64
+
+nsis:
+    buildUniversalInstaller: false
 
 mac:
     icon: assets/icons/logo.icns
