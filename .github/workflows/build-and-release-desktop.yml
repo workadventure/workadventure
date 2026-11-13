@@ -198,19 +198,21 @@ jobs:
       # extension (top level of build/ only — the unpacked app dirs are one level deeper) so the
       # globs survive version/arch changes. if-no-files-found: error turns a future naming drift into
       # a loud failure instead of a green run that silently uploaded nothing.
+      # x64 and arm64 in one artifact, as for the .deb below.
       - name: Upload Linux .AppImage artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          name: workadventure-desktop-linux-x64.AppImage
+          name: workadventure-desktop-linux.AppImage
           path: desktop/electron/build/*.AppImage
           if-no-files-found: error
 
+      # Both architectures, amd64 and arm64, in one artifact.
       - name: Upload Linux .deb artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          name: workadventure-desktop-linux-amd64.deb
+          name: workadventure-desktop-linux.deb
           path: desktop/electron/build/*.deb
           if-no-files-found: error
 
@@ -266,7 +268,7 @@ jobs:
   # .deb: apt checks each download against the SHA256 in the signed index. The .deb's after-install
   # script adds the repository (desktop/electron/deb/).
   apt_repository:
-    name: "Add the .deb to the APT repository"
+    name: "Add the .debs to the APT repository"
     # After publish: a draft's downloads are not public yet. Skipped with it on branches and PRs.
     needs: publish
     environment: desktop-release
@@ -288,14 +290,15 @@ jobs:
           repositories: desktop-releases
           permission-contents: write
 
-      - name: "Download the .deb"
+      # amd64 and arm64: one index lists both, and apt keeps the entries of its own architecture.
+      - name: "Download the .debs"
         uses: actions/download-artifact@v4
         with:
-          name: workadventure-desktop-linux-amd64.deb
+          name: workadventure-desktop-linux.deb
           # dpkg-scanpackages writes this path as the package's Filename: the path of its GitHub download URL.
           path: ${{ runner.temp }}/releases/download/${{ github.ref_name }}
 
-      - name: "Add it to the apt-repo branch and sign the index"
+      - name: "Add them to the apt-repo branch and sign the index"
         env:
           APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -312,7 +315,8 @@ jobs:
           fi
           mkdir -p apt/packages
           # One file per release: a re-run replaces its own, and every earlier version stays installable.
-          dpkg-scanpackages "releases/download/$TAG" > "apt/packages/$TAG"
+          # --multiversion: the two debs share name and version, and without it only one would be listed.
+          dpkg-scanpackages --multiversion "releases/download/$TAG" > "apt/packages/$TAG"
           cd apt
           cat packages/* > Packages
           cp "$key" workadventure.gpg
