@@ -10,7 +10,7 @@ import { isMiniWindowVisible, toggleMiniWindow } from "./mini-window-controller"
 import { t } from "./i18n";
 import { onShortcutsChange } from "./shortcuts";
 import { openSettingsWindow } from "./settings-window";
-import { TRAY_ICON_SIZE, renderTrayIcon } from "./tray-icon";
+import { TRAY_DOT_COLOR, TRAY_ICON_PATH, TRAY_ICON_SIZE, drawStatusDot } from "./tray-icon";
 
 let tray: Tray | undefined;
 
@@ -31,23 +31,25 @@ function trayStatusLabel(status: TrayStatus): string {
 const trayIconCache = new Map<TrayStatus, NativeImage>();
 
 /**
- * Build the tray image for a status as a non-template colored bitmap (a template image would
- * flatten the colored dot to monochrome), with a @2x representation so the glyph stays crisp on
- * Retina menu bars. Cached per status.
+ * The tray image for a status: the cup, with the status dot drawn over its 1x and 2x pixels. Not a
+ * template image, which would flatten the colored dot to monochrome. Cached per status.
  */
 function drawTrayStatusImage(status: TrayStatus): NativeImage {
     let image = trayIconCache.get(status);
     if (!image) {
-        image = nativeImage.createFromBitmap(renderTrayIcon(status, 1), {
-            width: TRAY_ICON_SIZE,
-            height: TRAY_ICON_SIZE,
-        });
-        image.addRepresentation({
-            scaleFactor: 2,
-            width: TRAY_ICON_SIZE * 2,
-            height: TRAY_ICON_SIZE * 2,
-            buffer: renderTrayIcon(status, 2),
-        });
+        const cup = nativeImage.createFromPath(TRAY_ICON_PATH);
+        const dotColor = TRAY_DOT_COLOR[status];
+        if (dotColor === undefined) {
+            image = cup;
+        } else {
+            image = nativeImage.createEmpty();
+            for (const scaleFactor of [1, 2]) {
+                const buffer = cup.toBitmap({ scaleFactor });
+                drawStatusDot(buffer, scaleFactor, dotColor);
+                const size = TRAY_ICON_SIZE * scaleFactor;
+                image.addRepresentation({ scaleFactor, width: size, height: size, buffer });
+            }
+        }
         trayIconCache.set(status, image);
     }
     return image;
