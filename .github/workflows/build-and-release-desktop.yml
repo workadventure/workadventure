@@ -238,6 +238,8 @@ jobs:
   windows_arm64:
     name: "Check the arm64 Windows installer"
     needs: build
+    # Without it, the draft job skipped on branches and PRs would skip this one too.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: windows-11-arm
     steps:
       - name: "Download the installers"
