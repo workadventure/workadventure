@@ -61,6 +61,12 @@ export const EnvironmentVariables = z.object({
     GRPC_PORT: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 50051))
         .describe("gRPC port for the back service. Defaults to 50051"),
+    GRPC_BIND_HOST: z
+        .string()
+        .optional()
+        .describe(
+            "Bind host for the back gRPC server. Defaults to `[::]` (all IPv6 and IPv4 addresses). Set to `0.0.0.0` on hosts without IPv6 support.",
+        ),
     MAX_PER_GROUP: PositiveIntAsString.optional()
         .or(z.string().max(0))
         .transform((val) => toNumber(val, 4))
