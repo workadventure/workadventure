@@ -27,7 +27,7 @@ Installing the `.deb` from a GitHub release also adds the WorkAdventure APT repo
 then updates with the rest of the system (`sudo apt upgrade` or the Software Updater):
 
 ```bash
-sudo apt install ./workadventure_<version>_amd64.deb   # or _arm64.deb on an arm64 machine
+sudo apt install ./WorkAdventure-amd64.deb   # or -arm64.deb on an arm64 machine
 ```
 
 Or add the repository yourself, then install:
