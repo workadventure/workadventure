@@ -10,3 +10,9 @@ test("puts the map name before the application name", () => {
     expect(createDesktopWindowTitle("Salle produit")).toBe("Salle produit - WorkAdventure");
     expect(createDesktopWindowTitle("  ")).toBe("WorkAdventure");
 });
+
+test("marks a beta version in the title", () => {
+    expect(createDesktopWindowTitle(undefined, "2.0.0-beta.1")).toBe("WorkAdventure (beta)");
+    expect(createDesktopWindowTitle("Salle produit", "2.0.0-beta.1")).toBe("Salle produit - WorkAdventure (beta)");
+    expect(createDesktopWindowTitle("Salle produit", "2.0.0")).toBe("Salle produit - WorkAdventure");
+});

@@ -775,6 +775,7 @@ export async function createWindow(initialUrl?: string) {
         height: windowState.height,
         autoHideMenuBar: true,
         show: false,
+        title: createDesktopWindowTitle(undefined, app.getVersion()),
         backgroundColor: "#0a1422",
         // Window / taskbar icon (Windows + Linux; macOS uses the dock icon). Matters mainly in dev —
         // packaged builds get the icon from the executable via electron-builder.
@@ -808,7 +809,7 @@ export async function createWindow(initialUrl?: string) {
         // alone until the map has loaded.
         onTabsChange(() => {
             const activeTab = getTabs().find((tab) => tab.id === getActiveTabId());
-            mainWindow?.setTitle(createDesktopWindowTitle(activeTab?.appTitle));
+            mainWindow?.setTitle(createDesktopWindowTitle(activeTab?.appTitle, app.getVersion()));
         });
     }
     // The tab strip is pinned to the top and reserves space; world views sit below it.
