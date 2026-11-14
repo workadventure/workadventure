@@ -23,6 +23,35 @@ import {
 
 const debug = Debug("space-to-back-forwarder");
 
+// Invitations to another map go through the world space, not the room, so the back's per-room limit
+// (GameRoom.isMeetingInvitationRequestTooHigh) does not apply: the sender's pusher caps them, like the client does
+// (50 people, 3 invitations per person in 10 minutes, reset when one is accepted). Counted here and not in an
+// event processor, which also runs on the receiver's pusher and would count each invitation twice.
+// An invitation is one event per tab the receiver has open, hence the limit per receiving tab.
+const MEETING_INVITATION_WINDOW_MS = 10 * 60 * 1000;
+const MEETING_INVITATION_MAX_RECEIVERS = 50;
+const MEETING_INVITATION_MAX_PER_TAB = 3;
+// ponytail: per pusher, so the reset on acceptance only works when both users share a pusher, and never pruned for
+// senders who leave; move it to the world space in the back (one per world) if that matters.
+const meetingInvitationLogBySender = new Map<string, { at: number; receiverUuid: string; receiverTab: string }[]>();
+
+function isMeetingInvitationTooHigh(senderUuid: string, receiverUuid: string, receiverTab: string): boolean {
+    const now = Date.now();
+    const log = (meetingInvitationLogBySender.get(senderUuid) ?? []).filter(
+        (entry) => entry.at > now - MEETING_INVITATION_WINDOW_MS,
+    );
+    meetingInvitationLogBySender.set(senderUuid, log);
+    const receivers = new Set(log.map((entry) => entry.receiverUuid)).add(receiverUuid);
+    if (
+        receivers.size > MEETING_INVITATION_MAX_RECEIVERS ||
+        log.filter((entry) => entry.receiverTab === receiverTab).length >= MEETING_INVITATION_MAX_PER_TAB
+    ) {
+        return true;
+    }
+    log.push({ at: now, receiverUuid, receiverTab });
+    return false;
+}
+
 export interface SpaceToBackForwarderInterface {
     registerUser(client: PusherWebSocket, filterType: FilterType): Promise<void>;
     updateUser(spaceUser: PartialSpaceUser, updateMask: string[]): void;
@@ -334,7 +363,21 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
             throw new Error("Event is required in spaceEvent");
         }
 
-        const processedEvent = this.eventProcessor.processPrivateEvent(event.spaceEvent.event, senderSpaceUser);
+        const spaceEvent = event.spaceEvent.event;
+        const receiverUuid = this._space.users.get(event.receiverUserId)?.uuid ?? event.receiverUserId;
+        if (
+            spaceEvent.$case === "meetingInvitationRequest" &&
+            senderSpaceUser &&
+            !senderSpaceUser.tags.includes("admin") &&
+            isMeetingInvitationTooHigh(senderSpaceUser.uuid, receiverUuid, event.receiverUserId)
+        ) {
+            throw new Error("Too many meeting invitations");
+        }
+        if (spaceEvent.$case === "meetingInvitationResponse" && spaceEvent.meetingInvitationResponse.accept) {
+            meetingInvitationLogBySender.delete(receiverUuid);
+        }
+
+        const processedEvent = this.eventProcessor.processPrivateEvent(spaceEvent, senderSpaceUser);
 
         this.forwardMessageToSpaceBack({
             $case: "privateEvent",
