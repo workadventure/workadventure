@@ -118,7 +118,10 @@ export interface AdminInterface {
 
     searchTags(world: string, searchText: string): Promise<string[]>;
 
-    getMember(memberUUID: string): Promise<MemberData>;
+    /**
+     * Returns the member only if it belongs to the world of playUri (the room of the player asking).
+     */
+    getMember(playUri: string, memberUUID: string): Promise<MemberData>;
 
     getWorldChatMembers(playUri: string, searchText: string): Promise<WorldChatMembersData>;
 
