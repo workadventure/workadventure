@@ -1,0 +1,22 @@
+{{- if .Values.excalidraw.enabled }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-env-excalidraw-storage
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  PORT: "8080"
+  LOG_LEVEL: "error"
+  BODY_LIMIT: "100mb"
+  STORAGE_URI: "redis://{{ .Release.Name }}-redis-master:6379/2"
+
+  {{- range $key, $val := .Values.commonEnv }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+
+  {{- range $key, $val := .Values.excalidraw.excalidrawStorage.env }}
+  {{ $key }}: {{ $val | quote }}
+  {{- end }}
+{{- end }}
