@@ -140,12 +140,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "キーストレージをリセット",
         resetKeyStorageConfirmationModal: {
-            title: "キーストレージリセットの確認",
-            content: "キーストレージをリセットしようとしています。よろしいですか？",
-            warning:
-                "キーストレージをリセットすると、現在のセッションとすべての信頼できるユーザーが削除されます。過去のメッセージへのアクセスを失う可能性があり、信頼できるユーザーとして認識されなくなります。続行する前に、この操作の結果を完全に理解していることを確認してください。",
-            cancel: "キャンセル",
-            continue: "続行",
+            newSecretsNext: "続けて新しいパスフレーズを選び、新しいリカバリーキーを受け取ります。",
+            oldSecretsStop: "現在のパスフレーズとリカバリーキーは使えなくなります。",
+            loseHistory: "これまでに暗号化されたメッセージが読めなくなる可能性があります。",
+            title: "暗号化をリセットしますか？",
+            content: "暗号化されたメッセージのロックを解除できなくなった場合にのみ実行してください。",
+            cancel: "暗号化を維持",
+            continue: "暗号化をリセット",
         },
     },
     sub: {

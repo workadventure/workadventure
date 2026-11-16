@@ -141,12 +141,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Wašu klucowu składarnju slědk stajiś",
         resetKeyStorageConfirmationModal: {
-            title: "Wobkšuśenje slědk stajenja klucoweje składarnje",
-            content: "Cośo wašu klucowu składarnju slědk stajiś. Sćo se wěsty?",
-            warning:
-                "Slědk stajenje klucoweje składarnje wótpórajo wašu aktualnu sesiju a wšyknych dowěry gódnych wužywarjow. Móžośo pśistup k někotarym pśedchadnym powěsćam zgubiś a wjace njejsćo ako dowěry gódny wužywaŕ spóznany. Zawěsććo, až rozmějośo wuslědki toś teje akcije pśed pókšacowanim.",
-            cancel: "Pśetergnuś",
-            continue: "Dalej",
+            newSecretsNext: "Ned pótom wuběraśo nowu frazu a dostanjośo nowy wótnowjeński kluc.",
+            oldSecretsStop: "Waša aktualna fraza a waš wótnowjeński kluc wěcej njefunkcioněrujotej.",
+            loseHistory: "Až doněnta skoděrowane powěsći snaź wěcej cytajobne njejsu.",
+            title: "Koděrowanje slědk stajiś?",
+            content: "Cyńśo to jano, gaž swóje skoděrowane powěsći wěcej wótwóriś njamóžośo.",
+            cancel: "Koděrowanje wobchowaś",
+            continue: "Koděrowanje slědk stajiś",
         },
     },
     sub: {

@@ -142,12 +142,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Restablir l'emmagatzematge de claus",
         resetKeyStorageConfirmationModal: {
-            title: "Confirmació de restabliment de l'emmagatzematge de claus",
-            content: "Esteu a punt de restablir l'emmagatzematge de claus. Esteu segur?",
-            warning:
-                "Restablir l'emmagatzematge de claus eliminarà la vostra sessió actual i tots els usuaris de confiança. Podríeu perdre l'accés a alguns missatges passats i ja no serà reconegut com a usuari de confiança. Assegureu-vos d'entendre completament les conseqüències d'aquesta acció abans de continuar.",
-            cancel: "Cancel·lar",
-            continue: "Continuar",
+            newSecretsNext: "Tot seguit triaràs una frase nova i obtindràs una clau de recuperació nova.",
+            oldSecretsStop: "La frase i la clau de recuperació actuals deixaran de funcionar.",
+            loseHistory: "És possible que els missatges xifrats fins ara ja no es puguin llegir.",
+            title: "Vols restablir el xifratge?",
+            content: "Fes-ho només si ja no pots desbloquejar els missatges xifrats.",
+            cancel: "Mantén el xifratge",
+            continue: "Restableix el xifratge",
         },
     },
     sub: {

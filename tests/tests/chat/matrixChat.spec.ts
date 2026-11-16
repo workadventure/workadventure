@@ -487,7 +487,7 @@ test.describe("Matrix chat tests @oidc @matrix @nowebkit", () => {
         await ChatUtils.cancelledContinueWithSSO(page, page.context());
         await page.getByTestId("chatBackward").click();
 
-        await expect(page.getByText("Chat recovery key creation")).not.toBeAttached();
+        await expect(page.getByText("Choose a security passphrase")).not.toBeAttached();
         await expect(page.getByTestId("restoreEncryptionButton")).toBeAttached();
     });
 

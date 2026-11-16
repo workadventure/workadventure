@@ -139,12 +139,13 @@ const menu: BaseTranslation = {
     chat: {
         resetKeyStorageUpButtonLabel: "Reset your key storage",
         resetKeyStorageConfirmationModal: {
-            title: "Key storage reset confirmation",
-            content: "You are about to reset the key storage. Are you sure?",
-            warning:
-                "Resetting the key storage will remove your current session and all trusted users. You could lose access to some past messages, and you will no longer be recognized as a trusted user. Make sure you fully understand the consequences of this action before proceeding.",
-            cancel: "Cancel",
-            continue: "Continue",
+            newSecretsNext: "You will choose a new passphrase and get a new recovery key right after.",
+            oldSecretsStop: "Your current passphrase and recovery key will stop working.",
+            loseHistory: "Messages encrypted until now may no longer be readable.",
+            title: "Reset your encryption?",
+            content: "Do this only if you can no longer unlock your encrypted messages.",
+            cancel: "Keep my encryption",
+            continue: "Reset encryption",
         },
     },
     sub: {

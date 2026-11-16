@@ -141,12 +141,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "wašu klučowu składarnju wróćo stajić",
         resetKeyStorageConfirmationModal: {
-            title: "wobkrućenje wróćo stajenja klučoweje składarnje",
-            content: "Chceće wašu klučowu składarnju wróćo stajić. Sće wěsty?",
-            warning:
-                "Wróćo stajenje klučoweje składarnje wotstroni wašu aktualnu sesiju a wšěch dowěry hódnych wužiwarjow. Móžeće přistup k někotrym předchadnym powěsćam zhubić a wjace njejsće jako dowěry hódny wužiwar spóznaty. Zawěsćće, zo rozumjeće wuslědki tuteje akcije před pokročowanjom.",
-            cancel: "přetorhnyć",
-            continue: "pokročować",
+            newSecretsNext: "Hnydom potom wuběraće nowu frazu a dóstanjeće nowy wobnowjenski kluč.",
+            oldSecretsStop: "Waša aktualna fraza a waš wobnowjenski kluč hižo njefunguještej.",
+            loseHistory: "Hač dotal zaklučowane powěsće snano hižo čitajomne njejsu.",
+            title: "Zaklučowanje wróćo stajić?",
+            content: "Čińće to jenož, hdyž swoje zaklučowane powěsće hižo wotewrěć njemóžeće.",
+            cancel: "Zaklučowanje wobchować",
+            continue: "Zaklučowanje wróćo stajić",
         },
     },
     sub: {
