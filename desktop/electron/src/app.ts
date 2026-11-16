@@ -179,8 +179,7 @@ async function init() {
         await createWindow(initialProtocolTarget);
 
         // Auto-away + notification hush: forward system idle transitions to the renderer, which
-        // flips the WA availability to "away" and back. presence.setIdle (called inside) also
-        // drives the tray status dot.
+        // flips the WA availability to "away" and back (the tray then shows that status).
         // The shell window has no preload: the worlds live in the tab views, so every tab gets it.
         startIdleMonitor((idle) => {
             for (const tab of getTabs()) {

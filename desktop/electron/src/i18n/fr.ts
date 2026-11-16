@@ -99,12 +99,6 @@ const fr: NativeStrings = {
     "menu.hideTabBarDetail":
         "Vous avez {total} onglets ouverts. Si vous masquez la barre d'onglets, cet onglet restera ouvert et les {count} autres seront fermés.",
 
-    "tray.status.meeting": "En réunion",
-    "tray.status.do_not_disturb": "Ne pas déranger",
-    "tray.status.busy": "Occupé",
-    "tray.status.back_in_a_moment": "De retour bientôt",
-    "tray.status.idle": "Inactif",
-    "tray.status.online": "Disponible",
     "tray.status.offline": "Hors ligne",
     "tray.microphone": "Microphone",
     "tray.camera": "Caméra",

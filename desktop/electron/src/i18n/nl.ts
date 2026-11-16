@@ -97,12 +97,6 @@ const nl: NativeStrings = {
     "menu.hideTabBarDetail":
         "Je hebt {total} tabbladen open. Als je de tabbladbalk verbergt, blijft dit tabblad open en worden de {count} andere gesloten.",
 
-    "tray.status.meeting": "In een vergadering",
-    "tray.status.do_not_disturb": "Niet storen",
-    "tray.status.busy": "Bezet",
-    "tray.status.back_in_a_moment": "Zo terug",
-    "tray.status.idle": "Inactief",
-    "tray.status.online": "Beschikbaar",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microfoon",
     "tray.camera": "Camera",

@@ -1,58 +1,45 @@
 import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
+import type { DesktopStatus } from "@workadventure/desktop-api";
 
 import settings from "./settings";
 import { createWindow, getWindow } from "./window";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
-import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
+import { getMediaState, getStatus, onPresenceChange } from "./presence";
 import { isMiniWindowVisible, toggleMiniWindow } from "./mini-window-controller";
 import { t } from "./i18n";
 import { onShortcutsChange } from "./shortcuts";
 import { openSettingsWindow } from "./settings-window";
-import { TRAY_DOT_COLOR, TRAY_ICON_PATH, TRAY_ICON_SIZE, drawStatusDot } from "./tray-icon";
+import { OFFLINE_DOT_COLOR, TRAY_ICON_PATH, TRAY_ICON_SIZE, drawStatusDot } from "./tray-icon";
 
 let tray: Tray | undefined;
 
-const TRAY_STATUS_EMOJI: Record<TrayStatus, string> = {
-    meeting: "🔴",
-    do_not_disturb: "⛔",
-    busy: "🟡",
-    back_in_a_moment: "🔵",
-    idle: "🟡",
-    online: "🟢",
-    offline: "⚪",
-};
-
-function trayStatusLabel(status: TrayStatus): string {
-    return `${TRAY_STATUS_EMOJI[status]} ${t(`tray.status.${status}`)}`;
+/** The status the tray shows: the one WorkAdventure shows, or "offline" outside a world. */
+function trayStatus(): DesktopStatus {
+    return getStatus() ?? { label: t("tray.status.offline"), color: OFFLINE_DOT_COLOR };
 }
 
-const trayIconCache = new Map<TrayStatus, NativeImage>();
+// The last image drawn. The colors come from the page, so only one is kept.
+let trayImage: { color: number; image: NativeImage } | undefined;
 
 /**
- * The tray image for a status: the cup, with the status dot drawn over its 1x and 2x pixels. Not a
- * template image, which would flatten the colored dot to monochrome. Cached per status.
+ * The tray image for a dot color: the cup, with the status dot drawn over its 1x and 2x pixels. Not a
+ * template image, which would flatten the colored dot to monochrome.
  */
-function drawTrayStatusImage(status: TrayStatus): NativeImage {
-    let image = trayIconCache.get(status);
-    if (!image) {
+function drawTrayStatusImage(color: number): NativeImage {
+    if (trayImage?.color !== color) {
         const cup = nativeImage.createFromPath(TRAY_ICON_PATH);
-        const dotColor = TRAY_DOT_COLOR[status];
-        if (dotColor === undefined) {
-            image = cup;
-        } else {
-            image = nativeImage.createEmpty();
-            for (const scaleFactor of [1, 2]) {
-                const buffer = cup.toBitmap({ scaleFactor });
-                drawStatusDot(buffer, scaleFactor, dotColor);
-                const size = TRAY_ICON_SIZE * scaleFactor;
-                image.addRepresentation({ scaleFactor, width: size, height: size, buffer });
-            }
+        const image = nativeImage.createEmpty();
+        for (const scaleFactor of [1, 2]) {
+            const buffer = cup.toBitmap({ scaleFactor });
+            drawStatusDot(buffer, scaleFactor, color);
+            const size = TRAY_ICON_SIZE * scaleFactor;
+            image.addRepresentation({ scaleFactor, width: size, height: size, buffer });
         }
-        trayIconCache.set(status, image);
+        trayImage = { color, image };
     }
-    return image;
+    return trayImage.image;
 }
 
 /**
@@ -60,16 +47,15 @@ function drawTrayStatusImage(status: TrayStatus): NativeImage {
  * tray's menu starts with them, and so does the Dock icon's menu (macOS).
  */
 function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
-    const status = getTrayStatus();
-    // Status / mic / camera / mini window only make sense inside a world; gray them out otherwise
-    // (landing / login, or no window). "offline" is exactly the not-in-a-world state.
-    const inWorld = status !== "offline";
+    // Mic / camera / mini window only make sense inside a world, which is when there is a status; gray
+    // them out otherwise (landing / login, or no window).
+    const inWorld = getStatus() !== undefined;
     const media = getMediaState();
     const shortcuts = settings.get("shortcuts");
     return [
         {
             // Reports the live status; it is changed in WorkAdventure or the mini window.
-            label: trayStatusLabel(status),
+            label: trayStatus().label,
             enabled: false,
         },
         { type: "separator" },
@@ -180,9 +166,9 @@ function updateTrayIcon() {
     if (!tray) {
         return;
     }
-    const status = getTrayStatus();
-    tray.setImage(drawTrayStatusImage(status));
-    tray.setToolTip(`WorkAdventure — ${t(`tray.status.${status}`)}`);
+    const status = trayStatus();
+    tray.setImage(drawTrayStatusImage(status.color));
+    tray.setToolTip(`WorkAdventure — ${status.label}`);
 }
 
 export function getTray() {
@@ -190,13 +176,13 @@ export function getTray() {
 }
 
 export function createTray() {
-    tray = new Tray(drawTrayStatusImage(getTrayStatus()));
+    tray = new Tray(drawTrayStatusImage(trayStatus().color));
     updateTrayIcon();
     updateTrayContextMenu();
     onWorldHistoryChange(updateTrayContextMenu);
     // The microphone and camera items show their shortcuts.
     onShortcutsChange(updateTrayContextMenu);
-    // Presence (meeting / mic / camera / idle) drives both the status dot and the quick-action
+    // Presence (status / mic / camera) drives both the status dot and the quick-action
     // checkmarks, so rebuild both on every change.
     onPresenceChange(() => {
         updateTrayIcon();

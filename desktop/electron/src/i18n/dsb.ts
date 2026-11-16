@@ -97,12 +97,6 @@ const dsb: NativeStrings = {
     "menu.hideTabBarDetail":
         "Maśo {total} rejtarikow wócynjonych. Gaž rejtarikowu lajstu schowajośo, wóstanjo toś ten rejtarik wócynjony a {count} drugich se zacynijo.",
 
-    "tray.status.meeting": "W zasedanju",
-    "tray.status.do_not_disturb": "Njewobśěžowaś",
-    "tray.status.busy": "Zabuzowany",
-    "tray.status.back_in_a_moment": "Wrośu se skóro",
-    "tray.status.idle": "Njeaktiwny",
-    "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamara",

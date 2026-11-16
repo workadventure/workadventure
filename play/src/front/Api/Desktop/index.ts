@@ -1,14 +1,14 @@
 import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
 import { AvailabilityStatus } from "@workadventure/messages";
-import type { DesktopAvailability, DesktopPresence, WorkAdventureDesktopApi } from "@workadventure/desktop-api";
+import type { DesktopPresence, WorkAdventureDesktopApi } from "@workadventure/desktop-api";
 import {
+    availabilityStatusStore,
     enableCameraSceneVisibilityStore,
     requestedCameraState,
     requestedMicrophoneState,
     requestedStatusStore,
     silentStore,
 } from "../../Stores/MediaStore";
-import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore, isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
@@ -33,24 +33,12 @@ import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMe
 
 import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
 import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
+import { getColorOfStatus, getStatusLabel } from "../../Utils/AvailabilityStatus";
 import { startSvelteAnnotations } from "./SvelteAnnotations";
 
 /** The desktop contract this page speaks (see `hello` in @workadventure/desktop-api). */
 const PAGE_CONTRACT = 2;
 const desktopDownload = desktopDownloadUrl(DESKTOP_VERSION_POLICY);
-
-function requestedStatusToKey(status: RequestedStatus | null): DesktopAvailability {
-    switch (status) {
-        case AvailabilityStatus.BUSY:
-            return "busy";
-        case AvailabilityStatus.BACK_IN_A_MOMENT:
-            return "back_in_a_moment";
-        case AvailabilityStatus.DO_NOT_DISTURB:
-            return "do_not_disturb";
-        default:
-            return "online";
-    }
-}
 
 /**
  * Aggregate `unreadNotificationCount` across every room on the chat connection into a single
@@ -271,20 +259,22 @@ class DesktopApi {
                     requestedMicrophoneState,
                     requestedCameraState,
                     requestedScreenSharingState,
-                    requestedStatusStore,
+                    availabilityStatusStore,
                     gameSceneIsLoadedStore,
                     onboardingStore,
                     meetingInvitationRequestStore,
                     allowPictureInPictureStore,
                     isInRemoteConversation,
                     currentPlayerGroupIdStore,
+                    // The status label follows the language, which can change without a reload.
+                    LL,
                 ],
                 ([
                     $inMeeting,
                     $mic,
                     $cam,
                     $share,
-                    $requested,
+                    $status,
                     $inWorld,
                     $onboarding,
                     $invitation,
@@ -303,7 +293,7 @@ class DesktopApi {
                     onboarding: $onboarding,
                     invitationPending: $invitation !== null,
                     autoOpenAllowed: $allowPictureInPicture,
-                    requestedStatus: requestedStatusToKey($requested),
+                    status: { label: getStatusLabel($status), color: getColorOfStatus($status).filling },
                 }),
             );
             //eslint-disable-next-line svelte/no-ignored-unsubscribe

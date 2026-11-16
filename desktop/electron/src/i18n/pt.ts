@@ -97,12 +97,6 @@ const pt: NativeStrings = {
     "menu.hideTabBarDetail":
         "Você tem {total} abas abertas. Ocultar a barra de abas mantém esta aba e fecha as outras {count}.",
 
-    "tray.status.meeting": "Em uma reunião",
-    "tray.status.do_not_disturb": "Não perturbe",
-    "tray.status.busy": "Ocupado",
-    "tray.status.back_in_a_moment": "Volto em instantes",
-    "tray.status.idle": "Inativo",
-    "tray.status.online": "Disponível",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microfone",
     "tray.camera": "Câmera",

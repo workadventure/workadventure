@@ -97,12 +97,6 @@ const es: NativeStrings = {
     "menu.hideTabBarDetail":
         "Tienes {total} pestañas abiertas. Al ocultar la barra de pestañas se mantiene esta pestaña y se cierran las otras {count}.",
 
-    "tray.status.meeting": "En una reunión",
-    "tray.status.do_not_disturb": "No molestar",
-    "tray.status.busy": "Ocupado",
-    "tray.status.back_in_a_moment": "Vuelvo en un momento",
-    "tray.status.idle": "Inactivo",
-    "tray.status.online": "Disponible",
     "tray.status.offline": "Desconectado",
     "tray.microphone": "Micrófono",
     "tray.camera": "Cámara",

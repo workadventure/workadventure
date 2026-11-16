@@ -97,12 +97,6 @@ const it: NativeStrings = {
     "menu.hideTabBarDetail":
         "Hai {total} schede aperte. Nascondendo la barra delle schede, questa scheda resta aperta e le altre {count} vengono chiuse.",
 
-    "tray.status.meeting": "In una riunione",
-    "tray.status.do_not_disturb": "Non disturbare",
-    "tray.status.busy": "Occupato",
-    "tray.status.back_in_a_moment": "Torno subito",
-    "tray.status.idle": "Inattivo",
-    "tray.status.online": "Disponibile",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microfono",
     "tray.camera": "Fotocamera",

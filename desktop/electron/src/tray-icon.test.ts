@@ -4,13 +4,13 @@ import { TRAY_ICON_PATH, TRAY_ICON_SIZE, drawStatusDot } from "./tray-icon";
 
 const WHITE = [0xff, 0xff, 0xff, 0xff];
 const TRANSPARENT = [0, 0, 0, 0];
-const MEETING_RED = 0xe74c3c;
-const MEETING_RED_BGRA = [0x3c, 0x4c, 0xe7, 0xff];
+const RED = 0xe74c3c;
+const RED_BGRA = [0x3c, 0x4c, 0xe7, 0xff];
 
 /** A white square standing for the cup, with the dot drawn over it. */
 function whiteIconWithDot(scale: number): Buffer {
     const icon = Buffer.alloc((TRAY_ICON_SIZE * scale) ** 2 * 4, 0xff);
-    drawStatusDot(icon, scale, MEETING_RED);
+    drawStatusDot(icon, scale, RED);
     return icon;
 }
 
@@ -33,8 +33,8 @@ test("has a 16 px tray icon and its @2x", () => {
 
 test("draws the dot in the bottom-right corner, with a transparent gap around it", () => {
     const icon = whiteIconWithDot(1);
-    expect(pixel(icon, 1, 12, 12)).toEqual(MEETING_RED_BGRA);
-    expect(pixel(icon, 1, 15, 12)).toEqual(MEETING_RED_BGRA);
+    expect(pixel(icon, 1, 12, 12)).toEqual(RED_BGRA);
+    expect(pixel(icon, 1, 15, 12)).toEqual(RED_BGRA);
     // The dot's own corner and the pixel left of the dot are cleared.
     expect(pixel(icon, 1, 10, 10)).toEqual(TRANSPARENT);
     expect(pixel(icon, 1, 9, 12)).toEqual(TRANSPARENT);
@@ -45,8 +45,8 @@ test("draws the dot in the bottom-right corner, with a transparent gap around it
 
 test("scales the dot by whole pixels", () => {
     const icon = whiteIconWithDot(2);
-    expect(pixel(icon, 2, 24, 24)).toEqual(MEETING_RED_BGRA);
-    expect(pixel(icon, 2, 25, 25)).toEqual(MEETING_RED_BGRA);
+    expect(pixel(icon, 2, 24, 24)).toEqual(RED_BGRA);
+    expect(pixel(icon, 2, 25, 25)).toEqual(RED_BGRA);
     expect(pixel(icon, 2, 18, 25)).toEqual(TRANSPARENT);
     expect(pixel(icon, 2, 19, 25)).toEqual(TRANSPARENT);
     expect(pixel(icon, 2, 17, 25)).toEqual(WHITE);

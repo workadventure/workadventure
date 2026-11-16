@@ -97,12 +97,6 @@ const hsb: NativeStrings = {
     "menu.hideTabBarDetail":
         "Maće {total} rajtarkow wočinjenych. Hdyž lajstu rajtarkow schowaće, wostanje tutón rajtark wočinjeny a {count} druhich so začini.",
 
-    "tray.status.meeting": "W zasedanju",
-    "tray.status.do_not_disturb": "Njewobćežować",
-    "tray.status.busy": "Zabuzowany",
-    "tray.status.back_in_a_moment": "Wróću so bórze",
-    "tray.status.idle": "Njeaktiwny",
-    "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",

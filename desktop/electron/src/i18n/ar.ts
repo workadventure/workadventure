@@ -91,12 +91,6 @@ const ar: NativeStrings = {
     "menu.hideTabBarDetail":
         "لديك {total} علامات تبويب مفتوحة. يؤدي إخفاء شريط علامات التبويب إلى الإبقاء على علامة التبويب هذه وإغلاق علامات التبويب الـ {count} الأخرى.",
 
-    "tray.status.meeting": "في اجتماع",
-    "tray.status.do_not_disturb": "عدم الإزعاج",
-    "tray.status.busy": "مشغول",
-    "tray.status.back_in_a_moment": "سأعود بعد قليل",
-    "tray.status.idle": "خامل",
-    "tray.status.online": "متاح",
     "tray.status.offline": "غير متصل",
     "tray.microphone": "الميكروفون",
     "tray.camera": "الكاميرا",

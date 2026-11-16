@@ -1,21 +1,15 @@
-import type { DesktopAvailability, DesktopPresence } from "@workadventure/desktop-api";
+import type { DesktopPresence, DesktopStatus } from "@workadventure/desktop-api";
 
 /**
- * Single source of truth for the user's live presence, aggregated from two sources:
- *   - the renderer (in-meeting / mic / camera), pushed via `app:setPresence`;
- *   - the main process idle monitor (see idle-monitor.ts), pushed via setIdle().
+ * Single source of truth for the user's live presence, pushed by the renderer via `app:setPresence`.
  *
- * The tray reflects the effective status (meeting > chosen availability > idle > online) as a colored
- * dot and mirrors the mic/camera booleans into its quick-action checkmarks. Kept deliberately dumb: it
- * holds state and fans out a change event; consumers decide what to render.
+ * The tray shows the user's status as WorkAdventure shows it (its name and dot color) and mirrors the
+ * mic/camera booleans into its quick-action checkmarks. Kept deliberately dumb: it holds state and fans
+ * out a change event; consumers decide what to render.
  */
 
-// The effective status shown by the tray dot: an active meeting, the user's chosen availability
-// (busy / back_in_a_moment / do_not_disturb), the auto-idle state, or plain online.
-export type TrayStatus = "meeting" | "idle" | "online" | "busy" | "back_in_a_moment" | "do_not_disturb" | "offline";
-
-/** What the renderer pushes, plus the idle flag of the main process. */
-type PresenceState = Required<DesktopPresence> & { idle: boolean };
+/** What the renderer pushes. No status until the page has sent a valid one. */
+type PresenceState = Required<Omit<DesktopPresence, "status">> & { status: DesktopStatus | undefined };
 
 const state: PresenceState = {
     inMeeting: false,
@@ -23,25 +17,26 @@ const state: PresenceState = {
     micEnabled: false,
     cameraEnabled: false,
     screenSharing: false,
-    idle: false,
     inWorld: false,
     onboarding: false,
     invitationPending: false,
     autoOpenAllowed: true,
-    requestedStatus: "online",
+    status: undefined,
 };
 
-const TRAY_AVAILABILITY_VALUES: readonly DesktopAvailability[] = [
-    "online",
-    "busy",
-    "back_in_a_moment",
-    "do_not_disturb",
-];
-
-function coerceAvailability(value: unknown): DesktopAvailability {
-    return typeof value === "string" && (TRAY_AVAILABILITY_VALUES as readonly string[]).includes(value)
-        ? (value as DesktopAvailability)
-        : "online";
+/** The page's status, if it is a label and a 0xRRGGBB color. The label is cut to fit a menu. */
+export function coerceStatus(value: unknown): DesktopStatus | undefined {
+    if (!value || typeof value !== "object") {
+        return undefined;
+    }
+    const { label, color } = value as Record<string, unknown>;
+    if (typeof label !== "string" || typeof color !== "number" || !Number.isInteger(color)) {
+        return undefined;
+    }
+    if (color < 0 || color > 0xffffff) {
+        return undefined;
+    }
+    return { label: label.slice(0, 100), color };
 }
 
 const listeners = new Set<() => void>();
@@ -74,7 +69,7 @@ export function onPresenceChange(listener: () => void): () => void {
     return () => listeners.delete(listener);
 }
 
-/** Renderer-sourced presence (in-meeting + media + availability). Emits only on a real change. */
+/** Renderer-sourced presence (in-meeting + media + status). Emits only on a real change. */
 export function setRendererPresence(next: {
     inMeeting?: boolean;
     withOthers?: boolean;
@@ -85,7 +80,7 @@ export function setRendererPresence(next: {
     onboarding?: boolean;
     invitationPending?: boolean;
     autoOpenAllowed?: boolean;
-    requestedStatus?: unknown;
+    status?: unknown;
 }): void {
     const inMeeting = Boolean(next.inMeeting);
     const withOthers = Boolean(next.withOthers);
@@ -96,7 +91,7 @@ export function setRendererPresence(next: {
     const onboarding = Boolean(next.onboarding);
     const invitationPending = Boolean(next.invitationPending);
     const autoOpenAllowed = next.autoOpenAllowed !== false;
-    const requestedStatus = coerceAvailability(next.requestedStatus);
+    const status = coerceStatus(next.status);
     if (
         state.inMeeting === inMeeting &&
         state.withOthers === withOthers &&
@@ -107,7 +102,8 @@ export function setRendererPresence(next: {
         state.onboarding === onboarding &&
         state.invitationPending === invitationPending &&
         state.autoOpenAllowed === autoOpenAllowed &&
-        state.requestedStatus === requestedStatus
+        state.status?.label === status?.label &&
+        state.status?.color === status?.color
     ) {
         return;
     }
@@ -120,16 +116,7 @@ export function setRendererPresence(next: {
     state.onboarding = onboarding;
     state.invitationPending = invitationPending;
     state.autoOpenAllowed = autoOpenAllowed;
-    state.requestedStatus = requestedStatus;
-    emit();
-}
-
-/** Main-sourced idle flag (from the powerMonitor idle monitor). Emits only on a real change. */
-export function setIdle(idle: boolean): void {
-    if (state.idle === Boolean(idle)) {
-        return;
-    }
-    state.idle = Boolean(idle);
+    state.status = status;
     emit();
 }
 
@@ -144,36 +131,20 @@ export function resetPresence(): void {
     state.micEnabled = false;
     state.cameraEnabled = false;
     state.screenSharing = false;
-    state.idle = false;
     state.inWorld = false;
     state.onboarding = false;
     state.invitationPending = false;
     state.autoOpenAllowed = true;
-    state.requestedStatus = "online";
+    state.status = undefined;
     emit();
 }
 
 /**
- * Effective tray status: not being in a world (landing / login / no window) is "offline" and outranks
- * everything; then an active meeting; then an explicitly-chosen availability (busy / back_in_a_moment /
- * do_not_disturb) outranks the auto-idle heuristic; otherwise idle, then the plain online default.
+ * The user's status in WorkAdventure, or undefined outside a world (landing / login, or the window is
+ * closed), where there is none: the tray then shows "offline" rather than a stale status.
  */
-export function getTrayStatus(): TrayStatus {
-    if (!state.inWorld) {
-        // Not connected to a world (landing / login, or the window is closed): no live availability,
-        // so the dot is "offline" rather than a stale green.
-        return "offline";
-    }
-    if (state.inMeeting) {
-        return "meeting";
-    }
-    if (state.requestedStatus !== "online") {
-        return state.requestedStatus;
-    }
-    if (state.idle) {
-        return "idle";
-    }
-    return "online";
+export function getStatus(): DesktopStatus | undefined {
+    return state.inWorld ? state.status : undefined;
 }
 
 export function getMediaState(): { micEnabled: boolean; cameraEnabled: boolean; inMeeting: boolean } {
