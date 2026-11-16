@@ -3,23 +3,41 @@ import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
     application: {
-        title: "Desktopapplicatie",
+        title: "Desktop-app",
         installed: "Geïnstalleerde versie",
         unknown: "Niet beschikbaar",
         startAtLogin: "WorkAdventure starten wanneer ik inlog op mijn computer",
+        openSettings: "Instellingen van de app openen",
+        windowMode: {
+            title: "Venstermodus",
+            x11: "Compatibiliteit (X11), aanbevolen",
+            x11Description:
+                "Het picture-in-picture-venster en de presentatorbalk openen waar je ze het laatst hebt neergezet en blijven boven andere apps. Sneltoetsen voor microfoon en camera werken alleen als WorkAdventure op de voorgrond staat. Vraagt iets meer van de grafische kaart als je schermen verschillende schaalinstellingen hebben.",
+            wayland: "Native Wayland",
+            waylandDescription:
+                "Sneltoetsen voor microfoon en camera werken vanuit elke app. Het picture-in-picture-venster opent elke keer in het midden van het scherm en kan niet boven andere apps blijven: je moet het zelf verplaatsen. Lichter voor de grafische kaart als je schermen verschillende schaalinstellingen hebben.",
+            waylandAfterRestart:
+                "Na het opnieuw starten opent het picture-in-picture-venster in het midden van je scherm en blijft het niet boven andere apps.",
+            restartNeeded:
+                "Start WorkAdventure opnieuw om deze modus te gebruiken. Als je in een vergadering zit, verlaat je die.",
+            restartNow: "Nu opnieuw starten",
+            setByCommandLine:
+                "De modus is ingesteld via de opdrachtregel (--ozone-platform), dus deze keuze heeft geen effect.",
+            x11Unavailable: "De compatibiliteitsmodus heeft XWayland nodig, maar dat draait niet.",
+        },
         browser: "Je gebruikt WorkAdventure in je browser.",
         recommendedVersion: "Aanbevolen versie",
         minimumVersion: "Minimaal ondersteunde versie",
-        download: "Desktopapplicatie downloaden",
+        download: "Desktop-app downloaden",
         managed:
             "Volg het updatebeleid van je organisatie. Deze pagina installeert geen applicatie en zet geen oudere versie terug.",
         status: {
             belowMinimum:
-                "Deze desktopversie is ouder dan de minimaal ondersteunde versie van deze instantie. Je kunt doorgaan, maar sommige functies werken mogelijk niet.",
-            recommended: "Je gebruikt de aanbevolen versie voor deze instantie.",
+                "Deze versie van de app is ouder dan de minimale versie die deze server ondersteunt. Je kunt doorgaan, maar sommige functies werken mogelijk niet.",
+            recommended: "Je gebruikt de aanbevolen versie voor deze server.",
             different:
-                "Je versie wijkt af van de aanbeveling voor deze instantie. Dat betekent niet noodzakelijk dat deze incompatibel is.",
-            unconfigured: "Deze instantie heeft geen aanbevolen versie opgegeven.",
+                "Je versie wijkt af van de aanbevolen versie voor deze server. Dat betekent niet noodzakelijk dat deze incompatibel is.",
+            unconfigured: "Deze server geeft geen aanbevolen versie op.",
         },
     },
     sourcePicker: {
@@ -37,17 +55,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Kan de schermen niet identificeren.",
         cancel: "Annuleren",
     },
-    companion: {
+    miniWindow: {
         annotations: "Annotaties",
         allowAnnotations: "Anderen laten annoteren",
         clearAnnotations: "Alles wissen",
         chat: "Chat",
         people: "Personen",
-        toggleMic: "Microfoon aan/uit",
-        toggleCamera: "Camera aan/uit",
-        shareScreen: "Je scherm delen",
-        stopShareScreen: "Stoppen met scherm delen",
-        shareScreenNeedsMeeting: "Neem deel aan een vergadering om je scherm te delen",
         backToApp: "Terug naar WorkAdventure",
         you: "Jij",
         youChip: "jij",
@@ -139,9 +152,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Zwart",
         allowOthers: "Anderen laten annoteren",
         clearAll: "Alles wissen",
-        toggleMic: "Microfoon aan/uit",
-        toggleCamera: "Camera aan/uit",
-        stopSharing: "Stoppen met scherm delen",
         annotate: "Gedeeld scherm annoteren",
         camera: "Camera",
         microphone: "Microfoon",

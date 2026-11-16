@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "../platform-capture-policy";
-import { companionVisibleInShare } from "../share-surfaces-policy";
+import { miniWindowVisibleInShare } from "../share-surfaces-policy";
+import { windowModeApplies } from "../window-mode-policy";
 import type {
     DesktopNativeStrings,
     WorkAdventureDesktopApi,
@@ -27,19 +28,19 @@ const windowsApi: WorkAdventureDesktopWindowsApi = {
         : {}),
     onOpen: (callback) =>
         subscribe("app:windows:open", (kind) => {
-            if (kind === "companion" || kind === "meeting-bar" || kind === "annotation") callback(kind);
+            if (kind === "mini-window" || kind === "meeting-bar" || kind === "annotation") callback(kind);
         }),
     onMeetingWanted: (callback) => subscribe("app:windows:meeting-wanted", (wanted) => callback(wanted === true)),
-    toggleCompanion: () => ipcRenderer.send("app:windows:toggle-companion"),
-    openCompanion: () => ipcRenderer.send("app:windows:open-companion"),
-    dismissCompanion: () => ipcRenderer.send("app:windows:dismiss-companion"),
+    toggleMiniWindow: () => ipcRenderer.send("app:windows:toggle-mini-window"),
+    openMiniWindow: () => ipcRenderer.send("app:windows:open-mini-window"),
+    dismissMiniWindow: () => ipcRenderer.send("app:windows:dismiss-mini-window"),
     focusMain: () => ipcRenderer.send("app:windows:focus-main"),
-    visibleInShare: (sharing) => companionVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),
+    visibleInShare: (sharing) => miniWindowVisibleInShare(canHideWindowsFromCapture(process.platform), sharing),
     tabStripShown: () => ipcRenderer.invoke("app:windows:tab-strip-shown"),
     toggleTabStrip: () => ipcRenderer.send("app:windows:toggle-tab-strip"),
 };
 
-// Lets the companion open when the window gets fully covered or minimized (see onPageVisibilityChange).
+// Lets the mini window open when the window gets fully covered or minimized (see onPageVisibilityChange).
 document.addEventListener("visibilitychange", () => {
     ipcRenderer.send("app:page-visibility", document.visibilityState === "hidden");
 });
@@ -119,6 +120,17 @@ const api: WorkAdventureDesktopApi = {
         get: () => ipcRenderer.invoke("app:start-at-login:get"),
         set: (enabled) => ipcRenderer.invoke("app:start-at-login:set", Boolean(enabled)),
     },
+    openSettings: () => ipcRenderer.send("app:settings:open"),
+    openLanding: () => ipcRenderer.send("app:landing:open"),
+    ...(windowModeApplies(process.platform, process.env)
+        ? {
+              windowMode: {
+                  get: () => ipcRenderer.invoke("app:window-mode:get"),
+                  set: (mode) => ipcRenderer.invoke("app:window-mode:set", mode),
+                  restart: () => ipcRenderer.send("app:window-mode:restart"),
+              },
+          }
+        : {}),
 };
 
 contextBridge.exposeInMainWorld("WAD", api);

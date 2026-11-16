@@ -46,7 +46,7 @@ export const microphoneSignalDetectionEligibleStore = derived(
 export function createMicrophoneSignalDetectorStore(
     streamStore: Readable<LocalStreamStoreValue>,
     eligibilityStore: Readable<boolean>,
-    getAudioContext: () => AudioContext = () => audioContextManager.getContext(),
+    getAudioContext: () => AudioContext = () => audioContextManager.getAnalysisContext(),
 ): Readable<MicrophoneSignalSample | undefined> {
     return derived<[Readable<LocalStreamStoreValue>, Readable<boolean>], MicrophoneSignalSample | undefined>(
         [streamStore, eligibilityStore],

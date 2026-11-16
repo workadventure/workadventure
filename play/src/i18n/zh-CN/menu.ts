@@ -103,9 +103,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "选择用户将到达的入口点",
     },
     globalMessage: {
-        warning: "广播到世界的所有房间",
         enter: "在此输入您的消息...",
-        send: "发送",
     },
     contact: {
         gettingStarted: {

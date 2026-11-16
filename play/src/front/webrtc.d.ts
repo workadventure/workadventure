@@ -3,8 +3,13 @@ declare interface HTMLMediaElement {
 }
 
 // Audio Output Devices API on AudioContext (Chrome 110+), absent from TypeScript's DOM types. Optional: Firefox and
-// Safari do not implement it. sinkId is an object only for a { type: "none" } sink, which we never set.
+// Safari do not implement it. sinkId is an object only for a { type: "none" } sink: a context without an audio output,
+// which AudioContextManager creates for analysis. Browsers that do not know the option ignore it.
 declare interface AudioContext {
     readonly sinkId?: string | object;
     setSinkId?: (sinkId: string) => Promise<void>;
+}
+
+declare interface AudioContextOptions {
+    sinkId?: string | { type: "none" };
 }

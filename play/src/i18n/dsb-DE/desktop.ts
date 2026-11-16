@@ -7,6 +7,24 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Instalěrowana wersija",
         unknown: "Njepśistupne",
         startAtLogin: "WorkAdventure pśi pśizjawjenju na licadle startowaś",
+        openSettings: "Nastajenja nałoženja wócyniś",
+        windowMode: {
+            title: "Woknowy modus",
+            x11: "Kompatibilita (X11), dopórucona",
+            x11Description:
+                "Wobraz we wobrazu a lajsta za prezentaciju se tam wócynijotej, źož sćo jej slědny raz wóstajili, a wóstanjotej nad drugimi nałoženjami. Tastowe skrotconki za mikrofon a kameru jano fungěruju, gaž jo WorkAdventure w prědku. Wužywa trochu wěcej grafiskeje mócy, gaž waše wobrazowki rozdźělne skalěrowanja wužywaju.",
+            wayland: "Natiwny Wayland",
+            waylandDescription:
+                "Tastowe skrotconki za mikrofon a kameru fungěruju z kuždego nałoženja. Wobraz we wobrazu se kuždy raz w srjejźi wobrazowki wócynijo a njamóžo nad drugimi nałoženjami wóstaś: musyśo jen sami pśesunuś. Wužywa mjenjej grafiskeje mócy, gaž waše wobrazowki rozdźělne skalěrowanja wužywaju.",
+            waylandAfterRestart:
+                "Pó nowem starśe se wobraz we wobrazu w srjejźi wašeje wobrazowki wócynijo a njewóstanjo nad drugimi nałoženjami.",
+            restartNeeded:
+                "Startujśo WorkAdventure znowego, aby toś ten modus wužywali. Wopušćijośo zasedanje, w kótaremž sćo.",
+            restartNow: "Něnto znowego startowaś",
+            setByCommandLine:
+                "Modus jo na pśikazowej smužce (--ozone-platform) nastajony, togodla toś ten wuběrk žeden wuskutk njama.",
+            x11Unavailable: "Kompatibelny modus trjeba XWayland, kótaryž njeběžy.",
+        },
         browser: "Wužywaśo WorkAdventure we wobglědowaku.",
         recommendedVersion: "Dopórucona wersija",
         minimumVersion: "Nejniša pódpěrana wersija",
@@ -15,11 +33,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Źaržćo se aktualizaciskeje politiki swójeje organizacije. Toś ten bok nałoženje njeinstalěrujo a staršu wersiju njewótnowja.",
         status: {
             belowMinimum:
-                "Toś ta desktopowa wersija jo starša ako nejniša pódpěrana wersija toś teje instance. Móžośo pókšacowaś, ale někotare funkcije snaź njefungěruju.",
-            recommended: "Wužywaśo dopóruconu wersiju za toś tu instancu.",
+                "Toś ta wersija nałoženja jo starša ako nejniša wersija, kótaruž toś ten serwer pódpěra. Móžośo pókšacowaś, ale někotare funkcije snaź njefungěruju.",
+            recommended: "Wužywaśo dopóruconu wersiju za toś ten serwer.",
             different:
-                "Waša wersija se wót dopóruconeje wersije toś teje instance rozeznawa. To njegroni, až jo njekompatibelna.",
-            unconfigured: "Toś ta instanca njejo dopóruconu wersiju pódała.",
+                "Waša wersija se wót dopóruconeje wersije toś togo serwera rozeznawa. To njegroni, až jo njekompatibelna.",
+            unconfigured: "Toś ten serwer njepódawa dopóruconu wersiju.",
         },
     },
     sourcePicker: {
@@ -37,17 +55,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Wobrazowki njedaju se identificěrowaś.",
         cancel: "Pśetergnuś",
     },
-    companion: {
+    miniWindow: {
         annotations: "Komentary",
         allowAnnotations: "Drugim komentěrowanje dowóliś",
         clearAnnotations: "Wšykno wulašowaś",
         chat: "Chat",
         people: "Luźe",
-        toggleMic: "Mikrofon zašaltowaś/wótšaltowaś",
-        toggleCamera: "Kameru zašaltowaś/wótšaltowaś",
-        shareScreen: "Wašu wobrazowku źěliś",
-        stopShareScreen: "Źělenje wobrazowki zastajiś",
-        shareScreenNeedsMeeting: "Pśistupśo k zasedanjeju, aby wašu wobrazowku źělił",
         backToApp: "Slědk k WorkAdventure",
         you: "Wy",
         youChip: "wy",
@@ -139,9 +152,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Carny",
         allowOthers: "Drugim komentěrowanje dowóliś",
         clearAll: "Wšykno wulašowaś",
-        toggleMic: "Mikrofon zašaltowaś/wótšaltowaś",
-        toggleCamera: "Kameru zašaltowaś/wótšaltowaś",
-        stopSharing: "Źělenje wobrazowki zastajiś",
         annotate: "Rozdźěleny wobraz komentěrowaś",
         camera: "Kamera",
         microphone: "Mikrofon",

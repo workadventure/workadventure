@@ -24,6 +24,8 @@
     let { targetUserId, canDraw }: Props = $props();
 
     const EMIT_INTERVAL_MS = 50;
+    // A drag in pointer mode draws a highlight: a thick translucent stroke that fades out.
+    const HIGHLIGHT_WIDTH = 0.02;
 
     let canvas: HTMLCanvasElement | undefined = $state();
     let clientWidth = $state(0);
@@ -40,10 +42,17 @@
     let draft: ScreenAnnotationElement | undefined = $state();
     let drawing = false;
     let lastEmit = 0;
+    let lastPointerEmit = 0;
 
-    // Floating text input state (in normalized coordinates).
-    let textInput: { x: number; y: number; value: string } | undefined = $state();
-    let textInputElement: HTMLInputElement | undefined = $state();
+    function freehand(tool: string): boolean {
+        return tool === "pen" || tool === "highlight";
+    }
+
+    // By tag name: in the desktop app's child window, instanceof HTMLInputElement is false for its own inputs.
+    function inTextField(event: KeyboardEvent): boolean {
+        const element = event.target as Partial<HTMLElement> | null;
+        return !!element?.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(element?.tagName ?? "");
+    }
 
     function pointerToNorm(event: PointerEvent): ScreenAnnotationPoint {
         if (!canvas) {
@@ -66,59 +75,28 @@
         }
     }
 
-    function openTextInput(p: ScreenAnnotationPoint): void {
-        textInput = { x: p.x, y: p.y, value: "" };
-    }
-
-    function commitText(): void {
-        const current = textInput;
-        textInput = undefined;
-        if (!current || current.value.trim() === "") {
-            return;
-        }
-        const element: ScreenAnnotationElement = {
-            id: screenAnnotationManager.nextElementId(),
-            authorUserId: screenAnnotationManager.localUserId ?? "local",
-            tool: "text",
-            color,
-            width,
-            points: [{ x: current.x, y: current.y }],
-            text: current.value,
-        };
-        screenAnnotationManager.upsertElement(targetUserId, element);
-    }
-
     function onPointerDown(event: PointerEvent): void {
         if (!inputEnabled || !canvas) {
-            return;
-        }
-        if (textInput) {
-            commitText();
             return;
         }
         const p = pointerToNorm(event);
         if (tool === "pointer") {
             movePointer(p);
-            return;
         }
         if (tool === "eraser") {
             eraseAt(p);
             return;
         }
-        if (tool === "text") {
-            openTextInput(p);
-            return;
-        }
         drawing = true;
         canvas.setPointerCapture(event.pointerId);
+        const draftTool = tool === "pointer" ? "highlight" : tool;
         draft = {
             id: screenAnnotationManager.nextElementId(),
             authorUserId: screenAnnotationManager.localUserId ?? "local",
-            tool,
+            tool: draftTool,
             color,
-            width,
-            points: tool === "pen" ? [p] : [p, p],
-            text: undefined,
+            width: draftTool === "highlight" ? HIGHLIGHT_WIDTH : width,
+            points: freehand(draftTool) ? [p] : [p, p],
         };
     }
 
@@ -127,9 +105,9 @@
 
     function movePointer(p: ScreenAnnotationPoint): void {
         const now = Date.now();
-        if (pointerId && now - lastEmit < EMIT_INTERVAL_MS) return;
+        if (pointerId && now - lastPointerEmit < EMIT_INTERVAL_MS) return;
         pointerId ??= screenAnnotationManager.nextElementId();
-        lastEmit = now;
+        lastPointerEmit = now;
         screenAnnotationManager.emitDraft(targetUserId, {
             id: pointerId,
             authorUserId: screenAnnotationManager.localUserId ?? "local",
@@ -158,16 +136,14 @@
     function onPointerMove(event: PointerEvent): void {
         if (inputEnabled && tool === "pointer") {
             movePointer(pointerToNorm(event));
-            return;
         }
         if (!drawing || !draft) {
             return;
         }
         const p = pointerToNorm(event);
-        draft =
-            draft.tool === "pen"
-                ? { ...draft, points: [...draft.points, p] }
-                : { ...draft, points: [draft.points[0], p] };
+        draft = freehand(draft.tool)
+            ? { ...draft, points: [...draft.points, p] }
+            : { ...draft, points: [draft.points[0], p] };
 
         const now = Date.now();
         if (now - lastEmit > EMIT_INTERVAL_MS) {
@@ -210,8 +186,14 @@
         // a stroke being drawn must never be invisible to its own author.
         if (!locallyHidden) {
             for (const element of elements) {
-                drawElement(ctx, element);
+                ctx.globalAlpha = screenAnnotationManager.opacity(element);
+                drawElement(
+                    ctx,
+                    element,
+                    element.tool === "pointer" ? screenAnnotationManager.userName(element.authorUserId) : undefined,
+                );
             }
+            ctx.globalAlpha = 1;
         }
         if (draft) {
             drawElement(ctx, draft);
@@ -224,12 +206,25 @@
         render();
     });
 
+    // A highlight fades out: redraw on every frame while one shows. The canvas's own window paces it:
+    // in the desktop overlay, the main window may be hidden.
+    $effect(() => {
+        const view = canvas?.ownerDocument.defaultView;
+        if (!view || locallyHidden || !elements.some((element) => element.tool === "highlight")) {
+            return;
+        }
+        let frame = view.requestAnimationFrame(function redraw() {
+            render();
+            frame = view.requestAnimationFrame(redraw);
+        });
+        return () => view.cancelAnimationFrame(frame);
+    });
+
     // Drawing mode ended mid-stroke (Escape, the presenter stopped letting the others draw...): the stroke is
     // given up, and the others drop what they saw of it.
     $effect(() => {
         if (!inputEnabled) {
             dropDraft();
-            textInput = undefined;
         }
     });
 
@@ -245,22 +240,22 @@
         if (!inputEnabled) {
             return;
         }
-        // Escape leaves drawing mode (the text input handles its own Escape first).
+        // Escape leaves drawing mode, Ctrl+Z undoes and Ctrl+Shift+Z redoes (a text field keeps its own undo).
         const onKeyDown = (event: KeyboardEvent) => {
             if (event.key === "Escape") {
                 localAnnotationTargetStore.set(undefined);
+            } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z" && !inTextField(event)) {
+                event.preventDefault();
+                if (event.shiftKey) {
+                    screenAnnotationManager.redoLastLocalElement(targetUserId);
+                } else {
+                    screenAnnotationManager.undoLastLocalElement(targetUserId);
+                }
             }
         };
         const target = canvas?.ownerDocument.defaultView;
         target?.addEventListener("keydown", onKeyDown);
         return () => target?.removeEventListener("keydown", onKeyDown);
-    });
-
-    $effect(() => {
-        // Focus the floating text input as soon as it appears.
-        if (textInput) {
-            textInputElement?.focus();
-        }
     });
 
     $effect(() => {
@@ -286,7 +281,6 @@
         // A stroke still in progress when the overlay unmounts (e.g. the screen is un-highlighted
         // mid-drag) is never finished: the others drop what they saw of it.
         dropDraft();
-        textInput = undefined;
     });
 </script>
 
@@ -304,30 +298,3 @@
     onpointerup={onPointerUp}
     onpointercancel={onPointerUp}
 ></canvas>
-
-{#if textInput}
-    <input
-        bind:this={textInputElement}
-        value={textInput.value}
-        oninput={(event) => {
-            if (textInput) textInput.value = event.currentTarget.value;
-        }}
-        type="text"
-        data-testid="annotation-text-input"
-        class="absolute z-[260] bg-transparent border border-dashed border-white/70 outline-none px-1 text-sm pointer-events-auto"
-        style={`left: ${textInput.x * clientWidth}px; top: ${textInput.y * clientHeight}px; color: ${color}; transform: translateY(-100%);`}
-        maxlength={500}
-        onpointerdown={(e) => e.stopPropagation()}
-        onkeydown={(e) => {
-            // Phaser listens on the window: typing must never reach game shortcuts or movement.
-            e.stopPropagation();
-            if (e.key === "Enter") {
-                commitText();
-            } else if (e.key === "Escape") {
-                e.stopPropagation();
-                textInput = undefined;
-            }
-        }}
-        onblur={commitText}
-    />
-{/if}

@@ -5,7 +5,7 @@ import { beforeEach, expect, test, vi } from "vitest";
 
 // Linux: the XDG autostart entry is the setting itself (no copy in settings.json).
 const appData = fs.mkdtempSync(path.join(os.tmpdir(), "wa-autostart-"));
-const file = path.join(appData, "autostart", "workadventure-desktop.desktop");
+const file = path.join(appData, "autostart", "workadventure.desktop");
 vi.mock("electron", () => ({ app: { getPath: () => appData, isPackaged: true } }));
 
 beforeEach(() => {
@@ -26,9 +26,9 @@ test("later launches keep what the user chose, and refresh the path of an enable
     initStartAtLogin(false);
     expect(fs.existsSync(file)).toBe(false);
 
-    // What the auto-launch package wrote: the AppImage's temporary mount.
+    // An entry pointing at where the AppImage used to be.
     fs.mkdirSync(path.dirname(file), { recursive: true });
-    fs.writeFileSync(file, "[Desktop Entry]\nExec=/tmp/.mount_WorkAdOLD/workadventure-desktop\n");
+    fs.writeFileSync(file, "[Desktop Entry]\nExec=/home/me/Downloads/WorkAdventure-2.0.0.AppImage\n");
     initStartAtLogin(false);
     expect(fs.readFileSync(file, "utf8")).toContain('\nExec="/home/me/My Apps/WorkAdventure.AppImage"\n');
 });

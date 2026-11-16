@@ -9,7 +9,8 @@ import {
     silentStore,
 } from "../../Stores/MediaStore";
 import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
-import { isInActiveConversationStore } from "../../Stores/StreamableCollectionStore";
+import { isInActiveConversationStore, isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
+import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
 import { LL } from "../../../i18n/i18n-svelte";
 import { activeScreenShareSourceStore, requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
@@ -29,7 +30,6 @@ import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/Ch
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
 import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
 import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMeetingBar.svelte";
-import desktopMeetingBarStyles from "../../Components/Video/PictureInPicture/desktopMeetingBar.css?raw";
 
 import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
 import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
@@ -203,7 +203,7 @@ class DesktopApi {
         // left untouched.
         //
         // Never during a meeting: someone following it without touching the keyboard or the mouse
-        // (a presentation, the companion's video) is not away, and BACK_IN_A_MOMENT would cut their
+        // (a presentation, the mini window's video) is not away, and BACK_IN_A_MOMENT would cut their
         // camera and microphone.
         if (window.WAD.onSystemIdle) {
             let autoAwayActive = false;
@@ -242,7 +242,7 @@ class DesktopApi {
 
         // Push live presence (meeting + mic/camera) to main so the tray shows a status dot and
         // reflects the mic/camera state in its quick-action checkmarks.
-        // The screen the user shares, so that the companion never opens by itself over it.
+        // The screen the user shares, so that the mini window never opens by itself over it.
         if (window.WAD.setScreenShareSource) {
             const setScreenShareSource = window.WAD.setScreenShareSource;
             //eslint-disable-next-line svelte/no-ignored-unsubscribe
@@ -276,6 +276,8 @@ class DesktopApi {
                     onboardingStore,
                     meetingInvitationRequestStore,
                     allowPictureInPictureStore,
+                    isInRemoteConversation,
+                    currentPlayerGroupIdStore,
                 ],
                 ([
                     $inMeeting,
@@ -287,8 +289,13 @@ class DesktopApi {
                     $onboarding,
                     $invitation,
                     $allowPictureInPicture,
+                    $remote,
+                    $groupId,
                 ]): Required<DesktopPresence> => ({
                     inMeeting: Boolean($inMeeting),
+                    // Another participant's video box or share, or a bubble that just formed (a bubble
+                    // always has someone else). Alone in a meeting room, inMeeting stays true: this does not.
+                    withOthers: Boolean($remote) || $groupId !== undefined,
                     micEnabled: Boolean($mic),
                     cameraEnabled: Boolean($cam),
                     screenSharing: Boolean($share),
@@ -318,13 +325,15 @@ class DesktopApi {
         if (windows) {
             const stopAnnotations = startSvelteAnnotations(windows);
             window.addEventListener("pagehide", stopAnnotations, { once: true });
+            // Both float over the user's screen: only their content shows.
+            const transparentWindow = "html, body { background: transparent !important; }";
             let annotation: DesktopChildWindow | undefined;
             let meetingBar: DesktopChildWindow | undefined;
             windows.onOpen((kind) => {
                 if (kind === "annotation") {
                     if (!annotation)
                         annotation = openDesktopChildWindow("wa-annotation", DesktopAnnotationOverlay, () => ({}), {
-                            styles: "html, body { background: transparent !important; margin: 0; overflow: hidden; }",
+                            styles: transparentWindow,
                             onClose: () => {
                                 annotation = undefined;
                             },
@@ -336,12 +345,7 @@ class DesktopApi {
                     "wa-meeting-bar",
                     DesktopMeetingBar,
                     (ownerDocument) => ({ windows, ownerDocument }),
-                    {
-                        onClose: () => (meetingBar = undefined),
-                        styles: desktopMeetingBarStyles,
-                        // Its own design only: the app's styles would fight it.
-                        pageStyles: false,
-                    },
+                    { onClose: () => (meetingBar = undefined), styles: transparentWindow },
                 );
             });
         }

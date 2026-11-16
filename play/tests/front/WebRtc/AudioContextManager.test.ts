@@ -5,15 +5,24 @@ import {
     RENDER_RECOVERY_INTERVAL_MS,
     RENDER_RECOVERY_MAX_ATTEMPTS,
 } from "../../../src/front/WebRtc/AudioContextManager";
-import { bindAudioOutput } from "../../../src/front/WebRtc/AudioOutputManager";
+import { applySinkId, bindAudioOutput } from "../../../src/front/WebRtc/AudioOutputManager";
 
-vi.mock("../../../src/front/WebRtc/AudioOutputManager", () => ({ bindAudioOutput: vi.fn() }));
+vi.mock("../../../src/front/WebRtc/AudioOutputManager", () => ({
+    applySinkId: vi.fn(() => Promise.resolve("applied")),
+    bindAudioOutput: vi.fn(),
+}));
 
 // jsdom has no AudioContext
 vi.stubGlobal(
     "AudioContext",
     class extends EventTarget {
         state = "running";
+        constructor(public options?: AudioContextOptions) {
+            super();
+        }
+        resume() {
+            return Promise.resolve();
+        }
         close() {
             this.state = "closed";
             return Promise.resolve();
@@ -22,6 +31,20 @@ vi.stubGlobal(
 );
 
 describe("AudioContextManager", () => {
+    // First: closeAllContexts(), in the next test, shuts the singleton down
+    it("analyses audio on contexts without an output, apart from the ones that play", () => {
+        const analysis = audioContextManager.getAnalysisContext();
+        expect(audioContextManager.getAnalysisContext()).toBe(analysis);
+        expect(analysis).toHaveProperty("options", { sinkId: { type: "none" } });
+
+        const analysis16k = audioContextManager.getAnalysisContext(16_000);
+        expect(analysis16k).not.toBe(analysis);
+        expect(analysis16k).toHaveProperty("options", { sampleRate: 16_000, sinkId: { type: "none" } });
+
+        // Never bound to the selected speaker
+        expect(bindAudioOutput).not.toHaveBeenCalled();
+    });
+
     it("keeps each context on the selected audio output until it is closed", async () => {
         const unbindDefault = vi.fn();
         const unbind48k = vi.fn();
@@ -31,6 +54,7 @@ describe("AudioContextManager", () => {
         expect(audioContextManager.getContext()).toBe(context);
         const context48k = audioContextManager.getContext(48_000);
         expect(vi.mocked(bindAudioOutput).mock.calls).toEqual([[context], [context48k]]);
+        expect(audioContextManager.getAnalysisContext()).not.toBe(context);
 
         await audioContextManager.closeContext();
         expect(unbindDefault).toHaveBeenCalledOnce();
@@ -91,6 +115,36 @@ describe("AudioContextManager", () => {
             expect(context.suspend).toHaveBeenCalledTimes(RENDER_RECOVERY_MAX_ATTEMPTS);
 
             stop();
+            vi.useRealTimers();
+        });
+
+        it("moves the context to the default output only when its own output device is gone", async () => {
+            vi.useFakeTimers();
+            const speaker = { kind: "audiooutput", deviceId: "headset" };
+            const enumerateDevices = vi.fn(() => Promise.resolve([speaker]));
+            vi.stubGlobal("navigator", { mediaDevices: { enumerateDevices } });
+
+            // Still plugged: the failure may pass, the user's choice is kept
+            const present = fakeContext();
+            Object.assign(present.context, { sinkId: "headset" });
+            const stopPresent = recoverFromRenderErrors(present.asAudioContext);
+            present.context.dispatchEvent(new Event("error"));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(applySinkId).not.toHaveBeenCalled();
+
+            // Unplugged: Chrome will not fall back by itself
+            enumerateDevices.mockResolvedValue([]);
+            const gone = fakeContext();
+            Object.assign(gone.context, { sinkId: "headset" });
+            const stopGone = recoverFromRenderErrors(gone.asAudioContext);
+            gone.context.dispatchEvent(new Event("error"));
+            gone.context.dispatchEvent(new Event("error"));
+            await vi.advanceTimersByTimeAsync(0);
+            expect(vi.mocked(applySinkId).mock.calls).toEqual([[gone.asAudioContext, ""]]);
+
+            stopPresent();
+            stopGone();
+            vi.unstubAllGlobals();
             vi.useRealTimers();
         });
 

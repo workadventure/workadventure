@@ -7,8 +7,7 @@ const stores: Record<string, Writable<unknown>> = vi.hoisted(() => ({}));
 vi.mock("./PeerStore", async () => {
     const { writable } = await import("svelte/store");
     stores.videos = writable([]);
-    stores.pip = writable(false);
-    return { videoStreamElementsStore: stores.videos, activePictureInPictureStore: stores.pip };
+    return { videoStreamElementsStore: stores.videos };
 });
 vi.mock("./IsStreamingStore", async () => {
     const { writable } = await import("svelte/store");
@@ -49,6 +48,35 @@ describe("privacyShutdownStore", () => {
 
         stores.group.set(undefined);
         stores.videos.set([]);
+        expect(get(privacyShutdownStore)).toBe(true);
+    });
+
+    it("stays on when the mini window shows a visitor, until the user comes back from it", () => {
+        stores.focus.set(true);
+        stores.focus.set(false);
+        expect(get(privacyShutdownStore)).toBe(true);
+
+        stores.group.set(42);
+        stores.videos.set([{}]);
+        expect(get(privacyShutdownStore)).toBe(true);
+
+        privacyShutdownStore.comeBack();
+        expect(get(privacyShutdownStore)).toBe(false);
+
+        // The visitor leaves while the user is still in another app.
+        stores.group.set(undefined);
+        stores.videos.set([]);
+        expect(get(privacyShutdownStore)).toBe(true);
+    });
+
+    it("ends a comeback outside a conversation when the user switches windows", () => {
+        stores.focus.set(true);
+        stores.focus.set(false);
+        privacyShutdownStore.comeBack();
+        expect(get(privacyShutdownStore)).toBe(false);
+
+        stores.focus.set(true);
+        stores.focus.set(false);
         expect(get(privacyShutdownStore)).toBe(true);
     });
 });

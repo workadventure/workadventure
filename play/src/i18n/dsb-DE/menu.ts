@@ -107,9 +107,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Wuzwól startowe město, pśez kótarež wužywarje pśidu",
     },
     globalMessage: {
-        warning: "Na wšykne śpy swěta pósłaś",
         enter: "Zapódajśo how swóju powěsć...",
-        send: "Wótpósłaś",
     },
     contact: {
         gettingStarted: {

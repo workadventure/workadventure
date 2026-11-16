@@ -105,20 +105,25 @@ export type DesktopAvailability = "online" | "busy" | "back_in_a_moment" | "do_n
 
 /**
  * The live presence the page pushes to main, which drives the tray status dot, the tray quick-action
- * checkmarks and the companion and meeting bar rules.
+ * checkmarks and the mini window and meeting bar rules.
  */
 export type DesktopPresence = {
     inMeeting: boolean;
+    /**
+     * Someone else is in the user's meeting or bubble: the browser's picture-in-picture closes without
+     * them, and so does a mini window that opened by itself. In a meeting room, `inMeeting` stays true alone.
+     */
+    withOthers?: boolean;
     micEnabled: boolean;
     cameraEnabled: boolean;
     screenSharing: boolean;
-    /** True while a game scene is loaded (gates the companion auto-show to actual worlds). */
+    /** True while a game scene is loaded (gates the mini window auto-show to actual worlds). */
     inWorld?: boolean;
     /** True while a first-connection screen (name, Woka, companion, camera) waits for the user. */
     onboarding?: boolean;
-    /** True while a meeting invitation is pending — force-opens the companion for its banner. */
+    /** True while a meeting invitation is pending — force-opens the mini window for its banner. */
     invitationPending?: boolean;
-    /** The "Allow picture-in-picture" setting: the companion may open by itself during a meeting. */
+    /** The "Allow picture-in-picture" setting: the mini window may open by itself during a meeting. */
     autoOpenAllowed?: boolean;
     /** The user's chosen availability, shown by the tray dot. */
     requestedStatus?: DesktopAvailability;
@@ -128,27 +133,27 @@ export type DesktopPresence = {
 export type DesktopScreenShareSource = { sourceId: string; displayId?: number };
 
 /** The floating windows the world page renders as child windows. */
-export type DesktopChildWindowKind = "companion" | "meeting-bar" | "annotation";
+export type DesktopChildWindowKind = "mini-window" | "meeting-bar" | "annotation";
 
 /**
- * The companion and the meeting bar: child windows of the world page that the page renders itself.
+ * The mini window and the meeting bar: child windows of the world page that the page renders itself.
  * The desktop app decides when they open; the page opens them on request and moves the meeting video
- * into the companion when told.
+ * into the mini window when told.
  */
 export type WorkAdventureDesktopWindowsApi = {
     /** Optional native screen overlay; absent on older shells and Linux. No business state crosses IPC. */
     setAnnotationState?: (state: { visible: boolean; interactive: boolean; trackCursor: boolean }) => void;
     onAnnotationCursor?: (callback: (x: number, y: number) => void) => () => void;
-    /** Main asks the page to open a window: `window.open("about:blank", "wa-companion" | "wa-meeting-bar")`. */
+    /** Main asks the page to open a window: `window.open("about:blank", "wa-mini-window" | "wa-meeting-bar")`. */
     onOpen: (callback: (kind: DesktopChildWindowKind) => void) => () => void;
-    /** The app wants the meeting video in the companion (true) or not any more (false). */
+    /** The app wants the meeting video in the mini window (true) or not any more (false). */
     onMeetingWanted: (callback: (wanted: boolean) => void) => () => void;
-    /** The PiP button: open or close the companion by hand. */
-    toggleCompanion: () => void;
-    /** WA's profile menu: open the companion by hand (it stays when WA shows again, a second call keeps it). */
-    openCompanion: () => void;
-    /** The companion's close button: closed until the user comes back to WorkAdventure. */
-    dismissCompanion: () => void;
+    /** The PiP button: open or close the mini window by hand. */
+    toggleMiniWindow: () => void;
+    /** WA's profile menu: open the mini window by hand (it stays when WA shows again, a second call keeps it). */
+    openMiniWindow: () => void;
+    /** The mini window's close button: closed until the user comes back to WorkAdventure. */
+    dismissMiniWindow: () => void;
     /** Bring the WorkAdventure window to the front. */
     focusMain: () => void;
     /** Whether a window shows in the user's own screen share (it cannot be hidden from it). */
@@ -200,7 +205,7 @@ export type WorkAdventureDesktopApi = {
     setUnreadCount?: (count: number) => void;
     /** Push the live presence to main (see DesktopPresence). */
     setPresence?: (presence: DesktopPresence) => void;
-    /** The screen the user shares (null: none), so that the companion never opens by itself over it. */
+    /** The screen the user shares (null: none), so that the mini window never opens by itself over it. */
     setScreenShareSource?: (source: DesktopScreenShareSource | null) => void;
     /**
      * Main asks this renderer to re-send its presence. Presence in the shell is a single global
@@ -246,6 +251,15 @@ export type WorkAdventureDesktopApi = {
     screenPermission?: WorkAdventureDesktopScreenPermissionApi;
     /** Start WorkAdventure when the user logs in to the computer (the "Desktop application" settings). */
     startAtLogin?: WorkAdventureDesktopStartAtLoginApi;
+    /** Linux under Wayland only: run through XWayland or natively (the "Desktop application" settings). */
+    windowMode?: WorkAdventureDesktopWindowModeApi;
+    /**
+     * Opens the app's own settings window (start at login, window mode, shortcuts, updates), or brings it
+     * to the front. Absent on desktop apps that have none: their settings are startAtLogin and windowMode.
+     */
+    openSettings?: () => void;
+    /** Opens the Landing in a new tab, to open a room or sign in to another world. */
+    openLanding?: () => void;
 };
 
 /** Read from the system each time, so a change made in its own startup settings shows. */
@@ -253,4 +267,30 @@ export interface WorkAdventureDesktopStartAtLoginApi {
     get: () => Promise<boolean>;
     /** Resolves with the state the system ends up in. */
     set: (enabled: boolean) => Promise<boolean>;
+}
+
+/**
+ * "x11" runs the app through XWayland: its floating windows (picture-in-picture, the presenter bar) can
+ * be placed and kept on top, but global shortcuts only fire while it is in front. "wayland" runs it
+ * natively: shortcuts work from any app, but the compositor places every window, in the middle.
+ */
+export type DesktopWindowMode = "x11" | "wayland";
+
+export interface DesktopWindowModeState {
+    /** The mode the next start uses. */
+    saved: DesktopWindowMode;
+    /** --ozone-platform on the command line decides instead: the choice has no effect. */
+    setByCommandLine: boolean;
+    /** XWayland is not running: compatibility mode cannot start. */
+    x11Unavailable: boolean;
+    /** This run does not use the saved mode yet: a restart applies it. */
+    restartNeeded: boolean;
+}
+
+export interface WorkAdventureDesktopWindowModeApi {
+    get: () => Promise<DesktopWindowModeState>;
+    /** Saves the mode for the next start; resolves with the new state. */
+    set: (mode: DesktopWindowMode) => Promise<DesktopWindowModeState>;
+    /** Restarts the app, which then starts in the saved mode. */
+    restart: () => void;
 }

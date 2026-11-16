@@ -18,7 +18,7 @@
 
     const { onclick }: Props = $props();
 
-    // The desktop app decides when its companion opens: the button opens or closes it by hand.
+    // The desktop app decides when its mini window opens: the button opens or closes it by hand.
     const desktopWindows = window.WAD?.desktop ? window.WAD.windows : undefined;
 
     function pictureInPictureClick() {
@@ -36,7 +36,7 @@
         }
 
         if (desktopWindows) {
-            desktopWindows.toggleCompanion();
+            desktopWindows.toggleMiniWindow();
             return;
         }
         askPictureInPictureActivatingStore.set(!$askPictureInPictureActivatingStore);

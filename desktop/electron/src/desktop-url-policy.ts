@@ -203,7 +203,7 @@ export function normalizePersistedLastRoomUrl(value?: string): string | undefine
         url.searchParams.delete(param);
     }
     // Drop the fragment so hash-only changes (e.g. "#chat=1", "#lang=fr") don't create
-    // spurious Recent worlds entries after every SPA state tweak.
+    // spurious Recent rooms entries after every SPA state tweak.
     url.hash = "";
     return url.toString();
 }
@@ -425,6 +425,13 @@ export function isRoomUrl(value: string): boolean {
     );
 }
 
+/** The same room: same server and path. The query (tokens) and the #entry don't make another room. */
+export function isSameRoomUrl(a: string, b: string): boolean {
+    const left = parseHttpUrl(a);
+    const right = parseHttpUrl(b);
+    return Boolean(left && right && left.origin === right.origin && left.pathname === right.pathname);
+}
+
 /**
  * The world a room URL belongs to, to find the tab that already shows it. Rooms of the same world share
  * a key: /@/{team}/{world} on an admin-hosted server, the whole server for map-storage rooms (the ~ and
@@ -451,14 +458,14 @@ export function worldKeyOf(value: string): string | undefined {
 // (landing.<code> in the native catalog).
 export function validateDesktopNavigationUrl(value: unknown, config: DesktopConfig): DesktopNavigationValidationResult {
     if (typeof value !== "string" || !value.trim()) {
-        return { ok: false, code: "urlRequired", error: "Please enter a world URL." };
+        return { ok: false, code: "urlRequired", error: "Please enter a room URL." };
     }
 
     let url: URL;
     try {
         url = new URL(value.trim());
     } catch {
-        return { ok: false, code: "urlInvalid", error: "Invalid URL. Please enter a full http(s):// world URL." };
+        return { ok: false, code: "urlInvalid", error: "Invalid URL. Please enter a full http(s):// room URL." };
     }
 
     if (url.protocol !== "http:" && url.protocol !== "https:") {
@@ -473,7 +480,7 @@ export function validateDesktopNavigationUrl(value: unknown, config: DesktopConf
         return {
             ok: false,
             code: "urlNotAllowed",
-            error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re world URL.",
+            error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re room URL.",
         };
     }
 

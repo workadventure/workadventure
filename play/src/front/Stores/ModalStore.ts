@@ -6,6 +6,7 @@ export const showLimitRoomModalStore = writable(false);
 export const modalIframeStore = writable<ModalEvent | null>(null);
 export const modalVisibilityStore = writable(false);
 
-export const showModalGlobalComminucationVisibilityStore = writable(false);
+/** The global communication window, opened on the text announcement composer or on the megaphone ("live"). */
+export const showModalGlobalComminucationVisibilityStore = writable<false | "text" | "live">(false);
 
 export const roomListVisibilityStore = writable<boolean>(false);

@@ -8,8 +8,8 @@ import tailwindcss from "@tailwindcss/vite";
 // and logins and does not take the installed app's single-instance lock.
 process.env.ELECTRON_ENTRY ??= "dist/main.js";
 
-// Same layout as the former tsup build: dist/main.js, dist/preload-*/preload.js, and the Landing in
-// dist/landing. Main runs first and empties dist, so the next builds must not empty it again. Only on a
+// Same layout as the former tsup build: dist/main.js, dist/preload-*/preload.js, and the native pages in
+// dist/landing and dist/settings (their scripts and styles in dist/assets). Main runs first and empties dist, so the next builds must not empty it again. Only on a
 // build: `npm run dev` rebuilds main alone on each change, and emptying dist then deletes the preloads.
 export default defineConfig(({ command }) => ({
     main: {
@@ -31,17 +31,25 @@ export default defineConfig(({ command }) => ({
                     "preload-app/preload": "src/preload-app/preload.ts",
                     "preload-tabs/preload": "src/preload-tabs/preload.ts",
                     "preload-screen-identify/preload": "src/preload-screen-identify/preload.ts",
+                    "preload-settings/preload": "src/preload-settings/preload.ts",
                 },
             },
         },
     },
+    // Each page is served at its folder under `root`: /landing/index.html, /settings/index.html.
     renderer: {
-        root: "src/landing",
+        root: "src",
         plugins: [svelte(), tailwindcss()],
         build: {
-            outDir: "dist/landing",
-            // Absolute: the dev server resolves it against `root`, the build against the project.
-            rolldownOptions: { input: fileURLToPath(new URL("./src/landing/index.html", import.meta.url)) },
+            outDir: "dist",
+            emptyOutDir: false,
+            // Absolute: the dev server resolves them against `root`, the build against the project.
+            rolldownOptions: {
+                input: {
+                    landing: fileURLToPath(new URL("./src/landing/index.html", import.meta.url)),
+                    settings: fileURLToPath(new URL("./src/settings/index.html", import.meta.url)),
+                },
+            },
         },
     },
 }));

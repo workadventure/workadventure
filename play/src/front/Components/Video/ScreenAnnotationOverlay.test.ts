@@ -35,8 +35,8 @@ afterEach(async () => {
     vi.unstubAllGlobals();
 });
 
-async function show(tool: "text" | "pointer") {
-    currentAnnotationToolStore.set(tool);
+async function show() {
+    currentAnnotationToolStore.set("pointer");
     component = mount(Overlay, { target: document.body, props: { targetUserId: "presenter", canDraw: true } });
     await tick();
     const canvas = document.querySelector("canvas");
@@ -51,7 +51,7 @@ function pointer(canvas: HTMLCanvasElement, type: string) {
 
 describe("screen annotation tools", () => {
     it("broadcasts the pointer on hover and drops it on leave without saving a stroke", async () => {
-        const canvas = await show("pointer");
+        const canvas = await show();
         pointer(canvas, "pointermove");
         expect(manager.emitDraft).toHaveBeenCalledWith(
             "presenter",
@@ -63,34 +63,5 @@ describe("screen annotation tools", () => {
         pointer(canvas, "pointerleave");
         expect(manager.dropDraft).toHaveBeenCalledWith("presenter", "pointer-id");
         expect(manager.upsertElement).not.toHaveBeenCalled();
-    });
-
-    it("focuses the text input and keeps typing away from game keyboard listeners", async () => {
-        const canvas = await show("text");
-        pointer(canvas, "pointerdown");
-        await tick();
-        const input = document.querySelector("input");
-        if (!input) throw new Error("Missing text input");
-        expect(document.activeElement).toBe(input);
-        const gameKeyDown = vi.fn();
-        window.addEventListener("keydown", gameKeyDown);
-        try {
-            input.dispatchEvent(new KeyboardEvent("keydown", { key: "a", bubbles: true, cancelable: true }));
-            expect(gameKeyDown).not.toHaveBeenCalled();
-            input.value = "Annotation Linux";
-            input.dispatchEvent(new Event("input", { bubbles: true }));
-            input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
-            await tick();
-            expect(manager.upsertElement).toHaveBeenCalledWith(
-                "presenter",
-                expect.objectContaining({
-                    tool: "text",
-                    text: "Annotation Linux",
-                }),
-            );
-            expect(document.querySelector("input")).toBeNull();
-        } finally {
-            window.removeEventListener("keydown", gameKeyDown);
-        }
     });
 });

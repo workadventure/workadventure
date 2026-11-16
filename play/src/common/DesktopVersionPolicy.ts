@@ -2,7 +2,7 @@
 export const DESKTOP_RELEASE_PATTERN = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const installedPattern =
     /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
-export const DEFAULT_DESKTOP_DOWNLOAD_URL = "https://github.com/workadventure/workadventure/releases/latest";
+export const DEFAULT_DESKTOP_DOWNLOAD_URL = "https://github.com/workadventure/desktop-releases/releases/latest";
 export type DesktopVersionPolicy = {
     recommendedVersion?: string;
     minimumVersion?: string;

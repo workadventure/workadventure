@@ -407,13 +407,28 @@ export const mapMenuVisibleStore = derived(
         globalMessageVisibleStore,
         getAdditionalMenuItemStore("buildMenu"),
         personalAreaDataStore,
+        roomListActivated,
+        mapManagerActivated,
+        userIsAdminStore,
     ],
-    ([$mapEditorMenuVisibleStore, $globalMessageVisibleStore, $additionalBuildMenuItems, $personalAreaDataStore]) => {
+    ([
+        $mapEditorMenuVisibleStore,
+        $globalMessageVisibleStore,
+        $additionalBuildMenuItems,
+        $personalAreaDataStore,
+        $roomListActivated,
+        $mapManagerActivated,
+        $userIsAdminStore,
+    ]) => {
+        // Room list and Explore the room are for everyone, so most users get the menu for them.
         return (
             $mapEditorMenuVisibleStore ||
             $globalMessageVisibleStore ||
             $additionalBuildMenuItems.size > 0 ||
-            $personalAreaDataStore !== null
+            $personalAreaDataStore !== null ||
+            $roomListActivated ||
+            $mapManagerActivated ||
+            $userIsAdminStore
         );
     },
 );

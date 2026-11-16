@@ -25,9 +25,9 @@ test("interpolate fills known placeholders and keeps unknown ones", () => {
 });
 
 test("string tables must be flat, string-valued and bounded", () => {
-    expect(sanitizeStringTable({ lang: "fr-FR", "companion.chat": "Discussion" })).toStrictEqual({
+    expect(sanitizeStringTable({ lang: "fr-FR", "miniWindow.chat": "Discussion" })).toStrictEqual({
         lang: "fr-FR",
-        "companion.chat": "Discussion",
+        "miniWindow.chat": "Discussion",
     });
     expect(sanitizeStringTable(null)).toBe(undefined);
     expect(sanitizeStringTable(["a"])).toBe(undefined);

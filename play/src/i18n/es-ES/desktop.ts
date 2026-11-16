@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Versión instalada",
         unknown: "No disponible",
         startAtLogin: "Iniciar WorkAdventure al iniciar sesión en mi ordenador",
+        openSettings: "Abrir los ajustes de la aplicación",
+        windowMode: {
+            title: "Modo de ventanas",
+            x11: "Compatibilidad (X11), recomendado",
+            x11Description:
+                "La ventana de imagen en imagen y la barra del presentador se abren donde las dejaste y se mantienen sobre las demás aplicaciones. Los atajos del micrófono y la cámara solo funcionan cuando WorkAdventure está en primer plano. Consume algo más de recursos gráficos cuando tus pantallas usan escalas diferentes.",
+            wayland: "Wayland nativo",
+            waylandDescription:
+                "Los atajos del micrófono y la cámara funcionan desde cualquier aplicación. La ventana de imagen en imagen se abre siempre en el centro de la pantalla y no puede mantenerse sobre las demás aplicaciones: tendrás que moverla a mano. Consume menos recursos gráficos cuando tus pantallas usan escalas diferentes.",
+            waylandAfterRestart:
+                "Tras el reinicio, la ventana de imagen en imagen se abrirá en el centro de tu pantalla y no se mantendrá sobre las demás aplicaciones.",
+            restartNeeded: "Reinicia WorkAdventure para usar este modo. Si estás en una reunión, saldrás de ella.",
+            restartNow: "Reiniciar ahora",
+            setByCommandLine:
+                "El modo está definido en la línea de comandos (--ozone-platform), así que esta opción no tiene efecto.",
+            x11Unavailable: "El modo de compatibilidad necesita XWayland, que no se está ejecutando.",
+        },
         browser: "Estás usando WorkAdventure en tu navegador.",
         recommendedVersion: "Versión recomendada",
         minimumVersion: "Versión mínima compatible",
@@ -15,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Sigue la política de actualizaciones de tu organización. Esta página no instala la aplicación ni vuelve a una versión anterior.",
         status: {
             belowMinimum:
-                "Esta versión es anterior a la mínima compatible con esta instancia. Puedes continuar, pero algunas funciones podrían no funcionar.",
-            recommended: "Estás usando la versión recomendada para esta instancia.",
+                "Esta versión de la aplicación es anterior a la mínima compatible con este servidor. Puedes continuar, pero algunas funciones podrían no funcionar.",
+            recommended: "Estás usando la versión recomendada para este servidor.",
             different:
-                "Tu versión difiere de la recomendada para esta instancia. Esto no significa necesariamente que sea incompatible.",
-            unconfigured: "Esta instancia no ha especificado una versión recomendada.",
+                "Tu versión difiere de la recomendada para este servidor. Esto no significa necesariamente que sea incompatible.",
+            unconfigured: "Este servidor no especifica una versión recomendada.",
         },
     },
     sourcePicker: {
@@ -37,17 +54,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "No se pueden identificar las pantallas.",
         cancel: "Cancelar",
     },
-    companion: {
+    miniWindow: {
         annotations: "Anotaciones",
         allowAnnotations: "Permitir que otros anoten",
         clearAnnotations: "Borrar todo",
         chat: "Chat",
         people: "Personas",
-        toggleMic: "Activar/desactivar el micrófono",
-        toggleCamera: "Activar/desactivar la cámara",
-        shareScreen: "Compartir tu pantalla",
-        stopShareScreen: "Dejar de compartir tu pantalla",
-        shareScreenNeedsMeeting: "Únete a una reunión para compartir tu pantalla",
         backToApp: "Volver a WorkAdventure",
         you: "Tú",
         youChip: "tú",
@@ -139,9 +151,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Negro",
         allowOthers: "Permitir que otros anoten",
         clearAll: "Borrar todo",
-        toggleMic: "Activar/desactivar el micrófono",
-        toggleCamera: "Activar/desactivar la cámara",
-        stopSharing: "Dejar de compartir tu pantalla",
         annotate: "Anotar la pantalla compartida",
         camera: "Cámara",
         microphone: "Micrófono",

@@ -14,8 +14,8 @@ import { app } from "electron";
  * `npm run dev`) and whenever `WA_ALLOW_WINDOW_CAPTURE=1` is set (to grab documentation/marketing shots
  * from a packaged build). Normal production runs keep the protection on.
  *
- * The companion panel is an ordinary utility window: it is only protected while the user shares
- * their screen (see companion-controller), still subject to this helper.
+ * The mini window is an ordinary utility window: it is only protected while the user shares
+ * their screen (see mini-window-controller), still subject to this helper.
  */
 export function shouldProtectWindowFromCapture(): boolean {
     if (process.env.WA_ALLOW_WINDOW_CAPTURE === "1") {
