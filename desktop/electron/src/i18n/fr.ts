@@ -163,6 +163,7 @@ const fr: NativeStrings = {
     "auth.signingOutMessage":
         "Terminez la déconnexion dans votre navigateur. Vous reviendrez automatiquement dans l'application.",
     "auth.reopenBrowser": "Rouvrir le navigateur",
+    "auth.back": "Retour",
     "auth.signedIn": "Connecté. Vous pouvez revenir à WorkAdventure.",
     "auth.signedOut": "Déconnecté. Vous pouvez revenir à WorkAdventure.",
     "auth.closeWindow": "Vous pouvez fermer cette fenêtre.",

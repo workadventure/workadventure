@@ -149,6 +149,7 @@ const zhTW: NativeStrings = {
     "auth.signingOutTitle": "正在登出…",
     "auth.signingOutMessage": "請在瀏覽器中完成登出，完成後會自動返回應用程式。",
     "auth.reopenBrowser": "重新開啟瀏覽器",
+    "auth.back": "返回",
     "auth.signedIn": "已登入。你可以返回 WorkAdventure 了。",
     "auth.signedOut": "已登出。你可以返回 WorkAdventure 了。",
     "auth.closeWindow": "你可以關閉此視窗了。",

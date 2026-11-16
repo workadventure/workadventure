@@ -152,6 +152,7 @@ const th: NativeStrings = {
     "auth.signingOutTitle": "กำลังออกจากระบบ…",
     "auth.signingOutMessage": "ออกจากระบบให้เสร็จในเบราว์เซอร์ของคุณ แล้วคุณจะกลับมาที่แอปโดยอัตโนมัติ",
     "auth.reopenBrowser": "เปิดเบราว์เซอร์อีกครั้ง",
+    "auth.back": "ย้อนกลับ",
     "auth.signedIn": "ลงชื่อเข้าใช้แล้ว คุณกลับไปที่ WorkAdventure ได้เลย",
     "auth.signedOut": "ออกจากระบบแล้ว คุณกลับไปที่ WorkAdventure ได้เลย",
     "auth.closeWindow": "คุณปิดหน้าต่างนี้ได้",

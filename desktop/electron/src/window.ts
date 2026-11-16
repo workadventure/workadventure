@@ -341,6 +341,11 @@ function escapeHtml(value: string) {
         .replaceAll("'", "&#39;");
 }
 
+/** The screen shown while signing in or out in the browser: the only data: page a world view loads. */
+function isBrowserFlowPendingScreen(contents: Electron.WebContents) {
+    return contents.getURL().startsWith("data:");
+}
+
 async function showDesktopBrowserFlowPendingScreen(title: string, message: string, actionUrl: string) {
     const contents = getActiveWorldContents();
     if (!contents) {
@@ -350,6 +355,12 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     // Signing in is a legitimate detour that outlives the world-load budget — drop the watchdog so
     // it cannot bounce the user out of the login flow mid-way.
     cancelReachWorldWatchdog();
+
+    // "Reopen the browser" lands here again: keep the one pending screen, so Back leaves it in one step.
+    if (isBrowserFlowPendingScreen(contents)) {
+        showWindow();
+        return;
+    }
 
     const safeActionUrl = escapeHtml(actionUrl);
     const safeTitle = escapeHtml(title);
@@ -381,6 +392,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
       text-decoration: none;
       font-weight: 600;
     }
+    a + a { margin-inline-start: 8px; background: transparent; box-shadow: inset 0 0 0 1px #475569; }
   </style>
 </head>
 <body>
@@ -388,6 +400,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     <h1>${safeTitle}</h1>
     <p>${safeMessage}</p>
     <a href="${safeActionUrl}">${escapeHtml(t("auth.reopenBrowser"))}</a>
+    <a href="javascript:history.back()">${escapeHtml(t("auth.back"))}</a>
   </main>
 </body>
 </html>`;
@@ -667,6 +680,13 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             event.preventDefault();
             void openDesktopBrowserFlow(url);
+            return;
+        }
+
+        // The pending screen's Back link (history.back(), its only other link is handled above): let it
+        // through, as the page it goes back to may be the Landing (file:), which the checks below would
+        // turn away.
+        if (isBrowserFlowPendingScreen(webContents)) {
             return;
         }
 

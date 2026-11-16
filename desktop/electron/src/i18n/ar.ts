@@ -152,6 +152,7 @@ const ar: NativeStrings = {
     "auth.signingOutTitle": "جارٍ تسجيل الخروج…",
     "auth.signingOutMessage": "أكمل تسجيل الخروج في متصفحك. ستعود إلى التطبيق تلقائيًا.",
     "auth.reopenBrowser": "إعادة فتح المتصفح",
+    "auth.back": "رجوع",
     "auth.signedIn": "تم تسجيل الدخول. يمكنك العودة إلى WorkAdventure.",
     "auth.signedOut": "تم تسجيل الخروج. يمكنك العودة إلى WorkAdventure.",
     "auth.closeWindow": "يمكنك إغلاق هذه النافذة.",

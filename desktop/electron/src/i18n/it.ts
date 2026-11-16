@@ -159,6 +159,7 @@ const it: NativeStrings = {
     "auth.signingOutTitle": "Disconnessione in corso…",
     "auth.signingOutMessage": "Completa la disconnessione nel browser. Tornerai automaticamente all'app.",
     "auth.reopenBrowser": "Riapri il browser",
+    "auth.back": "Indietro",
     "auth.signedIn": "Accesso effettuato. Puoi tornare a WorkAdventure.",
     "auth.signedOut": "Disconnessione effettuata. Puoi tornare a WorkAdventure.",
     "auth.closeWindow": "Puoi chiudere questa finestra.",

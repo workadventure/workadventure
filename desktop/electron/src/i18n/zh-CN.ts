@@ -146,6 +146,7 @@ const zhCN: NativeStrings = {
     "auth.signingOutTitle": "正在退出登录…",
     "auth.signingOutMessage": "请在浏览器中完成退出登录，完成后会自动返回应用。",
     "auth.reopenBrowser": "重新打开浏览器",
+    "auth.back": "返回",
     "auth.signedIn": "已登录。你可以返回 WorkAdventure 了。",
     "auth.signedOut": "已退出登录。你可以返回 WorkAdventure 了。",
     "auth.closeWindow": "你可以关闭此窗口了。",

@@ -159,6 +159,7 @@ const pt: NativeStrings = {
     "auth.signingOutTitle": "Saindo…",
     "auth.signingOutMessage": "Conclua a saída no seu navegador. Você voltará ao aplicativo automaticamente.",
     "auth.reopenBrowser": "Reabrir o navegador",
+    "auth.back": "Voltar",
     "auth.signedIn": "Login concluído. Você já pode voltar ao WorkAdventure.",
     "auth.signedOut": "Você saiu. Já pode voltar ao WorkAdventure.",
     "auth.closeWindow": "Você já pode fechar esta janela.",

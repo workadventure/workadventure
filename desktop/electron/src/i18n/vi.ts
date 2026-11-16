@@ -158,6 +158,7 @@ const vi: NativeStrings = {
     "auth.signingOutTitle": "Đang đăng xuất…",
     "auth.signingOutMessage": "Hoàn tất đăng xuất trong trình duyệt của bạn. Bạn sẽ tự động quay lại ứng dụng.",
     "auth.reopenBrowser": "Mở lại trình duyệt",
+    "auth.back": "Quay lại",
     "auth.signedIn": "Đã đăng nhập. Bạn có thể quay lại WorkAdventure.",
     "auth.signedOut": "Đã đăng xuất. Bạn có thể quay lại WorkAdventure.",
     "auth.closeWindow": "Bạn có thể đóng cửa sổ này.",

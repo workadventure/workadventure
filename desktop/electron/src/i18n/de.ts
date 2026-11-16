@@ -165,6 +165,7 @@ const de: NativeStrings = {
     "auth.signingOutMessage":
         "Schließen Sie die Abmeldung in Ihrem Browser ab. Sie kehren danach automatisch zur App zurück.",
     "auth.reopenBrowser": "Browser erneut öffnen",
+    "auth.back": "Zurück",
     "auth.signedIn": "Angemeldet. Sie können zu WorkAdventure zurückkehren.",
     "auth.signedOut": "Abgemeldet. Sie können zu WorkAdventure zurückkehren.",
     "auth.closeWindow": "Sie können dieses Fenster schließen.",
