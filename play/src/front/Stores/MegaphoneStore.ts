@@ -1,7 +1,7 @@
 import type { Readable } from "svelte/store";
 import { derived, writable } from "svelte/store";
 import type { SpaceInterface } from "../Space/SpaceInterface";
-import { isSpeakerStore, requestedCameraState, wantedMicrophoneState } from "./MediaStore";
+import { isSpeakerStore, requestedCameraState, requestedMicrophoneState } from "./MediaStore";
 import { requestedScreenSharingState } from "./ScreenSharingStore";
 
 export const currentLiveStreamingSpaceStore = writable<SpaceInterface | undefined>();
@@ -31,13 +31,19 @@ export const megaphoneSpaceStore = writable<SpaceInterface | undefined>(undefine
  * This store is true if the user is livestreaming, i.e. if the user is a speaker or (if the user has requested the megaphone and is enabling its camera or microphone or screen)
  */
 export const liveStreamingEnabledStore: Readable<boolean> = derived(
-    [isSpeakerStore, requestedMegaphoneStore, requestedCameraState, wantedMicrophoneState, requestedScreenSharingState],
+    [
+        isSpeakerStore,
+        requestedMegaphoneStore,
+        requestedCameraState,
+        requestedMicrophoneState,
+        requestedScreenSharingState,
+    ],
     (
         [
             $isSpeakerStore,
             $requestedMegaphoneStore,
             $requestedCameraState,
-            $wantedMicrophoneState,
+            $requestedMicrophoneState,
             $requestedScreenSharingState,
         ],
         set,
@@ -45,12 +51,12 @@ export const liveStreamingEnabledStore: Readable<boolean> = derived(
         set(
             $isSpeakerStore ||
                 ($requestedMegaphoneStore &&
-                    ($requestedCameraState || $wantedMicrophoneState || $requestedScreenSharingState)),
+                    ($requestedCameraState || $requestedMicrophoneState || $requestedScreenSharingState)),
         );
         if (
             $requestedMegaphoneStore &&
             !$requestedCameraState &&
-            !$wantedMicrophoneState &&
+            !$requestedMicrophoneState &&
             !$requestedScreenSharingState
         ) {
             requestedMegaphoneStore.set(false);

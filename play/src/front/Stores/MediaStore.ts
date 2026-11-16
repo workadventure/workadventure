@@ -147,12 +147,6 @@ export const wantedMicrophoneState: Readable<boolean> = derived(
     [requestedMicrophoneState, temporaryMicrophoneState],
     ([$requested, $temporary]) => $requested || $temporary,
 );
-
-/** Push-to-talk only makes sense muted, somewhere our voice is streamed (a bubble, a meeting, a speaker zone). */
-export const pushToTalkAvailabilityStore: Readable<boolean> = derived(
-    [requestedMicrophoneState, isLiveStreamingAudioStore],
-    ([$requested, $streaming]) => !$requested && $streaming,
-);
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
