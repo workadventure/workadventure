@@ -40,6 +40,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     microphone: {
         disabled: "Waš mikrofon je deaktiwowany",
         activate: "Waš mikrofon aktiwěrować",
+        temporaryOn: "Mikrofon je nachwilu aktiwěrowany",
+        temporaryRelease: "Pušćće tastu, zo byšće zaso wotšaltował.",
         noSoundWarning:
             "Žadyn zwuk z wašeho mikrofona namakany. Móže problem być; spytajće mikrofon w nastajenjach změnić.",
         advancedNoiseReduction: "Rozšěrjene potłóčowanje šuma",

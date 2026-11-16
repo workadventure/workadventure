@@ -55,6 +55,7 @@
         openUserList: $LL.menu.shortcuts.openUserList(),
         rotatePlayer: $LL.menu.shortcuts.rotatePlayer(),
         toggleMapEditor: $LL.menu.shortcuts.toggleMapEditor(),
+        pushToTalk: $LL.menu.shortcuts.pushToTalk(),
     });
 
     let fixedLabels: Record<FixedShortcut, string> = $derived({
@@ -94,6 +95,7 @@
                 rows: [
                     editable("openChat"),
                     editable("openUserList"),
+                    editable("pushToTalk", t.hints.pushToTalk()),
                     { label: t.openSayPopup(), combos: [single(t.keyNames.enter())] },
                     { label: t.openThinkPopup(), combos: [single("Ctrl", t.keyNames.enter())] },
                 ],

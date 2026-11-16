@@ -171,6 +171,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: 'popup „rěkać" wočinić',
         openThinkPopup: 'popup „myslić" wočinić',
         walkMyDesk: "k mojemu blidkej hić",
+        pushToTalk: "Stłóčić a rěčeć",
         edit: {
             start: "Wobdźěłać",
             title: "Wobdźěłowanski modus",
@@ -204,6 +205,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "Interagować",
         },
         hints: {
+            pushToTalk: "Při zhromadźiznje dźeržeć",
             speedUp: "Při chodźenju dźeržeć",
             follow: "Blisko někoho",
             emotes: "W rjedźe emote-lajsty",

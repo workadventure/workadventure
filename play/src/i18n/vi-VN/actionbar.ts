@@ -35,6 +35,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     microphone: {
         disabled: "Micrô của bạn đang tắt",
         activate: "Bật micrô của bạn",
+        temporaryOn: "Micrô tạm thời bật",
+        temporaryRelease: "Thả phím để tắt tiếng lại.",
         noSoundWarning:
             "Không phát hiện âm thanh từ micrô của bạn. Có thể đang có sự cố; hãy thử đổi micrô trong phần cài đặt.",
         advancedNoiseReduction: "Khử tiếng ồn nâng cao",

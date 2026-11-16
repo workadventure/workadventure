@@ -40,6 +40,10 @@ describe("ShortcutsStore", () => {
         expect(findShortcutAction(keyDown("KeyR", "r"))).toBe("rotatePlayer");
     });
 
+    it("binds push-to-talk to T by default", () => {
+        expect(findShortcutAction(keyDown("KeyT", "t"))).toBe("pushToTalk");
+    });
+
     it("ignores lone modifiers and labels keys by what they print", () => {
         expect(bindingFromEvent(keyDown("ShiftLeft", "Shift", { shiftKey: true }))).toBeNull();
         // AZERTY: the physical KeyQ prints "a".

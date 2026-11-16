@@ -171,6 +171,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Mở cửa sổ Nói",
         openThinkPopup: "Mở cửa sổ Nghĩ",
         walkMyDesk: "Đi tới bàn của tôi",
+        pushToTalk: "Nhấn để nói",
         edit: {
             start: "Chỉnh sửa",
             title: "Chế độ chỉnh sửa",
@@ -204,6 +205,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "Tương tác",
         },
         hints: {
+            pushToTalk: "Giữ trong cuộc họp",
             speedUp: "Giữ trong khi di chuyển",
             follow: "Khi ở gần ai đó",
             emotes: "Theo thứ tự của thanh biểu cảm",

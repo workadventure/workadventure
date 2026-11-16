@@ -40,6 +40,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     microphone: {
         disabled: "您的麦克风已禁用",
         activate: "激活您的麦克风",
+        temporaryOn: "麦克风已临时开启",
+        temporaryRelease: "松开按键即可再次静音。",
         noSoundWarning: "未检测到麦克风声音。可能存在问题 — 请尝试在设置中更换麦克风。",
         advancedNoiseReduction: "高级降噪",
         loudEnvironmentWarning: "检测到麦克风中存在持续的背景噪声。",

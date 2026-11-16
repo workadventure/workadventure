@@ -2,6 +2,7 @@
 
 ### Updates
 - Added multi Co-Website management
+- Push-to-talk: hold T (rebindable in the keyboard shortcuts menu) to unmute temporarily while muted in a conversation
 
 ### Bugfix
 - Moving a discussion over a user will now add this user to the discussion

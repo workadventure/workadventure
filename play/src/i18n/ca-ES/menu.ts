@@ -172,6 +172,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Obrir la finestra emergent en mode dir",
         openThinkPopup: "Obrir la finestra emergent en mode pensar",
         walkMyDesk: "Caminar fins al meu escriptori",
+        pushToTalk: "Prem per parlar",
         edit: {
             start: "Edita",
             title: "Mode d'edició",
@@ -205,6 +206,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "Interactuar",
         },
         hints: {
+            pushToTalk: "Mantén premut durant una reunió",
             speedUp: "Mantén premut mentre et mous",
             follow: "A prop d'algú",
             emotes: "En l'ordre de la barra d'emoticones",

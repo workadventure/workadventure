@@ -23,6 +23,7 @@ import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
 import { MapPanShortcut } from "./MapPanShortcut";
+import { PushToTalk } from "./PushToTalk";
 
 import Pointer = Phaser.Input.Pointer;
 import GameObject = Phaser.GameObjects.GameObject;
@@ -38,6 +39,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
     private readonly pointerCapture: MapDragPointerCapture;
     private readonly panShortcut: MapPanShortcut;
     private readonly spaceKey: Phaser.Input.Keyboard.Key | undefined;
+    private readonly pushToTalk = new PushToTalk();
 
     constructor(gameScene: GameScene) {
         this.gameScene = gameScene;
@@ -64,6 +66,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         gameScene.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
             this.pointerCapture.destroy();
             this.panShortcut.destroy();
+            this.pushToTalk.destroy();
         });
     }
 
@@ -332,6 +335,10 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
             }
             case "follow": {
                 this.handleKeyF();
+                break;
+            }
+            case "pushToTalk": {
+                this.pushToTalk.tryStart(event);
                 break;
             }
             default: {
