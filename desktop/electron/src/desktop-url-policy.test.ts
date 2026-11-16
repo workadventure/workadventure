@@ -4,6 +4,7 @@ import {
     createDesktopConfig,
     createDesktopLoginUrl,
     createDesktopLogoutUrl,
+    desktopBrowserFlowReturnUrl,
     createRoomUrlWithAuthToken,
     extractDesktopAuthCallback,
     formatWorldHistoryLabel,
@@ -311,6 +312,25 @@ test("adds a loopback callback URL to desktop logout URLs", () => {
     expect(createDesktopLogoutUrl(logoutUrl, "http://127.0.0.1:48919/logout/callback")).toBe(
         `${logoutUrl}&desktop=true&desktopCallbackUrl=http%3A%2F%2F127.0.0.1%3A48919%2Flogout%2Fcallback`
     );
+});
+
+test("the browser flow screen goes back to the world the user signed in or out from, else to the Landing", () => {
+    const config = createDesktopConfig({
+        portalUrl: "https://play.workadventu.re",
+        allowedOrigins: [],
+        allowedHostSuffixes: [".workadventu.re"],
+    });
+    const world = "https://play.workadventu.re/@/team/world/room";
+    const flow = (path: string, playUri: string, extra = "") =>
+        `https://play.workadventu.re/${path}?playUri=${encodeURIComponent(playUri)}${extra}&desktop=true`;
+
+    // The Login button: back to the world, as a guest.
+    expect(desktopBrowserFlowReturnUrl(flow("login-screen", world, "&manuallyTriggered=true"), config)).toBe(world);
+    // A world that requires signing in: back to it would sign in again.
+    expect(desktopBrowserFlowReturnUrl(flow("login-screen", world), config)).toBeUndefined();
+    expect(desktopBrowserFlowReturnUrl(flow("logout", world, "&token=abc"), config)).toBe(world);
+    expect(desktopBrowserFlowReturnUrl(flow("logout", "https://evil.test/@/a/b/c"), config)).toBeUndefined();
+    expect(desktopBrowserFlowReturnUrl("https://play.workadventu.re/login-screen", config)).toBeUndefined();
 });
 
 test("extracts desktop auth callback origin and one-shot code", () => {

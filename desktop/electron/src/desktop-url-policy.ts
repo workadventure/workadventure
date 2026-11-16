@@ -304,6 +304,23 @@ export function isDesktopLogoutUrl(value: string): boolean {
     return Boolean(url && url.pathname === "/logout");
 }
 
+/**
+ * Where the Back link of the screen shown during a browser sign-in or sign-out leads: the world the user
+ * asked to sign in or out from, or undefined for the Landing. A world that sent the user to sign in on
+ * its own requires it: going back to it would only start the sign-in again.
+ */
+export function desktopBrowserFlowReturnUrl(flowUrl: string, config: DesktopConfig): string | undefined {
+    const url = parseHttpUrl(flowUrl);
+    const world = url?.searchParams.get("playUri");
+    if (!url || !world || !isAllowedNavigationUrl(world, config)) {
+        return undefined;
+    }
+    if (isDesktopLoginUrl(flowUrl) && url.searchParams.get("manuallyTriggered") !== "true") {
+        return undefined;
+    }
+    return world;
+}
+
 function createDesktopFlowUrl(value: string): string {
     const url = parseHttpUrl(value);
     if (!url) {
