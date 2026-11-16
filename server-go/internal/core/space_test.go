@@ -2,6 +2,7 @@ package core
 
 import (
 	"errors"
+	"slices"
 	"testing"
 )
 
@@ -159,5 +160,28 @@ func TestAWatcherThatLeftIsNotKeptAsOne(t *testing.T) {
 	}
 	if !has(ev, func(i SpaceUsersInit) bool { return len(i.Users) == 1 }) {
 		t.Fatalf("the newcomer sees itself alone: %#v", ev)
+	}
+}
+
+// Away mode holds off the camera a member wants on: the others are told why they get nothing, and when it comes back.
+func TestAMemberTellsTheOthersWhichDevicesTheirStatusHoldsOff(t *testing.T) {
+	sp := NewSpace(SpaceKey{"http://play.test", "bubble"})
+	defer sp.Stop()
+	a, b := &recorder{}, &recorder{}
+	joinSpace(t, sp, a, "a", "cameraState", "microphoneState")
+	joinSpace(t, sp, b, "b", "cameraState", "microphoneState")
+	_ = sp.Watch(ctx, "a", nil)
+	syncSpace(t, sp)
+	a.take()
+
+	_ = sp.UpdateUser(ctx, "b", SpaceUser{CameraHeld: true}, []string{"cameraHeld", "microphoneHeld"})
+	syncSpace(t, sp)
+	if ev := a.take(); !has(ev, func(u SpaceUserUpdated) bool { return u.User.CameraHeld && !u.User.MicrophoneHeld }) {
+		t.Fatalf("the watcher is told the camera is held, not the microphone: %#v", ev)
+	}
+	_ = sp.UpdateUser(ctx, "b", SpaceUser{}, []string{"cameraHeld"})
+	syncSpace(t, sp)
+	if ev := a.take(); !has(ev, func(u SpaceUserUpdated) bool { return !u.User.CameraHeld && slices.Contains(u.Mask, "cameraHeld") }) {
+		t.Fatalf("the watcher is told the hold is lifted: %#v", ev)
 	}
 }

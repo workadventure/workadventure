@@ -430,7 +430,7 @@ func spaceUser(u core.SpaceUser) *pb.SpaceUser {
 		VisitCardUrl: str(u.VisitCardURL), Tags: u.Tags, CameraState: u.CameraState, MicrophoneState: u.MicrophoneState,
 		ScreenSharingState: u.ScreenSharingState, MegaphoneState: u.Megaphone, JitsiParticipantId: str(u.JitsiParticipantID),
 		Uuid: u.UUID, ChatID: str(u.ChatID), ShowVoiceIndicator: u.ShowVoiceIndicator, AttendeesState: u.AttendeesState,
-		CpuLimited: u.CPULimited,
+		CpuLimited: u.CPULimited, CameraHeld: u.CameraHeld, MicrophoneHeld: u.MicrophoneHeld,
 	}
 }
 
@@ -439,6 +439,7 @@ func fromSpaceUser(m *pb.SpaceUser) core.SpaceUser {
 	return core.SpaceUser{
 		CameraState: m.GetCameraState(), MicrophoneState: m.GetMicrophoneState(), ScreenSharingState: m.GetScreenSharingState(),
 		Megaphone: m.GetMegaphoneState(), AttendeesState: m.GetAttendeesState(), CPULimited: m.GetCpuLimited(),
+		CameraHeld: m.GetCameraHeld(), MicrophoneHeld: m.GetMicrophoneHeld(),
 	}
 }
 

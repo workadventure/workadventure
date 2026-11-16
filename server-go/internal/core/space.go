@@ -39,10 +39,12 @@ type SpaceUser struct {
 	CameraState, MicrophoneState, ScreenSharingState, Megaphone bool
 	UUID                                                        string
 	ShowVoiceIndicator, AttendeesState, CPULimited              bool
+	// The camera and the microphone the user wants on but their status holds off (away mode, busy...).
+	CameraHeld, MicrophoneHeld bool
 }
 
 // Fields a client may change on itself with UpdateSpaceUserMessage (the rest comes from the server).
-var clientMutableFields = []string{"microphoneState", "cameraState", "screenSharingState", "megaphoneState", "attendeesState", "cpuLimited"}
+var clientMutableFields = []string{"microphoneState", "cameraState", "screenSharingState", "megaphoneState", "attendeesState", "cpuLimited", "cameraHeld", "microphoneHeld"}
 
 // Fields the server itself updates from SetPlayerDetailsMessage.
 var playerDetailFields = []string{"availabilityStatus", "chatID", "showVoiceIndicator"}
@@ -61,6 +63,10 @@ func (u *SpaceUser) apply(from SpaceUser, path string) {
 		u.AttendeesState = from.AttendeesState
 	case "cpuLimited":
 		u.CPULimited = from.CPULimited
+	case "cameraHeld":
+		u.CameraHeld = from.CameraHeld
+	case "microphoneHeld":
+		u.MicrophoneHeld = from.MicrophoneHeld
 	case "availabilityStatus":
 		u.AvailabilityStatus = from.AvailabilityStatus
 	case "chatID":
@@ -660,6 +666,10 @@ func fieldValue(u SpaceUser, path string) any {
 		return u.AttendeesState
 	case "cpuLimited":
 		return u.CPULimited
+	case "cameraHeld":
+		return u.CameraHeld
+	case "microphoneHeld":
+		return u.MicrophoneHeld
 	case "availabilityStatus":
 		return u.AvailabilityStatus
 	case "chatID":
@@ -717,5 +727,6 @@ func spaceUserEqual(a, b SpaceUser) bool {
 	same := func(x, y *string) bool { return (x == nil) == (y == nil) && (x == nil || *x == *y) }
 	return a.AvailabilityStatus == b.AvailabilityStatus && same(a.ChatID, b.ChatID) && a.ShowVoiceIndicator == b.ShowVoiceIndicator &&
 		a.CameraState == b.CameraState && a.MicrophoneState == b.MicrophoneState && a.ScreenSharingState == b.ScreenSharingState &&
-		a.Megaphone == b.Megaphone && a.AttendeesState == b.AttendeesState && a.CPULimited == b.CPULimited
+		a.Megaphone == b.Megaphone && a.AttendeesState == b.AttendeesState && a.CPULimited == b.CPULimited &&
+		a.CameraHeld == b.CameraHeld && a.MicrophoneHeld == b.MicrophoneHeld
 }
