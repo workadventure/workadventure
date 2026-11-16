@@ -100,12 +100,6 @@ const de: NativeStrings = {
     "menu.hideTabBarDetail":
         "Sie haben {total} Tabs geöffnet. Beim Ausblenden der Tableiste bleibt dieser Tab geöffnet und die {count} anderen werden geschlossen.",
 
-    "tray.status.meeting": "Im Meeting",
-    "tray.status.do_not_disturb": "Nicht stören",
-    "tray.status.busy": "Beschäftigt",
-    "tray.status.back_in_a_moment": "Bin gleich zurück",
-    "tray.status.idle": "Inaktiv",
-    "tray.status.online": "Verfügbar",
     "tray.status.offline": "Offline",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",

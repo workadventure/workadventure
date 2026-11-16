@@ -87,12 +87,6 @@ const zhCN: NativeStrings = {
     "menu.hideTabBarDetailOne": "你打开了 {total} 个标签页。隐藏标签栏将保留此标签页，并关闭另一个。",
     "menu.hideTabBarDetail": "你打开了 {total} 个标签页。隐藏标签栏将保留此标签页，并关闭其他 {count} 个。",
 
-    "tray.status.meeting": "会议中",
-    "tray.status.do_not_disturb": "请勿打扰",
-    "tray.status.busy": "忙碌",
-    "tray.status.back_in_a_moment": "马上回来",
-    "tray.status.idle": "空闲",
-    "tray.status.online": "在线",
     "tray.status.offline": "离线",
     "tray.microphone": "麦克风",
     "tray.camera": "摄像头",

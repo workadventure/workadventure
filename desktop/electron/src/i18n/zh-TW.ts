@@ -89,12 +89,6 @@ const zhTW: NativeStrings = {
     "menu.hideTabBarDetailOne": "你開啟了 {total} 個分頁。隱藏分頁列將保留此分頁，並關閉另一個。",
     "menu.hideTabBarDetail": "你開啟了 {total} 個分頁。隱藏分頁列將保留此分頁，並關閉其他 {count} 個。",
 
-    "tray.status.meeting": "會議中",
-    "tray.status.do_not_disturb": "請勿打擾",
-    "tray.status.busy": "忙碌",
-    "tray.status.back_in_a_moment": "馬上回來",
-    "tray.status.idle": "閒置",
-    "tray.status.online": "線上",
     "tray.status.offline": "離線",
     "tray.microphone": "麥克風",
     "tray.camera": "攝影機",

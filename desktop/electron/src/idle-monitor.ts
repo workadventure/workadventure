@@ -1,12 +1,10 @@
 import { powerMonitor } from "electron";
 import ElectronLog from "electron-log";
-import { setIdle } from "./presence";
 
 /**
- * Detect when the user steps away and forward that as an "idle" signal, used to:
- *   - flip the tray status dot to amber (via presence.setIdle);
- *   - let the renderer auto-set the WA availability to "away" (which, via the existing
- *     allowNotificationSound() gate, also suppresses OS notifications) and restore it on return.
+ * Detect when the user steps away and forward that as an "idle" signal, to let the renderer auto-set
+ * the WA availability to "away" (which, via the existing allowNotificationSound() gate, also
+ * suppresses OS notifications) and restore it on return. The tray shows that status like any other.
  *
  * WHAT COUNTS AS AWAY: no input for `IDLE_THRESHOLD_SECONDS` (powerMonitor.getSystemIdleState),
  * the screen being locked, or the machine suspending. Returning (unlock / resume / input) clears
@@ -44,7 +42,6 @@ function applyIdle(idle: boolean): void {
         return;
     }
     currentIdle = idle;
-    setIdle(idle);
     onIdleChange?.(idle);
 }
 

@@ -97,12 +97,6 @@ const ca: NativeStrings = {
     "menu.hideTabBarDetail":
         "Tens {total} pestanyes obertes. Si amagues la barra de pestanyes, es mantindrà aquesta pestanya i es tancaran les altres {count}.",
 
-    "tray.status.meeting": "En una reunió",
-    "tray.status.do_not_disturb": "No molestar",
-    "tray.status.busy": "Ocupat",
-    "tray.status.back_in_a_moment": "Torno en un moment",
-    "tray.status.idle": "Inactiu",
-    "tray.status.online": "Disponible",
     "tray.status.offline": "Desconnectat",
     "tray.microphone": "Micròfon",
     "tray.camera": "Càmera",

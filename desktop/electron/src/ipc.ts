@@ -281,7 +281,7 @@ export default () => {
             onboarding: Boolean(raw.onboarding),
             invitationPending: Boolean(raw.invitationPending),
             autoOpenAllowed: raw.autoOpenAllowed !== false,
-            requestedStatus: raw.requestedStatus,
+            status: raw.status,
         });
     });
 

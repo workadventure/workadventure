@@ -91,12 +91,6 @@ const th: NativeStrings = {
     "menu.hideTabBarDetailOne": "คุณเปิดแท็บไว้ {total} แท็บ การซ่อนแถบแท็บจะเก็บแท็บนี้ไว้และปิดอีกแท็บหนึ่ง",
     "menu.hideTabBarDetail": "คุณเปิดแท็บไว้ {total} แท็บ การซ่อนแถบแท็บจะเก็บแท็บนี้ไว้และปิดแท็บอื่นอีก {count} แท็บ",
 
-    "tray.status.meeting": "อยู่ในการประชุม",
-    "tray.status.do_not_disturb": "ห้ามรบกวน",
-    "tray.status.busy": "ไม่ว่าง",
-    "tray.status.back_in_a_moment": "เดี๋ยวกลับมา",
-    "tray.status.idle": "ไม่ได้ใช้งาน",
-    "tray.status.online": "ว่าง",
     "tray.status.offline": "ออฟไลน์",
     "tray.microphone": "ไมโครโฟน",
     "tray.camera": "กล้อง",

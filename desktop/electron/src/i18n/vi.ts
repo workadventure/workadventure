@@ -96,12 +96,6 @@ const vi: NativeStrings = {
     "menu.hideTabBarDetailOne": "Bạn đang mở {total} tab. Ẩn thanh tab sẽ giữ lại tab này và đóng tab còn lại.",
     "menu.hideTabBarDetail": "Bạn đang mở {total} tab. Ẩn thanh tab sẽ giữ lại tab này và đóng {count} tab khác.",
 
-    "tray.status.meeting": "Đang họp",
-    "tray.status.do_not_disturb": "Không làm phiền",
-    "tray.status.busy": "Bận",
-    "tray.status.back_in_a_moment": "Quay lại ngay",
-    "tray.status.idle": "Không hoạt động",
-    "tray.status.online": "Sẵn sàng",
     "tray.status.offline": "Ngoại tuyến",
     "tray.microphone": "Micrô",
     "tray.camera": "Camera",

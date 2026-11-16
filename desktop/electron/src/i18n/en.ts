@@ -96,12 +96,6 @@ const en = {
     "menu.hideTabBarDetail":
         "You have {total} tabs open. Hiding the tab bar keeps this tab and closes the {count} others.",
 
-    "tray.status.meeting": "In a meeting",
-    "tray.status.do_not_disturb": "Do not disturb",
-    "tray.status.busy": "Busy",
-    "tray.status.back_in_a_moment": "Be right back",
-    "tray.status.idle": "Idle",
-    "tray.status.online": "Available",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microphone",
     "tray.camera": "Camera",

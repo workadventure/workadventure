@@ -97,11 +97,10 @@ export type DesktopNotificationPayload = {
 };
 
 /**
- * The four user-selectable availability statuses, as stable string keys. Kept as strings (not the
- * numeric AvailabilityStatus enum of @workadventure/messages) so the desktop app needs no dependency on
- * it: the page maps to/from the enum on its side.
+ * The user's status as WorkAdventure shows it: its name, in the language of WorkAdventure, and the
+ * color of its dot (0xRRGGBB). The tray shows it as is.
  */
-export type DesktopAvailability = "online" | "busy" | "back_in_a_moment" | "do_not_disturb";
+export type DesktopStatus = { label: string; color: number };
 
 /**
  * The live presence the page pushes to main, which drives the tray status dot, the tray quick-action
@@ -125,8 +124,8 @@ export type DesktopPresence = {
     invitationPending?: boolean;
     /** The "Allow picture-in-picture" setting: the mini window may open by itself during a meeting. */
     autoOpenAllowed?: boolean;
-    /** The user's chosen availability, shown by the tray dot. */
-    requestedStatus?: DesktopAvailability;
+    /** The user's status, shown by the tray. */
+    status: DesktopStatus;
 };
 
 /** The screen the user shares. */
