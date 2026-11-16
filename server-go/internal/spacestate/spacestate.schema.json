@@ -62,8 +62,7 @@
                         "pen",
                         "line",
                         "arrow",
-                        "rect",
-                        "text"
+                        "rect"
                       ]
                     },
                     "color": {
@@ -95,10 +94,6 @@
                       },
                       "minItems": 1,
                       "maxItems": 5000
-                    },
-                    "text": {
-                      "type": "string",
-                      "maxLengthUTF16": 500
                     },
                     "at": {
                       "type": "integer"

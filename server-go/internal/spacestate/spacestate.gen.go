@@ -160,9 +160,6 @@ type SpaceState struct {
 			// Points corresponds to the JSON schema field "points".
 			Points []SpaceStateAnnotationsValueElementsValuePointsElem `json:"points"`
 
-			// Text corresponds to the JSON schema field "text".
-			Text *string `json:"text,omitempty,omitzero"`
-
 			// Tool corresponds to the JSON schema field "tool".
 			Tool SpaceStateAnnotationsValueElementsValueTool `json:"tool"`
 
@@ -207,4 +204,3 @@ const SpaceStateAnnotationsValueElementsValueToolArrow SpaceStateAnnotationsValu
 const SpaceStateAnnotationsValueElementsValueToolLine SpaceStateAnnotationsValueElementsValueTool = "line"
 const SpaceStateAnnotationsValueElementsValueToolPen SpaceStateAnnotationsValueElementsValueTool = "pen"
 const SpaceStateAnnotationsValueElementsValueToolRect SpaceStateAnnotationsValueElementsValueTool = "rect"
-const SpaceStateAnnotationsValueElementsValueToolText SpaceStateAnnotationsValueElementsValueTool = "text"
