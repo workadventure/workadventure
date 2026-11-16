@@ -607,7 +607,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "Configurer",
         encryptionNotConfigured: "Messages chiffrés verrouillés",
-        encryptionNotConfiguredDescription: "Configurez cet appareil pour les lire.",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
             description:

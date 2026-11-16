@@ -643,35 +643,28 @@
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <div
-                class="m-3 p-3.5 flex gap-3 items-start rounded-xl bg-warning/10 border border-solid border-warning/35 text-white"
+                class="w-full h-8 flex items-center gap-2 px-3 border-0 border-t border-solid border-white/10 bg-white/5 text-white"
                 role="status"
             >
-                <IconCloudLock class="text-warning shrink-0" font-size="22" />
-                <div class="flex flex-col gap-2.5 grow min-w-0">
-                    <div>
-                        <p class="m-0 text-sm font-bold">{$LL.chat.e2ee.encryptionNotConfigured()}</p>
-                        <p class="m-0 mt-1 text-sm text-white/75">
-                            {$LL.chat.e2ee.encryptionNotConfiguredDescription()}
-                        </p>
-                    </div>
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        class="self-start"
-                        dataTestId="restoreEncryptionButton"
-                        onclick={(event: MouseEvent) => {
-                            event.stopPropagation();
-                            initChatConnectionEncryption().catch((error) => {
-                                console.error("Failed to initialize chat encryption", error);
-                                warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), {
-                                    closable: true,
-                                });
+                <IconCloudLock class="text-white/70 shrink-0" font-size="16" />
+                <span class="grow min-w-0 text-sm text-white/85">{$LL.chat.e2ee.encryptionNotConfigured()}</span>
+                <Button
+                    variant="light"
+                    appearance="border"
+                    size="xs"
+                    dataTestId="restoreEncryptionButton"
+                    onclick={(event: MouseEvent) => {
+                        event.stopPropagation();
+                        initChatConnectionEncryption().catch((error) => {
+                            console.error("Failed to initialize chat encryption", error);
+                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), {
+                                closable: true,
                             });
-                        }}
-                    >
-                        {$LL.chat.e2ee.configure()}
-                    </Button>
-                </div>
+                        });
+                    }}
+                >
+                    {$LL.chat.e2ee.configure()}
+                </Button>
             </div>
         {/if}
     </div>

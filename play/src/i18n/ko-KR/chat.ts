@@ -607,7 +607,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "구성",
         encryptionNotConfigured: "암호화가 구성되지 않았습니다",
-        encryptionNotConfiguredDescription: "읽으려면 이 기기를 설정하세요.",
         createRecoveryKey: {
             title: "채팅 복구 키 생성",
             description:

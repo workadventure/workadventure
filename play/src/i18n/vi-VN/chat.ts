@@ -605,7 +605,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "Cấu hình",
         encryptionNotConfigured: "Mã hóa chưa được cấu hình",
-        encryptionNotConfiguredDescription: "Thiết lập thiết bị này để đọc chúng.",
         createRecoveryKey: {
             title: "Tạo khóa khôi phục trò chuyện",
             description:

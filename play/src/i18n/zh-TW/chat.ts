@@ -604,7 +604,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "設定",
         encryptionNotConfigured: "加密未設定",
-        encryptionNotConfiguredDescription: "設定此裝置以閱讀它們。",
         createRecoveryKey: {
             title: "建立聊天復原金鑰",
             description:

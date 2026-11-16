@@ -606,7 +606,6 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "Konfigurować",
         encryptionNotConfigured: "Šifrowanje njekonfigurowane",
-        encryptionNotConfiguredDescription: "Zrjadujće tutón grat, zo byšće je čitał.",
         createRecoveryKey: {
             title: "Napraće wotnowjeńskeje kluče",
             description:

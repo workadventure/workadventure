@@ -606,7 +606,6 @@ const chat: BaseTranslation = {
     e2ee: {
         configure: "Set up",
         encryptionNotConfigured: "Encrypted messages are locked",
-        encryptionNotConfiguredDescription: "Set up this device to read them.",
         createRecoveryKey: {
             title: "Chat recovery key creation",
             description:
