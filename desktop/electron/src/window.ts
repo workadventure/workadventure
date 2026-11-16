@@ -14,6 +14,7 @@ import { createDesktopWindowTitle } from "./app-name-policy";
 import {
     createDesktopLoginUrl,
     createDesktopLogoutUrl,
+    desktopBrowserFlowReturnUrl,
     createRoomUrlWithAuthToken,
     isAllowedNavigationUrl,
     isDesktopLoginUrl,
@@ -346,6 +347,9 @@ function isBrowserFlowPendingScreen(contents: Electron.WebContents) {
     return contents.getURL().startsWith("data:");
 }
 
+/** Its Back link when there is no world to go back to: a data: page cannot open the Landing (file:). */
+const BACK_TO_LANDING = "#landing";
+
 async function showDesktopBrowserFlowPendingScreen(title: string, message: string, actionUrl: string) {
     const contents = getActiveWorldContents();
     if (!contents) {
@@ -363,6 +367,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     }
 
     const safeActionUrl = escapeHtml(actionUrl);
+    const safeBackUrl = escapeHtml(desktopBrowserFlowReturnUrl(actionUrl, getDesktopConfig()) ?? BACK_TO_LANDING);
     const safeTitle = escapeHtml(title);
     const safeMessage = escapeHtml(message);
     const html = `<!doctype html>
@@ -400,12 +405,16 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
     <h1>${safeTitle}</h1>
     <p>${safeMessage}</p>
     <a href="${safeActionUrl}">${escapeHtml(t("auth.reopenBrowser"))}</a>
-    <a href="javascript:history.back()">${escapeHtml(t("auth.back"))}</a>
+    <a href="${safeBackUrl}">${escapeHtml(t("auth.back"))}</a>
   </main>
 </body>
 </html>`;
 
-    await contents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    // The page this replaces may still be loading (the /login page the Login button goes through, which
+    // sent the user here): Electron then rejects with that page's ERR_ABORTED, though this one loads.
+    await contents.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`).catch((error) => {
+        ElectronLog.debug("The page before the browser flow screen did not finish loading.", error);
+    });
     showWindow();
 }
 
@@ -683,13 +692,6 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
             return;
         }
 
-        // The pending screen's Back link (history.back(), its only other link is handled above): let it
-        // through, as the page it goes back to may be the Landing (file:), which the checks below would
-        // turn away.
-        if (isBrowserFlowPendingScreen(webContents)) {
-            return;
-        }
-
         if (shouldOpenExternally(url, getDesktopConfig())) {
             event.preventDefault();
             void openExternal(url);
@@ -737,6 +739,10 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     // handler, only the initial cold-launch URL ever lands in Recent rooms.
     window.webContents.on("did-navigate-in-page", (event, url, isMainFrame) => {
         if (!isMainFrame) {
+            return;
+        }
+        if (url.endsWith(BACK_TO_LANDING) && isBrowserFlowPendingScreen(webContents)) {
+            void loadLandingPage();
             return;
         }
         rememberWorldUrl(url);
