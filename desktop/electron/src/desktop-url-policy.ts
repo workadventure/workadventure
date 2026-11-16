@@ -391,6 +391,15 @@ export function createRoomUrlWithAuthToken(targetUrl: string, token: string, mat
     return url.toString();
 }
 
+/**
+ * A Matrix media link (a file or image sent in the chat). It is served from a WorkAdventure host, so
+ * without this it would load as a world, fail, and throw the user back to the Landing.
+ */
+export function isMatrixMediaUrl(value: string): boolean {
+    const url = parseHttpUrl(value);
+    return !!url && url.pathname.startsWith("/_matrix/") && url.pathname.includes("/media/");
+}
+
 export function isRoomUrl(value: string): boolean {
     const url = parseHttpUrl(value);
     if (!url) {
