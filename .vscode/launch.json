@@ -45,17 +45,6 @@
             "restart": true,
             "address": "0.0.0.0",
             "skipFiles": ["<node_internals>/**"]
-        },
-        {
-            "name": "Debug: Uploader",
-            "type": "node",
-            "request": "attach",
-            "remoteRoot": "/usr/src/app",
-            "localRoot": "${workspaceFolder}",
-            "port": 9234,
-            "restart": true,
-            "address": "0.0.0.0",
-            "skipFiles": ["<node_internals>/**"]
         }
     ]
 }

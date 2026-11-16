@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "Cargando...",
     typing: "está escribiendo...",
+    typingIndicator: {
+        one: "{names} está escribiendo",
+        several: "{names} están escribiendo",
+        others: "{count} más",
+        someone: "Alguien",
+        row: "{name} está escribiendo…",
+        rowSeveral: "{count} personas están escribiendo…",
+        direct: "escribiendo…",
+    },
     users: "Usuarios",
     chat: "Chat",
     resizeChat: "Redimensionar el chat (flechas para redimensionar, Intro para pantalla completa)",
@@ -76,6 +85,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Invitaciones",
     roomInvitation: {
         notification: "Has sido invitado a la sala {roomName}",
+        direct: "Conversación privada",
+        room: "Sala",
+        folder: "Carpeta",
+        invitedBy: "invitado por {name}",
+        notificationFrom: "{inviter} te ha invitado a la sala {roomName}",
+        notificationDirect: "{name} quiere chatear contigo",
         notificationTitle: "Nueva invitación",
         unknownRoom: "Una sala",
     },
@@ -140,6 +155,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{{count:1 mensaje nuevo|?? mensajes nuevos}}",
         jumpToLatest: "Ir a los mensajes más recientes",
         unreadDivider: "Mensajes nuevos",
+        loadingMessages: "Cargando mensajes…",
+        loadError: "No se pudieron cargar los mensajes",
     },
     form: {
         placeholder: "Escribe tu mensaje...",
@@ -379,7 +396,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Sala sugerida",
         suggestedDescription: "Esta sala será sugerida a los usuarios que se unan al mismo espacio.",
-        users: "Usuarios",
         historyVisibility: {
             label: "Visibilidad de mensajes anteriores",
             world_readable: "Todos los mensajes son visibles",
@@ -456,12 +472,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participantes",
         error: "No se pudieron enviar las invitaciones",
-        title: "Gestionar participantes",
-        invitations: "Invitaciones",
         participants: "Participantes",
-        join: "Se unió",
         invite: "Invitado",
         ban: "Prohibido",
         kick: "Expulsado",
@@ -477,7 +489,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Desprohibir",
             invite: "Invitar",
             cancelInvitation: "Cancelar invitación",
-            close: "Cerrar",
         },
         roles: {
             USER: "Usuario",
@@ -513,6 +524,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Cifrada",
             notEncrypted: "Sin cifrar",
             readOnly: "Solo lectura",
+            copyRoomId: "Copiar el ID de la sala",
         },
         settings: {
             roomType: "Tipo de sala",
@@ -573,6 +585,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "No se pudieron cargar las encuestas. Inténtelo de nuevo.",
         pollsPartial: "Algunas encuestas no pudieron cargar sus resultados detallados.",
         pollFocusError: "No se pudo abrir esta encuesta en la línea de tiempo.",
+        closeFolderMembers: "Cerrar los miembros de la carpeta",
+        folderMembersHint: "Los miembros de la carpeta pueden unirse a sus salas abiertas a los miembros.",
     },
     roomMenu: {
         leaveRoom: {

@@ -49,7 +49,8 @@ test.describe("Action bar responsiveness @nomobile", () => {
         await expect(page.getByText("Download")).toBeVisible();
         await expect(page.getByText("Inventory")).toBeVisible();
 
-        await page.setViewportSize({ width: 750, height: 600 });
+        // Wide enough for the Tools menu, Share and Login, not for the first two script buttons
+        await page.setViewportSize({ width: 980, height: 600 });
 
         await expect(page.getByText("Register")).toBeHidden();
         await expect(page.getByText("Download")).toBeHidden();

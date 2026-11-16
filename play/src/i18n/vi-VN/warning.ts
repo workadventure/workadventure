@@ -67,6 +67,8 @@ const warning: DeepPartial<Translation["warning"]> = {
         continue: "Tiếp tục trong trình duyệt",
         neverShowPage: "Đừng hỏi lại",
     },
+    otherMeetingMuted: "Bạn hiện đang họp ở đây. Micrô, camera và chia sẻ màn hình của bạn trong {world} đã bị tắt.",
+    desktopAppOutdated: "Đã có phiên bản mới của ứng dụng WorkAdventure: {url}",
 };
 
 export default warning;

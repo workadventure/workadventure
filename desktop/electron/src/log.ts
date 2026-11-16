@@ -1,13 +1,39 @@
 import { dialog, shell } from "electron";
 import ElectronLog from "electron-log";
 import log from "electron-log";
+import { redactSensitiveString } from "./desktop-url-policy";
+
+function redactValue(value: unknown): unknown {
+    if (typeof value === "string") {
+        return redactSensitiveString(value);
+    }
+    if (value && typeof value === "object") {
+        try {
+            return JSON.parse(redactSensitiveString(JSON.stringify(value)) ?? "null");
+        } catch {
+            return value;
+        }
+    }
+    return value;
+}
+
+function installRedactionHook() {
+    log.hooks.push((message) => {
+        try {
+            message.data = (message.data ?? []).map(redactValue);
+        } catch {
+            // best-effort redaction; never let a logger hook crash the app
+        }
+        return message;
+    });
+}
 
 function onError(e: Error) {
     try {
         log.error(e);
 
         dialog.showErrorBox("WorkAdventure - A JavaScript error occurred", e.stack || "");
-    } catch (logError) {
+    } catch {
         console.error(e);
     }
 }
@@ -34,6 +60,7 @@ function onRejection(reason: Error) {
 }
 
 function init() {
+    installRedactionHook();
     console.log = log.log.bind(log);
 
     process.on("uncaughtException", onError);

@@ -60,7 +60,10 @@ test.describe("Map editor @oidc @nomobile @nowebkit", () => {
 
         // Test if tags are working correctly, all current users doesn't have the tag "example" to use megaphone
         await Menu.isNotThereMegaphoneButton(page);
-        await expect(page2.getByTestId("map-menu")).toBeHidden();
+        // Bob still has the Tools menu (Room list, Explore the room), but no global message in it
+        await Menu.openMapMenu(page2);
+        await expect(page2.getByRole("button", { name: "Send global message" })).toBeHidden();
+        await Menu.closeMapMenu(page2);
 
         // Remove rights
         await Menu.openMapEditor(page);

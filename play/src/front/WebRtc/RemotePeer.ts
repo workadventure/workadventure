@@ -728,6 +728,8 @@ export class RemotePeer extends Peer implements Streamable {
                 remoteUserUuid: this.space.getSpaceUserBySpaceUserId(this._spaceUserId)?.uuid,
                 spaceName: this.space.getName(),
                 connectionId: this._connectionId,
+                getQualitySetting: () =>
+                    get(this.type === "screenSharing" ? screenShareQualityStore : videoQualityStore),
             },
             (message) => this.space.emitVideoQualityReport(message),
         );

@@ -79,7 +79,8 @@ test.describe("Matrix chat threads @oidc @matrix @nowebkit", () => {
 
         const rootTimelineItem = mainTimeline.locator("li[data-event-id]").last();
         await rootTimelineItem.hover();
-        await rootTimelineItem.getByTestId("openThreadButton").click();
+        await rootTimelineItem.getByTestId("moreMessageActionsButton").click();
+        await page.getByTestId("openThreadButton").click();
 
         const threadTimeline = page.getByTestId("threadPanelTimeline");
         await expect(threadTimeline).toBeVisible();

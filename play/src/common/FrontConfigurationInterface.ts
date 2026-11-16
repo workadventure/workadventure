@@ -1,11 +1,13 @@
 import type { OpidWokaNamePolicy } from "@workadventure/messages";
 
 export interface FrontConfigurationInterface {
+    DESKTOP_APP_RECOMMENDED_VERSION?: string;
+    DESKTOP_APP_MINIMUM_VERSION?: string;
+    DESKTOP_APP_DOWNLOAD_URL?: string;
     DEBUG_MODE: boolean;
     PUSHER_URL: string;
     FRONT_URL: string;
     ADMIN_URL: string | undefined;
-    UPLOADER_URL: string;
     ICON_URL: string;
     SKIP_RENDER_OPTIMIZATIONS: boolean;
     JITSI_URL: string | undefined;

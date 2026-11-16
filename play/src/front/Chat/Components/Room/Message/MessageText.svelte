@@ -1,4 +1,5 @@
 <script lang="ts">
+    import type { Snippet } from "svelte";
     import type { Readable, Unsubscriber } from "svelte/store";
     import { Marked } from "marked";
     import { onDestroy, onMount } from "svelte";
@@ -10,9 +11,11 @@
     interface Props {
         content: Readable<ChatMessageContent>;
         hasDepth: false;
+        /** The message's time and tick, floated at the end of the last line. */
+        trailing?: Snippet;
     }
 
-    let { content, hasDepth }: Props = $props();
+    let { content, hasDepth, trailing }: Props = $props();
 
     async function getMarked(body: string): Promise<Marked> {
         let marked: Marked;
@@ -132,7 +135,12 @@
     onclick={onBubbleClick}
 >
     {@html sanitizeHTML(html)}
+    {@render trailing?.()}
 </div>
 
 <style>
+    /* The last paragraph flows inline so the floated stamp shares its last line when there is room. */
+    .message-bubble > :global(p:last-of-type:nth-last-child(2)) {
+        display: inline;
+    }
 </style>

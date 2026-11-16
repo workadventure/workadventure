@@ -19,7 +19,6 @@
     "map-storage",
     "libs/*",
     "benchmark",
-    "uploader",
     "play/packages/iframe-api-typings",
     "tests",
     "contrib/tools/generate-env-docs",

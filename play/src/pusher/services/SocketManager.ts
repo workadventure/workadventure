@@ -52,7 +52,7 @@ import type {
     WorldUser,
     WorldUsersAnswer,
 } from "@workadventure/messages";
-import { noUndefined } from "@workadventure/messages";
+import { AvailabilityStatus, noUndefined } from "@workadventure/messages";
 import { Metadata } from "@grpc/grpc-js";
 import * as Sentry from "@sentry/node";
 import type { AxiosResponse } from "axios";
@@ -87,6 +87,20 @@ const debug = Debug("socket");
 
 export type AdminSocket = WebSocket<AdminSocketData>;
 export type SocketUpgradeFailed = WebSocket<UpgradeFailedData>;
+
+/**
+ * The place an announcement leads to, as an absolute URL, if it stays on the sender's origin; "" otherwise.
+ * The "Join" button walks or travels there without reloading, so it must never lead to another site.
+ */
+export function sameOriginJoinUrl(joinUrl: string, senderRoomUrl: string): string {
+    if (!joinUrl) return "";
+    try {
+        const url = new URL(joinUrl, senderRoomUrl);
+        return url.origin === new URL(senderRoomUrl).origin ? url.toString() : "";
+    } catch {
+        return "";
+    }
+}
 
 export class SocketManager implements ZoneEventListener {
     private static readonly RECORDING_QUERY_TIMEOUT_MS = 60_000;
@@ -721,6 +735,10 @@ export class SocketManager implements ZoneEventListener {
         playerDetailsMessage: SetPlayerDetailsMessage,
     ): Promise<void> {
         const socketData = client.getUserData();
+        // A space joined later (a bubble, for instance) takes its first status from here.
+        if (playerDetailsMessage.availabilityStatus !== AvailabilityStatus.UNCHANGED) {
+            socketData.availabilityStatus = playerDetailsMessage.availabilityStatus;
+        }
         const pusherToBackMessage: PusherToBackMessage["message"] = {
             $case: "setPlayerDetailsMessage",
             setPlayerDetailsMessage: playerDetailsMessage,
@@ -1185,11 +1203,17 @@ export class SocketManager implements ZoneEventListener {
         }
 
         const clientRoomUrl = socketData.roomId;
+        const joinUrl = sameOriginJoinUrl(playGlobalMessageEvent.joinUrl, clientRoomUrl);
         let tabUrlRooms: string[];
 
         if (playGlobalMessageEvent.broadcastToWorld) {
             const shortDescriptions = await adminService.getUrlRoomsFromSameWorld(clientRoomUrl, "en", [], true);
-            tabUrlRooms = shortDescriptions.map((shortDescription) => shortDescription.roomUrl);
+            // The back identifies rooms by their absolute URL, but LocalAdmin lists map-storage rooms
+            // as relative paths ("/~/office.wam"). Resolve them against the sender's room, or the back
+            // finds no room and the message is silently dropped. Absolute URLs are left unchanged.
+            tabUrlRooms = shortDescriptions.map((shortDescription) =>
+                new URL(shortDescription.roomUrl, clientRoomUrl).toString(),
+            );
         } else {
             tabUrlRooms = [clientRoomUrl];
         }
@@ -1201,6 +1225,10 @@ export class SocketManager implements ZoneEventListener {
                 message: playGlobalMessageEvent.content,
                 type: playGlobalMessageEvent.type,
                 roomId: roomUrl,
+                senderName: socketData.name,
+                senderTextures: socketData.characterTextures,
+                broadcastToWorld: playGlobalMessageEvent.broadcastToWorld,
+                joinUrl,
             };
             apiRoom.sendAdminMessageToRoom(roomMessage, () => {
                 return;

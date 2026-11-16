@@ -439,6 +439,14 @@ const feedbackSourceField = z
   .enum(["sentry", "external_report_url"])
   .describe("Which feedback channel was used.");
 
+/** One codec in one direction, as media.codec.probed reports it. */
+const codecSupportField = (what: string) =>
+  z
+    .enum(["hardware", "software", "unsupported", "unknown"])
+    .describe(
+      `${what} in WebRTC: hardware when MediaCapabilities calls it powerEfficient, unknown when the browser gives no verdict (Firefox, or no MediaCapabilities).`,
+    );
+
 /* -------------------------------------------------------------------------- */
 /*                                  Helper                                    */
 /* -------------------------------------------------------------------------- */
@@ -831,6 +839,26 @@ export const ANALYTICS_EVENTS = {
         .nullable()
         .describe(
           "Outbound only: frame rate the capture is configured at (MediaTrackSettings.frameRate).",
+        ),
+      captureWidth: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Outbound only: width the camera or screen capture delivers (MediaTrackSettings.width), where frameWidth is the largest layer the encoder sends. A capture larger than what is sent was scaled down by the encoder or by its layer setup.",
+        ),
+      captureHeight: z
+        .number()
+        .int()
+        .nullable()
+        .describe(
+          "Outbound only: height the camera or screen capture delivers (MediaTrackSettings.height).",
+        ),
+      qualitySetting: z
+        .enum(["low", "recommended", "high"])
+        .nullable()
+        .describe(
+          "Outbound only: the sender's quality setting when the sample was taken: the camera's for a camera, the screen share's for a screen share.",
         ),
       encodeMsPerFrame: z
         .number()
@@ -1337,6 +1365,37 @@ export const ANALYTICS_EVENTS = {
     }),
     description:
       "This client's encoder could not keep up with its codec and left it for a cheaper one. Read against media.video_quality.sample, whose qualityLimitationReason is what this decision is made on: the sample says the machine is struggling, this says what was given up about it. Once per codec per session — nothing goes back up before a reload.",
+  }),
+
+  "media.codec.probed": event({
+    properties: z.object({
+      browser: z
+        .enum(["chrome", "edge", "firefox", "safari", "other"])
+        .describe(
+          "Browser family, from the user agent. chrome covers every Chromium browser but Edge; every iOS browser is safari, since all of them run WebKit.",
+        ),
+      os: z
+        .enum([
+          "windows",
+          "mac",
+          "linux",
+          "chromeos",
+          "android",
+          "ios",
+          "other",
+        ])
+        .describe("Operating system family, from the user agent."),
+      av1Encode: codecSupportField("Encoding AV1"),
+      av1Decode: codecSupportField("Decoding AV1"),
+      vp9Encode: codecSupportField("Encoding VP9"),
+      vp9Decode: codecSupportField("Decoding VP9"),
+      h264Encode: codecSupportField("Encoding H.264"),
+      h264Decode: codecSupportField("Decoding H.264"),
+      h265Encode: codecSupportField("Encoding H.265"),
+      h265Decode: codecSupportField("Decoding H.265"),
+    }),
+    description:
+      "What this browser can do with each video codec in a WebRTC call, as MediaCapabilities answers at 720p: the verdict the codec preference lists are filtered on. Once per page load. H.265 is probed but never negotiated: it is here to measure how many users could use it.",
   }),
 
   "media.livekit.connected": event({
@@ -1888,21 +1947,8 @@ export const ANALYTICS_EVENTS = {
     "The user opened the todo list module.",
   ),
   "file.drag_dropped": signal("The user dropped a file into the world."),
-  "global_audio.opened": signal("The user opened the global audio panel."),
-  "global_message.opened": event({
-    properties: z.object({
-      source: z
-        .enum(["menu", "action_bar"])
-        .describe("Which control opened the composer."),
-    }),
-    // A property rather than two events, because PostHog has counted these two
-    // paths separately since long before this pipeline (wa_menu_globalmessage and
-    // wa_action_globalmessage) and the admin could not tell them apart at all.
-    // Declaring the discriminator lets both sinks answer the same question.
-    description: "The user opened the global message composer.",
-  }),
-  "global_message.sound_sent": signal(
-    "The user broadcast a sound to the world.",
+  "global_message.opened": signal(
+    "The user opened the global message composer.",
   ),
   "global_message.text_sent": signal(
     "The user broadcast a text message to the world.",

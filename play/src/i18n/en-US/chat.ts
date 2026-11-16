@@ -27,6 +27,15 @@ const chat: BaseTranslation = {
     },
     loader: "Loading...",
     typing: "is typing...",
+    typingIndicator: {
+        one: "{names} is typing",
+        several: "{names} are typing",
+        others: "{count:number} others",
+        someone: "Someone",
+        row: "{name} is typing…",
+        rowSeveral: "{count:number} people are typing…",
+        direct: "typing…",
+    },
     users: "Users",
     chat: "Chat",
     resizeChat: "Resize the chat (arrow keys to resize, Enter for full screen)",
@@ -76,6 +85,12 @@ const chat: BaseTranslation = {
     invitations: "Invitations",
     roomInvitation: {
         notification: "You have been invited to the room {roomName}",
+        direct: "Direct message",
+        room: "Room",
+        folder: "Folder",
+        invitedBy: "invited by {name}",
+        notificationFrom: "{inviter} invited you to the room {roomName}",
+        notificationDirect: "{name} wants to chat with you",
         notificationTitle: "New invitation",
         unknownRoom: "A room",
     },
@@ -140,6 +155,8 @@ const chat: BaseTranslation = {
         newMessages: "{{count:1 new message|?? new messages}}",
         jumpToLatest: "Jump to latest messages",
         unreadDivider: "New messages",
+        loadingMessages: "Loading messages…",
+        loadError: "Couldn't load the messages",
     },
     form: {
         placeholder: "Enter your message...",
@@ -176,7 +193,7 @@ const chat: BaseTranslation = {
             excalidraw: {
                 title: "Excalidraw",
                 description:
-                    "Send an source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
+                    "Send an open source virtual hand-drawn style whiteboard. Collaborative and end-to-end encrypted.",
             },
             cards: {
                 title: "Cards",
@@ -380,7 +397,6 @@ const chat: BaseTranslation = {
         },
         suggested: "Suggested room",
         suggestedDescription: "This room will be suggested to users who in the same space.",
-        users: "Users",
         historyVisibility: {
             label: "Visibility of previous messages",
             world_readable: "All messages are visible",
@@ -457,12 +473,8 @@ const chat: BaseTranslation = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participants",
         error: "Unable send invitations",
-        title: "Manage participants",
-        invitations: "Invitations",
         participants: "Participants",
-        join: "Joined",
         invite: "Invited",
         ban: "Banned",
         kick: "Kicked",
@@ -478,7 +490,6 @@ const chat: BaseTranslation = {
             unban: "Unban",
             invite: "Invite",
             cancelInvitation: "Cancel invitation",
-            close: "Close",
         },
         roles: {
             USER: "User",
@@ -514,6 +525,7 @@ const chat: BaseTranslation = {
             encrypted: "Encrypted",
             notEncrypted: "Not encrypted",
             readOnly: "Read-only",
+            copyRoomId: "Copy the room ID",
         },
         settings: {
             roomType: "Room type",
@@ -574,6 +586,8 @@ const chat: BaseTranslation = {
         pollsLoadError: "Unable to load polls. Try again.",
         pollsPartial: "Some polls couldn't load their detailed results.",
         pollFocusError: "Unable to open this poll in the timeline.",
+        closeFolderMembers: "Close the folder members",
+        folderMembersHint: "Folder members can join its rooms that are open to members.",
     },
     roomMenu: {
         leaveRoom: {

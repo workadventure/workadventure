@@ -28,6 +28,15 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     loader: "Chargement...",
     typing: "est en train d'écrire...",
+    typingIndicator: {
+        one: "{names} écrit",
+        several: "{names} écrivent",
+        others: "{count} autres",
+        someone: "Quelqu'un",
+        row: "{name} écrit…",
+        rowSeveral: "{count} personnes écrivent…",
+        direct: "écrit…",
+    },
     users: "Utilisateurs",
     chat: "Chat",
     resizeChat: "Redimensionner le chat (flèches pour redimensionner, Entrée pour le plein écran)",
@@ -76,6 +85,12 @@ const chat: DeepPartial<Translation["chat"]> = {
     invitations: "Invitations",
     roomInvitation: {
         notification: "Vous avez été invité dans le salon {roomName}",
+        direct: "Conversation privée",
+        room: "Salon",
+        folder: "Dossier",
+        invitedBy: "invité par {name}",
+        notificationFrom: "{inviter} vous invite dans le salon {roomName}",
+        notificationDirect: "{name} veut discuter avec vous",
         notificationTitle: "Nouvelle invitation",
         unknownRoom: "Un salon",
     },
@@ -141,6 +156,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         newMessages: "{{count:1 nouveau message|?? nouveaux messages}}",
         jumpToLatest: "Revenir aux derniers messages",
         unreadDivider: "Nouveaux messages",
+        loadingMessages: "Chargement des messages…",
+        loadError: "Impossible de charger les messages",
     },
     form: {
         placeholder: "Écrire votre message...",
@@ -381,7 +398,6 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
         suggested: "Salon recommandé",
         suggestedDescription: "Ce salon sera recommandé aux utilisateurs qui rejoignent le même espace.",
-        users: "Utilisateurs",
         historyVisibility: {
             label: "Qui peut lire l'historique",
             world_readable: "N'importe qui",
@@ -458,13 +474,9 @@ const chat: DeepPartial<Translation["chat"]> = {
         },
     },
     manageRoomUsers: {
-        roomOption: "Participants",
         error: "Impossible d'envoyer les invitations",
-        title: "Gérer les participants",
-        invitations: "Invitations",
         participants: "Participants",
         roomID: "ID du salon : {roomId}",
-        join: "Présent",
         invite: "Invité",
         ban: "Banni",
         kick: "Expulsé",
@@ -479,7 +491,6 @@ const chat: DeepPartial<Translation["chat"]> = {
             unban: "Débannir",
             invite: "Inviter",
             cancelInvitation: "Annuler l'invitation",
-            close: "Fermer",
         },
         roles: {
             USER: "Utilisateur",
@@ -515,6 +526,7 @@ const chat: DeepPartial<Translation["chat"]> = {
             encrypted: "Chiffré",
             notEncrypted: "Non chiffré",
             readOnly: "Lecture seule",
+            copyRoomId: "Copier l'ID du salon",
         },
         settings: {
             roomType: "Type de salon",
@@ -575,6 +587,8 @@ const chat: DeepPartial<Translation["chat"]> = {
         pollsLoadError: "Impossible de charger les sondages. Veuillez réessayer.",
         pollsPartial: "Certains sondages n'ont pas pu charger leurs résultats détaillés.",
         pollFocusError: "Impossible d'ouvrir ce sondage dans la timeline.",
+        closeFolderMembers: "Fermer les membres du dossier",
+        folderMembersHint: "Les membres du dossier peuvent rejoindre ses salons ouverts aux membres.",
     },
     roomMenu: {
         leaveRoom: {

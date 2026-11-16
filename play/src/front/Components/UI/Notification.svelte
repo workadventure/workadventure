@@ -50,7 +50,6 @@
 </div>
 
 <style>
-    /*audio html when audio message playing*/
     .notification-playing {
         top: 40px;
         transition: all 0.1s ease-out;
