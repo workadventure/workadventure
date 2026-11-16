@@ -605,6 +605,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "Configurar",
         encryptionNotConfigured: "Xifratge no configurat",
+        encryptionNotConfiguredDescription: "Configura aquest dispositiu per llegir-los.",
         createRecoveryKey: {
             title: "Creació de clau de recuperació del xat",
             description:
@@ -706,12 +707,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Trieu el mètode de verificació",
         withOtherDevice: "Verificar amb un altre dispositiu",
         withPassphrase: "Verificar amb la frase de contrasenya de seguretat",
+        withOtherDeviceDescription: "Compara emojis amb un dispositiu on ja hagis iniciat la sessió.",
+        withPassphraseDescription: "O la teva clau de recuperació, si la vas desar.",
+        notNow: "Ara no",
     },
     askStartVerificationModal: {
         title: "Verificació necessària",
         accept: "Verificar la sessió",
         ignore: "Ignorar",
-        from: "des de",
+        description: "Una nova sessió del teu compte demana ser de confiança:",
+        unknownDevice: "Dispositiu desconegut",
+        deviceId: "ID {id}",
+        ipAddress: "IP {ip}",
+        notYou: "No has estat tu? Ignora aquesta sol·licitud i canvia la contrasenya.",
+        startFailed: "No s’ha pogut iniciar la verificació. Torna-la a llançar des de l’altre dispositiu.",
+        cancelled: "L’altre dispositiu ha cancel·lat la verificació.",
+        close: "Tanca",
     },
     requiresLoginForChat: "Inicieu sessió per accedir als missatges del xat",
     emojis: {

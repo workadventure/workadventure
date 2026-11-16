@@ -607,6 +607,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "設定",
         encryptionNotConfigured: "暗号化が設定されていません",
+        encryptionNotConfiguredDescription: "読むにはこの端末を設定してください。",
         createRecoveryKey: {
             title: "チャットリカバリーキーの作成",
             description:
@@ -708,12 +709,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "検証方法を選択",
         withOtherDevice: "別のデバイスで確認する",
         withPassphrase: "セキュリティパスフレーズで確認する",
+        withOtherDeviceDescription: "すでにサインインしている端末と絵文字を比較します。",
+        withPassphraseDescription: "保存していればリカバリーキーでも可能です。",
+        notNow: "後で",
     },
     askStartVerificationModal: {
         title: "検証が必要です",
         accept: "セッションを確認する",
         ignore: "無視",
-        from: "から",
+        description: "あなたのアカウントの新しいセッションが信頼を求めています：",
+        unknownDevice: "不明なデバイス",
+        deviceId: "ID {id}",
+        ipAddress: "IP {ip}",
+        notYou: "心当たりがない場合は、このリクエストを無視してパスワードを変更してください。",
+        startFailed: "検証を開始できませんでした。もう一方の端末からやり直してください。",
+        cancelled: "もう一方の端末が検証をキャンセルしました。",
+        close: "閉じる",
     },
     requiresLoginForChat: "チャットメッセージにアクセスするにはログインしてください。",
     emojis: {

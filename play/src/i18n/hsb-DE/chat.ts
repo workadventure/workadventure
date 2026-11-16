@@ -606,6 +606,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "Konfigurować",
         encryptionNotConfigured: "Šifrowanje njekonfigurowane",
+        encryptionNotConfiguredDescription: "Zrjadujće tutón grat, zo byšće je čitał.",
         createRecoveryKey: {
             title: "Napraće wotnowjeńskeje kluče",
             description:
@@ -707,12 +708,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Wubjer přeglědowansku metodu",
         withOtherDevice: "Z druhym rjadom přeglědać",
         withPassphrase: "Z wěstotneju frazu přeglědać",
+        withOtherDeviceDescription: "Přirunajće emojije z gratom, na kotrymž sće hižo přizjewjeny.",
+        withPassphraseDescription: "Abo waš kluč za wobnowjenje, jeli sće jón składował.",
+        notNow: "Pozdźišo",
     },
     askStartVerificationModal: {
         title: "Přeglědowanje trěbne",
         accept: "Sesiju přeglědać",
         ignore: "Ignorować",
-        from: "wot",
+        description: "Nowe posedźenje wašeho konta prosy wo dowěru:",
+        unknownDevice: "Njeznaty grat",
+        deviceId: "ID {id}",
+        ipAddress: "IP {ip}",
+        notYou: "To njejsće wy? Ignorujće tute naprašowanje a změńće swoje hesło.",
+        startFailed: "Přepruwowanje njeda so startować. Startujće je znowa z druheho grata.",
+        cancelled: "Druhi grat je přepruwowanje přetorhnył.",
+        close: "Začinić",
     },
     requiresLoginForChat: "Přizjew so, zo by měł přistup k chatowym powěsćam",
     emojis: {

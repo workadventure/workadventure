@@ -604,6 +604,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "配置",
         encryptionNotConfigured: "加密未配置",
+        encryptionNotConfiguredDescription: "设置此设备以阅读它们。",
         createRecoveryKey: {
             title: "聊天恢复密钥创建",
             description:
@@ -703,12 +704,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "选择验证方法",
         withOtherDevice: "使用其他设备验证",
         withPassphrase: "使用安全密码短语验证",
+        withOtherDeviceDescription: "与已登录的设备比对表情。",
+        withPassphraseDescription: "或使用你保存的恢复密钥。",
+        notNow: "以后再说",
     },
     askStartVerificationModal: {
         title: "需要验证",
         accept: "验证会话",
         ignore: "忽略",
-        from: "来自",
+        description: "你账号的一个新会话请求被信任：",
+        unknownDevice: "未知设备",
+        deviceId: "ID {id}",
+        ipAddress: "IP {ip}",
+        notYou: "不是你本人？请忽略此请求并修改密码。",
+        startFailed: "无法开始验证。请在另一台设备上重新发起。",
+        cancelled: "另一台设备取消了验证。",
+        close: "关闭",
     },
     requiresLoginForChat: "登录以访问聊天消息",
     emojis: {

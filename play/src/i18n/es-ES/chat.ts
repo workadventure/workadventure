@@ -605,6 +605,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "Configurar",
         encryptionNotConfigured: "Cifrado no configurado",
+        encryptionNotConfiguredDescription: "Configura este dispositivo para leerlos.",
         createRecoveryKey: {
             title: "Creación de clave de recuperación del chat",
             description:
@@ -706,12 +707,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "Elija el método de verificación",
         withOtherDevice: "Verificar con otro dispositivo",
         withPassphrase: "Verificar con frase de contraseña de seguridad",
+        withOtherDeviceDescription: "Compara emojis con un dispositivo en el que ya hayas iniciado sesión.",
+        withPassphraseDescription: "O tu clave de recuperación, si la guardaste.",
+        notNow: "Ahora no",
     },
     askStartVerificationModal: {
         title: "Verificación requerida",
         accept: "Verificar la sesión",
         ignore: "Ignorar",
-        from: "desde",
+        description: "Una nueva sesión de tu cuenta pide ser de confianza:",
+        unknownDevice: "Dispositivo desconocido",
+        deviceId: "ID {id}",
+        ipAddress: "IP {ip}",
+        notYou: "¿No has sido tú? Ignora esta solicitud y cambia tu contraseña.",
+        startFailed: "No se pudo iniciar la verificación. Vuelve a lanzarla desde tu otro dispositivo.",
+        cancelled: "El otro dispositivo canceló la verificación.",
+        close: "Cerrar",
     },
     requiresLoginForChat: "Inicie sesión para acceder a los mensajes del chat",
     emojis: {

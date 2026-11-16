@@ -5,6 +5,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { warningMessageStore } from "../../Stores/ErrorStore";
     import LL from "../../../i18n/i18n-svelte";
+    import Button from "../../Components/UI/Button.svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
@@ -641,26 +642,36 @@
     <div class="w-full flex flex-col col-span-full h-fit">
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-            <div class="w-full">
-                <button
-                    data-testid="restoreEncryptionButton"
-                    onclick={(event) => {
-                        event.stopPropagation();
-                        initChatConnectionEncryption().catch((error) => {
-                            console.error("Failed to initialize chat encryption", error);
-                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), { closable: true });
-                        });
-                    }}
-                    class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
-                >
-                    <IconCloudLock font-size="20" />
-                    <div class="text-sm font-bold grow text-start">
-                        {$LL.chat.e2ee.encryptionNotConfigured()}
+            <div
+                class="m-3 p-3.5 flex gap-3 items-start rounded-xl bg-warning/10 border border-solid border-warning/35 text-white"
+                role="status"
+            >
+                <IconCloudLock class="text-warning shrink-0" font-size="22" />
+                <div class="flex flex-col gap-2.5 grow min-w-0">
+                    <div>
+                        <p class="m-0 text-sm font-bold">{$LL.chat.e2ee.encryptionNotConfigured()}</p>
+                        <p class="m-0 mt-1 text-sm text-white/75">
+                            {$LL.chat.e2ee.encryptionNotConfiguredDescription()}
+                        </p>
                     </div>
-                    <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">
+                    <Button
+                        variant="secondary"
+                        size="sm"
+                        class="self-start"
+                        dataTestId="restoreEncryptionButton"
+                        onclick={(event: MouseEvent) => {
+                            event.stopPropagation();
+                            initChatConnectionEncryption().catch((error) => {
+                                console.error("Failed to initialize chat encryption", error);
+                                warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), {
+                                    closable: true,
+                                });
+                            });
+                        }}
+                    >
                         {$LL.chat.e2ee.configure()}
-                    </div>
-                </button>
+                    </Button>
+                </div>
             </div>
         {/if}
     </div>

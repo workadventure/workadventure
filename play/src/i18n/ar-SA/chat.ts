@@ -605,6 +605,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     e2ee: {
         configure: "تكوين",
         encryptionNotConfigured: "التشفير غير مهيأ",
+        encryptionNotConfiguredDescription: "اضبط هذا الجهاز لقراءتها.",
         createRecoveryKey: {
             title: "إنشاء مفتاح استرداد الدردشة",
             description:
@@ -706,12 +707,22 @@ const chat: DeepPartial<Translation["chat"]> = {
         description: "اختر طريقة التحقق",
         withOtherDevice: "التحقق باستخدام جهاز آخر",
         withPassphrase: "التحقق باستخدام عبارة المرور الأمنية",
+        withOtherDeviceDescription: "قارن الرموز التعبيرية مع جهاز سجّلت الدخول عليه بالفعل.",
+        withPassphraseDescription: "أو مفتاح الاسترداد إن كنت قد حفظته.",
+        notNow: "ليس الآن",
     },
     askStartVerificationModal: {
         title: "التحقق مطلوب",
         accept: "تحقق من الجلسة",
         ignore: "تجاهل",
-        from: "من",
+        description: "جلسة جديدة لحسابك تطلب أن تكون موثوقة:",
+        unknownDevice: "جهاز غير معروف",
+        deviceId: "المعرّف {id}",
+        ipAddress: "IP {ip}",
+        notYou: "لست أنت؟ تجاهل هذا الطلب وغيّر كلمة المرور.",
+        startFailed: "تعذّر بدء التحقق. أعد تشغيله من جهازك الآخر.",
+        cancelled: "ألغى الجهاز الآخر التحقق.",
+        close: "إغلاق",
     },
     requiresLoginForChat: "قم بتسجيل الدخول للوصول إلى رسائل الدردشة",
     emojis: {
