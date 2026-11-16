@@ -48,6 +48,17 @@ win:
           arch:
               - x64
               - arm64
+    # Azure Artifact Signing (formerly Trusted Signing): account and certificate profile in the WorkAdventure
+    # resource group. Only the release job can log in to Azure (.github/workflows/build-and-release-desktop.yml),
+    # the other builds pass -c.win.signExecutable=false.
+    azureSignOptions:
+        # The certificate's CN, which electron-builder also writes to app-update.yml: from then on, the app only
+        # installs updates signed by this publisher. Changing it means listing the old and the new name.
+        publisherName: "WorkAdventu.re"
+        # Must be the region of the account (North Europe), or signing fails with a 403.
+        endpoint: "https://neu.codesigning.azure.net/"
+        codeSigningAccountName: "WorkAdventure"
+        certificateProfileName: "workadventure-desktop"
 
 nsis:
     buildUniversalInstaller: false
