@@ -108,9 +108,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "Wählen Sie den Einstiegspunkt aus, über den die Benutzer ankommen",
     },
     globalMessage: {
-        warning: "An alle Räume in dieser Welt senden",
         enter: "Trage hier deine Nachricht ein...",
-        send: "Senden",
     },
     contact: {
         gettingStarted: {

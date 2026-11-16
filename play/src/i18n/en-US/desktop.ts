@@ -1,25 +1,41 @@
 import type { BaseTranslation } from "../i18n-types";
 
-// Desktop app (Electron) strings: `companion` and `meetingBar` are the companion and the presenter meeting
+// Desktop app (Electron) strings: `miniWindow` and `meetingBar` are the mini window and the presenter meeting
 // bar, windows of the desktop app that the front renders (Components/Video/PictureInPicture/).
 const desktop: BaseTranslation = {
     application: {
-        title: "Desktop application",
+        title: "Desktop app",
         installed: "Installed version",
         unknown: "Unavailable",
         startAtLogin: "Start WorkAdventure when I log in to my computer",
+        openSettings: "Open the app settings",
+        windowMode: {
+            title: "Window mode",
+            x11: "Compatibility (X11), recommended",
+            x11Description:
+                "Picture-in-picture and the presenter bar open where you left them and stay on top of other apps. Microphone and camera shortcuts only work while WorkAdventure is in front. Uses a bit more graphics power when your screens use different scales.",
+            wayland: "Native Wayland",
+            waylandDescription:
+                "Microphone and camera shortcuts work from any app. Picture-in-picture opens in the middle of the screen every time and can’t stay on top of other apps: you’ll have to move it yourself. Lighter on graphics when your screens use different scales.",
+            waylandAfterRestart:
+                "After the restart, picture-in-picture will open in the middle of your screen and won’t stay on top of other apps.",
+            restartNeeded: "Restart WorkAdventure to use this mode. You’ll leave any meeting you’re in.",
+            restartNow: "Restart now",
+            setByCommandLine: "The mode is set on the command line (--ozone-platform), so this choice has no effect.",
+            x11Unavailable: "Compatibility mode needs XWayland, which isn’t running.",
+        },
         browser: "You are using WorkAdventure in your browser.",
         recommendedVersion: "Recommended version",
         minimumVersion: "Minimum supported version",
-        download: "Download the desktop application",
+        download: "Download the desktop app",
         managed: "Follow your organization’s update policy. This page does not install or downgrade the application.",
         status: {
             belowMinimum:
-                "This desktop version is below the minimum supported by this instance. You can continue, but some features may not work.",
-            recommended: "You are using the version recommended for this instance.",
+                "This version of the app is older than the minimum this server supports. You can continue, but some features may not work.",
+            recommended: "You are using the version recommended for this server.",
             different:
-                "Your version differs from the one recommended for this instance. This does not necessarily mean it is incompatible.",
-            unconfigured: "This instance has not specified a recommended version.",
+                "Your version differs from the one recommended for this server. This does not necessarily mean it is incompatible.",
+            unconfigured: "This server does not specify a recommended version.",
         },
     },
     sourcePicker: {
@@ -37,17 +53,12 @@ const desktop: BaseTranslation = {
         identifyError: "Unable to identify the screens.",
         cancel: "Cancel",
     },
-    companion: {
+    miniWindow: {
         annotations: "Annotations",
         allowAnnotations: "Allow others to annotate",
         clearAnnotations: "Clear all",
         chat: "Chat",
         people: "People",
-        toggleMic: "Turn microphone on/off",
-        toggleCamera: "Turn camera on/off",
-        shareScreen: "Share your screen",
-        stopShareScreen: "Stop sharing your screen",
-        shareScreenNeedsMeeting: "Join a meeting to share your screen",
         backToApp: "Back to WorkAdventure",
         you: "You",
         youChip: "you",
@@ -139,9 +150,6 @@ const desktop: BaseTranslation = {
         black: "Black",
         allowOthers: "Allow others to annotate",
         clearAll: "Clear all",
-        toggleMic: "Turn microphone on/off",
-        toggleCamera: "Turn camera on/off",
-        stopSharing: "Stop sharing your screen",
         annotate: "Annotate the shared screen",
         camera: "Camera",
         microphone: "Microphone",

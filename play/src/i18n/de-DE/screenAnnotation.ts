@@ -11,7 +11,6 @@ const screenAnnotation: DeepPartial<Translation["screenAnnotation"]> = {
         line: "Linie",
         arrow: "Pfeil",
         rect: "Rechteck",
-        text: "Text",
         eraser: "Radierer",
     },
     color: "Farbe",

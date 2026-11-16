@@ -3,23 +3,41 @@ import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
     application: {
-        title: "Application desktop",
+        title: "Application de bureau",
         installed: "Version installée",
         unknown: "Indisponible",
         startAtLogin: "Lancer WorkAdventure à l’ouverture de ma session",
+        openSettings: "Ouvrir les paramètres de l’application",
+        windowMode: {
+            title: "Mode des fenêtres",
+            x11: "Compatibilité (X11), recommandé",
+            x11Description:
+                "Le Picture in Picture et la barre du présentateur s’ouvrent là où vous les avez laissés et restent au-dessus des autres applications. Les raccourcis du micro et de la caméra ne fonctionnent que lorsque WorkAdventure est au premier plan. Sollicite un peu plus la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
+            wayland: "Wayland natif",
+            waylandDescription:
+                "Les raccourcis du micro et de la caméra fonctionnent depuis n’importe quelle application. Le Picture in Picture s’ouvre à chaque fois au milieu de l’écran et ne peut pas rester au-dessus des autres applications : vous devrez le déplacer vous-même. Plus léger pour la carte graphique lorsque vos écrans ont des mises à l’échelle différentes.",
+            waylandAfterRestart:
+                "Après le redémarrage, le Picture in Picture s’ouvrira au milieu de votre écran et ne restera pas au-dessus des autres applications.",
+            restartNeeded:
+                "Redémarrez WorkAdventure pour utiliser ce mode. Vous quitterez la réunion en cours, le cas échéant.",
+            restartNow: "Redémarrer maintenant",
+            setByCommandLine:
+                "Le mode est défini sur la ligne de commande (--ozone-platform) : ce choix n’a pas d’effet.",
+            x11Unavailable: "Le mode compatibilité nécessite XWayland, qui n’est pas lancé.",
+        },
         browser: "Vous utilisez WorkAdventure dans votre navigateur.",
         recommendedVersion: "Version recommandée",
         minimumVersion: "Version minimale prise en charge",
-        download: "Télécharger l’application desktop",
+        download: "Télécharger l’application de bureau",
         managed:
             "Suivez la politique de mise à jour de votre organisation. Cette page n’installe pas l’application et ne la remplace pas par une ancienne version.",
         status: {
             belowMinimum:
-                "Cette version desktop est inférieure au minimum pris en charge par cette instance. Vous pouvez continuer, mais certaines fonctionnalités pourraient ne pas fonctionner.",
-            recommended: "Vous utilisez la version recommandée pour cette instance.",
+                "Cette version de l’application est plus ancienne que le minimum pris en charge par ce serveur. Vous pouvez continuer, mais certaines fonctionnalités pourraient ne pas fonctionner.",
+            recommended: "Vous utilisez la version recommandée pour ce serveur.",
             different:
-                "Votre version diffère de celle recommandée pour cette instance. Cela ne signifie pas nécessairement qu’elle est incompatible.",
-            unconfigured: "Cette instance n’a pas indiqué de version recommandée.",
+                "Votre version diffère de celle recommandée pour ce serveur. Cela ne signifie pas nécessairement qu’elle est incompatible.",
+            unconfigured: "Ce serveur n’indique pas de version recommandée.",
         },
     },
     sourcePicker: {
@@ -37,17 +55,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Impossible d'identifier les écrans.",
         cancel: "Annuler",
     },
-    companion: {
+    miniWindow: {
         annotations: "Annotations",
         allowAnnotations: "Autoriser les autres à annoter",
         clearAnnotations: "Tout effacer",
         chat: "Chat",
         people: "Personnes",
-        toggleMic: "Activer/désactiver le microphone",
-        toggleCamera: "Activer/désactiver la caméra",
-        shareScreen: "Partager votre écran",
-        stopShareScreen: "Arrêter de partager votre écran",
-        shareScreenNeedsMeeting: "Rejoignez une réunion pour partager votre écran",
         backToApp: "Retour à WorkAdventure",
         you: "Vous",
         youChip: "vous",
@@ -139,9 +152,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Noir",
         allowOthers: "Autoriser les autres à annoter",
         clearAll: "Tout effacer",
-        toggleMic: "Activer/désactiver le microphone",
-        toggleCamera: "Activer/désactiver la caméra",
-        stopSharing: "Arrêter de partager votre écran",
         annotate: "Annoter l'écran partagé",
         camera: "Caméra",
         microphone: "Microphone",

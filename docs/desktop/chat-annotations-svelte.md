@@ -8,7 +8,7 @@ Le compagnon affiche les conversations existantes et réutilise `RoomTimeline` e
 
 Les réponses, éditions, navigation dans les fils et brouillons du compagnon sont indépendants du chat principal. Les images s'ouvrent dans le compagnon. Le collage utilise la sélection de son document enfant.
 
-Les annotations sont adaptées au cycle de vie Svelte : texte, traits, lignes, flèches, rectangles, gomme, couleurs, annuler/rétablir et permissions du présentateur. Le pointeur distant passe par les brouillons éphémères ; il n'entre ni dans l'état persistant ni dans l'historique d'annulation. Le nettoyage du focus tient compte des champs retirés du DOM.
+Les annotations sont adaptées au cycle de vie Svelte : traits, lignes, flèches, rectangles, gomme, couleurs, annuler/rétablir et permissions du présentateur. Le pointeur distant passe par les brouillons éphémères ; il n'entre ni dans l'état persistant ni dans l'historique d'annulation. Le nettoyage du focus tient compte des champs retirés du DOM.
 
 ## Frontière Electron / WA
 
@@ -41,7 +41,6 @@ Les tests utilisent les dépendances Vitest/Vite déjà disponibles dans le chec
 3. Pendant une réunion, ouvrir le chat de proximité depuis le compagnon, quitter puis rejoindre la réunion.
 4. Partager un écran, autoriser un participant distant à annoter et pointer. Vérifier disparition du pointeur, annuler/rétablir, masquage local et retrait des permissions.
 5. Sur macOS/Windows : changer d'écran pendant l'ouverture de l'overlay, arrêter le partage, changer d'onglet. Vérifier transparence, exclusion de capture et libération clavier/souris après dessin.
-6. Sous Linux : saisir une annotation texte, la valider ou annuler, fermer la tuile/PiP pendant la saisie puis déplacer l'avatar. Vérifier aussi X11 et Wayland.
-7. Vérifier une ancienne page WA avec le nouveau desktop et une page récente avec un desktop sans les méthodes optionnelles.
+6. Vérifier une ancienne page WA avec le nouveau desktop et une page récente avec un desktop sans les méthodes optionnelles.
 
 La branche doit être intégrée après la migration Svelte. Un cherry-pick direct sur l'ancienne interface vanilla ne constitue pas une intégration valide : celle-ci possède un autre cycle de vie des overlays.

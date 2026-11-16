@@ -3,23 +3,41 @@ import type { Translation } from "../i18n-types";
 
 const desktop: DeepPartial<Translation["desktop"]> = {
     application: {
-        title: "Desktop-Anwendung",
+        title: "Desktop-App",
         installed: "Installierte Version",
         unknown: "Nicht verfügbar",
         startAtLogin: "WorkAdventure bei der Anmeldung am Computer starten",
+        openSettings: "Einstellungen der App öffnen",
+        windowMode: {
+            title: "Fenstermodus",
+            x11: "Kompatibilität (X11), empfohlen",
+            x11Description:
+                "Bild-in-Bild und die Präsentationsleiste öffnen sich dort, wo Sie sie zuletzt platziert haben, und bleiben über anderen Anwendungen. Die Tastenkürzel für Mikrofon und Kamera funktionieren nur, solange WorkAdventure im Vordergrund ist. Beansprucht die Grafikkarte etwas stärker, wenn Ihre Bildschirme unterschiedlich skaliert sind.",
+            wayland: "Natives Wayland",
+            waylandDescription:
+                "Die Tastenkürzel für Mikrofon und Kamera funktionieren in jeder Anwendung. Bild-in-Bild öffnet sich jedes Mal in der Mitte des Bildschirms und kann nicht über anderen Anwendungen bleiben: Sie müssen es selbst verschieben. Schont die Grafikkarte, wenn Ihre Bildschirme unterschiedlich skaliert sind.",
+            waylandAfterRestart:
+                "Nach dem Neustart öffnet sich Bild-in-Bild in der Mitte Ihres Bildschirms und bleibt nicht über anderen Anwendungen.",
+            restartNeeded:
+                "Starten Sie WorkAdventure neu, um diesen Modus zu verwenden. Sie verlassen dabei ein laufendes Meeting.",
+            restartNow: "Jetzt neu starten",
+            setByCommandLine:
+                "Der Modus ist über die Befehlszeile festgelegt (--ozone-platform), daher hat diese Auswahl keine Wirkung.",
+            x11Unavailable: "Der Kompatibilitätsmodus benötigt XWayland, das nicht läuft.",
+        },
         browser: "Sie verwenden WorkAdventure im Browser.",
         recommendedVersion: "Empfohlene Version",
         minimumVersion: "Älteste unterstützte Version",
-        download: "Desktop-Anwendung herunterladen",
+        download: "Desktop-App herunterladen",
         managed:
             "Beachten Sie die Update-Richtlinie Ihrer Organisation. Diese Seite installiert keine Anwendung und führt kein Downgrade durch.",
         status: {
             belowMinimum:
-                "Diese Desktop-Version ist älter als die von dieser Instanz unterstützte Mindestversion. Sie können fortfahren, aber einige Funktionen funktionieren möglicherweise nicht.",
-            recommended: "Sie verwenden die für diese Instanz empfohlene Version.",
+                "Diese Version der App ist älter als die Mindestversion, die dieser Server unterstützt. Sie können fortfahren, aber einige Funktionen funktionieren möglicherweise nicht.",
+            recommended: "Sie verwenden die für diesen Server empfohlene Version.",
             different:
-                "Ihre Version weicht von der Empfehlung dieser Instanz ab. Das bedeutet nicht unbedingt, dass sie inkompatibel ist.",
-            unconfigured: "Diese Instanz hat keine empfohlene Version angegeben.",
+                "Ihre Version weicht von der für diesen Server empfohlenen ab. Das bedeutet nicht unbedingt, dass sie inkompatibel ist.",
+            unconfigured: "Dieser Server gibt keine empfohlene Version an.",
         },
     },
     sourcePicker: {
@@ -37,17 +55,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Die Bildschirme konnten nicht identifiziert werden.",
         cancel: "Abbrechen",
     },
-    companion: {
+    miniWindow: {
         annotations: "Anmerkungen",
         allowAnnotations: "Anderen das Kommentieren erlauben",
         clearAnnotations: "Alles löschen",
         chat: "Chat",
         people: "Personen",
-        toggleMic: "Mikrofon ein-/ausschalten",
-        toggleCamera: "Kamera ein-/ausschalten",
-        shareScreen: "Bildschirm teilen",
-        stopShareScreen: "Bildschirmfreigabe beenden",
-        shareScreenNeedsMeeting: "Tritt einem Meeting bei, um deinen Bildschirm zu teilen",
         backToApp: "Zurück zu WorkAdventure",
         you: "Du",
         youChip: "du",
@@ -139,9 +152,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Schwarz",
         allowOthers: "Anderen das Kommentieren erlauben",
         clearAll: "Alles löschen",
-        toggleMic: "Mikrofon ein-/ausschalten",
-        toggleCamera: "Kamera ein-/ausschalten",
-        stopSharing: "Bildschirmfreigabe beenden",
         annotate: "Geteilten Bildschirm kommentieren",
         camera: "Kamera",
         microphone: "Mikrofon",

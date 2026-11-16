@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Versió instal·lada",
         unknown: "No disponible",
         startAtLogin: "Inicia WorkAdventure en iniciar la sessió a l’ordinador",
+        openSettings: "Obre la configuració de l’aplicació",
+        windowMode: {
+            title: "Mode de finestres",
+            x11: "Compatibilitat (X11), recomanat",
+            x11Description:
+                "La finestra d’imatge en imatge i la barra del presentador s’obren on les vas deixar i es mantenen per sobre de les altres aplicacions. Les dreceres del micròfon i de la càmera només funcionen quan WorkAdventure és en primer pla. Consumeix una mica més de recursos gràfics quan les pantalles fan servir escales diferents.",
+            wayland: "Wayland natiu",
+            waylandDescription:
+                "Les dreceres del micròfon i de la càmera funcionen des de qualsevol aplicació. La finestra d’imatge en imatge s’obre sempre al centre de la pantalla i no es pot mantenir per sobre de les altres aplicacions: l’hauràs de moure tu. Consumeix menys recursos gràfics quan les pantalles fan servir escales diferents.",
+            waylandAfterRestart:
+                "Després del reinici, la finestra d’imatge en imatge s’obrirà al centre de la pantalla i no es mantindrà per sobre de les altres aplicacions.",
+            restartNeeded: "Reinicia WorkAdventure per utilitzar aquest mode. Si ets en una reunió, en sortiràs.",
+            restartNow: "Reinicia ara",
+            setByCommandLine:
+                "El mode està definit a la línia d’ordres (--ozone-platform), així que aquesta opció no té cap efecte.",
+            x11Unavailable: "El mode de compatibilitat necessita XWayland, que no s’està executant.",
+        },
         browser: "Estàs utilitzant WorkAdventure al navegador.",
         recommendedVersion: "Versió recomanada",
         minimumVersion: "Versió mínima compatible",
@@ -15,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Segueix la política d’actualitzacions de la teva organització. Aquesta pàgina no instal·la l’aplicació ni torna a una versió anterior.",
         status: {
             belowMinimum:
-                "Aquesta versió és anterior a la mínima compatible amb aquesta instància. Pots continuar, però algunes funcions podrien no funcionar.",
-            recommended: "Estàs utilitzant la versió recomanada per a aquesta instància.",
+                "Aquesta versió de l’aplicació és anterior a la mínima compatible amb aquest servidor. Pots continuar, però algunes funcions podrien no funcionar.",
+            recommended: "Estàs utilitzant la versió recomanada per a aquest servidor.",
             different:
-                "La teva versió difereix de la recomanada per a aquesta instància. Això no vol dir necessàriament que sigui incompatible.",
-            unconfigured: "Aquesta instància no ha especificat cap versió recomanada.",
+                "La teva versió difereix de la recomanada per a aquest servidor. Això no vol dir necessàriament que sigui incompatible.",
+            unconfigured: "Aquest servidor no especifica cap versió recomanada.",
         },
     },
     sourcePicker: {
@@ -37,17 +54,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "No s'han pogut identificar les pantalles.",
         cancel: "Cancel·la",
     },
-    companion: {
+    miniWindow: {
         annotations: "Anotacions",
         allowAnnotations: "Permet que altres anotin",
         clearAnnotations: "Esborra-ho tot",
         chat: "Xat",
         people: "Persones",
-        toggleMic: "Activa/desactiva el micròfon",
-        toggleCamera: "Activa/desactiva la càmera",
-        shareScreen: "Comparteix la pantalla",
-        stopShareScreen: "Deixa de compartir la pantalla",
-        shareScreenNeedsMeeting: "Uneix-te a una reunió per compartir la pantalla",
         backToApp: "Torna a WorkAdventure",
         you: "Tu",
         youChip: "tu",
@@ -139,9 +151,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Negre",
         allowOthers: "Permet que altres anotin",
         clearAll: "Esborra-ho tot",
-        toggleMic: "Activa/desactiva el micròfon",
-        toggleCamera: "Activa/desactiva la càmera",
-        stopSharing: "Deixa de compartir la pantalla",
         annotate: "Anota la pantalla compartida",
         camera: "Càmera",
         microphone: "Micròfon",

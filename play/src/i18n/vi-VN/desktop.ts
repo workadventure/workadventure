@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Phiên bản đã cài",
         unknown: "Không khả dụng",
         startAtLogin: "Khởi động WorkAdventure khi đăng nhập vào máy tính",
+        openSettings: "Mở cài đặt ứng dụng",
+        windowMode: {
+            title: "Chế độ cửa sổ",
+            x11: "Tương thích (X11), được đề xuất",
+            x11Description:
+                "Hình trong hình và thanh người trình bày mở ở vị trí bạn để lại lần trước và luôn nằm trên các ứng dụng khác. Phím tắt micrô và camera chỉ hoạt động khi WorkAdventure ở phía trước. Dùng nhiều tài nguyên đồ họa hơn một chút khi các màn hình của bạn có tỷ lệ hiển thị khác nhau.",
+            wayland: "Wayland gốc",
+            waylandDescription:
+                "Phím tắt micrô và camera hoạt động từ mọi ứng dụng. Hình trong hình lần nào cũng mở ở giữa màn hình và không thể nằm trên các ứng dụng khác: bạn sẽ phải tự di chuyển nó. Dùng ít tài nguyên đồ họa hơn khi các màn hình của bạn có tỷ lệ hiển thị khác nhau.",
+            waylandAfterRestart:
+                "Sau khi khởi động lại, hình trong hình sẽ mở ở giữa màn hình của bạn và sẽ không nằm trên các ứng dụng khác.",
+            restartNeeded:
+                "Khởi động lại WorkAdventure để dùng chế độ này. Bạn sẽ rời khỏi cuộc họp đang tham gia, nếu có.",
+            restartNow: "Khởi động lại ngay",
+            setByCommandLine: "Chế độ được đặt từ dòng lệnh (--ozone-platform), nên lựa chọn này không có tác dụng.",
+            x11Unavailable: "Chế độ tương thích cần XWayland, nhưng XWayland hiện không chạy.",
+        },
         browser: "Bạn đang dùng WorkAdventure trong trình duyệt.",
         recommendedVersion: "Phiên bản được đề xuất",
         minimumVersion: "Phiên bản tối thiểu được hỗ trợ",
@@ -14,11 +31,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         managed: "Hãy tuân theo chính sách cập nhật của tổ chức. Trang này không cài đặt hoặc hạ phiên bản ứng dụng.",
         status: {
             belowMinimum:
-                "Phiên bản này cũ hơn phiên bản tối thiểu được phiên bản triển khai này hỗ trợ. Bạn có thể tiếp tục, nhưng một số tính năng có thể không hoạt động.",
-            recommended: "Bạn đang dùng phiên bản được đề xuất cho phiên bản triển khai này.",
+                "Phiên bản ứng dụng này cũ hơn phiên bản tối thiểu mà máy chủ này hỗ trợ. Bạn có thể tiếp tục, nhưng một số tính năng có thể không hoạt động.",
+            recommended: "Bạn đang dùng phiên bản được đề xuất cho máy chủ này.",
             different:
-                "Phiên bản của bạn khác với phiên bản được đề xuất. Điều này không nhất thiết có nghĩa là không tương thích.",
-            unconfigured: "Phiên bản triển khai này chưa chỉ định phiên bản được đề xuất.",
+                "Phiên bản của bạn khác với phiên bản được đề xuất cho máy chủ này. Điều này không nhất thiết có nghĩa là không tương thích.",
+            unconfigured: "Máy chủ này không chỉ định phiên bản được đề xuất.",
         },
     },
     sourcePicker: {
@@ -36,17 +53,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Không thể nhận diện các màn hình.",
         cancel: "Hủy",
     },
-    companion: {
+    miniWindow: {
         annotations: "Chú thích",
         allowAnnotations: "Cho phép người khác chú thích",
         clearAnnotations: "Xóa tất cả",
         chat: "Trò chuyện",
         people: "Mọi người",
-        toggleMic: "Bật/tắt micrô",
-        toggleCamera: "Bật/tắt camera",
-        shareScreen: "Chia sẻ màn hình của bạn",
-        stopShareScreen: "Dừng chia sẻ màn hình",
-        shareScreenNeedsMeeting: "Tham gia cuộc họp để chia sẻ màn hình",
         backToApp: "Quay lại WorkAdventure",
         you: "Bạn",
         youChip: "bạn",
@@ -138,9 +150,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Đen",
         allowOthers: "Cho phép người khác chú thích",
         clearAll: "Xóa tất cả",
-        toggleMic: "Bật/tắt micrô",
-        toggleCamera: "Bật/tắt camera",
-        stopSharing: "Dừng chia sẻ màn hình",
         annotate: "Chú thích trên màn hình được chia sẻ",
         camera: "Camera",
         microphone: "Micrô",

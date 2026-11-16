@@ -3,7 +3,7 @@
  * the desktop app speak: notify, the mute/camera shortcuts and the screen sources, nothing else).
  *
  * A page says `hello({ contract })` on every load. One that does not is an older WorkAdventure: its tab
- * gets the shortcuts, notifications and screen sharing, but no companion and no meeting bar, which that
+ * gets the shortcuts, notifications and screen sharing, but no mini window and no meeting bar, which that
  * page cannot render. Kept per page, since two tabs may be two servers of different versions.
  */
 
@@ -23,7 +23,7 @@ export function forgetPage(contents: Electron.WebContents): void {
     pageContracts.delete(contents.id);
 }
 
-/** The page in this view said hello: it renders the companion and the meeting bar. */
+/** The page in this view said hello: it renders the mini window and the meeting bar. */
 export function pageSaidHello(contents: Electron.WebContents): boolean {
     return pageContracts.has(contents.id);
 }

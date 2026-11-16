@@ -48,15 +48,18 @@ export async function manualRequestUpdateCheck() {
 }
 
 async function init() {
-    // In dev (electron .) the app.version is whatever package.json says — often "managedbyci"
-    // which electron-updater rejects with ERR_UPDATER_INVALID_VERSION. The unhandledRejection
-    // handler then pops a modal dialog that blocks the boot. Skip entirely in dev.
+    // In dev (electron .) there is no release to compare with, and a failed check pops the
+    // unhandledRejection dialog that blocks the boot. Skip entirely in dev.
     if (!app.isPackaged) {
         log.info("Auto-updater disabled in development.");
         return;
     }
 
     autoUpdater.logger = log;
+    // A beta install (2.0.0-beta.1) turns allowPrerelease on, and electron-updater then skips every release
+    // whose tag is not bare semver: ours are desktop-v<version>, so a beta would never update. Betas are
+    // published as the latest release, so the stable path finds them too.
+    autoUpdater.allowPrerelease = false;
     // Every user is offered the latest release; an organization can point its installs elsewhere.
     const feedUrl = createDesktopConfig().updateFeedUrl;
     if (feedUrl) {
@@ -96,6 +99,7 @@ async function init() {
         }
     });
 
+    // The .deb: apt brings the update, from the repository its after-install script adds (deb/).
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;
         autoUpdater.autoInstallOnAppQuit = false;

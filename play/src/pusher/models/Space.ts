@@ -35,6 +35,8 @@ const CLIENT_UPDATABLE_SPACE_USER_FIELDS: ReadonlySet<string> = new Set<keyof Sp
     "megaphoneState",
     "attendeesState",
     "cpuLimited",
+    "cameraHeld",
+    "microphoneHeld",
 ]);
 
 /**

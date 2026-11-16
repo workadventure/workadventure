@@ -1,36 +1,18 @@
 import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
-import ElectronLog from "electron-log";
-import path from "path";
 
-import { isStartAtLoginEnabled, onStartAtLoginChange, setStartAtLogin } from "./auto-launch";
-import * as autoUpdater from "./auto-updater";
-import * as log from "./log";
 import settings from "./settings";
 import { createWindow, getWindow } from "./window";
 import { emitCameraToggle, emitMuteToggle } from "./ipc";
 import { createPinnedWorldMenuItems, createRecentWorldMenuItems, openNativeWorldSwitcher } from "./native-menu";
 import { onWorldHistoryChange } from "./world-history";
 import { getMediaState, getTrayStatus, onPresenceChange, type TrayStatus } from "./presence";
-import { isCompanionVisible, toggleCompanion } from "./companion-controller";
+import { isMiniWindowVisible, toggleMiniWindow } from "./mini-window-controller";
 import { t } from "./i18n";
+import { onShortcutsChange } from "./shortcuts";
+import { openSettingsWindow } from "./settings-window";
+import { TRAY_DOT_COLOR, TRAY_ICON_PATH, TRAY_ICON_SIZE, drawStatusDot } from "./tray-icon";
 
 let tray: Tray | undefined;
-
-const assetsDirectory = path.join(__dirname, "..", "assets");
-
-// Status-dot colors composited onto the tray glyph. Mirror WA's own availability colors (the
-// `filling` values in play/src/front/Utils/AvailabilityStatus.ts getColorHexOfStatus): online green,
-// busy gold, back-in-a-moment blue, do-not-disturb coral. Idle reuses WA's AWAY gold; meeting reuses
-// WA's SILENT red as a "busy in a meeting" signal.
-const TRAY_STATUS_COLOR: Record<TrayStatus, string> = {
-    meeting: "#e74c3c",
-    do_not_disturb: "#e96e53",
-    busy: "#e9c84e",
-    back_in_a_moment: "#7382e2",
-    idle: "#e9c84e",
-    online: "#68e97a",
-    offline: "#6b7280",
-};
 
 const TRAY_STATUS_EMOJI: Record<TrayStatus, string> = {
     meeting: "🔴",
@@ -46,133 +28,47 @@ function trayStatusLabel(status: TrayStatus): string {
     return `${TRAY_STATUS_EMOJI[status]} ${t(`tray.status.${status}`)}`;
 }
 
-// Logical tray icon size in points; a matching @2x representation is added for Retina crispness.
-// Keep this at the macOS menu-bar glyph size (~18pt) — the image is a non-template colored icon, so
-// macOS renders it at its point size (it does not auto-fit to the bar height). A larger value makes
-// the icon overflow the ~22pt menu bar and read as an oversized blob next to the system icons.
-const TRAY_ICON_SIZE = 18;
 const trayIconCache = new Map<TrayStatus, NativeImage>();
-const baseTrayImageByPixelSize = new Map<number, NativeImage>();
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-    const value = hex.replace("#", "");
-    return {
-        r: parseInt(value.slice(0, 2), 16),
-        g: parseInt(value.slice(2, 4), 16),
-        b: parseInt(value.slice(4, 6), 16),
-    };
-}
-
-function getBaseTrayImage(pixelSize: number): NativeImage | undefined {
-    const cached = baseTrayImageByPixelSize.get(pixelSize);
-    if (cached) {
-        return cached;
-    }
-    const resized = nativeImage
-        .createFromPath(path.join(assetsDirectory, "icons", "logo.png"))
-        .resize({ width: pixelSize, height: pixelSize });
-    if (!resized.getSize().width) {
-        return undefined;
-    }
-    baseTrayImageByPixelSize.set(pixelSize, resized);
-    return resized;
-}
 
 /**
- * Composite a colored status dot onto a `pixelSize`×`pixelSize` copy of the logo and return the
- * BGRA buffer. Done pixel-wise on the toBitmap() buffer rather than via an SVG data URL, because
- * nativeImage.createFromDataURL does NOT reliably rasterize SVG across platforms — a bitmap
- * round-trip always works. The dot geometry scales with pixelSize so the 1x and 2x reps match.
- */
-function compositeStatusDotBuffer(status: TrayStatus, pixelSize: number): Buffer | undefined {
-    const base = getBaseTrayImage(pixelSize);
-    if (!base) {
-        return undefined;
-    }
-    const buffer = Buffer.from(base.toBitmap());
-    const { width, height } = base.getSize();
-    const { r, g, b } = hexToRgb(TRAY_STATUS_COLOR[status]);
-    const radius = Math.max(3, Math.round(Math.min(width, height) * 0.3));
-    const cx = width - radius - 1;
-    const cy = height - radius - 1;
-    const ring = Math.max(1, (pixelSize / TRAY_ICON_SIZE) * 1.5);
-
-    for (let y = Math.max(0, cy - radius - 2); y < Math.min(height, cy + radius + 2); y++) {
-        for (let x = Math.max(0, cx - radius - 2); x < Math.min(width, cx + radius + 2); x++) {
-            const dist = Math.sqrt((x - cx) ** 2 + (y - cy) ** 2);
-            const idx = (y * width + x) * 4;
-            // toBitmap yields BGRA.
-            if (dist <= radius) {
-                buffer[idx] = b;
-                buffer[idx + 1] = g;
-                buffer[idx + 2] = r;
-                buffer[idx + 3] = 255;
-            } else if (dist <= radius + ring) {
-                // White ring so the dot reads against a dark logo / dark menubar.
-                buffer[idx] = 255;
-                buffer[idx + 1] = 255;
-                buffer[idx + 2] = 255;
-                buffer[idx + 3] = 255;
-            }
-        }
-    }
-    return buffer;
-}
-
-/**
- * Build the tray image for a status as a non-template colored bitmap (a template image would
- * flatten the colored dot to monochrome), with a @2x representation so the glyph stays crisp on
- * Retina menu bars. Cached per status.
+ * The tray image for a status: the cup, with the status dot drawn over its 1x and 2x pixels. Not a
+ * template image, which would flatten the colored dot to monochrome. Cached per status.
  */
 function drawTrayStatusImage(status: TrayStatus): NativeImage {
-    const cached = trayIconCache.get(status);
-    if (cached) {
-        return cached;
-    }
-
-    try {
-        const buffer1x = compositeStatusDotBuffer(status, TRAY_ICON_SIZE);
-        if (!buffer1x) {
-            throw new Error("logo bitmap unavailable");
+    let image = trayIconCache.get(status);
+    if (!image) {
+        const cup = nativeImage.createFromPath(TRAY_ICON_PATH);
+        const dotColor = TRAY_DOT_COLOR[status];
+        if (dotColor === undefined) {
+            image = cup;
+        } else {
+            image = nativeImage.createEmpty();
+            for (const scaleFactor of [1, 2]) {
+                const buffer = cup.toBitmap({ scaleFactor });
+                drawStatusDot(buffer, scaleFactor, dotColor);
+                const size = TRAY_ICON_SIZE * scaleFactor;
+                image.addRepresentation({ scaleFactor, width: size, height: size, buffer });
+            }
         }
-        const image = nativeImage.createFromBitmap(buffer1x, { width: TRAY_ICON_SIZE, height: TRAY_ICON_SIZE });
-
-        const buffer2x = compositeStatusDotBuffer(status, TRAY_ICON_SIZE * 2);
-        if (buffer2x) {
-            image.addRepresentation({
-                scaleFactor: 2,
-                width: TRAY_ICON_SIZE * 2,
-                height: TRAY_ICON_SIZE * 2,
-                buffer: buffer2x,
-            });
-        }
-
         trayIconCache.set(status, image);
-        return image;
-    } catch (error) {
-        ElectronLog.warn(`Failed to composite tray status dot for "${status}"`, error);
-        // Fall back to the plain logo (never leave the tray without an icon).
-        return (
-            getBaseTrayImage(TRAY_ICON_SIZE) ??
-            nativeImage.createFromPath(path.join(assetsDirectory, "icons", "logo.png"))
-        );
     }
+    return image;
 }
 
 /**
- * Status, microphone, camera and companion: what is worth reaching for with the window hidden. The
+ * Status, microphone, camera and mini window: what is worth reaching for with the window hidden. The
  * tray's menu starts with them, and so does the Dock icon's menu (macOS).
  */
 function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
     const status = getTrayStatus();
-    // Status / mic / camera / companion only make sense inside a world; gray them out otherwise
+    // Status / mic / camera / mini window only make sense inside a world; gray them out otherwise
     // (landing / login, or no window). "offline" is exactly the not-in-a-world state.
     const inWorld = status !== "offline";
     const media = getMediaState();
     const shortcuts = settings.get("shortcuts");
     return [
         {
-            // Reports the live status; it is changed in WorkAdventure or the companion.
+            // Reports the live status; it is changed in WorkAdventure or the mini window.
             label: trayStatusLabel(status),
             enabled: false,
         },
@@ -201,28 +97,28 @@ function quickActionMenuItems(): Electron.MenuItemConstructorOptions[] {
             },
         },
         {
-            label: t("tray.companionPanel"),
+            label: t("tray.miniWindow"),
             type: "checkbox",
             enabled: inWorld,
-            checked: isCompanionVisible(),
+            checked: isMiniWindowVisible(),
             click() {
-                toggleCompanion();
+                toggleMiniWindow();
             },
         },
     ];
 }
 
 function updateTrayContextMenu() {
-    // Right-click on the Dock icon: the quick actions, the companion among them.
+    // Right-click on the Dock icon: the quick actions, the mini window among them.
     app.dock?.setMenu(Menu.buildFromTemplate(quickActionMenuItems()));
     if (!tray) {
         return;
     }
 
-    // Kept deliberately short: a menu-bar status item is glanced at mid-meeting, so only the things
-    // worth reaching for with a window hidden stay at the top level (status, mic, camera, companion,
-    // show/hide). World switching and diagnostics are real but rare, so they collapse into submenus;
-    // both also exist in the application menu, which is unreachable while the window is hidden.
+    // Kept deliberately short and shallow: a menu-bar status item is glanced at mid-meeting, so only the
+    // things worth reaching for with a window hidden stay at the top level (status, mic, camera,
+    // mini window, show/hide). World switching is real but rare, so it collapses into a submenu, also in
+    // the application menu (unreachable while the window is hidden). The rest is in the settings window.
     const trayContextMenu = Menu.buildFromTemplate([
         ...quickActionMenuItems(),
         { type: "separator" },
@@ -246,65 +142,27 @@ function updateTrayContextMenu() {
             },
         },
         {
-            label: t("tray.worlds"),
+            label: t("tray.rooms"),
             submenu: [
                 {
-                    label: t("menu.changeWorld"),
+                    label: t("menu.openRoom"),
                     click: openNativeWorldSwitcher,
                 },
                 { type: "separator" },
                 {
-                    label: t("menu.pinnedWorlds"),
+                    label: t("menu.pinnedRooms"),
                     submenu: createPinnedWorldMenuItems(),
                 },
                 {
-                    label: t("menu.recentWorlds"),
+                    label: t("menu.recentRooms"),
                     submenu: createRecentWorldMenuItems(),
                 },
             ],
         },
         { type: "separator" },
         {
-            label: t("tray.help"),
-            submenu: [
-                {
-                    // Also in WorkAdventure's settings; here for worlds whose server predates that switch.
-                    label: t("tray.startAtLogin"),
-                    type: "checkbox",
-                    checked: isStartAtLoginEnabled(),
-                    click(item) {
-                        setStartAtLogin(item.checked);
-                    },
-                },
-                { type: "separator" },
-                {
-                    label: t("tray.checkForUpdates"),
-                    click() {
-                        void autoUpdater.manualRequestUpdateCheck();
-                    },
-                },
-                {
-                    // Support-only, but this is the ONLY entry point to the log file in the app, so
-                    // it gets demoted rather than dropped.
-                    label: t("tray.openLogs"),
-                    click() {
-                        void log.openLog();
-                    },
-                },
-                {
-                    // Duplicated in the macOS app menu, but absent everywhere on Windows/Linux.
-                    label: t("tray.about"),
-                    click() {
-                        app.setAboutPanelOptions({
-                            applicationName: app.getName(),
-                            applicationVersion: app.getVersion(),
-                            iconPath: path.join(assetsDirectory, "icons", "logo.png"),
-                            copyright: "Copyright © WorkAdventure",
-                        });
-                        app.showAboutPanel();
-                    },
-                },
-            ],
+            label: t("menu.settings"),
+            click: openSettingsWindow,
         },
         {
             label: t("tray.quit"),
@@ -336,7 +194,8 @@ export function createTray() {
     updateTrayIcon();
     updateTrayContextMenu();
     onWorldHistoryChange(updateTrayContextMenu);
-    onStartAtLoginChange(updateTrayContextMenu);
+    // The microphone and camera items show their shortcuts.
+    onShortcutsChange(updateTrayContextMenu);
     // Presence (meeting / mic / camera / idle) drives both the status dot and the quick-action
     // checkmarks, so rebuild both on every change.
     onPresenceChange(() => {

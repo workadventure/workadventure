@@ -20,7 +20,7 @@ import zhTW from "./zh-TW";
 
 /**
  * Catalog for the native surfaces that have no world behind them (Landing, tab strip, menus, tray,
- * sign-in screens). Keyed by the OS language (app.getLocale()), unlike the companion / meeting bar
+ * sign-in screens). Keyed by the OS language (app.getLocale()), unlike the mini window / meeting bar
  * which receive their strings from the world, in the language chosen in WorkAdventure.
  */
 const CATALOGS: Record<NativeLocale, NativeStrings> = {

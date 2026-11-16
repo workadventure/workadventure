@@ -15,6 +15,11 @@ files:
 directories:
     output: ./build
 
+# No version in the file names, so that releases/latest/download/<name> always serves the latest release:
+# the download page of workadventu.re links there. The release tag holds the version, which is all the
+# auto-updater and the APT index need (both build their URLs from releases/download/<tag>/).
+artifactName: "${productName}-${arch}.${ext}"
+
 # Flipped in the packaged Electron binary only (`npm run dev` is unaffected); the same set as a new
 # Electron Forge app. The signed app can no longer be turned into a Node.js runtime
 # (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect) to run other code under its camera, microphone and
@@ -34,9 +39,18 @@ dmg:
 
 win:
     icon: "assets/icons/logo.ico"
-    artifactName: "${productName}-${version}-setup.${ext}"
+    # One installer per architecture, cross-built on the x64 runner: a universal installer would double the
+    # download for everyone. Both go in latest.yml, where electron-updater takes the file whose name holds
+    # its own architecture: keep ${arch} in the name.
+    artifactName: "${productName}-${arch}-setup.${ext}"
     target:
-        - nsis
+        - target: nsis
+          arch:
+              - x64
+              - arm64
+
+nsis:
+    buildUniversalInstaller: false
 
 mac:
     icon: assets/icons/logo.icns
@@ -74,8 +88,26 @@ linux:
     category: Network;InstantMessaging
     maintainer: TheCodingMachine <hello@workadventu.re>
     target:
-        - AppImage
-        - deb
+        # arm64 too, cross-built on the x64 runner: the app has no native module of its own. Both debs go
+        # in the same APT index, where apt keeps the entries of its own architecture.
+        - target: AppImage
+          arch:
+              - x64
+              - arm64
+        - target: deb
+          arch:
+              - x64
+              - arm64
+    # The public key of apt.workadventu.re, which the deb's after-install script installs (see deb/).
+    extraResources:
+        - from: deb/workadventure.gpg
+          to: workadventure.gpg
+
+deb:
+    # electron-builder's own scripts plus the APT repository (deb/), so that apt upgrade updates the app.
+    # Written by `npm run build` (deb/build-scripts.mjs).
+    afterInstall: build/deb-scripts/after-install.tpl
+    afterRemove: build/deb-scripts/after-remove.tpl
 
 appImage:
     # The AppImage launcher (AppRun) already adds --no-sandbox when the Chromium sandbox cannot start,
@@ -84,8 +116,13 @@ appImage:
     # unsandboxed everywhere.
     executableArgs: []
 
+# Releases live in their own public repository: electron-updater reads the repository's latest release,
+# which in the monorepo is the WorkAdventure server release. The CI uploads to a draft and publishes it
+# once the three OS are built (.github/workflows/build-and-release-desktop.yml). The app updates from
+# there too: electron-builder writes these settings into the app's app-update.yml.
 publish:
     provider: github
     owner: workadventure
-    repo: workadventure
-    releaseType: release
+    repo: desktop-releases
+    tagNamePrefix: desktop-v
+    releaseType: draft

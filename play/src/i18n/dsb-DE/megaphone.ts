@@ -2,40 +2,40 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "Pśipowěsć pósłaś",
+        audience: "Chto ju dostanjo?",
+        thisRoom: "Toś ta śpa",
+        wholeWorld: "Ceły swět",
+        place: "Městno (na žycenje)",
+        noPlace: "Žedno městno",
+        noPlaceOnMap: "Toś ta karta hyšći njama mjenjony wobcerk.",
+        preview: "Pśeglěd",
+        sendToRoom: "Do toś teje śpy pósłaś",
+        sendToWorld: "Do cełego swěta pósłaś",
+        confirmWorld: "Wšykne śpy swěta ju dostanu.",
+        confirmSend: "Jo, do cełego swěta pósłaś",
+        cancel: "Pśetergnuś",
+        sentToRoom: "Pśipowěsć do toś teje śpy pósłana",
+        sentToWorld: "Pśipowěsć do cełego swěta pósłana",
+        join: "K {place}",
+        joinMap: "Hyś",
+        placeNotFound: "Toś to městno južo njeeksistěrujo na karśe.",
+        admin: "Administrator",
+        more: "Cakajuce pśipowěsći: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Slědk k wuběranjeju komunikacije",
-        title: "Globalna komunikacija",
         liveMessage: {
-            startMegaphone: "Megafon startowaś",
-            stopMegaphone: "Megafon zastajiś",
-            goingToStream: "Buźośo streamowaś",
-            yourMicrophone: "waš mikrofon",
-            yourCamera: "wašu kameru",
-            yourScreen: "wašu wobrazowku",
+            microphoneOff: "Mikrofon wótšaltowany",
+            cameraOff: "Kamera wótšaltowana",
+            cameraOffHint: "Móžoš teke jano z mikrofonom live hyś.",
+            devices: "Kamera a mikrofon",
+            whoHears: "Chto śi słyšy?",
+            thisRoom: "Toś ta śpa",
+            wholeWorld: "Wšykne śpy swěta",
+            live: "Live",
+            stop: "Zastajiś",
             title: "Megafon",
-            button: "Žywy powěsć startowaś",
-            and: "a",
-            toAll: "na wšyknych wobźělnikow",
-            notice: `
-            Žywa powěsć abo "Megafon" wam zmóžnja, žywu powěsć z wašej kameru a wašym mikrofonu na wšykne luźe pósłaś, kótarež su w rumje abo w swěśe zwězane.
-
-            Toś ta powěsć buźo se w dolnem rožku wobrazowki pokazowaś, ako widejowowolanje abo diskusijowa bublina.
-
-            Pśikład wužywanja žyweje powěsći: "Witajśo wšykni, zachopimy konferencu? 🎉 Slědujśo mójomu avataroju k konferencowej conje a wócyńśo widejo-nałoženje 🚀"
-            `,
-            settings: "Nastajenja",
-        },
-        textMessage: {
-            title: "Tekstowa powěsć",
-            notice: `
-            Tekstowa powěsć wam zmóžnja, powěsć na wšykne luźe pósłaś, kótarež su w rumje abo w swěśe zwězane.
-
-            Toś ta powěsć buźo se ako popup górjejce na boku pokazowaś a buźo se ze zwukom pśidawaś, aby se identifikěrowało, až informacija jo cytajobna.
-
-            Pśikład powěsći: "Konferenca w rumje 3 zachopijo se za 2 minuty 🎉. Móžośo k konferencowej conje 3 hyś a widejo-nałoženje wócyniś 🚀"
-            `,
-            button: "Tekstowu powěsć pósłaś",
-            noAccess: "Njamaśo pśistup k toś tej funkciji 😱 Pšosym stajśo se z administratorom do zwiska 🙏",
         },
     },
 };

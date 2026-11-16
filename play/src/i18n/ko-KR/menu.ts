@@ -106,9 +106,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         selectEntryPointSelect: "사용자가 도착할 진입 지점을 선택하세요",
     },
     globalMessage: {
-        warning: "월드의 모든 방에 브로드캐스트",
         enter: "여기에 메시지를 입력하세요...",
-        send: "보내기",
     },
     contact: {
         gettingStarted: {

@@ -4,28 +4,30 @@ sidebar_position: 18
 
 # Sending a message to everyone
 
-Administrators can send a text message to everyone connected to their room, or to the whole world: to announce the start of a conference, a fire drill, the end of the day…
+Administrators can send an announcement to everyone connected to their room, or to the whole world: to announce the start of a conference, a fire drill, the end of the day…
 
-Only users with the `admin` tag can send them. To broadcast your camera and microphone live instead, use the [megaphone](/map-building/inline-editor/megaphone).
+Only users with the `admin` tag can send them. To broadcast your camera and microphone live instead, use **Go live**, the [megaphone](/map-building/inline-editor/megaphone).
 
-## Opening the window
+## Sending an announcement
 
-Click **Tools** in the action bar, then **Send global message**. The **Global communication** window offers two choices: **Start live message** (the megaphone, available only if it is enabled for the map and you are allowed to use it) and **Send a text message**.
+1. Click **Tools** in the action bar, then **Send an announcement**.
+2. Choose who receives it: **This room**, or **Whole world** to reach every room of your world.
+3. Write your message. The toolbar formats the text (bold, italic, links, lists).
+4. Optionally, pick a **Place to join**: a named area of the current map. The announcement then carries a **Join** button.
+5. Check the **Preview**: it shows the card exactly as people will receive it.
+6. Click **Send to this room**, or **Send to the whole world** and confirm.
 
-![The "Global communication" window](images/global-messages-window.png)
+![Writing an announcement, with a place to join](images/global-messages-composer.png)
 
-## Sending a text message
+## Receiving an announcement
 
-1. Click **Send a text message**.
-2. Write your message. The toolbar formats the text (bold, lists, colors, links, images…).
-3. Tick **Broadcast to all rooms of the world** to send it to every room of your world, not only the one you are in.
-4. Click **Send**.
+Everyone connected to the room (or to the world) sees the announcement below the action bar, with a short sound. It shows who sent it, at what time, and whether it went to the room or the whole world. They close it with the cross or **Escape**.
 
-![Writing a text message](images/global-messages-text.png)
+![The announcement, received below the action bar](images/global-messages-received.png)
 
-Everyone connected to the room (or to the world) sees the message at the top of the screen, with a short sound. They close it with the cross or **Escape**.
+When it has a place, **Join** walks their Woka to that area. From another room of the world, it takes them to the right map first, without reloading the page. If the area was renamed or deleted in the meantime, a message says the place no longer exists.
 
-![The message, received at the top of the screen](images/global-messages-received.png)
+When several announcements arrive, the newest one is shown and a counter tells how many are waiting behind it.
 
 ## Good to know
 

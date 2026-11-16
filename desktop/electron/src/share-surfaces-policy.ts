@@ -5,7 +5,7 @@
  *   Meeting bar        Whenever the user shares from the app, on macOS and Windows (out of the
  *                      capture): on the shared screen, or the screen under the pointer when a window
  *                      is shared. It follows a change of shared screen. None on Linux.
- *   Companion          Opens by itself during a share only on another screen than the shared one
+ *   Mini window        Opens by itself during a share only on another screen than the shared one
  *                      (none with a single screen, or when the shared screen is unknown), and never
  *                      on Linux, where it cannot be kept out of the capture. Opened by hand it stays,
  *                      and on Linux it warns it is visible in the share.
@@ -30,9 +30,9 @@ export function meetingBarDisplay(s: {
 }
 
 /**
- * The screen the companion may open on by itself, or undefined for nowhere.
+ * The screen the mini window may open on by itself, or undefined for nowhere.
  */
-export function companionAutoOpenDisplay(s: {
+export function miniWindowAutoOpenDisplay(s: {
     canHideFromCapture: boolean;
     sharing: boolean;
     identifyingScreens: boolean;
@@ -57,8 +57,8 @@ export function companionAutoOpenDisplay(s: {
 }
 
 /**
- * The companion warns it shows in the user's share where it cannot be kept out of the capture.
+ * The mini window warns it shows in the user's share where it cannot be kept out of the capture.
  */
-export function companionVisibleInShare(canHideFromCapture: boolean, sharing: boolean): boolean {
+export function miniWindowVisibleInShare(canHideFromCapture: boolean, sharing: boolean): boolean {
     return sharing && !canHideFromCapture;
 }

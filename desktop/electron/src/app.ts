@@ -6,11 +6,12 @@ import { createWindow, getWindow, openDeepLinkTarget } from "./window";
 import { getTabs } from "./tab-manager";
 import { createTray } from "./tray";
 import { startIdleMonitor } from "./idle-monitor";
-import { openCompanion, startCompanionController } from "./companion-controller";
+import { openMiniWindow, startMiniWindowController } from "./mini-window-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
 import { initStartAtLogin } from "./auto-launch";
 import ipc from "./ipc";
+import { registerSettingsWindowIpc } from "./settings-window";
 import settings from "./settings";
 import { setLogLevel } from "./log";
 import { loadShortcuts } from "./shortcuts";
@@ -18,6 +19,7 @@ import { t } from "./i18n";
 import { DESKTOP_APP_NAME } from "./app-name-policy";
 import { createDefaultProtocolClientArgs } from "./protocol-client-policy";
 import { extractDesktopAuthCallback, extractDesktopTargetFromDeepLink } from "./desktop-url-policy";
+import { applyWindowModeAtStartup } from "./window-mode";
 
 let pendingProtocolTarget: string | undefined;
 
@@ -29,7 +31,18 @@ if (process.platform === "win32") {
     app.setAppUserModelId("re.workadventu.desktop");
 }
 
-const OPEN_COMPANION_ARG = "--open-companion";
+// GNOME under Wayland gives apps no global key grabs: global shortcuts only work through its shortcut
+// service (the GlobalShortcuts portal), which Electron uses only with these features. The portal knows
+// the app by its .desktop file, hence "desktopName" in package.json.
+if (process.platform === "linux") {
+    const features = [
+        app.commandLine.getSwitchValue("enable-features"),
+        "GlobalShortcutsPortal,GlobalShortcutsPortalPreferredTrigger",
+    ];
+    app.commandLine.appendSwitch("enable-features", features.filter(Boolean).join(","));
+}
+
+const OPEN_MINI_WINDOW_ARG = "--open-mini-window";
 
 function getProtocolUrl(argv: string[]) {
     return argv.find((arg) => arg.startsWith("workadventure://"));
@@ -78,9 +91,9 @@ async function init() {
     registerProtocolHandler();
 
     app.on("second-instance", (event, argv) => {
-        // The taskbar task (Windows): open the companion, and leave the main window where it is.
-        if (argv.includes(OPEN_COMPANION_ARG)) {
-            openCompanion();
+        // The taskbar task (Windows): open the mini window, and leave the main window where it is.
+        if (argv.includes(OPEN_MINI_WINDOW_ARG)) {
+            openMiniWindow();
             return;
         }
         queueProtocolUrl(getProtocolUrl(argv));
@@ -117,6 +130,11 @@ async function init() {
 
         setLogLevel(settings.get("log_level") || "info");
 
+        // Linux under Wayland: restarting in X11 mode (the default) ends this start here.
+        if (await applyWindowModeAtStartup()) {
+            return;
+        }
+
         // Not awaited: it ends on a network round-trip to the update feed, and at login the network
         // is often not up yet. Awaiting it here delayed the tray, the menu and the window by however
         // long that request took to fail.
@@ -126,6 +144,7 @@ async function init() {
 
         // load ipc handler
         ipc();
+        registerSettingsWindowIpc();
 
         // In development (unpackaged) the macOS dock shows the default Electron icon — the bundle's
         // .icns is only applied to a packaged .app. Set it explicitly so dev matches the shipped icon.
@@ -142,15 +161,15 @@ async function init() {
         createTray();
         loadShortcuts();
         if (process.platform === "win32") {
-            // Right-click on the taskbar button: the task relaunches the app, the running one opens the companion.
+            // Right-click on the taskbar button: the task relaunches the app, the running one opens the mini window.
             app.setUserTasks([
                 {
                     program: process.execPath,
-                    arguments: app.isPackaged ? OPEN_COMPANION_ARG : `"${app.getAppPath()}" ${OPEN_COMPANION_ARG}`,
+                    arguments: app.isPackaged ? OPEN_MINI_WINDOW_ARG : `"${app.getAppPath()}" ${OPEN_MINI_WINDOW_ARG}`,
                     iconPath: process.execPath,
                     iconIndex: 0,
-                    title: t("tray.companionPanel"),
-                    description: t("tray.companionPanel"),
+                    title: t("tray.miniWindow"),
+                    description: t("tray.miniWindow"),
                 },
             ]);
         }
@@ -171,9 +190,9 @@ async function init() {
             }
         });
 
-        // The unified Companion auto-shows (People / Chat / Controls) whenever the main window is
+        // The mini window auto-shows (People / Chat / Controls) whenever the main window is
         // backgrounded in a world; also toggled from the tray + optional global shortcut.
-        startCompanionController();
+        startMiniWindowController();
     });
 
     // Quit when all windows are closed.

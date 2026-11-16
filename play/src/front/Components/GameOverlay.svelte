@@ -29,6 +29,7 @@
     import LoaderScene from "./Loader/LoaderScene.svelte";
     import EnableCameraScene from "./EnableCamera/EnableCameraScene.svelte";
     import GlobalCommunicationModal from "./Modal/GlobalCommunicationModal.svelte";
+    import AnnouncementComposerModal from "./Announcement/AnnouncementComposerModal.svelte";
     import FloatingUiPopupList from "./Util/FloatingUiPopupList.svelte";
     import MainModal from "./Modal/MainModal.svelte";
     import DroppingFileScene from "./DroppingFile/DroppingFileScene.svelte";
@@ -95,8 +96,10 @@
         {#if $mapEditorModeStore}
             <MapEditor />
         {/if}
-        {#if $showModalGlobalComminucationVisibilityStore}
+        {#if $showModalGlobalComminucationVisibilityStore === "live"}
             <GlobalCommunicationModal />
+        {:else if $showModalGlobalComminucationVisibilityStore === "text"}
+            <AnnouncementComposerModal />
         {/if}
 
         <Onboarding />

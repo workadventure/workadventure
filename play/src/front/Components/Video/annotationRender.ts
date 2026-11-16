@@ -47,14 +47,11 @@ export function distanceToSegment(
 
 /** True when the normalized point `p` is within {@link HIT_THRESHOLD} of the element (for erasing). */
 export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoint, aspect: number): boolean {
-    if (element.tool === "pointer") return false;
+    // The eraser goes through what disappears on its own.
+    if (element.tool === "pointer" || element.tool === "highlight") return false;
     const points = element.points;
     if (points.length === 0) {
         return false;
-    }
-    if (element.tool === "text") {
-        const anchor = points[0];
-        return Math.abs(p.x - anchor.x) < 0.08 && p.y > anchor.y - 0.05 && p.y < anchor.y + 0.02;
     }
     if (element.tool === "rect" && points.length >= 2) {
         const edges: [ScreenAnnotationPoint, ScreenAnnotationPoint][] = [
@@ -88,12 +85,29 @@ export function hitTest(element: ScreenAnnotationElement, p: ScreenAnnotationPoi
     return false;
 }
 
+/** Black or white text, whichever reads better on `color` (white unless it is a light #rrggbb color). */
+function textColorOn(color: string): string {
+    const hex = /^#([0-9a-f]{6})$/i.exec(color)?.[1];
+    if (!hex) return "#ffffff";
+    const [r, g, b] = [0, 2, 4].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    return 0.299 * r + 0.587 * g + 0.114 * b > 128 ? "#000000" : "#ffffff";
+}
+
 /**
  * Render a single annotation element onto a 2D canvas context.
  * Coordinates are normalized 0..1 and mapped to the context's backing-store pixel size, so the
  * caller only needs to size the canvas correctly (including devicePixelRatio).
+ * A pointer shows `label` (who points) to its right.
  */
-export function drawElement(ctx: CanvasRenderingContext2D, element: ScreenAnnotationElement): void {
+export function drawElement(ctx: CanvasRenderingContext2D, element: ScreenAnnotationElement, label?: string): void {
+    if (element.tool === "highlight") {
+        // A highlighter stroke: translucent, so what it covers stays readable.
+        ctx.save();
+        ctx.globalAlpha *= 0.4;
+        drawElement(ctx, { ...element, tool: "pen" });
+        ctx.restore();
+        return;
+    }
     const w = ctx.canvas.width;
     const h = ctx.canvas.height;
     const minSide = Math.min(w, h);
@@ -123,17 +137,24 @@ export function drawElement(ctx: CanvasRenderingContext2D, element: ScreenAnnota
         ctx.strokeStyle = "#ffffff";
         ctx.lineWidth = Math.max(1, minSide * 0.002);
         ctx.stroke();
+        if (label) {
+            const fontSize = Math.max(11, size * 0.6);
+            ctx.font = `${fontSize}px sans-serif`;
+            const padding = fontSize * 0.4;
+            const labelWidth = ctx.measureText(label).width + padding * 2;
+            const labelHeight = fontSize + padding * 2;
+            // To the left of the arrow when it would leave the canvas on the right.
+            const x = points[0].x * w + size * 1.1 + labelWidth > w ? -labelWidth - padding : size * 1.1;
+            // In the pointer's color, outlined in white like the arrow.
+            ctx.beginPath();
+            ctx.roundRect(x, size * 0.5, labelWidth, labelHeight, labelHeight / 2);
+            ctx.fill();
+            ctx.stroke();
+            ctx.fillStyle = textColorOn(element.color);
+            ctx.textBaseline = "middle";
+            ctx.fillText(label, x + padding, size * 0.5 + labelHeight / 2);
+        }
         ctx.restore();
-        return;
-    }
-
-    if (element.tool === "text") {
-        // Font size is fully normalized (relative to the smallest side) so it renders at the same
-        // relative size for every viewer, regardless of device pixel ratio.
-        const fontSize = Math.max(element.width * minSide * 4, minSide * 0.025);
-        ctx.font = `${fontSize}px sans-serif`;
-        ctx.textBaseline = "alphabetic";
-        ctx.fillText(element.text ?? "", points[0].x * w, points[0].y * h);
         return;
     }
 

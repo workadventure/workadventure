@@ -7,6 +7,24 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "インストール済みバージョン",
         unknown: "取得できません",
         startAtLogin: "コンピューターへのログイン時に WorkAdventure を起動",
+        openSettings: "アプリの設定を開く",
+        windowMode: {
+            title: "ウィンドウモード",
+            x11: "互換モード (X11)、推奨",
+            x11Description:
+                "ピクチャーインピクチャーとプレゼンターバーは前回の位置に開き、他のアプリより手前に表示されたままになります。マイクとカメラのショートカットは WorkAdventure が前面にあるときだけ機能します。画面ごとに拡大率が異なる場合、グラフィック処理の負荷が少し高くなります。",
+            wayland: "ネイティブ Wayland",
+            waylandDescription:
+                "マイクとカメラのショートカットはどのアプリからでも機能します。ピクチャーインピクチャーは毎回画面の中央に開き、他のアプリより手前に表示し続けることはできないため、自分で移動する必要があります。画面ごとに拡大率が異なる場合、グラフィック処理の負荷が軽くなります。",
+            waylandAfterRestart:
+                "再起動後、ピクチャーインピクチャーは画面の中央に開き、他のアプリより手前に表示されたままにはなりません。",
+            restartNeeded:
+                "このモードを使うには WorkAdventure を再起動してください。参加中のミーティングからは退出します。",
+            restartNow: "今すぐ再起動",
+            setByCommandLine:
+                "モードはコマンドライン (--ozone-platform) で指定されているため、この選択は反映されません。",
+            x11Unavailable: "互換モードには XWayland が必要ですが、実行されていません。",
+        },
         browser: "ブラウザーでWorkAdventureを使用しています。",
         recommendedVersion: "推奨バージョン",
         minimumVersion: "サポート対象の最小バージョン",
@@ -14,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         managed: "組織の更新ポリシーに従ってください。このページはアプリのインストールやダウングレードを行いません。",
         status: {
             belowMinimum:
-                "このデスクトップバージョンは、このインスタンスがサポートする最小バージョンより古いものです。続行できますが、一部の機能が動作しない場合があります。",
-            recommended: "このインスタンスの推奨バージョンを使用しています。",
+                "このアプリのバージョンは、このサーバーがサポートする最小バージョンより古いものです。続行できますが、一部の機能が動作しない場合があります。",
+            recommended: "このサーバーの推奨バージョンを使用しています。",
             different:
-                "使用中のバージョンは、このインスタンスの推奨バージョンと異なります。必ずしも互換性がないとは限りません。",
-            unconfigured: "このインスタンスには推奨バージョンが設定されていません。",
+                "使用中のバージョンは、このサーバーの推奨バージョンと異なります。必ずしも互換性がないとは限りません。",
+            unconfigured: "このサーバーには推奨バージョンが設定されていません。",
         },
     },
     sourcePicker: {
@@ -36,17 +54,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "画面を識別できませんでした。",
         cancel: "キャンセル",
     },
-    companion: {
+    miniWindow: {
         annotations: "注釈",
         allowAnnotations: "他の参加者の注釈を許可",
         clearAnnotations: "すべて消去",
         chat: "チャット",
         people: "メンバー",
-        toggleMic: "マイクのオン/オフ",
-        toggleCamera: "カメラのオン/オフ",
-        shareScreen: "画面を共有",
-        stopShareScreen: "画面共有を停止",
-        shareScreenNeedsMeeting: "画面を共有するにはミーティングに参加してください",
         backToApp: "WorkAdventure に戻る",
         you: "あなた",
         youChip: "あなた",
@@ -138,9 +151,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "黒",
         allowOthers: "他の参加者の注釈を許可",
         clearAll: "すべて消去",
-        toggleMic: "マイクのオン/オフ",
-        toggleCamera: "カメラのオン/オフ",
-        stopSharing: "画面共有を停止",
         annotate: "共有画面に注釈を付ける",
         camera: "カメラ",
         microphone: "マイク",

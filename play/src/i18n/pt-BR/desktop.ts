@@ -7,6 +7,23 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         installed: "Versão instalada",
         unknown: "Indisponível",
         startAtLogin: "Iniciar o WorkAdventure ao fazer login no computador",
+        openSettings: "Abrir as configurações do aplicativo",
+        windowMode: {
+            title: "Modo de janelas",
+            x11: "Compatibilidade (X11), recomendado",
+            x11Description:
+                "A janela de picture-in-picture e a barra do apresentador abrem onde você as deixou e ficam sobre os outros aplicativos. Os atalhos do microfone e da câmera só funcionam quando o WorkAdventure está em primeiro plano. Usa um pouco mais de recursos gráficos quando suas telas usam escalas diferentes.",
+            wayland: "Wayland nativo",
+            waylandDescription:
+                "Os atalhos do microfone e da câmera funcionam em qualquer aplicativo. A janela de picture-in-picture abre sempre no meio da tela e não pode ficar sobre os outros aplicativos: você terá que movê-la por conta própria. Usa menos recursos gráficos quando suas telas usam escalas diferentes.",
+            waylandAfterRestart:
+                "Depois de reiniciar, a janela de picture-in-picture abrirá no meio da sua tela e não ficará sobre os outros aplicativos.",
+            restartNeeded: "Reinicie o WorkAdventure para usar este modo. Se você estiver em uma reunião, sairá dela.",
+            restartNow: "Reiniciar agora",
+            setByCommandLine:
+                "O modo está definido na linha de comando (--ozone-platform), então esta opção não tem efeito.",
+            x11Unavailable: "O modo de compatibilidade precisa do XWayland, que não está em execução.",
+        },
         browser: "Você está usando o WorkAdventure no navegador.",
         recommendedVersion: "Versão recomendada",
         minimumVersion: "Versão mínima compatível",
@@ -15,11 +32,11 @@ const desktop: DeepPartial<Translation["desktop"]> = {
             "Siga a política de atualização da sua organização. Esta página não instala o aplicativo nem volta para uma versão anterior.",
         status: {
             belowMinimum:
-                "Esta versão é anterior à mínima compatível com esta instância. Você pode continuar, mas alguns recursos podem não funcionar.",
-            recommended: "Você está usando a versão recomendada para esta instância.",
+                "Esta versão do aplicativo é anterior à mínima compatível com este servidor. Você pode continuar, mas alguns recursos podem não funcionar.",
+            recommended: "Você está usando a versão recomendada para este servidor.",
             different:
-                "Sua versão é diferente da recomendada para esta instância. Isso não significa necessariamente que seja incompatível.",
-            unconfigured: "Esta instância não indicou uma versão recomendada.",
+                "Sua versão é diferente da recomendada para este servidor. Isso não significa necessariamente que seja incompatível.",
+            unconfigured: "Este servidor não indica uma versão recomendada.",
         },
     },
     sourcePicker: {
@@ -37,17 +54,12 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         identifyError: "Não foi possível identificar as telas.",
         cancel: "Cancelar",
     },
-    companion: {
+    miniWindow: {
         annotations: "Anotações",
         allowAnnotations: "Permitir que outros anotem",
         clearAnnotations: "Limpar tudo",
         chat: "Chat",
         people: "Pessoas",
-        toggleMic: "Ativar/desativar o microfone",
-        toggleCamera: "Ativar/desativar a câmera",
-        shareScreen: "Compartilhar sua tela",
-        stopShareScreen: "Parar de compartilhar sua tela",
-        shareScreenNeedsMeeting: "Entre em uma reunião para compartilhar sua tela",
         backToApp: "Voltar ao WorkAdventure",
         you: "Você",
         youChip: "você",
@@ -139,9 +151,6 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         black: "Preto",
         allowOthers: "Permitir que outros anotem",
         clearAll: "Limpar tudo",
-        toggleMic: "Ativar/desativar o microfone",
-        toggleCamera: "Ativar/desativar a câmera",
-        stopSharing: "Parar de compartilhar sua tela",
         annotate: "Anotar na tela compartilhada",
         camera: "Câmera",
         microphone: "Microfone",
