@@ -9,7 +9,6 @@ services:
       ALLOWED_CORS_ORIGIN: "http://play.workadventure.localhost"
       PUSHER_URL: "http://play.workadventure.localhost/"
       FRONT_URL: "http://play.workadventure.localhost"
-      UPLOADER_URL: "http://play.workadventure.localhost/uploader"
       ICON_URL: "http://play.workadventure.localhost/icon"
       PUBLIC_MAP_STORAGE_URL: "http://play.workadventure.localhost/map-storage"
     labels:
@@ -60,19 +59,6 @@ services:
       - "traefik.http.routers.map-storage-ui.entryPoints=web"
       - "traefik.http.routers.map-storage-ui.service=map-storage-ui"
       - "traefik.http.services.map-storage-ui.loadbalancer.server.port=8080"
-
-  uploader:
-    environment:
-      UPLOADER_URL: "http://play.workadventure.localhost/uploader"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.middlewares.strip-uploader-prefix.stripprefix.prefixes=/uploader"
-      - "traefik.http.routers.uploader.rule=Host(`play.workadventure.localhost`) && PathPrefix(`/uploader`)"
-      - "traefik.http.routers.uploader.priority=2"
-      - "traefik.http.routers.uploader.middlewares=strip-uploader-prefix@docker"
-      - "traefik.http.routers.uploader.entryPoints=web"
-      - "traefik.http.routers.uploader.service=uploader"
-      - "traefik.http.services.uploader.loadbalancer.server.port=8080"
 
   icon:
     labels:

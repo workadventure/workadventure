@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "Không thể tải âm thanh",
         notAllowed: "▶️ Âm thanh chưa được cho phép. Nhấn [PHÍM CÁCH] hoặc bấm vào đây để phát!",
     },
-    message: "Tin nhắn âm thanh",
     disable: "Tắt micrô của bạn",
 };
 

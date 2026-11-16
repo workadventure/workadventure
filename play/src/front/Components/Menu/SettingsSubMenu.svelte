@@ -21,7 +21,7 @@
     import { browserNotificationStore } from "../../Stores/BrowserNotificationStore";
     import { helpNotificationSettingsVisibleStore } from "../../Stores/HelpSettingsStore";
     import { screenShareQualityStore } from "../../Stores/ScreenSharingStore";
-    import { volumeProximityDiscussionStore } from "../../Stores/PeerStore";
+    import { allowPictureInPictureStore, volumeProximityDiscussionStore } from "../../Stores/PeerStore";
     import { bandwidthConstrainedPreferenceStore } from "../../Stores/BandwidthConstrainedPreferenceStore";
     import { settingsSubMenuTargetStore } from "../../Stores/MenuStore";
     import {
@@ -43,6 +43,7 @@
     import InputRadioBox from "../Input/InputRadioBox.svelte";
     import Select from "../Input/Select.svelte";
     import Chip from "../UI/Chip.svelte";
+    import DesktopApplicationSettings from "./DesktopApplicationSettings.svelte";
     import {
         IconAntennaBarsLow,
         IconAntennaBarsMid,
@@ -233,7 +234,7 @@
             value: allowPictureInPicture ? "true" : "false",
         });
 
-        localUserStore.setAllowPictureInPicture(allowPictureInPicture);
+        allowPictureInPictureStore.set(allowPictureInPicture);
     }
 
     function changeBlockAudio() {
@@ -344,6 +345,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 1;
+                                updateVideoQuality();
                             }}>{$LL.menu.settings.videoBandwidth.low()}</span
                         >
                     </li>
@@ -360,6 +362,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 2;
+                                updateVideoQuality();
                             }}>{$LL.menu.settings.videoBandwidth.recommended()}</span
                         >
                     </li>
@@ -376,6 +379,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueVideoQuality = 3;
+                                updateVideoQuality();
                             }}>{$LL.menu.settings.videoBandwidth.high()}</span
                         >
                     </li>
@@ -413,6 +417,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 1;
+                                updateScreenShareQuality();
                             }}>{$LL.menu.settings.shareScreenBandwidth.low()}</span
                         >
                     </li>
@@ -429,6 +434,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 2;
+                                updateScreenShareQuality();
                             }}>{$LL.menu.settings.shareScreenBandwidth.recommended()}</span
                         >
                     </li>
@@ -445,6 +451,7 @@
                             onclick={(event) => {
                                 event.preventDefault();
                                 valueScreenShareQuality = 3;
+                                updateScreenShareQuality();
                             }}>{$LL.menu.settings.shareScreenBandwidth.high()}</span
                         >
                     </li>
@@ -819,6 +826,7 @@
             />
         </div>
     </section>
+    <DesktopApplicationSettings />
 </div>
 
 <style>

@@ -38,6 +38,9 @@ export { default as IconForbid2 } from "~icons/tabler/forbid2";
 export { default as IconCancel } from "~icons/tabler/cancel";
 export { default as IconMoreVertical } from "~icons/tabler/dots-vertical";
 export { default as IconDots } from "~icons/tabler/dots";
+export { default as IconGripVertical } from "~icons/tabler/grip-vertical";
+export { default as IconDeviceDesktopUp } from "~icons/tabler/device-desktop-up";
+export { default as IconDeviceComputerCamera } from "~icons/tabler/device-computer-camera";
 export { default as IconShield } from "~icons/tabler/shield";
 export { default as IconUser } from "~icons/tabler/user";
 export { default as IconCheckList } from "~icons/tabler/list-check";
@@ -89,6 +92,7 @@ export { default as IconZoomInArea } from "~icons/tabler/zoom-in-area";
 export { default as IconFocus } from "~icons/tabler/photo-sensor";
 export { default as IconMicrophoneOff } from "~icons/tabler/microphone-off";
 export { default as IconCamera } from "~icons/tabler/video";
+export { default as IconCameraOff } from "~icons/tabler/video-off";
 export { default as IconDoorOut } from "~icons/tabler/door-exit";
 export { default as IconDoorIn } from "~icons/tabler/door-enter";
 export { default as IconFileMusic } from "~icons/tabler/file-music";
@@ -157,3 +161,15 @@ export { default as IconPhoto } from "~icons/tabler/photo";
 export { default as IconVideo } from "~icons/tabler/video";
 export { default as IconBell } from "~icons/tabler/bell";
 export { default as IconStack2 } from "~icons/tabler/stack-2";
+export { default as IconWorld } from "~icons/tabler/world";
+export { default as IconLine } from "~icons/tabler/line";
+export { default as IconArrowNarrowRight } from "~icons/tabler/arrow-narrow-right";
+export { default as IconSquare } from "~icons/tabler/square";
+export { default as IconEraser } from "~icons/tabler/eraser";
+export { default as IconPalette } from "~icons/tabler/palette";
+
+export { default as IconPointer } from "~icons/tabler/pointer";
+
+export { default as IconArrowForwardUp } from "~icons/tabler/arrow-forward-up";
+
+export { default as IconEyeOff } from "~icons/tabler/eye-off";

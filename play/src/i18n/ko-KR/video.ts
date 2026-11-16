@@ -11,6 +11,23 @@ const video: DeepPartial<Translation["video"]> = {
     persistent_connection_issue: "재연결 중... 연결이 불안정합니다...",
     click_to_unblock: "클릭하여 차단 해제",
     click_and_drag_to_resize: "클릭하고 드래그하여 크기 조정",
+    away: {
+        subtitle: "자리 비움 중 일시 중지됨",
+        cantSeeOrHear: "아무도 나를 보거나 들을 수 없습니다",
+        heardNotSeen: "소리는 들리지만 모습은 보이지 않습니다",
+        cantSee: "아무도 나를 볼 수 없습니다",
+        seenNotHeard: "모습은 보이지만 소리는 들리지 않습니다",
+        cantHear: "아무도 내 목소리를 들을 수 없습니다",
+        turnOnBoth: "카메라와 마이크 켜기",
+        turnOnCamera: "카메라 켜기",
+        turnOnMicrophone: "마이크 켜기",
+        turnOn: "켜기",
+    },
+    remoteAway: {
+        inAnotherWindow: "{name}님은 다른 창이나 탭에 있습니다",
+        cameraAndMicPaused: "돌아올 때까지 카메라와 마이크 일시 중지됨",
+        cameraPaused: "돌아올 때까지 카메라 일시 중지됨",
+    },
 };
 
 export default video;

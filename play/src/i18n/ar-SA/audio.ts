@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "تعذر تحميل الصوت", // Could not load sound
         notAllowed: "▶️ التشغيل التلقائي غير مسموح. اضغط [المسافة] أو انقر هنا للتشغيل!",
     },
-    message: "رسالة صوتية", // Voice message
     disable: "إيقاف الميكروفون", // Disable microphone
 };
 

@@ -2,7 +2,8 @@
     import highlightWords from "highlight-words";
     import { defaultColor } from "@workadventure/shared-utils";
     import { getContext, onDestroy, onMount } from "svelte";
-    import { locale } from "../../../../i18n/i18n-svelte";
+    import { derived } from "svelte/store";
+    import LL, { locale } from "../../../../i18n/i18n-svelte";
     import type {
         ChatRoom,
         ChatRoomMembershipManagement,
@@ -15,6 +16,8 @@
     import EncryptionBadge from "../EncryptionBadge.svelte";
     import UnreadCount from "../UnreadCount.svelte";
     import LastMessagePreview from "../LastMessagePreview.svelte";
+    import TypingDots from "../TypingDots.svelte";
+    import { truncateName } from "../typingIndicator";
     import { ROOM_ROW_PREVIEW_CONTEXT } from "../RoomListLayout";
     import { formatLastActivity } from "../unreadCount";
     import RoomMenu from "./RoomMenu/RoomMenu.svelte";
@@ -45,6 +48,21 @@
     const rowPreview = getContext<{ shown: boolean } | undefined>(ROOM_ROW_PREVIEW_CONTEXT);
     // Only listened to while shown.
     let lastMessagePreview = $derived(rowPreview?.shown ? room.lastMessagePreview : undefined);
+    let typingNamesStore = $derived(
+        room.typingNames ??
+            derived(room.typingMembers, (members) =>
+                members.map((member) => member.name ?? $LL.chat.typingIndicator.someone()),
+            ),
+    );
+    let typingText = $derived(
+        $typingNamesStore.length === 0
+            ? undefined
+            : $roomType === "direct"
+              ? $LL.chat.typingIndicator.direct()
+              : $typingNamesStore.length === 1
+                ? $LL.chat.typingIndicator.row({ name: truncateName($typingNamesStore[0]) })
+                : $LL.chat.typingIndicator.rowSeveral({ count: $typingNamesStore.length }),
+    );
     let peerAvatarColorStore = $derived(room.avatarFallbackColor);
     let peerWaParensStore = $derived(room.peerWaDisplayNameIfDifferent);
     let peerWaDisplayNameParens = $derived(peerWaParensStore ? $peerWaParensStore : undefined);
@@ -112,12 +130,30 @@
                         </span>
                     {/if}
                 </span>
-                <LastMessagePreview preview={lastMessagePreview} showSender={$roomType !== "direct"} />
+                {#if typingText}
+                    <span class="block truncate text-sm font-normal text-success" data-testid="roomRowTyping"
+                        >{typingText}</span
+                    >
+                {:else}
+                    <LastMessagePreview preview={lastMessagePreview} showSender={$roomType !== "direct"} />
+                {/if}
             {:else}
                 {@render nameChunks()}
             {/if}
         </span>
     </button>
+    {#if typingText && !lastMessagePreview}
+        <!-- No preview line in a narrow list: the dots say it next to the name. -->
+        <span
+            class="flex shrink-0 rounded-full bg-success/15 px-1.5 py-1 text-success"
+            title={typingText}
+            aria-label={typingText}
+            role="img"
+            data-testid="roomRowTyping"
+        >
+            <TypingDots />
+        </span>
+    {/if}
     {#if $areNotificationsMuted}
         <IconBellOff font-size="12" class="opacity-50" />
     {/if}

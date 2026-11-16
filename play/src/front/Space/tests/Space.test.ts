@@ -54,6 +54,7 @@ vi.mock("../../Stores/ScreenSharingStore", () => {
             setQuality: vi.fn(),
         },
         screenSharingLocalMedia: writable(undefined),
+        activeScreenShareSourceStore: writable(undefined),
     };
 });
 
@@ -138,6 +139,8 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         showVoiceIndicator: overrides.showVoiceIndicator ?? false,
         attendeesState: overrides.attendeesState ?? false,
         cpuLimited: overrides.cpuLimited ?? false,
+        cameraHeld: overrides.cameraHeld ?? false,
+        microphoneHeld: overrides.microphoneHeld ?? false,
     };
 }
 

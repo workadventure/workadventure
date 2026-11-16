@@ -261,7 +261,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
     /**
      * Retrieves a menu from its key.
      * Keys are set when the menu is created with `registerMenuCommand`
-     * In addition, the standard menus have the following keys: "settings", "profile", "invite", "credit", "globalMessages", "contact", "report"
+     * In addition, the standard menus have the following keys: "settings", "profile", "invite", "credit", "contact", "report"
      */
     public getMenuCommand(key: string): Promise<Menu> {
         // Note: we return a promise because in the future, we might want to check that the key we pass does indeed exist.

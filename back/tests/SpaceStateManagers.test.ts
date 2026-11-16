@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { Subject } from "rxjs";
-import { FilterType, SpaceUser } from "@workadventure/messages";
+import { FilterType, ScreenAnnotationElement, SpaceUser } from "@workadventure/messages";
 import type { SpaceState } from "@workadventure/shared-utils";
-import { emptySpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState, SCREEN_ANNOTATION_MAX_ELEMENTS } from "@workadventure/shared-utils";
 import type { SpaceStateHost } from "../src/Model/SpaceStateHost";
 import { RaiseHandManager } from "../src/Model/RaiseHandManager";
 import { ProximityPollManager } from "../src/Model/ProximityPollManager";
 import { ProximityQAManager } from "../src/Model/ProximityQAManager";
+import { ScreenAnnotationManager } from "../src/Model/ScreenAnnotationManager";
 
 function fakeSpace(filterType: SpaceStateHost["filterType"], ...partialUsers: Partial<SpaceUser>[]) {
     const users = partialUsers.map((user) => SpaceUser.fromPartial(user));
@@ -260,5 +261,91 @@ describe("ProximityQAManager", () => {
         remove("a", first);
         remove("mod", second);
         expect(state().questions).toEqual({});
+    });
+});
+
+describe("ScreenAnnotationManager", () => {
+    const element = (id: string, authorUserId = "someone-else") =>
+        ScreenAnnotationElement.fromPartial({
+            id,
+            authorUserId,
+            tool: "pen",
+            color: "#ff3b30",
+            width: 0.004,
+            points: [{ x: 0.1, y: 0.2 }],
+        });
+
+    function setup() {
+        const space = fakeSpace(
+            FilterType.ALL_USERS,
+            { spaceUserId: "presenter", screenSharingState: true },
+            { spaceUserId: "a" },
+            { spaceUserId: "b" },
+        );
+        const manager = new ScreenAnnotationManager(space.host);
+        const ids = () => Object.keys(space.state().annotations.presenter?.elements ?? {});
+        return { ...space, manager, ids };
+    }
+
+    it("reserves the screen to its presenter until they allow the others, and stamps the author", () => {
+        const { manager, user, state, ids } = setup();
+        manager.upsert(user("presenter"), "presenter", element("p1"));
+        expect(() => manager.upsert(user("a"), "presenter", element("a1"))).toThrow();
+
+        manager.setOthersAllowed(user("presenter"), true);
+        manager.upsert(user("a"), "presenter", element("a1"));
+        expect(ids()).toEqual(["p1", "a1"]);
+        expect(state().annotations.presenter.elements.a1.authorUserId).toBe("a");
+        // Someone else's element can be neither replaced nor erased...
+        expect(() => manager.upsert(user("b"), "presenter", element("a1"))).toThrow();
+        expect(() => manager.remove(user("b"), "presenter", "a1")).toThrow();
+        // ...except by its author and by the presenter.
+        manager.remove(user("a"), "presenter", "a1");
+        manager.remove(user("presenter"), "presenter", "p1");
+        expect(ids()).toEqual([]);
+    });
+
+    it("refuses annotations on a user who is not sharing their screen", () => {
+        const { manager, user } = setup();
+        expect(() => manager.upsert(user("a"), "a", element("a1"))).toThrow();
+        expect(() => manager.upsert(user("a"), "nobody", element("a1"))).toThrow();
+    });
+
+    it("refuses an element outside the schema", () => {
+        const { manager, user } = setup();
+        expect(() => manager.upsert(user("presenter"), "presenter", { ...element("p1"), tool: "eraser" })).toThrow();
+        expect(() => manager.upsert(user("presenter"), "presenter", { ...element("p2"), points: [] })).toThrow();
+    });
+
+    it("lets only the presenter clear their screen, and keeps their setting", () => {
+        const { manager, user, state, ids } = setup();
+        manager.setOthersAllowed(user("presenter"), true);
+        manager.upsert(user("a"), "presenter", element("a1"));
+        manager.clear(user("a"));
+        expect(ids()).toEqual(["a1"]);
+        manager.clear(user("presenter"));
+        expect(state().annotations.presenter).toEqual({ othersAllowed: true, elements: {} });
+    });
+
+    it("drops the oldest element beyond the limit", () => {
+        const { manager, user, ids } = setup();
+        for (let i = 0; i <= SCREEN_ANNOTATION_MAX_ELEMENTS; i++) {
+            manager.upsert(user("presenter"), "presenter", element(`p${i}`));
+        }
+        expect(ids()).toHaveLength(SCREEN_ANNOTATION_MAX_ELEMENTS);
+        expect(ids()).not.toContain("p0");
+    });
+
+    it("forgets everything drawn on a share when it stops or the presenter leaves", () => {
+        const { manager, user, state, updateUser, userRemoved$ } = setup();
+        manager.setOthersAllowed(user("presenter"), true);
+        manager.upsert(user("presenter"), "presenter", element("p1"));
+        updateUser("presenter", { screenSharingState: false });
+        expect(state().annotations).toEqual({});
+
+        updateUser("presenter", { screenSharingState: true });
+        manager.upsert(user("presenter"), "presenter", element("p1"));
+        userRemoved$.next(user("presenter"));
+        expect(state().annotations).toEqual({});
     });
 });

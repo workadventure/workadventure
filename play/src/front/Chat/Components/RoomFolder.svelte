@@ -16,6 +16,7 @@
     import RoomSuggested from "./Room/RoomSuggested.svelte";
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
+    import { sortByLastMessage } from "./sortByLastMessage";
     import { IconChevronUp, IconExclamation, IconLoader } from "@wa-icons";
 
     interface Props {
@@ -40,10 +41,11 @@
     let joinableRoomsOpen = $state(false);
     const isFoldersOpen: { [key: string]: boolean } = {};
 
+    let roomsByLastMessage = $derived(sortByLastMessage($rooms));
     let filteredRoom = $derived(
-        $rooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $roomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
 
     $folders?.forEach((folder) => {

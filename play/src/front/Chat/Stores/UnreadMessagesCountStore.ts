@@ -29,7 +29,7 @@ export const matrixUnreadMessagesCountStore: Readable<number> = derived(
             [
                 chatConnection.nbUnreadRoomsMessages,
                 chatConnection.nbUnreadDirectRoomsMessages,
-                chatConnection.nbUnreadInvitationsMessages,
+                chatConnection.nbPendingInvitations,
             ],
             ([rooms, directRooms, invitations]) => rooms + directRooms + invitations,
         ).subscribe(set);

@@ -131,7 +131,7 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
      */
     private readonly matrixClientRoomManageQueue: Room[] = [];
     private matrixClientRoomManageQueuePumpBusy = false;
-    nbUnreadInvitationsMessages: Readable<number>;
+    nbPendingInvitations: Readable<number>;
     nbUnreadDirectRoomsMessages: Readable<number>;
     nbUnreadRoomsMessages: Readable<number>;
     connectionStatus: Writable<ConnectionStatus>;
@@ -252,12 +252,8 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                 shouldRetrySendingEvents.some((shouldRetrySendingEvent) => shouldRetrySendingEvent),
         );
 
-        this.nbUnreadInvitationsMessages = derived(this.rawUnreadRooms, (rawUnreadRooms) =>
-            Array.from(rawUnreadRooms.values()).reduce(
-                (total, room) => total + (room.membership === KnownMembership.Invite ? room.count : 0),
-                0,
-            ),
-        );
+        // Matrix sends no unread count for a room we are only invited to, so each invitation counts as one.
+        this.nbPendingInvitations = derived(this.invitations, (invitations) => invitations.length);
 
         this.nbUnreadDirectRoomsMessages = readonly(this.nbUnreadDirectRoomsMessagesStore);
         this.directRoomsUnreadAggregateUnsubscriber = this.directRooms.subscribe((directRoomsList) => {
@@ -1633,9 +1629,16 @@ export class MatrixChatConnection implements ChatConnectionInterface, MatrixChat
                     if (client.isInitialSyncComplete()) {
                         const roomName = room.name?.trim() || get(LL).chat.roomInvitation.unknownRoom();
                         const chatRoom = new MatrixChatRoom(room);
+                        const inviter = chatRoom.inviterName;
+                        let message = get(LL).chat.roomInvitation.notification({ roomName });
+                        if (get(chatRoom.type) === "direct") {
+                            message = get(LL).chat.roomInvitation.notificationDirect({ name: inviter ?? roomName });
+                        } else if (inviter && !chatRoom.isRoomFolder) {
+                            message = get(LL).chat.roomInvitation.notificationFrom({ inviter, roomName });
+                        }
                         chatNotificationStore.addNotification(
                             get(LL).chat.roomInvitation.notificationTitle(),
-                            get(LL).chat.roomInvitation.notification({ roomName }),
+                            message,
                             chatRoom,
                             undefined,
                             false,

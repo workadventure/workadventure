@@ -1,6 +1,7 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
     import { onDestroy, onMount } from "svelte";
+    import { on } from "svelte/events";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
@@ -103,10 +104,25 @@
     };
 
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+        // The button toggles the menu itself.
+        if (event.target && buttonElement?.contains(event.target as Node)) return;
         if (event.target && popoversElement && !popoversElement.contains(event.target as Node)) {
             closeChatUserMenu();
         }
     };
+
+    // On the button's own document, not <svelte:window>: in the desktop companion (a child window), clicks
+    // never reach the main window.
+    $effect(() => {
+        const ownerDocument = buttonElement?.ownerDocument;
+        if (!ownerDocument) return;
+        const stopClick = on(ownerDocument, "click", handleClickOutside);
+        const stopTouch = on(ownerDocument, "touchstart", handleClickOutside);
+        return () => {
+            stopClick();
+            stopTouch();
+        };
+    });
 
     onMount(() => {
         gameManager
@@ -177,7 +193,6 @@
     }
 </script>
 
-<svelte:window onclick={handleClickOutside} ontouchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
         class="m-0 p-2 flex items-center rounded-md hover:bg-white/10 bg-transparent !text-white"

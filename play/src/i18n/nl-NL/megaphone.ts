@@ -2,52 +2,40 @@ import type { Translation } from "../i18n-types";
 import type { DeepPartial } from "../DeepPartial";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "Aankondiging versturen",
+        audience: "Wie ontvangt het?",
+        thisRoom: "Deze ruimte",
+        wholeWorld: "Hele wereld",
+        place: "Plek om naartoe te gaan (optioneel)",
+        noPlace: "Geen plek",
+        noPlaceOnMap: "Deze kaart heeft nog geen benoemde zone.",
+        preview: "Voorbeeld",
+        sendToRoom: "Naar deze ruimte sturen",
+        sendToWorld: "Naar de hele wereld sturen",
+        confirmWorld: "Alle ruimtes van de wereld ontvangen het.",
+        confirmSend: "Ja, naar de hele wereld sturen",
+        cancel: "Annuleren",
+        sentToRoom: "Aankondiging naar deze ruimte verstuurd",
+        sentToWorld: "Aankondiging naar de hele wereld verstuurd",
+        join: "Naar {place}",
+        joinMap: "Erheen",
+        placeNotFound: "Deze plek bestaat niet meer op de kaart.",
+        admin: "Beheerder",
+        more: "Wachtende aankondigingen: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Terug naar communicatie selecteren",
-        title: "Globale communicatie",
         liveMessage: {
-            startMegaphone: "Start megaphone",
-            stopMegaphone: "Stop megaphone",
-            goingToStream: "Je gaat streamen",
-            yourMicrophone: "je microfoon",
-            yourCamera: "je camera",
-            yourScreen: "je scherm",
+            microphoneOff: "Microfoon uit",
+            cameraOff: "Camera uit",
+            cameraOffHint: "Je kunt ook alleen met je microfoon live gaan.",
+            devices: "Camera en microfoon",
+            whoHears: "Wie hoort je?",
+            thisRoom: "Deze ruimte",
+            wholeWorld: "Alle ruimtes van de wereld",
+            live: "Live",
+            stop: "Stoppen",
             title: "Live bericht",
-            button: "Start live bericht",
-            and: "en",
-            toAll: "naar alle deelnemers",
-            notice: `
-            Het live bericht of "Megaphone" stelt je in staat om een live bericht te verzenden met je camera en microfoon naar alle mensen die zijn verbonden in de kamer of de wereld.
-
-            Dit bericht wordt weergegeven in de hoek van het scherm, zoals een video-oproep of een bubbelgesprek.
-
-            Een voorbeeld van een gebruiksscenario voor een live bericht: "Hallo iedereen, zullen we de conferentie starten? 🎉 Volg mijn avatar naar het conferentiegebied en open de video-app 🚀"
-            `,
-            settings: "Instellingen",
-        },
-        textMessage: {
-            title: "Tekstbericht",
-            notice: `
-            Het tekstbericht stelt je in staat om een bericht te verzenden naar alle mensen die zijn verbonden in de kamer of de wereld.
-
-            Dit bericht wordt weergegeven als een pop-up bovenaan de pagina en wordt vergezeld door een geluid om aan te geven dat de informatie leesbaar is.
-
-            Een voorbeeld van een bericht: "De conferentie in kamer 3 begint over 2 minuten 🎉. Je kunt naar conferentiegebied 3 gaan en de video-app openen 🚀"
-            `,
-            button: "Verzend een tekstbericht",
-            noAccess: "Je hebt geen toegang tot deze functie 😱 Neem contact op met de beheerder 🙏",
-        },
-        audioMessage: {
-            title: "Audio bericht",
-            notice: `
-            Het audiobericht is een bericht van het type "MP3, OGG..." dat naar alle gebruikers wordt gestuurd die zijn verbonden in de kamer of in de wereld.
-
-            Dit audiobericht wordt gedownload en afgespeeld bij alle mensen die deze melding ontvangen.
-
-            Een audiobericht kan bestaan uit een audiorecording die aangeeft dat een conferentie over enkele minuten begint.
-            `,
-            button: "Verzend een audiobericht",
-            noAccess: "Je hebt geen toegang tot deze functie 😱 Neem contact op met de beheerder 🙏",
         },
     },
 };

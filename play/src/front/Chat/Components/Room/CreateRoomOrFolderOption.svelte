@@ -7,9 +7,10 @@
     import { navChat } from "../../Stores/ChatStore";
     import ConfirmDialog from "../ConfirmDialog.svelte";
     import ChatMenu from "../ChatMenu.svelte";
-    import ManageParticipantsModal from "./ManageParticipantsModal.svelte";
+    import { selectedRoomStore } from "../../Stores/SelectRoomStore";
+    import { folderPanelStore, membersFocusRequestStore } from "../../Stores/RoomSidePanelStore";
     import RoomOption from "./RoomMenu/RoomOption.svelte";
-    import { IconFolder, IconLogout, IconMessage, IconUserEdit } from "@wa-icons";
+    import { IconFolder, IconLogout, IconMessage, IconUsersGroup } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -22,13 +23,6 @@
 
     let hasPermissionToCreateRoom = $derived(
         folder?.hasPermissionForRoomStateEvent(EventType.SpaceChild) ?? readable(false),
-    );
-    let hasPermissionToInvite = $derived(folder?.hasPermissionTo("invite") ?? readable(false));
-    let hasPermissionToKick = $derived(folder?.hasPermissionTo("kick") ?? readable(false));
-    let hasPermissionToBan = $derived(folder?.hasPermissionTo("ban") ?? readable(false));
-
-    let shouldDisplayManageParticipantButton = $derived(
-        $hasPermissionToInvite || $hasPermissionToKick || $hasPermissionToBan,
     );
 
     function openCreateSpace() {
@@ -47,14 +41,18 @@
             danger: true,
             onConfirm: async () => {
                 await leavingFolder.leaveRoom();
+                if ($folderPanelStore?.id === leavingFolder.id) folderPanelStore.set(undefined);
                 notificationPlayingStore.playNotification($LL.chat.folderMenu.leaveFolder.notification());
             },
         });
     }
 
-    function openManageParticipantsModal() {
+    // In the conversation column, in place of a conversation: a folder has none of its own.
+    function openMembers() {
         if (!folder) return;
-        modals.open(ManageParticipantsModal, { room: folder });
+        selectedRoomStore.set(undefined);
+        folderPanelStore.set(folder);
+        membersFocusRequestStore.set(true);
     }
 </script>
 
@@ -78,13 +76,13 @@
             onclick={openCreateSpace}
         />
     {/if}
-    <!-- Not tied to creating rooms: whoever may invite, kick or ban in the folder manages its members. -->
-    {#if shouldDisplayManageParticipantButton && folder}
+    <!-- Everyone sees the folder's members, as for a room; inviting and moderating are offered to those allowed. -->
+    {#if folder}
         <RoomOption
-            dataTestId="manageParticipantOption"
-            IconComponent={IconUserEdit}
-            title={$LL.chat.manageRoomUsers.roomOption()}
-            onclick={openManageParticipantsModal}
+            dataTestId="folderMembersOption"
+            IconComponent={IconUsersGroup}
+            title={$LL.chat.manageRoomUsers.sectionJoined()}
+            onclick={openMembers}
         />
     {/if}
 

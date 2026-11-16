@@ -128,7 +128,7 @@ Note: on some OSes, you will need to add this line to your `/etc/hosts` file:
 
 **/etc/hosts**
 ```
-127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost traefik.workadventure.localhost matrix.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost uploader.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost
+127.0.0.1 oidc.workadventure.localhost redis.workadventure.localhost play.workadventure.localhost traefik.workadventure.localhost matrix.workadventure.localhost extra.workadventure.localhost icon.workadventure.localhost map-storage.workadventure.localhost maps.workadventure.localhost api.workadventure.localhost front.workadventure.localhost
 ```
 
 

@@ -8,7 +8,7 @@
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
-    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import { folderPanelStore, roomSidePanelStore } from "../Stores/RoomSidePanelStore";
     import {
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
@@ -45,6 +45,7 @@
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import FolderMembersPanel from "./Room/FolderMembersPanel.svelte";
     import {
         CHAT_TWO_COLUMN_LAYOUT_LIMIT,
         canDisplayRoomListAndTimeline,
@@ -62,6 +63,7 @@
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
     import { rovingFocus } from "./roomRowKeyboard";
+    import { sortByLastMessage } from "./sortByLastMessage";
     import { IconChevronUp, IconCloudLock, IconLoader, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -204,15 +206,17 @@
         return undefined;
     }
 
+    let directRoomsByLastMessage = $derived(sortByLastMessage($directRooms));
     let filteredDirectRoom = $derived(
-        $directRooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $directRoomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
+    let roomsByLastMessage = $derived(sortByLastMessage($rooms));
     let filteredRooms = $derived(
-        $rooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $roomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
     let filteredRoomInvitations = $derived(
         $roomInvitations
@@ -337,7 +341,7 @@
         ? `grid-template-columns: ${$roomListWidthStore}px minmax(0, 1fr) 360px`
         : undefined}
 >
-    {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
+    {#if ($selectedRoomStore === undefined && $folderPanelStore === undefined) || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
             use:rovingFocus={{ items: "[data-room-row-button]" }}
@@ -437,7 +441,7 @@
                             onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
-                                {$LL.chat.invitations()}
+                                {$LL.chat.invitations()} · {filteredRoomInvitations.length}
                             </div>
                             <div
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
@@ -594,7 +598,13 @@
                 </div>
             {/if}
         </div>
-    {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
+    {:else if $folderPanelStore !== undefined}
+        <div class="relative overflow-y-auto min-w-0">
+            {#key $folderPanelStore.id}
+                <FolderMembersPanel folder={$folderPanelStore} />
+            {/key}
+        </div>
+    {:else if displayTwoColumnLayout}
         <CatchUpList conversations={$unreadConversations} />
     {/if}
 

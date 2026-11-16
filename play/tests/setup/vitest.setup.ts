@@ -36,7 +36,6 @@ if (typeof window !== "undefined" && window.env === undefined) {
         PUSHER_URL: "http://pusher.test",
         FRONT_URL: "http://front.test",
         ADMIN_URL: undefined,
-        UPLOADER_URL: "http://uploader.test",
         ICON_URL: "http://icon.test",
         SKIP_RENDER_OPTIMIZATIONS: false,
         JITSI_URL: undefined,

@@ -36,7 +36,7 @@ export const loudEnvironmentWarningStore = readable(false, (set) => {
     const controller = new LoudEnvironmentDetectionController(input, set, {
         // Only URLs are bundled: the worklet and RNNoise (about 110 kB) load when detection starts.
         createDetector: createBackgroundNoiseDetector,
-        getAudioContext: () => audioContextManager.getContext(BACKGROUND_NOISE_SAMPLE_RATE),
+        getAudioContext: () => audioContextManager.getAnalysisContext(BACKGROUND_NOISE_SAMPLE_RATE),
         reportError: (error) => Sentry.captureException(error),
     });
     return () => controller.destroy();

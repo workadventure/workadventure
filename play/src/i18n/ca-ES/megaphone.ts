@@ -2,52 +2,40 @@ import type { DeepPartial } from "../DeepPartial";
 import type { Translation } from "../i18n-types";
 
 const megaphone: DeepPartial<Translation["megaphone"]> = {
+    announcement: {
+        title: "Enviar un anunci",
+        audience: "Qui el rep?",
+        thisRoom: "Aquesta sala",
+        wholeWorld: "Tot el món",
+        place: "Lloc on anar (opcional)",
+        noPlace: "Cap lloc",
+        noPlaceOnMap: "Aquest mapa encara no té cap zona amb nom.",
+        preview: "Previsualització",
+        sendToRoom: "Enviar a aquesta sala",
+        sendToWorld: "Enviar a tot el món",
+        confirmWorld: "Totes les sales del món el rebran.",
+        confirmSend: "Sí, enviar a tot el món",
+        cancel: "Cancel·lar",
+        sentToRoom: "Anunci enviat a aquesta sala",
+        sentToWorld: "Anunci enviat a tot el món",
+        join: "Anar a {place}",
+        joinMap: "Anar-hi",
+        placeNotFound: "Aquest lloc ja no existeix al mapa.",
+        admin: "Administrador",
+        more: "Anuncis en espera: {count}",
+    },
     modal: {
-        backToSelectCommunication: "Tornar a seleccionar comunicació",
-        title: "Comunicació global",
         liveMessage: {
-            startMegaphone: "Iniciar megàfon",
-            stopMegaphone: "Aturar megàfon",
-            goingToStream: "Vas a transmetre",
-            yourMicrophone: "el teu micròfon",
-            yourCamera: "la teva càmera",
-            yourScreen: "la teva pantalla",
+            microphoneOff: "Micròfon apagat",
+            cameraOff: "Càmera apagada",
+            cameraOffHint: "Pots emetre en directe només amb el micròfon.",
+            devices: "Càmera i micròfon",
+            whoHears: "Qui t'escolta?",
+            thisRoom: "Aquesta sala",
+            wholeWorld: "Totes les sales del món",
+            live: "En directe",
+            stop: "Aturar",
             title: "Megàfon",
-            button: "Iniciar missatge en directe",
-            and: "i",
-            toAll: "a tots els participants",
-            notice: `
-            El missatge en directe o "Megàfon" et permet enviar un missatge en directe amb la teva càmera i micròfon a totes les persones connectades a la sala o el món.
-
-            Aquest missatge es mostrarà a la cantonada inferior de la pantalla, com una videotrucada o una bombolla de discussió.
-
-            Un exemple d'ús del missatge en directe: "Hola a tothom, comencem la conferència? 🎉 Segueix el meu avatar fins a l'àrea de conferència i obre l'aplicació de vídeo 🚀"
-            `,
-            settings: "Configuració",
-        },
-        textMessage: {
-            title: "Missatge de text",
-            notice: `
-            El missatge de text et permet enviar un missatge a totes les persones connectades a la sala o el món.
-
-            Aquest missatge es mostrarà com una finestra emergent a la part superior de la pàgina i anirà acompanyat d'un so per identificar que la informació és llegible.
-
-            Un exemple de missatge: "La conferència a la sala 3 comença en 2 minuts 🎉. Pots anar a l'àrea de conferència 3 i obrir l'aplicació de vídeo 🚀"
-            `,
-            button: "Enviar un missatge de text",
-            noAccess: "No tens accés a aquesta funció 😱 Si us plau, contacta amb l'administrador 🙏",
-        },
-        audioMessage: {
-            title: "Missatge d'àudio",
-            notice: `
-            El missatge d'àudio és un missatge de tipus "MP3, OGG..." enviat a tots els usuaris connectats a la sala o al món.
-
-            Aquest missatge d'àudio es descarregarà i es reproduirà per a totes les persones que rebin aquesta notificació.
-
-            Un missatge d'àudio pot consistir en una gravació d'àudio que indica que una conferència començarà en uns minuts.
-            `,
-            button: "Enviar un missatge d'àudio",
-            noAccess: "No tens accés a aquesta funció 😱 Si us plau, contacta amb l'administrador 🙏",
         },
     },
 };

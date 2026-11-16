@@ -1,5 +1,5 @@
 import { get, writable } from "svelte/store";
-import type { ChatConversation } from "../Connection/ChatConnection";
+import type { ChatConversation, RoomFolder } from "../Connection/ChatConnection";
 import { selectedThreadStore } from "./SelectedThreadStore";
 
 export type RoomSidePanelSection = "home" | "threads" | "polls" | "participants" | "questions" | "settings";
@@ -20,6 +20,15 @@ const DEFAULT_STATE: RoomSidePanelState = {
 };
 
 export const roomTimelineFocusStore = writable<RoomTimelineFocusRequest | undefined>(undefined);
+
+/** The folder whose members are shown in the conversation column, in place of a conversation. */
+export const folderPanelStore = writable<RoomFolder | undefined>(undefined);
+
+/**
+ * Set when a menu opens a Members section: once its list is loaded, that section moves the focus into it
+ * (and clears the request), so switching rooms with the section already open never steals the focus.
+ */
+export const membersFocusRequestStore = writable(false);
 
 const createRoomSidePanelStore = () => {
     const { subscribe, set: baseSet, update } = writable<RoomSidePanelState>(DEFAULT_STATE);

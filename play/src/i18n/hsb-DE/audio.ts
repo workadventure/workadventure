@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "zwuk njeda so začitać",
         notAllowed: "▶️ Zwuk njeje dowoleny. Tłóčće [SPACE] abo klikńće tu, zo by so wothrał!",
     },
-    message: "rěčna powěsć",
     disable: "hasńće swój mikrofon",
 };
 

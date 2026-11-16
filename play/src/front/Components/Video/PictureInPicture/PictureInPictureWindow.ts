@@ -6,8 +6,8 @@ interface DocumentPictureInPicture extends EventTarget {
     readonly window?: Window;
     requestWindow: (options: {
         preferInitialWindowPlacement: boolean;
-        height: string;
-        width: string;
+        height: number;
+        width: number;
     }) => Promise<Window>;
     addEventListener(
         type: string,
