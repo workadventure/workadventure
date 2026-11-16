@@ -1307,17 +1307,31 @@ async fn an_admin_speaks_to_the_room_and_previews_a_ban_by_ip() {
     let (mut alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
     let (_bob, mut ib) = bot(&server, room, "Bob", 3000, 3000).await;
 
-    let global =
-        pb::PlayGlobalMessage { r#type: "message".into(), content: "{\"ops\":[]}".into(), broadcast_to_world: false };
-    alice.send(pb::client_to_server_message::Message::PlayGlobalMessage(global)).await.unwrap();
-    let got = ib
-        .expect(WAIT, |m| match m {
-            Incoming::Top(Top::SendUserMessage(s)) => Some((s.r#type.clone(), s.message.clone())),
-            _ => None,
-        })
-        .await
-        .unwrap();
-    assert_eq!(got, ("message".to_owned(), "{\"ops\":[]}".to_owned()));
+    // The announcement names its sender and leads to a place of the same site, or to none.
+    for (content, join_url, received) in [
+        ("{\"ops\":[]}", "#moveTo=stage", "http://play.test/@/acme/world/lobby#moveTo=stage"),
+        ("elsewhere", "https://evil.test/#moveTo=stage", ""),
+    ] {
+        let global = pb::PlayGlobalMessage {
+            r#type: "message".into(),
+            content: content.into(),
+            broadcast_to_world: false,
+            join_url: join_url.into(),
+        };
+        alice.send(pb::client_to_server_message::Message::PlayGlobalMessage(global)).await.unwrap();
+        let got = ib
+            .expect(WAIT, |m| match m {
+                Incoming::Top(Top::SendUserMessage(s)) if s.message == content => Some(s.clone()),
+                _ => None,
+            })
+            .await
+            .unwrap();
+        assert_eq!(
+            (got.r#type.as_str(), got.sender_name.as_str(), got.join_url.as_str()),
+            ("message", "Alice", received)
+        );
+        assert!(!got.broadcast_to_world);
+    }
 
     // Without a forwarded address the server does not know Bob's IP: nothing to ban by IP.
     let q = alice
@@ -1686,6 +1700,32 @@ async fn the_debug_routes_of_the_back_answer_with_its_token() {
     let close = |q: &str| http.post(format!("{server}/debug/close-space-connection?token=t{q}")).send();
     assert_eq!(close("").await.unwrap().status(), 400);
     assert_eq!(close("&spaceName=nowhere.none").await.unwrap().status(), 500);
+}
+
+#[tokio::test]
+async fn a_message_of_the_admin_api_is_one_the_front_displays() {
+    let server = start_with(&[("SECRET_KEY", "test"), ("ADMIN_API_TOKEN", "t")]).await.0;
+    let room = "http://play.test/_/global/maps.test/e2e.json";
+    let (_alice, mut ia) = bot(&server, room, "Alice", 100, 100).await;
+    let body = serde_json::json!({"text": "Closing in 5 minutes", "type": "message", "targets": [room]});
+    let sent = reqwest::Client::new()
+        .post(format!("{server}/message"))
+        .header("Authorization", "t")
+        .json(&body)
+        .send()
+        .await
+        .unwrap();
+    assert_eq!(sent.status(), 200);
+    let got = ia
+        .expect(WAIT, |m| match m {
+            Incoming::Top(Top::SendUserMessage(s)) => Some(s.clone()),
+            _ => None,
+        })
+        .await
+        .unwrap();
+    // The type the front shows; no sender and no place, since no player sent it.
+    assert_eq!((got.r#type.as_str(), got.message.as_str()), ("message", "Closing in 5 minutes"));
+    assert!(got.sender_name.is_empty() && got.sender_textures.is_empty() && got.join_url.is_empty());
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

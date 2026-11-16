@@ -113,11 +113,9 @@ pub enum RoomCmd {
     /// From the admin: reload the room (dispatchRoomRefresh), a message to everyone, the world is full, a
     /// message of an external module to one user.
     Refresh,
-    /// sendAdminMessageToRoom: the admin's /message leaves the type empty, a global message has one.
-    AdminMessage {
-        kind: String,
-        message: String,
-    },
+    /// sendAdminMessageToRoom: a text to everyone in the room. The admin's /message has no sender and no place;
+    /// a player's announcement has both.
+    AdminMessage(pb::SendUserMessage),
     /// The room's group (map details): the world of the world-scoped player variables.
     Group(tokio::sync::oneshot::Sender<Option<String>>),
     /// Who is in the room (getWorldUsers), with the room's URL.
@@ -471,7 +469,7 @@ impl RoomActor {
             | RoomCmd::AdminListen { .. }
             | RoomCmd::AdminBan { .. }
             | RoomCmd::Refresh
-            | RoomCmd::AdminMessage { .. }
+            | RoomCmd::AdminMessage(_)
             | RoomCmd::Group(_)
             | RoomCmd::Users(_)
             | RoomCmd::WorldFull

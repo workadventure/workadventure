@@ -58,6 +58,15 @@ impl Logic {
                     return;
                 }
                 let app = self.app.clone();
+                // The announcement shows who sent it; its "Join" button never leaves the sender's site.
+                let announcement = pb::SendUserMessage {
+                    r#type: m.r#type,
+                    message: m.content,
+                    sender_name: self.name.clone(),
+                    sender_textures: wire::textures_to(&session.info.textures),
+                    broadcast_to_world: m.broadcast_to_world,
+                    join_url: same_origin_join_url(&m.join_url, &session.info.room_id),
+                };
                 tokio::spawn(async move {
                     let rooms = match (&app.admin, m.broadcast_to_world) {
                         (Some(admin), true) => {
@@ -73,9 +82,7 @@ impl Logic {
                     };
                     for url in rooms {
                         let room = room_actor::get_or_spawn(&app, &url);
-                        let _ = room
-                            .send(RoomCmd::AdminMessage { kind: m.r#type.clone(), message: m.content.clone() })
-                            .await;
+                        let _ = room.send(RoomCmd::AdminMessage(announcement.clone())).await;
                     }
                 });
             }
@@ -111,5 +118,45 @@ impl Logic {
             }
             _ => {}
         }
+    }
+}
+
+/// The place an announcement leads to, as an absolute URL, if it stays on the sender's origin; empty otherwise
+/// (another site, a scheme without an origin such as `javascript:`, or a room URL that does not parse).
+fn same_origin_join_url(join_url: &str, sender_room_url: &str) -> String {
+    if join_url.is_empty() {
+        return String::new();
+    }
+    let Ok(room) = reqwest::Url::parse(sender_room_url) else { return String::new() };
+    match room.join(join_url) {
+        Ok(url) if url.origin() == room.origin() => url.into(),
+        _ => String::new(),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::same_origin_join_url;
+
+    #[test]
+    fn an_announcement_only_leads_to_a_place_of_the_senders_site() {
+        let room = "https://play.test/@/acme/world/lobby";
+        assert_eq!(same_origin_join_url("", room), "");
+        assert_eq!(same_origin_join_url("#moveTo=stage", room), "https://play.test/@/acme/world/lobby#moveTo=stage");
+        assert_eq!(
+            same_origin_join_url("https://play.test/@/acme/world/hall#moveTo=stage", room),
+            "https://play.test/@/acme/world/hall#moveTo=stage"
+        );
+        for elsewhere in [
+            "https://evil.test/@/acme/world/lobby#moveTo=stage",
+            "//evil.test/x",
+            "http://play.test/@/acme/world/lobby",
+            "https://play.test:8443/x",
+            "javascript:alert(1)",
+            "data:text/html,x",
+        ] {
+            assert_eq!(same_origin_join_url(elsewhere, room), "", "{elsewhere}");
+        }
+        assert_eq!(same_origin_join_url("#moveTo=stage", "not a url"), "");
     }
 }

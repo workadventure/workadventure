@@ -10,6 +10,7 @@ use axum::routing::{get, post};
 
 use crate::AppState;
 use crate::room_actor::RoomCmd;
+use wa_proto::messages as pb;
 
 pub fn routes() -> Router<AppState> {
     Router::new()
@@ -158,7 +159,12 @@ async fn message(State(state): State<AppState>, headers: HeaderMap, body: axum::
     }
     for room in targets.iter().filter_map(|t| t.as_str()) {
         let cmd = if kind == "message" {
-            RoomCmd::AdminMessage { kind: String::new(), message: text.to_owned() }
+            // "message" is the only type the front displays. Not sent by a player: no sender, no place.
+            RoomCmd::AdminMessage(pb::SendUserMessage {
+                r#type: kind.to_owned(),
+                message: text.to_owned(),
+                ..Default::default()
+            })
         } else {
             RoomCmd::WorldFull
         };
