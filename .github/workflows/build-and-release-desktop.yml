@@ -129,8 +129,10 @@ jobs:
         working-directory: "desktop/electron"
 
       # Only the release can log in to Azure, and electron-builder fails on a Windows signature it cannot make.
+      # bash on Windows too: PowerShell splits -c.win.signExecutable=false at the first dot.
       - name: "Build app for testing"
         if: ${{ env.IS_RELEASE != 'true' }}
+        shell: bash
         run: npx electron-builder --publish never -c.win.signExecutable=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
