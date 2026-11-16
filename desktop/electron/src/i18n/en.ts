@@ -157,6 +157,7 @@ const en = {
     "auth.signingOutTitle": "Signing out…",
     "auth.signingOutMessage": "Finish signing out in your browser. You'll return to the app automatically.",
     "auth.reopenBrowser": "Reopen the browser",
+    "auth.back": "Back",
     "auth.signedIn": "Signed in. You can go back to WorkAdventure.",
     "auth.signedOut": "Signed out. You can go back to WorkAdventure.",
     "auth.closeWindow": "You can close this window.",

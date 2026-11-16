@@ -160,6 +160,7 @@ const dsb: NativeStrings = {
     "auth.signingOutMessage":
         "Dokóńcćo wótzjawjenje w swójom wobglědowaku. Pótom se awtomatiski do aplikacije wrośiśo.",
     "auth.reopenBrowser": "Wobglědowak znowego wócyniś",
+    "auth.back": "Slědk",
     "auth.signedIn": "Pśizjawjony. Móžośo se k WorkAdventure wrośiś.",
     "auth.signedOut": "Wótzjawjony. Móžośo se k WorkAdventure wrośiś.",
     "auth.closeWindow": "Móžośo toś to wokno zacyniś.",

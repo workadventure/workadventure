@@ -159,6 +159,7 @@ const nl: NativeStrings = {
     "auth.signingOutTitle": "Afmelden…",
     "auth.signingOutMessage": "Rond het afmelden af in je browser. Je keert daarna automatisch terug naar de app.",
     "auth.reopenBrowser": "Browser opnieuw openen",
+    "auth.back": "Terug",
     "auth.signedIn": "Aangemeld. Je kunt teruggaan naar WorkAdventure.",
     "auth.signedOut": "Afgemeld. Je kunt teruggaan naar WorkAdventure.",
     "auth.closeWindow": "Je kunt dit venster sluiten.",

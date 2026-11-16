@@ -159,6 +159,7 @@ const ca: NativeStrings = {
     "auth.signingOutTitle": "S'està tancant la sessió…",
     "auth.signingOutMessage": "Acaba de tancar la sessió al navegador. Tornaràs a l'aplicació automàticament.",
     "auth.reopenBrowser": "Torna a obrir el navegador",
+    "auth.back": "Enrere",
     "auth.signedIn": "Sessió iniciada. Ja pots tornar a WorkAdventure.",
     "auth.signedOut": "Sessió tancada. Ja pots tornar a WorkAdventure.",
     "auth.closeWindow": "Ja pots tancar aquesta finestra.",

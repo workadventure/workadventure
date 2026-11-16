@@ -156,6 +156,7 @@ const ko: NativeStrings = {
     "auth.signingOutTitle": "로그아웃하는 중…",
     "auth.signingOutMessage": "브라우저에서 로그아웃을 완료하세요. 완료되면 자동으로 앱으로 돌아옵니다.",
     "auth.reopenBrowser": "브라우저 다시 열기",
+    "auth.back": "뒤로",
     "auth.signedIn": "로그인되었습니다. WorkAdventure로 돌아가셔도 됩니다.",
     "auth.signedOut": "로그아웃되었습니다. WorkAdventure로 돌아가셔도 됩니다.",
     "auth.closeWindow": "이 창을 닫아도 됩니다.",

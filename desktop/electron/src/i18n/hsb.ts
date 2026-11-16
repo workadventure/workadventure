@@ -160,6 +160,7 @@ const hsb: NativeStrings = {
     "auth.signingOutMessage":
         "Dokónčće wotzjewjenje w swojim wobhladowaku. Potom so awtomatisce do aplikacije wróćiće.",
     "auth.reopenBrowser": "Wobhladowak znowa wočinić",
+    "auth.back": "Wróćo",
     "auth.signedIn": "Přizjewjeny. Móžeće so k WorkAdventure wróćić.",
     "auth.signedOut": "Wotzjewjeny. Móžeće so k WorkAdventure wróćić.",
     "auth.closeWindow": "Móžeće tute wokno začinić.",

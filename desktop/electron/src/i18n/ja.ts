@@ -159,6 +159,7 @@ const ja: NativeStrings = {
     "auth.signingOutTitle": "サインアウトしています…",
     "auth.signingOutMessage": "ブラウザでサインアウトを完了してください。自動的にアプリに戻ります。",
     "auth.reopenBrowser": "ブラウザを再度開く",
+    "auth.back": "戻る",
     "auth.signedIn": "サインインしました。WorkAdventure に戻れます。",
     "auth.signedOut": "サインアウトしました。WorkAdventure に戻れます。",
     "auth.closeWindow": "このウィンドウは閉じてかまいません。",
