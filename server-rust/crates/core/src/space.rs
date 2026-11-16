@@ -19,8 +19,16 @@ pub enum FilterType {
 }
 
 /// The fields of a space member that a client may change itself (CLIENT_UPDATABLE_SPACE_USER_FIELDS).
-pub const CLIENT_UPDATABLE: [&str; 6] =
-    ["microphoneState", "cameraState", "screenSharingState", "megaphoneState", "attendeesState", "cpuLimited"];
+pub const CLIENT_UPDATABLE: [&str; 8] = [
+    "microphoneState",
+    "cameraState",
+    "screenSharingState",
+    "megaphoneState",
+    "attendeesState",
+    "cpuLimited",
+    "cameraHeld",
+    "microphoneHeld",
+];
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct SpaceUser {
@@ -43,6 +51,9 @@ pub struct SpaceUser {
     pub show_voice_indicator: bool,
     pub attendees_state: bool,
     pub cpu_limited: bool,
+    /// The camera and the microphone the user wants on but their status holds off (away mode, busy...).
+    pub camera_held: bool,
+    pub microphone_held: bool,
 }
 
 impl SpaceUser {
@@ -57,6 +68,8 @@ impl SpaceUser {
                 "megaphoneState" => (&mut self.megaphone_state, from.megaphone_state),
                 "attendeesState" => (&mut self.attendees_state, from.attendees_state),
                 "cpuLimited" => (&mut self.cpu_limited, from.cpu_limited),
+                "cameraHeld" => (&mut self.camera_held, from.camera_held),
+                "microphoneHeld" => (&mut self.microphone_held, from.microphone_held),
                 _ => continue,
             };
             *dst = src;

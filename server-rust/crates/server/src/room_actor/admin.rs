@@ -67,7 +67,7 @@ impl RoomActor {
                 Fanout::new(&mut self.sessions).each_all(&frame);
             }
             RoomCmd::AdminMessage { kind, message } => {
-                let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: kind, message }));
+                let frame = wire::direct(Top::SendUserMessage(pb::SendUserMessage { r#type: kind, message, ..Default::default() }));
                 Fanout::new(&mut self.sessions).each_all(&frame);
             }
             RoomCmd::Group(reply) => {

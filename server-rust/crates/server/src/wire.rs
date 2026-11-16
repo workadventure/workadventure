@@ -213,6 +213,8 @@ pub fn space_user_to(u: &SpaceUser) -> pb::SpaceUser {
         show_voice_indicator: u.show_voice_indicator,
         attendees_state: u.attendees_state,
         cpu_limited: u.cpu_limited,
+        camera_held: u.camera_held,
+        microphone_held: u.microphone_held,
     }
 }
 
@@ -225,6 +227,8 @@ pub fn space_user_update_from(u: &pb::SpaceUser) -> SpaceUser {
         megaphone_state: u.megaphone_state,
         attendees_state: u.attendees_state,
         cpu_limited: u.cpu_limited,
+        camera_held: u.camera_held,
+        microphone_held: u.microphone_held,
         ..SpaceUser::default()
     }
 }
@@ -393,6 +397,15 @@ mod tests {
             batch.payload[1].message,
             Some(pb::sub_message::Message::UserLeftMessage(pb::UserLeftMessage { user_id: 2 }))
         );
+    }
+
+    #[test]
+    fn the_devices_a_status_holds_off_cross_the_wire_both_ways() {
+        let sent = pb::SpaceUser { camera_held: true, microphone_held: true, ..Default::default() };
+        let user = space_user_update_from(&sent);
+        assert!(user.camera_held && user.microphone_held);
+        let back = space_user_to(&user);
+        assert!(back.camera_held && back.microphone_held);
     }
 
     #[test]

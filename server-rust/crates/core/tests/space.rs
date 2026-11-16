@@ -430,6 +430,20 @@ fn a_fifth_user_moves_the_bubble_to_livekit_and_it_comes_back_after_a_quiet_dela
 }
 
 #[test]
+fn a_member_tells_the_others_which_devices_their_status_holds_off() {
+    let (mut s, mut r, _clock) = bubble(&["a", "b"]);
+    r.take();
+    // Away mode: the camera a wants on is held, the microphone a turned off is not.
+    let mut a = user("a");
+    a.camera_held = true;
+    s.update_from_client("a", &a, &["cameraHeld".into(), "microphoneHeld".into()], &mut r);
+    assert!(r.take().iter().any(|(to, e)| e == "update a" && to.contains(&"b".to_owned())));
+    // Back: the hold is lifted, and b is told again.
+    s.update_from_client("a", &user("a"), &["cameraHeld".into()], &mut r);
+    assert!(r.take().iter().any(|(to, e)| e == "update a" && to.contains(&"b".to_owned())));
+}
+
+#[test]
 fn a_recording_or_a_slow_computer_keeps_livekit() {
     let (mut s, mut r, clock) = bubble(&["a", "b", "c"]);
     // A CPU-limited member in a bubble of 3: LiveKit.
