@@ -42,6 +42,7 @@ export { default as IconGripVertical } from "~icons/tabler/grip-vertical";
 export { default as IconDeviceDesktopUp } from "~icons/tabler/device-desktop-up";
 export { default as IconDeviceComputerCamera } from "~icons/tabler/device-computer-camera";
 export { default as IconShield } from "~icons/tabler/shield";
+export { default as IconShieldCheck } from "~icons/tabler/shield-check";
 export { default as IconUser } from "~icons/tabler/user";
 export { default as IconCheckList } from "~icons/tabler/list-check";
 export { default as IconUsers } from "~icons/tabler/users";
