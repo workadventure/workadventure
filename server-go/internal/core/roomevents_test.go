@@ -44,3 +44,28 @@ func TestANewcomerGetsTheStateOfTheInteractiveObjects(t *testing.T) {
 		t.Fatal("the last state comes with the join")
 	}
 }
+
+func TestAnAnnouncementOnlyLeadsToAPlaceOfTheSendersSite(t *testing.T) {
+	const room = "https://play.test/@/acme/world/lobby"
+	for join, want := range map[string]string{
+		"":              "",
+		"#moveTo=stage": "https://play.test/@/acme/world/lobby#moveTo=stage",
+		"https://play.test/@/acme/world/hall#moveTo=stage":  "https://play.test/@/acme/world/hall#moveTo=stage",
+		"https://evil.test/@/acme/world/lobby#moveTo=stage": "",
+		"//evil.test/x":                       "",
+		"http://play.test/@/acme/world/lobby": "", // another scheme is another origin
+		"https://play.test:8443/x":            "",
+		"https://play.test@evil.test/x":       "",
+		"javascript:alert(1)":                 "",
+		"data:text/html,x":                    "",
+		" https://evil.test/x":                "",
+		"https://evil.test\t/x":               "",
+	} {
+		if got := SameOriginJoinURL(join, room); got != want {
+			t.Errorf("%q leads to %q, want %q", join, got, want)
+		}
+	}
+	if got := SameOriginJoinURL("#moveTo=stage", "not a url"); got != "" {
+		t.Errorf("a room that is not a URL has no origin to stay on: %q", got)
+	}
+}

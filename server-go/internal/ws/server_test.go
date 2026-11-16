@@ -474,7 +474,14 @@ func TestTheAdminTalksToThePlayersOfARoom(t *testing.T) {
 		t.Fatal("message")
 	}
 	alice.waitFor("the admin's text", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool {
-		return d.GetSendUserMessage().GetMessage() == "Closing in 5 minutes"
+		m := d.GetSendUserMessage()
+		if m.GetMessage() != "Closing in 5 minutes" {
+			return false
+		}
+		if m.GetType() != "message" || m.GetSenderName() != "" || m.GetJoinUrl() != "" {
+			t.Fatalf("a text of the admin API has the type the front displays, and no sender: %v", m)
+		}
+		return true
 	})
 	post(h.srv.AdminMessage, `{"text":"","type":"capacity","targets":["`+roomURL+`"]}`)
 	alice.waitFor("the world-full warning", func(d *pb.ServerToClientMessage, _ *pb.SubMessage) bool { return d.GetWorldFullWarningMessage() != nil })

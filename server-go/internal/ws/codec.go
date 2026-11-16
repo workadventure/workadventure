@@ -144,7 +144,9 @@ func serverMessage(ev core.Event) *pb.ServerToClientMessage {
 	case core.FollowAborted:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_FollowAbortMessage{FollowAbortMessage: &pb.FollowAbortMessage{Leader: e.Leader, Follower: e.Follower}}}
 	case core.UserMessage:
-		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_SendUserMessage{SendUserMessage: &pb.SendUserMessage{Type: e.Type, Message: e.Message}}}
+		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_SendUserMessage{SendUserMessage: &pb.SendUserMessage{
+			Type: e.Type, Message: e.Message, SenderName: e.SenderName, SenderTextures: characterTextures(e.SenderTextures),
+			BroadcastToWorld: e.BroadcastToWorld, JoinUrl: e.JoinURL}}}
 	case core.MapDeleted:
 		return &pb.ServerToClientMessage{Message: &pb.ServerToClientMessage_DeleteMapMessage{DeleteMapMessage: &pb.DeleteMapMessage{}}}
 	case core.WorldFullWarning:

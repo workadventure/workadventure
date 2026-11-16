@@ -89,7 +89,7 @@ func TestOnlyAnAdminAnnouncesToTheWorld(t *testing.T) {
 	elsewhere := h.dialWAM(auth.Token{Identifier: "far"}) // another room of the same world
 	announce := func(c *client, text string) {
 		c.send(&pb.ClientToServerMessage{Message: &pb.ClientToServerMessage_PlayGlobalMessage{PlayGlobalMessage: &pb.PlayGlobalMessage{
-			Type: "message", Content: text, BroadcastToWorld: true}}})
+			Type: "message", Content: text, BroadcastToWorld: true, JoinUrl: "#moveTo=stage"}}})
 	}
 	announce(guest, "fake")
 	announce(admin, "closing")
@@ -99,6 +99,10 @@ func TestOnlyAnAdminAnnouncesToTheWorld(t *testing.T) {
 			case "fake":
 				t.Fatal("a guest's announcement went out")
 			case "closing":
+				// It names its sender and leads to a place of the sender's room, whichever room receives it.
+				if m := d.GetSendUserMessage(); m.GetSenderName() != "bot" || !m.GetBroadcastToWorld() || m.GetJoinUrl() != roomURL+"#moveTo=stage" {
+					t.Fatalf("the announcement lost its sender or its place: %v", m)
+				}
 				return true
 			}
 			return false

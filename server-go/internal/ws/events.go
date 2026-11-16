@@ -138,8 +138,8 @@ func (srv *Server) AdminMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var m *core.Msg
-	if body.Type == "message" {
-		m = core.NewMsg(core.UserMessage{Type: "", Message: *body.Text}, false)
+	if body.Type == "message" { // the only type the front displays; not sent by a player: no sender, no place
+		m = core.NewMsg(core.UserMessage{Type: body.Type, Message: *body.Text}, false)
 	} else {
 		m = core.NewMsg(core.WorldFullWarning{}, false)
 	}

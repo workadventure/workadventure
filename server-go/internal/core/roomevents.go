@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"net/url"
 	"unicode/utf16"
 )
 
@@ -79,8 +80,37 @@ func (s *state) itemStates() []ItemState {
 	return out
 }
 
-// UserMessage is a message of an admin to the players (SendUserMessage): a text, or an audio message to play.
-type UserMessage struct{ Type, Message string }
+// UserMessage is a message to every player of a room (SendUserMessage): a text of the admin API, which has no
+// sender and no place, or the announcement of an admin in the game, which shows who sent it and may lead somewhere.
+type UserMessage struct {
+	Type, Message    string
+	SenderName       string
+	SenderTextures   []Texture
+	BroadcastToWorld bool
+	JoinURL          string // absolute, on the sender's origin (SameOriginJoinURL); empty for none
+}
+
+// SameOriginJoinURL is the place an announcement leads to, as an absolute URL, if it stays on the origin of the
+// sender's room; empty otherwise. The front's "Join" button walks or travels there without reloading, so it must
+// never lead to another site.
+func SameOriginJoinURL(joinURL, senderRoomURL string) string {
+	if joinURL == "" {
+		return ""
+	}
+	room, err := url.Parse(senderRoomURL)
+	if err != nil || room.Host == "" {
+		return ""
+	}
+	ref, err := url.Parse(joinURL)
+	if err != nil {
+		return ""
+	}
+	to := room.ResolveReference(ref)
+	if to.Scheme != room.Scheme || to.Host != room.Host || to.User != nil || to.Opaque != "" {
+		return ""
+	}
+	return to.String()
+}
 
 // SendUserMessage gives it to every player of the room.
 func (r *Room) SendUserMessage(ctx context.Context, m UserMessage) error {

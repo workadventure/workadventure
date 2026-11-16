@@ -58,6 +58,11 @@ func (s *Session) banIPPreview(id int32, banUUID string) {
 
 // playGlobalMessage is an admin's message to its room, or to every room of its world.
 func (s *Session) playGlobalMessage(m *pb.PlayGlobalMessage) {
+	name, _ := s.presence.get()
+	announcement := core.UserMessage{
+		Type: m.GetType(), Message: m.GetContent(), SenderName: name, SenderTextures: coreTextures(s.info.member.CharacterTextures),
+		BroadcastToWorld: m.GetBroadcastToWorld(), JoinURL: core.SameOriginJoinURL(m.GetJoinUrl(), s.info.roomID),
+	}
 	rooms := []string{s.info.roomID}
 	if m.GetBroadcastToWorld() {
 		if list, ok, err := s.srv.admin.SameWorld(context.Background(), s.info.roomID, nil, true); ok && err == nil {
@@ -79,7 +84,7 @@ func (s *Session) playGlobalMessage(m *pb.PlayGlobalMessage) {
 			continue // nobody there
 		}
 		room := s.srv.rooms.Acquire(url)
-		metrics.Ignore("room.SendUserMessage", room.SendUserMessage(context.Background(), core.UserMessage{Type: m.GetType(), Message: m.GetContent()}))
+		metrics.Ignore("room.SendUserMessage", room.SendUserMessage(context.Background(), announcement))
 		s.srv.rooms.Release(url)
 	}
 }
