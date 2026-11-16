@@ -19,7 +19,6 @@ import { followRoleStore, followStateStore, followUsersStore } from "../../Store
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { isKeyFromInteractiveElement } from "../../Utils/isKeyFromInteractiveElement";
 import { findShortcutAction } from "../../Stores/ShortcutsStore";
-import { toggleMedia } from "../../Stores/MediaToggleStore";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
@@ -348,7 +347,11 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 // Plain letters by default: never steal them from a text field, nor toggle again while the key is held.
                 if (event.repeat || isKeyFromTextField(event)) break;
                 event.preventDefault();
-                toggleMedia(action === "toggleMicrophone" ? "microphone" : "camera");
+                // Imported lazily: a static import pulls HeldMediaStore into GameScene's import cycle with MediaStore,
+                // where its top-level derived() runs before MediaStore's stores exist.
+                import("../../Stores/MediaToggleStore")
+                    .then(({ toggleMedia }) => toggleMedia(action === "toggleMicrophone" ? "microphone" : "camera"))
+                    .catch((e) => console.error("Failed to toggle the media", e));
                 break;
             }
             default: {
