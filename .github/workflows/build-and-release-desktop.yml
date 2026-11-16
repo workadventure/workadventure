@@ -60,6 +60,10 @@ jobs:
     if: ${{ !cancelled() && (needs.draft.result == 'success' || (needs.draft.result == 'skipped' && !startsWith(github.ref, 'refs/tags/'))) }}
     # Only the release reaches the Environment (and its secrets).
     environment: ${{ needs.draft.result == 'success' && 'desktop-release' || '' }}
+    permissions:
+      contents: read
+      # Windows code signing logs in to Azure with GitHub's OIDC token (release only, see below).
+      id-token: write
     env:
       IS_RELEASE: ${{ needs.draft.result == 'success' }}
 
@@ -124,9 +128,10 @@ jobs:
         run: npm run build
         working-directory: "desktop/electron"
 
+      # Only the release can log in to Azure, and electron-builder fails on a Windows signature it cannot make.
       - name: "Build app for testing"
         if: ${{ env.IS_RELEASE != 'true' }}
-        run: npx electron-builder --publish never
+        run: npx electron-builder --publish never -c.win.signExecutable=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # electron-builder skips signing on pull requests, the ad hoc one too (mac.identity "-"): the
@@ -147,6 +152,26 @@ jobs:
           repositories: desktop-releases
           permission-contents: write
 
+      # Windows code signing (win.azureSignOptions in electron-builder.yml). The workadventure-desktop-signing
+      # app in Azure trusts GitHub's OIDC token for jobs in the desktop-release environment only, so there is no
+      # secret, and none of these IDs is one. Its two federated credentials match the token's subject in both
+      # formats: repo:workadventure/workadventure:... today, and the one with the numeric IDs once the
+      # repository opts in to immutable subjects (then delete desktop-release-name-based).
+      - name: "Log in to Azure for code signing"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'windows') }}
+        uses: azure/login@v2
+        with:
+          client-id: 930c98a2-f3a0-4e6f-b38e-459eb45cc305
+          tenant-id: 04bd2520-bee9-4286-860d-a178506f47d1
+          # Signing needs no subscription, and the app's only role is on the signing account.
+          allow-no-subscriptions: true
+
+      # GitHub's token is short-lived, and packaging takes a while before the first signature: get the signing
+      # token now. az caches it, and the signing module (DefaultAzureCredential) takes it from az.
+      - name: "Get the code signing token"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'windows') }}
+        run: az account get-access-token --scope https://codesigning.azure.net/.default --output none
+
       # macOS keeps the ad hoc signature of electron-builder.yml (mac.identity) until the Developer ID
       # certificate is configured.
       - name: "Build & upload app"
@@ -164,6 +189,24 @@ jobs:
           app=$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)
           codesign --verify --deep --strict "$app"
           codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature"
+        working-directory: "desktop/electron"
+
+      # An unsigned Windows installer gets the SmartScreen warning, and the auto-updater of every installed
+      # app refuses an update that is not signed by win.azureSignOptions.publisherName. A failure here stops
+      # the job, so the draft is never published.
+      - name: "Check the Windows signatures"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'windows') }}
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem build/*.exe, build/win-*unpacked/WorkAdventure.exe
+          if (-not $files) { throw "No executable found in build/" }
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file.FullName
+            "{0}: {1}, {2}" -f $file.Name, $signature.Status, $signature.SignerCertificate.Subject
+            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notlike 'CN=WorkAdventu.re,*') {
+              throw "$($file.Name) is not signed by WorkAdventu.re"
+            }
+          }
         working-directory: "desktop/electron"
 
       # A fuse that does not fit the package (an app.asar that fails its integrity check, say) makes
