@@ -11,6 +11,7 @@ import {
     isAllowedNavigationUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
+    isMatrixMediaUrl,
     isRoomUrl,
     isSameRoomUrl,
     worldKeyOf,
@@ -427,4 +428,13 @@ test("pages that are not rooms belong to no world", () => {
     expect(worldKeyOf("https://play.workadventu.re/login-screen")).toBeUndefined();
     expect(worldKeyOf("file:///Applications/WorkAdventure.app/assets/landing/index.html")).toBeUndefined();
     expect(worldKeyOf("")).toBeUndefined();
+});
+
+test("chat files are downloads, not worlds", () => {
+    expect(isMatrixMediaUrl("https://matrix.workadventu.re/_matrix/media/v3/download/workadventu.re/abc")).toBe(true);
+    expect(isMatrixMediaUrl("https://matrix.workadventu.re/_matrix/client/v1/media/download/workadventu.re/abc")).toBe(
+        true
+    );
+    expect(isMatrixMediaUrl("https://play.workadventu.re/@/team/world/room")).toBe(false);
+    expect(isMatrixMediaUrl("https://matrix.workadventu.re/_matrix/client/v3/sync")).toBe(false);
 });

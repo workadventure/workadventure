@@ -19,6 +19,7 @@ import {
     isAllowedNavigationUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
+    isMatrixMediaUrl,
     isRoomUrl,
     isSameRoomUrl,
     resolveInitialTarget,
@@ -665,6 +666,11 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
             return { action: "allow", overrideBrowserWindowOptions: childOptions };
         }
 
+        if (isMatrixMediaUrl(url)) {
+            webContents.downloadURL(url);
+            return { action: "deny" };
+        }
+
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             void openDesktopBrowserFlow(url);
             return { action: "deny" };
@@ -686,6 +692,12 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     );
 
     window.webContents.on("will-navigate", (event, url) => {
+        if (isMatrixMediaUrl(url)) {
+            event.preventDefault();
+            webContents.downloadURL(url);
+            return;
+        }
+
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             event.preventDefault();
             void openDesktopBrowserFlow(url);
