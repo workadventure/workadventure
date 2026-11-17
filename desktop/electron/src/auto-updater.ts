@@ -66,16 +66,15 @@ async function init() {
         autoUpdater.setFeedURL({ provider: "generic", url: feedUrl });
     }
 
-    autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
+    autoUpdater.on("update-downloaded", ({ releaseName }) => {
         void (async () => {
-            // Either may be missing, and the notes are a list when fullChangelog is on.
-            const text = process.platform === "win32" ? releaseNotes : releaseName;
+            // Not the release notes: they are GitHub's HTML, and a native message box prints the tags.
             const dialogOpts: MessageBoxOptions = {
                 type: "question",
                 buttons: [t("update.installAndRestart"), t("update.installLater")],
                 defaultId: 0,
                 title: t("update.title"),
-                message: typeof text === "string" ? text : t("update.title"),
+                message: releaseName ?? t("update.title"),
                 detail: t("update.ready"),
             };
 
