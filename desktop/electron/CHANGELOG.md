@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.0.0-beta.5](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.4...desktop-v2.0.0-beta.5) (2026-11-17)
+
+
+### Bug Fixes
+
+* **desktop:** download chat files instead of opening them as a world ([871b2c2](https://github.com/workadventure/workadventure/commit/871b2c29a9cbdedf7c8e849e90c6a124d3dc180a))
+* **desktop:** never show the administration in the app, fall back to the Landing ([9f955cf](https://github.com/workadventure/workadventure/commit/9f955cf7283cbbd582a73b462999073e053ca9c2))
+* **desktop:** open only worlds in the app, other links in the browser ([59392ed](https://github.com/workadventure/workadventure/commit/59392ed3a63a6e8db16acc17ab29d484683deda0))
+
 ## [2.0.0-beta.4](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.3...desktop-v2.0.0-beta.4) (2026-11-17)
 
 
