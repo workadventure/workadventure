@@ -222,6 +222,7 @@ import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
 import { getWokaEmote, WOKA_EMOTES, WOKA_EMOTE_SOUND_PATH, wokaEmoteSoundKey } from "./Emote/WokaEmoteCatalog";
 import { BAN_SCENES, buildBan, isWokaEjection } from "./Emote/WokaEjectionCatalog";
+import { TELEPORT_IN, TELEPORT_OUT, claimTeleport } from "./Emote/WokaTeleportCatalog";
 import { buildKick, KICK_SOUNDS } from "./Emote/WokaKickCatalog";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
@@ -373,6 +374,13 @@ export class GameScene extends DirtyScene {
     private remotePlayersSpatialIndex = new SpatialMap<number, RemotePlayer>(CONVERSATION_BUBBLE_SPATIAL_GRID_SIZE);
     /** Players a moderator just removed, waiting for doRemovePlayer() to play their ejection. */
     private readonly pendingEjections = new Map<number, UserEjection>();
+    /** Players who just joined or left the room, as the back says: they teleport in or out. */
+    private readonly pendingArrivals = new Set<number>();
+    private readonly pendingDepartures = new Set<number>();
+    /** When the last teleports started, to cap how many play at once (see claimTeleport). */
+    private readonly recentTeleports: number[] = [];
+    /** When this player joined the room: the Wokas already there are not arriving. */
+    private roomJoinedAt: number | undefined;
     private originalMapUrl: string | undefined;
     private pinchManager: PinchManager | undefined;
     private outlineManager!: OutlineManager;
@@ -1439,6 +1447,9 @@ export class GameScene extends DirtyScene {
             this.doRemovePlayer(removedPlayerId);
             debugRemovePlayer("Player has been removed from GameScene", removedPlayerId);
         }
+        // A player who joined and left between two frames was neither added nor removed above.
+        this.pendingArrivals.clear();
+        this.pendingDepartures.clear();
 
         if (
             !this.playersDebugLogAlreadyDisplayed &&
@@ -2093,6 +2104,7 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                this.roomJoinedAt = Date.now();
 
                 // Subscribed before any await: the admin messages of the login come right after the connection.
                 // These streams are completed in the RoomConnection. No need to unsubscribe.
@@ -2177,6 +2189,9 @@ export class GameScene extends DirtyScene {
                 // The userJoinedMessageStream stream is completed in the RoomConnection. No need to unsubscribe.
                 //eslint-disable-next-line rxjs/no-ignored-subscription, svelte/no-ignored-unsubscribe
                 this.connection.userJoinedMessageStream.subscribe((message) => {
+                    if (message.arrived) {
+                        this.pendingArrivals.add(message.userId);
+                    }
                     this.remotePlayersRepository.addPlayer(message);
 
                     this.playersEventDispatcher.postMessage({
@@ -2216,6 +2231,8 @@ export class GameScene extends DirtyScene {
                 this.connection.userLeftMessageStream.subscribe((message) => {
                     if (message.ejection && isWokaEjection(message.ejection.type)) {
                         this.pendingEjections.set(message.userId, message.ejection);
+                    } else if (message.departed) {
+                        this.pendingDepartures.add(message.userId);
                     }
                     this.remotePlayersRepository.removePlayer(message.userId);
                     this.playersEventDispatcher.postMessage({
@@ -4565,6 +4582,21 @@ ${escapedMessage}
             this.activatablesManager.handlePointerOutActivatableObject();
             this.markDirty();
         });
+
+        if (this.pendingArrivals.has(player.userId) && this.mayTeleport()) {
+            player.playArrival(TELEPORT_IN);
+        }
+    }
+
+    /**
+     * Whether a Woka may teleport in or out now. "Disable map animations" in the settings and the
+     * browser's reduced-motion preference turn the teleports off: the Woka simply appears or goes.
+     */
+    private mayTeleport(): boolean {
+        if (localUserStore.getDisableAnimations() || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return false;
+        }
+        return claimTeleport(Date.now(), this.roomJoinedAt, this.recentTeleports);
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
@@ -4619,6 +4651,7 @@ ${escapedMessage}
         const player = this.MapPlayersByKey.get(userId);
         const ejection = this.pendingEjections.get(userId);
         this.pendingEjections.delete(userId);
+        const departed = this.pendingDepartures.has(userId);
         if (player === undefined) {
             console.error("Cannot find user with id ", userId);
         } else {
@@ -4627,6 +4660,8 @@ ${escapedMessage}
                 // The player is gone from every index below right away; only its Woka lingers,
                 // for the length of the scene.
                 this.playEjection(player, ejection);
+            } else if (departed && this.mayTeleport()) {
+                player.playEjection(TELEPORT_OUT, false, () => player.destroy());
             } else {
                 player.destroy();
             }

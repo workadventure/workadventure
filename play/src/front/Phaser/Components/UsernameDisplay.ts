@@ -119,6 +119,10 @@ export class UsernameDisplay {
         return this.statusDisplay.availabilityStatus;
     }
 
+    public setVisible(visible: boolean): void {
+        this.element.style.visibility = visible ? "" : "hidden";
+    }
+
     public setPlayerDepth(depth: number): void {
         this.depth = depth;
         this.updatePlayerDepth();

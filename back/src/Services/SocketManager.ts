@@ -444,6 +444,8 @@ export class SocketManager {
         if (fromZone) {
             userJoinedZoneMessage.fromZone = SocketManager.toProtoZone(fromZone);
         }
+        // Only the entry made when the user joins the room: not a zone sent in bulk, not a walk.
+        userJoinedZoneMessage.arrived = user.arriving;
         if (user.visitCardUrl) {
             userJoinedZoneMessage.visitCardUrl = user.visitCardUrl;
         }
@@ -507,7 +509,10 @@ export class SocketManager {
 
     private onClientLeave(thing: Movable, currentZone: ZonePosition, newZone: Zone | null, listener: RoomSocket) {
         if (thing instanceof User) {
-            this.emitUserLeftEvent(listener, currentZone, thing.id, newZone, thing.ejection);
+            // Leaving the room altogether, on one's own: an ejection has its own scene, and a user replaced
+            // by a reconnection from the same tab is still there.
+            const departed = newZone === null && thing.ejection === undefined && !thing.replaced;
+            this.emitUserLeftEvent(listener, currentZone, thing.id, newZone, thing.ejection, departed);
         } else if (thing instanceof Group) {
             this.emitDeleteGroupEvent(listener, currentZone, thing.getId(), newZone);
         } else {
@@ -621,6 +626,7 @@ export class SocketManager {
         userId: number,
         newZone: Zone | null,
         ejection: User["ejection"],
+        departed: boolean,
     ): void {
         emitZoneMessage(
             SocketManager.toZoneMessage(currentZone, {
@@ -629,6 +635,7 @@ export class SocketManager {
                     userId,
                     toZone: SocketManager.toProtoZone(newZone),
                     ejection,
+                    departed,
                 },
             }),
             client,

@@ -283,6 +283,7 @@ export class GameRoom implements BrothersFinder {
         // Check if there's a stale connection from the same browser tab and kill it immediately
         // This prevents "ghost" users appearing when a user reconnects after a network disruption
         const tabId = joinRoomMessage.tabId;
+        let reconnection = false;
         if (tabId) {
             const tabKey = `${joinRoomMessage.userUuid}_${tabId}`;
             const existingUser = this.usersByTabKey.get(tabKey);
@@ -290,7 +291,9 @@ export class GameRoom implements BrothersFinder {
                 console.info(
                     `Detected reconnection from same tab for user ${joinRoomMessage.userUuid}. Killing stale connection.`,
                 );
-                // Remove the stale user from the room
+                // Remove the stale user from the room. The other players see neither a departure nor an arrival.
+                existingUser.replaced = true;
+                reconnection = true;
                 this.leave(existingUser);
                 endUserConnectionWithReason(
                     existingUser.socket,
@@ -328,6 +331,7 @@ export class GameRoom implements BrothersFinder {
             joinRoomMessage.chatID,
             undefined,
             tabId,
+            !reconnection,
         );
 
         this.users.set(user.id, user);

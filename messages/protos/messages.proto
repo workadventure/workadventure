@@ -1291,6 +1291,8 @@ message UserJoinedMessage {
   map<string, string> variables = 12;
   optional string chatID = 13;
   SayMessage sayMessage = 14;
+  /* Set when the user has just joined the room, rather than come into view. */
+  bool arrived = 15;
 }
 
 /*
@@ -1314,6 +1316,8 @@ message UserLeftMessage {
   int32 userId = 1;
   /* Set when a moderator removed the user. */
   UserEjection ejection = 2;
+  /* Set when the user has left the room on their own, rather than walked out of view or reconnected. */
+  bool departed = 3;
 }
 
 /*
@@ -1887,6 +1891,8 @@ message UserJoinedZoneMessage {
   map<string, string> variables = 13;
   optional string chatID = 14;
   SayMessage sayMessage = 15;
+  /* Set by the back when the user has just joined the room, rather than walked or come into view. */
+  bool arrived = 16;
 }
 
 message UserLeftZoneMessage {
@@ -1894,6 +1900,8 @@ message UserLeftZoneMessage {
   Zone toZone = 2;
   /* Set when a moderator removed the user. Relayed as is on UserLeftMessage. */
   UserEjection ejection = 3;
+  /* Set by the back when the user left the room on their own: not ejected, not replaced by a reconnection. */
+  bool departed = 4;
 }
 
 message GroupUpdateZoneMessage {

@@ -2228,6 +2228,7 @@ export class RoomConnection implements RoomConnection {
             variables: variables,
             chatID: message.chatID,
             sayMessage: message.sayMessage,
+            arrived: message.arrived,
         };
     }
 

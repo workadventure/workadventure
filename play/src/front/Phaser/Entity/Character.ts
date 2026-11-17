@@ -77,6 +77,10 @@ export abstract class Character extends Container implements OutlineableInterfac
     private emoteTween: Tween | null = null;
     private wokaEmote: WokaEmoteAnimator | null = null;
     private wokaEmoteSounds: Phaser.Sound.BaseSound[] = [];
+    /** What playArrival() hid around the Woka, shown again however the arrival ends. */
+    private hiddenUntilEmoteEnds: Phaser.GameObjects.Components.Visible[] = [];
+    /** The name too, which may only be created once the arrival has started. */
+    private nameHiddenUntilEmoteEnds = false;
     private texts: Map<string, DOMElement> = new Map();
     private textsToBuild = new Map();
     scene: GameScene;
@@ -205,6 +209,7 @@ export abstract class Character extends Container implements OutlineableInterfac
             this.usernameDisplay.setAvailabilityStatus(this.availabilityStatus, true);
             this.usernameDisplay.setRaisedHand(this.raisedHand, true);
             this.usernameDisplay.setPlayerDepth(this.depth);
+            this.usernameDisplay.setVisible(!this.nameHiddenUntilEmoteEnds);
 
             this.outlineColorStoreUnsubscribe = this.outlineColorStore.subscribe((color) => {
                 this.usernameDisplay?.setPlayerNameOutlineColor(color);
@@ -661,21 +666,45 @@ export abstract class Character extends Container implements OutlineableInterfac
     }
 
     /**
-     * Plays the scene of a moderator removing this Woka — kicked off the map or locked up — then
-     * calls `onDone`, which is expected to destroy it. The user has already left the room, so for
+     * Plays the scene of this Woka leaving the map — kicked off it, locked up, or teleported away —
+     * then calls `onDone`, which is expected to destroy it. The user has already left the room, so for
      * the length of the scene the Woka is a ghost: no name, no bubble, nothing to click.
      */
     playEjection(definition: WokaEmoteDefinition<string>, mirrored: boolean, onDone: () => void): void {
         this.setClickable(false);
         this.usernameDisplay?.destroy();
         this.usernameDisplay = undefined;
+        this.hideAllButLayers();
+        this.playWokaEmote(definition, mirrored, onDone);
+    }
+
+    /**
+     * Plays the arrival of this Woka on the map. Its name and whatever else is drawn around it only
+     * show up once it has taken shape, or as soon as the arrival is cut short by walking away.
+     */
+    playArrival(definition: WokaEmoteDefinition<string>): void {
+        // Hidden before the emote adds its own column and pool of light around the Woka.
+        const hidden = this.hideAllButLayers();
+        this.playWokaEmote(definition);
+        this.hiddenUntilEmoteEnds = hidden;
+        this.nameHiddenUntilEmoteEnds = true;
+        this.usernameDisplay?.setVisible(false);
+    }
+
+    /** Hides everything drawn around the Woka but its own layers, and returns what was visible. */
+    private hideAllButLayers(): Phaser.GameObjects.Components.Visible[] {
         const layers = new Set<Phaser.GameObjects.GameObject>(this.sprites.values());
+        const hidden: Phaser.GameObjects.Components.Visible[] = [];
         for (const child of this.list) {
             if (!layers.has(child) && "setVisible" in child) {
-                (child as Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible).setVisible(false);
+                const visible = child as Phaser.GameObjects.GameObject & Phaser.GameObjects.Components.Visible;
+                if (visible.visible) {
+                    visible.setVisible(false);
+                    hidden.push(visible);
+                }
             }
         }
-        this.playWokaEmote(definition, mirrored, onDone);
+        return hidden;
     }
 
     /**
@@ -706,6 +735,14 @@ export abstract class Character extends Container implements OutlineableInterfac
     stopWokaEmote(): void {
         // An interrupted emote takes its sounds with it, the same way it takes its glyphs.
         this.destroyWokaEmoteSounds();
+        for (const child of this.hiddenUntilEmoteEnds) {
+            child.setVisible(true);
+        }
+        this.hiddenUntilEmoteEnds = [];
+        if (this.nameHiddenUntilEmoteEnds) {
+            this.nameHiddenUntilEmoteEnds = false;
+            this.usernameDisplay?.setVisible(true);
+        }
         if (!this.wokaEmote) return;
         this.wokaEmote.destroy();
         this.wokaEmote = null;
