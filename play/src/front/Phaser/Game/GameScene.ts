@@ -4583,12 +4583,20 @@ ${escapedMessage}
             this.markDirty();
         });
 
-        if (
-            this.pendingArrivals.has(player.userId) &&
-            claimTeleport(Date.now(), this.roomJoinedAt, this.recentTeleports)
-        ) {
+        if (this.pendingArrivals.has(player.userId) && this.mayTeleport()) {
             player.playArrival(TELEPORT_IN);
         }
+    }
+
+    /**
+     * Whether a Woka may teleport in or out now. "Disable map animations" in the settings and the
+     * browser's reduced-motion preference turn the teleports off: the Woka simply appears or goes.
+     */
+    private mayTeleport(): boolean {
+        if (localUserStore.getDisableAnimations() || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            return false;
+        }
+        return claimTeleport(Date.now(), this.roomJoinedAt, this.recentTeleports);
     }
 
     private tryChangeShowVoiceIndicatorState(show: boolean): void {
@@ -4652,7 +4660,7 @@ ${escapedMessage}
                 // The player is gone from every index below right away; only its Woka lingers,
                 // for the length of the scene.
                 this.playEjection(player, ejection);
-            } else if (departed && claimTeleport(Date.now(), this.roomJoinedAt, this.recentTeleports)) {
+            } else if (departed && this.mayTeleport()) {
                 player.playEjection(TELEPORT_OUT, false, () => player.destroy());
             } else {
                 player.destroy();
