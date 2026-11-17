@@ -143,12 +143,14 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Schlüsselspeicher zurücksetzen",
         resetKeyStorageConfirmationModal: {
-            title: "Bestätigung zurücksetzen des Schlüsselspeichers",
-            content: "Du bist dabei, den Schlüsselspeicher zurückzusetzen. Bist du sicher?",
-            warning:
-                "Das Zurücksetzen des Schlüsselspeichers entfernt deine aktuelle Sitzung und alle vertrauenswürdigen Benutzer. Du könntest den Zugriff auf einige vergangene Nachrichten verlieren und wirst nicht mehr als vertrauenswürdiger Benutzer erkannt. Stelle sicher, dass du die Konsequenzen dieser Aktion vollständig verstehst, bevor du fortfährst.",
-            cancel: "Abbrechen",
-            continue: "Fortfahren",
+            newSecretsNext:
+                "Sie wählen gleich danach eine neue Phrase und erhalten einen neuen Wiederherstellungsschlüssel.",
+            oldSecretsStop: "Ihre aktuelle Phrase und Ihr Wiederherstellungsschlüssel funktionieren nicht mehr.",
+            loseHistory: "Bisher verschlüsselte Nachrichten sind möglicherweise nicht mehr lesbar.",
+            title: "Verschlüsselung zurücksetzen?",
+            content: "Tun Sie das nur, wenn Sie Ihre verschlüsselten Nachrichten nicht mehr entsperren können.",
+            cancel: "Verschlüsselung behalten",
+            continue: "Verschlüsselung zurücksetzen",
         },
     },
     sub: {

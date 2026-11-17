@@ -141,12 +141,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Reset je sleutelopslag",
         resetKeyStorageConfirmationModal: {
-            title: "Bevestiging van reset van sleutelopslag",
-            content: "Je staat op het punt de sleutelopslag te resetten. Weet je het zeker?",
-            warning:
-                "Het resetten van de sleutelopslag zal je huidige sessie en alle vertrouwde gebruikers verwijderen. Je zou toegang kunnen verliezen tot sommige eerdere berichten en je zult niet langer worden herkend als een vertrouwde gebruiker. Zorg ervoor dat je de gevolgen van deze actie volledig begrijpt voordat je doorgaat.",
-            cancel: "Annuleren",
-            continue: "Doorgaan",
+            newSecretsNext: "Je kiest direct daarna een nieuwe zin en krijgt een nieuwe herstelsleutel.",
+            oldSecretsStop: "Je huidige zin en herstelsleutel werken niet meer.",
+            loseHistory: "Berichten die tot nu toe versleuteld zijn, zijn mogelijk niet meer leesbaar.",
+            title: "Versleuteling resetten?",
+            content: "Doe dit alleen als je je versleutelde berichten niet meer kunt ontgrendelen.",
+            cancel: "Versleuteling behouden",
+            continue: "Versleuteling resetten",
         },
     },
     sub: {

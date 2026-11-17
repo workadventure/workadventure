@@ -142,12 +142,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Restablecer el almacenamiento de claves",
         resetKeyStorageConfirmationModal: {
-            title: "Confirmación de restablecimiento del almacenamiento de claves",
-            content: "Está a punto de restablecer el almacenamiento de claves. ¿Está seguro?",
-            warning:
-                "Restablecer el almacenamiento de claves eliminará su sesión actual y todos los usuarios de confianza. Podría perder el acceso a algunos mensajes pasados y ya no será reconocido como usuario de confianza. Asegúrese de entender completamente las consecuencias de esta acción antes de continuar.",
-            cancel: "Cancelar",
-            continue: "Continuar",
+            newSecretsNext: "Justo después elegirás una frase nueva y obtendrás una clave de recuperación nueva.",
+            oldSecretsStop: "Tu frase y tu clave de recuperación actuales dejarán de funcionar.",
+            loseHistory: "Es posible que los mensajes cifrados hasta ahora ya no se puedan leer.",
+            title: "¿Restablecer el cifrado?",
+            content: "Hazlo solo si ya no puedes desbloquear tus mensajes cifrados.",
+            cancel: "Mantener mi cifrado",
+            continue: "Restablecer el cifrado",
         },
     },
     sub: {

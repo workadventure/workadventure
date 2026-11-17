@@ -141,12 +141,13 @@ const menu: BaseTranslation = {
     chat: {
         resetKeyStorageUpButtonLabel: "Redefinir seu armazenamento de chaves",
         resetKeyStorageConfirmationModal: {
-            title: "Confirmação de redefinição do armazenamento de chaves",
-            content: "Você está prestes a redefinir o armazenamento de chaves. Tem certeza?",
-            warning:
-                "Redefinir o armazenamento de chaves removerá sua sessão atual e todos os usuários confiáveis. Você pode perder o acesso a algumas mensagens anteriores e não será mais reconhecido como um usuário confiável. Certifique-se de entender completamente as consequências desta ação antes de prosseguir.",
-            cancel: "Cancelar",
-            continue: "Continuar",
+            newSecretsNext: "Logo em seguida você escolherá uma nova frase e receberá uma nova chave de recuperação.",
+            oldSecretsStop: "Sua frase e sua chave de recuperação atuais deixarão de funcionar.",
+            loseHistory: "As mensagens criptografadas até agora podem deixar de ser legíveis.",
+            title: "Redefinir a criptografia?",
+            content: "Faça isso somente se você não conseguir mais desbloquear suas mensagens criptografadas.",
+            cancel: "Manter minha criptografia",
+            continue: "Redefinir a criptografia",
         },
     },
     sub: {
