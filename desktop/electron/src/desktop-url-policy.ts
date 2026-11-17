@@ -99,7 +99,7 @@ export function createDesktopConfig(env: Record<string, unknown> = process.env):
         getDefaultPortalUrl()
     );
     const portalOrigin = new URL(portalUrl).origin;
-    const allowedOrigins = new Set([portalOrigin]);
+    const allowedOrigins = new Set<string>();
 
     // `trustedOrigins`: the servers the user added (see trusted-servers-policy).
     const configuredOrigins = parseList(env.allowedOrigins || env.WA_DESKTOP_ALLOWED_ORIGINS);
@@ -250,7 +250,9 @@ export function isAllowedNavigationUrl(value: string, config: DesktopConfig): bo
         return false;
     }
 
-    if (!requireHttpsInProd(url)) {
+    // The administration (the portal) is not a world: its pages open in the browser, never in the app. The app
+    // only calls its API, with net.fetch, which this does not gate.
+    if (!requireHttpsInProd(url) || url.origin === config.portalOrigin) {
         return false;
     }
 
@@ -479,15 +481,6 @@ export function validateDesktopNavigationUrl(value: unknown, config: DesktopConf
     }
 
     return { ok: true, url: normalizedUrl };
-}
-
-export function resolveInitialTarget(
-    config: DesktopConfig,
-    state: { pendingDeepLinkUrl?: string; lastRoomUrl?: string } = {}
-): string {
-    const candidates = [state.pendingDeepLinkUrl, state.lastRoomUrl, config.portalUrl];
-    const target = candidates.find((candidate) => candidate && isAllowedNavigationUrl(candidate, config));
-    return target || config.portalUrl;
 }
 
 export function extractDesktopTargetFromDeepLink(value: string): string | undefined {

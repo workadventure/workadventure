@@ -22,7 +22,6 @@ import {
     isRoomUrl,
     isSameRoomUrl,
     opensInApp,
-    resolveInitialTarget,
     stripSensitiveQueryParams,
     worldKeyOf,
     type DesktopAuthCallback,
@@ -562,9 +561,11 @@ function ensureDesktopCallbackServer(): Promise<string> {
             response.end(createDesktopCallbackPage(t("auth.signedOut"), t("auth.closeWindow"), nativeLocale()));
 
             bringAppToFront();
-            const config = getDesktopConfig();
-            const safeTarget = targetUrl && isAllowedNavigationUrl(targetUrl, config) ? targetUrl : config.portalUrl;
-            void loadDesktopTarget(safeTarget);
+            // Back to the world the user signed out from, else the Landing.
+            (targetUrl && isAllowedNavigationUrl(targetUrl, getDesktopConfig())
+                ? loadDesktopTarget(targetUrl)
+                : loadLandingPage()
+            ).catch((error) => ElectronLog.error("Could not leave the sign-out page.", error));
             maybeStopDesktopCallbackServer();
             return;
         }
@@ -931,15 +932,9 @@ export async function loadLandingPage(query?: { error: string } | { trust: strin
     try {
         await contents.loadURL(landingUrl);
     } catch (error) {
+        // The Landing ships with the app: there is nothing else to show. Still reveal the window rather than
+        // leave it hidden forever.
         ElectronLog.error(`Failed to load Landing page at ${landingUrl}`, error);
-        // Fall back to the portal URL — worst case the user still lands somewhere usable. Guard
-        // the fallback too: if BOTH the Landing file and the portal fail to load (e.g. offline on
-        // first launch), we must still reveal the window rather than leave it hidden forever.
-        try {
-            await contents.loadURL(getDesktopConfig().portalUrl);
-        } catch (fallbackError) {
-            ElectronLog.error("Failed to load Landing fallback portal", fallbackError);
-        }
     }
     showWindow();
 }
@@ -968,34 +963,23 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         throw new Error("No active world view");
     }
 
-    const explicitTarget = requestedUrl || pendingDeepLinkUrl;
-    const lastRoomUrl = settings.get("last_room_url");
-    // First cold launch (nothing pending, no persisted room) → show the Landing instead of
-    // silently loading the portal URL. Once the user picks a world (or a deep-link fires),
-    // last_room_url is set and this branch never fires again.
-    if (!explicitTarget && !lastRoomUrl) {
-        pendingDeepLinkUrl = undefined;
+    const target = requestedUrl || pendingDeepLinkUrl || settings.get("last_room_url");
+    pendingDeepLinkUrl = undefined;
+    // First cold launch (nothing pending, no persisted room) → the Landing. Once the user picks a world (or a
+    // deep-link fires), last_room_url is set and this branch never fires again.
+    if (!target) {
         await loadLandingPage();
         return true;
     }
-    const config = getDesktopConfig();
-    // A world on a server the app does not trust (a deep link, a server the user removed since): never open
-    // the last room or the portal in its place. A WorkAdventure server is offered to be added, anything else
-    // gets an error.
-    if (explicitTarget && !isAllowedNavigationUrl(explicitTarget, config)) {
-        pendingDeepLinkUrl = undefined;
+    // A world on a server the app does not trust (a deep link, a server the user removed since, a last room on a
+    // server an update stopped trusting): never open another world or the portal in its place. A WorkAdventure
+    // server is offered to be added, anything else gets an error.
+    if (!isAllowedNavigationUrl(target, getDesktopConfig())) {
         await loadLandingPage(
-            (await isWorkAdventureServer(explicitTarget))
-                ? { trust: explicitTarget }
-                : { error: t("landing.urlNotAllowed") }
+            (await isWorkAdventureServer(target)) ? { trust: target } : { error: t("landing.urlNotAllowed") }
         );
         return true;
     }
-    const target = resolveInitialTarget(config, {
-        pendingDeepLinkUrl: explicitTarget,
-        lastRoomUrl,
-    });
-    pendingDeepLinkUrl = undefined;
     try {
         const navigationStartedAt = Date.now();
         await contents.loadURL(target);
@@ -1130,7 +1114,7 @@ async function openDesktopAuthCallback(callback: DesktopAuthCallback) {
         );
     } catch (error) {
         ElectronLog.warn("Failed to exchange desktop auth callback.", error);
-        await loadDesktopTarget(getDesktopConfig().portalUrl);
+        await recoverToLandingWithError(t("landing.signInFailed"));
     }
 }
 
