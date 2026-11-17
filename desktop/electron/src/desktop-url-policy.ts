@@ -2,7 +2,6 @@ export type DesktopConfig = {
     portalUrl: string;
     portalOrigin: string;
     allowedOrigins: string[];
-    allowedHostSuffixes: string[];
     updateFeedUrl: string | undefined;
 };
 
@@ -20,8 +19,9 @@ export type DesktopNavigationValidationResult =
 
 const DEV_PORTAL_URL = "http://admin.workadventure.localhost/";
 const PROD_PORTAL_URL = "https://admin.workadventu.re/";
-const DEFAULT_ALLOWED_HOST_SUFFIXES_PROD = [".workadventu.re", ".workadventure.fr"];
-const DEFAULT_ALLOWED_HOST_SUFFIXES_DEV = [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"];
+// The hosted service's worlds, next to its portal. Trusted like any other server: by origin, no wildcard. An
+// organization sets its own with WA_DESKTOP_ALLOWED_ORIGINS; users add theirs from the Landing.
+const DEFAULT_ALLOWED_ORIGINS = ["https://play.workadventu.re"];
 export const SENSITIVE_QUERY_PARAMS: readonly string[] = [
     "token",
     "matrixLoginToken",
@@ -52,16 +52,6 @@ function parseList(value: unknown): string[] {
         .filter(Boolean);
 }
 
-function normalizeHostSuffix(value: string): string {
-    const trimmed = String(value || "")
-        .trim()
-        .toLowerCase();
-    if (!trimmed) {
-        return "";
-    }
-    return trimmed.startsWith(".") ? trimmed : "." + trimmed;
-}
-
 function isDevEnvironment(): boolean {
     return process.env.NODE_ENV === "development";
 }
@@ -70,10 +60,6 @@ function isDevEnvironment(): boolean {
 // refused outside development, so every "back to the portal" path would land on a dead page.
 export function getDefaultPortalUrl(): string {
     return isDevEnvironment() ? DEV_PORTAL_URL : PROD_PORTAL_URL;
-}
-
-function getDefaultAllowedHostSuffixes(): string[] {
-    return isDevEnvironment() ? DEFAULT_ALLOWED_HOST_SUFFIXES_DEV : DEFAULT_ALLOWED_HOST_SUFFIXES_PROD;
 }
 
 function normalizeHttpUrl(value: string | undefined, fallback: string): string {
@@ -116,8 +102,9 @@ export function createDesktopConfig(env: Record<string, unknown> = process.env):
     const allowedOrigins = new Set([portalOrigin]);
 
     // `trustedOrigins`: the servers the user added (see trusted-servers-policy).
+    const configuredOrigins = parseList(env.allowedOrigins || env.WA_DESKTOP_ALLOWED_ORIGINS);
     const extraOrigins = [
-        ...parseList(env.allowedOrigins || env.WA_DESKTOP_ALLOWED_ORIGINS),
+        ...(configuredOrigins.length > 0 ? configuredOrigins : DEFAULT_ALLOWED_ORIGINS),
         ...parseList(env.trustedOrigins),
     ];
     for (const origin of extraOrigins) {
@@ -127,18 +114,10 @@ export function createDesktopConfig(env: Record<string, unknown> = process.env):
         }
     }
 
-    const configuredSuffixes = parseList(env.allowedHostSuffixes || env.WA_DESKTOP_ALLOWED_HOST_SUFFIXES)
-        .map(normalizeHostSuffix)
-        .filter(Boolean);
-    const allowedHostSuffixes = (configuredSuffixes.length > 0 ? configuredSuffixes : getDefaultAllowedHostSuffixes())
-        .map(normalizeHostSuffix)
-        .filter(Boolean);
-
     return {
         portalUrl,
         portalOrigin,
         allowedOrigins: Array.from(allowedOrigins),
-        allowedHostSuffixes,
         // Unset: the releases on GitHub (the publish settings of electron-builder.yml). Set: a feed of the
         // organization's own, e.g. to hold versions back until they are validated internally.
         updateFeedUrl: nonEmptyString(env.updateFeedUrl) ?? nonEmptyString(env.WA_DESKTOP_UPDATE_URL),
@@ -279,19 +258,9 @@ export function isAllowedNavigationUrl(value: string, config: DesktopConfig): bo
         return true;
     }
 
-    if (isDevEnvironment() && isLocalhost(url.hostname)) {
-        return true;
-    }
-
-    const hostname = url.hostname.toLowerCase();
-    return config.allowedHostSuffixes.some((suffix) => {
-        const normalized = normalizeHostSuffix(suffix);
-        if (!normalized) {
-            return false;
-        }
-        const bare = normalized.slice(1);
-        return hostname === bare || hostname.endsWith(normalized);
-    });
+    // The local stack: *.workadventure.localhost. Only in development: a packaged app does not trust a name
+    // that someone on the network might answer for.
+    return isDevEnvironment() && (isLocalhost(url.hostname) || url.hostname.endsWith(".localhost"));
 }
 
 export function isDesktopLoginUrl(value: string): boolean {
@@ -497,7 +466,7 @@ export function validateDesktopNavigationUrl(value: unknown, config: DesktopConf
         return {
             ok: false,
             code: "urlNotAllowed",
-            error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a workadventu.re room URL.",
+            error: "This URL isn't in the allowed origins. Set WA_DESKTOP_ALLOWED_ORIGINS or use a play.workadventu.re room URL.",
         };
     }
 

@@ -479,7 +479,7 @@ export default () => {
             return { ok: false, error: t("landing.signInFailed") };
         }
         // Listed by our own administration over HTTPS: a white-label domain of the service, which the
-        // world loads on once signed in. Trusted like the built-in domains, without asking.
+        // world loads on once signed in. Trusted like the built-in servers, without asking.
         if (!isAllowedNavigationUrl(world.url, getDesktopConfig())) {
             trustServer(world.url);
         }

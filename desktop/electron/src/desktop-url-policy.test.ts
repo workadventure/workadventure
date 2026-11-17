@@ -41,15 +41,15 @@ function withNodeEnv(value: string | undefined, fn: () => void): void {
     }
 }
 
-test("allows the configured portal origin and WorkAdventure host suffixes only", () => {
+test("trusts servers by origin, never a whole domain", () => {
     const config = createDesktopConfig({
         portalUrl: "https://play.workadventu.re",
         allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re", ".workadventure.fr"],
     });
 
     expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
-    expect(isAllowedNavigationUrl("https://maps.workadventure.fr/some-map.json", config)).toBe(true);
+    expect(isAllowedNavigationUrl("https://matrix.workadventu.re/_matrix/media/v3/download/x/y", config)).toBe(false);
+    expect(isAllowedNavigationUrl("https://maps.workadventure.fr/some-map.json", config)).toBe(false);
     expect(isAllowedNavigationUrl("https://workadventu.re.evil.test/@/team/world/room", config)).toBe(false);
     expect(isAllowedNavigationUrl("javascript:alert(1)", config)).toBe(false);
 });
@@ -58,7 +58,6 @@ test("resolves launch target from deep link, then last room, then portal", () =>
     const config = createDesktopConfig({
         portalUrl: "https://play.workadventu.re",
         allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re"],
     });
 
     expect(
@@ -82,7 +81,6 @@ test("validates and normalizes world URLs entered in the desktop navigation UI",
     const config = createDesktopConfig({
         portalUrl: "https://admin.workadventu.re",
         allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re"],
     });
 
     expect(validateDesktopNavigationUrl("", config)).toStrictEqual({
@@ -125,47 +123,35 @@ test("uses the hosted admin portal by default in production, the local one in de
         const config = createDesktopConfig({});
 
         expect(config.portalUrl).toBe("https://admin.workadventu.re/");
-        // .workadventure.localhost is intentionally dropped in prod: an attacker on the same
-        // LAN can poison DNS for *.workadventure.localhost and serve a fake /desktop-auth/exchange.
-        expect(config.allowedHostSuffixes).toStrictEqual([".workadventu.re", ".workadventure.fr"]);
+        expect(config.allowedOrigins).toStrictEqual(["https://admin.workadventu.re", "https://play.workadventu.re"]);
     });
 });
 
-test("keeps .workadventure.localhost in dev defaults for local development", () => {
+test("an organization's allowed origins replace the hosted service's, like any other server", () => {
+    const config = createDesktopConfig({
+        portalUrl: "https://wa.example.org",
+        WA_DESKTOP_ALLOWED_ORIGINS: "https://play.example.org",
+    });
+    expect(isAllowedNavigationUrl("https://play.example.org/@/team/world/room", config)).toBe(true);
+    expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(false);
+});
+
+test("trusts the local stack only in development", () => {
+    const room = "https://play.workadventure.localhost/_/global/maps";
     withNodeEnv("development", () => {
-        const config = createDesktopConfig({});
-        expect(config.allowedHostSuffixes).toStrictEqual([
-            ".workadventu.re",
-            ".workadventure.fr",
-            ".workadventure.localhost",
-        ]);
+        expect(isAllowedNavigationUrl(room, createDesktopConfig({}))).toBe(true);
     });
-});
-
-test("normalises configured allow-list entries to dot-prefixed form", () => {
-    const config = createDesktopConfig({
-        allowedHostSuffixes: ["workadventu.re", "  WORKADVENTURE.fr  "],
+    withNodeEnv("production", () => {
+        // A packaged app must not trust a name someone on the network could answer for (a fake
+        // /desktop-auth/exchange served from *.workadventure.localhost).
+        expect(isAllowedNavigationUrl(room, createDesktopConfig({}))).toBe(false);
     });
-    expect(config.allowedHostSuffixes).toStrictEqual([".workadventu.re", ".workadventure.fr"]);
-});
-
-test("rejects sibling hostnames sharing the suffix string without dot boundary", () => {
-    const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
-        allowedHostSuffixes: ["workadventu.re"],
-    });
-    expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
-    expect(isAllowedNavigationUrl("https://workadventu.re/", config)).toBe(true);
-    // The classic endsWith-without-dot bug: evilworkadventu.re should NOT match workadventu.re.
-    expect(isAllowedNavigationUrl("https://evilworkadventu.re/", config)).toBe(false);
-    expect(isAllowedNavigationUrl("https://attacker.evilworkadventu.re/", config)).toBe(false);
 });
 
 test("blocks http:// outside development for non-loopback hosts", () => {
     withNodeEnv("production", () => {
         const config = createDesktopConfig({
             portalUrl: "https://play.workadventu.re",
-            allowedHostSuffixes: ["workadventu.re"],
         });
         expect(isAllowedNavigationUrl("http://play.workadventu.re/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
@@ -318,7 +304,6 @@ test("the browser flow screen goes back to the world the user signed in or out f
     const config = createDesktopConfig({
         portalUrl: "https://play.workadventu.re",
         allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re"],
     });
     const world = "https://play.workadventu.re/@/team/world/room";
     const flow = (path: string, playUri: string, extra = "") =>
