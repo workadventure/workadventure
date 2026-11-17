@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import type { WokaEmoteState } from "./WokaEmoteCatalog";
-import { FEET_OFFSET, feetAnchoredOffset, wheelSectorPath, wheelSliceAt, wheelSlicePosition } from "./WokaEmoteGeometry";
+import {
+    FEET_OFFSET,
+    feetAnchoredOffset,
+    wheelSectorPath,
+    wheelSliceAt,
+    wheelSlicePosition,
+} from "./WokaEmoteGeometry";
 
 const RESTING: WokaEmoteState = { frame: 1, x: 0, y: 0, angle: 0, scaleX: 1, scaleY: 1 };
 
