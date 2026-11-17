@@ -33,6 +33,8 @@ export interface WokaEmoteState {
     angle: number;
     scaleX: number;
     scaleY: number;
+    /** Opacity of the Woka, for the ejections that end with the Woka gone. */
+    alpha: number;
 }
 
 /**
@@ -63,13 +65,15 @@ export interface WokaEmoteParticleSpec {
 }
 
 /**
- * A ring drawn on the floor, under the Woka. The floating glyphs are DOM elements and therefore
- * always render above the canvas, so anything meant to be *under* the character has to be drawn by
- * Phaser instead — which is what this describes.
+ * A mark drawn on the floor, under the Woka: a ring, or a filled shadow. The floating glyphs are DOM
+ * elements and therefore always render above the canvas, so anything meant to be *under* the
+ * character has to be drawn by Phaser instead — which is what this describes.
  */
 export interface WokaEmoteGroundSpec {
-    /** Stroke colour, as a Phaser hex number. */
+    /** Colour, as a Phaser hex number. */
     color: number;
+    /** A filled disc (a shadow) instead of the arcs of a ring. */
+    fill?: boolean;
     /** Radius at scale 1, in sprite pixels. */
     radius: number;
     /** Stroke width, in sprite pixels. */
@@ -80,7 +84,8 @@ export interface WokaEmoteGroundSpec {
     arcs: [number, number][];
     /** Height of the floor above the sprite origin. Defaults to the feet. */
     offsetY?: number;
-    sample: (elapsed: number) => { scale?: number; alpha?: number; angle?: number };
+    /** `x` slides the mark along the floor, for a shadow that follows a Woka in flight. */
+    sample: (elapsed: number) => { x?: number; scale?: number; alpha?: number; angle?: number };
 }
 
 /**
@@ -120,15 +125,37 @@ export function wokaEmoteSoundVolume(distance: number, near: number, far = WOKA_
 }
 
 /**
+ * A drawn object that is part of the scene rather than a trickle of glyphs: the boot of a kick, the
+ * cell of a ban. Its recipe places it at every instant, relative to the Woka's feet, the same way
+ * `sample` places the Woka. Like the glyphs, it is a DOM element and renders above the Woka.
+ */
+export interface WokaEmotePropSpec {
+    glyph: WokaEmoteGlyphName;
+    /** Where the prop stands at `elapsed`, anchored by its bottom centre, or null while it is hidden. */
+    sample: (elapsed: number) => WokaEmotePropState | null;
+}
+
+export interface WokaEmotePropState {
+    /** Offset from the Woka's feet, in sprite pixels. Negative y is up. */
+    x: number;
+    y: number;
+    angle?: number;
+    scaleX?: number;
+    scaleY?: number;
+    alpha?: number;
+}
+
+/**
  * How the wheel groups the emotes: answering someone, moving for the fun of it, saying where you are.
  * WOKA_EMOTE_IDS is already ordered by family, so each family is one arc of the wheel.
  */
 export const WOKA_EMOTE_FAMILIES = ["react", "move", "status"] as const;
 export type WokaEmoteFamily = (typeof WOKA_EMOTE_FAMILIES)[number];
 
-export interface WokaEmoteDefinition {
-    id: WokaEmoteId;
-    family: WokaEmoteFamily;
+export interface WokaEmoteDefinition<Id extends string = WokaEmoteId> {
+    id: Id;
+    /** Where the emote sits in the wheel. Absent for what the wheel does not offer, such as an ejection. */
+    family?: WokaEmoteFamily;
     /** How long the animation runs, in milliseconds. */
     duration: number;
     /** Glyph shown in the emote wheel. */
@@ -143,21 +170,28 @@ export interface WokaEmoteDefinition {
     particles?: WokaEmoteParticleSpec[];
     /** A mark left on the floor under the Woka, for emotes whose energy goes downwards. */
     ground?: WokaEmoteGroundSpec;
-    /** A sound heard by the players standing near the Woka. */
-    sound?: WokaEmoteSoundSpec;
+    /** Sounds heard by the players standing near the Woka, each at its own instant. */
+    sounds?: WokaEmoteSoundSpec[];
+    /** Objects drawn around the Woka for the whole scene. */
+    props?: WokaEmotePropSpec[];
     sample: (elapsed: number) => Partial<WokaEmoteState>;
 }
+
+/** An emote the wheel offers: it always belongs to a family. */
+export type WokaWheelEmoteDefinition = WokaEmoteDefinition & { family: WokaEmoteFamily };
 
 /* -------------------------------------------------------------------------- */
 /* Easing and timing helpers. Kept pure so they can be unit-tested without Phaser. */
 /* -------------------------------------------------------------------------- */
 
-export type EaseName = "linear" | "quadIn" | "quadOut" | "bounceOut";
+export type EaseName = "linear" | "quadIn" | "quadOut" | "cubicOut" | "backOut" | "bounceOut";
 
 const EASES: Record<EaseName, (t: number) => number> = {
     linear: (t) => t,
     quadIn: (t) => t * t,
     quadOut: (t) => 1 - (1 - t) * (1 - t),
+    cubicOut: (t) => 1 - Math.pow(1 - t, 3),
+    backOut: (t) => 1 + 2.2 * Math.pow(t - 1, 3) + 1.2 * Math.pow(t - 1, 2),
     bounceOut: (t) => {
         const n = 7.5625;
         const d = 2.75;
@@ -218,7 +252,7 @@ export function stepThrough<T>(elapsed: number, period: number, values: T[]): T 
 /* The catalogue itself                                                        */
 /* -------------------------------------------------------------------------- */
 
-const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
+const DEFINITIONS: Record<WokaEmoteId, WokaWheelEmoteDefinition> = {
     nod: {
         id: "nod",
         family: "react",
@@ -238,7 +272,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         family: "react",
         duration: 1400,
         icon: "❓",
-        sound: { file: "question.mp3" },
+        sounds: [{ file: "question.mp3" }],
         // Here the tilt is the message rather than a stand-in for a missing arm: a head leans when
         // it does not understand.
         particles: [
@@ -265,7 +299,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         family: "react",
         duration: 1100,
         icon: "😂",
-        sound: { file: "laugh.mp3" },
+        sounds: [{ file: "laugh.mp3" }],
         // A body that bounces on the spot is not, on its own, readable as laughter: `celebrate` and
         // `jump` bounce too. The three "HA" puffs are what names the emote, and they leave the head
         // in the rhythm of the shake.
@@ -401,7 +435,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         family: "react",
         duration: 1400, // two 700ms hops
         icon: "🎉",
-        sound: { file: "celebrate.mp3" },
+        sounds: [{ file: "celebrate.mp3" }],
         // The confetti of the mock-up would need a pixel-art sheet that does not exist yet; until it
         // does, the bubble carries the celebration and the body carries the energy.
         bubble: "🎉",
@@ -441,7 +475,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
         family: "react",
         duration: 700,
         icon: "🙅",
-        sound: { file: "nope.mp3" },
+        sounds: [{ file: "nope.mp3" }],
         sample: (t) => ({
             frame: stepThrough(t, 160, [LEFT, RIGHT]),
             x: oscillate(t, 160) * 3 * Math.max(0, 1 - t / 700),
@@ -492,14 +526,25 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
     },
 };
 
-export const WOKA_EMOTES: WokaEmoteDefinition[] = WOKA_EMOTE_IDS.map((id) => DEFINITIONS[id]);
+export const WOKA_EMOTES: WokaWheelEmoteDefinition[] = WOKA_EMOTE_IDS.map((id) => DEFINITIONS[id]);
 
 export function getWokaEmote(id: WokaEmoteId): WokaEmoteDefinition {
     return DEFINITIONS[id];
 }
 
+/**
+ * The same state seen in a mirror: offsets and angles flip, and the frames facing left and right
+ * swap rows (row 1 of the spritesheet faces left, row 2 faces right). Recipes that have a side — an
+ * ejection comes from the moderator's — are written from the left and mirrored for the right.
+ */
+export function mirrorWokaEmoteState(state: WokaEmoteState): WokaEmoteState {
+    const row = Math.floor(state.frame / 3);
+    const frame = row === 1 ? state.frame + 3 : row === 2 ? state.frame - 3 : state.frame;
+    return { ...state, frame, x: -state.x, angle: -state.angle };
+}
+
 /** Fills in the properties a recipe left untouched, so callers always get a complete state. */
-export function sampleWokaEmote(definition: WokaEmoteDefinition, elapsed: number): WokaEmoteState {
+export function sampleWokaEmote(definition: WokaEmoteDefinition<string>, elapsed: number): WokaEmoteState {
     const clamped = Math.max(0, Math.min(elapsed, definition.duration));
     const partial = definition.sample(clamped);
     return {
@@ -509,5 +554,6 @@ export function sampleWokaEmote(definition: WokaEmoteDefinition, elapsed: number
         angle: partial.angle ?? 0,
         scaleX: partial.scaleX ?? 1,
         scaleY: partial.scaleY ?? 1,
+        alpha: partial.alpha ?? 1,
     };
 }

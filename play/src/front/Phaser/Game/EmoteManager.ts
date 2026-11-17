@@ -2,6 +2,7 @@ import type { Subscription } from "rxjs";
 import { isWokaEmoteId } from "@workadventure/shared-utils";
 import type { RoomConnection } from "../../Connection/RoomConnection";
 import type { GameScene } from "./GameScene";
+import { getWokaEmote } from "./Emote/WokaEmoteCatalog";
 
 export class EmoteManager {
     private subscription: Subscription;
@@ -19,7 +20,7 @@ export class EmoteManager {
             // know about Woka emotes would forward nothing here, and a newer one could name an
             // animation this client has not shipped yet.
             if (event.wokaEmoteId !== undefined && isWokaEmoteId(event.wokaEmoteId)) {
-                actor.playWokaEmote(event.wokaEmoteId);
+                actor.playWokaEmote(getWokaEmote(event.wokaEmoteId));
                 return;
             }
             if (event.emote) {
