@@ -18,16 +18,16 @@ function createService(stopEgress = vi.fn(), startRoomCompositeEgress = vi.fn(),
                 listRooms: vi.fn(),
                 createRoom: vi.fn(),
                 deleteRoom: vi.fn(),
-            } as never),
+            }) as never,
         () =>
             ({
                 stopEgress,
                 startRoomCompositeEgress,
-            } as never),
+            }) as never,
         () =>
             ({
                 receive,
-            } as never)
+            }) as never,
     );
 }
 
@@ -101,7 +101,7 @@ describe("LiveKitService", () => {
         trackRecording(service, { egressId: "egress-2", status: EgressStatus.EGRESS_ACTIVE });
 
         await expect(service.stopRecording()).rejects.toThrow(
-            "Multiple active recordings found; egressId is required to stop a specific recording"
+            "Multiple active recordings found; egressId is required to stop a specific recording",
         );
         expect(stopEgress).not.toHaveBeenCalled();
     });
@@ -121,7 +121,7 @@ describe("LiveKitService", () => {
                 name: "User 1",
             } as never,
             "folder-name",
-            "session-1"
+            "session-1",
         );
 
         expect(result).toEqual({
@@ -139,7 +139,7 @@ describe("LiveKitService", () => {
                         signingKey: "api-key",
                     }),
                 ],
-            })
+            }),
         );
         expect(getTrackedRecordings(service).has("egress-1")).toBe(true);
     });
@@ -191,7 +191,7 @@ describe("LiveKitService", () => {
 
     it("leaves timestamps at zero and files empty when LiveKit reports none", async () => {
         const receive = vi.fn().mockResolvedValue({
-            event: "egress_started",
+            event: "egress_updated",
             id: "event-2",
             createdAt: 1n,
             egressInfo: { egressId: "egress-1", roomName: "test-space", status: EgressStatus.EGRESS_ACTIVE },
@@ -208,6 +208,25 @@ describe("LiveKitService", () => {
         });
     });
 
+    it("only starts the recording once the egress is active, not while it loads the page", async () => {
+        for (const [event, status] of [
+            ["egress_started", EgressStatus.EGRESS_STARTING],
+            ["egress_updated", EgressStatus.EGRESS_STARTING],
+            ["egress_updated", EgressStatus.EGRESS_ENDING],
+        ] as const) {
+            const receive = vi.fn().mockResolvedValue({
+                event,
+                id: "event-3",
+                createdAt: 1n,
+                egressInfo: { egressId: "egress-1", roomName: "test-space", status },
+            });
+            const service = createService(vi.fn(), vi.fn(), receive);
+            await expect(
+                service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1"),
+            ).resolves.toBe("ignored");
+        }
+    });
+
     it("ignores signed LiveKit events that do not describe egress lifecycle", async () => {
         const receive = vi.fn().mockResolvedValue({
             event: "participant_joined",
@@ -217,7 +236,7 @@ describe("LiveKitService", () => {
         const service = createService(vi.fn(), vi.fn(), receive);
 
         await expect(
-            service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1")
+            service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1"),
         ).resolves.toBe("ignored");
     });
 
@@ -226,7 +245,7 @@ describe("LiveKitService", () => {
         const service = createService(vi.fn(), vi.fn(), receive);
 
         await expect(
-            service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1")
+            service.handleLivekitWebhook(Buffer.from("{}"), "jwt-token", "space-name", "session-1"),
         ).rejects.toMatchObject({
             kind: "unauthorized",
         } satisfies Partial<LivekitWebhookError>);
@@ -236,7 +255,7 @@ describe("LiveKitService", () => {
 describe("LiveKitService track egress", () => {
     function createTrackEgressService(tracks: { sid: string; source: TrackSource }[]) {
         const startTrackEgress = vi.fn((_roomName: string, _output: DirectFileOutput, _trackId: string) =>
-            Promise.resolve({ egressId: "EG_track" })
+            Promise.resolve({ egressId: "EG_track" }),
         );
         const service = new LiveKitService(
             "http://livekit.local",
@@ -244,9 +263,9 @@ describe("LiveKitService track egress", () => {
             "api-secret",
             "ws://livekit.local",
             "https://play.local",
-            () => ({ getParticipant: vi.fn().mockResolvedValue({ tracks }) } as never),
-            () => ({ startTrackEgress } as never),
-            () => ({ receive: vi.fn() })
+            () => ({ getParticipant: vi.fn().mockResolvedValue({ tracks }) }) as never,
+            () => ({ startTrackEgress }) as never,
+            () => ({ receive: vi.fn() }),
         );
         return { service, startTrackEgress };
     }
@@ -257,7 +276,13 @@ describe("LiveKitService track egress", () => {
         ]);
 
         await expect(
-            service.startTrackEgress("space", "user-1", "TR_mic", "folder/speaker.ogg", new S3Upload({ bucket: "audio" }))
+            service.startTrackEgress(
+                "space",
+                "user-1",
+                "TR_mic",
+                "folder/speaker.ogg",
+                new S3Upload({ bucket: "audio" }),
+            ),
         ).resolves.toBe("EG_track");
 
         const [roomName, output, trackId] = startTrackEgress.mock.calls[0];
@@ -273,7 +298,7 @@ describe("LiveKitService track egress", () => {
         ]);
 
         await expect(
-            service.startTrackEgress("space", "user-1", "TR_camera", "folder/speaker.ogg", new S3Upload({}))
+            service.startTrackEgress("space", "user-1", "TR_camera", "folder/speaker.ogg", new S3Upload({})),
         ).rejects.toThrow("is not the microphone");
         expect(startTrackEgress).not.toHaveBeenCalled();
     });
@@ -287,9 +312,9 @@ describe("LiveKitService egress times", () => {
             "api-secret",
             "ws://livekit.local",
             "https://play.local",
-            () => ({} as never),
-            () => ({ listEgress: vi.fn().mockResolvedValue(egresses) } as never),
-            () => ({ receive: vi.fn() })
+            () => ({}) as never,
+            () => ({ listEgress: vi.fn().mockResolvedValue(egresses) }) as never,
+            () => ({ receive: vi.fn() }),
         );
     }
 
@@ -299,7 +324,9 @@ describe("LiveKitService egress times", () => {
                 startedAt: 1_000_000_000_000n,
                 endedAt: 1_049_000_000_000n,
                 // The file's startedAt comes seconds after its first sample: not the one to align on
-                fileResults: [{ startedAt: 1_003_000_000_000n, endedAt: 1_049_000_000_000n, duration: 46_000_000_000n }],
+                fileResults: [
+                    { startedAt: 1_003_000_000_000n, endedAt: 1_049_000_000_000n, duration: 46_000_000_000n },
+                ],
             },
         ]);
 

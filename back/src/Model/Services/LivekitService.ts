@@ -52,7 +52,7 @@ type EgressToStop = {
     status?: EgressStatus;
 };
 
-type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_started" | "egress_ended">;
+type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_updated" | "egress_ended">;
 
 type WebhookReceiverLike = Pick<WebhookReceiver, "receive">;
 
@@ -356,6 +356,11 @@ export class LiveKitService {
         if (!this.isForwardedEvent(event.event)) {
             return "ignored";
         }
+        // The recording starts when the egress is active, not when it is started: a web egress first loads the
+        // ?recorder page and the map, and only records once the page logs START_RECORDING (awaitStartSignal).
+        if (event.event === "egress_updated" && event.egressInfo?.status !== EgressStatus.EGRESS_ACTIVE) {
+            return "ignored";
+        }
 
         const egressInfo = event.egressInfo;
         if (!egressInfo?.egressId) {
@@ -417,11 +422,11 @@ export class LiveKitService {
     }
 
     private isForwardedEvent(eventName: WebhookEvent["event"]): eventName is ForwardedWebhookEvent {
-        return eventName === "egress_started" || eventName === "egress_ended";
+        return eventName === "egress_updated" || eventName === "egress_ended";
     }
 
     private toWebhookPhase(eventName: ForwardedWebhookEvent): RecordingWebhookPhase {
-        return eventName === "egress_started"
+        return eventName === "egress_updated"
             ? RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED
             : RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED;
     }
