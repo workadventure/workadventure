@@ -707,6 +707,23 @@ const chat: DeepPartial<Translation["chat"]> = {
         waitOtherDeviceConfirmation: "Warten auf die Bestätigung des anderen Geräts...",
         understood: "Verstanden",
         error: "Fehler während des Überprüfungsprozesses...",
+        emojiListLabel: "Zu vergleichende Emojis",
+        compareTitle: "Vergleichen Sie die Emojis",
+        waitForOtherDeviceHint:
+            "Öffnen Sie WorkAdventure dort, wo Sie bereits angemeldet sind. Die Anfrage wartet dort.",
+        youConfirmed: "Sie haben bestätigt, dass die Emojis übereinstimmen.",
+        verifiedTitle: "Gerät verifiziert",
+        verifiedHeading: "Verifizierung abgeschlossen",
+        verifiedThisDevice: "Ihre verschlüsselten Nachrichten sind jetzt auf diesem Gerät lesbar.",
+        verifiedOtherDevice: "Ihr anderes Gerät kann jetzt Ihre verschlüsselten Nachrichten lesen.",
+        failedTitle: "Verifizierung abgebrochen",
+        failedHeading: "Die Geräte konnten nicht verifiziert werden",
+        cancelledHeading: "Die Verifizierung wurde abgebrochen",
+        cancelled:
+            "Das andere Gerät hat abgelehnt oder nicht rechtzeitig geantwortet. Es wurde nichts als vertrauenswürdig markiert.",
+        tryAgain: "Erneut versuchen",
+        cancel: "Abbrechen",
+        close: "Schließen",
     },
     chooseDeviceVerificationMethodModal: {
         title: "Ihr Gerät überprüfen",
