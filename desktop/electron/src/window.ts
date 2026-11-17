@@ -651,15 +651,19 @@ function configureSession() {
 
 /** A link that leaves its page: the browser sign-in, a world, or the system browser for anything else. */
 function openLink(url: string) {
+    let opening: Promise<void>;
     if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
-        void openDesktopBrowserFlow(url);
+        opening = openDesktopBrowserFlow(url);
     } else if (opensInApp(url, getDesktopConfig())) {
         // A new tab, not loadDesktopTarget: that loads into the ACTIVE tab, so a link from a background
         // world would replace the world (and meeting) the user is looking at.
-        void openWorldTab(url);
+        opening = openWorldTab(url);
     } else {
-        void openExternal(url);
+        opening = openExternal(url);
     }
+    opening.catch((error) =>
+        ElectronLog.error(`Could not open the link "${stripSensitiveQueryParams(url) || url}".`, error)
+    );
 }
 
 function configureNavigationSecurity(webContents: Electron.WebContents) {
@@ -697,29 +701,21 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         adoptChildWindow(childWindow, frameName);
     });
 
+    // A world tab may move within its own server or to another world. Anything else goes where a link would.
     window.webContents.on("will-navigate", (event, url) => {
-        if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
+        const config = getDesktopConfig();
+        if (isAllowedDesktopBrowserFlowUrl(url, config) || !opensInApp(url, config, webContents.getURL())) {
             event.preventDefault();
-            void openDesktopBrowserFlow(url);
-            return;
-        }
-
-        if (!opensInApp(url, getDesktopConfig(), webContents.getURL())) {
-            event.preventDefault();
-            void openExternal(url);
+            openLink(url);
         }
     });
 
+    // A server's redirect may go to any page of a trusted server (a sign-in redirect is not a world).
     window.webContents.on("will-redirect", (event, url) => {
-        if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
+        const config = getDesktopConfig();
+        if (isAllowedDesktopBrowserFlowUrl(url, config) || shouldOpenExternally(url, config)) {
             event.preventDefault();
-            void openDesktopBrowserFlow(url);
-            return;
-        }
-
-        if (shouldOpenExternally(url, getDesktopConfig())) {
-            event.preventDefault();
-            void openExternal(url);
+            openLink(url);
         }
     });
 
