@@ -244,7 +244,7 @@
             .catch((err) => console.warn("landing.screenPermission.get rejected", err));
     }
 
-    void refreshWorlds();
+    refreshWorlds().catch((err) => console.warn("landing.refreshWorlds rejected", err));
 
     onMount(() => {
         // Ready for the email to be typed and Enter hit. Not while asking to add a server: the question

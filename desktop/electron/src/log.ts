@@ -28,7 +28,7 @@ function installRedactionHook() {
     });
 }
 
-function onError(e: Error) {
+export function onError(e: Error) {
     try {
         log.error(e);
 

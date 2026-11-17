@@ -67,7 +67,7 @@ async function init() {
     }
 
     autoUpdater.on("update-downloaded", ({ releaseNotes, releaseName }) => {
-        void (async () => {
+        (async () => {
             // Either may be missing, and the notes are a list when fullChangelog is on.
             const text = process.platform === "win32" ? releaseNotes : releaseName;
             const dialogOpts: MessageBoxOptions = {
@@ -89,7 +89,7 @@ async function init() {
                 // app.confirmedExitPrompt = true;
                 app.quit();
             }
-        })();
+        })().catch((error) => log.error("Could not install the downloaded update.", error));
     });
 
     // Our AppImage names carry the version, so installing an update moves the app to a new file.
@@ -124,7 +124,7 @@ async function init() {
 
     // run update check every hour again
     setInterval(() => {
-        void checkForUpdates();
+        checkForUpdates().catch((error) => log.warn("Auto-update check failed.", error));
     }, 1000 * 60 * 60);
 }
 

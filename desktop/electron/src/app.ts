@@ -100,7 +100,7 @@ async function init() {
         const target = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
         // re-create window if closed
-        void openDeepLinkTarget(target);
+        openDeepLinkTarget(target).catch((error) => ElectronLog.error("Could not open the deep link.", error));
 
         const mainWindow = getWindow();
 
@@ -120,7 +120,7 @@ async function init() {
         if (app.isReady()) {
             const target = pendingProtocolTarget;
             pendingProtocolTarget = undefined;
-            void openDeepLinkTarget(target);
+            openDeepLinkTarget(target).catch((error) => ElectronLog.error("Could not open the deep link.", error));
         }
     });
 
@@ -138,7 +138,7 @@ async function init() {
         // Not awaited: it ends on a network round-trip to the update feed, and at login the network
         // is often not up yet. Awaiting it here delayed the tray, the menu and the window by however
         // long that request took to fail.
-        void autoUpdater.init();
+        autoUpdater.init().catch((error) => ElectronLog.error("Could not start the auto-updater.", error));
 
         initStartAtLogin(turnOnStartAtLogin);
 
@@ -207,7 +207,7 @@ async function init() {
         // reveal an existing-but-hidden one: a hidden window still counts in getAllWindows(), so the
         // old length check made this a no-op and left the dock icon dead. createWindow() already
         // handles both cases — it shows and focuses the current window when one exists.
-        void createWindow();
+        createWindow().catch((error) => ElectronLog.error("Could not open the window.", error));
     });
 
     app.on("quit", () => {

@@ -548,7 +548,7 @@ export default () => {
         if (!isTabStripSender(event.sender)) {
             return;
         }
-        void openWorldTab();
+        openWorldTab().catch((error) => ElectronLog.error("Could not open a new tab.", error));
     });
     ipcMain.on("app:tabs:activate", (event, id: unknown) => {
         if (!isTabStripSender(event.sender) || typeof id !== "string") {
@@ -685,9 +685,7 @@ export default () => {
 
     ipcMain.on("app:windows:annotation-state", (event, state: unknown) => {
         if (!isFromMainRenderer(event)) return;
-        void setAnnotationState(event.sender, state).catch((error) =>
-            ElectronLog.warn("Annotation window failed", error)
-        );
+        setAnnotationState(event.sender, state).catch((error) => ElectronLog.warn("Annotation window failed", error));
     });
 
     // ---- Presenter meeting bar ----

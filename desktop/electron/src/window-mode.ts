@@ -78,7 +78,7 @@ export async function applyWindowModeAtStartup(): Promise<boolean> {
     if (action === "x11-failed") {
         ElectronLog.warn("The last start in compatibility mode (X11) failed: staying in Wayland mode.");
         settings.set("window_mode", "wayland");
-        void dialog
+        dialog
             .showMessageBox({
                 type: "warning",
                 message: t("windowMode.x11Failed"),
@@ -88,7 +88,8 @@ export async function applyWindowModeAtStartup(): Promise<boolean> {
             })
             .then(({ response }) => {
                 if (response === 0) openSettingsWindow();
-            });
+            })
+            .catch((error) => ElectronLog.error("Could not show the compatibility mode failure.", error));
     } else if (process.argv.includes(X11_RESTART_ARG)) {
         ElectronLog.info("Running in compatibility mode (X11).");
     }

@@ -1,4 +1,4 @@
-import type ElectronLog from "electron-log";
+import ElectronLog from "electron-log";
 import Settings from "electron-settings";
 import type { DesktopWindowMode } from "@workadventure/desktop-api";
 import type { MiniWindowPlacement } from "./mini-window-placement-policy";
@@ -111,7 +111,7 @@ function set<T extends keyof SettingsData>(key: T | SettingsData, value?: Settin
         Object.assign(settings, key);
     }
 
-    void Settings.set(settings);
+    Settings.set(settings).catch((error) => ElectronLog.error("Could not save the settings.", error));
 }
 
 /** Resolves once the settings are on disk: set() writes in the background. */

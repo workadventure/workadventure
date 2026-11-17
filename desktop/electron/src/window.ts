@@ -246,7 +246,9 @@ function scheduleReachWorldDeadline(startedAt: number) {
                 Date.now() - startedAt
             }ms since navigation).`
         );
-        void recoverToLandingWithError(t("landing.loadTimeout"));
+        recoverToLandingWithError(t("landing.loadTimeout")).catch((error) =>
+            ElectronLog.error("Could not go back to the Landing.", error)
+        );
     }, REACH_WORLD_TIMEOUT_MS);
 }
 
@@ -294,7 +296,7 @@ function refreshRendererViewport(reason: string) {
         if (!contents) {
             return;
         }
-        void contents
+        contents
             .executeJavaScript(
                 `requestAnimationFrame(() => {
                     window.dispatchEvent(new Event("resize"));
@@ -563,7 +565,9 @@ function ensureDesktopCallbackServer(): Promise<string> {
             bringAppToFront();
             const config = getDesktopConfig();
             const safeTarget = targetUrl && isAllowedNavigationUrl(targetUrl, config) ? targetUrl : config.portalUrl;
-            void loadDesktopTarget(safeTarget);
+            loadDesktopTarget(safeTarget).catch((error) =>
+                ElectronLog.error("Could not open the page after signing out.", error)
+            );
             maybeStopDesktopCallbackServer();
             return;
         }
@@ -584,9 +588,9 @@ function ensureDesktopCallbackServer(): Promise<string> {
         response.end(createDesktopCallbackPage(t("auth.signedIn"), t("auth.closeWindow"), nativeLocale()));
 
         bringAppToFront();
-        void openDesktopAuthCallback({ origin: callbackOrigin, code, matrixLoginToken }).finally(
-            maybeStopDesktopCallbackServer
-        );
+        openDesktopAuthCallback({ origin: callbackOrigin, code, matrixLoginToken })
+            .finally(maybeStopDesktopCallbackServer)
+            .catch((error) => ElectronLog.error("Could not complete the desktop sign-in.", error));
     });
     desktopAuthCallbackServer = server;
 
@@ -718,7 +722,9 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
             ElectronLog.warn(`HTTP ${httpResponseCode} for "${stripSensitiveQueryParams(url) || url}".`);
             forgetLastRoomUrl(url);
             if (isActiveWorldContents(webContents)) {
-                void recoverToLandingWithError(t("landing.loadFailure"));
+                recoverToLandingWithError(t("landing.loadFailure")).catch((error) =>
+                    ElectronLog.error("Could not go back to the Landing.", error)
+                );
             }
             return;
         }
@@ -742,7 +748,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
             return;
         }
         if (url.endsWith(BACK_TO_LANDING) && isBrowserFlowPendingScreen(webContents)) {
-            void loadLandingPage();
+            loadLandingPage().catch((error) => ElectronLog.error("Could not load the Landing.", error));
             return;
         }
         rememberWorldUrl(url);
@@ -760,7 +766,9 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         // not throw the user out of the world they are in.
         // ponytail: the background tab keeps Chromium's error page until it is opened again.
         if (isActiveWorldContents(webContents)) {
-            void recoverToLandingWithError(t("landing.loadFailure"));
+            recoverToLandingWithError(t("landing.loadFailure")).catch((error) =>
+                ElectronLog.error("Could not go back to the Landing.", error)
+            );
         }
     });
 
