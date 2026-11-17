@@ -124,6 +124,25 @@ async function init() {
         }
     });
 
+    // F12 / Ctrl+Shift+I (and macOS's Cmd+Option+I) toggle the DevTools of the focused page, in every window:
+    // the floating windows are pages of their own, which the world's DevTools cannot inspect.
+    app.on("web-contents-created", (_event, contents) => {
+        contents.on("before-input-event", (event, input) => {
+            const devToolsKey =
+                input.key === "F12" ||
+                (input.code === "KeyI" && ((input.control && input.shift) || (input.meta && input.alt)));
+            if (input.type !== "keyDown" || !devToolsKey) {
+                return;
+            }
+            event.preventDefault();
+            if (contents.isDevToolsOpened()) {
+                contents.closeDevTools();
+            } else {
+                contents.openDevTools({ mode: "detach" });
+            }
+        });
+    });
+
     // This method will be called when Electron has finished loading
     await app.whenReady().then(async () => {
         const turnOnStartAtLogin = await settings.init();
