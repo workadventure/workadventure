@@ -46,10 +46,15 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "녹화가 진행 중입니다",
         },
         spacePicker: {
+            title: "녹화",
+            source: "녹화할 대상",
+            savedHint: "중지하면 내 녹화 목록에 저장됩니다.",
             megaphone: "메가폰 녹화",
             discussion: "토론 녹화",
             withMap: "동영상 레이아웃:",
             camerasOnly: "카메라만",
+            camerasOnlyHint:
+                "지도 없이 카메라만 녹화합니다. 녹화 중에는 연출할 수 없습니다: 프로듀서 패널, 레이아웃 및 확대/축소 변경이 없습니다.",
             layout: {
                 map: "지도 우선",
                 balanced: "균형",

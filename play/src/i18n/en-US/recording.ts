@@ -45,10 +45,15 @@ const recording: BaseTranslation = {
             inProgress: "A recording is in progress",
         },
         spacePicker: {
+            title: "Record",
+            source: "What to record",
+            savedHint: "Saved in your recordings when you stop.",
             megaphone: "Record megaphone",
             discussion: "Record discussion",
             withMap: "Layout of the video:",
             camerasOnly: "Cameras only",
+            camerasOnlyHint:
+                "Only the cameras, without the map. This video can't be directed while recording: no producer panel, no layout or zoom changes.",
             layout: {
                 map: "Map first",
                 balanced: "Balanced",

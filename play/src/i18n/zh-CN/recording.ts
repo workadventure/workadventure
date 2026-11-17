@@ -46,10 +46,14 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "录制正在进行中",
         },
         spacePicker: {
+            title: "录制",
+            source: "录制内容",
+            savedHint: "停止后保存到你的录制列表。",
             megaphone: "录制扩音器",
             discussion: "录制讨论",
             withMap: "视频布局：",
             camerasOnly: "仅摄像头",
+            camerasOnlyHint: "仅摄像头，不含地图。录制期间无法导播：没有导播面板，也不能更改布局或缩放。",
             layout: {
                 map: "地图优先",
                 balanced: "均衡",

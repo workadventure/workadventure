@@ -8,7 +8,13 @@
         orderedStreamableCollectionStore,
     } from "../Stores/OrderedStreamableCollectionStore";
     import { windowSize } from "../Stores/CoWebsiteStore";
-    import { recorderLayoutModeStore, recorderMapRectStore, recorderPinsStore } from "../Utils/RecorderMode";
+    import {
+        recorderLastCommandStore,
+        recorderLayoutModeStore,
+        recorderMapRectStore,
+        recorderPinsStore,
+    } from "../Utils/RecorderMode";
+    import { LL } from "../../i18n/i18n-svelte";
     import { computeRecorderLayout, pinnedFirst, RECORDER_MAX_TILES } from "../Utils/RecorderLayout";
     import { pipGridTemplateColumns } from "./Video/PictureInPicture/pictureInPictureGridLayout";
     import VideoBox from "./Video/VideoBox.svelte";
@@ -41,6 +47,17 @@
         if (JSON.stringify(current) !== JSON.stringify(map)) recorderMapRectStore.set(map);
     });
     onDestroy(() => recorderMapRectStore.set(undefined));
+
+    // ponytail: shown in the video to check the producer's commands arrive; drop it once the recorder is trusted.
+    const COMMAND_SHOWN_MS = 5000;
+    let shownCommand = $state<typeof $recorderLastCommandStore>(undefined);
+    $effect(() => {
+        const command = $recorderLastCommandStore;
+        shownCommand = command;
+        if (!command) return;
+        const timeout = setTimeout(() => (shownCommand = undefined), COMMAND_SHOWN_MS);
+        return () => clearTimeout(timeout);
+    });
 </script>
 
 <!-- What the egress films in ?recorder mode: the map and the camera tiles, laid out by the recording's mode. -->
@@ -71,6 +88,22 @@
                 .slice(0, 3)
                 .map((box) => box.spaceUser.name)
                 .join(", ")}{hidden.length > 3 ? "…" : ""}
+        </span>
+    {/if}
+    {#if shownCommand}
+        {@const { production, receivedAt } = shownCommand}
+        <span
+            class="absolute bottom-2 end-2 rounded-lg bg-contrast/90 px-3 py-1 text-sm font-semibold text-white"
+            data-testid="recorder-last-command"
+        >
+            {receivedAt.toLocaleTimeString()} ·
+            {$LL.recording.actionbar.spacePicker.layout[production.layout]()} ·
+            {production.frame
+                ? $LL.recording.actionbar.producer.frameMyView()
+                : `${$LL.recording.actionbar.producer.zoomLevel[production.zoom]()} · ${$LL.recording.actionbar.producer.follow()}`}
+            {#if production.pins.length > 0}
+                · {$LL.recording.actionbar.producer.pin()} ×{production.pins.length}
+            {/if}
         </span>
     {/if}
     {#each [...$streamableCollectionStore.values()] as videoBox (videoBox.uniqueId)}

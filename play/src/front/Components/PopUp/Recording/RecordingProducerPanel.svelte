@@ -70,14 +70,19 @@
     <div class="flex flex-col gap-3 pt-2" data-testid="recording-producer-panel">
         <div class="flex flex-col gap-1">
             <span class={label}>{$LL.recording.actionbar.producer.preview()}</span>
-            <div class="rounded-md ring-2 ring-red-400/80" data-testid="recording-producer-preview">
+            <div
+                class="rounded-md ring-2 ring-red-400/80"
+                data-testid="recording-producer-preview"
+                role="img"
+                aria-label="{$LL.recording.actionbar.spacePicker.layout[production.layout]()}: {filmed.join(', ')}"
+            >
                 <RecorderLayoutPreview mode={production.layout} cameraCount={filmed.length} names={filmed} />
             </div>
         </div>
 
         <div class="flex flex-col gap-1">
             <span class={label}>{$LL.recording.actionbar.producer.layout()}</span>
-            <div class="grid grid-cols-3 gap-1.5">
+            <div class="grid grid-cols-3 gap-1.5" role="group" aria-label={$LL.recording.actionbar.producer.layout()}>
                 {#each RECORDER_LAYOUT_MODES as layout (layout)}
                     <button
                         type="button"
@@ -95,7 +100,11 @@
 
         <div class="flex flex-col gap-1">
             <span class={label}>{$LL.recording.actionbar.producer.zoom()}</span>
-            <div class="flex gap-1 rounded-md bg-black/25 p-1">
+            <div
+                class="flex gap-1 rounded-md bg-black/25 p-1"
+                role="group"
+                aria-label={$LL.recording.actionbar.producer.zoom()}
+            >
                 {#each ZOOMS as zoom (zoom)}
                     <button
                         type="button"
@@ -111,7 +120,11 @@
 
         <div class="flex flex-col gap-1">
             <span class={label}>{$LL.recording.actionbar.producer.framing()}</span>
-            <div class="flex gap-1 rounded-md bg-black/25 p-1">
+            <div
+                class="flex gap-1 rounded-md bg-black/25 p-1"
+                role="group"
+                aria-label={$LL.recording.actionbar.producer.framing()}
+            >
                 <button
                     type="button"
                     class={segment}
@@ -144,6 +157,7 @@
                                 ? 'border-white bg-white text-contrast'
                                 : 'border-white/25 text-white hover:bg-white/10'}"
                             aria-pressed={pinned}
+                            aria-label="{$LL.recording.actionbar.producer.pin()} {user.name}"
                             data-testid="recording-producer-pin"
                             onclick={() => togglePin(user.spaceUserId)}
                         >

@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import type { RecordingProduction } from "@workadventure/shared-utils";
 import { parseRecorderLayoutMode } from "./RecorderLayout";
 import type { Rect, RecorderLayoutMode } from "./RecorderLayout";
 
@@ -38,3 +39,11 @@ export const recorderPinsStore = writable<string[]>([]);
 
 /** Where RecorderLayout leaves the map: the game canvas is sized and placed there (see canvasSize). */
 export const recorderMapRectStore = writable<Rect | undefined>(undefined);
+
+/**
+ * The last direction the producer sent, and when the page received it: RecorderLayout shows it for a few seconds, so a
+ * recording tells whether a command arrived and when.
+ */
+export const recorderLastCommandStore = writable<{ production: RecordingProduction; receivedAt: Date } | undefined>(
+    undefined,
+);

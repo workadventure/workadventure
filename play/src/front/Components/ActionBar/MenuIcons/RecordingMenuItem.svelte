@@ -82,7 +82,11 @@
                         console.error(`Failed to apply recording action`, error);
                     });
                 },
-                onclose: closeSpacePicker,
+                onclose: (restoreFocus?: boolean) => {
+                    closeSpacePicker();
+                    // Not after a click: a focused button would keep the arrow keys from the game.
+                    if (restoreFocus) triggerElement?.querySelector("button")?.focus();
+                },
             },
             {
                 placement: "bottom",

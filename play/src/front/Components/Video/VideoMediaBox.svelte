@@ -380,7 +380,8 @@
 >
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
-            (fullScreen || effectiveStatus !== "connected"
+            // In the recording, a person without a camera gets a tile too: a bare Woka looks like a hole in the video.
+            (fullScreen || isRecorderMode || effectiveStatus !== "connected"
                 ? effectiveStatus === "connecting" || effectiveStatus === "reconnecting"
                     ? "bg-gray-700/80 backdrop-blur"
                     : "bg-contrast/80 backdrop-blur"

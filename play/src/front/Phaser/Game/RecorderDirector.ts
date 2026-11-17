@@ -3,7 +3,7 @@ import { get } from "svelte/store";
 import { getMegaphoneSpaceFields } from "../../Streaming/MegaphoneSpaceFields";
 import type { SpaceInterface } from "../../Space/SpaceInterface";
 import type { RoomConnection } from "../../Connection/RoomConnection";
-import { recorderLayoutModeStore, recorderPinsStore } from "../../Utils/RecorderMode";
+import { recorderLastCommandStore, recorderLayoutModeStore, recorderPinsStore } from "../../Utils/RecorderMode";
 import type { GameScene } from "./GameScene";
 
 // How often the camera checks whether the people it films moved.
@@ -33,6 +33,7 @@ export class RecorderDirector {
     private space: SpaceInterface | undefined;
     private interval: ReturnType<typeof setInterval> | undefined;
     private lastFrame = "";
+    private lastProduction = "";
     // Bubble switches run one after the other: a leave must not overtake the join it undoes.
     private switching: Promise<void> = Promise.resolve();
     private firstJoin: Promise<void> | undefined;
@@ -125,6 +126,11 @@ export class RecorderDirector {
         // What the person recording directs (the producer panel), read on each reframe: it shows within a second.
         const production = get(this.space.state.store).recording.production;
         if (production) {
+            const received = JSON.stringify(production);
+            if (received !== this.lastProduction) {
+                this.lastProduction = received;
+                recorderLastCommandStore.set({ production, receivedAt: new Date() });
+            }
             recorderLayoutModeStore.set(production.layout);
             if (get(recorderPinsStore).join() !== production.pins.join()) recorderPinsStore.set(production.pins);
         }

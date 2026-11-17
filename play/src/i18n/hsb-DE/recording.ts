@@ -46,10 +46,15 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Nagraće běži",
         },
         spacePicker: {
+            title: "Nahrać",
+            source: "Što nahrać",
+            savedHint: "Při skónčenju so we wašich nahrawkach składuje.",
             megaphone: "Megafon nagrać",
             discussion: "Diskusiju nagrać",
             withMap: "Wuhotowanje wideja:",
             camerasOnly: "Jenož kamery",
+            camerasOnlyHint:
+                "Jenož kamery, bjez karty. Tute widejo njeda so při nahrawanju wodźić: žadyn panel producenta, žane změny wuhotowanja abo zooma.",
             layout: {
                 map: "Najprjedy karta",
                 balanced: "Wurunane",

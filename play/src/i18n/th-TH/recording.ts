@@ -46,10 +46,15 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "กำลังบันทึกอยู่",
         },
         spacePicker: {
+            title: "บันทึก",
+            source: "สิ่งที่จะบันทึก",
+            savedHint: "บันทึกไว้ในรายการบันทึกของคุณเมื่อหยุด",
             megaphone: "บันทึกเมกะโฟน",
             discussion: "บันทึกการสนทนา",
             withMap: "เลย์เอาต์ของวิดีโอ:",
             camerasOnly: "กล้องเท่านั้น",
+            camerasOnlyHint:
+                "เฉพาะกล้อง ไม่มีแผนที่ วิดีโอนี้ควบคุมระหว่างบันทึกไม่ได้: ไม่มีแผงโปรดิวเซอร์ และเปลี่ยนเลย์เอาต์หรือการซูมไม่ได้",
             layout: {
                 map: "เน้นแผนที่",
                 balanced: "สมดุล",
