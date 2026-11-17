@@ -19,7 +19,7 @@ export type SettingsData = {
     last_room_url?: string;
     world_history: string[];
     pinned_worlds: string[];
-    /** Servers outside the built-in domains the user added from the Landing (origins). See origin-verification. */
+    /** Servers outside the built-in servers the user added from the Landing (origins). See origin-verification. */
     trusted_origins?: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "mini_window_toggle", string>;
     /** Set once the user edits a shortcut in the settings window: from then on a blank one was cleared. */
