@@ -4,7 +4,7 @@
     "desktopName": "workadventure.desktop",
     "version": "2.0.0-beta.4",
     "description": "Desktop application for WorkAdventure",
-    "author": "TheCodingMachine <hello@workadventu.re>",
+    "author": "WorkAdventure <hello@workadventu.re>",
     "homepage": "https://workadventu.re",
     "main": "dist/main.js",
     "license": "SEE LICENSE IN LICENSE.txt",

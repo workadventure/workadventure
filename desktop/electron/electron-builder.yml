@@ -97,7 +97,7 @@ mac:
 linux:
     icon: assets/icons/logo.png
     category: Network;InstantMessaging
-    maintainer: TheCodingMachine <hello@workadventu.re>
+    maintainer: WorkAdventure <hello@workadventu.re>
     target:
         # arm64 too, cross-built on the x64 runner: the app has no native module of its own. Both debs go
         # in the same APT index, where apt keeps the entries of its own architecture.
