@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.0.0-beta.4](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.3...desktop-v2.0.0-beta.4) (2026-11-17)
+
+
+### Features
+
+* **desktop:** open the DevTools of the mini window and the meeting bar ([7eddc97](https://github.com/workadventure/workadventure/commit/7eddc976b833b224aa7cf8f89aac51f3e9b89e58))
+
+
+### Bug Fixes
+
+* **desktop:** show the mini window over full-screen apps ([40c0122](https://github.com/workadventure/workadventure/commit/40c0122fcb6a919a3871e03beac003b8d8a8b543))
+* **desktop:** show the status WorkAdventure shows in the tray ([e0796bf](https://github.com/workadventure/workadventure/commit/e0796bf95b61e1bbf579925b635dd051452191af))
+* **desktop:** trust the hosted service by origin, like any other server ([cf2c622](https://github.com/workadventure/workadventure/commit/cf2c62274562b0c14a853b9f7815d72599d81ced))
+
 ## [2.0.0-beta.3](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.2...desktop-v2.0.0-beta.3) (2026-11-16)
 
 
