@@ -47,7 +47,8 @@ const recording: BaseTranslation = {
         spacePicker: {
             megaphone: "Record megaphone",
             discussion: "Record discussion",
-            withMap: "With the map:",
+            withMap: "Layout of the video:",
+            camerasOnly: "Cameras only",
             layout: {
                 map: "Map first",
                 balanced: "Balanced",
@@ -55,6 +56,7 @@ const recording: BaseTranslation = {
             },
         },
         producer: {
+            preview: "In the video now",
             layout: "Layout",
             zoom: "Zoom",
             zoomLevel: {

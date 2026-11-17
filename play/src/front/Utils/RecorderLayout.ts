@@ -6,7 +6,7 @@ import type { PipGridTile } from "../Components/Video/PictureInPicture/pictureIn
  * Where a recording over the map puts the map against the cameras:
  * - "map": the map takes the whole screen, zoomed out, with one row of up to 4 cameras over its top;
  * - "balanced": up to 8 cameras on top (2×2 up to 4), the map below;
- * - "cameras": up to 16 cameras in a mosaic, the map is its big 2×2 cell.
+ * - "cameras": up to 16 cameras in a mosaic filling the screen, the map is its big 2×2 cell.
  * Beyond the mode's tiles, the last people to have spoken get a tile and the others are named only.
  */
 export const RECORDER_LAYOUT_MODES = recordingLayoutSchema.options;
@@ -61,19 +61,14 @@ export function computeRecorderLayout(
     if (mode === "cameras") {
         const columns = Math.max(2, Math.ceil(Math.sqrt(n + 4)));
         const rows = Math.max(2, Math.ceil((n + 4) / columns));
-        // 16:9 cells, as big as the screen allows, centered.
-        const cellWidth = Math.min(
-            (width - GAP * (columns + 1)) / columns,
-            ((height - GAP * (rows + 1)) / rows) * (16 / 9),
-        );
-        const cellHeight = cellWidth * (9 / 16);
-        const gridWidth = columns * cellWidth + (columns - 1) * GAP;
-        const gridHeight = rows * cellHeight + (rows - 1) * GAP;
+        // The cells fill the screen: 16:9 cells would leave empty bands in the video for most camera counts.
+        const cellWidth = (width - GAP * (columns + 1)) / columns;
+        const cellHeight = (height - GAP * (rows + 1)) / rows;
         const grid = {
-            left: (width - gridWidth) / 2,
-            top: (height - gridHeight) / 2,
-            width: gridWidth,
-            height: gridHeight,
+            left: GAP,
+            top: GAP,
+            width: width - 2 * GAP,
+            height: height - 2 * GAP,
             columns,
             rows,
             cellWidth,

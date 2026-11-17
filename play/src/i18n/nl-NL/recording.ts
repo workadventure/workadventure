@@ -48,7 +48,8 @@ const recording: DeepPartial<Translation["recording"]> = {
         spacePicker: {
             megaphone: "Megafoon opnemen",
             discussion: "Discussie opnemen",
-            withMap: "Met de kaart:",
+            withMap: "Indeling van de video:",
+            camerasOnly: "Alleen camera's",
             layout: {
                 map: "Kaart eerst",
                 balanced: "Gebalanceerd",
@@ -56,6 +57,7 @@ const recording: DeepPartial<Translation["recording"]> = {
             },
         },
         producer: {
+            preview: "Nu in de video",
             layout: "Indeling",
             zoom: "Zoom",
             zoomLevel: {

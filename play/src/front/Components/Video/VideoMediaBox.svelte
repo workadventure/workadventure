@@ -30,6 +30,7 @@
     import AwayPausedOverlay from "./AwayPausedOverlay.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
+    import { isRecorderMode } from "../../Utils/RecorderMode";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import ScreenAnnotationOverlay from "./ScreenAnnotationOverlay.svelte";
@@ -504,7 +505,8 @@
                                         spaceUserId={raisedHandSpaceUserId}
                                         spaceName={raisedHandSpaceName}
                                     />
-                                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                                    <!-- Nobody clicks the recorder page: its user menus would only show in the video. -->
+                                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local" && !isRecorderMode}
                                         <div
                                             class="flex items-center justify-center picture-in-picture:hidden"
                                             bind:this={userMenuButton}

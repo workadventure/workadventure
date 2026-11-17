@@ -48,7 +48,8 @@ const recording: DeepPartial<Translation["recording"]> = {
         spacePicker: {
             megaphone: "บันทึกเมกะโฟน",
             discussion: "บันทึกการสนทนา",
-            withMap: "พร้อมแผนที่:",
+            withMap: "เลย์เอาต์ของวิดีโอ:",
+            camerasOnly: "กล้องเท่านั้น",
             layout: {
                 map: "เน้นแผนที่",
                 balanced: "สมดุล",
@@ -56,6 +57,7 @@ const recording: DeepPartial<Translation["recording"]> = {
             },
         },
         producer: {
+            preview: "ในวิดีโอตอนนี้",
             layout: "เลย์เอาต์",
             zoom: "ซูม",
             zoomLevel: {

@@ -6,6 +6,7 @@
     import { RECORDER_LAYOUT_MODES } from "../../../Utils/RecorderLayout";
     import type { RecorderLayoutMode } from "../../../Utils/RecorderLayout";
     import RecordingProducerPanel from "./RecordingProducerPanel.svelte";
+    import RecorderLayoutPreview from "./RecorderLayoutPreview.svelte";
 
     interface Props {
         rowsStore: Readable<RecordingSpaceRow[]>;
@@ -84,24 +85,30 @@
                     <RecordingProducerPanel space={row.space} />
                 {/if}
                 {#if row.action === "start" && withMapAvailable}
-                    <div class="flex flex-row flex-wrap items-center gap-1 pt-1">
-                        <span class="text-xs text-white/70">{$LL.recording.actionbar.spacePicker.withMap()}</span>
-                        {#each RECORDER_LAYOUT_MODES as layout (layout)}
+                    <!-- The layouts as miniatures of the video: one click starts the recording in it. -->
+                    <span class="pt-1 text-xs text-white/70">{$LL.recording.actionbar.spacePicker.withMap()}</span>
+                    <div class="grid grid-cols-4 gap-1.5">
+                        {#each [undefined, ...RECORDER_LAYOUT_MODES] as layout (layout ?? "none")}
                             <button
                                 type="button"
-                                data-testid="recording-space-action-start-with-map-{layout}"
-                                class="rounded border border-white/20 px-2 py-1 text-xs font-semibold text-white transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
+                                data-testid={layout
+                                    ? `recording-space-action-start-with-map-${layout}`
+                                    : getActionTestId(row)}
+                                class="flex flex-col gap-1 rounded-md border border-white/15 p-1 text-[11px] font-semibold leading-tight text-white transition-colors hover:border-secondary hover:bg-secondary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:opacity-50"
                                 disabled={row.disabled}
                                 onclick={() => handleSelect(row, layout)}
                             >
-                                {$LL.recording.actionbar.spacePicker.layout[layout]()}
+                                <RecorderLayoutPreview mode={layout} cameraCount={4} />
+                                {layout
+                                    ? $LL.recording.actionbar.spacePicker.layout[layout]()
+                                    : $LL.recording.actionbar.spacePicker.camerasOnly()}
                             </button>
                         {/each}
                     </div>
                 {/if}
             </div>
 
-            {#if row.action}
+            {#if row.action && !(row.action === "start" && withMapAvailable)}
                 <button
                     type="button"
                     data-testid={getActionTestId(row)}

@@ -48,7 +48,8 @@ const recording: DeepPartial<Translation["recording"]> = {
         spacePicker: {
             megaphone: "메가폰 녹화",
             discussion: "토론 녹화",
-            withMap: "지도와 함께:",
+            withMap: "동영상 레이아웃:",
+            camerasOnly: "카메라만",
             layout: {
                 map: "지도 우선",
                 balanced: "균형",
@@ -56,6 +57,7 @@ const recording: DeepPartial<Translation["recording"]> = {
             },
         },
         producer: {
+            preview: "현재 동영상",
             layout: "레이아웃",
             zoom: "확대/축소",
             zoomLevel: {

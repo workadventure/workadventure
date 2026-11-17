@@ -14,6 +14,7 @@ vi.mock("../../../src/i18n/i18n-svelte", async () => {
                 actionbar: {
                     spacePicker: { layout: { map: text("Map"), balanced: text("Balanced"), cameras: text("Cameras") } },
                     producer: {
+                        preview: text("In the video now"),
                         layout: text("Layout"),
                         zoom: text("Zoom"),
                         zoomLevel: { tight: text("Close"), wide: text("Wide"), whole: text("Whole") },
@@ -80,13 +81,15 @@ describe("recording producer panel", () => {
         click("[data-testid='recording-producer-zoom-whole']");
         click("[data-testid='recording-producer-pin']");
 
+        // Each change builds on the previous one, before the space state comes back with it.
         expect(setRecordingProduction.mock.calls.map((call) => call[0] as unknown)).toEqual([
             { ...production, layout: "cameras", pins: [] },
-            { ...production, zoom: "whole", pins: [] },
-            { ...production, pins: ["room_1"] },
+            { ...production, layout: "cameras", zoom: "whole", pins: [] },
+            { ...production, layout: "cameras", zoom: "whole", pins: ["room_1"] },
         ]);
+        flushSync();
         expect(
-            target.querySelector("[data-testid='recording-producer-layout-balanced']")?.getAttribute("aria-pressed"),
+            target.querySelector("[data-testid='recording-producer-layout-cameras']")?.getAttribute("aria-pressed"),
         ).toBe("true");
     });
 });

@@ -15,6 +15,7 @@ vi.mock("../../../src/i18n/i18n-svelte", async () => {
                     spacePicker: {
                         discussion: () => "Record discussion",
                         withMap: () => "With the map:",
+                        camerasOnly: () => "Cameras only",
                         layout: { map: () => "Map first", balanced: () => "Balanced", cameras: () => "Cameras first" },
                     },
                 },

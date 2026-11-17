@@ -42,6 +42,16 @@ describe("computeRecorderLayout", () => {
         expect(computeRecorderLayout("cameras", 16, W, H).grid).toMatchObject({ columns: 5, rows: 4 });
     });
 
+    it("fills the whole video in the cameras mode, without empty bands", () => {
+        for (const count of [1, 2, 5, 16]) {
+            const { grid } = computeRecorderLayout("cameras", count, W, H);
+            expect(grid.left).toBe(8);
+            expect(grid.top).toBe(8);
+            expect(grid.width).toBe(W - 16);
+            expect(grid.height).toBe(H - 16);
+        }
+    });
+
     it("falls back to the balanced mode on an unknown value", () => {
         expect(parseRecorderLayoutMode("cameras")).toBe("cameras");
         expect(parseRecorderLayoutMode("whatever")).toBe("balanced");
