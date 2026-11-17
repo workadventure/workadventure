@@ -643,7 +643,7 @@
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
             <div
-                class="w-full h-8 flex items-center gap-2 px-3 border-0 border-t border-solid border-white/10 bg-white/5 text-white"
+                class="w-full h-8 flex items-center gap-2 ps-3 pe-2 border-0 border-t border-solid border-white/10 bg-white/5 text-white"
                 role="status"
             >
                 <IconCloudLock class="text-white/70 shrink-0" font-size="16" />
@@ -652,6 +652,7 @@
                     variant="light"
                     appearance="border"
                     size="xs"
+                    class="h-6 !py-0 !px-2 shrink-0"
                     dataTestId="restoreEncryptionButton"
                     onclick={(event: MouseEvent) => {
                         event.stopPropagation();
