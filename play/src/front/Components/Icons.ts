@@ -40,6 +40,8 @@ export { default as IconMoreVertical } from "~icons/tabler/dots-vertical";
 export { default as IconDots } from "~icons/tabler/dots";
 export { default as IconGripVertical } from "~icons/tabler/grip-vertical";
 export { default as IconDeviceDesktopUp } from "~icons/tabler/device-desktop-up";
+export { default as IconDeviceDesktop } from "~icons/tabler/device-desktop";
+export { default as IconDevices } from "~icons/tabler/devices";
 export { default as IconDeviceComputerCamera } from "~icons/tabler/device-computer-camera";
 export { default as IconShield } from "~icons/tabler/shield";
 export { default as IconShieldCheck } from "~icons/tabler/shield-check";

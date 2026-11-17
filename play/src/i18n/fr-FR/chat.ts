@@ -606,7 +606,7 @@ const chat: DeepPartial<Translation["chat"]> = {
     },
     e2ee: {
         configure: "Configurer",
-        encryptionNotConfigured: "Chiffrement non configuré",
+        encryptionNotConfigured: "Messages chiffrés verrouillés",
         createRecoveryKey: {
             title: "Création d'une clé de récupération",
             description:
@@ -720,16 +720,27 @@ const chat: DeepPartial<Translation["chat"]> = {
         close: "Fermer",
     },
     chooseDeviceVerificationMethodModal: {
-        title: "Vérifier votre appareil",
-        description: "Choisir la méthode de vérification",
-        withOtherDevice: "Vérifier avec un autre appareil",
-        withPassphrase: "Vérifier avec la phrase de sécurité",
+        title: "Vérifier cet appareil",
+        description:
+            "Vos messages chiffrés restent verrouillés sur un nouvel appareil tant que vous n’avez pas prouvé que c’est vous.",
+        withOtherDevice: "Utiliser un autre appareil",
+        withPassphrase: "Utiliser votre phrase secrète",
+        withOtherDeviceDescription: "Comparez des émojis avec un appareil où vous êtes déjà connecté.",
+        withPassphraseDescription: "Ou votre clé de récupération, si vous l’avez gardée.",
+        notNow: "Plus tard",
     },
     askStartVerificationModal: {
-        title: "Vérification requise",
-        accept: "Vérifier la session",
+        title: "Vérifier une nouvelle connexion ?",
+        accept: "Lancer la vérification",
         ignore: "Ignorer",
-        from: "depuis",
+        description: "Une nouvelle session de votre compte demande à être approuvée :",
+        unknownDevice: "Appareil inconnu",
+        deviceId: "ID {id}",
+        ipAddress: "IP {ip}",
+        notYou: "Ce n’est pas vous ? Ignorez cette demande et changez votre mot de passe.",
+        startFailed: "La vérification n’a pas pu démarrer. Relancez-la depuis votre autre appareil.",
+        cancelled: "L’autre appareil a annulé la vérification.",
+        close: "Fermer",
     },
     requiresLoginForChat: "Identifiez-vous pour accéder aux messages du chat",
     emojis: {
