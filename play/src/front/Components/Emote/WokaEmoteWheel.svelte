@@ -19,8 +19,6 @@
     const INNER_RADIUS = 52;
     /** Room around the ring for the family names. */
     const LABEL_MARGIN = 22;
-    /** Below this, a press on the shortcut is a tap that leaves the wheel open rather than a hold. */
-    const HOLD_THRESHOLD = 250;
     // "e" toggles the map editor; "g" for gesture is free in both keyboard layouts.
     const SHORTCUT = "g";
     /** One key per slice, matched on the physical key so they work on AZERTY without Shift. */
@@ -38,7 +36,8 @@
 
     let selected: number | null = $state(null);
     let wheelElement: HTMLElement | undefined = $state(undefined);
-    let openedWithShortcutAt: number | null = null;
+    /** Opened by holding G: releasing it is the choice. Opened from the emoji bar, it waits for a click. */
+    let openedWithShortcut = $state(false);
     /** Where the Woka sits on screen. Undefined until the first frame, or when there is no scene. */
     let anchor: { x: number; y: number } | undefined = $state(undefined);
     let trackingFrame: number | undefined;
@@ -122,7 +121,7 @@
     // up in the middle of the screen with every slice still collapsed on the centre.
     $effect(() => {
         if (!$wokaEmoteWheelVisibleStore) {
-            openedWithShortcutAt = null;
+            openedWithShortcut = false;
             selected = null;
             deployed = false;
             stopTracking();
@@ -137,7 +136,7 @@
     });
 
     function open(withShortcut: boolean): void {
-        openedWithShortcutAt = withShortcut ? Date.now() : null;
+        openedWithShortcut = withShortcut;
         wokaEmoteWheelVisibleStore.set(true);
     }
 
@@ -214,12 +213,10 @@
     }
 
     function onWindowKeyUp(event: KeyboardEvent): void {
-        if (event.key.toLowerCase() !== SHORTCUT || openedWithShortcutAt === null) return;
-        // A quick tap leaves the wheel open to be clicked; holding it makes the release the choice.
-        if (Date.now() - openedWithShortcutAt >= HOLD_THRESHOLD) {
-            play(selected);
-        }
-        openedWithShortcutAt = null;
+        if (event.key.toLowerCase() !== SHORTCUT || !openedWithShortcut) return;
+        // Released on a slice it plays it; released anywhere else, even mid-opening, it closes.
+        play(selected);
+        openedWithShortcut = false;
     }
 </script>
 
@@ -325,7 +322,8 @@
                     {#if selected === null}
                         {$LL.actionbar.wokaEmote.hint()}
                     {:else}
-                        <b class="text-white">{items[selected].label}</b> · {$LL.actionbar.wokaEmote.release()}
+                        <b class="text-white">{items[selected].label}</b>
+                        {#if openedWithShortcut}· {$LL.actionbar.wokaEmote.release()}{/if}
                     {/if}
                 </div>
             </div>
