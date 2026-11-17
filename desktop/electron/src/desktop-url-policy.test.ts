@@ -19,7 +19,6 @@ import {
     normalizePersistedWorldHistory,
     normalizePersistedPortalUrl,
     redactSensitiveString,
-    resolveInitialTarget,
     stripSensitiveQueryParams,
     validateDesktopNavigationUrl,
 } from "./desktop-url-policy";
@@ -44,7 +43,7 @@ function withNodeEnv(value: string | undefined, fn: () => void): void {
 
 test("trusts servers by origin, never a whole domain", () => {
     const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
+        portalUrl: "https://admin.workadventu.re",
         allowedOrigins: [],
     });
 
@@ -53,29 +52,6 @@ test("trusts servers by origin, never a whole domain", () => {
     expect(isAllowedNavigationUrl("https://maps.workadventure.fr/some-map.json", config)).toBe(false);
     expect(isAllowedNavigationUrl("https://workadventu.re.evil.test/@/team/world/room", config)).toBe(false);
     expect(isAllowedNavigationUrl("javascript:alert(1)", config)).toBe(false);
-});
-
-test("resolves launch target from deep link, then last room, then portal", () => {
-    const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
-        allowedOrigins: [],
-    });
-
-    expect(
-        resolveInitialTarget(config, {
-            pendingDeepLinkUrl: "https://play.workadventu.re/@/deep/world/room",
-            lastRoomUrl: "https://play.workadventu.re/@/last/world/room",
-        })
-    ).toBe("https://play.workadventu.re/@/deep/world/room");
-
-    expect(
-        resolveInitialTarget(config, {
-            pendingDeepLinkUrl: "https://evil.test/@/deep/world/room",
-            lastRoomUrl: "https://play.workadventu.re/@/last/world/room",
-        })
-    ).toBe("https://play.workadventu.re/@/last/world/room");
-
-    expect(resolveInitialTarget(config, {})).toBe("https://play.workadventu.re/");
 });
 
 test("validates and normalizes world URLs entered in the desktop navigation UI", () => {
@@ -124,7 +100,7 @@ test("uses the hosted admin portal by default in production, the local one in de
         const config = createDesktopConfig({});
 
         expect(config.portalUrl).toBe("https://admin.workadventu.re/");
-        expect(config.allowedOrigins).toStrictEqual(["https://admin.workadventu.re", "https://play.workadventu.re"]);
+        expect(config.allowedOrigins).toStrictEqual(["https://play.workadventu.re"]);
     });
 });
 
@@ -149,10 +125,31 @@ test("trusts the local stack only in development", () => {
     });
 });
 
+test("never opens the administration in the app, even when its origin is allowed", () => {
+    withNodeEnv("production", () => {
+        const page = "https://admin.workadventu.re/admin/world";
+        expect(isAllowedNavigationUrl(page, createDesktopConfig({}))).toBe(false);
+        expect(
+            isAllowedNavigationUrl(
+                page,
+                createDesktopConfig({ WA_DESKTOP_ALLOWED_ORIGINS: "https://admin.workadventu.re" })
+            )
+        ).toBe(false);
+        expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", createDesktopConfig({}))).toBe(
+            true
+        );
+    });
+    withNodeEnv("development", () => {
+        const config = createDesktopConfig({});
+        expect(isAllowedNavigationUrl("http://admin.workadventure.localhost/admin/world", config)).toBe(false);
+        expect(isAllowedNavigationUrl("http://play.workadventure.localhost/_/global/maps", config)).toBe(true);
+    });
+});
+
 test("blocks http:// outside development for non-loopback hosts", () => {
     withNodeEnv("production", () => {
         const config = createDesktopConfig({
-            portalUrl: "https://play.workadventu.re",
+            portalUrl: "https://admin.workadventu.re",
         });
         expect(isAllowedNavigationUrl("http://play.workadventu.re/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
@@ -305,7 +302,7 @@ test("adds a loopback callback URL to desktop logout URLs", () => {
 
 test("the browser flow screen goes back to the world the user signed in or out from, else to the Landing", () => {
     const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
+        portalUrl: "https://admin.workadventu.re",
         allowedOrigins: [],
     });
     const world = "https://play.workadventu.re/@/team/world/room";

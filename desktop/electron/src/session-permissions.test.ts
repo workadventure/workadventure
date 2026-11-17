@@ -12,7 +12,10 @@ type PermissionHandler = (
 
 function permissions() {
     let request: PermissionHandler | undefined;
-    let config = createDesktopConfig({ portalUrl: "https://play.example.org" });
+    let config = createDesktopConfig({
+        portalUrl: "https://admin.example.org",
+        allowedOrigins: ["https://play.example.org"],
+    });
     configureSessionPermissions(
         {
             setPermissionRequestHandler: (handler) => {
