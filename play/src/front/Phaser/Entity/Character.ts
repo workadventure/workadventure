@@ -640,7 +640,7 @@ export abstract class Character extends Container implements OutlineableInterfac
      * Plays an animated emote: the Woka itself performs it, as opposed to playEmote() which only
      * shows an emoji above its head. Some emotes use both.
      */
-    playWokaEmote(emoteId: WokaEmoteId): void {
+    playWokaEmote(emoteId: WokaEmoteId, { silent = false }: { silent?: boolean } = {}): void {
         this.stopWokaEmote();
         const definition = getWokaEmote(emoteId);
         // The bubble is the fallback for emotes with nothing floating off them; showing both would
@@ -650,7 +650,8 @@ export abstract class Character extends Container implements OutlineableInterfac
         }
         this.wokaEmote = new WokaEmoteAnimator(this.scene, this.sprites, this, definition, () => this.stopWokaEmote());
         this.wokaEmote.start();
-        if (definition.sound) {
+        // A preview sweeping across the wheel would fire a sound per slice.
+        if (definition.sound && !silent) {
             this.playWokaEmoteSound(definition.sound);
         }
     }

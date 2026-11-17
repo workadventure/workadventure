@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { WOKA_EMOTE_IDS } from "@workadventure/shared-utils";
 import {
     WOKA_EMOTES,
+    WOKA_EMOTE_FAMILIES,
     WOKA_EMOTE_SOUND_PATH,
     WOKA_EMOTE_SOUND_RANGE,
     WOKA_EMOTE_SOUND_VOLUME,
@@ -234,5 +235,14 @@ describe("the sounds", () => {
             if (!definition.sound) continue;
             expect(definition.sound.at ?? 0).toBeLessThan(definition.duration);
         }
+    });
+});
+
+describe("families", () => {
+    it("keeps each family in one arc of the wheel, in the order they are declared", () => {
+        const order = WOKA_EMOTES.map((emote) => emote.family).filter(
+            (family, index, all) => index === 0 || all[index - 1] !== family,
+        );
+        expect(order).toEqual([...WOKA_EMOTE_FAMILIES]);
     });
 });

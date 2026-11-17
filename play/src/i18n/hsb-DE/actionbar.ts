@@ -238,6 +238,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "Emotes",
         wheelTitle: "Koleso emotow",
         hint: "Wubjerće emote",
+        all: "Wšě",
+        release: "pušćić za wothraće",
+        favorites: "Twój Woka",
+        pin: "Připjeć",
+        donePinning: "Hotowe",
+        families: {
+            react: "Reagować",
+            move: "Hibać so",
+            status: "Status",
+        },
         names: {
             jump: "Skok",
             spin: "Wobrót",

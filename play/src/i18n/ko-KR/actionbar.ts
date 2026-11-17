@@ -238,6 +238,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "이모트",
         wheelTitle: "이모트 휠",
         hint: "이모트를 선택하세요",
+        all: "전체",
+        release: "놓으면 재생",
+        favorites: "내 Woka",
+        pin: "고정",
+        donePinning: "완료",
+        families: {
+            react: "반응",
+            move: "움직임",
+            status: "상태",
+        },
         names: {
             jump: "점프",
             spin: "회전",

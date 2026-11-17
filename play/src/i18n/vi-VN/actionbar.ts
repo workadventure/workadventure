@@ -237,6 +237,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "Biểu cảm",
         wheelTitle: "Vòng biểu cảm",
         hint: "Chọn một biểu cảm",
+        all: "Tất cả",
+        release: "thả ra để phát",
+        favorites: "Woka của bạn",
+        pin: "Ghim",
+        donePinning: "Xong",
+        families: {
+            react: "Phản ứng",
+            move: "Chuyển động",
+            status: "Trạng thái",
+        },
         names: {
             jump: "Nhảy",
             spin: "Xoay vòng",

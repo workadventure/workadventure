@@ -89,7 +89,7 @@ import { emoteStore } from "../../Stores/EmoteStore";
 import { isHandRaisedStore, requestedHandRaiseState } from "../../Stores/RaiseHandStore";
 import { raisedHandPlayerIdsStore } from "../../Stores/RaisedHandsStore";
 import { isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
-import { wokaEmoteStore } from "../../Stores/WokaEmoteStore";
+import { wokaEmotePreviewStore, wokaEmoteStore } from "../../Stores/WokaEmoteStore";
 import {
     jitsiParticipantsCountStore,
     userIsAdminStore,
@@ -2819,6 +2819,21 @@ export class GameScene extends DirtyScene {
                     // instead of dropping the emote for everyone but us.
                     this.connection?.emitWokaEmoteEvent(wokaEmoteId, definition.bubble ?? definition.icon);
                     wokaEmoteStore.set(null);
+                }
+            }),
+        );
+
+        // Aiming at a slice of the wheel plays it on our own Woka only. Moving off it stops the
+        // preview, but never an emote played for real, which may be running when the wheel opens.
+        let previewing = false;
+        this.unsubscribers.push(
+            wokaEmotePreviewStore.subscribe((wokaEmoteId) => {
+                if (wokaEmoteId) {
+                    this.CurrentPlayer?.playWokaEmote(wokaEmoteId, { silent: true });
+                    previewing = true;
+                } else if (previewing) {
+                    this.CurrentPlayer?.stopWokaEmote();
+                    previewing = false;
                 }
             }),
         );

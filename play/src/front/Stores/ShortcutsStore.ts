@@ -1,7 +1,7 @@
 import { derived, get, writable } from "svelte/store";
 import { z } from "zod";
 
-// Shortcuts the user can rebind. Moving, running, interacting, the say/think bubbles and the emotes stay fixed:
+// Shortcuts the user can rebind. Moving, running, interacting, the say/think bubbles and the emotes (and their wheel, G) stay fixed:
 // Phaser polls the movement keys every frame and Space/Enter have listeners of their own.
 export const editableShortcutActions = [
     "walkMyDesk",
@@ -120,7 +120,7 @@ export function findShortcutAction(event: KeyboardEvent): ShortcutAction | undef
     });
 }
 
-export type FixedShortcut = "walk" | "interact" | "openSayPopup" | "openThinkPopup" | "sendEmote";
+export type FixedShortcut = "walk" | "interact" | "openSayPopup" | "openThinkPopup" | "sendEmote" | "wokaEmoteWheel";
 
 const movementCodes = [
     "KeyW",
@@ -145,6 +145,8 @@ export function fixedShortcutFor(binding: KeyBinding): FixedShortcut | undefined
     if (movementCodes.includes(binding.code)) return "walk";
     if (binding.code === "Space") return "interact";
     if (emoteCodes.includes(binding.code)) return "sendEmote";
+    // Held rather than pressed, so it cannot share a code with an action that fires on keydown.
+    if (binding.code === "KeyG") return "wokaEmoteWheel";
     return undefined;
 }
 

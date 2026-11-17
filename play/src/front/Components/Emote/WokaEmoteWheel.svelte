@@ -2,23 +2,30 @@
     import { onDestroy } from "svelte";
     import { fade } from "svelte/transition";
     import LL from "../../../i18n/i18n-svelte";
-    import { WOKA_EMOTES } from "../../Phaser/Game/Emote/WokaEmoteCatalog";
-    import { wheelSliceAt, wheelSlicePosition } from "../../Phaser/Game/Emote/WokaEmoteGeometry";
+    import { WOKA_EMOTE_FAMILIES, WOKA_EMOTES } from "../../Phaser/Game/Emote/WokaEmoteCatalog";
+    import { wheelSectorPath, wheelSliceAt, wheelSlicePosition } from "../../Phaser/Game/Emote/WokaEmoteGeometry";
     import { enableUserInputsStore } from "../../Stores/UserInputStore";
-    import { playWokaEmote, wokaEmoteWheelVisibleStore } from "../../Stores/WokaEmoteStore";
+    import { playWokaEmote, wokaEmotePreviewStore, wokaEmoteWheelVisibleStore } from "../../Stores/WokaEmoteStore";
     import { getCurrentPlayerScreenPosition } from "../../Utils/GameToBrowserCoordinates";
+    import { wokaEmoteFamilyColors, wokaEmoteIcons } from "./wokaEmoteIcons";
 
-    /** Distance from the centre to the middle of a slice, in pixels. */
-    // Twelve slices need more circumference than six: at the old radius the buttons overlapped.
-    const MAX_RADIUS = 148;
-    /** Never wider than the screen it opens on: a full wheel is ~2×(radius+48) across. */
-    const MIN_RADIUS = 84;
+    /** Outer edge of the ring, in pixels: the labels need room inside each slice. */
+    const MAX_RADIUS = 180;
+    /** Never wider than the screen it opens on. */
+    const MIN_RADIUS = 116;
     /** Inside this radius the pointer selects nothing, so the wheel can be dismissed by aiming at its centre. */
     const DEAD_ZONE = 48;
+    /** Inner edge of the ring: the Woka stands in the hole, previewing the emote being aimed at. */
+    const INNER_RADIUS = 52;
+    /** Room around the ring for the family names. */
+    const LABEL_MARGIN = 22;
     /** Below this, a press on the shortcut is a tap that leaves the wheel open rather than a hold. */
     const HOLD_THRESHOLD = 250;
     // "e" toggles the map editor; "g" for gesture is free in both keyboard layouts.
     const SHORTCUT = "g";
+    /** One key per slice, matched on the physical key so they work on AZERTY without Shift. */
+    const KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="];
+    const KEY_CODES = [...KEYS.slice(0, 10).map((key) => `Digit${key}`), "Minus", "Equal"];
 
     const EDGE_MARGIN = 8;
     /** Grown or shrunk to fit the viewport; recomputed on every tracking frame, so it follows resizes. */
@@ -26,7 +33,7 @@
 
     function fittingRadius(): number {
         const smallestSide = Math.min(window.innerWidth, window.innerHeight);
-        return Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, smallestSide / 2 - 64));
+        return Math.max(MIN_RADIUS, Math.min(MAX_RADIUS, smallestSide / 2 - LABEL_MARGIN - 16));
     }
 
     let selected: number | null = $state(null);
@@ -43,7 +50,7 @@
     // both cases, so it is anchored to the Woka itself and clamped to stay fully on screen.
     function trackWoka(): void {
         radius = fittingRadius();
-        const halfFootprint = radius + 48;
+        const halfFootprint = radius + LABEL_MARGIN;
         const position = getCurrentPlayerScreenPosition();
         anchor = position
             ? {
@@ -79,22 +86,36 @@
     const items = $derived(
         WOKA_EMOTES.map((definition) => ({
             definition,
-            label: {
-                jump: $LL.actionbar.wokaEmote.names.jump(),
-                spin: $LL.actionbar.wokaEmote.names.spin(),
-                dance: $LL.actionbar.wokaEmote.names.dance(),
-                nod: $LL.actionbar.wokaEmote.names.nod(),
-                question: $LL.actionbar.wokaEmote.names.question(),
-                laugh: $LL.actionbar.wokaEmote.names.laugh(),
-                moonwalk: $LL.actionbar.wokaEmote.names.moonwalk(),
-                runInPlace: $LL.actionbar.wokaEmote.names.runInPlace(),
-                celebrate: $LL.actionbar.wokaEmote.names.celebrate(),
-                nope: $LL.actionbar.wokaEmote.names.nope(),
-                love: $LL.actionbar.wokaEmote.names.love(),
-                afk: $LL.actionbar.wokaEmote.names.afk(),
-            }[definition.id],
+            label: $LL.actionbar.wokaEmote.names[definition.id](),
         })),
     );
+
+    /**
+     * Room for a label inside a slice, along the arc at the middle of the ring. Long names ("Auf der
+     * Stelle laufen") wrap, and are hyphenated if a single word is too wide; when even that does not fit, on a small screen, the slices
+     * show their icon only and the name is read in the caption under the ring.
+     */
+    /** Content sits past the middle of the ring, where a slice is wider. */
+    const contentRadius = $derived((INNER_RADIUS + radius) / 2 + 8);
+    const labelWidth = $derived(Math.floor((2 * Math.PI * contentRadius) / WOKA_EMOTES.length) - 6);
+    const showLabels = $derived(labelWidth >= 48);
+
+    const familyLabels = $derived({
+        react: $LL.actionbar.wokaEmote.families.react(),
+        move: $LL.actionbar.wokaEmote.families.move(),
+        status: $LL.actionbar.wokaEmote.families.status(),
+    });
+
+    /** Each family's name sits outside the ring, at the middle of its arc. */
+    const familyArcs = WOKA_EMOTE_FAMILIES.map((family) => {
+        const indexes = WOKA_EMOTES.flatMap((emote, index) => (emote.family === family ? [index] : []));
+        return { family, middle: (indexes[0] + indexes[indexes.length - 1]) / 2 };
+    });
+
+    // What is aimed at plays on our own Woka, in the hole of the ring, before anyone else sees it.
+    $effect(() => {
+        wokaEmotePreviewStore.set(selected === null ? null : WOKA_EMOTES[selected].id);
+    });
 
     // The wheel is opened from the action bar as well as from the shortcut, so the setup hangs off
     // the store rather than off a local open(). Opened from the button it used to skip this and end
@@ -183,11 +204,10 @@
                 play(selected);
                 break;
             default: {
-                // Only the first nine have a key that can be typed on its own.
-                const digit = Number(event.key);
-                if (Number.isInteger(digit) && digit >= 1 && digit <= Math.min(9, WOKA_EMOTES.length)) {
+                const index = KEY_CODES.indexOf(event.code);
+                if (index !== -1 && index < WOKA_EMOTES.length) {
                     event.preventDefault();
-                    play(digit - 1);
+                    play(index);
                 }
             }
         }
@@ -226,51 +246,88 @@
         >
             <div
                 bind:this={wheelElement}
-                class="relative"
-                style="width: {radius * 2 + 96}px; height: {radius * 2 + 96}px;"
+                class="relative transition-[transform,opacity] duration-200 ease-out"
+                style="width: {(radius + LABEL_MARGIN) * 2}px; height: {(radius + LABEL_MARGIN) * 2}px;
+                       transform: scale({deployed ? 1 : 0.4}); opacity: {deployed ? 1 : 0};"
             >
-                <!-- Under the ring, not in the middle of it: the middle is where the Woka stands. -->
-                <div
-                    class="absolute left-1/2 top-full -translate-x-1/2 -mt-1 whitespace-nowrap rounded-sm
-                           bg-contrast/80 px-2 py-1 text-center text-white/80 text-xs select-none"
+                <svg
+                    class="absolute inset-0 overflow-visible pointer-events-none"
+                    viewBox="{-(radius + LABEL_MARGIN)} {-(radius + LABEL_MARGIN)} {(radius + LABEL_MARGIN) *
+                        2} {(radius + LABEL_MARGIN) * 2}"
+                    aria-hidden="true"
                 >
-                    {selected === null ? $LL.actionbar.wokaEmote.hint() : items[selected].label}
-                </div>
+                    {#each items as item, index (item.definition.id)}
+                        {@const color = wokaEmoteFamilyColors[item.definition.family]}
+                        <path
+                            d={wheelSectorPath(index, WOKA_EMOTES.length, INNER_RADIUS, radius)}
+                            style="fill: {selected === index ? color : 'hsl(var(--contrast) / 0.85)'}"
+                            class="transition-[fill] duration-100"
+                        />
+                        <!-- The family's colour runs along the outer edge, so the arcs read at a glance. -->
+                        <path
+                            d={wheelSectorPath(index, WOKA_EMOTES.length, radius - 4, radius)}
+                            style="fill: {color}"
+                        />
+                    {/each}
+                    {#each familyArcs as arc (arc.family)}
+                        {@const position = wheelSlicePosition(arc.middle, WOKA_EMOTES.length, radius + 12)}
+                        <text
+                            x={position.x}
+                            y={position.y + 4}
+                            text-anchor={position.x > 1 ? "start" : position.x < -1 ? "end" : "middle"}
+                            class="text-[11px] font-bold uppercase tracking-wide"
+                            fill="white"
+                            style="stroke: {wokaEmoteFamilyColors[arc.family]}"
+                            stroke-width="4"
+                            paint-order="stroke"
+                        >
+                            {familyLabels[arc.family]}
+                        </text>
+                    {/each}
+                </svg>
 
                 {#each items as item, index (item.definition.id)}
-                    {@const position = wheelSlicePosition(index, WOKA_EMOTES.length, radius)}
-                    <!-- The slice travels out of the Woka rather than appearing around it. -->
-                    <div
-                        class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                        style="margin-left: {deployed ? position.x : 0}px; margin-top: {deployed
-                            ? position.y
-                            : 0}px; opacity: {deployed ? 1 : 0}; transition: margin 260ms
-                            cubic-bezier(0.2, 0.9, 0.3, 1) {index * 25}ms, opacity 180ms linear {index * 25}ms;"
+                    {@const position = wheelSlicePosition(index, WOKA_EMOTES.length, contentRadius)}
+                    {@const Icon = wokaEmoteIcons[item.definition.id]}
+                    <button
+                        type="button"
+                        class="absolute left-1/2 top-1/2 flex flex-col items-center gap-0.5 text-white select-none
+                               transition-transform duration-100 {selected === index ? 'scale-110' : ''}"
+                        style="width: {labelWidth}px; transform: translate(calc(-50% + {position.x}px), calc(-50% +
+                            {position.y}px));"
+                        data-testid="woka-emote-{item.definition.id}"
+                        aria-label={item.label}
+                        aria-pressed={selected === index}
+                        onmouseenter={() => (selected = index)}
+                        onfocus={() => (selected = index)}
+                        onclick={(event) => {
+                            event.stopPropagation();
+                            play(index);
+                        }}
                     >
-                        <button
-                            type="button"
-                            class="flex h-14 w-14 flex-col items-center justify-center gap-0.5 rounded-full border
-                           transition-colors duration-150 pointer-events-auto
-                           {selected === index
-                                ? 'border-white bg-secondary scale-110'
-                                : 'border-white/20 bg-contrast/80 hover:border-white/60'}"
-                            data-testid="woka-emote-{item.definition.id}"
-                            aria-label={item.label}
-                            aria-pressed={selected === index}
-                            onmouseenter={() => (selected = index)}
-                            onfocus={() => (selected = index)}
-                            onclick={(event) => {
-                                event.stopPropagation();
-                                play(index);
-                            }}
-                        >
-                            <span class="text-2xl leading-none">{item.definition.icon}</span>
-                            {#if index < 9}
-                                <span class="text-white/50 text-[10px] leading-none">{index + 1}</span>
-                            {/if}
-                        </button>
-                    </div>
+                        <Icon font-size="22" />
+                        {#if showLabels}
+                            <span
+                                class="line-clamp-3 w-full text-center text-[10px] leading-tight hyphens-auto [overflow-wrap:anywhere]"
+                            >
+                                {item.label}
+                            </span>
+                        {/if}
+                        <span class="text-[9px] leading-none text-white/50">{KEYS[index]}</span>
+                    </button>
                 {/each}
+
+                <!-- Under the ring, not in the middle of it: the middle is where the Woka stands. -->
+                <div
+                    class="absolute left-1/2 top-full -translate-x-1/2 mt-1 whitespace-nowrap rounded-sm
+                           bg-contrast/80 px-2 py-1 text-center text-white/80 text-xs select-none"
+                >
+                    {#if selected === null}
+                        {$LL.actionbar.wokaEmote.hint()}
+                    {:else}
+                        <b class="text-white">{items[selected].label}</b> · {$LL.actionbar.wokaEmote.release()}
+                    {/if}
+                </div>
             </div>
         </div>
     </div>

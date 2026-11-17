@@ -237,6 +237,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "エモート",
         wheelTitle: "エモートホイール",
         hint: "エモートを選択",
+        all: "すべて",
+        release: "離して再生",
+        favorites: "あなたのWoka",
+        pin: "ピン留め",
+        donePinning: "完了",
+        families: {
+            react: "リアクション",
+            move: "動き",
+            status: "ステータス",
+        },
         names: {
             jump: "ジャンプ",
             spin: "スピン",

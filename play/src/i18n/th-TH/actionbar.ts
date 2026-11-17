@@ -237,6 +237,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "อีโมต",
         wheelTitle: "วงล้ออีโมต",
         hint: "เลือกอีโมต",
+        all: "ทั้งหมด",
+        release: "ปล่อยเพื่อเล่น",
+        favorites: "Woka ของคุณ",
+        pin: "ปักหมุด",
+        donePinning: "เสร็จ",
+        families: {
+            react: "แสดงความรู้สึก",
+            move: "เคลื่อนไหว",
+            status: "สถานะ",
+        },
         names: {
             jump: "กระโดด",
             spin: "หมุนตัว",

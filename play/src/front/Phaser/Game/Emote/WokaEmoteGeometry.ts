@@ -42,3 +42,20 @@ export function wheelSliceAt(dx: number, dy: number, count: number, deadZone: nu
     const slice = 360 / count;
     return ((Math.round(degrees / slice) % count) + count) % count;
 }
+
+/**
+ * SVG path of slice `index` as a ring sector between two radii, centred on (0, 0) and on the same
+ * angles as wheelSlicePosition. `gap` trims each side, in degrees, so the slices read as separate.
+ */
+export function wheelSectorPath(index: number, count: number, inner: number, outer: number, gap = 1): string {
+    const slice = 360 / count;
+    const from = (-90 - slice / 2 + index * slice + gap) * DEG_TO_RAD;
+    const to = (-90 + slice / 2 + index * slice - gap) * DEG_TO_RAD;
+    const point = (radius: number, angle: number) =>
+        `${(Math.cos(angle) * radius).toFixed(2)} ${(Math.sin(angle) * radius).toFixed(2)}`;
+    const large = slice - 2 * gap > 180 ? 1 : 0;
+    return (
+        `M ${point(outer, from)} A ${outer} ${outer} 0 ${large} 1 ${point(outer, to)} ` +
+        `L ${point(inner, to)} A ${inner} ${inner} 0 ${large} 0 ${point(inner, from)} Z`
+    );
+}

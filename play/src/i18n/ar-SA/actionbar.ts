@@ -236,6 +236,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "إيماءات",
         wheelTitle: "عجلة الإيماءات",
         hint: "اختر إيماءة",
+        all: "الكل",
+        release: "اترك للتشغيل",
+        favorites: "الووكا الخاص بك",
+        pin: "تثبيت",
+        donePinning: "تم",
+        families: {
+            react: "تفاعل",
+            move: "حركة",
+            status: "حالة",
+        },
         names: {
             jump: "قفز",
             spin: "دوران",

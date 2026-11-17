@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { WokaEmoteState } from "./WokaEmoteCatalog";
-import { FEET_OFFSET, feetAnchoredOffset, wheelSliceAt, wheelSlicePosition } from "./WokaEmoteGeometry";
+import { FEET_OFFSET, feetAnchoredOffset, wheelSectorPath, wheelSliceAt, wheelSlicePosition } from "./WokaEmoteGeometry";
 
 const RESTING: WokaEmoteState = { frame: 1, x: 0, y: 0, angle: 0, scaleX: 1, scaleY: 1 };
 
@@ -60,5 +60,13 @@ describe("the wheel geometry", () => {
         expect(wheelSliceAt(0, 0, COUNT, 40)).toBeNull();
         expect(wheelSliceAt(30, 0, COUNT, 40)).toBeNull();
         expect(wheelSliceAt(41, 0, COUNT, 40)).not.toBeNull();
+    });
+});
+
+describe("wheelSectorPath", () => {
+    it("draws the top slice centred on the top, between the two radii", () => {
+        const path = wheelSectorPath(0, 4, 10, 20, 0);
+        // A quarter centred on -90°: from -135° to -45° on the outer edge, back along the inner one.
+        expect(path).toBe("M -14.14 -14.14 A 20 20 0 0 1 14.14 -14.14 L 7.07 -7.07 A 10 10 0 0 0 -7.07 -7.07 Z");
     });
 });

@@ -242,6 +242,16 @@ const actionbar: BaseTranslation = {
         button: "Emotes",
         wheelTitle: "Roda de emotes",
         hint: "Escolha um emote",
+        all: "Todos",
+        release: "solte para jogar",
+        favorites: "Seu Woka",
+        pin: "Fixar",
+        donePinning: "Concluído",
+        families: {
+            react: "Reagir",
+            move: "Mover",
+            status: "Status",
+        },
         names: {
             jump: "Pular",
             spin: "Pirueta",

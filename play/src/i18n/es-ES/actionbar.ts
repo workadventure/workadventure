@@ -238,6 +238,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "Emotes",
         wheelTitle: "Rueda de emotes",
         hint: "Elige un emote",
+        all: "Todo",
+        release: "suelta para reproducir",
+        favorites: "Tu Woka",
+        pin: "Fijar",
+        donePinning: "Listo",
+        families: {
+            react: "Reaccionar",
+            move: "Moverse",
+            status: "Estado",
+        },
         names: {
             jump: "Saltar",
             spin: "Pirueta",

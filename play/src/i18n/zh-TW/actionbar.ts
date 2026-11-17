@@ -236,6 +236,16 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         button: "表情動作",
         wheelTitle: "表情輪盤",
         hint: "選擇一個表情",
+        all: "全部",
+        release: "放開即可播放",
+        favorites: "你的 Woka",
+        pin: "釘選",
+        donePinning: "完成",
+        families: {
+            react: "反應",
+            move: "動作",
+            status: "狀態",
+        },
         names: {
             jump: "跳躍",
             spin: "旋轉",

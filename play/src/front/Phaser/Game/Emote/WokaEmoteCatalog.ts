@@ -119,8 +119,16 @@ export function wokaEmoteSoundVolume(distance: number, near: number, far = WOKA_
     return WOKA_EMOTE_SOUND_VOLUME * (1 - (distance - near) / (far - near));
 }
 
+/**
+ * How the wheel groups the emotes: answering someone, moving for the fun of it, saying where you are.
+ * WOKA_EMOTE_IDS is already ordered by family, so each family is one arc of the wheel.
+ */
+export const WOKA_EMOTE_FAMILIES = ["react", "move", "status"] as const;
+export type WokaEmoteFamily = (typeof WOKA_EMOTE_FAMILIES)[number];
+
 export interface WokaEmoteDefinition {
     id: WokaEmoteId;
+    family: WokaEmoteFamily;
     /** How long the animation runs, in milliseconds. */
     duration: number;
     /** Glyph shown in the emote wheel. */
@@ -213,6 +221,7 @@ export function stepThrough<T>(elapsed: number, period: number, values: T[]): T 
 const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
     nod: {
         id: "nod",
+        family: "react",
         duration: 700,
         icon: "🙂",
         // The mirror of `nope`: same shake, turned through ninety degrees. A catalogue that can say
@@ -226,6 +235,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     question: {
         id: "question",
+        family: "react",
         duration: 1400,
         icon: "❓",
         sound: { file: "question.mp3" },
@@ -252,6 +262,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     laugh: {
         id: "laugh",
+        family: "react",
         duration: 1100,
         icon: "😂",
         sound: { file: "laugh.mp3" },
@@ -285,6 +296,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     moonwalk: {
         id: "moonwalk",
+        family: "move",
         duration: 1600,
         icon: "🕴",
         // Walk frames run backwards while the Woka slides the other way, then it walks back to where
@@ -297,6 +309,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     runInPlace: {
         id: "runInPlace",
+        family: "move",
         duration: 1200,
         icon: "🏃",
         sample: (t) => ({
@@ -308,6 +321,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     jump: {
         id: "jump",
+        family: "move",
         duration: 860,
         icon: "🤸",
         sample: (t) => ({
@@ -334,6 +348,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     spin: {
         id: "spin",
+        family: "move",
         duration: 940,
         icon: "🌀",
         // Two opposing arcs rather than a closed ring: a circle looks identical however far it has
@@ -364,6 +379,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     dance: {
         id: "dance",
+        family: "move",
         duration: 2160, // three 720ms bars
         icon: "🕺",
         bubble: "🎵",
@@ -382,6 +398,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     celebrate: {
         id: "celebrate",
+        family: "react",
         duration: 1400, // two 700ms hops
         icon: "🎉",
         sound: { file: "celebrate.mp3" },
@@ -421,6 +438,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     nope: {
         id: "nope",
+        family: "react",
         duration: 700,
         icon: "🙅",
         sound: { file: "nope.mp3" },
@@ -432,6 +450,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     love: {
         id: "love",
+        family: "react",
         duration: 1600,
         icon: "❤️",
         bubble: "❤️",
@@ -449,6 +468,7 @@ const DEFINITIONS: Record<WokaEmoteId, WokaEmoteDefinition> = {
 
     afk: {
         id: "afk",
+        family: "status",
         duration: 2400,
         icon: "💤",
         bubble: "💤",
