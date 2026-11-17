@@ -22,7 +22,7 @@
     }
 
     onMount(() => {
-        void refresh();
+        refresh().catch((err) => console.warn("Settings: refresh rejected", err));
         // They may have changed meanwhile: in WorkAdventure's settings, the menu, the system's own startup settings.
         window.addEventListener("focus", refresh);
         return () => window.removeEventListener("focus", refresh);

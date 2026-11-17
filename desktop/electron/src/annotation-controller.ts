@@ -1,4 +1,5 @@
 import { screen, type WebContents } from "electron";
+import ElectronLog from "electron-log";
 import { openChildWindow } from "./child-windows";
 import { closeHudWindow, getHudWindow } from "./hud-windows";
 import { getControllingWorldContents } from "./tab-manager";
@@ -29,7 +30,10 @@ export function setAnnotationSource(nextDisplayId: number | undefined): void {
     resetAnnotations();
     displayId = nextDisplayId;
     if (previousOwner && nextDisplayId !== undefined) {
-        void setAnnotationState(previousOwner, previousState).catch(() => resetAnnotations());
+        setAnnotationState(previousOwner, previousState).catch((error) => {
+            ElectronLog.warn("Annotation window failed", error);
+            resetAnnotations();
+        });
     }
 }
 

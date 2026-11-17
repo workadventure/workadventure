@@ -1,4 +1,5 @@
 import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
+import ElectronLog from "electron-log";
 import type { DesktopStatus } from "@workadventure/desktop-api";
 
 import settings from "./settings";
@@ -116,7 +117,7 @@ function updateTrayContextMenu() {
                 // On macOS, closing the window keeps the app running (window destroyed, no window).
                 // Re-create it instead of throwing — the tray is the user's way back in.
                 if (!mainWindow || mainWindow.isDestroyed()) {
-                    void createWindow();
+                    createWindow().catch((error) => ElectronLog.error("Could not open the window.", error));
                     return;
                 }
 
@@ -192,7 +193,7 @@ export function createTray() {
     tray.on("double-click", () => {
         const mainWindow = getWindow();
         if (!mainWindow || mainWindow.isDestroyed()) {
-            void createWindow();
+            createWindow().catch((error) => ElectronLog.error("Could not open the window.", error));
             return;
         }
 

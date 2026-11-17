@@ -7,6 +7,7 @@ import { closeActiveTab, closeInactiveTabs, cycleTab, getTabs } from "./tab-mana
 import { setTabStripVisible } from "./tab-strip";
 import settings from "./settings";
 import { t } from "./i18n";
+import { stripSensitiveQueryParams } from "./desktop-url-policy";
 import { getTrustedServers, onTrustedServersChange, removeTrustedServerOrigin } from "./origin-verification";
 import { openSettingsWindow, removeSettingsWindowMenu } from "./settings-window";
 
@@ -54,7 +55,7 @@ export async function setTabBarEnabled(enabled: boolean, parent = getWindow()): 
 let isListeningForHistoryChanges = false;
 
 function openNativeWorld(url: string): void {
-    void (async () => {
+    (async () => {
         if (!getWindow()) {
             await createWindow(url);
             return;
@@ -62,7 +63,7 @@ function openNativeWorld(url: string): void {
         // Recent / pinned worlds open in a new tab so they never replace what the user is in.
         await openWorldTab(url);
     })().catch((error) => {
-        ElectronLog.error(`Failed to open recent world "${url}".`, error);
+        ElectronLog.error(`Failed to open recent world "${stripSensitiveQueryParams(url) || url}".`, error);
     });
 }
 
@@ -102,11 +103,11 @@ function openNewTab(): void {
         setTabStripVisible(true);
         createNativeApplicationMenu();
     }
-    void openWorldTab();
+    openWorldTab().catch((error) => ElectronLog.error("Could not open a new tab.", error));
 }
 
 export function openNativeWorldSwitcher(): void {
-    void (async () => {
+    (async () => {
         if (!getWindow()) {
             await createWindow();
             return;
@@ -198,7 +199,11 @@ export function createNativeApplicationMenu(): void {
                     label: t("menu.showTabBar"),
                     type: "checkbox",
                     checked: settings.get("tab_bar_enabled") !== false,
-                    click: (menuItem) => void setTabBarEnabled(menuItem.checked),
+                    click: (menuItem) => {
+                        setTabBarEnabled(menuItem.checked).catch((error) =>
+                            ElectronLog.error("Could not change the tab bar.", error)
+                        );
+                    },
                 },
                 { type: "separator" },
                 {

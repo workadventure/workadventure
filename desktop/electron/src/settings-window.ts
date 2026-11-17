@@ -128,10 +128,14 @@ export function registerSettingsWindowIpc(): void {
         return shortcutsState();
     });
     ipcMain.on("app:settings:check-updates", (event) => {
-        if (isFromSettingsWindow(event)) void manualRequestUpdateCheck();
+        if (isFromSettingsWindow(event)) {
+            manualRequestUpdateCheck().catch((error) => ElectronLog.warn("Update check failed.", error));
+        }
     });
     ipcMain.on("app:settings:open-logs", (event) => {
-        if (isFromSettingsWindow(event)) void openLog();
+        if (isFromSettingsWindow(event)) {
+            openLog().catch((error) => ElectronLog.error("Could not open the log file.", error));
+        }
     });
     // The active world's page (the landing page when none is open), in a window of its own.
     ipcMain.on("app:settings:open-devtools", (event) => {
