@@ -19,9 +19,9 @@ import {
     isAllowedNavigationUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
-    isMatrixMediaUrl,
     isRoomUrl,
     isSameRoomUrl,
+    opensInApp,
     resolveInitialTarget,
     stripSensitiveQueryParams,
     worldKeyOf,
@@ -649,6 +649,19 @@ function configureSession() {
     }
 }
 
+/** A link that leaves its page: the browser sign-in, a world, or the system browser for anything else. */
+function openLink(url: string) {
+    if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
+        void openDesktopBrowserFlow(url);
+    } else if (opensInApp(url, getDesktopConfig())) {
+        // A new tab, not loadDesktopTarget: that loads into the ACTIVE tab, so a link from a background
+        // world would replace the world (and meeting) the user is looking at.
+        void openWorldTab(url);
+    } else {
+        void openExternal(url);
+    }
+}
+
 function configureNavigationSecurity(webContents: Electron.WebContents) {
     // Each new page has to say hello again (page-contract.ts): it may be another server, or an older one.
     webContents.on("did-start-navigation", (details) => {
@@ -666,45 +679,32 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
             return { action: "allow", overrideBrowserWindowOptions: childOptions };
         }
 
-        if (isMatrixMediaUrl(url)) {
-            webContents.downloadURL(url);
-            return { action: "deny" };
-        }
-
-        if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
-            void openDesktopBrowserFlow(url);
-            return { action: "deny" };
-        }
-
-        if (shouldOpenExternally(url, getDesktopConfig())) {
-            void openExternal(url);
-            return { action: "deny" };
-        }
-
-        // A new tab, not loadDesktopTarget: that loads into the ACTIVE tab, so a window.open from a
-        // background world would replace the world (and meeting) the user is looking at.
-        void openWorldTab(url);
+        openLink(url);
         return { action: "deny" };
     });
 
-    window.webContents.on("did-create-window", (childWindow, { frameName }) =>
-        adoptChildWindow(childWindow, frameName)
-    );
+    window.webContents.on("did-create-window", (childWindow, { frameName }) => {
+        // The floating windows show play's components (the chat among them): their links go where the
+        // world's would. Without this, Electron opened them in a new window of its own, Google included.
+        childWindow.webContents.setWindowOpenHandler(({ url }) => {
+            openLink(url);
+            return { action: "deny" };
+        });
+        childWindow.webContents.on("will-navigate", (event, url) => {
+            event.preventDefault();
+            openLink(url);
+        });
+        adoptChildWindow(childWindow, frameName);
+    });
 
     window.webContents.on("will-navigate", (event, url) => {
-        if (isMatrixMediaUrl(url)) {
-            event.preventDefault();
-            webContents.downloadURL(url);
-            return;
-        }
-
         if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
             event.preventDefault();
             void openDesktopBrowserFlow(url);
             return;
         }
 
-        if (shouldOpenExternally(url, getDesktopConfig())) {
+        if (!opensInApp(url, getDesktopConfig(), webContents.getURL())) {
             event.preventDefault();
             void openExternal(url);
         }

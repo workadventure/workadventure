@@ -11,9 +11,9 @@ import {
     isAllowedNavigationUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
-    isMatrixMediaUrl,
     isRoomUrl,
     isSameRoomUrl,
+    opensInApp,
     worldKeyOf,
     normalizePersistedLastRoomUrl,
     normalizePersistedWorldHistory,
@@ -212,6 +212,8 @@ test("detects WorkAdventure room URLs that are safe to remember", () => {
     expect(isRoomUrl("https://play.workadventu.re/*/global/example.com/map.json")).toBe(true);
     expect(isRoomUrl("https://play.workadventu.re/login-screen")).toBe(false);
     expect(isRoomUrl("https://play.workadventu.re/")).toBe(false);
+    expect(isRoomUrl("https://docs.example.com/guide/_/rooms")).toBe(false);
+    expect(isRoomUrl("https://matrix.workadventu.re/_matrix/media/v3/download/workadventu.re/abc")).toBe(false);
 });
 
 test("normalizePersistedLastRoomUrl strips the URL fragment so hash-only changes don't spawn new entries", () => {
@@ -430,11 +432,19 @@ test("pages that are not rooms belong to no world", () => {
     expect(worldKeyOf("")).toBeUndefined();
 });
 
-test("chat files are downloads, not worlds", () => {
-    expect(isMatrixMediaUrl("https://matrix.workadventu.re/_matrix/media/v3/download/workadventu.re/abc")).toBe(true);
-    expect(isMatrixMediaUrl("https://matrix.workadventu.re/_matrix/client/v1/media/download/workadventu.re/abc")).toBe(
-        true
-    );
-    expect(isMatrixMediaUrl("https://play.workadventu.re/@/team/world/room")).toBe(false);
-    expect(isMatrixMediaUrl("https://matrix.workadventu.re/_matrix/client/v3/sync")).toBe(false);
+test("only worlds open in the app: other links, chat files included, open in the browser", () => {
+    withNodeEnv("production", () => {
+        const config = createDesktopConfig({});
+        const world = "https://play.workadventu.re/@/team/world/room";
+        expect(opensInApp(world, config)).toBe(true);
+        expect(opensInApp("https://www.google.com/", config)).toBe(false);
+        expect(opensInApp("https://matrix.workadventu.re/_matrix/media/v3/download/workadventu.re/abc", config)).toBe(
+            false
+        );
+        expect(opensInApp("https://docs.workadventu.re/", config)).toBe(false);
+        // A world tab may move within its own server, not to another one.
+        expect(opensInApp("https://play.workadventu.re/", config, world)).toBe(true);
+        expect(opensInApp("https://matrix.workadventu.re/_matrix/media/v3/download/x/y", config, world)).toBe(false);
+        expect(opensInApp("https://www.google.com/", config, "https://www.google.com/")).toBe(false);
+    });
 });

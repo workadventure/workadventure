@@ -391,33 +391,32 @@ export function createRoomUrlWithAuthToken(targetUrl: string, token: string, mat
     return url.toString();
 }
 
-/**
- * A Matrix media link (a file or image sent in the chat). It is served from a WorkAdventure host, so
- * without this it would load as a world, fail, and throw the user back to the Landing.
- */
-export function isMatrixMediaUrl(value: string): boolean {
-    const url = parseHttpUrl(value);
-    return !!url && url.pathname.startsWith("/_matrix/") && url.pathname.includes("/media/");
-}
-
 export function isRoomUrl(value: string): boolean {
-    const url = parseHttpUrl(value);
-    if (!url) {
-        return false;
-    }
-
     // WorkAdventure exposes several room-path shapes:
     //   /@/{team}/{world}/{room}      — hosted admin worlds
     //   /_/{instance}/{host}/{map}    — anonymous/global maps
     //   /~/maps/{map}.wam             — admin-managed maps in dev/self-hosted
     //   /*/…                          — custom map storage prefixes
-    // Anything else (`/`, `/login-screen`, `/logout`, `/admin/...`) is portal/auth, not a world.
-    return (
-        url.pathname.includes("/@/") ||
-        url.pathname.includes("/_/") ||
-        url.pathname.includes("/~/") ||
-        url.pathname.includes("/*/")
-    );
+    // Anything else (`/`, `/login-screen`, `/logout`, `/admin/...`, `/_matrix/...`) is not a world. Anchored:
+    // a page of another site whose path merely contains `/_/` is not one either.
+    const url = parseHttpUrl(value);
+    return !!url && /^\/[@_~*]\//.test(url.pathname);
+}
+
+/**
+ * Whether a link the user followed opens in the app. Only worlds do: anything else (a chat file, the docs,
+ * any other site) opens in the browser, since loaded as a world it would fail and throw the user back to
+ * the Landing. A world tab may still move within its own server (`from`), e.g. to / and its redirect.
+ */
+export function opensInApp(url: string, config: DesktopConfig, from?: string): boolean {
+    if (!isAllowedNavigationUrl(url, config)) {
+        return false;
+    }
+    if (isRoomUrl(url)) {
+        return true;
+    }
+    const current = parseHttpUrl(from);
+    return !!current && parseHttpUrl(url)?.origin === current.origin;
 }
 
 /** The same room: same server and path. The query (tokens) and the #entry don't make another room. */
