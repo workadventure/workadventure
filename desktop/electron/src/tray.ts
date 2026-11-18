@@ -1,4 +1,5 @@
 import { app, nativeImage, Tray, Menu, type NativeImage } from "electron";
+import ElectronLog from "electron-log";
 import type { DesktopStatus } from "@workadventure/desktop-api";
 
 import settings from "./settings";
@@ -189,13 +190,13 @@ export function createTray() {
         updateTrayContextMenu();
     });
 
-    tray.on("double-click", () => {
-        const mainWindow = getWindow();
-        if (!mainWindow || mainWindow.isDestroyed()) {
-            void createWindow();
-            return;
-        }
-
-        mainWindow.show();
-    });
+    // A click opens the window, as in Teams or Slack: the menu is on right-click (Windows) or where the
+    // desktop puts it (Linux, where `click` is an "activation": a left click on KDE). createWindow() shows,
+    // restores and focuses the window, or makes it again. Not macOS: a click on a menu-bar icon opens its
+    // menu, and the Dock icon reopens the window (`activate`).
+    if (process.platform !== "darwin") {
+        tray.on("click", () => {
+            createWindow().catch((error) => ElectronLog.error("Could not open the window from the tray.", error));
+        });
+    }
 }

@@ -102,6 +102,11 @@ let stopWatchingPresence: (() => void) | undefined;
 // The view and the navigation the watchdog judges: its front must have reported presence since then.
 let reachWorldContentsId: number | undefined;
 let reachWorldNavigationStartedAt = 0;
+// A background start (the app started with the computer): the window stays hidden until the user opens it,
+// from the tray, the Dock or a second launch. Nothing reveals it by itself meanwhile.
+let backgroundStart = false;
+// A sign-in the world asked for while nobody was looking: the browser opens once the user opens the window.
+let deferredBrowserFlowUrl: string | undefined;
 const desktopCallbackFlows = new Map<string, DesktopCallbackFlow>();
 
 function randomToken(bytes: number) {
@@ -284,6 +289,26 @@ function showWindow() {
     refreshRendererViewport("show");
 }
 
+/** A load settled: show the window, unless the app started in the background. Then only the user opens it. */
+function revealWindow() {
+    if (!backgroundStart) {
+        showWindow();
+    }
+}
+
+/** The user opened the window: the app is in the foreground from now on. */
+function endBackgroundStart() {
+    if (!backgroundStart) {
+        return;
+    }
+    backgroundStart = false;
+    const url = deferredBrowserFlowUrl;
+    deferredBrowserFlowUrl = undefined;
+    if (url) {
+        openDesktopBrowserFlow(url).catch((error) => ElectronLog.error("Could not open the deferred sign-in.", error));
+    }
+}
+
 function refreshRendererViewport(reason: string) {
     // Re-fit the active world view to the shell, then nudge its renderer to re-measure. The view
     // bounds are managed by the tab manager; a window resize/show is when they need re-applying.
@@ -439,6 +464,11 @@ function isAllowedDesktopBrowserFlowUrl(url: string, config: DesktopConfig) {
 }
 
 async function openDesktopBrowserFlow(url: string) {
+    // Nobody looks at a window that started in the background: the browser opens when the user opens it.
+    if (backgroundStart) {
+        deferredBrowserFlowUrl = url;
+        return;
+    }
     if (isDesktopLoginUrl(url)) {
         await openDesktopLogin(url);
         return;
@@ -781,7 +811,8 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     });
 }
 
-export async function createWindow(initialUrl?: string) {
+/** `inBackground`: the app started with the computer, so the window stays hidden until the user opens it. */
+export async function createWindow(initialUrl?: string, inBackground = false) {
     // do not re-create window if still existing
     if (mainWindow) {
         if (initialUrl) {
@@ -791,6 +822,7 @@ export async function createWindow(initialUrl?: string) {
         return;
     }
 
+    backgroundStart = inBackground;
     configureSession();
 
     // Load the previous state with fallback to defaults
@@ -856,9 +888,18 @@ export async function createWindow(initialUrl?: string) {
     // Let us register listeners on the window, so we can update the state
     // automatically (the listeners will be removed when the window is closed)
     // and restore the maximized or full screen state
-    windowState.manage(mainWindow);
-    if (maximizeBeforeLoad && !mainWindow.isMaximized() && !mainWindow.isFullScreen()) {
-        mainWindow.maximize();
+    const win = mainWindow;
+    const restoreWindowState = () => {
+        windowState.manage(win);
+        if (maximizeBeforeLoad && !win.isMaximized() && !win.isFullScreen()) {
+            win.maximize();
+        }
+    };
+    if (backgroundStart) {
+        // Maximizing or going full screen shows the window: a background start waits for the user to open it.
+        win.once("show", restoreWindowState);
+    } else {
+        restoreWindowState();
     }
 
     mainWindow.on("closed", () => {
@@ -883,6 +924,7 @@ export async function createWindow(initialUrl?: string) {
     // Any of these can change whether the main window shows, which the mini window controller decides
     // on (mini-window-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
     mainWindow.on("focus", onMainWindowFocus);
+    mainWindow.on("show", endBackgroundStart);
     mainWindow.on("show", updateMiniWindow);
     mainWindow.on("hide", onMainWindowHidden);
     mainWindow.on("minimize", onMainWindowHidden);
@@ -908,8 +950,10 @@ export async function createWindow(initialUrl?: string) {
 
     // The shell has no content of its own, so rely on loadDesktopTarget → showWindow to reveal it
     // once the first world view has something to paint (avoids a blank flash). The fallback timer
-    // guarantees that reveal happens even if the load never settles.
-    armInitialRevealFallback();
+    // guarantees that reveal happens even if the load never settles. A background start reveals nothing.
+    if (!backgroundStart) {
+        armInitialRevealFallback();
+    }
 
     await loadDesktopTarget(initialUrl);
 }
@@ -936,7 +980,7 @@ export async function loadLandingPage(query?: { error: string } | { trust: strin
         // leave it hidden forever.
         ElectronLog.error(`Failed to load Landing page at ${landingUrl}`, error);
     }
-    showWindow();
+    revealWindow();
 }
 
 /**
@@ -984,7 +1028,7 @@ export async function loadDesktopTarget(requestedUrl?: string): Promise<boolean>
         const navigationStartedAt = Date.now();
         await contents.loadURL(target);
         armReachWorldWatchdog(target, contents.id, navigationStartedAt);
-        showWindow();
+        revealWindow();
         return true;
     } catch (error) {
         ElectronLog.warn(`Failed to load desktop target "${target}".`, error);
