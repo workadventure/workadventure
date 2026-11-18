@@ -98,6 +98,19 @@ describe("heldMediaStore", () => {
         expect(get(heldMediaStore).microphone).toBe(false);
     });
 
+    it("idle holds both devices whatever the away settings; a click on one brings the user back with it", () => {
+        settings.keepCamera = true;
+        settings.keepMicrophone = true;
+        goAway(AvailabilityStatus.IDLE);
+        expect(get(heldMediaStore)).toEqual({ camera: true, microphone: true, status: AvailabilityStatus.IDLE });
+
+        toggleMicrophone();
+        expect(status.passStatusToOnline).toHaveBeenCalled();
+        expect(get(privacyShutdownStore)).toBe(false);
+        expect(get(requestedMicrophoneState)).toBe(true);
+        expect(get(requestedCameraState)).toBe(false);
+    });
+
     it("holds nothing when the user is online", () => {
         privacyShutdown.set(false);
         availability.set(AvailabilityStatus.ONLINE);

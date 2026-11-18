@@ -12,7 +12,9 @@
      * microphone is. Overlaid so that coming back moves nothing. Devices the user turned off are never mentioned.
      */
     let paused = $derived(
-        $heldMediaStore.status === AvailabilityStatus.AWAY ? $heldMediaStore : { camera: false, microphone: false },
+        $heldMediaStore.status === AvailabilityStatus.AWAY || $heldMediaStore.status === AvailabilityStatus.IDLE
+            ? $heldMediaStore
+            : { camera: false, microphone: false },
     );
     let text = $derived(
         paused.camera

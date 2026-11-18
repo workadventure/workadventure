@@ -1549,7 +1549,9 @@ export class ProximityChatRoom implements ChatRoom {
             if (
                 !get(requestedMicrophoneState) &&
                 !get(requestedCameraState) &&
-                (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
+                (actualStatus === AvailabilityStatus.ONLINE ||
+                    actualStatus === AvailabilityStatus.AWAY ||
+                    actualStatus === AvailabilityStatus.IDLE)
             ) {
                 // If the user is not on the mobile, open the chat
                 // The user experience is disrupted by the chat on mobile

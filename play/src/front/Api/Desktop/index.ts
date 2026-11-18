@@ -26,6 +26,7 @@ import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
 import { focusStore } from "../../Stores/FocusStore";
+import { toggleCamera, toggleMicrophone } from "../../Stores/HeldMediaStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
 import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
@@ -127,22 +128,16 @@ class DesktopApi {
             })
             .catch((error: unknown) => console.warn("Could not read desktop version", error));
 
+        // The same toggles as the buttons: under away, idle or a status the user picked, turning a device on
+        // brings them back with it, instead of turning off a device their status holds.
         window.WAD.onMuteToggle(() => {
             if (this.isSilent) return;
-            if (get(requestedMicrophoneState) === true) {
-                requestedMicrophoneState.disableMicrophone();
-            } else {
-                requestedMicrophoneState.enableMicrophone();
-            }
+            toggleMicrophone();
         });
 
         window.WAD.onCameraToggle(() => {
             if (this.isSilent) return;
-            if (get(requestedCameraState) === true) {
-                requestedCameraState.disableWebcam();
-            } else {
-                requestedCameraState.enableWebcam();
-            }
+            toggleCamera();
         });
 
         // One meeting at a time across the desktop tabs: another tab entered one, so this world stops
