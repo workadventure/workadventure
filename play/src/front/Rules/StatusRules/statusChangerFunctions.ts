@@ -1,6 +1,7 @@
 import { requestedStatusStore } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { popupStore } from "../../Stores/PopupStore";
+import { idleStore } from "../../Stores/IdleStore";
 import BubbleConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/BubbleConfirmationModal.svelte";
 import ChangeStatusConfirmationModal from "../../Components/ActionBar/AvailabilityStatus/Modals/ChangeStatusConfirmationModal.svelte";
 import type { RequestedStatus } from "./statusRules";
@@ -24,6 +25,8 @@ export const resetAllStatusStoreExcept = (status: RequestedStatus | null = null)
 
 export const passStatusToOnline = () => {
     resetAllStatusStoreExcept();
+    // Only ever called on something the user does (moving, accepting a bubble, turning a device on): they are back.
+    idleStore.set(false);
     closeChangeStatusConfirmationModal();
     closeBubbleConfirmationModal();
 };

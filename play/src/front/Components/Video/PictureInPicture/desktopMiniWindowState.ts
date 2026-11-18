@@ -4,6 +4,7 @@ import { availabilityStatusStore, requestedStatusStore } from "../../../Stores/M
 import { resetAllStatusStoreExcept } from "../../../Rules/StatusRules/statusChangerFunctions";
 import type { RequestedStatus } from "../../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore } from "../../../Stores/StreamableCollectionStore";
+import { idleStore } from "../../../Stores/IdleStore";
 import { requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
 import { gameSceneIsLoadedStore } from "../../../Stores/GameSceneStore";
 import { meetingInvitationRequestStore } from "../../../Stores/MeetingInvitationStore";
@@ -124,6 +125,8 @@ export function setMiniWindowStatus(status: MiniWindowStatus): void {
         do_not_disturb: AvailabilityStatus.DO_NOT_DISTURB,
     };
     resetAllStatusStoreExcept(requested[status]);
+    // Picking a status, even from the mini window without coming back to WorkAdventure, ends idle.
+    idleStore.set(false);
 }
 
 export const miniWindowMediaStore: Readable<MiniWindowMedia> = derived(

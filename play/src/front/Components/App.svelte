@@ -29,6 +29,7 @@
     import { HtmlUtils } from "../WebRtc/HtmlUtils";
     import { iframeListener } from "../Api/IframeListener";
     import { desktopApi } from "../Api/Desktop";
+    import { startIdleRules } from "../Rules/IdleRules";
     import { canvasSize, coWebsiteManager, coWebsites, fullScreenCowebsite } from "../Stores/CoWebsiteStore";
     import { urlManager } from "../Url/UrlManager";
     import { FileListener } from "../Phaser/FileUpload/FileListener";
@@ -233,6 +234,7 @@
 
         //updateScreenSize();
         iframeListener.init();
+        stopIdleRules = startIdleRules();
         desktopApi.init();
     });
 
@@ -257,6 +259,7 @@
 
     let canvasSizeUnsubscriber: Unsubscriber;
     let stopBootPump: (() => void) | undefined;
+    let stopIdleRules: (() => void) | undefined;
     onMount(() => {
         canvasSizeUnsubscriber = canvasSize.subscribe(({ width, height }) => {
             if (width < 1 || height < 1) {
@@ -270,6 +273,7 @@
     onDestroy(() => {
         canvasSizeUnsubscriber?.();
         stopBootPump?.();
+        stopIdleRules?.();
         if (canvas && handleCanvasClick) {
             canvas.removeEventListener("click", handleCanvasClick);
         }

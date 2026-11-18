@@ -18,6 +18,7 @@ import {
     getControllingWorldContents,
     getWindow,
     isActiveWorldContents,
+    isBackgroundStart,
     isControllingWorldContents,
     loadDesktopTarget,
     loadLandingPage,
@@ -198,6 +199,7 @@ function normalizeNotifyPayload(payload: unknown): DesktopNotificationPayload | 
 export default () => {
     ipcMain.handle("is-development", () => !app.isPackaged);
     ipcMain.handle("get-version", () => (app.isPackaged ? app.getVersion() : "dev"));
+    ipcMain.handle("app:started-in-background", () => isBackgroundStart());
 
     // The handshake: a world page says which contract it speaks; the app answers with its own.
     ipcMain.on("app:hello", (event, page: unknown) => {

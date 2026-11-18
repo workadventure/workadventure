@@ -66,6 +66,7 @@ const api: WorkAdventureDesktopApi = {
     setScreenShareSource: (source) => ipcRenderer.send("app:screen-share-source", source),
     setTabTitle: (title) => ipcRenderer.send("app:setTabTitle", String(title ?? "")),
     onSystemIdle: (callback) => subscribe("app:on-system-idle", (idle) => callback(Boolean(idle))),
+    startedInBackground: () => ipcRenderer.invoke("app:started-in-background"),
     onMediaPreempted: (callback) => subscribe("app:on-media-preempted", () => callback()),
     onOtherMeetingMuted: (callback) =>
         subscribe("app:on-other-meeting-muted", (worldName) =>

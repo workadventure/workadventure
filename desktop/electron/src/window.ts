@@ -296,6 +296,11 @@ function revealWindow() {
     }
 }
 
+/** Whether the app started in the background and the user has not opened its window since. */
+export function isBackgroundStart() {
+    return backgroundStart;
+}
+
 /** The user opened the window: the app is in the foreground from now on. */
 function endBackgroundStart() {
     if (!backgroundStart) {
