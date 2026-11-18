@@ -9,7 +9,7 @@ import { startIdleMonitor } from "./idle-monitor";
 import { openMiniWindow, startMiniWindowController } from "./mini-window-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
-import { initStartAtLogin } from "./auto-launch";
+import { initStartAtLogin, startedAtLogin } from "./auto-launch";
 import ipc from "./ipc";
 import { registerSettingsWindowIpc } from "./settings-window";
 import settings from "./settings";
@@ -195,7 +195,13 @@ async function init() {
 
         const initialProtocolTarget = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
-        await createWindow(initialProtocolTarget);
+        // Started with the computer, not by the user: the world loads behind the tray, without taking the
+        // screen or the focus.
+        const inBackground = !initialProtocolTarget && startedAtLogin();
+        if (inBackground) {
+            ElectronLog.info("Started at login: the window stays hidden until the user opens it.");
+        }
+        await createWindow(initialProtocolTarget, inBackground);
 
         // Auto-away + notification hush: forward system idle transitions to the renderer, which
         // flips the WA availability to "away" and back (the tray then shows that status).
