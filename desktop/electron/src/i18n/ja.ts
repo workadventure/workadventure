@@ -108,12 +108,17 @@ const ja: NativeStrings = {
         "WorkAdventure を互換モード (X11) で起動できなかったため、現在はネイティブ Wayland モードを使用しています。設定から元に戻せます。",
     "windowMode.openSettings": "設定を開く",
     "tray.quit": "終了",
+    "closeToTray.stillRunning":
+        "WorkAdventure は実行中で、ワールドにも残っています。終了するには、システムトレイのアイコンを使用してください。",
 
     "settings.title": "設定",
     "settings.general": "一般",
     "settings.startAtLogin": "コンピューターへのログイン時に WorkAdventure を起動",
     "settings.showTabBar": "タブバーを表示",
     "settings.showTabBarHint": "タブバーは複数のタブを開いているときに表示されます。",
+    "settings.closeToTray": "ウィンドウを閉じても WorkAdventure を実行したままにする",
+    "settings.closeToTrayHint":
+        "ワールドに残ったままになります。終了するには、システムトレイの WorkAdventure アイコンを使用してください。",
     "settings.windowMode": "ウィンドウモード",
     "settings.windowModeX11": "互換モード (X11)、推奨",
     "settings.windowModeX11Description":

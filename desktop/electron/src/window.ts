@@ -62,6 +62,7 @@ export {
     isControllingWorldContents,
 } from "./tab-manager";
 import { closeAllHudWindows } from "./hud-windows";
+import { keepRunningOnClose } from "./close-to-tray";
 import { adoptChildWindow, childWindowOptions } from "./child-windows";
 import { forgetPage } from "./page-contract";
 import { landingPageUrl } from "./landing-page";
@@ -887,24 +888,7 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("hide", onMainWindowHidden);
     mainWindow.on("minimize", onMainWindowHidden);
     mainWindow.on("restore", updateMiniWindow);
-
-    // mainWindow.on('close', async (event) => {
-    //   if (!app.confirmedExitPrompt) {
-    //     event.preventDefault(); // Prevents the window from closing
-    //     const choice = await dialog.showMessageBox(getMainWindow(), {
-    //       type: 'question',
-    //       buttons: ['Yes', 'Abort'],
-    //       title: 'Confirm',
-    //       message: 'Are you sure you want to quit?',
-    //     });
-    //     if (choice.response === 0) {
-    //       app.confirmedExitPrompt = true;
-    //       mainWindow.close();
-    //     }
-    //   } else {
-    //     app.confirmedExitPrompt = false;
-    //   }
-    // });
+    keepRunningOnClose(mainWindow);
 
     // The shell has no content of its own, so rely on loadDesktopTarget → showWindow to reveal it
     // once the first world view has something to paint (avoids a blank flash). The fallback timer

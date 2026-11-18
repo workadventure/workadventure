@@ -105,12 +105,17 @@ const ko: NativeStrings = {
         "WorkAdventure를 호환 모드(X11)로 시작할 수 없어 지금은 네이티브 Wayland 모드를 사용합니다. 설정에서 다시 전환할 수 있습니다.",
     "windowMode.openSettings": "설정 열기",
     "tray.quit": "종료",
+    "closeToTray.stillRunning":
+        "WorkAdventure가 계속 실행 중이며 월드에도 그대로 있습니다. 종료하려면 시스템 트레이의 아이콘을 사용하세요.",
 
     "settings.title": "설정",
     "settings.general": "일반",
     "settings.startAtLogin": "컴퓨터에 로그인할 때 WorkAdventure 시작",
     "settings.showTabBar": "탭 표시줄 보기",
     "settings.showTabBarHint": "여러 탭을 열면 탭 표시줄이 나타납니다.",
+    "settings.closeToTray": "창을 닫아도 WorkAdventure 계속 실행",
+    "settings.closeToTrayHint":
+        "월드에 그대로 남아 있습니다. 종료하려면 시스템 트레이의 WorkAdventure 아이콘을 사용하세요.",
     "settings.windowMode": "창 모드",
     "settings.windowModeX11": "호환 모드(X11), 권장",
     "settings.windowModeX11Description":

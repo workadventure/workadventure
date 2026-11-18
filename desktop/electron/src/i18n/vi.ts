@@ -107,12 +107,17 @@ const vi: NativeStrings = {
         "WorkAdventure không thể khởi động ở chế độ tương thích (X11), nên hiện đang dùng chế độ Wayland gốc. Bạn có thể chuyển lại trong phần cài đặt của ứng dụng.",
     "windowMode.openSettings": "Mở cài đặt",
     "tray.quit": "Thoát",
+    "closeToTray.stillRunning":
+        "WorkAdventure vẫn đang chạy và bạn vẫn ở trong thế giới của mình. Để thoát, hãy dùng biểu tượng của nó trong khay hệ thống.",
 
     "settings.title": "Cài đặt",
     "settings.general": "Chung",
     "settings.startAtLogin": "Khởi động WorkAdventure khi đăng nhập vào máy tính",
     "settings.showTabBar": "Hiện thanh tab",
     "settings.showTabBarHint": "Thanh tab xuất hiện khi bạn mở nhiều tab.",
+    "settings.closeToTray": "Giữ WorkAdventure chạy khi tôi đóng cửa sổ",
+    "settings.closeToTrayHint":
+        "Bạn vẫn ở trong thế giới của mình. Để thoát, hãy dùng biểu tượng WorkAdventure trong khay hệ thống.",
     "settings.windowMode": "Chế độ cửa sổ",
     "settings.windowModeX11": "Tương thích (X11), được đề xuất",
     "settings.windowModeX11Description":

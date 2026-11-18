@@ -108,12 +108,17 @@ const pt: NativeStrings = {
         "O WorkAdventure não conseguiu iniciar no modo de compatibilidade (X11), então agora usa o modo Wayland nativo. Você pode voltar a ele nas configurações do aplicativo.",
     "windowMode.openSettings": "Abrir configurações",
     "tray.quit": "Sair",
+    "closeToTray.stillRunning":
+        "O WorkAdventure continua aberto e você continua no seu mundo. Para sair, use o ícone dele na bandeja do sistema.",
 
     "settings.title": "Configurações",
     "settings.general": "Geral",
     "settings.startAtLogin": "Iniciar o WorkAdventure ao fazer login no computador",
     "settings.showTabBar": "Mostrar a barra de abas",
     "settings.showTabBarHint": "A barra de abas aparece quando há várias abas abertas.",
+    "settings.closeToTray": "Manter o WorkAdventure aberto ao fechar a janela",
+    "settings.closeToTrayHint":
+        "Você continua no seu mundo. Para sair, use o ícone do WorkAdventure na bandeja do sistema.",
     "settings.windowMode": "Modo de janelas",
     "settings.windowModeX11": "Compatibilidade (X11), recomendado",
     "settings.windowModeX11Description":

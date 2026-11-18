@@ -30,6 +30,10 @@ export type SettingsData = {
     window_mode?: DesktopWindowMode;
     /** Set before restarting in X11 mode, cleared once that start gets going: still set, it failed. */
     x11_start_pending?: boolean;
+    /** Closing the main window hides it in the tray. Unset: on where the desktop shows tray icons. */
+    close_to_tray?: boolean;
+    /** Set once the first close to the tray told the user WorkAdventure keeps running. */
+    close_to_tray_notified?: boolean;
 };
 
 let settings: SettingsData;

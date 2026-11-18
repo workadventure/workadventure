@@ -98,12 +98,15 @@ const zhCN: NativeStrings = {
         "WorkAdventure 无法以兼容模式 (X11) 启动，因此现在使用原生 Wayland 模式。你可以在它的设置中切换回来。",
     "windowMode.openSettings": "打开设置",
     "tray.quit": "退出",
+    "closeToTray.stillRunning": "WorkAdventure 仍在运行，你也仍在你的世界中。要退出，请使用系统托盘中的图标。",
 
     "settings.title": "设置",
     "settings.general": "常规",
     "settings.startAtLogin": "登录电脑时启动 WorkAdventure",
     "settings.showTabBar": "显示标签栏",
     "settings.showTabBarHint": "打开多个标签页时会显示标签栏。",
+    "settings.closeToTray": "关闭窗口时保持 WorkAdventure 运行",
+    "settings.closeToTrayHint": "你会留在你的世界中。要退出，请使用系统托盘中的 WorkAdventure 图标。",
     "settings.windowMode": "窗口模式",
     "settings.windowModeX11": "兼容模式 (X11)，推荐",
     "settings.windowModeX11Description":

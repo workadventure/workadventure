@@ -107,12 +107,16 @@ const en = {
         "WorkAdventure couldn't start in compatibility mode (X11), so it now uses native Wayland mode. You can switch back in its settings.",
     "windowMode.openSettings": "Open settings",
     "tray.quit": "Quit",
+    "closeToTray.stillRunning":
+        "WorkAdventure is still running, and you are still in your world. To quit, use its icon in the tray.",
 
     "settings.title": "Settings",
     "settings.general": "General",
     "settings.startAtLogin": "Start WorkAdventure when I log in to my computer",
     "settings.showTabBar": "Show tab bar",
     "settings.showTabBarHint": "The tab bar shows once several tabs are open.",
+    "settings.closeToTray": "Keep WorkAdventure running when I close its window",
+    "settings.closeToTrayHint": "You stay in your world. To quit, use the WorkAdventure icon in the tray.",
     "settings.windowMode": "Window mode",
     "settings.windowModeX11": "Compatibility (X11), recommended",
     "settings.windowModeX11Description":

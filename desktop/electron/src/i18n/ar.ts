@@ -102,12 +102,16 @@ const ar: NativeStrings = {
         "تعذّر تشغيل WorkAdventure في وضع التوافق (X11)، لذا يستخدم الآن وضع Wayland الأصلي. يمكنك التبديل مرة أخرى من إعداداته.",
     "windowMode.openSettings": "فتح الإعدادات",
     "tray.quit": "إنهاء",
+    "closeToTray.stillRunning":
+        "لا يزال WorkAdventure قيد التشغيل، ولا تزال في عالمك. للإنهاء، استخدم أيقونته في علبة النظام.",
 
     "settings.title": "الإعدادات",
     "settings.general": "عام",
     "settings.startAtLogin": "تشغيل WorkAdventure عند تسجيل الدخول إلى الكمبيوتر",
     "settings.showTabBar": "إظهار شريط علامات التبويب",
     "settings.showTabBarHint": "يظهر شريط علامات التبويب عند فتح عدة علامات تبويب.",
+    "settings.closeToTray": "إبقاء WorkAdventure قيد التشغيل عند إغلاق نافذته",
+    "settings.closeToTrayHint": "تبقى في عالمك. للإنهاء، استخدم أيقونة WorkAdventure في علبة النظام.",
     "settings.windowMode": "وضع النوافذ",
     "settings.windowModeX11": "التوافق (X11)، موصى به",
     "settings.windowModeX11Description":

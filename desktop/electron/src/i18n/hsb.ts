@@ -108,12 +108,17 @@ const hsb: NativeStrings = {
         "WorkAdventure njeda so w kompatibelnym modusu (X11) startować, tohodla nětko natiwny modus Wayland wužiwa. W jeho nastajenjach móžeće zaso wróćo přešaltować.",
     "windowMode.openSettings": "Nastajenja wočinić",
     "tray.quit": "Skónčić",
+    "closeToTray.stillRunning":
+        "WorkAdventure hišće běži a wy sće hišće w swojim swěće. Zo byšće skónčili, wužiwajće jeho symbol w systemowej lajsće.",
 
     "settings.title": "Nastajenja",
     "settings.general": "Powšitkowne",
     "settings.startAtLogin": "WorkAdventure při přizjewjenju na kompjuterje startować",
     "settings.showTabBar": "Lajstu rajtarkow pokazać",
     "settings.showTabBarHint": "Lajsta rajtarkow so pokaza, hdyž su wjacore rajtarki wočinjene.",
+    "settings.closeToTray": "WorkAdventure dale běžeć wostajić, hdyž wokno začinju",
+    "settings.closeToTrayHint":
+        "Wostanjeće w swojim swěće. Zo byšće skónčili, wužiwajće symbol WorkAdventure w systemowej lajsće.",
     "settings.windowMode": "Woknowy modus",
     "settings.windowModeX11": "Kompatibilita (X11), doporučena",
     "settings.windowModeX11Description":
