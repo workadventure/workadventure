@@ -909,6 +909,17 @@ div.emoji-picker {
     &.speaker {
         animation: sonar_speaker 0.5s ease-out infinite;
     }
+
+    /* The "zZz" of an idle user: a slow float, still for those who ask for less motion */
+    & .username-idle {
+        animation: username_idle 3s ease-in-out infinite;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .username-display .username-idle {
+        animation: none;
+    }
 }
 
 .game-scene-loaded .username-display {
@@ -919,6 +930,11 @@ div.emoji-picker {
     0%   { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.2); }
     70%  { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 14px)  rgba(255,255,255, 0); }
     100% { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0); }
+}
+
+@keyframes username_idle {
+    0%, 100% { transform: translateY(calc(var(--username-dom-scale, 1) * 1px)); }
+    50%      { transform: translateY(calc(var(--username-dom-scale, 1) * -1px)); }
 }
 
 @keyframes sonar_speaker {

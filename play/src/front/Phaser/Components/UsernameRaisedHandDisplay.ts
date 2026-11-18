@@ -6,7 +6,7 @@ const ICON_SIZE = `calc(${MEGAPHONE_ICON_SIZE}px * var(--username-dom-scale, 1))
 
 /**
  * A small raised-hand badge displayed next to the player's name when they raised their hand in a
- * meeting. It mirrors the behaviour of {@link UsernameMegaphoneDisplay}: a DOM element living inside
+ * meeting. It mirrors the behaviour of {@link UsernameBadgeDisplay}: a DOM element living inside
  * the username flex container, animated in and out. The icon is the same "hand-stop" glyph used by
  * RaiseHandIcon.svelte, so the feature looks identical wherever it appears.
  */

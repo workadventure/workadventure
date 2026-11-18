@@ -3,7 +3,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { PLAYER_NAME_GAP, PLAYER_NAME_HEIGHT } from "./UsernameDisplaySizes";
-import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
+import { UsernameBadgeDisplay } from "./UsernameBadgeDisplay";
 import { UsernameRaisedHandDisplay } from "./UsernameRaisedHandDisplay";
 import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
@@ -27,7 +27,8 @@ export class UsernameDisplay {
     private playerNameOutlineColor: number | undefined;
     private displayScale: number;
     private readonly statusDisplay: UsernameStatusDisplay;
-    private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
+    private readonly megaphoneDisplay: UsernameBadgeDisplay;
+    private readonly idleDisplay: UsernameBadgeDisplay;
     private readonly raisedHandDisplay: UsernameRaisedHandDisplay;
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
@@ -55,7 +56,9 @@ export class UsernameDisplay {
 
         this.playerNameOutlineColor = outlineColor;
         this.statusDisplay = new UsernameStatusDisplay();
-        this.megaphoneDisplay = new UsernameMegaphoneDisplay();
+        this.megaphoneDisplay = new UsernameBadgeDisplay("/resources/icons/icon_megaphone.svg");
+        this.idleDisplay = new UsernameBadgeDisplay("/resources/icons/icon_zzz.svg");
+        this.idleDisplay.element.className = "username-idle";
         this.raisedHandDisplay = new UsernameRaisedHandDisplay();
         this.playerNameElement = this.createPlayerNameElement();
 
@@ -70,6 +73,7 @@ export class UsernameDisplay {
         this.element.append(
             this.statusDisplay.element,
             this.playerNameElement,
+            this.idleDisplay.element,
             this.megaphoneDisplay.element,
             this.raisedHandDisplay.element,
         );
@@ -109,6 +113,7 @@ export class UsernameDisplay {
             return;
         }
         this.megaphoneDisplay.show(availabilityStatus === AvailabilityStatus.SPEAKER, instant);
+        this.idleDisplay.show(availabilityStatus === AvailabilityStatus.IDLE, instant);
     }
 
     public setRaisedHand(raised: boolean, forceClose = false): void {
@@ -143,6 +148,7 @@ export class UsernameDisplay {
         this.element.remove();
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
+        this.idleDisplay.destroy();
         this.raisedHandDisplay.destroy();
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }

@@ -28,15 +28,19 @@ const EXPANDED_KEYFRAME: Keyframe = {
     opacity: 1,
 };
 
-export class UsernameMegaphoneDisplay {
+/**
+ * An icon next to the player's name, shown while their status calls for it: the megaphone of a speaker, the "zZz"
+ * of an idle user (whose float is in style.css).
+ */
+export class UsernameBadgeDisplay {
     public readonly element: HTMLImageElement;
 
     private shown = false;
     private animation?: Animation;
 
-    constructor() {
+    constructor(src: string) {
         this.element = document.createElement("img");
-        this.element.src = "/resources/icons/icon_megaphone.svg";
+        this.element.src = src;
         this.element.alt = "";
         this.element.draggable = false;
         this.element.style.display = "none";
@@ -54,7 +58,7 @@ export class UsernameMegaphoneDisplay {
      * the name background at every frame.
      *
      * @param instant apply the new state without playing any animation. Used when the display is
-     * initialised with a status that is already SPEAKER: the icon must simply be there.
+     * initialised with a status that already shows the icon: it must simply be there.
      */
     public show(show = true, instant = false): void {
         if (this.shown === show && !instant) {
