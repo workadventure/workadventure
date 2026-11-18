@@ -70,7 +70,7 @@
                 <div class="text-white/90 text-sm p-4">{$LL.chat.imagePreview.notAvailable()}</div>
             {/if}
             <div
-                class="absolute top-2 right-2 flex items-center justify-end gap-2 rounded-lg bg-black/40 p-1.5"
+                class="absolute top-2 right-2 flex items-center justify-end gap-2 rounded-2xl bg-black/40 p-1.5"
                 aria-label={$LL.chat.imagePreview.imageActions()}
             >
                 {#if url}
@@ -78,7 +78,7 @@
                         href={url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        class="flex items-center justify-center rounded-lg p-2 hover:bg-white/20 text-white transition-colors"
+                        class="flex items-center justify-center rounded-[10px] p-2 hover:bg-white/20 text-white transition-colors"
                         title={$LL.chat.imagePreview.openInNewTab()}
                     >
                         <IconExternalLink class="h-6 w-6" />

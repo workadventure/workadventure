@@ -62,7 +62,7 @@
     role="menu"
     aria-label={$LL.chat.messageActions.label()}
     data-testid="messageMoreMenu"
-    class="flex flex-col min-w-44 p-1 rounded-lg bg-contrast border border-solid border-white/15 shadow-lg text-sm text-white"
+    class="flex flex-col min-w-44 p-1.5 rounded-2xl bg-contrast border border-solid border-white/15 shadow-lg text-sm text-white"
 >
     {#if onOpenThread}
         <button
@@ -119,7 +119,7 @@
         width: 100%;
         margin: 0;
         padding: 0.4rem 0.5rem;
-        border-radius: 0.375rem;
+        border-radius: 9px;
         text-align: start;
         background: transparent;
         cursor: pointer;
