@@ -25,6 +25,9 @@ enum AvailabilityStatus {
   // gesture. Unlike BACK_IN_A_MOMENT, which the user picks, this one is imposed and
   // clears on the next click.
   SOUND_BLOCKED = 13;
+  // Set automatically when WorkAdventure has not seen the user for a while: started with the computer and not
+  // opened yet, no input for a few minutes, or away for hours. Camera and microphone are off until they are back.
+  IDLE = 14;
 }
 
 message PositionMessage {

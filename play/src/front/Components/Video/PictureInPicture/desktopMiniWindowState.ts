@@ -98,6 +98,7 @@ function availabilityKey(status: AvailabilityStatus): string {
         case AvailabilityStatus.SOUND_BLOCKED:
             return "back_in_a_moment";
         case AvailabilityStatus.AWAY:
+        case AvailabilityStatus.IDLE:
             return "away";
         default:
             return "online";

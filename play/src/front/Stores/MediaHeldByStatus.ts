@@ -10,6 +10,7 @@ const MEDIA_CUTTING_STATUSES: ReadonlySet<AvailabilityStatus> = new Set([
     AvailabilityStatus.BACK_IN_A_MOMENT,
     AvailabilityStatus.SOUND_BLOCKED,
     AvailabilityStatus.BUSY,
+    AvailabilityStatus.IDLE,
 ]);
 
 export type MediaHeldByStatus = {
