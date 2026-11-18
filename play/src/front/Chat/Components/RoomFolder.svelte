@@ -100,10 +100,10 @@
     });
 </script>
 
-<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-lg mb-4" : ""}`} data-roving-group>
+<div class={`${!rootFolder ? "mx-2 p-1 bg-contrast-300/10 rounded-xl mb-4" : ""}`} data-roving-group>
     <div
-        class={`group relative px-3 m-0 rounded-md text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
-            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10 rounded-none" : "rounded-md"
+        class={`group relative px-3 m-0 text-white/75 hover:text-white h-11 hover:bg-contrast-200/10 w-full flex space-x-2 items-center ${
+            rootFolder ? "border-solid border-x-0 border-t border-b-0 border-white/10 rounded-none" : "rounded-lg"
         }`}
         class:mb-2={isOpen || rootFolder}
         data-roving-row
