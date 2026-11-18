@@ -47,6 +47,7 @@
             document.documentElement.dir = /^(ar|fa|he|ur)([-_]|$)/i.test(strings.lang) ? "rtl" : "ltr";
         }
         applyStaticStrings();
+        applyAnnotateLabel();
         // Re-render the open dynamic panels in the new language.
         if (pickerOpen && lastSources.length > 0) renderPicker();
         if (devicesOpen) renderDevices();
@@ -82,6 +83,7 @@
     var dvCancel = byId("dv-cancel");
 
     var annotationPanel = byId("annotation");
+    var annotationNote = byId("annotation-note");
     var anCaret = byId("an-caret");
     var anTools = annotationPanel.querySelectorAll("[data-tool]");
     var anColors = annotationPanel.querySelectorAll("[data-color]");
@@ -95,6 +97,8 @@
     var menuOpen = false;
     var devicesOpen = false;
     var annotationActive = false;
+    var annotationWindowShare = false;
+    var noteTimer = null;
     var pickerKind = "screen";
     var lastSources = [];
     var lastDevices = null;
@@ -118,6 +122,13 @@
         lastCamEnabled = state.cameraEnabled === true;
         var annotation = state.annotation || {};
         setBtnState(btnAnnotate, annotation.active === true, false);
+        // Window share: the overlay covers whole screens only, so the pen is greyed (still clickable
+        // to explain why, or to leave a drawing mode started before switching to a window).
+        annotationWindowShare = annotation.windowShare === true;
+        btnAnnotate.classList.toggle("is-unavailable", annotationWindowShare);
+        btnAnnotate.setAttribute("aria-disabled", annotationWindowShare ? "true" : "false");
+        applyAnnotateLabel();
+        if (!annotationWindowShare) hideAnnotationNote();
         // Annotation toolbar (a panel of this window): reflect the active tool / colour / toggles.
         annotationActive = annotation.active === true;
         anTools.forEach(function (b) {
@@ -151,8 +162,34 @@
         api.sendCommand({ type: "toggle-screenshare" });
     });
     btnAnnotate.addEventListener("click", function () {
+        if (annotationWindowShare && !annotationActive) {
+            showAnnotationNote();
+            return;
+        }
         api.sendCommand({ type: "annotation-toggle" });
     });
+    // Native title tooltips are unreliable on this unfocused always-on-top window: say it in a panel.
+    function screenOnlyText() {
+        return t("meetingBar.annotateScreenOnly", "Annotations are only available when you share a whole screen.");
+    }
+    function applyAnnotateLabel() {
+        var label = annotationWindowShare ? screenOnlyText() : t("meetingBar.annotate", "Annotate the shared screen");
+        btnAnnotate.title = label;
+        btnAnnotate.setAttribute("aria-label", label);
+    }
+    function showAnnotationNote() {
+        annotationNote.textContent = screenOnlyText();
+        annotationNote.classList.add("visible");
+        updateExpanded();
+        clearTimeout(noteTimer);
+        noteTimer = setTimeout(hideAnnotationNote, 4000);
+    }
+    function hideAnnotationNote() {
+        clearTimeout(noteTimer);
+        if (!annotationNote.classList.contains("visible")) return;
+        annotationNote.classList.remove("visible");
+        updateExpanded();
+    }
 
     // ─────────── Annotation toolbar (panel above the pill, like the "…" menu) ───────────
     // Grow the window to the tallest open panel: the picker/menu need the full height, the short
@@ -160,7 +197,7 @@
     function updateExpanded() {
         if (menuOpen || pickerOpen || devicesOpen) {
             api.setExpanded(true);
-        } else if (annotationActive) {
+        } else if (annotationActive || annotationNote.classList.contains("visible")) {
             api.setExpanded(true, ANNOTATION_EXPAND_HEIGHT);
         } else {
             api.setExpanded(false);

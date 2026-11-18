@@ -15,7 +15,11 @@ import {
     usedMicrophoneDeviceIdStore,
 } from "../../Stores/MediaStore";
 import { localUserStore } from "../../Connection/LocalUserStore";
-import { requestedScreenSharingState, startScreenShareWithSource } from "../../Stores/ScreenSharingStore";
+import {
+    activeScreenShareSourceStore,
+    requestedScreenSharingState,
+    startScreenShareWithSource,
+} from "../../Stores/ScreenSharingStore";
 import {
     currentAnnotationColorStore,
     currentAnnotationToolStore,
@@ -29,6 +33,11 @@ import { screenAnnotationManager } from "../../Space/ScreenAnnotation/ScreenAnno
 import { isActivePresenterTool, presenterToolStore } from "../../Stores/PresenterEffectStore";
 
 type WindowWithDesktop = Window & { WAD?: WorkAdventureDesktopApi };
+
+/** desktopCapturer ids are "screen:<id>:<n>" or "window:<id>:<n>". */
+function isWindowShare(): boolean {
+    return get(activeScreenShareSourceStore)?.id.startsWith("window:") === true;
+}
 
 /** Returns the native presenter-HUD API when running inside the Electron desktop shell. */
 function getPresenterHudApi(): NonNullable<WorkAdventureDesktopApi["presenterHud"]> | undefined {
@@ -74,6 +83,7 @@ class PresenterHudBridge {
             requestedMicrophoneState,
             requestedCameraState,
             requestedScreenSharingState,
+            activeScreenShareSourceStore,
             localAnnotationActiveStore,
             currentAnnotationToolStore,
             currentAnnotationColorStore,
@@ -115,6 +125,7 @@ class PresenterHudBridge {
                 locallyHidden: get(screenAnnotationLocallyHiddenStore),
                 canUndo: target ? screenAnnotationManager.canUndoLocal(target) : false,
                 canRedo: target ? screenAnnotationManager.canRedoLocal(target) : false,
+                windowShare: isWindowShare(),
             },
             presenterTool: get(presenterToolStore),
             devices: {
@@ -170,6 +181,8 @@ class PresenterHudBridge {
                 });
                 break;
             case "annotation-toggle":
+                // The overlay only covers whole screens; turning it off stays possible.
+                if (isWindowShare() && !get(localAnnotationActiveStore)) break;
                 screenAnnotationManager.toggleDrawingOnMyShare();
                 break;
             case "annotation-set-tool":

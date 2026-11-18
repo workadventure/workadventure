@@ -123,6 +123,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         toggleCamera: "Kameru zašaltowaś/wótšaltowaś",
         stopSharing: "Źělenje wobrazowki zastajiś",
         annotate: "Rozdźěleny wobraz komentěrowaś",
+        annotateScreenOnly: "Komentary su jano k dispoziciji, gaž cełu wobrazowku źěliš.",
         camera: "Kamera",
         microphone: "Mikrofon",
         cameraOff: "Waša kamera jo wótšaltowana — zašaltujśo ju, aby jadnu wubrał.",

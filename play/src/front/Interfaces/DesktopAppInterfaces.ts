@@ -203,6 +203,8 @@ export type DesktopPresenterHudState = {
         /** Whether there is a local element to undo / a undone element to redo (greys the buttons). */
         canUndo: boolean;
         canRedo: boolean;
+        /** The share is a single window: the overlay covers whole screens only, so drawing is unavailable. */
+        windowShare: boolean;
     };
     /** Active presenter cursor tool: "none" | "laser" | "spotlight" | "loupe". */
     presenterTool?: string;

@@ -126,6 +126,7 @@ const desktop: BaseTranslation = {
         toggleCamera: "Turn camera on/off",
         stopSharing: "Stop sharing your screen",
         annotate: "Annotate the shared screen",
+        annotateScreenOnly: "Annotations are only available when you share a whole screen.",
         camera: "Camera",
         microphone: "Microphone",
         cameraOff: "Your camera is off — turn it on to choose one.",

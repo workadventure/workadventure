@@ -123,6 +123,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         toggleCamera: "Bật/tắt camera",
         stopSharing: "Dừng chia sẻ màn hình",
         annotate: "Chú thích trên màn hình được chia sẻ",
+        annotateScreenOnly: "Chỉ có thể chú thích khi bạn chia sẻ toàn bộ màn hình.",
         camera: "Camera",
         microphone: "Micrô",
         cameraOff: "Camera của bạn đang tắt — hãy bật để chọn camera.",

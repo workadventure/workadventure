@@ -123,6 +123,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         toggleCamera: "開啟/關閉攝影機",
         stopSharing: "停止分享螢幕",
         annotate: "在分享的螢幕上加上註解",
+        annotateScreenOnly: "僅在分享整個螢幕時才能使用註解。",
         camera: "攝影機",
         microphone: "麥克風",
         cameraOff: "你的攝影機已關閉——請先開啟再選擇。",

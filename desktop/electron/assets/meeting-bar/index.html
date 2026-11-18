@@ -349,6 +349,25 @@
             z-index: 10;
         }
         #annotation.visible { display: inline-flex; }
+        .bar-btn.is-unavailable { opacity: 0.4; }
+        .bar-btn.is-unavailable.is-active { opacity: 1; }
+        #annotation-note {
+            position: fixed;
+            bottom: 62px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: none;
+            max-width: calc(100vw - 24px);
+            padding: 8px 12px;
+            background: var(--contrast);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            color: var(--fg);
+            font-size: 13px;
+            text-align: center;
+            z-index: 10;
+        }
+        #annotation-note.visible { display: block; }
         .an-btn {
             -webkit-app-region: no-drag;
             cursor: pointer;
@@ -453,6 +472,7 @@
         </button>
         <span class="mn-caret" id="mn-caret" aria-hidden="true"></span>
     </div>
+    <div id="annotation-note" role="status" aria-live="polite"></div>
     <!-- Annotation toolbar (panel of this window; shown while drawing mode is on). -->
     <div id="annotation" role="toolbar" aria-label="Annotation tools" data-i18n-label="meetingBar.annotationTools">
         <button class="an-btn" id="an-undo" type="button" title="Undo" aria-label="Undo" data-i18n-label="meetingBar.undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M9 14l-4 -4l4 -4"/><path d="M5 10h11a4 4 0 1 1 0 8h-1"/></svg></button>
@@ -528,7 +548,7 @@
                     <path d="M16 9l5 -5"/>
                 </svg>
             </button>
-            <button class="bar-btn" id="bar-annotate" type="button" data-state="off" title="Annotate the shared screen" aria-label="Annotate the shared screen" data-i18n-label="meetingBar.annotate">
+            <button class="bar-btn" id="bar-annotate" type="button" data-state="off" title="Annotate the shared screen" aria-label="Annotate the shared screen">
                 <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                     <path d="M4 20h4l10.5 -10.5a2.828 2.828 0 1 0 -4 -4l-10.5 10.5v4"/>

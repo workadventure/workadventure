@@ -123,6 +123,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         toggleCamera: "カメラのオン/オフ",
         stopSharing: "画面共有を停止",
         annotate: "共有画面に注釈を付ける",
+        annotateScreenOnly: "注釈は画面全体を共有している場合のみ利用できます。",
         camera: "カメラ",
         microphone: "マイク",
         cameraOff: "カメラがオフです。選択するにはオンにしてください。",

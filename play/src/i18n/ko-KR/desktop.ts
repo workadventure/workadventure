@@ -123,6 +123,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         toggleCamera: "카메라 켜기/끄기",
         stopSharing: "화면 공유 중지",
         annotate: "공유 화면에 주석 달기",
+        annotateScreenOnly: "주석은 전체 화면을 공유할 때만 사용할 수 있습니다.",
         camera: "카메라",
         microphone: "마이크",
         cameraOff: "카메라가 꺼져 있습니다. 선택하려면 카메라를 켜세요.",
