@@ -14,6 +14,7 @@ export type SettingsState = {
     version: string;
     startAtLogin: boolean;
     tabBar: boolean;
+    closeToTray: boolean;
     /** Linux under Wayland only. */
     windowMode?: DesktopWindowModeState;
     shortcuts: SettingsShortcuts;
@@ -26,6 +27,7 @@ export type SettingsApi = {
     /** Each setter resolves with the state the app ends up in. */
     setStartAtLogin: (enabled: boolean) => Promise<boolean>;
     setTabBar: (enabled: boolean) => Promise<boolean>;
+    setCloseToTray: (enabled: boolean) => Promise<boolean>;
     setWindowMode: (mode: DesktopWindowMode) => Promise<DesktopWindowModeState | undefined>;
     restart: () => void;
     /** "" clears the shortcut. */

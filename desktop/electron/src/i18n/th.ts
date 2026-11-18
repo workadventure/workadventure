@@ -102,12 +102,16 @@ const th: NativeStrings = {
         "WorkAdventure ไม่สามารถเริ่มในโหมดความเข้ากันได้ (X11) จึงใช้โหมด Wayland แบบเนทีฟแทน คุณสามารถเปลี่ยนกลับได้ในการตั้งค่าของแอป",
     "windowMode.openSettings": "เปิดการตั้งค่า",
     "tray.quit": "ออก",
+    "closeToTray.stillRunning":
+        "WorkAdventure ยังทำงานอยู่ และคุณยังอยู่ในโลกของคุณ หากต้องการออก ให้ใช้ไอคอนในถาดระบบ",
 
     "settings.title": "การตั้งค่า",
     "settings.general": "ทั่วไป",
     "settings.startAtLogin": "เปิด WorkAdventure เมื่อเข้าสู่ระบบคอมพิวเตอร์",
     "settings.showTabBar": "แสดงแถบแท็บ",
     "settings.showTabBarHint": "แถบแท็บจะแสดงเมื่อเปิดหลายแท็บ",
+    "settings.closeToTray": "ให้ WorkAdventure ทำงานต่อเมื่อปิดหน้าต่าง",
+    "settings.closeToTrayHint": "คุณยังอยู่ในโลกของคุณ หากต้องการออก ให้ใช้ไอคอน WorkAdventure ในถาดระบบ",
     "settings.windowMode": "โหมดหน้าต่าง",
     "settings.windowModeX11": "ความเข้ากันได้ (X11) (แนะนำ)",
     "settings.windowModeX11Description":

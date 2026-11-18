@@ -13,6 +13,7 @@ import { t } from "./i18n";
 import { onShortcutsChange } from "./shortcuts";
 import { openSettingsWindow } from "./settings-window";
 import { OFFLINE_DOT_COLOR, TRAY_ICON_PATH, TRAY_ICON_SIZE, drawStatusDot } from "./tray-icon";
+import { detectTray } from "./close-to-tray";
 
 let tray: Tray | undefined;
 
@@ -177,6 +178,7 @@ export function getTray() {
 }
 
 export function createTray() {
+    detectTray();
     tray = new Tray(drawTrayStatusImage(trayStatus().color));
     updateTrayIcon();
     updateTrayContextMenu();

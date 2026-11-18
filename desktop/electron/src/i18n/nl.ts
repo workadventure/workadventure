@@ -108,12 +108,17 @@ const nl: NativeStrings = {
         "WorkAdventure kon niet starten in de compatibiliteitsmodus (X11) en gebruikt nu de native Wayland-modus. Je kunt terugschakelen in de instellingen van de app.",
     "windowMode.openSettings": "Instellingen openen",
     "tray.quit": "Afsluiten",
+    "closeToTray.stillRunning":
+        "WorkAdventure draait nog en je bent nog steeds in je wereld. Gebruik het pictogram in het systeemvak om af te sluiten.",
 
     "settings.title": "Instellingen",
     "settings.general": "Algemeen",
     "settings.startAtLogin": "WorkAdventure starten wanneer ik inlog op mijn computer",
     "settings.showTabBar": "Tabbladbalk tonen",
     "settings.showTabBarHint": "De tabbalk verschijnt zodra er meerdere tabbladen open zijn.",
+    "settings.closeToTray": "WorkAdventure laten draaien wanneer ik het venster sluit",
+    "settings.closeToTrayHint":
+        "Je blijft in je wereld. Gebruik het WorkAdventure-pictogram in het systeemvak om af te sluiten.",
     "settings.windowMode": "Venstermodus",
     "settings.windowModeX11": "Compatibiliteit (X11), aanbevolen",
     "settings.windowModeX11Description":

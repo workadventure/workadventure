@@ -9,6 +9,7 @@ import { getWindowModeState, restartToApplyWindowMode, setWindowMode, windowMode
 import { getUnavailableShortcuts, saveShortcut } from "./shortcuts";
 import { isSettableAccelerator, SHORTCUT_NAMES, type ShortcutName } from "./shortcut-policy";
 import { setTabBarEnabled } from "./native-menu";
+import { closesToTray, setCloseToTray } from "./close-to-tray";
 import { manualRequestUpdateCheck } from "./auto-updater";
 import { openLog } from "./log";
 import { getActiveWorldContents } from "./tab-manager";
@@ -88,6 +89,7 @@ function settingsState(): SettingsState {
         version: app.isPackaged ? app.getVersion() : "dev",
         startAtLogin: isStartAtLoginEnabled(),
         tabBar: settings.get("tab_bar_enabled") !== false,
+        closeToTray: closesToTray(),
         windowMode: windowModeAvailable ? getWindowModeState() : undefined,
         shortcuts: shortcutsState(),
     };
@@ -106,6 +108,9 @@ export function registerSettingsWindowIpc(): void {
     });
     ipcMain.handle("app:settings:tab-bar", (event, enabled: unknown) =>
         isFromSettingsWindow(event) ? setTabBarEnabled(enabled === true, settingsWindow) : false
+    );
+    ipcMain.handle("app:settings:close-to-tray", (event, enabled: unknown) =>
+        isFromSettingsWindow(event) ? setCloseToTray(enabled === true) : false
     );
     ipcMain.handle("app:settings:window-mode", (event, mode: unknown) => {
         if (!isFromSettingsWindow(event) || !windowModeAvailable || (mode !== "x11" && mode !== "wayland")) {

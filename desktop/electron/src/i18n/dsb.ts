@@ -108,12 +108,17 @@ const dsb: NativeStrings = {
         "WorkAdventure njedajo se w kompatibelnem modusu (X11) startowaś, togodla něnto natiwny modus Wayland wužywa. W jogo nastajenjach móžośo zasej slědk pśešaltowaś.",
     "windowMode.openSettings": "Nastajenja wócyniś",
     "tray.quit": "Skóńcyś",
+    "closeToTray.stillRunning":
+        "WorkAdventure hyšći běžy a wy sćo hyšći w swójom swěśe. Aby skóńcyli, wužywajśo jogo symbol w systemowej lajsće.",
 
     "settings.title": "Nastajenja",
     "settings.general": "Powšykne",
     "settings.startAtLogin": "WorkAdventure pśi pśizjawjenju na licadle startowaś",
     "settings.showTabBar": "Rejtarikowu lajstu pokazaś",
     "settings.showTabBarHint": "Lajsta rejtarikow se pokažo, gaž su někotare rejtariki wócynjone.",
+    "settings.closeToTray": "WorkAdventure dalej běžaś daś, gaž wokno zacynjam",
+    "settings.closeToTrayHint":
+        "Wóstanjośo w swójom swěśe. Aby skóńcyli, wužywajśo symbol WorkAdventure w systemowej lajsće.",
     "settings.windowMode": "Woknowy modus",
     "settings.windowModeX11": "Kompatibilita (X11), dopórucona",
     "settings.windowModeX11Description":

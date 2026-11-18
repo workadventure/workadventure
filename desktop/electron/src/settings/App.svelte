@@ -124,6 +124,22 @@
                     <span class="text-[13px] text-muted">{t("settings.showTabBarHint")}</span>
                 </span>
             </label>
+            <label class="flex cursor-pointer gap-3">
+                <input
+                    type="checkbox"
+                    class={checkboxClass}
+                    checked={settings.closeToTray}
+                    onchange={async (event) => {
+                        const on = await toggle(event, api.setCloseToTray);
+                        if (settings && on !== undefined) settings.closeToTray = on;
+                    }}
+                    data-testid="settings-close-to-tray"
+                />
+                <span class="flex flex-col gap-0.5">
+                    <span>{t("settings.closeToTray")}</span>
+                    <span class="text-[13px] text-muted">{t("settings.closeToTrayHint")}</span>
+                </span>
+            </label>
         </Section>
 
         {#if settings.windowMode}

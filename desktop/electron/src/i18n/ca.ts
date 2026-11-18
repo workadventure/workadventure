@@ -108,12 +108,17 @@ const ca: NativeStrings = {
         "WorkAdventure no s'ha pogut iniciar en mode de compatibilitat (X11), així que ara fa servir el mode Wayland natiu. Pots tornar a canviar-lo a la seva configuració.",
     "windowMode.openSettings": "Obre la configuració",
     "tray.quit": "Surt",
+    "closeToTray.stillRunning":
+        "WorkAdventure continua obert i continues al teu món. Per sortir, fes servir la seva icona a la safata del sistema.",
 
     "settings.title": "Configuració",
     "settings.general": "General",
     "settings.startAtLogin": "Inicia WorkAdventure en iniciar la sessió a l’ordinador",
     "settings.showTabBar": "Mostra la barra de pestanyes",
     "settings.showTabBarHint": "La barra de pestanyes apareix quan hi ha diverses pestanyes obertes.",
+    "settings.closeToTray": "Mantén WorkAdventure obert en tancar la finestra",
+    "settings.closeToTrayHint":
+        "Continues al teu món. Per sortir, fes servir la icona de WorkAdventure a la safata del sistema.",
     "settings.windowMode": "Mode de finestres",
     "settings.windowModeX11": "Compatibilitat (X11), recomanat",
     "settings.windowModeX11Description":
