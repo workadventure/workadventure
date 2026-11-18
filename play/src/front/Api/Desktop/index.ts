@@ -183,15 +183,6 @@ class DesktopApi {
             });
         }
 
-        // Started with the computer, behind the tray: nobody has looked at WorkAdventure yet.
-        window.WAD.startedInBackground?.()
-            .then((inBackground) => {
-                if (inBackground && !get(focusStore)) {
-                    goIdle();
-                }
-            })
-            .catch((error: unknown) => console.warn("Could not ask the desktop app how it started", error));
-
         // Notification clicks arrive from main once the user has focused the window; route them
         // to the same chat-open path the service-worker click path uses on the web, so the
         // originating chat room is opened and highlighted.

@@ -27,7 +27,6 @@ const CONTRACT_2 = [
     "onRequestPresence",
     "setTabTitle",
     "onSystemIdle",
-    "startedInBackground",
     "onMediaPreempted",
     "onOtherMeetingMuted",
     "identifyScreens",

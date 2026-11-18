@@ -222,11 +222,6 @@ export type WorkAdventureDesktopApi = {
      */
     onSystemIdle?: (callback: (idle: boolean) => void) => () => void;
     /**
-     * Whether the app started with the computer and the user has not opened its window since: the world loads
-     * behind the tray, with nobody looking at it. Absent on older desktop apps: then it is a normal start.
-     */
-    startedInBackground?: () => Promise<boolean>;
-    /**
      * Another tab entered a meeting: this world must turn off its microphone, camera and screen
      * share (one meeting at a time). Returns an unsubscriber.
      */

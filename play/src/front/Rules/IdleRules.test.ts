@@ -19,6 +19,11 @@ vi.mock("../Stores/FocusStore", async () => {
     stores.focus = writable(false);
     return { focusStore: stores.focus };
 });
+vi.mock("../Stores/GameSceneStore", async () => {
+    const { writable } = await import("svelte/store");
+    stores.mapLoaded = writable(false);
+    return { gameSceneIsLoadedStore: stores.mapLoaded };
+});
 vi.mock("../Stores/PrivacyShutdownStore", async () => {
     const { writable } = await import("svelte/store");
     stores.away = writable(false);
@@ -65,12 +70,34 @@ describe("startIdleRules", () => {
         stores.conversation.set(false);
         stores.focus.set(false);
         stores.away.set(false);
+        stores.mapLoaded.set(false);
         stop = startIdleRules();
     });
 
     afterEach(() => {
         stop();
         vi.useRealTimers();
+    });
+
+    it("a page that never had the focus goes idle when its first map is loaded", () => {
+        stores.mapLoaded.set(true);
+        expect(get(idleStore)).toBe(true);
+    });
+
+    it("a page that had the focus does not, even if it lost it before the map was loaded", () => {
+        stores.focus.set(true);
+        stores.focus.set(false);
+        stores.mapLoaded.set(true);
+        expect(get(idleStore)).toBe(false);
+    });
+
+    it("only the first map counts: a later one is not a new page", () => {
+        stores.mapLoaded.set(true);
+        // Back from the mini window, without ever giving the page the focus.
+        idleStore.set(false);
+        stores.mapLoaded.set(false);
+        stores.mapLoaded.set(true);
+        expect(get(idleStore)).toBe(false);
     });
 
     it("coming back to WorkAdventure ends idle", () => {
