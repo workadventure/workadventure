@@ -29,20 +29,25 @@ const EXPANDED_KEYFRAME: Keyframe = {
 };
 
 /**
- * An icon next to the player's name, shown while their status calls for it: the megaphone of a speaker, the "zZz"
- * of an idle user (whose float is in style.css).
+ * An icon next to the player's name, shown while their status calls for it: the megaphone of a speaker (an image),
+ * the "zZz" of an idle user (an inline SVG, so that style.css can animate each Z).
  */
 export class UsernameBadgeDisplay {
-    public readonly element: HTMLImageElement;
+    public readonly element: HTMLImageElement | SVGSVGElement;
 
     private shown = false;
     private animation?: Animation;
 
-    constructor(src: string) {
-        this.element = document.createElement("img");
-        this.element.src = src;
-        this.element.alt = "";
-        this.element.draggable = false;
+    constructor(icon: string | SVGSVGElement) {
+        if (typeof icon === "string") {
+            const image = document.createElement("img");
+            image.src = icon;
+            image.alt = "";
+            image.draggable = false;
+            this.element = image;
+        } else {
+            this.element = icon;
+        }
         this.element.style.display = "none";
         this.element.style.flex = "0 0 auto";
         this.element.style.width = ICON_SIZE;

@@ -910,14 +910,26 @@ div.emoji-picker {
         animation: sonar_speaker 0.5s ease-out infinite;
     }
 
-    /* The "zZz" of an idle user: a slow float, still for those who ask for less motion */
-    & .username-idle {
-        animation: username_idle 3s ease-in-out infinite;
+    /*
+     * The "zZz" of an idle user: each Z lights up and swells in turn, from the small one to the big one (2.16 s each,
+     * 0.45 s apart), then all three rest for 3 s. One 6.1 s cycle, which the delays keep staggered.
+     */
+    & .username-idle use {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: username_idle 6.1s ease-in-out infinite backwards;
+    }
+    & .username-idle use:nth-child(2) {
+        animation-delay: 0.45s;
+    }
+    & .username-idle use:nth-child(3) {
+        animation-delay: 0.9s;
     }
 }
 
+/* Still, and fully white, for those who ask for less motion */
 @media (prefers-reduced-motion: reduce) {
-    .username-display .username-idle {
+    .username-display .username-idle use {
         animation: none;
     }
 }
@@ -933,8 +945,8 @@ div.emoji-picker {
 }
 
 @keyframes username_idle {
-    0%, 100% { transform: translateY(calc(var(--username-dom-scale, 1) * 1px)); }
-    50%      { transform: translateY(calc(var(--username-dom-scale, 1) * -1px)); }
+    0%, 35.4%, 100% { opacity: 0.3; transform: scale(1); }
+    11.8%           { opacity: 1;   transform: scale(1.15); }
 }
 
 @keyframes sonar_speaker {
