@@ -152,6 +152,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "他の参加者の注釈を許可",
         clearAll: "すべて消去",
         annotate: "共有画面に注釈を付ける",
+        annotateScreenOnly: "注釈は画面全体を共有している場合のみ利用できます。",
         camera: "カメラ",
         microphone: "マイク",
         cameraOff: "カメラがオフです。選択するにはオンにしてください。",

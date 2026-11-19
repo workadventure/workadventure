@@ -147,6 +147,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "允许他人标注",
         clearAll: "全部清除",
         annotate: "标注共享屏幕",
+        annotateScreenOnly: "仅在共享整个屏幕时才能使用批注。",
         camera: "摄像头",
         microphone: "麦克风",
         cameraOff: "你的摄像头已关闭——请先打开再选择。",
