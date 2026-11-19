@@ -149,6 +149,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "다른 사람의 주석 허용",
         clearAll: "모두 지우기",
         annotate: "공유 화면에 주석 달기",
+        annotateScreenOnly: "주석은 전체 화면을 공유할 때만 사용할 수 있습니다.",
         camera: "카메라",
         microphone: "마이크",
         cameraOff: "카메라가 꺼져 있습니다. 선택하려면 카메라를 켜세요.",

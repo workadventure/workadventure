@@ -151,6 +151,7 @@ const desktop: BaseTranslation = {
         allowOthers: "Allow others to annotate",
         clearAll: "Clear all",
         annotate: "Annotate the shared screen",
+        annotateScreenOnly: "Annotations are only available when you share a whole screen.",
         camera: "Camera",
         microphone: "Microphone",
         cameraOff: "Your camera is off — turn it on to choose one.",
