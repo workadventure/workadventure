@@ -1,5 +1,5 @@
 # The "front" image of the previous deployment. Its hashed assets are carried over (see the "front" stage).
-ARG PREVIOUS_FRONT_IMAGE=nginx:1.30-alpine3.24
+ARG PREVIOUS_FRONT_IMAGE=nginx:1.31-alpine3.24
 
 
 # protobuf build
@@ -61,13 +61,13 @@ RUN mkdir -p /usr/share/nginx/html/assets
 # "front" image: the static files, served by nginx (build with --target front).
 # It keeps the hashed files of the previous deployments for 60 days, so that pages rendered with an older
 # index.html (open tabs, a rollout in progress, a CDN miss) can still load their chunks.
-# nginx stable branch: the patch version follows upstream automatically.
-FROM nginx:1.30-alpine3.24 AS front
+# nginx mainline branch: the patch version follows upstream automatically.
+FROM nginx:1.31-alpine3.24 AS front
 COPY --from=previous-front /usr/share/nginx/html/assets /usr/share/nginx/html/assets
 COPY --from=builder /usr/src/play/dist/public /usr/share/nginx/html
 RUN find /usr/share/nginx/html/assets -type f -mtime +60 -delete
 COPY play/nginx-front.conf /etc/nginx/conf.d/default.conf
-HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 CMD wget -q -O /dev/null http://localhost/index.html || exit 1
+HEALTHCHECK --interval=10s --timeout=5s --start-period=5s --retries=3 CMD wget -q -O /dev/null http://127.0.0.1/index.html || exit 1
 
 # final production image (the default target)
 FROM node:24-trixie-slim
