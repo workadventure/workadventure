@@ -104,7 +104,7 @@
         <div class="flex flex-col gap-1">
             <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
                 <button
-                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
+                    class="p-3 hover:bg-white/10 rounded-lg aspect-square w-12 m-0"
                     data-testid="closeMapEditorButton"
                     onclick={(event) => {
                         event.preventDefault();
@@ -116,7 +116,7 @@
             </div>
             <div class="close-window p-2 bg-contrast/80 rounded-2xl backdrop-blur-md">
                 <button
-                    class="p-3 hover:bg-white/10 rounded aspect-square w-12 m-0"
+                    class="p-3 hover:bg-white/10 rounded-lg aspect-square w-12 m-0"
                     data-testid="hideMapEditorButton"
                     onclick={(event) => {
                         event.preventDefault();
@@ -140,7 +140,7 @@
                 {@const ToolIcon = tool.iconComponent}
                 <div class="tool-button relative">
                     <button
-                        class="peer p-3 aspect-square w-12 rounded {$mapEditorSelectedToolStore === tool.toolName
+                        class="peer p-3 aspect-square w-12 rounded-lg {$mapEditorSelectedToolStore === tool.toolName
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
                         id={tool.toolName}
