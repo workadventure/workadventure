@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.0.0-beta.6](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.5...desktop-v2.0.0-beta.6) (2026-11-19)
+
+
+### Features
+
+* **desktop:** keep running in the tray when the window is closed ([4fcc6f9](https://github.com/workadventure/workadventure/commit/4fcc6f9ac576738b023269b66c462f782d11e9db))
+* **desktop:** sign and notarize the macOS app with the Developer ID certificate ([980806f](https://github.com/workadventure/workadventure/commit/980806f3821fddb4e2919b044de4564fb2e320ec))
+* **desktop:** start in the tray when the computer starts the app ([#7049](https://github.com/workadventure/workadventure/issues/7049)) ([a004173](https://github.com/workadventure/workadventure/commit/a0041738f7bbb33425087ff8a7ef4733e2046357))
+
+
+### Bug Fixes
+
+* **desktop:** show the release name, not raw HTML, in the Windows update dialog ([eb60bc3](https://github.com/workadventure/workadventure/commit/eb60bc305ba22695a507ebb9ae3eead29e819c2c))
+
 ## [2.0.0-beta.5](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.4...desktop-v2.0.0-beta.5) (2026-11-17)
 
 
