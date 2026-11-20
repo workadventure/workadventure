@@ -7,6 +7,7 @@ import { isStartAtLoginEnabled, writeLinuxAutostart } from "./auto-launch";
 import { createAndShowNotification } from "./notification";
 import { createDesktopConfig } from "./desktop-url-policy";
 import { t } from "./i18n";
+import { getWindow } from "./window";
 
 const sleep = util.promisify(setTimeout);
 
@@ -78,7 +79,13 @@ async function init() {
                 detail: t("update.ready"),
             };
 
-            const { response } = await dialog.showMessageBox(dialogOpts);
+            // Attached to the window: on macOS a message box without a parent runs a modal loop on the
+            // main thread, which froze the whole app (calls included) until the user answered.
+            const window = getWindow();
+            const { response } =
+                window && !window.isDestroyed()
+                    ? await dialog.showMessageBox(window, dialogOpts)
+                    : await dialog.showMessageBox(dialogOpts);
             if (response === 0) {
                 await sleep(1000);
 
