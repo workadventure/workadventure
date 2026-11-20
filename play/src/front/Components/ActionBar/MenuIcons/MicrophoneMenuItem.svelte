@@ -9,6 +9,8 @@
         microphoneListStore,
         requestedMicrophoneState,
         silentStore,
+        temporaryMicrophoneState,
+        wantedMicrophoneState,
     } from "../../../Stores/MediaStore";
     import { openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
@@ -21,18 +23,37 @@
 
     // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
-        [requestedMicrophoneState, microphoneListStore, silentStore],
-        ([$requestedMicrophoneState, $microphoneListStore, $silentStore]) => {
+        [requestedMicrophoneState, temporaryMicrophoneState, microphoneListStore, silentStore],
+        ([$requestedMicrophoneState, $temporaryMicrophoneState, $microphoneListStore, $silentStore]) => {
             if ($silentStore || ($microphoneListStore !== undefined && $microphoneListStore.length === 0)) {
                 return "disabled";
+            }
+            // Held open with push-to-talk: a click latches it on.
+            if ($temporaryMicrophoneState && !$requestedMicrophoneState) {
+                return "active";
             }
             return $requestedMicrophoneState ? "normal" : "forbidden";
         },
     );
 
     const microphoneActionBarTooltipStore = derived(
-        [LL, microphoneButtonHelpContextStore, heldMediaStore, silentStore, availabilityStatusStore],
-        ([$LL, ctx, held, silent, status]) => {
+        [
+            LL,
+            microphoneButtonHelpContextStore,
+            heldMediaStore,
+            silentStore,
+            availabilityStatusStore,
+            requestedMicrophoneState,
+            temporaryMicrophoneState,
+        ],
+        ([$LL, ctx, held, silent, status, micOn, temporaryMicOn]) => {
+            if (temporaryMicOn && !micOn) {
+                return {
+                    title: $LL.actionbar.microphone.temporaryOn(),
+                    desc: $LL.actionbar.microphone.temporaryRelease(),
+                    media: "",
+                };
+            }
             if (held.microphone && canComeBackFrom(held.status)) {
                 return {
                     title: $LL.actionbar.help.micPausedByStatus.title(),
@@ -108,7 +129,7 @@
     desc={$microphoneActionBarTooltipStore.desc}
     media={$microphoneActionBarTooltipStore.media}
 >
-    {#if $requestedMicrophoneState && !$silentStore && $microphoneListStore && $microphoneListStore.length > 0}
+    {#if $wantedMicrophoneState && !$silentStore && $microphoneListStore && $microphoneListStore.length > 0}
         <MicOnIcon />
     {:else}
         <MicOffIcon />

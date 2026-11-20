@@ -164,6 +164,7 @@ const menu: DeepPartial<Translation["menu"]> = {
     },
     shortcuts: {
         walkMyDesk: "Aller à mon bureau",
+        pushToTalk: "Appuyer pour parler",
         edit: {
             start: "Modifier",
             title: "Mode édition",
@@ -197,6 +198,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "Interagir",
         },
         hints: {
+            pushToTalk: "Maintenir pendant une réunion",
             speedUp: "Maintenir pendant le déplacement",
             follow: "Près d'une personne",
             emotes: "Dans l'ordre de la barre d'émoticônes",

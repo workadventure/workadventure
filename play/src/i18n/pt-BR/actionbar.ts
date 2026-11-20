@@ -44,6 +44,8 @@ const actionbar: BaseTranslation = {
     microphone: {
         disabled: "Seu microfone está desabilitado",
         activate: "Ativar seu microfone",
+        temporaryOn: "Microfone temporariamente ligado",
+        temporaryRelease: "Solte a tecla para silenciar novamente.",
         noSoundWarning:
             "Nenhum som detectado do seu microfone. Pode haver um problema; tente trocar o microfone nas configurações.",
         advancedNoiseReduction: "Redução de ruído avançada",

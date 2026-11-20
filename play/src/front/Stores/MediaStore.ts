@@ -101,6 +101,12 @@ function createRequestedCameraState() {
 }
 
 /**
+ * Push-to-talk: true while the user holds the push-to-talk key (see GameSceneUserInputHandler) with the microphone
+ * muted. Never persisted, so releasing the key brings back the user's real choice instead of latching the mic on.
+ */
+export const temporaryMicrophoneState = writable(false);
+
+/**
  * A store that contains the microphone state requested by the user (on or off).
  */
 function createRequestedMicrophoneState() {
@@ -113,6 +119,8 @@ function createRequestedMicrophoneState() {
             localUserStore.setRequestedMicrophoneState(true);
         },
         disableMicrophone: () => {
+            // Every mute (the user, a moderator, a device error) also ends a push-to-talk in progress.
+            temporaryMicrophoneState.set(false);
             set(false);
             localUserStore.setRequestedMicrophoneState(false);
         },
@@ -134,6 +142,12 @@ function createEnableCameraSceneVisibilityStore() {
 
 export const requestedCameraState = createRequestedCameraState();
 export const requestedMicrophoneState = createRequestedMicrophoneState();
+
+/** The microphone the user wants open: latched on with the button, or held open with push-to-talk. */
+export const wantedMicrophoneState: Readable<boolean> = derived(
+    [requestedMicrophoneState, temporaryMicrophoneState],
+    ([$requested, $temporary]) => $requested || $temporary,
+);
 export const enableCameraSceneVisibilityStore = createEnableCameraSceneVisibilityStore();
 
 /**
@@ -536,7 +550,7 @@ export interface MediaStreamConstraintsValue {
 export const mediaStreamConstraintsStore = derived(
     [
         requestedCameraState,
-        requestedMicrophoneState,
+        wantedMicrophoneState,
         myCameraStore,
         myMicrophoneStore,
         inExternalServiceStore,
@@ -554,7 +568,7 @@ export const mediaStreamConstraintsStore = derived(
     (
         [
             $requestedCameraState,
-            $requestedMicrophoneState,
+            $wantedMicrophoneState,
             $myCameraStore,
             $myMicrophoneStore,
             $inExternalServiceStore,
@@ -589,7 +603,7 @@ export const mediaStreamConstraintsStore = derived(
             $myMicrophoneStore === false || isInExternalService || heldByStatus.microphone || isEnergySaving;
 
         // Audio constraints always apply
-        if ($requestedMicrophoneState === false || isMicrophoneForcedOff) {
+        if ($wantedMicrophoneState === false || isMicrophoneForcedOff) {
             currentAudioConstraint = false;
         }
 
@@ -598,8 +612,7 @@ export const mediaStreamConstraintsStore = derived(
         // Only a mute by the user keeps the track open; every other reason really releases the device.
         // A space streams our audio in a bubble, a meeting area, or a speaker zone where we are a speaker
         // (not a mere listener, who cannot be heard anyway).
-        const keepAudioWarm =
-            $isLiveStreamingAudioStore && $requestedMicrophoneState === false && !isMicrophoneForcedOff;
+        const keepAudioWarm = $isLiveStreamingAudioStore && $wantedMicrophoneState === false && !isMicrophoneForcedOff;
 
         // Video constraints only apply when NOT in background settings (to allow camera preview)
         if (!$inBackgroundSettingsStore) {

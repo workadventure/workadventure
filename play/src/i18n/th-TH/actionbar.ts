@@ -36,6 +36,8 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     microphone: {
         disabled: "ไมโครโฟนของคุณถูกปิดอยู่",
         activate: "เปิดไมโครโฟนของคุณ",
+        temporaryOn: "เปิดไมโครโฟนชั่วคราว",
+        temporaryRelease: "ปล่อยปุ่มเพื่อปิดเสียงอีกครั้ง",
         noSoundWarning: "ไม่พบเสียงจากไมโครโฟนของคุณ อาจมีปัญหา ลองเปลี่ยนไมโครโฟนในการตั้งค่า",
         advancedNoiseReduction: "การลดเสียงรบกวนขั้นสูง",
         loudEnvironmentWarning: "ตรวจพบเสียงรบกวนพื้นหลังต่อเนื่องจากไมโครโฟนของคุณ",
