@@ -12,17 +12,11 @@ const follow: BaseTranslation = {
     },
     interactMenu: {
         title: {
-            interact: "Interaction",
             follow: "Do you want to follow {leader}?",
-        },
-        stop: {
-            leader: "Do you want to stop leading the way?",
-            follower: "Do you want to stop following {leader}?",
         },
         yes: "Yes",
         no: "No",
     },
-    actionName: "Locate",
 };
 
 export default follow;

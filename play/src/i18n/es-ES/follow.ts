@@ -13,17 +13,11 @@ const follow: DeepPartial<Translation["follow"]> = {
     },
     interactMenu: {
         title: {
-            interact: "Interacción",
             follow: "¿Quiere seguir a {leader}?",
-        },
-        stop: {
-            leader: "¿Quiere dejar de liderar?",
-            follower: "¿Quiere dejar de seguir a {leader}?",
         },
         yes: "Sí",
         no: "No",
     },
-    actionName: "Localizar",
 };
 
 export default follow;
