@@ -27,7 +27,8 @@ test("signs in and out through the system browser, which never enters the world 
         await tab.fill("#Input_Username", "User1");
         await tab.fill("#Input_Password", "pwd");
         await tab.click('button:has-text("Login")');
-        await expect(tab).toHaveURL(loopbackCallback("auth"));
+        // Through Synapse's SSO first: its first login of User1 can take 20 s on CI (as in oidcLogin).
+        await expect(tab).toHaveURL(loopbackCallback("auth"), { timeout: 50_000 });
 
         await expect(world).toHaveURL(inWorld);
         await Menu.openMenu(world);
