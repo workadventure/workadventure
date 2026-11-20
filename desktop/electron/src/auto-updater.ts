@@ -87,6 +87,8 @@ async function init() {
                 // quitAndInstall quits by itself. No app.quit() after it: on macOS it waits for Squirrel to
                 // stage the update before asking for the relaunch, and quitting first installed the update
                 // (or not) without ever reopening the app.
+                // TEMPORARY, remove after the next desktop release: a no-op change that ships a newer
+                // version, so the release after it tests the relaunch fixed here from an installed build.
                 autoUpdater.quitAndInstall();
             }
         })();
