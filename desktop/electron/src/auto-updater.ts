@@ -1,15 +1,12 @@
 import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import * as util from "util";
 
 import { isStartAtLoginEnabled, writeLinuxAutostart } from "./auto-launch";
 import { createAndShowNotification } from "./notification";
 import { createDesktopConfig } from "./desktop-url-policy";
 import { t } from "./i18n";
 import { getWindow } from "./window";
-
-const sleep = util.promisify(setTimeout);
 
 let isCheckPending = false;
 let isManualRequestedUpdate = false;
@@ -87,13 +84,12 @@ async function init() {
                     ? await dialog.showMessageBox(window, dialogOpts)
                     : await dialog.showMessageBox(dialogOpts);
             if (response === 0) {
-                await sleep(1000);
-
+                // quitAndInstall quits by itself. No app.quit() after it: on macOS it waits for Squirrel to
+                // stage the update before asking for the relaunch, and quitting first installed the update
+                // (or not) without ever reopening the app.
+                // TEMPORARY, remove after the next desktop release: a no-op change that ships a newer
+                // version, so the release after it tests the relaunch fixed here from an installed build.
                 autoUpdater.quitAndInstall();
-
-                // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
-                // app.confirmedExitPrompt = true;
-                app.quit();
             }
         })();
     });
