@@ -276,6 +276,31 @@ export function isDesktopLogoutUrl(value: string): boolean {
 }
 
 /**
+ * A page that signs the user in or out of a world the app trusts: its `playUri`, which the server sends the user
+ * back to. The page itself may be on another origin than the world: the pusher (pusher.workadventu.re next to
+ * play.workadventu.re) or the administration. The world vouches for it.
+ */
+function isTrustedWorldAuthPage(url: URL | undefined, config: DesktopConfig): url is URL {
+    const world = url?.searchParams.get("playUri");
+    return !!url && requireHttpsInProd(url) && !!world && isAllowedNavigationUrl(world, config);
+}
+
+/** The pusher's sign-in or sign-out page of a trusted world: the app runs it in the browser. */
+export function isDesktopBrowserFlowUrl(value: string, config: DesktopConfig): boolean {
+    const url = parseHttpUrl(value);
+    return isTrustedWorldAuthPage(url, config) && (url.pathname === "/login-screen" || url.pathname === "/logout");
+}
+
+/**
+ * A trusted world's sign-out page other than the pusher's (the administration's /oauth/logout): it loads in the
+ * app, and redirects back to the world there. In the browser, the user would end up in the world in the browser.
+ */
+export function isWorldSignOutUrl(value: string, config: DesktopConfig): boolean {
+    const url = parseHttpUrl(value);
+    return isTrustedWorldAuthPage(url, config) && url.pathname.endsWith("/logout");
+}
+
+/**
  * Where the Back link of the screen shown during a browser sign-in or sign-out leads: the world the user
  * asked to sign in or out from, or undefined for the Landing. A world that sent the user to sign in on
  * its own requires it: going back to it would only start the sign-in again.

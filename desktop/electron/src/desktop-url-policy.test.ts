@@ -9,8 +9,10 @@ import {
     extractDesktopAuthCallback,
     formatWorldHistoryLabel,
     isAllowedNavigationUrl,
+    isDesktopBrowserFlowUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
+    isWorldSignOutUrl,
     isRoomUrl,
     isSameRoomUrl,
     opensInApp,
@@ -316,6 +318,29 @@ test("the browser flow screen goes back to the world the user signed in or out f
     expect(desktopBrowserFlowReturnUrl(flow("logout", world, "&token=abc"), config)).toBe(world);
     expect(desktopBrowserFlowReturnUrl(flow("logout", "https://evil.test/@/a/b/c"), config)).toBeUndefined();
     expect(desktopBrowserFlowReturnUrl("https://play.workadventu.re/login-screen", config)).toBeUndefined();
+});
+
+test("the sign-in and sign-out of a trusted world run in the browser, on any server it sends the user to", () => {
+    const config = createDesktopConfig({ portalUrl: "https://admin.workadventu.re", allowedOrigins: [] });
+    const world = encodeURIComponent("https://play.workadventu.re/@/team/world/room");
+    const untrusted = encodeURIComponent("https://evil.test/@/team/world/room");
+
+    // The hosted service's pusher has an origin of its own: the world it signs into vouches for it.
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/login-screen?playUri=${world}`, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/logout?playUri=${world}&token=a`, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/login-screen?playUri=${untrusted}`, config)).toBe(
+        false
+    );
+    expect(isDesktopBrowserFlowUrl("https://pusher.workadventu.re/login-screen", config)).toBe(false);
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/other?playUri=${world}`, config)).toBe(false);
+    expect(isDesktopBrowserFlowUrl(`http://pusher.workadventu.re/login-screen?playUri=${world}`, config)).toBe(false);
+
+    // The administration's sign-out comes back to the world: it loads in the app.
+    const memberLogout = `https://member.workadventu.re/oauth/logout?redirect=${world}&playUri=${world}&token=a`;
+    expect(isWorldSignOutUrl(memberLogout, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(memberLogout, config)).toBe(false);
+    expect(isWorldSignOutUrl(`https://member.workadventu.re/oauth/logout?playUri=${untrusted}`, config)).toBe(false);
+    expect(isWorldSignOutUrl(`https://member.workadventu.re/profile?playUri=${world}`, config)).toBe(false);
 });
 
 test("extracts desktop auth callback origin and one-shot code", () => {
