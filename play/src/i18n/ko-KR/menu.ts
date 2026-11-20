@@ -168,6 +168,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "사용자 목록 열기",
         toggleMapEditor: "지도 편집기 표시/숨기기",
         rotatePlayer: "플레이어 회전",
+        wokaEmoteWheel: "이모트 휠",
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
         walkMyDesk: "내 책상으로 이동",

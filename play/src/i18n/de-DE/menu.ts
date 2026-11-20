@@ -172,6 +172,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openUserList: "Benutzerliste öffnen",
         toggleMapEditor: "Karten-Editor anzeigen/verstecken",
         rotatePlayer: "Spieler drehen",
+        wokaEmoteWheel: "Emote-Rad",
         openSayPopup: "Sprech-Popup öffnen",
         openThinkPopup: "Denk-Popup öffnen",
         walkMyDesk: "Zu meinem Schreibtisch gehen",

@@ -24,7 +24,15 @@
     import SayPopUp from "../PopUp/SayPopUp.svelte";
     import Button from "../UI/Button.svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { IconPencil, IconXIcon } from "@wa-icons";
+    import {
+        MAX_WOKA_EMOTE_FAVORITES,
+        openWokaEmoteWheel,
+        playWokaEmote,
+        wokaEmoteFavoritesStore,
+    } from "../../Stores/WokaEmoteStore";
+    import { WOKA_EMOTES } from "../../Phaser/Game/Emote/WokaEmoteCatalog";
+    import { wokaEmoteFamilyColors, wokaEmoteIcons } from "../Emote/wokaEmoteIcons";
+    import { IconCheck, IconPencil, IconPin, IconStar, IconStarFilled, IconXIcon } from "@wa-icons";
 
     let emoteDataLoading = $state(false);
 
@@ -58,6 +66,9 @@
 
     let showSayBubbleTooltip = $state(false);
     let showThinkBubbleTooltip = $state(false);
+    let showWokaEmoteTooltip = $state(false);
+    /** The favourites row turns into the full list, where a click pins or unpins. */
+    let pinningWokaEmotes = $state(false);
 
     let closeFloatingUi: (() => void) | undefined = undefined;
 
@@ -266,11 +277,104 @@
             -->
         </div>
         <!-- Divider -->
-        {#if isSayBubbleEnabled}
-            <div class="w-full h-[1px] bg-white/10"></div>
+        <div class="w-full h-[1px] bg-white/10"></div>
 
-            <div class="px-1 py-2 flex flex-row items-center justify-between">
-                <div class="flex flex-row justify-between gap-2 items-center w-full">
+        <!-- The Woka's own emotes, where people already go to react. -->
+        <div class="px-1 pt-2 flex flex-col gap-1 select-none">
+            <div class="flex items-center justify-between px-1 text-[10px] uppercase tracking-wide text-white/50">
+                <span>{$LL.actionbar.wokaEmote.favorites()}</span>
+                <button
+                    type="button"
+                    class="flex items-center gap-1 rounded-sm px-1 normal-case tracking-normal text-white/70 hover:text-white hover:bg-white/10"
+                    onclick={() => (pinningWokaEmotes = !pinningWokaEmotes)}
+                    data-testid="woka-emote-pin-toggle"
+                >
+                    {#if pinningWokaEmotes}
+                        <IconCheck font-size="12" />{$LL.actionbar.wokaEmote.donePinning()}
+                    {:else}
+                        <IconPin font-size="12" />{$LL.actionbar.wokaEmote.pin()}
+                    {/if}
+                </button>
+            </div>
+            {#if pinningWokaEmotes}
+                <div class="grid grid-cols-6 gap-1">
+                    {#each WOKA_EMOTES as emote (emote.id)}
+                        {@const Icon = wokaEmoteIcons[emote.id]}
+                        {@const pinned = $wokaEmoteFavoritesStore.includes(emote.id)}
+                        <button
+                            type="button"
+                            class="relative flex flex-col items-center gap-0.5 rounded-sm p-1 text-white
+                                   {pinned ? 'bg-white/20' : 'hover:bg-white/10'} disabled:opacity-40"
+                            disabled={!pinned && $wokaEmoteFavoritesStore.length >= MAX_WOKA_EMOTE_FAVORITES}
+                            aria-pressed={pinned}
+                            onclick={() => wokaEmoteFavoritesStore.toggle(emote.id)}
+                            data-testid="woka-emote-pin-{emote.id}"
+                        >
+                            <span style="color: {wokaEmoteFamilyColors[emote.family]}"><Icon font-size="18" /></span>
+                            <span
+                                class="w-full line-clamp-2 text-center text-[10px] leading-tight hyphens-auto [overflow-wrap:anywhere]"
+                                >{$LL.actionbar.wokaEmote.names[emote.id]()}</span
+                            >
+                            <span class="absolute right-0.5 top-0.5 {pinned ? 'text-warning' : 'text-white/40'}">
+                                {#if pinned}<IconStarFilled font-size="10" />{:else}<IconStar font-size="10" />{/if}
+                            </span>
+                        </button>
+                    {/each}
+                </div>
+            {:else}
+                <div class="flex items-stretch gap-1">
+                    {#each $wokaEmoteFavoritesStore as id (id)}
+                        {@const Icon = wokaEmoteIcons[id]}
+                        <button
+                            type="button"
+                            class="flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-sm bg-white/10 p-1 text-white hover:bg-white/20"
+                            onclick={() => playWokaEmote(id)}
+                            data-testid="woka-emote-favorite-{id}"
+                        >
+                            <Icon font-size="20" />
+                            <span
+                                class="w-full line-clamp-2 text-center text-[10px] leading-tight hyphens-auto [overflow-wrap:anywhere]"
+                                >{$LL.actionbar.wokaEmote.names[id]()}</span
+                            >
+                        </button>
+                    {/each}
+                    <div class="relative flex">
+                        <button
+                            type="button"
+                            class="flex flex-col items-center justify-center gap-0.5 rounded-sm px-2 text-white/80 hover:bg-white/10"
+                            onmouseenter={() => (showWokaEmoteTooltip = true)}
+                            onmouseleave={() => (showWokaEmoteTooltip = false)}
+                            onclick={() => {
+                                // The wheel opens on the Woka, in the middle of the map: leaving the emoji
+                                // bar open under it would put two pickers on screen at once.
+                                activeSecondaryZoneActionBarStore.set(undefined);
+                                openWokaEmoteWheel();
+                            }}
+                            aria-label={$LL.actionbar.wokaEmote.button()}
+                            data-testid="woka-emote-button"
+                        >
+                            <span class="text-[11px]">{$LL.actionbar.wokaEmote.all()}</span>
+                            <kbd class="rounded-sm border border-white/40 px-1 text-[10px] leading-tight">G</kbd>
+                        </button>
+                        {#if showWokaEmoteTooltip}
+                            <div class="absolute bottom-full right-0 m-auto w-2 h-1">
+                                <HelpTooltip
+                                    title={$LL.actionbar.help.wokaEmote.title()}
+                                    desc={$LL.actionbar.help.wokaEmote.desc()}
+                                    shortcuts={["g"]}
+                                    hasImage={false}
+                                    delayBeforeAppear={100}
+                                />
+                            </div>
+                        {/if}
+                    </div>
+                </div>
+            {/if}
+        </div>
+
+        <div class="px-1 py-2 flex flex-row items-center justify-between">
+            <div class="flex flex-row justify-between gap-2 items-center w-full">
+                {#if isSayBubbleEnabled}
                     <button
                         class="text-white/80 text-md p-2 bg-white/10 rounded-sm w-full text-nowrap flex items-center justify-center cursor-pointer"
                         onmouseenter={() => (showSayBubbleTooltip = true)}
@@ -317,9 +421,9 @@
                             />
                         </div>
                     {/if}
-                </div>
+                {/if}
             </div>
-        {/if}
+        </div>
     </div>
     <div use:arrowAction></div>
 </div>

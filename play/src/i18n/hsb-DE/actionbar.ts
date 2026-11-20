@@ -110,6 +110,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "Ruku zběhnyć",
             desc: "Signalizuj, zo chceš rěčeć. Twoja zběhnjena ruka so na karće a na twojim widejje pokazuje, zo by kóždy wědźał, štó je na rjedźe.",
         },
+        wokaEmote: {
+            title: "Emote wothrać",
+            desc: "Dajće swojemu Woka skakać, rejwać abo so wobroćić. Držće G, zo byšće koleso wočinili, a pušćće, zo byšće wothrali.",
+        },
         audioManager: {
             title: "Hłošnosć wokolnych zwukow",
             desc: "Konfigurujće awdijowu hłošnosć, kliknje tu.",
@@ -230,6 +234,35 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "Nimaće hišće wosobinske pisaće blidko",
         errorMoving: "Wosobinske pisaće blidko njeje so docpěło",
         errorUnclaiming: "Wosobinske pisaće blidko njeje so wotwołało",
+    },
+    wokaEmote: {
+        button: "Emotes",
+        wheelTitle: "Koleso emotow",
+        hint: "Wubjerće emote",
+        all: "Wšě",
+        release: "pušćić za wothraće",
+        favorites: "Twój Woka",
+        pin: "Připjeć",
+        donePinning: "Hotowe",
+        families: {
+            react: "Reagować",
+            move: "Hibać so",
+            status: "Status",
+        },
+        names: {
+            jump: "Skok",
+            spin: "Wobrót",
+            dance: "Reja",
+            celebrate: "Swjedźeń",
+            nod: "Haj",
+            question: "Zawisny",
+            laugh: "Smjeć so",
+            moonwalk: "Moonwalk",
+            runInPlace: "Na městnje běhać",
+            nope: "Ně",
+            love: "Wutroba",
+            afk: "Njepřitomny",
+        },
     },
 };
 

@@ -108,6 +108,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "ارفع يدك",
             desc: "أشر إلى أنك تريد التحدث. تظهر يدك المرفوعة على الخريطة وعلى الفيديو الخاص بك، حتى يعرف الجميع دور من التالي.",
         },
+        wokaEmote: {
+            title: "تشغيل إيماءة",
+            desc: "اجعل الـ Woka يقفز أو يرقص أو يدور. اضغط مع الاستمرار على G لفتح العجلة وأفلته للتشغيل.",
+        },
         audioManager: {
             title: "حجم الأصوات المحيطة",
             desc: "قم بضبط حجم الأصوات المحيطة بسهولة.",
@@ -228,6 +232,35 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "ليس لديك مكتب شخصي بعد",
         errorMoving: "تعذر الوصول إلى مكتبك الشخصي",
         errorUnclaiming: "تعذر تحرير مكتبك الشخصي",
+    },
+    wokaEmote: {
+        button: "إيماءات",
+        wheelTitle: "عجلة الإيماءات",
+        hint: "اختر إيماءة",
+        all: "الكل",
+        release: "اترك للتشغيل",
+        favorites: "الووكا الخاص بك",
+        pin: "تثبيت",
+        donePinning: "تم",
+        families: {
+            react: "تفاعل",
+            move: "حركة",
+            status: "حالة",
+        },
+        names: {
+            jump: "قفز",
+            spin: "دوران",
+            dance: "رقص",
+            celebrate: "احتفال",
+            nod: "نعم",
+            question: "حائر",
+            laugh: "ضحك",
+            moonwalk: "مشية القمر",
+            runInPlace: "الركض في المكان",
+            nope: "لا",
+            love: "قلب",
+            afk: "بعيد",
+        },
     },
 };
 

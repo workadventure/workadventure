@@ -169,6 +169,7 @@ const menu: BaseTranslation = {
         openUserList: "Abrir Lista de Usuários",
         toggleMapEditor: "Mostrar/Ocultar Editor de Mapas",
         rotatePlayer: "Girar Jogador",
+        wokaEmoteWheel: "Roda de emotes",
         openSayPopup: "Abrir Popup de Fala",
         openThinkPopup: "Abrir Popup de Pensamento",
         walkMyDesk: "Ir para Minha Mesa",
