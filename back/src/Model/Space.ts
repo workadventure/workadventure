@@ -19,7 +19,7 @@ import {
     UpdateSpaceMetadataMessage,
 } from "@workadventure/messages";
 import type { SpaceState } from "@workadventure/shared-utils";
-import { emptySpaceState } from "@workadventure/shared-utils";
+import { emptySpaceState, recordingProductionSchema } from "@workadventure/shared-utils";
 // Default import: under Node ESM this CommonJS package exposes no named exports.
 import jsonpatch from "fast-json-patch";
 import { Subject } from "rxjs";
@@ -309,6 +309,10 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
     }
 
     private filterOneUser(user: SpaceUser): boolean {
+        if (user.isRecorder) {
+            // The LiveKit egress filming the map: it receives the space but nobody ever sees it.
+            return false;
+        }
         switch (this._filterType) {
             case FilterType.ALL_USERS: {
                 return true;
@@ -709,9 +713,14 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
             case "revokeFloor":
                 return this.raiseHandManager.revokeFloor(sender, query.revokeFloor.targetSpaceUserId);
             case "startRecording":
-                return this.startRecording(sender);
+                return this.startRecording(sender, query.startRecording.withMap, query.startRecording.layout);
             case "stopRecording":
                 return this.stopRecording(sender);
+            case "setRecordingProduction":
+                return this.communicationManager.setRecordingProduction(
+                    sender,
+                    recordingProductionSchema.parse(JSON.parse(query.setRecordingProduction.production)),
+                );
             case "createPoll":
                 return this.proximityPollManager.create(sender, query.createPoll);
             case "votePoll":
@@ -873,9 +882,9 @@ export class Space implements CustomJsonReplacerInterface, ICommunicationSpace {
         return this._nbPublishers;
     }
 
-    public async startRecording(user: SpaceUser) {
+    public async startRecording(user: SpaceUser, withMap = false, layout = "") {
         try {
-            await this.communicationManager.handleStartRecording(user);
+            await this.communicationManager.handleStartRecording(user, withMap, layout);
         } catch (error) {
             Sentry.captureException(error);
             throw error; // Re-throw the error to be handled by the caller

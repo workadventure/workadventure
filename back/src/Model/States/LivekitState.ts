@@ -61,8 +61,13 @@ export class LivekitState
         }
     }
 
-    async handleStartRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo> {
-        return await this._currentStrategy.startRecording(user, recordingSessionId).catch((error) => {
+    async handleStartRecording(
+        user: SpaceUser,
+        recordingSessionId: string,
+        withMap = false,
+        layout = "",
+    ): Promise<RecordingStartInfo> {
+        return await this._currentStrategy.startRecording(user, recordingSessionId, withMap, layout).catch((error) => {
             console.error("Error starting recording:", error);
             throw new Error("Failed to start recording");
         });

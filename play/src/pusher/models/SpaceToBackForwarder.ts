@@ -94,6 +94,7 @@ export class SpaceToBackForwarder implements SpaceToBackForwarderInterface {
                 characterTextures: socketData.characterTextures,
                 visitCardUrl: socketData.visitCardUrl ?? undefined,
                 chatID: socketData.chatID ?? undefined,
+                isRecorder: socketData.isRecorder,
             }),
             lowercaseName: socketData.name.toLowerCase(),
         };

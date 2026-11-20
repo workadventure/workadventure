@@ -48,10 +48,36 @@ export const floorHolderEntrySchema = z.object({
 
 export const recordingStatusSchema = z.enum(["idle", "starting", "recording", "stopping"]);
 
+// How a recording over the map is laid out ("map": the map with a row of cameras over it, "balanced": cameras on top
+// and the map below, "cameras": a mosaic where the map is the big cell).
+export const recordingLayoutSchema = z.enum(["map", "balanced", "cameras"]);
+// How much of the map the recording shows around the people: "tight", "wide" (the default) or "whole" (the whole map).
+export const recordingZoomSchema = z.enum(["tight", "wide", "whole"]);
+export const RECORDING_MAX_PINS = 8;
+
+// What the person recording over the map directs while it records (the producer panel). The ?recorder page applies it.
+export const recordingProductionSchema = z.object({
+    layout: recordingLayoutSchema,
+    zoom: recordingZoomSchema,
+    // A spot of the map to film, in map px, instead of following the people. Null: follow them.
+    frame: z
+        .object({
+            x: z.number().finite(),
+            y: z.number().finite(),
+            width: z.number().finite().positive(),
+            height: z.number().finite().positive(),
+        })
+        .nullable(),
+    // spaceUserIds that keep their camera tile even when they are silent.
+    pins: z.array(z.string().min(1)).max(RECORDING_MAX_PINS),
+});
+
 export const recordingStateSchema = z.object({
     recording: z.boolean(),
     recorder: z.string().nullable(),
     status: recordingStatusSchema,
+    // Only for a recording over the map.
+    production: recordingProductionSchema.optional(),
 });
 
 export const proximityPollAnswerSchema = z.object({
@@ -140,6 +166,9 @@ export type RaisedHandEntry = z.infer<typeof raisedHandEntrySchema>;
 export type FloorHolderEntry = z.infer<typeof floorHolderEntrySchema>;
 export type RecordingStatus = z.infer<typeof recordingStatusSchema>;
 export type RecordingState = z.infer<typeof recordingStateSchema>;
+export type RecordingLayout = z.infer<typeof recordingLayoutSchema>;
+export type RecordingZoom = z.infer<typeof recordingZoomSchema>;
+export type RecordingProduction = z.infer<typeof recordingProductionSchema>;
 export type ProximityPollAnswer = z.infer<typeof proximityPollAnswerSchema>;
 export type ProximityPollVote = z.infer<typeof proximityPollVoteSchema>;
 export type ProximityPoll = z.infer<typeof proximityPollSchema>;

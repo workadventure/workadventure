@@ -4,6 +4,7 @@ import type {
     MicrophoneTrackPublishedMessage,
     SpaceUser,
 } from "@workadventure/messages";
+import type { RecordingProduction } from "@workadventure/shared-utils";
 import type { ManagedRecordingState } from "../RecordingManager";
 import type { SessionEndReason } from "../SessionAnalytics";
 
@@ -12,7 +13,8 @@ export interface ICommunicationManager {
     handleUserAdded(user: SpaceUser): Promise<void>;
     handleUserDeleted(user: SpaceUser): Promise<void>;
     handleUserUpdated(user: SpaceUser, updateMask?: string[]): Promise<void>;
-    handleStartRecording(user: SpaceUser): Promise<void>;
+    handleStartRecording(user: SpaceUser, withMap?: boolean, layout?: string): Promise<void>;
+    setRecordingProduction(user: SpaceUser, production: RecordingProduction): void;
     handleStopRecording(user: SpaceUser): Promise<void>;
     handleRecorderLeftSpace(spaceUserId: string): Promise<boolean>;
     handleServerStopRecording(): Promise<boolean>;

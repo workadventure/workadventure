@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Un enregistrement est en cours",
         },
         spacePicker: {
+            title: "Enregistrer",
+            source: "Quoi enregistrer",
+            savedHint: "La vidéo rejoint vos enregistrements quand vous arrêtez.",
             megaphone: "Enregistrer le mégaphone",
             discussion: "Enregistrer la discussion",
+            withMap: "Mise en page de la vidéo :",
+            camerasOnly: "Caméras seules",
+            camerasOnlyHint:
+                "Seulement les caméras, sans la carte. Cette vidéo ne se pilote pas pendant l'enregistrement : pas de panneau producteur, ni de changement de mise en page ou de zoom.",
+            layout: {
+                map: "La carte d'abord",
+                balanced: "Entre les deux",
+                cameras: "Les caméras d'abord",
+            },
+        },
+        producer: {
+            preview: "Dans la vidéo en ce moment",
+            layout: "Mise en page",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Serré",
+                wide: "Dézoomé",
+                whole: "Toute la carte",
+            },
+            framing: "Cadrage",
+            follow: "Suivre la bulle",
+            frameMyView: "Cadrer ce que je vois",
+            cameras: "Caméras",
+            pin: "Épingler",
+            unpin: "Désépingler",
+            pinHint: "Une personne épinglée garde sa tuile même quand elle se tait (jusqu'à {max}).",
         },
     },
 };

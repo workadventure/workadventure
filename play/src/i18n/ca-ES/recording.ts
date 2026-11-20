@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Un enregistrament està en curs",
         },
         spacePicker: {
+            title: "Enregistra",
+            source: "Què enregistrar",
+            savedHint: "Es desa als teus enregistraments quan l'aturis.",
             megaphone: "Enregistrar megàfon",
             discussion: "Enregistrar la discussió",
+            withMap: "Disseny del vídeo:",
+            camerasOnly: "Només càmeres",
+            camerasOnlyHint:
+                "Només les càmeres, sense el mapa. Aquest vídeo no es pot dirigir durant l'enregistrament: sense tauler de producció ni canvis de disseny o zoom.",
+            layout: {
+                map: "Primer el mapa",
+                balanced: "Equilibrat",
+                cameras: "Primer les càmeres",
+            },
+        },
+        producer: {
+            preview: "Ara al vídeo",
+            layout: "Disposició",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "A prop",
+                wide: "Allunyat",
+                whole: "Tot el mapa",
+            },
+            framing: "Enquadrament",
+            follow: "Seguir la bombolla",
+            frameMyView: "Enquadrar el que veig",
+            cameras: "Càmeres",
+            pin: "Fixar",
+            unpin: "Deixar de fixar",
+            pinHint: "Una persona fixada conserva la seva finestra fins i tot callada (fins a {max}).",
         },
     },
 };

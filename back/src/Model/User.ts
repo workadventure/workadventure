@@ -67,10 +67,14 @@ export class User implements Movable, CustomJsonReplacerInterface {
         private sayMessage?: SayMessage,
         // Unique identifier for the browser tab, used to detect reconnections from the same tab
         public readonly tabId?: string,
+        // The LiveKit egress filming the map: in no zone, so nobody ever sees it (see GameRoom.join).
+        public readonly isRecorder = false,
     ) {
         this.listenedZones = new Set<Zone>();
 
-        this.positionNotifier.enter(this);
+        if (!this.isRecorder) {
+            this.positionNotifier.enter(this);
+        }
     }
 
     public static async create(
@@ -98,6 +102,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
         chatID?: string,
         sayMessage?: SayMessage,
         tabId?: string,
+        isRecorder = false,
     ): Promise<User> {
         const playersVariablesRepository = await getPlayersVariablesRepository();
         const variables = new PlayerVariables(uuid, roomUrl, roomGroup, playersVariablesRepository, isLogged);
@@ -127,6 +132,7 @@ export class User implements Movable, CustomJsonReplacerInterface {
             chatID,
             sayMessage,
             tabId,
+            isRecorder,
         );
     }
 
@@ -137,7 +143,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
     public setPosition(position: PointInterface): void {
         const oldPosition = this.position;
         this.position = position;
-        this.positionNotifier.updatePosition(this, position, oldPosition);
+        if (!this.isRecorder) {
+            this.positionNotifier.updatePosition(this, position, oldPosition);
+        }
         this.movedSubject.next(position);
     }
 
@@ -301,7 +309,9 @@ export class User implements Movable, CustomJsonReplacerInterface {
             }
         }
 
-        this.positionNotifier.updatePlayerDetails(this, details);
+        if (!this.isRecorder) {
+            this.positionNotifier.updatePlayerDetails(this, details);
+        }
     }
 
     public getVariables(): PlayerVariables {

@@ -1,6 +1,7 @@
 import type { Attachment } from "svelte/attachments";
 import type { Box } from "../WebRtc/LayoutManager";
 import { biggestAvailableAreaStore } from "../Stores/BiggestAvailableAreaStore";
+import { isRecorderMode } from "./RecorderMode";
 
 const FINE_WINDOW_MARGIN = 1;
 const INTERSECTION_RATIO_EPSILON = 0.0001;
@@ -182,6 +183,8 @@ class ScreenBlockerPositionObserver {
 }
 
 export const blocker: Attachment<HTMLElement> = (element) => {
+    // The recorder sizes the game to the map's own area (RecorderLayout): nothing covers it.
+    if (isRecorderMode) return;
     const unregisterBlocker = biggestAvailableAreaStore.registerBlocker(element);
     const positionObserver = new ScreenBlockerPositionObserver(element);
     const resizeObserver = new ResizeObserver((entries) => {

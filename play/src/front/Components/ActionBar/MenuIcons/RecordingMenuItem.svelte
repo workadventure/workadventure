@@ -6,13 +6,14 @@
     import ActionBarButton from "../ActionBarButton.svelte";
     import RecordingIcon from "../../Icons/RecordingIcon.svelte";
     import RecordingActiveIcon from "../../Icons/RecordingActiveIcon.svelte";
-    import { recordingStore } from "../../../Stores/RecordingStore";
+    import { recordingStore, recordingWithMapAvailableStore } from "../../../Stores/RecordingStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { gameManager } from "../../../Phaser/Game/GameManager";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import RecordingSpacePicker from "../../PopUp/Recording/RecordingSpacePicker.svelte";
     import { notificationPlayingStore } from "../../../Stores/NotificationStore";
+    import type { RecorderLayoutMode } from "../../../Utils/RecorderLayout";
     import type { RecordingMenuState, RecordingSpaceRow } from "./RecordingMenuUtils";
     import { IconAlertTriangle } from "@wa-icons";
 
@@ -31,7 +32,7 @@
         closeFloatingUi = undefined;
     }
 
-    async function applyRecordingAction(row: RecordingSpaceRow): Promise<void> {
+    async function applyRecordingAction(row: RecordingSpaceRow, layout?: RecorderLayoutMode): Promise<void> {
         if (!row.action) {
             return;
         }
@@ -43,7 +44,7 @@
 
         try {
             if (row.action === "start") {
-                await row.space.state.startRecording();
+                await row.space.state.startRecording(layout);
                 analyticsClient.trackAdminEvent("recording.started");
             } else {
                 await row.space.state.stopRecording();
@@ -75,12 +76,17 @@
             RecordingSpacePicker,
             {
                 rowsStore: derived(recordingMenuState, ($state) => $state.currentRows),
-                onselect: (row: RecordingSpaceRow) => {
-                    applyRecordingAction(row).catch((error) => {
+                withMapAvailable: get(recordingWithMapAvailableStore),
+                onselect: (row: RecordingSpaceRow, layout: RecorderLayoutMode | undefined) => {
+                    applyRecordingAction(row, layout).catch((error) => {
                         console.error(`Failed to apply recording action`, error);
                     });
                 },
-                onclose: closeSpacePicker,
+                onclose: (restoreFocus?: boolean) => {
+                    closeSpacePicker();
+                    // Not after a click: a focused button would keep the arrow keys from the game.
+                    if (restoreFocus) triggerElement?.querySelector("button")?.focus();
+                },
             },
             {
                 placement: "bottom",
@@ -98,8 +104,15 @@
             return;
         }
 
-        if (state.directRow) {
-            await applyRecordingAction(state.directRow);
+        // With the map on offer, a start goes through the picker so the user chooses. A recording over the map opens
+        // it too: it holds the producer panel (and the stop button).
+        const directRow = state.directRow;
+        if (
+            directRow &&
+            !(directRow.action === "start" && get(recordingWithMapAvailableStore)) &&
+            !(directRow.action === "stop" && get(directRow.space.state.store).recording.production)
+        ) {
+            await applyRecordingAction(directRow);
             return;
         }
 

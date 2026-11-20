@@ -30,6 +30,7 @@
     import AwayPausedOverlay from "./AwayPausedOverlay.svelte";
     import RaisedHandBadge from "./RaisedHandBadge.svelte";
     import UserName from "./UserName.svelte";
+    import { isRecorderMode } from "../../Utils/RecorderMode";
     import UpDownChevron from "./UpDownChevron.svelte";
     import CenteredVideo from "./CenteredVideo.svelte";
     import ScreenAnnotationOverlay from "./ScreenAnnotationOverlay.svelte";
@@ -387,7 +388,8 @@
 >
     <div
         class={"w-full transition-all bg-center bg-no-repeat " +
-            (fullScreen || effectiveStatus !== "connected"
+            // In the recording, a person without a camera gets a tile too: a bare Woka looks like a hole in the video.
+            (fullScreen || isRecorderMode || effectiveStatus !== "connected"
                 ? effectiveStatus === "connecting" || effectiveStatus === "reconnecting"
                     ? "bg-gray-700/80 backdrop-blur"
                     : "bg-contrast/80 backdrop-blur"
@@ -508,7 +510,8 @@
                                         spaceUserId={raisedHandSpaceUserId}
                                         spaceName={raisedHandSpaceName}
                                     />
-                                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local"}
+                                    <!-- Nobody clicks the recorder page: its user menus would only show in the video. -->
+                                    {#if extendedSpaceUser && extendedSpaceUser.spaceUserId !== "local" && !isRecorderMode}
                                         <div
                                             class="flex items-center justify-center picture-in-picture:hidden"
                                             bind:this={userMenuButton}

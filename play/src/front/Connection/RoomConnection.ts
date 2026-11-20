@@ -115,6 +115,7 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { SelectCharacterScene, SelectCharacterSceneName } from "../Phaser/Login/SelectCharacterScene";
 import { SelectCompanionScene, SelectCompanionSceneName } from "../Phaser/Login/SelectCompanionScene";
 import { chatZoneLiveStore } from "../Stores/ChatStore";
+import { recordingWithMapAvailableStore } from "../Stores/RecordingStore";
 import { errorScreenStore } from "../Stores/ErrorScreenStore";
 import { duplicateUserConnectedStore, shouldShowDuplicateUserPopup } from "../Stores/DuplicateUserConnectedStore";
 import { followRoleStore, followUsersStore } from "../Stores/FollowStore";
@@ -131,6 +132,7 @@ import {
 import { requestedScreenSharingState } from "../Stores/ScreenSharingStore";
 import { selectCompanionSceneVisibleStore } from "../Stores/SelectCompanionStore";
 import { selectCharacterSceneVisibleStore } from "../Stores/SelectCharacterStore";
+import { recorderToken } from "../Utils/RecorderMode";
 import { connectionManager } from "./ConnectionManager";
 import type {
     GroupCreatedUpdatedMessageInterface,
@@ -328,6 +330,9 @@ export class RoomConnection implements RoomConnection {
         params.set("cameraState", get(requestedCameraState) ? "true" : "false");
         params.set("microphoneState", get(requestedMicrophoneState) ? "true" : "false");
         params.set("tabId", connectionManager.tabId);
+        if (recorderToken !== undefined) {
+            params.set("recorderToken", recorderToken);
+        }
         // TODO: check if the screenSharingState variable is used
         params.set("screenSharingState", get(requestedScreenSharingState) ? "true" : "false");
 
@@ -602,6 +607,7 @@ export class RoomConnection implements RoomConnection {
                             : true,
                     );
                     this.canEdit = roomJoinedMessage.canEdit;
+                    recordingWithMapAvailableStore.set(roomJoinedMessage.recordingWithMapAvailable);
                     mapEditorActivated.set(ENABLE_MAP_EDITOR && this.canEdit);
 
                     // If there are scripts from the admin, run it

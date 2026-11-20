@@ -507,6 +507,8 @@ function createSocket(overrides: Partial<SocketData> = {}): RawSocket {
         cameraState: false,
         lastActivityAtMs: Date.now(),
         tabId: "tab-1",
+        recorderToken: undefined,
+        isRecorder: false,
         connectionId: "conn-1",
         attendeesState: false,
         queryAbortControllers: new Map(),

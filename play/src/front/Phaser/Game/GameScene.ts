@@ -209,6 +209,7 @@ import {
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { getCustomEntityCollectionUrl } from "../../Utils/MapStorageUrl";
+import { isRecorderMode, recorderSpace, recorderSpaceFilter } from "../../Utils/RecorderMode";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
@@ -218,6 +219,7 @@ import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { audioPlaybackStore, handleSuspendedAudioContext } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
+import { RecorderDirector } from "./RecorderDirector";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -306,6 +308,7 @@ export class GameScene extends DirtyScene {
     Terrains: Array<Tileset>;
     CurrentPlayer!: Player;
     MapPlayersByKey: MapStore<number, RemotePlayer> = new MapStore<number, RemotePlayer>();
+    private recorderDirector: RecorderDirector | undefined;
     CurrentRemotePlayerLocated: RemotePlayer | undefined = undefined;
     CurrentChatUserLocated: ChatUser | undefined = undefined;
     Map!: Tilemap;
@@ -1019,7 +1022,11 @@ export class GameScene extends DirtyScene {
                                 // #moveTo walks the player along a path: it needs the player (created when the pusher
                                 // answered) and the areas the user cannot enter in the collision grid, which only
                                 // exist once the areas manager is initialized.
-                                this.tryMovePlayerWithMoveToParameter();
+                                if (isRecorderMode) {
+                                    this.startRecorderDirector();
+                                } else {
+                                    this.tryMovePlayerWithMoveToParameter();
+                                }
                             })
                             .catch((e) => {
                                 if (e instanceof CloseEvent) {
@@ -1261,6 +1268,7 @@ export class GameScene extends DirtyScene {
         });
         megaphoneSpaceStore.set(undefined);
         this.proximitySpaceManager?.destroy();
+        this.recorderDirector?.destroy();
         if (this._proximityChatRoomManager) {
             this._proximityChatRoomManager.destroy();
         } else {
@@ -1715,6 +1723,15 @@ export class GameScene extends DirtyScene {
      * @returns The calculated viewport or null if invalid
      */
     private calculateViewport(margin = 300): ViewportInterface | null {
+        if (isRecorderMode) {
+            // The recorder follows people who may walk far from what it shows right now: it watches the whole map
+            // (the pusher crops a viewport above MAX_ZONES_PER_VIEWPORT, i.e. 12800 px).
+            return this.intersectViewportWithMapBounds(
+                { left: 0, top: 0, right: this.Map.widthInPixels, bottom: this.Map.heightInPixels },
+                this.Map.widthInPixels,
+                this.Map.heightInPixels,
+            );
+        }
         if (!this.scene.scene.renderer) {
             // The camera's worldView is empty without a renderer: sending it would replace the viewport of the
             // joinRoom message with a 300 px square at the map origin.
@@ -2081,6 +2098,13 @@ export class GameScene extends DirtyScene {
             )
             .then(async (onConnect: OnConnectInterface) => {
                 this.connection = onConnect.connection;
+                if (isRecorderMode) {
+                    // The back sends the first bubble to follow right after the room is joined: listen before any await.
+                    this.recorderDirector = new RecorderDirector(this, recorderSpace, recorderSpaceFilter);
+                    if (recorderSpace === undefined) {
+                        this.recorderDirector.follow(this.connection, this.connectionAnswerPromiseDeferred.promise);
+                    }
+                }
 
                 // Subscribed before any await: the admin messages of the login come right after the connection.
                 // These streams are completed in the RoomConnection. No need to unsubscribe.
@@ -2599,7 +2623,10 @@ export class GameScene extends DirtyScene {
         this._proximityChatRoomManagerDeferred.resolve(this._proximityChatRoomManager);
 
         this._proximityChatRoomDeferred.resolve(this._proximityChatRoom);
-        this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoomManager);
+        // The recorder joins only what it films (see RecorderDirector), never the bubbles around it.
+        if (!isRecorderMode) {
+            this.proximitySpaceManager = new ProximitySpaceManager(this.connection, this._proximityChatRoomManager);
+        }
 
         // Check WebRtc connection
         try {
@@ -4019,6 +4046,15 @@ ${escapedMessage}
     /**
      * Analyze the #moveTo parameter in the URL and walk the player there (see walkToMoveTarget).
      */
+    /** ?recorder: join the space being recorded and frame its members (see RecorderDirector). */
+    private startRecorderDirector(): void {
+        this.recorderDirector
+            ?.start()
+            // The LiveKit egress waits for this exact log (awaitStartSignal) before it starts recording.
+            .then(() => console.log("START_RECORDING"))
+            .catch((e) => console.error("The recorder could not join the space", e));
+    }
+
     private tryMovePlayerWithMoveToParameter(): void {
         const moveToParam = urlManager.getHashParameter("moveTo");
         if (moveToParam && this.walkToMoveTarget(moveToParam)) {
@@ -4347,8 +4383,14 @@ ${escapedMessage}
                 this.currentPlayerTexturesPromise,
                 PositionMessage_Direction.DOWN,
                 false,
-                gameManager.getCompanionTextureId() != undefined ? this.currentCompanionTexturePromise : undefined,
+                gameManager.getCompanionTextureId() != undefined && !isRecorderMode
+                    ? this.currentCompanionTexturePromise
+                    : undefined,
             );
+            if (isRecorderMode) {
+                // The egress films the map: the recorder must not show up on it.
+                this.CurrentPlayer.setVisible(false);
+            }
             this.CurrentPlayer.on(Phaser.Input.Events.POINTER_OVER, (pointer: Pointer) => {
                 this.CurrentPlayer.pointerOverOutline(PHASER_COLOR_DESIGN_SYSTEM_SECONDARY);
             });
@@ -4425,6 +4467,10 @@ ${escapedMessage}
     }
 
     private getViewport(forceRecomputeCamera = false): ViewportInterface {
+        const recorderViewport = isRecorderMode ? this.calculateViewport() : null;
+        if (recorderViewport) {
+            return recorderViewport;
+        }
         if (!this.scene.scene.renderer) {
             return this.getHeadlessViewport();
         }

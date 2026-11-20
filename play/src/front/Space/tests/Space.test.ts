@@ -141,6 +141,7 @@ function createSpaceUser(overrides: Partial<SpaceUser> & Pick<SpaceUser, "spaceU
         cpuLimited: overrides.cpuLimited ?? false,
         cameraHeld: overrides.cameraHeld ?? false,
         microphoneHeld: overrides.microphoneHeld ?? false,
+        isRecorder: overrides.isRecorder ?? false,
     };
 }
 
@@ -632,7 +633,7 @@ describe("Space test", () => {
 
         expect(alterSpaceStateSpy).toHaveBeenCalledWith(
             "space-name",
-            { $case: "startRecording", startRecording: {} },
+            { $case: "startRecording", startRecording: { withMap: false } },
             { timeout: 60_000 },
         );
         expect(alterSpaceStateSpy).toHaveBeenCalledWith(

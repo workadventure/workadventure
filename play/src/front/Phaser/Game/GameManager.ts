@@ -38,6 +38,7 @@ import type { WokaData } from "../../Components/Woka/WokaTypes";
 import { generateRandomName } from "../../Utils/RandomNameGenerator";
 import { shouldShowPwaInstallSceneAsync } from "../../Utils/PwaInstallEligibility";
 import { raceTimeout } from "../../Utils/PromiseUtils";
+import { isRecorderMode } from "../../Utils/RecorderMode";
 import { GameScene } from "./GameScene";
 
 import ScenePlugin = Phaser.Scenes.ScenePlugin;
@@ -156,6 +157,19 @@ export class GameManager {
             if (preferredVideoInputDeviceId && preferredVideoInputDeviceId !== "") {
                 requestedCameraDeviceIdStore.set(preferredVideoInputDeviceId);
             }
+        }
+
+        // The recorder is opened by the LiveKit egress in a fresh browser: nobody can click through the entry
+        // screens, and its name and Woka are never shown, so fill them in and go straight to the map.
+        if (isRecorderMode) {
+            requestedMicrophoneState.disableMicrophone();
+            requestedCameraState.disableWebcam();
+            this.playerName ??= "recorder";
+            if (!this.characterTextureIds || this.characterTextureIds.length === 0) {
+                const wokaData = await this.loadWokaData();
+                this.characterTextureIds = [wokaData.woka.collections[0].textures[0].id];
+            }
+            return this.startRoom.key;
         }
 
         Sentry.setUser({
