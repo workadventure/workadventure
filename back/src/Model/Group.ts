@@ -141,8 +141,7 @@ export class Group implements Movable, CustomJsonReplacerInterface {
     }
 
     searchForNearbyUsers(): void {
-        // A locked group lets nobody in, not even the users its members walk up to.
-        if (!this.currentZone || this.isLocked()) return;
+        if (!this.currentZone) return;
 
         for (const user of this.positionNotifier.getAllUsersInSquareAroundZone(this.currentZone)) {
             if (this.isFull()) return;
@@ -150,6 +149,8 @@ export class Group implements Movable, CustomJsonReplacerInterface {
             // We ignore users that are already in a group or silent, and users still walking: like in
             // GameRoom.updateUserGroup, a user joins a group when they stop.
             if (user.silent || user.group || user.getPosition().moving) continue;
+            // A locked group lets nobody in, not even the users its members walk up to, except someone they invited.
+            if (!this.canBeJoinedBy(user)) continue;
             const distance = GameRoom.computeDistanceBetweenPositions(user.getPosition(), this.getPosition());
             if (distance < this.groupRadius) {
                 this.join(user);
@@ -167,11 +168,27 @@ export class Group implements Movable, CustomJsonReplacerInterface {
         return this.locked;
     }
 
+    /**
+     * A locked group still lets in a user who accepted an invitation from one of its members (see User.lockPass).
+     */
+    canBeJoinedBy(user: User): boolean {
+        if (this.isFull()) return false;
+        if (!this.locked) return true;
+        const pass = user.lockPass;
+        return (
+            pass !== undefined &&
+            pass.expiresAt > Date.now() &&
+            Array.from(this.users).some((member) => member.uuid === pass.inviterUuid)
+        );
+    }
+
     isEmpty(): boolean {
         return this.users.size <= 1;
     }
 
     join(user: User): void {
+        // The pass only works once
+        if (this.locked) user.lockPass = undefined;
         // Broadcast on the right event
         this.users.add(user);
         user.group = this;

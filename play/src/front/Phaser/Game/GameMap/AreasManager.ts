@@ -24,6 +24,9 @@ export class AreasManager {
     private areaPermissions: AreaPermissions;
     private areaPropertyVariablesSubscription: Unsubscriber | undefined;
     private variableChangesSubscription: Unsubscriber | undefined;
+    // Locked areas the current player may enter once, because someone inside invited them (see grantLockPass).
+    private lockPassAreaIds = new Set<string>();
+    private lockPassTimeout: ReturnType<typeof setTimeout> | undefined;
 
     constructor(
         private scene: GameScene,
@@ -177,11 +180,40 @@ export class AreasManager {
     }
 
     /**
+     * Lets the current player into the locked areas at this position, where the person who invited them stands.
+     * The pass works once (it is used up when the player enters) and only for durationMs. The back opens the locked
+     * bubble the same way (see User.lockPass). Areas the player has no access to, or full ones, still block them.
+     */
+    public grantLockPass(position: { x: number; y: number }, durationMs: number): void {
+        this.revokeLockPass();
+        for (const area of this.gameMapAreas.getAreas().values()) {
+            if (
+                area.properties.some((property) => property.type === "lockableAreaPropertyData") &&
+                this.gameMapAreas.isPlayerInsideArea(area.id, position)
+            ) {
+                this.lockPassAreaIds.add(area.id);
+            }
+        }
+        this.updateAreasCollision([...this.lockPassAreaIds]);
+        this.lockPassTimeout = setTimeout(() => this.revokeLockPass(), durationMs);
+    }
+
+    private revokeLockPass(): void {
+        clearTimeout(this.lockPassTimeout);
+        const areaIds = [...this.lockPassAreaIds];
+        this.lockPassAreaIds.clear();
+        this.updateAreasCollision(areaIds);
+    }
+
+    /**
      * Checks if the specified area is locked.
      * @param areaId - The ID of the area to check
      * @returns true if the area is locked, false otherwise
      */
     private isAreaLocked(areaId: string): boolean {
+        if (this.lockPassAreaIds.has(areaId)) {
+            return false;
+        }
         const area = this.gameMapAreas.getArea(areaId);
         if (!area) {
             return false;
@@ -258,6 +290,10 @@ export class AreasManager {
 
         // Check if current player is already inside the area
         const isCurrentPlayerInside = this.isCurrentPlayerInArea(areaId);
+        // The lock pass is used up once the player is in: when they leave, the lock applies to them again.
+        if (isCurrentPlayerInside) {
+            this.lockPassAreaIds.delete(areaId);
+        }
 
         // Check if area is locked
         const isLocked = this.isAreaLocked(areaId);
@@ -356,6 +392,7 @@ export class AreasManager {
      * Must be called when the AreasManager is no longer needed to prevent memory leaks.
      */
     public destroy(): void {
+        clearTimeout(this.lockPassTimeout);
         // Unsubscribe from variable changes first (inner subscription)
         if (this.variableChangesSubscription) {
             this.variableChangesSubscription();
