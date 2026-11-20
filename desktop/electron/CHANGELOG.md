@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-beta.7](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.6...desktop-v2.0.0-beta.7) (2026-11-20)
+
+
+### Bug Fixes
+
+* **desktop:** sign in and out of worlds whose pusher is on another host ([6b25dc6](https://github.com/workadventure/workadventure/commit/6b25dc66bf5e5c601e6f34b39f57ae792d974f68))
+* **desktop:** stop the update prompt from freezing the app on macOS ([e2dd7df](https://github.com/workadventure/workadventure/commit/e2dd7dfe04d71772481df7cc79d340db586874da))
+
 ## [2.0.0-beta.6](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.5...desktop-v2.0.0-beta.6) (2026-11-19)
 
 
