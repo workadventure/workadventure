@@ -43,7 +43,7 @@
   "dependencies": {
     "@anatine/zod-openapi": "^2.2.8",
     "@aws-sdk/client-s3": "^3.1054.0",
-    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/grpc-js": "^1.14.6",
     "@grpc/proto-loader": "0.8.1",
     "@sentry/node": "^10.54.0",
     "@types/express": "^5.0.6",
