@@ -437,7 +437,7 @@ class LocalAdmin implements AdminInterface {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
-    getMember(memberUUID: string): Promise<MemberData> {
+    getMember(playUri: string, memberUUID: string): Promise<MemberData> {
         return Promise.reject(new Error("No admin backoffice set!"));
     }
 
