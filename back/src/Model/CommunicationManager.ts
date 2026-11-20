@@ -129,7 +129,9 @@ export class CommunicationManager implements ICommunicationManager {
     private readonly _sessionAnalytics: SessionAnalytics;
     /** Records every microphone of the space's meetings when its world asks for it; unrelated to `_recordingManager`. */
     private readonly autoRecorder: AutoRecorder;
-    private autoRecordingAsked = false;
+    private worldSettingsAsked = false;
+    /** The world's own P2P threshold, read by the policy: set from the admin's answer (see askWorldSettings). */
+    private readonly world: { maxUsersForWebRTC?: number } = {};
     private readonly recordingEventNotifier: (payload: RecordingEventPayload) => Promise<void>;
     private destroyed = false;
 
@@ -205,6 +207,7 @@ export class CommunicationManager implements ICommunicationManager {
                 this._recordingManager,
                 LIVEKIT_SWITCH_ON_CPU_LIMITATION,
                 this.autoRecorder,
+                this.world,
             );
     }
 
@@ -218,7 +221,7 @@ export class CommunicationManager implements ICommunicationManager {
         this.userRegistry.addUser(user);
         this.syncPresence(user, wasPresent);
         this.cancelPendingTransitionIfNeeded();
-        this.askAutoRecording(user);
+        this.askWorldSettings(user);
 
         // Decide the strategy before telling the joiner which one to use. If this join tips the
         // bubble into LiveKit, the old state's switchState() already told the joiner (the registry
@@ -277,21 +280,20 @@ export class CommunicationManager implements ICommunicationManager {
 
     /**
      * At the first join of a media space, asks the admin for the world's LiveKit settings before the transport is
-     * chosen: a recorded space starts on LiveKit rather than in P2P. The transition lock is held meanwhile, so every
-     * join waits for the answer. Only the admin records a world: without one (or without the LiveKit recordings
-     * bucket), nothing is asked and nothing is recorded.
+     * chosen: a recorded space starts on LiveKit rather than in P2P, and a world may move to LiveKit at its own user
+     * count. The transition lock is held meanwhile, so every join waits for the answer. Without an admin, nothing is
+     * asked: the environment's threshold applies and nothing is recorded.
      */
-    private askAutoRecording(user: SpaceUser): void {
+    private askWorldSettings(user: SpaceUser): void {
         if (
-            this.autoRecordingAsked ||
-            !this.autoRecorder.backRecords ||
+            this.worldSettingsAsked ||
             !livekitCredentialsFromAdmin() ||
             this.lifecycleManager.getCurrentState().communicationType !== CommunicationType.WEBRTC
         ) {
             return;
         }
-        this.autoRecordingAsked = true;
-        this.orchestrator.setTransitionLock(this.decideAutoRecording(user));
+        this.worldSettingsAsked = true;
+        this.orchestrator.setTransitionLock(this.decideWorldSettings(user));
     }
 
     /**
@@ -299,18 +301,19 @@ export class CommunicationManager implements ICommunicationManager {
      * for a LiveKit state, before releasing it. The lock is awaited once, it is not a mutex: the joins waiting on it
      * must wake on a settled space, or each of them would start its own transition.
      */
-    private async decideAutoRecording(user: SpaceUser): Promise<void> {
+    private async decideWorldSettings(user: SpaceUser): Promise<void> {
         let credentials: LivekitCredentialsResponse | undefined;
         try {
             credentials = await adminApi.fetchLivekitCredentials(this.space.getSpaceName(), user.playUri);
         } catch (error) {
             console.error(
-                `Could not tell whether ${this.space.getSpaceName()} is recorded automatically; it is not:`,
+                `Could not get the LiveKit settings of ${this.space.getSpaceName()}; it is not recorded and uses the default P2P threshold:`,
                 error,
             );
             Sentry.captureException(error);
         }
         this.autoRecorder.decide(credentials?.autoRecording ?? false);
+        this.world.maxUsersForWebRTC = credentials?.maxUsersForWebrtc ?? undefined;
         if (!this.destroyed) {
             await this.transitionIfNeeded(user, credentials);
         }
@@ -712,10 +715,3 @@ export class CommunicationManager implements ICommunicationManager {
         }
     }
 }
-
-/**
- * Export configuration for backward compatibility.
- */
-export const CommunicationConfig = {
-    MAX_USERS_FOR_WEBRTC,
-};
