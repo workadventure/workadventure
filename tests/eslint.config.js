@@ -39,5 +39,13 @@ export default [
             "svelte/no-ignored-unsubscribe": "off",
             "rxjs/no-ignored-subscription": "off",
         }
-    }
+    },
+    {
+        // Documentation screenshot scripts, not tests: a still image needs fades and animations to settle,
+        // and there is no state to wait on for that.
+        files: ["docs-screenshots/**"],
+        rules: {
+            "playwright/no-wait-for-timeout": "off",
+        },
+    },
 ];
