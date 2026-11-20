@@ -1,7 +1,7 @@
 import path from "path";
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
-import type { ElectronApplication, Page } from "@playwright/test";
+import type { Browser, ElectronApplication, Page } from "@playwright/test";
 import { _electron as electron, expect, test } from "@playwright/test";
 import { play_url } from "./urls";
 
@@ -13,8 +13,21 @@ import { play_url } from "./urls";
 const desktopDir = fileURLToPath(new URL("../../../desktop/electron/", import.meta.url));
 const require = createRequire(import.meta.url);
 
-/** The desktop app, unpackaged (a packaged build's fuses turn off the --inspect Playwright needs), opening `url`. */
-export function launchDesktopApp(url: string): Promise<ElectronApplication> {
+export type DesktopApp = ElectronApplication & {
+    /** The next page the app opens in the system browser (the sign-in or sign-out page), as a new tab of it. */
+    waitForSystemBrowserPage(): Promise<Page>;
+};
+
+/** What the app opened with shell.openExternal, in its main process (see launchDesktopApp). */
+type SystemBrowserUrls = { systemBrowserUrls: string[] };
+
+/**
+ * The desktop app, unpackaged (a packaged build's fuses turn off the --inspect Playwright needs), opening `url`.
+ * Nothing it opens with shell.openExternal reaches the real browser: waitForSystemBrowserPage opens it in
+ * `systemBrowser` instead, in one context for the app's lifetime, which keeps the identity provider's session from
+ * sign-in to sign-out like the user's own browser.
+ */
+export async function launchDesktopApp(url: string, systemBrowser?: Browser): Promise<DesktopApp> {
     // Its own settings, logins, logs and single-instance lock, in the test's output folder. HOME too: the
     // app registers itself as the workadventure:// handler, which writes to the user's desktop files.
     const home = test.info().outputPath("desktop-home");
@@ -23,7 +36,7 @@ export function launchDesktopApp(url: string): Promise<ElectronApplication> {
             (entry): entry is [string, string] => entry[1] !== undefined && entry[0] !== "WAYLAND_DISPLAY",
         ),
     );
-    return electron.launch({
+    const app = await electron.launch({
         executablePath: createRequire(path.join(desktopDir, "package.json"))("electron") as string,
         args: [
             // Playwright adds its loader only when it finds Electron itself, which it cannot from here.
@@ -53,6 +66,37 @@ export function launchDesktopApp(url: string): Promise<ElectronApplication> {
             DBUS_SESSION_BUS_ADDRESS: "unix:path=/nonexistent",
         },
     });
+    await app.evaluate(({ shell }) => {
+        const opened: string[] = [];
+        Object.assign(globalThis, { systemBrowserUrls: opened } satisfies SystemBrowserUrls);
+        shell.openExternal = (url: string) => {
+            opened.push(url);
+            return Promise.resolve();
+        };
+    });
+    const browserContext = await systemBrowser?.newContext();
+    return Object.assign(app, {
+        // `await using`: the browser goes with the app, before the next test starts.
+        async [Symbol.asyncDispose]() {
+            await app.close();
+            await browserContext?.close();
+        },
+        async waitForSystemBrowserPage(): Promise<Page> {
+            if (!browserContext) {
+                throw new Error("No system browser: pass launchDesktopApp a browser");
+            }
+            let opened = "";
+            await expect(async () => {
+                opened = await app.evaluate(
+                    () => (globalThis as unknown as SystemBrowserUrls).systemBrowserUrls.shift() ?? "",
+                );
+                expect(opened, "a page opened in the system browser").not.toBe("");
+            }).toPass({ timeout: 30_000 });
+            const page = await browserContext.newPage();
+            await page.goto(opened);
+            return page;
+        },
+    });
 }
 
 /** The world tab: a WebContentsView of the main window, which Playwright lists like any page. */
@@ -64,31 +108,6 @@ export async function getWorldPage(app: ElectronApplication): Promise<Page> {
         throw new Error("No world page");
     }
     return page;
-}
-
-/**
- * Keeps what the app opens in the system browser (shell.openExternal: the sign-in and sign-out pages) for the
- * test, which plays the browser: see nextSystemBrowserUrl.
- */
-export async function interceptSystemBrowser(app: ElectronApplication): Promise<void> {
-    await app.evaluate(({ shell }) => {
-        const opened: string[] = [];
-        Object.assign(globalThis, { systemBrowserUrls: opened });
-        shell.openExternal = (url: string) => {
-            opened.push(url);
-            return Promise.resolve();
-        };
-    });
-}
-
-/** The next page the app opened in the system browser (see interceptSystemBrowser). */
-export async function nextSystemBrowserUrl(app: ElectronApplication): Promise<string> {
-    const opened = () =>
-        app.evaluate(() => (globalThis as unknown as { systemBrowserUrls: string[] }).systemBrowserUrls);
-    await expect.poll(async () => (await opened()).length, { timeout: 30_000 }).toBeGreaterThan(0);
-    return app.evaluate(
-        () => (globalThis as unknown as { systemBrowserUrls: string[] }).systemBrowserUrls.shift() ?? "",
-    );
 }
 
 /** The mini window is a window.open of the world page, named wa-mini-window (desktop child-windows.ts). */
