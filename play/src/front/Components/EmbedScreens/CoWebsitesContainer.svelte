@@ -16,7 +16,7 @@
     import { screenOrientationStore } from "../../Stores/ScreenOrientationStore";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
     import CoWebsiteTab from "./CoWebsiteTab.svelte";
-    import { IconChevronLeft, IconChevronRight, IconArrowsMinimize } from "@wa-icons";
+    import { IconChevronLeft, IconChevronRight, IconArrowsMaximize, IconArrowsMinimize } from "@wa-icons";
 
     //let container: HTMLElement;
     let activeCowebsite: CoWebsite = $state($coWebsites[0]);
@@ -261,7 +261,7 @@
                     onclick={toggleFullScreen}
                 >
                     {#if !$fullScreenCowebsite}
-                        <IconArrowsMinimize font-size="20" class="text-white" />
+                        <IconArrowsMaximize font-size="20" class="text-white" />
                     {:else}
                         <IconArrowsMinimize font-size="20" class="text-white" />
                     {/if}
