@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-beta.9](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.8...desktop-v2.0.0-beta.9) (2026-11-20)
+
+
+### Bug Fixes
+
+* **desktop:** remove the temporary auto-update test comment ([#7070](https://github.com/workadventure/workadventure/issues/7070)) ([7d16633](https://github.com/workadventure/workadventure/commit/7d16633e60af09157beb120917b6451049059f3b))
+
 ## [2.0.0-beta.8](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.7...desktop-v2.0.0-beta.8) (2026-11-20)
 
 
