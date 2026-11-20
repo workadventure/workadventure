@@ -17,9 +17,10 @@ import {
     desktopBrowserFlowReturnUrl,
     createRoomUrlWithAuthToken,
     isAllowedNavigationUrl,
+    isDesktopBrowserFlowUrl,
     isDesktopLoginUrl,
-    isDesktopLogoutUrl,
     isRoomUrl,
+    isWorldSignOutUrl,
     isSameRoomUrl,
     opensInApp,
     stripSensitiveQueryParams,
@@ -89,6 +90,8 @@ type DesktopCallbackFlow = {
     secret: string;
     expiresAt: number;
     kind: "auth" | "logout";
+    // The sign-in or sign-out page's: its pusher, the only server the code is exchanged with.
+    origin: string;
 };
 
 let mainWindow: BrowserWindow | undefined;
@@ -147,13 +150,14 @@ function consumeDesktopCallbackFlow(secret: string, state: string | null): Deskt
     return flow;
 }
 
-function registerDesktopCallbackFlow(kind: "auth" | "logout"): DesktopCallbackFlow {
+function registerDesktopCallbackFlow(kind: "auth" | "logout", pageUrl: string): DesktopCallbackFlow {
     purgeExpiredDesktopCallbackFlows();
     const flow: DesktopCallbackFlow = {
         state: randomToken(DESKTOP_CALLBACK_STATE_BYTES),
         secret: randomToken(DESKTOP_CALLBACK_SECRET_BYTES),
         expiresAt: Date.now() + DESKTOP_CALLBACK_FLOW_TTL_MS,
         kind,
+        origin: new URL(pageUrl).origin,
     };
     desktopCallbackFlows.set(flow.secret, flow);
     return flow;
@@ -446,7 +450,7 @@ async function showDesktopBrowserFlowPendingScreen(title: string, message: strin
 
 async function openDesktopLogin(url: string) {
     const callbackOrigin = await ensureDesktopCallbackServer();
-    const flow = registerDesktopCallbackFlow("auth");
+    const flow = registerDesktopCallbackFlow("auth", url);
     const desktopLoginUrl = createDesktopLoginUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
     await openExternal(desktopLoginUrl);
     await showDesktopBrowserFlowPendingScreen(t("auth.signingInTitle"), t("auth.signingInMessage"), desktopLoginUrl);
@@ -454,14 +458,10 @@ async function openDesktopLogin(url: string) {
 
 async function openDesktopLogout(url: string) {
     const callbackOrigin = await ensureDesktopCallbackServer();
-    const flow = registerDesktopCallbackFlow("logout");
+    const flow = registerDesktopCallbackFlow("logout", url);
     const desktopLogoutUrl = createDesktopLogoutUrl(url, buildLoopbackCallbackUrl(callbackOrigin, flow));
     await openExternal(desktopLogoutUrl);
     await showDesktopBrowserFlowPendingScreen(t("auth.signingOutTitle"), t("auth.signingOutMessage"), desktopLogoutUrl);
-}
-
-function isAllowedDesktopBrowserFlowUrl(url: string, config: DesktopConfig) {
-    return isAllowedNavigationUrl(url, config) && (isDesktopLoginUrl(url) || isDesktopLogoutUrl(url));
 }
 
 async function openDesktopBrowserFlow(url: string) {
@@ -484,7 +484,7 @@ async function openDesktopBrowserFlow(url: string) {
  * a sign-in page the app may open.
  */
 export async function signInFromLanding(loginUrl: string): Promise<boolean> {
-    if (!isDesktopLoginUrl(loginUrl) || !isAllowedNavigationUrl(loginUrl, getDesktopConfig())) {
+    if (!isDesktopLoginUrl(loginUrl) || !isDesktopBrowserFlowUrl(loginUrl, getDesktopConfig())) {
         return false;
     }
     await openDesktopLogin(loginUrl);
@@ -603,7 +603,9 @@ function ensureDesktopCallbackServer(): Promise<string> {
 
         const callbackOrigin = requestUrl.searchParams.get("origin");
         const code = requestUrl.searchParams.get("code");
-        if (!callbackOrigin || !code) {
+        // The pusher of the sign-in page, which the trusted world sent the user to: never another server.
+        if (callbackOrigin !== flow.origin || !code) {
+            ElectronLog.warn(`Rejected desktop sign-in callback from "${callbackOrigin}", expected "${flow.origin}".`);
             response.writeHead(400, { "Content-Type": "text/plain; charset=utf-8" });
             response.end("Missing desktop auth callback parameters");
             maybeStopDesktopCallbackServer();
@@ -684,7 +686,7 @@ function configureSession() {
 /** A link that leaves its page: the browser sign-in, a world, or the system browser for anything else. */
 function openLink(url: string) {
     let opening: Promise<void>;
-    if (isAllowedDesktopBrowserFlowUrl(url, getDesktopConfig())) {
+    if (isDesktopBrowserFlowUrl(url, getDesktopConfig())) {
         opening = openDesktopBrowserFlow(url);
     } else if (opensInApp(url, getDesktopConfig())) {
         // A new tab, not loadDesktopTarget: that loads into the ACTIVE tab, so a link from a background
@@ -733,10 +735,12 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         adoptChildWindow(childWindow, frameName);
     });
 
-    // A world tab may move within its own server or to another world. Anything else goes where a link would.
+    // A world tab may move within its own server, to another world, or to its sign-out page, which comes back to
+    // it. Anything else goes where a link would.
     window.webContents.on("will-navigate", (event, url) => {
         const config = getDesktopConfig();
-        if (isAllowedDesktopBrowserFlowUrl(url, config) || !opensInApp(url, config, webContents.getURL())) {
+        const staysInApp = opensInApp(url, config, webContents.getURL()) || isWorldSignOutUrl(url, config);
+        if (isDesktopBrowserFlowUrl(url, config) || !staysInApp) {
             event.preventDefault();
             openLink(url);
         }
@@ -745,7 +749,7 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     // A server's redirect may go to any page of a trusted server (a sign-in redirect is not a world).
     window.webContents.on("will-redirect", (event, url) => {
         const config = getDesktopConfig();
-        if (isAllowedDesktopBrowserFlowUrl(url, config) || shouldOpenExternally(url, config)) {
+        if (isDesktopBrowserFlowUrl(url, config) || shouldOpenExternally(url, config)) {
             event.preventDefault();
             openLink(url);
         }
@@ -1124,13 +1128,6 @@ function requestDesktopAuthExchange(origin: string, code: string): Promise<{ tok
 }
 
 async function openDesktopAuthCallback(callback: DesktopAuthCallback) {
-    const config = getDesktopConfig();
-    if (!isAllowedNavigationUrl(callback.origin, config)) {
-        ElectronLog.warn(`Blocked desktop auth callback from disallowed origin "${callback.origin}".`);
-        await createWindow();
-        return;
-    }
-
     if (!mainWindow) {
         await createWindow();
     }
