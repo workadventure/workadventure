@@ -2,7 +2,6 @@
     import { AvailabilityStatus } from "@workadventure/messages";
     import type { Readable } from "svelte/store";
     import { derived } from "svelte/store";
-    import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import CamOnIcon from "../../Icons/CamOnIcon.svelte";
     import ActionBarButton from "../ActionBarButton.svelte";
     import CamOffIcon from "../../Icons/CamOffIcon.svelte";
@@ -19,7 +18,8 @@
     import { LL } from "../../../../i18n/i18n-svelte";
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
-    import { canComeBackFrom, heldMediaStore, toggleCamera } from "../../../Stores/HeldMediaStore";
+    import { canComeBackFrom, heldMediaStore } from "../../../Stores/HeldMediaStore";
+    import { toggleMedia } from "../../../Stores/MediaToggleStore";
 
     // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
@@ -91,9 +91,7 @@
     );
 
     function cameraClick(): void {
-        analyticsClient.trackAdminEvent("media.camera.toggled");
-        if ($silentStore) return;
-        toggleCamera();
+        toggleMedia("camera");
     }
 </script>
 
