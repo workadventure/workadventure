@@ -24,6 +24,7 @@ import {
     GRPC_MAX_MESSAGE_SIZE,
     BODY_PARSER_JSON_SIZE_LIMIT,
     AWS_BUCKET,
+    GRPC_BIND_HOST,
 } from "./Enum/EnvironmentVariable";
 import { createProbeS3Client, getS3Client, hasS3Bucket } from "./Services/S3Client";
 import { S3HealthCheck } from "./Services/S3HealthCheck";
@@ -73,7 +74,7 @@ const server = new grpc.Server({
 //@ts-ignore
 server.addService(MapStorageService, mapStorageServer);
 
-server.bindAsync(`0.0.0.0:50053`, grpc.ServerCredentials.createInsecure(), (err, port) => {
+server.bindAsync(`${GRPC_BIND_HOST}:50053`, grpc.ServerCredentials.createInsecure(), (err, port) => {
     if (err) {
         throw err;
     }
