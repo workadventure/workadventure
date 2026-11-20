@@ -192,6 +192,7 @@
         tooltipDesc={$LL.actionbar.help.lock.desc()}
         disabledHelp={$openedMenuStore !== undefined || (showAreaLock && !canLockSomething)}
         state={buttonState}
+        pressed={buttonState === "forbidden" || buttonState === "disabledForbidden"}
         dataTestId="lock-button"
         media="./static/Videos/LockBubble.mp4"
         desc={$LL.actionbar.help.lock.desc()}

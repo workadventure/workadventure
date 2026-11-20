@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { LL } from "../../../i18n/i18n-svelte";
     import { IconX } from "@wa-icons";
 
     interface Props {
@@ -45,6 +46,7 @@
     {id}
     class="{sizeClasses} p-0 flex items-center justify-center rounded backdrop-blur close-window transition-all aspect-square text-2xl {textColor} {bgColor} hover:{hoverColor} close-btn {extraButtonClasses}"
     data-testid={dataTestId}
+    aria-label={$LL.actionbar.a11y.close()}
     onclick={handleClick}
 >
     <IconX />

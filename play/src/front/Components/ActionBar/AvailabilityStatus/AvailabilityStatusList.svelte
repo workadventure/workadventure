@@ -40,7 +40,7 @@
     <!-- Some status (silent, in a meeting...) are locking the status bar to only one option -->
     {#if [AvailabilityStatus.LISTENER, AvailabilityStatus.SPEAKER, AvailabilityStatus.JITSI, AvailabilityStatus.LIVEKIT, AvailabilityStatus.BBB, AvailabilityStatus.DENY_PROXIMITY_MEETING, AvailabilityStatus.SILENT, AvailabilityStatus.SOUND_BLOCKED].includes($availabilityStatusStore)}
         <button
-            class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded active:outline-none focus:outline-none"
+            class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded"
         >
             <AvailabilityStatusCircle
                 cursorType="pointer"
@@ -53,7 +53,7 @@
     {:else}
         {#each statusInformation as statusInformationValue (statusInformationValue.AvailabilityStatus)}
             <button
-                class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded active:outline-none focus:outline-none"
+                class="status-button group flex px-2 py-1 gap-2 items-center transition-all cursor-pointer text-sm text-neutral-100 w-full pointer-events-auto text-start rounded"
                 class:justify-end={align === "end"}
                 class:disabled={$availabilityStatusStore === statusInformationValue.AvailabilityStatus}
                 onkeyup={(e) => {
