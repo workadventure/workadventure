@@ -66,6 +66,31 @@ export async function getWorldPage(app: ElectronApplication): Promise<Page> {
     return page;
 }
 
+/**
+ * Keeps what the app opens in the system browser (shell.openExternal: the sign-in and sign-out pages) for the
+ * test, which plays the browser: see nextSystemBrowserUrl.
+ */
+export async function interceptSystemBrowser(app: ElectronApplication): Promise<void> {
+    await app.evaluate(({ shell }) => {
+        const opened: string[] = [];
+        Object.assign(globalThis, { systemBrowserUrls: opened });
+        shell.openExternal = (url: string) => {
+            opened.push(url);
+            return Promise.resolve();
+        };
+    });
+}
+
+/** The next page the app opened in the system browser (see interceptSystemBrowser). */
+export async function nextSystemBrowserUrl(app: ElectronApplication): Promise<string> {
+    const opened = () =>
+        app.evaluate(() => (globalThis as unknown as { systemBrowserUrls: string[] }).systemBrowserUrls);
+    await expect.poll(async () => (await opened()).length, { timeout: 30_000 }).toBeGreaterThan(0);
+    return app.evaluate(
+        () => (globalThis as unknown as { systemBrowserUrls: string[] }).systemBrowserUrls.shift() ?? "",
+    );
+}
+
 /** The mini window is a window.open of the world page, named wa-mini-window (desktop child-windows.ts). */
 export async function findMiniWindow(app: ElectronApplication): Promise<Page | undefined> {
     for (const page of app.windows()) {
