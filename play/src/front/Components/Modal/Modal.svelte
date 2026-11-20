@@ -12,6 +12,8 @@
     let mainModal: HTMLDivElement;
 
     let isFullScreened = $state(false);
+    // A frameless page is transparent over the whole screen and brings its own close button.
+    const frameless = $modalIframeStore?.frameless === true;
 
     function close() {
         modalVisibilityStore.set(false);
@@ -64,14 +66,20 @@
 <svelte:window onkeydown={onKeyDown} />
 
 <div
-    class="menu-container fixed h-dvh w-dvw z-[2000] pointer-events-auto top-0 transition-all {isMobile
-        ? 'mobile'
-        : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}"
+    class="menu-container fixed h-dvh w-dvw z-[2000] pointer-events-auto top-0 transition-all {frameless
+        ? 'frameless'
+        : isMobile
+          ? 'mobile'
+          : $modalIframeStore?.position} {isFullScreened ? 'fullscreened' : ''}"
     bind:this={mainModal}
 >
-    <div class="w-full h-full bg-contrast/80 backdrop-blur rounded" transition:blur={{ amount: 10, duration: 250 }}>
-        <div
-            class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-y-0 @lg/main-layout:space-y-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
+    <div
+        class="w-full h-full {frameless ? '' : 'bg-contrast/80 backdrop-blur rounded'}"
+        transition:blur={{ amount: 10, duration: 250 }}
+    >
+        {#if !frameless}
+            <div
+                class={`flex justify-center items-center content-center bg-contrast/80 backdrop-blur p-2 space-y-0 @lg/main-layout:space-y-2 rounded-lg absolute z-50 hover:opacity-100 opacity-25 transition-opacity duration-300
                 ${
                     isFullScreened || isMobile
                         ? "top-4 right-4"
@@ -82,44 +90,45 @@
                           }`
                 }
             `}
-        >
-            {#if modalUrl != undefined}
-                {#if $modalIframeStore?.allowFullScreen}
+            >
+                {#if modalUrl != undefined}
+                    {#if $modalIframeStore?.allowFullScreen}
+                        <Button
+                            variant="light"
+                            appearance="ghost"
+                            square
+                            class="rounded hidden @lg/main-layout:block"
+                            onclick={() => (isFullScreened = !isFullScreened)}
+                        >
+                            {#snippet icon()}
+                                {#if isFullScreened}
+                                    <IconArrowsMinimize font-size="20" class="text-white" />
+                                {:else}
+                                    <IconArrowsMaximize font-size="20" class="text-white" />
+                                {/if}
+                            {/snippet}
+                        </Button>
+                    {/if}
+                {/if}
+                {#if $modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true}
                     <Button
-                        variant="light"
-                        appearance="ghost"
+                        onclick={(event) => {
+                            event.preventDefault();
+                            close();
+                        }}
+                        variant="danger"
                         square
-                        class="rounded hidden @lg/main-layout:block"
-                        onclick={() => (isFullScreened = !isFullScreened)}
+                        class="rounded m-0"
+                        style={isFullScreened == true ? "" : "margin: 0px;"}
+                        dataTestId="close-modal-button"
                     >
                         {#snippet icon()}
-                            {#if isFullScreened}
-                                <IconArrowsMinimize font-size="20" class="text-white" />
-                            {:else}
-                                <IconArrowsMaximize font-size="20" class="text-white" />
-                            {/if}
+                            <IconX font-size="20" class="text-white" />
                         {/snippet}
                     </Button>
                 {/if}
-            {/if}
-            {#if $modalIframeStore?.closable == undefined || $modalIframeStore?.closable == true}
-                <Button
-                    onclick={(event) => {
-                        event.preventDefault();
-                        close();
-                    }}
-                    variant="danger"
-                    square
-                    class="rounded m-0"
-                    style={isFullScreened == true ? "" : "margin: 0px;"}
-                    dataTestId="close-modal-button"
-                >
-                    {#snippet icon()}
-                        <IconX font-size="20" class="text-white" />
-                    {/snippet}
-                </Button>
-            {/if}
-        </div>
+            </div>
+        {/if}
         {#if modalUrl != undefined}
             <iframe
                 id="modalIframe"
@@ -139,6 +148,7 @@
 
 <style>
     .menu-container {
+        &.frameless,
         &.mobile {
             width: 100% !important;
             height: 100% !important;

@@ -8,6 +8,8 @@ export const isModalEvent = z.object({
     allowApi: z.boolean().optional().default(false),
     allowFullScreen: z.boolean().optional().default(true),
     closable: z.boolean().optional().default(true),
+    // The page draws its own card: no frame, no buttons around it, and the iframe covers the whole screen.
+    frameless: z.boolean().optional().default(false),
 });
 
 /**

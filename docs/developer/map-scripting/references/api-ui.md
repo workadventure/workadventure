@@ -319,6 +319,8 @@ WA.ui.modal.openModal({
     allowApi?: boolean, // optional by default false.
     position?: string,
     allowFullScreen?: boolean,
+    closable?: boolean,
+    frameless?: boolean,
     title: string,
     closeCallback?: (event: ModalEvent) => void
 }): void
@@ -329,6 +331,8 @@ WA.ui.modal.openModal({
 - `allowApi` (boolean, *optional*, default `false`): if set to `true`, the iframe will be able to use the scripting API.
 - `position` (string, *optional*, default `right`): the position of the modal. Possible values are `center`, `left`, `right`.
 - `allowFullScreen` (boolean, *optional*, default `true`): if set to `false`, the "fullscreen" button next to the close button will be hidden.
+- `closable` (boolean, *optional*, default `true`): if set to `false`, the close button is hidden and the Escape key does not close the modal. Close it with `WA.ui.modal.closeModal()`.
+- `frameless` (boolean, *optional*, default `false`): if set to `true`, the modal is drawn without its frame nor its buttons, and the iframe covers the whole screen with a transparent background. Your page draws its own card, backdrop and close button (calling `WA.ui.modal.closeModal()` needs `allowApi`). `position` is ignored. Remember to make the `html` and `body` of your page transparent, and to leave its `color-scheme` at its default (`normal`): browsers paint an iframe whose color scheme differs from its embedder on an opaque background.
 - `title`: the title of the iframe (note: this is mostly useless since the title is not displayed).
 - `closeCallback` (function, *optional*): a function that will be called when the modal is closed. The function will be passed the `ModalEvent` object used to configure the modal.
 
