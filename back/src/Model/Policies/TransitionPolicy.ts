@@ -17,12 +17,15 @@ export class TransitionPolicy implements ITransitionPolicy {
         private readonly switchOnCpuLimitation: boolean = true,
         /** A recorded space (see AutoRecorder) lives on LiveKit, where the egress records. */
         private readonly autoRecording: { readonly isEnabled: boolean } = { isEnabled: false },
+        /** The world's own threshold, once the admin gave it (see CommunicationManager.askWorldSettings). */
+        private readonly world: { readonly maxUsersForWebRTC?: number } = {},
     ) {}
 
     /**
      * Determines if a transition should occur based on current state and user count.
      *
      * Business rules:
+     * - maxUsersForWebRTC is the world's own when it has one, the environment's otherwise
      * - WebRTC -> LiveKit: when user count exceeds maxUsersForWebRTC AND LiveKit is available, or when a user
      *   raised its `cpuLimited` flag in a bubble of more than two (in P2P that user runs one encoder per peer;
      *   LiveKit brings it down to one, which is worth nothing for a pair)
@@ -40,11 +43,12 @@ export class TransitionPolicy implements ITransitionPolicy {
      */
     shouldTransition(currentType: CommunicationType, userCount: number, cpuLimitedUserCount = 0): boolean {
         const cpuLimited = this.switchOnCpuLimitation && cpuLimitedUserCount > 0;
+        const maxUsersForWebRTC = this.world.maxUsersForWebRTC ?? this.maxUsersForWebRTC;
 
         if (currentType === CommunicationType.WEBRTC) {
             const shouldSwitch =
                 (this.autoRecording.isEnabled && userCount > 0) ||
-                userCount > this.maxUsersForWebRTC ||
+                userCount > maxUsersForWebRTC ||
                 (cpuLimited && userCount > 2);
             if (shouldSwitch && !this.livekitChecker.isAvailable()) {
                 return false;
@@ -54,7 +58,7 @@ export class TransitionPolicy implements ITransitionPolicy {
 
         if (
             currentType === CommunicationType.LIVEKIT &&
-            userCount <= this.maxUsersForWebRTC &&
+            userCount <= maxUsersForWebRTC &&
             !this.recordingManager.isRecording &&
             !cpuLimited &&
             !this.autoRecording.isEnabled
