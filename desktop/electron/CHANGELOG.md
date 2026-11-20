@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.0.0-beta.8](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.7...desktop-v2.0.0-beta.8) (2026-11-20)
+
+
+### Bug Fixes
+
+* **desktop:** relaunch the app after "Install and Restart" ([#7068](https://github.com/workadventure/workadventure/issues/7068)) ([0fcb97e](https://github.com/workadventure/workadventure/commit/0fcb97eee2f2505a582f335fc46a583845c1fbdd))
+
 ## [2.0.0-beta.7](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.6...desktop-v2.0.0-beta.7) (2026-11-20)
 
 
