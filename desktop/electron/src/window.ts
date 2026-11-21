@@ -747,7 +747,12 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
     });
 
     // A server's redirect may go to any page of a trusted server (a sign-in redirect is not a world).
+    // Only the world's own: unlike will-navigate, this fires for iframes too, and an iframe redirected
+    // elsewhere (the Profile menu's /profile-callback to the administration) stays in its iframe.
     window.webContents.on("will-redirect", (event, url) => {
+        if (!event.isMainFrame) {
+            return;
+        }
         const config = getDesktopConfig();
         if (isDesktopBrowserFlowUrl(url, config) || shouldOpenExternally(url, config)) {
             event.preventDefault();
