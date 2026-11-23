@@ -111,13 +111,15 @@
     {#snippet action()}
         <div class="flex w-full items-center gap-3">
             {#if status === "done"}
-                <span class="flex-1"></span>
-                <Button dataTestId="understoodButton" variant="secondary" class="flex-1" onclick={() => modals.close()}
+                <Button
+                    dataTestId="understoodButton"
+                    variant="secondary"
+                    class="mx-auto w-1/2"
+                    onclick={() => modals.close()}
                     >{$LL.chat.verificationEmojiDialog.understood()}
                 </Button>
             {:else if status === "error"}
-                <span class="flex-1"></span>
-                <Button variant="light" appearance="ghost" class="flex-1" onclick={() => modals.close()}>
+                <Button variant="light" appearance="ghost" class="mx-auto w-1/2" onclick={() => modals.close()}>
                     {$LL.chat.verificationEmojiDialog.close()}
                 </Button>
             {:else if status === "confirming"}
