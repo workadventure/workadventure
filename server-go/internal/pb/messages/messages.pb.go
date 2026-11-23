@@ -44,6 +44,9 @@ const (
 	// gesture. Unlike BACK_IN_A_MOMENT, which the user picks, this one is imposed and
 	// clears on the next click.
 	AvailabilityStatus_SOUND_BLOCKED AvailabilityStatus = 13
+	// Set automatically when WorkAdventure has not seen the user for a while: started with the computer and not
+	// opened yet, no input for a few minutes, or away for hours. Camera and microphone are off until they are back.
+	AvailabilityStatus_IDLE AvailabilityStatus = 14
 )
 
 // Enum value maps for AvailabilityStatus.
@@ -63,6 +66,7 @@ var (
 		11: "LIVEKIT",
 		12: "LISTENER",
 		13: "SOUND_BLOCKED",
+		14: "IDLE",
 	}
 	AvailabilityStatus_value = map[string]int32{
 		"UNCHANGED":              0,
@@ -79,6 +83,7 @@ var (
 		"LIVEKIT":                11,
 		"LISTENER":               12,
 		"SOUND_BLOCKED":          13,
+		"IDLE":                   14,
 	}
 )
 
@@ -23736,7 +23741,7 @@ const file_messages_proto_rawDesc = "" +
 	"\x04room\x18\x01 \x01(\tR\x04room\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12*\n" +
 	"\x04data\x18\x03 \x01(\v2\x16.google.protobuf.ValueR\x04data\x12$\n" +
-	"\rtargetUserIds\x18\x04 \x03(\x05R\rtargetUserIds*\xe4\x01\n" +
+	"\rtargetUserIds\x18\x04 \x03(\x05R\rtargetUserIds*\xee\x01\n" +
 	"\x12AvailabilityStatus\x12\r\n" +
 	"\tUNCHANGED\x10\x00\x12\n" +
 	"\n" +
@@ -23754,7 +23759,8 @@ const file_messages_proto_rawDesc = "" +
 	"\x12\v\n" +
 	"\aLIVEKIT\x10\v\x12\f\n" +
 	"\bLISTENER\x10\f\x12\x11\n" +
-	"\rSOUND_BLOCKED\x10\r*5\n" +
+	"\rSOUND_BLOCKED\x10\r\x12\b\n" +
+	"\x04IDLE\x10\x0e*5\n" +
 	"\x0eSayMessageType\x12\x10\n" +
 	"\fSpeechBubble\x10\x00\x12\x11\n" +
 	"\rThinkingCloud\x10\x01*w\n" +
