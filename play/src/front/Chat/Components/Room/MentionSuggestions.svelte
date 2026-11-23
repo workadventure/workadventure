@@ -156,12 +156,12 @@
 
 {#if matches.length > 0}
     <div
-        class="absolute bottom-full start-0 end-0 z-50 mx-2 mb-2 overflow-hidden rounded-xl border border-solid border-white/10 bg-contrast shadow-xl"
+        class="absolute bottom-full start-0 end-0 z-50 mx-2 mb-2 overflow-hidden rounded-2xl border border-solid border-white/10 bg-contrast shadow-xl"
         data-testid="mentionSuggestions"
     >
         <ul
             bind:this={listElement}
-            class="m-0 max-h-80 list-none overflow-y-auto p-1"
+            class="m-0 max-h-80 list-none overflow-y-auto p-1.5"
             role="listbox"
             aria-label={$LL.chat.mention.suggestions()}
         >
@@ -180,7 +180,7 @@
                 <li
                     role="option"
                     aria-selected={active}
-                    class="flex cursor-pointer items-center gap-2.5 rounded-lg px-2 py-1.5 text-white {active
+                    class="flex cursor-pointer items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-white {active
                         ? 'bg-secondary'
                         : 'hover:bg-white/10'}"
                     onmousedown={(event) => {

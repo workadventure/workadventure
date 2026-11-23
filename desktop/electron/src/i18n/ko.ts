@@ -94,12 +94,6 @@ const ko: NativeStrings = {
     "menu.hideTabBarDetail":
         "탭 {total}개가 열려 있습니다. 탭 표시줄을 숨기면 이 탭은 유지되고 나머지 {count}개는 닫힙니다.",
 
-    "tray.status.meeting": "회의 중",
-    "tray.status.do_not_disturb": "방해 금지",
-    "tray.status.busy": "바쁨",
-    "tray.status.back_in_a_moment": "곧 돌아옴",
-    "tray.status.idle": "자리 비움",
-    "tray.status.online": "온라인",
     "tray.status.offline": "오프라인",
     "tray.microphone": "마이크",
     "tray.camera": "카메라",
@@ -111,12 +105,17 @@ const ko: NativeStrings = {
         "WorkAdventure를 호환 모드(X11)로 시작할 수 없어 지금은 네이티브 Wayland 모드를 사용합니다. 설정에서 다시 전환할 수 있습니다.",
     "windowMode.openSettings": "설정 열기",
     "tray.quit": "종료",
+    "closeToTray.stillRunning":
+        "WorkAdventure가 계속 실행 중이며 월드에도 그대로 있습니다. 종료하려면 시스템 트레이의 아이콘을 사용하세요.",
 
     "settings.title": "설정",
     "settings.general": "일반",
     "settings.startAtLogin": "컴퓨터에 로그인할 때 WorkAdventure 시작",
     "settings.showTabBar": "탭 표시줄 보기",
     "settings.showTabBarHint": "여러 탭을 열면 탭 표시줄이 나타납니다.",
+    "settings.closeToTray": "창을 닫아도 WorkAdventure 계속 실행",
+    "settings.closeToTrayHint":
+        "월드에 그대로 남아 있습니다. 종료하려면 시스템 트레이의 WorkAdventure 아이콘을 사용하세요.",
     "settings.windowMode": "창 모드",
     "settings.windowModeX11": "호환 모드(X11), 권장",
     "settings.windowModeX11Description":
@@ -156,6 +155,7 @@ const ko: NativeStrings = {
     "auth.signingOutTitle": "로그아웃하는 중…",
     "auth.signingOutMessage": "브라우저에서 로그아웃을 완료하세요. 완료되면 자동으로 앱으로 돌아옵니다.",
     "auth.reopenBrowser": "브라우저 다시 열기",
+    "auth.back": "뒤로",
     "auth.signedIn": "로그인되었습니다. WorkAdventure로 돌아가셔도 됩니다.",
     "auth.signedOut": "로그아웃되었습니다. WorkAdventure로 돌아가셔도 됩니다.",
     "auth.closeWindow": "이 창을 닫아도 됩니다.",

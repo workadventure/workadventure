@@ -27,6 +27,7 @@ export const heldMediaStore = derived(
 // as long as their cause: a click cannot end them.
 const STATUSES_A_CLICK_ENDS: ReadonlySet<AvailabilityStatus> = new Set([
     AvailabilityStatus.AWAY,
+    AvailabilityStatus.IDLE,
     AvailabilityStatus.BUSY,
     AvailabilityStatus.BACK_IN_A_MOMENT,
     AvailabilityStatus.DO_NOT_DISTURB,

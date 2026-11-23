@@ -9,7 +9,7 @@ import { startIdleMonitor } from "./idle-monitor";
 import { openMiniWindow, startMiniWindowController } from "./mini-window-controller";
 import { createNativeApplicationMenu } from "./native-menu";
 import autoUpdater from "./auto-updater";
-import { initStartAtLogin } from "./auto-launch";
+import { initStartAtLogin, startedAtLogin } from "./auto-launch";
 import ipc from "./ipc";
 import { registerSettingsWindowIpc } from "./settings-window";
 import settings from "./settings";
@@ -124,6 +124,25 @@ async function init() {
         }
     });
 
+    // F12 / Ctrl+Shift+I (and macOS's Cmd+Option+I) toggle the DevTools of the focused page, in every window:
+    // the floating windows are pages of their own, which the world's DevTools cannot inspect.
+    app.on("web-contents-created", (_event, contents) => {
+        contents.on("before-input-event", (event, input) => {
+            const devToolsKey =
+                input.key === "F12" ||
+                (input.code === "KeyI" && ((input.control && input.shift) || (input.meta && input.alt)));
+            if (input.type !== "keyDown" || !devToolsKey) {
+                return;
+            }
+            event.preventDefault();
+            if (contents.isDevToolsOpened()) {
+                contents.closeDevTools();
+            } else {
+                contents.openDevTools({ mode: "detach" });
+            }
+        });
+    });
+
     // This method will be called when Electron has finished loading
     await app.whenReady().then(async () => {
         const turnOnStartAtLogin = await settings.init();
@@ -176,11 +195,16 @@ async function init() {
 
         const initialProtocolTarget = pendingProtocolTarget;
         pendingProtocolTarget = undefined;
-        await createWindow(initialProtocolTarget);
+        // Started with the computer, not by the user: the world loads behind the tray, without taking the
+        // screen or the focus.
+        const inBackground = !initialProtocolTarget && startedAtLogin();
+        if (inBackground) {
+            ElectronLog.info("Started at login: the window stays hidden until the user opens it.");
+        }
+        await createWindow(initialProtocolTarget, inBackground);
 
         // Auto-away + notification hush: forward system idle transitions to the renderer, which
-        // flips the WA availability to "away" and back. presence.setIdle (called inside) also
-        // drives the tray status dot.
+        // flips the WA availability to "away" and back (the tray then shows that status).
         // The shell window has no preload: the worlds live in the tab views, so every tab gets it.
         startIdleMonitor((idle) => {
             for (const tab of getTabs()) {

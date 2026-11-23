@@ -147,6 +147,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "允許他人加上註解",
         clearAll: "全部清除",
         annotate: "在分享的螢幕上加上註解",
+        annotateScreenOnly: "僅在分享整個螢幕時才能使用註解。",
         camera: "攝影機",
         microphone: "麥克風",
         cameraOff: "你的攝影機已關閉——請先開啟再選擇。",

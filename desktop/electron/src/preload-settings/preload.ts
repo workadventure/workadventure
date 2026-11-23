@@ -9,6 +9,7 @@ const api: SettingsApi = {
     getState: () => ipcRenderer.invoke("app:settings:get"),
     setStartAtLogin: (enabled) => ipcRenderer.invoke("app:settings:start-at-login", Boolean(enabled)),
     setTabBar: (enabled) => ipcRenderer.invoke("app:settings:tab-bar", Boolean(enabled)),
+    setCloseToTray: (enabled) => ipcRenderer.invoke("app:settings:close-to-tray", Boolean(enabled)),
     setWindowMode: (mode) => ipcRenderer.invoke("app:settings:window-mode", mode),
     restart: () => ipcRenderer.send("app:settings:restart"),
     setShortcut: (name, accelerator) => ipcRenderer.invoke("app:settings:shortcut", name, accelerator),

@@ -96,12 +96,6 @@ const en = {
     "menu.hideTabBarDetail":
         "You have {total} tabs open. Hiding the tab bar keeps this tab and closes the {count} others.",
 
-    "tray.status.meeting": "In a meeting",
-    "tray.status.do_not_disturb": "Do not disturb",
-    "tray.status.busy": "Busy",
-    "tray.status.back_in_a_moment": "Be right back",
-    "tray.status.idle": "Idle",
-    "tray.status.online": "Available",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microphone",
     "tray.camera": "Camera",
@@ -113,12 +107,16 @@ const en = {
         "WorkAdventure couldn't start in compatibility mode (X11), so it now uses native Wayland mode. You can switch back in its settings.",
     "windowMode.openSettings": "Open settings",
     "tray.quit": "Quit",
+    "closeToTray.stillRunning":
+        "WorkAdventure is still running, and you are still in your world. To quit, use its icon in the tray.",
 
     "settings.title": "Settings",
     "settings.general": "General",
     "settings.startAtLogin": "Start WorkAdventure when I log in to my computer",
     "settings.showTabBar": "Show tab bar",
     "settings.showTabBarHint": "The tab bar shows once several tabs are open.",
+    "settings.closeToTray": "Keep WorkAdventure running when I close its window",
+    "settings.closeToTrayHint": "You stay in your world. To quit, use the WorkAdventure icon in the tray.",
     "settings.windowMode": "Window mode",
     "settings.windowModeX11": "Compatibility (X11), recommended",
     "settings.windowModeX11Description":
@@ -157,6 +155,7 @@ const en = {
     "auth.signingOutTitle": "Signing out…",
     "auth.signingOutMessage": "Finish signing out in your browser. You'll return to the app automatically.",
     "auth.reopenBrowser": "Reopen the browser",
+    "auth.back": "Back",
     "auth.signedIn": "Signed in. You can go back to WorkAdventure.",
     "auth.signedOut": "Signed out. You can go back to WorkAdventure.",
     "auth.closeWindow": "You can close this window.",

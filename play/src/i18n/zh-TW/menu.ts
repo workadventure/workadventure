@@ -137,12 +137,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "重設您的金鑰儲存",
         resetKeyStorageConfirmationModal: {
-            title: "金鑰儲存重設確認",
-            content: "您即將重設金鑰儲存。您確定嗎？",
-            warning:
-                "重設金鑰儲存將刪除您目前的工作階段和所有受信任的使用者。您可能會失去對某些過往訊息的存取權限，並且不再被識別為受信任的使用者。請確保在繼續之前完全理解此操作的後果。",
-            cancel: "取消",
-            continue: "繼續",
+            newSecretsNext: "接著您將設定新的密語並取得新的復原金鑰。",
+            oldSecretsStop: "目前的密語和復原金鑰將失效。",
+            loseHistory: "先前加密的訊息可能將無法讀取。",
+            title: "重設加密？",
+            content: "僅在您無法再解鎖加密訊息時才這樣做。",
+            cancel: "保留我的加密",
+            continue: "重設加密",
         },
     },
     sub: {

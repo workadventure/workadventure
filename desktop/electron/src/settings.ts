@@ -19,7 +19,7 @@ export type SettingsData = {
     last_room_url?: string;
     world_history: string[];
     pinned_worlds: string[];
-    /** Servers outside the built-in domains the user added from the Landing (origins). See origin-verification. */
+    /** Servers outside the built-in servers the user added from the Landing (origins). See origin-verification. */
     trusted_origins?: string[];
     shortcuts: Record<"mute_toggle" | "camera_toggle" | "mini_window_toggle", string>;
     /** Set once the user edits a shortcut in the settings window: from then on a blank one was cleared. */
@@ -30,6 +30,10 @@ export type SettingsData = {
     window_mode?: DesktopWindowMode;
     /** Set before restarting in X11 mode, cleared once that start gets going: still set, it failed. */
     x11_start_pending?: boolean;
+    /** Closing the main window hides it in the tray. Unset: on where the desktop shows tray icons. */
+    close_to_tray?: boolean;
+    /** Set once the first close to the tray told the user WorkAdventure keeps running. */
+    close_to_tray_notified?: boolean;
 };
 
 let settings: SettingsData;

@@ -13,7 +13,11 @@ export const LivekitCredentialsResponse = z.object({
     }),
     autoRecording: extendApi(z.boolean().optional(), {
         description:
-            "Whether the world's spaces are recorded automatically: every microphone of a bubble or meeting area is recorded to its own file, by an egress on this LiveKit server. Asked once per space, at its first join, by a back with LIVEKIT_RECORDING_S3_BUCKET set. Defaults to false.",
+            "Whether the world's spaces are recorded automatically: every microphone of a bubble or meeting area is recorded to its own file, by an egress on this LiveKit server. Asked once per space, at its first join; only a back with LIVEKIT_RECORDING_S3_BUCKET set records. Defaults to false.",
+    }),
+    maxUsersForWebrtc: extendApi(z.number().int().positive().nullable().optional(), {
+        description:
+            "The world's own MAX_USERS_FOR_WEBRTC: a bubble or meeting area of more users goes from P2P to LiveKit (1 puts every conversation on LiveKit). Asked once per space, at its first join. Null or absent: the back's MAX_USERS_FOR_WEBRTC.",
     }),
 });
 

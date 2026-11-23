@@ -25,6 +25,7 @@ const video: DeepPartial<Translation["video"]> = {
     },
     remoteAway: {
         inAnotherWindow: "{name} 在其他窗口或标签页中",
+        idle: "{name} 已有一段时间没有活动",
         cameraAndMicPaused: "摄像头和麦克风已暂停，回来后恢复",
         cameraPaused: "摄像头已暂停，回来后恢复",
     },

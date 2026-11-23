@@ -140,12 +140,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "키 저장소 재설정",
         resetKeyStorageConfirmationModal: {
-            title: "키 저장소 재설정 확인",
-            content: "키 저장소를 재설정하려고 합니다. 확실합니까?",
-            warning:
-                "키 저장소를 재설정하면 현재 세션과 모든 신뢰할 수 있는 사용자가 제거됩니다. 일부 과거 메시지에 대한 액세스 권한을 잃을 수 있으며 더 이상 신뢰할 수 있는 사용자로 인식되지 않습니다. 계속하기 전에 이 작업의 결과를 완전히 이해했는지 확인하세요.",
-            cancel: "취소",
-            continue: "계속하기",
+            newSecretsNext: "바로 이어서 새 암호 문구를 정하고 새 복구 키를 받게 됩니다.",
+            oldSecretsStop: "현재 암호 문구와 복구 키는 더 이상 작동하지 않습니다.",
+            loseHistory: "지금까지 암호화된 메시지를 더 이상 읽지 못할 수 있습니다.",
+            title: "암호화를 재설정할까요?",
+            content: "암호화된 메시지의 잠금을 더 이상 해제할 수 없을 때만 진행하세요.",
+            cancel: "암호화 유지",
+            continue: "암호화 재설정",
         },
     },
     sub: {

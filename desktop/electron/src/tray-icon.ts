@@ -1,5 +1,4 @@
 import path from "path";
-import type { TrayStatus } from "./presence";
 
 // The tray has its own icon: the logo's cup redrawn for 16 px, with its @2x next to it (Electron loads
 // both from the one path). The logo itself is a 26 px wide cup on a navy tile: scaled down to tray size
@@ -14,19 +13,9 @@ export const TRAY_ICON_PATH = path.join(__dirname, "..", "assets", "icons", "tra
 /** Side of the tray icon in points. */
 export const TRAY_ICON_SIZE = 16;
 
-// Status-dot colors, as 0xRRGGBB. Mirror WA's own availability colors (the `filling` values in
-// play/src/front/Utils/AvailabilityStatus.ts getColorHexOfStatus): busy gold, back-in-a-moment blue,
-// do-not-disturb coral. Idle reuses WA's AWAY gold; meeting reuses WA's SILENT red as a "busy in a
-// meeting" signal. Online is the resting state: the bare cup, no dot.
-export const TRAY_DOT_COLOR: Record<TrayStatus, number | undefined> = {
-    online: undefined,
-    meeting: 0xe74c3c,
-    do_not_disturb: 0xe96e53,
-    busy: 0xe9c84e,
-    back_in_a_moment: 0x7382e2,
-    idle: 0xe9c84e,
-    offline: 0x6b7280,
-};
+// The dot outside a world (landing, sign-in, no window), where WorkAdventure gives no status. In a
+// world, the dot takes the color WorkAdventure gives the status.
+export const OFFLINE_DOT_COLOR = 0x6b7280;
 
 // The dot fills the bottom-right corner of the 16 px icon: pixels 10 to 15, without its own corners.
 const DOT_CENTER = 12.5;

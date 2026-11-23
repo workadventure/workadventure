@@ -153,6 +153,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "Druhim komentowanje dowolić",
         clearAll: "Wšitko zhašeć",
         annotate: "Dźěleny wobraz komentować",
+        annotateScreenOnly: "Komentary su jenož k dispoziciji, hdyž cyłu wobrazowku dźěliš.",
         camera: "Kamera",
         microphone: "Mikrofon",
         cameraOff: "Waša kamera je wušaltowana — zašaltujće ju, zo byšće jednu wubrali.",

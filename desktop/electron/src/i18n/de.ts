@@ -100,12 +100,6 @@ const de: NativeStrings = {
     "menu.hideTabBarDetail":
         "Sie haben {total} Tabs geöffnet. Beim Ausblenden der Tableiste bleibt dieser Tab geöffnet und die {count} anderen werden geschlossen.",
 
-    "tray.status.meeting": "Im Meeting",
-    "tray.status.do_not_disturb": "Nicht stören",
-    "tray.status.busy": "Beschäftigt",
-    "tray.status.back_in_a_moment": "Bin gleich zurück",
-    "tray.status.idle": "Inaktiv",
-    "tray.status.online": "Verfügbar",
     "tray.status.offline": "Offline",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",
@@ -117,12 +111,17 @@ const de: NativeStrings = {
         "WorkAdventure konnte nicht im Kompatibilitätsmodus (X11) starten und verwendet jetzt den nativen Wayland-Modus. Sie können in seinen Einstellungen zurückwechseln.",
     "windowMode.openSettings": "Einstellungen öffnen",
     "tray.quit": "Beenden",
+    "closeToTray.stillRunning":
+        "WorkAdventure läuft weiter und Sie sind weiterhin in Ihrer Welt. Zum Beenden verwenden Sie das Symbol im Infobereich.",
 
     "settings.title": "Einstellungen",
     "settings.general": "Allgemein",
     "settings.startAtLogin": "WorkAdventure bei der Anmeldung am Computer starten",
     "settings.showTabBar": "Tableiste anzeigen",
     "settings.showTabBarHint": "Die Tableiste erscheint, sobald mehrere Tabs geöffnet sind.",
+    "settings.closeToTray": "WorkAdventure weiterlaufen lassen, wenn ich das Fenster schließe",
+    "settings.closeToTrayHint":
+        "Sie bleiben in Ihrer Welt. Zum Beenden verwenden Sie das WorkAdventure-Symbol im Infobereich.",
     "settings.windowMode": "Fenstermodus",
     "settings.windowModeX11": "Kompatibilität (X11), empfohlen",
     "settings.windowModeX11Description":
@@ -165,6 +164,7 @@ const de: NativeStrings = {
     "auth.signingOutMessage":
         "Schließen Sie die Abmeldung in Ihrem Browser ab. Sie kehren danach automatisch zur App zurück.",
     "auth.reopenBrowser": "Browser erneut öffnen",
+    "auth.back": "Zurück",
     "auth.signedIn": "Angemeldet. Sie können zu WorkAdventure zurückkehren.",
     "auth.signedOut": "Abgemeldet. Sie können zu WorkAdventure zurückkehren.",
     "auth.closeWindow": "Sie können dieses Fenster schließen.",

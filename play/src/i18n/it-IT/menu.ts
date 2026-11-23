@@ -142,12 +142,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Reimposta il tuo archivio chiavi",
         resetKeyStorageConfirmationModal: {
-            title: "Conferma reimpostazione archivio chiavi",
-            content: "Stai per reimpostare l'archivio chiavi. Sei sicuro?",
-            warning:
-                "Reimpostare l'archivio chiavi rimuoverà la tua sessione corrente e tutti gli utenti fidati. Potresti perdere l'accesso ad alcuni messaggi passati e non sarai più riconosciuto come utente fidato. Assicurati di comprendere appieno le conseguenze di questa azione prima di procedere.",
-            cancel: "Annulla",
-            continue: "Continua",
+            newSecretsNext: "Subito dopo sceglierai una nuova frase e riceverai una nuova chiave di recupero.",
+            oldSecretsStop: "La frase e la chiave di recupero attuali smetteranno di funzionare.",
+            loseHistory: "I messaggi crittografati finora potrebbero non essere più leggibili.",
+            title: "Reimpostare la crittografia?",
+            content: "Fallo solo se non riesci più a sbloccare i messaggi crittografati.",
+            cancel: "Mantieni la crittografia",
+            continue: "Reimposta la crittografia",
         },
     },
     sub: {

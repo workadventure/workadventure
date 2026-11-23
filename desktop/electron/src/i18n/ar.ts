@@ -91,12 +91,6 @@ const ar: NativeStrings = {
     "menu.hideTabBarDetail":
         "لديك {total} علامات تبويب مفتوحة. يؤدي إخفاء شريط علامات التبويب إلى الإبقاء على علامة التبويب هذه وإغلاق علامات التبويب الـ {count} الأخرى.",
 
-    "tray.status.meeting": "في اجتماع",
-    "tray.status.do_not_disturb": "عدم الإزعاج",
-    "tray.status.busy": "مشغول",
-    "tray.status.back_in_a_moment": "سأعود بعد قليل",
-    "tray.status.idle": "خامل",
-    "tray.status.online": "متاح",
     "tray.status.offline": "غير متصل",
     "tray.microphone": "الميكروفون",
     "tray.camera": "الكاميرا",
@@ -108,12 +102,16 @@ const ar: NativeStrings = {
         "تعذّر تشغيل WorkAdventure في وضع التوافق (X11)، لذا يستخدم الآن وضع Wayland الأصلي. يمكنك التبديل مرة أخرى من إعداداته.",
     "windowMode.openSettings": "فتح الإعدادات",
     "tray.quit": "إنهاء",
+    "closeToTray.stillRunning":
+        "لا يزال WorkAdventure قيد التشغيل، ولا تزال في عالمك. للإنهاء، استخدم أيقونته في علبة النظام.",
 
     "settings.title": "الإعدادات",
     "settings.general": "عام",
     "settings.startAtLogin": "تشغيل WorkAdventure عند تسجيل الدخول إلى الكمبيوتر",
     "settings.showTabBar": "إظهار شريط علامات التبويب",
     "settings.showTabBarHint": "يظهر شريط علامات التبويب عند فتح عدة علامات تبويب.",
+    "settings.closeToTray": "إبقاء WorkAdventure قيد التشغيل عند إغلاق نافذته",
+    "settings.closeToTrayHint": "تبقى في عالمك. للإنهاء، استخدم أيقونة WorkAdventure في علبة النظام.",
     "settings.windowMode": "وضع النوافذ",
     "settings.windowModeX11": "التوافق (X11)، موصى به",
     "settings.windowModeX11Description":
@@ -152,6 +150,7 @@ const ar: NativeStrings = {
     "auth.signingOutTitle": "جارٍ تسجيل الخروج…",
     "auth.signingOutMessage": "أكمل تسجيل الخروج في متصفحك. ستعود إلى التطبيق تلقائيًا.",
     "auth.reopenBrowser": "إعادة فتح المتصفح",
+    "auth.back": "رجوع",
     "auth.signedIn": "تم تسجيل الدخول. يمكنك العودة إلى WorkAdventure.",
     "auth.signedOut": "تم تسجيل الخروج. يمكنك العودة إلى WorkAdventure.",
     "auth.closeWindow": "يمكنك إغلاق هذه النافذة.",

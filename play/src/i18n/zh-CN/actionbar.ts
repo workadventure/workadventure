@@ -61,6 +61,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     status: {
         ONLINE: "在线",
         AWAY: "离开",
+        IDLE: "空闲",
         BACK_IN_A_MOMENT: "马上回来",
         DO_NOT_DISTURB: "请勿打扰",
         BUSY: "忙碌",

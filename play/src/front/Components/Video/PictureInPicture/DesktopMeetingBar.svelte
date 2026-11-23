@@ -19,7 +19,7 @@
         myMicrophoneStore,
         proximityMeetingStore,
     } from "../../../Stores/MyMediaStore";
-    import { startScreenShareWithSource } from "../../../Stores/ScreenSharingStore";
+    import { activeScreenShareSourceStore, startScreenShareWithSource } from "../../../Stores/ScreenSharingStore";
     import { localUserStore } from "../../../Connection/LocalUserStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import MicrophoneMenuItem from "../../ActionBar/MenuIcons/MicrophoneMenuItem.svelte";
@@ -58,6 +58,11 @@
 
     // Read the id on each store update: the bar can open before the share's space is known.
     let othersAllowed = $derived($screenAnnotationEnabledStore.get(screenAnnotationManager.localUserId ?? "") ?? false);
+    // Annotations are drawn over a display: a shared window has none, so the pen is greyed and explains why
+    // on hover. Drawing that is already on can still be turned off.
+    let annotateUnavailable = $derived(
+        ($activeScreenShareSourceStore?.id.startsWith("window:") ?? false) && !$localAnnotationActiveStore,
+    );
 
     // The desktop app opens the window this high (the pill is pinned to its bottom): a page cannot make a
     // window less than 100 high.
@@ -390,12 +395,21 @@
             <div class="flex items-center gap-0.5 [-webkit-app-region:no-drag]">
                 <button
                     type="button"
-                    class="{barButton} {$localAnnotationActiveStore ? activeButton : 'hover:bg-white/10'}"
+                    class="{barButton} {$localAnnotationActiveStore
+                        ? activeButton
+                        : annotateUnavailable
+                          ? 'cursor-not-allowed opacity-40'
+                          : 'hover:bg-white/10'}"
                     data-testid="desktop-annotate"
-                    title={$LL.desktop.meetingBar.annotate()}
+                    title={annotateUnavailable
+                        ? $LL.desktop.meetingBar.annotateScreenOnly()
+                        : $LL.desktop.meetingBar.annotate()}
                     aria-label={$LL.desktop.meetingBar.annotate()}
+                    aria-disabled={annotateUnavailable}
                     aria-pressed={$localAnnotationActiveStore}
-                    onclick={() => screenAnnotationManager.toggleDrawingOnMyShare()}
+                    onclick={() => {
+                        if (!annotateUnavailable) screenAnnotationManager.toggleDrawingOnMyShare();
+                    }}
                 >
                     <IconPencil />
                 </button>

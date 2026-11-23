@@ -91,12 +91,6 @@ const th: NativeStrings = {
     "menu.hideTabBarDetailOne": "คุณเปิดแท็บไว้ {total} แท็บ การซ่อนแถบแท็บจะเก็บแท็บนี้ไว้และปิดอีกแท็บหนึ่ง",
     "menu.hideTabBarDetail": "คุณเปิดแท็บไว้ {total} แท็บ การซ่อนแถบแท็บจะเก็บแท็บนี้ไว้และปิดแท็บอื่นอีก {count} แท็บ",
 
-    "tray.status.meeting": "อยู่ในการประชุม",
-    "tray.status.do_not_disturb": "ห้ามรบกวน",
-    "tray.status.busy": "ไม่ว่าง",
-    "tray.status.back_in_a_moment": "เดี๋ยวกลับมา",
-    "tray.status.idle": "ไม่ได้ใช้งาน",
-    "tray.status.online": "ว่าง",
     "tray.status.offline": "ออฟไลน์",
     "tray.microphone": "ไมโครโฟน",
     "tray.camera": "กล้อง",
@@ -108,12 +102,16 @@ const th: NativeStrings = {
         "WorkAdventure ไม่สามารถเริ่มในโหมดความเข้ากันได้ (X11) จึงใช้โหมด Wayland แบบเนทีฟแทน คุณสามารถเปลี่ยนกลับได้ในการตั้งค่าของแอป",
     "windowMode.openSettings": "เปิดการตั้งค่า",
     "tray.quit": "ออก",
+    "closeToTray.stillRunning":
+        "WorkAdventure ยังทำงานอยู่ และคุณยังอยู่ในโลกของคุณ หากต้องการออก ให้ใช้ไอคอนในถาดระบบ",
 
     "settings.title": "การตั้งค่า",
     "settings.general": "ทั่วไป",
     "settings.startAtLogin": "เปิด WorkAdventure เมื่อเข้าสู่ระบบคอมพิวเตอร์",
     "settings.showTabBar": "แสดงแถบแท็บ",
     "settings.showTabBarHint": "แถบแท็บจะแสดงเมื่อเปิดหลายแท็บ",
+    "settings.closeToTray": "ให้ WorkAdventure ทำงานต่อเมื่อปิดหน้าต่าง",
+    "settings.closeToTrayHint": "คุณยังอยู่ในโลกของคุณ หากต้องการออก ให้ใช้ไอคอน WorkAdventure ในถาดระบบ",
     "settings.windowMode": "โหมดหน้าต่าง",
     "settings.windowModeX11": "ความเข้ากันได้ (X11) (แนะนำ)",
     "settings.windowModeX11Description":
@@ -152,6 +150,7 @@ const th: NativeStrings = {
     "auth.signingOutTitle": "กำลังออกจากระบบ…",
     "auth.signingOutMessage": "ออกจากระบบให้เสร็จในเบราว์เซอร์ของคุณ แล้วคุณจะกลับมาที่แอปโดยอัตโนมัติ",
     "auth.reopenBrowser": "เปิดเบราว์เซอร์อีกครั้ง",
+    "auth.back": "ย้อนกลับ",
     "auth.signedIn": "ลงชื่อเข้าใช้แล้ว คุณกลับไปที่ WorkAdventure ได้เลย",
     "auth.signedOut": "ออกจากระบบแล้ว คุณกลับไปที่ WorkAdventure ได้เลย",
     "auth.closeWindow": "คุณปิดหน้าต่างนี้ได้",

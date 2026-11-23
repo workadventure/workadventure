@@ -153,6 +153,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "Consenti agli altri di annotare",
         clearAll: "Cancella tutto",
         annotate: "Annota lo schermo condiviso",
+        annotateScreenOnly: "Le annotazioni sono disponibili solo quando condividi un intero schermo.",
         camera: "Fotocamera",
         microphone: "Microfono",
         cameraOff: "La tua fotocamera è spenta: attivala per sceglierne una.",

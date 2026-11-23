@@ -8,7 +8,7 @@
     "type": "git",
     "url": "git+https://github.com/workadventure/workadventure.git"
   },
-  "author": "David Négrier <d.negrier@thecodingmachine.com>",
+  "author": "David Négrier <d.negrier@workadventu.re>",
   "license": "MIT",
   "publishConfig": {
     "access": "public"

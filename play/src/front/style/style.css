@@ -909,6 +909,29 @@ div.emoji-picker {
     &.speaker {
         animation: sonar_speaker 0.5s ease-out infinite;
     }
+
+    /*
+     * The "zZz" of an idle user: each Z lights up and swells in turn, from the small one to the big one (1.4 s each,
+     * 0.3 s apart, 2 s in all), then all three rest for 5 s. One 7 s cycle, which the delays keep staggered.
+     */
+    & .username-idle use {
+        transform-box: fill-box;
+        transform-origin: center;
+        animation: username_idle 7s ease-in-out infinite backwards;
+    }
+    & .username-idle use:nth-child(2) {
+        animation-delay: 0.3s;
+    }
+    & .username-idle use:nth-child(3) {
+        animation-delay: 0.6s;
+    }
+}
+
+/* Still, and fully white, for those who ask for less motion */
+@media (prefers-reduced-motion: reduce) {
+    .username-display .username-idle use {
+        animation: none;
+    }
 }
 
 .game-scene-loaded .username-display {
@@ -919,6 +942,11 @@ div.emoji-picker {
     0%   { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.2); }
     70%  { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 14px)  rgba(255,255,255, 0); }
     100% { box-shadow: 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0.4), 0 0 0 calc(var(--username-dom-scale, 1) * 1.5px) rgba(255,255,255, 0); }
+}
+
+@keyframes username_idle {
+    0%, 20%, 100% { opacity: 0.3; transform: scale(1); }
+    6.67%         { opacity: 1;   transform: scale(1.15); }
 }
 
 @keyframes sonar_speaker {

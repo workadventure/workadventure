@@ -1,14 +1,12 @@
 import { derived, get, type Readable, type Unsubscriber } from "svelte/store";
-import { AvailabilityStatus } from "@workadventure/messages";
-import type { DesktopAvailability, DesktopPresence, WorkAdventureDesktopApi } from "@workadventure/desktop-api";
+import type { DesktopPresence, WorkAdventureDesktopApi } from "@workadventure/desktop-api";
 import {
+    availabilityStatusStore,
     enableCameraSceneVisibilityStore,
     requestedCameraState,
     requestedMicrophoneState,
-    requestedStatusStore,
     silentStore,
 } from "../../Stores/MediaStore";
-import type { RequestedStatus } from "../../Rules/StatusRules/statusRules";
 import { isInActiveConversationStore, isInRemoteConversation } from "../../Stores/StreamableCollectionStore";
 import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
 import { warningMessageStore } from "../../Stores/ErrorStore";
@@ -26,6 +24,9 @@ import { gameManager } from "../../Phaser/Game/GameManager";
 import { notificationManager } from "../../Notification/NotificationManager";
 import { desktopAwayStore } from "../../Stores/DesktopStatusStore";
 import { focusStore } from "../../Stores/FocusStore";
+import { idleStore } from "../../Stores/IdleStore";
+import { goIdle } from "../../Rules/IdleRules";
+import { toggleCamera, toggleMicrophone } from "../../Stores/HeldMediaStore";
 import type { ChatConnectionInterface, ChatRoom } from "../../Chat/Connection/ChatConnection";
 import { openDesktopChildWindow, type DesktopChildWindow } from "../../Components/Video/PictureInPicture/childWindow";
 import DesktopAnnotationOverlay from "../../Components/Video/PictureInPicture/DesktopAnnotationOverlay.svelte";
@@ -33,24 +34,12 @@ import DesktopMeetingBar from "../../Components/Video/PictureInPicture/DesktopMe
 
 import { DESKTOP_VERSION_POLICY } from "../../Enum/EnvironmentVariable";
 import { desktopDownloadUrl, desktopVersionStatus } from "../../../common/DesktopVersionPolicy";
+import { getColorOfStatus, getStatusLabel } from "../../Utils/AvailabilityStatus";
 import { startSvelteAnnotations } from "./SvelteAnnotations";
 
 /** The desktop contract this page speaks (see `hello` in @workadventure/desktop-api). */
 const PAGE_CONTRACT = 2;
 const desktopDownload = desktopDownloadUrl(DESKTOP_VERSION_POLICY);
-
-function requestedStatusToKey(status: RequestedStatus | null): DesktopAvailability {
-    switch (status) {
-        case AvailabilityStatus.BUSY:
-            return "busy";
-        case AvailabilityStatus.BACK_IN_A_MOMENT:
-            return "back_in_a_moment";
-        case AvailabilityStatus.DO_NOT_DISTURB:
-            return "do_not_disturb";
-        default:
-            return "online";
-    }
-}
 
 /**
  * Aggregate `unreadNotificationCount` across every room on the chat connection into a single
@@ -139,22 +128,16 @@ class DesktopApi {
             })
             .catch((error: unknown) => console.warn("Could not read desktop version", error));
 
+        // The same toggles as the buttons: under away, idle or a status the user picked, turning a device on
+        // brings them back with it, instead of turning off a device their status holds.
         window.WAD.onMuteToggle(() => {
             if (this.isSilent) return;
-            if (get(requestedMicrophoneState) === true) {
-                requestedMicrophoneState.disableMicrophone();
-            } else {
-                requestedMicrophoneState.enableMicrophone();
-            }
+            toggleMicrophone();
         });
 
         window.WAD.onCameraToggle(() => {
             if (this.isSilent) return;
-            if (get(requestedCameraState) === true) {
-                requestedCameraState.disableWebcam();
-            } else {
-                requestedCameraState.enableWebcam();
-            }
+            toggleCamera();
         });
 
         // One meeting at a time across the desktop tabs: another tab entered one, so this world stops
@@ -185,45 +168,17 @@ class DesktopApi {
             });
         }
 
-        // Auto-away: when the OS reports the user idle (no input for a while, or screen locked),
-        // hush notifications and reflect "away" in WA.
-        //
-        // Notification hush goes through the dedicated desktopAwayStore (checked by
-        // NotificationManager.hasNotification), NOT the availability status machine: a backgrounded
-        // window is already AWAY via privacyShutdown, and AWAY→BACK_IN_A_MOMENT is a rejected
-        // transition, so a status-only hush would silently fail in exactly the common
-        // "backgrounded + idle" case. The dedicated flag is immune to that.
-        //
-        // Visible presence: we additionally set requestedStatusStore to BACK_IN_A_MOMENT, but only
-        // when the window is FOCUSED (idle-at-keyboard) — there the current status is ONLINE and the
-        // transition is valid. When the window is backgrounded, privacyShutdown already shows the
-        // user as AWAY, so there's nothing to add and we avoid the rejected transition. We write the
-        // store WITHOUT persisting (no localUserStore.setRequestedStatus) so auto-away never
-        // survives a restart, and only from the neutral (null) state so a manual DND/busy/brb is
-        // left untouched.
-        //
-        // Never during a meeting: someone following it without touching the keyboard or the mouse
-        // (a presentation, the mini window's video) is not away, and BACK_IN_A_MOMENT would cut their
-        // camera and microphone.
+        // The OS reports the user idle (no input for a while, screen locked, machine asleep): notifications are
+        // hushed (desktopAwayStore, checked by NotificationManager), and the user goes idle, which turns their
+        // camera and microphone off (see goIdle for when it does not). Activity again ends idle only while
+        // WorkAdventure has the focus: input in another app does not mean the user has seen WorkAdventure.
         if (window.WAD.onSystemIdle) {
-            let autoAwayActive = false;
             window.WAD.onSystemIdle((idle) => {
                 desktopAwayStore.set(idle);
                 if (idle) {
-                    if (autoAwayActive) return;
-                    if (get(requestedStatusStore) !== null) return;
-                    if (!get(focusStore)) return;
-                    if (get(isInActiveConversationStore)) return;
-                    requestedStatusStore.set(AvailabilityStatus.BACK_IN_A_MOMENT);
-                    autoAwayActive = true;
-                } else {
-                    if (!autoAwayActive) return;
-                    // Only clear if the value is still OUR auto-away — if the user changed status
-                    // in the meantime (e.g. synced from another device), don't clobber it.
-                    if (get(requestedStatusStore) === AvailabilityStatus.BACK_IN_A_MOMENT) {
-                        requestedStatusStore.set(null);
-                    }
-                    autoAwayActive = false;
+                    goIdle();
+                } else if (get(focusStore)) {
+                    idleStore.set(false);
                 }
             });
         }
@@ -271,20 +226,22 @@ class DesktopApi {
                     requestedMicrophoneState,
                     requestedCameraState,
                     requestedScreenSharingState,
-                    requestedStatusStore,
+                    availabilityStatusStore,
                     gameSceneIsLoadedStore,
                     onboardingStore,
                     meetingInvitationRequestStore,
                     allowPictureInPictureStore,
                     isInRemoteConversation,
                     currentPlayerGroupIdStore,
+                    // The status label follows the language, which can change without a reload.
+                    LL,
                 ],
                 ([
                     $inMeeting,
                     $mic,
                     $cam,
                     $share,
-                    $requested,
+                    $status,
                     $inWorld,
                     $onboarding,
                     $invitation,
@@ -303,7 +260,7 @@ class DesktopApi {
                     onboarding: $onboarding,
                     invitationPending: $invitation !== null,
                     autoOpenAllowed: $allowPictureInPicture,
-                    requestedStatus: requestedStatusToKey($requested),
+                    status: { label: getStatusLabel($status), color: getColorOfStatus($status).filling },
                 }),
             );
             //eslint-disable-next-line svelte/no-ignored-unsubscribe

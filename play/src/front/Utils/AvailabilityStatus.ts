@@ -21,6 +21,8 @@ const COLORS: Record<AvailabilityStatus, { filling: number; outline: number }> =
     [AvailabilityStatus.LIVEKIT]: { filling: 0x68e97a, outline: 0x44d45a },
     [AvailabilityStatus.LISTENER]: { filling: 0x68e97a, outline: 0x44d45a },
     [AvailabilityStatus.SOUND_BLOCKED]: { filling: 0x7382e2, outline: 0x4156f6 },
+    // Away's: others see the same dot, and the label tells them apart.
+    [AvailabilityStatus.IDLE]: { filling: 0xe9c84e, outline: 0xd3873b },
 };
 
 // A peer running an older build sends statuses this one has no colour for, and the

@@ -126,9 +126,17 @@
     let availabilityStatusStore = $derived(extendedSpaceUser?.reactiveUser.availabilityStatus);
     let cameraHeldStore = $derived(extendedSpaceUser?.reactiveUser.cameraHeld);
     let microphoneHeldStore = $derived(extendedSpaceUser?.reactiveUser.microphoneHeld);
-    // Someone walking up to a user in away mode sees why they get no answer. Only on another user's camera tile.
+    // Someone walking up to a user in away mode, or idle, sees why they get no answer. Only on another user's camera tile.
     let away = $derived(
-        streamable?.videoType === "video" && !isLocalUser && $availabilityStatusStore === AvailabilityStatus.AWAY,
+        streamable?.videoType === "video" &&
+            !isLocalUser &&
+            ($availabilityStatusStore === AvailabilityStatus.AWAY ||
+                $availabilityStatusStore === AvailabilityStatus.IDLE),
+    );
+    let awayLabel = $derived(
+        $availabilityStatusStore === AvailabilityStatus.IDLE
+            ? $LL.video.remoteAway.idle({ name: name ?? "unknown" })
+            : $LL.video.remoteAway.inAnotherWindow({ name: name ?? "unknown" }),
     );
     // A camera away mode holds off gets the shutter of the user's own tile, instead of the centered Woka of a camera turned off
     let awayCameraHeld = $derived(
@@ -488,12 +496,8 @@
                                         {#if away && !videoEnabled && !awayCameraHeld}
                                             <span
                                                 role="img"
-                                                aria-label={$LL.video.remoteAway.inAnotherWindow({
-                                                    name: name ?? "unknown",
-                                                })}
-                                                title={$LL.video.remoteAway.inAnotherWindow({
-                                                    name: name ?? "unknown",
-                                                })}
+                                                aria-label={awayLabel}
+                                                title={awayLabel}
                                                 class="me-1.5 inline-block h-2 w-2 shrink-0 rounded-full align-middle"
                                                 style:background-color={getColorHexOfStatus(AvailabilityStatus.AWAY)}
                                                 data-testid="away-notice"
@@ -554,9 +558,6 @@
                                 {/if}
                                 {#if awayCameraHeld}
                                     <!-- The shutter of the user's own tile (AwayPausedOverlay), seen from the visitor's side -->
-                                    {@const awayText = $LL.video.remoteAway.inAnotherWindow({
-                                        name: name ?? "unknown",
-                                    })}
                                     {@const awayDetail = $microphoneHeldStore
                                         ? $LL.video.remoteAway.cameraAndMicPaused()
                                         : $LL.video.remoteAway.cameraPaused()}
@@ -567,11 +568,11 @@
                                         <!-- Small tiles keep only the icon, with the text in its tooltip -->
                                         <div
                                             class="pointer-events-auto flex flex-col items-center gap-0.5"
-                                            title="{awayText}. {awayDetail}"
+                                            title="{awayLabel}. {awayDetail}"
                                         >
                                             <IconEyeOff class="text-warning shrink-0" font-size="20" />
                                             <div class="hidden @[14rem]/videomediabox:block text-sm leading-tight">
-                                                {awayText}
+                                                {awayLabel}
                                             </div>
                                             <div class="hidden @[14rem]/videomediabox:block text-xs text-white/60">
                                                 {awayDetail}

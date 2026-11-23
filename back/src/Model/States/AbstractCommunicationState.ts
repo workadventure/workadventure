@@ -3,7 +3,6 @@ import type { SpaceUser, PrivateEvent, MeetingConnectionRestartMessage } from "@
 import type { CommunicationType } from "../Types/CommunicationTypes";
 import type { ICommunicationState, StateTransitionResult } from "../Interfaces/ICommunicationState";
 import type { ICommunicationStrategy, IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
-import { CommunicationConfig } from "../CommunicationManager";
 import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 export abstract class CommunicationState<T extends ICommunicationStrategy> implements ICommunicationState<T> {
     protected _switchTimeout: NodeJS.Timeout | null = null;
@@ -15,7 +14,6 @@ export abstract class CommunicationState<T extends ICommunicationStrategy> imple
         protected readonly _currentStrategy: T,
         protected users: ReadonlyMap<string, SpaceUser>,
         protected usersToNotify: ReadonlyMap<string, SpaceUser>,
-        protected readonly MAX_USERS_FOR_WEBRTC: number = Number(CommunicationConfig.MAX_USERS_FOR_WEBRTC),
     ) {}
 
     /**

@@ -5,6 +5,7 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { warningMessageStore } from "../../Stores/ErrorStore";
     import LL from "../../../i18n/i18n-svelte";
+    import Button from "../../Components/UI/Button.svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
@@ -641,26 +642,30 @@
     <div class="w-full flex flex-col col-span-full h-fit">
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-            <div class="w-full">
-                <button
-                    data-testid="restoreEncryptionButton"
-                    onclick={(event) => {
+            <div
+                class="w-full h-8 flex items-center gap-2 ps-3 pe-2 border-0 border-t border-solid border-white/10 bg-white/5 text-white"
+                role="status"
+            >
+                <IconCloudLock class="text-white/70 shrink-0" font-size="16" />
+                <span class="grow min-w-0 text-sm text-white/85">{$LL.chat.e2ee.encryptionNotConfigured()}</span>
+                <Button
+                    variant="light"
+                    appearance="border"
+                    size="xs"
+                    class="h-6 !py-0 !px-2 shrink-0"
+                    dataTestId="restoreEncryptionButton"
+                    onclick={(event: MouseEvent) => {
                         event.stopPropagation();
                         initChatConnectionEncryption().catch((error) => {
                             console.error("Failed to initialize chat encryption", error);
-                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), { closable: true });
+                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), {
+                                closable: true,
+                            });
                         });
                     }}
-                    class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
-                    <IconCloudLock font-size="20" />
-                    <div class="text-sm font-bold grow text-start">
-                        {$LL.chat.e2ee.encryptionNotConfigured()}
-                    </div>
-                    <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">
-                        {$LL.chat.e2ee.configure()}
-                    </div>
-                </button>
+                    {$LL.chat.e2ee.configure()}
+                </Button>
             </div>
         {/if}
     </div>

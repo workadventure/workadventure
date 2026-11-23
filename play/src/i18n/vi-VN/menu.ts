@@ -141,12 +141,13 @@ const menu: DeepPartial<Translation["menu"]> = {
     chat: {
         resetKeyStorageUpButtonLabel: "Đặt lại kho khóa của bạn",
         resetKeyStorageConfirmationModal: {
-            title: "Xác nhận đặt lại kho khóa",
-            content: "Bạn sắp đặt lại kho khóa. Bạn có chắc không?",
-            warning:
-                "Đặt lại kho khóa sẽ xóa phiên hiện tại của bạn và tất cả người dùng tin cậy. Bạn có thể mất quyền truy cập một số tin nhắn cũ, và sẽ không còn được nhận diện là người dùng tin cậy. Hãy chắc chắn bạn hiểu rõ hậu quả của thao tác này trước khi tiếp tục.",
-            cancel: "Hủy",
-            continue: "Tiếp tục",
+            newSecretsNext: "Ngay sau đó bạn sẽ chọn cụm mật khẩu mới và nhận khóa khôi phục mới.",
+            oldSecretsStop: "Cụm mật khẩu và khóa khôi phục hiện tại sẽ ngừng hoạt động.",
+            loseHistory: "Các tin nhắn đã mã hóa đến nay có thể không đọc được nữa.",
+            title: "Đặt lại mã hóa?",
+            content: "Chỉ làm điều này nếu bạn không thể mở khóa tin nhắn được mã hóa nữa.",
+            cancel: "Giữ mã hóa của tôi",
+            continue: "Đặt lại mã hóa",
         },
     },
     sub: {

@@ -97,12 +97,6 @@ const ja: NativeStrings = {
     "menu.hideTabBarDetail":
         "{total} 個のタブを開いています。タブバーを非表示にすると、このタブを残して他の {count} 個を閉じます。",
 
-    "tray.status.meeting": "ミーティング中",
-    "tray.status.do_not_disturb": "応答不可",
-    "tray.status.busy": "忙しい",
-    "tray.status.back_in_a_moment": "すぐ戻る",
-    "tray.status.idle": "アイドル",
-    "tray.status.online": "オンライン",
     "tray.status.offline": "オフライン",
     "tray.microphone": "マイク",
     "tray.camera": "カメラ",
@@ -114,12 +108,17 @@ const ja: NativeStrings = {
         "WorkAdventure を互換モード (X11) で起動できなかったため、現在はネイティブ Wayland モードを使用しています。設定から元に戻せます。",
     "windowMode.openSettings": "設定を開く",
     "tray.quit": "終了",
+    "closeToTray.stillRunning":
+        "WorkAdventure は実行中で、ワールドにも残っています。終了するには、システムトレイのアイコンを使用してください。",
 
     "settings.title": "設定",
     "settings.general": "一般",
     "settings.startAtLogin": "コンピューターへのログイン時に WorkAdventure を起動",
     "settings.showTabBar": "タブバーを表示",
     "settings.showTabBarHint": "タブバーは複数のタブを開いているときに表示されます。",
+    "settings.closeToTray": "ウィンドウを閉じても WorkAdventure を実行したままにする",
+    "settings.closeToTrayHint":
+        "ワールドに残ったままになります。終了するには、システムトレイの WorkAdventure アイコンを使用してください。",
     "settings.windowMode": "ウィンドウモード",
     "settings.windowModeX11": "互換モード (X11)、推奨",
     "settings.windowModeX11Description":
@@ -159,6 +158,7 @@ const ja: NativeStrings = {
     "auth.signingOutTitle": "サインアウトしています…",
     "auth.signingOutMessage": "ブラウザでサインアウトを完了してください。自動的にアプリに戻ります。",
     "auth.reopenBrowser": "ブラウザを再度開く",
+    "auth.back": "戻る",
     "auth.signedIn": "サインインしました。WorkAdventure に戻れます。",
     "auth.signedOut": "サインアウトしました。WorkAdventure に戻れます。",
     "auth.closeWindow": "このウィンドウは閉じてかまいません。",

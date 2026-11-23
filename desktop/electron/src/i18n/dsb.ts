@@ -97,12 +97,6 @@ const dsb: NativeStrings = {
     "menu.hideTabBarDetail":
         "Maśo {total} rejtarikow wócynjonych. Gaž rejtarikowu lajstu schowajośo, wóstanjo toś ten rejtarik wócynjony a {count} drugich se zacynijo.",
 
-    "tray.status.meeting": "W zasedanju",
-    "tray.status.do_not_disturb": "Njewobśěžowaś",
-    "tray.status.busy": "Zabuzowany",
-    "tray.status.back_in_a_moment": "Wrośu se skóro",
-    "tray.status.idle": "Njeaktiwny",
-    "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamara",
@@ -114,12 +108,17 @@ const dsb: NativeStrings = {
         "WorkAdventure njedajo se w kompatibelnem modusu (X11) startowaś, togodla něnto natiwny modus Wayland wužywa. W jogo nastajenjach móžośo zasej slědk pśešaltowaś.",
     "windowMode.openSettings": "Nastajenja wócyniś",
     "tray.quit": "Skóńcyś",
+    "closeToTray.stillRunning":
+        "WorkAdventure hyšći běžy a wy sćo hyšći w swójom swěśe. Aby skóńcyli, wužywajśo jogo symbol w systemowej lajsće.",
 
     "settings.title": "Nastajenja",
     "settings.general": "Powšykne",
     "settings.startAtLogin": "WorkAdventure pśi pśizjawjenju na licadle startowaś",
     "settings.showTabBar": "Rejtarikowu lajstu pokazaś",
     "settings.showTabBarHint": "Lajsta rejtarikow se pokažo, gaž su někotare rejtariki wócynjone.",
+    "settings.closeToTray": "WorkAdventure dalej běžaś daś, gaž wokno zacynjam",
+    "settings.closeToTrayHint":
+        "Wóstanjośo w swójom swěśe. Aby skóńcyli, wužywajśo symbol WorkAdventure w systemowej lajsće.",
     "settings.windowMode": "Woknowy modus",
     "settings.windowModeX11": "Kompatibilita (X11), dopórucona",
     "settings.windowModeX11Description":
@@ -160,6 +159,7 @@ const dsb: NativeStrings = {
     "auth.signingOutMessage":
         "Dokóńcćo wótzjawjenje w swójom wobglědowaku. Pótom se awtomatiski do aplikacije wrośiśo.",
     "auth.reopenBrowser": "Wobglědowak znowego wócyniś",
+    "auth.back": "Slědk",
     "auth.signedIn": "Pśizjawjony. Móžośo se k WorkAdventure wrośiś.",
     "auth.signedOut": "Wótzjawjony. Móžośo se k WorkAdventure wrośiś.",
     "auth.closeWindow": "Móžośo toś to wokno zacyniś.",

@@ -149,6 +149,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "อนุญาตให้ผู้อื่นใส่คำอธิบาย",
         clearAll: "ล้างทั้งหมด",
         annotate: "ใส่คำอธิบายบนหน้าจอที่แชร์",
+        annotateScreenOnly: "ใช้คำอธิบายประกอบได้เฉพาะเมื่อแชร์ทั้งหน้าจอเท่านั้น",
         camera: "กล้อง",
         microphone: "ไมโครโฟน",
         cameraOff: "กล้องของคุณปิดอยู่ — เปิดกล้องเพื่อเลือกอุปกรณ์",
