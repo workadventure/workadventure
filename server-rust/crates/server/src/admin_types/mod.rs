@@ -55,7 +55,8 @@ mod tests {
         assert_eq!(livekit(json!(1)), Ok(Some(1)));
         assert_eq!(livekit(Value::Null), Ok(None));
         assert!(livekit(json!(0)).is_err() && livekit(json!(2.5)).is_err());
-        let null = json!({"livekitHost": "h", "livekitApiKey": "k", "livekitApiSecret": "s", "maxUsersForWebrtc": null});
+        let null =
+            json!({"livekitHost": "h", "livekitApiKey": "k", "livekitApiSecret": "s", "maxUsersForWebrtc": null});
         assert!(parse::<LivekitCredentials>("livekit", null).is_ok_and(|c| c.max_users_for_webrtc.is_none()));
         assert!(fits::<RoomRedirect>(&json!({"redirectUrl": "/x"})));
         // email and visitCardUrl may be null, not absent (z.string().nullable()).

@@ -796,10 +796,7 @@ mod tests {
     #[test]
     fn window_env_has_real_types_and_no_undefined_keys() {
         let c = Config::load(Env::new(
-            [("SECRET_KEY", "s"), ("ICON_URL", "/icon")]
-                .iter()
-                .map(|(k, v)| (k.to_string(), v.to_string()))
-                .collect(),
+            [("SECRET_KEY", "s"), ("ICON_URL", "/icon")].iter().map(|(k, v)| (k.to_string(), v.to_string())).collect(),
         ))
         .unwrap();
         let env = front_env(&c);

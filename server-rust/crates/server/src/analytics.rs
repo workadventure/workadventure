@@ -15,10 +15,10 @@ use sha2::{Digest, Sha256};
 use wa_proto::messages as pb;
 
 use crate::admin_api::AdminApi;
+use crate::clock::iso_at;
 use crate::config::Config;
 use crate::redis_store::now_ms;
 use crate::session::SessionInfo;
-use crate::clock::iso_at;
 
 const MAX_ATTEMPTS: u32 = 4;
 const MAX_EVENTS_PER_REPORT: usize = 100;
@@ -443,8 +443,8 @@ fn counter<T: Into<f64> + Copy>(v: Option<T>) -> Value {
 /// The sample's properties, None when it cannot be one (toVideoQualityProperties).
 fn video_sample(s: &pb::VideoQualitySampleMessage) -> Option<Value> {
     use pb::{
-        VideoQualityLimitationReason as L, VideoQualityRelayProtocol as R, VideoQualityStreamCategory as C,
-        VideoQualityLevel as Q, VideoQualityStreamDirection as D, VideoQualityTransportType as T,
+        VideoQualityLevel as Q, VideoQualityLimitationReason as L, VideoQualityRelayProtocol as R,
+        VideoQualityStreamCategory as C, VideoQualityStreamDirection as D, VideoQualityTransportType as T,
     };
     if s.stream_id.is_empty() || s.space_name.is_empty() || client_time(s.client_event_time_ms).is_none() {
         return None;
