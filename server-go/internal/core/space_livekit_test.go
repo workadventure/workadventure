@@ -2,6 +2,7 @@ package core
 
 import (
 	"context"
+	"errors"
 	"slices"
 	"sync"
 	"testing"
@@ -362,5 +363,67 @@ func TestAWorldsOwnLiveKitIsAskedForEachMove(t *testing.T) {
 	defer mu.Unlock()
 	if len(asked) != 1 || asked[0] != "http://play.test/@/org/w/r" {
 		t.Fatalf("the admin is asked with a member's play URI: %v", asked)
+	}
+}
+
+// thresholdLiveKit is a MediaProvider whose worlds have their own WebRTC threshold, as the admin's credentials give it.
+type thresholdLiveKit struct {
+	ServerLiveKit
+	threshold func(ctx context.Context, playURI string) (int, error)
+}
+
+func (w thresholdLiveKit) MaxUsersForWebRTC(ctx context.Context, playURI string) (int, error) {
+	return w.threshold(ctx, playURI)
+}
+
+func TestAWorldsOwnThresholdMovesAPairToLiveKit(t *testing.T) {
+	var asked []string
+	var mu sync.Mutex
+	m := DefaultMedia(nil)
+	m.FinalizeAfter = 30 * time.Millisecond
+	m.Clock = newFakeClock()
+	m.Provider = thresholdLiveKit{ServerLiveKit{LiveKit: &fakeLiveKit{}}, func(_ context.Context, playURI string) (int, error) {
+		mu.Lock()
+		asked = append(asked, playURI)
+		mu.Unlock()
+		return 1, nil
+	}}
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble"}, m)
+	defer sp.Stop()
+	var first *recorder
+	for _, id := range []string{"a", "b"} {
+		p := &recorder{}
+		if first == nil {
+			first = p
+		}
+		if err := sp.Join(ctx, p, SpaceJoin{User: SpaceUser{ID: id, PlayURI: "http://play.test/@/org/w/r"}, Filter: FilterAllUsers, PropertiesToSync: media},
+			func(error) {}); err != nil {
+			t.Fatal(err)
+		}
+		_ = sp.Watch(ctx, id, nil)
+	}
+	eventually(t, sp, first, "a LiveKit token for a pair, in a world whose threshold is 1", strategy(nil, "invitation"))
+	mu.Lock()
+	defer mu.Unlock()
+	if len(asked) != 1 || asked[0] != "http://play.test/@/org/w/r" {
+		t.Fatalf("the admin is asked once per space, with the first member's play URI: %v", asked)
+	}
+}
+
+func TestWithoutAWorldThresholdTheServersApplies(t *testing.T) {
+	m := DefaultMedia(nil)
+	m.Clock = newFakeClock()
+	m.Provider = thresholdLiveKit{ServerLiveKit{LiveKit: &fakeLiveKit{}}, func(context.Context, string) (int, error) {
+		return 0, errors.New("the admin is down")
+	}}
+	sp := NewSpaceWithMedia(SpaceKey{"org/w", "bubble"}, m)
+	defer sp.Stop()
+	a := enter(t, sp, "a")
+	enter(t, sp, "b")
+	settle(t, sp)
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	if has(a.events, strategy(nil, "switch LIVEKIT")) {
+		t.Fatalf("a pair stays on WebRTC when the admin gives no threshold: %#v", a.events)
 	}
 }

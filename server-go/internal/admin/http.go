@@ -495,3 +495,21 @@ func (a *HTTP) LiveKitCredentials(ctx context.Context, playURI string) (host, ke
 	}
 	return *c.Host, *c.Key, *c.Secret, nil
 }
+
+// LiveKitMaxUsersForWebRTC is the world's own MAX_USERS_FOR_WEBRTC, from the same A24 answer (maxUsersForWebrtc):
+// 0 when the admin gives none, asked once per space, at its first join.
+func (a *HTTP) LiveKitMaxUsersForWebRTC(ctx context.Context, playURI string) (int, error) {
+	var c struct {
+		Max *int `json:"maxUsersForWebrtc"`
+	}
+	if err := a.call(ctx, http.MethodGet, a.cfg.AdminAPIURL, "/api/livekit/credentials", url.Values{"playUri": {playURI}}, true, "", nil, &c); err != nil {
+		return 0, err
+	}
+	if c.Max == nil {
+		return 0, nil
+	}
+	if *c.Max < 1 {
+		return 0, fmt.Errorf("the admin's maxUsersForWebrtc is %d, expected a positive integer", *c.Max)
+	}
+	return *c.Max, nil
+}

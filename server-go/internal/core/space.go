@@ -200,6 +200,8 @@ type spaceState struct {
 	strategy      string // WEBRTC or LIVEKIT
 	roomName      string // the LiveKit room: the space's name, prefixed by its world
 	lk            liveKitState
+	worldAsked    bool   // the world's threshold was asked for (askWorld)
+	worldMax      int    // the world's own MaxUsersForWebRTC; 0: the server's
 	finalizing    string // the strategy left, until it is finalized
 	finalizeTimer func() // stops the timer; nil when none runs
 	finalizeGen   int
@@ -330,6 +332,9 @@ func (s *spaceState) join(p Peer, j SpaceJoin, reply func(error)) {
 	p.Send(NewMsg(SpaceStatePatch{Space: s.local, Patch: `[{"op":"replace","path":"","value":` + string(state) + `}]`}, true))
 	if s.media {
 		p.Send(NewMsg(SpacePrivateEvent{Space: s.local, ReceiverID: id, Sender: m.user, Event: SwitchStrategy{Strategy: s.strategy}}, true))
+		if s.hasLiveKit() {
+			s.askWorld(j.User.PlayURI)
+		}
 		s.evaluate()
 	}
 	s.syncPresence(id)

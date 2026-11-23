@@ -44,7 +44,7 @@ func buildMedia(cfg *config.Config, adm admin.Admin, meetings *analytics.Queue) 
 	}
 	h, saas := adm.(*admin.HTTP)
 	if saas && h.Capabilities()["api/livekit/credentials"] == "v1" {
-		worlds := livekit.Worlds{Credentials: h.LiveKitCredentials}
+		worlds := livekit.Worlds{Credentials: h.LiveKitCredentials, Threshold: h.LiveKitMaxUsersForWebRTC}
 		if r.Complete() { // record on the world's LiveKit, into the same bucket
 			worlds.Recordings, recordings = &bucket, s3.New(r.Endpoint, r.Region, r.Bucket, r.AccessKey, r.Secret)
 		}

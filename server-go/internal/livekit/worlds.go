@@ -11,7 +11,9 @@ import (
 // core.MediaProvider of the SaaS. Recordings, when set, is the bucket every world records into.
 type Worlds struct {
 	Credentials func(ctx context.Context, playURI string) (host, key, secret string, err error)
-	Recordings  *S3
+	// Threshold is the world's own MAX_USERS_FOR_WEBRTC, 0 when it has none; nil: no world has one.
+	Threshold  func(ctx context.Context, playURI string) (int, error)
+	Recordings *S3
 }
 
 func (w Worlds) LiveKitFor(ctx context.Context, playURI string) (core.LiveKit, error) {
@@ -23,6 +25,14 @@ func (w Worlds) LiveKitFor(ctx context.Context, playURI string) (core.LiveKit, e
 		return nil, err
 	}
 	return New(host, key, secret), nil
+}
+
+// MaxUsersForWebRTC is the world's own threshold (core.WorldThresholds).
+func (w Worlds) MaxUsersForWebRTC(ctx context.Context, playURI string) (int, error) {
+	if w.Threshold == nil || playURI == "" {
+		return 0, nil
+	}
+	return w.Threshold(ctx, playURI)
 }
 
 // EgressFor records on the world's LiveKit, into the shared bucket.

@@ -269,7 +269,9 @@ func TestTheAdminGivesEachWorldItsLiveKit(t *testing.T) {
 	a, _ := fakeAdmin(t, func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Query().Get("playUri") {
 		case "http://play.test/@/o/w/r":
-			_, _ = w.Write([]byte(`{"livekitHost":"https://lk.w.test","livekitApiKey":"k","livekitApiSecret":"s"}`))
+			_, _ = w.Write([]byte(`{"livekitHost":"https://lk.w.test","livekitApiKey":"k","livekitApiSecret":"s","maxUsersForWebrtc":1}`))
+		case "zero":
+			_, _ = w.Write([]byte(`{"livekitHost":"https://lk.test","livekitApiKey":"k","livekitApiSecret":"s","maxUsersForWebrtc":0}`))
 		default:
 			_, _ = w.Write([]byte(`{"livekitHost":"https://lk.test"}`))
 		}
@@ -280,6 +282,15 @@ func TestTheAdminGivesEachWorldItsLiveKit(t *testing.T) {
 	}
 	if _, _, _, err := a.LiveKitCredentials(context.Background(), "other"); err == nil {
 		t.Fatal("incomplete credentials are an error: the space stays on WebRTC")
+	}
+	if n, err := a.LiveKitMaxUsersForWebRTC(context.Background(), "http://play.test/@/o/w/r"); err != nil || n != 1 {
+		t.Fatal("the world's own threshold:", n, err)
+	}
+	if n, err := a.LiveKitMaxUsersForWebRTC(context.Background(), "other"); err != nil || n != 0 {
+		t.Fatal("no threshold of its own: the server's applies:", n, err)
+	}
+	if _, err := a.LiveKitMaxUsersForWebRTC(context.Background(), "zero"); err == nil {
+		t.Fatal("a threshold must be a positive integer")
 	}
 }
 

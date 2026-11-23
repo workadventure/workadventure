@@ -7,7 +7,7 @@ import (
 )
 
 // A space with media meets through WebRTC, each member connected to the others, until it grows past
-// MaxUsersForWebRTC members (or a member says its CPU is limited, in a bubble of three or more): it then moves to
+// MaxUsersForWebRTC members, or the world's own threshold when the admin gives one (or a member says its CPU is limited, in a bubble of three or more): it then moves to
 // LiveKit, one connection per member to a media server. It moves back BackToWebRTCAfter the condition went away.
 // After a move, the old strategy is finalized FinalizeAfter later, so that the fronts keep their old connections
 // until the new ones are up (TransitionPolicy, CommunicationManager and StateLifecycleManager of the back).
@@ -41,6 +41,14 @@ type MediaProvider interface {
 	EgressFor(lk LiveKit) Egress
 	// CanRecord says whether recording is available at all.
 	CanRecord() bool
+}
+
+// WorldThresholds is a MediaProvider whose worlds may have their own MaxUsersForWebRTC (maxUsersForWebrtc in the
+// admin's api/livekit/credentials): 1 puts every conversation of the world on LiveKit.
+type WorldThresholds interface {
+	// MaxUsersForWebRTC is the threshold of the world of playURI, 0 when it has none. It may ask the admin: the
+	// space calls it off its goroutine.
+	MaxUsersForWebRTC(ctx context.Context, playURI string) (int, error)
 }
 
 // ServerLiveKit is one LiveKit server for every world (LIVEKIT_HOST…), recording with Egress when it is set.
@@ -107,6 +115,36 @@ func (s *spaceState) hasLiveKit() bool {
 // takesPart: a member in the filter streams; a watcher receives.
 func (s *spaceState) takesPart(m *spaceMember) bool { return s.inFilter(&m.user) || m.watching }
 
+// maxWebRTC is the world's own threshold once the admin gave one, the server's otherwise.
+func (s *spaceState) maxWebRTC() int {
+	if s.worldMax > 0 {
+		return s.worldMax
+	}
+	return s.mediaCfg.MaxUsersForWebRTC
+}
+
+// askWorld asks for the world's threshold, once, at the first join of a space with media. The space does not wait
+// for the answer: the server's threshold applies meanwhile (and stays if the admin fails), then the policy runs again.
+func (s *spaceState) askWorld(playURI string) {
+	p, ok := s.mediaCfg.Provider.(WorldThresholds)
+	if !ok || s.worldAsked {
+		return
+	}
+	s.worldAsked = true
+	room := s.roomName
+	s.call(func() {
+		n, err := p.MaxUsersForWebRTC(context.Background(), playURI)
+		s.later(func() {
+			if err != nil {
+				slog.Warn("cannot get the world's WebRTC threshold, the server's applies", "space", room, "error", err)
+				return
+			}
+			s.worldMax = n
+			s.evaluate()
+		})
+	})
+}
+
 func (s *spaceState) wantsLiveKit() bool {
 	n, cpu := len(s.members), 0
 	for _, m := range s.members {
@@ -114,12 +152,12 @@ func (s *spaceState) wantsLiveKit() bool {
 			cpu++
 		}
 	}
-	return n > s.mediaCfg.MaxUsersForWebRTC || (s.mediaCfg.SwitchOnCPULimit && cpu > 0 && n > 2)
+	return n > s.maxWebRTC() || (s.mediaCfg.SwitchOnCPULimit && cpu > 0 && n > 2)
 }
 
 // mayGoBack: small enough again, and no member with a limited CPU (a bubble moved for one goes back only once it left).
 func (s *spaceState) mayGoBack() bool {
-	if len(s.members) > s.mediaCfg.MaxUsersForWebRTC || s.rec != nil { // a recording stays on LiveKit
+	if len(s.members) > s.maxWebRTC() || s.rec != nil { // a recording stays on LiveKit
 		return false
 	}
 	for _, m := range s.members {
