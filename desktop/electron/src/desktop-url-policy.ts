@@ -285,19 +285,16 @@ function isTrustedWorldAuthPage(url: URL | undefined, config: DesktopConfig): ur
     return !!url && requireHttpsInProd(url) && !!world && isAllowedNavigationUrl(world, config);
 }
 
-/** The pusher's sign-in or sign-out page of a trusted world: the app runs it in the browser. */
+/**
+ * A trusted world's sign-in or sign-out page: the pusher's, or the administration's /oauth/logout. The app runs it
+ * in the browser, where the sign-in ran: signing out in the app would leave the browser's session alive, and the
+ * next sign-in would get the user straight back in.
+ */
 export function isDesktopBrowserFlowUrl(value: string, config: DesktopConfig): boolean {
     const url = parseHttpUrl(value);
-    return isTrustedWorldAuthPage(url, config) && (url.pathname === "/login-screen" || url.pathname === "/logout");
-}
-
-/**
- * A trusted world's sign-out page other than the pusher's (the administration's /oauth/logout): it loads in the
- * app, and redirects back to the world there. In the browser, the user would end up in the world in the browser.
- */
-export function isWorldSignOutUrl(value: string, config: DesktopConfig): boolean {
-    const url = parseHttpUrl(value);
-    return isTrustedWorldAuthPage(url, config) && url.pathname.endsWith("/logout");
+    return (
+        isTrustedWorldAuthPage(url, config) && (url.pathname === "/login-screen" || url.pathname.endsWith("/logout"))
+    );
 }
 
 /**
@@ -342,14 +339,24 @@ export function createDesktopLoginUrl(value: string, desktopCallbackUrl?: string
 
 export function createDesktopLogoutUrl(value: string, desktopCallbackUrl?: string): string {
     const url = parseHttpUrl(createDesktopFlowUrl(value));
-    if (!url) {
-        return value;
+    if (!url || !desktopCallbackUrl) {
+        return url?.toString() ?? value;
     }
 
-    if (desktopCallbackUrl) {
+    if (isDesktopLogoutUrl(value)) {
+        // The pusher knows the app: it sends the browser to the callback itself.
         url.searchParams.set("desktopCallbackUrl", desktopCallbackUrl);
+        return url.toString();
     }
 
+    // The administration sends the browser to `playUri` once signed out: the callback, which takes the app
+    // back to that world.
+    const callbackUrl = new URL(desktopCallbackUrl);
+    const world = url.searchParams.get("playUri");
+    if (world) {
+        callbackUrl.searchParams.set("url", world);
+    }
+    url.searchParams.set("playUri", callbackUrl.toString());
     return url.toString();
 }
 

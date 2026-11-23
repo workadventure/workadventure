@@ -12,7 +12,6 @@ import {
     isDesktopBrowserFlowUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
-    isWorldSignOutUrl,
     isRoomUrl,
     isSameRoomUrl,
     opensInApp,
@@ -335,12 +334,33 @@ test("the sign-in and sign-out of a trusted world run in the browser, on any ser
     expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/other?playUri=${world}`, config)).toBe(false);
     expect(isDesktopBrowserFlowUrl(`http://pusher.workadventu.re/login-screen?playUri=${world}`, config)).toBe(false);
 
-    // The administration's sign-out comes back to the world: it loads in the app.
+    // The administration's sign-out too: the session it ends is the browser's, where the sign-in ran.
     const memberLogout = `https://member.workadventu.re/oauth/logout?redirect=${world}&playUri=${world}&token=a`;
-    expect(isWorldSignOutUrl(memberLogout, config)).toBe(true);
-    expect(isDesktopBrowserFlowUrl(memberLogout, config)).toBe(false);
-    expect(isWorldSignOutUrl(`https://member.workadventu.re/oauth/logout?playUri=${untrusted}`, config)).toBe(false);
-    expect(isWorldSignOutUrl(`https://member.workadventu.re/profile?playUri=${world}`, config)).toBe(false);
+    expect(isDesktopBrowserFlowUrl(memberLogout, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(`https://member.workadventu.re/oauth/3/logout?playUri=${world}`, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(`https://member.workadventu.re/oauth/logout?playUri=${untrusted}`, config)).toBe(
+        false
+    );
+    expect(isDesktopBrowserFlowUrl(`https://member.workadventu.re/profile?playUri=${world}`, config)).toBe(false);
+});
+
+test("the sign-out comes back to the app through its callback", () => {
+    const world = "https://play.workadventu.re/@/team/world/room";
+    const callback = `http://127.0.0.1:4000/logout/callback/${"a".repeat(64)}?state=s`;
+
+    // The pusher's sends the browser to the callback itself.
+    const pusher = new URL(createDesktopLogoutUrl(`https://play.workadventu.re/logout?playUri=${world}`, callback));
+    expect(pusher.searchParams.get("desktopCallbackUrl")).toBe(callback);
+    expect(pusher.searchParams.get("playUri")).toBe(world);
+
+    // The administration's goes to `playUri`: the callback, carrying the world.
+    const member = new URL(
+        createDesktopLogoutUrl(`https://member.workadventu.re/oauth/logout?redirect=x&playUri=${world}`, callback)
+    );
+    const back = new URL(member.searchParams.get("playUri") ?? "");
+    expect(back.pathname).toBe(`/logout/callback/${"a".repeat(64)}`);
+    expect(back.searchParams.get("state")).toBe("s");
+    expect(back.searchParams.get("url")).toBe(world);
 });
 
 test("extracts desktop auth callback origin and one-shot code", () => {

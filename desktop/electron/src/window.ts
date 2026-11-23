@@ -20,7 +20,6 @@ import {
     isDesktopBrowserFlowUrl,
     isDesktopLoginUrl,
     isRoomUrl,
-    isWorldSignOutUrl,
     isSameRoomUrl,
     opensInApp,
     stripSensitiveQueryParams,
@@ -735,12 +734,10 @@ function configureNavigationSecurity(webContents: Electron.WebContents) {
         adoptChildWindow(childWindow, frameName);
     });
 
-    // A world tab may move within its own server, to another world, or to its sign-out page, which comes back to
-    // it. Anything else goes where a link would.
+    // A world tab may move within its own server or to another world. Anything else goes where a link would.
     window.webContents.on("will-navigate", (event, url) => {
         const config = getDesktopConfig();
-        const staysInApp = opensInApp(url, config, webContents.getURL()) || isWorldSignOutUrl(url, config);
-        if (isDesktopBrowserFlowUrl(url, config) || !staysInApp) {
+        if (isDesktopBrowserFlowUrl(url, config) || !opensInApp(url, config, webContents.getURL())) {
             event.preventDefault();
             openLink(url);
         }
