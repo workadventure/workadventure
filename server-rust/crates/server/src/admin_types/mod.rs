@@ -44,6 +44,19 @@ mod tests {
             parse("sameWorld", json!([{"name": null, "roomUrl": "http://r", "description": "d"}])).unwrap();
         assert_eq!((rooms[0].name.as_deref(), rooms[0].room_url.as_str()), (None, "http://r"));
         assert!(parse::<LivekitCredentials>("livekit", json!({"livekitHost": "h"})).is_err());
+        // The world's own WebRTC threshold: a positive integer, null or absent (the server's applies).
+        let livekit = |max: Value| {
+            let mut v = json!({"livekitHost": "h", "livekitApiKey": "k", "livekitApiSecret": "s"});
+            if !max.is_null() {
+                v["maxUsersForWebrtc"] = max;
+            }
+            parse::<LivekitCredentials>("livekit", v).map(|c| c.max_users_for_webrtc.map(std::num::NonZeroU64::get))
+        };
+        assert_eq!(livekit(json!(1)), Ok(Some(1)));
+        assert_eq!(livekit(Value::Null), Ok(None));
+        assert!(livekit(json!(0)).is_err() && livekit(json!(2.5)).is_err());
+        let null = json!({"livekitHost": "h", "livekitApiKey": "k", "livekitApiSecret": "s", "maxUsersForWebrtc": null});
+        assert!(parse::<LivekitCredentials>("livekit", null).is_ok_and(|c| c.max_users_for_webrtc.is_none()));
         assert!(fits::<RoomRedirect>(&json!({"redirectUrl": "/x"})));
         // email and visitCardUrl may be null, not absent (z.string().nullable()).
         let minimal = json!({"status": "ok", "email": null, "visitCardUrl": null, "userUuid": "uuid-a", "tags": ["member"],

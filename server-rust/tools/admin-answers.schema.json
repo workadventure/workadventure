@@ -1082,6 +1082,17 @@
         },
         "autoRecording": {
           "type": "boolean"
+        },
+        "maxUsersForWebrtc": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       },
       "required": [

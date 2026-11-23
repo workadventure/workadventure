@@ -333,7 +333,8 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
     let mut media =
         Media { livekit: Livekit::from_config(&app.config), room: livekit::room_name(&key), http: app.http.clone() };
     let raw = |k: &str| app.config.raw.get(k).filter(|v| !v.is_empty()).cloned();
-    // A24: the admin may give the LiveKit credentials (per world); they are asked when the space starts.
+    // A24: the admin may give the LiveKit credentials (per world) and the world's own WebRTC threshold; they are
+    // asked when the space starts, before its first join is handled.
     let admin_livekit = app.admin.clone().filter(|a| a.has("api/livekit/credentials"));
     let mut media_config = MediaConfig {
         max_webrtc: raw("MAX_USERS_FOR_WEBRTC").and_then(|v| v.parse().ok()).unwrap_or(4),
@@ -382,6 +383,7 @@ async fn run(key: String, local_name: String, mut mailbox: tokio::sync::mpsc::Re
                     // ponytail: awaited once, when the space starts (the back asks at each switch).
                     match admin.livekit_credentials(&user.play_uri).await {
                         Ok(c) => {
+                            media_config = media_config.with_world_threshold(c.max_users_for_webrtc);
                             media.livekit = Some(Livekit {
                                 host: c.livekit_host.trim_end_matches('/').to_owned(),
                                 key: c.livekit_api_key,

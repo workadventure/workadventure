@@ -161,6 +161,18 @@ pub struct MediaConfig {
     pub switch_on_cpu: bool,
 }
 
+impl MediaConfig {
+    /// The world's own threshold (the admin's `maxUsersForWebrtc`) replaces MAX_USERS_FOR_WEBRTC when it has one:
+    /// 1 puts every conversation of the world on LiveKit.
+    #[must_use]
+    pub fn with_world_threshold(self, world: Option<std::num::NonZeroU64>) -> Self {
+        match world {
+            Some(max) => Self { max_webrtc: usize::try_from(max.get()).unwrap_or(usize::MAX), ..self },
+            None => self,
+        }
+    }
+}
+
 impl Default for MediaConfig {
     fn default() -> Self {
         Self { max_webrtc: 4, livekit: false, switch_on_cpu: true }

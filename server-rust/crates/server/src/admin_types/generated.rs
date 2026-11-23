@@ -104,6 +104,8 @@ pub struct LivekitCredentials {
     pub livekit_api_secret: ::std::string::String,
     #[serde(rename = "livekitHost")]
     pub livekit_host: ::std::string::String,
+    #[serde(rename = "maxUsersForWebrtc", skip_serializing_if = "::std::option::Option::is_none")]
+    pub max_users_for_webrtc: ::std::option::Option<::std::num::NonZeroU64>,
 }
 #[doc = "`MapDetailsData`"]
 #[derive(:: serde :: Deserialize, :: serde :: Serialize, Clone, Debug, PartialEq)]

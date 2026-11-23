@@ -564,3 +564,21 @@ fn a_watch_that_arrives_after_its_user_left_registers_nobody() {
     s.join(FilterType::AllUsers, user("c"), &mut r).unwrap();
     assert!(r.take().iter().all(|(to, _)| !to.contains(&"b".to_owned())));
 }
+
+#[test]
+fn a_worlds_own_threshold_replaces_the_servers() {
+    let f = FilterType::AllUsers;
+    let server = MediaConfig { max_webrtc: 4, livekit: true, switch_on_cpu: true };
+    let pair = |media: MediaConfig| {
+        let mut s = Space::new("s".into(), f, vec!["cameraState".into(), "microphoneState".into()], "i".into());
+        s.configure_media(media, Box::new(TestClock::default()));
+        let mut r = Rec::default();
+        enter(&mut s, &mut r, "a");
+        enter(&mut s, &mut r, "b");
+        s.comm()
+    };
+    // 1: every conversation of the world runs on LiveKit, from its second member.
+    assert_eq!(pair(server.with_world_threshold(std::num::NonZeroU64::new(1))), Comm::Livekit);
+    // No threshold of its own: MAX_USERS_FOR_WEBRTC.
+    assert_eq!(pair(server.with_world_threshold(None)), Comm::WebRtc);
+}
