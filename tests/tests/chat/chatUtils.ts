@@ -82,9 +82,9 @@ class ChatUtils {
 
         await page.getByTestId("passphraseInput").fill(DEFAULT_PASSPHRASE);
         await page.getByTestId("passphraseConfirmInput").fill(DEFAULT_PASSPHRASE);
-        await page.getByText("Generate").click();
+        await page.getByTestId("generateRecoveryKeyButton").click();
         await page.getByTestId("downloadRecoveryKeyButton").click();
-        await page.getByText("Continue").click();
+        await page.getByTestId("continueRecoveryKeyButton").click();
     }
 
     /** A new room opens by itself: check it is the one just created, then go back to the room list. */

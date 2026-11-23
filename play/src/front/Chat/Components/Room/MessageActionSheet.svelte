@@ -4,6 +4,7 @@
     import type { ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
     import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import { confirmDelete } from "./confirmDeleteMessage";
     import { IconArrowBackUp, IconCopy, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
 
@@ -41,7 +42,7 @@
 
     function copyText() {
         navigator.clipboard
-            .writeText($content.body)
+            .writeText(decodeHtmlEntities($content.body))
             .then(() => {
                 copied = true;
                 setTimeout(onClose, 600);

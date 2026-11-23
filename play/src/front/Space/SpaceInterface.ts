@@ -191,6 +191,8 @@ export interface SpaceInterface {
     readonly observeMetadata: Observable<Map<string, unknown>>;
     readonly filterType: FilterType;
     get mySpaceUserId(): SpaceUser["spaceUserId"];
+    /** True when the space syncs camera, microphone or screen-sharing state (bubbles, meeting areas). */
+    isVideoSpace(): boolean;
     getUsers(options?: { signal: AbortSignal }): Promise<Map<string, Readonly<SpaceUserExtended>>>;
     waitForSpaceUser(spaceUserId: SpaceUser["spaceUserId"], timeoutMs: number): Promise<SpaceUserExtended>;
 

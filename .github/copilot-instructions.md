@@ -22,7 +22,6 @@ WorkAdventure is a comprehensive platform for creating customizable collaborativ
 - **`back/`** - Backend API server with gRPC and HTTP endpoints  
 - **`messages/`** - Protocol Buffer definitions for service communication
 - **`map-storage/`** - Map storage and management service (talks to back, stores map on disk or in S3 compatible service)
-- **`uploader/`** - File upload service (deprecated)
 - **`tests/`** - End-to-end tests using Playwright
 
 ### Shared Libraries (`libs/`)
@@ -199,7 +198,6 @@ lsof -ti:3000,3001,8080,9229 | xargs kill -9
 - `play/src/server.ts` - Frontend server (Svelte app + Phaser game)
 - `back/src/server.ts` - Backend API server
 - `map-storage/src/server.ts` - Map storage service
-- `uploader/server.ts` - File upload service
 
 ### Build Configurations
 - `play/vite.config.ts` - Frontend build config (Vite + Svelte)

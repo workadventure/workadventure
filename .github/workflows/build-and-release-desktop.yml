@@ -1,28 +1,78 @@
 name: Build & release desktop app
 
+# Builds the desktop app on every change to it. A `desktop-v<version>` tag (pushed by
+# release-please-desktop.yml once the release PR is merged) builds it again and publishes it in
+# workadventure/desktop-releases.
 on:
   push:
     branches:
       - master
       - develop
+    # Path filters are not evaluated for tags. The app only reads desktop/electron (no import or
+    # electron-builder file outside it), so other changes cannot break its build.
+    tags:
+      - "desktop-v*"
+    paths:
+      - "desktop/electron/**"
+      - ".github/workflows/build-and-release-desktop.yml"
   pull_request:
-  release:
-    types: [created]
-
-env:
-  YARN_CACHE_FOLDER: ~/.yarn
+    paths:
+      - "desktop/electron/**"
+      - ".github/workflows/build-and-release-desktop.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_on_linux:
-    name: "Build & release desktop app for ${{ matrix.os }}"
+  # The release is a draft of workadventure/desktop-releases until the three OS are uploaded, so an
+  # update never points at a missing binary. Created here rather than by electron-builder: the three
+  # parallel uploads would each create their own draft.
+  draft:
+    name: "Create the draft desktop release"
+    if: ${{ github.repository == 'workadventure/workadventure' && startsWith(github.ref, 'refs/tags/desktop-v') }}
+    environment: desktop-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Get a token for desktop-releases"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      - name: "Create the draft"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo workadventure/desktop-releases > /dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --repo workadventure/desktop-releases --draft \
+              --title "WorkAdventure Desktop ${GITHUB_REF_NAME#desktop-v}" --notes ""
+
+  # One job for both cases: a branch or PR builds the app and keeps it as an artifact, a desktop-v* tag
+  # (draft created) builds it and uploads it to the draft.
+  build:
+    name: "Build desktop app for ${{ matrix.os }}"
+    needs: draft
+    if: ${{ !cancelled() && (needs.draft.result == 'success' || (needs.draft.result == 'skipped' && !startsWith(github.ref, 'refs/tags/'))) }}
+    # Only the release reaches the Environment (and its secrets).
+    environment: ${{ needs.draft.result == 'success' && 'desktop-release' || '' }}
+    permissions:
+      contents: read
+      # Windows code signing logs in to Azure with GitHub's OIDC token (release only, see below).
+      id-token: write
+    env:
+      IS_RELEASE: ${{ needs.draft.result == 'success' }}
 
     strategy:
+      # Build each OS independently: a flake on one (e.g. a transient GitHub download of the NSIS
+      # tool on Windows) should not cancel the ubuntu/macOS builds.
+      fail-fast: false
       matrix:
-        node-version: [16.x]
+        node-version: [22.x]
         runtime: [ linux-x64, win-x64, osx-x64 ]
         include:
         - runtime: linux-x64
@@ -38,82 +88,344 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: "actions/checkout@v2.0.0"
+        uses: actions/checkout@v4
+
+      - name: "Check the tag matches the app version"
+        if: ${{ env.IS_RELEASE == 'true' }}
+        shell: bash
+        run: test "desktop-v$(node -p "require('./package.json').version")" = "${GITHUB_REF_NAME}"
+        working-directory: "desktop/electron"
 
       - name: "Setup NodeJS"
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
+          cache-dependency-path: "desktop/electron/package-lock.json"
 
       - name: Caching
         uses: actions/cache@v4
         with:
           path: |
-            ${{ env.YARN_CACHE_FOLDER }}
             ~/.cache/electron
             ~/.cache/electron-builder
-          key: ${{ runner.OS }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          key: ${{ runner.OS }}-electron-${{ hashFiles('desktop/electron/package-lock.json') }}
           restore-keys: |
-            ${{ runner.OS }}-yarn-
-
-      - name: "Revert to Yarn 1"
-        run: yarn set version classic
-
-      - name: "local-app: Install dependencies"
-        run: yarn install  --immutable
-        working-directory: "desktop/local-app"
-
-      - name: "local-app: Build"
-        run: yarn build
-        working-directory: "desktop/local-app"
-
-      - name: "Set desktop app version"
-        run: node helpers/set-version.js
-        working-directory: "desktop/electron"
+            ${{ runner.OS }}-electron-
 
       - name: "Install dependencies"
-        run: yarn install  --immutable
+        run: npm ci
+        working-directory: "desktop/electron"
+
+      # electron-vite only strips the types: without these, a type error or a broken contract.test.ts
+      # (what window.WAD exposes to world pages) would reach a release.
+      - name: "Type-check and test"
+        if: ${{ startsWith(matrix.os, 'ubuntu') }}
+        run: npm run typecheck && npm test
         working-directory: "desktop/electron"
 
       - name: "Build typescript"
-        run: yarn build
+        run: npm run build
         working-directory: "desktop/electron"
 
-      - name: "Install electron tools"
-        run: yarn electron-builder install-app-deps
-        working-directory: "desktop/electron"
-
+      # Only the release can log in to Azure or reach the Apple certificate: the other builds do not sign
+      # Windows (electron-builder fails on a signature it cannot make) and sign macOS ad hoc, without the
+      # hardened runtime (see mac in electron-builder.yml).
+      # bash on Windows too: PowerShell splits -c.win.signExecutable=false at the first dot.
       - name: "Build app for testing"
-        run: yarn electron-builder --publish never
+        if: ${{ env.IS_RELEASE != 'true' }}
+        shell: bash
+        run: npx electron-builder --publish never -c.win.signExecutable=false -c.mac.identity=- -c.mac.hardenedRuntime=false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # electron-builder skips signing on pull requests, the ad hoc one too: the artifact was then
+          # unsigned, and macOS cannot attach the screen recording, camera or microphone permissions to an
+          # unsigned app. The ad hoc signature uses no secret.
+          CSC_FOR_PULL_REQUEST: ${{ startsWith(matrix.os, 'macos') }}
         working-directory: "desktop/electron"
-        if: ${{ github.event_name != 'release' }}
 
-      - name: "Build & release app"
-        run: yarn electron-builder --publish always
+      - name: "Get a token for desktop-releases"
+        if: ${{ env.IS_RELEASE == 'true' }}
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      # Windows code signing (win.azureSignOptions in electron-builder.yml). The workadventure-desktop-signing
+      # app in Azure trusts GitHub's OIDC token for jobs in the desktop-release environment only, so there is no
+      # secret, and none of these IDs is one. Its two federated credentials match the token's subject in both
+      # formats: repo:workadventure/workadventure:... today, and the one with the numeric IDs once the
+      # repository opts in to immutable subjects (then delete desktop-release-name-based).
+      - name: "Log in to Azure for code signing"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'windows') }}
+        uses: azure/login@v2
+        with:
+          client-id: 930c98a2-f3a0-4e6f-b38e-459eb45cc305
+          tenant-id: 04bd2520-bee9-4286-860d-a178506f47d1
+          # Signing needs no subscription, and the app's only role is on the signing account.
+          allow-no-subscriptions: true
+
+      # GitHub's token is short-lived, and packaging takes a while before the first signature: get the signing
+      # token now. az caches it, and the signing module (DefaultAzureCredential) takes it from az.
+      - name: "Get the code signing token"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'windows') }}
+        run: az account get-access-token --scope https://codesigning.azure.net/.default --output none
+
+      # macOS notarization: electron-builder takes the App Store Connect API key as a file path only.
+      - name: "Write the App Store Connect API key"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'macos') }}
+        run: printf '%s\n' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/AuthKey.p8"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        working-directory: "desktop/electron"
-        if: ${{ github.event_name == 'release' }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
 
+      # CSC_LINK (the Developer ID Application .p12, base64) and APPLE_* sign and notarize macOS. Windows
+      # ignores CSC_LINK: win.azureSignOptions picks the Azure signer, which only reads WIN_CSC_LINK otherwise.
+      - name: "Build & upload app"
+        if: ${{ env.IS_RELEASE == 'true' }}
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          APPLE_API_KEY: ${{ runner.temp }}/AuthKey.p8
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+        working-directory: "desktop/electron"
+
+      # An unsigned macOS app cannot keep its screen recording, camera or microphone permissions. On a
+      # release, the app must also be notarized with its ticket stapled: electron-builder only warns and
+      # skips notarization when the APPLE_* variables are missing, and Gatekeeper then blocks the app
+      # (spctl rejects an "Unnotarized Developer ID"). A failure here stops the job, so the draft is never
+      # published.
+      - name: "Check the macOS signature"
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        run: |
+          app=$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)
+          codesign --verify --deep --strict "$app"
+          codesign -dv "$app" 2>&1 | grep -E "Identifier|Signature|Authority|TeamIdentifier"
+          if [ "$IS_RELEASE" = true ]; then
+            spctl --assess --type execute -vv "$app"
+            xcrun stapler validate "$app"
+          fi
+        working-directory: "desktop/electron"
+
+      # An unsigned Windows installer gets the SmartScreen warning, and the auto-updater of every installed
+      # app refuses an update that is not signed by win.azureSignOptions.publisherName. A failure here stops
+      # the job, so the draft is never published.
+      - name: "Check the Windows signatures"
+        if: ${{ env.IS_RELEASE == 'true' && startsWith(matrix.os, 'windows') }}
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem build/*.exe, build/win-*unpacked/WorkAdventure.exe
+          if (-not $files) { throw "No executable found in build/" }
+          foreach ($file in $files) {
+            $signature = Get-AuthenticodeSignature $file.FullName
+            "{0}: {1}, {2}" -f $file.Name, $signature.Status, $signature.SignerCertificate.Subject
+            if ($signature.Status -ne 'Valid' -or $signature.SignerCertificate.Subject -notlike 'CN=WorkAdventu.re,*') {
+              throw "$($file.Name) is not signed by WorkAdventu.re"
+            }
+          }
+        working-directory: "desktop/electron"
+
+      # A fuse that does not fit the package (an app.asar that fails its integrity check, say) makes
+      # the app abort at startup, on every user's machine: start it and check it still runs 15 s later.
+      # On a release too: a failure stops the job, so the draft is never published.
+      - name: "Check the packaged app starts"
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux) app=build/linux-unpacked/workadventure ;;
+            macOS) app="$(find build -maxdepth 2 -name WorkAdventure.app | head -n 1)/Contents/MacOS/WorkAdventure" ;;
+            Windows) app=build/win-unpacked/WorkAdventure.exe ;;
+          esac
+          npx @electron/fuses read --app "$app"
+          if [ "${{ runner.os }}" = "Linux" ]; then
+            xvfb-run -a "$app" --no-sandbox > startup.log 2>&1 &
+          else
+            "$app" > startup.log 2>&1 &
+          fi
+          pid=$!
+          sleep 15
+          if ! kill -0 "$pid" 2>/dev/null; then
+            cat startup.log
+            echo "The packaged app exited during startup"
+            exit 1
+          fi
+          kill "$pid" || true
+        working-directory: "desktop/electron"
+
+      # electron-builder names the outputs "WorkAdventure-<arch>..." (artifactName in electron-builder.yml).
+      # Match by extension (top level of build/ only — the unpacked app dirs are one level deeper) so the
+      # globs survive naming changes. if-no-files-found: error turns a future naming drift into
+      # a loud failure instead of a green run that silently uploaded nothing.
+      # x64 and arm64 in one artifact, as for the .deb below.
       - name: Upload Linux .AppImage artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'ubuntu')
         with:
-          name: workadventure-desktop-linux-x64.AppImage
-          path: desktop/electron/build/workadventure-desktop-*-x86_64.AppImage
+          name: workadventure-desktop-linux.AppImage
+          path: desktop/electron/build/*.AppImage
+          if-no-files-found: error
 
+      # Both architectures, amd64 and arm64, in one artifact.
+      - name: Upload Linux .deb artifact
+        uses: actions/upload-artifact@v4
+        if: startsWith(matrix.os, 'ubuntu')
+        with:
+          name: workadventure-desktop-linux.deb
+          path: desktop/electron/build/*.deb
+          if-no-files-found: error
+
+      # x64 and arm64 installers in one artifact.
       - name: Upload Windows .exe artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'windows')
         with:
-          name: workadventure-desktop-win-x64.exe
-          path: desktop/electron/build/workadventure-desktop-*.exe
+          name: workadventure-desktop-win.exe
+          path: desktop/electron/build/*.exe
+          if-no-files-found: error
 
       - name: Upload MacOS .dmg artifact
         uses: actions/upload-artifact@v4
         if: startsWith(matrix.os, 'macos')
         with:
           name: workadventure-mac.dmg
-          path: desktop/electron/build/workadventure-desktop-*.dmg
+          path: desktop/electron/build/*.dmg
+          if-no-files-found: error
+
+  # The arm64 installer is cross-built on the x64 runner, where its app cannot start: install it on arm64
+  # Windows and check it still runs 15 s later. On a release too: a failure here skips publish.
+  windows_arm64:
+    name: "Check the arm64 Windows installer"
+    needs: build
+    # Without it, the draft job skipped on branches and PRs would skip this one too.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: windows-11-arm
+    steps:
+      - name: "Download the installers"
+        uses: actions/download-artifact@v4
+        with:
+          name: workadventure-desktop-win.exe
+
+      - name: "Install and start the app"
+        shell: pwsh
+        run: |
+          $setup = Get-ChildItem *-arm64-setup.exe
+          Start-Process -Wait -FilePath $setup.FullName -ArgumentList '/S'
+          $app = (Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter WorkAdventure.exe | Select-Object -First 1).FullName
+          # The x64 app would start here too, under emulation: check the PE machine type is arm64 (0xAA64).
+          $f = [IO.File]::OpenRead($app); $b = New-Object byte[] 1024; [void]$f.Read($b, 0, 1024); $f.Close()
+          $machine = [BitConverter]::ToUInt16($b, [BitConverter]::ToInt32($b, 0x3C) + 4)
+          if ($machine -ne 0xAA64) { throw ("{0} is not an arm64 executable (machine 0x{1:X})" -f $app, $machine) }
+          $p = Start-Process -FilePath $app -PassThru -RedirectStandardOutput startup.log -RedirectStandardError startup.err
+          Start-Sleep 15
+          if ($p.HasExited) { Get-Content startup.log, startup.err; throw "The packaged app exited during startup" }
+          Stop-Process -Id $p.Id
+
+  publish:
+    name: "Publish the desktop release"
+    needs: [draft, build, windows_arm64]
+    if: ${{ needs.draft.result == 'success' }}
+    environment: desktop-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Get a token for desktop-releases"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      # The release notes are this version's section of the CHANGELOG written by release-please.
+      - name: "Publish the release with its notes"
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          version="${GITHUB_REF_NAME#desktop-v}"
+          awk -v v="$version" '/^## / { if (p) exit; p = index($0, "[" v "]") || index($0, " " v " "); next } p' \
+            desktop/electron/CHANGELOG.md > notes.md
+          gh release edit "$GITHUB_REF_NAME" --repo workadventure/desktop-releases \
+            --notes-file notes.md --draft=false --latest
+
+  # apt.workadventu.re serves the apt-repo branch of workadventure/desktop-releases (the signed index, a
+  # few KB) and redirects releases/download/... to the release there, where electron-builder uploaded the
+  # .deb: apt checks each download against the SHA256 in the signed index. The .deb's after-install
+  # script adds the repository (desktop/electron/deb/).
+  apt_repository:
+    name: "Add the .debs to the APT repository"
+    # After publish: a draft's downloads are not public yet. Skipped with it on branches and PRs.
+    needs: publish
+    environment: desktop-release
+    runs-on: ubuntu-latest
+    # Two releases at once would both push to the branch.
+    concurrency: apt-repository
+
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+
+      - name: "Get a token for desktop-releases"
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.DESKTOP_RELEASE_APP_ID }}
+          private-key: ${{ secrets.DESKTOP_RELEASE_APP_PRIVATE_KEY }}
+          owner: workadventure
+          repositories: desktop-releases
+          permission-contents: write
+
+      # amd64 and arm64: one index lists both, and apt keeps the entries of its own architecture.
+      - name: "Download the .debs"
+        uses: actions/download-artifact@v4
+        with:
+          name: workadventure-desktop-linux.deb
+          # dpkg-scanpackages writes this path as the package's Filename: the path of its GitHub download URL.
+          path: ${{ runner.temp }}/releases/download/${{ github.ref_name }}
+
+      - name: "Add them to the apt-repo branch and sign the index"
+        env:
+          APT_SIGNING_KEY: ${{ secrets.APT_SIGNING_KEY }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          : "${APT_SIGNING_KEY:?Add the APT_SIGNING_KEY secret: the armored private key, without a passphrase}"
+          key="$PWD/desktop/electron/deb/workadventure.gpg"
+          cd "$RUNNER_TEMP"
+          git init -q -b apt-repo apt
+          git -C apt remote add origin "https://x-access-token:${GH_TOKEN}@github.com/workadventure/desktop-releases.git"
+          # The branch only exists after the first release.
+          if git -C apt fetch -q --depth 1 origin apt-repo; then
+            git -C apt reset -q --hard FETCH_HEAD
+          fi
+          mkdir -p apt/packages
+          # One file per release: a re-run replaces its own, and every earlier version stays installable.
+          # --multiversion: the two debs share name and version, and without it only one would be listed.
+          dpkg-scanpackages --multiversion "releases/download/$TAG" > "apt/packages/$TAG"
+          cd apt
+          cat packages/* > Packages
+          cp "$key" workadventure.gpg
+          {
+            echo "Origin: WorkAdventure"
+            echo "Label: WorkAdventure"
+            echo "Date: $(date -Ru)"
+            echo "SHA256:"
+            echo " $(sha256sum Packages | cut -d' ' -f1) $(stat -c %s Packages) Packages"
+          } > Release
+          gpg --batch --import <<< "$APT_SIGNING_KEY"
+          gpg --batch --yes --clearsign -o InRelease Release
+          gpg --batch --yes --armor --detach-sign -o Release.gpg Release
+          # Every install trusts the key shipped in the .deb: it must be the one that signs.
+          gpgv --keyring "$PWD/workadventure.gpg" InRelease
+          git add -A
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "workadventure $TAG"
+          git push origin apt-repo

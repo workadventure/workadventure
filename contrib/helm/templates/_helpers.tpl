@@ -146,21 +146,6 @@ https://{{ .Values.domainName }}/map-storage
 {{- end -}}
 {{- end }}
 
-{{- define "workadventure.uploaderDomainName" -}}
-{{- coalesce .Values.uploader.ingress.domainName (printf "uploader%s%s" .Values.domainNamePrefix .Values.domainName) }}
-{{- end -}}
-{{- define "workadventure.uploaderUrl" -}}
-{{- if .Values.singleDomain -}}
-https://{{ .Values.domainName }}/uploader
-{{- else -}}
-{{- if .Values.uploader.ingress.domainName -}}
-{{ printf "https://%s" .Values.uploader.ingress.domainName }}
-{{- else -}}
-{{- printf "https://uploader%s%s" .Values.domainNamePrefix .Values.domainName }}
-{{- end }}
-{{- end -}}
-{{- end }}
-
 {{- define "workadventure.mapsDomainName" -}}
 {{- coalesce .Values.maps.ingress.domainName (printf "maps%s%s" .Values.domainNamePrefix .Values.domainName) }}
 {{- end -}}

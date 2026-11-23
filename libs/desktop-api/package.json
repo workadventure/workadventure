@@ -1,0 +1,12 @@
+{
+  "name": "@workadventure/desktop-api",
+  "version": "1.0.0",
+  "description": "Types of window.WAD, the bridge between the desktop app and the WorkAdventure page",
+  "type": "module",
+  "main": "./src/index.ts",
+  "author": "WorkAdventure",
+  "license": "ISC",
+  "files": [
+    "src"
+  ]
+}

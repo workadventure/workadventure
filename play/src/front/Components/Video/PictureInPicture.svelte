@@ -1,8 +1,6 @@
 <script lang="ts">
     import type { Snippet } from "svelte";
     import { onDestroy, onMount, tick } from "svelte";
-    import { on } from "svelte/events";
-    import { z } from "zod";
     import Debug from "debug";
     import { isInRemoteConversation, streamableCollectionStore } from "../../Stores/StreamableCollectionStore";
     import {
@@ -14,6 +12,17 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import {} from "./PictureInPicture/PictureInPictureWindow";
     import { gameManager } from "../../Phaser/Game/GameManager";
+    import {
+        hasPictureInPictureContent,
+        isDocumentPictureInPictureSupported,
+    } from "./PictureInPicture/PictureInPictureAvailabilityPolicy";
+    import DesktopMiniWindow from "./PictureInPicture/DesktopMiniWindow.svelte";
+    import {
+        copyStyleSheets,
+        delegateSvelteEvents,
+        openDesktopChildWindow,
+        type DesktopChildWindow,
+    } from "./PictureInPicture/childWindow";
 
     interface Props {
         children?: Snippet<[{ inPictureInPicture: boolean }]>;
@@ -23,96 +32,23 @@
 
     const debug = Debug("app:PictureInPicture");
 
+    // In the desktop app, the mini window takes the place of the browser's picture-in-picture: the
+    // app decides when it opens and when it shows the meeting (see openMiniWindow).
+    const desktopWindows = window.WAD?.desktop ? window.WAD.windows : undefined;
+
     let divElement: HTMLDivElement;
     let parentDivElement: HTMLDivElement;
     let pipWindow: Window | undefined;
     let mapImage: string | undefined = $state(undefined);
     let pipRequested = false;
     let unloading = false;
-    let stopPictureInPictureEventDelegation: Array<() => void> = [];
-
-    const delegatedPictureInPictureEvents = [
-        "beforeinput",
-        "click",
-        "change",
-        "contextmenu",
-        "dblclick",
-        "focusin",
-        "focusout",
-        "input",
-        "keydown",
-        "keyup",
-        "mousedown",
-        "mousemove",
-        "mouseout",
-        "mouseover",
-        "mouseup",
-        "pointerdown",
-        "pointermove",
-        "pointerout",
-        "pointerover",
-        "pointerup",
-        "touchend",
-        "touchmove",
-        "touchstart",
-    ];
-
-    const DocumentPictureInPictureSchema = z.object({
-        requestWindow: z
-            .function()
-            .args(
-                z.object({
-                    preferInitialWindowPlacement: z.boolean(),
-                    height: z.string(),
-                    width: z.string(),
-                }),
-            )
-            .returns(z.promise(z.instanceof(Window))),
-    });
-
-    const WindowExtSchema = z
-        .object({
-            documentPictureInPicture: DocumentPictureInPictureSchema,
-        })
-        .passthrough();
-
-    function copySteelSheet(pipWindow: Window) {
-        [...document.styleSheets].forEach((styleSheet) => {
-            try {
-                const cssRules = [...styleSheet.cssRules].map((rule) => rule.cssText).join("");
-                const style = document.createElement("style");
-
-                style.textContent = cssRules;
-                pipWindow.document.head.appendChild(style);
-            } catch (e) {
-                console.error("Could not copy stylesheet: ", e);
-                const link = document.createElement("link");
-                link.rel = "stylesheet";
-                link.type = styleSheet.type;
-                link.media = styleSheet.media.mediaText;
-                link.href = styleSheet.href || "";
-                pipWindow.document.head.appendChild(link);
-            }
-        });
-    }
-
-    function attachPictureInPictureEventDelegation(pipWindow: Window) {
-        detachPictureInPictureEventDelegation();
-
-        // Svelte 5 delegates DOM handlers to the mount document. The PiP DOM is reparented into a
-        // separate document, so a no-op svelte/events listener is enough to run Svelte's delegation there.
-        stopPictureInPictureEventDelegation = delegatedPictureInPictureEvents.map((eventName) =>
-            on(pipWindow.document, eventName, () => {}),
-        );
-    }
-
-    function detachPictureInPictureEventDelegation() {
-        stopPictureInPictureEventDelegation.forEach((stopEventDelegation) => stopEventDelegation());
-        stopPictureInPictureEventDelegation = [];
-    }
+    let stopPictureInPictureEventDelegation: (() => void) | undefined;
+    let miniWindow: DesktopChildWindow | undefined;
+    let miniWindowProps: { videoHost?: HTMLDivElement } = $state({});
 
     function destroyPictureInPictureComponent(keepRequest = false) {
-        detachPictureInPictureEventDelegation();
+        stopPictureInPictureEventDelegation?.();
+        stopPictureInPictureEventDelegation = undefined;
 
         if (!parentDivElement) {
             return;
@@ -144,7 +80,7 @@
     }
 
     const unsubscribeIsInRemoteConversation = isInRemoteConversation.subscribe((isTalking) => {
-        if (!isTalking) {
+        if (!isTalking && !desktopWindows) {
             destroyPictureInPictureComponent();
         }
     });
@@ -152,9 +88,14 @@
     function requestPictureInPicture() {
         debug("Request Picture in Picture mode");
 
-        // We activate the picture in picture mode only if we are in a remote conversation
-        if (!$isInRemoteConversation) {
-            debug("Request Picture in Picture mode but not in a remote conversation");
+        // The desktop app opens its mini window itself (see the PiP button).
+        if (desktopWindows) {
+            return;
+        }
+
+        if (!hasPictureInPictureContent($isInRemoteConversation, $streamableCollectionStore.size)) {
+            debug("Request Picture in Picture mode but no video content is available");
+            askPictureInPictureActivatingStore.set(false);
             return;
         }
 
@@ -172,12 +113,10 @@
             return;
         }
 
-        // request permission to use the picture in picture mode
-        // see the documentation for more details: https://developer.mozilla.org/en-US/docs/Glossary/Transient_activation
-        const windowExtResult = WindowExtSchema.safeParse(window);
-        if (!windowExtResult.success) {
+        if (!isDocumentPictureInPictureSupported(window)) {
             debug("Picture in Picture is not supported");
             pictureInPictureSupportedStore.set(false);
+            askPictureInPictureActivatingStore.set(false);
             return;
         }
 
@@ -191,8 +130,8 @@
             // 227: the height of a video
             // 80: the height of the action bar
             // 78: the height of the video feedback of the current user
-            height: `${pipHeightOption}`,
-            width: "400",
+            height: pipHeightOption,
+            width: 400,
         };
 
         pipRequested = true;
@@ -205,7 +144,7 @@
                 // the builder listen the pipWindow and will start the dom building
                 pipWindow = newPipWindow;
 
-                copySteelSheet(pipWindow);
+                copyStyleSheets(pipWindow);
                 pipWindow.document.body.style.display = "flex";
                 pipWindow.document.body.style.flexDirection = "column";
                 pipWindow.document.body.style.justifyContent = "center";
@@ -218,7 +157,8 @@
                 // documentPictureInPicture 'enter' / LiveKit may run isElementInPiP immediately;
                 // if <video> nodes are not under pipWin.document yet, contains(el) is false.
                 pipWindow.document.body.append(divElement);
-                attachPictureInPictureEventDelegation(pipWindow);
+                stopPictureInPictureEventDelegation?.();
+                stopPictureInPictureEventDelegation = delegateSvelteEvents(pipWindow);
 
                 activePictureInPictureStore.set(true);
                 await tick();
@@ -228,8 +168,51 @@
             .catch((error: Error) => {
                 debug("Picture-in-Picture is not supported", error);
                 destroyPictureInPictureComponent();
+                askPictureInPictureActivatingStore.set(false);
                 // Maybe we could propose a popup to the user to activate the Picture in Picture mode
             });
+    }
+
+    /**
+     * The desktop app asked for its mini window: open it as a child window of this page, like the browser's
+     * picture-in-picture, so it renders with this page's stores and plays its MediaStreams directly.
+     */
+    function openMiniWindow() {
+        if (!desktopWindows || miniWindow) return;
+        const windows = desktopWindows;
+        miniWindow = openDesktopChildWindow(
+            "wa-mini-window",
+            DesktopMiniWindow,
+            (ownerDocument) => ({
+                windows,
+                ownerDocument,
+                get videoHost() {
+                    return miniWindowProps.videoHost;
+                },
+                set videoHost(element) {
+                    miniWindowProps.videoHost = element;
+                },
+            }),
+            {
+                // Closed by the app, or the page goes away: take the videos back first.
+                onClose: () => {
+                    showMeetingInMiniWindow(false);
+                    miniWindow = undefined;
+                },
+            },
+        );
+    }
+
+    function showMeetingInMiniWindow(show: boolean) {
+        const host = miniWindowProps.videoHost;
+        if (show && host) {
+            host.append(divElement);
+            activePictureInPictureStore.set(true);
+        } else if (parentDivElement) {
+            // eslint-disable-next-line svelte/no-dom-manipulating
+            parentDivElement.append(divElement);
+            activePictureInPictureStore.set(false);
+        }
     }
 
     onMount(() => {
@@ -241,12 +224,18 @@
             debug("PictureInPicture enterpictureinpicture handler is not supported", e);
         }
 
-        if (WindowExtSchema.safeParse(window).success === false) {
+        if (desktopWindows) {
+            // The desktop app always has its mini window, even where DocumentPictureInPicture is missing.
+            pictureInPictureSupportedStore.set(true);
+        } else if (!isDocumentPictureInPictureSupported(window)) {
             debug("PictureInPicture is not supported by the browser");
             pictureInPictureSupportedStore.set(false);
         }
 
         const askPictureInPictureActivatingSubscriber = askPictureInPictureActivatingStore.subscribe((active) => {
+            if (desktopWindows) {
+                return;
+            }
             if (active) {
                 requestPictureInPicture();
             } else {
@@ -255,11 +244,14 @@
         });
 
         const unsubscribe = visibilityStore.subscribe((visible) => {
-            if (visible) {
+            if (!desktopWindows && visible) {
                 destroyPictureInPictureComponent();
-            } else {
-                requestPictureInPicture();
             }
+        });
+
+        const unsubscribeMeetingWanted = desktopWindows?.onMeetingWanted(showMeetingInMiniWindow);
+        const unsubscribeOpenWindow = desktopWindows?.onOpen((kind) => {
+            if (kind === "mini-window") openMiniWindow();
         });
 
         try {
@@ -273,7 +265,11 @@
             console.warn("PictureInPicture => Could not get mapImage from the current game scene", e);
         }
 
+        // Browser PiP is closed as soon as the main window regains focus (the DocumentPictureInPicture
+        // spec assumes you no longer need it once you're back on the tab). The desktop app decides
+        // for its mini window (a mini window opened by hand stays), so we skip the reset there.
         const onFocus = () => {
+            if (desktopWindows) return;
             // The picture-in-picture window takes the focus when it opens, so a click on the picture-in-picture
             // button first focuses this window, which closes the picture-in-picture window. If the button opened it,
             // forget its request only after that click: forgetting it now would make the click open the window again.
@@ -290,6 +286,9 @@
         return () => {
             askPictureInPictureActivatingSubscriber();
             unsubscribe();
+            unsubscribeMeetingWanted?.();
+            unsubscribeOpenWindow?.();
+            miniWindow?.close();
             try {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 //@ts-ignore
@@ -313,7 +312,7 @@
     <div bind:this={divElement} class="h-full w-full bg-contrast-1100">
         {#if $activePictureInPictureStore}
             <div
-                class="fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
+                class="pip-map-background fixed z-0 top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat opacity-20 bg-black"
                 style="background-image: url({mapImage});"
             ></div>
         {/if}

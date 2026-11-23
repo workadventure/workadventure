@@ -4,8 +4,11 @@
 
     import PictureInPictureIcon from "../../Icons/PictureInPictureIcon.svelte";
     import PictureInPictureOffIcon from "../../Icons/PictureInPictureOffIcon.svelte";
-    import { activePictureInPictureStore, askPictureInPictureActivatingStore } from "../../../Stores/PeerStore";
-    import { localUserStore } from "../../../Connection/LocalUserStore";
+    import {
+        activePictureInPictureStore,
+        allowPictureInPictureStore,
+        askPictureInPictureActivatingStore,
+    } from "../../../Stores/PeerStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
 
@@ -15,20 +18,27 @@
 
     const { onclick }: Props = $props();
 
+    // The desktop app decides when its mini window opens: the button opens or closes it by hand.
+    const desktopWindows = window.WAD?.desktop ? window.WAD.windows : undefined;
+
     function pictureInPictureClick() {
         // Analytics
         analyticsClient.trackAdminEvent("meeting.picture_in_picture.toggled", {
-            open: !$askPictureInPictureActivatingStore,
+            open: desktopWindows ? !$activePictureInPictureStore : !$askPictureInPictureActivatingStore,
         });
 
         // Create request to the navigateur to enter picture in picture mode
         onclick?.();
 
         // If the settings of user do not allow picture in picture, we enable it
-        if (!localUserStore.getAllowPictureInPicture()) {
-            localUserStore.setAllowPictureInPicture(true);
+        if (!$allowPictureInPictureStore) {
+            allowPictureInPictureStore.set(true);
         }
 
+        if (desktopWindows) {
+            desktopWindows.toggleMiniWindow();
+            return;
+        }
         askPictureInPictureActivatingStore.set(!$askPictureInPictureActivatingStore);
     }
 </script>

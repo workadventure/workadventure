@@ -42,6 +42,7 @@
             }
             case AvailabilityStatus.SILENT:
             case AvailabilityStatus.AWAY:
+            case AvailabilityStatus.IDLE:
             case AvailabilityStatus.DO_NOT_DISTURB:
             case AvailabilityStatus.BACK_IN_A_MOMENT:
             case AvailabilityStatus.SOUND_BLOCKED:

@@ -25,6 +25,7 @@
     let entryPoint = $state("");
     let linkCopied = $state(false);
     let timeout: ReturnType<typeof setTimeout> | null = null;
+    let disposed = false;
 
     function getGameScene(): GameScene | null {
         try {
@@ -69,16 +70,20 @@
         invitePreferencesStore.update((p) => ({ ...p, showZoneSelect: value }));
     }
 
-    function copyLink() {
-        // Analytics Client
-        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
-
-        const input: HTMLInputElement = document.getElementById("input-share-link") as HTMLInputElement;
+    async function copyLink() {
+        const input = document.getElementById("input-share-link");
+        if (!(input instanceof HTMLInputElement)) return;
         input.focus();
         input.select();
-        navigator.clipboard
-            .writeText(input.value)
-            .catch((err) => console.error("Navigator clipboard write text error: ", err));
+        try {
+            await navigator.clipboard.writeText(input.value);
+            if (disposed) return;
+            analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
+            changeCopyLinkButtonStatus();
+        } catch (error: unknown) {
+            linkCopied = false;
+            console.error("Navigator clipboard write text error: ", error);
+        }
     }
 
     function getLink() {
@@ -103,16 +108,14 @@
     let canShare = navigator.share !== undefined;
 
     async function shareLink() {
-        // Analytics Client
-        analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
-
         const shareData = { url: getLink() };
 
         try {
             await navigator.share(shareData);
+            analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
         } catch (err) {
             console.error("Error: " + err);
-            copyLink();
+            await copyLink();
         }
     }
 
@@ -127,6 +130,7 @@
     }
 
     onDestroy(() => {
+        disposed = true;
         if (timeout) clearTimeout(timeout);
     });
 </script>
@@ -165,10 +169,7 @@
                     variant={linkCopied ? "success" : "secondary"}
                     size="sm"
                     class="flex items-center absolute right-2 transition-all text-center"
-                    onclick={() => {
-                        changeCopyLinkButtonStatus();
-                        copyLink();
-                    }}
+                    onclick={copyLink}
                 >
                     {#snippet icon()}
                         <span class="flex items-center justify-center {linkCopied ? '' : 'hidden'}">

@@ -98,6 +98,7 @@ import {
 } from "./ProximityFileTransferService";
 import { estimateProximityFileTransferRemainingSeconds } from "./ProximityFileTransferEta";
 import { applyProximityReaction } from "./ProximityChatMessageReaction";
+import { TypingExpiry } from "./TypingExpiry";
 
 const debug = Debug("ProximityChatRoom");
 
@@ -254,6 +255,7 @@ export class ProximityChatRoom implements ChatRoom {
     private _space: SpaceInterface | undefined;
     private spaceMessageSubscription: Subscription | undefined;
     private spaceIsTypingSubscription: Subscription | undefined;
+    private readonly typingExpiry = new TypingExpiry((id) => this.removeTypingUserbyID(id));
     private spaceMessageReactionSubscription: Subscription | undefined;
     private spaceStateUnsubscriber: Unsubscriber | undefined;
     private roomSidePanelUnsubscriber: Unsubscriber;
@@ -1316,6 +1318,7 @@ export class ProximityChatRoom implements ChatRoom {
             }
             return typingMembers;
         });
+        this.typingExpiry.refresh(senderUserId);
     }
 
     private removeTypingUser(senderUserId: string): void {
@@ -1325,12 +1328,11 @@ export class ProximityChatRoom implements ChatRoom {
             userIdToRemove = sender.spaceUserId.toString();
         }
 
-        this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== userIdToRemove);
-        });
+        this.removeTypingUserbyID(userIdToRemove);
     }
 
     private removeTypingUserbyID(id: string) {
+        this.typingExpiry.forget(id);
         this.typingMembers.update((typingMembers) => {
             return typingMembers.filter((user) => user.id !== id);
         });
@@ -1343,12 +1345,11 @@ export class ProximityChatRoom implements ChatRoom {
             }
             return typingMembers;
         });
+        this.typingExpiry.refresh(id);
     }
 
     removeExternalTypingUser(id: string) {
-        this.typingMembers.update((typingMembers) => {
-            return typingMembers.filter((user) => user.id !== id);
-        });
+        this.removeTypingUserbyID(id);
     }
 
     public setDisplayName(displayName: string): void {
@@ -1548,7 +1549,9 @@ export class ProximityChatRoom implements ChatRoom {
             if (
                 !get(requestedMicrophoneState) &&
                 !get(requestedCameraState) &&
-                (actualStatus === AvailabilityStatus.ONLINE || actualStatus === AvailabilityStatus.AWAY)
+                (actualStatus === AvailabilityStatus.ONLINE ||
+                    actualStatus === AvailabilityStatus.AWAY ||
+                    actualStatus === AvailabilityStatus.IDLE)
             ) {
                 // If the user is not on the mobile, open the chat
                 // The user experience is disrupted by the chat on mobile
@@ -1996,7 +1999,7 @@ export class ProximityChatRoom implements ChatRoom {
                     }
                 }
             }
-            this.typingMembers.set([]);
+            this.clearTypingMembers();
         }
         this.hasUserInProximityChat.set(false);
 
@@ -2119,7 +2122,13 @@ export class ProximityChatRoom implements ChatRoom {
         return this._space;
     }
 
+    private clearTypingMembers(): void {
+        this.typingExpiry.clear();
+        this.typingMembers.set([]);
+    }
+
     public destroy(): void {
+        this.clearTypingMembers();
         this.spaceMessageSubscription?.unsubscribe();
         this.spaceIsTypingSubscription?.unsubscribe();
         this.spaceMessageReactionSubscription?.unsubscribe();

@@ -1,0 +1,15 @@
+# Hot reload for the dev target of the Dockerfile (air-verse/air).
+root = "."
+tmp_dir = "/tmp/air"
+
+[build]
+  # API_VERSION lets a stack match a front served by Vite ("dev"); by default, the hash of the protocol.
+  cmd = "go build -ldflags \"-X main.apiVersion=${API_VERSION:-$(./api-version.sh)}\" -o /tmp/air/server ./cmd/server"
+  entrypoint = ["/tmp/air/server"]
+  include_ext = ["go"]
+  exclude_regex = ["_test\\.go$"]
+  delay = 200
+  # Stop the old server before starting the new one: SIGINT (its graceful shutdown), then SIGKILL after kill_delay.
+  # Without it, the old one kept the ports and the new one died on "address already in use".
+  send_interrupt = true
+  kill_delay = "3s"

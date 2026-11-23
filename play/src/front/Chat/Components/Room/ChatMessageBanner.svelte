@@ -8,6 +8,7 @@
     import { selectedRoomStore } from "../../Stores/SelectRoomStore";
     import { selectedChatMessageToReply } from "../../Stores/ChatStore";
     import { mentionsToPlainText } from "../../Mentions";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import Avatar from "../Avatar.svelte";
     import { IconX } from "@wa-icons";
 
@@ -80,7 +81,7 @@
                 {/if}
             </div>
             <div class="line-clamp-2 break-words" data-testid="chatMessageBannerBody">
-                {mentionsToPlainText(banner.body)}
+                {decodeHtmlEntities(mentionsToPlainText(banner.body))}
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <Button variant="secondary" size="xs" onclick={() => open(banner)} dataTestId="chatMessageBannerOpen">

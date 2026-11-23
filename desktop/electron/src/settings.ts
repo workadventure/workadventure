@@ -1,38 +1,91 @@
-import ElectronLog from "electron-log";
+import type ElectronLog from "electron-log";
 import Settings from "electron-settings";
-import type { Server } from "./preload-local-app/types";
+import type { DesktopWindowMode } from "@workadventure/desktop-api";
+import type { MiniWindowPlacement } from "./mini-window-placement-policy";
+import {
+    getDefaultPortalUrl,
+    normalizePersistedLastRoomUrl,
+    normalizePersistedPortalUrl,
+    normalizePersistedWorldHistory,
+} from "./desktop-url-policy";
+import { defaultShortcuts } from "./shortcut-policy";
 
 export type SettingsData = {
     log_level: ElectronLog.LogLevel;
-    auto_launch_enabled: boolean;
-    servers: Server[];
-    shortcuts: Record<"mute_toggle" | "camera_toggle", string>;
+    /** Show the multi-tab strip at the top of the shell. Most users run single-tab, so it can be
+     * turned off via the "Show tab bar" menu item. Defaults to on for backward compatibility. */
+    tab_bar_enabled: boolean;
+    portal_url: string;
+    last_room_url?: string;
+    world_history: string[];
+    pinned_worlds: string[];
+    /** Servers outside the built-in servers the user added from the Landing (origins). See origin-verification. */
+    trusted_origins?: string[];
+    shortcuts: Record<"mute_toggle" | "camera_toggle" | "mini_window_toggle", string>;
+    /** Set once the user edits a shortcut in the settings window: from then on a blank one was cleared. */
+    shortcuts_edited?: boolean;
+    /** Last size of the resizable mini window and where it sat on its screen, restored on reopen. */
+    mini_window_placement?: MiniWindowPlacement;
+    /** Linux under Wayland: see window-mode-policy. Unset: "x11". */
+    window_mode?: DesktopWindowMode;
+    /** Set before restarting in X11 mode, cleared once that start gets going: still set, it failed. */
+    x11_start_pending?: boolean;
+    /** Closing the main window hides it in the tray. Unset: on where the desktop shows tray icons. */
+    close_to_tray?: boolean;
+    /** Set once the first close to the tray told the user WorkAdventure keeps running. */
+    close_to_tray_notified?: boolean;
 };
 
 let settings: SettingsData;
 
 const defaultSettings: SettingsData = {
     log_level: "info",
-    auto_launch_enabled: true,
-    servers: [
-        {
-            _id: `${Date.now()}-1`,
-            name: "WA Demo",
-            url: "https://play.staging.workadventu.re/@/tcm/workadventure/wa-village",
-        },
-    ],
-    shortcuts: {
-        mute_toggle: "",
-        camera_toggle: "",
-    },
+    tab_bar_enabled: true,
+    portal_url: process.env.WA_DESKTOP_PORTAL_URL || getDefaultPortalUrl(),
+    world_history: [],
+    pinned_worlds: [],
+    shortcuts: defaultShortcuts(process.platform),
 };
 
-async function init() {
-    let _settings = await Settings.get();
-    if (Object.keys(_settings).length === 0) {
-        _settings = defaultSettings;
+/**
+ * Keep only the accelerators a user actually configured, so persisted blanks don't mask a new
+ * default. Every install that ran a build before mic/camera had default bindings has
+ * `mute_toggle: ""` on disk, and `""` is a present key — a plain spread would let it win over the
+ * default forever and ship the feature to new profiles only. Until the user edits the shortcuts in
+ * the settings window (`shortcuts_edited`), a blank can only mean "never set"; after that, it was cleared.
+ */
+function configuredShortcuts(persisted: Partial<SettingsData["shortcuts"]> | undefined, edited: boolean) {
+    const configured: Partial<SettingsData["shortcuts"]> = {};
+    for (const [name, accelerator] of Object.entries(persisted || {})) {
+        if (typeof accelerator === "string" && (edited || accelerator.length > 0)) {
+            configured[name as keyof SettingsData["shortcuts"]] = accelerator;
+        }
     }
-    settings = _settings as SettingsData;
+    return configured;
+}
+
+/** Loads the settings. True on the first launch of a fresh install, to turn start at login on. */
+async function init(): Promise<boolean> {
+    const _settings = await Settings.get();
+    const turnOnStartAtLogin = Object.keys(_settings).length === 0;
+    const persistedSettings = _settings as Partial<SettingsData>;
+    const persistedWorldHistory = Array.isArray(persistedSettings.world_history) ? persistedSettings.world_history : [];
+    const persistedPinnedWorlds = Array.isArray(persistedSettings.pinned_worlds) ? persistedSettings.pinned_worlds : [];
+    settings = {
+        ...defaultSettings,
+        ...persistedSettings,
+        shortcuts: {
+            ...defaultSettings.shortcuts,
+            ...configuredShortcuts(persistedSettings.shortcuts, persistedSettings.shortcuts_edited === true),
+        },
+    };
+    settings.portal_url = normalizePersistedPortalUrl(process.env.WA_DESKTOP_PORTAL_URL || settings.portal_url);
+    settings.last_room_url = normalizePersistedLastRoomUrl(settings.last_room_url);
+    settings.world_history = normalizePersistedWorldHistory([settings.last_room_url, ...persistedWorldHistory]);
+    // Pinned worlds are sanitized the same way; a modest cap keeps the sidebar/menus tidy.
+    settings.pinned_worlds = normalizePersistedWorldHistory(persistedPinnedWorlds, 12);
+    await Settings.set(settings);
+    return turnOnStartAtLogin;
 }
 
 function get(): SettingsData;
@@ -65,8 +118,14 @@ function set<T extends keyof SettingsData>(key: T | SettingsData, value?: Settin
     void Settings.set(settings);
 }
 
+/** Resolves once the settings are on disk: set() writes in the background. */
+function flush(): Promise<void> {
+    return Settings.set(settings);
+}
+
 export default {
     init,
     get,
     set,
+    flush,
 };

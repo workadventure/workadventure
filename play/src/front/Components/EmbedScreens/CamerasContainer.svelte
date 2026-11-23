@@ -53,6 +53,7 @@
         pipGridTemplateRows,
         PIP_GRID_MAX_VIDEOS,
     } from "../Video/PictureInPicture/pictureInPictureGridLayout";
+    import { observeElementSize } from "../Video/PictureInPicture/childWindow";
     import ResizeHandle from "./ResizeHandle.svelte";
 
     setContext("inCameraContainer", true);
@@ -434,6 +435,15 @@
         const step = camerasContainer.clientHeight * scrollStepRatio;
         camerasContainer.scrollBy({ top: step, behavior: "smooth" });
     }
+
+    // In picture-in-picture the container lives in another window, where bind:clientWidth no longer reports.
+    $effect(() => {
+        if (!$activePictureInPictureStore || !camerasContainer) return;
+        return observeElementSize(camerasContainer, (width, height) => {
+            containerWidth = width;
+            camerasContainerHeight = height;
+        });
+    });
 
     // Re-run scroll indicator check when layout or content changes
     $effect(() => {

@@ -31,13 +31,6 @@ spec:
                 name: {{ include "workadventure.fullname" . }}-back
                 port:
                   number: {{ .Values.back.service.port }}
-          - path: /uploader{{ .Values.ingress.rewritePathSuffix }}
-            pathType: {{ .Values.ingress.pathType }}
-            backend:
-              service:
-                name: {{ include "workadventure.fullname" . }}-uploader
-                port:
-                  number: {{ .Values.uploader.service.port }}
           - path: /icon{{ .Values.ingress.rewritePathSuffix }}
             pathType: {{ .Values.ingress.pathType }}
             backend:

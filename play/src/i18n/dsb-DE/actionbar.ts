@@ -22,7 +22,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "Kameru / mikrofon wobźěłaś",
     allSettings: "Wšykne nastajenja",
     installPwa: "Web-App instalěrowaś",
-    globalMessage: "Globalnu powěsć pósłaś",
+    sendAnnouncement: "Pśipowěsć pósłaś",
+    goLive: "Live hyś",
+    desktop: {
+        section: "Desktopowe nałoženje",
+        openRoom: "Drugu śpu wócyniś…",
+        openMiniWindow: "Mini-wokno wócyniś",
+    },
     mapEditor: "Kartowy editor",
     mapEditorMobileLocked: "Kartowy editor jo w mobilnem modusu zawrěty",
     mapEditorLocked: "Kartowy editor jo zawrěty 🔐",
@@ -57,6 +63,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     status: {
         ONLINE: "Online",
         AWAY: "Njejsu tam",
+        IDLE: "Njeaktiwny",
         BACK_IN_A_MOMENT: "Wrośu se skóro",
         DO_NOT_DISTURB: "Njewobśěžowaś",
         BUSY: "Zabuzowany",
@@ -152,6 +159,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Kamara deaktiwěrowana",
             desc: 'Waša kamera jo deaktiwěrowana, dokulaž sćo w statusu "{status}".',
+        },
+        micPausedByStatus: {
+            title: "Mikrofon w pawzy",
+            desc: 'Waš mikrofon jo w pawzy, dokulaž sćo w statusu "{status}". Klikniśo, aby jen zašaltowali a zasej k dispoziciji byli.',
+        },
+        camPausedByStatus: {
+            title: "Kamera w pawzy",
+            desc: 'Waša kamera jo w pawzy, dokulaž sćo w statusu "{status}". Klikniśo, aby ju zašaltowali a zasej k dispoziciji byli.',
         },
         share: {
             title: "Wašu wobrazowku źěliś",

@@ -1,31 +1,140 @@
+# Also the Windows AppUserModelId, set in src/app.ts: keep both in sync.
 appId: re.workadventu.desktop
+
+# Top level, not under linux: macOS only gets CFBundleURLTypes (and so `open-url` deep links) from
+# here or mac.protocols, and the Windows installer registers the scheme from here too.
+protocols:
+    - name: WorkAdventure
+      schemes:
+          - workadventure
 
 files:
     - "dist/**/*"
     - "assets/**/*"
-    - from: "../local-app/dist/"
-      to: "local-app/dist"
 
 directories:
     output: ./build
 
+# No version in the file names, so that releases/latest/download/<name> always serves the latest release:
+# the download page of workadventu.re links there. The release tag holds the version, which is all the
+# auto-updater and the APT index need (both build their URLs from releases/download/<tag>/).
+artifactName: "${productName}-${arch}.${ext}"
+
+# Flipped in the packaged Electron binary only (`npm run dev` is unaffected); the same set as a new
+# Electron Forge app. The signed app can no longer be turned into a Node.js runtime
+# (ELECTRON_RUN_AS_NODE, NODE_OPTIONS, --inspect) to run other code under its camera, microphone and
+# screen recording permissions, and it only loads its own app.asar, checked against the hash
+# embedded at build time (macOS and Windows). Cookie encryption is one-way: turning it off again
+# would make every stored cookie (the world logins) unreadable.
+electronFuses:
+    runAsNode: false
+    enableCookieEncryption: true
+    enableNodeOptionsEnvironmentVariable: false
+    enableNodeCliInspectArguments: false
+    enableEmbeddedAsarIntegrityValidation: true
+    onlyLoadAppFromAsar: true
+
 dmg:
     icon: false
 
-linux:
-    category: "TODO;TODO"
-    packageCategory: "TODO;TODO"
-    icon: "assets/icons/logo.icns"
-    target:
-        - AppImage
-    artifactName: "${productName}-${version}-${arch}.${ext}"
-
 win:
     icon: "assets/icons/logo.ico"
-    artifactName: "${productName}-${version}-setup.${ext}"
+    # One installer per architecture, cross-built on the x64 runner: a universal installer would double the
+    # download for everyone. Both go in latest.yml, where electron-updater takes the file whose name holds
+    # its own architecture: keep ${arch} in the name.
+    artifactName: "${productName}-${arch}-setup.${ext}"
+    target:
+        - target: nsis
+          arch:
+              - x64
+              - arm64
+    # Azure Artifact Signing (formerly Trusted Signing): account and certificate profile in the WorkAdventure
+    # resource group. Only the release job can log in to Azure (.github/workflows/build-and-release-desktop.yml),
+    # the other builds pass -c.win.signExecutable=false.
+    azureSignOptions:
+        # The certificate's CN, which electron-builder also writes to app-update.yml: from then on, the app only
+        # installs updates signed by this publisher. Changing it means listing the old and the new name.
+        publisherName: "WorkAdventu.re"
+        # Must be the region of the account (North Europe), or signing fails with a 403.
+        endpoint: "https://neu.codesigning.azure.net/"
+        codeSigningAccountName: "WorkAdventure"
+        certificateProfileName: "workadventure-desktop"
 
+nsis:
+    buildUniversalInstaller: false
+
+mac:
+    icon: assets/icons/logo.icns
+    category: public.app-category.business
+    # A release is signed with the Developer ID Application certificate (CSC_LINK, CSC_KEY_PASSWORD) and
+    # notarized with the App Store Connect API key (APPLE_API_*), secrets of the desktop-release environment
+    # (.github/workflows/build-and-release-desktop.yml). Notarization requires the hardened runtime.
+    # The other builds pass -c.mac.identity=- -c.mac.hardenedRuntime=false: an ad hoc signature, because an
+    # unsigned app (Electron's own linker signature) cannot have its camera / microphone decisions
+    # remembered by macOS, which then asks on every access; and no hardened runtime, whose library
+    # validation would refuse Electron's frameworks under an ad hoc signature.
+    hardenedRuntime: true
+    gatekeeperAssess: false
+    entitlements: assets/entitlements.mac.plist
+    entitlementsInherit: assets/entitlements.mac.inherit.plist
+    extendInfo:
+        NSCameraUsageDescription: "WorkAdventure uses your camera to enable video calls inside virtual worlds."
+        NSMicrophoneUsageDescription: "WorkAdventure uses your microphone to enable voice calls inside virtual worlds."
+        # macOS screen recording prompt copy. The system also requires the user to grant Screen Recording
+        # in System Settings > Privacy & Security on first use.
+        NSScreenCaptureDescription: "WorkAdventure uses screen capture for screen sharing in virtual worlds."
+    # zip is REQUIRED for electron-updater on macOS (delta + diff updates).
+    # One universal build (Intel + Apple Silicon in the same app) rather than one per architecture: with
+    # two DMGs, Apple Silicon users who pick the Intel one run it under Rosetta, slowly, without knowing.
+    # The app has no native module of its own, so the two architectures merge as they are.
+    target:
+        - target: dmg
+          arch:
+              - universal
+        - target: zip
+          arch:
+              - universal
+
+linux:
+    icon: assets/icons/logo.png
+    category: Network;InstantMessaging
+    maintainer: WorkAdventure <hello@workadventu.re>
+    target:
+        # arm64 too, cross-built on the x64 runner: the app has no native module of its own. Both debs go
+        # in the same APT index, where apt keeps the entries of its own architecture.
+        - target: AppImage
+          arch:
+              - x64
+              - arm64
+        - target: deb
+          arch:
+              - x64
+              - arm64
+    # The public key of apt.workadventu.re, which the deb's after-install script installs (see deb/).
+    extraResources:
+        - from: deb/workadventure.gpg
+          to: workadventure.gpg
+
+deb:
+    # electron-builder's own scripts plus the APT repository (deb/), so that apt upgrade updates the app.
+    # Written by `npm run build` (deb/build-scripts.mjs).
+    afterInstall: build/deb-scripts/after-install.tpl
+    afterRemove: build/deb-scripts/after-remove.tpl
+
+appImage:
+    # The AppImage launcher (AppRun) already adds --no-sandbox when the Chromium sandbox cannot start,
+    # e.g. on Ubuntu 24.04 where AppArmor forbids unprivileged user namespaces. Without this, the
+    # desktop entry would also pass it unconditionally, and an AppImage integrated in the menu would run
+    # unsandboxed everywhere.
+    executableArgs: []
+
+# Releases live in their own public repository: electron-updater reads the repository's latest release,
+# which in the monorepo is the WorkAdventure server release. The CI uploads to a draft and publishes it
+# once the three OS are built (.github/workflows/build-and-release-desktop.yml). The app updates from
+# there too: electron-builder writes these settings into the app's app-update.yml.
 publish:
     provider: github
-    owner: thecodingmachine
-    repo: workadventure
-    releaseType: release
+    owner: workadventure
+    repo: desktop-releases
+    tagNamePrefix: desktop-v
+    releaseType: draft

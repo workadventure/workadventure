@@ -1,0 +1,57 @@
+# The Go server's generated code must be fresh: the Go types and JSON Schemas made from the zod schemas
+# (server-go/schemas), the analytics catalogue, the WAM schema and the protobuf types. go generate, then no diff.
+name: "server-go generated code"
+
+on:
+  pull_request:
+    paths:
+      - "server-go/**"
+      - "libs/messages/**"
+      - "libs/shared-utils/src/SpaceState/**"
+      - "libs/map-editor/src/**"
+      - "messages/protos/**"
+      - "play/src/pusher/services/AdminApi.ts"
+      - "play/src/pusher/services/ShortMapDescription.ts"
+      - "play/src/pusher/services/WorldChatMembersData.ts"
+      - ".github/workflows/server-go-generated.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - name: Install the repository's node modules (zod, zod-to-json-schema, tsx)
+        run: npm ci
+      - name: Build the TypeScript protobuf types (libs/map-editor imports @workadventure/messages)
+        working-directory: messages
+        run: |
+          npm ci
+          npm run ts-proto
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: server-go/go.mod
+          cache-dependency-path: server-go/go.sum
+      - name: Install protoc and its Go plugins (the versions the generated files name)
+        run: |
+          curl -fsSL -o /tmp/protoc.zip https://github.com/protocolbuffers/protobuf/releases/download/v33.1/protoc-33.1-linux-x86_64.zip
+          sudo unzip -q -o /tmp/protoc.zip -d /usr/local bin/protoc 'include/*'
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+      - name: go generate
+        working-directory: server-go
+        run: go generate ./...
+      - name: The generated code is the committed one
+        run: git status --porcelain && git diff --exit-code
+      - name: The TS catalogue tests run (they do not skip in CI)
+        working-directory: server-go
+        run: go test ./internal/analytics ./internal/spacestate ./internal/admin ./internal/zodschema

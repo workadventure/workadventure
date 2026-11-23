@@ -5,7 +5,6 @@
 export const DEBUG_MODE = false;
 export const PUSHER_URL = "http://localhost";
 export const ADMIN_URL: string | undefined = undefined;
-export const UPLOADER_URL = "http://uploader.test";
 export const ICON_URL = "http://icon.test";
 export const SKIP_RENDER_OPTIMIZATIONS = false;
 export const JITSI_URL: string | undefined = undefined;

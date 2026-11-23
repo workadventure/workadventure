@@ -1,11 +1,18 @@
 <script lang="ts">
+    import { onDestroy } from "svelte";
     import { readable } from "svelte/store";
+    import { getChatInteraction } from "../../ChatInteractionContext";
     import type { ChatAttachmentStatus, ChatMessage } from "../../Connection/ChatConnection";
     import LL from "../../../../i18n/i18n-svelte";
-    import { selectedChatMessageToEdit, selectedChatMessageToReply } from "../../Stores/ChatStore";
+    import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
+    import { decodeHtmlEntities } from "../../decodeHtmlEntities";
     import EmojiButton from "./EmojiButton.svelte";
+    import MessageMoreMenu from "./MessageMoreMenu.svelte";
     import { confirmDelete } from "./confirmDeleteMessage";
-    import { IconArrowBackUp, IconArrowDown, IconMessageCircle2, IconPencil, IconTrash } from "@wa-icons";
+    import { IconArrowBackUp, IconDots } from "@wa-icons";
+
+    const chatInteraction = getChatInteraction();
+    const { reply: selectedChatMessageToReply, edit: selectedChatMessageToEdit } = chatInteraction;
 
     interface Props {
         message: ChatMessage;
@@ -47,64 +54,113 @@
     let canDownload = $derived(
         message.type !== "text" && $content.url !== undefined && $attachmentStatus.state === "ready",
     );
+
+    // Proximity (bubble) messages are plain text too.
+    let canCopy = $derived((message.type === "text" || message.type === "proximity") && $content.body !== "");
+
+    function copyText(): Promise<void> {
+        return navigator.clipboard.writeText(decodeHtmlEntities($content.body));
+    }
+
+    const QUICK_REACTIONS = ["👍", "❤️", "😂"];
+
+    let hasMoreActions = $derived(!!message.openThread || canCopy || $canEdit || $canDelete || canDownload);
+
+    let moreButton: HTMLButtonElement | undefined = $state();
+    let closeMoreMenu: (() => void) | undefined;
+
+    function hideMoreMenu() {
+        const close = closeMoreMenu;
+        closeMoreMenu = undefined;
+        close?.();
+    }
+
+    // The menu lives at the app root: it must not outlive the message's options.
+    onDestroy(hideMoreMenu);
+
+    function toggleMoreMenu(event: MouseEvent) {
+        if (closeMoreMenu) {
+            hideMoreMenu();
+            return;
+        }
+        if (!moreButton) {
+            return;
+        }
+        // A click from Enter or Space has no pointer position: the menu then takes the focus, and gives it back.
+        const fromKeyboard = event.detail === 0;
+        const trigger = moreButton;
+        closeMoreMenu = showFloatingUi(
+            trigger,
+            MessageMoreMenu,
+            {
+                downloadUrl: canDownload ? $content.url : undefined,
+                downloadName: $content.body,
+                onOpenThread: message.openThread
+                    ? () => openThread().catch((error) => console.error(error))
+                    : undefined,
+                onCopy: canCopy ? copyText : undefined,
+                onEdit: $canEdit ? selectMessageToEdit : undefined,
+                onDelete: $canDelete ? removeMessage : undefined,
+                onClose: () => {
+                    hideMoreMenu();
+                    if (fromKeyboard) {
+                        trigger.focus();
+                    }
+                },
+                keyboardNavigation: fromKeyboard,
+            },
+            { placement: "bottom-end" },
+            4,
+            false,
+            true,
+            () => (closeMoreMenu = undefined),
+        );
+    }
 </script>
 
-<div class="flex flex-row gap-1 items-center">
-    {#if canDownload}
-        <a
-            href={$content.url}
-            download={$content.body}
-            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all flex"
-            target="_blank"
-        >
-            <IconArrowDown font-size={16} class="hover:cursor-pointer" />
-        </a>
+<!-- Quick reactions and the picker, then reply; copy and the rarer actions wait behind "⋯", delete last and apart. -->
+<div class="flex flex-row gap-0.5 items-center">
+    {#if $canReact}
+        {#each QUICK_REACTIONS as emoji (emoji)}
+            <button
+                type="button"
+                class="p-0 m-0 w-7 h-7 grid place-items-center rounded-md text-white/80 hover:text-white hover:bg-white/10 focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 transition-all cursor-pointer text-base leading-none"
+                aria-label={$LL.chat.messageActions.reactWith({ emoji })}
+                title={$LL.chat.messageActions.reactWith({ emoji })}
+                onclick={() => addReaction(emoji)}
+            >
+                {emoji}
+            </button>
+        {/each}
+        <EmojiButton onchange={addReaction} {messageRef} />
+    {/if}
+    {#if $canReact && ($canReply || hasMoreActions)}
+        <span class="w-px h-4 mx-0.5 bg-white/15" aria-hidden="true"></span>
     {/if}
     {#if $canReply}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
+            type="button"
+            class="p-0 m-0 w-7 h-7 grid place-items-center rounded-md text-white/80 hover:text-white hover:bg-white/10 focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 transition-all cursor-pointer"
             data-testid="replyToMessageButton"
             aria-label={$LL.chat.reply()}
             title={$LL.chat.reply()}
             onclick={replyToMessage}
         >
-            <IconArrowBackUp font-size={16} />
+            <IconArrowBackUp font-size={18} />
         </button>
     {/if}
-    {#if message.openThread}
+    {#if hasMoreActions}
         <button
-            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
-            data-testid="openThreadButton"
-            title={$LL.chat.thread.openThreadButtonTitle()}
-            aria-label={$LL.chat.thread.openThreadButtonTitle()}
-            onclick={openThread}
+            type="button"
+            class="p-0 m-0 w-7 h-7 grid place-items-center rounded-md text-white/80 hover:text-white hover:bg-white/10 focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 transition-all cursor-pointer"
+            data-testid="moreMessageActionsButton"
+            aria-label={$LL.chat.messageActions.label()}
+            title={$LL.chat.messageActions.label()}
+            aria-haspopup="menu"
+            bind:this={moreButton}
+            onclick={toggleMoreMenu}
         >
-            <IconMessageCircle2 font-size={16} />
-        </button>
-    {/if}
-    {#if $canReact}
-        <EmojiButton onchange={addReaction} {messageRef} />
-    {/if}
-    {#if $canEdit}
-        <button
-            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
-            data-testid="editMessageButton"
-            aria-label={$LL.chat.messageActions.edit()}
-            title={$LL.chat.messageActions.edit()}
-            onclick={selectMessageToEdit}
-        >
-            <IconPencil font-size={16} />
-        </button>
-    {/if}
-    {#if $canDelete}
-        <button
-            class="p-0 m-0 text-white/50 hover:text-white focus-visible:text-white focus-visible:ring-2 focus-visible:ring-white/70 rounded-sm transition-all hover:cursor-pointer flex"
-            data-testid="removeMessageButton"
-            aria-label={$LL.chat.delete()}
-            title={$LL.chat.delete()}
-            onclick={removeMessage}
-        >
-            <IconTrash font-size={16} />
+            <IconDots font-size={18} />
         </button>
     {/if}
 </div>

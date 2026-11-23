@@ -76,6 +76,9 @@ export interface WebRtcSenderStats {
     // is configured at (MediaTrackSettings.frameRate): a camera below its configured rate starves the encoder.
     captureFps?: number;
     captureTargetFps?: number;
+    // Size the capture delivers (MediaTrackSettings.width / height), where frameWidth / frameHeight is what is sent
+    captureWidth?: number;
+    captureHeight?: number;
     // Encoding time per encoded frame, all layers, in milliseconds
     encodeMsPerFrame?: number;
     // Share of the time (0 to 1) the encoder degraded the stream for lack of CPU / of bandwidth

@@ -372,4 +372,38 @@ describe("TransitionPolicy", () => {
             expect(recorded(false).shouldTransition(CommunicationType.WEBRTC, 2)).toBe(false);
         });
     });
+
+    describe("world threshold", () => {
+        const withWorld = (world: { maxUsersForWebRTC?: number }) =>
+            new TransitionPolicy(
+                MAX_USERS_FOR_WEBRTC,
+                createLivekitChecker(true),
+                createRecordingManager(),
+                true,
+                { isEnabled: false },
+                world,
+            );
+
+        it("moves a pair to LiveKit and keeps it there when the world's threshold is 1", () => {
+            const policy = withWorld({ maxUsersForWebRTC: 1 });
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 1)).toBe(false);
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 2)).toBe(true);
+            expect(policy.shouldTransition(CommunicationType.LIVEKIT, 2)).toBe(false);
+            expect(policy.shouldTransition(CommunicationType.LIVEKIT, 1)).toBe(true);
+        });
+
+        it("uses the environment's threshold when the world has none", () => {
+            const policy = withWorld({});
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 4)).toBe(false);
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 5)).toBe(true);
+        });
+
+        it("reads the world's threshold at each decision, as it arrives after the space was created", () => {
+            const world: { maxUsersForWebRTC?: number } = {};
+            const policy = withWorld(world);
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 2)).toBe(false);
+            world.maxUsersForWebRTC = 1;
+            expect(policy.shouldTransition(CommunicationType.WEBRTC, 2)).toBe(true);
+        });
+    });
 });
