@@ -27,23 +27,32 @@ WA.onInit().then(() => {
 ### Get the player ID
 
 ```
-WA.player.id: string|undefined;
+WA.player.uuid: string|undefined;
+WA.player.playerId: number;
 ```
 
-The player ID is available from the `WA.player.id` property.
-This is a unique identifier for a given player. Anonymous player might not have an id.
+`WA.player.uuid` is a unique identifier for a given player, stable across sessions. Anonymous players might not have one.
+
+`WA.player.playerId` is the numerical ID of the player in the current room. It changes on every connection.
+It is the same ID as the one exposed by `RemotePlayer.playerId` to the other players (see [`WA.players`](api-players.md)).
 
 :::info
-You need to wait for the end of the initialization before accessing `WA.player.id`
+You need to wait for the end of the initialization before accessing `WA.player.uuid` or `WA.player.playerId`
 :::
 
 ```typescript
 WA.onInit().then(() => {
-    console.log('Player ID: ', WA.player.id);
+    console.log('Player UUID: ', WA.player.uuid);
+    console.log('Player ID in the room: ', WA.player.playerId);
 })
 // Will display:
-// Player ID: a293c901-4455-4b1e-cf39-f4c0420de6f5
+// Player UUID: a293c901-4455-4b1e-cf39-f4c0420de6f5
+// Player ID in the room: 42
 ```
+
+:::caution
+`WA.player.id` is a deprecated alias of `WA.player.uuid`.
+:::
 
 ### Get the player language
 

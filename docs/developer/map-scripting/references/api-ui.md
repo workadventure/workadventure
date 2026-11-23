@@ -178,6 +178,33 @@ class ActionMessage {
 }
 ```
 
+### Displaying a message above the player's head
+
+```ts
+WA.ui.displayPlayerMessage({
+    message: string,
+    callback: () => void,
+    type?: "message",
+}): PlayerMessage
+```
+
+Works like `displayActionMessage`, but the message is displayed above the current player's Woka instead of at the
+bottom of the screen. It disappears when the space bar is pressed, which triggers the `callback`.
+
+Like `ActionMessage`, the returned `PlayerMessage` object has a `remove(): Promise<void>` method.
+
+```ts
+const playerMessage = WA.ui.displayPlayerMessage({
+    message: "Press SPACE to open the door",
+    callback: () => {
+        console.log("Door opened");
+    },
+});
+
+// later
+await playerMessage.remove();
+```
+
 ### Adding custom ActionsMenu Action
 
 When clicking on other player's WOKA, the contextual menu (we call it ActionsMenu) is displayed with some default Actions. It is possible to add custom actions right when player is clicked:
@@ -206,6 +233,8 @@ setTimeout(
     1000,
 );
 ```
+
+You can also remove an action from its name, with `remotePlayer.removeAction(actionName)`.
 
 ## Manage fixed iframes
 
