@@ -12,10 +12,12 @@
         receipts: ChatReadReceipts;
         /** "Seen by" and the readers' faces, instead of the tick (my last message in a group). */
         showReaders: boolean;
+        /** "Seen by" before the faces. Off beside reactions: the faces alone keep them on one line. */
+        showSeenByLabel?: boolean;
         members: readonly ChatRoomMember[] | undefined;
     }
 
-    let { messageId, receipts, showReaders, members }: Props = $props();
+    let { messageId, receipts, showReaders, showSeenByLabel = true, members }: Props = $props();
 
     const MAX_FACES = 3;
 
@@ -53,7 +55,9 @@
         data-read-state={readState}
     >
         {#if showReaders && readers.length > 0}
-            <span>{$LL.chat.readReceipts.seenBy()}</span>
+            {#if showSeenByLabel}
+                <span>{$LL.chat.readReceipts.seenBy()}</span>
+            {/if}
             <span class="flex">
                 {#each readers.slice(0, MAX_FACES) as reader (reader.userId)}
                     {@const who = person(reader.userId)}

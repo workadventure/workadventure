@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "Kon geluid niet laden",
         notAllowed: "▶️ Audio is niet toegestaan. Druk op [SPATIE] of klik hier om het af te spelen!",
     },
-    message: "Audiobericht",
     disable: "Schakel je microfoon uit",
 };
 

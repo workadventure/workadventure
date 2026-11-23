@@ -60,24 +60,20 @@ Rooms where the megaphone is disabled do not receive the broadcast.
 ![](../images/editor/megaphone_menu.png)
 
 1. Click **Tools** in the action bar.
-2. Click **Send global message**.
-
-![](../images/editor/megaphone_global_message.png)
-
-3. In the **Megaphone** section, click **Start live message**.
+2. Click **Go live**.
 
 ![](../images/editor/megaphone_live_settings.png)
 
-4. Turn on your camera or your microphone in the action bar (**Start megaphone** stays disabled until one of them is on).
-   You can also share your screen. Choose your camera and microphone in this window if needed, then click **Start megaphone**.
+3. Turn on your camera or your microphone in the action bar (**Go live** stays disabled until one of them is on).
+   You can also share your screen. Choose your camera and microphone in this window if needed, then click **Go live**.
 
 Everyone reached by the megaphone now receives what you have turned on: your camera, your microphone and your screen.
 Your video tile carries a megaphone badge (and is framed in yellow when your camera is on), and the megaphone button appears in the action bar, highlighted.
 
 ![](../images/editor/megaphone_live.png)
 
-To stop, click the megaphone button in the action bar (1), or **Stop megaphone** in the **Global communication** window.
-From this window, administrators can also send a **text message** or an **audio message** to everyone.
+To stop, click the megaphone button in the action bar (1), or **Stop** in the **Go live** window.
+Administrators can also send a written announcement to everyone, with **Send an announcement** in the same menu (see [Sending a message to everyone](/user/global-messages)).
 
 The participants see your video tile with the same megaphone badge:
 
@@ -103,14 +99,14 @@ If you are also in a discussion you can record, choose **Record megaphone**.
 While you are broadcasting, the megaphone button of the action bar is highlighted in orange and your video tile carries a megaphone badge (framed in yellow when your camera is on).
 Participants get an "Announcement" notification and, if sound notifications are enabled, hear a sound when the broadcast starts.
 
-### I can't see the "Send global message" button. How do I enable it?
+### I can't see the "Go live" button. How do I enable it?
 
-If you can't see **Send global message** in the **Tools** menu, please check:
+If you can't see **Go live** in the **Tools** menu, please check:
 
 - that the megaphone is enabled in this room (see [Configuring the megaphone](#configuring-the-megaphone))
 - if **Rights** lists tags, that you are logged in with an account that has one of them. If **Rights** is empty, anyone can use the megaphone (see [Configuring the megaphone](#configuring-the-megaphone))
 
-Administrators always see the button, but **Start live message** stays unavailable if the megaphone is disabled or if they don't have one of the allowed tags.
+Administrators follow the same rules: **Go live** only appears when the megaphone is enabled and they have one of the allowed tags (or **Rights** is empty).
 
 ### I have several rooms in my world. I want the megaphone to broadcast in some of the rooms but not in the others. How do I do that?
 

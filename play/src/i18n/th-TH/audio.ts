@@ -9,7 +9,6 @@ const audio: DeepPartial<Translation["audio"]> = {
         error: "ไม่สามารถโหลดเสียงได้",
         notAllowed: "▶️ ยังไม่ได้รับอนุญาตให้เล่นเสียง กด [SPACE] หรือคลิกที่นี่เพื่อเล่น!",
     },
-    message: "ข้อความเสียง",
     disable: "ปิดไมโครโฟนของคุณ",
 };
 

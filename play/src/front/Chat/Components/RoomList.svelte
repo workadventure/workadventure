@@ -5,10 +5,11 @@
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { warningMessageStore } from "../../Stores/ErrorStore";
     import LL from "../../../i18n/i18n-svelte";
+    import Button from "../../Components/UI/Button.svelte";
     import { chatSearchBarValue, joignableRoom, navChat } from "../Stores/ChatStore";
     import { selectedRoomStore } from "../Stores/SelectRoomStore";
     import { isThreadPanelEnabledStore, selectedThreadStore } from "../Stores/SelectedThreadStore";
-    import { roomSidePanelStore } from "../Stores/RoomSidePanelStore";
+    import { folderPanelStore, roomSidePanelStore } from "../Stores/RoomSidePanelStore";
     import {
         hasChatRoomMembershipManagement,
         hasChatRoomModeration,
@@ -45,6 +46,7 @@
     import RequireConnection from "./requireConnection.svelte";
     import RefreshChat from "./RefreshChat.svelte";
     import RoomSidePanel from "./Room/RoomSidePanel.svelte";
+    import FolderMembersPanel from "./Room/FolderMembersPanel.svelte";
     import {
         CHAT_TWO_COLUMN_LAYOUT_LIMIT,
         canDisplayRoomListAndTimeline,
@@ -62,6 +64,7 @@
     import UnreadCount from "./UnreadCount.svelte";
     import { rowUnreadCount } from "./showMoreUnread";
     import { rovingFocus } from "./roomRowKeyboard";
+    import { sortByLastMessage } from "./sortByLastMessage";
     import { IconChevronUp, IconCloudLock, IconLoader, IconPlus, IconRefresh } from "@wa-icons";
 
     interface Props {
@@ -204,15 +207,17 @@
         return undefined;
     }
 
+    let directRoomsByLastMessage = $derived(sortByLastMessage($directRooms));
     let filteredDirectRoom = $derived(
-        $directRooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $directRoomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
+    let roomsByLastMessage = $derived(sortByLastMessage($rooms));
     let filteredRooms = $derived(
-        $rooms
-            .filter(({ name }) => get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()))
-            .sort((a, b) => (a.lastMessageTimestamp > b.lastMessageTimestamp ? -1 : 1)),
+        $roomsByLastMessage.filter(({ name }) =>
+            get(name).toLocaleLowerCase().includes($chatSearchBarValue.toLocaleLowerCase()),
+        ),
     );
     let filteredRoomInvitations = $derived(
         $roomInvitations
@@ -337,7 +342,7 @@
         ? `grid-template-columns: ${$roomListWidthStore}px minmax(0, 1fr) 360px`
         : undefined}
 >
-    {#if $selectedRoomStore === undefined || displayTwoColumnLayout}
+    {#if ($selectedRoomStore === undefined && $folderPanelStore === undefined) || displayTwoColumnLayout}
         <div
             class="w-full flex flex-col border border-solid border-y-0 border-l-0 border-white/10 relative overflow-y-auto overflow-x-none"
             use:rovingFocus={{ items: "[data-room-row-button]" }}
@@ -437,7 +442,7 @@
                             onclick={toggleDisplayRoomInvitations}
                         >
                             <div class="text-white text-sm font-bold tracking-widest uppercase grow text-start">
-                                {$LL.chat.invitations()}
+                                {$LL.chat.invitations()} · {filteredRoomInvitations.length}
                             </div>
                             <div
                                 class="transition-all group-hover:bg-white/10 p-1 rounded aspect-square flex items-center justify-center text-white"
@@ -594,7 +599,13 @@
                 </div>
             {/if}
         </div>
-    {:else if $selectedRoomStore === undefined && displayTwoColumnLayout}
+    {:else if $folderPanelStore !== undefined}
+        <div class="relative overflow-y-auto min-w-0">
+            {#key $folderPanelStore.id}
+                <FolderMembersPanel folder={$folderPanelStore} />
+            {/key}
+        </div>
+    {:else if displayTwoColumnLayout}
         <CatchUpList conversations={$unreadConversations} />
     {/if}
 
@@ -631,26 +642,30 @@
     <div class="w-full flex flex-col col-span-full h-fit">
         <ExternalComponents zone="chatBand" />
         {#if $isEncryptionRequiredAndNotSet === true && $isGuest === false}
-            <div class="w-full">
-                <button
-                    data-testid="restoreEncryptionButton"
-                    onclick={(event) => {
+            <div
+                class="w-full h-8 flex items-center gap-2 ps-3 pe-2 border-0 border-t border-solid border-white/10 bg-white/5 text-white"
+                role="status"
+            >
+                <IconCloudLock class="text-white/70 shrink-0" font-size="16" />
+                <span class="grow min-w-0 text-sm text-white/85">{$LL.chat.e2ee.encryptionNotConfigured()}</span>
+                <Button
+                    variant="light"
+                    appearance="border"
+                    size="xs"
+                    class="h-6 !py-0 !px-2 shrink-0"
+                    dataTestId="restoreEncryptionButton"
+                    onclick={(event: MouseEvent) => {
                         event.stopPropagation();
                         initChatConnectionEncryption().catch((error) => {
                             console.error("Failed to initialize chat encryption", error);
-                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), { closable: true });
+                            warningMessageStore.addWarningMessage($LL.chat.e2ee.configureFailed(), {
+                                closable: true,
+                            });
                         });
                     }}
-                    class="text-white flex gap-2 justify-center w-full bg-neutral hover:bg-neutral-600 hover:brightness-100 m-0 rounded-none py-2 px-3 appearance-none"
                 >
-                    <IconCloudLock font-size="20" />
-                    <div class="text-sm font-bold grow text-start">
-                        {$LL.chat.e2ee.encryptionNotConfigured()}
-                    </div>
-                    <div class="text-xs rounded border border-solid border-white py-0.5 px-1.5 group-hover:bg-white/10">
-                        {$LL.chat.e2ee.configure()}
-                    </div>
-                </button>
+                    {$LL.chat.e2ee.configure()}
+                </Button>
             </div>
         {/if}
     </div>

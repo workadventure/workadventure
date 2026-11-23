@@ -3,7 +3,7 @@ import { AvailabilityStatus } from "@workadventure/messages";
 import type { GameScene } from "../Game/GameScene";
 import { waScaleManager, WaScaleManagerEvent } from "../Services/WaScaleManager";
 import { PLAYER_NAME_GAP, PLAYER_NAME_HEIGHT } from "./UsernameDisplaySizes";
-import { UsernameMegaphoneDisplay } from "./UsernameMegaphoneDisplay";
+import { UsernameBadgeDisplay } from "./UsernameBadgeDisplay";
 import { UsernameRaisedHandDisplay } from "./UsernameRaisedHandDisplay";
 import { UsernameStatusDisplay } from "./UsernameStatusDisplay";
 
@@ -13,6 +13,25 @@ const USERNAME_FONT_SIZE = 10;
 const USERNAME_FONT_WEIGHT = 500;
 
 const PLAYER_NAME_BACKGROUND_COLOR = "rgba(27, 42, 65, 0.5)";
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+
+/**
+ * The "zZz" of an idle user: the three Zs of icon_zzz.svg, each in its own <use>, so that style.css can animate them
+ * one after the other. Inside an <img>, only the SVG's own CSS could, and browsers do not apply the page's reduced
+ * motion setting in there.
+ */
+function createIdleIcon(): SVGSVGElement {
+    const svg = document.createElementNS(SVG_NAMESPACE, "svg");
+    svg.setAttribute("viewBox", "0 0 24 24");
+    svg.setAttribute("aria-hidden", "true");
+    svg.classList.add("username-idle");
+    for (const id of ["z1", "z2", "z3"]) {
+        const use = document.createElementNS(SVG_NAMESPACE, "use");
+        use.setAttribute("href", `/resources/icons/icon_zzz.svg#${id}`);
+        svg.append(use);
+    }
+    return svg;
+}
 const PLAYER_NAME_BACKGROUND_RADIUS = 8;
 const PLAYER_NAME_PADDING = 4;
 
@@ -27,7 +46,8 @@ export class UsernameDisplay {
     private playerNameOutlineColor: number | undefined;
     private displayScale: number;
     private readonly statusDisplay: UsernameStatusDisplay;
-    private readonly megaphoneDisplay: UsernameMegaphoneDisplay;
+    private readonly megaphoneDisplay: UsernameBadgeDisplay;
+    private readonly idleDisplay: UsernameBadgeDisplay;
     private readonly raisedHandDisplay: UsernameRaisedHandDisplay;
 
     private readonly onZoomChanged = (zoomModifier: number): void => {
@@ -55,7 +75,8 @@ export class UsernameDisplay {
 
         this.playerNameOutlineColor = outlineColor;
         this.statusDisplay = new UsernameStatusDisplay();
-        this.megaphoneDisplay = new UsernameMegaphoneDisplay();
+        this.megaphoneDisplay = new UsernameBadgeDisplay("/resources/icons/icon_megaphone.svg");
+        this.idleDisplay = new UsernameBadgeDisplay(createIdleIcon());
         this.raisedHandDisplay = new UsernameRaisedHandDisplay();
         this.playerNameElement = this.createPlayerNameElement();
 
@@ -70,6 +91,7 @@ export class UsernameDisplay {
         this.element.append(
             this.statusDisplay.element,
             this.playerNameElement,
+            this.idleDisplay.element,
             this.megaphoneDisplay.element,
             this.raisedHandDisplay.element,
         );
@@ -109,6 +131,7 @@ export class UsernameDisplay {
             return;
         }
         this.megaphoneDisplay.show(availabilityStatus === AvailabilityStatus.SPEAKER, instant);
+        this.idleDisplay.show(availabilityStatus === AvailabilityStatus.IDLE, instant);
     }
 
     public setRaisedHand(raised: boolean, forceClose = false): void {
@@ -143,6 +166,7 @@ export class UsernameDisplay {
         this.element.remove();
         this.statusDisplay.destroy();
         this.megaphoneDisplay.destroy();
+        this.idleDisplay.destroy();
         this.raisedHandDisplay.destroy();
         this.scene.game.events.off(WaScaleManagerEvent.ZoomChanged, this.onZoomChanged);
     }

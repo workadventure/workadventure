@@ -1,6 +1,7 @@
 <script lang="ts">
     import * as Sentry from "@sentry/svelte";
     import { onDestroy, onMount } from "svelte";
+    import { on } from "svelte/events";
     import { computePosition, flip, shift, offset, autoUpdate } from "@floating-ui/dom";
     import type { Readable } from "svelte/store";
     import { AskPositionMessage_AskType } from "@workadventure/messages";
@@ -103,10 +104,25 @@
     };
 
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+        // The button toggles the menu itself.
+        if (event.target && buttonElement?.contains(event.target as Node)) return;
         if (event.target && popoversElement && !popoversElement.contains(event.target as Node)) {
             closeChatUserMenu();
         }
     };
+
+    // On the button's own document, not <svelte:window>: in the desktop companion (a child window), clicks
+    // never reach the main window.
+    $effect(() => {
+        const ownerDocument = buttonElement?.ownerDocument;
+        if (!ownerDocument) return;
+        const stopClick = on(ownerDocument, "click", handleClickOutside);
+        const stopTouch = on(ownerDocument, "touchstart", handleClickOutside);
+        return () => {
+            stopClick();
+            stopTouch();
+        };
+    });
 
     onMount(() => {
         gameManager
@@ -177,7 +193,6 @@
     }
 </script>
 
-<svelte:window onclick={handleClickOutside} ontouchstart={handleClickOutside} />
 <div class="wa-dropdown">
     <button
         class="m-0 p-2 flex items-center rounded-md hover:bg-white/10 bg-transparent !text-white"
@@ -193,13 +208,13 @@
     {#if chatMenuActive}
         <div
             bind:this={popoversElement}
-            class="wa-dropdown-menu z-10 mr-1 fixed bg-contrast/80 backdrop-blur-md rounded-md p-1"
+            class="wa-dropdown-menu z-10 mr-1 fixed bg-contrast/80 backdrop-blur-md rounded-2xl p-1.5"
         >
             {#if isInTheSameMap}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="walk-to wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="walk-to wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
@@ -212,7 +227,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class={`follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded ${
+                    class={`follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px] ${
                         userToLocate == undefined ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
                     }`}
                     onclick={(event) => {
@@ -226,7 +241,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     data-testid="user-list-invite"
                     onclick={(event) => {
                         event.stopPropagation();
@@ -252,7 +267,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="teleport wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="teleport wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         goTo("room", user.playUri ?? "", user.uuid ?? "");
@@ -271,7 +286,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     data-testid="user-list-invite"
                     onclick={(event) => {
                         event.stopPropagation();
@@ -298,7 +313,7 @@
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             {#if user.visitCardUrl}
                 <span
-                    class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         showBusinessCard(user.visitCardUrl);
@@ -319,7 +334,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="ban wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="ban wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         openModerationModal(user.uuid ?? "", user.username ?? "");

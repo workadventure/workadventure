@@ -119,7 +119,6 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PUSHER_URL,
     FRONT_URL,
     ADMIN_URL,
-    UPLOADER_URL: "http://uploader.test",
     ICON_URL: "http://icon.test",
     SKIP_RENDER_OPTIMIZATIONS: false,
     JITSI_URL: undefined,

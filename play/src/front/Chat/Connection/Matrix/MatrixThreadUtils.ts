@@ -3,6 +3,7 @@ import { EventType, NotificationCountType, RelationType } from "matrix-js-sdk";
 import type { IThreadBundledRelationship } from "matrix-js-sdk/lib/models/event";
 import type { Thread } from "matrix-js-sdk/lib/models/thread";
 import type { ChatMessagePreview, ChatReadState, ChatThreadSummary } from "../ChatConnection";
+import { decodeHtmlEntities } from "../../decodeHtmlEntities";
 import { getEventSenderMember } from "./MatrixChatUser";
 
 type ThreadRelationContent = {
@@ -151,7 +152,7 @@ function getEventPreview(event: MatrixEvent | undefined): string | undefined {
     }
 
     const content = event.getOriginalContent();
-    return typeof content?.body === "string" && content.body.length > 0 ? content.body : undefined;
+    return typeof content?.body === "string" && content.body.length > 0 ? decodeHtmlEntities(content.body) : undefined;
 }
 
 function getEventSenderName(event: MatrixEvent | undefined, room: Room): string | undefined {
@@ -164,7 +165,9 @@ function getEventSenderName(event: MatrixEvent | undefined, room: Room): string 
 }
 
 function getRawEventPreview(event: { content?: IContent } | undefined): string | undefined {
-    return typeof event?.content?.body === "string" && event.content.body.length > 0 ? event.content.body : undefined;
+    return typeof event?.content?.body === "string" && event.content.body.length > 0
+        ? decodeHtmlEntities(event.content.body)
+        : undefined;
 }
 
 function getRawEventSenderName(event: { sender?: string } | undefined, room: Room): string | undefined {

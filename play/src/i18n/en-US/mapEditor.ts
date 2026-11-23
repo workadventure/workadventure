@@ -249,7 +249,7 @@ const mapEditor: BaseTranslation = {
         cards: {
             label: "Open Cards",
             description:
-                "Quickest and easyestsolution to share your knowledge in no time, online, on MS Teams and on mobile.",
+                "Quickest and easiest solution to share your knowledge in no time, online, on MS Teams and on mobile.",
             error: "Please enter a valid Cards URL",
             disabled: "Cards integration is disabled.",
             actionButtonLabel: "Open cards",

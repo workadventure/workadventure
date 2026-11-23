@@ -1,10 +1,12 @@
 <script lang="ts">
     import { get } from "svelte/store";
     import { onMount } from "svelte";
-    import { selectedChatMessageToReply } from "../../../Stores/ChatStore";
+    import { getChatInteraction } from "../../../ChatInteractionContext";
     import { chatInputFocusStore } from "../../../../Stores/ChatStore";
     import LL from "../../../../../i18n/i18n-svelte";
     import { IconPaperclip, IconX } from "@wa-icons";
+
+    const { reply: selectedChatMessageToReply } = getChatInteraction();
 
     let files: FileList | undefined = $state(undefined);
     let fileInputElement: HTMLInputElement;

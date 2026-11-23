@@ -1,12 +1,12 @@
-import { app, dialog } from "electron";
+import { app, dialog, type MessageBoxOptions } from "electron";
 import { autoUpdater } from "electron-updater";
 import log from "electron-log";
-import * as isDev from "electron-is-dev";
-import * as util from "util";
 
+import { isStartAtLoginEnabled, writeLinuxAutostart } from "./auto-launch";
 import { createAndShowNotification } from "./notification";
-
-const sleep = util.promisify(setTimeout);
+import { createDesktopConfig } from "./desktop-url-policy";
+import { t } from "./i18n";
+import { getWindow } from "./window";
 
 let isCheckPending = false;
 let isManualRequestedUpdate = false;
@@ -17,21 +17,28 @@ export async function checkForUpdates() {
     }
 
     // Don't do auto-updates in development
-    if (isDev) {
+    if (!app.isPackaged) {
         return;
     }
 
-    // check for updates right away
-    await autoUpdater.checkForUpdates();
-
-    isCheckPending = false;
+    isCheckPending = true;
+    try {
+        await autoUpdater.checkForUpdates();
+    } catch (error) {
+        // Previously the flag was never reset on error, which silently disabled every subsequent
+        // check for the lifetime of the process. Always reset in a finally so a transient network
+        // failure does not break auto-update forever.
+        log.warn("Auto-update check failed.", error);
+    } finally {
+        isCheckPending = false;
+    }
 }
 
 export async function manualRequestUpdateCheck() {
     isManualRequestedUpdate = true;
 
     createAndShowNotification({
-        body: "Checking for updates ...",
+        body: t("update.checking"),
     });
 
     await checkForUpdates();
@@ -39,43 +46,68 @@ export async function manualRequestUpdateCheck() {
 }
 
 async function init() {
+    // In dev (electron .) there is no release to compare with, and a failed check pops the
+    // unhandledRejection dialog that blocks the boot. Skip entirely in dev.
+    if (!app.isPackaged) {
+        log.info("Auto-updater disabled in development.");
+        return;
+    }
+
     autoUpdater.logger = log;
+    // A beta install (2.0.0-beta.1) turns allowPrerelease on, and electron-updater then skips every release
+    // whose tag is not bare semver: ours are desktop-v<version>, so a beta would never update. Betas are
+    // published as the latest release, so the stable path finds them too.
+    autoUpdater.allowPrerelease = false;
+    // Every user is offered the latest release; an organization can point its installs elsewhere.
+    const feedUrl = createDesktopConfig().updateFeedUrl;
+    if (feedUrl) {
+        autoUpdater.setFeedURL({ provider: "generic", url: feedUrl });
+    }
 
-    autoUpdater.on(
-        "update-downloaded",
-        ({ releaseNotes, releaseName }: { releaseNotes: string; releaseName: string }) => {
-            void (async () => {
-                const dialogOpts = {
-                    type: "question",
-                    buttons: ["Install and Restart", "Install Later"],
-                    defaultId: 0,
-                    title: "WorkAdventure - Update",
-                    message: process.platform === "win32" ? releaseNotes : releaseName,
-                    detail: "A new version has been downloaded. Restart the application to apply the updates.",
-                };
+    autoUpdater.on("update-downloaded", ({ releaseName }) => {
+        void (async () => {
+            // Not the release notes: they are GitHub's HTML, and a native message box prints the tags.
+            const dialogOpts: MessageBoxOptions = {
+                type: "question",
+                buttons: [t("update.installAndRestart"), t("update.installLater")],
+                defaultId: 0,
+                title: t("update.title"),
+                message: releaseName ?? t("update.title"),
+                detail: t("update.ready"),
+            };
 
-                const { response } = await dialog.showMessageBox(dialogOpts);
-                if (response === 0) {
-                    await sleep(1000);
+            // Attached to the window: on macOS a message box without a parent runs a modal loop on the
+            // main thread, which froze the whole app (calls included) until the user answered.
+            const window = getWindow();
+            const { response } =
+                window && !window.isDestroyed()
+                    ? await dialog.showMessageBox(window, dialogOpts)
+                    : await dialog.showMessageBox(dialogOpts);
+            if (response === 0) {
+                // quitAndInstall quits by itself. No app.quit() after it: on macOS it waits for Squirrel to
+                // stage the update before asking for the relaunch, and quitting first installed the update
+                // (or not) without ever reopening the app.
+                autoUpdater.quitAndInstall();
+            }
+        })();
+    });
 
-                    autoUpdater.quitAndInstall();
-
-                    // Force app to quit. This is just a workaround, ideally autoUpdater.quitAndInstall() should relaunch the app.
-                    // app.confirmedExitPrompt = true;
-                    app.quit();
-                }
-            })();
+    // Our AppImage names carry the version, so installing an update moves the app to a new file.
+    autoUpdater.on("appimage-filename-updated", (newPath) => {
+        if (isStartAtLoginEnabled()) {
+            writeLinuxAutostart(true, newPath);
         }
-    );
+    });
 
+    // The .deb: apt brings the update, from the repository its after-install script adds (deb/).
     if (process.platform === "linux" && !process.env.APPIMAGE) {
         autoUpdater.autoDownload = false;
         autoUpdater.autoInstallOnAppQuit = false;
 
         autoUpdater.on("update-available", () => {
             createAndShowNotification({
-                title: "WorkAdventure - Update available",
-                body: "Please go to our website and install the newest version",
+                title: t("update.availableTitle"),
+                body: t("update.availableBody"),
             });
         });
     }
@@ -83,7 +115,7 @@ async function init() {
     autoUpdater.on("update-not-available", () => {
         if (isManualRequestedUpdate) {
             createAndShowNotification({
-                body: "No update available.",
+                body: t("update.none"),
             });
         }
     });
@@ -91,7 +123,9 @@ async function init() {
     await checkForUpdates();
 
     // run update check every hour again
-    setInterval(() => checkForUpdates, 1000 * 60 * 1);
+    setInterval(() => {
+        void checkForUpdates();
+    }, 1000 * 60 * 60);
 }
 
 export default {

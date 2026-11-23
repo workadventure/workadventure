@@ -22,7 +22,13 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     editCamMic: "Modifica camera / microfono",
     allSettings: "Tutte le impostazioni",
     installPwa: "Installa app web",
-    globalMessage: "Invia messaggio globale",
+    sendAnnouncement: "Invia un annuncio",
+    goLive: "Vai in diretta",
+    desktop: {
+        section: "App desktop",
+        openRoom: "Apri un'altra stanza…",
+        openMiniWindow: "Apri la mini finestra",
+    },
     mapEditor: "Editor mappe",
     mapEditorMobileLocked: "L'editor delle mappe è bloccato in modalità mobile",
     mapEditorLocked: "L'editor delle mappe è bloccato 🔐",
@@ -57,6 +63,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     status: {
         ONLINE: "Online",
         AWAY: "Assente",
+        IDLE: "Inattivo",
         BACK_IN_A_MOMENT: "Torno subito",
         DO_NOT_DISTURB: "Non disturbare",
         BUSY: "Occupato",
@@ -152,6 +159,14 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         camDisabledByStatus: {
             title: "Fotocamera disabilitata",
             desc: 'La tua fotocamera è disabilitata perché sei nello stato "{status}".',
+        },
+        micPausedByStatus: {
+            title: "Microfono in pausa",
+            desc: 'Il tuo microfono è in pausa perché sei nello stato "{status}". Fai clic per attivarlo e tornare disponibile.',
+        },
+        camPausedByStatus: {
+            title: "Fotocamera in pausa",
+            desc: 'La tua fotocamera è in pausa perché sei nello stato "{status}". Fai clic per attivarla e tornare disponibile.',
         },
         share: {
             title: "Condividi il tuo schermo",

@@ -57,7 +57,7 @@
 <!-- One Tab stop for the whole list (rovingFocus in the panel): ↑ ↓ move, → or Shift+F10 open the "...". -->
 <div
     class="flex items-center gap-3 rounded-lg border border-solid border-white/10 bg-white/[0.03] px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
-    data-testid="roomSidePanelParticipantRow"
+    data-testid={`${member.id}-panel-row`}
     data-member-row
     data-roving-row
     tabindex="-1"
@@ -72,7 +72,7 @@
 
     <div class="min-w-0 flex-1">
         <div class="truncate text-sm font-semibold text-white">{$memberNameStore || "?"}</div>
-        <div class="truncate text-xs opacity-70">
+        <div class="truncate text-xs opacity-70" data-testid={`${member.id}-panel-status`}>
             {#if status}
                 {status}
             {:else if $memberPermissionLevelStore === ChatPermissionLevel.ADMIN}

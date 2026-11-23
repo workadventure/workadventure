@@ -83,10 +83,10 @@
 {#if currentRecord?.videoFile}
     <div
         data-testid="recording-context-menu"
-        class="context-menu flex flex-col gap-1 min-w-[200px] z-50 absolute bg-contrast/80 backdrop-blur-md rounded-md shadow-lg py-1 p-1"
+        class="context-menu flex flex-col gap-1 min-w-[200px] z-50 absolute bg-contrast/80 backdrop-blur-md rounded-2xl shadow-lg p-1.5"
     >
         <button
-            class="w-full p-2 text-left flex items-center gap-2 bg-secondary-800 hover:bg-secondary cursor-pointer rounded"
+            class="w-full p-2 text-left flex items-center gap-2 bg-secondary-800 hover:bg-secondary cursor-pointer rounded-[10px]"
             onclick={() => downloadFile(currentRecord.videoFile.filename)}
         >
             <DownloadIcon height="h-4" width="w-4" />
@@ -97,7 +97,7 @@
 
         <button
             data-testid="recording-context-menu-delete"
-            class="w-full p-2 text-left hover:bg-red-500 text-red-400 hover:text-white flex items-center gap-2 rounded"
+            class="w-full p-2 text-left hover:bg-red-500 text-red-400 hover:text-white flex items-center gap-2 rounded-[10px]"
             onclick={() => handleDelete()}
         >
             {$LL.recording.contextMenu.delete()}
