@@ -26,8 +26,15 @@ vi.mock("./CurrentPlayerGroupStore", async () => {
 });
 
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { idleStore } from "./IdleStore";
 
 describe("privacyShutdownStore", () => {
+    it("coming back ends idle too", () => {
+        idleStore.set(true);
+        privacyShutdownStore.comeBack();
+        expect(get(idleStore)).toBe(false);
+    });
+
     it("stays on when someone walks up to a user who left the page", () => {
         stores.focus.set(false);
         expect(get(privacyShutdownStore)).toBe(true);

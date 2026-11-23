@@ -104,6 +104,11 @@ export function openDesktopChildWindow<Props extends Record<string, any>>(
     // Same origin as this page (about:blank), so this page renders into it directly.
     const child = window.open("about:blank", name);
     if (!child) return undefined;
+    // about:blank renders in quirks mode, where tables inherit neither the font size nor the color
+    // (the video quality stats showed black 16px text): a doctype puts it in standards mode.
+    child.document.open();
+    child.document.write("<!DOCTYPE html><html><head></head><body></body></html>");
+    child.document.close();
     child.document.title = "WorkAdventure";
     for (const attribute of ["lang", "dir", "class"]) {
         const value = document.documentElement.getAttribute(attribute);

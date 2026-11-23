@@ -97,12 +97,6 @@ const hsb: NativeStrings = {
     "menu.hideTabBarDetail":
         "Maće {total} rajtarkow wočinjenych. Hdyž lajstu rajtarkow schowaće, wostanje tutón rajtark wočinjeny a {count} druhich so začini.",
 
-    "tray.status.meeting": "W zasedanju",
-    "tray.status.do_not_disturb": "Njewobćežować",
-    "tray.status.busy": "Zabuzowany",
-    "tray.status.back_in_a_moment": "Wróću so bórze",
-    "tray.status.idle": "Njeaktiwny",
-    "tray.status.online": "K dispoziciji",
     "tray.status.offline": "Offline",
     "tray.microphone": "Mikrofon",
     "tray.camera": "Kamera",
@@ -114,12 +108,17 @@ const hsb: NativeStrings = {
         "WorkAdventure njeda so w kompatibelnym modusu (X11) startować, tohodla nětko natiwny modus Wayland wužiwa. W jeho nastajenjach móžeće zaso wróćo přešaltować.",
     "windowMode.openSettings": "Nastajenja wočinić",
     "tray.quit": "Skónčić",
+    "closeToTray.stillRunning":
+        "WorkAdventure hišće běži a wy sće hišće w swojim swěće. Zo byšće skónčili, wužiwajće jeho symbol w systemowej lajsće.",
 
     "settings.title": "Nastajenja",
     "settings.general": "Powšitkowne",
     "settings.startAtLogin": "WorkAdventure při přizjewjenju na kompjuterje startować",
     "settings.showTabBar": "Lajstu rajtarkow pokazać",
     "settings.showTabBarHint": "Lajsta rajtarkow so pokaza, hdyž su wjacore rajtarki wočinjene.",
+    "settings.closeToTray": "WorkAdventure dale běžeć wostajić, hdyž wokno začinju",
+    "settings.closeToTrayHint":
+        "Wostanjeće w swojim swěće. Zo byšće skónčili, wužiwajće symbol WorkAdventure w systemowej lajsće.",
     "settings.windowMode": "Woknowy modus",
     "settings.windowModeX11": "Kompatibilita (X11), doporučena",
     "settings.windowModeX11Description":
@@ -160,6 +159,7 @@ const hsb: NativeStrings = {
     "auth.signingOutMessage":
         "Dokónčće wotzjewjenje w swojim wobhladowaku. Potom so awtomatisce do aplikacije wróćiće.",
     "auth.reopenBrowser": "Wobhladowak znowa wočinić",
+    "auth.back": "Wróćo",
     "auth.signedIn": "Přizjewjeny. Móžeće so k WorkAdventure wróćić.",
     "auth.signedOut": "Wotzjewjeny. Móžeće so k WorkAdventure wróćić.",
     "auth.closeWindow": "Móžeće tute wokno začinić.",

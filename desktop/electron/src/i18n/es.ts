@@ -97,12 +97,6 @@ const es: NativeStrings = {
     "menu.hideTabBarDetail":
         "Tienes {total} pestañas abiertas. Al ocultar la barra de pestañas se mantiene esta pestaña y se cierran las otras {count}.",
 
-    "tray.status.meeting": "En una reunión",
-    "tray.status.do_not_disturb": "No molestar",
-    "tray.status.busy": "Ocupado",
-    "tray.status.back_in_a_moment": "Vuelvo en un momento",
-    "tray.status.idle": "Inactivo",
-    "tray.status.online": "Disponible",
     "tray.status.offline": "Desconectado",
     "tray.microphone": "Micrófono",
     "tray.camera": "Cámara",
@@ -114,12 +108,17 @@ const es: NativeStrings = {
         "WorkAdventure no ha podido iniciarse en modo de compatibilidad (X11), así que ahora usa el modo Wayland nativo. Puedes volver a cambiarlo en sus ajustes.",
     "windowMode.openSettings": "Abrir los ajustes",
     "tray.quit": "Salir",
+    "closeToTray.stillRunning":
+        "WorkAdventure sigue abierto y sigues en tu mundo. Para salir, usa su icono en la bandeja del sistema.",
 
     "settings.title": "Ajustes",
     "settings.general": "General",
     "settings.startAtLogin": "Iniciar WorkAdventure al iniciar sesión en mi ordenador",
     "settings.showTabBar": "Mostrar la barra de pestañas",
     "settings.showTabBarHint": "La barra de pestañas aparece en cuanto hay varias pestañas abiertas.",
+    "settings.closeToTray": "Mantener WorkAdventure abierto al cerrar su ventana",
+    "settings.closeToTrayHint":
+        "Sigues en tu mundo. Para salir, usa el icono de WorkAdventure en la bandeja del sistema.",
     "settings.windowMode": "Modo de ventanas",
     "settings.windowModeX11": "Compatibilidad (X11), recomendado",
     "settings.windowModeX11Description":
@@ -159,6 +158,7 @@ const es: NativeStrings = {
     "auth.signingOutTitle": "Cerrando sesión…",
     "auth.signingOutMessage": "Termina de cerrar sesión en tu navegador. Volverás a la aplicación automáticamente.",
     "auth.reopenBrowser": "Volver a abrir el navegador",
+    "auth.back": "Volver",
     "auth.signedIn": "Sesión iniciada. Ya puedes volver a WorkAdventure.",
     "auth.signedOut": "Sesión cerrada. Ya puedes volver a WorkAdventure.",
     "auth.closeWindow": "Ya puedes cerrar esta ventana.",

@@ -208,13 +208,13 @@
     {#if chatMenuActive}
         <div
             bind:this={popoversElement}
-            class="wa-dropdown-menu z-10 mr-1 fixed bg-contrast/80 backdrop-blur-md rounded-md p-1"
+            class="wa-dropdown-menu z-10 mr-1 fixed bg-contrast/80 backdrop-blur-md rounded-2xl p-1.5"
         >
             {#if isInTheSameMap}
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="walk-to wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="walk-to wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         goTo("user", user.playUri ?? "", user.uuid ?? "");
@@ -227,7 +227,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class={`follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded ${
+                    class={`follow wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px] ${
                         userToLocate == undefined ? "opacity-50 cursor-not-allowed pointer-events-none" : ""
                     }`}
                     onclick={(event) => {
@@ -241,7 +241,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     data-testid="user-list-invite"
                     onclick={(event) => {
                         event.stopPropagation();
@@ -267,7 +267,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="teleport wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="teleport wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         goTo("room", user.playUri ?? "", user.uuid ?? "");
@@ -286,7 +286,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="invite wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     data-testid="user-list-invite"
                     onclick={(event) => {
                         event.stopPropagation();
@@ -313,7 +313,7 @@
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             {#if user.visitCardUrl}
                 <span
-                    class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="businessCard wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         showBusinessCard(user.visitCardUrl);
@@ -334,7 +334,7 @@
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <span
-                    class="ban wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded"
+                    class="ban wa-dropdown-item text-nowrap flex gap-2 items-center hover:bg-white/10 m-0 p-2 w-full text-sm rounded-[10px]"
                     onclick={(event) => {
                         event.stopPropagation();
                         openModerationModal(user.uuid ?? "", user.username ?? "");

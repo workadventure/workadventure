@@ -43,7 +43,7 @@
     <img
         src={notification.icon ? (icons.get(notification.icon) ?? notification.icon) : waImg}
         alt="Audio playing"
-        class="bg-white/10 rounded-md h-12"
+        class="bg-white/10 rounded h-12"
         draggable="false"
     />
     <p>{notification.text}</p>

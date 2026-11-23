@@ -3,6 +3,7 @@ import { videoStreamElementsStore } from "./PeerStore";
 import { isLiveStreamingStore } from "./IsStreamingStore";
 import { focusStore } from "./FocusStore";
 import { currentPlayerGroupIdStore } from "./CurrentPlayerGroupStore";
+import { idleStore } from "./IdleStore";
 
 /**
  * "true" when the webcam should be stopped for privacy reasons — i.e. the user has left the page
@@ -71,8 +72,9 @@ function createPrivacyShutdownStore() {
 
     return {
         subscribe,
-        /** The user, still in another app, asked to be seen and heard (from the mini window). */
+        /** The user, still in another app, asked to be seen and heard (from the mini window). Ends idle too. */
         comeBack() {
+            idleStore.set(false);
             cameBack = true;
             recompute();
         },

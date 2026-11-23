@@ -97,12 +97,6 @@ const nl: NativeStrings = {
     "menu.hideTabBarDetail":
         "Je hebt {total} tabbladen open. Als je de tabbladbalk verbergt, blijft dit tabblad open en worden de {count} andere gesloten.",
 
-    "tray.status.meeting": "In een vergadering",
-    "tray.status.do_not_disturb": "Niet storen",
-    "tray.status.busy": "Bezet",
-    "tray.status.back_in_a_moment": "Zo terug",
-    "tray.status.idle": "Inactief",
-    "tray.status.online": "Beschikbaar",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microfoon",
     "tray.camera": "Camera",
@@ -114,12 +108,17 @@ const nl: NativeStrings = {
         "WorkAdventure kon niet starten in de compatibiliteitsmodus (X11) en gebruikt nu de native Wayland-modus. Je kunt terugschakelen in de instellingen van de app.",
     "windowMode.openSettings": "Instellingen openen",
     "tray.quit": "Afsluiten",
+    "closeToTray.stillRunning":
+        "WorkAdventure draait nog en je bent nog steeds in je wereld. Gebruik het pictogram in het systeemvak om af te sluiten.",
 
     "settings.title": "Instellingen",
     "settings.general": "Algemeen",
     "settings.startAtLogin": "WorkAdventure starten wanneer ik inlog op mijn computer",
     "settings.showTabBar": "Tabbladbalk tonen",
     "settings.showTabBarHint": "De tabbalk verschijnt zodra er meerdere tabbladen open zijn.",
+    "settings.closeToTray": "WorkAdventure laten draaien wanneer ik het venster sluit",
+    "settings.closeToTrayHint":
+        "Je blijft in je wereld. Gebruik het WorkAdventure-pictogram in het systeemvak om af te sluiten.",
     "settings.windowMode": "Venstermodus",
     "settings.windowModeX11": "Compatibiliteit (X11), aanbevolen",
     "settings.windowModeX11Description":
@@ -159,6 +158,7 @@ const nl: NativeStrings = {
     "auth.signingOutTitle": "Afmelden…",
     "auth.signingOutMessage": "Rond het afmelden af in je browser. Je keert daarna automatisch terug naar de app.",
     "auth.reopenBrowser": "Browser opnieuw openen",
+    "auth.back": "Terug",
     "auth.signedIn": "Aangemeld. Je kunt teruggaan naar WorkAdventure.",
     "auth.signedOut": "Afgemeld. Je kunt teruggaan naar WorkAdventure.",
     "auth.closeWindow": "Je kunt dit venster sluiten.",

@@ -97,12 +97,6 @@ const it: NativeStrings = {
     "menu.hideTabBarDetail":
         "Hai {total} schede aperte. Nascondendo la barra delle schede, questa scheda resta aperta e le altre {count} vengono chiuse.",
 
-    "tray.status.meeting": "In una riunione",
-    "tray.status.do_not_disturb": "Non disturbare",
-    "tray.status.busy": "Occupato",
-    "tray.status.back_in_a_moment": "Torno subito",
-    "tray.status.idle": "Inattivo",
-    "tray.status.online": "Disponibile",
     "tray.status.offline": "Offline",
     "tray.microphone": "Microfono",
     "tray.camera": "Fotocamera",
@@ -114,12 +108,16 @@ const it: NativeStrings = {
         "WorkAdventure non è riuscito ad avviarsi in modalità compatibilità (X11), quindi ora usa la modalità Wayland nativa. Puoi tornare indietro nelle sue impostazioni.",
     "windowMode.openSettings": "Apri le impostazioni",
     "tray.quit": "Esci",
+    "closeToTray.stillRunning":
+        "WorkAdventure è ancora aperto e sei ancora nel tuo mondo. Per uscire, usa la sua icona nell’area di notifica.",
 
     "settings.title": "Impostazioni",
     "settings.general": "Generali",
     "settings.startAtLogin": "Avvia WorkAdventure all’accesso al computer",
     "settings.showTabBar": "Mostra la barra delle schede",
     "settings.showTabBarHint": "La barra delle schede compare quando sono aperte più schede.",
+    "settings.closeToTray": "Mantieni WorkAdventure aperto quando chiudo la finestra",
+    "settings.closeToTrayHint": "Resti nel tuo mondo. Per uscire, usa l’icona di WorkAdventure nell’area di notifica.",
     "settings.windowMode": "Modalità finestre",
     "settings.windowModeX11": "Compatibilità (X11), consigliata",
     "settings.windowModeX11Description":
@@ -159,6 +157,7 @@ const it: NativeStrings = {
     "auth.signingOutTitle": "Disconnessione in corso…",
     "auth.signingOutMessage": "Completa la disconnessione nel browser. Tornerai automaticamente all'app.",
     "auth.reopenBrowser": "Riapri il browser",
+    "auth.back": "Indietro",
     "auth.signedIn": "Accesso effettuato. Puoi tornare a WorkAdventure.",
     "auth.signedOut": "Disconnessione effettuata. Puoi tornare a WorkAdventure.",
     "auth.closeWindow": "Puoi chiudere questa finestra.",

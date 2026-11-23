@@ -25,6 +25,7 @@ const video: DeepPartial<Translation["video"]> = {
     },
     remoteAway: {
         inAnotherWindow: "{name} és en una altra finestra o pestanya",
+        idle: "Sense activitat de {name} des de fa una estona",
         cameraAndMicPaused: "Càmera i micro en pausa fins que torni",
         cameraPaused: "Càmera en pausa fins que torni",
     },

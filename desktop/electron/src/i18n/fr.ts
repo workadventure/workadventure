@@ -99,12 +99,6 @@ const fr: NativeStrings = {
     "menu.hideTabBarDetail":
         "Vous avez {total} onglets ouverts. Si vous masquez la barre d'onglets, cet onglet restera ouvert et les {count} autres seront fermés.",
 
-    "tray.status.meeting": "En réunion",
-    "tray.status.do_not_disturb": "Ne pas déranger",
-    "tray.status.busy": "Occupé",
-    "tray.status.back_in_a_moment": "De retour bientôt",
-    "tray.status.idle": "Inactif",
-    "tray.status.online": "Disponible",
     "tray.status.offline": "Hors ligne",
     "tray.microphone": "Microphone",
     "tray.camera": "Caméra",
@@ -116,12 +110,17 @@ const fr: NativeStrings = {
         "WorkAdventure n'a pas pu démarrer en mode compatibilité (X11) et utilise maintenant le mode Wayland natif. Vous pouvez revenir en arrière dans ses paramètres.",
     "windowMode.openSettings": "Ouvrir les paramètres",
     "tray.quit": "Quitter",
+    "closeToTray.stillRunning":
+        "WorkAdventure est toujours ouvert et vous êtes toujours dans votre monde. Pour quitter, utilisez son icône dans la zone de notification.",
 
     "settings.title": "Paramètres",
     "settings.general": "Général",
     "settings.startAtLogin": "Lancer WorkAdventure à l’ouverture de ma session",
     "settings.showTabBar": "Afficher la barre d'onglets",
     "settings.showTabBarHint": "La barre d'onglets apparaît dès que plusieurs onglets sont ouverts.",
+    "settings.closeToTray": "Garder WorkAdventure ouvert quand je ferme sa fenêtre",
+    "settings.closeToTrayHint":
+        "Vous restez dans votre monde. Pour quitter, utilisez l’icône WorkAdventure de la zone de notification.",
     "settings.windowMode": "Mode des fenêtres",
     "settings.windowModeX11": "Compatibilité (X11), recommandé",
     "settings.windowModeX11Description":
@@ -163,6 +162,7 @@ const fr: NativeStrings = {
     "auth.signingOutMessage":
         "Terminez la déconnexion dans votre navigateur. Vous reviendrez automatiquement dans l'application.",
     "auth.reopenBrowser": "Rouvrir le navigateur",
+    "auth.back": "Retour",
     "auth.signedIn": "Connecté. Vous pouvez revenir à WorkAdventure.",
     "auth.signedOut": "Déconnecté. Vous pouvez revenir à WorkAdventure.",
     "auth.closeWindow": "Vous pouvez fermer cette fenêtre.",

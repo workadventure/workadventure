@@ -149,6 +149,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "السماح للآخرين بالتعليق",
         clearAll: "مسح الكل",
         annotate: "التعليق على الشاشة المشتركة",
+        annotateScreenOnly: "التعليقات متاحة فقط عند مشاركة شاشة كاملة.",
         camera: "الكاميرا",
         microphone: "الميكروفون",
         cameraOff: "الكاميرا متوقفة — شغّلها لاختيار واحدة.",

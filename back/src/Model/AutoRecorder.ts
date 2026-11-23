@@ -136,7 +136,7 @@ export class AutoRecorder {
 
     /**
      * Whether the world records this space, decided once, at the space's first join, before the transport is chosen
-     * (see `CommunicationManager.askAutoRecording`): turning the recording off means kicking everyone out of the room.
+     * (see `CommunicationManager.askWorldSettings`): turning the recording off means kicking everyone out of the room.
      */
     public decide(worldRecorded: boolean): void {
         this.enabled = this.backRecords && worldRecorded;

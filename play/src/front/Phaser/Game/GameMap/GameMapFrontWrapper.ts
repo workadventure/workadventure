@@ -119,6 +119,11 @@ export class GameMapFrontWrapper {
     private areasCollisionLayerDirty = true;
     private perLayerCollisionGridCache: Map<number, (0 | 1 | 2 | 3)[][]> = new Map<number, (0 | 1 | 2 | 3)[][]>();
     private dirtyLayerIndices: Set<number> = new Set<number>();
+    /**
+     * Layers hidden with WA.room.hideLayer: their tiles stop colliding (this is how doors open).
+     * A layer hidden in Tiled still collides: maps use one to draw invisible walls.
+     */
+    private readonly scriptHiddenLayers = new Set<RenderableTilemapLayer>();
 
     private lastProperties = new Map<string, string | boolean | number>();
     private propertiesChangeCallbacks = new Map<string, Array<PropertyChangeCallback>>();
@@ -460,26 +465,25 @@ export class GameMapFrontWrapper {
 
     public setLayerVisibility(layerName: string, visible: boolean): void {
         const phaserLayer = this.findPhaserLayer(layerName);
-        if (phaserLayer != undefined) {
-            phaserLayer.setVisible(visible);
-            phaserLayer.setCollisionByProperty({ collides: true }, visible);
-            this.invalidateCollisionGrid();
-        } else {
-            const phaserLayers = this.findPhaserLayers(layerName + "/");
-            if (phaserLayers.length === 0) {
-                console.warn(
-                    'Could not find layer with name that contains "' +
-                        layerName +
-                        '" when calling WA.hideLayer / WA.showLayer',
-                );
-                return;
-            }
-            for (let i = 0; i < phaserLayers.length; i++) {
-                phaserLayers[i].setVisible(visible);
-                phaserLayers[i].setCollisionByProperty({ collides: true }, visible);
-            }
-            this.invalidateCollisionGrid();
+        const phaserLayers = phaserLayer ? [phaserLayer] : this.findPhaserLayers(layerName + "/");
+        if (phaserLayers.length === 0) {
+            console.warn(
+                'Could not find layer with name that contains "' +
+                    layerName +
+                    '" when calling WA.hideLayer / WA.showLayer',
+            );
+            return;
         }
+        for (const layer of phaserLayers) {
+            layer.setVisible(visible);
+            layer.setCollisionByProperty({ collides: true }, visible);
+            if (visible) {
+                this.scriptHiddenLayers.delete(layer);
+            } else {
+                this.scriptHiddenLayers.add(layer);
+            }
+        }
+        this.invalidateCollisionGrid();
     }
 
     /**
@@ -603,7 +607,8 @@ export class GameMapFrontWrapper {
         const grid: number[][] = Array.from(Array(map.height), (_) => Array(map.width).fill(PathTileType.Walkable));
         // go through all tilemap layers on map. Maintain order
         for (const layer of this.phaserLayers) {
-            if (!layer.visible && layer !== this.entitiesCollisionLayer && layer !== this.areasCollisionLayer) {
+            // Match the Arcade colliders: only WA.room.hideLayer turns a layer's collisions off.
+            if (this.scriptHiddenLayers.has(layer)) {
                 continue;
             }
             const cachedLayer = this.perLayerCollisionGridCache.get(layer.layerIndex);

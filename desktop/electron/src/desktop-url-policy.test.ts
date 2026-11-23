@@ -4,20 +4,23 @@ import {
     createDesktopConfig,
     createDesktopLoginUrl,
     createDesktopLogoutUrl,
+    desktopBrowserFlowReturnUrl,
     createRoomUrlWithAuthToken,
     extractDesktopAuthCallback,
     formatWorldHistoryLabel,
     isAllowedNavigationUrl,
+    isDesktopBrowserFlowUrl,
     isDesktopLoginUrl,
     isDesktopLogoutUrl,
+    isWorldSignOutUrl,
     isRoomUrl,
     isSameRoomUrl,
+    opensInApp,
     worldKeyOf,
     normalizePersistedLastRoomUrl,
     normalizePersistedWorldHistory,
     normalizePersistedPortalUrl,
     redactSensitiveString,
-    resolveInitialTarget,
     stripSensitiveQueryParams,
     validateDesktopNavigationUrl,
 } from "./desktop-url-policy";
@@ -40,48 +43,23 @@ function withNodeEnv(value: string | undefined, fn: () => void): void {
     }
 }
 
-test("allows the configured portal origin and WorkAdventure host suffixes only", () => {
+test("trusts servers by origin, never a whole domain", () => {
     const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
+        portalUrl: "https://admin.workadventu.re",
         allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re", ".workadventure.fr"],
     });
 
     expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
-    expect(isAllowedNavigationUrl("https://maps.workadventure.fr/some-map.json", config)).toBe(true);
+    expect(isAllowedNavigationUrl("https://matrix.workadventu.re/_matrix/media/v3/download/x/y", config)).toBe(false);
+    expect(isAllowedNavigationUrl("https://maps.workadventure.fr/some-map.json", config)).toBe(false);
     expect(isAllowedNavigationUrl("https://workadventu.re.evil.test/@/team/world/room", config)).toBe(false);
     expect(isAllowedNavigationUrl("javascript:alert(1)", config)).toBe(false);
-});
-
-test("resolves launch target from deep link, then last room, then portal", () => {
-    const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
-        allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re"],
-    });
-
-    expect(
-        resolveInitialTarget(config, {
-            pendingDeepLinkUrl: "https://play.workadventu.re/@/deep/world/room",
-            lastRoomUrl: "https://play.workadventu.re/@/last/world/room",
-        })
-    ).toBe("https://play.workadventu.re/@/deep/world/room");
-
-    expect(
-        resolveInitialTarget(config, {
-            pendingDeepLinkUrl: "https://evil.test/@/deep/world/room",
-            lastRoomUrl: "https://play.workadventu.re/@/last/world/room",
-        })
-    ).toBe("https://play.workadventu.re/@/last/world/room");
-
-    expect(resolveInitialTarget(config, {})).toBe("https://play.workadventu.re/");
 });
 
 test("validates and normalizes world URLs entered in the desktop navigation UI", () => {
     const config = createDesktopConfig({
         portalUrl: "https://admin.workadventu.re",
         allowedOrigins: [],
-        allowedHostSuffixes: [".workadventu.re"],
     });
 
     expect(validateDesktopNavigationUrl("", config)).toStrictEqual({
@@ -124,47 +102,56 @@ test("uses the hosted admin portal by default in production, the local one in de
         const config = createDesktopConfig({});
 
         expect(config.portalUrl).toBe("https://admin.workadventu.re/");
-        // .workadventure.localhost is intentionally dropped in prod: an attacker on the same
-        // LAN can poison DNS for *.workadventure.localhost and serve a fake /desktop-auth/exchange.
-        expect(config.allowedHostSuffixes).toStrictEqual([".workadventu.re", ".workadventure.fr"]);
+        expect(config.allowedOrigins).toStrictEqual(["https://play.workadventu.re"]);
     });
 });
 
-test("keeps .workadventure.localhost in dev defaults for local development", () => {
+test("an organization's allowed origins replace the hosted service's, like any other server", () => {
+    const config = createDesktopConfig({
+        portalUrl: "https://wa.example.org",
+        WA_DESKTOP_ALLOWED_ORIGINS: "https://play.example.org",
+    });
+    expect(isAllowedNavigationUrl("https://play.example.org/@/team/world/room", config)).toBe(true);
+    expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(false);
+});
+
+test("trusts the local stack only in development", () => {
+    const room = "https://play.workadventure.localhost/_/global/maps";
+    withNodeEnv("development", () => {
+        expect(isAllowedNavigationUrl(room, createDesktopConfig({}))).toBe(true);
+    });
+    withNodeEnv("production", () => {
+        // A packaged app must not trust a name someone on the network could answer for (a fake
+        // /desktop-auth/exchange served from *.workadventure.localhost).
+        expect(isAllowedNavigationUrl(room, createDesktopConfig({}))).toBe(false);
+    });
+});
+
+test("never opens the administration in the app, even when its origin is allowed", () => {
+    withNodeEnv("production", () => {
+        const page = "https://admin.workadventu.re/admin/world";
+        expect(isAllowedNavigationUrl(page, createDesktopConfig({}))).toBe(false);
+        expect(
+            isAllowedNavigationUrl(
+                page,
+                createDesktopConfig({ WA_DESKTOP_ALLOWED_ORIGINS: "https://admin.workadventu.re" })
+            )
+        ).toBe(false);
+        expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", createDesktopConfig({}))).toBe(
+            true
+        );
+    });
     withNodeEnv("development", () => {
         const config = createDesktopConfig({});
-        expect(config.allowedHostSuffixes).toStrictEqual([
-            ".workadventu.re",
-            ".workadventure.fr",
-            ".workadventure.localhost",
-        ]);
+        expect(isAllowedNavigationUrl("http://admin.workadventure.localhost/admin/world", config)).toBe(false);
+        expect(isAllowedNavigationUrl("http://play.workadventure.localhost/_/global/maps", config)).toBe(true);
     });
-});
-
-test("normalises configured allow-list entries to dot-prefixed form", () => {
-    const config = createDesktopConfig({
-        allowedHostSuffixes: ["workadventu.re", "  WORKADVENTURE.fr  "],
-    });
-    expect(config.allowedHostSuffixes).toStrictEqual([".workadventu.re", ".workadventure.fr"]);
-});
-
-test("rejects sibling hostnames sharing the suffix string without dot boundary", () => {
-    const config = createDesktopConfig({
-        portalUrl: "https://play.workadventu.re",
-        allowedHostSuffixes: ["workadventu.re"],
-    });
-    expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
-    expect(isAllowedNavigationUrl("https://workadventu.re/", config)).toBe(true);
-    // The classic endsWith-without-dot bug: evilworkadventu.re should NOT match workadventu.re.
-    expect(isAllowedNavigationUrl("https://evilworkadventu.re/", config)).toBe(false);
-    expect(isAllowedNavigationUrl("https://attacker.evilworkadventu.re/", config)).toBe(false);
 });
 
 test("blocks http:// outside development for non-loopback hosts", () => {
     withNodeEnv("production", () => {
         const config = createDesktopConfig({
-            portalUrl: "https://play.workadventu.re",
-            allowedHostSuffixes: ["workadventu.re"],
+            portalUrl: "https://admin.workadventu.re",
         });
         expect(isAllowedNavigationUrl("http://play.workadventu.re/@/team/world/room", config)).toBe(false);
         expect(isAllowedNavigationUrl("https://play.workadventu.re/@/team/world/room", config)).toBe(true);
@@ -224,6 +211,8 @@ test("detects WorkAdventure room URLs that are safe to remember", () => {
     expect(isRoomUrl("https://play.workadventu.re/*/global/example.com/map.json")).toBe(true);
     expect(isRoomUrl("https://play.workadventu.re/login-screen")).toBe(false);
     expect(isRoomUrl("https://play.workadventu.re/")).toBe(false);
+    expect(isRoomUrl("https://docs.example.com/guide/_/rooms")).toBe(false);
+    expect(isRoomUrl("https://matrix.workadventu.re/_matrix/media/v3/download/workadventu.re/abc")).toBe(false);
 });
 
 test("normalizePersistedLastRoomUrl strips the URL fragment so hash-only changes don't spawn new entries", () => {
@@ -311,6 +300,47 @@ test("adds a loopback callback URL to desktop logout URLs", () => {
     expect(createDesktopLogoutUrl(logoutUrl, "http://127.0.0.1:48919/logout/callback")).toBe(
         `${logoutUrl}&desktop=true&desktopCallbackUrl=http%3A%2F%2F127.0.0.1%3A48919%2Flogout%2Fcallback`
     );
+});
+
+test("the browser flow screen goes back to the world the user signed in or out from, else to the Landing", () => {
+    const config = createDesktopConfig({
+        portalUrl: "https://admin.workadventu.re",
+        allowedOrigins: [],
+    });
+    const world = "https://play.workadventu.re/@/team/world/room";
+    const flow = (path: string, playUri: string, extra = "") =>
+        `https://play.workadventu.re/${path}?playUri=${encodeURIComponent(playUri)}${extra}&desktop=true`;
+
+    // The Login button: back to the world, as a guest.
+    expect(desktopBrowserFlowReturnUrl(flow("login-screen", world, "&manuallyTriggered=true"), config)).toBe(world);
+    // A world that requires signing in: back to it would sign in again.
+    expect(desktopBrowserFlowReturnUrl(flow("login-screen", world), config)).toBeUndefined();
+    expect(desktopBrowserFlowReturnUrl(flow("logout", world, "&token=abc"), config)).toBe(world);
+    expect(desktopBrowserFlowReturnUrl(flow("logout", "https://evil.test/@/a/b/c"), config)).toBeUndefined();
+    expect(desktopBrowserFlowReturnUrl("https://play.workadventu.re/login-screen", config)).toBeUndefined();
+});
+
+test("the sign-in and sign-out of a trusted world run in the browser, on any server it sends the user to", () => {
+    const config = createDesktopConfig({ portalUrl: "https://admin.workadventu.re", allowedOrigins: [] });
+    const world = encodeURIComponent("https://play.workadventu.re/@/team/world/room");
+    const untrusted = encodeURIComponent("https://evil.test/@/team/world/room");
+
+    // The hosted service's pusher has an origin of its own: the world it signs into vouches for it.
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/login-screen?playUri=${world}`, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/logout?playUri=${world}&token=a`, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/login-screen?playUri=${untrusted}`, config)).toBe(
+        false
+    );
+    expect(isDesktopBrowserFlowUrl("https://pusher.workadventu.re/login-screen", config)).toBe(false);
+    expect(isDesktopBrowserFlowUrl(`https://pusher.workadventu.re/other?playUri=${world}`, config)).toBe(false);
+    expect(isDesktopBrowserFlowUrl(`http://pusher.workadventu.re/login-screen?playUri=${world}`, config)).toBe(false);
+
+    // The administration's sign-out comes back to the world: it loads in the app.
+    const memberLogout = `https://member.workadventu.re/oauth/logout?redirect=${world}&playUri=${world}&token=a`;
+    expect(isWorldSignOutUrl(memberLogout, config)).toBe(true);
+    expect(isDesktopBrowserFlowUrl(memberLogout, config)).toBe(false);
+    expect(isWorldSignOutUrl(`https://member.workadventu.re/oauth/logout?playUri=${untrusted}`, config)).toBe(false);
+    expect(isWorldSignOutUrl(`https://member.workadventu.re/profile?playUri=${world}`, config)).toBe(false);
 });
 
 test("extracts desktop auth callback origin and one-shot code", () => {
@@ -422,4 +452,21 @@ test("pages that are not rooms belong to no world", () => {
     expect(worldKeyOf("https://play.workadventu.re/login-screen")).toBeUndefined();
     expect(worldKeyOf("file:///Applications/WorkAdventure.app/assets/landing/index.html")).toBeUndefined();
     expect(worldKeyOf("")).toBeUndefined();
+});
+
+test("only worlds open in the app: other links, chat files included, open in the browser", () => {
+    withNodeEnv("production", () => {
+        const config = createDesktopConfig({});
+        const world = "https://play.workadventu.re/@/team/world/room";
+        expect(opensInApp(world, config)).toBe(true);
+        expect(opensInApp("https://www.google.com/", config)).toBe(false);
+        expect(opensInApp("https://matrix.workadventu.re/_matrix/media/v3/download/workadventu.re/abc", config)).toBe(
+            false
+        );
+        expect(opensInApp("https://docs.workadventu.re/", config)).toBe(false);
+        // A world tab may move within its own server, not to another one.
+        expect(opensInApp("https://play.workadventu.re/", config, world)).toBe(true);
+        expect(opensInApp("https://matrix.workadventu.re/_matrix/media/v3/download/x/y", config, world)).toBe(false);
+        expect(opensInApp("https://www.google.com/", config, "https://www.google.com/")).toBe(false);
+    });
 });

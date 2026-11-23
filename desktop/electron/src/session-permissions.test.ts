@@ -12,7 +12,10 @@ type PermissionHandler = (
 
 function permissions() {
     let request: PermissionHandler | undefined;
-    let config = createDesktopConfig({ portalUrl: "https://play.example.org" });
+    let config = createDesktopConfig({
+        portalUrl: "https://admin.example.org",
+        allowedOrigins: ["https://play.example.org"],
+    });
     configureSessionPermissions(
         {
             setPermissionRequestHandler: (handler) => {
@@ -42,18 +45,16 @@ describe("world session permissions", () => {
             expect(policy.allow(permission, "https://play.example.org/@/world")).toBe(false);
         }
     });
-    it("rejects clipboard writes requested by an embedded external origin", () => {
-        expect(
-            permissions().allow(
-                "clipboard-sanitized-write",
-                "https://play.example.org/@/world",
-                "https://external.example.org/frame"
-            )
-        ).toBe(false);
+    it("judges the page the user opened, not the embedded frame asking", () => {
+        // Chromium only lets the frame use it if the world delegated it with an allow attribute.
+        expect(permissions().allow("media", "https://play.example.org/@/world", "https://meet.jit.si/room")).toBe(true);
+        expect(permissions().allow("media", "https://external.example.org/", "https://play.example.org/@/world")).toBe(
+            false
+        );
     });
-    it("checks the current allow-list and falls back to the world URL when needed", () => {
+    it("checks the current allow-list", () => {
         const policy = permissions();
-        expect(policy.allow("clipboard-sanitized-write", "https://play.example.org/@/world", "")).toBe(true);
+        expect(policy.allow("clipboard-sanitized-write", "https://play.example.org/@/world")).toBe(true);
         policy.setConfig(createDesktopConfig({ portalUrl: "https://other.example.org" }));
         expect(policy.allow("clipboard-sanitized-write", "https://play.example.org/@/world")).toBe(false);
     });

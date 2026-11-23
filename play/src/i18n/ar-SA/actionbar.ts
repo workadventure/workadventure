@@ -61,6 +61,7 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
     status: {
         ONLINE: "متصل",
         AWAY: "بعيد",
+        IDLE: "خامل",
         BACK_IN_A_MOMENT: "سأعود بعد قليل",
         DO_NOT_DISTURB: "عدم الإزعاج",
         BUSY: "مشغول",

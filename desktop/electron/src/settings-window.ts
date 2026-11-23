@@ -9,9 +9,11 @@ import { getWindowModeState, restartToApplyWindowMode, setWindowMode, windowMode
 import { getUnavailableShortcuts, saveShortcut } from "./shortcuts";
 import { isSettableAccelerator, SHORTCUT_NAMES, type ShortcutName } from "./shortcut-policy";
 import { setTabBarEnabled } from "./native-menu";
+import { closesToTray, setCloseToTray } from "./close-to-tray";
 import { manualRequestUpdateCheck } from "./auto-updater";
 import { openLog } from "./log";
 import { getActiveWorldContents } from "./tab-manager";
+import { getHudWindow } from "./hud-windows";
 import { getWindow } from "./window";
 import type { SettingsShortcuts, SettingsState } from "./settings/api";
 
@@ -87,6 +89,7 @@ function settingsState(): SettingsState {
         version: app.isPackaged ? app.getVersion() : "dev",
         startAtLogin: isStartAtLoginEnabled(),
         tabBar: settings.get("tab_bar_enabled") !== false,
+        closeToTray: closesToTray(),
         windowMode: windowModeAvailable ? getWindowModeState() : undefined,
         shortcuts: shortcutsState(),
     };
@@ -105,6 +108,9 @@ export function registerSettingsWindowIpc(): void {
     });
     ipcMain.handle("app:settings:tab-bar", (event, enabled: unknown) =>
         isFromSettingsWindow(event) ? setTabBarEnabled(enabled === true, settingsWindow) : false
+    );
+    ipcMain.handle("app:settings:close-to-tray", (event, enabled: unknown) =>
+        isFromSettingsWindow(event) ? setCloseToTray(enabled === true) : false
     );
     ipcMain.handle("app:settings:window-mode", (event, mode: unknown) => {
         if (!isFromSettingsWindow(event) || !windowModeAvailable || (mode !== "x11" && mode !== "wayland")) {
@@ -133,10 +139,14 @@ export function registerSettingsWindowIpc(): void {
     ipcMain.on("app:settings:open-logs", (event) => {
         if (isFromSettingsWindow(event)) void openLog();
     });
-    // The active world's page (the landing page when none is open), in a window of its own.
+    // The active world's page (the landing page when none is open), in a window of its own. The floating
+    // windows are pages of their own too, which the world's DevTools cannot inspect: they get theirs.
     ipcMain.on("app:settings:open-devtools", (event) => {
         if (isFromSettingsWindow(event)) {
             (getActiveWorldContents() ?? getWindow()?.webContents)?.openDevTools({ mode: "detach" });
+            for (const kind of ["mini-window", "meeting-bar"] as const) {
+                getHudWindow(kind)?.webContents.openDevTools({ mode: "detach" });
+            }
         }
     });
 }

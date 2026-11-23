@@ -1,4 +1,4 @@
-import { type BrowserWindow, screen } from "electron";
+import { BrowserWindow, app, screen } from "electron";
 import ElectronLog from "electron-log";
 import settings from "./settings";
 import { MINI_WINDOW_MIN_HEIGHT, MINI_WINDOW_MIN_WIDTH, miniWindowPlacement } from "./mini-window-placement-policy";
@@ -112,14 +112,16 @@ export function setUpHudWindow(kind: HudKind, newWindow: BrowserWindow): void {
         }
     }
     try {
-        // On macOS this call switches the app's process type, which briefly hides the app's windows and
-        // Dock tiles. The mini window opens right as WA gets minimized, whose Dock tile then went missing:
-        // it skips the switch (and so does not show over full-screen apps). The meeting bar keeps it to
-        // stay over a full-screen presentation.
-        newWindow.setVisibleOnAllWorkspaces(true, {
-            visibleOnFullScreen: true,
-            skipTransformProcessType: kind === "mini-window",
-        });
+        // On macOS, showing over full-screen apps switches the app to a Dock-less process, which hides the
+        // Dock icon and drops the Dock tile of every minimized window (dock.show() brings the icon back,
+        // not the tiles). So the mini window only does it while no WA window is minimized: WA left on
+        // another desktop or behind a full-screen app is exactly when the mini window must follow there.
+        const skipTransformProcessType =
+            kind === "mini-window" && BrowserWindow.getAllWindows().some((window) => window.isMinimized());
+        newWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true, skipTransformProcessType });
+        if (kind === "mini-window" && !skipTransformProcessType) {
+            app.dock?.show().catch((error) => ElectronLog.debug("dock.show failed", error));
+        }
     } catch (error) {
         ElectronLog.debug(`HUD ${kind} setVisibleOnAllWorkspaces failed`, error);
     }

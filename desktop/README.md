@@ -78,5 +78,14 @@ auto-updater looks for updates.
 The app is in beta: with `"prerelease": true` in `release-please-config.json`, every release PR bumps
 the beta number (`2.0.0-beta.1` → `2.0.0-beta.2`). Set it to `false` and the next release PR is `2.0.0`.
 
+Windows releases are signed with [Azure Artifact Signing](https://learn.microsoft.com/azure/artifact-signing/overview)
+(`win.azureSignOptions` in `electron/electron-builder.yml`): account `WorkAdventure` (resource group
+`WorkAdventure`, North Europe), Public Trust certificate profile `workadventure-desktop`, issued to the legal
+name `WorkAdventu.re`. The release job logs in as the Entra app `workadventure-desktop-signing` with GitHub's
+OIDC token, so there is no secret: the app's federated credentials only trust the `desktop-release`
+environment, and its only role is "Artifact Signing Certificate Profile Signer" on the account. Pull requests
+and branch builds are not signed. macOS builds keep an ad hoc signature until the Developer ID certificate is
+configured.
+
 To test an update locally, point the app at a folder served over HTTP holding the `latest*.yml` files
 and the binaries: `WA_DESKTOP_UPDATE_URL=http://localhost:8080/`.

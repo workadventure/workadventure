@@ -151,6 +151,7 @@ const desktop: DeepPartial<Translation["desktop"]> = {
         allowOthers: "Cho phép người khác chú thích",
         clearAll: "Xóa tất cả",
         annotate: "Chú thích trên màn hình được chia sẻ",
+        annotateScreenOnly: "Chỉ có thể chú thích khi bạn chia sẻ toàn bộ màn hình.",
         camera: "Camera",
         microphone: "Micrô",
         cameraOff: "Camera của bạn đang tắt — hãy bật để chọn camera.",

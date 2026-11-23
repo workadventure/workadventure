@@ -1,4 +1,4 @@
-// Worlds outside the built-in domains (self-hosted servers, white-label domains): servers the user added
+// Worlds outside the built-in servers (self-hosted servers, white-label domains): servers the user added
 // from the Landing. Kept until removed; capped so a settings file cannot grow without bound.
 export const MAX_TRUSTED_SERVERS = 50;
 

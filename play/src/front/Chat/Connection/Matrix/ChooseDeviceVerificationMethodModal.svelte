@@ -3,6 +3,8 @@
     import Button from "../../../Components/UI/Button.svelte";
     import LL from "../../../../i18n/i18n-svelte";
     import { matrixSecurity } from "./MatrixSecurity";
+    import VerificationMethodCard from "./VerificationMethodCard.svelte";
+    import { IconDevices, IconKey } from "@wa-icons";
     import { modals } from "@wa-modals";
 
     interface Props {
@@ -28,27 +30,40 @@
 
 <Popup {isOpen}>
     {#snippet title()}
-        <h1>{$LL.chat.chooseDeviceVerificationMethodModal.title()}</h1>
+        <h1 class="text-2xl font-bold">{$LL.chat.chooseDeviceVerificationMethodModal.title()}</h1>
     {/snippet}
     {#snippet content()}
-        <div class="w-full flex justify-center">
-            {$LL.chat.chooseDeviceVerificationMethodModal.description()}
+        <div class="w-full flex flex-col gap-5">
+            <p class="m-0 text-base text-white/80">{$LL.chat.chooseDeviceVerificationMethodModal.description()}</p>
+            <div class="flex flex-col gap-3">
+                <VerificationMethodCard
+                    dataTestId="VerifyWithAnotherDeviceButton"
+                    title={$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
+                    description={$LL.chat.chooseDeviceVerificationMethodModal.withOtherDeviceDescription()}
+                    onclick={startVerificationWithOtherDevice}
+                >
+                    {#snippet icon()}
+                        <IconDevices font-size="22" />
+                    {/snippet}
+                </VerificationMethodCard>
+                <VerificationMethodCard
+                    dataTestId="VerifyWithPassphraseButton"
+                    title={$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
+                    description={$LL.chat.chooseDeviceVerificationMethodModal.withPassphraseDescription()}
+                    onclick={startVerificationWithPassphrase}
+                >
+                    {#snippet icon()}
+                        <IconKey font-size="22" />
+                    {/snippet}
+                </VerificationMethodCard>
+            </div>
         </div>
     {/snippet}
     {#snippet action()}
-        <Button
-            dataTestId="VerifyWithAnotherDeviceButton"
-            variant="secondary"
-            class="bg-secondary flex-1"
-            onclick={startVerificationWithOtherDevice}
-            >{$LL.chat.chooseDeviceVerificationMethodModal.withOtherDevice()}
-        </Button>
-        <Button
-            dataTestId="VerifyWithPassphraseButton"
-            variant="secondary"
-            class="bg-secondary flex-1"
-            onclick={startVerificationWithPassphrase}
-            >{$LL.chat.chooseDeviceVerificationMethodModal.withPassphrase()}
-        </Button>
+        <div class="flex w-full">
+            <Button variant="light" appearance="ghost" onclick={() => modals.close()}>
+                {$LL.chat.chooseDeviceVerificationMethodModal.notNow()}
+            </Button>
+        </div>
     {/snippet}
 </Popup>

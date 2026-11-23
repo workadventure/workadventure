@@ -96,12 +96,6 @@ const vi: NativeStrings = {
     "menu.hideTabBarDetailOne": "Bạn đang mở {total} tab. Ẩn thanh tab sẽ giữ lại tab này và đóng tab còn lại.",
     "menu.hideTabBarDetail": "Bạn đang mở {total} tab. Ẩn thanh tab sẽ giữ lại tab này và đóng {count} tab khác.",
 
-    "tray.status.meeting": "Đang họp",
-    "tray.status.do_not_disturb": "Không làm phiền",
-    "tray.status.busy": "Bận",
-    "tray.status.back_in_a_moment": "Quay lại ngay",
-    "tray.status.idle": "Không hoạt động",
-    "tray.status.online": "Sẵn sàng",
     "tray.status.offline": "Ngoại tuyến",
     "tray.microphone": "Micrô",
     "tray.camera": "Camera",
@@ -113,12 +107,17 @@ const vi: NativeStrings = {
         "WorkAdventure không thể khởi động ở chế độ tương thích (X11), nên hiện đang dùng chế độ Wayland gốc. Bạn có thể chuyển lại trong phần cài đặt của ứng dụng.",
     "windowMode.openSettings": "Mở cài đặt",
     "tray.quit": "Thoát",
+    "closeToTray.stillRunning":
+        "WorkAdventure vẫn đang chạy và bạn vẫn ở trong thế giới của mình. Để thoát, hãy dùng biểu tượng của nó trong khay hệ thống.",
 
     "settings.title": "Cài đặt",
     "settings.general": "Chung",
     "settings.startAtLogin": "Khởi động WorkAdventure khi đăng nhập vào máy tính",
     "settings.showTabBar": "Hiện thanh tab",
     "settings.showTabBarHint": "Thanh tab xuất hiện khi bạn mở nhiều tab.",
+    "settings.closeToTray": "Giữ WorkAdventure chạy khi tôi đóng cửa sổ",
+    "settings.closeToTrayHint":
+        "Bạn vẫn ở trong thế giới của mình. Để thoát, hãy dùng biểu tượng WorkAdventure trong khay hệ thống.",
     "settings.windowMode": "Chế độ cửa sổ",
     "settings.windowModeX11": "Tương thích (X11), được đề xuất",
     "settings.windowModeX11Description":
@@ -158,6 +157,7 @@ const vi: NativeStrings = {
     "auth.signingOutTitle": "Đang đăng xuất…",
     "auth.signingOutMessage": "Hoàn tất đăng xuất trong trình duyệt của bạn. Bạn sẽ tự động quay lại ứng dụng.",
     "auth.reopenBrowser": "Mở lại trình duyệt",
+    "auth.back": "Quay lại",
     "auth.signedIn": "Đã đăng nhập. Bạn có thể quay lại WorkAdventure.",
     "auth.signedOut": "Đã đăng xuất. Bạn có thể quay lại WorkAdventure.",
     "auth.closeWindow": "Bạn có thể đóng cửa sổ này.",

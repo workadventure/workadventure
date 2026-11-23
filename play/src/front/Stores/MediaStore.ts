@@ -31,6 +31,7 @@ import { WebviewOnOldIOS } from "./Errors/WebviewOnOldIOS";
 
 import { createSilentStore } from "./SilentStore";
 import { privacyShutdownStore } from "./PrivacyShutdownStore";
+import { idleStore } from "./IdleStore";
 import { mediaHeldByStatus } from "./MediaHeldByStatus";
 import { inExternalServiceStore, myCameraStore, myMicrophoneStore, proximityMeetingStore } from "./MyMediaStore";
 import { userMovingStore } from "./GameStore";
@@ -434,6 +435,7 @@ export const availabilityStatusStore = derived(
         inBbbStore,
         silentStore,
         privacyShutdownStore,
+        idleStore,
         proximityMeetingStore,
         isSpeakerStore,
         requestedStatusStore,
@@ -447,6 +449,7 @@ export const availabilityStatusStore = derived(
         $inBbbStore,
         $silentStore,
         $privacyShutdownStore,
+        $idleStore,
         $proximityMeetingStore,
         $isSpeakerStore,
         $requestedStatusStore,
@@ -466,6 +469,7 @@ export const availabilityStatusStore = derived(
         if ($inLivekitStore) return AvailabilityStatus.LIVEKIT;
         if ($isListenerStore) return AvailabilityStatus.LISTENER;
         if ($requestedStatusStore) return $requestedStatusStore;
+        if ($idleStore) return AvailabilityStatus.IDLE;
         if ($privacyShutdownStore) return AvailabilityStatus.AWAY;
 
         return AvailabilityStatus.ONLINE;
