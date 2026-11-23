@@ -284,6 +284,7 @@ export class SocketManager implements ZoneEventListener {
                     switch (message.message.$case) {
                         case "roomJoinedMessage": {
                             socketData.userId = message.message.roomJoinedMessage.currentUserId;
+                            socketData.isRecorder = message.message.roomJoinedMessage.isRecorder;
                             socketData.spaceUserId =
                                 socketData.roomId + "_" + message.message.roomJoinedMessage.currentUserId;
 
@@ -438,6 +439,7 @@ export class SocketManager implements ZoneEventListener {
                 userRoomToken: socketData.userRoomToken ?? "", // TODO: turn this into an optional field
                 chatID: socketData.chatID,
                 tabId: socketData.tabId,
+                recorderToken: socketData.recorderToken,
             };
 
             debug("Calling joinRoom '" + socketData.roomId + "'");

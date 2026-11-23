@@ -35,6 +35,7 @@ import type { OnConnectInterface } from "./ConnexionModels";
 import { RoomConnection } from "./RoomConnection";
 import { HtmlUtils } from "./../WebRtc/HtmlUtils";
 import { hasCapability } from "./Capabilities";
+import { isRecorderMode } from "../Utils/RecorderMode";
 
 const connectionRetryBaseDelayMs = 1_000;
 const connectionRetryMaxDelayMs = 10_000;
@@ -161,7 +162,9 @@ class ConnectionManager {
         let nextScene: "selectCharacterScene" | "selectCompanionScene" | "gameScene" = "gameScene";
 
         const urlParams = new URLSearchParams(window.location.search);
-        let token = urlParams.get("token");
+        // In recorder mode, ?token= is the LiveKit token of the egress (see RecorderMode), not a WorkAdventure login:
+        // sent to the pusher as one, it gets the map refused with a 401.
+        let token = isRecorderMode ? null : urlParams.get("token");
         // get token injected by post method from pusher
         if (token == undefined) {
             const input = HtmlUtils.getElementByIdOrFail<HTMLInputElement>("authToken");

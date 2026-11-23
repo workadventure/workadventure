@@ -1048,6 +1048,7 @@ message SpaceStateQuery {
     UpsertScreenAnnotationQuery upsertScreenAnnotation = 17;
     RemoveScreenAnnotationQuery removeScreenAnnotation = 18;
     ClearScreenAnnotationsQuery clearScreenAnnotations = 19;
+    SetRecordingProductionQuery setRecordingProduction = 20;
   }
 }
 
@@ -1091,8 +1092,18 @@ message RevokeFloorQuery {
   string targetSpaceUserId = 1;
 }
 message StartRecordingQuery {
+  // Film the meeting over the live map (the ?recorder page) instead of the camera grid.
+  bool withMap = 1;
+  // With the map: where the map goes against the cameras ("map", "balanced" or "cameras"), the ?recorder page's
+  // ?recorderLayout=. Empty means the page's default.
+  string layout = 2;
 }
 message StopRecordingQuery {
+}
+// The person recording over the map changes how it is filmed (the producer panel).
+message SetRecordingProductionQuery {
+  // JSON, see recordingProductionSchema in @workadventure/shared-utils.
+  string production = 1;
 }
 message CreatePollQuery {
   string question = 1;
@@ -1353,6 +1364,10 @@ message RoomJoinedMessage {
   bool canEdit = 16;
   CompanionTextureMessage companionTexture = 18;
   repeated AreaPropertyVariableMessage areaPropertyVariable = 19;
+  // The back accepted the recorderToken: this user is the LiveKit egress filming the map. Nobody sees it.
+  bool isRecorder = 20;
+  // The back lets this world record over the map (LIVEKIT_RECORDING_WITH_MAP): the front offers the choice.
+  bool recordingWithMapAvailable = 21;
 }
 
 message WebRtcStartMessage {
@@ -1850,6 +1865,9 @@ message JoinRoomMessage {
   // and kill stale connections immediately instead of waiting for ping timeout
   //TODO : remove the optional when the tabId is always present in the query string (next version of the app )
   optional string tabId = 19;
+  // Set by the ?recorder page (the LiveKit egress): the LiveKit token the egress passed it. The back joins the user as
+  // a recorder only if the token is valid and carries the "recorder" grant.
+  optional string recorderToken = 20;
 }
 
 message UserJoinedZoneMessage {
@@ -2186,6 +2204,8 @@ message SpaceUser{
   // why they get nothing, and that it comes back with the user. A device the user turned off is never held.
   bool cameraHeld = 21;
   bool microphoneHeld = 22;
+  // The LiveKit egress filming the map (?recorder page): it receives every user of the space but is never listed.
+  bool isRecorder = 23;
   // Raise-hand state is NOT stored per-user here: it lives in the space state (SpaceStateQuery / SpaceStatePatchMessage),
   // which is broadcast to all members, including a megaphone speaker without seeAttendees.
 }

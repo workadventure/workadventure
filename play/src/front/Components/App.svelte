@@ -35,6 +35,7 @@
     import { FileListener } from "../Phaser/FileUpload/FileListener";
     import { isStructuredCloneSupported } from "../Utils/BrowserCompatibility";
     import { gameSceneIsLoadedStore } from "../Stores/GameSceneStore";
+    import { isRecorderMode, RECORDER_FPS, recorderMapRectStore } from "../Utils/RecorderMode";
     import GameOverlay from "./GameOverlay.svelte";
     import CoWebsitesContainer from "./EmbedScreens/CoWebsitesContainer.svelte";
     import BrowserNotSupported from "./BrowserNotSupported/BrowserNotSupported.svelte";
@@ -113,6 +114,8 @@
              * Apply delta smoothing during the game update to help avoid spikes?
              */
             smoothStep: false,
+            // The egress encodes at 30 fps: drawing more frames only takes CPU from the other recordings.
+            limit: isRecorderMode ? RECORDER_FPS : 0,
         };
 
         // the ?phaserMode=canvas parameter can be used to force Canvas usage
@@ -293,6 +296,9 @@
             class="relative {$fullScreenCowebsite ? 'hidden' : ''}"
             class:game-scene-loaded={$gameSceneIsLoadedStore}
             bind:this={gameDiv}
+            style={$recorderMapRectStore
+                ? `position: fixed; left: ${$recorderMapRectStore.left}px; top: ${$recorderMapRectStore.top}px; width: ${$recorderMapRectStore.width}px; height: ${$recorderMapRectStore.height}px;`
+                : undefined}
         >
             {#if game}
                 <GameOverlay {game} />

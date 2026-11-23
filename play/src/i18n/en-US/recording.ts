@@ -45,8 +45,37 @@ const recording: BaseTranslation = {
             inProgress: "A recording is in progress",
         },
         spacePicker: {
+            title: "Record",
+            source: "What to record",
+            savedHint: "Saved in your recordings when you stop.",
             megaphone: "Record megaphone",
             discussion: "Record discussion",
+            withMap: "Layout of the video:",
+            camerasOnly: "Cameras only",
+            camerasOnlyHint:
+                "Only the cameras, without the map. This video can't be directed while recording: no producer panel, no layout or zoom changes.",
+            layout: {
+                map: "Map first",
+                balanced: "Balanced",
+                cameras: "Cameras first",
+            },
+        },
+        producer: {
+            preview: "In the video now",
+            layout: "Layout",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Close",
+                wide: "Zoomed out",
+                whole: "Whole map",
+            },
+            framing: "Framing",
+            follow: "Follow the bubble",
+            frameMyView: "Frame what I see",
+            cameras: "Cameras",
+            pin: "Pin",
+            unpin: "Unpin",
+            pinHint: "A pinned person keeps their tile even when silent (up to {max:number}).",
         },
     },
 };

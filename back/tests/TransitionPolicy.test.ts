@@ -30,6 +30,9 @@ describe("TransitionPolicy", () => {
             hasActiveSessions: false,
         }),
         handleAddUser: () => {},
+        handleSpaceKindChanged: () => {},
+        setProduction: () => {},
+        followedRecorder: undefined,
         isRecording,
         destroy: () => {},
     });

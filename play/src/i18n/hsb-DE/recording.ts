@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Nagraće běži",
         },
         spacePicker: {
+            title: "Nahrać",
+            source: "Što nahrać",
+            savedHint: "Při skónčenju so we wašich nahrawkach składuje.",
             megaphone: "Megafon nagrać",
             discussion: "Diskusiju nagrać",
+            withMap: "Wuhotowanje wideja:",
+            camerasOnly: "Jenož kamery",
+            camerasOnlyHint:
+                "Jenož kamery, bjez karty. Tute widejo njeda so při nahrawanju wodźić: žadyn panel producenta, žane změny wuhotowanja abo zooma.",
+            layout: {
+                map: "Najprjedy karta",
+                balanced: "Wurunane",
+                cameras: "Najprjedy kamery",
+            },
+        },
+        producer: {
+            preview: "Nětko we widejo",
+            layout: "Wuhotowanje",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Blisko",
+                wide: "Pomjeńšene",
+                whole: "Cyła karta",
+            },
+            framing: "Wurězk",
+            follow: "Bublinje sćěhować",
+            frameMyView: "Pokazać, štož widźu",
+            cameras: "Kamery",
+            pin: "Připjeć",
+            unpin: "Wotpjeć",
+            pinHint: "Připjata wosoba wobchowa swoju kachlicu, tež hdyž mjelči (hač do {max}).",
         },
     },
 };

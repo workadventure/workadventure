@@ -22,7 +22,12 @@ export interface ICommunicationStrategy {
 }
 
 export interface IRecordableStrategy extends ICommunicationStrategy {
-    startRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo>;
+    startRecording(
+        user: SpaceUser,
+        recordingSessionId: string,
+        withMap?: boolean,
+        layout?: string,
+    ): Promise<RecordingStartInfo>;
     stopRecording(egressId?: string): Promise<void>;
     handleLivekitWebhook(
         rawBody: Buffer | Uint8Array,

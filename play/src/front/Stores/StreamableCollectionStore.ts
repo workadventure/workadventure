@@ -7,6 +7,7 @@ import { VideoBox } from "../Space/VideoBox";
 import type { Streamable } from "../Space/Streamable";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { localEncoderStatsStore } from "../WebRtc/LocalEncoderStats";
+import { isRecorderMode } from "../Utils/RecorderMode";
 import { screenSharingLocalVideoBox } from "./ScreenSharingStore";
 
 import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
@@ -227,6 +228,8 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             };
 
             if (
+                // The ?recorder page films the others: it has no tile of its own.
+                !isRecorderMode &&
                 shouldDisplayLocalCameraPeer({
                     hasCameraDevice: $myCameraStore,
                     isCameraEnergySaving: $cameraEnergySavingStore,

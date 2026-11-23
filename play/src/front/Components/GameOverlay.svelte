@@ -17,8 +17,10 @@
     import { showModalGlobalComminucationVisibilityStore } from "../Stores/ModalStore";
     import { draggingFile } from "../Stores/FileUploadStore";
     import ChatSidebar from "../Chat/ChatSidebar.svelte";
+    import { isRecorderMode } from "../Utils/RecorderMode";
     import LoginScene from "./Login/LoginScene.svelte";
     import MainLayout from "./MainLayout.svelte";
+    import RecorderLayout from "./RecorderLayout.svelte";
     import SelectCompanionScene from "./SelectCompanion/SelectCompanionScene.svelte";
     import ErrorDialog from "./UI/ErrorDialog.svelte";
     import ErrorScreen from "./UI/ErrorScreen.svelte";
@@ -91,22 +93,26 @@
     {#if $refreshPromptStore}
         <RefreshPrompt />
     {/if}
-    {#key $forceRefreshChatStore}
-        <ChatSidebar />
-        {#if $mapEditorModeStore}
-            <MapEditor />
-        {/if}
-        {#if $showModalGlobalComminucationVisibilityStore === "live"}
-            <GlobalCommunicationModal />
-        {:else if $showModalGlobalComminucationVisibilityStore === "text"}
-            <AnnouncementComposerModal />
-        {/if}
+    {#if isRecorderMode}
+        <RecorderLayout />
+    {:else}
+        {#key $forceRefreshChatStore}
+            <ChatSidebar />
+            {#if $mapEditorModeStore}
+                <MapEditor />
+            {/if}
+            {#if $showModalGlobalComminucationVisibilityStore === "live"}
+                <GlobalCommunicationModal />
+            {:else if $showModalGlobalComminucationVisibilityStore === "text"}
+                <AnnouncementComposerModal />
+            {/if}
 
-        <Onboarding />
+            <Onboarding />
 
-        <MainLayout />
-    {/key}
-    <MainModal />
+            <MainLayout />
+        {/key}
+        <MainModal />
+    {/if}
 {/if}
 
 <FloatingUiPopupList />

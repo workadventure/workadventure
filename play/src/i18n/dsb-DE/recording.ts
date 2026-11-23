@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Nagraśe běžy",
         },
         spacePicker: {
+            title: "Nagraś",
+            source: "Co nagraś",
+            savedHint: "Pśi skóńcenju se we wašych nagraśach składujo.",
             megaphone: "Megafon nagraś",
             discussion: "Diskusiju nagraś",
+            withMap: "Wugótowanje wideja:",
+            camerasOnly: "Jano kamery",
+            camerasOnlyHint:
+                "Jano kamery, bźez kórty. Toś to wideo njedajo se pśi nagrawanju wóźiś: žeden pólo producenta, žedne změny wugótowanja abo zooma.",
+            layout: {
+                map: "Nejpjerwjej kórta",
+                balanced: "Wurownane",
+                cameras: "Nejpjerwjej kamery",
+            },
+        },
+        producer: {
+            preview: "Něnto we wideju",
+            layout: "Wugótowanje",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Blisko",
+                wide: "Pómjeńšone",
+                whole: "Ceła kórta",
+            },
+            framing: "Wurězk",
+            follow: "Bublinje slědowaś",
+            frameMyView: "Pokazaś, což wiźim",
+            cameras: "Kamery",
+            pin: "Pśipěś",
+            unpin: "Wótpěś",
+            pinHint: "Pśipěta wósoba wobdźaržy swóju kachlicu, teke gaž mjelcy (až do {max}).",
         },
     },
 };

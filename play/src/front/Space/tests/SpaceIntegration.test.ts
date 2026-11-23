@@ -289,6 +289,7 @@ describe("", () => {
             cpuLimited: false,
             cameraHeld: false,
             microphoneHeld: false,
+            isRecorder: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -348,6 +349,7 @@ describe("", () => {
             cpuLimited: false,
             cameraHeld: false,
             microphoneHeld: false,
+            isRecorder: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -402,6 +404,7 @@ describe("", () => {
             cpuLimited: false,
             cameraHeld: false,
             microphoneHeld: false,
+            isRecorder: false,
         } satisfies SpaceUser;
 
         const addSpaceUserMessage: AddSpaceUserMessage = {
@@ -550,6 +553,7 @@ describe("", () => {
                 cpuLimited: false,
                 cameraHeld: false,
                 microphoneHeld: false,
+                isRecorder: false,
             },
             $case: "muteVideo",
             muteVideo: {

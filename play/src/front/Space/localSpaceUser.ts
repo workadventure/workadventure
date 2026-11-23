@@ -30,6 +30,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
         cpuLimited: false,
         cameraHeld: false,
         microphoneHeld: false,
+        isRecorder: false,
         pictureStore: readable<string | undefined>(undefined, (set) => {
             const unsubscribe = gameManager
                 .getCurrentGameScene()
@@ -78,6 +79,7 @@ export const localSpaceUser = (name?: string): SpaceUserExtended => {
             cpuLimited: writable(false),
             cameraHeld: writable(false),
             microphoneHeld: writable(false),
+            isRecorder: writable(false),
             screenSharingState: writable(true),
             megaphoneState: writable(false),
             jitsiParticipantId: writable(undefined),

@@ -9,6 +9,8 @@ import type { ICommunicationSpace } from "../Interfaces/ICommunicationSpace";
 import type { IRecordableStrategy } from "../Interfaces/ICommunicationStrategy";
 import type { EgressFile } from "../Interfaces/ICommunicationState";
 import type { LiveKitService, RecordingStartInfo } from "../Services/LivekitService";
+import { LIVEKIT_RECORDING_WITH_MAP } from "../../Enum/EnvironmentVariable";
+import { mintRecorderToken, recorderFollowPageUrl, recorderPageUrl } from "../../Services/RecorderToken";
 
 export class LivekitCommunicationStrategy implements IRecordableStrategy {
     private usersReady: Set<string> = new Set();
@@ -276,7 +278,12 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
             Sentry.captureException(error);
         });
     }
-    async startRecording(user: SpaceUser, recordingSessionId: string): Promise<RecordingStartInfo> {
+    async startRecording(
+        user: SpaceUser,
+        recordingSessionId: string,
+        withMap = false,
+        layout = "",
+    ): Promise<RecordingStartInfo> {
         if (!this.createRoomPromise) {
             console.warn("Room not created yet");
             Sentry.captureMessage("[LivekitCommunicationStrategy] Room not created yet when starting recording");
@@ -284,7 +291,30 @@ export class LivekitCommunicationStrategy implements IRecordableStrategy {
         }
 
         await this.createRoomPromise;
-        return await this.livekitService.startRecording(this.space.getSpaceName(), user, user.uuid, recordingSessionId);
+        // The user asked for the map, and this server allows it. A bubble breaks up and forms again under another
+        // name as people walk: the page follows the person recording instead of this space.
+        let recorderPage: { customBaseUrl: string } | { webUrl: string } | undefined;
+        if (LIVEKIT_RECORDING_WITH_MAP && withMap) {
+            recorderPage =
+                this.space.getState().kind === "bubble"
+                    ? { webUrl: recorderFollowPageUrl(user.playUri, layout, await mintRecorderToken(user.uuid)) }
+                    : {
+                          customBaseUrl: recorderPageUrl(
+                              user.playUri,
+                              layout,
+                              this.space.world,
+                              this.space.getSpaceName(),
+                              this.space.filterType,
+                          ),
+                      };
+        }
+        return await this.livekitService.startRecording(
+            this.space.getSpaceName(),
+            user,
+            user.uuid,
+            recordingSessionId,
+            recorderPage,
+        );
     }
     async stopRecording(egressId?: string): Promise<void> {
         await this.livekitService.stopRecording(egressId);

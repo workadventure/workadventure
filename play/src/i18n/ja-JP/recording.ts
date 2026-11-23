@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "録画が進行中です",
         },
         spacePicker: {
+            title: "録画",
+            source: "録画する対象",
+            savedHint: "停止すると録画一覧に保存されます。",
             megaphone: "メガホンを録音する",
             discussion: "ディスカッションを録音する",
+            withMap: "動画のレイアウト：",
+            camerasOnly: "カメラのみ",
+            camerasOnlyHint:
+                "マップなしでカメラのみを録画します。録画中は演出できません（プロデューサーパネル、レイアウトやズームの変更はありません）。",
+            layout: {
+                map: "マップ優先",
+                balanced: "バランス",
+                cameras: "カメラ優先",
+            },
+        },
+        producer: {
+            preview: "現在の動画",
+            layout: "レイアウト",
+            zoom: "ズーム",
+            zoomLevel: {
+                tight: "寄り",
+                wide: "引き",
+                whole: "マップ全体",
+            },
+            framing: "フレーミング",
+            follow: "バブルを追う",
+            frameMyView: "自分の見ている範囲を映す",
+            cameras: "カメラ",
+            pin: "固定",
+            unpin: "固定解除",
+            pinHint: "固定した人は話していなくてもタイルが残ります（最大 {max} 人）。",
         },
     },
 };

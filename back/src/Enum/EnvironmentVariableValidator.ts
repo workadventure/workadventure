@@ -170,6 +170,11 @@ Note that anonymous players don't have any TTL limit because their data is store
     LIVEKIT_RECORDING_S3_SECRET_KEY: z.string().optional().describe("The S3 secret key for Livekit recording."),
     LIVEKIT_RECORDING_S3_REGION: z.string().optional().describe("The S3 region for Livekit recording."),
     LIVEKIT_RECORDING_S3_BUCKET: z.string().optional().describe("The S3 bucket for Livekit recording."),
+    LIVEKIT_RECORDING_WITH_MAP: BoolAsString.optional()
+        .transform((val) => toBool(val, false))
+        .describe(
+            "Record the meeting over the live map (an invisible ?recorder page) instead of the plain camera grid. Defaults to false",
+        ),
 });
 
 export type EnvironmentVariables = z.infer<typeof EnvironmentVariables>;

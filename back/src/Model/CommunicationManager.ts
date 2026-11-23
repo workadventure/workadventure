@@ -9,6 +9,7 @@ import {
     type MicrophoneTrackPublishedMessage,
     FilterType,
 } from "@workadventure/messages";
+import type { RecordingProduction } from "@workadventure/shared-utils";
 import { LIVEKIT_SWITCH_ON_CPU_LIMITATION, MAX_USERS_FOR_WEBRTC } from "../Enum/EnvironmentVariable";
 import { adminApi, type RecordingEventPayload } from "../Services/AdminApi";
 import type { LivekitCredentialsResponse } from "../Services/Repository/LivekitCredentialsResponse";
@@ -488,9 +489,12 @@ export class CommunicationManager implements ICommunicationManager {
             .getCurrentState()
             .handleMeetingConnectionRestartMessage(meetingConnectionRestartMessage, senderUserId);
     }
-    public async handleStartRecording(user: SpaceUser): Promise<void> {
+    public setRecordingProduction(user: SpaceUser, production: RecordingProduction): void {
+        this._recordingManager.setProduction(user, production);
+    }
+    public async handleStartRecording(user: SpaceUser, withMap = false, layout = ""): Promise<void> {
         this.cancelPendingTransitionIfNeeded();
-        await this._recordingManager.startRecording(user);
+        await this._recordingManager.startRecording(user, withMap, layout);
     }
 
     public async handleStopRecording(user: SpaceUser): Promise<void> {
@@ -693,6 +697,15 @@ export class CommunicationManager implements ICommunicationManager {
     /** The space learnt what it is: a session waiting on that may open now. */
     public handleSpaceKindChanged(): void {
         this._sessionAnalytics.kindChanged();
+        // Now a bubble: a recording following one of its users shows here, on LiveKit.
+        this._recordingManager.handleSpaceKindChanged();
+        const recorder = this._recordingManager.followedRecorder;
+        if (recorder) {
+            this.evaluateAndHandleTransition(recorder).catch((error) => {
+                console.error("Error moving a followed recording's bubble to LiveKit:", error);
+                Sentry.captureException(error);
+            });
+        }
     }
 
     /**

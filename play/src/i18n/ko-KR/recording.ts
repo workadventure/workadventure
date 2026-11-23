@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "녹화가 진행 중입니다",
         },
         spacePicker: {
+            title: "녹화",
+            source: "녹화할 대상",
+            savedHint: "중지하면 내 녹화 목록에 저장됩니다.",
             megaphone: "메가폰 녹화",
             discussion: "토론 녹화",
+            withMap: "동영상 레이아웃:",
+            camerasOnly: "카메라만",
+            camerasOnlyHint:
+                "지도 없이 카메라만 녹화합니다. 녹화 중에는 연출할 수 없습니다: 프로듀서 패널, 레이아웃 및 확대/축소 변경이 없습니다.",
+            layout: {
+                map: "지도 우선",
+                balanced: "균형",
+                cameras: "카메라 우선",
+            },
+        },
+        producer: {
+            preview: "현재 동영상",
+            layout: "레이아웃",
+            zoom: "확대/축소",
+            zoomLevel: {
+                tight: "가깝게",
+                wide: "멀리",
+                whole: "지도 전체",
+            },
+            framing: "구도",
+            follow: "버블 따라가기",
+            frameMyView: "내가 보는 화면 담기",
+            cameras: "카메라",
+            pin: "고정",
+            unpin: "고정 해제",
+            pinHint: "고정된 사람은 말하지 않아도 타일이 유지됩니다(최대 {max}명).",
         },
     },
 };

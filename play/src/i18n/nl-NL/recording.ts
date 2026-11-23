@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Een opname is bezig",
         },
         spacePicker: {
+            title: "Opnemen",
+            source: "Wat opnemen",
+            savedHint: "Wordt bij het stoppen in je opnames opgeslagen.",
             megaphone: "Megafoon opnemen",
             discussion: "Discussie opnemen",
+            withMap: "Indeling van de video:",
+            camerasOnly: "Alleen camera's",
+            camerasOnlyHint:
+                "Alleen de camera's, zonder de kaart. Deze video kun je tijdens de opname niet regisseren: geen regiepaneel, geen wijziging van indeling of zoom.",
+            layout: {
+                map: "Kaart eerst",
+                balanced: "Gebalanceerd",
+                cameras: "Camera's eerst",
+            },
+        },
+        producer: {
+            preview: "Nu in de video",
+            layout: "Indeling",
+            zoom: "Zoom",
+            zoomLevel: {
+                tight: "Dichtbij",
+                wide: "Uitgezoomd",
+                whole: "Hele kaart",
+            },
+            framing: "Kader",
+            follow: "De bubbel volgen",
+            frameMyView: "Kaderen wat ik zie",
+            cameras: "Camera's",
+            pin: "Vastzetten",
+            unpin: "Losmaken",
+            pinHint: "Een vastgezette persoon houdt zijn tegel, ook als hij zwijgt (tot {max}).",
         },
     },
 };

@@ -46,8 +46,37 @@ const recording: DeepPartial<Translation["recording"]> = {
             inProgress: "Đang có một bản ghi được thực hiện",
         },
         spacePicker: {
+            title: "Ghi hình",
+            source: "Ghi gì",
+            savedHint: "Được lưu vào danh sách bản ghi của bạn khi dừng.",
             megaphone: "Ghi loa phóng thanh",
             discussion: "Ghi cuộc thảo luận",
+            withMap: "Bố cục video:",
+            camerasOnly: "Chỉ camera",
+            camerasOnlyHint:
+                "Chỉ camera, không có bản đồ. Không thể điều khiển video này khi đang ghi: không có bảng đạo diễn, không đổi bố cục hay thu phóng.",
+            layout: {
+                map: "Ưu tiên bản đồ",
+                balanced: "Cân bằng",
+                cameras: "Ưu tiên camera",
+            },
+        },
+        producer: {
+            preview: "Trong video lúc này",
+            layout: "Bố cục",
+            zoom: "Thu phóng",
+            zoomLevel: {
+                tight: "Gần",
+                wide: "Thu nhỏ",
+                whole: "Toàn bộ bản đồ",
+            },
+            framing: "Khung hình",
+            follow: "Theo bong bóng",
+            frameMyView: "Đóng khung những gì tôi thấy",
+            cameras: "Camera",
+            pin: "Ghim",
+            unpin: "Bỏ ghim",
+            pinHint: "Người được ghim giữ ô của mình ngay cả khi im lặng (tối đa {max}).",
         },
     },
 };

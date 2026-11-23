@@ -1,4 +1,4 @@
-import type { SpaceState } from "@workadventure/shared-utils";
+import type { RecordingProduction, SpaceState } from "@workadventure/shared-utils";
 import { emptySpaceState, screenAnnotationElementSchema, spaceStateSchema } from "@workadventure/shared-utils";
 import type { Operation } from "fast-json-patch";
 import { applyPatch } from "fast-json-patch";
@@ -115,8 +115,23 @@ export class SpaceStateManager {
     }
 
     // Unlike the other state changes, a refused recording is reported by the caller (the recording menu).
-    public async startRecording(): Promise<void> {
-        await this.alter({ $case: "startRecording", startRecording: {} }, { timeout: RECORDING_QUERY_TIMEOUT_MS });
+    // layout: over the map, in this layout (see RecorderLayout). Undefined: the camera grid only.
+    public async startRecording(layout?: string): Promise<void> {
+        await this.alter(
+            { $case: "startRecording", startRecording: { withMap: layout !== undefined, layout: layout ?? "" } },
+            { timeout: RECORDING_QUERY_TIMEOUT_MS },
+        );
+    }
+
+    /** The person recording over the map changes how it is filmed (the producer panel). */
+    public async setRecordingProduction(production: RecordingProduction): Promise<void> {
+        await this.alter(
+            {
+                $case: "setRecordingProduction",
+                setRecordingProduction: { production: JSON.stringify(production) },
+            },
+            {},
+        );
     }
 
     public async stopRecording(): Promise<void> {

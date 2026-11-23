@@ -13,6 +13,7 @@ import {
     EncodedFileType,
     ImageOutput,
     WebhookConfig,
+    EncodingOptionsPreset,
 } from "livekit-server-sdk";
 import type { CreateOptions, EgressInfo, EncodedOutputs, WebhookEvent } from "livekit-server-sdk";
 import * as Sentry from "@sentry/node";
@@ -51,7 +52,7 @@ type EgressToStop = {
     status?: EgressStatus;
 };
 
-type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_started" | "egress_ended">;
+type ForwardedWebhookEvent = Extract<WebhookEvent["event"], "egress_updated" | "egress_ended">;
 
 type WebhookReceiverLike = Pick<WebhookReceiver, "receive">;
 
@@ -141,7 +142,9 @@ export class LiveKitService {
             room: livekitRoomName,
             // Note: everyone can publish in Livekit, moderation is handled at application level. If a user should
             // not have published, its VideoBox will never be visible by anyone anyway.
-            canPublish: true,
+            // The ?recorder page (the egress filming the map) only watches, and stays out of the participant list.
+            canPublish: !user.isRecorder,
+            hidden: user.isRecorder,
             canSubscribe: true,
             roomJoin: true,
             canPublishSources: [
@@ -227,7 +230,9 @@ export class LiveKitService {
         user: SpaceUser,
         folderName: string,
         recordingSessionId: string,
-        layout = "grid",
+        // The ?recorder page that films the map, instead of LiveKit's camera grid: as the RoomComposite template
+        // of this room, or as a web page that follows someone whatever room they move to.
+        recorderPage?: { customBaseUrl: string } | { webUrl: string },
     ): Promise<RecordingStartInfo> {
         try {
             const livekitRoomName = getLivekitRoomName(roomName);
@@ -285,15 +290,25 @@ export class LiveKitService {
             webhookUrl.searchParams.set("space", roomName);
             webhookUrl.searchParams.set("recordingSessionId", recordingSessionId);
 
-            const result = await this.egressClient.startRoomCompositeEgress(livekitRoomName, outputs, {
-                layout,
-                webhooks: [new WebhookConfig({ url: webhookUrl.toString(), signingKey: this.livekitApiKey })],
-            });
+            const webhooks = [new WebhookConfig({ url: webhookUrl.toString(), signingKey: this.livekitApiKey })];
+            const result =
+                recorderPage && "webUrl" in recorderPage
+                    ? await this.egressClient.startWebEgress(recorderPage.webUrl, outputs, {
+                          encodingOptions: EncodingOptionsPreset.H264_720P_30,
+                          awaitStartSignal: true,
+                          webhooks,
+                      })
+                    : await this.egressClient.startRoomCompositeEgress(livekitRoomName, outputs, {
+                          layout: "grid",
+                          customBaseUrl: recorderPage?.customBaseUrl,
+                          webhooks,
+                      });
 
             this.activeRecordings.set(result.egressId, result);
             return {
                 egressId: result.egressId,
-                roomName: result.roomName,
+                // A web egress belongs to no room: it is still the recording of this space.
+                roomName: result.roomName || livekitRoomName,
             };
         } catch (error) {
             console.error("Error starting recording:", error);
@@ -341,9 +356,20 @@ export class LiveKitService {
         if (!this.isForwardedEvent(event.event)) {
             return "ignored";
         }
+        // The recording starts when the egress is active, not when it is started: a web egress first loads the
+        // ?recorder page and the map, and only records once the page logs START_RECORDING (awaitStartSignal).
+        if (event.event === "egress_updated" && event.egressInfo?.status !== EgressStatus.EGRESS_ACTIVE) {
+            return "ignored";
+        }
 
         const egressInfo = event.egressInfo;
-        if (!egressInfo?.egressId || !egressInfo.roomName) {
+        if (!egressInfo?.egressId) {
+            throw new LivekitWebhookError("Missing egress information in webhook payload", "bad-request");
+        }
+        // A web egress (recording over the map, following someone) has no room: it records the space it was
+        // started from, which the webhook URL names.
+        const roomName = egressInfo.roomName || (spaceName ? getLivekitRoomName(spaceName) : "");
+        if (!roomName) {
             throw new LivekitWebhookError("Missing egress information in webhook payload", "bad-request");
         }
 
@@ -352,7 +378,7 @@ export class LiveKitService {
             eventId: event.id,
             recordingSessionId,
             egressId: egressInfo.egressId,
-            roomName: egressInfo.roomName,
+            roomName,
             phase: this.toWebhookPhase(event.event),
             status: this.toStatusName(egressInfo.status),
             error: egressInfo.error,
@@ -396,11 +422,11 @@ export class LiveKitService {
     }
 
     private isForwardedEvent(eventName: WebhookEvent["event"]): eventName is ForwardedWebhookEvent {
-        return eventName === "egress_started" || eventName === "egress_ended";
+        return eventName === "egress_updated" || eventName === "egress_ended";
     }
 
     private toWebhookPhase(eventName: ForwardedWebhookEvent): RecordingWebhookPhase {
-        return eventName === "egress_started"
+        return eventName === "egress_updated"
             ? RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_STARTED
             : RecordingWebhookPhase.RECORDING_WEBHOOK_PHASE_ENDED;
     }
