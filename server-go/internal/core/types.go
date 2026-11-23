@@ -46,6 +46,7 @@ const (
 	StatusLivekit
 	StatusListener
 	StatusSoundBlocked
+	StatusIdle // set by the front when it has not seen the user for a while; an idle player still joins bubbles
 )
 
 // Silent players never enter a proximity bubble (User.silent in the back).

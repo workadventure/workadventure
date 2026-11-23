@@ -11,18 +11,22 @@ import (
 
 // The core mirrors the protobuf enums by value; this catches a new value added on one side only.
 func TestEnumsAreAligned(t *testing.T) {
-	if len(pb.AvailabilityStatus_name) != int(core.StatusSoundBlocked)+1 {
-		t.Fatalf("AvailabilityStatus has %d values, core knows %d", len(pb.AvailabilityStatus_name), core.StatusSoundBlocked+1)
+	if len(pb.AvailabilityStatus_name) != int(core.StatusIdle)+1 {
+		t.Fatalf("AvailabilityStatus has %d values, core knows %d", len(pb.AvailabilityStatus_name), core.StatusIdle+1)
 	}
 	pairs := map[core.AvailabilityStatus]pb.AvailabilityStatus{
 		core.StatusOnline: pb.AvailabilityStatus_ONLINE, core.StatusDoNotDisturb: pb.AvailabilityStatus_DO_NOT_DISTURB,
 		core.StatusBackInAMoment: pb.AvailabilityStatus_BACK_IN_A_MOMENT, core.StatusSoundBlocked: pb.AvailabilityStatus_SOUND_BLOCKED,
 		core.StatusListener: pb.AvailabilityStatus_LISTENER, core.StatusLivekit: pb.AvailabilityStatus_LIVEKIT,
+		core.StatusIdle: pb.AvailabilityStatus_IDLE,
 	}
 	for c, p := range pairs {
 		if int32(c) != int32(p) {
 			t.Errorf("%v != %v", c, p)
 		}
+	}
+	if core.StatusIdle.Silent() {
+		t.Error("an idle player still joins bubbles, as in the back (User.silent)")
 	}
 	if int32(core.DirectionLeft) != int32(pb.PositionMessage_LEFT) || int32(core.ScopeWorld) != int32(pb.SetPlayerVariableMessage_WORLD) {
 		t.Error("Direction or Scope drifted")
