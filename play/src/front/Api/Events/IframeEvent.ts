@@ -1,13 +1,6 @@
 import { z } from "zod";
-import {
-    isBanEvent,
-    isChatEvent,
-    isChatMessage,
-    isKlaxoonEvent,
-    KLAXOON_ACTIVITY_PICKER_EVENT,
-} from "@workadventure/shared-utils";
+import { isChatEvent, isKlaxoonEvent, KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import { isStartWritingEvent, isStopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
-import { isUpdateWritingStatusChatListEvent } from "@workadventure/shared-utils/src/Events/UpdateWritingStatusChatListEvent";
 import { isClosePopupEvent } from "./ClosePopupEvent";
 import { isGoToPageEvent } from "./GoToPageEvent";
 import { isLoadPageEvent } from "./LoadPageEvent";
@@ -45,8 +38,6 @@ import { isActionsMenuActionClickedEvent } from "./ActionsMenuActionClickedEvent
 import { isHasPlayerMovedEvent } from "./HasPlayerMovedEvent";
 import { isWasCameraUpdatedEvent } from "./WasCameraUpdatedEvent";
 
-import { isLeaveMucEvent } from "./LeaveMucEvent";
-import { isJoinMucEvent } from "./JoinMucEvent";
 import { isMenuItemClickedEvent } from "./Ui/MenuItemClickedEvent";
 import { isJoinProximityMeetingEvent } from "./ProximityMeeting/JoinProximityMeetingEvent";
 import { isParticipantProximityMeetingEvent } from "./ProximityMeeting/ParticipantProximityMeetingEvent";
@@ -55,8 +46,6 @@ import { isEnablePlayersTrackingEvent } from "./EnablePlayersTrackingEvent";
 import { isAddPlayerEvent, isRemotePlayerChangedEvent } from "./AddPlayerEvent";
 import { isSetPlayerVariableEvent } from "./SetPlayerVariableEvent";
 import { isSettingsEvent } from "./SettingsEvent";
-import { isChatVisibilityEvent } from "./ChatVisibilityEvent";
-import { isShowBusinessCardEvent } from "./ShowBusinessCardEvent";
 import { isModalEvent } from "./ModalEvent";
 import { isAddActionBarButtonEvent, isRemoveButtonActionBarEvent } from "./Ui/ButtonActionBarEvent";
 import { isBannerEvent } from "./Ui/BannerEvent";
@@ -117,11 +106,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal("closeChat"),
         data: z.undefined(),
-    }),
-    /* @deprecated with new service chat messagerie */
-    z.object({
-        type: z.literal("addPersonnalMessage"),
-        data: z.string(),
     }),
     z.object({
         type: z.literal("newChatMessageWritingStatus"),
@@ -264,27 +248,11 @@ export const isIframeEventWrapper = z.union([
         data: isDynamicAreaEvent,
     }),
     z.object({
-        type: z.literal("login"),
-        data: z.undefined(),
-    }),
-    z.object({
-        type: z.literal("refresh"),
-        data: z.undefined(),
-    }),
-    z.object({
-        type: z.literal("showBusinessCard"),
-        data: isShowBusinessCardEvent,
-    }),
-    z.object({
         type: z.literal("openModal"),
         data: isModalEvent,
     }),
     z.object({
         type: z.literal("closeModal"),
-        data: z.undefined(),
-    }),
-    z.object({
-        type: z.literal("redirectPricing"),
         data: z.undefined(),
     }),
     z.object({
@@ -306,10 +274,6 @@ export const isIframeEventWrapper = z.union([
     z.object({
         type: z.literal(KLAXOON_ACTIVITY_PICKER_EVENT),
         payload: isKlaxoonEvent,
-    }),
-    z.object({
-        type: z.literal("banUser"),
-        data: isBanEvent,
     }),
     z.object({
         type: z.literal("disableMapEditor"),
@@ -481,14 +445,6 @@ export const isIframeResponseEvent = z.union([
         data: isMessageReferenceEvent,
     }),
     z.object({
-        type: z.literal("leaveMuc"),
-        data: isLeaveMucEvent,
-    }),
-    z.object({
-        type: z.literal("joinMuc"),
-        data: isJoinMucEvent,
-    }),
-    z.object({
         type: z.literal("addRemotePlayer"),
         data: isAddPlayerEvent,
     }),
@@ -504,32 +460,7 @@ export const isIframeResponseEvent = z.union([
         type: z.literal("settings"),
         data: isSettingsEvent,
     }),
-    z.object({
-        type: z.literal("chatVisibility"),
-        data: isChatVisibilityEvent,
-    }),
-    z.object({
-        type: z.literal("availabilityStatus"),
-        data: z.number(),
-    }),
 
-    // TODO will be deleted if timeline is becoming a MUC room
-    z.object({
-        type: z.literal("peerConnectionStatus"),
-        data: z.boolean(),
-    }),
-    z.object({
-        type: z.literal("comingUser"),
-        data: isChatMessage,
-    }),
-    z.object({
-        type: z.literal("addChatMessage"),
-        data: isChatMessage,
-    }),
-    z.object({
-        type: z.literal("updateWritingStatusChatList"),
-        data: isUpdateWritingStatusChatListEvent,
-    }),
     z.object({
         type: z.literal("buttonActionBarTriggered"),
         data: z.string(),
@@ -537,10 +468,6 @@ export const isIframeResponseEvent = z.union([
     z.object({
         type: z.literal("modalCloseTrigger"),
         data: isModalEvent,
-    }),
-    z.object({
-        type: z.literal("banUser"),
-        data: isBanEvent,
     }),
     z.object({
         type: z.literal("appendPCMData"),
@@ -643,10 +570,6 @@ export const iframeQueryMapTypeGuards = {
     getArea: {
         query: z.string(),
         answer: isCreateDynamicAreaEvent,
-    },
-    modifyArea: {
-        query: isDynamicAreaEvent,
-        answer: z.undefined(),
     },
     deleteArea: {
         query: z.string(),

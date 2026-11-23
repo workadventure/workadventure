@@ -132,6 +132,7 @@ export class RemotePlayer implements RemotePlayerInterface {
     public readonly _position$ = new Subject<PlayerPosition>();
     public readonly position$ = this._position$.asObservable();
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     public destroy() {
         this._position$.complete();
         for (const subject of Object.values(this._variablesSubjects)) {
@@ -139,6 +140,7 @@ export class RemotePlayer implements RemotePlayerInterface {
         }
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     public setVariable<K extends keyof PublicPlayerState>(name: K, value: PublicPlayerState[K]): void {
         this._variables[name] = value;
         const observable = this._variablesSubjects[name];
@@ -157,6 +159,7 @@ export class RemotePlayer implements RemotePlayerInterface {
         return newAction;
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     public callAction(key: string): void {
         const action = this.actions.get(key);
         if (action) {

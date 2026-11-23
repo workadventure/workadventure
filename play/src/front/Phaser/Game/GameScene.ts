@@ -3141,13 +3141,6 @@ ${escapedMessage}
         );
 
         this.iframeSubscriptionList.push(
-            // FIXME: aren't we making a weird loop here?
-            iframeListener.addPersonnalMessageStream.subscribe((text) => {
-                iframeListener.sendUserInputChat(text, undefined);
-            }),
-        );
-
-        this.iframeSubscriptionList.push(
             iframeListener.chatMessageStream.subscribe((chatMessage) => {
                 this.proximityChatRoomPromise()
                     .then((room) => {
@@ -3397,12 +3390,6 @@ ${escapedMessage}
         this.iframeSubscriptionList.push(
             iframeListener.setAreaPropertyStream.subscribe((setProperty) => {
                 this.setAreaProperty(setProperty.areaName, setProperty.propertyName, setProperty.propertyValue);
-            }),
-        );
-
-        this.iframeSubscriptionList.push(
-            iframeListener.banPlayerIframeEvent.subscribe((banPlayerEvent) => {
-                this.connection?.emitBanPlayerMessage(banPlayerEvent.uuid, banPlayerEvent.name);
             }),
         );
 
