@@ -166,6 +166,8 @@ fn a_silent_player_stays_out_and_leaves_when_going_silent() {
 
     room.update_details(b, DetailsChange { availability: Availability::BUSY, ..DetailsChange::default() }, &mut log);
     assert_eq!(room.group_count(), 1, "busy is not silent");
+    room.update_details(b, DetailsChange { availability: Availability::IDLE, ..DetailsChange::default() }, &mut log);
+    assert_eq!(room.group_count(), 1, "idle is not silent");
     room.update_details(
         b,
         DetailsChange { availability: Availability::BACK_IN_A_MOMENT, ..DetailsChange::default() },

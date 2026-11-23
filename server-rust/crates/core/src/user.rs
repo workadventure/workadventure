@@ -22,6 +22,8 @@ impl Availability {
     pub const LIVEKIT: Self = Self(11);
     pub const LISTENER: Self = Self(12);
     pub const SOUND_BLOCKED: Self = Self(13);
+    /// Set by the front when it has not seen the user for a while. Not silent: an idle player still joins bubbles.
+    pub const IDLE: Self = Self(14);
 
     /// A silent player never joins a bubble (User.silent in the back).
     pub fn is_silent(self) -> bool {
