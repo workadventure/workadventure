@@ -28,7 +28,7 @@
     aria-labelledby={title ? titleId : undefined}
     aria-label={title ? undefined : $LL.onboarding.tips.label()}
     data-testid="onboarding-popover"
-    class="pointer-events-auto flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg bg-contrast p-3 text-white shadow-lg"
+    class="pointer-events-auto flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg bg-contrast/80 p-3 text-white shadow-lg"
 >
     <div class="flex items-start gap-2">
         <div class="flex flex-1 flex-col gap-2">
@@ -58,7 +58,17 @@
         </button>
         <span class="flex-1"></span>
         {#if total > 1}
-            <span class="text-xs text-white/60">{position} / {total}</span>
+            <span class="flex gap-1" role="img" aria-label="{position} / {total}">
+                {#each { length: total }, i (i)}
+                    <span
+                        class={[
+                            "h-1 rounded-full",
+                            i === position - 1 ? "w-5" : "w-2",
+                            i < position ? "bg-secondary-600" : "bg-white/20",
+                        ]}
+                    ></span>
+                {/each}
+            </span>
         {/if}
         {#if showNext}
             <Button variant="secondary" size="sm" dataTestId="onboarding-popover-next" onclick={onNext}>
