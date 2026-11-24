@@ -17,6 +17,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "接続待機中",
     waitingConnectionSubtitle: "接続中",
     megaphoneNeeds: "メガホンを使用するには、カメラまたはマイクを起動するか、画面を共有する必要があります。",
+    megaphoneUnavailable:
+        "メガホンを使用できません：メガホンのスペースへの接続に失敗しました。このワールドのマップでメガホンの設定（オーディトリアムモード）が異なっている可能性があります。",
     mapEditorShortCut: "マップエディタ―を開く際にエラーが発生しました。",
     mapEditorNotEnabled: "このワールドでは、マップエディターが有効になっていません。",
     popupBlocked: {

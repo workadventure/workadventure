@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "Na zwězanje cakaś",
     waitingConnectionSubtitle: "Zwězaś",
     megaphoneNeeds: "Aby megafon wužywał, musyš swóju kameru abo swój mikrofon aktiwěrowaś abo swóju wobrazowku źěliś.",
+    megaphoneUnavailable:
+        "Megafon njejo k dispoziciji: zwisk k jogo rumoju njejo se raźił. Kórty togo swěta maju snaź rozdźělne nastajenja megafona (modus Auditorium).",
     mapEditorShortCut: "Pśi wopyśe editora kórtow wócyniś jo zmólka nastała.",
     mapEditorNotEnabled: "Editor kórtow njejo na toś tom swěśe zmóžnjony.",
     backgroundProcessing: {

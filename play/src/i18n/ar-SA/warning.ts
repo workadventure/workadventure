@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "انتظار الاتصال", // "Waiting for connection"
     waitingConnectionSubtitle: "الاتصال", // "Connecting"
     megaphoneNeeds: "لاستخدام الميكروفون، يجب عليك تفعيل الكاميرا أو الميكروفون أو مشاركة شاشتك.", // "To use the microphone, you must enable the camera or microphone, or share your screen."
+    megaphoneUnavailable:
+        "مكبر الصوت غير متاح: فشل الاتصال بمساحته. قد تكون لخرائط هذا العالم إعدادات مختلفة لمكبر الصوت (وضع القاعة).",
     mapEditorShortCut: "حدث خطأ أثناء محاولة فتح محرر الخريطة.", // "An error occurred while trying to open the map editor."
     mapEditorNotEnabled: "محرر الخريطة غير مفعّل في هذا العالم.", // "The map editor is not enabled in this world."
     backgroundProcessing: {

@@ -28,10 +28,14 @@ function stopStreamingOnSpace(space: SpaceInterface | undefined): void {
 }
 
 export function startMegaphoneLive(): void {
+    const megaphoneSpace = get(megaphoneSpaceStore);
+    // Not in the megaphone space (still joining, or the join failed): going "live" would reach nobody.
+    if (!megaphoneSpace) {
+        return;
+    }
     // PostHog counts the press. The time on air is measured by the
     // back, as broadcast.participation.ended — a speaker zone never comes through here.
     analyticsClient.startMegaphone();
-    const megaphoneSpace = get(megaphoneSpaceStore);
     currentLiveStreamingSpaceStore.set(megaphoneSpace);
     requestedMegaphoneStore.set(true);
     startStreamingOnSpace(get(currentLiveStreamingSpaceStore));

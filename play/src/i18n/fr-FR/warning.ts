@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "En attente du serveur",
     waitingConnectionSubtitle: "Connexion",
     megaphoneNeeds: "Pour utiliser le mégaphone, vous devez activer votre caméra ou votre microphone.",
+    megaphoneUnavailable:
+        "Le mégaphone est indisponible : la connexion à son espace a échoué. Les cartes de ce monde ont peut-être des réglages de mégaphone différents (mode Auditorium).",
     mapEditorShortCut: "Une erreur est survenue lors de l’ouverture de l’éditeur de carte.",
     mapEditorNotEnabled: "L’éditeur de carte n’est pas activé sur ce monde.",
     popupBlocked: {

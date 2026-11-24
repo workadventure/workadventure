@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "연결 대기 중",
     waitingConnectionSubtitle: "연결 중",
     megaphoneNeeds: "확성기를 사용하려면 카메라나 마이크를 활성화하거나 화면을 공유해야 합니다.",
+    megaphoneUnavailable:
+        "확성기를 사용할 수 없습니다: 확성기 공간에 연결하지 못했습니다. 이 월드의 맵마다 확성기 설정(강당 모드)이 다를 수 있습니다.",
     mapEditorShortCut: "지도 편집기를 여는 동안 오류가 발생했습니다.",
     mapEditorNotEnabled: "이 월드에서는 지도 편집기가 활성화되지 않았습니다.",
     popupBlocked: {

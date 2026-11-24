@@ -21,7 +21,11 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import {
+        megaphoneSpaceJoinFailedStore,
+        megaphoneSpaceStore,
+        requestedMegaphoneStore,
+    } from "../../Stores/MegaphoneStore";
     import { startMegaphoneLive, stopMegaphoneLive } from "../ActionBar/MenuIcons/megaphoneActions";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
@@ -110,7 +114,9 @@
         gameManager.getCurrentGameScene().getGameMap().getWamFile()?.getWam()?.settings?.megaphone?.scope !== "ROOM";
 
     let hasVideo = $derived(Boolean($requestedCameraState && stream?.getVideoTracks().length));
-    let canGoLive = $derived($requestedCameraState || $requestedMicrophoneState);
+    let canGoLive = $derived(
+        ($requestedCameraState || $requestedMicrophoneState) && $megaphoneSpaceStore !== undefined,
+    );
 
     function startLive() {
         startMegaphoneLive();
@@ -234,7 +240,15 @@
                 </section>
 
                 <footer class="flex flex-wrap items-center justify-end gap-2">
-                    {#if !canGoLive}
+                    {#if $megaphoneSpaceJoinFailedStore}
+                        <p
+                            class="m-0 me-auto text-sm flex items-center gap-1 text-danger-400"
+                            data-testid="go-live-unavailable"
+                        >
+                            <IconAlertTriangle font-size="16" />
+                            {$LL.warning.megaphoneUnavailable()}
+                        </p>
+                    {:else if !$requestedCameraState && !$requestedMicrophoneState}
                         <p class="m-0 me-auto text-sm flex items-center gap-1 text-warning-400">
                             <IconAlertTriangle font-size="16" />
                             {$LL.warning.megaphoneNeeds()}

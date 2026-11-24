@@ -16,6 +16,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "等待连接",
     waitingConnectionSubtitle: "连接",
     megaphoneNeeds: "要使用扩音器，您必须激活摄像头或麦克风，或共享屏幕。",
+    megaphoneUnavailable: "扩音器不可用：连接其空间失败。此世界的地图可能使用了不同的扩音器设置（礼堂模式）。",
     mapEditorShortCut: "尝试打开地图编辑器时出错。",
     mapEditorNotEnabled: "地图编辑器在此世界中未启用。",
     backgroundProcessing: {

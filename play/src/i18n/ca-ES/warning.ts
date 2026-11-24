@@ -17,6 +17,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionSubtitle: "Conectant",
     megaphoneNeeds:
         "Per utilitzar el megàfon, has d'activar la teva càmera o el teu micròfon o compartir la teva pantalla.",
+    megaphoneUnavailable:
+        "El megàfon no està disponible: la connexió al seu espai ha fallat. Els mapes d'aquest món poden tenir configuracions del megàfon diferents (mode Auditori).",
     mapEditorShortCut: "Hi ha hagut un error en intentar obrir l'editor de mapes.",
     mapEditorNotEnabled: "L'editor de mapes no està habilitat en aquest món.",
     backgroundProcessing: {
