@@ -67,8 +67,9 @@ class ConnectionManager {
 
     constructor() {
         // The listener never needs to be removed, because we are in a singleton that is never destroyed.
+        // pagehide, not beforeunload: a navigation cancelled after beforeunload would leave the page never reconnecting.
         // eslint-disable-next-line listeners/no-missing-remove-event-listener,listeners/no-inline-function-event-listener
-        window.addEventListener("beforeunload", () => {
+        window.addEventListener("pagehide", () => {
             this._unloading = true;
             if (this.reconnectingTimeout) clearTimeout(this.reconnectingTimeout);
         });

@@ -58,6 +58,17 @@ describe("WorkAdventureWebSocket close codes", () => {
         expect(new URL(FakeWebSocket.instances[1].url).searchParams.get("lastReceivedNonce")).toBe("0");
     });
 
+    it("keeps the connection when a navigation is cancelled after beforeunload, closes it on pagehide", () => {
+        socket = new WorkAdventureWebSocket("ws://pusher/ws/room?tabId=tab");
+
+        // The desktop app opening a link in the system browser: beforeunload, then no pagehide.
+        window.dispatchEvent(new Event("beforeunload"));
+        expect(FakeWebSocket.instances[0].close).not.toHaveBeenCalled();
+
+        window.dispatchEvent(new Event("pagehide"));
+        expect(FakeWebSocket.instances[0].close).toHaveBeenCalledWith(1000, "Page unloading");
+    });
+
     it("does not resume after the pusher destroyed the session", () => {
         socket = new WorkAdventureWebSocket("ws://pusher/ws/room?tabId=tab");
         const onclose = vi.fn();
