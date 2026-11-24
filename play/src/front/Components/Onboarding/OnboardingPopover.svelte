@@ -28,7 +28,7 @@
     aria-labelledby={title ? titleId : undefined}
     aria-label={title ? undefined : $LL.onboarding.tips.label()}
     data-testid="onboarding-popover"
-    class="pointer-events-auto flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg border border-solid border-secondary bg-contrast p-3 text-white shadow-lg"
+    class="pointer-events-auto flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg bg-contrast p-3 text-white shadow-lg"
 >
     <div class="flex items-start gap-2">
         <div class="flex flex-1 flex-col gap-2">
