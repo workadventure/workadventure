@@ -24,7 +24,6 @@ const menu: DeepPartial<Translation["menu"]> = {
     profile: {
         login: "přizjewić",
         logout: "wotzjewić",
-        helpAndTips: "Pomoc a pokiwki",
     },
     settings: {
         videoBandwidth: {
