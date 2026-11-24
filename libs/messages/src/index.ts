@@ -14,6 +14,7 @@ export * from "./JsonMessages/CompanionTextures";
 export * from "./JsonMessages/ChatData";
 export * from "./JsonMessages/ErrorApiData";
 export * from "./JsonMessages/MapDetailsData";
+export * from "./JsonMessages/OnboardingData";
 export * from "./JsonMessages/MetaTagFavicon";
 export * from "./JsonMessages/MetaTagManifestIcon";
 export * from "./JsonMessages/PlayerTextures";

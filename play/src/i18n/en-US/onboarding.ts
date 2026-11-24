@@ -52,4 +52,24 @@ export default {
             "You've learned the basics of {worldName}! Feel free to explore, meet new people, and have fun. You can always access help from the menu if you need it.",
         finish: "Start exploring!",
     },
+    tips: {
+        label: "Tip",
+        next: "Next",
+        gotIt: "Got it",
+        close: "Close",
+        stopShowing: "Stop showing tips",
+        restartTutorial: "Restart the tutorial",
+    },
+    mapEditorTour: {
+        title: "Place furniture with the map editor",
+        openMenu: {
+            title: "Make this place yours",
+            text: "You can change this map. Open the **{menu}** menu to start.",
+        },
+        openEditor: "Click **{editor}**.",
+        placeObject: {
+            title: "Place furniture",
+            text: "Pick an object in this list, then click on the map to place it.",
+        },
+    },
 } satisfies Translation["onboarding"];

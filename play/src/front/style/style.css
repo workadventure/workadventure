@@ -770,6 +770,27 @@ div.emoji-picker {
     left: -12px;
 }
 
+/* The element an onboarding popover points at. The ring is drawn inside: the action bar and the side panels clip
+   what goes past their edges. */
+[data-onboarding-highlight] {
+    /* Plain CSS: Tailwind's outline utilities read --tw-outline-style, which some buttons set to none. */
+    outline: 2px solid hsl(var(--secondary));
+    outline-offset: -2px;
+    animation: onboarding-highlight-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes onboarding-highlight-pulse {
+    50% {
+        outline-color: hsl(var(--secondary) / 0.4);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    [data-onboarding-highlight] {
+        animation: none;
+    }
+}
+
 .say-bubble{
     font-weight: 500;
     font-family: "Pretendard Korean", "Comic Jens", cursive;

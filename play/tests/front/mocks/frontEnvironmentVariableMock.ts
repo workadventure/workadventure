@@ -73,3 +73,4 @@ export const BYPASS_PWA = false;
 export const PROVIDE_DEFAULT_WOKA_NAME: "no" | "random" | "fix" | "fix-plus-random-numbers" | undefined = undefined;
 export const PROVIDE_DEFAULT_WOKA_TEXTURE: "no" | "random" | "fix" | undefined = undefined;
 export const ENABLE_TUTORIAL = true;
+export const ONBOARDING_START_DELAY = 30;

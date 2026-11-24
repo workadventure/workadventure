@@ -1329,6 +1329,17 @@
       }
     },
     {
+      "title": "onboarding.anchor_missing",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.anchor_missing"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.anchor_missing"
+        }
+      }
+    },
+    {
       "title": "onboarding.companion_selected",
       "properties": {
         "eventName": {
@@ -1347,6 +1358,39 @@
         },
         "properties": {
           "$ref": "#/$defs/onboarding.custom_woka_selected"
+        }
+      }
+    },
+    {
+      "title": "onboarding.item_dismissed",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.item_dismissed"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.item_dismissed"
+        }
+      }
+    },
+    {
+      "title": "onboarding.item_done",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.item_done"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.item_done"
+        }
+      }
+    },
+    {
+      "title": "onboarding.item_started",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.item_started"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.item_started"
         }
       }
     },
@@ -2092,8 +2136,12 @@
               "menu.custom.opened",
               "menu.opened",
               "menu.shortcuts.opened",
+              "onboarding.anchor_missing",
               "onboarding.companion_selected",
               "onboarding.custom_woka_selected",
+              "onboarding.item_dismissed",
+              "onboarding.item_done",
+              "onboarding.item_started",
               "onboarding.name_validated",
               "onboarding.video_validated",
               "onboarding.woka_selected",
@@ -4719,6 +4767,37 @@
       "description": "The user opened the keyboard shortcuts.",
       "title": "menu.shortcuts.opened"
     },
+    "onboarding.anchor_missing": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "The onboarding item's id. Built-in ids start with `wa.`."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "builtin",
+            "world"
+          ],
+          "description": "Where the item comes from: WorkAdventure itself, or the world's own onboarding config."
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The step the event happened on, from 0."
+        },
+        "anchor": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "The UI element the step points at."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.anchor_missing",
+      "description": "An onboarding step's target did not appear within 10 s, so the item stopped. A renamed or removed anchor shows up here."
+    },
     "onboarding.companion_selected": {
       "type": "object",
       "properties": {},
@@ -4732,6 +4811,92 @@
       "additionalProperties": true,
       "description": "The user picked a custom Woka during onboarding.",
       "title": "onboarding.custom_woka_selected"
+    },
+    "onboarding.item_dismissed": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "The onboarding item's id. Built-in ids start with `wa.`."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "builtin",
+            "world"
+          ],
+          "description": "Where the item comes from: WorkAdventure itself, or the world's own onboarding config."
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The step the event happened on, from 0."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.item_dismissed",
+      "description": "The user closed an onboarding item before its end, with × or Esc. `step` is the one they closed."
+    },
+    "onboarding.item_done": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "The onboarding item's id. Built-in ids start with `wa.`."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "builtin",
+            "world"
+          ],
+          "description": "Where the item comes from: WorkAdventure itself, or the world's own onboarding config."
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The step the event happened on, from 0."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.item_done",
+      "description": "The user went through every step of an onboarding item. `step` is the last one."
+    },
+    "onboarding.item_started": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "The onboarding item's id. Built-in ids start with `wa.`."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "builtin",
+            "world"
+          ],
+          "description": "Where the item comes from: WorkAdventure itself, or the world's own onboarding config."
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The step the event happened on, from 0."
+        },
+        "trigger": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "help"
+          ],
+          "description": "auto: the scheduler started it. help: the user picked it in the Help menu."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.item_started",
+      "description": "An onboarding item (a tour of a feature, a tip) appeared. `step` is the first step shown."
     },
     "onboarding.name_validated": {
       "type": "object",

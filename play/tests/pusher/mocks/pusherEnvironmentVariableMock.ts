@@ -107,6 +107,7 @@ export const LIVEKIT_RECORDING_S3_REGION: string | undefined = undefined;
 export const LIVEKIT_PIXEL_DENSITY = 2 / 3;
 export const ENABLE_ISSUE_REPORT = true;
 export const ENABLE_TUTORIAL = true;
+export const ONBOARDING_START_DELAY = 30;
 export const GRPC_MAX_MESSAGE_SIZE = 20 * 1024 * 1024;
 export const ANALYTICS_FLUSH_INTERVAL_MS = 10_000;
 export const ANALYTICS_TIMEOUT_MS = 2_000;
@@ -181,4 +182,5 @@ export const FRONT_ENVIRONMENT_VARIABLES: FrontConfigurationInterface = {
     PROVIDE_DEFAULT_WOKA_NAME,
     PROVIDE_DEFAULT_WOKA_TEXTURE,
     ENABLE_TUTORIAL,
+    ONBOARDING_START_DELAY,
 };

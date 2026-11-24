@@ -2,6 +2,7 @@
     import { onDestroy, onMount } from "svelte";
     // import { createPopperActions } from "svelte-popperjs";
     import type { LocalizedString } from "typesafe-i18n";
+    import type { OnboardingAnchor } from "@workadventure/messages";
     import { LL } from "../../../i18n/i18n-svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
     import { EditorToolName } from "../../Phaser/Game/MapEditor/MapEditorModeManager";
@@ -11,28 +12,32 @@
     import { isMediaBreakpointUp } from "../../Utils/BreakpointsUtils";
     import ArrowBarRight from "../Icons/ArrowBarRight.svelte";
     import type { WorkAdventureComponent } from "../../../types/component";
+    import { onboarding } from "../../Onboarding/OnboardingAnchors";
     import { IconX, IconTexture, IconLamp, IconMapSearch, IconSettings, IconTrash } from "@wa-icons";
 
     type SideBarTool = {
         toolName: EditorToolName;
+        anchor?: OnboardingAnchor;
         iconComponent: WorkAdventureComponent;
         tooltiptext: LocalizedString;
     };
 
     const direction = document.documentElement.getAttribute("dir") || "ltr";
 
-    const exploreTheRoomTool = {
+    const exploreTheRoomTool: SideBarTool = {
         toolName: EditorToolName.ExploreTheRoom,
+        anchor: "mapEditor.tool.exploration",
         iconComponent: IconMapSearch,
         tooltiptext: $LL.mapEditor.sideBar.exploreTheRoom(),
     };
 
-    const entityEditorTool = {
+    const entityEditorTool: SideBarTool = {
         toolName: EditorToolName.EntityEditor,
+        anchor: "mapEditor.tool.entity",
         iconComponent: IconLamp,
         tooltiptext: $LL.mapEditor.sideBar.entityEditor(),
     };
-    const trashEditorTool = {
+    const trashEditorTool: SideBarTool = {
         toolName: EditorToolName.TrashEditor,
         iconComponent: IconTrash,
         tooltiptext: $LL.mapEditor.sideBar.trashEditor(),
@@ -48,6 +53,7 @@
         if ($mapEditorActivated && !isMobile) {
             tools.push({
                 toolName: EditorToolName.AreaEditor,
+                anchor: "mapEditor.tool.area",
                 iconComponent: IconTexture,
                 tooltiptext: $LL.mapEditor.sideBar.areaEditor(),
             });
@@ -144,6 +150,7 @@
                             ? 'bg-secondary'
                             : 'hover:bg-white/10'}"
                         id={tool.toolName}
+                        {@attach tool.anchor && onboarding(tool.anchor)}
                         class:active={$mapEditorSelectedToolStore === tool.toolName}
                         onclick={(event) => {
                             event.preventDefault();

@@ -18,6 +18,7 @@
 
     import MicOnIcon from "../../Icons/MicOnIcon.svelte";
     import MicOffIcon from "../../Icons/MicOffIcon.svelte";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const microphoneButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
@@ -96,6 +97,7 @@
 </script>
 
 <ActionBarButton
+    {@attach onboarding("actionBar.microphone")}
     onclick={microphoneClick}
     classList="group/btn-mic peer/mic"
     disabledHelp={$openedMenuStore !== undefined}

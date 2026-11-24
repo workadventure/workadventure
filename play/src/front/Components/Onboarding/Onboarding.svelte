@@ -9,6 +9,8 @@
     import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
     import { inJitsiStore, inLivekitStore, silentStore } from "../../Stores/MediaStore";
     import type { GameScene } from "../../Phaser/Game/GameScene";
+    import { OnboardingScheduler, onboardingScheduler } from "../../Onboarding/OnboardingScheduler";
+    import { builtinItems } from "../../Onboarding/builtinItems";
     import OnboardingStep from "./OnboardingStep.svelte";
     import OnboardingHighlight from "./OnboardingHighlight.svelte";
     import WelcomeStep from "./Steps/WelcomeStep.svelte";
@@ -37,6 +39,16 @@
         window.removeEventListener("keydown", handleKeyDown);
         if (onboardingUnsubscribe) onboardingUnsubscribe();
     }
+
+    // Tours and tips. The tutorial below joins them as an item in phase 2.
+    onMount(() => {
+        const scheduler = new OnboardingScheduler(gameManager.getCurrentGameScene(), builtinItems);
+        onboardingScheduler.set(scheduler);
+        return () => {
+            scheduler.destroy();
+            onboardingScheduler.set(undefined);
+        };
+    });
 
     onMount(() => {
         // Listen to player movement for step 2

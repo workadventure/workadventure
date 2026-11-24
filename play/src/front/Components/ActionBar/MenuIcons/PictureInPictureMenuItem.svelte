@@ -11,6 +11,7 @@
     } from "../../../Stores/PeerStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     interface Props {
         onclick?: () => void;
@@ -44,6 +45,7 @@
 </script>
 
 <ActionBarButton
+    {@attach onboarding("actionBar.pictureInPicture")}
     classList="group/btn-picture-in-picture"
     disabledHelp={$openedMenuStore !== undefined}
     state={$activePictureInPictureStore ? "active" : "normal"}

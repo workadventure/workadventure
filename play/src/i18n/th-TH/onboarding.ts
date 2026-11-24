@@ -51,6 +51,26 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
             "คุณได้เรียนรู้พื้นฐานของ {worldName} แล้ว! สำรวจ พบปะผู้คนใหม่ ๆ และสนุกได้เลย หากต้องการความช่วยเหลือ สามารถเปิดดูได้จากเมนูเสมอ",
         finish: "เริ่มสำรวจเลย!",
     },
+    tips: {
+        label: "เคล็ดลับ",
+        next: "ถัดไป",
+        gotIt: "เข้าใจแล้ว",
+        close: "ปิด",
+        stopShowing: "หยุดแสดงเคล็ดลับ",
+        restartTutorial: "เริ่มบทแนะนำใหม่",
+    },
+    mapEditorTour: {
+        title: "วางเฟอร์นิเจอร์ด้วยตัวแก้ไขแผนที่",
+        openMenu: {
+            title: "ทำให้ที่นี่เป็นของคุณ",
+            text: "คุณสามารถแก้ไขแผนที่นี้ได้ เปิดเมนู **{menu}** เพื่อเริ่มต้น",
+        },
+        openEditor: "คลิก **{editor}**",
+        placeObject: {
+            title: "วางเฟอร์นิเจอร์",
+            text: "เลือกวัตถุจากรายการนี้ แล้วคลิกบนแผนที่เพื่อวาง",
+        },
+    },
 };
 
 export default onboarding;

@@ -51,4 +51,24 @@ export default {
             "Je hebt de basis van {worldName} geleerd! Voel je vrij om te verkennen, nieuwe mensen te ontmoeten en plezier te hebben. Je kunt altijd hulp openen via het menu als je het nodig hebt.",
         finish: "Begin met verkennen!",
     },
+    tips: {
+        label: "Tip",
+        next: "Volgende",
+        gotIt: "Begrepen",
+        close: "Sluiten",
+        stopShowing: "Geen tips meer tonen",
+        restartTutorial: "Tutorial opnieuw starten",
+    },
+    mapEditorTour: {
+        title: "Meubels plaatsen met de kaarteditor",
+        openMenu: {
+            title: "Maak deze plek de jouwe",
+            text: "Je kunt deze kaart aanpassen. Open het menu **{menu}** om te beginnen.",
+        },
+        openEditor: "Klik op **{editor}**.",
+        placeObject: {
+            title: "Meubels plaatsen",
+            text: "Kies een object uit deze lijst en klik dan op de kaart om het te plaatsen.",
+        },
+    },
 } satisfies Translation["onboarding"];

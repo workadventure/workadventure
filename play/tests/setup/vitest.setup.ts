@@ -98,6 +98,7 @@ if (typeof window !== "undefined" && window.env === undefined) {
         PROVIDE_DEFAULT_WOKA_NAME: undefined,
         PROVIDE_DEFAULT_WOKA_TEXTURE: undefined,
         ENABLE_TUTORIAL: false,
+        ONBOARDING_START_DELAY: 30,
     };
 
     window.env = defaultEnv;

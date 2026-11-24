@@ -39,6 +39,8 @@ services:
       WOKA_SPEED: 27
       # Disable tutorial
       ENABLE_TUTORIAL: "false"
+      # Onboarding tips start without the 30 s wait
+      ONBOARDING_START_DELAY: "0"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.play.rule=Host(`play.workadventure.localhost`)"

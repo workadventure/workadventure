@@ -10,6 +10,7 @@
     import MenuBurgerIcon from "../../Icons/MenuBurgerIcon.svelte";
     import XIcon from "../../Icons/XIcon.svelte";
     import Woka from "../../Woka/WokaFromUserId.svelte";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
     import ProfileMenuContent from "./ProfileMenuContent.svelte";
 
     const PROFILE_MENU_Z_INDEX = 1100;
@@ -71,6 +72,7 @@
         class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2 cursor-pointer"
         class:profile-menu-force-burger={forceBurgerMode}
         bind:this={triggerElement}
+        {@attach onboarding("actionBar.profileMenu")}
         onclick={(event) => {
             event.preventDefault();
             openedMenuStore.toggle("profileMenu");

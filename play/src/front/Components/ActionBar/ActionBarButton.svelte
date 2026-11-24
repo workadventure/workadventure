@@ -48,6 +48,8 @@
         children?: Snippet;
         tooltip?: Snippet;
         end?: Snippet;
+        // Attachments ({@attach onboarding(...)}) are props with a symbol key: they land on the button.
+        [attachment: symbol]: unknown;
     }
 
     let {
@@ -83,6 +85,7 @@
         children,
         tooltip,
         end,
+        ...rest
     }: Props = $props();
 
     let isInMenu = $derived(context !== undefined ? context === "menu" : getContext("inMenu"));
@@ -165,6 +168,7 @@
                 onmouseleave?.(event);
             }}
             data-testid={dataTestId}
+            {...rest}
         >
             {#if !hideIconInActionBar}
                 {#if statusDot}
@@ -215,6 +219,7 @@
         style={styleVars}
         data-testid={dataTestId}
         bind:this={wrapperDiv}
+        {...rest}
     >
         {#if hasImage}
             <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">

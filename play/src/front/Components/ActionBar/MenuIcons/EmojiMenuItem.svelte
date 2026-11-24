@@ -5,6 +5,7 @@
     import { activeSecondaryZoneActionBarStore, openedMenuStore } from "../../../Stores/MenuStore";
     import LL from "../../../../i18n/i18n-svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     function toggleEmojiPicker() {
         if ($activeSecondaryZoneActionBarStore === "emote") {
@@ -25,6 +26,7 @@
 </script>
 
 <ActionBarButton
+    {@attach onboarding("actionBar.emoji")}
     onclick={() => {
         toggleEmojiPicker();
     }}

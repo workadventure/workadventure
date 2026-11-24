@@ -284,6 +284,24 @@ const joinRankProperty = z
  * Without it these rows say a camera was turned off somewhere, by someone, and cannot
  * be placed on the meeting they belong to.
  */
+/** Where an onboarding item is and how far the user got. */
+const onboardingItemProperties = z.object({
+  itemId: z
+    .string()
+    .max(100)
+    .describe("The onboarding item's id. Built-in ids start with `wa.`."),
+  source: z
+    .enum(["builtin", "world"])
+    .describe(
+      "Where the item comes from: WorkAdventure itself, or the world's own onboarding config.",
+    ),
+  step: z
+    .number()
+    .int()
+    .nonnegative()
+    .describe("The step the event happened on, from 0."),
+});
+
 const meetingActionProperties = z.object({
   meetingId: z
     .string()
@@ -1779,6 +1797,41 @@ export const ANALYTICS_EVENTS = {
         .describe("Which onboarding scene the Woka was confirmed in."),
     }),
     description: "The user confirmed their Woka during onboarding.",
+  }),
+
+  "onboarding.item_started": event({
+    properties: onboardingItemProperties.extend({
+      trigger: z
+        .enum(["auto", "help"])
+        .describe(
+          "auto: the scheduler started it. help: the user picked it in the Help menu.",
+        ),
+    }),
+    description:
+      "An onboarding item (a tour of a feature, a tip) appeared. `step` is the first step shown.",
+  }),
+
+  "onboarding.item_done": event({
+    properties: onboardingItemProperties,
+    description:
+      "The user went through every step of an onboarding item. `step` is the last one.",
+  }),
+
+  "onboarding.item_dismissed": event({
+    properties: onboardingItemProperties,
+    description:
+      "The user closed an onboarding item before its end, with × or Esc. `step` is the one they closed.",
+  }),
+
+  "onboarding.anchor_missing": event({
+    properties: onboardingItemProperties.extend({
+      anchor: z
+        .string()
+        .max(100)
+        .describe("The UI element the step points at."),
+    }),
+    description:
+      "An onboarding step's target did not appear within 10 s, so the item stopped. A renamed or removed anchor shows up here.",
   }),
 
   "feedback.opened": event({
