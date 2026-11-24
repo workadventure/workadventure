@@ -52,7 +52,7 @@ describe("BroadcastService", () => {
         const { space } = createMockSpace();
         const { service, joinSpace } = createService(space);
 
-        await service.joinSpace("Megaphone Space", new AbortController().signal, false);
+        await service.joinSpace("Megaphone Space", new AbortController().signal);
 
         expect(joinSpace).toHaveBeenCalledWith(
             "megaphone-space",
@@ -63,11 +63,11 @@ describe("BroadcastService", () => {
         );
     });
 
-    it("should use screenSharingState and attendeesState watch fields when feedback is enabled", async () => {
+    it("should join with feedback whatever the audience setting, so every map asks for the same filter", async () => {
         const { space } = createMockSpace();
         const { service, joinSpace } = createService(space);
 
-        await service.joinSpace("Megaphone Space", new AbortController().signal, true);
+        await service.joinSpace("Megaphone Space", new AbortController().signal, writable(false));
 
         expect(joinSpace).toHaveBeenCalledWith(
             "megaphone-space",
@@ -82,7 +82,7 @@ describe("BroadcastService", () => {
         const { space, hasRemoteSpeakerStore, startListenerStreaming, stopListenerStreaming } = createMockSpace();
         const { service } = createService(space);
 
-        await service.joinSpace("Megaphone Space", new AbortController().signal, true);
+        await service.joinSpace("Megaphone Space", new AbortController().signal, writable(true));
 
         // Nobody on air yet: joining must not emit an attendeesState the space never had.
         expect(startListenerStreaming).not.toHaveBeenCalled();
@@ -99,10 +99,26 @@ describe("BroadcastService", () => {
         const { space, hasRemoteSpeakerStore, startListenerStreaming } = createMockSpace();
         const { service } = createService(space);
 
-        await service.joinSpace("Megaphone Space", new AbortController().signal, false);
+        await service.joinSpace("Megaphone Space", new AbortController().signal);
         hasRemoteSpeakerStore.set(true);
 
         // startListenerStreaming throws outside a WITH_FEEDBACK space.
         expect(startListenerStreaming).not.toHaveBeenCalled();
+    });
+
+    it("should follow the Auditorium setting without leaving the space", async () => {
+        const { space, hasRemoteSpeakerStore, startListenerStreaming, stopListenerStreaming } = createMockSpace();
+        const { service } = createService(space);
+        const audienceFeedback = writable(false);
+
+        await service.joinSpace("Megaphone Space", new AbortController().signal, audienceFeedback);
+        hasRemoteSpeakerStore.set(true);
+        expect(startListenerStreaming).not.toHaveBeenCalled();
+
+        audienceFeedback.set(true);
+        expect(startListenerStreaming).toHaveBeenCalledTimes(1);
+
+        audienceFeedback.set(false);
+        expect(stopListenerStreaming).toHaveBeenCalledTimes(1);
     });
 });

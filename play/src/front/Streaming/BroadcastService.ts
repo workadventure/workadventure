@@ -1,7 +1,7 @@
 import debug from "debug";
 import { slugify } from "@workadventure/shared-utils/src/Jitsi/slugify";
 import { FilterType, type SpaceKind } from "@workadventure/messages";
-import { get, type Unsubscriber } from "svelte/store";
+import { derived, get, writable, type Readable, type Unsubscriber } from "svelte/store";
 import { Subscription } from "rxjs";
 import { type WAMSettings, WAMSettingsUtils } from "@workadventure/map-editor";
 
@@ -27,6 +27,10 @@ export class BroadcastService {
     private unsubscribes: Subscription[] = [];
     private megaphoneSpaceSettingsStoreUnsubscribe: Unsubscriber;
     private megaphoneSpaceSettings: MegaphoneSpaceSettings | undefined;
+    // Auditorium mode: whether the audience shows its camera to the speakers. A setting of the
+    // map, while the megaphone space is shared by every map of the world: it must not change
+    // how the space is joined, only what this map's users publish in it.
+    private readonly megaphoneAudienceFeedbackStore = writable(false);
 
     constructor(
         private spaceRegistry: SpaceRegistryInterface,
@@ -42,12 +46,12 @@ export class BroadcastService {
             if (oldMegaphoneSpace) {
                 oldMegaphoneSpace.setCanRecord(newSpaceSettings?.canRecord ?? false);
             }
+            this.megaphoneAudienceFeedbackStore.set(newSpaceSettings?.audienceVideoFeedbackActivated ?? false);
 
             if (
                 oldMegaphoneSpace &&
                 newSpaceSettings !== undefined &&
-                oldSpaceSettings?.spaceName === newSpaceSettings.spaceName &&
-                oldSpaceSettings.audienceVideoFeedbackActivated === newSpaceSettings.audienceVideoFeedbackActivated
+                oldSpaceSettings?.spaceName === newSpaceSettings.spaceName
             ) {
                 this.megaphoneSpaceSettings = newSpaceSettings;
                 return;
@@ -64,12 +68,11 @@ export class BroadcastService {
 
             if (newSpaceSettings !== undefined) {
                 const spaceName = newSpaceSettings.spaceName;
-                const audienceVideoFeedbackActivated = newSpaceSettings.audienceVideoFeedbackActivated;
                 this.megaphoneSpaceSettings = newSpaceSettings;
                 this.joinSpace(
                     spaceName,
                     this.abortSignal,
-                    audienceVideoFeedbackActivated,
+                    this.megaphoneAudienceFeedbackStore,
                     "megaphone",
                     newSpaceSettings.canRecord,
                 )
@@ -92,27 +95,29 @@ export class BroadcastService {
      * Join a broadcast space
      * @param spaceName The name of the space to join
      * @param abortSignal Signal to abort the join operation
-     * @param audienceVideoFeedbackActivated If true, use LIVE_STREAMING_USERS_WITH_FEEDBACK to allow speaker to see attendees
+     * @param audienceFeedback When given, the space is joined with LIVE_STREAMING_USERS_WITH_FEEDBACK and the
+     * audience publishes its camera to the speakers while this store is true. The filter does not depend on
+     * the store's value: every client of a space must ask for the same filter, or the back refuses the join.
      * @param spaceKind What the space is: the world megaphone, or a speaker zone on the map
      * @returns The broadcast space
      */
     public async joinSpace(
         spaceName: string,
         abortSignal: AbortSignal,
-        audienceVideoFeedbackActivated = false,
+        audienceFeedback: Readable<boolean> | undefined = undefined,
         spaceKind: SpaceKind = "speaker_zone",
         canRecord = WAMSettingsUtils.canStartRecordingMegaphone(this.wamSettings, this.tags, localUserStore.isLogged()),
     ): Promise<SpaceInterface> {
         const spaceNameSlugify = slugify(spaceName);
 
-        const filterType = audienceVideoFeedbackActivated
+        const filterType = audienceFeedback
             ? FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK
             : FilterType.LIVE_STREAMING_USERS;
 
         const space = await this.spaceRegistry.joinSpace(
             spaceNameSlugify,
             filterType,
-            getMegaphoneSpaceFields(audienceVideoFeedbackActivated),
+            getMegaphoneSpaceFields(audienceFeedback !== undefined),
             abortSignal,
             {
                 canRecord,
@@ -129,20 +134,23 @@ export class BroadcastService {
             }),
         );
 
-        // The audience only publishes while there is someone to publish to. The store carries
-        // its current value on subscribe, so a listener who joins after the speakers is covered
-        // by the same code path as one who was there first.
-        if (filterType === FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK) {
+        // The audience only publishes while there is someone to publish to, and while the map asks
+        // for it. The stores carry their current value on subscribe, so a listener who joins after
+        // the speakers is covered by the same code path as one who was there first.
+        if (audienceFeedback) {
             let listenerStreaming = false;
             this.unsubscribes.push(
                 new Subscription(
-                    space.hasRemoteSpeakerStore.subscribe((hasSpeaker) => {
-                        if (hasSpeaker === listenerStreaming) {
+                    derived(
+                        [space.hasRemoteSpeakerStore, audienceFeedback],
+                        ([hasSpeaker, feedback]) => hasSpeaker && feedback,
+                    ).subscribe((shouldStream) => {
+                        if (shouldStream === listenerStreaming) {
                             return;
                         }
-                        listenerStreaming = hasSpeaker;
+                        listenerStreaming = shouldStream;
 
-                        if (hasSpeaker) {
+                        if (shouldStream) {
                             space.startListenerStreaming();
                         } else {
                             space.stopListenerStreaming();
