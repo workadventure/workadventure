@@ -774,8 +774,8 @@ div.emoji-picker {
    what goes past their edges. */
 [data-onboarding-highlight] {
     /* Plain CSS: Tailwind's outline utilities read --tw-outline-style, which some buttons set to none. */
-    outline: 2px solid hsl(var(--secondary));
-    outline-offset: -2px;
+    outline: 4px solid hsl(var(--secondary));
+    outline-offset: -4px;
     animation: onboarding-highlight-pulse 1.5s ease-in-out infinite;
 }
 
