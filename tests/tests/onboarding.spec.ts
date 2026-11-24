@@ -6,28 +6,13 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import { evaluateScript } from "./utils/scripting";
 import { isMobile } from "./utils/isMobile";
 import { map_storage_url } from "./utils/urls";
+import setFrontEnvVars from "./utils/setFrontEnvVar";
 
 test.use({
     baseURL: map_storage_url,
 });
 
 const TOUR_ID = "wa.mapEditor.furniture";
-
-// Tours start as soon as their target is on screen, instead of after the 30 s a user spends in the world first.
-const noStartDelay = {
-    pageCreatedHook: async (page: Page) => {
-        await page.addInitScript(() => {
-            // window.env is set by an inline script of the page: patch it as soon as it is assigned.
-            Object.defineProperty(window, "env", {
-                configurable: true,
-                set(value: { ONBOARDING_START_DELAY: number }) {
-                    value.ONBOARDING_START_DELAY = 0;
-                    Object.defineProperty(window, "env", { value, writable: true, configurable: true });
-                },
-            });
-        });
-    },
-};
 
 interface OnboardingState {
     firstVisit: string;
@@ -81,7 +66,10 @@ test.describe("Onboarding tours @oidc @nomobile @nowebkit", () => {
         // The tour runs on the editable "empty" map, which a fresh stack does not have yet.
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"), {
-            ...noStartDelay,
+            ...setFrontEnvVars({
+                // Tours start as soon as their target is on screen, instead of after the 30 s a user spends in the world first.
+                ONBOARDING_START_DELAY: 0,
+            }),
             keepOnboardingTips: true,
         });
         const popover = page.getByTestId("onboarding-popover");

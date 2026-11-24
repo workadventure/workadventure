@@ -4,6 +4,7 @@ import { expect, test, type Page } from "@playwright/test";
 import Map from "../utils/map";
 import { getPage } from "../utils/auth";
 import { publicTestMapUrl } from "../utils/urls";
+import setFrontEnvVars from "../utils/setFrontEnvVar";
 import ChatUtils from "./chatUtils";
 
 test.setTimeout(120000);
@@ -104,17 +105,9 @@ test.describe("Proximity chat file transfer @nomobile @nowebkit", () => {
         // so that a third person is enough to go over it.
         const mapUrl = publicTestMapUrl("tests/E2E/empty.json", "proximity_file_transfer_limit");
         await using alice = await getPage(browser, "Alice", mapUrl, {
-            pageCreatedHook: (page) =>
-                page.addInitScript(() => {
-                    let env: unknown;
-                    Object.defineProperty(window, "env", {
-                        configurable: true,
-                        get: () => env,
-                        set: (value: object) => {
-                            env = { ...value, PROXIMITY_FILE_TRANSFER_MAX_USERS: 2 };
-                        },
-                    });
-                }),
+            ...setFrontEnvVars({
+                PROXIMITY_FILE_TRANSFER_MAX_USERS: 2,
+            }),
         });
         await Map.teleportToPosition(alice, 160, 160);
         await using bob = await getPage(browser, "Bob", mapUrl);
