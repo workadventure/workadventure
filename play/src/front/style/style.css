@@ -791,6 +791,15 @@ div.emoji-picker {
     }
 }
 
+/* The highlight on its way from the previous step's target to the next one (stepKinds.ts). */
+.onboarding-highlight-glide {
+    position: fixed;
+    z-index: 2999;
+    box-sizing: border-box;
+    border: 4px solid hsl(var(--secondary));
+    pointer-events: none;
+}
+
 .say-bubble{
     font-weight: 500;
     font-family: "Pretendard Korean", "Comic Jens", cursive;

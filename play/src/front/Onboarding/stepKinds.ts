@@ -21,22 +21,87 @@ const ANCHOR_WAIT_MS = 10_000;
 const LOST_GRACE_MS = 300;
 /** An attribute, not a class: Svelte rewrites the class of an element whose class depends on its state. */
 const HIGHLIGHT_ATTRIBUTE = "data-onboarding-highlight";
+/** The highlight glides from the previous target when that one went away less than this long ago. */
+const GLIDE_WINDOW_MS = 2000;
+const GLIDE_MS = 400;
+
+// ponytail: shared by all items, so an item that starts within GLIDE_WINDOW_MS of another one's end glides from it too.
+let lastHighlight: { rect: DOMRect; document: Document; at: number } | undefined;
 
 export function renderMarkdown(text: string): string {
     return sanitizeHtml(marked.parse(text, { async: false }));
 }
 
+/** Moves a ring from `from` onto `node`, following the node if it moves meanwhile (a sidebar that slides in). */
+function glide(win: Window, from: DOMRect, node: HTMLElement, onDone: () => void): () => void {
+    const ring = win.document.createElement("div");
+    ring.className = "onboarding-highlight-glide";
+    ring.style.borderRadius = win.getComputedStyle(node).borderRadius;
+    win.document.body.append(ring);
+    const start = win.performance.now();
+    let frame = 0;
+    const move = (now: number) => {
+        const t = Math.min(1, (now - start) / GLIDE_MS);
+        const eased = 1 - (1 - t) ** 3;
+        const to = node.getBoundingClientRect();
+        const at = (a: number, b: number) => `${a + (b - a) * eased}px`;
+        Object.assign(ring.style, {
+            left: at(from.left, to.left),
+            top: at(from.top, to.top),
+            width: at(from.width, to.width),
+            height: at(from.height, to.height),
+        });
+        if (t < 1) {
+            frame = win.requestAnimationFrame(move);
+        } else {
+            ring.remove();
+            onDone();
+        }
+    };
+    move(start);
+    return () => {
+        win.cancelAnimationFrame(frame);
+        ring.remove();
+    };
+}
+
 const popover: StepKind<PopoverStep> = (step, run, view) => {
     let node: HTMLElement | undefined;
     let closePopover: (() => void) | undefined;
+    let stopGlide: (() => void) | undefined;
     let shown = false;
     let lostTimer: ReturnType<typeof setTimeout> | undefined;
 
     const detach = () => {
+        stopGlide?.();
+        stopGlide = undefined;
         closePopover?.();
         closePopover = undefined;
+        if (node?.isConnected) {
+            lastHighlight = { rect: node.getBoundingClientRect(), document: node.ownerDocument, at: Date.now() };
+        }
         node?.removeAttribute(HIGHLIGHT_ATTRIBUTE);
         node = undefined;
+    };
+
+    const highlight = (target: HTMLElement) => {
+        const from = lastHighlight;
+        lastHighlight = undefined;
+        const win = target.ownerDocument.defaultView;
+        if (
+            !from ||
+            !win ||
+            from.document !== target.ownerDocument ||
+            Date.now() - from.at > GLIDE_WINDOW_MS ||
+            win.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ) {
+            target.setAttribute(HIGHLIGHT_ATTRIBUTE, "");
+            return;
+        }
+        stopGlide = glide(win, from.rect, target, () => {
+            stopGlide = undefined;
+            target.setAttribute(HIGHLIGHT_ATTRIBUTE, "");
+        });
     };
 
     const update = () => {
@@ -50,7 +115,7 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
             lostTimer = undefined;
             shown = true;
             node = target;
-            node.setAttribute(HIGHLIGHT_ATTRIBUTE, "");
+            highlight(target);
             closePopover = showFloatingUi(
                 target,
                 OnboardingPopover,
