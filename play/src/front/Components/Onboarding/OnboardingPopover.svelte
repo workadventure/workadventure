@@ -30,32 +30,10 @@
     data-testid="onboarding-popover"
     class="pointer-events-auto flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-2 rounded-lg bg-contrast/80 p-3 text-white shadow-lg"
 >
-    <div class="flex items-start gap-2">
-        <div class="flex flex-1 flex-col gap-2">
-            {#if title}
-                <h3 id={titleId} class="m-0 text-base font-bold leading-tight">{title}</h3>
-            {/if}
-            <div class="text-sm leading-snug">{@html html}</div>
-        </div>
-        <button
-            type="button"
-            class="-me-1 -mt-1 flex h-6 w-6 items-center justify-center rounded text-white/70 hover:bg-white/10 hover:text-white"
-            aria-label={$LL.onboarding.tips.close()}
-            data-testid="onboarding-popover-close"
-            onclick={onClose}
-        >
-            <IconX font-size="16" />
-        </button>
-    </div>
     <div class="flex items-center gap-2">
-        <button
-            type="button"
-            class="p-0 text-xs text-white/60 underline hover:text-white"
-            data-testid="onboarding-popover-opt-out"
-            onclick={onOptOut}
-        >
-            {$LL.onboarding.tips.stopShowing()}
-        </button>
+        <span class="text-xxs font-bold uppercase tracking-widest text-pop-yellow">
+            {$LL.onboarding.tips.label()}
+        </span>
         <span class="flex-1"></span>
         {#if total > 1}
             <span class="flex gap-1" role="img" aria-label="{position} / {total}">
@@ -70,6 +48,30 @@
                 {/each}
             </span>
         {/if}
+        <button
+            type="button"
+            class="-my-1 -me-1 flex h-6 w-6 items-center justify-center rounded text-white/70 hover:bg-white/10 hover:text-white"
+            aria-label={$LL.onboarding.tips.close()}
+            data-testid="onboarding-popover-close"
+            onclick={onClose}
+        >
+            <IconX font-size="16" />
+        </button>
+    </div>
+    {#if title}
+        <h3 id={titleId} class="m-0 text-base font-bold leading-tight">{title}</h3>
+    {/if}
+    <div class="text-sm leading-snug">{@html html}</div>
+    <div class="flex items-center gap-2">
+        <button
+            type="button"
+            class="p-0 text-xs text-white/60 underline hover:text-white"
+            data-testid="onboarding-popover-opt-out"
+            onclick={onOptOut}
+        >
+            {$LL.onboarding.tips.stopShowing()}
+        </button>
+        <span class="flex-1"></span>
         {#if showNext}
             <Button variant="secondary" size="sm" dataTestId="onboarding-popover-next" onclick={onNext}>
                 {position === total ? $LL.onboarding.tips.gotIt() : $LL.onboarding.tips.next()}
