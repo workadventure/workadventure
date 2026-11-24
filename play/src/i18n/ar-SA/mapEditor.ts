@@ -428,16 +428,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "جارٍ التحميل...",
+        saving: "جارٍ الحفظ…",
         megaphone: {
             title: "الميغافون",
             description: "الميغافون أداة تتيح لك بث فيديو/صوت لجميع اللاعبين في الغرفة/العالم.",
+            world: {
+                title: "إعدادات مشتركة لكل الخرائط ذات نطاق العالم",
+                description: "يُطبَّق التغيير فورًا على كل هذه الخرائط ولجميع المتصلين.",
+                loadError: "تعذّر تحميل الإعدادات المشتركة لمكبر الصوت",
+                migrationWarnings: "منقول من إعدادات الخرائط، للمراجعة:",
+                auditorium: "وضع القاعة: سترى كاميرات الجمهور.",
+            },
             inputs: {
                 spaceName: "اسم الفضاء",
+                worldRights: "من يمكنه التحدث من هذه الخريطة",
                 spaceNameHelper:
                     "إذا أردت البث لكل المستخدمين عبر غرف مختلفة ضمن نفس العالم، ضع نفس اسم الفضاء لكل إعدادات الميغافون واضبط النطاق على 'العالم'.",
                 scope: "النطاق",
                 world: "العالم",
                 room: "الغرفة",
+                roomHelper: "إعداداتها الخاصة",
+                worldHelper: "مشترك مع الخرائط ذات نطاق العالم",
                 notificationSound: "صوت الإشعار",
                 notificationSoundNoSound: "بدون صوت",
                 notificationSoundCustom: "مخصص",

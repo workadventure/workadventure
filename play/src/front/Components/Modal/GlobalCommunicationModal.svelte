@@ -21,7 +21,7 @@
     import { localUserStore } from "../../Connection/LocalUserStore";
     import { StringUtils } from "../../Utils/StringUtils";
     import { analyticsClient } from "../../Administration/AnalyticsClient";
-    import { requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
+    import { megaphoneSpaceSettingsStore, requestedMegaphoneStore } from "../../Stores/MegaphoneStore";
     import { startMegaphoneLive, stopMegaphoneLive } from "../ActionBar/MenuIcons/megaphoneActions";
     import ButtonClose from "../Input/ButtonClose.svelte";
     import Select from "../Input/Select.svelte";
@@ -231,6 +231,9 @@
                             {$LL.megaphone.modal.liveMessage.thisRoom()}
                         {/if}
                     </p>
+                    {#if $megaphoneSpaceSettingsStore?.audienceVideoFeedbackActivated}
+                        <p class="m-0 text-sm opacity-80">{$LL.mapEditor.settings.megaphone.world.auditorium()}</p>
+                    {/if}
                 </section>
 
                 <footer class="flex flex-wrap items-center justify-end gap-2">

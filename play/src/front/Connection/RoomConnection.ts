@@ -1,7 +1,7 @@
 import Debug from "debug";
 import * as Sentry from "@sentry/svelte";
 
-import type { AreaData, AtLeast, EntityDimensions, WAMEntityData } from "@workadventure/map-editor";
+import type { AreaData, AtLeast, EntityDimensions, WAMEntityData, WorldSettings } from "@workadventure/map-editor";
 import { Deferred } from "@workadventure/shared-utils";
 import type {
     AddSpaceFilterMessage,
@@ -1346,6 +1346,23 @@ export class RoomConnection implements RoomConnection {
                         message: {
                             $case: "updateWAMSettingsMessage",
                             updateWAMSettingsMessage,
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    public emitUpdateWorldSettingsMessage(commandId: string, settings: WorldSettings): void {
+        this.send({
+            message: {
+                $case: "editMapCommandMessage",
+                editMapCommandMessage: {
+                    id: commandId,
+                    editMapMessage: {
+                        message: {
+                            $case: "updateWorldSettingsMessage",
+                            updateWorldSettingsMessage: { settings },
                         },
                     },
                 },

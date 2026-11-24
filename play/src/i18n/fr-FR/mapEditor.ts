@@ -437,17 +437,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Chargement en cours",
+        saving: "Enregistrement…",
         megaphone: {
             title: "Mégaphone",
             description:
                 "Le mégaphone est un outil qui permet de diffuser un flux vidéo/audio à tous les joueurs dans la salle/monde.",
+            world: {
+                title: "Réglages communs à toutes les cartes en portée Monde",
+                description: "Un changement s'applique à toutes ces cartes, tout de suite, pour tous les connectés.",
+                loadError: "Impossible de charger les réglages communs du mégaphone",
+                migrationWarnings: "Repris des réglages des cartes, à vérifier :",
+                auditorium: "Mode Auditorium : vous verrez les caméras du public.",
+            },
             inputs: {
                 spaceName: "Nom de l'espace",
+                worldRights: "Qui peut parler depuis cette carte",
                 spaceNameHelper:
                     "Si vous souhaitez diffuser un flux à tous les utilisateurs qui se trouvent dans différentes salles mais dans le même monde, vous devez définir le même nom d'espace pour tous les paramètres du mégaphone dans chaque salle et définir la portée sur 'Monde'.",
                 scope: "Portée",
                 world: "Monde",
                 room: "Salle",
+                roomHelper: "Ses propres réglages",
+                worldHelper: "Partagé avec les cartes en portée Monde",
                 notificationSound: "Son de notification",
                 notificationSoundNoSound: "Aucun son",
                 notificationSoundCustom: "Personnalisé",

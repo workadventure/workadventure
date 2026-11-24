@@ -22,6 +22,7 @@ export * from "./types";
 export * from "./Constants/CustomEntityCollectionConstants";
 export * from "./FunctionalTypes/Result";
 export * from "./WAMSettingsUtils";
+export * from "./WorldSettings";
 export * from "./Constants/EntityUploadSupportedFormats";
 export * from "./Constants/FileUploadSupportedFormats";
 export * from "./Permissions/EntityPermissions";

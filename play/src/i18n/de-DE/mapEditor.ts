@@ -437,17 +437,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Laden...",
+        saving: "Wird gespeichert…",
         megaphone: {
             title: "Megaphon",
             description:
                 "Das Megaphon ist ein Werkzeug, mit dem Sie Ihre Stimme über die ganze Welt oder einen Raum hinweg übertragen können.",
+            world: {
+                title: "Gemeinsame Einstellungen aller Karten im Bereich „Welt“",
+                description: "Eine Änderung gilt sofort für alle diese Karten und alle Verbundenen.",
+                loadError: "Die gemeinsamen Megafon-Einstellungen konnten nicht geladen werden",
+                migrationWarnings: "Aus den Karteneinstellungen übernommen, bitte prüfen:",
+                auditorium: "Auditorium-Modus: Du siehst die Kameras des Publikums.",
+            },
             inputs: {
                 spaceName: "Raumname",
+                worldRights: "Wer von dieser Karte aus sprechen darf",
                 spaceNameHelper:
                     "Der Name des Raums, in dem das Megaphon verwendet werden kann. Wenn Sie es leer lassen, kann es in der gesamten Welt verwendet werden.",
                 scope: "Geltungsbereich",
                 world: "Welt",
                 room: "Raum",
+                roomHelper: "Eigene Einstellungen",
+                worldHelper: "Mit den Karten im Bereich „Welt“ geteilt",
                 notificationSound: "Benachrichtigungston",
                 notificationSoundNoSound: "Kein Ton",
                 notificationSoundCustom: "Benutzerdefiniert",

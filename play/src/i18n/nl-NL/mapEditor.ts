@@ -437,17 +437,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Laden",
+        saving: "Opslaan…",
         megaphone: {
             title: "Megaphone",
             description:
                 "De megaphone is een tool die je in staat stelt om een video/audio stream uit te zenden naar alle spelers in de kamer/wereld.",
+            world: {
+                title: "Gedeelde instellingen van alle kaarten met bereik Wereld",
+                description: "Een wijziging geldt meteen voor al deze kaarten, voor iedereen die verbonden is.",
+                loadError: "De gedeelde megafooninstellingen konden niet worden geladen",
+                migrationWarnings: "Overgenomen uit de kaartinstellingen, graag nakijken:",
+                auditorium: "Auditoriummodus: je ziet de camera's van het publiek.",
+            },
             inputs: {
                 spaceName: "Ruimtenaam",
+                worldRights: "Wie kan spreken vanaf deze kaart",
                 spaceNameHelper:
                     "Als je een stream wilt uitzenden naar alle gebruikers die zich in verschillende kamers bevinden maar in dezelfde wereld, moet je dezelfde Ruimtenaam instellen voor alle megaphone-instellingen in elke kamer en de reikwijdte op 'Wereld' instellen.",
                 scope: "Reikwijdte",
                 world: "Wereld",
                 room: "Kamer",
+                roomHelper: "Eigen instellingen",
+                worldHelper: "Gedeeld met de kaarten met bereik Wereld",
                 notificationSound: "Meldingsgeluid",
                 notificationSoundNoSound: "Geen geluid",
                 notificationSoundCustom: "Aangepast",

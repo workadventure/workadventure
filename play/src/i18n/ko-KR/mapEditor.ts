@@ -432,17 +432,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "불러오는 중",
+        saving: "저장 중…",
         megaphone: {
             title: "확성기",
             description:
                 "확성기는 방 또는 월드에 있는 모든 플레이어에게 비디오/오디오 스트림을 방송할 수 있는 도구입니다.",
+            world: {
+                title: "월드 범위의 모든 맵에 공통인 설정",
+                description: "변경 사항은 이 모든 맵에 접속한 모든 사람에게 즉시 적용됩니다.",
+                loadError: "메가폰 공통 설정을 불러올 수 없습니다",
+                migrationWarnings: "맵 설정에서 가져온 항목, 확인 필요:",
+                auditorium: "오디토리엄 모드: 청중의 카메라를 보게 됩니다.",
+            },
             inputs: {
                 spaceName: "Space 이름",
+                worldRights: "이 맵에서 말할 수 있는 사람",
                 spaceNameHelper:
                     "여러 방에 있는 사용자에게 동일한 방송을 보내려면 각 방의 확성기 설정에서 같은 Space 이름을 사용하고 범위를 '월드'로 설정해야 합니다.",
                 scope: "범위",
                 world: "월드",
                 room: "방",
+                roomHelper: "자체 설정",
+                worldHelper: "월드 범위의 맵과 공유",
                 notificationSound: "알림 소리",
                 notificationSoundNoSound: "소리 없음",
                 notificationSoundCustom: "사용자 지정",

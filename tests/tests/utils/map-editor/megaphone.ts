@@ -32,7 +32,7 @@ class Megaphone {
     }
 
     async megaphoneSelectScope(page: Page) {
-        await page.getByLabel("Scope").selectOption("ROOM");
+        await page.getByRole("radio", { name: /^Room/ }).check();
     }
 
     async megaphoneAddNewRights(page: Page, tag = "test") {

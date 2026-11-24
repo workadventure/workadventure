@@ -197,12 +197,14 @@ export class BroadcastService {
         if (!statusChanger.allowNotificationSound()) {
             return;
         }
-        const enableSoundNotifications = this.wamSettings?.megaphone?.enableSoundNotifications ?? true;
+        // The settings of the megaphone in effect (the world megaphone takes them from the world),
+        // then the map's own for a scene that has no megaphone space yet.
+        const settings = this.megaphoneSpaceSettings ?? this.wamSettings?.megaphone;
+        const enableSoundNotifications = settings?.enableSoundNotifications ?? true;
         if (!enableSoundNotifications) {
             return;
         }
-        const notificationSoundUrl =
-            this.wamSettings?.megaphone?.notificationSoundUrl ?? DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL;
+        const notificationSoundUrl = settings?.notificationSoundUrl ?? DEFAULT_MEGAPHONE_NOTIFICATION_SOUND_URL;
         const scene = gameManager.getCurrentGameScene();
         const soundUrl = resolveUrlPlaceholders(notificationSoundUrl);
         if (!soundUrl) {

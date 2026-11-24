@@ -194,6 +194,7 @@ export class WamManager {
             case "uploadEntityMessage":
             case "modifyCustomEntityMessage":
             case "uploadFileMessage":
+            case "updateWorldSettingsMessage": // stored per world by the map-storage, not in the WAM
             case "errorCommandMessage":
                 break;
             default: {

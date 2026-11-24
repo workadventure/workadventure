@@ -354,7 +354,15 @@ message EditMapMessage {
     DeleteCustomEntityMessage deleteCustomEntityMessage = 11;
     ModifiyWAMMetadataMessage modifiyWAMMetadataMessage = 12;
     UploadFileMessage uploadFileMessage = 13;
+    UpdateWorldSettingsMessage updateWorldSettingsMessage = 14;
   }
+}
+
+// Replaces the settings shared by every map of the world (stored once per world in the map-storage,
+// not in a WAM file). Schemaless here, parsed against WorldSettings (libs/map-editor) before it is
+// written. Only editors of the map the command is sent from may send it.
+message UpdateWorldSettingsMessage {
+  google.protobuf.Value settings = 1;
 }
 
 message ErrorCommandMessage {

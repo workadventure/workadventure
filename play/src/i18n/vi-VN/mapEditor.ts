@@ -432,17 +432,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Đang tải",
+        saving: "Đang lưu…",
         megaphone: {
             title: "Loa phóng thanh",
             description:
                 "Loa phóng thanh là công cụ cho phép bạn phát một luồng video/âm thanh tới tất cả người chơi trong phòng/thế giới.",
+            world: {
+                title: "Cài đặt chung cho mọi bản đồ có phạm vi Thế giới",
+                description: "Thay đổi áp dụng ngay cho tất cả các bản đồ này, cho mọi người đang kết nối.",
+                loadError: "Không thể tải cài đặt chung của megaphone",
+                migrationWarnings: "Lấy từ cài đặt của các bản đồ, cần xem lại:",
+                auditorium: "Chế độ Hội trường: bạn sẽ thấy camera của khán giả.",
+            },
             inputs: {
                 spaceName: "Tên không gian",
+                worldRights: "Ai có thể nói từ bản đồ này",
                 spaceNameHelper:
                     "Nếu bạn muốn phát tới tất cả người dùng đang ở các phòng khác nhau nhưng trong cùng thế giới, bạn phải đặt cùng một Tên không gian cho cài đặt loa phóng thanh ở mỗi phòng và đặt phạm vi là 'Thế giới'.",
                 scope: "Phạm vi",
                 world: "Thế giới",
                 room: "Phòng",
+                roomHelper: "Cài đặt riêng",
+                worldHelper: "Dùng chung với các bản đồ có phạm vi Thế giới",
                 notificationSound: "Âm thanh thông báo",
                 notificationSoundNoSound: "Không âm thanh",
                 notificationSoundCustom: "Tùy chỉnh",

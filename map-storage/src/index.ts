@@ -7,6 +7,7 @@ import { MapStorageService } from "@workadventure/messages/src/ts-proto-generate
 import passport from "passport";
 import bodyParser from "body-parser";
 import { setErrorHandler } from "@workadventure/shared-utils/src/ErrorHandler";
+import { WORLD_SETTINGS_FILE_NAME } from "@workadventure/map-editor";
 import { mapStorageServer } from "./MapStorageServer";
 
 import { proxyFiles } from "./FileFetcher/FileFetcher";
@@ -58,6 +59,7 @@ import { ResourceUrlModule } from "./Modules/ResourceUrlModule";
 import { hookManager } from "./Modules/HookManager";
 import { FileModule } from "./Modules/FileModule";
 import { verifyJWT } from "./Services/VerifyJwt";
+import { worldSettingsService } from "./Services/WorldSettingsService";
 
 const resourceUrlModule = new ResourceUrlModule();
 resourceUrlModule.init(hookManager);
@@ -125,6 +127,17 @@ app.get(/.*\.wam$/, (req, res, next) => {
     // Let's load the map, but do not put it in memory (because it might become outdated if another map-storage
     // changes the map)
     fileSystem.serveStaticFile(key, res, next);
+});
+
+// Public like the WAM files it is built from. Never cached: a client re-reads it right after a save.
+app.get(`/${WORLD_SETTINGS_FILE_NAME}`, (req, res, next) => {
+    worldSettingsService
+        .read(req.hostname)
+        .then((settings) => {
+            res.setHeader("Cache-Control", "no-store");
+            res.json(settings);
+        })
+        .catch(next);
 });
 
 // On-demand S3 connectivity checks. Kubernetes drives the cadence and the consecutive-failure
