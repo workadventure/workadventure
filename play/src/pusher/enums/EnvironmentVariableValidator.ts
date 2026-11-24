@@ -341,9 +341,7 @@ export const EnvironmentVariables = z.object({
         .describe("Whether the onboarding tutorial is enabled or not on this room. Defaults to true."),
     ONBOARDING_START_DELAY: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 30))
-        .describe(
-            "Seconds a user spends in a world before onboarding tips can start by themselves. Defaults to 30. The e2e tests set it to 0.",
-        ),
+        .describe("Seconds a user spends in a world before onboarding tips can start by themselves. Defaults to 30."),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))

@@ -13,6 +13,22 @@ test.use({
 
 const TOUR_ID = "wa.mapEditor.furniture";
 
+// Tours start as soon as their target is on screen, instead of after the 30 s a user spends in the world first.
+const noStartDelay = {
+    pageCreatedHook: async (page: Page) => {
+        await page.addInitScript(() => {
+            // window.env is set by an inline script of the page: patch it as soon as it is assigned.
+            Object.defineProperty(window, "env", {
+                configurable: true,
+                set(value: { ONBOARDING_START_DELAY: number }) {
+                    value.ONBOARDING_START_DELAY = 0;
+                    Object.defineProperty(window, "env", { value, writable: true, configurable: true });
+                },
+            });
+        });
+    },
+};
+
 interface OnboardingState {
     firstVisit: string;
     items: Record<string, { status: string }>;
@@ -55,7 +71,6 @@ async function reloadWithFirstVisit(page: Page, days: number) {
     }).toPass({ timeout: 60_000 });
 }
 
-// The e2e stack sets ONBOARDING_START_DELAY to 0, so a tour starts as soon as its target is on screen.
 test.describe("Onboarding tours @oidc @nomobile @nowebkit", () => {
     test.beforeEach(({ page, browserName }) => {
         test.skip(isMobile(page), "The map editor tour is for desktop");
@@ -65,7 +80,10 @@ test.describe("Onboarding tours @oidc @nomobile @nowebkit", () => {
     test("The map editor tour leads an editor from the Tools menu to the entity list", async ({ browser, request }) => {
         // The tour runs on the editable "empty" map, which a fresh stack does not have yet.
         await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), {
+            ...noStartDelay,
+            keepOnboardingTips: true,
+        });
         const popover = page.getByTestId("onboarding-popover");
 
         // On the first day, the tour waits.
