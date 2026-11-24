@@ -268,6 +268,8 @@ export class FrontController extends BaseHttpController {
                 // TODO change it to push data from admin
                 msApplicationTileImage: metaTagsData.favIcons[metaTagsData.favIcons.length - 1].src,
                 url,
+                // Same room shared with utm_*/other query strings: tell search engines it is one page.
+                canonicalUrl: url.split(/[?#]/)[0],
                 script: await this.getScript(),
                 posthogApiKey: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_API_KEY,
                 posthogUrl: FRONT_ENVIRONMENT_VARIABLES.POSTHOG_URL,
