@@ -6,6 +6,7 @@ import { isLandingPageUrl } from "./landing-page";
 import settings from "./settings";
 import type { DesktopCapturerSource, DesktopNotificationPayload } from "@workadventure/desktop-api";
 import { setKeepAwake, setUnreadCount, showNotification } from "./system-integration";
+import { createNotificationDeduper } from "./notify-policy";
 import { notePresenceReport, setRendererPresence } from "./presence";
 import {
     dismissMiniWindow,
@@ -213,6 +214,8 @@ export default () => {
     });
 
     // app ipc
+    // Two tabs on the same world both receive a chat message: show it once.
+    const isDuplicateNotification = createNotificationDeduper(2000);
     ipcMain.on("app:notify", (event, payload: unknown) => {
         // Accept both `notify(text)` (a string) and `notifyMessage({title, body, tag, silent})` (an
         // object). Anything else is ignored — the renderer
@@ -220,6 +223,10 @@ export default () => {
         // untyped surface doesn't crash the main process.
         const options = normalizeNotifyPayload(payload);
         if (!options) {
+            return;
+        }
+        if (isDuplicateNotification(options)) {
+            ElectronLog.info("Notification dropped: duplicate from another tab");
             return;
         }
         // The click belongs to the world that raised the notification, which may be a background tab.

@@ -103,6 +103,7 @@ export function showNotification(
     onClick: (tag: string | undefined) => void
 ): Notification | undefined {
     if (!Notification.isSupported()) {
+        ElectronLog.warn("Notification not shown: system notifications are not supported here");
         return undefined;
     }
     const notif = new Notification({
@@ -112,6 +113,10 @@ export function showNotification(
         silent: Boolean(options.silent),
     });
     notif.on("click", () => onClick(options.tag));
+    // Windows only. Never log the title or body: they hold chat content.
+    notif.on("failed", (_event, error) => {
+        ElectronLog.warn("Notification failed to show", error);
+    });
     notif.show();
     return notif;
 }

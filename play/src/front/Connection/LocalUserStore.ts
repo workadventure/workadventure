@@ -4,6 +4,7 @@ import { arrayEmoji } from "../Stores/Utils/emojiSchema";
 import type { RequestedStatus } from "../Rules/StatusRules/statusRules";
 import { requestedStatusFactory } from "../Rules/StatusRules/StatusFactory/RequestedStatusFactory";
 import { INITIAL_SIDEBAR_WIDTH } from "../Stores/ChatStore";
+import { desktopCanNotify } from "../Api/Desktop/desktopCanNotify";
 import type { LocalUser } from "./LocalUser";
 import { areCharacterTexturesValid, isUserNameValid } from "./LocalUserUtils";
 
@@ -413,8 +414,18 @@ class LocalUserStore {
         localStorage.setItem(notification, value.toString());
     }
 
+    /**
+     * An explicit choice ("true" / "false") always wins. With no choice yet, notifications are on
+     * in the desktop app (installing it is the consent, and the browser permission prompt that
+     * writes this key never shows there) and off on the web. Nothing is written here, so "never
+     * chosen" stays distinguishable from "chosen".
+     */
     getNotification(): boolean {
-        return localStorage.getItem(notification) === "true";
+        const value = localStorage.getItem(notification);
+        if (value === null) {
+            return desktopCanNotify();
+        }
+        return value === "true";
     }
 
     setAllowPictureInPicture(value: boolean): void {
