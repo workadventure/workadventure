@@ -13,6 +13,7 @@ import {
     EntityPermissions,
     UpdateWAMMetadataCommand,
     UpdateWAMSettingCommand,
+    WorldSettings,
 } from "@workadventure/map-editor";
 import type {
     EditMapCommandMessage,
@@ -38,6 +39,7 @@ import { CreateEntityMapStorageCommand } from "./Commands/Entity/CreateEntityMap
 import { DeleteEntityMapStorageCommand } from "./Commands/Entity/DeleteEntityMapStorageCommand";
 import { UploadFileMapStorageCommand } from "./Commands/File/UploadFileMapStorageCommand";
 import { hookManager } from "./Modules/HookManager";
+import { worldSettingsService } from "./Services/WorldSettingsService";
 import { UpdateEntityMapStorageCommand } from "./Commands/Entity/UpdateEntityMapStorageCommand";
 import { isModifyAreaMessageOnlyClaim } from "./Services/isModifyAreaMessageOnlyClaim";
 import { canUserEditCustomEntity } from "./Services/canUserEditCustomEntity";
@@ -417,6 +419,19 @@ const mapStorageServer: MapStorageServer = {
                             mapKey,
                             mapUrl.host,
                             new UpdateWAMSettingCommand(wam, message, commandId),
+                        );
+                        break;
+                    }
+                    case "updateWorldSettingsMessage": {
+                        // Shared by every map of the world: area editors of this map are not enough.
+                        if (!userCanEdit) {
+                            throw new Error(
+                                `User ${userUUID} has no editor access and is not allowed to change the world settings from map ${mapUrl}`,
+                            );
+                        }
+                        await worldSettingsService.write(
+                            mapUrl.hostname,
+                            WorldSettings.parse(editMapMessage.updateWorldSettingsMessage.settings),
                         );
                         break;
                     }

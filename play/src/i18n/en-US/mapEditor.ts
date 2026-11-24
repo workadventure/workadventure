@@ -430,17 +430,28 @@ const mapEditor: BaseTranslation = {
     },
     settings: {
         loading: "Loading",
+        saving: "Saving",
         megaphone: {
             title: "Megaphone",
             description:
                 "The megaphone is a tool that allows you to broadcast a video/audio stream to all players in the room/world.",
+            world: {
+                title: "Settings shared by every map set to World",
+                description: "A change applies to all of these maps, right away, for everyone connected.",
+                loadError: "Could not load the shared megaphone settings",
+                migrationWarnings: "Carried over from the map settings, to review:",
+                auditorium: "Auditorium mode: you will see the audience's cameras.",
+            },
             inputs: {
                 spaceName: "Space name",
+                worldRights: "Who can speak from this map",
                 spaceNameHelper:
                     "If you want to broadcast a stream to all the users that are on different rooms but in the same world, you must set the same SpaceName for all the megaphone settings in each room and set the scope to 'World'.",
                 scope: "Scope",
                 world: "World",
                 room: "Room",
+                roomHelper: "Its own settings",
+                worldHelper: "Shared with the maps set to World",
                 notificationSound: "Notification sound",
                 notificationSoundNoSound: "No sound",
                 notificationSoundCustom: "Custom",

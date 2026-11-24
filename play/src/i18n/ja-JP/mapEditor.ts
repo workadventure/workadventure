@@ -433,17 +433,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "読み込み",
+        saving: "保存中…",
         megaphone: {
             title: "メガホン",
             description:
                 "メガホンは、ビデオ / オーディオストリームをルーム / ワールド内のすべてのユーザーに配信できるツールです。",
+            world: {
+                title: "ワールド範囲のすべてのマップに共通の設定",
+                description: "変更はこれらすべてのマップに、接続中の全員に対してすぐに反映されます。",
+                loadError: "メガホンの共通設定を読み込めませんでした",
+                migrationWarnings: "マップの設定から引き継ぎました。確認してください:",
+                auditorium: "オーディトリアムモード: 聴衆のカメラが見えます。",
+            },
             inputs: {
                 spaceName: "スペース名",
+                worldRights: "このマップから話せる人",
                 spaceNameHelper:
                     "同じワールドの異なるルームにいるすべてのユーザに配信したい場合、各ルームのメガホン設定で同じスペース名を設定し、範囲を「ワールド」に設定する必要があります。",
                 scope: "範囲",
                 world: "ワールド",
                 room: "ルーム",
+                roomHelper: "独自の設定",
+                worldHelper: "ワールド範囲のマップと共有",
                 notificationSound: "通知音",
                 notificationSoundNoSound: "音なし",
                 notificationSoundCustom: "カスタム",

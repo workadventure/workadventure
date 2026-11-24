@@ -426,16 +426,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "加载中",
+        saving: "正在保存…",
         megaphone: {
             title: "扩音器",
             description: "扩音器是一个工具，允许您向房间/世界中的所有玩家广播视频/音频流。",
+            world: {
+                title: "所有范围为世界的地图共用的设置",
+                description: "更改会立即应用于所有这些地图上的所有在线用户。",
+                loadError: "无法加载扩音器的共用设置",
+                migrationWarnings: "从地图设置中继承，请检查：",
+                auditorium: "礼堂模式：你将看到听众的摄像头。",
+            },
             inputs: {
                 spaceName: "空间名称",
+                worldRights: "谁可以在此地图上发言",
                 spaceNameHelper:
                     '如果您想向所有在不同房间但在同一世界中的用户广播流，您必须为每个房间中的所有扩音器设置设置相同的空间名称，并将范围设置为"世界"。',
                 scope: "范围",
                 world: "世界",
                 room: "房间",
+                roomHelper: "独立设置",
+                worldHelper: "与范围为世界的地图共享",
                 notificationSound: "通知声音",
                 notificationSoundNoSound: "无声音",
                 notificationSoundCustom: "自定义",

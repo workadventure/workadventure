@@ -434,17 +434,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Carregant",
+        saving: "S'està desant…",
         megaphone: {
             title: "Megàfon",
             description:
                 "El megàfon és una eina que permet transmetre un flux de vídeo/àudio a tots els jugadors de la sala/món.",
+            world: {
+                title: "Configuració comuna a tots els mapes amb abast Món",
+                description: "Un canvi s'aplica a tots aquests mapes, a l'instant, per a tots els connectats.",
+                loadError: "No s'ha pogut carregar la configuració comuna del megàfon",
+                migrationWarnings: "Recuperat de la configuració dels mapes, per revisar:",
+                auditorium: "Mode Auditori: veuràs les càmeres del públic.",
+            },
             inputs: {
                 spaceName: "Nom de l'espai",
+                worldRights: "Qui pot parlar des d'aquest mapa",
                 spaceNameHelper:
                     "Si voleu transmetre un flux a tots els usuaris que es troben en diferents sales però en el mateix món, heu d'establir el mateix nom d'espai per a tots els paràmetres del megàfon a cada sala i establir l'abast a 'Món'.",
                 scope: "Abast",
                 world: "Món",
                 room: "Sala",
+                roomHelper: "La seva pròpia configuració",
+                worldHelper: "Compartit amb els mapes amb abast Món",
                 notificationSound: "So de notificació",
                 notificationSoundNoSound: "Sense so",
                 notificationSoundCustom: "Personalitzat",

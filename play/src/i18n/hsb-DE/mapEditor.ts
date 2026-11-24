@@ -433,16 +433,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Laden...",
+        saving: "Składuje so…",
         megaphone: {
             title: "Megaphon",
             description: "Megafon je grat, z kotrymž móžeće Waš hłós přez cyły swět abo rum přenjesć.",
+            world: {
+                title: "Zhromadne nastajenja wšěch kartow we wobłuku „Swět“",
+                description: "Změna płaći hnydom za wšě tute karty a wšěch zwjazanych.",
+                loadError: "Zhromadne nastajenja megafona njedachu so začitać",
+                migrationWarnings: "Přewzate z nastajenjow kartow, prošu přepruwować:",
+                auditorium: "Modus awditorija: widźiš kamery publikuma.",
+            },
             inputs: {
                 spaceName: "mjeno ruma",
+                worldRights: "Štó móže z tuteje karty rěčeć",
                 spaceNameHelper:
                     "Jeli chceće přenos na wšě wužiwarje přenjesć, kotřiž su w rozdźělnych rumnosćach, ale w samym swěće, dyrbiće samsne mjeno ruma za wšě nastajenja megafona w kóždej rumnosći nastajić a wobłuk płaćiwosće na 'Swět' stajić.",
                 scope: "wobłuk płaćiwosće",
                 world: "swět",
                 room: "rum",
+                roomHelper: "Swójske nastajenja",
+                worldHelper: "Dźělene z kartami we wobłuku „Swět“",
                 notificationSound: "Powěsćowy zwuk",
                 notificationSoundNoSound: "Bjez zwuka",
                 notificationSoundCustom: "Benutzerdefiniert",

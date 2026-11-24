@@ -426,16 +426,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "載入中",
+        saving: "正在儲存…",
         megaphone: {
             title: "擴音器",
             description: "擴音器是一項工具，可讓您向房間／世界中的所有玩家廣播視訊／音訊串流。",
+            world: {
+                title: "所有範圍為世界的地圖共用的設定",
+                description: "變更會立即套用到所有這些地圖上的所有在線使用者。",
+                loadError: "無法載入擴音器的共用設定",
+                migrationWarnings: "從地圖設定中沿用，請檢查：",
+                auditorium: "禮堂模式：你會看到聽眾的攝影機。",
+            },
             inputs: {
                 spaceName: "空間名稱",
+                worldRights: "誰可以在此地圖上發言",
                 spaceNameHelper:
                     "如果您想向所有在不同房間但在同一世界中的使用者廣播串流，您必須為每個房間中的所有擴音器設定相同的空間名稱，並將範圍設為「世界」。",
                 scope: "範圍",
                 world: "世界",
                 room: "房間",
+                roomHelper: "獨立設定",
+                worldHelper: "與範圍為世界的地圖共享",
                 notificationSound: "通知音效",
                 notificationSoundNoSound: "無音效",
                 notificationSoundCustom: "自訂",

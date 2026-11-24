@@ -90,7 +90,11 @@
             <IconInfoCircle font-size="18" />
             {$LL.mapEditor.settings.recording.inputs.enableSoundsHelper()}
         </p>
-        <ButtonState promise={save} initialText={$LL.menu.settings.save()} loadingText="Saving" />
+        <ButtonState
+            promise={save}
+            initialText={$LL.menu.settings.save()}
+            loadingText={$LL.mapEditor.settings.saving()}
+        />
     {:catch error}
         <p class="help-text text-danger-800">
             <IconInfoCircle font-size="18" />

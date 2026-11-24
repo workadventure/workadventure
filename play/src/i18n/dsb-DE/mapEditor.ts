@@ -434,16 +434,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Lodujo se...",
+        saving: "Składujo se…",
         megaphone: {
             title: "Megafon",
             description: "Megafon jo rěd, z kótarymž móžośo swój głos wusćełaś pó cełem swěśe abo we jadnej śpě.",
+            world: {
+                title: "Zgromadne nastajenja wšych kórtow w słuźbje „Swět“",
+                description: "Změna płaśi ned za wšykne toś te kórty a wšych zwězanych.",
+                loadError: "Zgromadne nastajenja megafona njejsu se dali zacytaś",
+                migrationWarnings: "Pśewzete z nastajenjow kartow, pšosym pśeglědaś:",
+                auditorium: "Modus awditorija: wiźiš kamery publikuma.",
+            },
             inputs: {
                 spaceName: "Mě śpy",
+                worldRights: "Chto móžo z toś teje kórty powědaś",
                 spaceNameHelper:
                     "Jolic cośo pśenos na wšykne wužywarje wusćełaś, kótarež su w rozdźělnych śpach, ale w samem swěśe, musyśo samsne mě śpy za wšykne nastajenja megafona w kuždej śpě nastajiś a wobcerjenje na 'Swět' stajiś.",
                 scope: "Wobcerjenje wužyśa",
                 world: "Swět",
                 room: "Śpa",
+                roomHelper: "Swójske nastajenja",
+                worldHelper: "Źělone z kórtami w słuźbje „Swět“",
                 notificationSound: "Powěsćowy zwuk",
                 notificationSoundNoSound: "Bźez zwuka",
                 notificationSoundCustom: "Benutzerdefiniert",

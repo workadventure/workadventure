@@ -21,6 +21,8 @@ export interface MegaphoneSpaceSettings {
     spaceName: string;
     audienceVideoFeedbackActivated: boolean;
     canRecord: boolean;
+    enableSoundNotifications?: boolean;
+    notificationSoundUrl?: string;
 }
 
 // A store that contains everything needed to connect to the megaphone space.

@@ -28,7 +28,8 @@ import {
     GameMap,
     GameMapProperties,
     type WAMFileFormat,
-    WAMSettingsUtils,
+    resolveMegaphone,
+    WORLD_SETTINGS_REVISION_METADATA_KEY,
 } from "@workadventure/map-editor";
 import { wamFileMigration } from "@workadventure/map-editor/src/Migrations/WamFileMigration";
 import Debug from "debug";
@@ -209,6 +210,7 @@ import {
 import type { ChatConnectionInterface, ChatUser } from "../../Chat/Connection/ChatConnection";
 import { selectedRoomStore } from "../../Chat/Stores/SelectRoomStore";
 import { getCustomEntityCollectionUrl } from "../../Utils/MapStorageUrl";
+import { fetchWorldSettings, getMegaphoneStoreValues, worldSettingsStore } from "../../Stores/WorldSettingsStore";
 import { PLAYTEXT_NEW_MEDIA_DEVICE_PREFIX } from "../Entity/Character";
 import { type Avatar, ConversationBubble } from "../Entity/ConversationBubble";
 import { DarkenOutsideAreaEffect } from "../Components/DarkenOutsideArea/DarkenOutsideAreaEffect";
@@ -431,6 +433,11 @@ export class GameScene extends DirtyScene {
     private _spaceRegistry: SpaceRegistryInterface | undefined;
     private spaceScriptingBridgeService: SpaceScriptingBridgeService | undefined;
     private allUserSpace: SpaceInterface | undefined;
+
+    /** The space every user of the world is in, once joined. */
+    public get worldSpace(): SpaceInterface | undefined {
+        return this.allUserSpace;
+    }
     private isLiveStreamingUnsubscriber: Unsubscriber | undefined;
     private shouldPublishScreenShareUnsubscriber: Unsubscriber | undefined;
     private unregisterAudioContextPlaybackRetry: Unsubscriber | undefined;
@@ -2540,6 +2547,12 @@ export class GameScene extends DirtyScene {
             )
             .then((space) => {
                 this.allUserSpace = space;
+                // Someone saved the world settings, possibly from another map: re-read them.
+                this.rxJsSubscriptions.push(
+                    space
+                        .observeMetadataProperty(WORLD_SETTINGS_REVISION_METADATA_KEY)
+                        .subscribe(() => this.loadWorldSettings()),
+                );
                 worldUserProvider = new WorldUserProvider(space);
                 this._worldUserCounter.forward(worldUserProvider.userCount);
                 return gameManager.getChatConnection();
@@ -2618,32 +2631,10 @@ export class GameScene extends DirtyScene {
         );
         this._broadcastService = broadcastService;
 
-        const megaphoneSpaceName = WAMSettingsUtils.getMegaphoneUrl(
-            this.getGameMap().getWamFile()?.getWam()?.settings,
-            new URL(this.roomUrl).host,
-            this.roomUrl,
-        );
-        if (!megaphoneSpaceName) {
-            megaphoneSpaceSettingsStore.set(undefined);
-        } else {
-            megaphoneSpaceSettingsStore.set({
-                spaceName: megaphoneSpaceName,
-                audienceVideoFeedbackActivated:
-                    this.getGameMap().getWamFile()?.getWam()?.settings?.megaphone?.audienceVideoFeedbackActivated ??
-                    false,
-                canRecord: WAMSettingsUtils.canStartRecordingMegaphone(
-                    this.getGameMap().getWamFile()?.getWam()?.settings,
-                    this.connection.getAllTags(),
-                    localUserStore.isLogged(),
-                ),
-            });
-        }
-        megaphoneCanBeUsedStore.set(
-            WAMSettingsUtils.canUseMegaphone(
-                this.getGameMap().getWamFile()?.getWam()?.settings,
-                this.connection.getAllTags(),
-            ),
-        );
+        // The megaphone depends on the world settings too: re-resolve it whenever they are (re)loaded.
+        worldSettingsStore.set(undefined);
+        this.unsubscribers.push(worldSettingsStore.subscribe(() => this.applyMegaphoneSettings()));
+        this.loadWorldSettings();
 
         this.subscribeToStores();
 
@@ -2717,6 +2708,53 @@ export class GameScene extends DirtyScene {
                 })().catch((error) => console.error(error));
             }
         }
+    }
+
+    // Shared by every scene: only the latest request may set the store, so neither an older answer nor
+    // one fetched by a previous scene (maybe another world) can replace newer settings.
+    private static lastWorldSettingsRequest = 0;
+
+    private loadWorldSettings(): void {
+        const wamUrl = this.wamUrlFile;
+        if (!wamUrl) {
+            return;
+        }
+        const request = ++GameScene.lastWorldSettingsRequest;
+        fetchWorldSettings(wamUrl, PUBLIC_MAP_STORAGE_PREFIX)
+            .then((settings) => {
+                if (request === GameScene.lastWorldSettingsRequest) {
+                    worldSettingsStore.set(settings);
+                }
+            })
+            .catch((e) => {
+                // Without them, the map's own megaphone still works: the world one stays off.
+                console.error("Failed to load the world settings", e);
+                Sentry.captureException(e);
+            });
+    }
+
+    /**
+     * Points the megaphone stores at the megaphone of this map: limited to it, or the world one.
+     * Called again when the WAM settings or the world settings change.
+     */
+    public applyMegaphoneSettings(): void {
+        const connection = this.connection;
+        if (!connection) {
+            return;
+        }
+        const resolved = resolveMegaphone(
+            this.getGameMap().getWamFile()?.getWam()?.settings,
+            get(worldSettingsStore),
+            new URL(this.roomUrl).host,
+            this.roomUrl,
+        );
+        const { spaceSettings, canBeUsed } = getMegaphoneStoreValues(
+            resolved,
+            connection.getAllTags(),
+            localUserStore.isLogged(),
+        );
+        megaphoneSpaceSettingsStore.set(spaceSettings);
+        megaphoneCanBeUsedStore.set(canBeUsed);
     }
 
     private subscribeToStores(): void {

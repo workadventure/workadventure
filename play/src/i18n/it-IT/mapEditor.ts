@@ -434,17 +434,28 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
     },
     settings: {
         loading: "Caricamento",
+        saving: "Salvataggio…",
         megaphone: {
             title: "Megafono",
             description:
                 "Il megafono è uno strumento che ti permette di trasmettere un flusso video/audio a tutti i giocatori nella stanza/mondo.",
+            world: {
+                title: "Impostazioni comuni a tutte le mappe con ambito Mondo",
+                description: "Una modifica si applica subito a tutte queste mappe, per tutti i connessi.",
+                loadError: "Impossibile caricare le impostazioni comuni del megafono",
+                migrationWarnings: "Ripreso dalle impostazioni delle mappe, da verificare:",
+                auditorium: "Modalità Auditorium: vedrai le telecamere del pubblico.",
+            },
             inputs: {
                 spaceName: "Nome spazio",
+                worldRights: "Chi può parlare da questa mappa",
                 spaceNameHelper:
                     "Se vuoi trasmettere un flusso a tutti gli utenti che sono in stanze diverse ma nello stesso mondo, devi impostare lo stesso NomeSpazio per tutte le impostazioni del megafono in ogni stanza e impostare l'ambito su 'Mondo'.",
                 scope: "Ambito",
                 world: "Mondo",
                 room: "Stanza",
+                roomHelper: "Impostazioni proprie",
+                worldHelper: "Condiviso con le mappe con ambito Mondo",
                 notificationSound: "Suono di notifica",
                 notificationSoundNoSound: "Nessun suono",
                 notificationSoundCustom: "Personalizzato",
