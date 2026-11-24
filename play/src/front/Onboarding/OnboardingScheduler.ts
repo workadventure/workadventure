@@ -125,10 +125,13 @@ export class OnboardingScheduler {
                     return;
                 }
                 this.updateState((state) => (state.items[itemId] = { status: outcome, at: new Date().toISOString() }));
-                analyticsClient.trackAdminEvent(
-                    outcome === "done" ? "onboarding.item_done" : "onboarding.item_dismissed",
-                    { itemId, source, step },
-                );
+                // A plain condition: the catalog test reads the two event names off this ternary.
+                const done = outcome === "done";
+                analyticsClient.trackAdminEvent(done ? "onboarding.item_done" : "onboarding.item_dismissed", {
+                    itemId,
+                    source,
+                    step,
+                });
             },
         });
     }

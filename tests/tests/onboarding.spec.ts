@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import Map from "./utils/map";
 import Menu from "./utils/menu";
 import { getPage } from "./utils/auth";
+import { resetWamMaps } from "./utils/map-editor/uploader";
 import { evaluateScript } from "./utils/scripting";
 import { isMobile } from "./utils/isMobile";
 import { map_storage_url } from "./utils/urls";
@@ -55,13 +56,15 @@ async function reloadWithFirstVisit(page: Page, days: number) {
 }
 
 // The e2e stack sets ONBOARDING_START_DELAY to 0, so a tour starts as soon as its target is on screen.
-test.describe("Onboarding tours @nomobile @nowebkit", () => {
+test.describe("Onboarding tours @oidc @nomobile @nowebkit", () => {
     test.beforeEach(({ page, browserName }) => {
         test.skip(isMobile(page), "The map editor tour is for desktop");
         test.skip(browserName === "webkit", "WebKit has issues with camera/microphone");
     });
 
-    test("The map editor tour leads an editor from the Tools menu to the entity list", async ({ browser }) => {
+    test("The map editor tour leads an editor from the Tools menu to the entity list", async ({ browser, request }) => {
+        // The tour runs on the editable "empty" map, which a fresh stack does not have yet.
+        await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
         const popover = page.getByTestId("onboarding-popover");
 
