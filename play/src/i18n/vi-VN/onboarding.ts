@@ -6,8 +6,6 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "Chào mừng đến với {worldName}! 🚀",
         description:
             "Hãy sẵn sàng khám phá một thế giới ảo nơi bạn có thể di chuyển, trò chuyện và cộng tác theo thời gian thực. Cùng làm một vòng tham quan nhanh để bắt đầu nhé!",
-        start: "Bắt đầu nào!",
-        skip: "Bỏ qua hướng dẫn",
     },
     movement: {
         title: "Di chuyển",
@@ -27,31 +25,24 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "Khóa cuộc trò chuyện của bạn",
         description:
             "Bấm nút khóa để ngăn người khác tham gia bong bóng trò chuyện của bạn. Rất hữu ích cho các cuộc thảo luận riêng tư!",
-        video: "./static/Videos/LockBubble.mp4",
         hint: "Bấm vào nút khóa được đánh dấu để thử ngay!",
-        next: "Tiếp theo",
     },
     screenSharing: {
         title: "Chia sẻ màn hình của bạn",
         description:
             "Chia sẻ màn hình với những người trong bong bóng trò chuyện của bạn. Hoàn hảo cho thuyết trình và cộng tác!",
-        video: "./static/images/screensharing.mp4",
         hint: "Bấm vào nút chia sẻ màn hình được đánh dấu để bắt đầu!",
-        next: "Tiếp theo",
     },
     pictureInPicture: {
         title: "Hình trong hình",
         description:
             "Dùng chế độ hình trong hình để giữ cuộc gọi video hiển thị trong khi bạn di chuyển trên bản đồ. Tuyệt vời để làm nhiều việc cùng lúc!",
-        video: "./static/Videos/PictureInPicture.mp4",
         hint: "Bấm vào nút PiP được đánh dấu để kích hoạt!",
-        next: "Tiếp theo",
     },
     complete: {
         title: "Bạn đã sẵn sàng! 🎉",
         description:
             "Bạn đã nắm được những điều cơ bản của {worldName}! Hãy thoải mái khám phá, gặp gỡ mọi người và vui chơi. Bạn luôn có thể mở phần trợ giúp từ menu khi cần.",
-        finish: "Bắt đầu khám phá!",
     },
     tips: {
         label: "Mẹo",
@@ -60,6 +51,14 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         close: "Đóng",
         stopShowing: "Ngừng hiển thị mẹo",
         restartTutorial: "Bắt đầu lại hướng dẫn",
+        showMe: "Cho tôi xem",
+        notNow: "Để sau",
+    },
+    announcements: {
+        tours: {
+            title: "Mẹo và hướng dẫn tham quan",
+            text: "WorkAdventure giờ sẽ giới thiệu các tính năng cho bạn, mỗi lần một mẹo ngắn. Bạn có thể xem lại chúng, cùng với phần hướng dẫn, trong **{help}** ở phần cài đặt.",
+        },
     },
     mapEditorTour: {
         title: "Đặt đồ nội thất bằng trình chỉnh sửa bản đồ",

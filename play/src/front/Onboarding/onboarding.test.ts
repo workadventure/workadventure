@@ -1,28 +1,33 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
 import type { OnboardingAnchor } from "@workadventure/messages";
+import type { GameScene } from "../Phaser/Game/GameScene";
 import { decide, newState } from "./onboardingRules";
-import type { OnboardingContext, OnboardingItem, OnboardingState } from "./onboardingRules";
+import type { OnboardingContext, OnboardingItem, OnboardingState, OnboardingStep } from "./onboardingRules";
 import type { ItemRun } from "./ItemRunner";
 
 // The runner's steps, without a DOM: each started step is recorded with its run.
 const started: { anchor: string; run: ItemRun; stopped: boolean }[] = [];
 vi.mock("./stepKinds", () => ({
-    stepKinds: {
-        popover: (step: { anchor: string }, run: ItemRun) => {
-            const entry = { anchor: step.anchor, run, stopped: false };
-            started.push(entry);
-            return () => (entry.stopped = true);
-        },
+    startStep: (step: OnboardingStep, run: ItemRun) => {
+        const entry = { anchor: step.type === "popover" ? step.anchor : step.type, run, stopped: false };
+        started.push(entry);
+        return () => (entry.stopped = true);
     },
 }));
 
 const visible = new Set<OnboardingAnchor>();
 vi.mock("./OnboardingAnchors", () => ({
     anchorNode: (anchor: OnboardingAnchor) => (visible.has(anchor) ? document.createElement("div") : undefined),
+    anchorsChanged: writable(0),
+    onAnchorUsed: () => () => {},
 }));
+vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: () => {} } }));
+vi.mock("../Connection/LocalUserStore", () => ({ localUserStore: { isLogged: () => true } }));
+vi.mock("../Touch/TouchScreenManager", () => ({ touchScreenManager: { primaryTouchDevice: false } }));
 
 const { runItem } = await import("./ItemRunner");
+const { OnboardingScheduler } = await import("./OnboardingScheduler");
 
 const NOW = new Date(2026, 10, 24, 12, 0);
 
@@ -36,6 +41,10 @@ function tour(id: string, extra: Partial<OnboardingItem> = {}): OnboardingItem {
     };
 }
 
+function announcement(id: string): OnboardingItem {
+    return { id, kind: "announcement", title: () => id, steps: [{ type: "modal", text: () => "" }] };
+}
+
 function ctx(extra: Partial<OnboardingContext> = {}): OnboardingContext {
     return {
         now: NOW,
@@ -43,6 +52,7 @@ function ctx(extra: Partial<OnboardingContext> = {}): OnboardingContext {
         isGuest: false,
         isTouch: false,
         quietPeriodMinutes: 60,
+        startDelayOver: true,
         anchorVisible: (anchor) => anchor === "actionBar.mapMenu",
         ...extra,
     };
@@ -134,6 +144,31 @@ describe("decide", () => {
         const result = decide([item], state({ used: ["actionBar.lockBubble"], lastAutoStartAt: hoursAgo(0) }), ctx());
         expect(result).toEqual({ skip: ["a"], start: undefined });
     });
+
+    it("holds tours back until the start delay is over, but not announcements or the tutorial", () => {
+        const notYet = ctx({ startDelayOver: false });
+        expect(decide([tour("a")], state(), notYet).start).toBeUndefined();
+        expect(decide([tour("a"), announcement("b")], state(), notYet).start?.id).toBe("b");
+        const tutorial = { ...announcement("t"), kind: "tutorial" as const };
+        expect(decide([tutorial], state(), notYet).start?.id).toBe("t");
+        // The quiet period still applies.
+        expect(decide([announcement("b")], state({ lastAutoStartAt: hoursAgo(0.5) }), notYet).start).toBeUndefined();
+    });
+
+    it("starts the first pending announcement and skips the others", () => {
+        const result = decide([announcement("a"), tour("t"), announcement("b")], state(), ctx());
+        expect(result).toEqual({ skip: ["b"], start: expect.objectContaining({ id: "a" }) });
+        // Nothing starts in the quiet period, so nothing is skipped either.
+        expect(decide([announcement("a"), announcement("b")], state({ lastAutoStartAt: hoursAgo(0) }), ctx())).toEqual({
+            skip: [],
+            start: undefined,
+        });
+    });
+
+    it("skips an item that `doneWhen` already says is done", () => {
+        const item = { ...announcement("a"), doneWhen: writable(true) };
+        expect(decide([item], state(), ctx())).toEqual({ skip: ["a"], start: undefined });
+    });
 });
 
 describe("runItem", () => {
@@ -194,6 +229,37 @@ describe("runItem", () => {
         expect(ends).toEqual([["interrupted", 1]]);
     });
 
+    it("runs a step's onComplete when the user completes it, not when it is left out", () => {
+        const onComplete = vi.fn();
+        const item = tour("t", { steps: [{ ...threeSteps.steps[0], onComplete }, threeSteps.steps[1]] });
+        run(item);
+        started[0].run.skip();
+        expect(onComplete).not.toHaveBeenCalled();
+        run(item);
+        started[2].run.complete();
+        expect(onComplete).toHaveBeenCalledOnce();
+    });
+
+    it("ends as done when doneWhen turns true, and runs what the steps left for the end", () => {
+        const doneWhen = writable(false);
+        const cleanup = vi.fn();
+        const { ends } = run({ ...threeSteps, doneWhen });
+        started[0].run.onEnd(cleanup);
+        doneWhen.set(true);
+        expect(ends).toEqual([["done", 0]]);
+        expect(started[0].stopped).toBe(true);
+        expect(cleanup).toHaveBeenCalledOnce();
+    });
+
+    it("dismisses on Esc, whatever the step", () => {
+        const { ends } = run(threeSteps);
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+        expect(ends).toEqual([["dismissed", 0]]);
+        // Gone with the item.
+        window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+        expect(ends).toHaveLength(1);
+    });
+
     it("ignores a late call from a step that is gone", () => {
         const { ends } = run(threeSteps);
         started[0].run.complete();
@@ -202,5 +268,53 @@ describe("runItem", () => {
         expect(started).toHaveLength(2);
         started[1].run.dismiss();
         expect(ends).toEqual([["dismissed", 1]]);
+    });
+});
+
+describe("OnboardingScheduler", () => {
+    const tutorial: OnboardingItem = { ...announcement("wa.tutorial"), kind: "tutorial" };
+    const items = [tutorial, announcement("wa.news")];
+    let scheduler: InstanceType<typeof OnboardingScheduler> | undefined;
+
+    /** A scene with only what the scheduler reads: the player variables. */
+    function start(variables: Record<string, unknown>) {
+        const map = new Map(Object.entries(variables));
+        const scene = {
+            connection: { getAllTags: () => [] },
+            getPlayerVariablesManager: () => ({
+                variables: map,
+                setVariableFromApp: (key: string, value: unknown) => map.set(key, value),
+            }),
+        } as unknown as GameScene;
+        scheduler = new OnboardingScheduler(scene, items);
+        return { map, state: () => map.get("onboarding") as OnboardingState };
+    }
+
+    beforeEach(() => {
+        started.length = 0;
+    });
+    afterEach(() => {
+        scheduler?.destroy();
+    });
+
+    it("gives a new user the tutorial at once, and none of the announcements that exist then", () => {
+        const { state } = start({});
+        expect(state().items["wa.news"]?.status).toBe("skipped");
+        expect(started).toHaveLength(1);
+        expect(state().lastAutoStartAt).toBeDefined();
+    });
+
+    it("counts tutorialDone as the tutorial done, and shows an existing user the announcement", () => {
+        const { state } = start({ tutorialDone: true });
+        expect(state().items["wa.tutorial"]?.status).toBe("done");
+        expect(state().items["wa.news"]).toBeUndefined();
+        // The announcement, at once: it does not wait for the start delay.
+        expect(started).toHaveLength(1);
+    });
+
+    it("writes tutorialDone when the tutorial ends, for map scripts", () => {
+        const { map } = start({});
+        started[0].run.dismiss();
+        expect(map.get("tutorialDone")).toBe(true);
     });
 });

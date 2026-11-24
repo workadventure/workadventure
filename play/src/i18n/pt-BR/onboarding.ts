@@ -5,8 +5,6 @@ export default {
         title: "Bem-vindo ao {worldName}! 🚀",
         description:
             "Prepare-se para explorar um mundo virtual onde você pode se mover, conversar com outros e colaborar em tempo real. Vamos fazer um tour rápido para ajudá-lo a começar!",
-        start: "Vamos lá!",
-        skip: "Pular tutorial",
     },
     movement: {
         title: "Mover-se",
@@ -26,31 +24,24 @@ export default {
         title: "Bloquear sua conversa",
         description:
             "Clique no botão de bloqueio para impedir que outros se juntem à sua bolha de conversa. Isso é útil para discussões privadas!",
-        video: "./static/Videos/LockBubble.mp4",
         hint: "Clique no botão de bloqueio destacado para experimentar!",
-        next: "Próximo",
     },
     screenSharing: {
         title: "Compartilhar sua tela",
         description:
             "Compartilhe sua tela com outros na sua bolha de conversa. Perfeito para apresentações e colaboração!",
-        video: "./static/images/screensharing.mp4",
         hint: "Clique no botão de compartilhamento de tela destacado para começar a compartilhar!",
-        next: "Próximo",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Use o modo Picture in Picture para manter as chamadas de vídeo visíveis enquanto navega pelo mapa. Ótimo para multitarefa!",
-        video: "./static/Videos/PictureInPicture.mp4",
         hint: "Clique no botão PiP destacado para ativá-lo!",
-        next: "Próximo",
     },
     complete: {
         title: "Você está pronto! 🎉",
         description:
             "Você aprendeu o básico de {worldName}! Sinta-se à vontade para explorar, conhecer novas pessoas e se divertir. Você sempre pode acessar a ajuda no menu se precisar.",
-        finish: "Começar a explorar!",
     },
     tips: {
         label: "Dica",
@@ -59,6 +50,14 @@ export default {
         close: "Fechar",
         stopShowing: "Parar de mostrar dicas",
         restartTutorial: "Reiniciar o tutorial",
+        showMe: "Mostrar",
+        notNow: "Agora não",
+    },
+    announcements: {
+        tours: {
+            title: "Dicas e tours guiados",
+            text: "O WorkAdventure agora apresenta seus recursos, uma dica curta de cada vez. Encontre todas elas, e o tutorial, em **{help}** nas configurações.",
+        },
     },
     mapEditorTour: {
         title: "Posicione móveis com o editor de mapa",

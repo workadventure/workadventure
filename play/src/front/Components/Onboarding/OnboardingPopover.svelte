@@ -2,12 +2,15 @@
     /* eslint-disable svelte/no-at-html-tags */
     import { LL } from "../../../i18n/i18n-svelte";
     import Button from "../UI/Button.svelte";
+    import OnboardingMedia from "./OnboardingMedia.svelte";
     import { IconX } from "@wa-icons";
 
     interface Props {
         title?: string;
         /** Already sanitized: the step's Markdown, rendered by `renderMarkdown()`. */
         html: string;
+        image?: string;
+        video?: string;
         position: number;
         total: number;
         /** false when the step completes on a click on its target. */
@@ -17,7 +20,7 @@
         onOptOut: () => void;
     }
 
-    let { title, html, position, total, showNext, onNext, onClose, onOptOut }: Props = $props();
+    let { title, html, image, video, position, total, showNext, onNext, onClose, onOptOut }: Props = $props();
 
     const titleId = $props.id();
 </script>
@@ -62,6 +65,7 @@
         <h3 id={titleId} class="m-0 text-base font-bold leading-tight">{title}</h3>
     {/if}
     <div class="text-sm leading-snug">{@html html}</div>
+    <OnboardingMedia {image} {video} />
     <div class="flex items-center gap-2">
         <button
             type="button"

@@ -34,8 +34,7 @@ test.describe("Noise suppression @nomobile @nowebkit", () => {
         await page.reload();
         await page.addStyleTag({
             content: `
-                [data-testid="onboarding-step"],
-                [data-testid^="onboarding-highlight-"] {
+                [data-testid="onboarding-modal"] {
                     display: none !important;
                     pointer-events: none !important;
                 }

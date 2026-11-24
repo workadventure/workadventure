@@ -10,24 +10,61 @@ import type { OnboardingAnchor } from "@workadventure/messages";
 /** A text read at display time, so it follows the current locale. */
 export type Text = () => string;
 
-export interface PopoverStep {
+interface StepBase {
+    /** The step never shows to someone who already clicked this anchor. */
+    skipIfUsed?: OnboardingAnchor;
+    /** Built-in items only: runs when the user completes the step. */
+    onComplete?: () => void;
+}
+
+interface StepContent {
+    title?: Text;
+    text: Text;
+    /** URLs. */
+    image?: string;
+    video?: string;
+}
+
+/** Centered. Next, or "Got it" on the last step; "Show me" and "Not now" when it leads into other steps. */
+export interface ModalStep extends StepBase, StepContent {
+    type: "modal";
+}
+
+export interface PopoverStep extends StepBase, StepContent {
     type: "popover";
     anchor: OnboardingAnchor;
     side?: "top" | "right" | "bottom" | "left";
     /** "next": a Next button. "click": the user clicks the anchor itself. */
     advance?: "next" | "click";
-    title?: Text;
-    text: Text;
-    /** The step never shows to someone who already clicked this anchor. */
-    skipIfUsed?: OnboardingAnchor;
+    /** Built-in items only: the click that completes the step does not reach the element. */
+    interceptClick?: boolean;
+    /**
+     * Built-in items only: the anchor may never show, such as a button that the layout or the browser does not have.
+     * The step is then left out instead of interrupting the item.
+     */
+    optional?: boolean;
 }
 
-export type OnboardingStep = PopoverStep;
+/** Built-in items only: waits for the avatar to move. */
+export interface MovementStep extends StepBase {
+    type: "movement";
+}
+
+/** Built-in items only: a fake user walks up and opens a fake bubble, until the item ends. */
+export interface SimulatedConversationStep extends StepBase {
+    type: "simulatedConversation";
+}
+
+export type OnboardingStep = ModalStep | PopoverStep | MovementStep | SimulatedConversationStep;
 
 export interface OnboardingItem {
     /** Unique and stable: the state is keyed by it. Built-in ids start with "wa.". */
     id: string;
-    kind: "tour";
+    /**
+     * Drives scheduling. A tour waits for the start delay, an announcement and the tutorial do not. "tutorial" is
+     * built-in only.
+     */
+    kind: "tour" | "announcement" | "tutorial";
     /** Its name in the Help menu. */
     title: Text;
     audience?: {
@@ -53,6 +90,8 @@ export interface OnboardingItem {
         /** Start when this anchor appears. */
         onAnchor?: OnboardingAnchor;
     };
+    /** Built-in items only: ends the item as done when it turns true. Already true, the item is skipped. */
+    doneWhen?: Readable<boolean>;
     steps: OnboardingStep[];
 }
 
@@ -74,6 +113,8 @@ export interface OnboardingContext {
     isGuest: boolean;
     isTouch: boolean;
     quietPeriodMinutes: number;
+    /** The user has been in the world for `ONBOARDING_START_DELAY` seconds. */
+    startDelayOver: boolean;
     anchorVisible: (anchor: OnboardingAnchor) => boolean;
 }
 
@@ -145,13 +186,18 @@ function afterSatisfied(
     return ended === undefined || ctx.now.getTime() - Date.parse(ended.at) >= minHours * 3_600_000;
 }
 
+/** The step shows by itself, not at an anchor that must be on screen. */
+export function stepAnchor(step: OnboardingStep): OnboardingAnchor | undefined {
+    return step.type === "popover" ? step.anchor : undefined;
+}
+
 export function isStepSkipped(step: OnboardingStep, used: readonly string[]): boolean {
     return step.skipIfUsed !== undefined && used.includes(step.skipIfUsed);
 }
 
 /**
  * Which items to record as skipped, and which one to start, if any. Pacing that does not depend on the state (one item
- * at a time, the start delay) is the caller's job.
+ * at a time) is the caller's job.
  */
 export function decide(
     items: OnboardingItem[],
@@ -182,16 +228,24 @@ export function decide(
             continue;
         }
         const firstStep = item.steps.find((step) => !isStepSkipped(step, state.used));
-        if (!firstStep) {
-            // Every step is about something the user already used: record it without showing anything.
+        // Every step is about something the user already used, or what the item teaches is already happening (someone
+        // already in a bubble does not need the tutorial): record it without showing anything.
+        if (!firstStep || (item.doneWhen && get(item.doneWhen))) {
             skip.push(item.id);
             continue;
         }
-        if (start || quiet) {
+        // Only the first pending announcement shows: someone who missed three releases gets one "what's new".
+        if (start?.kind === "announcement" && item.kind === "announcement") {
+            skip.push(item.id);
             continue;
         }
-        // A tour starts only when its first target is on screen.
-        if (ctx.anchorVisible(firstStep.anchor)) {
+        // A tip waits until the user has settled in. An announcement or the tutorial at entry interrupts nothing.
+        if (start || quiet || (item.kind === "tour" && !ctx.startDelayOver)) {
+            continue;
+        }
+        // An item that starts with a popover starts only when that target is on screen.
+        const anchor = stepAnchor(firstStep);
+        if (anchor === undefined || ctx.anchorVisible(anchor)) {
             start = item;
         }
     }

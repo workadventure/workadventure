@@ -4,8 +4,6 @@ export default {
     welcome: {
         title: "欢迎来到 {worldName}！ 🚀",
         description: "准备好探索一个虚拟世界，在这里你可以移动、与他人聊天并实时协作。让我们快速浏览一下，帮助您开始！",
-        start: "开始吧！",
-        skip: "跳过教程",
     },
     movement: {
         title: "移动",
@@ -22,29 +20,22 @@ export default {
     lockBubble: {
         title: "锁定您的对话",
         description: "点击锁定按钮以防止其他人加入您的对话气泡。这对私人讨论很有用！",
-        video: "./static/Videos/LockBubble.mp4",
         hint: "点击高亮的锁定按钮试试看！",
-        next: "下一步",
     },
     screenSharing: {
         title: "共享您的屏幕",
         description: "与对话气泡中的其他人共享您的屏幕。非常适合演示和协作！",
-        video: "./static/images/screensharing.mp4",
         hint: "点击高亮的屏幕共享按钮开始共享！",
-        next: "下一步",
     },
     pictureInPicture: {
         title: "画中画",
         description: "使用画中画模式在导航地图时保持视频通话可见。非常适合多任务处理！",
-        video: "./static/Videos/PictureInPicture.mp4",
         hint: "点击高亮的 PiP 按钮激活它！",
-        next: "下一步",
     },
     complete: {
         title: "您已准备就绪！ 🎉",
         description:
             "您已经学习了 {worldName} 的基础知识！随时可以探索、结识新朋友并享受乐趣。如果需要，您随时可以从菜单访问帮助。",
-        finish: "开始探索！",
     },
     tips: {
         label: "提示",
@@ -53,6 +44,14 @@ export default {
         close: "关闭",
         stopShowing: "不再显示提示",
         restartTutorial: "重新开始教程",
+        showMe: "带我看看",
+        notNow: "以后再说",
+    },
+    announcements: {
+        tours: {
+            title: "提示与引导教程",
+            text: "WorkAdventure 现在会通过简短的提示，一步步向你介绍各项功能。你可以在设置的 **{help}** 中重新查看它们和教程。",
+        },
     },
     mapEditorTour: {
         title: "使用地图编辑器摆放家具",

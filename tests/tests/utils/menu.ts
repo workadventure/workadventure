@@ -79,22 +79,6 @@ class Menu {
         await expect(page.getByTestId("media-settings-panel")).toBeVisible();
     }
 
-    async dismissOnboardingIfVisible(page: Page) {
-        const onboardingStep = page.getByTestId("onboarding-step");
-        if (await onboardingStep.isHidden().catch(() => true)) {
-            return;
-        }
-
-        const skipButton = page.getByTestId("onboarding-button-welcome-skip");
-        if (await skipButton.isVisible().catch(() => false)) {
-            await skipButton.click();
-        } else {
-            await page.keyboard.press("Escape");
-        }
-
-        await expect(onboardingStep).toBeHidden();
-    }
-
     async closeMapEditor(page: Page) {
         //await page.locator('.map-editor .configure-my-room .close-window').click();
         await page.getByTestId("closeMapEditorButton").click();

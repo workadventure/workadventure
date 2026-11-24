@@ -5,8 +5,6 @@ export default {
         title: "{worldName}에 오신 것을 환영합니다! 🚀",
         description:
             "이동하고, 다른 사람들과 채팅하고, 실시간으로 협업할 수 있는 가상 세계를 탐험할 준비를 하세요. 시작하는 데 도움이 되는 빠른 투어를 해봅시다!",
-        start: "시작합시다!",
-        skip: "튜토리얼 건너뛰기",
     },
     movement: {
         title: "이동하기",
@@ -25,30 +23,23 @@ export default {
     lockBubble: {
         title: "대화 잠그기",
         description: "잠금 버튼을 클릭하여 다른 사람이 대화 버블에 참여하지 못하도록 합니다. 비공개 토론에 유용합니다!",
-        video: "./static/Videos/LockBubble.mp4",
         hint: "강조 표시된 잠금 버튼을 클릭하여 시도해 보세요!",
-        next: "다음",
     },
     screenSharing: {
         title: "화면 공유하기",
         description: "대화 버블의 다른 사람들과 화면을 공유합니다. 프레젠테이션 및 협업에 완벽합니다!",
-        video: "./static/images/screensharing.mp4",
         hint: "강조 표시된 화면 공유 버튼을 클릭하여 공유를 시작하세요!",
-        next: "다음",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Picture in Picture 모드를 사용하여 맵을 탐색하는 동안 화상 통화를 계속 볼 수 있습니다. 멀티태스킹에 좋습니다!",
-        video: "./static/Videos/PictureInPicture.mp4",
         hint: "강조 표시된 PiP 버튼을 클릭하여 활성화하세요!",
-        next: "다음",
     },
     complete: {
         title: "준비 완료! 🎉",
         description:
             "{worldName}의 기본 사항을 배웠습니다! 자유롭게 탐험하고, 새로운 사람들을 만나고, 즐기세요. 필요할 때는 메뉴에서 항상 도움말에 액세스할 수 있습니다.",
-        finish: "탐험 시작하기!",
     },
     tips: {
         label: "팁",
@@ -57,6 +48,14 @@ export default {
         close: "닫기",
         stopShowing: "팁 그만 보기",
         restartTutorial: "튜토리얼 다시 시작",
+        showMe: "보여 주세요",
+        notNow: "나중에",
+    },
+    announcements: {
+        tours: {
+            title: "팁과 가이드 투어",
+            text: "이제 WorkAdventure가 짧은 팁으로 기능을 하나씩 안내합니다. 팁과 튜토리얼은 설정의 **{help}**에서 다시 볼 수 있습니다.",
+        },
     },
     mapEditorTour: {
         title: "맵 편집기로 가구 배치하기",

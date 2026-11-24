@@ -5,8 +5,6 @@ export default {
         title: "Welcome to {worldName}! 🚀",
         description:
             "Get ready to explore a virtual world where you can move around, chat with others, and collaborate in real-time. Let's take a quick tour to help you get started!",
-        start: "Let's go!",
-        skip: "Skip tutorial",
     },
     movement: {
         title: "Move around",
@@ -26,31 +24,24 @@ export default {
         title: "Lock your conversation",
         description:
             "Click the lock button to prevent others from joining your conversation bubble. This is useful for private discussions!",
-        video: "./static/Videos/LockBubble.mp4",
         hint: "Click the highlighted lock button to try it out!",
-        next: "Next",
     },
     screenSharing: {
         title: "Share your screen",
         description:
             "Share your screen with others in your conversation bubble. Perfect for presentations and collaboration!",
-        video: "./static/images/screensharing.mp4",
         hint: "Click the highlighted screen share button to start sharing!",
-        next: "Next",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Use Picture in Picture mode to keep video calls visible while you navigate the map. Great for multitasking!",
-        video: "./static/Videos/PictureInPicture.mp4",
         hint: "Click the highlighted PiP button to activate it!",
-        next: "Next",
     },
     complete: {
         title: "You're all set! 🎉",
         description:
             "You've learned the basics of {worldName}! Feel free to explore, meet new people, and have fun. You can always access help from the menu if you need it.",
-        finish: "Start exploring!",
     },
     tips: {
         label: "Consell",
@@ -59,6 +50,14 @@ export default {
         close: "Tanca",
         stopShowing: "No mostris més consells",
         restartTutorial: "Reinicia el tutorial",
+        showMe: "Mostra-m'ho",
+        notNow: "Ara no",
+    },
+    announcements: {
+        tours: {
+            title: "Consells i visites guiades",
+            text: "WorkAdventure ara et mostra les seves funcions, un consell breu cada vegada. Troba'ls, juntament amb el tutorial, a **{help}** a la configuració.",
+        },
     },
     mapEditorTour: {
         title: "Col·loca mobles amb l'editor de mapes",
