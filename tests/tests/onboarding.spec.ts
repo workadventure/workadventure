@@ -67,6 +67,15 @@ async function reloadWithState(page: Page, state: OnboardingState, tutorialDone 
     }).toPass({ timeout: 60_000 });
 }
 
+/** CI turns the tutorial off for every spec (`ENABLE_TUTORIAL=false`): this turns it back on in the room's metadata. */
+async function enableTutorial(page: Page) {
+    await page.route(/\/map\?/, async (route) => {
+        const response = await route.fetch();
+        const json = (await response.json()) as { metadata?: Record<string, unknown> };
+        await route.fulfill({ response, json: { ...json, metadata: { ...json.metadata, enableTutorial: true } } });
+    });
+}
+
 /** Starts the user's onboarding over, as if their first visit to the world was `days` ago. */
 async function reloadWithFirstVisit(page: Page, days: number) {
     await reloadWithState(page, { firstVisit: localDateDaysAgo(days), items: overBut(), used: [] });
@@ -127,7 +136,10 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
 
     test("The tutorial starts at load, and points at the buttons of a fake bubble", async ({ browser, request }) => {
         await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), {
+            pageCreatedHook: enableTutorial,
+            keepOnboardingTips: true,
+        });
         const modal = page.getByTestId("onboarding-modal");
         const popover = page.getByTestId("onboarding-popover");
 
