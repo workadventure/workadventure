@@ -6,7 +6,7 @@ import { resetWamMaps } from "./utils/map-editor/uploader";
 import { evaluateScript } from "./utils/scripting";
 import { isMobile } from "./utils/isMobile";
 import { map_storage_url } from "./utils/urls";
-import setFrontEnvVars from "./utils/setFrontEnvVar";
+import setFrontEnvVars from "./utils/setFrontEnvVars";
 
 test.use({
     baseURL: map_storage_url,
@@ -66,10 +66,8 @@ test.describe("Onboarding tours @oidc @nomobile @nowebkit", () => {
         // The tour runs on the editable "empty" map, which a fresh stack does not have yet.
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"), {
-            ...setFrontEnvVars({
-                // Tours start as soon as their target is on screen, instead of after the 30 s a user spends in the world first.
-                ONBOARDING_START_DELAY: 0,
-            }),
+            // Tours start as soon as their target is on screen, instead of after the 30 s a user spends in the world.
+            pageCreatedHook: (newPage) => setFrontEnvVars(newPage, { ONBOARDING_START_DELAY: 0 }),
             keepOnboardingTips: true,
         });
         const popover = page.getByTestId("onboarding-popover");
