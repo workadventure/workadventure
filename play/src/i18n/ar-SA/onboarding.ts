@@ -49,6 +49,12 @@ export default {
         showMe: "أرني",
         notNow: "ليس الآن",
     },
+    help: {
+        inConversation: "أثناء محادثة",
+        inMapEditor: "في محرر الخريطة",
+        notHere: "غير متاح هنا حاليًا",
+        remindMe: "ذكّرني",
+    },
     releaseNotes: {
         title: "ما الجديد في WorkAdventure {version}",
     },

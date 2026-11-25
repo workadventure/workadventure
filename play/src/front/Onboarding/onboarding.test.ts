@@ -27,6 +27,7 @@ vi.mock("../Connection/LocalUserStore", () => ({ localUserStore: { isLogged: () 
 vi.mock("../Touch/TouchScreenManager", () => ({ touchScreenManager: { primaryTouchDevice: false } }));
 
 const { runItem } = await import("./ItemRunner");
+const { anchorsChanged } = await import("./OnboardingAnchors");
 const { OnboardingScheduler } = await import("./OnboardingScheduler");
 
 const NOW = new Date(2026, 10, 24, 12, 0);
@@ -266,7 +267,7 @@ describe("OnboardingScheduler", () => {
     let scheduler: InstanceType<typeof OnboardingScheduler> | undefined;
 
     /** A scene with only what the scheduler reads: the player variables. */
-    function start(variables: Record<string, unknown>) {
+    function start(variables: Record<string, unknown>, list = items) {
         const map = new Map(Object.entries(variables));
         const scene = {
             connection: { getAllTags: () => [] },
@@ -275,8 +276,9 @@ describe("OnboardingScheduler", () => {
                 setVariableFromApp: (key: string, value: unknown) => map.set(key, value),
             }),
         } as unknown as GameScene;
-        scheduler = new OnboardingScheduler(scene, items);
-        return { map, state: () => map.get("onboarding") as OnboardingState };
+        const created = new OnboardingScheduler(scene, list);
+        scheduler = created;
+        return { map, scheduler: created, state: () => map.get("onboarding") as OnboardingState };
     }
 
     beforeEach(() => {
@@ -301,21 +303,62 @@ describe("OnboardingScheduler", () => {
         expect(started).toHaveLength(1);
     });
 
-    it("lists in the Help menu only the items that can start now", () => {
+    it("lists in the Help menu the items that cannot start now, with their missing target", () => {
         const lockTip = tour("lock", {
             steps: [{ type: "popover", anchor: "actionBar.lockBubble", text: () => "" }],
         });
-        scheduler = new OnboardingScheduler(
+        const help = new OnboardingScheduler(
             {
                 connection: { getAllTags: () => [] },
                 getPlayerVariablesManager: () => undefined,
             } as unknown as GameScene,
-            [tutorial, lockTip],
+            // Out of this user's audience: never listed.
+            [tutorial, lockTip, tour("admins", { audience: { tags: ["admin"] } })],
         );
+        scheduler = help;
+        const list = () => help.helpItems.map(({ item, missingAnchor }) => [item.id, missingAnchor]);
         // The lock button is only there in a bubble.
-        expect(scheduler.helpItems.map((item) => item.id)).toEqual(["wa.tutorial"]);
+        expect(list()).toEqual([
+            ["wa.tutorial", undefined],
+            ["lock", "actionBar.lockBubble"],
+        ]);
         visible.add("actionBar.lockBubble");
-        expect(scheduler.helpItems.map((item) => item.id)).toEqual(["wa.tutorial", "lock"]);
+        expect(list()).toEqual([
+            ["wa.tutorial", undefined],
+            ["lock", undefined],
+        ]);
+        visible.clear();
+    });
+
+    it("starts an item asked for in the Help menu as soon as its target shows up, whatever its state", () => {
+        const lockTip = tour("lock", {
+            steps: [{ type: "popover", anchor: "actionBar.lockBubble", text: () => "" }],
+        });
+        const at = new Date().toISOString();
+        const onboarding: OnboardingState = {
+            firstVisit: "2026-11-24",
+            // Dismissed: it would never start by itself again.
+            items: { "wa.news": { status: "done", at }, lock: { status: "dismissed", at } },
+            used: [],
+        };
+        const { state, scheduler: help } = start({ tutorialDone: true, onboarding }, [...items, lockTip]);
+        expect(started).toHaveLength(0);
+
+        // Twice cancels.
+        help.toggleRequest("lock");
+        help.toggleRequest("lock");
+        expect(state().requested).toBeUndefined();
+
+        help.toggleRequest("lock");
+        expect(state().requested).toEqual(["lock"]);
+        expect(help.helpItems.find(({ item }) => item.id === "lock")?.requested).toBe(true);
+        expect(started).toHaveLength(0);
+
+        // In a bubble, the lock button shows up.
+        visible.add("actionBar.lockBubble");
+        anchorsChanged.update((n) => n + 1);
+        expect(started.map((step) => step.anchor)).toEqual(["actionBar.lockBubble"]);
+        expect(state().requested).toBeUndefined();
         visible.clear();
     });
 

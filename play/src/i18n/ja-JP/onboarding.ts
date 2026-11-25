@@ -49,6 +49,12 @@ export default {
         showMe: "見てみる",
         notNow: "後で",
     },
+    help: {
+        inConversation: "会話中に使えます",
+        inMapEditor: "マップエディターで使えます",
+        notHere: "ここでは今は使えません",
+        remindMe: "リマインド",
+    },
     releaseNotes: {
         title: "WorkAdventure {version} の新機能",
     },

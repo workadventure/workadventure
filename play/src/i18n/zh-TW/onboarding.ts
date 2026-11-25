@@ -43,6 +43,12 @@ export default {
         showMe: "帶我看看",
         notNow: "以後再說",
     },
+    help: {
+        inConversation: "在對話中可用",
+        inMapEditor: "在地圖編輯器中可用",
+        notHere: "此處暫不可用",
+        remindMe: "提醒我",
+    },
     releaseNotes: {
         title: "WorkAdventure {version} 新功能",
     },

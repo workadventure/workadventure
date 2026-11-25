@@ -48,6 +48,12 @@ export default {
         showMe: "Laat zien",
         notNow: "Niet nu",
     },
+    help: {
+        inConversation: "Tijdens een gesprek",
+        inMapEditor: "In de kaarteditor",
+        notHere: "Hier nu niet beschikbaar",
+        remindMe: "Herinner me",
+    },
     releaseNotes: {
         title: "Nieuw in WorkAdventure {version}",
     },

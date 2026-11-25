@@ -100,6 +100,8 @@ export const OnboardingState = z.object({
     items: z.record(z.object({ status: z.enum(["done", "dismissed", "skipped"]), at: z.string() })),
     /** Anchors clicked at least once. Plain strings, so a removed anchor does not invalidate the state. */
     used: z.array(z.string()),
+    /** Items asked for in the Help menu while their first anchor was not on screen: each starts when it shows up. */
+    requested: z.array(z.string()).optional(),
 });
 export type OnboardingState = z.infer<typeof OnboardingState>;
 

@@ -26,6 +26,7 @@ interface OnboardingState {
     firstVisit: string;
     items: Record<string, { status: string; at: string }>;
     used: string[];
+    requested?: string[];
 }
 
 function localDateDaysAgo(days: number): string {
@@ -244,5 +245,39 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await expect(popover).toBeHidden();
         await Menu.expectButtonState(page, "lock-button", "forbidden");
         await expect.poll(async () => (await readOnboardingState(page))?.items[LOCK_TIP_ID]?.status).toBe("done");
+    });
+
+    test("A tip of the Help menu that cannot start here starts in the next bubble, if the user asks for it", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        const popover = page.getByTestId("onboarding-popover");
+
+        // Over: the tip would never start by itself again.
+        await reloadWithState(page, {
+            firstVisit: localDateDaysAgo(1),
+            items: overBut(undefined, [TOUR_ID, LOCK_TIP_ID, "wa.tip.screenShare", "wa.tip.pictureInPicture"]),
+            used: [],
+        });
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
+
+        // Out of a bubble, the Help menu lists it greyed out, with where its button shows up.
+        await Menu.openMenu(page);
+        await page.getByRole("button", { name: "All settings" }).click();
+        await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await expect(page.getByTestId(`onboarding-help-${LOCK_TIP_ID}`)).toContainText("During a conversation");
+        const remind = page.getByTestId(`onboarding-help-remind-${LOCK_TIP_ID}`);
+        await expect(remind).toHaveAttribute("aria-pressed", "false");
+        await remind.click();
+        await expect(remind).toHaveAttribute("aria-pressed", "true");
+        await expect.poll(async () => (await readOnboardingState(page))?.requested).toEqual([LOCK_TIP_ID]);
+        await page.locator("#closeMenu").click();
+
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 5 * 32, 5 * 32);
+        await expect(popover).toContainText("Lock your conversation", { timeout: 30_000 });
+        await expect.poll(async () => (await readOnboardingState(page))?.requested).toBeUndefined();
     });
 });

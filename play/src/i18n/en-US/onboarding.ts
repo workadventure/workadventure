@@ -49,6 +49,14 @@ export default {
         showMe: "Show me",
         notNow: "Not now",
     },
+    help: {
+        // Where the target of an item shows up, under an item of the Help menu that cannot start here.
+        inConversation: "During a conversation",
+        inMapEditor: "In the map editor",
+        notHere: "Not available here right now",
+        // A toggle: the item starts when its target shows up.
+        remindMe: "Remind me",
+    },
     releaseNotes: {
         title: "What's new in WorkAdventure {version}",
     },

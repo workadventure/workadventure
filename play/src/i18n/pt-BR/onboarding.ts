@@ -49,6 +49,12 @@ export default {
         showMe: "Mostrar",
         notNow: "Agora não",
     },
+    help: {
+        inConversation: "Durante uma conversa",
+        inMapEditor: "No editor de mapa",
+        notHere: "Indisponível aqui no momento",
+        remindMe: "Lembrar-me",
+    },
     releaseNotes: {
         title: "Novidades do WorkAdventure {version}",
     },

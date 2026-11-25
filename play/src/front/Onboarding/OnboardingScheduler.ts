@@ -1,4 +1,5 @@
 import { writable } from "svelte/store";
+import type { OnboardingAnchor } from "@workadventure/messages";
 import type { GameScene } from "../Phaser/Game/GameScene";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { localUserStore } from "../Connection/LocalUserStore";
@@ -8,6 +9,22 @@ import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
 import { runItem } from "./ItemRunner";
 import { decide, inAudience, newState, OnboardingState, stepAnchor } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem } from "./onboardingRules";
+
+/**
+ * An item of the Help menu. `missingAnchor`: its first target, when it is not on screen. `requested`: the user asked
+ * to see it when that target shows up.
+ */
+export interface HelpItem {
+    item: OnboardingItem;
+    missingAnchor?: OnboardingAnchor;
+    requested?: boolean;
+}
+
+/** The first anchor of an item, when it is not on screen: the item cannot start now. */
+function missingAnchor(item: OnboardingItem, ctx: OnboardingContext): OnboardingAnchor | undefined {
+    const anchor = item.steps[0] && stepAnchor(item.steps[0]);
+    return anchor && !ctx.anchorVisible(anchor) ? anchor : undefined;
+}
 
 /** The player variable that holds the whole state, world scope, persisted. */
 const STATE_KEY = "onboarding";
@@ -71,15 +88,29 @@ export class OnboardingScheduler {
     }
 
     /**
-     * What the Help menu lists: every item this user is in the audience of, whatever its state, that can start now. The
-     * tip on the lock button is only there in a bubble.
+     * What the Help menu lists: every item this user is in the audience of, whatever its state. An item whose first
+     * target is not on screen cannot start now (the tip on the lock button, outside a bubble): the menu shows it greyed
+     * out, with where that target shows up, and the user can ask to see it then.
      */
-    get helpItems(): OnboardingItem[] {
+    get helpItems(): HelpItem[] {
         const ctx = this.context();
-        return this.items.filter((item) => {
-            const anchor = item.steps[0] && stepAnchor(item.steps[0]);
-            return inAudience(item, ctx) && (anchor === undefined || ctx.anchorVisible(anchor));
+        const requested = this.readState().requested ?? [];
+        return this.items
+            .filter((item) => inAudience(item, ctx))
+            .map((item) => {
+                const anchor = missingAnchor(item, ctx);
+                return anchor ? { item, missingAnchor: anchor, requested: requested.includes(item.id) } : { item };
+            });
+    }
+
+    /** From the Help menu: the item starts when its first target shows up. Again to cancel. */
+    toggleRequest(id: string): void {
+        this.updateState((state) => {
+            const requested = state.requested ?? [];
+            const next = requested.includes(id) ? requested.filter((other) => other !== id) : [...requested, id];
+            state.requested = next.length > 0 ? next : undefined;
         });
+        this.evaluate();
     }
 
     /** Ignores pacing and the state: the user asked for it. */
@@ -105,6 +136,17 @@ export class OnboardingScheduler {
         }
         const ctx = this.context();
         const state = this.readState();
+        // Asked for in the Help menu: it starts as soon as it can, whatever pacing and the state say.
+        const requested = this.items.find(
+            (item) => state.requested?.includes(item.id) && inAudience(item, ctx) && !missingAnchor(item, ctx),
+        );
+        if (requested) {
+            const others = state.requested?.filter((id) => id !== requested.id) ?? [];
+            state.requested = others.length > 0 ? others : undefined;
+            this.writeState(state);
+            this.run(requested, "help");
+            return;
+        }
         const { skip, start } = decide(this.items, state, ctx);
         const at = ctx.now.toISOString();
         for (const id of skip) {
