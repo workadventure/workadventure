@@ -7,7 +7,6 @@
     import { inLivekitStore } from "../../../Stores/MediaStore";
     import { inExternalServiceStore } from "../../../Stores/MyMediaStore";
     import { raiseHandAvailableStore } from "../../../Stores/RaiseHandAvailabilityStore";
-    import { simulatedConversationStore } from "../../../Stores/SimulatedConversationStore";
     import { followStateStore } from "../../../Stores/FollowStore";
     import { requestedMegaphoneStore } from "../../../Stores/MegaphoneStore";
     import { currentPlayerLockableAreasStore } from "../../../Stores/CurrentPlayerAreaLockStore";
@@ -59,7 +58,7 @@
     <FollowMenuItem />
 {/if}
 
-{#if $currentPlayerLockableAreasStore.length > 0 || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined) || $simulatedConversationStore}
+{#if $currentPlayerLockableAreasStore.length > 0 || ($bottomActionBarVisibilityStore && !$inLivekitStore && $currentPlayerGroupLockStateStore !== undefined)}
     <LockDiscussionMenuItem />
 {/if}
 

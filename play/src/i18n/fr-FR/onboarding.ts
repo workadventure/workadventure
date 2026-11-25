@@ -25,19 +25,16 @@ export default {
         title: "Verrouiller votre conversation",
         description:
             "Cliquez sur le bouton de verrouillage pour empêcher les autres de rejoindre votre bulle de conversation. C'est utile pour les discussions privées !",
-        hint: "Cliquez sur le bouton de verrouillage mis en évidence pour l'essayer !",
     },
     screenSharing: {
         title: "Partager votre écran",
         description:
             "Partagez votre écran avec les autres dans votre bulle de conversation. Parfait pour les présentations et la collaboration !",
-        hint: "Cliquez sur le bouton de partage d'écran mis en évidence pour commencer à partager !",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Utilisez le mode Picture in Picture pour garder les appels vidéo visibles pendant que vous naviguez sur la carte. Idéal pour le multitâche !",
-        hint: "Cliquez sur le bouton PiP mis en évidence pour l'activer !",
     },
     complete: {
         title: "Vous êtes prêt ! 🎉",

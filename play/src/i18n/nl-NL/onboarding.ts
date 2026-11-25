@@ -24,18 +24,15 @@ export default {
         title: "Je gesprek vergrendelen",
         description:
             "Klik op de vergrendelknop om te voorkomen dat anderen zich bij je communicatiebel voegen. Dit is handig voor privégesprekken!",
-        hint: "Klik op de gemarkeerde vergrendelknop om het uit te proberen!",
     },
     screenSharing: {
         title: "Je scherm delen",
         description: "Deel je scherm met anderen in je communicatiebel. Perfect voor presentaties en samenwerking!",
-        hint: "Klik op de gemarkeerde schermdelingsknop om te beginnen met delen!",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Gebruik de Picture in Picture-modus om videogesprekken zichtbaar te houden terwijl je op de kaart navigeert. Geweldig voor multitasking!",
-        hint: "Klik op de gemarkeerde PiP-knop om deze te activeren!",
     },
     complete: {
         title: "Je bent klaar! 🎉",

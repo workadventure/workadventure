@@ -13,8 +13,6 @@ export type Text = () => string;
 interface StepBase {
     /** The step never shows to someone who already clicked this anchor. */
     skipIfUsed?: OnboardingAnchor;
-    /** Built-in items only: runs when the user completes the step. */
-    onComplete?: () => void;
 }
 
 interface StepContent {
@@ -36,13 +34,6 @@ export interface PopoverStep extends StepBase, StepContent {
     side?: "top" | "right" | "bottom" | "left";
     /** "next": a Next button. "click": the user clicks the anchor itself. */
     advance?: "next" | "click";
-    /** Built-in items only: the click that completes the step does not reach the element. */
-    interceptClick?: boolean;
-    /**
-     * Built-in items only: the anchor may never show, such as a button that the layout or the browser does not have.
-     * The step is then left out instead of interrupting the item.
-     */
-    optional?: boolean;
 }
 
 /** Built-in items only: waits for the avatar to move. */

@@ -23,18 +23,15 @@ export default {
     lockBubble: {
         title: "대화 잠그기",
         description: "잠금 버튼을 클릭하여 다른 사람이 대화 버블에 참여하지 못하도록 합니다. 비공개 토론에 유용합니다!",
-        hint: "강조 표시된 잠금 버튼을 클릭하여 시도해 보세요!",
     },
     screenSharing: {
         title: "화면 공유하기",
         description: "대화 버블의 다른 사람들과 화면을 공유합니다. 프레젠테이션 및 협업에 완벽합니다!",
-        hint: "강조 표시된 화면 공유 버튼을 클릭하여 공유를 시작하세요!",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Picture in Picture 모드를 사용하여 맵을 탐색하는 동안 화상 통화를 계속 볼 수 있습니다. 멀티태스킹에 좋습니다!",
-        hint: "강조 표시된 PiP 버튼을 클릭하여 활성화하세요!",
     },
     complete: {
         title: "준비 완료! 🎉",

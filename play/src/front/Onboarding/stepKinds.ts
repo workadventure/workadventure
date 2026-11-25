@@ -35,8 +35,6 @@ export type StepKind<S> = (step: S, run: ItemRun, view: StepView) => () => void;
 
 /** For a menu that opens: the next step's target gets this long to appear. */
 const ANCHOR_WAIT_MS = 10_000;
-/** An optional step's target is expected on screen already: it gets this long, then the step is left out. */
-const OPTIONAL_ANCHOR_WAIT_MS = 1000;
 /** The movement step completes once the avatar has stopped moving for this long. */
 const MOVED_MS = 1000;
 /** A re-render mounts the node again at once, while a menu that closes does not. */
@@ -177,29 +175,16 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
         }
     };
 
-    const waitTimer = setTimeout(
-        () => {
-            if (!shown) {
-                if (step.optional) {
-                    run.skip();
-                } else {
-                    run.anchorMissing();
-                }
-            }
-        },
-        step.optional ? OPTIONAL_ANCHOR_WAIT_MS : ANCHOR_WAIT_MS,
-    );
+    const waitTimer = setTimeout(() => {
+        if (!shown) {
+            run.anchorMissing();
+        }
+    }, ANCHOR_WAIT_MS);
     const unsubscribe = anchorsChanged.subscribe(update);
-    const offClick = onAnchorClick((anchor, event) => {
-        if (anchor !== step.anchor || step.advance !== "click") {
-            return;
+    const offClick = onAnchorClick((anchor) => {
+        if (anchor === step.anchor && step.advance === "click") {
+            run.complete();
         }
-        if (step.interceptClick) {
-            // The tutorial does not start a real screen share.
-            event.preventDefault();
-            event.stopImmediatePropagation();
-        }
-        run.complete();
     });
 
     return () => {

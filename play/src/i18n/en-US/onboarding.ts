@@ -24,19 +24,16 @@ export default {
         title: "Lock your conversation",
         description:
             "Click the lock button to prevent others from joining your conversation bubble. This is useful for private discussions!",
-        hint: "Click the highlighted lock button to try it out!",
     },
     screenSharing: {
         title: "Share your screen",
         description:
             "Share your screen with others in your conversation bubble. Perfect for presentations and collaboration!",
-        hint: "Click the highlighted screen share button to start sharing!",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Use Picture in Picture mode to keep video calls visible while you navigate the map. Great for multitasking!",
-        hint: "Click the highlighted PiP button to activate it!",
     },
     complete: {
         title: "You're all set! 🎉",

@@ -7,8 +7,6 @@ import { startStep } from "./stepKinds";
 export interface ItemRun {
     /** This step is done: go to the next one. */
     complete: () => void;
-    /** Leave this step out and go to the next one, without its `onComplete`. */
-    skip: () => void;
     /** This step's target went away: go back to the latest earlier step whose target is on screen. */
     back: () => void;
     /** × or "Not now". */
@@ -91,11 +89,7 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
             }
         };
         const run: ItemRun = {
-            complete: live(() => {
-                step.onComplete?.();
-                show(i + 1);
-            }),
-            skip: live(() => show(i + 1)),
+            complete: live(() => show(i + 1)),
             back: live(() => {
                 for (let j = i - 1; j >= 0; j--) {
                     const earlier = item.steps[j];

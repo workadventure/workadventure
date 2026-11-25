@@ -24,19 +24,16 @@ export default {
         title: "Bloquear tu conversación",
         description:
             "Haz clic en el botón de bloqueo para evitar que otros se unan a tu burbuja de conversación. ¡Es útil para discusiones privadas!",
-        hint: "¡Haz clic en el botón de bloqueo resaltado para probarlo!",
     },
     screenSharing: {
         title: "Compartir tu pantalla",
         description:
             "Comparte tu pantalla con otros en tu burbuja de conversación. ¡Perfecto para presentaciones y colaboración!",
-        hint: "¡Haz clic en el botón de compartir pantalla resaltado para comenzar a compartir!",
     },
     pictureInPicture: {
         title: "Imagen en imagen",
         description:
             "Usa el modo Imagen en imagen para mantener las videollamadas visibles mientras navegas por el mapa. ¡Genial para multitarea!",
-        hint: "¡Haz clic en el botón PiP resaltado para activarlo!",
     },
     complete: {
         title: "¡Ya estás listo! 🎉",

@@ -25,19 +25,16 @@ export default {
         title: "Ihre Unterhaltung sperren",
         description:
             "Klicken Sie auf die Sperrtaste, um zu verhindern, dass andere Ihrer Kommunikationsblase beitreten. Das ist nützlich für private Diskussionen!",
-        hint: "Klicken Sie auf die hervorgehobene Sperrtaste, um es auszuprobieren!",
     },
     screenSharing: {
         title: "Ihren Bildschirm teilen",
         description:
             "Teilen Sie Ihren Bildschirm mit anderen in Ihrer Kommunikationsblase. Perfekt für Präsentationen und Zusammenarbeit!",
-        hint: "Klicken Sie auf die hervorgehobene Bildschirmfreigabetaste, um mit dem Teilen zu beginnen!",
     },
     pictureInPicture: {
         title: "Bild-im-Bild",
         description:
             "Verwenden Sie den Bild-im-Bild-Modus, um Videoanrufe sichtbar zu halten, während Sie auf der Karte navigieren. Großartig für Multitasking!",
-        hint: "Klicken Sie auf die hervorgehobene PiP-Taste, um sie zu aktivieren!",
     },
     complete: {
         title: "Sie sind bereit! 🎉",

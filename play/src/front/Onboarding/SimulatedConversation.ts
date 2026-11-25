@@ -21,24 +21,17 @@ class SimulatedConversation {
     private player: RemotePlayer | undefined;
     private bubble: ConversationBubble | undefined;
     private video: Streamable | undefined;
-    private locked = false;
     private destroyed = false;
     private readonly timers = new Set<ReturnType<typeof setTimeout>>();
     private bubbleInterval: ReturnType<typeof setInterval> | undefined;
     private followTimer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private readonly scene: GameScene) {
-        simulatedConversationStore.set({ locked: false });
+        simulatedConversationStore.set(true);
         scene.CurrentPlayer.on(hasMovedEventName, this.follow);
         this.walkUp().catch((error) => {
             console.error("The onboarding's fake user could not walk up", error);
         });
-    }
-
-    lock(): void {
-        this.locked = true;
-        this.bubble?.setLocked(true);
-        simulatedConversationStore.set({ locked: true });
     }
 
     destroy(): void {
@@ -54,7 +47,7 @@ class SimulatedConversation {
         if (this.video) {
             scriptingVideoStore.removeVideo(this.video.uniqueId);
         }
-        simulatedConversationStore.set(undefined);
+        simulatedConversationStore.set(false);
     }
 
     private later(delay: number, action: () => void): void {
@@ -116,7 +109,7 @@ class SimulatedConversation {
             return;
         }
         const me = this.scene.CurrentPlayer;
-        const bubble = new ConversationBubble(this.scene, me.x, me.y - 30, this.locked, [userId, SIMULATED_USER_ID]);
+        const bubble = new ConversationBubble(this.scene, me.x, me.y - 30, false, [userId, SIMULATED_USER_ID]);
         this.bubble = bubble;
         this.bubbleInterval = setInterval(() => {
             bubble.step([
@@ -167,22 +160,8 @@ class SimulatedConversation {
     };
 }
 
-let current: SimulatedConversation | undefined;
-
 /** Starts the fake conversation. Returns its end. */
 export function startSimulatedConversation(scene: GameScene): () => void {
-    current?.destroy();
     const conversation = new SimulatedConversation(scene);
-    current = conversation;
-    return () => {
-        conversation.destroy();
-        if (current === conversation) {
-            current = undefined;
-        }
-    };
-}
-
-/** Turns the fake bubble red, as locking a real one does. */
-export function lockSimulatedBubble(): void {
-    current?.lock();
+    return () => conversation.destroy();
 }

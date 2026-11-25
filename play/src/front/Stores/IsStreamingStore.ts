@@ -5,8 +5,7 @@ import { gameSceneStore } from "./GameSceneStore";
 import { simulatedConversationStore } from "./SimulatedConversationStore";
 
 /**
- * Reads a store of the space registry, forced to true during the tutorial's fake conversation, which points at the media
- * buttons.
+ * Reads a store of the space registry, forced to true during the tutorial's fake conversation.
  */
 function liveStreamingStateStore(
     select: (spaceRegistry: SpaceRegistryInterface) => Readable<boolean>,

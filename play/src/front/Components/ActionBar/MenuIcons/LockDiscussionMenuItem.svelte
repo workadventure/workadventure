@@ -18,17 +18,8 @@
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LockableAreaPicker from "../../PopUp/LockableAreaPicker.svelte";
     import { onboarding } from "../../../Onboarding/OnboardingAnchors";
-    import { lockSimulatedBubble } from "../../../Onboarding/SimulatedConversation";
-    import { simulatedConversationStore } from "../../../Stores/SimulatedConversationStore";
-
-    /** The tutorial's fake bubble locks like a real one. */
-    let groupLockState = $derived($currentPlayerGroupLockStateStore ?? $simulatedConversationStore?.locked);
 
     function lockGroupClick() {
-        if ($simulatedConversationStore) {
-            lockSimulatedBubble();
-            return;
-        }
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
     }
 
@@ -76,7 +67,7 @@
 
     let lockableAreas = $derived($currentPlayerLockableAreasStore);
     let showAreaLock = $derived(lockableAreas.length > 0);
-    let showGroupLock = $derived(!showAreaLock && groupLockState !== undefined);
+    let showGroupLock = $derived(!showAreaLock && $currentPlayerGroupLockStateStore !== undefined);
 
     let areasWithPermission = $derived(
         (() => {
@@ -175,7 +166,7 @@
                 return lockableAreas.every((e) => e.lockState) ? true : false;
             }
             if (showGroupLock) {
-                return groupLockState;
+                return $currentPlayerGroupLockStateStore;
             }
             return undefined;
         })(),

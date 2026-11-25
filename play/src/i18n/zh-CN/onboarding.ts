@@ -20,17 +20,14 @@ export default {
     lockBubble: {
         title: "锁定您的对话",
         description: "点击锁定按钮以防止其他人加入您的对话气泡。这对私人讨论很有用！",
-        hint: "点击高亮的锁定按钮试试看！",
     },
     screenSharing: {
         title: "共享您的屏幕",
         description: "与对话气泡中的其他人共享您的屏幕。非常适合演示和协作！",
-        hint: "点击高亮的屏幕共享按钮开始共享！",
     },
     pictureInPicture: {
         title: "画中画",
         description: "使用画中画模式在导航地图时保持视频通话可见。非常适合多任务处理！",
-        hint: "点击高亮的 PiP 按钮激活它！",
     },
     complete: {
         title: "您已准备就绪！ 🎉",

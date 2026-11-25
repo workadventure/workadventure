@@ -4,9 +4,9 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { ONBOARDING_START_DELAY } from "../Enum/EnvironmentVariable";
-import { anchorNode, anchorsChanged, onAnchorUsed } from "./OnboardingAnchors";
+import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
 import { runItem } from "./ItemRunner";
-import { decide, inAudience, newState, OnboardingState } from "./onboardingRules";
+import { decide, inAudience, newState, OnboardingState, stepAnchor } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem } from "./onboardingRules";
 
 /** The player variable that holds the whole state, world scope, persisted. */
@@ -57,7 +57,7 @@ export class OnboardingScheduler {
             () => clearTimeout(startTimer),
             () => clearInterval(tick),
             anchorsChanged.subscribe(() => this.evaluate()),
-            onAnchorUsed((anchor) =>
+            onAnchorClick((anchor) =>
                 this.updateState((state) => !state.used.includes(anchor) && state.used.push(anchor)),
             ),
         );
@@ -70,10 +70,16 @@ export class OnboardingScheduler {
         this.evaluate();
     }
 
-    /** What the Help menu lists: every item this user is in the audience of, whatever its state. */
+    /**
+     * What the Help menu lists: every item this user is in the audience of, whatever its state, that can start now. The
+     * tip on the lock button is only there in a bubble.
+     */
     get helpItems(): OnboardingItem[] {
         const ctx = this.context();
-        return this.items.filter((item) => inAudience(item, ctx));
+        return this.items.filter((item) => {
+            const anchor = item.steps[0] && stepAnchor(item.steps[0]);
+            return inAudience(item, ctx) && (anchor === undefined || ctx.anchorVisible(anchor));
+        });
     }
 
     /** Ignores pacing and the state: the user asked for it. */

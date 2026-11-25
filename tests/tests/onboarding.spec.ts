@@ -13,6 +13,7 @@ test.use({
 });
 
 const TOUR_ID = "wa.mapEditor.furniture";
+const LOCK_TIP_ID = "wa.tip.lockBubble";
 const TUTORIAL_ID = "wa.tutorial";
 const ANNOUNCEMENT_ID = "wa.announcement.tours";
 /**
@@ -40,10 +41,11 @@ async function readOnboardingState(page: Page): Promise<OnboardingState | undefi
     });
 }
 
-/** The `AT_LOAD` items but `except`, recorded as done. */
-function overBut(except?: string): OnboardingState["items"] {
+/** The `AT_LOAD` items but `except`, and the `others`, recorded as done. */
+function overBut(except?: string, others: string[] = []): OnboardingState["items"] {
     const at = new Date().toISOString();
-    return Object.fromEntries(AT_LOAD.filter((id) => id !== except).map((id) => [id, { status: "done", at }]));
+    const ids = [...AT_LOAD.filter((id) => id !== except), ...others];
+    return Object.fromEntries(ids.map((id) => [id, { status: "done", at }]));
 }
 
 /**
@@ -134,14 +136,13 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await expect.poll(async () => (await readOnboardingState(page))?.items[TOUR_ID]?.status).toBe("dismissed");
     });
 
-    test("The tutorial starts at load, and points at the buttons of a fake bubble", async ({ browser, request }) => {
+    test("The tutorial starts at load, and shows a fake bubble", async ({ browser, request }) => {
         await resetWamMaps(request);
         await using page = await getPage(browser, "Admin1", Map.url("empty"), {
             pageCreatedHook: enableTutorial,
             keepOnboardingTips: true,
         });
         const modal = page.getByTestId("onboarding-modal");
-        const popover = page.getByTestId("onboarding-popover");
 
         // A user who has not done the tutorial yet. The start delay stays the default 30 s.
         await reloadWithState(page, { firstVisit: localDateDaysAgo(2), items: overBut(TUTORIAL_ID), used: [] }, false);
@@ -151,15 +152,6 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await expect(page.getByRole("heading", { name: "Move around" })).toBeVisible();
         await Map.walkTo(page, "ArrowRight", 500);
         await page.getByRole("button", { name: "Got it!" }).click();
-
-        // The clicks do not reach the real buttons: the lock turns the fake bubble red, and no screen share starts.
-        await expect(popover).toContainText("Lock your conversation");
-        await page.getByTestId("lock-button").click();
-        await Menu.expectButtonState(page, "lock-button", "forbidden");
-        await expect(popover).toContainText("Share your screen");
-        await page.getByTestId("screenShareButton").click();
-        await expect(popover).toContainText("Picture in Picture");
-        await page.getByTestId("pictureInPictureButton").click();
 
         await expect(modal).toContainText("You're all set");
         await modal.getByTestId("onboarding-modal-next").click();
@@ -174,8 +166,6 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
                 }),
             )
             .toBe(true);
-        // The fake user and its bubble left with the tutorial.
-        await expect(page.getByTestId("lock-button")).toBeHidden();
     });
 
     test("An announcement shows at load to an existing user", async ({ browser, request }) => {
@@ -189,5 +179,37 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await modal.getByTestId("onboarding-modal-next").click();
         await expect(modal).toBeHidden();
         await expect.poll(async () => (await readOnboardingState(page))?.items[ANNOUNCEMENT_ID]?.status).toBe("done");
+    });
+
+    test("The tip on the lock button shows in a bubble, from the day after the first visit", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), {
+            pageCreatedHook: (newPage) => setFrontEnvVars(newPage, { ONBOARDING_START_DELAY: 0 }),
+            keepOnboardingTips: true,
+        });
+        const popover = page.getByTestId("onboarding-popover");
+
+        // The map editor tour would start first, on the Tools menu.
+        await reloadWithState(page, {
+            firstVisit: localDateDaysAgo(1),
+            items: overBut(undefined, [TOUR_ID]),
+            used: [],
+        });
+        await Map.teleportToPosition(page, 5 * 32, 5 * 32);
+        // Out of a bubble, there is no lock button to point at.
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(2000);
+        await expect(popover).toBeHidden();
+
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Map.teleportToPosition(bob, 5 * 32, 5 * 32);
+        await expect(popover).toContainText("Lock your conversation", { timeout: 30_000 });
+        await expect(page.getByTestId("lock-button")).toHaveAttribute("data-onboarding-highlight");
+        await popover.getByTestId("onboarding-popover-next").click();
+        await expect(popover).toBeHidden();
+        await expect.poll(async () => (await readOnboardingState(page))?.items[LOCK_TIP_ID]?.status).toBe("done");
     });
 });

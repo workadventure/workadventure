@@ -25,19 +25,16 @@ export default {
         title: "Blocca la tua conversazione",
         description:
             "Clicca sul pulsante di blocco per impedire ad altri di unirsi alla tua bolla di conversazione. Utile per discussioni private!",
-        hint: "Clicca sul pulsante di blocco evidenziato per provarlo!",
     },
     screenSharing: {
         title: "Condividi il tuo schermo",
         description:
             "Condividi il tuo schermo con altri nella tua bolla di conversazione. Perfetto per presentazioni e collaborazione!",
-        hint: "Clicca sul pulsante di condivisione schermo evidenziato per iniziare a condividere!",
     },
     pictureInPicture: {
         title: "Immagine nell'immagine",
         description:
             "Usa la modalità Immagine nell'immagine per mantenere visibili le videochiamate mentre navighi sulla mappa. Ottimo per il multitasking!",
-        hint: "Clicca sul pulsante PiP evidenziato per attivarlo!",
     },
     complete: {
         title: "Sei pronto! 🎉",

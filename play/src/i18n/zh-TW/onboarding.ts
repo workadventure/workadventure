@@ -20,17 +20,14 @@ export default {
     lockBubble: {
         title: "鎖定您的對話",
         description: "點選鎖定按鈕以防止其他人加入您的對話氣泡。這對私人討論很有用！",
-        hint: "點選醒目顯示的鎖定按鈕試試看！",
     },
     screenSharing: {
         title: "分享您的螢幕",
         description: "與對話氣泡中的其他人分享您的螢幕。非常適合簡報與協作！",
-        hint: "點選醒目顯示的螢幕分享按鈕開始分享！",
     },
     pictureInPicture: {
         title: "子母畫面",
         description: "使用子母畫面模式，在瀏覽地圖時保持視訊通話可見。非常適合多工處理！",
-        hint: "點選醒目顯示的 PiP 按鈕來啟用它！",
     },
     complete: {
         title: "您已準備就緒！ 🎉",

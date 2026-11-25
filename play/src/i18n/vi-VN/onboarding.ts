@@ -25,19 +25,16 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "Khóa cuộc trò chuyện của bạn",
         description:
             "Bấm nút khóa để ngăn người khác tham gia bong bóng trò chuyện của bạn. Rất hữu ích cho các cuộc thảo luận riêng tư!",
-        hint: "Bấm vào nút khóa được đánh dấu để thử ngay!",
     },
     screenSharing: {
         title: "Chia sẻ màn hình của bạn",
         description:
             "Chia sẻ màn hình với những người trong bong bóng trò chuyện của bạn. Hoàn hảo cho thuyết trình và cộng tác!",
-        hint: "Bấm vào nút chia sẻ màn hình được đánh dấu để bắt đầu!",
     },
     pictureInPicture: {
         title: "Hình trong hình",
         description:
             "Dùng chế độ hình trong hình để giữ cuộc gọi video hiển thị trong khi bạn di chuyển trên bản đồ. Tuyệt vời để làm nhiều việc cùng lúc!",
-        hint: "Bấm vào nút PiP được đánh dấu để kích hoạt!",
     },
     complete: {
         title: "Bạn đã sẵn sàng! 🎉",

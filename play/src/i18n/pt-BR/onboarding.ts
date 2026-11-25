@@ -24,19 +24,16 @@ export default {
         title: "Bloquear sua conversa",
         description:
             "Clique no botão de bloqueio para impedir que outros se juntem à sua bolha de conversa. Isso é útil para discussões privadas!",
-        hint: "Clique no botão de bloqueio destacado para experimentar!",
     },
     screenSharing: {
         title: "Compartilhar sua tela",
         description:
             "Compartilhe sua tela com outros na sua bolha de conversa. Perfeito para apresentações e colaboração!",
-        hint: "Clique no botão de compartilhamento de tela destacado para começar a compartilhar!",
     },
     pictureInPicture: {
         title: "Picture in Picture",
         description:
             "Use o modo Picture in Picture para manter as chamadas de vídeo visíveis enquanto navega pelo mapa. Ótimo para multitarefa!",
-        hint: "Clique no botão PiP destacado para ativá-lo!",
     },
     complete: {
         title: "Você está pronto! 🎉",

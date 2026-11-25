@@ -20,7 +20,7 @@ const visible = new Set<OnboardingAnchor>();
 vi.mock("./OnboardingAnchors", () => ({
     anchorNode: (anchor: OnboardingAnchor) => (visible.has(anchor) ? document.createElement("div") : undefined),
     anchorsChanged: writable(0),
-    onAnchorUsed: () => () => {},
+    onAnchorClick: () => () => {},
 }));
 vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: () => {} } }));
 vi.mock("../Connection/LocalUserStore", () => ({ localUserStore: { isLogged: () => true } }));
@@ -229,17 +229,6 @@ describe("runItem", () => {
         expect(ends).toEqual([["interrupted", 1]]);
     });
 
-    it("runs a step's onComplete when the user completes it, not when it is left out", () => {
-        const onComplete = vi.fn();
-        const item = tour("t", { steps: [{ ...threeSteps.steps[0], onComplete }, threeSteps.steps[1]] });
-        run(item);
-        started[0].run.skip();
-        expect(onComplete).not.toHaveBeenCalled();
-        run(item);
-        started[2].run.complete();
-        expect(onComplete).toHaveBeenCalledOnce();
-    });
-
     it("ends as done when doneWhen turns true, and runs what the steps left for the end", () => {
         const doneWhen = writable(false);
         const cleanup = vi.fn();
@@ -310,6 +299,24 @@ describe("OnboardingScheduler", () => {
         expect(state().items["wa.news"]).toBeUndefined();
         // The announcement, at once: it does not wait for the start delay.
         expect(started).toHaveLength(1);
+    });
+
+    it("lists in the Help menu only the items that can start now", () => {
+        const lockTip = tour("lock", {
+            steps: [{ type: "popover", anchor: "actionBar.lockBubble", text: () => "" }],
+        });
+        scheduler = new OnboardingScheduler(
+            {
+                connection: { getAllTags: () => [] },
+                getPlayerVariablesManager: () => undefined,
+            } as unknown as GameScene,
+            [tutorial, lockTip],
+        );
+        // The lock button is only there in a bubble.
+        expect(scheduler.helpItems.map((item) => item.id)).toEqual(["wa.tutorial"]);
+        visible.add("actionBar.lockBubble");
+        expect(scheduler.helpItems.map((item) => item.id)).toEqual(["wa.tutorial", "lock"]);
+        visible.clear();
     });
 
     it("writes tutorialDone when the tutorial ends, for map scripts", () => {

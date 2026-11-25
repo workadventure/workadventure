@@ -1,12 +1,12 @@
 import { derived, get } from "svelte/store";
+import type { OnboardingAnchor } from "@workadventure/messages";
 import { LL } from "../../i18n/i18n-svelte";
 import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable";
 import { currentPlayerGroupIdStore } from "../Stores/CurrentPlayerGroupStore";
 import { gameSceneStore } from "../Stores/GameSceneStore";
 import { inBbbStore, inJitsiStore, inLivekitStore } from "../Stores/MediaStore";
 import { mapEditorMenuVisibleStore } from "../Stores/MenuStore";
-import { lockSimulatedBubble } from "./SimulatedConversation";
-import type { OnboardingItem, OnboardingStep } from "./onboardingRules";
+import type { OnboardingItem } from "./onboardingRules";
 
 /** `enableTutorial` in the room metadata, or `ENABLE_TUTORIAL` without metadata (self-hosted). */
 const tutorialEnabled = derived(gameSceneStore, (scene) => {
@@ -24,59 +24,33 @@ function worldName(): string {
     return get(gameSceneStore)?.room.roomName ?? "WorkAdventure";
 }
 
-/** The same steps as the tutorial of old. Touch devices have no lock, screen sharing or picture-in-picture. */
-function tutorialSteps(touch: boolean): OnboardingStep[] {
-    const ll = () => get(LL).onboarding;
-    const bubbleButtons: OnboardingStep[] = [
-        {
-            type: "popover",
-            anchor: "actionBar.lockBubble",
-            advance: "click",
-            interceptClick: true,
-            // On a small screen the lock button moves to the profile menu.
-            optional: true,
-            title: () => ll().lockBubble.title(),
-            text: () => `${ll().lockBubble.description()}\n\n*${ll().lockBubble.hint()}*`,
-            video: "./static/Videos/LockBubble.mp4",
-            onComplete: lockSimulatedBubble,
-        },
-        {
-            type: "popover",
-            anchor: "actionBar.screenShare",
-            advance: "click",
-            interceptClick: true,
-            optional: true,
-            title: () => ll().screenSharing.title(),
-            text: () => `${ll().screenSharing.description()}\n\n*${ll().screenSharing.hint()}*`,
-            video: "./static/images/screensharing.mp4",
-        },
-        {
-            type: "popover",
-            anchor: "actionBar.pictureInPicture",
-            advance: "click",
-            interceptClick: true,
-            // Not every browser has picture-in-picture.
-            optional: true,
-            title: () => ll().pictureInPicture.title(),
-            text: () => `${ll().pictureInPicture.description()}\n\n*${ll().pictureInPicture.hint()}*`,
-            video: "./static/Videos/PictureInPicture.mp4",
-        },
-    ];
-    return [
-        {
-            type: "modal",
-            title: () => ll().welcome.title({ worldName: worldName() }),
-            text: () => ll().welcome.description(),
-        },
-        { type: "movement" },
-        { type: "simulatedConversation" },
-        ...(touch ? [] : bubbleButtons),
-        {
-            type: "modal",
-            title: () => ll().complete.title(),
-            text: () => ll().complete.description({ worldName: worldName() }),
-        },
-    ];
+/**
+ * A tip on a button that only shows in a bubble, for someone who has not used it after a few days. It starts when the
+ * user is in a bubble, where the button is.
+ */
+function bubbleTip(
+    id: string,
+    anchor: OnboardingAnchor,
+    minDaysSinceFirstVisit: number,
+    texts: () => { title: () => string; description: () => string },
+    video: string,
+): OnboardingItem {
+    return {
+        id,
+        kind: "tour",
+        title: () => texts().title(),
+        when: { minDaysSinceFirstVisit, onAnchor: anchor },
+        steps: [
+            {
+                type: "popover",
+                anchor,
+                skipIfUsed: anchor,
+                title: () => texts().title(),
+                text: () => texts().description(),
+                video,
+            },
+        ],
+    };
 }
 
 /** Built-in content, in priority order. Ids start with "wa." and never change: the state is keyed by them. */
@@ -85,17 +59,22 @@ export const builtinItems: OnboardingItem[] = [
         id: "wa.tutorial",
         kind: "tutorial",
         title: () => get(LL).onboarding.tips.restartTutorial(),
-        audience: { allowed: tutorialEnabled, touch: false },
+        audience: { allowed: tutorialEnabled },
         doneWhen: inRealConversation,
-        steps: tutorialSteps(false),
-    },
-    {
-        id: "wa.tutorial.touch",
-        kind: "tutorial",
-        title: () => get(LL).onboarding.tips.restartTutorial(),
-        audience: { allowed: tutorialEnabled, touch: true },
-        doneWhen: inRealConversation,
-        steps: tutorialSteps(true),
+        steps: [
+            {
+                type: "modal",
+                title: () => get(LL).onboarding.welcome.title({ worldName: worldName() }),
+                text: () => get(LL).onboarding.welcome.description(),
+            },
+            { type: "movement" },
+            { type: "simulatedConversation" },
+            {
+                type: "modal",
+                title: () => get(LL).onboarding.complete.title(),
+                text: () => get(LL).onboarding.complete.description({ worldName: worldName() }),
+            },
+        ],
     },
     {
         id: "wa.announcement.tours",
@@ -141,4 +120,25 @@ export const builtinItems: OnboardingItem[] = [
             },
         ],
     },
+    bubbleTip(
+        "wa.tip.lockBubble",
+        "actionBar.lockBubble",
+        1,
+        () => get(LL).onboarding.lockBubble,
+        "./static/Videos/LockBubble.mp4",
+    ),
+    bubbleTip(
+        "wa.tip.screenShare",
+        "actionBar.screenShare",
+        2,
+        () => get(LL).onboarding.screenSharing,
+        "./static/images/screensharing.mp4",
+    ),
+    bubbleTip(
+        "wa.tip.pictureInPicture",
+        "actionBar.pictureInPicture",
+        3,
+        () => get(LL).onboarding.pictureInPicture,
+        "./static/Videos/PictureInPicture.mp4",
+    ),
 ];
