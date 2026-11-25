@@ -181,7 +181,8 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
     }, ANCHOR_WAIT_MS);
     const unsubscribe = anchorsChanged.subscribe(update);
     const offClick = onAnchorClick((anchor) => {
-        if (anchor === step.anchor && step.advance === "click") {
+        // Whatever `advance` says: the user did what the step points at.
+        if (anchor === step.anchor) {
             run.complete();
         }
     });

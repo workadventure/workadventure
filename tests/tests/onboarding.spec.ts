@@ -218,8 +218,10 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(bob, 5 * 32, 5 * 32);
         await expect(popover).toContainText("Lock your conversation", { timeout: 30_000 });
         await expect(page.getByTestId("lock-button")).toHaveAttribute("data-onboarding-highlight");
-        await popover.getByTestId("onboarding-popover-next").click();
+        // Locking the bubble closes the tip as done, as its "Got it" button would.
+        await page.getByTestId("lock-button").click();
         await expect(popover).toBeHidden();
+        await Menu.expectButtonState(page, "lock-button", "forbidden");
         await expect.poll(async () => (await readOnboardingState(page))?.items[LOCK_TIP_ID]?.status).toBe("done");
     });
 });

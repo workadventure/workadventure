@@ -32,7 +32,7 @@ export interface PopoverStep extends StepBase, StepContent {
     type: "popover";
     anchor: OnboardingAnchor;
     side?: "top" | "right" | "bottom" | "left";
-    /** "next": a Next button. "click": the user clicks the anchor itself. */
+    /** A click on the anchor always completes the step. "next" also shows a Next button, "click" does not. */
     advance?: "next" | "click";
 }
 
