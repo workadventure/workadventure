@@ -49,11 +49,8 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         showMe: "Cho tôi xem",
         notNow: "Để sau",
     },
-    announcements: {
-        tours: {
-            title: "Mẹo và hướng dẫn tham quan",
-            text: "WorkAdventure giờ sẽ giới thiệu các tính năng cho bạn, mỗi lần một mẹo ngắn. Bạn có thể xem lại chúng, cùng với phần hướng dẫn, trong **{help}** ở phần cài đặt.",
-        },
+    releaseNotes: {
+        title: "Có gì mới trong WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "Đặt đồ nội thất bằng trình chỉnh sửa bản đồ",

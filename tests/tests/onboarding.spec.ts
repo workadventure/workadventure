@@ -15,7 +15,7 @@ test.use({
 const TOUR_ID = "wa.mapEditor.furniture";
 const LOCK_TIP_ID = "wa.tip.lockBubble";
 const TUTORIAL_ID = "wa.tutorial";
-const ANNOUNCEMENT_ID = "wa.announcement.tours";
+const ANNOUNCEMENT_ID = "wa.announcement.v1.35";
 /**
  * The built-in items that start by themselves at load. A test marks over the ones it does not test: one still pending
  * would start first and set off the quiet period. A new built-in announcement goes in here.
@@ -185,7 +185,16 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
 
         // The start delay stays the default 30 s: an announcement does not wait for it.
         await reloadWithState(page, { firstVisit: localDateDaysAgo(2), items: overBut(ANNOUNCEMENT_ID), used: [] });
-        await expect(modal).toContainText("Tips and guided tours", { timeout: 10_000 });
+        await expect(modal).toContainText("What's new in WorkAdventure 1.35", { timeout: 10_000 });
+        // A link in the same tab would take the user out of the world.
+        await expect(modal.getByRole("link", { name: "Read the release notes" })).toHaveAttribute("target", "_blank");
+        // The video written in the Markdown plays by itself, muted.
+        const video = modal.locator("video");
+        await expect(video).toHaveJSProperty("muted", true);
+        await expect(video).toHaveJSProperty("paused", false);
+        // On a short window, the body scrolls and the button stays in view.
+        await page.setViewportSize({ width: 1280, height: 480 });
+        await expect(modal.getByTestId("onboarding-modal-next")).toBeInViewport({ ratio: 1 });
         await modal.getByTestId("onboarding-modal-next").click();
         await expect(modal).toBeHidden();
         await expect.poll(async () => (await readOnboardingState(page))?.items[ANNOUNCEMENT_ID]?.status).toBe("done");

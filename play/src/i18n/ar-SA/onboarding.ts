@@ -48,11 +48,8 @@ export default {
         showMe: "أرني",
         notNow: "ليس الآن",
     },
-    announcements: {
-        tours: {
-            title: "نصائح وجولات إرشادية",
-            text: "يعرّفك WorkAdventure الآن على ميزاته، نصيحة قصيرة في كل مرة. يمكنك إعادة مشاهدتها، مع الدليل التعليمي، من **{help}** في الإعدادات.",
-        },
+    releaseNotes: {
+        title: "ما الجديد في WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "ضع الأثاث باستخدام محرر الخريطة",

@@ -46,11 +46,8 @@ export default {
         showMe: "보여 주세요",
         notNow: "나중에",
     },
-    announcements: {
-        tours: {
-            title: "팁과 가이드 투어",
-            text: "이제 WorkAdventure가 짧은 팁으로 기능을 하나씩 안내합니다. 팁과 튜토리얼은 설정의 **{help}**에서 다시 볼 수 있습니다.",
-        },
+    releaseNotes: {
+        title: "WorkAdventure {version}의 새로운 기능",
     },
     mapEditorTour: {
         title: "맵 편집기로 가구 배치하기",

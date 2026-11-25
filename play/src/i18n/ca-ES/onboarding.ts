@@ -48,11 +48,8 @@ export default {
         showMe: "Mostra-m'ho",
         notNow: "Ara no",
     },
-    announcements: {
-        tours: {
-            title: "Consells i visites guiades",
-            text: "WorkAdventure ara et mostra les seves funcions, un consell breu cada vegada. Troba'ls, juntament amb el tutorial, a **{help}** a la configuració.",
-        },
+    releaseNotes: {
+        title: "Novetats de WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "Col·loca mobles amb l'editor de mapes",

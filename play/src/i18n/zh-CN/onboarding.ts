@@ -42,11 +42,8 @@ export default {
         showMe: "带我看看",
         notNow: "以后再说",
     },
-    announcements: {
-        tours: {
-            title: "提示与引导教程",
-            text: "WorkAdventure 现在会通过简短的提示，一步步向你介绍各项功能。你可以在设置的 **{help}** 中重新查看它们和教程。",
-        },
+    releaseNotes: {
+        title: "WorkAdventure {version} 新功能",
     },
     mapEditorTour: {
         title: "使用地图编辑器摆放家具",

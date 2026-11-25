@@ -49,11 +49,8 @@ export default {
         showMe: "Montrez-moi",
         notNow: "Plus tard",
     },
-    announcements: {
-        tours: {
-            title: "Astuces et visites guidées",
-            text: "WorkAdventure vous fait désormais découvrir ses fonctionnalités, une courte astuce à la fois. Retrouvez-les, ainsi que le tutoriel, dans **{help}** dans les paramètres.",
-        },
+    releaseNotes: {
+        title: "Nouveautés de WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "Placer du mobilier avec l'éditeur de carte",

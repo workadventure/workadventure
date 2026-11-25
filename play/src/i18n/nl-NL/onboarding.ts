@@ -47,11 +47,8 @@ export default {
         showMe: "Laat zien",
         notNow: "Niet nu",
     },
-    announcements: {
-        tours: {
-            title: "Tips en rondleidingen",
-            text: "WorkAdventure laat je nu de functies zien, met één korte tip tegelijk. Je vindt ze, net als de tutorial, onder **{help}** in de instellingen.",
-        },
+    releaseNotes: {
+        title: "Nieuw in WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "Meubels plaatsen met de kaarteditor",

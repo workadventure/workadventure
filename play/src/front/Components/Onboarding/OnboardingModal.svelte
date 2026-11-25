@@ -38,7 +38,7 @@
         aria-modal="true"
         aria-labelledby={title ? titleId : undefined}
         aria-label={title ? undefined : $LL.onboarding.tips.label()}
-        class="flex max-h-full w-full max-w-lg flex-col gap-3 overflow-y-auto rounded-xl bg-contrast/90 p-5 text-white shadow-2xl backdrop-blur-lg"
+        class="flex max-h-full w-full max-w-lg flex-col gap-3 rounded-xl bg-contrast/90 p-5 text-white shadow-2xl backdrop-blur-lg"
         in:fly={{ y: 10, duration: 300 }}
     >
         <div class="flex items-center gap-2">
@@ -70,8 +70,21 @@
                 <IconX font-size="18" />
             </button>
         </div>
-        <div class="text-base leading-relaxed text-white/90">{@html html}</div>
-        <OnboardingMedia {image} {video} />
+        <!-- Only the body scrolls: long release notes keep their title and buttons in view. -->
+        <div class="-me-2 flex min-h-0 flex-col gap-3 overflow-y-auto pe-2">
+            <!-- Images and videos keep their own size, and one shows whole in the body. -->
+            <div
+                class={[
+                    "text-base leading-relaxed text-white/90 [&>:first-child]:mt-0 [&>:last-child]:mb-0",
+                    "[&_a]:text-white [&_a]:underline [&_li]:mb-1 [&_ul]:list-disc [&_ul]:ps-5",
+                    "[&_img]:mx-auto [&_img]:max-h-[40vh] [&_img]:rounded-lg",
+                    "[&_video]:mx-auto [&_video]:max-h-[40vh] [&_video]:rounded-lg",
+                ]}
+            >
+                {@html html}
+            </div>
+            <OnboardingMedia {image} {video} class="mx-auto max-h-[40vh]" />
+        </div>
         <div class="flex flex-wrap items-center gap-2 pt-1">
             <button
                 type="button"

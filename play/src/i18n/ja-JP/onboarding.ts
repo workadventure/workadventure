@@ -48,11 +48,8 @@ export default {
         showMe: "見てみる",
         notNow: "後で",
     },
-    announcements: {
-        tours: {
-            title: "ヒントとガイドツアー",
-            text: "WorkAdventure が短いヒントで機能を少しずつ紹介するようになりました。ヒントとチュートリアルは、設定の **{help}** からいつでも見返せます。",
-        },
+    releaseNotes: {
+        title: "WorkAdventure {version} の新機能",
     },
     mapEditorTour: {
         title: "マップエディターで家具を配置する",

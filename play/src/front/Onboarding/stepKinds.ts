@@ -1,10 +1,8 @@
-import { marked } from "marked";
 import * as Phaser from "phaser";
 import { get, writable } from "svelte/store";
 import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../types/component";
 import { LL } from "../../i18n/i18n-svelte";
 import { showFloatingUi } from "../Utils/svelte-floatingui-show";
-import { sanitizeHtml } from "../Utils/HtmlSanitizer";
 import { gameManager } from "../Phaser/Game/GameManager";
 import type { GameScene } from "../Phaser/Game/GameScene";
 import { hasMovedEventName } from "../Phaser/Player/Player";
@@ -22,6 +20,7 @@ import type {
 import type { ItemRun } from "./ItemRunner";
 import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
 import { startSimulatedConversation } from "./SimulatedConversation";
+import { renderMarkdown } from "./renderMarkdown";
 
 /** Where the step stands among the steps that show. */
 export interface StepView {
@@ -46,10 +45,6 @@ const GLIDE_MS = 400;
 
 // ponytail: shared by all items, so an item that starts within GLIDE_WINDOW_MS of another one's end glides from it too.
 let lastHighlight: { rect: DOMRect; document: Document; at: number } | undefined;
-
-export function renderMarkdown(text: string): string {
-    return sanitizeHtml(marked.parse(text, { async: false }));
-}
 
 /** What the current step shows over the game (a modal, a panel), rendered by `Onboarding.svelte`. */
 export const onboardingView = writable<
@@ -201,19 +196,36 @@ const modal: StepKind<ModalStep> = (step, run, view) => {
     // A first modal that leads into other steps: an announcement that offers a tour, or the tutorial's welcome.
     const leadsIn = view.position === 1 && !last;
     const ll = get(LL).onboarding.tips;
-    return showView(OnboardingModal, {
-        title: step.title?.(),
-        html: renderMarkdown(step.text()),
-        image: step.image,
-        video: step.video,
-        position: view.position,
-        total: view.total,
-        nextLabel: leadsIn ? ll.showMe() : last ? ll.gotIt() : ll.next(),
-        notNowLabel: leadsIn ? ll.notNow() : undefined,
-        onNext: run.complete,
-        onClose: run.dismiss,
-        onOptOut: run.optOut,
-    });
+    let stopped = false;
+    let hide: (() => void) | undefined;
+    Promise.resolve(step.text())
+        .then((text) => {
+            if (stopped) {
+                return;
+            }
+            hide = showView(OnboardingModal, {
+                title: step.title?.(),
+                html: renderMarkdown(text),
+                image: step.image,
+                video: step.video,
+                position: view.position,
+                total: view.total,
+                nextLabel: leadsIn ? ll.showMe() : last ? ll.gotIt() : ll.next(),
+                notNowLabel: leadsIn ? ll.notNow() : undefined,
+                onNext: run.complete,
+                onClose: run.dismiss,
+                onOptOut: run.optOut,
+            });
+        })
+        .catch((error: unknown) => {
+            console.error("The text of an onboarding modal did not load", error);
+            // Like a target that never appeared: nothing is recorded, and the item comes back at the next visit.
+            run.anchorMissing();
+        });
+    return () => {
+        stopped = true;
+        hide?.();
+    };
 };
 
 /** A pulsing ring around the avatar, drawn in the game. */

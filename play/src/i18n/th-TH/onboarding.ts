@@ -47,11 +47,8 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         showMe: "แสดงให้ดู",
         notNow: "ไว้ทีหลัง",
     },
-    announcements: {
-        tours: {
-            title: "เคล็ดลับและทัวร์แนะนำ",
-            text: "ตอนนี้ WorkAdventure จะพาคุณรู้จักฟีเจอร์ต่าง ๆ ทีละเคล็ดลับสั้น ๆ คุณสามารถดูเคล็ดลับและบทแนะนำอีกครั้งได้ที่ **{help}** ในการตั้งค่า",
-        },
+    releaseNotes: {
+        title: "มีอะไรใหม่ใน WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "วางเฟอร์นิเจอร์ด้วยตัวแก้ไขแผนที่",

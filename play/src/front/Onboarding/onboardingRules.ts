@@ -24,8 +24,10 @@ interface StepContent {
 }
 
 /** Centered. Next, or "Got it" on the last step; "Show me" and "Not now" when it leads into other steps. */
-export interface ModalStep extends StepBase, StepContent {
+export interface ModalStep extends StepBase, Omit<StepContent, "text"> {
     type: "modal";
+    /** Can load when the step shows: release notes are Markdown files. */
+    text: () => string | Promise<string>;
 }
 
 export interface PopoverStep extends StepBase, StepContent {

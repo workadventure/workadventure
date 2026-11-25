@@ -49,11 +49,8 @@ export default {
         showMe: "Zeigen Sie es mir",
         notNow: "Nicht jetzt",
     },
-    announcements: {
-        tours: {
-            title: "Tipps und geführte Touren",
-            text: "WorkAdventure stellt Ihnen seine Funktionen jetzt in kurzen Tipps vor. Sie finden sie, ebenso wie das Tutorial, unter **{help}** in den Einstellungen.",
-        },
+    releaseNotes: {
+        title: "Neu in WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "Möbel mit dem Karteneditor platzieren",

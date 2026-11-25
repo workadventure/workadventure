@@ -48,11 +48,8 @@ export default {
         showMe: "Show me",
         notNow: "Not now",
     },
-    announcements: {
-        tours: {
-            title: "Tips and guided tours",
-            text: "WorkAdventure now shows you around, one short tip at a time. Replay them, and the tutorial, from **{help}** in the settings.",
-        },
+    releaseNotes: {
+        title: "What's new in WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "Place furniture with the map editor",

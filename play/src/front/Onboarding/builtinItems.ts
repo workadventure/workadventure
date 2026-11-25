@@ -6,6 +6,7 @@ import { gameSceneStore } from "../Stores/GameSceneStore";
 import { inBbbStore, inJitsiStore, inLivekitStore } from "../Stores/MediaStore";
 import { mapEditorMenuVisibleStore } from "../Stores/MenuStore";
 import type { OnboardingItem } from "./onboardingRules";
+import { releaseNotes } from "./releaseNotes";
 
 /** `enableTutorial` in the room metadata, or `ENABLE_TUTORIAL` without metadata (self-hosted). */
 const tutorialEnabled = derived(gameSceneStore, (scene) => {
@@ -50,18 +51,9 @@ export const builtinItems: OnboardingItem[] = [
             },
         ],
     },
-    {
-        id: "wa.announcement.tours",
-        kind: "announcement",
-        title: () => get(LL).onboarding.announcements.tours.title(),
-        steps: [
-            {
-                type: "modal",
-                title: () => get(LL).onboarding.announcements.tours.title(),
-                text: () => get(LL).onboarding.announcements.tours.text({ help: get(LL).menu.sub.help() }),
-            },
-        ],
-    },
+    // The newest release first: only the first pending announcement shows. A version is added here when it is
+    // released, never by a feature PR (see docs/agent/release-notes.md).
+    releaseNotes("1.35"),
     {
         id: "wa.mapEditor.furniture",
         kind: "tour",
