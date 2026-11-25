@@ -49,8 +49,8 @@ function overBut(except?: string, others: string[] = []): OnboardingState["items
 }
 
 /**
- * Replaces the user's onboarding state, and reloads so that the front reads it. The state is a persisted player
- * variable: the reload is retried until the server has it.
+ * Replaces the user's onboarding state and `tutorialDone`, and reloads so that the front reads them. They are persisted
+ * player variables: the reload is retried until the server has both.
  */
 async function reloadWithState(page: Page, state: OnboardingState, tutorialDone = true) {
     await expect(async () => {
@@ -65,7 +65,13 @@ async function reloadWithState(page: Page, state: OnboardingState, tutorialDone 
         );
         await page.reload();
         await Menu.waitForMapLoad(page);
-        expect((await readOnboardingState(page))?.firstVisit).toBe(state.firstVisit);
+        // Both: a reload can land between the two writes.
+        const saved = await evaluateScript(page, async () => {
+            await WA.onInit();
+            const onboarding = WA.player.state.onboarding as OnboardingState | undefined;
+            return { firstVisit: onboarding?.firstVisit, tutorialDone: WA.player.state.tutorialDone };
+        });
+        expect(saved).toEqual({ firstVisit: state.firstVisit, tutorialDone });
     }).toPass({ timeout: 60_000 });
 }
 
