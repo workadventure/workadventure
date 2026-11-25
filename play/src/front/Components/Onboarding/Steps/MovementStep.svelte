@@ -11,7 +11,7 @@
 
     const { onnext }: Props = $props();
 
-    /** The short flow of touch devices. */
+    /** A phone or a tablet. A laptop with a touch screen moves with the keyboard. */
     const touch = touchScreenManager.primaryTouchDevice;
     /** The movement keys held down, lit up below. */
     const pressedKeys = new SvelteSet<string>();
@@ -113,11 +113,9 @@
                 {$LL.onboarding.movement.title()}
             </h3>
             <p class="text-sm text-white/90">
-                {touch || touchScreenManager.supportTouchScreen
-                    ? $LL.onboarding.movement.descriptionTouch()
-                    : $LL.onboarding.movement.descriptionDesktop()}
+                {touch ? $LL.onboarding.movement.descriptionTouch() : $LL.onboarding.movement.descriptionDesktop()}
             </p>
-            {#if !touch && !touchScreenManager.supportTouchScreen}
+            {#if !touch}
                 <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
                     <kbd
                         class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has('KeyW')
