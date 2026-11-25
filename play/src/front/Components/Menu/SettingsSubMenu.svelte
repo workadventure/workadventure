@@ -8,7 +8,6 @@
         audioManagerVolumeStore,
         bubbleSoundStore,
     } from "../../Stores/AudioManagerStore";
-    import { HtmlUtils } from "../../WebRtc/HtmlUtils";
     import { LL, locale } from "../../../i18n/i18n-svelte";
     import type { Locales } from "../../../i18n/i18n-types";
     import { displayableLocales, setCurrentLocale } from "../../Utils/locales";
@@ -56,7 +55,7 @@
         IconMicrophoneOn,
     } from "@wa-icons";
 
-    let fullscreen: boolean = $state(localUserStore.getFullscreen());
+    let fullscreen: boolean = $state(document.fullscreenElement !== null);
     let notification: boolean = $state(localUserStore.getNotification());
     let allowPictureInPicture: boolean = $state(localUserStore.getAllowPictureInPicture());
     let blockAudio: boolean = $state(localUserStore.getBlockAudio());
@@ -190,15 +189,17 @@
         // Analytics Client
         analyticsClient.trackAdminEvent("settings.fullscreen.changed", { value: fullscreen ? "true" : "false" });
 
-        const body = HtmlUtils.querySelectorOrFail("body");
-        if (body) {
-            if (document.fullscreenElement !== null && !fullscreen) {
-                document.exitFullscreen().catch((e) => console.error(e));
-            } else {
-                document.documentElement.requestFullscreen().catch((e) => console.error(e));
-            }
-            localUserStore.setFullscreen(fullscreen);
+        if (fullscreen && document.fullscreenElement === null) {
+            document.documentElement.requestFullscreen().catch((e) => console.error(e));
+        } else if (!fullscreen && document.fullscreenElement !== null) {
+            document.exitFullscreen().catch((e) => console.error(e));
         }
+        localUserStore.setFullscreen(fullscreen);
+    }
+
+    function syncFullscreen() {
+        fullscreen = document.fullscreenElement !== null;
+        localUserStore.setFullscreen(fullscreen);
     }
 
     function changeNotification() {
@@ -322,6 +323,8 @@
         return `/resources/objects/webrtc-in-${bubbleSound}.mp3`;
     }
 </script>
+
+<svelte:document onfullscreenchange={syncFullscreen} />
 
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
     <section class=" p-0 first:pt-0 pt-8 m-0">
