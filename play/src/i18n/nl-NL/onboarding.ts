@@ -40,6 +40,7 @@ export default {
     tips: {
         label: "Tip",
         next: "Volgende",
+        previous: "Vorige",
         gotIt: "Begrepen",
         close: "Sluiten",
         stopShowing: "Geen tips meer tonen",

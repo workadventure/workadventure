@@ -35,6 +35,7 @@ export default {
     tips: {
         label: "提示",
         next: "下一步",
+        previous: "上一步",
         gotIt: "知道了",
         close: "关闭",
         stopShowing: "不再显示提示",

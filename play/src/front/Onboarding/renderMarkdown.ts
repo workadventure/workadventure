@@ -32,3 +32,23 @@ export function renderMarkdown(text: string): string {
     }
     return template.innerHTML;
 }
+
+/**
+ * The pages of a modal's text, rendered: a `---` line starts a new page, as in Markdown slides. Split on the
+ * rendered HTML, so a `---` in a code block, or right under a line of text (which makes that line a heading), does not
+ * count.
+ */
+export function renderPages(text: string): string[] {
+    const template = document.createElement("template");
+    template.innerHTML = renderMarkdown(text);
+    const pages = [document.createElement("div")];
+    for (const node of [...template.content.childNodes]) {
+        if (node.nodeName === "HR") {
+            pages.push(document.createElement("div"));
+        } else {
+            pages[pages.length - 1].append(node);
+        }
+    }
+    const html = pages.map((page) => page.innerHTML.trim()).filter((page) => page !== "");
+    return html.length > 0 ? html : [""];
+}

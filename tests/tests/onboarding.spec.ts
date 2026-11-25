@@ -186,16 +186,28 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         // The start delay stays the default 30 s: an announcement does not wait for it.
         await reloadWithState(page, { firstVisit: localDateDaysAgo(2), items: overBut(ANNOUNCEMENT_ID), used: [] });
         await expect(modal).toContainText("What's new in WorkAdventure 1.35", { timeout: 10_000 });
-        // A link in the same tab would take the user out of the world.
-        await expect(modal.getByRole("link", { name: "Read the release notes" })).toHaveAttribute("target", "_blank");
         // The video written in the Markdown plays by itself, muted.
         const video = modal.locator("video");
         await expect(video).toHaveJSProperty("muted", true);
         await expect(video).toHaveJSProperty("paused", false);
+
+        // A `---` line in the Markdown starts a new page.
+        const next = modal.getByTestId("onboarding-modal-next");
+        await expect(modal).not.toContainText("A desktop app");
+        await expect(modal.getByTestId("onboarding-modal-previous")).toBeHidden();
+        await next.click();
+        await expect(modal).toContainText("A desktop app");
+        await modal.getByTestId("onboarding-modal-previous").click();
+        await expect(modal).toContainText("Drag the map to look around");
+        await next.click();
+        await expect(next).toHaveText("Got it");
+
+        // A link in the same tab would take the user out of the world.
+        await expect(modal.getByRole("link", { name: "full release notes" })).toHaveAttribute("target", "_blank");
         // On a short window, the body scrolls and the button stays in view.
         await page.setViewportSize({ width: 1280, height: 480 });
-        await expect(modal.getByTestId("onboarding-modal-next")).toBeInViewport({ ratio: 1 });
-        await modal.getByTestId("onboarding-modal-next").click();
+        await expect(next).toBeInViewport({ ratio: 1 });
+        await next.click();
         await expect(modal).toBeHidden();
         await expect.poll(async () => (await readOnboardingState(page))?.items[ANNOUNCEMENT_ID]?.status).toBe("done");
     });

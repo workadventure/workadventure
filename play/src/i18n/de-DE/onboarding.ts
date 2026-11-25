@@ -42,6 +42,7 @@ export default {
     tips: {
         label: "Tipp",
         next: "Weiter",
+        previous: "Zurück",
         gotIt: "Verstanden",
         close: "Schließen",
         stopShowing: "Keine Tipps mehr anzeigen",

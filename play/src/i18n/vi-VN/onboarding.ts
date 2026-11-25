@@ -42,6 +42,7 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
     tips: {
         label: "Mẹo",
         next: "Tiếp",
+        previous: "Trước",
         gotIt: "Đã hiểu",
         close: "Đóng",
         stopShowing: "Ngừng hiển thị mẹo",

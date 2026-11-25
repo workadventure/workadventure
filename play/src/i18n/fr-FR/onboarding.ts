@@ -42,6 +42,7 @@ export default {
     tips: {
         label: "Astuce",
         next: "Suivant",
+        previous: "Précédent",
         gotIt: "J'ai compris",
         close: "Fermer",
         stopShowing: "Ne plus afficher d'astuces",

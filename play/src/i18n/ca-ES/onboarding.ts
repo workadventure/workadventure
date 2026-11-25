@@ -41,6 +41,7 @@ export default {
     tips: {
         label: "Consell",
         next: "Següent",
+        previous: "Anterior",
         gotIt: "Entesos",
         close: "Tanca",
         stopShowing: "No mostris més consells",

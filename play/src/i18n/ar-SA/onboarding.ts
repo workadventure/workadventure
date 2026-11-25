@@ -41,6 +41,7 @@ export default {
     tips: {
         label: "نصيحة",
         next: "التالي",
+        previous: "السابق",
         gotIt: "فهمت",
         close: "إغلاق",
         stopShowing: "إيقاف عرض النصائح",

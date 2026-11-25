@@ -20,7 +20,7 @@ import type {
 import type { ItemRun } from "./ItemRunner";
 import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
 import { startSimulatedConversation } from "./SimulatedConversation";
-import { renderMarkdown } from "./renderMarkdown";
+import { renderMarkdown, renderPages } from "./renderMarkdown";
 
 /** Where the step stands among the steps that show. */
 export interface StepView {
@@ -205,7 +205,7 @@ const modal: StepKind<ModalStep> = (step, run, view) => {
             }
             hide = showView(OnboardingModal, {
                 title: step.title?.(),
-                html: renderMarkdown(text),
+                pages: renderPages(text),
                 image: step.image,
                 video: step.video,
                 position: view.position,

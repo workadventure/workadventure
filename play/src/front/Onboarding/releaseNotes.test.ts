@@ -3,13 +3,14 @@ import { loadReleaseNotes, releaseNotes } from "./releaseNotes";
 
 describe("release notes", () => {
     it("loads the Markdown file of the release", async () => {
-        await expect(loadReleaseNotes("1.35", "en-US")).resolves.toContain("**Drag the map**");
+        await expect(loadReleaseNotes("1.35", "en-US")).resolves.toContain("## Drag the map");
     });
 
     it("points a media file of the release's folder at its URL", async () => {
         const notes = await loadReleaseNotes("1.35", "en-US");
         expect(notes).not.toContain("](drag-the-map.mp4)");
         expect(notes).toMatch(/\]\([^)]*\/announcements\/1\.35\/drag-the-map\.mp4\)/);
+        expect(notes).toMatch(/\]\([^)]*\/announcements\/1\.35\/mini-window\.webp\)/);
         // Links are not files of the folder.
         expect(notes).toContain("](https://workadventu.re/download/)");
     });

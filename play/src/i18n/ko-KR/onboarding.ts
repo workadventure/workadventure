@@ -39,6 +39,7 @@ export default {
     tips: {
         label: "팁",
         next: "다음",
+        previous: "이전",
         gotIt: "확인",
         close: "닫기",
         stopShowing: "팁 그만 보기",

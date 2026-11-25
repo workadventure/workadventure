@@ -41,6 +41,7 @@ export default {
     tips: {
         label: "ヒント",
         next: "次へ",
+        previous: "戻る",
         gotIt: "わかりました",
         close: "閉じる",
         stopShowing: "ヒントを表示しない",
