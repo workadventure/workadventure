@@ -202,10 +202,10 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         });
         const popover = page.getByTestId("onboarding-popover");
 
-        // The map editor tour would start first, on the Tools menu.
+        // The map editor tour would start first, on the Tools menu, and the other tips of the bubble could.
         await reloadWithState(page, {
             firstVisit: localDateDaysAgo(1),
-            items: overBut(undefined, [TOUR_ID]),
+            items: overBut(undefined, [TOUR_ID, "wa.tip.screenShare", "wa.tip.pictureInPicture"]),
             used: [],
         });
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);

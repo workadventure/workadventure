@@ -1,5 +1,4 @@
 import { derived, get } from "svelte/store";
-import type { OnboardingAnchor } from "@workadventure/messages";
 import { LL } from "../../i18n/i18n-svelte";
 import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable";
 import { currentPlayerGroupIdStore } from "../Stores/CurrentPlayerGroupStore";
@@ -22,35 +21,6 @@ const inRealConversation = derived(
 
 function worldName(): string {
     return get(gameSceneStore)?.room.roomName ?? "WorkAdventure";
-}
-
-/**
- * A tip on a button that only shows in a bubble, for someone who has not used it after a few days. It starts when the
- * user is in a bubble, where the button is.
- */
-function bubbleTip(
-    id: string,
-    anchor: OnboardingAnchor,
-    minDaysSinceFirstVisit: number,
-    texts: () => { title: () => string; description: () => string },
-    video: string,
-): OnboardingItem {
-    return {
-        id,
-        kind: "tour",
-        title: () => texts().title(),
-        when: { minDaysSinceFirstVisit, onAnchor: anchor },
-        steps: [
-            {
-                type: "popover",
-                anchor,
-                skipIfUsed: anchor,
-                title: () => texts().title(),
-                text: () => texts().description(),
-                video,
-            },
-        ],
-    };
 }
 
 /** Built-in content, in priority order. Ids start with "wa." and never change: the state is keyed by them. */
@@ -124,25 +94,53 @@ export const builtinItems: OnboardingItem[] = [
             },
         ],
     },
-    bubbleTip(
-        "wa.tip.lockBubble",
-        "actionBar.lockBubble",
-        1,
-        () => get(LL).onboarding.lockBubble,
-        "./static/Videos/LockBubble.mp4",
-    ),
-    bubbleTip(
-        "wa.tip.screenShare",
-        "actionBar.screenShare",
-        2,
-        () => get(LL).onboarding.screenSharing,
-        "./static/images/screensharing.mp4",
-    ),
-    bubbleTip(
-        "wa.tip.pictureInPicture",
-        "actionBar.pictureInPicture",
-        3,
-        () => get(LL).onboarding.pictureInPicture,
-        "./static/Videos/PictureInPicture.mp4",
-    ),
+    {
+        id: "wa.tip.lockBubble",
+        kind: "tour",
+        title: () => get(LL).onboarding.lockBubble.title(),
+        // The lock button only shows in a bubble: the tip starts there, for someone who has not used it yet.
+        when: { minDaysSinceFirstVisit: 1, onAnchor: "actionBar.lockBubble" },
+        steps: [
+            {
+                type: "popover",
+                anchor: "actionBar.lockBubble",
+                skipIfUsed: "actionBar.lockBubble",
+                title: () => get(LL).onboarding.lockBubble.title(),
+                text: () => get(LL).onboarding.lockBubble.description(),
+                video: "./static/Videos/LockBubble.mp4",
+            },
+        ],
+    },
+    {
+        id: "wa.tip.screenShare",
+        kind: "tour",
+        title: () => get(LL).onboarding.screenSharing.title(),
+        when: { minDaysSinceFirstVisit: 1, onAnchor: "actionBar.screenShare" },
+        steps: [
+            {
+                type: "popover",
+                anchor: "actionBar.screenShare",
+                skipIfUsed: "actionBar.screenShare",
+                title: () => get(LL).onboarding.screenSharing.title(),
+                text: () => get(LL).onboarding.screenSharing.description(),
+                video: "./static/images/screensharing.mp4",
+            },
+        ],
+    },
+    {
+        id: "wa.tip.pictureInPicture",
+        kind: "tour",
+        title: () => get(LL).onboarding.pictureInPicture.title(),
+        when: { minDaysSinceFirstVisit: 3, onAnchor: "actionBar.pictureInPicture" },
+        steps: [
+            {
+                type: "popover",
+                anchor: "actionBar.pictureInPicture",
+                skipIfUsed: "actionBar.pictureInPicture",
+                title: () => get(LL).onboarding.pictureInPicture.title(),
+                text: () => get(LL).onboarding.pictureInPicture.description(),
+                video: "./static/Videos/PictureInPicture.mp4",
+            },
+        ],
+    },
 ];
