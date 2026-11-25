@@ -16,6 +16,8 @@ const TOUR_ID = "wa.mapEditor.furniture";
 const LOCK_TIP_ID = "wa.tip.lockBubble";
 const TUTORIAL_ID = "wa.tutorial";
 const ANNOUNCEMENT_ID = "wa.announcement.v1.35";
+/** The draft of `play/tests/e2e-onboarding.json`, the `ONBOARDING_FILE` of the e2e stack. */
+const WORLD_DRAFT_ID = "e2e-draft";
 /**
  * The built-in items that start by themselves at load. A test marks over the ones it does not test: one still pending
  * would start first and set off the quiet period. A new built-in announcement goes in here.
@@ -279,5 +281,37 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(bob, 5 * 32, 5 * 32);
         await expect(popover).toContainText("Lock your conversation", { timeout: 30_000 });
         await expect.poll(async () => (await readOnboardingState(page))?.requested).toBeUndefined();
+    });
+
+    test("A draft of the world's ONBOARDING_FILE never starts, and only admins open it from the Help menu", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        const modal = page.getByTestId("onboarding-modal");
+
+        // An existing user, with nothing pending at load: a published announcement would start now.
+        await reloadWithState(page, { firstVisit: localDateDaysAgo(2), items: overBut(), used: [] });
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(2000);
+        await expect(modal).toBeHidden();
+
+        await Menu.openMenu(page);
+        await page.getByRole("button", { name: "All settings" }).click();
+        await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await page.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`).click();
+        await expect(modal).toContainText("Only admins see drafts");
+        await expect(modal).toContainText("This item comes from the ONBOARDING_FILE of the play container.");
+        await modal.getByTestId("onboarding-modal-next").click();
+        await expect(modal).toBeHidden();
+
+        // Without the admin tag, the Help menu lists the built-in items only.
+        await using bob = await getPage(browser, "Bob", Map.url("empty"));
+        await Menu.openMenu(bob);
+        await bob.getByRole("button", { name: "All settings" }).click();
+        await bob.getByRole("button", { name: "Help & tutorials" }).click();
+        await expect(bob.getByTestId(`onboarding-help-${ANNOUNCEMENT_ID}`)).toBeVisible();
+        await expect(bob.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`)).toBeHidden();
     });
 });

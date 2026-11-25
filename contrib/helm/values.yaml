@@ -237,6 +237,21 @@ play:
 
   affinity: {}
 
+  # Onboarding tips and announcements of your own, for every world, written here in YAML (it is turned into the JSON
+  # file of ONBOARDING_FILE). Format: https://docs.workadventu.re/docs/schema/onboarding.json
+  # It is public: guests read it too.
+  onboarding: {}
+  # Example:
+  # onboarding:
+  #   version: 1
+  #   items:
+  #     - id: welcome-town-hall
+  #       kind: announcement
+  #       steps:
+  #         - type: modal
+  #           title: { en-US: "Town hall on Friday", fr-FR: "Réunion générale vendredi" }
+  #           text: { en-US: "Join us in the **auditorium** at 4pm.", fr-FR: "Rendez-vous dans l'**auditorium** à 16 h." }
+
   # Additional volumes to be added to the play pod
   extraVolumes: []
   # Example:

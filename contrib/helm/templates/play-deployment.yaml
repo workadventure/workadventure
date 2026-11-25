@@ -92,13 +92,28 @@ spec:
               port: http
           resources:
             {{- toYaml .Values.play.resources | nindent 12 }}
-          {{- with .Values.play.extraVolumeMounts }}
+          {{- if or .Values.play.onboarding .Values.play.extraVolumeMounts }}
           volumeMounts:
+            {{- if .Values.play.onboarding }}
+            # A directory, not a subPath: an edit of play.onboarding reaches the running pods.
+            - name: onboarding
+              mountPath: /etc/workadventure/onboarding
+              readOnly: true
+            {{- end }}
+            {{- with .Values.play.extraVolumeMounts }}
             {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 12 }}
+            {{- end }}
           {{- end }}
-      {{- with .Values.play.extraVolumes }}
+      {{- if or .Values.play.onboarding .Values.play.extraVolumes }}
       volumes:
+        {{- if .Values.play.onboarding }}
+        - name: onboarding
+          configMap:
+            name: {{ include "workadventure.fullname" . }}-play-onboarding
+        {{- end }}
+        {{- with .Values.play.extraVolumes }}
         {{- include "common.tplvalues.render" (dict "value" . "context" $) | nindent 8 }}
+        {{- end }}
       {{- end }}
       {{- with .Values.play.nodeSelector }}
       nodeSelector:

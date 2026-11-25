@@ -363,6 +363,11 @@ export const isMapDetailsData = z.object({
   recording: extendApi(RecordingData.optional(), {
     description: "Recording settings for the room",
   }),
+  onboardingUrl: extendApi(z.string().nullable().optional(), {
+    description:
+      "The URL of the world's onboarding JSON (see https://docs.workadventu.re/docs/schema/onboarding.json): its own tips and announcements, and which built-in ones it keeps. Without it, only the built-in ones show.",
+    example: "https://play.example.com/onboarding.json",
+  }),
 });
 
 export type MapDetailsData = z.infer<typeof isMapDetailsData>;

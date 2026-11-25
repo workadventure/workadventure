@@ -1,13 +1,14 @@
 import { writable } from "svelte/store";
+import { DEFAULT_QUIET_PERIOD_MINUTES } from "@workadventure/messages";
 import type { OnboardingAnchor } from "@workadventure/messages";
 import type { GameScene } from "../Phaser/Game/GameScene";
 import { analyticsClient } from "../Administration/AnalyticsClient";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { ONBOARDING_START_DELAY } from "../Enum/EnvironmentVariable";
-import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
+import { anchorNode, anchorsChanged, onAnchorUsed } from "./OnboardingAnchors";
 import { runItem } from "./ItemRunner";
-import { decide, inAudience, newState, OnboardingState, stepAnchor } from "./onboardingRules";
+import { decide, inHelp, newState, OnboardingState, stepAnchor } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem } from "./onboardingRules";
 
 /**
@@ -30,8 +31,6 @@ function missingAnchor(item: OnboardingItem, ctx: OnboardingContext): Onboarding
 const STATE_KEY = "onboarding";
 /** The player variable of the tutorial before onboarding items, which map scripts read (`WA.player.state`). */
 const TUTORIAL_DONE_KEY = "tutorialDone";
-// ponytail: a constant until world configs exist (phase 3), whose `quietPeriodMinutes` sets it per world.
-const QUIET_PERIOD_MINUTES = 60;
 /** For what only time changes: the end of the quiet period, `after` delays, a new day. */
 const TICK_MS = 60_000;
 
@@ -47,17 +46,20 @@ export class OnboardingScheduler {
     constructor(
         private readonly scene: GameScene,
         private readonly items: OnboardingItem[],
+        /** The world's `quietPeriodMinutes`. */
+        private readonly quietPeriodMinutes = DEFAULT_QUIET_PERIOD_MINUTES,
     ) {
         // Written at once: the first visit is day 0, whatever happens next.
         if (OnboardingState.safeParse(this.variables()?.get(STATE_KEY)).success) {
             this.writeState(this.readState());
         } else {
             const state = newState(new Date());
-            // A new user does not need "what's new". Someone who did the tutorial is an existing user.
+            // A new user does not need "what's new". Someone who did the tutorial is an existing user. A draft is not
+            // news yet: it will be when the world publishes it.
             if (!this.tutorialDone()) {
                 const at = new Date().toISOString();
                 for (const item of items) {
-                    if (item.kind === "announcement") {
+                    if (item.kind === "announcement" && item.published !== false) {
                         state.items[item.id] = { status: "skipped", at };
                     }
                 }
@@ -74,7 +76,7 @@ export class OnboardingScheduler {
             () => clearTimeout(startTimer),
             () => clearInterval(tick),
             anchorsChanged.subscribe(() => this.evaluate()),
-            onAnchorClick((anchor) =>
+            onAnchorUsed((anchor) =>
                 this.updateState((state) => !state.used.includes(anchor) && state.used.push(anchor)),
             ),
         );
@@ -88,15 +90,15 @@ export class OnboardingScheduler {
     }
 
     /**
-     * What the Help menu lists: every item this user is in the audience of, whatever its state. An item whose first
-     * target is not on screen cannot start now (the tip on the lock button, outside a bubble): the menu shows it greyed
-     * out, with where that target shows up, and the user can ask to see it then.
+     * What the Help menu lists: every item this user is in the audience of, whatever its state, and the drafts for a
+     * world admin. An item whose first target is not on screen cannot start now (the tip on the lock button, outside a
+     * bubble): the menu shows it greyed out, with where that target shows up, and the user can ask to see it then.
      */
     get helpItems(): HelpItem[] {
         const ctx = this.context();
         const requested = this.readState().requested ?? [];
         return this.items
-            .filter((item) => inAudience(item, ctx))
+            .filter((item) => inHelp(item, ctx))
             .map((item) => {
                 const anchor = missingAnchor(item, ctx);
                 return anchor ? { item, missingAnchor: anchor, requested: requested.includes(item.id) } : { item };
@@ -138,7 +140,7 @@ export class OnboardingScheduler {
         const state = this.readState();
         // Asked for in the Help menu: it starts as soon as it can, whatever pacing and the state say.
         const requested = this.items.find(
-            (item) => state.requested?.includes(item.id) && inAudience(item, ctx) && !missingAnchor(item, ctx),
+            (item) => state.requested?.includes(item.id) && inHelp(item, ctx) && !missingAnchor(item, ctx),
         );
         if (requested) {
             const others = state.requested?.filter((id) => id !== requested.id) ?? [];
@@ -205,7 +207,7 @@ export class OnboardingScheduler {
             tags: this.scene.connection?.getAllTags() ?? [],
             isGuest: !localUserStore.isLogged(),
             isTouch: touchScreenManager.primaryTouchDevice,
-            quietPeriodMinutes: QUIET_PERIOD_MINUTES,
+            quietPeriodMinutes: this.quietPeriodMinutes,
             startDelayOver: this.startDelayOver,
             anchorVisible: (anchor) => anchorNode(anchor) !== undefined,
         };

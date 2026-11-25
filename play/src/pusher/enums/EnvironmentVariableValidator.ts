@@ -342,6 +342,12 @@ export const EnvironmentVariables = z.object({
     ONBOARDING_START_DELAY: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 30))
         .describe("Seconds a user spends in a world before onboarding tips can start by themselves. Defaults to 30."),
+    ONBOARDING_FILE: z
+        .string()
+        .optional()
+        .describe(
+            "Path, in the play container, to a JSON file of onboarding tips and announcements for every world, read on each room join (format: https://docs.workadventu.re/docs/schema/onboarding.json). The file is public. Its mistakes are logged by the play container. Without it, only the built-in tips and announcements show.",
+        ),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))

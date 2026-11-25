@@ -21,6 +21,7 @@ vi.mock("./OnboardingAnchors", () => ({
     anchorNode: (anchor: OnboardingAnchor) => (visible.has(anchor) ? document.createElement("div") : undefined),
     anchorsChanged: writable(0),
     onAnchorClick: () => () => {},
+    onAnchorUsed: () => () => {},
 }));
 vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: () => {} } }));
 vi.mock("../Connection/LocalUserStore", () => ({ localUserStore: { isLogged: () => true } }));
@@ -164,6 +165,12 @@ describe("decide", () => {
             skip: [],
             start: undefined,
         });
+    });
+
+    it("never starts a draft, and does not let it hold back the items after it", () => {
+        const draft = tour("a", { published: false });
+        expect(decide([draft], state(), ctx({ tags: ["admin"] })).start).toBeUndefined();
+        expect(decide([draft, tour("b", { when: { after: "a" } })], state(), ctx()).start?.id).toBe("b");
     });
 
     it("skips an item that `doneWhen` already says is done", () => {
@@ -328,6 +335,28 @@ describe("OnboardingScheduler", () => {
             ["lock", undefined],
         ]);
         visible.clear();
+    });
+
+    it("lists a draft in the Help menu for world admins only, whatever its audience, and never starts it", () => {
+        const draft: OnboardingItem = { ...announcement("draft"), published: false, audience: { tags: ["member"] } };
+        const listed = (tags: string[]) => {
+            const help = new OnboardingScheduler(
+                {
+                    connection: { getAllTags: () => tags },
+                    getPlayerVariablesManager: () => undefined,
+                } as unknown as GameScene,
+                [draft],
+            );
+            const ids = help.helpItems.map(({ item }) => item.id);
+            help.destroy();
+            return ids;
+        };
+        expect(listed(["member"])).toEqual([]);
+        expect(listed(["admin"])).toEqual(["draft"]);
+        expect(started).toHaveLength(0);
+        // Not news yet for a new user: it will be once the world publishes it.
+        const { state } = start({}, [tutorial, draft]);
+        expect(state().items.draft).toBeUndefined();
     });
 
     it("starts an item asked for in the Help menu as soon as its target shows up, whatever its state", () => {

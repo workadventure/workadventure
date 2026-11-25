@@ -29,6 +29,9 @@ services:
 
   play:
     image: thecodingmachine/workadventure-play:${VERSION}
+    # Onboarding tips and announcements of your own: uncomment, and set ONBOARDING_FILE in .env.
+    # volumes:
+    #   - ./onboarding.json:/etc/workadventure/onboarding.json:ro
     environment:
       - DESKTOP_APP_RECOMMENDED_VERSION
       - DESKTOP_APP_MINIMUM_VERSION
@@ -75,6 +78,7 @@ services:
       - CLIENT_DISCONNECTION_RETENTION_MS
       - REDIS_HOST=redis
       - ENABLE_TUTORIAL=${ENABLE_TUTORIAL:-true}
+      - ONBOARDING_FILE
       # Report issues menu
       - ENABLE_REPORT_ISSUES_MENU=${ENABLE_REPORT_ISSUES_MENU}
       - REPORT_ISSUES_URL=${REPORT_ISSUES_URL}

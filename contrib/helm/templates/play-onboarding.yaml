@@ -1,0 +1,11 @@
+{{- if .Values.play.onboarding }}
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ include "workadventure.fullname" . }}-play-onboarding
+  labels:
+    {{- include "workadventure.labels" . | nindent 4 }}
+data:
+  onboarding.json: {{ toJson .Values.play.onboarding | quote }}
+{{- end }}

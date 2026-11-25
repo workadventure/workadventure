@@ -71,6 +71,13 @@ jobs:
         run: npm run typecheck
         working-directory: "play"
 
+      # The SaaS admin and self-hosters validate onboarding files with docs/schema/onboarding.json.
+      - name: "Check the JSON Schemas of libs/messages are in sync with Zod"
+        run: |
+          npm run export-json-schema
+          git diff --exit-code ../../docs/schema
+        working-directory: "libs/messages"
+
       - name: "Svelte check"
         run: npm run svelte-check
         working-directory: "play"

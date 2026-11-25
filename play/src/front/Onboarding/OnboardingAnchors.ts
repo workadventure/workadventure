@@ -6,6 +6,7 @@ import { LL } from "../../i18n/i18n-svelte";
 /** The visible nodes of each anchor. A node that is mounted but clipped or hidden is not in here. */
 const visibleNodes = new Map<OnboardingAnchor, Set<HTMLElement>>();
 const clickListeners = new Set<(anchor: OnboardingAnchor) => void>();
+const usedListeners = new Set<(anchor: OnboardingAnchor) => void>();
 
 /** Ticks each time an anchor appears or goes away. Read the nodes with `anchorNode()`. */
 export const anchorsChanged = writable(0);
@@ -44,6 +45,22 @@ export function onAnchorClick(listener: (anchor: OnboardingAnchor) => void): () 
     return () => clickListeners.delete(listener);
 }
 
+/** Called on every use of an anchor: a click on it, or a `markUsed()`. */
+export function onAnchorUsed(listener: (anchor: OnboardingAnchor) => void): () => void {
+    usedListeners.add(listener);
+    return () => usedListeners.delete(listener);
+}
+
+/**
+ * For a feature used without a click on its anchor (a keyboard shortcut): `skipIfUsed` then knows the user used it.
+ * Unlike a click, it does not complete a step that points at the anchor.
+ */
+export function markUsed(anchor: OnboardingAnchor): void {
+    for (const listener of [...usedListeners]) {
+        listener(anchor);
+    }
+}
+
 function setVisible(anchor: OnboardingAnchor, node: HTMLElement, visible: boolean): void {
     let nodes = visibleNodes.get(anchor);
     if (visible === (nodes?.has(node) ?? false)) {
@@ -74,6 +91,7 @@ export function onboarding(anchor: OnboardingAnchor): Attachment<HTMLElement> {
             for (const listener of [...clickListeners]) {
                 listener(anchor);
             }
+            markUsed(anchor);
         };
         // Capture: the element's handler may close the menu that holds it, and the next step waits for this click.
         node.addEventListener("click", onClick, { capture: true });

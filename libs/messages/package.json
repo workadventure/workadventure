@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
-    "export-json-schema": "tsx ./src/exportAnalyticsJsonSchema.ts"
+    "export-json-schema": "tsx ./src/exportAnalyticsJsonSchema.ts && tsx ./src/exportOnboardingJsonSchema.ts"
   },
   "author": "WorkAdventure",
   "license": "ISC",

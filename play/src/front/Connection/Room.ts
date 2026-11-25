@@ -42,6 +42,7 @@ export class Room {
     private _wamUrl: string | undefined;
     private readonly _search: URLSearchParams;
     private _contactPage: string | undefined;
+    private _onboardingUrl: string | undefined;
     private _group: string | null = null;
     private _expireOn: Date | undefined;
     private _canReport = false;
@@ -184,6 +185,7 @@ export class Room {
                 this._opidLogoutRedirectUrl =
                     data.opidLogoutRedirectUrl || new URL("logout", ABSOLUTE_PUSHER_URL).toString();
                 this._contactPage = data.contactPage || CONTACT_URL;
+                this._onboardingUrl = data.onboardingUrl ?? undefined;
                 if (data.expireOn) {
                     this._expireOn = new Date(data.expireOn);
                 }
@@ -325,6 +327,10 @@ export class Room {
 
     get contactPage(): string | undefined {
         return this._contactPage;
+    }
+
+    get onboardingUrl(): string | undefined {
+        return this._onboardingUrl;
     }
 
     get group(): string | null {

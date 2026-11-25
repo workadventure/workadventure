@@ -56,6 +56,8 @@ import {
     MATRIX_ADMIN_USER,
     MATRIX_ADMIN_PASSWORD,
     MATRIX_DOMAIN,
+    ONBOARDING_FILE,
+    PUSHER_URL,
 } from "../enums/EnvironmentVariable";
 import type { FetchMemberDataByUuidResponse } from "./AdminApi";
 import type { AdminInterface } from "./AdminInterface";
@@ -345,6 +347,8 @@ class LocalAdmin implements AdminInterface {
             metadata: {
                 enableTutorial: ENABLE_TUTORIAL,
             },
+            // Served by OnboardingController.
+            onboardingUrl: ONBOARDING_FILE ? PUSHER_URL.replace(/\/+$/, "") + "/onboarding.json" : undefined,
         });
     }
 

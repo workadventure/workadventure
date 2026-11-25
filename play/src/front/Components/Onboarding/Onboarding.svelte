@@ -4,12 +4,25 @@
     import { OnboardingScheduler, onboardingScheduler } from "../../Onboarding/OnboardingScheduler";
     import { builtinItems } from "../../Onboarding/builtinItems";
     import { onboardingView } from "../../Onboarding/stepKinds";
+    import { loadWorldOnboarding, mergeItems } from "../../Onboarding/worldOnboarding";
 
     onMount(() => {
-        const scheduler = new OnboardingScheduler(gameManager.getCurrentGameScene(), builtinItems);
-        onboardingScheduler.set(scheduler);
+        const scene = gameManager.getCurrentGameScene();
+        let scheduler: OnboardingScheduler | undefined;
+        let destroyed = false;
+        // The world's items come first in priority, so nothing starts before they are known.
+        loadWorldOnboarding(scene.room.onboardingUrl)
+            .then((world) => {
+                if (destroyed) {
+                    return;
+                }
+                scheduler = new OnboardingScheduler(scene, mergeItems(builtinItems, world), world?.quietPeriodMinutes);
+                onboardingScheduler.set(scheduler);
+            })
+            .catch((error: unknown) => console.error("Onboarding did not start", error));
         return () => {
-            scheduler.destroy();
+            destroyed = true;
+            scheduler?.destroy();
             onboardingScheduler.set(undefined);
         };
     });
