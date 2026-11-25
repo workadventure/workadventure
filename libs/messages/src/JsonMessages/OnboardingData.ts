@@ -2,7 +2,7 @@ import { z } from "zod";
 
 /**
  * The onboarding of a world: its own items, and which built-in ones it keeps. The SaaS admin serves it per world, and
- * a self-hosted install from `ONBOARDING_FILE`. Exported as JSON Schema to docs/schema/onboarding.json.
+ * a self-hosted install from `ONBOARDING_URL`. Exported as JSON Schema to docs/schema/onboarding.json.
  */
 
 /**

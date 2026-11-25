@@ -31,7 +31,6 @@ import { WokaService } from "./services/WokaService";
 import { UserController } from "./controllers/UserController";
 import { MatrixRoomAreaController } from "./controllers/MatrixRoomAreaController";
 import { LocalScriptController } from "./controllers/LocalScriptController";
-import { OnboardingController } from "./controllers/OnboardingController";
 import { LivekitWebhookController } from "./controllers/LivekitWebhookController";
 import { analyticsEventsQueue } from "./services/AnalyticsEventsQueue";
 
@@ -94,7 +93,6 @@ class App {
         const frontAssets = createFrontAssets();
         new PingController(this.app, frontAssets);
         new LocalScriptController(this.app);
-        new OnboardingController(this.app);
 
         if (ENABLE_OPENAPI_ENDPOINT) {
             new SwaggerController(this.app);

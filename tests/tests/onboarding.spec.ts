@@ -16,7 +16,7 @@ const TOUR_ID = "wa.mapEditor.furniture";
 const LOCK_TIP_ID = "wa.tip.lockBubble";
 const TUTORIAL_ID = "wa.tutorial";
 const ANNOUNCEMENT_ID = "wa.announcement.v1.35";
-/** The draft of `play/tests/e2e-onboarding.json`, the `ONBOARDING_FILE` of the e2e stack. */
+/** The draft of `maps/tests/e2e-onboarding.json`, the `ONBOARDING_URL` of the e2e stack. */
 const WORLD_DRAFT_ID = "e2e-draft";
 /**
  * The built-in items that start by themselves at load. A test marks over the ones it does not test: one still pending
@@ -283,7 +283,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await expect.poll(async () => (await readOnboardingState(page))?.requested).toBeUndefined();
     });
 
-    test("A draft of the world's ONBOARDING_FILE never starts, and only admins open it from the Help menu", async ({
+    test("A draft of the world's onboarding file never starts, and only admins open it from the Help menu", async ({
         browser,
         request,
     }) => {
@@ -302,7 +302,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await page.getByRole("button", { name: "Help & tutorials" }).click();
         await page.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`).click();
         await expect(modal).toContainText("Only admins see drafts");
-        await expect(modal).toContainText("This item comes from the ONBOARDING_FILE of the play container.");
+        await expect(modal).toContainText("This item comes from the file at ONBOARDING_URL.");
         await modal.getByTestId("onboarding-modal-next").click();
         await expect(modal).toBeHidden();
 

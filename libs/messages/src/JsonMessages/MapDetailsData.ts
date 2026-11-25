@@ -366,7 +366,7 @@ export const isMapDetailsData = z.object({
   onboardingUrl: extendApi(z.string().nullable().optional(), {
     description:
       "The URL of the world's onboarding JSON (see https://docs.workadventu.re/docs/schema/onboarding.json): its own tips and announcements, and which built-in ones it keeps. Without it, only the built-in ones show.",
-    example: "https://play.example.com/onboarding.json",
+    example: "https://example.com/onboarding.json",
   }),
 });
 

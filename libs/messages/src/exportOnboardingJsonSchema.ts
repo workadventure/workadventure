@@ -10,7 +10,7 @@ import {
 
 /**
  * Publishes the onboarding config of a world as JSON Schema, at
- * https://docs.workadventu.re/docs/schema/onboarding.json. Self-hosters check their `ONBOARDING_FILE` with it, and the
+ * https://docs.workadventu.re/docs/schema/onboarding.json. Self-hosters check their file with it, and the
  * SaaS admin checks what its editor saves. Its editor reads the anchors and the built-in tours (with their labels) in
  * `$defs`.
  */
