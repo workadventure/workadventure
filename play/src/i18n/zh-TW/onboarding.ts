@@ -14,8 +14,6 @@ export default {
     communication: {
         title: "通訊氣泡",
         description: "當您靠近其他玩家時，會自動進入通訊氣泡。您可以在同一個氣泡中與其他玩家聊天！",
-        video: "./static/Videos/Meet.mp4",
-        next: "知道了！",
     },
     lockBubble: {
         title: "鎖定您的對話",

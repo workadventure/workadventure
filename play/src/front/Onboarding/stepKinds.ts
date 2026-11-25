@@ -12,7 +12,6 @@ import { silentStore } from "../Stores/MediaStore";
 import OnboardingPopover from "../Components/Onboarding/OnboardingPopover.svelte";
 import OnboardingModal from "../Components/Onboarding/OnboardingModal.svelte";
 import MovementStepView from "../Components/Onboarding/Steps/MovementStep.svelte";
-import CommunicationStepView from "../Components/Onboarding/Steps/CommunicationStep.svelte";
 import type {
     ModalStep,
     MovementStep,
@@ -256,13 +255,14 @@ const movement: StepKind<MovementStep> = (_step, run) => {
     };
 };
 
-const simulatedConversation: StepKind<SimulatedConversationStep> = (_step, run) => {
-    // The fake user stays for the steps that point at the bubble's buttons, until the item ends.
+const simulatedConversation: StepKind<SimulatedConversationStep> = (step, run, view) => {
+    // The fake user stays until the item ends.
     run.onEnd(startSimulatedConversation(gameManager.getCurrentGameScene()));
     // A silent zone would mute the demo.
     silentStore.setOnboardingOverride(true);
     run.onEnd(() => silentStore.setOnboardingOverride(false));
-    return showView(CommunicationStepView, { onnext: run.complete });
+    // Below the fake user's video, once they have walked up and it plays.
+    return popover({ ...step, type: "popover", anchor: "tutorial.simulatedUser" }, run, view);
 };
 
 export function startStep(step: OnboardingStep, run: ItemRun, view: StepView): () => void {

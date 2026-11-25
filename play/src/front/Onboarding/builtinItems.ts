@@ -68,7 +68,11 @@ export const builtinItems: OnboardingItem[] = [
                 text: () => get(LL).onboarding.welcome.description(),
             },
             { type: "movement" },
-            { type: "simulatedConversation" },
+            {
+                type: "simulatedConversation",
+                title: () => get(LL).onboarding.communication.title(),
+                text: () => get(LL).onboarding.communication.description(),
+            },
             {
                 type: "modal",
                 title: () => get(LL).onboarding.complete.title(),

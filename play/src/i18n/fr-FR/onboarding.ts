@@ -18,8 +18,6 @@ export default {
         title: "Bulles de communication",
         description:
             "Lorsque vous vous approchez d'autres joueurs, vous entrez automatiquement dans une bulle de communication. Vous pouvez discuter avec les autres dans la même bulle !",
-        video: "./static/Videos/Meet.mp4",
-        next: "Compris !",
     },
     lockBubble: {
         title: "Verrouiller votre conversation",

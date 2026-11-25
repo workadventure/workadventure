@@ -17,8 +17,6 @@ export default {
         title: "통신 버블",
         description:
             "다른 플레이어에게 가까이 가면 자동으로 통신 버블에 들어갑니다. 같은 버블의 다른 사람들과 채팅할 수 있습니다!",
-        video: "./static/Videos/Meet.mp4",
-        next: "알겠습니다!",
     },
     lockBubble: {
         title: "대화 잠그기",

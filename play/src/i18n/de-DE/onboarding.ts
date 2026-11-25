@@ -18,8 +18,6 @@ export default {
         title: "Kommunikationsblasen",
         description:
             "Wenn Sie sich anderen Spielern nähern, treten Sie automatisch in eine Kommunikationsblase ein. Sie können mit anderen in derselben Blase chatten!",
-        video: "./static/Videos/Meet.mp4",
-        next: "Verstanden!",
     },
     lockBubble: {
         title: "Ihre Unterhaltung sperren",

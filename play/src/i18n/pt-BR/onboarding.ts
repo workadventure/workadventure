@@ -17,8 +17,6 @@ export default {
         title: "Bolhas de comunicação",
         description:
             "Quando você se aproxima de outros jogadores, entra automaticamente em uma bolha de comunicação. Você pode conversar com outros na mesma bolha!",
-        video: "./static/Videos/Meet.mp4",
-        next: "Entendi!",
     },
     lockBubble: {
         title: "Bloquear sua conversa",

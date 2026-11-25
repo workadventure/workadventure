@@ -41,8 +41,11 @@ export interface MovementStep extends StepBase {
     type: "movement";
 }
 
-/** Built-in items only: a fake user walks up and opens a fake bubble, until the item ends. */
-export interface SimulatedConversationStep extends StepBase {
+/**
+ * Built-in items only: a fake user walks up and opens a fake bubble, until the item ends. The texts show in a popover
+ * below the fake user's video.
+ */
+export interface SimulatedConversationStep extends StepBase, StepContent {
     type: "simulatedConversation";
 }
 

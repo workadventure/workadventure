@@ -19,5 +19,6 @@ export const OnboardingAnchor = z.enum([
   "mapEditor.tool.entity",
   "mapEditor.tool.exploration",
   "mapEditor.entityList",
+  "tutorial.simulatedUser",
 ]);
 export type OnboardingAnchor = z.infer<typeof OnboardingAnchor>;

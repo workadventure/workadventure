@@ -17,8 +17,6 @@ export default {
         title: "Communication bubbles",
         description:
             "When you get close to other players, you'll automatically enter a communication bubble. You can chat with others in the same bubble!",
-        video: "./static/Videos/Meet.mp4",
-        next: "Got it!",
     },
     lockBubble: {
         title: "Lock your conversation",

@@ -18,8 +18,6 @@ export default {
         title: "コミュニケーションバブル",
         description:
             "他のプレイヤーに近づくと、自動的にコミュニケーションバブルに入ります。同じバブル内の他のプレイヤーとチャットできます！",
-        video: "./static/Videos/Meet.mp4",
-        next: "了解しました！",
     },
     lockBubble: {
         title: "会話をロックする",

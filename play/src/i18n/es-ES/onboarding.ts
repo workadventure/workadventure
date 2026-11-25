@@ -17,8 +17,6 @@ export default {
         title: "Burbujas de comunicación",
         description:
             "Cuando te acerques a otros jugadores, entrarás automáticamente en una burbuja de comunicación. ¡Puedes chatear con otros en la misma burbuja!",
-        video: "./static/Videos/Meet.mp4",
-        next: "¡Entendido!",
     },
     lockBubble: {
         title: "Bloquear tu conversación",

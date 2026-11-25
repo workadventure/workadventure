@@ -18,8 +18,6 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "Bong bóng trò chuyện",
         description:
             "Khi lại gần người chơi khác, bạn sẽ tự động vào một bong bóng trò chuyện. Bạn có thể trò chuyện với những người trong cùng bong bóng!",
-        video: "./static/Videos/Meet.mp4",
-        next: "Đã hiểu!",
     },
     lockBubble: {
         title: "Khóa cuộc trò chuyện của bạn",

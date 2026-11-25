@@ -27,7 +27,7 @@ class SimulatedConversation {
     private followTimer: ReturnType<typeof setTimeout> | undefined;
 
     constructor(private readonly scene: GameScene) {
-        simulatedConversationStore.set(true);
+        simulatedConversationStore.set({});
         scene.CurrentPlayer.on(hasMovedEventName, this.follow);
         this.walkUp().catch((error) => {
             console.error("The onboarding's fake user could not walk up", error);
@@ -47,7 +47,7 @@ class SimulatedConversation {
         if (this.video) {
             scriptingVideoStore.removeVideo(this.video.uniqueId);
         }
-        simulatedConversationStore.set(false);
+        simulatedConversationStore.set(undefined);
     }
 
     private later(delay: number, action: () => void): void {
@@ -124,6 +124,7 @@ class SimulatedConversation {
             `/static/Videos/onboarding/ia-generation-remoteoffice${Math.floor(Math.random() * 5) + 1}.mp4`,
             { name: "Demo User", loop: true },
         );
+        simulatedConversationStore.set({ videoId: this.video.uniqueId });
         this.later(300, () => this.faceAndWave(player));
     }
 

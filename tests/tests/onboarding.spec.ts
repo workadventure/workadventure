@@ -143,6 +143,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
             keepOnboardingTips: true,
         });
         const modal = page.getByTestId("onboarding-modal");
+        const popover = page.getByTestId("onboarding-popover");
 
         // A user who has not done the tutorial yet. The start delay stays the default 30 s.
         await reloadWithState(page, { firstVisit: localDateDaysAgo(2), items: overBut(TUTORIAL_ID), used: [] }, false);
@@ -151,7 +152,10 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
 
         await expect(page.getByRole("heading", { name: "Move around" })).toBeVisible();
         await Map.walkTo(page, "ArrowRight", 500);
-        await page.getByRole("button", { name: "Got it!" }).click();
+        // A fake user walks up: the popover points at their video.
+        await expect(popover).toContainText("Communication bubbles", { timeout: 20_000 });
+        await expect(page.locator(".camera-box[data-onboarding-highlight]")).toBeVisible();
+        await popover.getByTestId("onboarding-popover-next").click();
 
         await expect(modal).toContainText("You're all set");
         await modal.getByTestId("onboarding-modal-next").click();

@@ -4,6 +4,8 @@
     import type { VideoBox } from "../../Space/VideoBox";
     import type { ObservableElement } from "../../Interfaces/ObservableElement";
     import type { TokenRemovalHandle } from "../../Utils/TokenBucket";
+    import { onboarding } from "../../Onboarding/OnboardingAnchors";
+    import { simulatedConversationStore } from "../../Stores/SimulatedConversationStore";
     import type { DocumentPictureInPictureEvent } from "./PictureInPicture/PictureInPictureWindow";
     import { videoBoxVisibilityTokenBucket } from "./VideoBoxVisibilityTokenBucket";
     import { pipTileStyle } from "./PictureInPicture/pictureInPictureGridLayout";
@@ -160,6 +162,7 @@
 -->
 <div
     bind:this={videoBoxElement}
+    {@attach $simulatedConversationStore?.videoId === videoBox.uniqueId && onboarding("tutorial.simulatedUser")}
     style={layoutStyle}
     class={`pointer-events-auto overflow-hidden camera-box ${layoutClass}`}
 >

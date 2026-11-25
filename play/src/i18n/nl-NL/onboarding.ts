@@ -17,8 +17,6 @@ export default {
         title: "Communicatiebellen",
         description:
             "Wanneer je dicht bij andere spelers komt, kom je automatisch in een communicatiebel. Je kunt chatten met anderen in dezelfde bel!",
-        video: "./static/Videos/Meet.mp4",
-        next: "Begrepen!",
     },
     lockBubble: {
         title: "Je gesprek vergrendelen",

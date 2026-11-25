@@ -18,8 +18,6 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "บับเบิลสนทนา",
         description:
             "เมื่อคุณเข้าใกล้ผู้เล่นคนอื่น คุณจะเข้าสู่บับเบิลสนทนาโดยอัตโนมัติ คุณสามารถพูดคุยกับทุกคนที่อยู่ในบับเบิลเดียวกันได้!",
-        video: "./static/Videos/Meet.mp4",
-        next: "เข้าใจแล้ว!",
     },
     lockBubble: {
         title: "ล็อกการสนทนาของคุณ",
