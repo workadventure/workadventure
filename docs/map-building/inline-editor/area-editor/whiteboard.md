@@ -12,13 +12,17 @@ The whiteboard property attaches a collaborative whiteboard to an area. Everybod
 
 The whiteboard is [Excalidraw](https://excalidraw.com), drawn by WorkAdventure itself: there is no external website and no extra service to install. Drawings go through the WorkAdventure server only.
 
-The board opens in a panel beside the map, like a website opened from an area, with the name of the area as its title. You keep seeing the map and the cameras while you draw.
+The board opens in a panel beside the map, with the name of the area as its title: you prepare it while you keep seeing the map.
 
 ![](../../images/editor/whiteboard/whiteboard-1.png)
 
-The button at the top right of the panel puts the board fullscreen; click it again to bring the map back. The cross on the board's tab closes it.
+When a meeting starts, click **Put on stage** in the board's header: the board moves to the middle of the screen, under the cameras, and stays there while you walk around the area. The header shows who is on the board (click someone to follow their view), puts the board fullscreen with the cameras in a strip on the side, brings it **Back to the panel**, or closes it. The board remembers your choice the next time you open it.
 
 ![](../../images/editor/whiteboard/whiteboard-2.png)
+
+On stage, when you shrink the board to a tile among the cameras, the tile shows a live picture of the board and its name: you see what the others draw without opening it. Click the tile to bring the board back.
+
+![](../../images/editor/whiteboard/whiteboard-4.png)
 
 ## Add a whiteboard to an area
 
@@ -29,17 +33,19 @@ While editing an area, select the "Whiteboard" property. You can choose when the
 
 ![](../../images/editor/whiteboard/whiteboard-3.png)
 
+While the map editor is open, a board on stage shrinks to a tile among the cameras, so that it does not hide the map.
+
 ## Saved with the map
 
 The board is kept with the map: walk out and come back the next day, it is still there. It is saved every few seconds while people draw, and as soon as the last person leaves. Deleting the area, the whiteboard property or the map deletes the board.
 
 Turn on **Ephemeral whiteboard** for a board that is never saved: it empties itself 2 minutes after the last person left.
 
+A board holds up to 15 MB of drawings. Past that, what you just drew is not shared and a message says the board is full: delete some elements or images, or export the board.
+
 ## Images
 
 Paste or drop an image on the board to share it. Images are stored with the board, only reach the people allowed to see it, and are deleted with it. PNG, JPEG, GIF, WebP and SVG images up to 4 MB are accepted.
-
-A board holds up to 15 MB of drawings. Past that, what you just drew is not shared and a message says the board is full: delete some elements or images, or export the board.
 
 ## Exporting
 
@@ -57,7 +63,7 @@ The server checks these rights on every change, not only when the board opens.
 
 ## Following someone
 
-Click the avatar of another user in the top right corner of the board to follow them: your view moves with theirs. Scroll or zoom to stop following.
+Click the avatar of another user in the board's header (or in its top right corner) to follow them: your view moves with theirs. Scroll or zoom to stop following.
 
 ## Clearing a board
 

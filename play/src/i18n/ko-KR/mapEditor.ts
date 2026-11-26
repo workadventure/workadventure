@@ -251,6 +251,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "이 월드에서는 화이트보드가 비활성화되어 있습니다.",
             loadError: "화이트보드를 불러올 수 없습니다.",
             full: "화이트보드가 가득 찼습니다. 마지막 그림이 공유되지 않았습니다. 요소나 이미지를 삭제하세요.",
+            putOnStage: "무대에 올리기",
+            backToPanel: "패널로 되돌리기",
+            fullscreen: "전체 화면",
+            exitFullscreen: "전체 화면 종료",
+            close: "화이트보드 닫기",
+            follow: "{name} 따라가기",
             rightsHint:
                 "그릴 수 있는 사람은 영역의 권한 속성을 따릅니다. 쓰기 태그가 있는 사람은 그리고, 나머지는 보기만 합니다. 권한이 없으면 모두가 그릴 수 있습니다.",
             clear: "화이트보드 지우기",

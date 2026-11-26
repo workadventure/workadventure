@@ -253,6 +253,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "このワールドではホワイトボードが無効になっています。",
             loadError: "ホワイトボードを読み込めませんでした。",
             full: "ホワイトボードがいっぱいです。最後の描画は共有されませんでした。要素や画像を削除してください。",
+            putOnStage: "ステージに表示",
+            backToPanel: "パネルに戻す",
+            fullscreen: "全画面",
+            exitFullscreen: "全画面を終了",
+            close: "ホワイトボードを閉じる",
+            follow: "{name} をフォロー",
             rightsHint:
                 "描ける人はエリアの権限プロパティに従います。書き込みタグを持つ人は描け、他の人は閲覧のみです。権限がなければ全員が描けます。",
             clear: "ホワイトボードを消去",

@@ -1,13 +1,16 @@
-// Loaded on demand (see WhiteboardCowebsiteComponent.svelte): React and Excalidraw only reach the
+// Loaded on demand (see WhiteboardStore.ts): React and Excalidraw only reach the
 // browser when somebody opens a whiteboard.
 import { createElement } from "react";
 import { createRoot } from "react-dom/client";
-import { Excalidraw, MainMenu } from "@excalidraw/excalidraw";
-import type { ExcalidrawImperativeAPI } from "@excalidraw/excalidraw/types";
+import { Excalidraw, MainMenu, exportToSvg, hashElementsVersion } from "@excalidraw/excalidraw";
+import type { ExcalidrawImperativeAPI, SocketId } from "@excalidraw/excalidraw/types";
 // eslint-disable-next-line import/no-unresolved -- only exported under the "development"/"production" conditions, which Vite resolves
 import "@excalidraw/excalidraw/index.css";
 import type { RoomConnection } from "../Connection/RoomConnection";
 import { WhiteboardSession } from "./WhiteboardSession";
+import type { WhiteboardParticipantView } from "./WhiteboardSession";
+
+export type { WhiteboardParticipantView };
 
 // Excalidraw downloads its fonts at runtime. Serve them ourselves (the build copies them next to the
 // bundle, see vite.config.ts) rather than letting it fall back to esm.sh.
@@ -26,10 +29,15 @@ export interface WhiteboardMountOptions {
     filesUrl: URL | undefined;
     /** Shown when the back refuses a drawing because the board is full. */
     fullMessage: string;
+    onParticipantsChange(participants: WhiteboardParticipantView[]): void;
 }
 
 export interface MountedWhiteboard {
     destroy(): void;
+    /** A picture of the board, for its tile among the cameras; undefined while the board is empty. */
+    preview(): Promise<SVGSVGElement | undefined>;
+    /** Follows (or stops following) someone's view, like clicking their avatar in Excalidraw. */
+    follow(participant: WhiteboardParticipantView): void;
 }
 
 export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOptions): MountedWhiteboard {
@@ -48,6 +56,7 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
             onFull: () => {
                 excalidrawApi?.setToast({ message: options.fullMessage, closable: true, duration: 8000 });
             },
+            onParticipantsChange: (participants) => options.onParticipantsChange(participants),
         },
         options.filesUrl,
     );
@@ -102,10 +111,45 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
     };
     render();
 
+    // Only redrawn when the scene changed since the last picture.
+    let previewVersion: number | undefined;
+    let previewPicture: SVGSVGElement | undefined;
+    const preview = async (): Promise<SVGSVGElement | undefined> => {
+        if (!excalidrawApi) {
+            return undefined;
+        }
+        const elements = excalidrawApi.getSceneElements();
+        const version = hashElementsVersion(elements);
+        if (version !== previewVersion) {
+            previewVersion = version;
+            previewPicture =
+                elements.length === 0
+                    ? undefined
+                    : await exportToSvg({
+                          elements,
+                          appState: { ...excalidrawApi.getAppState(), exportBackground: true },
+                          files: excalidrawApi.getFiles(),
+                          // Drawn in the page, which already holds Excalidraw's fonts.
+                          skipInliningFonts: true,
+                      });
+        }
+        return previewPicture;
+    };
+
     return {
         destroy: () => {
             session.destroy();
             root.unmount();
+        },
+        preview,
+        follow: ({ socketId, name }) => {
+            if (!excalidrawApi) {
+                return;
+            }
+            const followed = excalidrawApi.getAppState().userToFollow?.socketId === socketId;
+            excalidrawApi.updateScene({
+                appState: { userToFollow: followed ? null : { socketId: socketId as SocketId, username: name } },
+            });
         },
     };
 }

@@ -228,7 +228,14 @@
     {/if}
 
     {#if $highlightedEmbedScreen && $highlightFullScreen}
-        <div class="w-full h-full fixed start-0 end-0 z-[310]">
+        <!-- A whiteboard keeps its header buttons and Excalidraw's right-hand tools out from under the camera list. -->
+        <div
+            class="w-full h-full fixed start-0 end-0 z-[310]"
+            style:padding-inline-end={highlightParticipantCamerasListOpen &&
+            $highlightedEmbedScreen.uniqueId.startsWith("whiteboard-")
+                ? "250px"
+                : undefined}
+        >
             <MediaBox videoBox={$highlightedEmbedScreen} fullScreen={true} />
         </div>
         <!-- Fullscreen participant cameras list: slide + single edge toggle (same arrow, same spot) -->

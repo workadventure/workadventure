@@ -249,6 +249,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "La pissarra està desactivada en aquest món.",
             loadError: "No s'ha pogut carregar la pissarra.",
             full: "La pissarra és plena: el darrer dibuix no s'ha compartit. Esborra alguns elements o imatges.",
+            putOnStage: "Posar en escena",
+            backToPanel: "Tornar al panell",
+            fullscreen: "Pantalla completa",
+            exitFullscreen: "Surt de la pantalla completa",
+            close: "Tanca la pissarra",
+            follow: "Segueix {name}",
             rightsHint:
                 "Qui pot dibuixar segueix la propietat Drets de la zona: les seves etiquetes d'escriptura dibuixen, els altres només miren. Sense drets, tothom dibuixa.",
             clear: "Buida la pissarra",

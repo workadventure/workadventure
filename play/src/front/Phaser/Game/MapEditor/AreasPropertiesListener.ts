@@ -66,7 +66,7 @@ import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
-import { WhiteboardCoWebsite } from "../../../WebRtc/CoWebsite/WhiteboardCoWebsite";
+import { whiteboardStore } from "../../../Stores/WhiteboardStore";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
 import {
     ON_ACTION_TRIGGER_BUTTON,
@@ -2110,48 +2110,28 @@ export class AreasPropertiesListener {
 
     private handleWhiteboardOnEnter(property: WhiteboardPropertyData, areaData: AreaData): void {
         const connection = this.scene.connection;
-        if (
-            !this.scene.applicationManager.whiteboardToolActivated ||
-            !connection ||
-            this.openedCoWebsites.has(property.id)
-        ) {
+        if (!this.scene.applicationManager.whiteboardToolActivated || !connection) {
             return;
         }
 
-        const actionId = "whiteboard-" + uuidv4();
-        const coWebsiteOpen: OpenCoWebsite = { actionId };
-        this.openedCoWebsites.set(property.id, coWebsiteOpen);
-
-        // A co-website: a panel beside the map, which the co-website bar puts fullscreen.
+        // A panel beside the map, which its header puts on stage under the cameras (see WhiteboardStore).
         const open = () => {
-            if (coWebsiteOpen.coWebsite) {
-                return;
-            }
-            const url = new URL(`#whiteboard-${areaData.id}-${property.id}`, this.scene.mapUrlFile);
-            const coWebsite = new WhiteboardCoWebsite(
-                url,
-                {
-                    connection,
-                    areaId: areaData.id,
-                    propertyId: property.id,
-                    // Excalidraw names English "en" and takes the other WorkAdventure locales as they are.
-                    langCode: get(locale).startsWith("en") ? "en" : get(locale),
-                    filesUrl: this.whiteboardFilesUrl(areaData.id, property.id),
-                    fullMessage: get(LL).mapEditor.properties.whiteboard.full(),
-                },
-                areaData.name || get(LL).mapEditor.properties.whiteboard.label(),
-            );
-            coWebsiteOpen.coWebsite = coWebsite;
-            coWebsites.add(coWebsite, undefined, {
-                targetUrl: url.toString(),
-                triggerProperty: "other",
+            whiteboardStore.open({
                 areaId: areaData.id,
                 areaName: areaData.name,
+                propertyId: property.id,
+                title: areaData.name || get(LL).mapEditor.properties.whiteboard.label(),
+                url: new URL(`#whiteboard-${areaData.id}-${property.id}`, this.scene.mapUrlFile),
+                connection,
+                // Excalidraw names English "en" and takes the other WorkAdventure locales as they are.
+                langCode: get(locale).startsWith("en") ? "en" : get(locale),
+                filesUrl: this.whiteboardFilesUrl(areaData.id, property.id),
+                fullMessage: get(LL).mapEditor.properties.whiteboard.full(),
             });
-            inOpenWebsite.set(true);
         };
 
         if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            const actionId = "whiteboard-" + uuidv4();
             this.coWebsitesActionTriggers.set(property.id, actionId);
             popupStore.addPopup(
                 PopupCowebsite,
@@ -2175,13 +2155,7 @@ export class AreasPropertiesListener {
     }
 
     private handleWhiteboardOnLeave(property: WhiteboardPropertyData): void {
-        const coWebsite = this.openedCoWebsites.get(property.id)?.coWebsite;
-        if (coWebsite) {
-            coWebsites.remove(coWebsite);
-        }
-        this.openedCoWebsites.delete(property.id);
-        inOpenWebsite.set(false);
-
+        whiteboardStore.close(property.id);
         const actionId = this.coWebsitesActionTriggers.get(property.id);
         if (actionId) {
             popupStore.removePopup(actionId);

@@ -254,6 +254,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Das Whiteboard ist in dieser Welt deaktiviert.",
             loadError: "Das Whiteboard konnte nicht geladen werden.",
             full: "Das Whiteboard ist voll: Deine letzte Zeichnung wurde nicht geteilt. Lösche einige Elemente oder Bilder.",
+            putOnStage: "Auf die Bühne",
+            backToPanel: "Zurück ins Seitenfenster",
+            fullscreen: "Vollbild",
+            exitFullscreen: "Vollbild beenden",
+            close: "Whiteboard schließen",
+            follow: "{name} folgen",
             rightsHint:
                 "Wer zeichnen darf, folgt der Rechte-Eigenschaft des Bereichs: Schreib-Tags zeichnen, die anderen schauen nur zu. Ohne Rechte zeichnen alle.",
             clear: "Whiteboard leeren",

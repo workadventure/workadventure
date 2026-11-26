@@ -43,6 +43,14 @@ export interface WhiteboardSessionListener {
     onCanWriteChange(canWrite: boolean): void;
     /** The back refused what was just drawn: the board is full. */
     onFull(): void;
+    /** The other people on the board changed. */
+    onParticipantsChange(participants: WhiteboardParticipantView[]): void;
+}
+
+export interface WhiteboardParticipantView {
+    socketId: string;
+    name: string;
+    color: string;
 }
 
 /**
@@ -413,6 +421,13 @@ export class WhiteboardSession {
             });
         }
         this.api.updateScene({ collaborators: new Map(this.collaborators) });
+        this.listener.onParticipantsChange(
+            [...this.collaborators.values()].map((collaborator) => ({
+                socketId: collaborator.socketId ?? "",
+                name: collaborator.username ?? "",
+                color: collaborator.color?.stroke ?? "#4156f6",
+            })),
+        );
     }
 }
 

@@ -251,6 +251,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Běła tafla je w tutym swěće znjemóžnjena.",
             loadError: "Běła tafla njeda so začitać.",
             full: "Běła tafla je połna: waše poslednje rysowanje njeje so dźěliło. Zhašejće někotre elementy abo wobrazy.",
+            putOnStage: "Na jewišćo",
+            backToPanel: "Wróćo do panela",
+            fullscreen: "Połna wobrazowka",
+            exitFullscreen: "Połnu wobrazowku skónčić",
+            close: "Běłu taflu začinić",
+            follow: "{name} slědować",
             rightsHint:
                 "Štó smě rysować, slěduje kajkosći Prawa wobłuka: jeho pisanske tagi rysuja, druzy jenož hladaja. Bjez prawow rysuja wšitcy.",
             clear: "Taflu wuprózdnić",

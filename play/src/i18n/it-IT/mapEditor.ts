@@ -253,6 +253,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "La lavagna è disattivata in questo mondo.",
             loadError: "Impossibile caricare la lavagna.",
             full: "La lavagna è piena: il tuo ultimo disegno non è stato condiviso. Elimina alcuni elementi o immagini.",
+            putOnStage: "Metti in scena",
+            backToPanel: "Torna al pannello",
+            fullscreen: "Schermo intero",
+            exitFullscreen: "Esci da schermo intero",
+            close: "Chiudi la lavagna",
+            follow: "Segui {name}",
             rightsHint:
                 "Chi può disegnare segue la proprietà Diritti dell'area: i suoi tag di scrittura disegnano, gli altri guardano soltanto. Senza diritti, disegnano tutti.",
             clear: "Svuota la lavagna",

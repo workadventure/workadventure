@@ -1,23 +1,22 @@
 import excalidrawIcon from "../../Components/images/applications/icon_excalidraw.svg";
-import type { WhiteboardMountOptions } from "../../Whiteboard/WhiteboardApp";
+import type { WhiteboardBoard } from "../../Stores/WhiteboardStore";
 import { SimpleCoWebsite } from "./SimpleCoWebsite";
 
 /**
- * The collaborative whiteboard of an area, drawn by Excalidraw right inside WorkAdventure (no iframe).
- * The URL only identifies the board (in analytics); there is nothing to load from it.
+ * A whiteboard in its panel beside the map (see WhiteboardStore). Not closable from the co-website bar: the
+ * board's own header closes it, or puts it on stage.
  */
 export class WhiteboardCoWebsite extends SimpleCoWebsite {
     constructor(
         url: URL,
-        public readonly options: WhiteboardMountOptions,
-        private readonly title: string,
+        public readonly board: WhiteboardBoard,
     ) {
-        super(url, false, undefined, undefined, true, true);
+        super(url, false, undefined, undefined, false, true);
         this.id = "whiteboard-" + this.id;
     }
 
     public getTitle(): string {
-        return this.title;
+        return this.board.title;
     }
 
     public getIcon(): string {

@@ -243,6 +243,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "此世界已禁用白板。",
             loadError: "无法加载白板。",
             full: "白板已满：你最后的绘制未被共享。请删除一些元素或图片。",
+            putOnStage: "放到舞台",
+            backToPanel: "放回面板",
+            fullscreen: "全屏",
+            exitFullscreen: "退出全屏",
+            close: "关闭白板",
+            follow: "跟随 {name}",
             rightsHint:
                 "谁能绘图取决于区域的权限属性：拥有写入标签的人可以绘图，其他人只能查看。没有权限设置时，所有人都能绘图。",
             clear: "清空白板",

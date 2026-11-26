@@ -218,7 +218,7 @@ import { ApplicationManager } from "../../Chat/Applications/ApplicationManager";
 import { audioPlaybackStore, handleSuspendedAudioContext } from "../../Stores/AudioPlaybackStore";
 import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
 import { EnterLeaveScriptingService } from "../Helpers/EnterLeaveScriptingService";
-import { WhiteboardCoWebsite } from "../../WebRtc/CoWebsite/WhiteboardCoWebsite";
+import { whiteboardStore } from "../../Stores/WhiteboardStore";
 import { GameMapFrontWrapper } from "./GameMap/GameMapFrontWrapper";
 import { gameManager } from "./GameManager";
 import { EmoteManager } from "./EmoteManager";
@@ -1229,8 +1229,7 @@ export class GameScene extends DirtyScene {
 
         iframeListener.cleanup();
         uiWebsiteManager.closeAll();
-        // A board is tied to the connection it opened with.
-        coWebsites.keepOnly((coWebsite) => !(coWebsite instanceof WhiteboardCoWebsite));
+        whiteboardStore.closeAll();
         followUsersStore.stopFollowing();
 
         audioManagerFileStore.unloadAudio();

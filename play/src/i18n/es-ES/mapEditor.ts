@@ -249,6 +249,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "La pizarra está desactivada en este mundo.",
             loadError: "No se ha podido cargar la pizarra.",
             full: "La pizarra está llena: tu último dibujo no se ha compartido. Borra algunos elementos o imágenes.",
+            putOnStage: "Poner en escena",
+            backToPanel: "Volver al panel",
+            fullscreen: "Pantalla completa",
+            exitFullscreen: "Salir de pantalla completa",
+            close: "Cerrar la pizarra",
+            follow: "Seguir a {name}",
             rightsHint:
                 "Quién puede dibujar sigue la propiedad Derechos de la zona: sus etiquetas de escritura dibujan, los demás solo miran. Sin derechos, todos dibujan.",
             clear: "Vaciar la pizarra",

@@ -246,6 +246,12 @@ const mapEditor: BaseTranslation = {
             disabled: "The whiteboard is disabled on this world.",
             loadError: "The whiteboard could not be loaded.",
             full: "The whiteboard is full: your last drawing was not shared. Delete some elements or images.",
+            putOnStage: "Put on stage",
+            backToPanel: "Back to the panel",
+            fullscreen: "Fullscreen",
+            exitFullscreen: "Exit fullscreen",
+            close: "Close the whiteboard",
+            follow: "Follow {name}",
             rightsHint:
                 "Who may draw follows the area's Rights property: its write tags draw, the others only look. Without rights, everybody draws.",
             clear: "Clear the whiteboard",

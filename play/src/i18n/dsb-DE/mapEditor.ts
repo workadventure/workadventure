@@ -252,6 +252,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Běła tafla jo w toś tom swěśe znjemóžnjona.",
             loadError: "Běła tafla njejo se dała zacytaś.",
             full: "Běła tafla jo połna: wašo slědne kreslenje njejo se źěliło. Wulašujśo někotare elementy abo wobraze.",
+            putOnStage: "Na jewišćo",
+            backToPanel: "Slědk do pśedstawka",
+            fullscreen: "Połna wobrazowka",
+            exitFullscreen: "Połnu wobrazowku skóńcyś",
+            close: "Běłu taflu zacyniś",
+            follow: "{name} slědowaś",
             rightsHint:
                 "Chto smějo kresliś, slědujo kakosći Pšawa wobceŕka: jogo pisańske tagi kreslijo, drugie jano glědaju. Bźez pšawow kreslijo wšykne.",
             clear: "Tablu wuprozniś",

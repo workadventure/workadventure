@@ -261,6 +261,12 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             disabled: "Le tableau blanc est désactivé sur ce monde.",
             loadError: "Le tableau blanc n'a pas pu être chargé.",
             full: "Tableau plein : votre dernier dessin n'a pas été partagé. Supprimez des éléments ou des images.",
+            putOnStage: "Mettre sur scène",
+            backToPanel: "Remettre en panneau",
+            fullscreen: "Plein écran",
+            exitFullscreen: "Quitter le plein écran",
+            close: "Fermer le tableau",
+            follow: "Suivre {name}",
             rightsHint:
                 "Qui peut dessiner suit la propriété Droits de la zone : ses tags d'écriture dessinent, les autres regardent. Sans droits, tout le monde dessine.",
             clear: "Vider le tableau",
