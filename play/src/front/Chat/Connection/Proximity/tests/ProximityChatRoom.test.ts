@@ -79,6 +79,15 @@ function createOffer(): IncomingProximityFileTransferOffer {
     };
 }
 
+describe("ProximityChatRoom lastMessagePreview", () => {
+    it("should preview the last message instead of throwing once the room has one", () => {
+        const room = createRoom();
+        room.sendMessage("hello", "proximity", false);
+
+        expect(get(room.lastMessagePreview)?.body).toBe("hello");
+    });
+});
+
 describe("ProximityChatRoom file transfers", () => {
     beforeEach(() => {
         loadLocale("en-US");

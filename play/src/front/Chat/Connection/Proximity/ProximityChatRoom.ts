@@ -202,7 +202,9 @@ export class ProximityChatRoom implements ChatRoom {
     avatarFallbackColor = readable(undefined);
     messages: SearchableArrayStore<string, ChatMessage> = new SearchableArrayStore((item) => item.id);
     // Arrivals and departures are not messages.
-    readonly lastMessagePreview: Readable<ChatMessagePreview | undefined> = derived(this.messages, (messages) => {
+    // SearchableArrayStore extends Array: passed bare, derived() would take it for an array of stores
+    // and call subscribe() on each message (PLAY-50A). Wrap it.
+    readonly lastMessagePreview: Readable<ChatMessagePreview | undefined> = derived([this.messages], ([messages]) => {
         const message = messages.filter(({ type }) => type !== "incoming" && type !== "outcoming").pop();
         const body = message ? get(message.content).body : "";
         return message && body
