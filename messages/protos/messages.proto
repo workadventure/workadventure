@@ -699,8 +699,12 @@ message WhiteboardServerMessage {
     WhiteboardElementsMessage elements = 4;
     WhiteboardRemotePointerMessage pointer = 5;
     WhiteboardParticipantsMessage participants = 6;
+    // The board refused what this user just drew: it would have grown past its size limit.
+    WhiteboardFullMessage full = 7;
   }
 }
+
+message WhiteboardFullMessage {}
 
 // The whole board, sent to whoever joins it.
 message WhiteboardSceneMessage {

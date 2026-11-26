@@ -248,6 +248,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Una pissarra compartida per tothom qui és a la zona. Tothom veu els dibuixos en directe, amb els cursors dels altres.",
             disabled: "La pissarra està desactivada en aquest món.",
             loadError: "No s'ha pogut carregar la pissarra.",
+            full: "La pissarra és plena: el darrer dibuix no s'ha compartit. Esborra alguns elements o imatges.",
             rightsHint:
                 "Qui pot dibuixar segueix la propietat Drets de la zona: les seves etiquetes d'escriptura dibuixen, els altres només miren. Sense drets, tothom dibuixa.",
             clear: "Buida la pissarra",

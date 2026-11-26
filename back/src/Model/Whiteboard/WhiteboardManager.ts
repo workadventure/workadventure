@@ -139,7 +139,7 @@ export class WhiteboardManager {
                     console.warn(`Invalid whiteboard elements sent by user ${user.uuid}`, e);
                     return;
                 }
-                const { accepted, outdated } = board.scene.merge(elements);
+                const { accepted, outdated, full } = board.scene.merge(elements);
                 if (accepted.length > 0) {
                     this.markDirty(board);
                     this.broadcast(board, user, {
@@ -149,6 +149,9 @@ export class WhiteboardManager {
                 }
                 if (outdated.length > 0) {
                     this.send(board, user, { $case: "elements", elements: { elementsJson: JSON.stringify(outdated) } });
+                }
+                if (full) {
+                    this.send(board, user, { $case: "full", full: {} });
                 }
                 break;
             }

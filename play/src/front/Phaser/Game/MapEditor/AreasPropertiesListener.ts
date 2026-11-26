@@ -2125,6 +2125,7 @@ export class AreasPropertiesListener {
                 // Excalidraw names English "en" and takes the other WorkAdventure locales as they are.
                 langCode: get(locale).startsWith("en") ? "en" : get(locale),
                 filesUrl: this.whiteboardFilesUrl(areaData.id, property.id),
+                fullMessage: get(LL).mapEditor.properties.whiteboard.full(),
             });
             highlightedEmbedScreen.highlight(videoBox);
         };

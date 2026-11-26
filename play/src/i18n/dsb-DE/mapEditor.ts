@@ -251,6 +251,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Běła tafla, kótaruž wšykne w tom wobceŕku źěle. Kuždy wiźi kreslanki direktnje, ze kursorami drugich.",
             disabled: "Běła tafla jo w toś tom swěśe znjemóžnjona.",
             loadError: "Běła tafla njejo se dała zacytaś.",
+            full: "Běła tafla jo połna: wašo slědne kreslenje njejo se źěliło. Wulašujśo někotare elementy abo wobraze.",
             rightsHint:
                 "Chto smějo kresliś, slědujo kakosći Pšawa wobceŕka: jogo pisańske tagi kreslijo, drugie jano glědaju. Bźez pšawow kreslijo wšykne.",
             clear: "Tablu wuprozniś",

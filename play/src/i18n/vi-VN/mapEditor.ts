@@ -246,6 +246,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Một bảng trắng dùng chung cho mọi người trong khu vực. Mọi người thấy nét vẽ trực tiếp, cùng con trỏ của người khác.",
             disabled: "Bảng trắng đã bị tắt trong thế giới này.",
             loadError: "Không thể tải bảng trắng.",
+            full: "Bảng trắng đã đầy: nét vẽ cuối của bạn chưa được chia sẻ. Hãy xóa bớt một số phần tử hoặc hình ảnh.",
             rightsHint:
                 "Ai được vẽ tuân theo thuộc tính Quyền của khu vực: thẻ ghi được vẽ, người khác chỉ xem. Không có quyền thì mọi người đều vẽ.",
             clear: "Xóa bảng trắng",

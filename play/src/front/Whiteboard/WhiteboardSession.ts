@@ -41,6 +41,8 @@ const FILE_EXTENSIONS: Readonly<Record<string, string>> = {
 
 export interface WhiteboardSessionListener {
     onCanWriteChange(canWrite: boolean): void;
+    /** The back refused what was just drawn: the board is full. */
+    onFull(): void;
 }
 
 /**
@@ -213,6 +215,10 @@ export class WhiteboardSession {
             case "participants": {
                 this.participants = payload.participants.participants;
                 this.refreshCollaborators();
+                break;
+            }
+            case "full": {
+                this.listener.onFull();
                 break;
             }
             default: {

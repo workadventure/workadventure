@@ -66,8 +66,8 @@ describe("WhiteboardScene limits and clear", () => {
         const scene = new WhiteboardScene(
             Array.from({ length: MAX_ELEMENTS_PER_BOARD }, (_, i) => ({ ...rect(1, 1), id: `e${i}` })),
         );
-        expect(scene.merge([{ ...rect(1, 1), id: "one-too-many" }]).accepted).toHaveLength(0);
-        expect(scene.merge([{ ...rect(2, 1), id: "e0" }]).accepted).toHaveLength(1);
+        expect(scene.merge([{ ...rect(1, 1), id: "one-too-many" }])).toMatchObject({ accepted: [], full: true });
+        expect(scene.merge([{ ...rect(2, 1), id: "e0" }])).toMatchObject({ full: false });
     });
 
     it("refuses what would make an element or the board too big, and brings the sender back in line", () => {
@@ -76,11 +76,14 @@ describe("WhiteboardScene limits and clear", () => {
         const huge = scene.merge([rect(2, 1, padding(MAX_ELEMENT_BYTES))]);
         expect(huge.accepted).toHaveLength(0);
         expect(huge.outdated).toEqual([rect(1, 1)]);
+        expect(huge.full).toBe(true);
 
         const chunk = MAX_ELEMENT_BYTES - 1000;
         const count = Math.ceil(MAX_BOARD_BYTES / chunk);
         const big = Array.from({ length: count }, (_, i) => ({ ...rect(1, 1, padding(chunk)), id: `big${i}` }));
-        expect(scene.merge(big).accepted.length).toBeLessThan(count);
+        const merged = scene.merge(big);
+        expect(merged.accepted.length).toBeLessThan(count);
+        expect(merged.full).toBe(true);
         // Deleting an element frees its room once it is pruned.
         scene.merge([{ ...rect(1, 1, padding(chunk)), id: "big0", version: 2, isDeleted: true, updated: 0 }]);
         scene.pruneDeletedBefore(1);

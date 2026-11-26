@@ -7,8 +7,9 @@ import { decodeStoragePath, mapPathUsingDomain } from "./PathMapper";
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 export const WHITEBOARD_FILE_MAX_BYTES = 4 * 1024 * 1024;
-// The back refuses to grow a board past 10 MB (MAX_BOARD_BYTES): anything bigger did not come from it.
-export const WHITEBOARD_SCENE_MAX_BYTES = 11 * 1024 * 1024;
+// The back refuses to grow a board past 15 MB (MAX_BOARD_BYTES): anything bigger did not come from it. gRPC caps a
+// message at 20 MB.
+export const WHITEBOARD_SCENE_MAX_BYTES = 16 * 1024 * 1024;
 
 // The images Excalidraw lets people paste, by MIME type, and the extension they are stored under.
 export const WHITEBOARD_FILE_TYPES: Readonly<Record<string, string>> = {

@@ -27,7 +27,7 @@ export const MAX_ELEMENTS_PER_MESSAGE = 5000;
 // Deleted elements count too until they are pruned: a board is not meant to hold a whole diagram library.
 export const MAX_ELEMENTS_PER_BOARD = 20000;
 // The whole board travels in one gRPC message (join, save), capped at 20 MB: keep well below.
-export const MAX_BOARD_BYTES = 10 * 1024 * 1024;
+export const MAX_BOARD_BYTES = 15 * 1024 * 1024;
 // A long freehand line is the biggest element Excalidraw makes, far below this.
 export const MAX_ELEMENT_BYTES = 1024 * 1024;
 
@@ -70,12 +70,19 @@ export class WhiteboardScene {
      * Keeps the newer copy of each element. The stored copies of the elements that lost are returned
      * too, so that the sender can be brought back in line.
      */
-    public merge(incoming: WhiteboardElement[]): { accepted: WhiteboardElement[]; outdated: WhiteboardElement[] } {
+    public merge(incoming: WhiteboardElement[]): {
+        accepted: WhiteboardElement[];
+        outdated: WhiteboardElement[];
+        /** Something was refused because the board, or the element, is too big. */
+        full: boolean;
+    } {
         const accepted: WhiteboardElement[] = [];
         const outdated: WhiteboardElement[] = [];
+        let full = false;
         for (const element of incoming) {
             const existing = this.elements.get(element.id);
             if (existing === undefined && this.elements.size >= MAX_ELEMENTS_PER_BOARD) {
+                full = true;
                 continue;
             }
             const elementBytes = byteSize(element);
@@ -83,6 +90,7 @@ export class WhiteboardScene {
                 elementBytes > MAX_ELEMENT_BYTES ||
                 this.bytes - (this.elementBytes.get(element.id) ?? 0) + elementBytes > MAX_BOARD_BYTES;
             if (tooBig) {
+                full = true;
                 if (existing !== undefined) {
                     outdated.push(existing);
                 }
@@ -98,7 +106,7 @@ export class WhiteboardScene {
                 outdated.push(existing);
             }
         }
-        return { accepted, outdated };
+        return { accepted, outdated, full };
     }
 
     /**

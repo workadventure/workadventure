@@ -253,6 +253,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Een whiteboard dat iedereen in het gebied deelt. Iedereen ziet de tekeningen live, met de cursors van de anderen.",
             disabled: "Het whiteboard is uitgeschakeld in deze wereld.",
             loadError: "Het whiteboard kon niet worden geladen.",
+            full: "Het whiteboard is vol: je laatste tekening is niet gedeeld. Verwijder enkele elementen of afbeeldingen.",
             rightsHint:
                 "Wie mag tekenen volgt de eigenschap Rechten van het gebied: de schrijftags tekenen, de anderen kijken alleen. Zonder rechten tekent iedereen.",
             clear: "Whiteboard leegmaken",

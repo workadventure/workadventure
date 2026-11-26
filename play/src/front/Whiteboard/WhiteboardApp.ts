@@ -24,6 +24,8 @@ export interface WhiteboardMountOptions {
     langCode: string;
     /** Where the board's images live in the map-storage; undefined leaves the image tool off. */
     filesUrl: URL | undefined;
+    /** Shown when the back refuses a drawing because the board is full. */
+    fullMessage: string;
 }
 
 export interface MountedWhiteboard {
@@ -44,6 +46,9 @@ export function mountWhiteboard(target: HTMLElement, options: WhiteboardMountOpt
             onCanWriteChange: (value) => {
                 canWrite = value;
                 render();
+            },
+            onFull: () => {
+                excalidrawApi?.setToast({ message: options.fullMessage, closable: true, duration: 8000 });
             },
         },
         options.filesUrl,

@@ -16,6 +16,7 @@ export interface WhiteboardOptions {
     connection: RoomConnection;
     langCode: string;
     filesUrl: URL | undefined;
+    fullMessage: string;
 }
 
 interface OpenWhiteboard {

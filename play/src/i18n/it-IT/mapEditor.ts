@@ -252,6 +252,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Una lavagna condivisa da tutti quelli che si trovano nell'area. Tutti vedono i disegni in diretta, con i cursori degli altri.",
             disabled: "La lavagna è disattivata in questo mondo.",
             loadError: "Impossibile caricare la lavagna.",
+            full: "La lavagna è piena: il tuo ultimo disegno non è stato condiviso. Elimina alcuni elementi o immagini.",
             rightsHint:
                 "Chi può disegnare segue la proprietà Diritti dell'area: i suoi tag di scrittura disegnano, gli altri guardano soltanto. Senza diritti, disegnano tutti.",
             clear: "Svuota la lavagna",

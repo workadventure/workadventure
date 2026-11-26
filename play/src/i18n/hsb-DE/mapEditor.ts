@@ -250,6 +250,7 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
                 "Běła tafla, kotruž wšitcy we wobłuku dźěla. Kóždy widźi rysowanki direktnje, z kursorami druhich.",
             disabled: "Běła tafla je w tutym swěće znjemóžnjena.",
             loadError: "Běła tafla njeda so začitać.",
+            full: "Běła tafla je połna: waše poslednje rysowanje njeje so dźěliło. Zhašejće někotre elementy abo wobrazy.",
             rightsHint:
                 "Štó smě rysować, slěduje kajkosći Prawa wobłuka: jeho pisanske tagi rysuja, druzy jenož hladaja. Bjez prawow rysuja wšitcy.",
             clear: "Taflu wuprózdnić",
