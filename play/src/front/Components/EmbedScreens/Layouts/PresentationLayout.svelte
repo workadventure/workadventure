@@ -7,8 +7,7 @@
     import { inExternalServiceStore, proximityMeetingStore } from "../../../Stores/MyMediaStore";
     import { streamableCollectionStore } from "../../../Stores/StreamableCollectionStore";
     import { highlightFullScreen } from "../../../Stores/ActionsCamStore";
-    import { isOnOneLine } from "../../../Stores/VideoLayoutStore";
-    import { highlightCollapsedStore } from "../../../Stores/HighlightCollapsedStore";
+    import { isOnOneLine, playerMovedInTheLast10Seconds } from "../../../Stores/VideoLayoutStore";
     import PictureInPictureActionBar from "../../ActionBar/PictureInPictureActionBar.svelte";
     import { activePictureInPictureStore, screenShareStreamElementsStore } from "../../../Stores/PeerStore";
     import type { CamerasContainerMode } from "../../Video/VideoBoxLayout";
@@ -102,11 +101,6 @@
             $highlightedEmbedScreen,
         ),
     );
-    // Alone with a whiteboard, nothing else is on stage and the board would span the whole window: keep the
-    // map visible around it.
-    let narrowHighlight = $derived(
-        $streamableCollectionStore.size === 1 && $highlightedEmbedScreen?.uniqueId.startsWith("whiteboard-") === true,
-    );
     let pipHighlightLayoutEnabled = $derived(
         inPictureInPicture && $activePictureInPictureStore && pictureInPictureHighlightedScreen != undefined,
     );
@@ -164,7 +158,7 @@
             </div>
         {/if}
 
-        {#if $streamableCollectionStore.size > 0 && pictureInPictureHighlightedScreen && !$highlightCollapsedStore}
+        {#if $streamableCollectionStore.size > 0 && pictureInPictureHighlightedScreen && !$playerMovedInTheLast10Seconds}
             <div
                 id="highlighted-media"
                 class="md:mb-0"
@@ -174,10 +168,7 @@
                     !pipHighlightLayoutEnabled}
                 class:mb-8={!inPictureInPicture || pictureInPictureHighlightedScreen == undefined}
                 class:mb-0={inPictureInPicture && pictureInPictureHighlightedScreen != undefined}
-                class:w-full={narrowHighlight}
-                class:mx-auto={narrowHighlight}
                 style={pipHighlightContainerStyle}
-                style:max-width={narrowHighlight ? "75%" : undefined}
                 bind:this={highlightScreen}
             >
                 {#key pictureInPictureHighlightedScreen.uniqueId}

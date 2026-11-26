@@ -12,17 +12,13 @@ The whiteboard property attaches a collaborative whiteboard to an area. Everybod
 
 The whiteboard is [Excalidraw](https://excalidraw.com), drawn by WorkAdventure itself: there is no external website and no extra service to install. Drawings go through the WorkAdventure server only.
 
-The board shows up like a screen share, and at the same size: in the middle of the screen, above the cameras, with the map still visible around it. It stays there while you walk around the area.
+The board opens in a panel beside the map, like a website opened from an area, with the name of the area as its title. You keep seeing the map and the cameras while you draw.
 
 ![](../../images/editor/whiteboard/whiteboard-1.png)
 
-The buttons at the bottom of the board put it fullscreen (the cameras move to a strip on the side) or shrink it to a tile among the cameras.
+The button at the top right of the panel puts the board fullscreen; click it again to bring the map back. The cross on the board's tab closes it.
 
 ![](../../images/editor/whiteboard/whiteboard-2.png)
-
-Shrunk, the tile shows a live picture of the board and its name: you see what the others draw without opening it. Click the tile to bring the board back.
-
-![](../../images/editor/whiteboard/whiteboard-4.png)
 
 ## Add a whiteboard to an area
 
@@ -33,8 +29,6 @@ While editing an area, select the "Whiteboard" property. You can choose when the
 
 ![](../../images/editor/whiteboard/whiteboard-3.png)
 
-While the map editor is open, the board shrinks to a tile among the cameras, so that it does not hide the map.
-
 ## Saved with the map
 
 The board is kept with the map: walk out and come back the next day, it is still there. It is saved every few seconds while people draw, and as soon as the last person leaves. Deleting the area, the whiteboard property or the map deletes the board.
@@ -44,6 +38,8 @@ Turn on **Ephemeral whiteboard** for a board that is never saved: it empties its
 ## Images
 
 Paste or drop an image on the board to share it. Images are stored with the board, only reach the people allowed to see it, and are deleted with it. PNG, JPEG, GIF, WebP and SVG images up to 4 MB are accepted.
+
+A board holds up to 15 MB of drawings. Past that, what you just drew is not shared and a message says the board is full: delete some elements or images, or export the board.
 
 ## Exporting
 

@@ -13,7 +13,6 @@ import { highlightedEmbedScreen } from "./HighlightedEmbedScreenStore";
 import { embedScreenLayoutStore } from "./EmbedScreenLayoutStore";
 
 import { scriptingVideoStore } from "./ScriptingVideoStore";
-import { whiteboardStore } from "./WhiteboardStore";
 import { myCameraStore } from "./MyMediaStore";
 import {
     availabilityStatusStore,
@@ -185,7 +184,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             videoStreamElementsStore,
             screenSharingLocalVideoBox,
             scriptingVideoStore,
-            whiteboardStore,
             myCameraStore,
             myCameraPeerStore,
             cameraEnergySavingStore,
@@ -204,7 +202,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
                 $videoStreamElementsStore,
                 $screenSharingLocalVideoBox,
                 $scriptingVideoStore,
-                $whiteboardStore,
                 $myCameraStore,
                 $myCameraPeerStore,
                 $cameraEnergySavingStore,
@@ -259,8 +256,6 @@ function createStreamableCollectionStore(): Readable<Map<string, VideoBox>> {
             if ($isListenerStore && (peers.size === 0 || (peers.size === 1 && peers.has("-1")))) {
                 addPeer(listenerBoxVideoBox);
             }
-
-            $whiteboardStore.forEach(addPeer);
 
             const $highlightedEmbedScreen = get(highlightedEmbedScreen);
 
