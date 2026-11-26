@@ -3,6 +3,7 @@
     import { get } from "svelte/store";
     import { CancelablePromise } from "cancelable-promise";
     import Debug from "debug";
+    import type { DesktopCapturerSource, SourcesOptions } from "@workadventure/desktop-api";
     import type { JitsiCoWebsite, JitsiApi, JitsiOptions } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { defaultInterfaceConfig, mergeConfig } from "../../WebRtc/CoWebsite/JitsiCoWebsite";
     import { jitsiExternalApiFactory } from "../../WebRtc/JitsiExternalApiFactory";
@@ -75,6 +76,35 @@
         }
     };
 
+    // In Electron, Jitsi's own screen-share picker asks its host page for the sources through the
+    // external API, the way the jitsi-meet-electron SDK answers it. Without an answer it spins forever.
+    const onRequestDesktopSources = (
+        request: { options: SourcesOptions },
+        callback: (response: { sources: Array<DesktopCapturerSource & { thumbnail: { dataUrl: string } }> }) => void,
+    ) => {
+        // An empty list, not { error }: Jitsi's picker turns an error into null, throws on it and keeps spinning.
+        const answerNoSources = (reason: unknown) => {
+            console.warn("Could not list the screens and windows for Jitsi screen sharing", reason);
+            callback({ sources: [] });
+        };
+        const getSources = window.WAD?.getDesktopCapturerSources;
+        if (!getSources) {
+            answerNoSources("This desktop app does not expose getDesktopCapturerSources");
+            return;
+        }
+        getSources(request.options)
+            .then(
+                (sources) =>
+                    callback({
+                        sources: sources.map((source) => ({ ...source, thumbnail: { dataUrl: source.thumbnailURL } })),
+                    }),
+                // Only a failure to list the sources answers with an empty list.
+                answerNoSources,
+            )
+            // Jitsi was closed while the sources were loading: its transport is gone and nobody waits for them.
+            .catch((error) => debug("Jitsi closed before the screen-share sources arrived", error));
+    };
+
     function updateParticipantsCountStore() {
         jitsiParticipantsCountStore.set(jitsiApi?.getParticipantsInfo().length ?? 0);
     }
@@ -145,6 +175,7 @@
                     jitsiApi.addListener("participantJoined", onParticipantsCountChange);
                     jitsiApi.addListener("participantLeft", onParticipantsCountChange);
                     jitsiApi.addListener("participantKickedOut", onParticipantsCountChange);
+                    jitsiApi.addListener("_requestDesktopSources", onRequestDesktopSources);
                 });
 
                 jitsiMeetLoadedPromise
@@ -182,6 +213,7 @@
             jitsiApi.removeListener("participantJoined", onParticipantsCountChange);
             jitsiApi.removeListener("participantLeft", onParticipantsCountChange);
             jitsiApi.removeListener("participantKickedOut", onParticipantsCountChange);
+            jitsiApi.removeListener("_requestDesktopSources", onRequestDesktopSources);
             jitsiApi.removeListener("videoConferenceLeft", onVideoConferenceLeft);
             jitsiApi.removeListener("readyToClose", onReadyToClose);
             jitsiApi.dispose();
