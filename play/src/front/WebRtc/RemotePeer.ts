@@ -135,7 +135,10 @@ export class RemotePeer extends Peer implements Streamable {
         const ZodCandidate = z.object({
             type: z.literal("candidate"),
         });
-        if (ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
+        // Only for the first connection: after it, an ICE outage also shows "connecting" and its ICE restart sends new
+        // candidates, but nothing would clear this timer once ICE recovers, and the "error" status it sets would keep
+        // the video tile on the avatar for good. ICE recovery has its own timeouts.
+        if (!this._connected && ZodCandidate.safeParse(data).success && get(this._statusStore) === "connecting") {
             // If the signal is a candidate, we set a connection timer
             if (this.connectTimeout) {
                 clearTimeout(this.connectTimeout);
@@ -593,7 +596,7 @@ export class RemotePeer extends Peer implements Streamable {
                     // stable MediaStream inside the RemotePeer where we add / remove tracks on the fly.
                     this.localStream = new MediaStream();
                     this.addStream(this.localStream);
-                    console.log("[WebRTC] stream sent successfully", {
+                    debug("[WebRTC] stream sent successfully %o", {
                         userId: this.user.userId,
                         spaceUserId: this._spaceUserId,
                         type: this.type,
@@ -791,7 +794,7 @@ export class RemotePeer extends Peer implements Streamable {
      */
     private stream(stream: MediaStream) {
         debug("Receiving stream from peer", this._spaceUserId);
-        console.log("[WebRTC] stream received successfully", {
+        debug("[WebRTC] stream received successfully %o", {
             userId: this.user.userId,
             spaceUserId: this._spaceUserId,
             type: this.type,
