@@ -36,6 +36,7 @@ export async function deleteAllRecordings(page: Page) {
             .catch(() => false)
     ) {
         await page.getByTestId("recording-delete-0").click();
+        await page.getByTestId("recording-delete-confirm-0").click();
         const deleteToast = page.getByText("Recording deleted successfully").last();
         await expect(deleteToast).toBeVisible();
         await expect(deleteToast).toBeHidden();

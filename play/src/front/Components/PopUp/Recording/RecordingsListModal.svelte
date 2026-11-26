@@ -334,10 +334,13 @@
 <div class="absolute inset-0 z-30 flex items-stretch justify-center sm:items-center">
     <section
         aria-labelledby="recordings-title"
-        class="flex w-full flex-col gap-4 bg-contrast/95 p-4 text-white backdrop-blur-md sm:h-fit sm:max-h-[86vh] sm:w-11/12 sm:max-w-[42rem] sm:rounded-lg sm:bg-contrast/80 sm:p-6 xl:max-w-[65rem]"
+        class="pointer-events-auto flex w-full flex-col gap-4 bg-contrast/95 p-4 text-white backdrop-blur-md sm:h-fit sm:max-h-[86vh] sm:w-11/12 sm:max-w-[42rem] sm:rounded-lg sm:bg-contrast/80 sm:p-6 xl:max-w-[65rem]"
     >
         <header class="flex items-center gap-2 sm:gap-3">
-            <h2 id="recordings-title" class="m-0 flex flex-1 items-baseline gap-2.5 text-xl font-bold">
+            <h2
+                id="recordings-title"
+                class="m-0 flex min-w-0 flex-1 items-baseline gap-2.5 text-lg leading-tight font-bold sm:text-xl"
+            >
                 {$LL.recording.title()}
                 {#if recordings.length > 0}
                     <span class="text-sm font-medium text-white/70">{recordings.length}</span>
@@ -491,15 +494,14 @@
                                 {@render thumbnail(record, index, "w-full rounded-t-lg", "h-8 w-8")}
                                 <span class="flex min-w-0 flex-col gap-0.5 px-3 pt-2.5 pb-3">
                                     <span class="truncate text-sm font-medium">{date}</span>
-                                    <span class="text-xs text-white/70">{formatSize(record.videoFile.size)}</span>
+                                    <span class="flex flex-wrap items-center gap-x-2 text-xs text-white/70">
+                                        {formatSize(record.videoFile.size)}
+                                        {#if days !== null}
+                                            {@render expiryBadge(days, "")}
+                                        {/if}
+                                    </span>
                                 </span>
                             </button>
-                            {#if days !== null}
-                                {@render expiryBadge(
-                                    days,
-                                    "absolute start-1.5 top-1.5 rounded-full bg-[#0f1826]/90 px-2 py-0.5 pointer-events-none",
-                                )}
-                            {/if}
                             {@render actions(
                                 record,
                                 index,
