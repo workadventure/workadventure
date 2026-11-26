@@ -18,7 +18,7 @@ import type {
     SimulatedConversationStep,
 } from "./onboardingRules";
 import type { ItemRun } from "./ItemRunner";
-import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
+import { anchorClicked, anchorNode, anchorsChanged } from "./OnboardingAnchors";
 import { startSimulatedConversation } from "./SimulatedConversation";
 import { renderMarkdown, renderPages } from "./renderMarkdown";
 
@@ -175,7 +175,7 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
         }
     }, ANCHOR_WAIT_MS);
     const unsubscribe = anchorsChanged.subscribe(update);
-    const offClick = onAnchorClick((anchor) => {
+    const clicks = anchorClicked.subscribe((anchor) => {
         // Whatever `advance` says: the user did what the step points at.
         if (anchor === step.anchor) {
             run.complete();
@@ -184,7 +184,7 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
 
     return () => {
         unsubscribe();
-        offClick();
+        clicks.unsubscribe();
         clearTimeout(waitTimer);
         clearTimeout(lostTimer);
         detach();

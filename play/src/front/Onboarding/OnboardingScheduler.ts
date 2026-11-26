@@ -6,7 +6,7 @@ import { analyticsClient } from "../Administration/AnalyticsClient";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { ONBOARDING_START_DELAY } from "../Enum/EnvironmentVariable";
-import { anchorNode, anchorsChanged, onAnchorUsed } from "./OnboardingAnchors";
+import { anchorNode, anchorsChanged, anchorUsed } from "./OnboardingAnchors";
 import { runItem } from "./ItemRunner";
 import { decide, inHelp, newState, OnboardingState, stepAnchor } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem } from "./onboardingRules";
@@ -72,13 +72,14 @@ export class OnboardingScheduler {
             this.evaluate();
         }, ONBOARDING_START_DELAY * 1000);
         const tick = setInterval(() => this.evaluate(), TICK_MS);
+        const used = anchorUsed.subscribe((anchor) =>
+            this.updateState((state) => !state.used.includes(anchor) && state.used.push(anchor)),
+        );
         this.cleanups.push(
             () => clearTimeout(startTimer),
             () => clearInterval(tick),
             anchorsChanged.subscribe(() => this.evaluate()),
-            onAnchorUsed((anchor) =>
-                this.updateState((state) => !state.used.includes(anchor) && state.used.push(anchor)),
-            ),
+            () => used.unsubscribe(),
         );
         for (const item of items) {
             if (item.audience?.allowed) {

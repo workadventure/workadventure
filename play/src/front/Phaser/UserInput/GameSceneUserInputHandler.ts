@@ -19,7 +19,7 @@ import { followRoleStore, followStateStore, followUsersStore } from "../../Store
 import { localUserStore } from "../../Connection/LocalUserStore";
 import { isKeyFromInteractiveElement } from "../../Utils/isKeyFromInteractiveElement";
 import { findShortcutAction } from "../../Stores/ShortcutsStore";
-import { markUsed } from "../../Onboarding/OnboardingAnchors";
+import { anchorUsed } from "../../Onboarding/OnboardingAnchors";
 import { waScaleManager } from "../Services/WaScaleManager";
 import { MapDragPointerCapture } from "./MapDragPointerCapture";
 import { MapDragGesture } from "./MapDragGesture";
@@ -303,7 +303,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
         switch (findShortcutAction(event)) {
             case "toggleMapEditor": {
                 if (get(mapManagerActivated) == false) return event;
-                markUsed("mapMenu.editMap");
+                anchorUsed.next("mapMenu.editMap");
                 mapEditorModeStore.switchMode(!get(mapEditorModeStore));
                 break;
             }
@@ -312,7 +312,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 break;
             }
             case "openChat":
-                markUsed("actionBar.chat");
+                anchorUsed.next("actionBar.chat");
                 this.handleKeyC();
                 break;
             case "openUserList":
@@ -354,7 +354,7 @@ export class GameSceneUserInputHandler implements UserInputHandlerInterface {
                 const emoteIndex = Number.parseInt(digit, 10);
 
                 if (isEmoteIndex(emoteIndex)) {
-                    markUsed("actionBar.emoji");
+                    anchorUsed.next("actionBar.emoji");
                     displayEmote(emoteIndex);
                 } else {
                     console.warn(`Invalid emote index: ${emoteIndex}`);

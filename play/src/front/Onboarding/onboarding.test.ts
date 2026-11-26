@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
+import { Subject } from "rxjs";
 import type { OnboardingAnchor } from "@workadventure/messages";
 import type { GameScene } from "../Phaser/Game/GameScene";
 import { decide, newState } from "./onboardingRules";
@@ -20,15 +21,15 @@ const visible = new Set<OnboardingAnchor>();
 vi.mock("./OnboardingAnchors", () => ({
     anchorNode: (anchor: OnboardingAnchor) => (visible.has(anchor) ? document.createElement("div") : undefined),
     anchorsChanged: writable(0),
-    onAnchorClick: () => () => {},
-    onAnchorUsed: () => () => {},
+    anchorClicked: new Subject(),
+    anchorUsed: new Subject(),
 }));
 vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: () => {} } }));
 vi.mock("../Connection/LocalUserStore", () => ({ localUserStore: { isLogged: () => true } }));
 vi.mock("../Touch/TouchScreenManager", () => ({ touchScreenManager: { primaryTouchDevice: false } }));
 
 const { runItem } = await import("./ItemRunner");
-const { anchorsChanged } = await import("./OnboardingAnchors");
+const { anchorsChanged, anchorUsed } = await import("./OnboardingAnchors");
 const { OnboardingScheduler } = await import("./OnboardingScheduler");
 
 const NOW = new Date(2026, 10, 24, 12, 0);
@@ -389,6 +390,13 @@ describe("OnboardingScheduler", () => {
         expect(started.map((step) => step.anchor)).toEqual(["actionBar.lockBubble"]);
         expect(state().requested).toBeUndefined();
         visible.clear();
+    });
+
+    it("records each anchor the user uses once, a click or a shortcut alike", () => {
+        const { state } = start({ tutorialDone: true });
+        anchorUsed.next("actionBar.chat");
+        anchorUsed.next("actionBar.chat");
+        expect(state().used).toEqual(["actionBar.chat"]);
     });
 
     it("writes tutorialDone when the tutorial ends, for map scripts", () => {
