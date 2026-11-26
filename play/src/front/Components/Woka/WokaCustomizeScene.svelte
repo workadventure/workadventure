@@ -368,7 +368,7 @@
                                     class="w-full flex flex-row flex-wrap items-start justify-start gap-3"
                                     id={`woka-line-${collectionIndex}`}
                                 >
-                                    {#each getAvailableTextures(collectionIndex, selectedBodyPart) as texture (texture.id)}
+                                    {#each getAvailableTextures(collectionIndex, selectedBodyPart) as texture, textureIndex (texture.id)}
                                         <button
                                             class="rounded border border-solid box-border p-0 h-fit {selectedTextures[
                                                 selectedBodyPart
@@ -377,6 +377,8 @@
                                                 : 'bg-white/10 hover:bg-white/20 border-transparent'}"
                                             onclick={() => selectTexture(selectedBodyPart, texture.id)}
                                             id={`texture-${selectedBodyPart}-${texture.id}`}
+                                            aria-label={$LL.actionbar.a11y.wokaOption({ index: textureIndex + 1 })}
+                                            aria-pressed={selectedTextures[selectedBodyPart] === texture.id}
                                         >
                                             <WokaImage
                                                 selectedTextures={{ [selectedBodyPart]: texture.id }}

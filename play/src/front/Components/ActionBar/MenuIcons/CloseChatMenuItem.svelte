@@ -4,6 +4,7 @@
     import { chatVisibilityStore } from "../../../Stores/ChatStore";
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { ProximityChatRoom } from "../../../Chat/Connection/Proximity/ProximityChatRoom";
+    import { LL } from "../../../../i18n/i18n-svelte";
     import { IconX } from "@wa-icons";
 
     interface Props {
@@ -21,6 +22,12 @@
     }
 </script>
 
-<ActionBarButton onclick={closeChat} dataTestId="closeChatButton" {last} disabledHelp={false}>
+<ActionBarButton
+    onclick={closeChat}
+    dataTestId="closeChatButton"
+    ariaLabel={$LL.actionbar.a11y.closeChat()}
+    {last}
+    disabledHelp={false}
+>
     <IconX font-size="20" />
 </ActionBarButton>
