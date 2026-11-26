@@ -115,8 +115,6 @@ services:
       CLIENT_DISCONNECTION_RETENTION_MS: "$CLIENT_DISCONNECTION_RETENTION_MS"
       PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES: "$PUSHER_ADMIN_WS_MAX_BACKPRESSURE_BYTES"
       ENABLE_TUTORIAL: "$ENABLE_TUTORIAL"
-      # A draft world item, which only users with the admin tag see, in the Help menu: onboarding.spec.ts opens it.
-      ONBOARDING_URL: ${ONBOARDING_URL:-http://maps.workadventure.localhost/tests/e2e-onboarding.json}
       # Woka settings
       DEFAULT_WOKA_NAME: ${DEFAULT_WOKA_NAME:-}
       DEFAULT_WOKA_TEXTURE: ${DEFAULT_WOKA_TEXTURE:-}

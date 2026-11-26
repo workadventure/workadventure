@@ -18,8 +18,8 @@
             "fr-FR": "Seuls les admins voient les brouillons"
           },
           "text": {
-            "en-US": "This item comes from the file at **ONBOARDING_URL**.",
-            "fr-FR": "Cet élément vient du fichier à l'adresse **ONBOARDING_URL**."
+            "en-US": "This item comes from the world's **onboarding file**.",
+            "fr-FR": "Cet élément vient du **fichier d'onboarding** du monde."
           }
         }
       ]
