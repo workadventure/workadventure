@@ -1,5 +1,5 @@
 diff --git a/node_modules/phaser/dist/phaser.esm.js b/node_modules/phaser/dist/phaser.esm.js
-index 07a961e..d40f5b4 100644
+index 07a961e..221337d 100644
 --- a/node_modules/phaser/dist/phaser.esm.js
 +++ b/node_modules/phaser/dist/phaser.esm.js
 @@ -208266,15 +208266,22 @@ module.exports = [
@@ -35,7 +35,7 @@ index 07a961e..d40f5b4 100644
      'uniform vec2 uAnimResolution;',
      '#endif',
      'varying vec2 outTexCoord;',
-@@ -208292,9 +208299,17 @@ module.exports = [
+@@ -208292,9 +208299,22 @@ module.exports = [
      '{',
      '    return uMainResolution;',
      '}',
@@ -51,10 +51,15 @@ index 07a961e..d40f5b4 100644
 -    '    return texel.r * 255.0 + (texel.g * 255.0 * 256.0) + (texel.b * 255.0 * 256.0 * 256.0) + (texel.a * 255.0 * 256.0 * 256.0 * 256.0);',
 +    '    vec4 b = texelBytes(texel);',
 +    '    return b.r + (b.g * 256.0) + (b.b * 256.0 * 256.0) + (b.a * 256.0 * 256.0 * 256.0);',
++    '}',
++    'vec2 indexToGrid (float index, float width)',
++    '{',
++    '    float row = floor((index + 0.5) / width);',
++    '    return vec2(index - row * width, row);',
      '}',
      'struct Tile',
      '{',
-@@ -208311,10 +208326,13 @@ module.exports = [
+@@ -208311,10 +208331,13 @@ module.exports = [
      '    vec2 tile = floor(texelCoord);',
      '    vec2 uv = fract(texelCoord);',
      '    uv.y = 1.0 - uv.y;',
@@ -70,7 +75,7 @@ index 07a961e..d40f5b4 100644
      '    {',
      '        return Tile(',
      '            0.0,',
-@@ -208333,6 +208351,16 @@ module.exports = [
+@@ -208333,6 +208356,16 @@ module.exports = [
      '    /* Bit 29 is animation. */',
      '    bool animated = mod(flags, 64.0) > 31.0;',
      '    #endif',
@@ -87,7 +92,47 @@ index 07a961e..d40f5b4 100644
      '    if (flipX)',
      '    {',
      '        uv.x = 1.0 - uv.x;',
-@@ -208403,7 +208431,21 @@ module.exports = [
+@@ -208353,18 +208386,16 @@ module.exports = [
+     '}',
+     'vec2 getFrameCorner (float index)',
+     '{',
+-    '    float x = mod(index, uTileColumns);',
+-    '    float y = floor(index / uTileColumns);',
+-    '    vec2 xy = vec2(x, y);',
++    '    vec2 xy = indexToGrid(index, uTileColumns);',
+     '    return xy * outTileStride + uTileWidthHeightMarginSpacing.zz;',
+     '}',
+     '#if MAX_ANIM_FRAMES > 0',
+     'float animationIndex (float index)',
+     '{',
+     '    float animTextureWidth = uAnimResolution.x;',
+-    '    vec2 index2D = vec2(mod(index, animTextureWidth), floor(index / animTextureWidth));',
++    '    vec2 index2D = indexToGrid(index, animTextureWidth);',
+     '    vec4 animDurationTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+-    '    index2D = vec2(mod(index + 1.0, animTextureWidth), floor((index + 1.0) / animTextureWidth));',
++    '    index2D = indexToGrid(index + 1.0, animTextureWidth);',
+     '    vec4 animIndexTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+     '    float animDuration = floatTexel(animDurationTexel);',
+     '    float animIndex = floatTexel(animIndexTexel);',
+@@ -208372,7 +208403,7 @@ module.exports = [
+     '    float animTimeAccum = 0.0;',
+     '    for (int i = 0; i < MAX_ANIM_FRAMES; i++)',
+     '    {',
+-    '        index2D = vec2(mod(animIndex, animTextureWidth), floor(animIndex / animTextureWidth));',
++    '        index2D = indexToGrid(animIndex, animTextureWidth);',
+     '        animDurationTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+     '        float frameDuration = floatTexel(animDurationTexel);',
+     '        animTimeAccum += frameDuration;',
+@@ -208383,7 +208414,7 @@ module.exports = [
+     '        animIndex += 2.0;',
+     '    }',
+     '    animIndex += 1.0;',
+-    '    index2D = vec2(mod(animIndex, animTextureWidth), floor(animIndex / animTextureWidth));',
++    '    index2D = indexToGrid(animIndex, animTextureWidth);',
+     '    animIndexTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+     '    float animFrameIndex = floatTexel(animIndexTexel);',
+     '    return animFrameIndex;',
+@@ -208403,7 +208434,21 @@ module.exports = [
      '    }',
      '    #endif',
      '    vec2 frameCorner = getFrameCorner(index);',
@@ -109,7 +154,7 @@ index 07a961e..d40f5b4 100644
      '}',
      '#pragma phaserTemplate(fragmentHeader)',
      'struct Samples {',
-@@ -208488,6 +208530,9 @@ module.exports = [
+@@ -208488,6 +208533,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -119,7 +164,7 @@ index 07a961e..d40f5b4 100644
      '    Samples samples = getFinalSamples(tile, layerTexCoord);',
      '    vec4 fragColor = samples.color;',
      '    #pragma phaserTemplate(declareSamples)',
-@@ -208526,7 +208571,11 @@ module.exports = [
+@@ -208526,7 +208574,11 @@ module.exports = [
      '{',
      '    gl_Position = uProjectionMatrix * vec4(inPosition, 1.0, 1.0);',
      '    outTexCoord = inTexCoord;',
@@ -132,7 +177,7 @@ index 07a961e..d40f5b4 100644
      '    #pragma phaserTemplate(vertexProcess)',
      '}',
  ].join('\n');
-@@ -243957,6 +244006,19 @@ var TilemapGPULayer = new Class({
+@@ -243957,6 +244009,19 @@ var TilemapGPULayer = new Class({
                  {
                      index |= 0x20000000;
                  }
@@ -152,7 +197,7 @@ index 07a961e..d40f5b4 100644
                  if (tile.index === -1)
                  {
                      // Set the fourth bit to 1 to indicate an empty tile.
-@@ -246698,7 +246760,11 @@ var Tileset = new Class({
+@@ -246698,7 +246763,11 @@ var Tileset = new Class({
                  var animationDuration = tileDatum.animationDuration;
  
                  // This index maps to an animation, not a single tile.
@@ -166,7 +211,7 @@ index 07a961e..d40f5b4 100644
                  // This animation points to a run of frames.
                  animations.push([ animationDuration, animFrames.length ]);
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
-index 8f3f66c..6a770c6 100644
+index 8f3f66c..7cb7b27 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/TilemapGPULayer-frag.js
 @@ -5,15 +5,22 @@ module.exports = [
@@ -202,7 +247,7 @@ index 8f3f66c..6a770c6 100644
      'uniform vec2 uAnimResolution;',
      '#endif',
      'varying vec2 outTexCoord;',
-@@ -31,9 +38,17 @@ module.exports = [
+@@ -31,9 +38,22 @@ module.exports = [
      '{',
      '    return uMainResolution;',
      '}',
@@ -218,10 +263,15 @@ index 8f3f66c..6a770c6 100644
 -    '    return texel.r * 255.0 + (texel.g * 255.0 * 256.0) + (texel.b * 255.0 * 256.0 * 256.0) + (texel.a * 255.0 * 256.0 * 256.0 * 256.0);',
 +    '    vec4 b = texelBytes(texel);',
 +    '    return b.r + (b.g * 256.0) + (b.b * 256.0 * 256.0) + (b.a * 256.0 * 256.0 * 256.0);',
++    '}',
++    'vec2 indexToGrid (float index, float width)',
++    '{',
++    '    float row = floor((index + 0.5) / width);',
++    '    return vec2(index - row * width, row);',
      '}',
      'struct Tile',
      '{',
-@@ -50,10 +65,13 @@ module.exports = [
+@@ -50,10 +70,13 @@ module.exports = [
      '    vec2 tile = floor(texelCoord);',
      '    vec2 uv = fract(texelCoord);',
      '    uv.y = 1.0 - uv.y;',
@@ -237,7 +287,7 @@ index 8f3f66c..6a770c6 100644
      '    {',
      '        return Tile(',
      '            0.0,',
-@@ -72,6 +90,16 @@ module.exports = [
+@@ -72,6 +95,16 @@ module.exports = [
      '    /* Bit 29 is animation. */',
      '    bool animated = mod(flags, 64.0) > 31.0;',
      '    #endif',
@@ -254,7 +304,47 @@ index 8f3f66c..6a770c6 100644
      '    if (flipX)',
      '    {',
      '        uv.x = 1.0 - uv.x;',
-@@ -142,7 +170,21 @@ module.exports = [
+@@ -92,18 +125,16 @@ module.exports = [
+     '}',
+     'vec2 getFrameCorner (float index)',
+     '{',
+-    '    float x = mod(index, uTileColumns);',
+-    '    float y = floor(index / uTileColumns);',
+-    '    vec2 xy = vec2(x, y);',
++    '    vec2 xy = indexToGrid(index, uTileColumns);',
+     '    return xy * outTileStride + uTileWidthHeightMarginSpacing.zz;',
+     '}',
+     '#if MAX_ANIM_FRAMES > 0',
+     'float animationIndex (float index)',
+     '{',
+     '    float animTextureWidth = uAnimResolution.x;',
+-    '    vec2 index2D = vec2(mod(index, animTextureWidth), floor(index / animTextureWidth));',
++    '    vec2 index2D = indexToGrid(index, animTextureWidth);',
+     '    vec4 animDurationTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+-    '    index2D = vec2(mod(index + 1.0, animTextureWidth), floor((index + 1.0) / animTextureWidth));',
++    '    index2D = indexToGrid(index + 1.0, animTextureWidth);',
+     '    vec4 animIndexTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+     '    float animDuration = floatTexel(animDurationTexel);',
+     '    float animIndex = floatTexel(animIndexTexel);',
+@@ -111,7 +142,7 @@ module.exports = [
+     '    float animTimeAccum = 0.0;',
+     '    for (int i = 0; i < MAX_ANIM_FRAMES; i++)',
+     '    {',
+-    '        index2D = vec2(mod(animIndex, animTextureWidth), floor(animIndex / animTextureWidth));',
++    '        index2D = indexToGrid(animIndex, animTextureWidth);',
+     '        animDurationTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+     '        float frameDuration = floatTexel(animDurationTexel);',
+     '        animTimeAccum += frameDuration;',
+@@ -122,7 +153,7 @@ module.exports = [
+     '        animIndex += 2.0;',
+     '    }',
+     '    animIndex += 1.0;',
+-    '    index2D = vec2(mod(animIndex, animTextureWidth), floor(animIndex / animTextureWidth));',
++    '    index2D = indexToGrid(animIndex, animTextureWidth);',
+     '    animIndexTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);',
+     '    float animFrameIndex = floatTexel(animIndexTexel);',
+     '    return animFrameIndex;',
+@@ -142,7 +173,21 @@ module.exports = [
      '    }',
      '    #endif',
      '    vec2 frameCorner = getFrameCorner(index);',
@@ -276,7 +366,7 @@ index 8f3f66c..6a770c6 100644
      '}',
      '#pragma phaserTemplate(fragmentHeader)',
      'struct Samples {',
-@@ -227,6 +269,9 @@ module.exports = [
+@@ -227,6 +272,9 @@ module.exports = [
      '{',
      '    vec2 layerTexCoord = outTexCoord;',
      '    Tile tile = getLayerData(layerTexCoord);',
@@ -304,7 +394,7 @@ index 83dc1e9..6ef0b12 100644
      '}',
  ].join('\n');
 diff --git a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
-index c5a0357..9b9eaa5 100644
+index c5a0357..b5dc5bd 100644
 --- a/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
 +++ b/node_modules/phaser/src/renderer/webgl/shaders/src/TilemapGPULayer.frag
 @@ -7,8 +7,10 @@
@@ -341,7 +431,7 @@ index c5a0357..9b9eaa5 100644
  uniform vec2 uAnimResolution;
  #endif
  
-@@ -42,10 +49,20 @@ vec2 getTexRes ()
+@@ -42,10 +49,34 @@ vec2 getTexRes ()
      return uMainResolution;
  }
  
@@ -360,10 +450,24 @@ index c5a0357..9b9eaa5 100644
 +    vec4 b = texelBytes(texel);
 +
 +    return b.r + (b.g * 256.0) + (b.b * 256.0 * 256.0) + (b.a * 256.0 * 256.0 * 256.0);
++}
++
++// WA patch: split an integer-valued index into (column, row) in a grid `width` cells wide.
++// `floor(index / width)` is not safe for this: GPUs divide by multiplying with the reciprocal,
++// so an exact multiple of `width` can land a hair below the integer quotient
++// (15.0 / 15.0 == 0.99999994). `floor()` then returns the previous row and `mod()` returns
++// `width` instead of 0, addressing a cell past the end of the row: every tile in the first
++// column of a tileset rendered as the last tile of the previous row. Dividing `index + 0.5`
++// keeps the quotient half a cell away from any integer.
++vec2 indexToGrid (float index, float width)
++{
++    float row = floor((index + 0.5) / width);
++
++    return vec2(index - row * width, row);
  }
  
  struct Tile
-@@ -67,12 +84,15 @@ Tile getLayerData (vec2 coord)
+@@ -67,12 +98,15 @@ Tile getLayerData (vec2 coord)
      // Invert Y, as textures are flipped in GL.
      uv.y = 1.0 - uv.y;
  
@@ -381,7 +485,7 @@ index c5a0357..9b9eaa5 100644
      {
          return Tile(
              0.0,
-@@ -95,6 +115,17 @@ Tile getLayerData (vec2 coord)
+@@ -95,6 +129,17 @@ Tile getLayerData (vec2 coord)
      bool animated = mod(flags, 64.0) > 31.0;
      #endif
  
@@ -399,7 +503,48 @@ index c5a0357..9b9eaa5 100644
      if (flipX)
      {
          uv.x = 1.0 - uv.x;
-@@ -188,7 +219,27 @@ vec2 getTileTexelCoord (Tile tile)
+@@ -120,9 +165,7 @@ Tile getLayerData (vec2 coord)
+ // Returns the texel coordinates of the tile in the main texture.
+ vec2 getFrameCorner (float index)
+ {
+-    float x = mod(index, uTileColumns);
+-    float y = floor(index / uTileColumns);
+-    vec2 xy = vec2(x, y);
++    vec2 xy = indexToGrid(index, uTileColumns);
+ 
+     return xy * outTileStride + uTileWidthHeightMarginSpacing.zz;
+ }
+@@ -133,9 +176,9 @@ float animationIndex (float index)
+ {
+     // Get initial animation data.
+     float animTextureWidth = uAnimResolution.x;
+-    vec2 index2D = vec2(mod(index, animTextureWidth), floor(index / animTextureWidth));
++    vec2 index2D = indexToGrid(index, animTextureWidth);
+     vec4 animDurationTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);
+-    index2D = vec2(mod(index + 1.0, animTextureWidth), floor((index + 1.0) / animTextureWidth));
++    index2D = indexToGrid(index + 1.0, animTextureWidth);
+     vec4 animIndexTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);
+ 
+     float animDuration = floatTexel(animDurationTexel);
+@@ -146,7 +189,7 @@ float animationIndex (float index)
+     float animTimeAccum = 0.0;
+     for (int i = 0; i < MAX_ANIM_FRAMES; i++)
+     {
+-        index2D = vec2(mod(animIndex, animTextureWidth), floor(animIndex / animTextureWidth));
++        index2D = indexToGrid(animIndex, animTextureWidth);
+         animDurationTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);
+         float frameDuration = floatTexel(animDurationTexel);
+         animTimeAccum += frameDuration;
+@@ -163,7 +206,7 @@ float animationIndex (float index)
+     animIndex += 1.0;
+ 
+     // Derive the animation frame index.
+-    index2D = vec2(mod(animIndex, animTextureWidth), floor(animIndex / animTextureWidth));
++    index2D = indexToGrid(animIndex, animTextureWidth);
+     animIndexTexel = texture2D(uAnimSampler, (index2D + 0.5) / uAnimResolution);
+     float animFrameIndex = floatTexel(animIndexTexel);
+ 
+@@ -188,7 +231,27 @@ vec2 getTileTexelCoord (Tile tile)
      #endif
  
      vec2 frameCorner = getFrameCorner(index);
@@ -427,7 +572,7 @@ index c5a0357..9b9eaa5 100644
  }
  
  #pragma phaserTemplate(fragmentHeader)
-@@ -301,6 +352,10 @@ void main ()
+@@ -301,6 +364,10 @@ void main ()
      vec2 layerTexCoord = outTexCoord;
      Tile tile = getLayerData(layerTexCoord);
  
