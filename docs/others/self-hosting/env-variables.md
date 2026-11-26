@@ -70,7 +70,7 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
 | `ONBOARDING_START_DELAY` | No | Seconds a user spends in a world before onboarding tips can start by themselves. Defaults to 30. |
-| `ONBOARDING_URL` | No | URL of a JSON file of onboarding tips and announcements for every world (format: https://docs.workadventu.re/docs/schema/onboarding.json), for instance uploaded with your maps. Browsers fetch it, so its server must allow CORS. It is public. Its mistakes show in the browser console. Without it, only the built-in tips and announcements show. |
+| `ONBOARDING_URL` | No | URL of a JSON file of onboarding tips and announcements (format: https://docs.workadventu.re/docs/schema/onboarding.json). Browsers fetch it, so its server must allow CORS. It is public. Its mistakes show in the browser console. Without it, only the built-in tips and announcements show. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
 | `ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between analytics batch flushes. Renamed from VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: one queue now carries every analytics event, video quality samples included. Defaults to 10000 |
 | `ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for analytics ingestion calls. Renamed from VIDEO_ANALYTICS_TIMEOUT_MS. Defaults to 2000 |
