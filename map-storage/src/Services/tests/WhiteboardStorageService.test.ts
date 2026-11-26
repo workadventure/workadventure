@@ -4,7 +4,8 @@ import type { FileSystemInterface } from "../../Upload/FileSystemInterface";
 // The real module validates the whole environment on import, which CI does not provide.
 vi.mock("../../Enum/EnvironmentVariable", () => ({ PATH_PREFIX: "", USE_DOMAIN_NAME_IN_PATH: false }));
 
-const { WhiteboardLocation, WhiteboardStorageService } = await import("../WhiteboardStorageService");
+const { WhiteboardLocation, WhiteboardStorageService, WHITEBOARD_SCENE_MAX_BYTES } =
+    await import("../WhiteboardStorageService");
 
 // The few calls the service makes, on an in-memory tree.
 function memoryFileSystem(): FileSystemInterface & { files: Map<string, string | Uint8Array> } {
@@ -59,7 +60,7 @@ describe("WhiteboardStorageService", () => {
             { id: "a", type: "rectangle" },
             { id: "b", type: "image", fileId: "kept" },
         ];
-        await service.save(location, JSON.stringify(elements));
+        await service.save(location, JSON.stringify(elements), true);
 
         const stored = JSON.parse(String(fileSystem.files.get(location.scenePath))) as { type: string };
         expect(stored.type).toBe("excalidraw");
@@ -70,5 +71,19 @@ describe("WhiteboardStorageService", () => {
         await service.delete(location);
         expect(await fileSystem.exist(location.scenePath)).toBe(false);
         expect(await fileSystem.exist(location.filePath("kept", "png"))).toBe(false);
+    });
+
+    it("keeps the unused images while somebody may be uploading one, and refuses an oversized board", async () => {
+        const service = new WhiteboardStorageService(fileSystem);
+        await fileSystem.writeByteArrayAsFile(location.filePath("uploading", "png"), new Uint8Array([1]));
+        await service.save(location, "[]", false);
+        expect(await fileSystem.exist(location.filePath("uploading", "png"))).toBe(true);
+
+        await expect(
+            service.save(location, JSON.stringify([{ id: "a", text: "x".repeat(WHITEBOARD_SCENE_MAX_BYTES) }]), false),
+        ).rejects.toThrow();
+
+        await service.deleteFiles(location);
+        expect(await fileSystem.exist(location.filePath("uploading", "png"))).toBe(false);
     });
 });

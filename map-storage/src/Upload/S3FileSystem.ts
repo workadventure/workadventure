@@ -121,6 +121,10 @@ export class S3FileSystem implements FileSystemInterface {
 
             if (objects && objects.length > 0) {
                 const filteredObjects = objects.filter((o) => {
+                    // Whiteboards and uploaded files are not part of the map: a new version of it keeps them.
+                    if (o.Key?.startsWith(directory + "private/")) {
+                        return false;
+                    }
                     if (o.Key?.includes(".wam")) {
                         const wamKey = o.Key?.slice().replace(directory, "");
                         const tmjKey = wamKey.slice().replace(".wam", ".tmj");

@@ -1,3 +1,4 @@
+import path from "path";
 import type { Express, NextFunction, Request, Response } from "express";
 import express from "express";
 import { jwtVerify } from "jose";
@@ -10,6 +11,9 @@ import { WHITEBOARD_FILE_MAX_BYTES, WHITEBOARD_FILE_TYPES, WhiteboardLocation } 
 
 // The token the pusher signs for the map-storage (see handleMapStorageJwtQuery): the map and the user's tags.
 const MapStorageToken = z.object({ wamUrl: z.string().url(), tags: z.array(z.string()).optional() });
+
+// ponytail: a cap on the number of images, not their bytes (4 MB each at most): ~400 MB per board in the worst case.
+const MAX_FILES_PER_BOARD = 100;
 
 const FILE_PATH =
     /^\/private\/whiteboards\/.+\/([A-Za-z0-9_-]{1,64})\/([A-Za-z0-9_-]{1,64})\/([A-Za-z0-9_-]{1,64})\.([a-z]{3,4})$/;
@@ -38,7 +42,7 @@ export function registerWhiteboardFileRoutes(app: Express, fileSystem: FileSyste
 
     app.put(
         "/private/whiteboards/{*splat}",
-        express.raw({ type: Object.keys(WHITEBOARD_FILE_TYPES), limit: WHITEBOARD_FILE_MAX_BYTES }),
+        // Who is asking comes first: nobody gets a 4 MB body read without the right to draw.
         (req: Request, res: Response, next: NextFunction) => {
             authorize(req, fileSystem, "write")
                 .then(async (storagePath) => {
@@ -46,14 +50,26 @@ export function registerWhiteboardFileRoutes(app: Express, fileSystem: FileSyste
                         res.sendStatus(403);
                         return;
                     }
-                    const extension = WHITEBOARD_FILE_TYPES[req.get("Content-Type") ?? ""];
-                    if (!Buffer.isBuffer(req.body) || req.body.length === 0 || !storagePath.endsWith("." + extension)) {
-                        res.sendStatus(400);
+                    if ((await countFiles(fileSystem, path.posix.dirname(storagePath) + "/")) >= MAX_FILES_PER_BOARD) {
+                        res.sendStatus(413);
                         return;
                     }
-                    await fileSystem.writeByteArrayAsFile(storagePath, req.body);
-                    res.sendStatus(204);
+                    res.locals.storagePath = storagePath;
+                    next();
                 })
+                .catch(next);
+        },
+        express.raw({ type: Object.keys(WHITEBOARD_FILE_TYPES), limit: WHITEBOARD_FILE_MAX_BYTES }),
+        (req: Request, res: Response, next: NextFunction) => {
+            const storagePath = z.string().parse(res.locals.storagePath);
+            const extension = WHITEBOARD_FILE_TYPES[req.get("Content-Type") ?? ""];
+            if (!Buffer.isBuffer(req.body) || req.body.length === 0 || !storagePath.endsWith("." + extension)) {
+                res.sendStatus(400);
+                return;
+            }
+            fileSystem
+                .writeByteArrayAsFile(storagePath, req.body)
+                .then(() => res.sendStatus(204))
                 .catch(next);
         },
     );
@@ -73,8 +89,9 @@ async function authorize(
     access: "read" | "write",
 ): Promise<string | undefined> {
     const match = FILE_PATH.exec(req.path);
-    const token = req.query.token;
-    if (!match || typeof token !== "string") {
+    // In a header, never in the query string, which ends up in proxy logs.
+    const token = /^Bearer (.+)$/.exec(req.get("Authorization") ?? "")?.[1];
+    if (!match || token === undefined) {
         return undefined;
     }
     const [, areaId, propertyId, fileId, extension] = match;
@@ -107,4 +124,12 @@ async function authorize(
     }
     const rights = getWhiteboardRights(area, tags);
     return (access === "read" ? rights.canRead : rights.canWrite) ? storagePath : undefined;
+}
+
+async function countFiles(fileSystem: FileSystemInterface, directory: string): Promise<number> {
+    try {
+        return (await fileSystem.listFiles(directory)).length;
+    } catch {
+        return 0; // No image stored yet.
+    }
 }

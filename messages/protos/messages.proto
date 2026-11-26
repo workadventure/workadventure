@@ -2117,6 +2117,9 @@ message WhiteboardStorageScene {
 message WhiteboardStorageSaveRequest {
   WhiteboardStorageKey key = 1;
   string elementsJson = 2;
+  // Also delete the images no element refers to. Only safe when nobody is on the board: an image being
+  // uploaded is not in the elements yet.
+  bool pruneFiles = 3;
 }
 
 message MapStorageDeleteMessage {

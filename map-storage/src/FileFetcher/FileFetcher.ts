@@ -1,3 +1,4 @@
+import path from "path";
 import type { Request, Response, NextFunction } from "express";
 import { mapPath } from "../Services/PathMapper";
 import type { FileSystemInterface } from "../Upload/FileSystemInterface";
@@ -5,9 +6,28 @@ import { CACHE_CONTROL } from "../Enum/EnvironmentVariable";
 
 const staticFileExtensions = ["png", "css", "js", "jpg", "jpeg", "ico", "svg", "html", "htm", "jpeg"];
 
-export function proxyFiles(fileSystem: FileSystemInterface) {
+/**
+ * True when the decoded path points into "private/" (whiteboards, uploaded files), however it is spelled:
+ * "%77", "//", "/./", "/x/../" or another case would otherwise slip past the routes that guard it.
+ */
+export function isPrivatePath(unescapedPath: string): boolean {
+    const firstSegment = path.posix
+        .normalize("/" + unescapedPath)
+        .split("/")
+        .find((segment) => segment !== "");
+    return firstSegment?.toLowerCase() === "private";
+}
+
+/**
+ * Serves the stored files. "private/" is only served when the route already checked the caller (allowPrivate).
+ */
+export function proxyFiles(fileSystem: FileSystemInterface, { allowPrivate = false } = {}) {
     return (req: Request, res: Response, next: NextFunction) => {
         const unescapedPath = decodeURIComponent(req.path.replace(/\+/g, " "));
+        if (!allowPrivate && isPrivatePath(unescapedPath)) {
+            res.sendStatus(404);
+            return;
+        }
         const virtualPath = mapPath(unescapedPath, req);
 
         const fileName = req.path.split("/").pop();

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+    MAX_BOARD_BYTES,
+    MAX_ELEMENT_BYTES,
     MAX_ELEMENTS_PER_BOARD,
     parseWhiteboardElements,
     WhiteboardScene,
@@ -41,6 +43,13 @@ describe("WhiteboardScene", () => {
         expect(() => parseWhiteboardElements("{}")).toThrow();
         expect(() => parseWhiteboardElements(JSON.stringify([{ id: "x" }]))).toThrow();
     });
+
+    it("rejects an image whose file id is a URL or a path", () => {
+        const image = (fileId: string) => JSON.stringify([rect(1, 1, { type: "image", fileId })]);
+        expect(parseWhiteboardElements(image("0123456789abcdef0123456789abcdef01234567"))).toHaveLength(1);
+        expect(() => parseWhiteboardElements(image("https://example.com/x"))).toThrow();
+        expect(() => parseWhiteboardElements(image("../../maps/office"))).toThrow();
+    });
 });
 
 describe("WhiteboardScene limits and clear", () => {
@@ -59,5 +68,22 @@ describe("WhiteboardScene limits and clear", () => {
         );
         expect(scene.merge([{ ...rect(1, 1), id: "one-too-many" }]).accepted).toHaveLength(0);
         expect(scene.merge([{ ...rect(2, 1), id: "e0" }]).accepted).toHaveLength(1);
+    });
+
+    it("refuses what would make an element or the board too big, and brings the sender back in line", () => {
+        const padding = (bytes: number) => ({ text: "x".repeat(bytes) });
+        const scene = new WhiteboardScene([rect(1, 1)]);
+        const huge = scene.merge([rect(2, 1, padding(MAX_ELEMENT_BYTES))]);
+        expect(huge.accepted).toHaveLength(0);
+        expect(huge.outdated).toEqual([rect(1, 1)]);
+
+        const chunk = MAX_ELEMENT_BYTES - 1000;
+        const count = Math.ceil(MAX_BOARD_BYTES / chunk);
+        const big = Array.from({ length: count }, (_, i) => ({ ...rect(1, 1, padding(chunk)), id: `big${i}` }));
+        expect(scene.merge(big).accepted.length).toBeLessThan(count);
+        // Deleting an element frees its room once it is pruned.
+        scene.merge([{ ...rect(1, 1, padding(chunk)), id: "big0", version: 2, isDeleted: true, updated: 0 }]);
+        scene.pruneDeletedBefore(1);
+        expect(scene.merge([{ ...rect(1, 1, padding(chunk)), id: "late" }]).accepted).toHaveLength(1);
     });
 });

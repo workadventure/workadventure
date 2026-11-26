@@ -7,6 +7,8 @@ import { decodeStoragePath, mapPathUsingDomain } from "./PathMapper";
 const ID = /^[A-Za-z0-9_-]{1,64}$/;
 
 export const WHITEBOARD_FILE_MAX_BYTES = 4 * 1024 * 1024;
+// The back refuses to grow a board past 10 MB (MAX_BOARD_BYTES): anything bigger did not come from it.
+export const WHITEBOARD_SCENE_MAX_BYTES = 11 * 1024 * 1024;
 
 // The images Excalidraw lets people paste, by MIME type, and the extension they are stored under.
 export const WHITEBOARD_FILE_TYPES: Readonly<Record<string, string>> = {
@@ -84,7 +86,10 @@ export class WhiteboardStorageService {
      * Writes the scene as a regular .excalidraw file (it opens in excalidraw.com as is, without its images),
      * then deletes the images no element refers to anymore.
      */
-    public async save(location: WhiteboardLocation, elementsJson: string): Promise<void> {
+    public async save(location: WhiteboardLocation, elementsJson: string, pruneFiles: boolean): Promise<void> {
+        if (Buffer.byteLength(elementsJson) > WHITEBOARD_SCENE_MAX_BYTES) {
+            throw new Error("The whiteboard is too big to be saved");
+        }
         const elements = z.array(z.unknown()).parse(JSON.parse(elementsJson));
         await this.fileSystem.writeStringAsFile(
             location.scenePath,
@@ -98,6 +103,9 @@ export class WhiteboardStorageService {
             }),
         );
 
+        if (!pruneFiles) {
+            return;
+        }
         const usedFileIds = new Set<string>();
         for (const element of elements) {
             const image = ImageElement.safeParse(element);
@@ -120,6 +128,11 @@ export class WhiteboardStorageService {
 
     public async delete(location: WhiteboardLocation): Promise<void> {
         await this.fileSystem.deleteFiles(location.scenePath);
+        await this.deleteFiles(location);
+    }
+
+    /** The images alone: an ephemeral board has no scene file, but its images were stored to be shared. */
+    public async deleteFiles(location: WhiteboardLocation): Promise<void> {
         await this.fileSystem.deleteFiles(location.filesDirectory);
     }
 }

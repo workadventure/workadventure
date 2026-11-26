@@ -123,10 +123,24 @@ const mapStorageServer: MapStorageServer = {
     },
     saveWhiteboard(call: ServerUnaryCall<WhiteboardStorageSaveRequest, Empty>, callback: sendUnaryData<Empty>): void {
         (async () => {
-            await whiteboardStorageService.save(whiteboardLocation(call.request.key), call.request.elementsJson);
+            await whiteboardStorageService.save(
+                whiteboardLocation(call.request.key),
+                call.request.elementsJson,
+                call.request.pruneFiles,
+            );
             callback(null);
         })().catch((e: unknown) => {
             console.error(`[${new Date().toISOString()}] An error occurred in saveWhiteboard`, e);
+            Sentry.captureException(e);
+            callback({ name: "MapStorageError", message: asError(e).message }, null);
+        });
+    },
+    deleteWhiteboardFiles(call: ServerUnaryCall<WhiteboardStorageKey, Empty>, callback: sendUnaryData<Empty>): void {
+        (async () => {
+            await whiteboardStorageService.deleteFiles(whiteboardLocation(call.request));
+            callback(null);
+        })().catch((e: unknown) => {
+            console.error(`[${new Date().toISOString()}] An error occurred in deleteWhiteboardFiles`, e);
             Sentry.captureException(e);
             callback({ name: "MapStorageError", message: asError(e).message }, null);
         });

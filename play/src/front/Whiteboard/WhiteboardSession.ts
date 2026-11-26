@@ -25,6 +25,9 @@ import type { WhiteboardParticipant, WhiteboardPointerMessage, WhiteboardServerM
 import type { RoomConnection } from "../Connection/RoomConnection";
 
 const ELEMENTS_THROTTLE_MS = 50;
+// The file ids Excalidraw makes (a SHA-1 in hex). Anything else, a URL or a path in particular, comes from a forged
+// element and must never be fetched with our token.
+const FILE_ID = /^[A-Za-z0-9_-]{1,64}$/;
 const POINTER_THROTTLE_MS = 50;
 
 // The images the map-storage accepts (see WhiteboardStorageService), and the extension they are stored under.
@@ -254,7 +257,7 @@ export class WhiteboardSession {
             }
             const file = files[element.fileId];
             const extension = file ? FILE_EXTENSIONS[file.mimeType] : undefined;
-            if (!file || !extension || this.transfers.has(file.id)) {
+            if (!file || !extension || !FILE_ID.test(file.id) || this.transfers.has(file.id)) {
                 continue;
             }
             this.transfers.add(file.id);
@@ -333,9 +336,14 @@ export class WhiteboardSession {
     private async fetchFile(fileName: string, init: RequestInit): Promise<Response> {
         const send = async () => {
             this.token ??= this.connection.queryMapStorageJwtToken().then((answer) => answer.jwt);
-            const url = new URL(fileName, this.filesUrl);
-            url.searchParams.set("token", await this.token);
-            return fetch(url, init);
+            const url = new URL(encodeURIComponent(fileName), this.filesUrl);
+            if (!this.filesUrl || url.origin !== this.filesUrl.origin) {
+                throw new Error(`Refusing to send the map-storage token to ${url.origin}`);
+            }
+            // In a header, not in the query string: the URL ends up in proxy logs.
+            const headers = new Headers(init.headers);
+            headers.set("Authorization", `Bearer ${await this.token}`);
+            return fetch(url, { ...init, headers });
         };
         const response = await send();
         if (response.status !== 403) {
@@ -410,6 +418,7 @@ function isSavedImage(
         !element.isDeleted &&
         element.status === "saved" &&
         element.fileId !== null &&
+        FILE_ID.test(element.fileId) &&
         typeof element.customData?.mimeType === "string"
     );
 }

@@ -31,6 +31,10 @@ export class DiskFileSystem implements FileSystemInterface {
                 const files = await this.getAllFilesWithin(fullPath, fullPath);
                 const promises: Promise<void>[] = [];
                 for (const file of files) {
+                    // Whiteboards and uploaded files are not part of the map: a new version of it keeps them.
+                    if (file.startsWith("private/")) {
+                        continue;
+                    }
                     if (file.includes(".wam")) {
                         const tmjKey = file.slice().replace(".wam", ".tmj");
                         // do not delete existing .wam file if there's no new version in zip and .tmj file with the same name exists

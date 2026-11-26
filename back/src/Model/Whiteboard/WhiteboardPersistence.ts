@@ -9,7 +9,8 @@ import type { WhiteboardElement } from "./WhiteboardScene";
  */
 export interface WhiteboardPersistence {
     load(key: WhiteboardStorageKey): Promise<WhiteboardElement[]>;
-    save(key: WhiteboardStorageKey, elements: WhiteboardElement[]): Promise<void>;
+    save(key: WhiteboardStorageKey, elements: WhiteboardElement[], pruneFiles: boolean): Promise<void>;
+    deleteFiles(key: WhiteboardStorageKey): Promise<void>;
 }
 
 export const mapStorageWhiteboardPersistence: WhiteboardPersistence = {
@@ -28,15 +29,17 @@ export const mapStorageWhiteboardPersistence: WhiteboardPersistence = {
             });
         });
     },
-    save(key, elements) {
+    save(key, elements, pruneFiles) {
         return new Promise((resolve, reject) => {
-            getMapStorageClient().saveWhiteboard({ key, elementsJson: JSON.stringify(elements) }, (error) => {
-                if (error) {
-                    reject(error);
-                    return;
-                }
-                resolve();
-            });
+            getMapStorageClient().saveWhiteboard(
+                { key, elementsJson: JSON.stringify(elements), pruneFiles },
+                (error) => (error ? reject(error) : resolve()),
+            );
+        });
+    },
+    deleteFiles(key) {
+        return new Promise((resolve, reject) => {
+            getMapStorageClient().deleteWhiteboardFiles(key, (error) => (error ? reject(error) : resolve()));
         });
     },
 };

@@ -111,6 +111,13 @@ function createWhiteboardStore() {
                 return videoBoxes;
             });
         },
+
+        /** When the game scene goes (map change, reconnection): a board is tied to the connection it opened with. */
+        closeAll(): void {
+            for (const propertyId of [...boards.keys()]) {
+                this.close(propertyId);
+            }
+        },
     };
 }
 

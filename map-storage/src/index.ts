@@ -191,7 +191,7 @@ app.get(
     (req, res, next) => {
         Promise.resolve(verifyJWT(req, res, next)).catch(next);
     },
-    proxyFiles(fileSystem),
+    proxyFiles(fileSystem, { allowPrivate: true }),
 );
 
 app.use(proxyFiles(fileSystem));

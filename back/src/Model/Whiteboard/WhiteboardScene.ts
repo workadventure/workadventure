@@ -12,6 +12,13 @@ const WhiteboardElement = z
         versionNonce: z.number().int(),
         isDeleted: z.boolean().optional(),
         updated: z.number().optional(),
+        // An image's file, fetched by every viewer with their map-storage token: a URL or a path here would send
+        // that token elsewhere. Excalidraw's own ids are SHA-1 hashes in hex.
+        fileId: z
+            .string()
+            .regex(/^[A-Za-z0-9_-]{1,64}$/)
+            .nullable()
+            .optional(),
     })
     .passthrough();
 export type WhiteboardElement = z.infer<typeof WhiteboardElement>;
@@ -19,6 +26,10 @@ export type WhiteboardElement = z.infer<typeof WhiteboardElement>;
 export const MAX_ELEMENTS_PER_MESSAGE = 5000;
 // Deleted elements count too until they are pruned: a board is not meant to hold a whole diagram library.
 export const MAX_ELEMENTS_PER_BOARD = 20000;
+// The whole board travels in one gRPC message (join, save), capped at 20 MB: keep well below.
+export const MAX_BOARD_BYTES = 10 * 1024 * 1024;
+// A long freehand line is the biggest element Excalidraw makes, far below this.
+export const MAX_ELEMENT_BYTES = 1024 * 1024;
 
 /**
  * Throws when the payload is not a JSON array of elements. A message holds fewer elements than a whole board.
@@ -46,9 +57,13 @@ export function isNewerElement(incoming: WhiteboardElement, existing: Whiteboard
  */
 export class WhiteboardScene {
     private readonly elements = new Map<string, WhiteboardElement>();
+    private readonly elementBytes = new Map<string, number>();
+    private bytes = 0;
 
     constructor(initialElements: WhiteboardElement[] = []) {
-        this.merge(initialElements);
+        for (const element of initialElements) {
+            this.set(element);
+        }
     }
 
     /**
@@ -63,8 +78,18 @@ export class WhiteboardScene {
             if (existing === undefined && this.elements.size >= MAX_ELEMENTS_PER_BOARD) {
                 continue;
             }
+            const elementBytes = byteSize(element);
+            const tooBig =
+                elementBytes > MAX_ELEMENT_BYTES ||
+                this.bytes - (this.elementBytes.get(element.id) ?? 0) + elementBytes > MAX_BOARD_BYTES;
+            if (tooBig) {
+                if (existing !== undefined) {
+                    outdated.push(existing);
+                }
+                continue;
+            }
             if (isNewerElement(element, existing)) {
-                this.elements.set(element.id, element);
+                this.set(element, elementBytes);
                 accepted.push(element);
             } else if (
                 existing !== undefined &&
@@ -92,7 +117,7 @@ export class WhiteboardScene {
                 versionNonce: Math.floor(Math.random() * 2 ** 31),
                 updated: Date.now(),
             };
-            this.elements.set(copy.id, copy);
+            this.set(copy);
             deleted.push(copy);
         }
         return deleted;
@@ -103,6 +128,8 @@ export class WhiteboardScene {
         for (const [id, element] of this.elements) {
             if (element.isDeleted === true && (element.updated ?? 0) < time) {
                 this.elements.delete(id);
+                this.bytes -= this.elementBytes.get(id) ?? 0;
+                this.elementBytes.delete(id);
             }
         }
     }
@@ -114,4 +141,14 @@ export class WhiteboardScene {
     public get size(): number {
         return this.elements.size;
     }
+
+    private set(element: WhiteboardElement, elementBytes = byteSize(element)): void {
+        this.bytes += elementBytes - (this.elementBytes.get(element.id) ?? 0);
+        this.elementBytes.set(element.id, elementBytes);
+        this.elements.set(element.id, element);
+    }
+}
+
+function byteSize(element: WhiteboardElement): number {
+    return Buffer.byteLength(JSON.stringify(element));
 }

@@ -3,7 +3,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { WAMFileFormat } from "@workadventure/map-editor";
 import type { SubMessage, WhiteboardStorageKey } from "@workadventure/messages";
 import type { User } from "../src/Model/User";
-import { WhiteboardManager, WHITEBOARD_EVICT_DELAY_MS } from "../src/Model/Whiteboard/WhiteboardManager";
+import {
+    WhiteboardManager,
+    WHITEBOARD_EVICT_DELAY_MS,
+    WHITEBOARD_SAVE_DELAY_MS,
+} from "../src/Model/Whiteboard/WhiteboardManager";
 import type { WhiteboardPersistence } from "../src/Model/Whiteboard/WhiteboardPersistence";
 import type { WhiteboardElement } from "../src/Model/Whiteboard/WhiteboardScene";
 
@@ -74,17 +78,22 @@ function sceneOf(user: { received: SubMessage[] }): unknown[] {
 
 describe("WhiteboardManager persistence", () => {
     let stored: Map<string, WhiteboardElement[]>;
-    let persistence: WhiteboardPersistence & { saves: number };
+    let persistence: WhiteboardPersistence & { saves: number; prunes: boolean[]; deletedFiles: number };
 
     beforeEach(() => {
         vi.useFakeTimers();
         stored = new Map([["area/board", [rect("from-storage")]]]);
-        const counting = { saves: 0 };
+        const counting = { saves: 0, prunes: [] as boolean[], deletedFiles: 0 };
         persistence = Object.assign(counting, {
             load: (key: WhiteboardStorageKey) => Promise.resolve(stored.get(`${key.areaId}/${key.propertyId}`) ?? []),
-            save: (key: WhiteboardStorageKey, elements: WhiteboardElement[]) => {
+            save: (key: WhiteboardStorageKey, elements: WhiteboardElement[], pruneFiles: boolean) => {
                 counting.saves++;
+                counting.prunes.push(pruneFiles);
                 stored.set(`${key.areaId}/${key.propertyId}`, elements);
+                return Promise.resolve();
+            },
+            deleteFiles: () => {
+                counting.deletedFiles++;
                 return Promise.resolve();
             },
         });
@@ -113,6 +122,8 @@ describe("WhiteboardManager persistence", () => {
         await manager.handleMessage(alice, leave);
         await vi.advanceTimersByTimeAsync(WHITEBOARD_EVICT_DELAY_MS + 1);
         expect(persistence.saves).toBe(0);
+        // Its images were stored for the others to fetch: they go with it.
+        expect(persistence.deletedFiles).toBe(1);
 
         const bob = makeUser(2);
         await manager.handleMessage(bob, join);
@@ -128,5 +139,43 @@ describe("WhiteboardManager persistence", () => {
         await manager.handleMessage(alice, draw([rect("lost")]));
         await vi.runOnlyPendingTimersAsync();
         expect(persistence.saves).toBe(0);
+    });
+
+    it("drops unused images only once nobody is on the board", async () => {
+        const manager = new WhiteboardManager(makeRoom(), persistence);
+        const alice = makeUser(1);
+        await manager.handleMessage(alice, join);
+        await manager.handleMessage(alice, draw([rect("new")]));
+        await vi.advanceTimersByTimeAsync(WHITEBOARD_SAVE_DELAY_MS + 1);
+        await manager.handleMessage(alice, draw([rect("new", 2)]));
+        await manager.handleMessage(alice, leave);
+        await vi.runOnlyPendingTimersAsync();
+        expect(persistence.prunes).toEqual([false, true]);
+    });
+
+    it("writes the saves of a board one after the other, the newest last", async () => {
+        const writes: string[][] = [];
+        let releaseFirst: () => void = () => undefined;
+        persistence.save = (key, elements) => {
+            writes.push(elements.map((element) => `${element.id}@${element.version}`));
+            return writes.length === 1
+                ? new Promise<void>((resolve) => {
+                      releaseFirst = resolve;
+                  })
+                : Promise.resolve();
+        };
+        const manager = new WhiteboardManager(makeRoom(), persistence);
+        const alice = makeUser(1);
+        await manager.handleMessage(alice, join);
+        await manager.handleMessage(alice, draw([rect("new")]));
+        await vi.advanceTimersByTimeAsync(WHITEBOARD_SAVE_DELAY_MS + 1);
+        // The first save hangs; a newer stroke and the leave ask for another one meanwhile.
+        await manager.handleMessage(alice, draw([rect("new", 2)]));
+        await manager.handleMessage(alice, leave);
+        await vi.advanceTimersByTimeAsync(0);
+        expect(writes).toHaveLength(1);
+        releaseFirst();
+        await vi.advanceTimersByTimeAsync(0);
+        expect(writes.at(-1)).toContain("new@2");
     });
 });

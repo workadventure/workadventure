@@ -35,6 +35,8 @@ interface Whiteboard {
     readonly scene: WhiteboardScene;
     readonly participants: Map<number, Participant>;
     dirty: boolean;
+    // The saves of a board run one after the other: an older one finishing last would overwrite a newer one.
+    saving: Promise<void>;
     saveTimer?: ReturnType<typeof setTimeout>;
     evictTimer?: ReturnType<typeof setTimeout>;
 }
@@ -92,7 +94,9 @@ export class WhiteboardManager {
                 .catch((e) => console.error("Could not save the whiteboards of a closing room", e))
                 .finally(() => {
                     this.stopTimers();
-                    this.boards.clear();
+                    for (const board of [...this.boards.values()]) {
+                        this.forget(board);
+                    }
                 });
         });
     }
@@ -186,7 +190,14 @@ export class WhiteboardManager {
         }
 
         const board = await this.getBoard(areaId, propertyId, found.property.ephemeral === true);
-        if (board === undefined || user.disconnected) {
+        if (board === undefined) {
+            return;
+        }
+        if (user.disconnected) {
+            // Loaded for nobody: forget it like any empty board.
+            if (board.participants.size === 0) {
+                this.scheduleEviction(board);
+            }
             return;
         }
         clearTimeout(board.evictTimer);
@@ -264,6 +275,7 @@ export class WhiteboardManager {
                 scene: new WhiteboardScene(elements),
                 participants: new Map(),
                 dirty: false,
+                saving: Promise.resolve(),
             };
             this.boards.set(WhiteboardManager.key(areaId, propertyId), board);
             return board;
@@ -283,7 +295,13 @@ export class WhiteboardManager {
         }
     }
 
-    private async save(board: Whiteboard): Promise<void> {
+    private save(board: Whiteboard): Promise<void> {
+        board.saving = board.saving.then(() => this.write(board));
+        return board.saving;
+    }
+
+    /** Never throws: a failed write marks the board dirty again, to be retried. */
+    private async write(board: Whiteboard): Promise<void> {
         clearTimeout(board.saveTimer);
         board.saveTimer = undefined;
         if (!board.dirty) {
@@ -299,7 +317,8 @@ export class WhiteboardManager {
         }
         board.scene.pruneDeletedBefore(Date.now() - DELETED_ELEMENT_RETENTION_MS);
         try {
-            await this.persistence.save(storageKey, board.scene.getElements());
+            // Unused images go only when nobody is on the board: one being uploaded is not in the elements yet.
+            await this.persistence.save(storageKey, board.scene.getElements(), board.participants.size === 0);
         } catch (e) {
             console.error(`Could not save the whiteboard ${board.areaId}/${board.propertyId}`, e);
             Sentry.captureException(e);
@@ -327,11 +346,28 @@ export class WhiteboardManager {
             this.save(board)
                 .catch((e) => console.error("Could not save a whiteboard", e))
                 .finally(() => {
-                    if (board.participants.size === 0 && !board.dirty) {
-                        this.boards.delete(WhiteboardManager.key(board.areaId, board.propertyId));
+                    if (board.participants.size > 0) {
+                        return;
                     }
+                    if (board.dirty) {
+                        // The save failed: keep the board until a retry succeeds.
+                        this.scheduleEviction(board);
+                        return;
+                    }
+                    this.forget(board);
                 });
         }, WHITEBOARD_EVICT_DELAY_MS);
+    }
+
+    private forget(board: Whiteboard): void {
+        this.boards.delete(WhiteboardManager.key(board.areaId, board.propertyId));
+        const storageKey = this.storageKey(board.areaId, board.propertyId);
+        if (board.ephemeral && storageKey !== undefined) {
+            // Its images were stored to be shared, the board itself never was.
+            this.persistence
+                .deleteFiles(storageKey)
+                .catch((e) => console.error("Could not delete the images of a whiteboard", e));
+        }
     }
 
     private storageKey(areaId: string, propertyId: string): WhiteboardStorageKey | undefined {
