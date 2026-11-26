@@ -16,7 +16,7 @@ The board opens in a panel beside the map, with the name of the area as its titl
 
 ![](../../images/editor/whiteboard/whiteboard-1.png)
 
-When a meeting starts, click **Put on stage** in the board's header: the board moves to the middle of the screen, under the cameras, and stays there while you walk around the area. The header shows who is on the board (click someone to follow their view), puts the board fullscreen with the cameras in a strip on the side, brings it **Back to the panel**, or closes it. The board remembers your choice the next time you open it.
+When a meeting starts, click **Show large** in the board's header: the board moves to the middle of the screen, under the cameras, and stays there while you walk around the area. The header shows who is on the board (click someone to follow their view), puts the board fullscreen with the cameras in a strip on the side, brings it back with **Show on the side**, or closes it. The board remembers your choice the next time you open it.
 
 ![](../../images/editor/whiteboard/whiteboard-2.png)
 

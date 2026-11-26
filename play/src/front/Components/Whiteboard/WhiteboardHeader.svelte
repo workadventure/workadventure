@@ -52,19 +52,19 @@
         <button
             class="h-9 px-3 shrink-0 rounded-md bg-secondary hover:bg-secondary-600 text-sm font-bold flex items-center gap-1.5"
             onclick={() => whiteboardStore.setMode(board.propertyId, "stage")}
-            data-testid="whiteboard-put-on-stage"
+            data-testid="whiteboard-show-large"
         >
             <IconPresentation font-size="16" />
-            {$LL.mapEditor.properties.whiteboard.putOnStage()}
+            {$LL.mapEditor.properties.whiteboard.showLarge()}
         </button>
     {:else}
         <button
             class="h-9 px-3 shrink-0 rounded-md border border-white/20 hover:bg-white/10 text-sm flex items-center gap-1.5"
             onclick={() => whiteboardStore.setMode(board.propertyId, "panel")}
-            data-testid="whiteboard-back-to-panel"
+            data-testid="whiteboard-show-on-side"
         >
             <IconLayoutSidebarRight font-size="16" />
-            {$LL.mapEditor.properties.whiteboard.backToPanel()}
+            {$LL.mapEditor.properties.whiteboard.showOnSide()}
         </button>
         <button
             class="w-9 h-9 shrink-0 rounded-md hover:bg-white/10 flex items-center justify-center"
