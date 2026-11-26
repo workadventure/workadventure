@@ -32,7 +32,7 @@ import { shouldMaximizeBeforeLoad } from "./window-state-policy";
 import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-policy";
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
-import { onMainWindowFocus, onMainWindowHidden, stopMiniWindow, updateMiniWindow } from "./mini-window-controller";
+import { onMainWindowFocus, onMainWindowHidden, onMainWindowShown, stopMiniWindow } from "./mini-window-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import {
     activateTab,
@@ -932,13 +932,14 @@ export async function createWindow(initialUrl?: string, inBackground = false) {
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
     // Any of these can change whether the main window shows, which the mini window controller decides
-    // on (mini-window-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
+    // on (mini-window-visibility-policy). Losing the focus is handled app-wide in mini-window-controller
+    // (browser-window-blur), so moving to the meeting bar or the mini window is not leaving WA.
     mainWindow.on("focus", onMainWindowFocus);
     mainWindow.on("show", endBackgroundStart);
-    mainWindow.on("show", updateMiniWindow);
+    mainWindow.on("show", onMainWindowShown);
     mainWindow.on("hide", onMainWindowHidden);
     mainWindow.on("minimize", onMainWindowHidden);
-    mainWindow.on("restore", updateMiniWindow);
+    mainWindow.on("restore", onMainWindowShown);
     keepRunningOnClose(mainWindow);
 
     // The shell has no content of its own, so rely on loadDesktopTarget → showWindow to reveal it
