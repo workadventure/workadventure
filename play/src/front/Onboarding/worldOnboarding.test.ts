@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { BuiltinTourId, parseOnboardingData } from "@workadventure/messages";
+import {
+    BuiltinOnboardingAnchor,
+    BuiltinTourId,
+    OnboardingAnchorArea,
+    parseOnboardingData,
+} from "@workadventure/messages";
 import { builtinItems } from "./builtinItems";
 import type { OnboardingItem } from "./onboardingRules";
 import { mergeItems, pickText } from "./worldOnboarding";
@@ -97,6 +102,13 @@ describe("parseOnboardingData", () => {
     it("lists every built-in tour a world can turn off", () => {
         const tours = builtinItems.filter((item) => item.kind === "tour").map((item) => item.id);
         expect(tours.sort()).toEqual(BuiltinTourId.options.map((option) => option.value).sort());
+    });
+
+    it("gives every built-in anchor an area", () => {
+        const areas = OnboardingAnchorArea.options.map((option) => option.value);
+        for (const { value } of BuiltinOnboardingAnchor.options) {
+            expect(areas, value).toContain(value.split(".")[0]);
+        }
     });
 });
 

@@ -180,21 +180,47 @@ removed.
 
 ## Anchors
 
-An anchor is an element of the WorkAdventure interface that a popover can point at, such as a button. Its name says
-where it is: `actionBar.*` in the action bar, `mapMenu.*` in the Tools menu, `mapEditor.*` in the map editor. For
-example:
+An anchor is an element of the WorkAdventure interface that a popover can point at, such as a button. Its id up to the
+first dot says where it is.
+
+**Action bar** (`actionBar`)
 
 | Anchor | |
 |---|---|
-| `actionBar.mapMenu` | The "Tools" menu button of the action bar. |
-| `actionBar.camera` | The camera button. |
-| `actionBar.lockBubble` | The button that locks a conversation. It only shows in a conversation. |
-| `mapMenu.editMap` | "Map editor", in the Tools menu, for users who can edit the map. |
-| `mapEditor.tool.entity` | The furniture (objects) tool of the map editor. |
+| `actionBar.mapMenu` | Tools menu button |
+| `actionBar.profileMenu` | Profile menu button |
+| `actionBar.camera` | Camera button |
+| `actionBar.microphone` | Microphone button |
+| `actionBar.screenShare` | Screen sharing button |
+| `actionBar.chat` | Chat button |
+| `actionBar.emoji` | Emoji reactions button |
+| `actionBar.lockBubble` | Lock conversation button (in a conversation) |
+| `actionBar.pictureInPicture` | Picture-in-picture button (in a conversation) |
 
-The full list grows with each release. It is in the JSON Schema,
-[`docs/schema/onboarding.json`](../../schema/onboarding.json), under `$defs` → `OnboardingAnchor`. With `$schema` set
-in your file, your editor [completes them](#checking-your-file) as you type.
+**Tools menu** (`mapMenu`)
+
+| Anchor | |
+|---|---|
+| `mapMenu.editMap` | Map editor entry (in the Tools menu), for users who can edit the map |
+
+**Map editor** (`mapEditor`)
+
+| Anchor | |
+|---|---|
+| `mapEditor.tool.area` | Area tool |
+| `mapEditor.tool.entity` | Furniture tool |
+| `mapEditor.tool.exploration` | Explore the room tool |
+| `mapEditor.entityList` | Object list |
+
+**Tutorial** (`tutorial`)
+
+| Anchor | |
+|---|---|
+| `tutorial.simulatedUser` | Video of the tutorial's fake user |
+
+The list grows with each release. The JSON Schema, [`docs/schema/onboarding.json`](../../schema/onboarding.json), has
+it under `$defs` → `BuiltinOnboardingAnchor`, and the areas under `$defs` → `OnboardingAnchorArea`. With `$schema`
+set in your file, your editor [completes them](#checking-your-file) as you type.
 
 Your map scripts' own buttons are anchors too: a button added with `WA.ui.actionBar.addButton({ id: "book-desk", … })`
 is `actionBar.custom.book-desk`.

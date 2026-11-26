@@ -6,25 +6,41 @@ import { z } from "zod";
  */
 
 /**
- * The UI elements of WorkAdventure that onboarding items can point at. The front sets them with the `onboarding`
- * attachment. World configs name them, so removing or renaming one is a breaking change that goes in the release notes.
+ * The UI elements of WorkAdventure that onboarding items can point at, with the name the admin editor shows. The front
+ * sets them with the `onboarding` attachment. World configs name them, so removing or renaming one is a breaking change
+ * that goes in the release notes. The id up to its first dot is an `OnboardingAnchorArea`.
  */
-export const BuiltinOnboardingAnchor = z.enum([
-  "actionBar.mapMenu",
-  "actionBar.profileMenu",
-  "actionBar.camera",
-  "actionBar.microphone",
-  "actionBar.screenShare",
-  "actionBar.chat",
-  "actionBar.emoji",
-  "actionBar.lockBubble",
-  "actionBar.pictureInPicture",
-  "mapMenu.editMap",
-  "mapEditor.tool.area",
-  "mapEditor.tool.entity",
-  "mapEditor.tool.exploration",
-  "mapEditor.entityList",
-  "tutorial.simulatedUser",
+export const BuiltinOnboardingAnchor = z.union([
+  z.literal("actionBar.mapMenu").describe("Tools menu button"),
+  z.literal("actionBar.profileMenu").describe("Profile menu button"),
+  z.literal("actionBar.camera").describe("Camera button"),
+  z.literal("actionBar.microphone").describe("Microphone button"),
+  z.literal("actionBar.screenShare").describe("Screen sharing button"),
+  z.literal("actionBar.chat").describe("Chat button"),
+  z.literal("actionBar.emoji").describe("Emoji reactions button"),
+  z
+    .literal("actionBar.lockBubble")
+    .describe("Lock conversation button (in a conversation)"),
+  z
+    .literal("actionBar.pictureInPicture")
+    .describe("Picture-in-picture button (in a conversation)"),
+  z.literal("mapMenu.editMap").describe("Map editor entry (in the Tools menu)"),
+  z.literal("mapEditor.tool.area").describe("Area tool"),
+  z.literal("mapEditor.tool.entity").describe("Furniture tool"),
+  z.literal("mapEditor.tool.exploration").describe("Explore the room tool"),
+  z.literal("mapEditor.entityList").describe("Object list"),
+  z
+    .literal("tutorial.simulatedUser")
+    .describe("Video of the tutorial's fake user"),
+]);
+export type BuiltinOnboardingAnchor = z.infer<typeof BuiltinOnboardingAnchor>;
+
+/** Where an anchor is, for the admin editor to group anchors: the anchor id up to its first dot. */
+export const OnboardingAnchorArea = z.union([
+  z.literal("actionBar").describe("Action bar"),
+  z.literal("mapMenu").describe("Tools menu"),
+  z.literal("mapEditor").describe("Map editor"),
+  z.literal("tutorial").describe("Tutorial"),
 ]);
 
 export const OnboardingAnchor = z

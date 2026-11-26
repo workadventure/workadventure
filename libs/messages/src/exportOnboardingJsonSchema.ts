@@ -2,8 +2,10 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { zodToJsonSchema } from "zod-to-json-schema";
 import {
+  BuiltinOnboardingAnchor,
   BuiltinTourId,
   OnboardingAnchor,
+  OnboardingAnchorArea,
   OnboardingData,
   OnboardingText,
 } from "./JsonMessages/OnboardingData";
@@ -11,11 +13,17 @@ import {
 /**
  * Publishes the onboarding config of a world as JSON Schema, at
  * https://docs.workadventu.re/docs/schema/onboarding.json. Self-hosters check their file with it, and the
- * SaaS admin checks what its editor saves. Its editor reads the anchors and the built-in tours (with their labels) in
- * `$defs`.
+ * SaaS admin checks what its editor saves. Its editor reads the anchors and their areas, and the built-in tours (all
+ * with their names) in `$defs`.
  */
 const { $schema: _, ...schema } = zodToJsonSchema(OnboardingData, {
-  definitions: { OnboardingAnchor, OnboardingText, BuiltinTourId },
+  definitions: {
+    OnboardingAnchor,
+    BuiltinOnboardingAnchor,
+    OnboardingAnchorArea,
+    OnboardingText,
+    BuiltinTourId,
+  },
   definitionPath: "$defs",
 }) as Record<string, unknown>;
 
