@@ -27,28 +27,47 @@ class NotificationManager {
     }
 
     public hasNotification(): boolean {
-        return (
-            Notification.permission === "granted" &&
-            statusChanger.allowNotificationSound() &&
-            // Desktop idle/away hush: robust even when the availability status machine can't be
-            // moved to a silencing status (e.g. a backgrounded window is already AWAY, and
-            // AWAY→BACK_IN_A_MOMENT is a rejected transition). See DesktopStatusStore.
-            !get(desktopAwayStore) &&
-            localUserStore.getNotification()
-        );
+        return this.blockReason() === undefined;
     }
 
     public createNotification(notification: NotificationWA) {
+        // The user is looking at WA: nothing to notify, and nothing to trace (it is the normal case).
         if (document.hasFocus()) {
             return;
         }
 
-        if (this.hasNotification()) {
-            notification.sendNotification().catch((error) => {
-                Sentry.captureException(error);
-                console.error("Error while sending notification", error);
-            });
+        const reason = this.blockReason();
+        if (reason) {
+            // Sentry's console integration turns this into a breadcrumb: a skipped notification is
+            // context for another error, not an error of its own.
+            console.debug("Notification skipped", { reason });
+            return;
         }
+
+        notification.sendNotification().catch((error) => {
+            Sentry.captureException(error);
+            console.error("Error while sending notification", error);
+        });
+    }
+
+    /** Why a notification would be skipped, first reason wins; undefined when it can be sent. */
+    private blockReason(): "permission" | "status" | "desktop-away" | "setting" | undefined {
+        if (Notification.permission !== "granted") {
+            return "permission";
+        }
+        if (!statusChanger.allowNotificationSound()) {
+            return "status";
+        }
+        // Desktop idle/away hush: robust even when the availability status machine can't be
+        // moved to a silencing status (e.g. a backgrounded window is already AWAY, and
+        // AWAY→BACK_IN_A_MOMENT is a rejected transition). See DesktopStatusStore.
+        if (get(desktopAwayStore)) {
+            return "desktop-away";
+        }
+        if (!localUserStore.getNotification()) {
+            return "setting";
+        }
+        return undefined;
     }
 
     private createNotificationMessageChannel() {
