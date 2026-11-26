@@ -55,6 +55,7 @@ export default {
         inMapEditor: "Dans l'éditeur de carte",
         notHere: "Pas disponible ici pour le moment",
         remindMe: "Me le rappeler",
+        showTips: "Afficher les astuces automatiquement",
     },
     releaseNotes: {
         title: "Nouveautés de WorkAdventure {version}",

@@ -55,6 +55,7 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         inMapEditor: "Trong trình chỉnh sửa bản đồ",
         notHere: "Hiện không khả dụng ở đây",
         remindMe: "Nhắc tôi",
+        showTips: "Tự động hiển thị mẹo",
     },
     releaseNotes: {
         title: "Có gì mới trong WorkAdventure {version}",

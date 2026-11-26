@@ -116,6 +116,23 @@ export class OnboardingScheduler {
         this.evaluate();
     }
 
+    /** False once the user clicked "Stop showing tips": nothing starts by itself any more. */
+    get showTips(): boolean {
+        return !this.readState().optedOut;
+    }
+
+    /** From the Help menu, to undo "Stop showing tips", or to do the same. */
+    setShowTips(show: boolean): void {
+        this.updateState((state) => {
+            if (show) {
+                delete state.optedOut;
+            } else {
+                state.optedOut = true;
+            }
+        });
+        this.evaluate();
+    }
+
     /** Ignores pacing and the state: the user asked for it. */
     startFromHelp(id: string): void {
         const item = this.items.find((candidate) => candidate.id === id);

@@ -52,6 +52,7 @@ export default {
         inMapEditor: "맵 편집기에서 사용할 수 있습니다",
         notHere: "지금 여기에서는 사용할 수 없습니다",
         remindMe: "알림 받기",
+        showTips: "팁 자동으로 보기",
     },
     releaseNotes: {
         title: "WorkAdventure {version}의 새로운 기능",

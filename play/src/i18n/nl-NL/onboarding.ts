@@ -53,6 +53,7 @@ export default {
         inMapEditor: "In de kaarteditor",
         notHere: "Hier nu niet beschikbaar",
         remindMe: "Herinner me",
+        showTips: "Tips automatisch tonen",
     },
     releaseNotes: {
         title: "Nieuw in WorkAdventure {version}",

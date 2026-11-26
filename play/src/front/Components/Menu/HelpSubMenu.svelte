@@ -6,6 +6,7 @@
     import type { HelpItem } from "../../Onboarding/OnboardingScheduler";
     import { anchorPlace, anchorsChanged } from "../../Onboarding/OnboardingAnchors";
     import ActionBarButton from "../ActionBar/ActionBarButton.svelte";
+    import InputSwitch from "../Input/InputSwitch.svelte";
     import { IconCheck, IconHelpCircle } from "@wa-icons";
 
     // The ActionBarButton component is displayed differently in the menu.
@@ -14,12 +15,20 @@
 
     // Live: someone can walk up while the menu is open, and the bubble brings the buttons of its tips.
     let items: HelpItem[] = $state([]);
+    let showTips = $state(true);
     $effect(() => {
         const scheduler = $onboardingScheduler;
+        showTips = scheduler?.showTips ?? true;
         return anchorsChanged.subscribe(() => {
             items = scheduler?.helpItems ?? [];
         });
     });
+
+    // Undoes "Stop showing tips", which the tips themselves offer.
+    function toggleShowTips() {
+        $onboardingScheduler?.setShowTips(!showTips);
+        showTips = $onboardingScheduler?.showTips ?? true;
+    }
 
     function toggleRequest(id: string) {
         $onboardingScheduler?.toggleRequest(id);
@@ -36,6 +45,16 @@
 <div class="customize-main">
     <div class="submenu p-4">
         <h2 class="text-white text-lg font-semibold mb-4">{$LL.menu.sub.help()}</h2>
+        {#if $onboardingScheduler}
+            <div class="mb-4">
+                <InputSwitch
+                    id="onboarding-show-tips"
+                    value={showTips}
+                    onchange={toggleShowTips}
+                    label={$LL.onboarding.help.showTips()}
+                />
+            </div>
+        {/if}
         <div class="space-y-2">
             {#each items as { item, missingAnchor, requested } (item.id)}
                 {#if missingAnchor}

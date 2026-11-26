@@ -399,6 +399,27 @@ describe("OnboardingScheduler", () => {
         expect(state().used).toEqual(["actionBar.chat"]);
     });
 
+    it("turns tips back on from the Help menu after Stop showing tips", () => {
+        const at = new Date().toISOString();
+        const onboarding: OnboardingState = {
+            firstVisit: "2026-11-24",
+            optedOut: true,
+            items: { "wa.tutorial": { status: "done", at } },
+            used: [],
+        };
+        const { state, scheduler: help } = start({ tutorialDone: true, onboarding });
+        // The announcement is pending, but nothing starts by itself.
+        expect(help.showTips).toBe(false);
+        expect(started).toHaveLength(0);
+
+        help.setShowTips(true);
+        expect(state().optedOut).toBeUndefined();
+        expect(started).toHaveLength(1);
+
+        help.setShowTips(false);
+        expect(state().optedOut).toBe(true);
+    });
+
     it("writes tutorialDone when the tutorial ends, for map scripts", () => {
         const { map } = start({});
         started[0].run.dismiss();

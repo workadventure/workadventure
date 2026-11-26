@@ -26,6 +26,7 @@ const AT_LOAD = [TUTORIAL_ID, ANNOUNCEMENT_ID];
 
 interface OnboardingState {
     firstVisit: string;
+    optedOut?: true;
     items: Record<string, { status: string; at: string }>;
     used: string[];
     requested?: string[];
@@ -325,5 +326,31 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await bob.getByRole("button", { name: "Help & tutorials" }).click();
         await expect(bob.getByTestId(`onboarding-help-${ANNOUNCEMENT_ID}`)).toBeVisible();
         await expect(bob.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`)).toBeHidden();
+    });
+
+    test("Tips stopped with Stop showing tips come back from the Help menu", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        const modal = page.getByTestId("onboarding-modal");
+
+        // The announcement is pending, but the user stopped the tips.
+        await reloadWithState(page, {
+            firstVisit: localDateDaysAgo(2),
+            optedOut: true,
+            items: overBut(ANNOUNCEMENT_ID),
+            used: [],
+        });
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(2000);
+        await expect(modal).toBeHidden();
+
+        await Menu.openMenu(page);
+        await page.getByRole("button", { name: "All settings" }).click();
+        await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await expect(page.locator("#onboarding-show-tips")).not.toBeChecked();
+        await page.getByTestId("onboarding-show-tips").click();
+        await expect(page.locator("#onboarding-show-tips")).toBeChecked();
+        await expect.poll(async () => (await readOnboardingState(page))?.optedOut).toBeUndefined();
+        await expect(modal).toContainText("What's new in WorkAdventure 1.35");
     });
 });
