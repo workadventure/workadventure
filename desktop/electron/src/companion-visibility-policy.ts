@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * When the Companion (People / Chat / meeting video) opens and closes. The desktop app is the only
  * decider: the world page reports facts (in a meeting, the "Allow picture-in-picture" setting, a
@@ -26,20 +24,25 @@
  * Pure functions (no Electron dependency) so the rules can be unit-tested.
  */
 
-/**
- * @param {{
- *   opened?: "no" | "auto" | "manual", // how the companion currently open was opened
- *   inWorld?: boolean,
- *   inMeeting?: boolean,
- *   invitationPending?: boolean,
- *   autoOpenAllowed?: boolean, // the "Allow picture-in-picture" setting
- *   waShowing?: boolean,
- *   dismissed?: boolean, // closed by the user since they last came back to WA
- *   placeAvailable?: boolean, // somewhere to open by itself (see companionAutoOpenDisplay)
- * }} state
- * @returns {"closed" | "auto" | "manual"}
- */
-function companionMode(state) {
+export type CompanionMode = "closed" | "auto" | "manual";
+
+export type CompanionState = {
+    /** How the companion currently open was opened. */
+    opened?: "no" | "auto" | "manual";
+    inWorld?: boolean;
+    inMeeting?: boolean;
+    invitationPending?: boolean;
+    /** The "Allow picture-in-picture" setting. */
+    autoOpenAllowed?: boolean;
+    /** WA shows: not minimized, hidden, left (focus) or page hidden. */
+    waShowing?: boolean;
+    /** Closed by the user since they last came back to WA. */
+    dismissed?: boolean;
+    /** Somewhere to open by itself (see companionAutoOpenDisplay). */
+    placeAvailable?: boolean;
+};
+
+function companionMode(state: CompanionState | undefined): CompanionMode {
     const s = state || {};
     if (!s.inWorld) {
         return "closed";
@@ -66,11 +69,10 @@ function companionMode(state) {
  * screen; no when it went to another screen, where WA keeps showing (a heuristic: switching with the
  * keyboard does not move the pointer). Under Wayland the pointer's screen is unknown, so it always
  * counts, and so does any unknown screen.
- *
- * @param {{ positionsKnown?: boolean, pointerDisplayId?: number, waDisplayId?: number }} blur
- * @returns {boolean}
  */
-function leftOnBlur(blur) {
+function leftOnBlur(
+    blur: { positionsKnown?: boolean; pointerDisplayId?: number; waDisplayId?: number } | undefined
+): boolean {
     const b = blur || {};
     if (!b.positionsKnown || b.pointerDisplayId === undefined || b.waDisplayId === undefined) {
         return true;
@@ -78,7 +80,4 @@ function leftOnBlur(blur) {
     return b.pointerDisplayId === b.waDisplayId;
 }
 
-module.exports = {
-    companionMode,
-    leftOnBlur,
-};
+export { companionMode, leftOnBlur };

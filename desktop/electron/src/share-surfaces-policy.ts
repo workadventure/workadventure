@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * What floats during the user's own screen share. The desktop app decides; the world page reports
  * facts (sharing, the shared screen or window, and later the drawing mode).
@@ -22,11 +20,13 @@
 
 /**
  * The screen the meeting bar goes on, or undefined for no bar.
- *
- * @param {{ canHideFromCapture: boolean, sharing: boolean, sharedDisplayId?: number, pointerDisplayId: number }} s
- * @returns {number | undefined}
  */
-function meetingBarDisplay(s) {
+function meetingBarDisplay(s: {
+    canHideFromCapture: boolean;
+    sharing: boolean;
+    sharedDisplayId?: number;
+    pointerDisplayId: number;
+}): number | undefined {
     if (!s.canHideFromCapture || !s.sharing) {
         return undefined;
     }
@@ -35,18 +35,15 @@ function meetingBarDisplay(s) {
 
 /**
  * The screen the companion may open on by itself, or undefined for nowhere.
- *
- * @param {{
- *   canHideFromCapture: boolean,
- *   sharing: boolean,
- *   identifyingScreens: boolean,
- *   displayIds: number[],
- *   sharedDisplayId?: number,
- *   pointerDisplayId: number,
- * }} s
- * @returns {number | undefined}
  */
-function companionAutoOpenDisplay(s) {
+function companionAutoOpenDisplay(s: {
+    canHideFromCapture: boolean;
+    sharing: boolean;
+    identifyingScreens: boolean;
+    displayIds: number[];
+    sharedDisplayId?: number;
+    pointerDisplayId: number;
+}): number | undefined {
     if (s.identifyingScreens) {
         return undefined;
     }
@@ -56,7 +53,7 @@ function companionAutoOpenDisplay(s) {
     if (!s.canHideFromCapture || s.sharedDisplayId === undefined) {
         return undefined;
     }
-    const others = (s.displayIds || []).filter((id) => id !== s.sharedDisplayId);
+    const others = (s.displayIds || []).filter((id: number) => id !== s.sharedDisplayId);
     if (others.length === 0) {
         return undefined;
     }
@@ -65,32 +62,26 @@ function companionAutoOpenDisplay(s) {
 
 /**
  * The companion warns it shows in the user's share where it cannot be kept out of the capture.
- *
- * @param {boolean} canHideFromCapture
- * @param {boolean} sharing
- * @returns {boolean}
  */
-function companionVisibleInShare(canHideFromCapture, sharing) {
+function companionVisibleInShare(canHideFromCapture: boolean, sharing: boolean): boolean {
     return sharing && !canHideFromCapture;
 }
 
 /**
  * The screen the annotation overlay covers, or undefined for no overlay.
- *
- * @param {{
- *   canHideFromCapture: boolean,
- *   sharing: boolean,
- *   sharedDisplayId?: number, // undefined when a window is shared
- *   drawing: boolean,
- *   presenterTool: boolean,
- * }} s
- * @returns {number | undefined}
  */
-function annotationOverlayDisplay(s) {
+function annotationOverlayDisplay(s: {
+    canHideFromCapture: boolean;
+    sharing: boolean;
+    /** Undefined when a window is shared. */
+    sharedDisplayId?: number;
+    drawing: boolean;
+    presenterTool: boolean;
+}): number | undefined {
     if (!s.canHideFromCapture || !s.sharing || s.sharedDisplayId === undefined) {
         return undefined;
     }
     return s.drawing || s.presenterTool ? s.sharedDisplayId : undefined;
 }
 
-module.exports = { meetingBarDisplay, companionAutoOpenDisplay, companionVisibleInShare, annotationOverlayDisplay };
+export { meetingBarDisplay, companionAutoOpenDisplay, companionVisibleInShare, annotationOverlayDisplay };

@@ -6,7 +6,7 @@ import {
     meetingBarDisplay,
 } from "./share-surfaces-policy";
 
-// One test per row of the rules table in share-surfaces-policy.js.
+// One test per row of the rules table in share-surfaces-policy.ts.
 const macSharing = { canHideFromCapture: true, sharing: true, pointerDisplayId: 3 };
 
 test("meeting bar: on the shared screen, under the pointer for a window, none without a share or on Linux", () => {

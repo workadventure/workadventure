@@ -1,10 +1,28 @@
-"use strict";
+export type DesktopConfig = {
+    portalUrl: string;
+    portalOrigin: string;
+    allowedOrigins: string[];
+    allowedHostSuffixes: string[];
+    updateFeedUrl: string;
+};
+
+export type DesktopAuthCallback = {
+    origin: string;
+    code: string;
+    matrixLoginToken?: string;
+};
+
+export type DesktopNavigationErrorCode = "urlRequired" | "urlInvalid" | "urlProtocol" | "urlHost" | "urlNotAllowed";
+
+export type DesktopNavigationValidationResult =
+    | { ok: true; url: string }
+    | { ok: false; code: DesktopNavigationErrorCode; error: string };
 
 const DEV_PORTAL_URL = "http://admin.workadventure.localhost/";
 const PROD_PORTAL_URL = "https://admin.workadventu.re/";
 const DEFAULT_ALLOWED_HOST_SUFFIXES_PROD = [".workadventu.re", ".workadventure.fr"];
 const DEFAULT_ALLOWED_HOST_SUFFIXES_DEV = [".workadventu.re", ".workadventure.fr", ".workadventure.localhost"];
-const SENSITIVE_QUERY_PARAMS = [
+const SENSITIVE_QUERY_PARAMS: readonly string[] = [
     "token",
     "matrixLoginToken",
     "code",
@@ -20,7 +38,7 @@ const BROKEN_PERSISTED_URLS = new Set([
     "https://play.workadventure.localhost/_/global/maps.workadventure.localhost/tests/Areas/StartAreas/start_areas.json",
 ]);
 
-function parseList(value) {
+function parseList(value: unknown): string[] {
     if (!value) {
         return [];
     }
@@ -35,7 +53,7 @@ function parseList(value) {
         .filter(Boolean);
 }
 
-function normalizeHostSuffix(value) {
+function normalizeHostSuffix(value: unknown): string {
     const trimmed = String(value || "")
         .trim()
         .toLowerCase();
@@ -51,7 +69,7 @@ function isDevEnvironment() {
 
 // A packaged build must never fall back to the local dev stack: `http:` on a non-localhost host is
 // refused outside development, so every "back to the portal" path would land on a dead page.
-function getDefaultPortalUrl() {
+function getDefaultPortalUrl(): string {
     return isDevEnvironment() ? DEV_PORTAL_URL : PROD_PORTAL_URL;
 }
 
@@ -59,7 +77,7 @@ function getDefaultAllowedHostSuffixes() {
     return isDevEnvironment() ? DEFAULT_ALLOWED_HOST_SUFFIXES_DEV : DEFAULT_ALLOWED_HOST_SUFFIXES_PROD;
 }
 
-function normalizeHttpUrl(value, fallback) {
+function normalizeHttpUrl(value: string | undefined, fallback: string): string {
     try {
         const url = new URL(value || fallback);
         if (url.protocol !== "https:" && url.protocol !== "http:") {
@@ -71,9 +89,9 @@ function normalizeHttpUrl(value, fallback) {
     }
 }
 
-function normalizeOrigin(value) {
+function normalizeOrigin(value: string | null): string | undefined {
     try {
-        const url = new URL(value);
+        const url = new URL(value as string);
         if (url.protocol !== "https:" && url.protocol !== "http:") {
             return undefined;
         }
@@ -83,8 +101,11 @@ function normalizeOrigin(value) {
     }
 }
 
-function createDesktopConfig(env = process.env) {
-    const portalUrl = normalizePersistedPortalUrl(env.portalUrl || env.WA_DESKTOP_PORTAL_URL, getDefaultPortalUrl());
+function createDesktopConfig(env: Record<string, unknown> = process.env): DesktopConfig {
+    const portalUrl = normalizePersistedPortalUrl(
+        (env.portalUrl || env.WA_DESKTOP_PORTAL_URL) as string | undefined,
+        getDefaultPortalUrl()
+    );
     const portalOrigin = new URL(portalUrl).origin;
     const allowedOrigins = new Set([portalOrigin]);
 
@@ -112,14 +133,15 @@ function createDesktopConfig(env = process.env) {
         portalOrigin,
         allowedOrigins: Array.from(allowedOrigins),
         allowedHostSuffixes,
-        updateFeedUrl:
-            env.updateFeedUrl || env.WA_DESKTOP_UPDATE_URL || "https://desktop-updates.workadventu.re/stable",
+        updateFeedUrl: (env.updateFeedUrl ||
+            env.WA_DESKTOP_UPDATE_URL ||
+            "https://desktop-updates.workadventu.re/stable") as string,
     };
 }
 
-function parseHttpUrl(value) {
+function parseHttpUrl(value: string | undefined): URL | undefined {
     try {
-        const url = new URL(value);
+        const url = new URL(value as string);
         if (url.protocol !== "https:" && url.protocol !== "http:") {
             return undefined;
         }
@@ -129,7 +151,7 @@ function parseHttpUrl(value) {
     }
 }
 
-function requireHttpsInProd(url) {
+function requireHttpsInProd(url: URL | undefined): boolean {
     if (!url) {
         return false;
     }
@@ -145,12 +167,12 @@ function requireHttpsInProd(url) {
     return isLocalhost(url.hostname);
 }
 
-function isBrokenPersistedUrl(value) {
+function isBrokenPersistedUrl(value: string | undefined): boolean {
     const url = parseHttpUrl(value);
     return Boolean(url && BROKEN_PERSISTED_URLS.has(url.toString().replace(/\/$/, "")));
 }
 
-function normalizePersistedPortalUrl(value, fallback = getDefaultPortalUrl()) {
+function normalizePersistedPortalUrl(value?: string, fallback = getDefaultPortalUrl()): string {
     if (isBrokenPersistedUrl(value)) {
         return fallback;
     }
@@ -158,7 +180,7 @@ function normalizePersistedPortalUrl(value, fallback = getDefaultPortalUrl()) {
     return normalizeHttpUrl(value, fallback);
 }
 
-function normalizePersistedLastRoomUrl(value) {
+function normalizePersistedLastRoomUrl(value?: string): string | undefined {
     // BROKEN_PERSISTED_URLS is a portal_url migration list — those URLs were mistakenly seeded
     // as portal_url in an old buggy build. They are legitimate room URLs to navigate to today, so
     // we must NOT filter them here (that would silently drop them from world_history / last_room_url
@@ -177,13 +199,13 @@ function normalizePersistedLastRoomUrl(value) {
     return url.toString();
 }
 
-function normalizePersistedWorldHistory(value, limit = MAX_WORLD_HISTORY_LENGTH) {
+function normalizePersistedWorldHistory(value: unknown, limit = MAX_WORLD_HISTORY_LENGTH): string[] {
     if (!Array.isArray(value)) {
         return [];
     }
 
-    const normalizedHistory = [];
-    const seen = new Set();
+    const normalizedHistory: string[] = [];
+    const seen = new Set<string>();
     const safeLimit = Math.max(0, Number.isFinite(limit) ? Math.floor(limit) : MAX_WORLD_HISTORY_LENGTH);
     if (safeLimit === 0) {
         return normalizedHistory;
@@ -202,11 +224,11 @@ function normalizePersistedWorldHistory(value, limit = MAX_WORLD_HISTORY_LENGTH)
     return normalizedHistory;
 }
 
-function addWorldToHistory(history, value, limit = MAX_WORLD_HISTORY_LENGTH) {
-    return normalizePersistedWorldHistory([value, ...(Array.isArray(history) ? history : [])], limit);
+function addWorldToHistory(history: unknown, value: string, limit = MAX_WORLD_HISTORY_LENGTH): string[] {
+    return normalizePersistedWorldHistory([value, ...(Array.isArray(history) ? (history as unknown[]) : [])], limit);
 }
 
-function formatWorldHistoryLabel(value, maxLength = 58) {
+function formatWorldHistoryLabel(value: string, maxLength = 58): string {
     const url = parseHttpUrl(value);
     if (!url) {
         return "Unknown world";
@@ -230,11 +252,11 @@ function formatWorldHistoryLabel(value, maxLength = 58) {
     return label.length > safeMaxLength ? label.slice(0, safeMaxLength - 1) + "…" : label;
 }
 
-function isLocalhost(hostname) {
+function isLocalhost(hostname: string): boolean {
     return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 }
 
-function isAllowedNavigationUrl(value, config) {
+function isAllowedNavigationUrl(value: string, config: DesktopConfig): boolean {
     const url = parseHttpUrl(value);
     if (!url) {
         return false;
@@ -263,17 +285,17 @@ function isAllowedNavigationUrl(value, config) {
     });
 }
 
-function isDesktopLoginUrl(value) {
+function isDesktopLoginUrl(value: string): boolean {
     const url = parseHttpUrl(value);
     return Boolean(url && url.pathname === "/login-screen");
 }
 
-function isDesktopLogoutUrl(value) {
+function isDesktopLogoutUrl(value: string): boolean {
     const url = parseHttpUrl(value);
     return Boolean(url && url.pathname === "/logout");
 }
 
-function createDesktopFlowUrl(value) {
+function createDesktopFlowUrl(value: string): string {
     const url = parseHttpUrl(value);
     if (!url) {
         return value;
@@ -283,7 +305,7 @@ function createDesktopFlowUrl(value) {
     return url.toString();
 }
 
-function createDesktopLoginUrl(value, desktopCallbackUrl) {
+function createDesktopLoginUrl(value: string, desktopCallbackUrl?: string): string {
     const url = parseHttpUrl(createDesktopFlowUrl(value));
     if (!url) {
         return value;
@@ -296,7 +318,7 @@ function createDesktopLoginUrl(value, desktopCallbackUrl) {
     return url.toString();
 }
 
-function createDesktopLogoutUrl(value, desktopCallbackUrl) {
+function createDesktopLogoutUrl(value: string, desktopCallbackUrl?: string): string {
     const url = parseHttpUrl(createDesktopFlowUrl(value));
     if (!url) {
         return value;
@@ -309,8 +331,8 @@ function createDesktopLogoutUrl(value, desktopCallbackUrl) {
     return url.toString();
 }
 
-function extractDesktopAuthCallback(value) {
-    let url;
+function extractDesktopAuthCallback(value: string): DesktopAuthCallback | undefined {
+    let url: URL;
     try {
         url = new URL(value);
     } catch {
@@ -331,7 +353,7 @@ function extractDesktopAuthCallback(value) {
     return { origin, code, matrixLoginToken };
 }
 
-function stripSensitiveQueryParams(value) {
+function stripSensitiveQueryParams(value: string | undefined): string | undefined {
     if (!value || typeof value !== "string") {
         return value;
     }
@@ -349,7 +371,7 @@ function stripSensitiveQueryParams(value) {
     return changed ? url.toString() : value;
 }
 
-function redactSensitiveString(value) {
+function redactSensitiveString(value: string | undefined): string | undefined {
     if (typeof value !== "string" || value.length === 0) {
         return value;
     }
@@ -361,7 +383,7 @@ function redactSensitiveString(value) {
     return result;
 }
 
-function createRoomUrlWithAuthToken(targetUrl, token, matrixLoginToken) {
+function createRoomUrlWithAuthToken(targetUrl: string, token: string, matrixLoginToken?: string): string {
     const url = parseHttpUrl(targetUrl);
     if (!url) {
         return targetUrl;
@@ -374,7 +396,7 @@ function createRoomUrlWithAuthToken(targetUrl, token, matrixLoginToken) {
     return url.toString();
 }
 
-function isRoomUrl(value) {
+function isRoomUrl(value: string): boolean {
     const url = parseHttpUrl(value);
     if (!url) {
         return false;
@@ -400,7 +422,7 @@ function isRoomUrl(value) {
  * * paths), since a server without an admin is a single world. A public map (/_/) is a world of its own.
  * Undefined for anything that is not a room (Landing, portal, login).
  */
-function worldKeyOf(value) {
+function worldKeyOf(value: string): string | undefined {
     const url = parseHttpUrl(value);
     if (!url || !isRoomUrl(url.toString())) {
         return undefined;
@@ -418,12 +440,12 @@ function worldKeyOf(value) {
 
 // `error` is the English text; `code` lets the caller show it in the user's language
 // (landing.<code> in the native catalog).
-function validateDesktopNavigationUrl(value, config) {
+function validateDesktopNavigationUrl(value: unknown, config: DesktopConfig): DesktopNavigationValidationResult {
     if (typeof value !== "string" || !value.trim()) {
         return { ok: false, code: "urlRequired", error: "Please enter a world URL." };
     }
 
-    let url;
+    let url: URL;
     try {
         url = new URL(value.trim());
     } catch {
@@ -449,14 +471,17 @@ function validateDesktopNavigationUrl(value, config) {
     return { ok: true, url: normalizedUrl };
 }
 
-function resolveInitialTarget(config, state = {}) {
+function resolveInitialTarget(
+    config: DesktopConfig,
+    state: { pendingDeepLinkUrl?: string; lastRoomUrl?: string } = {}
+): string {
     const candidates = [state.pendingDeepLinkUrl, state.lastRoomUrl, config.portalUrl];
     const target = candidates.find((candidate) => candidate && isAllowedNavigationUrl(candidate, config));
     return target || config.portalUrl;
 }
 
-function extractDesktopTargetFromDeepLink(value) {
-    let url;
+function extractDesktopTargetFromDeepLink(value: string): string | undefined {
+    let url: URL;
     try {
         url = new URL(value);
     } catch {
@@ -488,7 +513,7 @@ function extractDesktopTargetFromDeepLink(value) {
     return undefined;
 }
 
-module.exports = {
+export {
     createDesktopConfig,
     createDesktopLoginUrl,
     createDesktopLogoutUrl,

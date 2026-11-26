@@ -1,7 +1,7 @@
 import { expect, test } from "vitest";
 import { companionMode, leftOnBlur } from "./companion-visibility-policy";
 
-// One test per row of the rules table in companion-visibility-policy.js.
+// One test per row of the rules table in companion-visibility-policy.ts.
 const awayInMeeting = {
     opened: "no",
     inWorld: true,

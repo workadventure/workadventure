@@ -1,5 +1,3 @@
-"use strict";
-
 /**
  * The renderer settings every world view runs under. Extracted from tab-manager so the hardened
  * flags below sit in one testable place instead of inline in the view factory.
@@ -15,7 +13,7 @@
  * so nothing — not even opening the room WebSocket — happens while the renderer gets no frames. The
  * fix belongs in the front: take the connection out of the render loop. Tracked separately.
  */
-function createWorldViewWebPreferences(preloadPath) {
+function createWorldViewWebPreferences(preloadPath: string) {
     return {
         preload: preloadPath,
         nodeIntegration: false,
@@ -25,4 +23,4 @@ function createWorldViewWebPreferences(preloadPath) {
     };
 }
 
-module.exports = { createWorldViewWebPreferences };
+export { createWorldViewWebPreferences };
