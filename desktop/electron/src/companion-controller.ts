@@ -1,12 +1,12 @@
-import { screen, type BrowserWindow } from "electron";
+import { app, BrowserWindow, screen } from "electron";
 import ElectronLog from "electron-log";
 import { closeHudWindow, getHudWindow, isHudWindowOpen, openHudWindow } from "./hud-windows";
 import { getPresenceSnapshot, onPresenceChange } from "./presence";
 import { getWindow } from "./window";
 import { getControllingWorldContents } from "./tab-manager";
-import { companionMode } from "./companion-visibility-policy";
+import { companionMode, leftOnBlur } from "./companion-visibility-policy";
 import { companionAutoOpenDisplay } from "./share-surfaces-policy";
-import { canHideWindowsFromCapture } from "./platform-capture-policy";
+import { canHideWindowsFromCapture, usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { shouldProtectWindowFromCapture } from "./content-protection";
 import { isIdentifyingScreens } from "./screen-identify";
 
@@ -31,6 +31,10 @@ let openTimer: ReturnType<typeof setTimeout> | undefined;
 let leaveWorldTimer: ReturnType<typeof setTimeout> | undefined;
 // The world page is hidden: WA fully covered (tracked on macOS and Windows) or minimized.
 let pageHidden = false;
+// The focus left the app while WA was considered left (see leftOnBlur). Detecting WA fully covered
+// is unreliable and the app is rarely minimized, so this is the main signal. Only raised by a focus
+// loss; only WA's focus, restore or show lower it.
+let leftApp = false;
 // The screen in the user's own screen share, when known (a whole screen is shared).
 let sharedScreenDisplayId: number | undefined;
 // Closed by the user since they last came back to WA.
@@ -50,8 +54,26 @@ function isMainWindowShowing(): boolean {
     const mainWindow = getWindow();
     return (
         Boolean(mainWindow && !mainWindow.isDestroyed() && mainWindow.isVisible() && !mainWindow.isMinimized()) &&
-        !pageHidden
+        !pageHidden &&
+        !leftApp
     );
+}
+
+/** The signals behind the decision, for the diagnostic log (no world, user or window names). */
+function signalsForLog(): string {
+    const mainWindow = getWindow();
+    const alive = Boolean(mainWindow && !mainWindow.isDestroyed());
+    const flags = {
+        minimized: alive && mainWindow ? mainWindow.isMinimized() : false,
+        hidden: alive && mainWindow ? !mainWindow.isVisible() : false,
+        leftApp,
+        pageHidden,
+        inMeeting: Boolean(getPresenceSnapshot().inMeeting),
+    };
+    return [
+        ...Object.entries(flags).map(([name, value]) => `${name}=${String(value)}`),
+        `platform=${process.platform}`,
+    ].join(" ");
 }
 
 function cursorDisplayId(): number {
@@ -162,6 +184,15 @@ function performOpen(mode: "auto" | "manual"): void {
     if (wantedMode() !== mode) {
         return;
     }
+    // The focus is still in one of the app's windows (meeting bar, overlay, companion): not leaving
+    // WA. Checked here, after the debounce, when the system has handed the focus over; leaving that
+    // window for another app blurs it and arms a new debounce.
+    if (mode === "auto" && BrowserWindow.getFocusedWindow() !== null) {
+        return;
+    }
+    if (mode === "auto") {
+        ElectronLog.info(`Companion auto-open: ${signalsForLog()}`);
+    }
     opened = mode;
     opening = true;
     const automatic = mode === "auto" && !getPresenceSnapshot().invitationPending;
@@ -210,8 +241,44 @@ export function onPageVisibilityChange(hidden: boolean): void {
     updateCompanion();
 }
 
+/**
+ * Any window of the app lost the focus (app-wide `browser-window-blur`), so focus moving between
+ * WA, the companion and the meeting bar is not leaving WA. Read synchronously: "Identify screens"
+ * clears its state as soon as a screen is picked.
+ */
+function onAppWindowBlur(): void {
+    const mainWindow = getWindow();
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFocused() || isIdentifyingScreens()) {
+        return;
+    }
+    const positionsKnown = !usesSystemScreenSharePicker(process.platform, process.env);
+    const pointerDisplayId = cursorDisplayId();
+    const waDisplayId = screen.getDisplayMatching(mainWindow.getBounds()).id;
+    const left = leftOnBlur({ positionsKnown, pointerDisplayId, waDisplayId });
+    if (getPresenceSnapshot().inMeeting) {
+        ElectronLog.info(
+            `Companion blur: left=${String(left)} wayland=${String(
+                !positionsKnown
+            )} pointerDisplay=${pointerDisplayId} waDisplay=${waDisplayId}`
+        );
+    }
+    // Raise only: focus moving on between the app's windows, or toward another screen, does not
+    // bring WA back.
+    if (left) {
+        leftApp = true;
+    }
+    updateCompanion();
+}
+
 export function onMainWindowFocus(): void {
     pageHidden = false;
+    leftApp = false;
+    updateCompanion();
+}
+
+/** The main window was shown or restored: back on screen, even if the focus did not follow. */
+export function onMainWindowShown(): void {
+    leftApp = false;
     updateCompanion();
 }
 
@@ -228,6 +295,10 @@ export function updateCompanion(): void {
     if (mode === "closed") {
         cancelPendingOpen();
         if (isOpen) {
+            // Read before closing: closeCompanionWindow() resets `opened`.
+            if (opened === "auto") {
+                ElectronLog.info(`Companion auto-close: ${signalsForLog()}`);
+            }
             closeCompanionWindow();
         }
     } else if (!isOpen && !opening && openTimer === undefined) {
@@ -288,6 +359,7 @@ export function startCompanionController(): void {
     }
     started = true;
     onPresenceChange(handlePresenceChange);
+    app.on("browser-window-blur", onAppWindowBlur);
     updateCompanion();
 }
 

@@ -8,7 +8,7 @@ export type CompanionState = {
     invitationPending?: boolean;
     /** The "Allow picture-in-picture" setting. */
     autoOpenAllowed?: boolean;
-    /** WA shows: not minimized, hidden or fully covered. */
+    /** WA shows: not minimized, hidden, left (focus) or page hidden. */
     waShowing?: boolean;
     /** Closed by the user since they last came back to WA. */
     dismissed?: boolean;
@@ -17,3 +17,9 @@ export type CompanionState = {
 };
 
 export function companionMode(state: CompanionState): CompanionMode;
+
+export function leftOnBlur(blur: {
+    positionsKnown?: boolean;
+    pointerDisplayId?: number;
+    waDisplayId?: number;
+}): boolean;

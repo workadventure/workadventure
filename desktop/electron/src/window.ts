@@ -31,7 +31,7 @@ import { reachWorldDeadlineAction, reachWorldWatchdogStep } from "./reach-world-
 import { usesSystemScreenSharePicker } from "./platform-capture-policy";
 import { forgetLastRoomUrl, rememberWorldUrl } from "./world-history";
 import { closeOverlayWindow } from "./overlay-window";
-import { onMainWindowFocus, onMainWindowHidden, stopCompanion, updateCompanion } from "./companion-controller";
+import { onMainWindowFocus, onMainWindowHidden, onMainWindowShown, stopCompanion } from "./companion-controller";
 import { getPresenceSnapshot, hasReportedPresenceSince, onPresenceChange, resetPresence } from "./presence";
 import { stopPresenterCursor } from "./presenter-cursor";
 import {
@@ -828,10 +828,11 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("enter-full-screen", () => refreshRendererViewport("enter-full-screen"));
     mainWindow.on("leave-full-screen", () => refreshRendererViewport("leave-full-screen"));
     // Any of these can change whether the main window shows, which the companion controller decides
-    // on (companion-visibility-policy). Losing the focus alone is not leaving: WA keeps showing.
-    const onWindowStateEvent = () => {
+    // on (companion-visibility-policy). Losing the focus is handled app-wide in companion-controller
+    // (browser-window-blur), so moving to the meeting bar or the companion is not leaving WA.
+    const onWindowShown = () => {
         emitDesktopWindowStateChange();
-        updateCompanion();
+        onMainWindowShown();
     };
     const onWindowHidden = () => {
         emitDesktopWindowStateChange();
@@ -844,10 +845,10 @@ export async function createWindow(initialUrl?: string) {
     mainWindow.on("blur", () => {
         emitDesktopWindowStateChange();
     });
-    mainWindow.on("show", onWindowStateEvent);
+    mainWindow.on("show", onWindowShown);
     mainWindow.on("hide", onWindowHidden);
     mainWindow.on("minimize", onWindowHidden);
-    mainWindow.on("restore", onWindowStateEvent);
+    mainWindow.on("restore", onWindowShown);
 
     // mainWindow.on('close', async (event) => {
     //   if (!app.confirmedExitPrompt) {

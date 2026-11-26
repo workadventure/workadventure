@@ -5,9 +5,13 @@
  * decider: the world page reports facts (in a meeting, the "Allow picture-in-picture" setting, a
  * pending invitation) and shows the meeting video in the companion when the app asks it to.
  *
- *   Automatic opening  In a meeting, WA stops showing (minimized, hidden, or fully covered: tracked
- *                      on macOS and Windows; on Linux only minimizing counts), the setting is on, and
- *                      the user did not close it since they last came back to WA.
+ *   Automatic opening  In a meeting, WA is considered left (minimized, hidden, the focus left the app
+ *                      while the pointer was on WA's screen, any focus loss under Wayland, or the page
+ *                      reported hidden), the setting is on, and the user did not close it since they
+ *                      last came back to WA. Never while the focus is in one of the app's own windows.
+ *   Accepted false     An alt-tab longer than 400 ms (opens, closes on return); a click into a small
+ *   positives          window while WA stays visible; switching apps with the keyboard while the
+ *                      pointer sits on WA's screen, toward an app on another screen.
  *   Placement          During the user's own screen share: see share-surfaces-policy. Out of the
  *                      capture while sharing.
  *   Opening by hand    PiP button, tray, shortcut: always, on the screen under the pointer.
@@ -57,6 +61,24 @@ function companionMode(state) {
     return "closed";
 }
 
+/**
+ * Does losing the focus to another application count as leaving WA? Yes when the pointer is on WA's
+ * screen; no when it went to another screen, where WA keeps showing (a heuristic: switching with the
+ * keyboard does not move the pointer). Under Wayland the pointer's screen is unknown, so it always
+ * counts, and so does any unknown screen.
+ *
+ * @param {{ positionsKnown?: boolean, pointerDisplayId?: number, waDisplayId?: number }} blur
+ * @returns {boolean}
+ */
+function leftOnBlur(blur) {
+    const b = blur || {};
+    if (!b.positionsKnown || b.pointerDisplayId === undefined || b.waDisplayId === undefined) {
+        return true;
+    }
+    return b.pointerDisplayId === b.waDisplayId;
+}
+
 module.exports = {
     companionMode,
+    leftOnBlur,
 };

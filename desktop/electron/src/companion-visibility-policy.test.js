@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { companionMode } from "./companion-visibility-policy";
+import { companionMode, leftOnBlur } from "./companion-visibility-policy";
 
 // One test per row of the rules table in companion-visibility-policy.js.
 const awayInMeeting = {
@@ -62,4 +62,21 @@ test("closing by hand: closed until the user comes back to WA", () => {
 
 test("outside a meeting: never by itself", () => {
     expect(companionMode({ ...awayInMeeting, inMeeting: false })).toBe("closed");
+});
+
+test("leaving by focus: Wayland always counts, the pointer's screen is unknown there", () => {
+    expect(leftOnBlur({ positionsKnown: false, pointerDisplayId: 2, waDisplayId: 1 })).toBe(true);
+});
+
+test("leaving by focus: the pointer on WA's screen counts", () => {
+    expect(leftOnBlur({ positionsKnown: true, pointerDisplayId: 1, waDisplayId: 1 })).toBe(true);
+});
+
+test("leaving by focus: the pointer on another screen does not, WA keeps showing there", () => {
+    expect(leftOnBlur({ positionsKnown: true, pointerDisplayId: 2, waDisplayId: 1 })).toBe(false);
+});
+
+test("leaving by focus: an unknown screen counts as leaving", () => {
+    expect(leftOnBlur({ positionsKnown: true, pointerDisplayId: 1 })).toBe(true);
+    expect(leftOnBlur({ positionsKnown: true, waDisplayId: 1 })).toBe(true);
 });

@@ -12,16 +12,25 @@ const fake = vi.hoisted(() => ({
     displays: [1],
     identifying: false,
     canHide: true,
+    windowDisplay: 1,
+    pointerDisplay: 1,
+    focusedWindow: null,
+    wayland: false,
+    appBlur: () => {},
+    logs: [],
 }));
 
 vi.mock("electron", () => ({
+    app: { on: (event, callback) => event === "browser-window-blur" && (fake.appBlur = callback) },
+    BrowserWindow: { getFocusedWindow: () => fake.focusedWindow },
     screen: {
         getCursorScreenPoint: () => ({ x: 0, y: 0 }),
-        getDisplayNearestPoint: () => ({ id: 1 }),
+        getDisplayNearestPoint: () => ({ id: fake.pointerDisplay }),
+        getDisplayMatching: () => ({ id: fake.windowDisplay }),
         getAllDisplays: () => fake.displays.map((id) => ({ id })),
     },
 }));
-vi.mock("electron-log", () => ({ default: { warn: () => {} } }));
+vi.mock("electron-log", () => ({ default: { warn: () => {}, info: (message) => fake.logs.push(message) } }));
 vi.mock("./hud-windows", () => ({
     isHudWindowOpen: () => fake.companion !== undefined,
     getHudWindow: () => fake.companion,
@@ -52,13 +61,17 @@ vi.mock("./window", () => ({
         isVisible: () => true,
         isMinimized: () => fake.main.minimized,
         isFocused: () => fake.main.focused,
+        getBounds: () => ({ x: 0, y: 0, width: 1, height: 1 }),
     }),
 }));
 vi.mock("./tab-manager", () => ({
     getControllingWorldContents: () => ({ send: (channel, value) => fake.sent.push(value) }),
 }));
 vi.mock("./content-protection", () => ({ shouldProtectWindowFromCapture: () => false }));
-vi.mock("./platform-capture-policy", () => ({ canHideWindowsFromCapture: () => fake.canHide }));
+vi.mock("./platform-capture-policy", () => ({
+    canHideWindowsFromCapture: () => fake.canHide,
+    usesSystemScreenSharePicker: () => fake.wayland,
+}));
 vi.mock("./screen-identify", () => ({ isIdentifyingScreens: () => fake.identifying }));
 
 let controller;
@@ -73,6 +86,11 @@ beforeEach(async () => {
     fake.displays = [1];
     fake.identifying = false;
     fake.canHide = true;
+    fake.windowDisplay = 1;
+    fake.pointerDisplay = 1;
+    fake.focusedWindow = null;
+    fake.wayland = false;
+    fake.logs = [];
     controller = await import("./companion-controller");
     controller.startCompanionController();
 });
@@ -253,4 +271,79 @@ test("on Linux, during the user's share, it never opens by itself, even with ano
     controller.setSharedScreenDisplay(1);
     await leaveWA();
     expect(isOpen()).toBe(false);
+});
+
+// Focus leaving WA. `focusTo` is the window that gets it: null for another application, or one of the
+// app's own windows (meeting bar, companion). 500 ms is past the 400 ms open debounce.
+async function focusTo(window) {
+    fake.main = { minimized: false, focused: false };
+    fake.focusedWindow = window;
+    fake.appBlur();
+    await vi.advanceTimersByTimeAsync(500);
+}
+const bar = { name: "meeting bar" };
+
+test("another application with the pointer on WA's screen is leaving it; coming back closes it", async () => {
+    await focusTo(null);
+    expect(isOpen()).toBe(true);
+
+    fake.focusedWindow = {};
+    await comeBack();
+    expect(isOpen()).toBe(false);
+});
+
+test("another application with the pointer on another screen is not leaving it", async () => {
+    fake.pointerDisplay = 2;
+    await focusTo(null);
+    expect(isOpen()).toBe(false);
+});
+
+test("on Wayland the pointer position is unknown: any blur is leaving it", async () => {
+    fake.wayland = true;
+    fake.pointerDisplay = 2;
+    await focusTo(null);
+    expect(isOpen()).toBe(true);
+});
+
+test("focus moving to the meeting bar opens nothing; from the bar to another application opens it", async () => {
+    await focusTo(bar);
+    expect(isOpen()).toBe(false);
+
+    await focusTo(null);
+    expect(isOpen()).toBe(true);
+});
+
+test("opened by itself, it stays open while the focus moves to it then to the bar", async () => {
+    await focusTo(null);
+    fake.pointerDisplay = 2;
+    await focusTo(fake.companion);
+    await focusTo(bar);
+    expect(isOpen()).toBe(true);
+});
+
+test('a blur during "Identify screens" is not leaving it', async () => {
+    fake.identifying = true;
+    await focusTo(null);
+    expect(isOpen()).toBe(false);
+});
+
+test("an invitation while the focus is in the meeting bar does not open it", async () => {
+    await focusTo(bar);
+    await setPresence({ inMeeting: false, invitationPending: true });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(isOpen()).toBe(false);
+});
+
+test("WA shown again without the focus closes it", async () => {
+    await focusTo(null);
+    controller.onMainWindowShown();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(isOpen()).toBe(false);
+});
+
+test("an automatic open logs the flags that caused it", async () => {
+    await focusTo(null);
+    expect(fake.logs.some((line) => line.startsWith("Companion auto-open:") && line.includes("leftApp=true"))).toBe(
+        true
+    );
 });
