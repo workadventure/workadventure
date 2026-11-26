@@ -51,7 +51,13 @@
         }
     });
 
+    // The right bar overflows on its left: the buttons that fall into the burger menu are always the leftmost ones,
+    // so the first button still shown is the one right after a hidden one. The "first" computed in the store from
+    // the list index cannot know that.
+    let hiddenItems: Record<string, boolean> = $state({});
+
     function onMenuItemVisibilityChange(isVisible: boolean, button: RightMenuItem) {
+        hiddenItems[button.id] = !isVisible;
         button.fallsInBurgerMenuStore.set(!isVisible);
     }
 </script>
@@ -167,6 +173,8 @@
                                 >
                                     <ButtonComponent
                                         {...button.props}
+                                        first={button.props.first ||
+                                            (index > 0 && hiddenItems[barMenuItems[index - 1].id])}
                                         classList={button.props.last && index !== barMenuItems.length - 1
                                             ? "me-1 @md/actions:me-2 @xl/actions:me-4"
                                             : ""}
