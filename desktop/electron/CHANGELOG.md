@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.0.0-beta.10](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.9...desktop-v2.0.0-beta.10) (2026-11-27)
+
+
+### Bug Fixes
+
+* **desktop:** keep iframes the server redirects in the app ([a8905e9](https://github.com/workadventure/workadventure/commit/a8905e9904c203a0fb48aa3c013a0e3fc9c40cdd)), closes [#7075](https://github.com/workadventure/workadventure/issues/7075)
+* **desktop:** show system notifications by default in the desktop app ([#7093](https://github.com/workadventure/workadventure/issues/7093)) ([4d10875](https://github.com/workadventure/workadventure/commit/4d10875fa1d2a4e76129fbbb38e4bfc3cc84a90d))
+
 ## [2.0.0-beta.9](https://github.com/workadventure/workadventure/compare/desktop-v2.0.0-beta.8...desktop-v2.0.0-beta.9) (2026-11-20)
 
 
