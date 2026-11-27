@@ -4,7 +4,7 @@ import type { BuiltinOnboardingItem } from "../onboardingRules";
 
 /** Tips about what a conversation offers. Each starts on its button, which only shows in a bubble. */
 
-export const lockBubble: BuiltinOnboardingItem = {
+export const lockBubbleTip: BuiltinOnboardingItem = {
     id: "wa.conversation.lockBubble",
     kind: "tour",
     title: () => get(LL).onboarding.lockBubble.title(),
@@ -22,7 +22,7 @@ export const lockBubble: BuiltinOnboardingItem = {
     ],
 };
 
-export const screenShare: BuiltinOnboardingItem = {
+export const screenShareTip: BuiltinOnboardingItem = {
     id: "wa.conversation.screenShare",
     kind: "tour",
     title: () => get(LL).onboarding.screenSharing.title(),
@@ -39,7 +39,7 @@ export const screenShare: BuiltinOnboardingItem = {
     ],
 };
 
-export const pictureInPicture: BuiltinOnboardingItem = {
+export const pictureInPictureTip: BuiltinOnboardingItem = {
     id: "wa.conversation.pictureInPicture",
     kind: "tour",
     title: () => get(LL).onboarding.pictureInPicture.title(),

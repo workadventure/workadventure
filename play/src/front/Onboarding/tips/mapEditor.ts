@@ -5,7 +5,7 @@ import type { BuiltinOnboardingItem } from "../onboardingRules";
 
 /** Tours of the map editor, for the users who can edit the map. */
 
-export const furniture: BuiltinOnboardingItem = {
+export const furnitureTip: BuiltinOnboardingItem = {
     id: "wa.mapEditor.furniture",
     kind: "tour",
     title: () => get(LL).onboarding.mapEditorTour.title(),

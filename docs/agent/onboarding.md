@@ -8,7 +8,8 @@ The onboarding engine lives in `play/src/front/Onboarding/` (rules, scheduler, r
 ## Adding a tip
 
 1. Write it in its group's file, `play/src/front/Onboarding/tips/<group>.ts`, typed `BuiltinOnboardingItem`, with the
-   id `wa.<group>.<name>`. `<group>` is one of `OnboardingTipGroup` (`libs/messages`); a test checks it.
+   id `wa.<group>.<name>`. `<group>` is one of `OnboardingTipGroup` (`libs/messages`); a test checks it. Export it as
+   `<name>Tip` (`screenShareTip`): the suffix keeps it apart from the stores and functions of the feature it is about.
 2. Place it in `tips/index.ts`, at the position its priority calls for: when two tips can start, the first one does.
 3. Add its id, with the English label the SaaS editor shows, to `BuiltinTourId` in `libs/messages`. Without it, the
    tip does not compile.
