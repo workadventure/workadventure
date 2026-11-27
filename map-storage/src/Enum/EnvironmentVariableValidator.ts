@@ -66,6 +66,12 @@ export const EnvironmentVariables = z.object({
             "The prefix to strip if a reverse proxy is proxying calls to the map-storage from a path, e.g. /map-storage",
         )
         .transform(emptyStringToUndefined),
+    GRPC_BIND_HOST: z
+        .string()
+        .optional()
+        .describe(
+            "Bind host for the map-storage gRPC server. Defaults to `[::]` (all IPv6 and IPv4 addresses). Set to `0.0.0.0` on hosts without IPv6 support.",
+        ),
     STORAGE_DIRECTORY: z
         .string()
         .optional()
