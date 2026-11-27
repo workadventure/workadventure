@@ -99,14 +99,14 @@ describe("parseOnboardingData", () => {
         const { data, errors } = parseOnboardingData({
             ...example,
             startWhen: "later",
-            builtin: { ...example.builtin, disabledGroups: ["chat"] },
+            builtin: { ...example.builtin, disabledTopics: ["chat"] },
         });
         expect(data?.quietPeriodMinutes).toBe(120);
         expect(data?.builtin).toEqual(example.builtin);
         expect(data?.items).toHaveLength(2);
         expect(errors).toEqual([
             'unknown field "startWhen" is ignored',
-            'builtin: unknown field "disabledGroups" is ignored',
+            'builtin: unknown field "disabledTopics" is ignored',
         ]);
     });
 
@@ -143,6 +143,12 @@ describe("parseOnboardingData", () => {
         expect(json).toEqual({ version: 1, extra: true, builtin: { extra: true } });
     });
 
+    it("keeps the groups it knows in disabledGroups, and says which it does not", () => {
+        const { data, errors } = parseOnboardingData({ version: 1, builtin: { disabledGroups: ["chat", "later"] } });
+        expect(data?.builtin?.disabledGroups).toEqual(["chat"]);
+        expect(errors).toEqual(['builtin.disabledGroups: "later" is not a group of this release']);
+    });
+
     it("keeps nothing when the root is wrong", () => {
         expect(parseOnboardingData({ version: 2, items: [modal("a")] }).data).toBeUndefined();
         expect(parseOnboardingData({ version: 1, quietPeriodMinutes: -1 }).data).toBeUndefined();
@@ -150,8 +156,13 @@ describe("parseOnboardingData", () => {
     });
 
     it("lists every built-in tour a world can turn off", () => {
+        // The type of a tour's id already catches a tip missing from BuiltinTourId; this catches an id left in it
+        // without its tip, and two tips with one id, which the schema and the SaaS editor would offer as a switch.
         const tours = builtinItems.filter((item) => item.kind === "tour").map((item) => item.id);
-        expect(tours.sort()).toEqual(BuiltinTourId.options.map((option) => option.value).sort());
+        expect(
+            tours.sort(),
+            "Add or remove the id in BuiltinTourId (libs/messages), then run npm run export-json-schema there",
+        ).toEqual(BuiltinTourId.options.map((option) => option.value).sort());
     });
 
     it("names a topic in every built-in id: wa.<group> or wa.<group>.<name>", () => {
@@ -208,6 +219,20 @@ describe("mergeItems", () => {
         expect(items[1].steps[0].type === "modal" && items[1].steps[0].text()).toBe(
             "Town halls now happen on the second floor.",
         );
+    });
+
+    it("leaves out every built-in item of a group the world turned off, the tutorial and announcements included", () => {
+        const world = (disabledGroups: string[]) =>
+            parseOnboardingData({ version: 1, builtin: { disabledGroups } }).data;
+        expect(ids(mergeItems(builtin, world(["conversation"])))).toEqual([
+            "wa.tutorial",
+            "wa.announcement.v1",
+            "wa.mapEditor.furniture",
+        ]);
+        expect(ids(mergeItems(builtin, world(["tutorial", "announcement"])))).toEqual([
+            "wa.mapEditor.furniture",
+            "wa.conversation.lockBubble",
+        ]);
     });
 
     it("keeps every built-in item without a world config", () => {

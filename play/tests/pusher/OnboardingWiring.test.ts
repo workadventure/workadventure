@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { BuiltinOnboardingAnchor } from "@workadventure/messages";
-import { EMITTER_SOURCES } from "./analyticsEmitterSources";
+import { ANALYTICS_EVENT_CATALOG, BuiltinOnboardingAnchor } from "@workadventure/messages";
+import { builtinItems } from "../../src/front/Onboarding/builtinItems";
+import { referencedKeys } from "../../src/front/Onboarding/onboardingRules";
+import { EMITTER_SOURCES, frontSentEventNames } from "./analyticsEmitterSources";
 
 /**
  * World onboarding files name the anchors of the schema, so each one must be attached somewhere in the front: a
@@ -23,5 +25,24 @@ describe("Onboarding wiring", () => {
             attachedNowhere,
             "Attach each anchor with {@attach onboarding(...)}, or remove it from BuiltinOnboardingAnchor",
         ).toEqual([]);
+    });
+
+    it("only names in a built-in item's skipIfUsed the analytics events the front sends", () => {
+        const sent = frontSentEventNames();
+        // A scraper that silently finds nothing would pass everything.
+        expect(sent.size).toBeGreaterThan(50);
+        const neverSent = [...referencedKeys(builtinItems)]
+            .filter((key) => Object.hasOwn(ANALYTICS_EVENT_CATALOG, key))
+            .filter((name) => !sent.has(name));
+        expect(neverSent, "The front never sends these events: a tip that names them would never be skipped").toEqual(
+            [],
+        );
+    });
+
+    it("never gives an anchor the name of an analytics event, as both share the used list", () => {
+        const both = BuiltinOnboardingAnchor.options
+            .map((option) => option.value)
+            .filter((anchor) => Object.hasOwn(ANALYTICS_EVENT_CATALOG, anchor));
+        expect(both).toEqual([]);
     });
 });

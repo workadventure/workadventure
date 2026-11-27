@@ -4,9 +4,9 @@ import { ENABLE_TUTORIAL } from "../Enum/EnvironmentVariable";
 import { currentPlayerGroupIdStore } from "../Stores/CurrentPlayerGroupStore";
 import { gameSceneStore } from "../Stores/GameSceneStore";
 import { inBbbStore, inJitsiStore, inLivekitStore } from "../Stores/MediaStore";
-import { mapEditorMenuVisibleStore } from "../Stores/MenuStore";
-import type { OnboardingItem } from "./onboardingRules";
+import type { BuiltinOnboardingItem } from "./onboardingRules";
 import { releaseNotes } from "./releaseNotes";
+import { tips } from "./tips";
 
 /** `enableTutorial` in the room metadata, or `ENABLE_TUTORIAL` without metadata (self-hosted). */
 const tutorialEnabled = derived(gameSceneStore, (scene) => {
@@ -28,7 +28,7 @@ function worldName(): string {
  * Built-in content, in priority order. Ids are `wa.<group>` or `wa.<group>.<name>`, `<group>` from `OnboardingTipGroup`
  * (a test checks it). The state is keyed by id, so a renamed item shows again.
  */
-export const builtinItems: OnboardingItem[] = [
+export const builtinItems: BuiltinOnboardingItem[] = [
     {
         id: "wa.tutorial",
         kind: "tutorial",
@@ -57,85 +57,5 @@ export const builtinItems: OnboardingItem[] = [
     // The newest release first: only the first pending announcement shows. A version is added here when it is
     // released, never by a feature PR (see docs/agent/release-notes.md).
     releaseNotes("1.35"),
-    {
-        id: "wa.mapEditor.furniture",
-        kind: "tour",
-        title: () => get(LL).onboarding.mapEditorTour.title(),
-        // The Tools menu starts the tour for everyone, so editor rights are checked here. On touch devices the
-        // map editor has no entity list.
-        audience: { allowed: mapEditorMenuVisibleStore, touch: false },
-        when: { minDaysSinceFirstVisit: 1 },
-        steps: [
-            {
-                type: "popover",
-                anchor: "actionBar.mapMenu",
-                advance: "click",
-                title: () => get(LL).onboarding.mapEditorTour.openMenu.title(),
-                text: () => get(LL).onboarding.mapEditorTour.openMenu.text({ menu: get(LL).actionbar.map() }),
-            },
-            {
-                type: "popover",
-                anchor: "mapMenu.editMap",
-                side: "left",
-                advance: "click",
-                text: () => get(LL).onboarding.mapEditorTour.openEditor({ editor: get(LL).actionbar.mapEditor() }),
-            },
-            {
-                type: "popover",
-                anchor: "mapEditor.entityList",
-                side: "left",
-                title: () => get(LL).onboarding.mapEditorTour.placeObject.title(),
-                text: () => get(LL).onboarding.mapEditorTour.placeObject.text(),
-            },
-        ],
-    },
-    {
-        id: "wa.conversation.lockBubble",
-        kind: "tour",
-        title: () => get(LL).onboarding.lockBubble.title(),
-        // The lock button only shows in a bubble: the tip starts there, for someone who has not used it yet.
-        when: { minDaysSinceFirstVisit: 1, onAnchor: "actionBar.lockBubble" },
-        steps: [
-            {
-                type: "popover",
-                anchor: "actionBar.lockBubble",
-                skipIfUsed: "actionBar.lockBubble",
-                title: () => get(LL).onboarding.lockBubble.title(),
-                text: () => get(LL).onboarding.lockBubble.description(),
-                video: "./static/Videos/LockBubble.mp4",
-            },
-        ],
-    },
-    {
-        id: "wa.conversation.screenShare",
-        kind: "tour",
-        title: () => get(LL).onboarding.screenSharing.title(),
-        when: { minDaysSinceFirstVisit: 1, onAnchor: "actionBar.screenShare" },
-        steps: [
-            {
-                type: "popover",
-                anchor: "actionBar.screenShare",
-                skipIfUsed: "actionBar.screenShare",
-                title: () => get(LL).onboarding.screenSharing.title(),
-                text: () => get(LL).onboarding.screenSharing.description(),
-                video: "./static/images/screensharing.mp4",
-            },
-        ],
-    },
-    {
-        id: "wa.conversation.pictureInPicture",
-        kind: "tour",
-        title: () => get(LL).onboarding.pictureInPicture.title(),
-        when: { minDaysSinceFirstVisit: 3, onAnchor: "actionBar.pictureInPicture" },
-        steps: [
-            {
-                type: "popover",
-                anchor: "actionBar.pictureInPicture",
-                skipIfUsed: "actionBar.pictureInPicture",
-                title: () => get(LL).onboarding.pictureInPicture.title(),
-                text: () => get(LL).onboarding.pictureInPicture.description(),
-                video: "./static/Videos/PictureInPicture.mp4",
-            },
-        ],
-    },
+    ...tips,
 ];

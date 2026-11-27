@@ -1,10 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { writable } from "svelte/store";
-import { Subject } from "rxjs";
+import { ReplaySubject, Subject } from "rxjs";
 import type { OnboardingAnchor } from "@workadventure/messages";
 import type { GameScene } from "../Phaser/Game/GameScene";
 import { decide, newState } from "./onboardingRules";
-import type { OnboardingContext, OnboardingItem, OnboardingState, OnboardingStep } from "./onboardingRules";
+import type { OnboardingContext, OnboardingItem, OnboardingState, OnboardingStep, Reason } from "./onboardingRules";
 import type { ItemRun } from "./ItemRunner";
 
 // The runner's steps, without a DOM: each started step is recorded with its run.
@@ -24,7 +24,12 @@ vi.mock("./OnboardingAnchors", () => ({
     anchorClicked: new Subject(),
     anchorUsed: new Subject(),
 }));
-vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: { trackAdminEvent: () => {} } }));
+// A new subject in each scheduler test: the client sends each name once per page load.
+const analytics = vi.hoisted(() => ({
+    trackAdminEvent: vi.fn(),
+    eventNamesSent: undefined as unknown as ReplaySubject<string>,
+}));
+vi.mock("../Administration/AnalyticsClient", () => ({ analyticsClient: analytics }));
 vi.mock("../Connection/LocalUserStore", () => ({ localUserStore: { isLogged: () => true } }));
 vi.mock("../Touch/TouchScreenManager", () => ({ touchScreenManager: { primaryTouchDevice: false } }));
 
@@ -133,6 +138,7 @@ describe("decide", () => {
         expect(decide([used], state({ optedOut: true, used: ["actionBar.chat"] }), ctx())).toEqual({
             skip: [],
             start: undefined,
+            reasons: { a: "optedOut" },
         });
     });
 
@@ -164,7 +170,7 @@ describe("decide", () => {
             ],
         });
         const result = decide([item], state({ used: ["actionBar.lockBubble"], lastAutoStartAt: hoursAgo(0) }), ctx());
-        expect(result).toEqual({ skip: ["a"], start: undefined });
+        expect(result).toEqual({ skip: ["a"], start: undefined, reasons: { a: "used" } });
     });
 
     it("holds tours back until the start delay is over, but not announcements or the tutorial", () => {
@@ -179,11 +185,16 @@ describe("decide", () => {
 
     it("starts the first pending announcement and skips the others", () => {
         const result = decide([announcement("a"), tour("t"), announcement("b")], state(), ctx());
-        expect(result).toEqual({ skip: ["b"], start: expect.objectContaining({ id: "a" }) });
+        expect(result).toEqual({
+            skip: ["b"],
+            start: expect.objectContaining({ id: "a" }),
+            reasons: { a: "starts", t: "anotherItemStarts", b: "laterAnnouncement" },
+        });
         // Nothing starts in the quiet period, so nothing is skipped either.
         expect(decide([announcement("a"), announcement("b")], state({ lastAutoStartAt: hoursAgo(0) }), ctx())).toEqual({
             skip: [],
             start: undefined,
+            reasons: { a: "quietPeriod", b: "quietPeriod" },
         });
     });
 
@@ -195,7 +206,58 @@ describe("decide", () => {
 
     it("skips an item that `doneWhen` already says is done", () => {
         const item = { ...announcement("a"), doneWhen: writable(true) };
-        expect(decide([item], state(), ctx())).toEqual({ skip: ["a"], start: undefined });
+        expect(decide([item], state(), ctx())).toEqual({
+            skip: ["a"],
+            start: undefined,
+            reasons: { a: "doneAlready" },
+        });
+    });
+});
+
+describe("decide, with used events and reasons", () => {
+    it("skips an item whose item-level skipIfUsed was used, even in the quiet period", () => {
+        const item = tour("a", { skipIfUsed: ["chat.matrix_folder.created"] });
+        const used = state({ used: ["chat.matrix_folder.created"], lastAutoStartAt: hoursAgo(0) });
+        expect(decide([item], used, ctx())).toMatchObject({ skip: ["a"], start: undefined, reasons: { a: "used" } });
+        expect(decide([item], state(), ctx()).start?.id).toBe("a");
+    });
+
+    it("looks at a tip interrupted twice after every other item", () => {
+        const interrupted = state({ interrupted: { a: 2 } });
+        expect(decide([tour("a"), tour("b")], interrupted, ctx())).toMatchObject({
+            start: { id: "b" },
+            reasons: { a: "demoted", b: "starts" },
+        });
+        // Nothing else can start: it does, and it is never recorded as skipped.
+        const bSeen = state({ interrupted: { a: 2 }, items: { b: { status: "done", at: hoursAgo(1) } } });
+        expect(decide([tour("a"), tour("b")], bSeen, ctx())).toMatchObject({ skip: [], start: { id: "a" } });
+    });
+
+    // Keyed by `Reason`: a reason without a case does not compile. Item "x" gets the reason.
+    const cases: Record<Reason, [OnboardingItem[], Partial<OnboardingState>, Partial<OnboardingContext>]> = {
+        seen: [[tour("x")], { items: { x: { status: "done", at: hoursAgo(1) } } }, {}],
+        optedOut: [[tour("x")], { optedOut: true }, {}],
+        unpublished: [[tour("x", { published: false })], {}, {}],
+        notInAudience: [[tour("x", { audience: { tags: ["admin"] } })], {}, {}],
+        expired: [[tour("x", { when: { expiresAt: "2026-01-01" } })], {}, {}],
+        tooEarly: [[tour("x", { when: { minDaysSinceFirstVisit: 1 } })], {}, {}],
+        tooLate: [[tour("x", { when: { maxDaysSinceFirstVisit: 1 } })], { firstVisit: "2026-11-20" }, {}],
+        waitingForAfter: [[tour("a"), tour("x", { when: { after: "a" } })], {}, {}],
+        onAnchorNotOnScreen: [[tour("x", { when: { onAnchor: "actionBar.lockBubble" } })], {}, {}],
+        used: [[tour("x", { skipIfUsed: ["actionBar.chat"] })], { used: ["actionBar.chat"] }, {}],
+        doneAlready: [[tour("x", { doneWhen: writable(true) })], {}, {}],
+        laterAnnouncement: [[announcement("a"), announcement("x")], {}, {}],
+        anotherItemStarts: [[tour("a"), tour("x")], {}, {}],
+        demoted: [[tour("x"), tour("a")], { interrupted: { x: 2 } }, {}],
+        quietPeriod: [[tour("x")], { lastAutoStartAt: hoursAgo(0) }, {}],
+        startDelay: [[tour("x")], {}, { startDelayOver: false }],
+        firstAnchorNotOnScreen: [[tour("x")], {}, { anchorVisible: () => false }],
+        starts: [[tour("x")], {}, {}],
+    };
+    it.each(Object.entries(cases))("gives each item one reason: %s", (reason, [items, extra, context]) => {
+        const { reasons } = decide(items, state(extra), ctx(context));
+        expect(reasons.x).toBe(reason);
+        expect(Object.keys(reasons).sort()).toEqual(items.map((item) => item.id).sort());
     });
 });
 
@@ -240,6 +302,14 @@ describe("runItem", () => {
             steps: [{ ...threeSteps.steps[0], skipIfUsed: "actionBar.mapMenu" }, threeSteps.steps[1]],
         });
         run(item, ["actionBar.mapMenu"]);
+        expect(started.map((s) => s.anchor)).toEqual(["mapMenu.editMap"]);
+    });
+
+    it("jumps over a step whose skipIfUsed names an analytics event the user sent", () => {
+        const item = tour("t", {
+            steps: [{ ...threeSteps.steps[0], skipIfUsed: "chat.matrix_folder.created" }, threeSteps.steps[1]],
+        });
+        run(item, ["chat.matrix_folder.created"]);
         expect(started.map((s) => s.anchor)).toEqual(["mapMenu.editMap"]);
     });
 
@@ -322,6 +392,8 @@ describe("OnboardingScheduler", () => {
 
     beforeEach(() => {
         started.length = 0;
+        analytics.eventNamesSent = new ReplaySubject<string>(Number.POSITIVE_INFINITY);
+        analytics.trackAdminEvent.mockClear();
     });
     afterEach(() => {
         scheduler?.destroy();
@@ -483,6 +555,116 @@ describe("OnboardingScheduler", () => {
         // The tutorial does not start again; the announcement, for an existing user, does.
         expect(started.map((step) => step.anchor)).toEqual(["modal"]);
         expect(map.get("onboarding")).toEqual({ firstVisit: "a later format" });
+    });
+
+    /** A user who saw the tutorial and the news: what the test adds is all that can start. */
+    function seenAll(extra: Partial<OnboardingState> = {}): OnboardingState {
+        const at = new Date().toISOString();
+        return {
+            firstVisit: "2026-11-24",
+            items: { "wa.tutorial": { status: "done", at }, "wa.news": { status: "done", at } },
+            used: [],
+            ...extra,
+        };
+    }
+
+    it("records an event an item names, even one sent before the scheduler exists, and no other event", () => {
+        analytics.eventNamesSent.next("chat.matrix_folder.created");
+        analytics.eventNamesSent.next("bubble.say.opened");
+        const tip = tour("tip", { skipIfUsed: ["chat.matrix_folder.created"] });
+        const { state } = start({ tutorialDone: true, onboarding: seenAll() }, [...items, tip]);
+        expect(state().used).toEqual(["chat.matrix_folder.created"]);
+        // Skipped at once, without waiting for the start delay.
+        expect(state().items.tip?.status).toBe("skipped");
+    });
+
+    it("ends a running tip as done when the user does what it is about", () => {
+        vi.useFakeTimers();
+        visible.add("actionBar.mapMenu");
+        const tip = tour("tip", { skipIfUsed: ["chat.matrix_folder.created"] });
+        const { state } = start({ tutorialDone: true, onboarding: seenAll() }, [...items, tip]);
+        vi.advanceTimersByTime(30_000);
+        expect(started.map((step) => step.anchor)).toEqual(["actionBar.mapMenu"]);
+
+        analytics.eventNamesSent.next("chat.matrix_folder.created");
+        expect(state().items.tip?.status).toBe("done");
+        expect(analytics.trackAdminEvent).toHaveBeenCalledWith(
+            "onboarding.item_done",
+            expect.objectContaining({ itemId: "tip" }),
+        );
+    });
+
+    it("puts a tip interrupted twice after the others, and keeps it", () => {
+        vi.useFakeTimers();
+        visible.add("actionBar.mapMenu");
+        visible.add("actionBar.chat");
+        const other = tour("b", { steps: [{ type: "popover", anchor: "actionBar.chat", text: () => "" }] });
+        const { state } = start({ tutorialDone: true, onboarding: seenAll() }, [...items, tour("a"), other]);
+        vi.advanceTimersByTime(30_000);
+        // Its target goes away twice while it shows (a bubble that closes, say).
+        started.at(-1)?.run.back();
+        expect(state().interrupted).toEqual({ a: 1 });
+        vi.advanceTimersByTime(61 * 60_000);
+        expect(started.at(-1)?.anchor).toBe("actionBar.mapMenu");
+        started.at(-1)?.run.back();
+        expect(state().interrupted).toEqual({ a: 2 });
+
+        vi.advanceTimersByTime(61 * 60_000);
+        expect(started.at(-1)?.anchor).toBe("actionBar.chat");
+        expect(state().items.a).toBeUndefined();
+    });
+
+    it("does not count an interruption by the Help menu, nor one of the tutorial", () => {
+        vi.useFakeTimers();
+        visible.add("actionBar.mapMenu");
+        const { state, scheduler: help } = start({ tutorialDone: true, onboarding: seenAll() }, [
+            ...items,
+            tour("a"),
+            tour("b"),
+        ]);
+        vi.advanceTimersByTime(30_000);
+        help.startFromHelp("b");
+        expect(state().interrupted).toBeUndefined();
+        help.destroy();
+
+        const { state: newUser, scheduler: withTutorial } = start({});
+        withTutorial.destroy();
+        expect(newUser().interrupted).toBeUndefined();
+    });
+
+    it("forgets the interruptions of a tip once it ends done or dismissed", () => {
+        vi.useFakeTimers();
+        visible.add("actionBar.mapMenu");
+        const { state } = start({ tutorialDone: true, onboarding: seenAll({ interrupted: { a: 1 } }) }, [
+            ...items,
+            tour("a"),
+        ]);
+        vi.advanceTimersByTime(30_000);
+        started.at(-1)?.run.dismiss();
+        expect(state().items.a?.status).toBe("dismissed");
+        expect(state().interrupted).toBeUndefined();
+    });
+
+    it("sends onboarding.opted_out from a tip, and from the Help menu when tips were on", () => {
+        vi.useFakeTimers();
+        visible.add("actionBar.mapMenu");
+        const { scheduler: help } = start({ tutorialDone: true, onboarding: seenAll() }, [...items, tour("a")]);
+        vi.advanceTimersByTime(30_000);
+        started.at(-1)?.run.optOut?.();
+        expect(analytics.trackAdminEvent).toHaveBeenCalledWith("onboarding.opted_out", {
+            from: "tip",
+            itemId: "a",
+            source: "world",
+            step: 0,
+        });
+
+        analytics.trackAdminEvent.mockClear();
+        // Already off: nothing to count.
+        help.setShowTips(false);
+        expect(analytics.trackAdminEvent).not.toHaveBeenCalledWith("onboarding.opted_out", expect.anything());
+        help.setShowTips(true);
+        help.setShowTips(false);
+        expect(analytics.trackAdminEvent).toHaveBeenCalledWith("onboarding.opted_out", { from: "help" });
     });
 
     it("writes tutorialDone when the tutorial ends, for map scripts", () => {

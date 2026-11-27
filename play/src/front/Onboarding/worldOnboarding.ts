@@ -2,6 +2,7 @@ import { get } from "svelte/store";
 import { parseOnboardingData } from "@workadventure/messages";
 import type { OnboardingData, OnboardingItemData, OnboardingText } from "@workadventure/messages";
 import { locale } from "../../i18n/i18n-svelte";
+import { idGroup } from "./onboardingRules";
 import type { OnboardingItem, OnboardingStep } from "./onboardingRules";
 
 /** Past this, the world's items are left out and only the built-in ones run. */
@@ -42,8 +43,11 @@ function worldItem(item: OnboardingItemData): OnboardingItem {
 /** The world's items first, then the built-in items it keeps. */
 export function mergeItems(builtin: OnboardingItem[], world: OnboardingData | undefined): OnboardingItem[] {
     const disabledTours: string[] = world?.builtin?.disabledTours ?? [];
-    const kept = builtin.filter((item) =>
-        item.kind === "announcement" ? world?.builtin?.announcements !== false : !disabledTours.includes(item.id),
+    const disabledGroups: string[] = world?.builtin?.disabledGroups ?? [];
+    const kept = builtin.filter(
+        (item) =>
+            !disabledGroups.includes(idGroup(item.id)) &&
+            (item.kind === "announcement" ? world?.builtin?.announcements !== false : !disabledTours.includes(item.id)),
     );
     return [...(world?.items.map(worldItem) ?? []), ...kept];
 }

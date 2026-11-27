@@ -11,8 +11,9 @@ const visibleNodes = new Map<OnboardingAnchor, Set<HTMLElement>>();
 export const anchorClicked = new Subject<OnboardingAnchor>();
 
 /**
- * Every use of an anchor, for `skipIfUsed`: a click on it, or a feature used without one, such as a keyboard shortcut,
- * which calls `anchorUsed.next()` itself. Unlike a click, a use does not complete a step.
+ * Every use of an anchor, for `skipIfUsed`: a click on it, or a keyboard shortcut for it, which calls `anchorUsed.next()`
+ * itself. Unlike a click, a use does not complete a step. A feature that has no anchor marks its use by sending its
+ * analytics event (see `AnalyticsClient.eventNamesSent`), not through here.
  */
 export const anchorUsed = new Subject<OnboardingAnchor>();
 
@@ -29,7 +30,11 @@ export function anchorNode(anchor: OnboardingAnchor): HTMLElement | undefined {
     return undefined;
 }
 
-/** Where an anchor shows up, for an item of the Help menu that cannot start because its anchor is not on screen. */
+/**
+ * Where an anchor shows up, for an item of the Help menu that cannot start because its anchor is not on screen. Read
+ * from the anchor's area (the id up to its first dot), so a new anchor needs no case here, except one that only shows
+ * in a conversation.
+ */
 export function anchorPlace(anchor: OnboardingAnchor): string {
     const ll = get(LL).onboarding.help;
     switch (anchor) {
@@ -37,14 +42,8 @@ export function anchorPlace(anchor: OnboardingAnchor): string {
         case "actionBar.screenShare":
         case "actionBar.pictureInPicture":
             return ll.inConversation();
-        case "mapEditor.tool.area":
-        case "mapEditor.tool.entity":
-        case "mapEditor.tool.exploration":
-        case "mapEditor.entityList":
-            return ll.inMapEditor();
-        default:
-            return ll.notHere();
     }
+    return anchor.split(".")[0] === "mapEditor" ? ll.inMapEditor() : ll.notHere();
 }
 
 function setVisible(anchor: OnboardingAnchor, node: HTMLElement, visible: boolean): void {

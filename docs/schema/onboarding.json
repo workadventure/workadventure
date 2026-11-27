@@ -31,6 +31,13 @@
             "$ref": "#/$defs/BuiltinTourId"
           },
           "description": "The built-in tours this world turns off. The tutorial has its own switch."
+        },
+        "disabledGroups": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/OnboardingTipGroup"
+          },
+          "description": "The groups of built-in items this world turns off, including items later releases add to them. `announcement` does what `announcements: false` does; `tutorial` turns the tutorial off in this world."
         }
       },
       "additionalProperties": false,
