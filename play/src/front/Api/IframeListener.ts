@@ -1,7 +1,7 @@
 import { Subject } from "rxjs";
 import * as Sentry from "@sentry/svelte";
 import { availabilityStatusToJSON } from "@workadventure/messages";
-import type { BanEvent, ChatEvent } from "@workadventure/shared-utils";
+import type { ChatEvent } from "@workadventure/shared-utils";
 import { KLAXOON_ACTIVITY_PICKER_EVENT } from "@workadventure/shared-utils";
 import type { StartWritingEvent, StopWritingEvent } from "@workadventure/shared-utils/src/Events/WritingEvent";
 import { get } from "svelte/store";
@@ -14,10 +14,8 @@ import {
 } from "../Stores/MenuStore";
 import { ProtobufClientUtils } from "../Network/ProtobufClientUtils";
 import type { MessageUserJoined } from "../Connection/ConnexionModels";
-import { analyticsClient } from "../Administration/AnalyticsClient";
-import { bannerStore, requestVisitCardsStore } from "../Stores/GameStore";
+import { bannerStore } from "../Stores/GameStore";
 import { modalIframeStore, modalVisibilityStore } from "../Stores/ModalStore";
-import { connectionManager } from "../Connection/ConnectionManager";
 
 import { gameManager } from "../Phaser/Game/GameManager";
 import type { OpenPopupEvent } from "./Events/OpenPopupEvent";
@@ -111,9 +109,6 @@ class IframeListener {
     private readonly _restoreWebcamStream: Subject<void> = new Subject();
     public readonly restoreWebcamStream = this._restoreWebcamStream.asObservable();
 
-    private readonly _addPersonnalMessageStream: Subject<string> = new Subject();
-    public readonly addPersonnalMessageStream = this._addPersonnalMessageStream.asObservable();
-
     private readonly _newChatMessageWritingStatusStream: Subject<number> = new Subject();
     public readonly newChatMessageWritingStatusStream = this._newChatMessageWritingStatusStream.asObservable();
 
@@ -188,9 +183,6 @@ class IframeListener {
 
     private readonly _modifyUIWebsiteStream: Subject<ModifyUIWebsiteEvent> = new Subject();
     public readonly modifyUIWebsiteStream = this._modifyUIWebsiteStream.asObservable();
-
-    private readonly _banPlayerIframeEvent: Subject<BanEvent> = new Subject();
-    public readonly banPlayerIframeEvent = this._banPlayerIframeEvent.asObservable();
 
     private readonly _mapEditorStream: Subject<boolean> = new Subject();
     public readonly mapEditorStream = this._mapEditorStream.asObservable();
@@ -483,8 +475,6 @@ class IframeListener {
                             this._openChatStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "closeChat") {
                             this._closeChatStream.next(iframeEvent.data);
-                        } else if (iframeEvent.type === "addPersonnalMessage") {
-                            this._addPersonnalMessageStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "newChatMessageWritingStatus") {
                             this._newChatMessageWritingStatusStream.next(iframeEvent.data);
                         } else if (iframeEvent.type === "openPopup") {
@@ -565,17 +555,6 @@ class IframeListener {
                             handleMenuUnregisterEvent(iframeEvent.data.key);
                         } else if (iframeEvent.type == "openMenu") {
                             handleOpenMenuEvent(iframeEvent.data.key);
-                        } else if (iframeEvent.type == "login") {
-                            analyticsClient.trackAdminEvent("auth.login_clicked");
-                            window.location.href = "/login";
-                        } else if (iframeEvent.type == "redirectPricing") {
-                            if (connectionManager.currentRoom && connectionManager.currentRoom.pricingUrl) {
-                                window.location.href = connectionManager.currentRoom.pricingUrl;
-                            }
-                        } else if (iframeEvent.type == "refresh") {
-                            window.location.reload();
-                        } else if (iframeEvent.type == "showBusinessCard") {
-                            requestVisitCardsStore.set(iframeEvent.data.visitCardUrl);
                         } else if (iframeEvent.type == "openModal") {
                             modalIframeStore.set(iframeEvent.data);
                             modalVisibilityStore.set(true);
@@ -604,8 +583,6 @@ class IframeListener {
                                 message as unknown as MessageEventInit<unknown>,
                             );
                             window.dispatchEvent(event);
-                        } else if (iframeEvent.type == "banUser") {
-                            this._banPlayerIframeEvent.next(iframeEvent.data);
                         } else if (iframeEvent.type == "disableMapEditor") {
                             this._mapEditorStream.next(false);
                         } else if (iframeEvent.type == "restoreMapEditor") {

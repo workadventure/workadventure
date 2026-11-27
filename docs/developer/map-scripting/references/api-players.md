@@ -63,7 +63,7 @@ interface RemotePlayerInterface {
     /**
      * A unique ID for this player. Each character on the map has a unique ID
      */
-    readonly id: number;
+    readonly playerId: number;
     /**
      * The displayed name for this player
      */
@@ -90,6 +90,12 @@ interface RemotePlayerInterface {
      * An object storing players variables
      */
     readonly state: ReadOnlyState;
+
+    /**
+     * Send an event to the player.
+     * Remote player can listen to this event using `WA.event.on(key).subscribe((event) => { ... })`.
+     */
+    sendEvent(key: string, value: unknown): Promise<void>;
 }
 ```
 
@@ -264,7 +270,7 @@ WA.players.onVariableChange("score").subscribe((event: PlayerVariableChanged) =>
 
 ## Sending an event to a remote player
 
-You can send an event to a remote player using the `WA.player.sendEvent` method.
+You can send an event to a remote player using the `sendEvent` method of the `RemotePlayer` object.
 
 ```typescript
 RemotePlayer.sendEvent(key: string, value: unknown): Promise<void>

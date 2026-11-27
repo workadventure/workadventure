@@ -124,6 +124,7 @@ export class Meeting {
         return listener.observable;
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     stopListeningToAudioStreams(): void {
         for (const listener of this.audioStreamListeners.values()) {
             if (listener.subscriptionsCount > 0) {
@@ -139,16 +140,19 @@ export class Meeting {
         this.audioStreamListeners.clear();
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     updateParticipants(participants: RemotePlayer[]): void {
         this.participants = participants;
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     participantJoined(player: RemotePlayer): void {
         this.participants = this.participants.filter((participant) => participant.playerId !== player.playerId);
         this.participants.push(player);
         this.participantJoinStream?.next(player);
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     participantLeft(player: RemotePlayer): void {
         this.participants = this.participants.filter((participant) => participant.playerId !== player.playerId);
         this.participantLeaveStream?.next(player);
@@ -159,6 +163,7 @@ export class Meeting {
         this.leaveStream?.next();
     }
 
+    /** @internal Called by the scripting API itself; not meant to be used by map scripts. */
     appendPCMData(data: Float32Array): void {
         this.pcmDataStream.next(data);
     }

@@ -268,6 +268,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         return Promise.resolve(new Menu(key));
     }
 
+    /** @deprecated Use `WA.players.get(id)?.addAction(key, callback)`: this only adds the menu entry, without any click callback. */
     public addActionsMenuKeyToRemotePlayer(id: number, actionKey: string): void {
         sendToWorkadventure({
             type: "addActionsMenuKeyToRemotePlayer",
@@ -275,6 +276,7 @@ export class WorkAdventureUiCommands extends IframeApiContribution<WorkAdventure
         });
     }
 
+    /** @deprecated Use `action.remove()` on the object returned by `RemotePlayer.addAction()`. */
     public removeActionsMenuKeyFromRemotePlayer(id: number, actionKey: string): void {
         sendToWorkadventure({
             type: "removeActionsMenuKeyFromRemotePlayer",
