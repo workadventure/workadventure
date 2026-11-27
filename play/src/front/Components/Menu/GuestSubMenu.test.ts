@@ -13,6 +13,7 @@ import Guest from "./GuestSubMenu.svelte";
 let component: ReturnType<typeof mount> | undefined;
 const originalShare = Object.getOwnPropertyDescriptor(navigator, "share");
 const originalClipboard = Object.getOwnPropertyDescriptor(navigator, "clipboard");
+const originalExecCommand = Object.getOwnPropertyDescriptor(document, "execCommand");
 beforeEach(() => {
     vi.clearAllMocks();
     loadLocale("en-US");
@@ -27,6 +28,8 @@ afterEach(async () => {
     else Reflect.deleteProperty(navigator, "clipboard");
     if (originalShare) Object.defineProperty(navigator, "share", originalShare);
     else Reflect.deleteProperty(navigator, "share");
+    if (originalExecCommand) Object.defineProperty(document, "execCommand", originalExecCommand);
+    else Reflect.deleteProperty(document, "execCommand");
     vi.restoreAllMocks();
 });
 async function show(writeText: (text: string) => Promise<void>) {
@@ -39,6 +42,20 @@ async function show(writeText: (text: string) => Promise<void>) {
     return { button, input };
 }
 describe("map invite copy confirmation", () => {
+    it.each([true, false])("confirms HTTP fallback copy only when it succeeds (%s)", async (success) => {
+        vi.spyOn(console, "error").mockImplementation(() => {});
+        const { button, input } = await show(vi.fn());
+        Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+        const copy = vi.fn(() => success);
+        Object.defineProperty(document, "execCommand", { value: copy, configurable: true });
+        button.click();
+        await tick();
+        expect(copy).toHaveBeenCalledWith("copy");
+        expect(input.selectionStart).toBe(0);
+        expect(input.selectionEnd).toBe(input.value.length);
+        expect(button.classList.contains("btn-success")).toBe(success);
+        expect(trackEvent).toHaveBeenCalledTimes(success ? 1 : 0);
+    });
     it("confirms the copy only after the clipboard write succeeds", async () => {
         let finish: (() => void) | undefined;
         const pending = new Promise<void>((resolve) => {

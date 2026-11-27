@@ -76,7 +76,11 @@
         input.focus();
         input.select();
         try {
-            await navigator.clipboard.writeText(input.value);
+            if (navigator.clipboard) {
+                await navigator.clipboard.writeText(input.value);
+            } else if (!document.execCommand("copy")) {
+                throw new Error("Could not copy the share link");
+            }
             if (disposed) return;
             analyticsClient.trackAdminEvent("invite.sent", { inviteType: "copy_link" });
             changeCopyLinkButtonStatus();
@@ -163,7 +167,7 @@
                     readonly
                     id="input-share-link"
                     class="grow h-12 text-sm border-white bg-contrast rounded-md border border-solid border-white/20"
-                    value={location.toString()}
+                    value={getLink()}
                 />
                 <Button
                     variant={linkCopied ? "success" : "secondary"}
