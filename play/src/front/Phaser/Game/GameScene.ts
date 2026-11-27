@@ -2459,6 +2459,11 @@ export class GameScene extends DirtyScene {
         );
 
         if (room.companionTexture) {
+            // The current player was created before the room was joined, from the companion this browser knew of.
+            // When the admin keeps the companion (api/save-textures), a new browser only learns of it now.
+            if (!this.CurrentPlayer.companion) {
+                this.CurrentPlayer.addCompanion(this.currentCompanionTexturePromise);
+            }
             allPromises.push(
                 lazyLoadPlayerCompanionTexture(this.superLoad, room.companionTexture)
                     .then((texture) => {
