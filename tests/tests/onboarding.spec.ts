@@ -97,6 +97,11 @@ async function setWorldOnboarding(page: Page) {
     });
 }
 
+/** The Help menu shows its items by group, each closed: opens one. */
+async function openHelpGroup(page: Page, group: string) {
+    await page.getByTestId(`onboarding-help-group-${group}`).locator("summary").click();
+}
+
 /** Starts the user's onboarding over, as if their first visit to the world was `days` ago. */
 async function reloadWithFirstVisit(page: Page, days: number) {
     await reloadWithState(page, { firstVisit: localDateDaysAgo(days), items: overBut(), used: [] });
@@ -148,6 +153,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Menu.openMenu(page);
         await page.getByRole("button", { name: "All settings" }).click();
         await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await openHelpGroup(page, "mapEditor");
         await page.getByTestId(`onboarding-help-${TOUR_ID}`).click();
         await expect(popover).toContainText("Open the Tools menu");
         await page.keyboard.press("Escape");
@@ -284,6 +290,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Menu.openMenu(page);
         await page.getByRole("button", { name: "All settings" }).click();
         await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await openHelpGroup(page, "conversation");
         await expect(page.getByTestId(`onboarding-help-${LOCK_TIP_ID}`)).toContainText("During a conversation");
         const remind = page.getByTestId(`onboarding-help-remind-${LOCK_TIP_ID}`);
         await expect(remind).toHaveAttribute("aria-pressed", "false");
@@ -318,6 +325,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Menu.openMenu(page);
         await page.getByRole("button", { name: "All settings" }).click();
         await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await openHelpGroup(page, "world");
         await page.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`).click();
         await expect(modal).toContainText("Only admins see drafts");
         await expect(modal).toContainText("This item comes from the world's onboarding file.");
@@ -329,8 +337,10 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Menu.openMenu(bob);
         await bob.getByRole("button", { name: "All settings" }).click();
         await bob.getByRole("button", { name: "Help & tutorials" }).click();
+        await openHelpGroup(bob, "announcement");
         await expect(bob.getByTestId(`onboarding-help-${ANNOUNCEMENT_ID}`)).toBeVisible();
-        await expect(bob.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`)).toBeHidden();
+        // Not listed at all: a closed group would hide it too.
+        await expect(bob.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`)).toHaveCount(0);
     });
 
     test("Stop showing tips stops the tips, not the announcements, until the Help menu turns them back on", async ({

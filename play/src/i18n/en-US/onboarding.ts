@@ -58,6 +58,21 @@ export default {
         remindMe: "Remind me",
         // A switch: off once the user clicked "Stop showing tips".
         showTips: "Show tips automatically",
+        // The groups of the Help menu: the world's own items, then WorkAdventure's, by topic.
+        groups: {
+            world: "This world",
+            tutorial: "First visit",
+            announcement: "What's new",
+            conversation: "Conversations",
+            chat: "Chat",
+            presence: "Status and expression",
+            mapEditor: "Map editor",
+            navigation: "Finding people and places",
+            worldAdmin: "World admin tools",
+            app: "App and settings",
+        },
+        // Next to a group's name: how many of its items the user has not seen yet.
+        unseen: "{count} new",
     },
     releaseNotes: {
         title: "What's new in WorkAdventure {version}",
