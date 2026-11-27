@@ -10,6 +10,12 @@ import { Subject } from "rxjs";
  * In addition you can listen when a new item is pushed in the array
  */
 export class SearchableArrayStore<K, V> extends Array<V> implements Readable<Array<V>> {
+    // filter/map/slice… must return a plain array. By default they would build another SearchableArrayStore
+    // through its constructor, without a key callback, and its overridden pop/splice/… would then throw.
+    static get [Symbol.species]() {
+        return Array;
+    }
+
     private readonly store = writable(this);
     private readonly storesByKey = new Map<K, V>();
     private readonly _pushSubject = new Subject<V>();

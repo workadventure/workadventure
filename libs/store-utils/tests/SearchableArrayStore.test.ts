@@ -26,6 +26,17 @@ describe("SearchableArrayStore", () => {
         expect(subscription).toHaveBeenCalledTimes(3); // initial + each push
     });
 
+    it("should return plain arrays from filter and map", () => {
+        const store = new SearchableArrayStore(getKey);
+        store.push({ id: 1, name: "Item 1" }, { id: 2, name: "Item 2" });
+
+        const filtered = store.filter((item) => item.id === 1);
+
+        expect(filtered).not.toBeInstanceOf(SearchableArrayStore);
+        expect(filtered.pop()?.name).toBe("Item 1");
+        expect(store.map((item) => item.id)).toEqual([1, 2]);
+    });
+
     it("should retrieve an item by key", () => {
         const store = new SearchableArrayStore(getKey);
         store.push({ id: 1, name: "Item 1" });
