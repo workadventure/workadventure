@@ -1361,4 +1361,34 @@ describe("Space state", () => {
 
         expect(space.getState().raisedHands.map((entry) => entry.spaceUserId)).toEqual(["foo_2"]);
     });
+
+    describe("nbPublishers with LIVE_STREAMING_USERS_WITH_FEEDBACK", () => {
+        it("counts speakers and the Auditorium audience, not a camera on for a bubble", () => {
+            const space = new Space(
+                "test",
+                FilterType.LIVE_STREAMING_USERS_WITH_FEEDBACK,
+                mock<EventProcessor>(),
+                [],
+                "world",
+            );
+            const watcher = mock<SpacesWatcher>({ id: "uuid-watcher", write: vi.fn() });
+            (space as unknown as { users: Map<SpacesWatcher, Map<string, SpaceUser>> }).users.set(
+                watcher,
+                new Map<string, SpaceUser>(),
+            );
+
+            space.addUser(watcher, SpaceUser.fromPartial({ spaceUserId: "bubble", cameraState: true }));
+            expect(space.nbPublishers).toBe(0);
+
+            space.addUser(
+                watcher,
+                SpaceUser.fromPartial({ spaceUserId: "speaker", megaphoneState: true, microphoneState: true }),
+            );
+            space.addUser(
+                watcher,
+                SpaceUser.fromPartial({ spaceUserId: "attendee", attendeesState: true, cameraState: true }),
+            );
+            expect(space.nbPublishers).toBe(2);
+        });
+    });
 });
