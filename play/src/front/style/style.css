@@ -785,8 +785,28 @@ div.emoji-picker {
     }
 }
 
+/* A video covers a ring drawn inside its box: on a camera box, the ring goes over the video and its overlays. */
+.camera-box[data-onboarding-highlight] {
+    position: relative;
+    outline: none;
+    animation: none;
+}
+
+.camera-box[data-onboarding-highlight]::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 300;
+    border-radius: 0.5rem;
+    outline: 4px solid var(--color-pop-yellow);
+    outline-offset: -4px;
+    pointer-events: none;
+    animation: onboarding-highlight-pulse 1.5s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    [data-onboarding-highlight] {
+    [data-onboarding-highlight],
+    .camera-box[data-onboarding-highlight]::after {
         animation: none;
     }
 }

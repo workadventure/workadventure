@@ -114,8 +114,7 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
         await page.reload();
         await page.addStyleTag({
             content: `
-                [data-testid="onboarding-step"],
-                [data-testid^="onboarding-highlight-"] {
+                [data-testid="onboarding-modal"] {
                     display: none !important;
                     pointer-events: none !important;
                 }
@@ -158,8 +157,7 @@ test.describe("Virtual background @nomobile @nowebkit @nofirefox", () => {
         await alice.reload();
         await alice.addStyleTag({
             content: `
-                [data-testid="onboarding-step"],
-                [data-testid^="onboarding-highlight-"] {
+                [data-testid="onboarding-modal"] {
                     display: none !important;
                     pointer-events: none !important;
                 }

@@ -1,6 +1,6 @@
 ---
 name: translate
-description: Fill missing WorkAdventure i18n translations by running the i18n diff in play/ and updating locale files under play/src/i18n. Use when asked to run npm run i18n:diff, fix missing translation keys, or complete locale modules.
+description: Fill missing WorkAdventure i18n translations by running the i18n diff in play/ and updating locale files under play/src/i18n and the release notes under play/announcements. Use when asked to run npm run i18n:diff, fix missing translation keys, or complete locale modules.
 ---
 
 # Translate
@@ -15,7 +15,10 @@ description: Fill missing WorkAdventure i18n translations by running the i18n di
 4. For each missing key:
    - Look at the `en-US` translation first. If unsure, look at the `fr-FR` translation too.
    - If unsure, ask the user precisions before translating.
-5. Re-run the diff command until it reports no missing translations.
+5. Release notes are Markdown files, not keys: `[MISSING RELEASE NOTES]` lines name the file to create
+   (`play/announcements/<version>/<locale>.md`) and the `en-US.md` to translate. Translate the
+   whole document. Keep the Markdown structure, the links and the media file names as they are.
+6. Re-run the diff command until it reports no missing translations.
 
 ## Conventions
 

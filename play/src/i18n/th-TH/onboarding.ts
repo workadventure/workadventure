@@ -6,8 +6,6 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "ยินดีต้อนรับสู่ {worldName}! 🚀",
         description:
             "เตรียมพร้อมสำรวจโลกเสมือนที่คุณสามารถเดินไปมา พูดคุยกับผู้อื่น และทำงานร่วมกันแบบเรียลไทม์ มาทัวร์สั้น ๆ เพื่อช่วยให้คุณเริ่มต้นกันเถอะ!",
-        start: "ไปกันเลย!",
-        skip: "ข้ามบทแนะนำ",
     },
     movement: {
         title: "การเคลื่อนที่",
@@ -20,44 +18,44 @@ const onboarding: DeepPartial<Translation["onboarding"]> = {
         title: "บับเบิลสนทนา",
         description:
             "เมื่อคุณเข้าใกล้ผู้เล่นคนอื่น คุณจะเข้าสู่บับเบิลสนทนาโดยอัตโนมัติ คุณสามารถพูดคุยกับทุกคนที่อยู่ในบับเบิลเดียวกันได้!",
-        video: "./static/Videos/Meet.mp4",
-        next: "เข้าใจแล้ว!",
     },
     lockBubble: {
         title: "ล็อกการสนทนาของคุณ",
         description: "คลิกปุ่มล็อกเพื่อป้องกันไม่ให้ผู้อื่นเข้าร่วมบับเบิลสนทนาของคุณ เหมาะสำหรับการพูดคุยแบบส่วนตัว!",
-        video: "./static/Videos/LockBubble.mp4",
-        hint: "คลิกปุ่มล็อกที่ไฮไลต์ไว้เพื่อลองใช้งาน!",
-        next: "ถัดไป",
     },
     screenSharing: {
         title: "แชร์หน้าจอของคุณ",
         description: "แชร์หน้าจอของคุณกับคนอื่น ๆ ในบับเบิลสนทนา เหมาะสำหรับการนำเสนอและการทำงานร่วมกัน!",
-        video: "./static/images/screensharing.mp4",
-        hint: "คลิกปุ่มแชร์หน้าจอที่ไฮไลต์ไว้เพื่อเริ่มแชร์!",
-        next: "ถัดไป",
     },
     pictureInPicture: {
         title: "ภาพซ้อนภาพ (Picture in Picture)",
         description:
             "ใช้โหมดภาพซ้อนภาพเพื่อให้วิดีโอคอลยังมองเห็นได้ขณะที่คุณเดินสำรวจแผนที่ เหมาะสำหรับการทำหลายอย่างพร้อมกัน!",
-        video: "./static/Videos/PictureInPicture.mp4",
-        hint: "คลิกปุ่ม PiP ที่ไฮไลต์ไว้เพื่อเปิดใช้งาน!",
-        next: "ถัดไป",
     },
     complete: {
         title: "พร้อมแล้ว! 🎉",
         description:
             "คุณได้เรียนรู้พื้นฐานของ {worldName} แล้ว! สำรวจ พบปะผู้คนใหม่ ๆ และสนุกได้เลย หากต้องการความช่วยเหลือ สามารถเปิดดูได้จากเมนูเสมอ",
-        finish: "เริ่มสำรวจเลย!",
     },
     tips: {
         label: "เคล็ดลับ",
         next: "ถัดไป",
+        previous: "ก่อนหน้า",
         gotIt: "เข้าใจแล้ว",
         close: "ปิด",
         stopShowing: "หยุดแสดงเคล็ดลับ",
         restartTutorial: "เริ่มบทแนะนำใหม่",
+        showMe: "แสดงให้ดู",
+        notNow: "ไว้ทีหลัง",
+    },
+    help: {
+        inConversation: "ระหว่างการสนทนา",
+        inMapEditor: "ในตัวแก้ไขแผนที่",
+        notHere: "ไม่พร้อมใช้งานที่นี่ในขณะนี้",
+        remindMe: "เตือนฉัน",
+    },
+    releaseNotes: {
+        title: "มีอะไรใหม่ใน WorkAdventure {version}",
     },
     mapEditorTour: {
         title: "วางเฟอร์นิเจอร์ด้วยตัวแก้ไขแผนที่",

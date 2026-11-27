@@ -20,6 +20,18 @@ const sourceLocale = localeArgs[1] || "en-US";
 const srcDir = fileURLToPath(new URL(`../src/i18n/${sourceLocale}`, import.meta.url));
 const tgtDir = fileURLToPath(new URL(`../src/i18n/${targetLocale}`, import.meta.url));
 const baseI18nDir = fileURLToPath(new URL("../src/i18n", import.meta.url));
+// Release notes are Markdown files, one folder per release. A locale without its file shows the English one.
+const announcementsDir = fileURLToPath(new URL("../announcements", import.meta.url));
+
+/** The release notes `locale` has not translated yet, as paths from play/. */
+function missingAnnouncements(locale: string): string[] {
+    if (!fs.existsSync(announcementsDir)) return [];
+    return fs
+        .readdirSync(announcementsDir)
+        .filter((version) => fs.existsSync(path.join(announcementsDir, version, `${sourceLocale}.md`)))
+        .filter((version) => !fs.existsSync(path.join(announcementsDir, version, `${locale}.md`)))
+        .map((version) => `announcements/${version}/${locale}.md`);
+}
 
 async function loadModule(file: string): Promise<unknown> {
     const mod = await import(file);
@@ -85,7 +97,7 @@ async function preloadSourceModules(dir: string) {
 async function computeMissingCountsForLocale(
     srcModules: Map<string, { keys: string[]; count: number }>,
     srcDir: string,
-    localeDir: string
+    localeDir: string,
 ) {
     let missingKeys = 0;
     let missingFiles = 0;
@@ -184,7 +196,7 @@ async function runDetailedCheck() {
                         console.log(`${file}:`);
                     }
                     console.log(
-                        `  ⚠️  ${lang}: ${langKeyCount}/${refKeyCount} keys (${percentage}% complete, ${missingCount} missing key(s))`
+                        `  ⚠️  ${lang}: ${langKeyCount}/${refKeyCount} keys (${percentage}% complete, ${missingCount} missing key(s))`,
                     );
                     // Show first 15 missing keys
                     const keysToShow = missingKeys.slice(0, 15);
@@ -276,6 +288,14 @@ async function runDetailedCheck() {
         }
     }
 
+    // Reported, not an error: the English text shows meanwhile.
+    for (const lang of languages) {
+        const missing = missingAnnouncements(lang);
+        if (missing.length > 0) {
+            console.log(`ℹ️  ${lang}: ${missing.length} release note(s) not translated yet: ${missing.join(", ")}`);
+        }
+    }
+
     if (!isQuietMode) {
         console.log("");
     }
@@ -315,12 +335,12 @@ async function run() {
 
         const srcModules = await preloadSourceModules(srcDir);
 
-        const results: Array<{ locale: string; missingKeys: number; missingFiles: number }> = [];
+        const results: Array<{ locale: string; missingKeys: number; missingFiles: number; missingNotes: number }> = [];
         for (const locale of locales) {
             const localeDir = path.join(baseDir, locale);
             // eslint-disable-next-line no-await-in-loop
             const { missingKeys, missingFiles } = await computeMissingCountsForLocale(srcModules, srcDir, localeDir);
-            results.push({ locale, missingKeys, missingFiles });
+            results.push({ locale, missingKeys, missingFiles, missingNotes: missingAnnouncements(locale).length });
         }
 
         // Sort by missing keys desc
@@ -330,18 +350,20 @@ async function run() {
             console.log(`i18n diff summary (source: ${sourceLocale})`);
         }
         for (const r of results) {
-            if (isQuietMode && r.missingKeys === 0 && r.missingFiles === 0) {
+            if (isQuietMode && r.missingKeys === 0 && r.missingFiles === 0 && r.missingNotes === 0) {
                 continue;
             }
             console.log(
-                `${r.locale}: ${r.missingKeys} missing keys${r.missingFiles ? `, ${r.missingFiles} missing files` : ""}`
+                `${r.locale}: ${r.missingKeys} missing keys${r.missingFiles ? `, ${r.missingFiles} missing files` : ""}${
+                    r.missingNotes ? `, ${r.missingNotes} missing release notes` : ""
+                }`,
             );
         }
-        const totalMissing = results.reduce((acc, r) => acc + r.missingKeys, 0);
+        const totalMissing = results.reduce((acc, r) => acc + r.missingKeys + r.missingNotes, 0);
         if (totalMissing === 0) console.log("All locales are fully translated. ✅");
         if (!isQuietMode) {
             console.log(
-                "\nTip: to view detailed missing keys for one locale, run: npm run i18n:diff -- <language-code>"
+                "\nTip: to view detailed missing keys for one locale, run: npm run i18n:diff -- <language-code>",
             );
         }
         return;
@@ -388,6 +410,12 @@ async function run() {
             report.push(`Module ${baseName}:`);
             for (const k of missing) report.push(`  - ${k}`);
         }
+    }
+
+    for (const file of missingAnnouncements(targetLocale)) {
+        report.push(
+            `[MISSING RELEASE NOTES] ${file} (translate ${file.replace(`${targetLocale}.md`, `${sourceLocale}.md`)})`,
+        );
     }
 
     if (report.length === 0) {

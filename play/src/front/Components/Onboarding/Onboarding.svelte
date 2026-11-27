@@ -1,46 +1,10 @@
 <script lang="ts">
-    import { onMount, onDestroy } from "svelte";
-    import { get, type Unsubscriber } from "svelte/store";
-    import { onboardingStore } from "../../Stores/OnboardingStore";
+    import { onMount } from "svelte";
     import { gameManager } from "../../Phaser/Game/GameManager";
-    import { hasMovedEventName } from "../../Phaser/Player/Player";
-    import { requestedScreenSharingState } from "../../Stores/ScreenSharingStore";
-    import { activePictureInPictureStore } from "../../Stores/PeerStore";
-    import { currentPlayerGroupIdStore } from "../../Stores/CurrentPlayerGroupStore";
-    import { inJitsiStore, inLivekitStore, silentStore } from "../../Stores/MediaStore";
-    import type { GameScene } from "../../Phaser/Game/GameScene";
     import { OnboardingScheduler, onboardingScheduler } from "../../Onboarding/OnboardingScheduler";
     import { builtinItems } from "../../Onboarding/builtinItems";
-    import OnboardingStep from "./OnboardingStep.svelte";
-    import OnboardingHighlight from "./OnboardingHighlight.svelte";
-    import WelcomeStep from "./Steps/WelcomeStep.svelte";
-    import MovementStep from "./Steps/MovementStep.svelte";
-    import CommunicationStep from "./Steps/CommunicationStep.svelte";
-    import LockBubbleStep from "./Steps/LockBubbleStep.svelte";
-    import ScreenSharingStep from "./Steps/ScreenSharingStep.svelte";
-    import PictureInPictureStep from "./Steps/PictureInPictureStep.svelte";
-    import CompleteStep from "./Steps/CompleteStep.svelte";
+    import { onboardingView } from "../../Onboarding/stepKinds";
 
-    let movementTimeout: ReturnType<typeof setTimeout> | null = null;
-    let onboardingHighlight: OnboardingHighlight | null = $state(null);
-    let onboardingUnsubscribe: Unsubscriber | undefined = undefined;
-    let currentGameScene: GameScene | undefined = undefined;
-
-    // Listen for ESC key to exit onboarding
-    const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape" && $onboardingStore) {
-            handleSkip();
-        }
-    };
-
-    function destroyOnboarding() {
-        currentGameScene?.CurrentPlayer?.off(hasMovedEventName, handlePlayerMove);
-        if (movementTimeout) clearTimeout(movementTimeout);
-        window.removeEventListener("keydown", handleKeyDown);
-        if (onboardingUnsubscribe) onboardingUnsubscribe();
-    }
-
-    // Tours and tips. The tutorial below joins them as an item in phase 2.
     onMount(() => {
         const scheduler = new OnboardingScheduler(gameManager.getCurrentGameScene(), builtinItems);
         onboardingScheduler.set(scheduler);
@@ -49,100 +13,12 @@
             onboardingScheduler.set(undefined);
         };
     });
-
-    onMount(() => {
-        // Listen to player movement for step 2
-        currentGameScene = gameManager.getCurrentGameScene();
-        currentGameScene?.CurrentPlayer?.on(hasMovedEventName, handlePlayerMove);
-
-        // Auto-start onboarding if not completed (with a small delay to ensure scene is loaded)
-        setTimeout(() => {
-            if (onboardingStore.isCompleted()) return;
-
-            // Start the onboarding
-            onboardingStore.start();
-            window.addEventListener("keydown", handleKeyDown);
-
-            // Subscribe to the onboarding store
-            onboardingUnsubscribe = onboardingStore.subscribe((step) => {
-                if (step === null) {
-                    destroyOnboarding();
-                }
-            });
-        }, 800);
-
-        return () => {
-            destroyOnboarding();
-        };
-    });
-
-    onDestroy(() => {
-        destroyOnboarding();
-    });
-
-    function handlePlayerMove() {
-        if ($onboardingStore === "movement") {
-            if (movementTimeout) clearTimeout(movementTimeout);
-            // Wait 5 seconds after movement, then advance only when no movement key is pressed
-            movementTimeout = setTimeout(() => {
-                // Advance to the next step only if no movement key is pressed for 2 seconds
-                onboardingStore.next();
-            }, 1000);
-        }
-    }
-
-    function handleNext() {
-        // If we're in the lockBubble step, lock the bubble (make it red) before advancing
-        if ($onboardingStore === "lockBubble" && onboardingHighlight) {
-            onboardingHighlight.lockBubble();
-        }
-        onboardingStore.next();
-    }
-
-    function handleSkip() {
-        onboardingStore.skip();
-    }
-
-    // During onboarding: temporarily disable silent zone so the communication demo works
-    $effect(() => {
-        silentStore.setOnboardingOverride($onboardingStore !== null);
-    });
-
-    // Cancel onboarding if user enters a real conversation bubble or meeting
-    $effect(() => {
-        if ($onboardingStore && ($currentPlayerGroupIdStore !== undefined || $inJitsiStore || $inLivekitStore)) {
-            onboardingStore.skip();
-            silentStore.setOnboardingOverride(false);
-        }
-    });
-
-    // Watch for step completion conditions
-    $effect(() => {
-        // Note: lockBubble step completion is handled by click interceptor in OnboardingHighlight
-        if ($onboardingStore === "screenSharing" && get(requestedScreenSharingState)) {
-            setTimeout(() => onboardingStore.next(), 1000);
-        }
-        if ($onboardingStore === "pictureInPicture" && get(activePictureInPictureStore)) {
-            setTimeout(() => onboardingStore.next(), 1000);
-        }
-    });
 </script>
 
-<OnboardingStep>
-    {#if $onboardingStore === "welcome"}
-        <WelcomeStep onnext={handleNext} onskip={handleSkip} />
-    {:else if $onboardingStore === "movement"}
-        <MovementStep onnext={handleNext} />
-    {:else if $onboardingStore === "communication"}
-        <CommunicationStep onnext={handleNext} />
-    {:else if $onboardingStore === "lockBubble"}
-        <LockBubbleStep onnext={handleNext} />
-    {:else if $onboardingStore === "screenSharing"}
-        <ScreenSharingStep onnext={handleNext} />
-    {:else if $onboardingStore === "pictureInPicture"}
-        <PictureInPictureStep onnext={handleNext} />
-    {:else if $onboardingStore === "complete"}
-        <CompleteStep onnext={handleNext} />
+<!-- Keyed: each step mounts its own view, even when two steps in a row show the same component. -->
+{#key $onboardingView}
+    {#if $onboardingView}
+        {@const View = $onboardingView.component}
+        <View {...$onboardingView.props} />
     {/if}
-</OnboardingStep>
-<OnboardingHighlight bind:this={onboardingHighlight} />
+{/key}

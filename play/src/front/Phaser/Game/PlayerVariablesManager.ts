@@ -1,5 +1,5 @@
 import type { SetPlayerVariableMessage } from "@workadventure/messages";
-import type { RoomConnection } from "../../Connection/RoomConnection";
+import { RoomConnection } from "../../Connection/RoomConnection";
 import { iframeListener } from "../../Api/IframeListener";
 import type { SetPlayerVariableEvent } from "../../Api/Events/SetPlayerVariableEvent";
 import { localUserStore } from "../../Connection/LocalUserStore";
@@ -69,16 +69,18 @@ export class PlayerVariablesManager {
      */
     public updateVariable(setVariable: SetPlayerVariableMessage): void {
         const key = setVariable.name;
+        // Serialized on the wire, like the variables received when joining.
+        const value = RoomConnection.unserializeVariable(setVariable.value);
 
         // Let's stop any propagation of the value we set is the same as the existing value.
-        if (JSON.stringify(setVariable.value) === JSON.stringify(this._variables.get(key))) {
+        if (JSON.stringify(value) === JSON.stringify(this._variables.get(key))) {
             return;
         }
 
-        this._variables.set(key, setVariable.value);
+        this._variables.set(key, value);
 
         // Dispatch to other iframes
-        iframeListener.dispatchPlayerVariableToOtherIframes(key, setVariable.value, null);
+        iframeListener.dispatchPlayerVariableToOtherIframes(key, value, null);
     }
 
     public close(): void {

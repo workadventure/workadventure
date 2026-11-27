@@ -5,8 +5,6 @@ export default {
         title: "{worldName}へようこそ！ 🚀",
         description:
             "移動、チャット、リアルタイムでのコラボレーションが可能な仮想世界を探索する準備をしましょう。始めるための簡単なツアーをしましょう！",
-        start: "始めましょう！",
-        skip: "チュートリアルをスキップ",
     },
     movement: {
         title: "移動する",
@@ -20,45 +18,45 @@ export default {
         title: "コミュニケーションバブル",
         description:
             "他のプレイヤーに近づくと、自動的にコミュニケーションバブルに入ります。同じバブル内の他のプレイヤーとチャットできます！",
-        video: "./static/Videos/Meet.mp4",
-        next: "了解しました！",
     },
     lockBubble: {
         title: "会話をロックする",
         description:
             "ロックボタンをクリックして、他のプレイヤーが会話バブルに参加できないようにします。プライベートな議論に便利です！",
-        video: "./static/Videos/LockBubble.mp4",
-        hint: "ハイライトされたロックボタンをクリックして試してみてください！",
-        next: "次へ",
     },
     screenSharing: {
         title: "画面を共有する",
         description: "会話バブル内の他のプレイヤーと画面を共有します。プレゼンテーションやコラボレーションに最適です！",
-        video: "./static/images/screensharing.mp4",
-        hint: "ハイライトされた画面共有ボタンをクリックして共有を開始してください！",
-        next: "次へ",
     },
     pictureInPicture: {
         title: "ピクチャーインピクチャー",
         description:
             "ピクチャーインピクチャーモードを使用して、マップをナビゲートしながらビデオ通話を表示し続けます。マルチタスクに最適です！",
-        video: "./static/Videos/PictureInPicture.mp4",
-        hint: "ハイライトされたPiPボタンをクリックして有効にしてください！",
-        next: "次へ",
     },
     complete: {
         title: "準備完了です！ 🎉",
         description:
             "{worldName}の基本を学びました！自由に探索し、新しい人と出会い、楽しんでください。必要に応じて、メニューからいつでもヘルプにアクセスできます。",
-        finish: "探索を始めましょう！",
     },
     tips: {
         label: "ヒント",
         next: "次へ",
+        previous: "戻る",
         gotIt: "わかりました",
         close: "閉じる",
         stopShowing: "ヒントを表示しない",
         restartTutorial: "チュートリアルをやり直す",
+        showMe: "見てみる",
+        notNow: "後で",
+    },
+    help: {
+        inConversation: "会話中に使えます",
+        inMapEditor: "マップエディターで使えます",
+        notHere: "ここでは今は使えません",
+        remindMe: "リマインド",
+    },
+    releaseNotes: {
+        title: "WorkAdventure {version} の新機能",
     },
     mapEditorTour: {
         title: "マップエディターで家具を配置する",

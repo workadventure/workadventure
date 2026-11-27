@@ -1,8 +1,8 @@
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
+    import { SvelteSet } from "svelte/reactivity";
     import { fly } from "svelte/transition";
     import LL from "../../../../i18n/i18n-svelte";
-    import { isMobileOnboarding, pressedKeysStore } from "../../../Stores/OnboardingStore";
     import { touchScreenManager } from "../../../Touch/TouchScreenManager";
 
     interface Props {
@@ -10,6 +10,11 @@
     }
 
     const { onnext }: Props = $props();
+
+    /** A phone or a tablet. A laptop with a touch screen moves with the keyboard. */
+    const touch = touchScreenManager.primaryTouchDevice;
+    /** The movement keys held down, lit up below. */
+    const pressedKeys = new SvelteSet<string>();
 
     let keyboardLayout: "QWERTY" | "AZERTY" = "QWERTY";
 
@@ -64,20 +69,14 @@
 
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
-            // eslint-disable-next-line svelte/prefer-svelte-reactivity
-            pressedKeysStore.update((keys) => new Set(keys).add(event.code));
+            pressedKeys.add(event.code);
         }
     }
 
     function handleKeyUp(event: KeyboardEvent) {
         const keyLabel = getKeyLabel(event.code);
         if (keyLabel) {
-            pressedKeysStore.update((keys) => {
-                // eslint-disable-next-line svelte/prefer-svelte-reactivity
-                const next = new Set(keys);
-                next.delete(event.code);
-                return next;
-            });
+            pressedKeys.delete(event.code);
         }
     }
 
@@ -90,7 +89,6 @@
     onDestroy(() => {
         window.removeEventListener("keydown", handleKeyDown, true);
         window.removeEventListener("keyup", handleKeyUp, true);
-        pressedKeysStore.set(new Set());
     });
 
     function handleNext() {
@@ -100,50 +98,48 @@
 
 <!-- Mobile onboarding: panel at top so user sees the map and character. Desktop: panel on the right. -->
 <div
-    class="z-[3001] pointer-events-auto {$isMobileOnboarding
+    class="z-[3001] pointer-events-auto {touch
         ? 'fixed left-4 right-4 top-4'
         : 'fixed top-1/2 -right-10 transform -translate-x-14 -translate-y-1/2'}"
 >
     <div
-        class="bg-contrast/90 backdrop-blur-lg rounded-xl p-4 sm:p-6 w-full max-w-lg shadow-2xl border border-white/20 {$isMobileOnboarding
+        class="bg-contrast/90 backdrop-blur-lg rounded-xl p-4 sm:p-6 w-full max-w-lg shadow-2xl border border-white/20 {touch
             ? 'mx-auto max-h-[35vh] overflow-y-auto'
             : ''}"
-        in:fly={{ y: $isMobileOnboarding ? -10 : 10, duration: 400 }}
+        in:fly={{ y: touch ? -10 : 10, duration: 400 }}
     >
         <div class="space-y-4">
             <h3 class="text-lg sm:text-xl font-bold text-white">
                 {$LL.onboarding.movement.title()}
             </h3>
             <p class="text-sm text-white/90">
-                {$isMobileOnboarding || touchScreenManager.supportTouchScreen
-                    ? $LL.onboarding.movement.descriptionTouch()
-                    : $LL.onboarding.movement.descriptionDesktop()}
+                {touch ? $LL.onboarding.movement.descriptionTouch() : $LL.onboarding.movement.descriptionDesktop()}
             </p>
-            {#if !$isMobileOnboarding && !touchScreenManager.supportTouchScreen}
+            {#if !touch}
                 <div class="flex items-center gap-2 text-xs text-white/70 flex-wrap">
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyW')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has('KeyW')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
                         {getKeyLabel("KeyW")}
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyA')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has('KeyA')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
                         {getKeyLabel("KeyA")}
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyS')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has('KeyS')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
                         {getKeyLabel("KeyS")}
                     </kbd>
                     <kbd
-                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has('KeyD')
+                        class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has('KeyD')
                             ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                             : ''}"
                     >
@@ -152,16 +148,14 @@
                     <span>or</span>
                     <div class="flex gap-1">
                         <kbd
-                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
-                                'ArrowUp',
-                            )
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has('ArrowUp')
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
                                 : ''}"
                         >
                             ↑
                         </kbd>
                         <kbd
-                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has(
                                 'ArrowLeft',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
@@ -170,7 +164,7 @@
                             ←
                         </kbd>
                         <kbd
-                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has(
                                 'ArrowDown',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'
@@ -179,7 +173,7 @@
                             ↓
                         </kbd>
                         <kbd
-                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {$pressedKeysStore.has(
+                            class="px-2 py-1 bg-white/10 rounded transition-all duration-150 {pressedKeys.has(
                                 'ArrowRight',
                             )
                                 ? 'bg-yellow-400/80 text-black scale-110 shadow-lg'

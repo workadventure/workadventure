@@ -132,7 +132,7 @@ export async function logIn(page: Page, name: UserName): Promise<void> {
     await dismissPwaInstallScreenIfShown(page);
     await dismissNoBrowserSoundInfoToast(page);
     await dismissNoMicrophoneSoundToast(page);
-    await skipOnboardingWhenShown(page);
+    await closeOnboardingWhenShown(page);
 
     if (page.context().browser()?.browserType().name() !== "webkit") {
         await Menu.expectButtonState(page, "microphone-button", "normal");
@@ -210,7 +210,7 @@ export async function getPage(
         pageCreatedHook?: (page: Page) => void | Promise<void>;
         /** Extra options for the page's context, e.g. a phone viewport with touch for one test. */
         contextOptions?: BrowserContextOptions;
-        /** Leave onboarding tips on screen. By default they are closed as soon as they show. */
+        /** Leave the tutorial, announcements and tips on screen. By default they are closed as soon as they show. */
         keepOnboardingTips?: boolean;
     } = {},
 ): Promise<Page> {
@@ -236,9 +236,8 @@ export async function getPage(
     await dismissDuplicateUserConnectedModalIfShown(page, true);
     await dismissNoBrowserSoundInfoToast(page);
     await dismissNoMicrophoneSoundToast(page);
-    await skipOnboardingWhenShown(page);
     if (!options.keepOnboardingTips) {
-        await closeOnboardingTipsWhenShown(page);
+        await closeOnboardingWhenShown(page);
     }
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
@@ -246,31 +245,24 @@ export async function getPage(
 }
 
 /**
- * A user's onboarding state outlives the test (it is a persisted player variable), so a tour can show up in any test
- * from the user's second day on a long-lived stack. Closing it records it as dismissed, and it does not come back.
+ * The tutorial and announcements open as a modal when the map loads. A user's onboarding state outlives the test (it is
+ * a persisted player variable), so a tour can also show up in any test from the user's second day on a long-lived
+ * stack. Closing them records them as dismissed, and they do not come back.
  */
-async function closeOnboardingTipsWhenShown(page: Page) {
-    await page.addLocatorHandler(page.getByTestId("onboarding-popover"), async () => {
-        try {
-            await page.getByTestId("onboarding-popover-close").click();
-        } catch (e) {
-            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
-                return;
+async function closeOnboardingWhenShown(page: Page) {
+    for (const [shown, close] of [
+        ["onboarding-modal", "onboarding-modal-close"],
+        ["onboarding-popover", "onboarding-popover-close"],
+    ]) {
+        await page.addLocatorHandler(page.getByTestId(shown), async () => {
+            try {
+                await page.getByTestId(close).click();
+            } catch (e) {
+                if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
+                    return;
+                }
+                throw e;
             }
-            throw e;
-        }
-    });
-}
-
-async function skipOnboardingWhenShown(page: Page) {
-    await page.addLocatorHandler(page.getByTestId("onboarding-button-welcome-skip"), async () => {
-        try {
-            await page.getByTestId("onboarding-button-welcome-skip").click();
-        } catch (e) {
-            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
-                return;
-            }
-            throw e;
-        }
-    });
+        });
+    }
 }

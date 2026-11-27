@@ -17,7 +17,7 @@ type Point = { x: number; y: number };
  * that skips the onboarding, which opens shortly after the map loads: wait for it, and let an assertion skip it.
  */
 async function touchscreen(page: Page) {
-    const skip = page.getByTestId("onboarding-button-welcome-skip");
+    const skip = page.getByTestId("onboarding-modal-close");
     await skip.waitFor({ state: "visible", timeout: 5_000 }).catch(() => undefined);
     await expect(skip).toBeHidden();
 

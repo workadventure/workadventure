@@ -1,6 +1,7 @@
 import type { Attachment } from "svelte/attachments";
-import { writable } from "svelte/store";
+import { get, writable } from "svelte/store";
 import type { OnboardingAnchor } from "@workadventure/messages";
+import { LL } from "../../i18n/i18n-svelte";
 
 /** The visible nodes of each anchor. A node that is mounted but clipped or hidden is not in here. */
 const visibleNodes = new Map<OnboardingAnchor, Set<HTMLElement>>();
@@ -17,6 +18,24 @@ export function anchorNode(anchor: OnboardingAnchor): HTMLElement | undefined {
         }
     }
     return undefined;
+}
+
+/** Where an anchor shows up, for an item of the Help menu that cannot start because its anchor is not on screen. */
+export function anchorPlace(anchor: OnboardingAnchor): string {
+    const ll = get(LL).onboarding.help;
+    switch (anchor) {
+        case "actionBar.lockBubble":
+        case "actionBar.screenShare":
+        case "actionBar.pictureInPicture":
+            return ll.inConversation();
+        case "mapEditor.tool.area":
+        case "mapEditor.tool.entity":
+        case "mapEditor.tool.exploration":
+        case "mapEditor.entityList":
+            return ll.inMapEditor();
+        default:
+            return ll.notHere();
+    }
 }
 
 /** Called on every click on an anchor, before the element's own handlers. */

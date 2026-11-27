@@ -2,26 +2,20 @@ import type { Readable } from "svelte/store";
 import { derived } from "svelte/store";
 import type { SpaceRegistryInterface } from "../Space/SpaceRegistry/SpaceRegistryInterface";
 import { gameSceneStore } from "./GameSceneStore";
-import { onboardingStore } from "./OnboardingStore";
+import { simulatedConversationStore } from "./SimulatedConversationStore";
 
 /**
- * Reads a store of the space registry, forced to true during the onboarding steps that show the media buttons.
+ * Reads a store of the space registry, forced to true during the tutorial's fake conversation.
  */
 function liveStreamingStateStore(
     select: (spaceRegistry: SpaceRegistryInterface) => Readable<boolean>,
 ): Readable<boolean> {
-    return derived([gameSceneStore, onboardingStore], ([gameSceneStore, onboardingStore], set) => {
+    return derived([gameSceneStore, simulatedConversationStore], ([gameSceneStore, simulatedConversation], set) => {
         if (gameSceneStore == null) {
             set(false);
             return;
         }
-        // If we are in the onboarding process, we are live streaming
-        if (
-            onboardingStore === "screenSharing" ||
-            onboardingStore === "pictureInPicture" ||
-            onboardingStore === "communication" ||
-            onboardingStore === "lockBubble"
-        ) {
+        if (simulatedConversation) {
             set(true);
             return;
         }

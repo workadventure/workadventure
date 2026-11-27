@@ -220,6 +220,13 @@ Audit missing translation keys with the helper script:
   - From `play/` run `npm run i18n:diff -- <language-code>` (e.g. `npm run i18n:diff -- fr-FR`)
   - Optionally compare against a different source locale: `npm run i18n:diff -- <target-locale> <source-locale>`
 
+## Release Notes
+
+A PR that adds a feature users will notice must also add it, in English, to the "What's new" of the upcoming minor
+version: `play/announcements/<version>/en-US.md` (the latest `v*` tag with the minor version
+bumped). It must not register that version in `play/src/front/Onboarding/builtinItems.ts`: the release does. See
+`docs/agent/release-notes.md`.
+
 ## Trust These Instructions
 These instructions are comprehensive and validated. Only search for additional information if:
 1. A specific command fails with an error not covered above

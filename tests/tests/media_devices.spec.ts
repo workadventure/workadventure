@@ -389,11 +389,11 @@ async function loginWithMockedMediaDevices(page: Page, url: string): Promise<voi
 async function openMediaSettings(page: Page): Promise<void> {
     if (
         await page
-            .getByTestId("onboarding-step")
+            .getByTestId("onboarding-modal")
             .isVisible()
             .catch(() => false)
     ) {
-        await page.addStyleTag({ content: '[data-testid="onboarding-step"] { display: none !important; }' });
+        await page.addStyleTag({ content: '[data-testid="onboarding-modal"] { display: none !important; }' });
     }
 
     await page.locator(".group\\/hardware").hover();
@@ -402,11 +402,11 @@ async function openMediaSettings(page: Page): Promise<void> {
 
 async function waitForMapAfterOnboarding(page: Page): Promise<void> {
     const microphone = page.getByTestId("microphone-button");
-    const skipOnboarding = page.getByTestId("onboarding-button-welcome-skip");
+    const skipOnboarding = page.getByTestId("onboarding-modal-close");
 
     for (let i = 0; i < 3; i++) {
         // Single wait rather than a Promise.race: a leaked loser polling for 30s here would race
-        // the `onboarding-button-welcome-skip` locator handler registered in utils/auth.ts.
+        // the `onboarding-modal` locator handler registered in utils/auth.ts.
         await microphone.or(skipOnboarding).first().waitFor({ state: "visible", timeout: 30_000 });
 
         if (await microphone.isVisible()) {

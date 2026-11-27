@@ -1,7 +1,7 @@
 import type { OnboardingAnchor } from "@workadventure/messages";
-import { isStepSkipped, type OnboardingItem } from "./onboardingRules";
+import { isStepSkipped, stepAnchor, type OnboardingItem } from "./onboardingRules";
 import { anchorNode } from "./OnboardingAnchors";
-import { stepKinds } from "./stepKinds";
+import { startStep } from "./stepKinds";
 
 /** What a step kind can do to the item it belongs to. */
 export interface ItemRun {
@@ -9,12 +9,14 @@ export interface ItemRun {
     complete: () => void;
     /** This step's target went away: go back to the latest earlier step whose target is on screen. */
     back: () => void;
-    /** × or Esc. */
+    /** × or "Not now". */
     dismiss: () => void;
     /** The target never appeared. */
     anchorMissing: () => void;
     /** "Stop showing tips". */
     optOut: () => void;
+    /** Runs however the item ends, for what outlives the step (the tutorial's fake user). */
+    onEnd: (cleanup: () => void) => void;
 }
 
 export type Outcome = "done" | "dismissed" | "interrupted";
@@ -36,6 +38,7 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
     let stopStep: (() => void) | undefined;
     let started = false;
     let ended = false;
+    const endCleanups: (() => void)[] = [];
 
     const leaveStep = () => {
         token++;
@@ -49,8 +52,19 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
         }
         ended = true;
         leaveStep();
+        window.removeEventListener("keydown", onKeyDown);
+        for (const cleanup of endCleanups.splice(0)) {
+            cleanup();
+        }
         hooks.onEnd(outcome, index);
     };
+
+    // Whatever the step shows.
+    function onKeyDown(event: KeyboardEvent) {
+        if (event.key === "Escape") {
+            finish("dismissed");
+        }
+    }
 
     const show = (from: number) => {
         leaveStep();
@@ -79,7 +93,8 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
             back: live(() => {
                 for (let j = i - 1; j >= 0; j--) {
                     const earlier = item.steps[j];
-                    if (!isStepSkipped(earlier, used) && anchorNode(earlier.anchor)) {
+                    const anchor = stepAnchor(earlier);
+                    if (!isStepSkipped(earlier, used) && anchor && anchorNode(anchor)) {
                         show(j);
                         return;
                     }
@@ -89,18 +104,41 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
             }),
             dismiss: live(() => finish("dismissed")),
             anchorMissing: live(() => {
-                hooks.onAnchorMissing(step.anchor, i);
+                const anchor = stepAnchor(step);
+                if (anchor) {
+                    hooks.onAnchorMissing(anchor, i);
+                }
                 finish("interrupted");
             }),
             optOut: live(() => {
                 hooks.onOptOut();
                 finish("dismissed");
             }),
+            onEnd: (cleanup) => {
+                if (ended) {
+                    cleanup();
+                } else {
+                    endCleanups.push(cleanup);
+                }
+            },
         };
         const position = shown.indexOf(step) + 1;
-        stopStep = stepKinds[step.type](step, run, { position, total: shown.length });
+        stopStep = startStep(step, run, { position, total: shown.length });
     };
 
+    window.addEventListener("keydown", onKeyDown);
     show(0);
+    const unsubscribeDone = item.doneWhen?.subscribe((done) => {
+        if (done) {
+            finish("done");
+        }
+    });
+    if (unsubscribeDone) {
+        if (ended) {
+            unsubscribeDone();
+        } else {
+            endCleanups.push(unsubscribeDone);
+        }
+    }
     return () => finish("interrupted");
 }

@@ -1,10 +1,26 @@
-import { marked } from "marked";
+import * as Phaser from "phaser";
+import { get, writable } from "svelte/store";
+import type { WorkAdventureComponent, WorkAdventureComponentProps } from "../../types/component";
+import { LL } from "../../i18n/i18n-svelte";
 import { showFloatingUi } from "../Utils/svelte-floatingui-show";
-import { sanitizeHtml } from "../Utils/HtmlSanitizer";
+import { gameManager } from "../Phaser/Game/GameManager";
+import type { GameScene } from "../Phaser/Game/GameScene";
+import { hasMovedEventName } from "../Phaser/Player/Player";
+import { silentStore } from "../Stores/MediaStore";
 import OnboardingPopover from "../Components/Onboarding/OnboardingPopover.svelte";
-import type { OnboardingStep, PopoverStep } from "./onboardingRules";
+import OnboardingModal from "../Components/Onboarding/OnboardingModal.svelte";
+import MovementStepView from "../Components/Onboarding/Steps/MovementStep.svelte";
+import type {
+    ModalStep,
+    MovementStep,
+    OnboardingStep,
+    PopoverStep,
+    SimulatedConversationStep,
+} from "./onboardingRules";
 import type { ItemRun } from "./ItemRunner";
 import { anchorNode, anchorsChanged, onAnchorClick } from "./OnboardingAnchors";
+import { startSimulatedConversation } from "./SimulatedConversation";
+import { renderMarkdown, renderPages } from "./renderMarkdown";
 
 /** Where the step stands among the steps that show. */
 export interface StepView {
@@ -17,6 +33,8 @@ export type StepKind<S> = (step: S, run: ItemRun, view: StepView) => () => void;
 
 /** For a menu that opens: the next step's target gets this long to appear. */
 const ANCHOR_WAIT_MS = 10_000;
+/** The movement step completes once the avatar has stopped moving for this long. */
+const MOVED_MS = 1000;
 /** A re-render mounts the node again at once, while a menu that closes does not. */
 const LOST_GRACE_MS = 300;
 /** An attribute, not a class: Svelte rewrites the class of an element whose class depends on its state. */
@@ -28,8 +46,15 @@ const GLIDE_MS = 400;
 // ponytail: shared by all items, so an item that starts within GLIDE_WINDOW_MS of another one's end glides from it too.
 let lastHighlight: { rect: DOMRect; document: Document; at: number } | undefined;
 
-export function renderMarkdown(text: string): string {
-    return sanitizeHtml(marked.parse(text, { async: false }));
+/** What the current step shows over the game (a modal, a panel), rendered by `Onboarding.svelte`. */
+export const onboardingView = writable<
+    { component: WorkAdventureComponent; props: WorkAdventureComponentProps } | undefined
+>(undefined);
+
+function showView<P extends WorkAdventureComponentProps>(component: WorkAdventureComponent<P>, props: P): () => void {
+    const view = { component, props };
+    onboardingView.set(view);
+    return () => onboardingView.update((current) => (current === view ? undefined : current));
 }
 
 /** Moves a ring from `from` onto `node`, following the node if it moves meanwhile (a sidebar that slides in). */
@@ -122,6 +147,8 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
                 {
                     title: step.title?.(),
                     html: renderMarkdown(step.text()),
+                    image: step.image,
+                    video: step.video,
                     position: view.position,
                     total: view.total,
                     showNext: step.advance !== "click",
@@ -149,27 +176,117 @@ const popover: StepKind<PopoverStep> = (step, run, view) => {
     }, ANCHOR_WAIT_MS);
     const unsubscribe = anchorsChanged.subscribe(update);
     const offClick = onAnchorClick((anchor) => {
-        if (anchor === step.anchor && step.advance === "click") {
+        // Whatever `advance` says: the user did what the step points at.
+        if (anchor === step.anchor) {
             run.complete();
         }
     });
-    const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") {
-            run.dismiss();
-        }
-    };
-    window.addEventListener("keydown", onKeyDown);
 
     return () => {
         unsubscribe();
         offClick();
-        window.removeEventListener("keydown", onKeyDown);
         clearTimeout(waitTimer);
         clearTimeout(lostTimer);
         detach();
     };
 };
 
-export const stepKinds: { [K in OnboardingStep["type"]]: StepKind<Extract<OnboardingStep, { type: K }>> } = {
-    popover,
+const modal: StepKind<ModalStep> = (step, run, view) => {
+    const last = view.position === view.total;
+    // A first modal that leads into other steps: an announcement that offers a tour, or the tutorial's welcome.
+    const leadsIn = view.position === 1 && !last;
+    const ll = get(LL).onboarding.tips;
+    let stopped = false;
+    let hide: (() => void) | undefined;
+    Promise.resolve(step.text())
+        .then((text) => {
+            if (stopped) {
+                return;
+            }
+            hide = showView(OnboardingModal, {
+                title: step.title?.(),
+                pages: renderPages(text),
+                image: step.image,
+                video: step.video,
+                position: view.position,
+                total: view.total,
+                nextLabel: leadsIn ? ll.showMe() : last ? ll.gotIt() : ll.next(),
+                notNowLabel: leadsIn ? ll.notNow() : undefined,
+                onNext: run.complete,
+                onClose: run.dismiss,
+                onOptOut: run.optOut,
+            });
+        })
+        .catch((error: unknown) => {
+            console.error("The text of an onboarding modal did not load", error);
+            // Like a target that never appeared: nothing is recorded, and the item comes back at the next visit.
+            run.anchorMissing();
+        });
+    return () => {
+        stopped = true;
+        hide?.();
+    };
 };
+
+/** A pulsing ring around the avatar, drawn in the game. */
+function highlightAvatar(scene: GameScene): () => void {
+    const graphics = scene.add.graphics();
+    graphics.setDepth(10000);
+    let time = 0;
+    // After the update, so the ring does not lag one frame behind the avatar.
+    const draw = () => {
+        time += 0.05;
+        const player = scene.CurrentPlayer;
+        graphics.clear();
+        graphics.lineStyle(4, 0xffff00, 0.6 + Math.sin(time) * 0.2);
+        graphics.strokeCircle(player.x, player.y, 32 + Math.sin(time) * 5);
+        scene.markDirty();
+    };
+    scene.events.on(Phaser.Scenes.Events.POST_UPDATE, draw);
+    draw();
+    return () => {
+        scene.events.off(Phaser.Scenes.Events.POST_UPDATE, draw);
+        graphics.destroy();
+    };
+}
+
+const movement: StepKind<MovementStep> = (_step, run) => {
+    const scene = gameManager.getCurrentGameScene();
+    const stopHighlight = highlightAvatar(scene);
+    let movedTimer: ReturnType<typeof setTimeout> | undefined;
+    const onMove = () => {
+        clearTimeout(movedTimer);
+        movedTimer = setTimeout(run.complete, MOVED_MS);
+    };
+    scene.CurrentPlayer.on(hasMovedEventName, onMove);
+    const closeView = showView(MovementStepView, { onnext: run.complete });
+    return () => {
+        closeView();
+        clearTimeout(movedTimer);
+        scene.CurrentPlayer.off(hasMovedEventName, onMove);
+        stopHighlight();
+    };
+};
+
+const simulatedConversation: StepKind<SimulatedConversationStep> = (step, run, view) => {
+    // The fake user stays until the item ends.
+    run.onEnd(startSimulatedConversation(gameManager.getCurrentGameScene()));
+    // A silent zone would mute the demo.
+    silentStore.setOnboardingOverride(true);
+    run.onEnd(() => silentStore.setOnboardingOverride(false));
+    // Below the fake user's video, once they have walked up and it plays.
+    return popover({ ...step, type: "popover", anchor: "tutorial.simulatedUser" }, run, view);
+};
+
+export function startStep(step: OnboardingStep, run: ItemRun, view: StepView): () => void {
+    switch (step.type) {
+        case "modal":
+            return modal(step, run, view);
+        case "popover":
+            return popover(step, run, view);
+        case "movement":
+            return movement(step, run, view);
+        case "simulatedConversation":
+            return simulatedConversation(step, run, view);
+    }
+}
