@@ -168,6 +168,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "打开说弹出窗口",
         openThinkPopup: "打开思考弹出窗口",
         walkMyDesk: "走到我的办公桌",
+        pushToTalk: "按键通话",
         edit: {
             start: "编辑",
             title: "编辑模式",
@@ -201,6 +202,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "互动",
         },
         hints: {
+            pushToTalk: "会议中按住",
             speedUp: "移动时按住",
             follow: "在某人附近时",
             emotes: "按表情栏的顺序",

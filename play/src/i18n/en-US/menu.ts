@@ -170,6 +170,7 @@ const menu: BaseTranslation = {
         openSayPopup: "Open Say Popup",
         openThinkPopup: "Open Think Popup",
         walkMyDesk: "Walk to My Desk",
+        pushToTalk: "Push to talk",
         edit: {
             start: "Edit",
             title: "Edit mode",
@@ -203,6 +204,7 @@ const menu: BaseTranslation = {
             interact: "Interact",
         },
         hints: {
+            pushToTalk: "Hold during a meeting",
             speedUp: "Hold while moving",
             follow: "Near someone",
             emotes: "In the order of the emote bar",

@@ -171,6 +171,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "말하기 팝업 열기",
         openThinkPopup: "생각하기 팝업 열기",
         walkMyDesk: "내 책상으로 이동",
+        pushToTalk: "눌러서 말하기",
         edit: {
             start: "편집",
             title: "편집 모드",
@@ -204,6 +205,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "상호작용",
         },
         hints: {
+            pushToTalk: "회의 중 길게 누르기",
             speedUp: "이동 중에 누르고 있기",
             follow: "다른 사람 근처에서",
             emotes: "이모트 바 순서대로",

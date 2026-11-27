@@ -26,7 +26,7 @@ import {
     localVolumeStore,
     mediaStreamConstraintsStore,
     requestedCameraState,
-    requestedMicrophoneState,
+    wantedMicrophoneState,
     silentStore,
 } from "./MediaStore";
 import { screenShareStreamElementsStore, videoStreamElementsStore } from "./PeerStore";
@@ -72,7 +72,7 @@ export const myCameraPeerStore: Readable<VideoBox> = derived([LL], ([$LL], set) 
                 stream.getVideoTracks().length > 0
             );
         }),
-        hasAudio: requestedMicrophoneState,
+        hasAudio: wantedMicrophoneState,
         statusStore: writable("connected" as const),
         name: writable($LL.camera.my.nameTag()),
         showVoiceIndicator: localVoiceIndicatorStore,

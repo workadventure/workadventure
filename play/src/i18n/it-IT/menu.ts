@@ -173,6 +173,7 @@ const menu: DeepPartial<Translation["menu"]> = {
         openSayPopup: "Apri popup di dire",
         openThinkPopup: "Apri popup di pensare",
         walkMyDesk: "Vai alla mia scrivania",
+        pushToTalk: "Premi per parlare",
         edit: {
             start: "Modifica",
             title: "Modalità modifica",
@@ -206,6 +207,7 @@ const menu: DeepPartial<Translation["menu"]> = {
             interact: "Interagire",
         },
         hints: {
+            pushToTalk: "Tieni premuto durante una riunione",
             speedUp: "Tieni premuto mentre ti muovi",
             follow: "Vicino a qualcuno",
             emotes: "Nell'ordine della barra delle emoticon",
