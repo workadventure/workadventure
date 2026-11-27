@@ -1,6 +1,6 @@
 import { get } from "svelte/store";
 import { LL, locale } from "../../i18n/i18n-svelte";
-import type { OnboardingItem } from "./onboardingRules";
+import type { BuiltinOnboardingItem } from "./onboardingRules";
 
 /** `play/announcements/<version>/<locale>.md`, each in its own chunk, loaded when its announcement shows. */
 const files = import.meta.glob<string>("/announcements/*/*.md", { query: "?raw", import: "default" });
@@ -30,7 +30,7 @@ export function loadReleaseNotes(version: string, lang: string): Promise<string>
 }
 
 /** The "what's new" of a release, written in `play/announcements/<version>/`. */
-export function releaseNotes(version: string): OnboardingItem {
+export function releaseNotes(version: string): BuiltinOnboardingItem {
     const title = () => get(LL).onboarding.releaseNotes.title({ version });
     return {
         id: `wa.announcement.v${version}`,

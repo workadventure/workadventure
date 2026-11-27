@@ -30,6 +30,7 @@ WorkAdventure is a TypeScript monorepo (npm workspaces) for building collaborati
 - `docs/agent/common-issues.md`
 - `docs/agent/devtools.md`
 - `docs/agent/release-notes.md`
+- `docs/agent/onboarding.md`
 
 ## Release notes
 

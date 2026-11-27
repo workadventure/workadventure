@@ -1,4 +1,5 @@
 import type { PostHog } from "@posthog/types";
+import { ReplaySubject } from "rxjs";
 import type {
     AnalyticsEventArgs,
     AnalyticsEventName,
@@ -64,6 +65,14 @@ class AnalyticsClient {
     private adminAnalyticsSender: AdminAnalyticsSender | undefined;
     private pendingAdminEvents: AdminAnalyticsEvent[] = [];
     private previousRoomId: string | undefined;
+    private readonly namesSent = new Set<AnalyticsEventName>();
+
+    /**
+     * Each event name the first time this page load sends it, replayed to a late subscriber. Onboarding learns from it
+     * which features this user already used, so that a tip about one of them is skipped.
+     */
+    // Unbounded, yet at most one value per catalog event: each name is emitted once.
+    public readonly eventNamesSent = new ReplaySubject<AnalyticsEventName>(Number.POSITIVE_INFINITY);
 
     constructor() {
         if ((POSTHOG_API_KEY || POSTHOG_URL) && (!POSTHOG_API_KEY || !POSTHOG_URL)) {
@@ -123,6 +132,7 @@ class AnalyticsClient {
      * here is what keeps `posthog.capture("wa_…")` out of the call sites.
      */
     public trackAdminEvent<N extends AnalyticsEventName>(eventName: N, ...args: AnalyticsEventArgs<N>): void {
+        this.noteSent(eventName);
         const [given = {}] = args;
 
         // Ahead of the capability gate, and deliberately: PostHog is the sink that
@@ -168,6 +178,7 @@ class AnalyticsClient {
         openProperties: TimedAnalyticsEventOpenProperties<N>,
         options: { reopenOnReconnect?: boolean } = {},
     ): EndTimedAnalyticsEvent {
+        this.noteSent(eventName);
         // Ahead of the capability gate, exactly as in trackAdminEvent and for the same
         // reason: on a world whose pusher does not advertise the batch endpoint,
         // PostHog is the only sink there is.
@@ -198,6 +209,18 @@ class AnalyticsClient {
             captured = true;
             this.posthog?.capture(closes, pick(openProperties, keys.opensProperties));
         };
+    }
+
+    /**
+     * Ahead of both sinks and of the capability gate: onboarding needs it on every install, with or without an admin,
+     * and whatever the world's analytics settings, which apply only in the admin. Once per name, so the subject holds
+     * at most one value per catalog event.
+     */
+    private noteSent(eventName: AnalyticsEventName): void {
+        if (!this.namesSent.has(eventName)) {
+            this.namesSent.add(eventName);
+            this.eventNamesSent.next(eventName);
+        }
     }
 
     private openAdminInterval<N extends TimedAnalyticsEventName>(

@@ -81,7 +81,11 @@ export const OnboardingTipGroup = z.union([
 ]);
 export type OnboardingTipGroup = z.infer<typeof OnboardingTipGroup>;
 
-/** The built-in tours a world can turn off, with the label the admin editor shows. */
+/**
+ * The built-in tours a world can turn off, with the label the admin editor shows. Every built-in tour's id goes here:
+ * play types each tour's id with this list, so a tip missing from it does not compile, and a test fails on an id left
+ * here without its tip.
+ */
 export const BuiltinTourId = z.union([
   z
     .literal("wa.mapEditor.furniture")
@@ -248,6 +252,12 @@ const OnboardingBuiltin = z.object({
     .describe(
       "The built-in tours this world turns off. The tutorial has its own switch.",
     ),
+  disabledGroups: z
+    .array(OnboardingTipGroup)
+    .optional()
+    .describe(
+      "The groups of built-in items this world turns off, including items later releases add to them. `announcement` does what `announcements: false` does; `tutorial` turns the tutorial off in this world.",
+    ),
 });
 
 export const OnboardingData = z
@@ -285,6 +295,7 @@ export type OnboardingData = z.infer<typeof OnboardingData>;
 const OnboardingRoot = OnboardingData.extend({
   builtin: OnboardingBuiltin.extend({
     disabledTours: z.array(z.string()).optional(),
+    disabledGroups: z.array(z.string()).optional(),
   }).optional(),
   items: z.array(z.unknown()).default([]),
 });
@@ -335,6 +346,17 @@ export function parseOnboardingData(json: unknown): {
       return known;
     },
   );
+  const disabledGroups = root.data.builtin?.disabledGroups?.filter(
+    (group): group is OnboardingTipGroup => {
+      const known = OnboardingTipGroup.safeParse(group).success;
+      if (!known) {
+        errors.push(
+          `builtin.disabledGroups: "${group}" is not a group of this release`,
+        );
+      }
+      return known;
+    },
+  );
   const ids = new Set<string>();
   const items: OnboardingItemData[] = [];
   root.data.items.forEach((raw, index) => {
@@ -353,6 +375,7 @@ export function parseOnboardingData(json: unknown): {
   const builtin = root.data.builtin && {
     ...root.data.builtin,
     disabledTours,
+    disabledGroups,
   };
   return { data: { ...root.data, builtin, items }, errors };
 }

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { get, type Readable } from "svelte/store";
-import type { OnboardingAnchor } from "@workadventure/messages";
+import type { AnalyticsEventName, BuiltinTourId, OnboardingAnchor } from "@workadventure/messages";
 
 /**
  * Onboarding items and the rules that decide which one starts. Pure functions only, so they can be tested without
@@ -10,9 +10,15 @@ import type { OnboardingAnchor } from "@workadventure/messages";
 /** A text read at display time, so it follows the current locale. */
 export type Text = () => string;
 
+/**
+ * What a user can have used: an anchor (clicked, or a shortcut for it), or, for built-in items, an analytics event the
+ * front sent (see `AnalyticsClient.eventNamesSent`). World items name anchors only: event names are no public contract.
+ */
+export type UsedKey = OnboardingAnchor | AnalyticsEventName;
+
 interface StepBase {
-    /** The step never shows to someone who already clicked this anchor. */
-    skipIfUsed?: OnboardingAnchor;
+    /** The step never shows to someone who already used this. */
+    skipIfUsed?: UsedKey;
 }
 
 interface StepContent {
@@ -90,8 +96,18 @@ export interface OnboardingItem {
     };
     /** Built-in items only: ends the item as done when it turns true. Already true, the item is skipped. */
     doneWhen?: Readable<boolean>;
+    /**
+     * Built-in items only: the item is skipped, without using up the quiet period, once the user used any of these;
+     * used while it shows, it ends as done.
+     */
+    skipIfUsed?: UsedKey[];
     steps: OnboardingStep[];
 }
+
+/** A built-in item. A tour's id is typed: a tip missing from `BuiltinTourId` (in libs/messages) does not compile. */
+export type BuiltinOnboardingItem =
+    | (OnboardingItem & { kind: "tour"; id: BuiltinTourId })
+    | (OnboardingItem & { kind: "tutorial" | "announcement" });
 
 export const OnboardingState = z.object({
     /** Local date, YYYY-MM-DD. */
@@ -104,6 +120,8 @@ export const OnboardingState = z.object({
     used: z.array(z.string()),
     /** Items asked for in the Help menu while their first anchor was not on screen: each starts when it shows up. */
     requested: z.array(z.string()).optional(),
+    /** How many times a tip that started by itself was interrupted. At 2, it goes after every other item. */
+    interrupted: z.record(z.number().int().min(1)).optional(),
 });
 export type OnboardingState = z.infer<typeof OnboardingState>;
 
@@ -214,60 +232,132 @@ export function isStepSkipped(step: OnboardingStep, used: readonly string[]): bo
     return step.skipIfUsed !== undefined && used.includes(step.skipIfUsed);
 }
 
+/** Why an item starts or does not, for the `onboarding` debug log. */
+export type Reason =
+    | "seen"
+    | "optedOut"
+    | "unpublished"
+    | "notInAudience"
+    | "expired"
+    | "tooEarly"
+    | "tooLate"
+    | "waitingForAfter"
+    | "onAnchorNotOnScreen"
+    | "used"
+    | "doneAlready"
+    | "laterAnnouncement"
+    | "anotherItemStarts"
+    | "demoted"
+    | "quietPeriod"
+    | "startDelay"
+    | "firstAnchorNotOnScreen"
+    | "starts";
+
+/** Every key the items name in `skipIfUsed`, on the item or on a step: the only event names worth storing. */
+export function referencedKeys(items: OnboardingItem[]): Set<string> {
+    const keys = new Set<string>();
+    for (const item of items) {
+        for (const key of item.skipIfUsed ?? []) {
+            keys.add(key);
+        }
+        for (const step of item.steps) {
+            if (step.skipIfUsed !== undefined) {
+                keys.add(step.skipIfUsed);
+            }
+        }
+    }
+    return keys;
+}
+
 /**
- * Which items to record as skipped, and which one to start, if any. Pacing that does not depend on the state (one item
- * at a time) is the caller's job.
+ * Which items to record as skipped, which one to start, if any, and why for each item. Pacing that does not depend on
+ * the state (one item at a time) is the caller's job.
  */
 export function decide(
     items: OnboardingItem[],
     state: OnboardingState,
     ctx: OnboardingContext,
-): { skip: string[]; start?: OnboardingItem } {
+): { skip: string[]; start?: OnboardingItem; reasons: Record<string, Reason> } {
     const skip: string[] = [];
+    const reasons: Record<string, Reason> = {};
     const quiet =
         state.lastAutoStartAt !== undefined &&
         ctx.now.getTime() - Date.parse(state.lastAutoStartAt) < ctx.quietPeriodMinutes * 60_000;
     const days = daysSinceFirstVisit(state, ctx.now);
-
+    const demoted = (item: OnboardingItem) => (state.interrupted?.[item.id] ?? 0) >= 2;
     let start: OnboardingItem | undefined;
-    for (const item of items) {
+
+    // Typed to return a `Reason`, so every way out of it gives one. Checks in this order.
+    const decideItem = (item: OnboardingItem): Reason => {
         const when = item.when ?? {};
-        if (
-            state.items[item.id] ||
-            // "Stop showing tips" stops tips only: announcements and the tutorial still start. A tip is passed over
-            // before any check that records a skip, so nothing is recorded for it.
-            (state.optedOut && item.kind === "tour") ||
-            item.published === false ||
-            !inAudience(item, ctx) ||
-            expired(item, ctx.now) ||
-            days < (when.minDaysSinceFirstVisit ?? 0) ||
-            days > (when.maxDaysSinceFirstVisit ?? Infinity) ||
-            !afterSatisfied(item, items, state, ctx) ||
-            (when.onAnchor !== undefined && !ctx.anchorVisible(when.onAnchor))
-        ) {
-            continue;
+        if (state.items[item.id]) {
+            return "seen";
         }
+        // "Stop showing tips" stops tips only: announcements and the tutorial still start. A tip is passed over before
+        // any check that records a skip, so nothing is recorded for it.
+        if (state.optedOut && item.kind === "tour") {
+            return "optedOut";
+        }
+        if (item.published === false) {
+            return "unpublished";
+        }
+        if (!inAudience(item, ctx)) {
+            return "notInAudience";
+        }
+        if (expired(item, ctx.now)) {
+            return "expired";
+        }
+        if (days < (when.minDaysSinceFirstVisit ?? 0)) {
+            return "tooEarly";
+        }
+        if (days > (when.maxDaysSinceFirstVisit ?? Infinity)) {
+            return "tooLate";
+        }
+        if (!afterSatisfied(item, items, state, ctx)) {
+            return "waitingForAfter";
+        }
+        if (when.onAnchor !== undefined && !ctx.anchorVisible(when.onAnchor)) {
+            return "onAnchorNotOnScreen";
+        }
+        // Every step is about something the user already used, or the item is: record it without showing anything.
         const firstStep = item.steps.find((step) => !isStepSkipped(step, state.used));
-        // Every step is about something the user already used, or what the item teaches is already happening (someone
-        // already in a bubble does not need the tutorial): record it without showing anything.
-        if (!firstStep || (item.doneWhen && get(item.doneWhen))) {
+        if (!firstStep || item.skipIfUsed?.some((key) => state.used.includes(key))) {
             skip.push(item.id);
-            continue;
+            return "used";
+        }
+        // What the item teaches is already happening (someone already in a bubble does not need the tutorial).
+        if (item.doneWhen && get(item.doneWhen)) {
+            skip.push(item.id);
+            return "doneAlready";
         }
         // Only the first pending announcement shows: someone who missed three releases gets one "what's new".
         if (start?.kind === "announcement" && item.kind === "announcement") {
             skip.push(item.id);
-            continue;
+            return "laterAnnouncement";
+        }
+        if (start) {
+            return demoted(item) ? "demoted" : "anotherItemStarts";
+        }
+        if (quiet) {
+            return "quietPeriod";
         }
         // A tip waits until the user has settled in. An announcement or the tutorial at entry interrupts nothing.
-        if (start || quiet || (item.kind === "tour" && !ctx.startDelayOver)) {
-            continue;
+        if (item.kind === "tour" && !ctx.startDelayOver) {
+            return "startDelay";
         }
         // An item that starts with a popover starts only when that target is on screen.
         const anchor = stepAnchor(firstStep);
-        if (anchor === undefined || ctx.anchorVisible(anchor)) {
-            start = item;
+        if (anchor !== undefined && !ctx.anchorVisible(anchor)) {
+            return "firstAnchorNotOnScreen";
         }
+        start = item;
+        return "starts";
+    };
+
+    // A tip interrupted twice (its bubble closed, the scene changed) goes after every other item: it no longer blocks
+    // the queue, and still shows when nothing else is waiting.
+    for (const item of [...items.filter((item) => !demoted(item)), ...items.filter(demoted)]) {
+        reasons[item.id] = decideItem(item);
     }
-    return { skip, start };
+    return { skip, start, reasons };
 }

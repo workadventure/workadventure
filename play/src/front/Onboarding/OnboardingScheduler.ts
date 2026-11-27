@@ -1,4 +1,6 @@
-import { writable } from "svelte/store";
+import { derived, writable } from "svelte/store";
+import type { Writable } from "svelte/store";
+import Debug from "debug";
 import { DEFAULT_QUIET_PERIOD_MINUTES } from "@workadventure/messages";
 import type { OnboardingAnchor } from "@workadventure/messages";
 import type { GameScene } from "../Phaser/Game/GameScene";
@@ -8,7 +10,7 @@ import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { ONBOARDING_START_DELAY } from "../Enum/EnvironmentVariable";
 import { anchorNode, anchorsChanged, anchorUsed } from "./OnboardingAnchors";
 import { runItem } from "./ItemRunner";
-import { decide, inHelp, newState, OnboardingState, stepAnchor } from "./onboardingRules";
+import { decide, inHelp, newState, OnboardingState, referencedKeys, stepAnchor } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem } from "./onboardingRules";
 
 /**
@@ -34,13 +36,21 @@ const TUTORIAL_DONE_KEY = "tutorialDone";
 /** For what only time changes: the end of the quiet period, `after` delays, a new day. */
 const TICK_MS = 60_000;
 
+/** `localStorage.debug = "onboarding"`: why each item starts or not, each time that changes. */
+const debug = Debug("onboarding");
+
 /** The scheduler of the current game scene, for the Help menu. */
 export const onboardingScheduler = writable<OnboardingScheduler | undefined>(undefined);
 
 /** Starts the item that applies, one at a time, and keeps the state. See DESIGN_onboarding.md. */
 export class OnboardingScheduler {
-    private current: { stop: () => void } | undefined;
+    /** The running item. `usedNow` turns true when a key of its item-level `skipIfUsed` is used while it shows. */
+    private current: { stop: () => void; skipIfUsed?: readonly string[]; usedNow?: Writable<boolean> } | undefined;
     private startDelayOver = false;
+    /** Set while the Help menu stops the running item to start another one: that interruption is not counted. */
+    private stoppingForHelp = false;
+    /** The reasons last logged, so that the debug log only shows a change. */
+    private lastReasons = "";
     private readonly cleanups: (() => void)[] = [];
     /** Set when the stored state cannot be read: the state of this session, which is never written. */
     private memoryState: OnboardingState | undefined;
@@ -81,14 +91,17 @@ export class OnboardingScheduler {
             this.evaluate();
         }, ONBOARDING_START_DELAY * 1000);
         const tick = setInterval(() => this.evaluate(), TICK_MS);
-        const used = anchorUsed.subscribe((anchor) =>
-            this.updateState((state) => !state.used.includes(anchor) && state.used.push(anchor)),
-        );
+        // After the first write: the analytics subject replays the names sent so far at once.
+        const referenced = referencedKeys(items);
+        const used = anchorUsed.subscribe((anchor) => this.markUsed(anchor));
+        // Only the event names an item names: `used` does not become a record of everything the user does.
+        const sent = analyticsClient.eventNamesSent.subscribe((name) => referenced.has(name) && this.markUsed(name));
         this.cleanups.push(
             () => clearTimeout(startTimer),
             () => clearInterval(tick),
             anchorsChanged.subscribe(() => this.evaluate()),
             () => used.unsubscribe(),
+            () => sent.unsubscribe(),
         );
         for (const item of items) {
             if (item.audience?.allowed) {
@@ -132,6 +145,9 @@ export class OnboardingScheduler {
 
     /** From the Help menu, to undo "Stop showing tips" (tips start by themselves again), or to do the same. */
     setShowTips(show: boolean): void {
+        if (!show && this.showTips) {
+            analyticsClient.trackAdminEvent("onboarding.opted_out", { from: "help" });
+        }
         this.updateState((state) => {
             if (show) {
                 delete state.optedOut;
@@ -148,7 +164,9 @@ export class OnboardingScheduler {
         if (!item) {
             return;
         }
+        this.stoppingForHelp = true;
         this.current?.stop();
+        this.stoppingForHelp = false;
         this.run(item, "help");
     }
 
@@ -176,7 +194,16 @@ export class OnboardingScheduler {
             this.run(requested, "help");
             return;
         }
-        const { skip, start } = decide(this.items, state, ctx);
+        const { skip, start, reasons } = decide(this.items, state, ctx);
+        if (debug.enabled) {
+            const lines = Object.entries(reasons)
+                .map(([id, reason]) => `${id}: ${reason}`)
+                .join("\n");
+            if (lines !== this.lastReasons) {
+                this.lastReasons = lines;
+                debug("Why each item starts or not:\n%s", lines);
+            }
+        }
         const at = ctx.now.toISOString();
         for (const id of skip) {
             state.items[id] = { status: "skipped", at };
@@ -198,25 +225,47 @@ export class OnboardingScheduler {
     private run(item: OnboardingItem, trigger: "auto" | "help"): void {
         const itemId = item.id;
         const source = itemId.startsWith("wa.") ? "builtin" : "world";
-        const current = { stop: () => {} };
+        const usedNow = item.skipIfUsed?.length ? writable(false) : undefined;
+        const current = { stop: () => {}, skipIfUsed: item.skipIfUsed, usedNow };
         this.current = current;
-        current.stop = runItem(item, {
+        // The runner ends an item as done when `doneWhen` turns true: a tip ends once the user does what it is about.
+        const doneWhen = usedNow && (item.doneWhen ? derived([item.doneWhen, usedNow], ([a, b]) => a || b) : usedNow);
+        current.stop = runItem(doneWhen ? { ...item, doneWhen } : item, {
             // From the Help menu, the user asked for the whole item.
             used: () => (trigger === "help" ? [] : this.readState().used),
             onStart: (step) =>
                 analyticsClient.trackAdminEvent("onboarding.item_started", { itemId, source, step, trigger }),
             onAnchorMissing: (anchor, step) =>
                 analyticsClient.trackAdminEvent("onboarding.anchor_missing", { itemId, source, step, anchor }),
-            onOptOut: () => this.updateState((state) => (state.optedOut = true)),
+            onOptOut: (step) => {
+                this.updateState((state) => (state.optedOut = true));
+                analyticsClient.trackAdminEvent("onboarding.opted_out", { from: "tip", itemId, source, step });
+            },
             onEnd: (outcome, step) => {
                 if (this.current === current) {
                     this.current = undefined;
                 }
-                // An interruption records nothing, so the item can come back next session.
+                // An interruption records nothing, so the item can come back next session. A tip that started by itself
+                // is counted, unless the Help menu stopped it to start another item: interrupted twice, it goes after
+                // every other item (see `decide()`).
                 if (outcome === "interrupted") {
+                    if (item.kind === "tour" && trigger === "auto" && !this.stoppingForHelp) {
+                        this.updateState((state) => {
+                            state.interrupted = {
+                                ...state.interrupted,
+                                [itemId]: (state.interrupted?.[itemId] ?? 0) + 1,
+                            };
+                        });
+                    }
                     return;
                 }
-                this.updateState((state) => (state.items[itemId] = { status: outcome, at: new Date().toISOString() }));
+                this.updateState((state) => {
+                    state.items[itemId] = { status: outcome, at: new Date().toISOString() };
+                    if (state.interrupted?.[itemId] !== undefined) {
+                        const others = Object.entries(state.interrupted).filter(([id]) => id !== itemId);
+                        state.interrupted = others.length > 0 ? Object.fromEntries(others) : undefined;
+                    }
+                });
                 // A plain condition: the catalog test reads the two event names off this ternary.
                 const done = outcome === "done";
                 analyticsClient.trackAdminEvent(done ? "onboarding.item_done" : "onboarding.item_dismissed", {
@@ -226,6 +275,14 @@ export class OnboardingScheduler {
                 });
             },
         });
+    }
+
+    /** A use of an anchor or of a feature `skipIfUsed` names: recorded, and it ends a running tip about it. */
+    private markUsed(key: string): void {
+        this.updateState((state) => !state.used.includes(key) && state.used.push(key));
+        if (this.current?.skipIfUsed?.includes(key)) {
+            this.current.usedNow?.set(true);
+        }
     }
 
     private context(): OnboardingContext {

@@ -58,3 +58,4 @@ Do not edit generated `src/i18n/i18n-*.ts` files directly.
 - `../docs/agent/i18n.md`
 - `../docs/agent/typescript-style.md`
 - `../docs/agent/devtools.md`
+- `../docs/agent/onboarding.md`

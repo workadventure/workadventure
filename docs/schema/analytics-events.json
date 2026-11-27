@@ -1406,6 +1406,17 @@
       }
     },
     {
+      "title": "onboarding.opted_out",
+      "properties": {
+        "eventName": {
+          "const": "onboarding.opted_out"
+        },
+        "properties": {
+          "$ref": "#/$defs/onboarding.opted_out"
+        }
+      }
+    },
+    {
       "title": "onboarding.video_validated",
       "properties": {
         "eventName": {
@@ -2143,6 +2154,7 @@
               "onboarding.item_done",
               "onboarding.item_started",
               "onboarding.name_validated",
+              "onboarding.opted_out",
               "onboarding.video_validated",
               "onboarding.woka_selected",
               "onboarding.woka_validated",
@@ -4904,6 +4916,40 @@
       "additionalProperties": true,
       "description": "The user confirmed their name during onboarding.",
       "title": "onboarding.name_validated"
+    },
+    "onboarding.opted_out": {
+      "type": "object",
+      "properties": {
+        "itemId": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "The onboarding item's id. Built-in ids start with `wa.`."
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "builtin",
+            "world"
+          ],
+          "description": "Where the item comes from: WorkAdventure itself, or the world's own onboarding config."
+        },
+        "step": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "The step the event happened on, from 0."
+        },
+        "from": {
+          "type": "string",
+          "enum": [
+            "tip",
+            "help"
+          ],
+          "description": "tip: the user picked \"Stop showing tips\" in a tip, which `itemId`, `source` and `step` name. help: the user turned \"Show tips automatically\" off in the Help menu."
+        }
+      },
+      "additionalProperties": true,
+      "title": "onboarding.opted_out",
+      "description": "The user turned automatic tips off. Announcements still show."
     },
     "onboarding.video_validated": {
       "type": "object",

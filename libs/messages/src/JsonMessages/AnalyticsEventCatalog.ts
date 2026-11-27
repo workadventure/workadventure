@@ -1823,6 +1823,18 @@ export const ANALYTICS_EVENTS = {
       "The user closed an onboarding item before its end, with × or Esc. `step` is the one they closed.",
   }),
 
+  "onboarding.opted_out": event({
+    properties: onboardingItemProperties.partial().extend({
+      from: z
+        .enum(["tip", "help"])
+        .describe(
+          'tip: the user picked "Stop showing tips" in a tip, which `itemId`, `source` and `step` name. help: the user turned "Show tips automatically" off in the Help menu.',
+        ),
+    }),
+    description:
+      "The user turned automatic tips off. Announcements still show.",
+  }),
+
   "onboarding.anchor_missing": event({
     properties: onboardingItemProperties.extend({
       anchor: z

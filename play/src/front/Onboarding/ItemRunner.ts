@@ -26,7 +26,8 @@ export interface RunHooks {
     used(): readonly string[];
     onStart(step: number): void;
     onAnchorMissing(anchor: OnboardingAnchor, step: number): void;
-    onOptOut(): void;
+    /** "Stop showing tips", on `step`. */
+    onOptOut(step: number): void;
     onEnd(outcome: Outcome, step: number): void;
 }
 
@@ -113,7 +114,7 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
             optOut:
                 item.kind === "tour"
                     ? live(() => {
-                          hooks.onOptOut();
+                          hooks.onOptOut(i);
                           finish("dismissed");
                       })
                     : undefined,

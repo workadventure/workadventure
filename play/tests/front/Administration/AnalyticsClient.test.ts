@@ -299,3 +299,28 @@ describe("AnalyticsClient admin analytics sink", () => {
         expect(sendAdmin.mock.calls[0][0].events[0].properties).toEqual({});
     });
 });
+
+describe("AnalyticsClient eventNamesSent", () => {
+    afterEach(() => {
+        window.capabilities = {};
+    });
+
+    // The client is a singleton, and each name is emitted once per page load: these names are used by no other test.
+    it("emits a name the first time it is sent, without the admin capability, and replays it to a late subscriber", () => {
+        window.capabilities = {};
+        const names: string[] = [];
+        const subscription = analyticsClient.eventNamesSent.subscribe((name) => names.push(name));
+
+        analyticsClient.trackAdminEvent("chat.matrix_folder.created");
+        analyticsClient.trackAdminEvent("chat.matrix_folder.created");
+        analyticsClient.openTimedEvent("area.dwell", { areaId: "a", areaName: "A" })();
+        subscription.unsubscribe();
+
+        expect(names.filter((name) => name === "chat.matrix_folder.created")).toHaveLength(1);
+        expect(names).toContain("area.dwell");
+
+        const late: string[] = [];
+        analyticsClient.eventNamesSent.subscribe((name) => late.push(name)).unsubscribe();
+        expect(late).toEqual(expect.arrayContaining(["chat.matrix_folder.created", "area.dwell"]));
+    });
+});
