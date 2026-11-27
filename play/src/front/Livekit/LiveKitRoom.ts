@@ -8,6 +8,7 @@ import type {
     TrackPublishOptions,
 } from "livekit-client";
 import {
+    AudioPresets,
     BackupCodecPolicy,
     compareVersions,
     getBrowser,
@@ -810,8 +811,13 @@ export class LiveKitRoom implements LiveKitRoomInterface, E2ELivekitRoom {
                 }
                 const screenShareAudioLocalTrack = new LocalAudioTrack(screenShareAudioTrack);
 
+                // Shared audio is usually music or a video: the defaults (48 kbps, DTX, RED) are tuned for voice.
+                // Stereo follows the captured track (2 channels for a tab, see ScreenSharingStore).
                 await this.localParticipant.publishTrack(screenShareAudioLocalTrack, {
                     source: Track.Source.ScreenShareAudio,
+                    audioPreset: AudioPresets.musicHighQualityStereo,
+                    dtx: false,
+                    red: false,
                 });
                 // Only keep the reference once published (see handleCameraTrack)
                 this.localScreenSharingAudioTrack = screenShareAudioLocalTrack;
