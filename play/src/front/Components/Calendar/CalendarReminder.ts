@@ -1,6 +1,6 @@
 import { get, writable } from "svelte/store";
 import type { CalendarEventInterface } from "@workadventure/shared-utils";
-import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+import { isCalendarVisibleStore, visibleCalendarEventsStore } from "../../Stores/CalendarStore";
 import { byStart, isLong } from "./agenda";
 
 /** How long before it starts a meeting gets its reminder. */
@@ -57,11 +57,11 @@ export function dismissReminder(event: CalendarEventInterface): void {
  */
 export function startCalendarReminders(): () => void {
     const check = () =>
-        calendarRemindersStore.set(dueReminders(get(calendarEventsStore).values(), dismissed, new Date()));
+        calendarRemindersStore.set(dueReminders(get(visibleCalendarEventsStore).values(), dismissed, new Date()));
 
     const interval = setInterval(check, CHECK_INTERVAL_MS);
     // A refresh can bring a meeting into the window, or take a cancelled or moved one out of it.
-    const unsubscribeEvents = calendarEventsStore.subscribe(check);
+    const unsubscribeEvents = visibleCalendarEventsStore.subscribe(check);
     // The agenda shows the same meetings with the same buttons: once it is open, the reminders have done their job.
     const unsubscribeAgenda = isCalendarVisibleStore.subscribe((visible) => {
         if (visible) get(calendarRemindersStore).forEach(dismissReminder);

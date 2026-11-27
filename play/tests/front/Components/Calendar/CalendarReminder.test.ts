@@ -1,7 +1,20 @@
 import type { CalendarEventInterface } from "@workadventure/shared-utils";
-import { describe, expect, it } from "vitest";
+import { get } from "svelte/store";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+// The real LocalUserStore pulls half the app in; the calendar store only needs these two calls.
+vi.mock("../../../../src/front/Connection/LocalUserStore", () => ({
+    localUserStore: { getCalendarSelection: () => ({}), setCalendarSelection: () => {} },
+}));
 
 import {
+    calendarEventsStore,
+    calendarSelectionStore,
+    calendarSourcesStore,
+} from "../../../../src/front/Stores/CalendarStore";
+import {
+    calendarRemindersStore,
+    startCalendarReminders,
     dueReminders,
     REMINDER_LEAD_MS,
     REMINDER_LINGER_MS,
@@ -67,5 +80,35 @@ describe("dueReminders", () => {
             NOW,
         );
         expect(ids(due)).toEqual(["a", "b", "c"]);
+    });
+});
+
+describe("startCalendarReminders", () => {
+    afterEach(() => {
+        calendarEventsStore.set(new Map());
+        calendarSourcesStore.set(new Map());
+        calendarSelectionStore.set({});
+        calendarRemindersStore.set([]);
+        vi.useRealTimers();
+    });
+
+    it("does not remind of a meeting from an unticked calendar", () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(NOW);
+        calendarSourcesStore.set(new Map([["google:leo", { id: "google:leo", name: "Léo", selectedByDefault: true }]]));
+        calendarSelectionStore.set({ "google:leo": false });
+        calendarEventsStore.set(
+            new Map([
+                ["google:leo:1", event("google:leo:1", 3 * MINUTE, { calendar: { id: "google:leo", name: "Léo" } })],
+            ]),
+        );
+
+        const stop = startCalendarReminders();
+        expect(get(calendarRemindersStore)).toEqual([]);
+
+        // Ticked again: the same meeting is due.
+        calendarSelectionStore.set({});
+        expect(ids(get(calendarRemindersStore))).toEqual(["google:leo:1"]);
+        stop();
     });
 });

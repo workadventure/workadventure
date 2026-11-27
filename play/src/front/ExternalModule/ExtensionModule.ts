@@ -1,6 +1,6 @@
 import type { AvailabilityStatus, ExternalModuleMessage, OauthRefreshToken } from "@workadventure/messages";
 import type { Readable, Updater } from "svelte/store";
-import type { CalendarEventInterface, TodoListInterface } from "@workadventure/shared-utils";
+import type { CalendarEventInterface, CalendarSourceInterface, TodoListInterface } from "@workadventure/shared-utils";
 import type { AreaData, AreaDataProperties } from "@workadventure/map-editor";
 import type { Observable } from "rxjs";
 import { z } from "zod";
@@ -37,6 +37,8 @@ export interface ExtensionModuleOptions {
     ) => Promise<OauthRefreshToken>;
     spaceRegistry?: SpaceRegistryInterface;
     calendarEventsStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarEventInterface>>) => void;
+    /** Publishes the calendars of the user's account, so the agenda can show and filter them. */
+    calendarSourcesStoreUpdate?: (this: void, updater: Updater<Map<string, CalendarSourceInterface>>) => void;
     todoListStoreUpdate?: (this: void, updater: Updater<Map<string, TodoListInterface>>) => void;
     openErrorScreen?(error: Error): void;
     logoutCallback?(): void;

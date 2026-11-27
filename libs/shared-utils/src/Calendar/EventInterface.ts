@@ -1,4 +1,9 @@
 export interface CalendarEventInterface {
+    /**
+     * Unique key of the meeting, also its key in the calendar events Map.
+     * Modules that read several calendars build it as `<calendar id>:<provider event id>`, so two copies
+     * of the same meeting in two calendars have two different ids.
+     */
     id: string;
     title: string;
     description: string;
@@ -21,6 +26,31 @@ export interface CalendarEventInterface {
             isWorkAdventure?: boolean;
         };
     };
+    /**
+     * The calendar holding this meeting. A meeting without it is always shown (module that reads one
+     * calendar only).
+     */
+    calendar?: { id: string; name: string };
+    /**
+     * iCalendar UID, shared by the copies of one meeting in several calendars. Meetings with the same uid
+     * and the same start are shown once. A meeting without it is never deduplicated.
+     */
+    uid?: string;
+}
+
+/**
+ * One calendar of the user's account, as published by the calendar module.
+ */
+export interface CalendarSourceInterface {
+    /** Prefixed by the provider: `google:<calendarId>`, `ms:<calendarId>`. */
+    id: string;
+    name: string;
+    /** The main calendar of the account (Google `primary`, Graph `isDefaultCalendar`). */
+    primary?: boolean;
+    /** Shown in the agenda unless the user changed it: main calendar and calendars the user can edit. */
+    selectedByDefault: boolean;
+    /** The last read of this calendar failed: its meetings are those of the previous read. */
+    stale?: true;
 }
 
 /**

@@ -11,9 +11,11 @@
         /** The other meetings happening during this one. */
         overlaps: CalendarEventInterface[];
         now: Date;
+        /** Shows the name of the meeting's calendar: useful once the agenda mixes several calendars. */
+        showCalendar?: boolean;
     }
 
-    let { event, overlaps, now }: Props = $props();
+    let { event, overlaps, now, showCalendar = false }: Props = $props();
 
     let started = $derived(event.start <= now);
     let reminder = $derived(new Date(event.start.getTime() - REMINDER_LEAD_MS));
@@ -43,7 +45,7 @@
         <span class="text-sm text-contrast-200">
             {isToday ? "" : `${formatDayName(startOfDay(event.start), now)} · `}{formatTime(event.start)} – {formatTime(
                 event.end,
-            )}
+            )}{#if showCalendar && event.calendar}&nbsp;· {event.calendar.name}{/if}
         </span>
     </div>
 

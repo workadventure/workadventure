@@ -66,6 +66,7 @@ const videoQualityKey = "videoQuality";
 const screenShareQualityKey = "screenShareQuality";
 const bandwidthConstrainedScreenSharePreferenceKey = "bandwidthConstrainedScreenSharePreference";
 const codecRetryTimesKey = "codecRetryTimes";
+const calendarSelectionKey = "calendarSelection";
 const legacyVideoBandwidthKey = "videoBandwidth";
 const legacyScreenShareBandwidthKey = "screenShareBandwidth";
 const noiseSuppressionEnabledKey = "noiseSuppressionEnabled";
@@ -814,6 +815,27 @@ class LocalUserStore {
 
     setCodecRetryTime(codec: string, time: number): void {
         localStorage.setItem(codecRetryTimesKey, JSON.stringify({ ...this.getCodecRetryTimes(), [codec]: time }));
+    }
+
+    /**
+     * The calendars the user ticked or unticked in the agenda, by calendar id. Only the choices that differ
+     * from the calendar's default are kept.
+     */
+    getCalendarSelection(): Record<string, boolean> {
+        try {
+            const raw = localStorage.getItem(calendarSelectionKey);
+            if (!raw) {
+                return {};
+            }
+            const parsed = z.record(z.boolean()).safeParse(JSON.parse(raw));
+            return parsed.success ? parsed.data : {};
+        } catch {
+            return {};
+        }
+    }
+
+    setCalendarSelection(selection: Record<string, boolean>): void {
+        localStorage.setItem(calendarSelectionKey, JSON.stringify(selection));
     }
 
     // Background transformation settings

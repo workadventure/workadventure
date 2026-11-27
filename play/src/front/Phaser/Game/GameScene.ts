@@ -186,7 +186,11 @@ import { UserProviderMerger } from "../../Chat/UserProviderMerger/UserProviderMe
 import { AdminUserProvider } from "../../Chat/UserProvider/AdminUserProvider";
 import { ExtensionModuleStatusSynchronization } from "../../Rules/StatusRules/ExtensionModuleStatusSynchronization";
 import { resetAllStatusStoreExcept } from "../../Rules/StatusRules/statusChangerFunctions";
-import { calendarEventsStore, isActivatedStore as isCalendarActiveStore } from "../../Stores/CalendarStore";
+import {
+    calendarEventsStore,
+    calendarSourcesStore,
+    isActivatedStore as isCalendarActiveStore,
+} from "../../Stores/CalendarStore";
 import { isActivatedStore as isTodoListActiveStore, todoListsStore } from "../../Stores/TodoListStore";
 import { externalSvelteComponentService } from "../../Stores/Utils/externalSvelteComponentService";
 import type { ExtensionModule } from "../../ExternalModule/ExtensionModule";
@@ -2689,6 +2693,7 @@ export class GameScene extends DirtyScene {
                         externalModuleMessage: connection.externalModuleMessage,
                         onExtensionModuleStatusChange: ExtensionModuleStatusSynchronization.onStatusChange,
                         calendarEventsStoreUpdate: calendarEventsStore.update,
+                        calendarSourcesStoreUpdate: calendarSourcesStore.update,
                         todoListStoreUpdate: todoListsStore.update,
                         openCoWebSite: openCoWebSiteWithoutSource,
                         closeCoWebsite,

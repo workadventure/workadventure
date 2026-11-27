@@ -1,7 +1,13 @@
 <script lang="ts">
     import { fly } from "svelte/transition";
     import { get } from "svelte/store";
-    import { calendarEventsStore, isCalendarVisibleStore } from "../../Stores/CalendarStore";
+    import {
+        calendarSourcesStore,
+        isCalendarVisibleStore,
+        shownCalendarsStore,
+        staleCalendarsStore,
+        visibleCalendarEventsStore,
+    } from "../../Stores/CalendarStore";
     import LL from "../../../i18n/i18n-svelte";
 
     import outlookSvg from "../images/applications/outlook.svg";
@@ -19,6 +25,8 @@
     import CalendarMeetingsInProgress from "./CalendarMeetingsInProgress.svelte";
     import CalendarEventRow from "./CalendarEventRow.svelte";
     import CalendarOverlapGroup from "./CalendarOverlapGroup.svelte";
+    import CalendarSourcePicker from "./CalendarSourcePicker.svelte";
+    import { IconAlertTriangle, IconChevronDown } from "@wa-icons";
 
     // "in 5 minutes", the now line and the next meeting all go stale: refresh them twice a minute.
     let now = $state(new Date());
@@ -27,9 +35,19 @@
         return () => clearInterval(interval);
     });
 
-    let days = $derived(buildAgenda($calendarEventsStore.values(), now));
-    let next = $derived(nextMeeting($calendarEventsStore.values(), now));
-    let inProgress = $derived(meetingsInProgress($calendarEventsStore.values(), now));
+    let days = $derived(buildAgenda($visibleCalendarEventsStore.values(), now));
+    let next = $derived(nextMeeting($visibleCalendarEventsStore.values(), now));
+    let inProgress = $derived(meetingsInProgress($visibleCalendarEventsStore.values(), now));
+    // Once the agenda mixes several calendars, each meeting says which one it comes from.
+    let showCalendar = $derived($shownCalendarsStore.length > 1);
+
+    let pickerOpen = $state(false);
+
+    function closePicker(event: KeyboardEvent) {
+        if (event.key === "Escape" && pickerOpen) {
+            pickerOpen = false;
+        }
+    }
 
     let sections: HTMLElement[] = $state([]);
 
@@ -42,6 +60,8 @@
         window.location.href = "/login";
     }
 </script>
+
+<svelte:window onkeydown={closePicker} />
 
 <div class="calendar select-text flex">
     <div
@@ -66,9 +86,45 @@
                 <span class="text-sm text-contrast-200">
                     {now.toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
                 </span>
+                {#if $calendarSourcesStore.size > 0}
+                    <!-- What the agenda shows, always in sight: the user must not believe it mirrors their whole calendar app. -->
+                    <div class="flex flex-wrap items-center gap-1.5 text-sm text-contrast-200">
+                        <button
+                            type="button"
+                            class="m-0 flex items-center gap-1 rounded-sm border-0 bg-secondary/25 px-1.5 py-0.5 text-sm font-bold text-white"
+                            aria-expanded={pickerOpen}
+                            aria-label={$LL.externalModule.calendar.chooseCalendars()}
+                            onclick={() => (pickerOpen = !pickerOpen)}
+                        >
+                            {$shownCalendarsStore.length > 0
+                                ? $LL.externalModule.calendar.calendarsCount({ count: $shownCalendarsStore.length })
+                                : $LL.externalModule.calendar.noCalendars()}
+                            <IconChevronDown
+                                class="h-3.5 w-3.5 transition-transform {pickerOpen ? 'rotate-180' : ''}"
+                                aria-hidden="true"
+                            />
+                        </button>
+                        {#if $staleCalendarsStore.length > 0}
+                            <button
+                                type="button"
+                                class="m-0 flex items-center gap-1 rounded-sm border-0 bg-warning/20 px-1.5 py-0.5 text-sm font-bold text-warning"
+                                aria-expanded={pickerOpen}
+                                onclick={() => (pickerOpen = !pickerOpen)}
+                            >
+                                <IconAlertTriangle class="h-3.5 w-3.5" aria-hidden="true" />
+                                {$LL.externalModule.calendar.staleCount({ count: $staleCalendarsStore.length })}
+                            </button>
+                        {/if}
+                        <span>{$LL.externalModule.calendar.scope()}</span>
+                    </div>
+                {/if}
             </div>
             <ButtonClose onclick={closeCalendar} />
         </header>
+
+        {#if pickerOpen && $calendarSourcesStore.size > 0}
+            <CalendarSourcePicker />
+        {/if}
 
         {#if !$userIsConnected && get(externalSvelteComponentService.getComponentsByZone("calendarButton")).size == 0}
             <Button variant="secondary" onclick={goToLoginPage}>{$LL.menu.profile.login()}</Button>
@@ -81,9 +137,14 @@
 
         {#if inProgress.length > 1}
             <!-- We cannot tell which one the user is in: offer them all rather than pick one. -->
-            <CalendarMeetingsInProgress events={inProgress} />
+            <CalendarMeetingsInProgress events={inProgress} {showCalendar} />
         {:else if next}
-            <CalendarNextMeeting event={next} overlaps={overlapsWith(next, $calendarEventsStore.values())} {now} />
+            <CalendarNextMeeting
+                event={next}
+                overlaps={overlapsWith(next, $visibleCalendarEventsStore.values())}
+                {now}
+                {showCalendar}
+            />
         {/if}
 
         {#if days.length > 0}
@@ -130,9 +191,15 @@
                         <!-- Finished meetings are not listed: the ones in progress show how far along they are. -->
                         {#each day.items as item (item.kind === "overlap" ? `overlap-${item.events[0].id}` : item.event.id)}
                             {#if item.kind === "overlap"}
-                                <CalendarOverlapGroup start={item.start} end={item.end} events={item.events} {now} />
+                                <CalendarOverlapGroup
+                                    start={item.start}
+                                    end={item.end}
+                                    events={item.events}
+                                    {now}
+                                    {showCalendar}
+                                />
                             {:else}
-                                <CalendarEventRow event={item.event} long={item.kind === "long"} {now} />
+                                <CalendarEventRow event={item.event} long={item.kind === "long"} {now} {showCalendar} />
                             {/if}
                         {/each}
                     </section>

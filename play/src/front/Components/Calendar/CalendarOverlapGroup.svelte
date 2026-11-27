@@ -10,9 +10,11 @@
         end: Date;
         events: CalendarEventInterface[];
         now: Date;
+        /** Shows the name of each meeting's calendar: useful once the agenda mixes several calendars. */
+        showCalendar?: boolean;
     }
 
-    let { start, end, events, now }: Props = $props();
+    let { start, end, events, now, showCalendar = false }: Props = $props();
 
     // Ties each meeting's line to its bar on the timeline. Static class names, for Tailwind's scanner.
     const COLORS = ["bg-secondary-300", "bg-success-400", "bg-warning-400", "bg-danger-400", "bg-contrast-200"];
@@ -63,6 +65,10 @@
                 <span class="flex min-w-0 items-center gap-1.5">
                     <span class="h-2 w-2 shrink-0 rounded-full {COLORS[index % COLORS.length]}"></span>
                     <span class="truncate text-sm">{event.title}</span>
+                    {#if showCalendar && event.calendar}
+                        <!-- Name only: a second colour would compete with the dot that ties the line to its bar. -->
+                        <span class="shrink-0 truncate text-xs text-contrast-200">· {event.calendar.name}</span>
+                    {/if}
                 </span>
                 <CalendarJoinButton {event} />
             </li>
