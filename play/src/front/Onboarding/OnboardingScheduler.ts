@@ -1,7 +1,7 @@
 import { derived, writable } from "svelte/store";
 import type { Writable } from "svelte/store";
 import Debug from "debug";
-import { DEFAULT_QUIET_PERIOD_MINUTES } from "@workadventure/messages";
+import { DEFAULT_QUIET_PERIOD_MINUTES, OnboardingTipGroup } from "@workadventure/messages";
 import type { OnboardingAnchor } from "@workadventure/messages";
 import type { GameScene } from "../Phaser/Game/GameScene";
 import { analyticsClient } from "../Administration/AnalyticsClient";
@@ -10,17 +10,43 @@ import { touchScreenManager } from "../Touch/TouchScreenManager";
 import { ONBOARDING_START_DELAY } from "../Enum/EnvironmentVariable";
 import { anchorNode, anchorsChanged, anchorUsed } from "./OnboardingAnchors";
 import { runItem } from "./ItemRunner";
-import { decide, inHelp, newState, OnboardingState, referencedKeys, stepAnchor } from "./onboardingRules";
+import { decide, idGroup, inHelp, newState, OnboardingState, referencedKeys, stepAnchor } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem } from "./onboardingRules";
+
+/** A group of the Help menu: the world's own items, or a group of built-in items. */
+export type HelpGroup = OnboardingTipGroup | "world";
+
+/** In the order the Help menu shows them. */
+const HELP_GROUPS: HelpGroup[] = ["world", ...OnboardingTipGroup.options.map((option) => option.value)];
 
 /**
  * An item of the Help menu. `missingAnchor`: its first target, when it is not on screen. `requested`: the user asked
- * to see it when that target shows up.
+ * to see it when that target shows up. `seen`: the state has an entry for it (done, dismissed or skipped).
  */
 export interface HelpItem {
     item: OnboardingItem;
+    group: HelpGroup;
+    seen: boolean;
     missingAnchor?: OnboardingAnchor;
     requested?: boolean;
+}
+
+/**
+ * The Help menu's groups, without the empty ones: the world's own items first, then the groups of built-in items in
+ * their order. Within a group, the items not seen yet come first, each part in priority order.
+ */
+export function groupHelpItems(items: HelpItem[]): { group: HelpGroup; items: HelpItem[] }[] {
+    return HELP_GROUPS.map((group) => ({
+        group,
+        // A stable sort: the priority order stays within the unseen and the seen items.
+        items: items.filter((item) => item.group === group).sort((a, b) => Number(a.seen) - Number(b.seen)),
+    })).filter((group) => group.items.length > 0);
+}
+
+/** The group of an item; "world" for a world item, and for a built-in group this release does not list. */
+function helpGroup(id: string): HelpGroup {
+    const group = idGroup(id);
+    return HELP_GROUPS.find((known) => known === group) ?? "world";
 }
 
 /** The first anchor of an item, when it is not on screen: the item cannot start now. */
@@ -119,12 +145,14 @@ export class OnboardingScheduler {
      */
     get helpItems(): HelpItem[] {
         const ctx = this.context();
-        const requested = this.readState().requested ?? [];
+        const state = this.readState();
+        const requested = state.requested ?? [];
         return this.items
             .filter((item) => inHelp(item, ctx))
             .map((item) => {
+                const listed = { item, group: helpGroup(item.id), seen: state.items[item.id] !== undefined };
                 const anchor = missingAnchor(item, ctx);
-                return anchor ? { item, missingAnchor: anchor, requested: requested.includes(item.id) } : { item };
+                return anchor ? { ...listed, missingAnchor: anchor, requested: requested.includes(item.id) } : listed;
             });
     }
 

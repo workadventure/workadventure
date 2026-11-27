@@ -6,6 +6,7 @@ import type { GameScene } from "../Phaser/Game/GameScene";
 import { decide, newState } from "./onboardingRules";
 import type { OnboardingContext, OnboardingItem, OnboardingState, OnboardingStep, Reason } from "./onboardingRules";
 import type { ItemRun } from "./ItemRunner";
+import type { HelpItem } from "./OnboardingScheduler";
 
 // The runner's steps, without a DOM: each started step is recorded with its run.
 const started: { anchor: string; run: ItemRun; stopped: boolean }[] = [];
@@ -35,7 +36,7 @@ vi.mock("../Touch/TouchScreenManager", () => ({ touchScreenManager: { primaryTou
 
 const { runItem } = await import("./ItemRunner");
 const { anchorsChanged, anchorUsed } = await import("./OnboardingAnchors");
-const { OnboardingScheduler } = await import("./OnboardingScheduler");
+const { OnboardingScheduler, groupHelpItems } = await import("./OnboardingScheduler");
 
 const NOW = new Date(2026, 10, 24, 12, 0);
 
@@ -261,6 +262,28 @@ describe("decide, with used events and reasons", () => {
     });
 });
 
+describe("groupHelpItems", () => {
+    const listed = (id: string, group: HelpItem["group"], seen = false): HelpItem => ({ item: tour(id), group, seen });
+
+    it("puts the world's items first, then the groups in their order, the unseen items first, and no empty group", () => {
+        const grouped = groupHelpItems([
+            listed("wa.conversation.a", "conversation", true),
+            listed("wa.mapEditor.b", "mapEditor"),
+            listed("wa.conversation.c", "conversation"),
+            listed("world-item", "world", true),
+            listed("wa.tutorial", "tutorial"),
+            listed("wa.conversation.d", "conversation", true),
+        ]);
+        expect(grouped.map(({ group, items }) => [group, items.map(({ item }) => item.id)])).toEqual([
+            ["world", ["world-item"]],
+            ["tutorial", ["wa.tutorial"]],
+            // Unseen first, then the priority order.
+            ["conversation", ["wa.conversation.c", "wa.conversation.a", "wa.conversation.d"]],
+            ["mapEditor", ["wa.mapEditor.b"]],
+        ]);
+    });
+});
+
 describe("runItem", () => {
     afterEach(() => {
         started.length = 0;
@@ -442,6 +465,27 @@ describe("OnboardingScheduler", () => {
             ["lock", undefined],
         ]);
         visible.clear();
+    });
+
+    it("gives each item of the Help menu its group and whether it was seen", () => {
+        const at = new Date().toISOString();
+        const onboarding: OnboardingState = {
+            firstVisit: "2026-11-24",
+            items: { "wa.tutorial": { status: "done", at }, "wa.news": { status: "dismissed", at } },
+            used: [],
+        };
+        const { scheduler: help } = start({ tutorialDone: true, onboarding }, [
+            ...items,
+            tour("wa.conversation.lockBubble"),
+            tour("acme-tour"),
+        ]);
+        expect(help.helpItems.map(({ item, group, seen }) => [item.id, group, seen])).toEqual([
+            ["wa.tutorial", "tutorial", true],
+            // A built-in group this release does not list goes with the world's items.
+            ["wa.news", "world", true],
+            ["wa.conversation.lockBubble", "conversation", false],
+            ["acme-tour", "world", false],
+        ]);
     });
 
     it("lists a draft in the Help menu for world admins only, whatever its audience, and never starts it", () => {
