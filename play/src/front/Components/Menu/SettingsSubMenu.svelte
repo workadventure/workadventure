@@ -324,7 +324,8 @@
     }
 </script>
 
-<svelte:document onfullscreenchange={syncFullscreen} />
+<!-- A refused request fires fullscreenerror, not fullscreenchange: resync on both. -->
+<svelte:document onfullscreenchange={syncFullscreen} onfullscreenerror={syncFullscreen} />
 
 <div class="divide-y divide-white/20" transition:fly={{ x: -700, duration: 250 }}>
     <section class=" p-0 first:pt-0 pt-8 m-0">
@@ -752,14 +753,17 @@
             />
         </div>
 
-        <div class="flex cursor-pointer items-center relative m-4">
-            <InputSwitch
-                id="fullscreen-toggle"
-                bind:value={fullscreen}
-                onchange={changeFullscreen}
-                label={$LL.menu.settings.fullscreen()}
-            />
-        </div>
+        <!-- Unsupported (iPhone Safari) or blocked (iframe without allow="fullscreen"): the switch could never work. -->
+        {#if document.fullscreenEnabled}
+            <div class="flex cursor-pointer items-center relative m-4">
+                <InputSwitch
+                    id="fullscreen-toggle"
+                    bind:value={fullscreen}
+                    onchange={changeFullscreen}
+                    label={$LL.menu.settings.fullscreen()}
+                />
+            </div>
+        {/if}
         <div class="flex cursor-pointer items-center relative m-4">
             <InputSwitch
                 id="notification-toggle"
