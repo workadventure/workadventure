@@ -15,7 +15,9 @@ import {
     OPID_ACCESS_TYPE,
     SECRET_KEY,
     OPID_TAGS_CLAIM,
+    OPID_ADMIN_TAG,
 } from "../enums/EnvironmentVariable";
+import { mapOpenIdAdminTag } from "./OpenIdTags";
 
 const OIDC_COOKIE_OPTIONS = {
     httpOnly: true,
@@ -298,7 +300,7 @@ function userClaims(userInfo: Record<string, unknown>) {
     return {
         username: userInfo[OPID_USERNAME_CLAIM] as string,
         locale: userInfo[OPID_LOCALE_CLAIM] as string,
-        tags: userInfo[OPID_TAGS_CLAIM] as string[],
+        tags: mapOpenIdAdminTag(userInfo[OPID_TAGS_CLAIM], OPID_ADMIN_TAG),
     };
 }
 

@@ -51,6 +51,7 @@ Environment variables for the Play service (frontend and pusher).
 | `OPENID_LOCALE_CLAIM` | No | JWT claim to use for user locale. Defaults to 'locale' |
 | `OPENID_WOKA_NAME_POLICY` | No | Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid' |
 | `OPENID_TAGS_CLAIM` | No | JWT claim containing user tags/roles |
+| `OPENID_ADMIN_TAG` | No | Tag (in the OPENID_TAGS_CLAIM claim) that grants admin rights. Defaults to 'admin'. When set, an 'admin' tag sent by the OpenID provider no longer grants admin rights |
 | `DISABLE_ANONYMOUS` | No | If true, anonymous users cannot access the platform. Defaults to false |
 | `PROMETHEUS_AUTHORIZATION_TOKEN` | No | The token to access the Prometheus metrics. |
 | `PROMETHEUS_PORT` | No | The port to access the Prometheus metrics. If not set, the default port is used AND an authorization token is required. |

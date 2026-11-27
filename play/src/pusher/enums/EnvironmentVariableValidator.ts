@@ -273,6 +273,12 @@ export const EnvironmentVariables = z.object({
         "Policy for avatar naming: 'user_input', 'allow_override_opid', or 'force_opid'",
     ),
     OPENID_TAGS_CLAIM: z.string().optional().describe("JWT claim containing user tags/roles"),
+    OPENID_ADMIN_TAG: z
+        .string()
+        .optional()
+        .describe(
+            "Tag (in the OPENID_TAGS_CLAIM claim) that grants admin rights. Defaults to 'admin'. When set, an 'admin' tag sent by the OpenID provider no longer grants admin rights",
+        ),
 
     DISABLE_ANONYMOUS: BoolAsString.optional()
         .transform((val) => toBool(val, false))
