@@ -10,9 +10,11 @@
         /** A long event, running alongside the meetings rather than competing with them. */
         long?: boolean;
         now: Date;
+        /** Shows the name of the meeting's calendar: useful once the agenda mixes several calendars. */
+        showCalendar?: boolean;
     }
 
-    let { event, long = false, now }: Props = $props();
+    let { event, long = false, now, showCalendar = false }: Props = $props();
 
     let inProgress = $derived(event.start <= now && now < event.end);
     // How much of the meeting has run: in a list, a card's size says nothing of time, so the bar shows it.
@@ -44,7 +46,8 @@
             {#if inProgress}
                 <span class="font-bold text-danger-600">{$LL.externalModule.calendar.inProgress()}</span>&nbsp;·
             {/if}
-            {formatDuration(event)}{#if event.resource?.onlineMeeting?.isWorkAdventure}&nbsp;· WorkAdventure{/if}
+            {formatDuration(event)}{#if event.resource?.onlineMeeting?.isWorkAdventure}&nbsp;· WorkAdventure{/if}{#if showCalendar && event.calendar}&nbsp;·
+                {event.calendar.name}{/if}
         </span>
     </div>
     <CalendarJoinButton {event} />
