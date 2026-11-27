@@ -9,22 +9,12 @@
     let request = $derived($meetingInvitationRequestStore);
 
     function onAccept() {
-        gameManager.getCurrentGameScene().inviteManager?.handleAccept({
-            senderUserUuid: request?.senderUserUuid ?? "",
-            senderPlayUri: request?.senderPlayUri ?? "",
-            senderName: request?.senderName ?? "",
-            senderUserId: request?.senderUserId ?? 0,
-        });
+        if (request) gameManager.getCurrentGameScene().inviteManager?.handleAccept(request);
         meetingInvitationRequestStore.set(null);
     }
 
     function onDecline() {
-        gameManager.getCurrentGameScene().inviteManager?.handleDecline({
-            senderUserUuid: request?.senderUserUuid ?? "",
-            senderPlayUri: request?.senderPlayUri ?? "",
-            senderName: request?.senderName ?? "",
-            senderUserId: request?.senderUserId ?? 0,
-        });
+        if (request) gameManager.getCurrentGameScene().inviteManager?.handleDecline(request);
         meetingInvitationRequestStore.set(null);
     }
 </script>
@@ -51,6 +41,11 @@
                 <p class="text-sm text-white/95 leading-snug">
                     {$LL.chat.meetingInvitation.title({ name: request?.senderName ?? "" })}
                 </p>
+                {#if request?.senderRoomName}
+                    <p class="text-xs text-white/70 leading-snug mt-1" data-testid="meeting-invitation-other-map">
+                        {$LL.chat.meetingInvitation.otherMap({ map: request.senderRoomName })}
+                    </p>
+                {/if}
             </div>
         </div>
     </div>
