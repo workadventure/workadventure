@@ -15,6 +15,8 @@ const warning: BaseTranslation = {
     waitingConnectionTitle: "Aguardando a conexão",
     waitingConnectionSubtitle: "Conectando",
     megaphoneNeeds: "Para usar o megafone, você deve ativar sua câmera ou seu microfone ou compartilhar sua tela.",
+    megaphoneUnavailable:
+        "O megafone está indisponível: a conexão com o seu espaço falhou. Os mapas deste mundo podem ter configurações de megafone diferentes (modo Auditório).",
     mapEditorShortCut: "Houve um erro ao tentar abrir o editor de mapas.",
     mapEditorNotEnabled: "O editor de mapas não está habilitado neste mundo.",
     backgroundProcessing: {

@@ -17,6 +17,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionSubtitle: "Verbinden",
     megaphoneNeeds:
         "Um das Megaphon zu benutzen, musst du deine Kamera oder dein Mikrofon aktivieren oder deinen Bildschirm freigeben.",
+    megaphoneUnavailable:
+        "Das Megaphon ist nicht verfügbar: Die Verbindung zu seinem Bereich ist fehlgeschlagen. Die Karten dieser Welt haben möglicherweise unterschiedliche Megaphon-Einstellungen (Auditorium-Modus).",
     mapEditorShortCut: "Beim Versuch, den Karteneditor zu öffnen, ist ein Fehler aufgetreten.",
     mapEditorNotEnabled: "Der Karteneditor ist in dieser Welt nicht aktiviert.",
     popupBlocked: {

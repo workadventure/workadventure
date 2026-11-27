@@ -17,6 +17,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionSubtitle: "Connessione in corso",
     megaphoneNeeds:
         "Per usare il megafono, devi attivare la tua fotocamera o il tuo microfono o condividere il tuo schermo.",
+    megaphoneUnavailable:
+        "Il megafono non è disponibile: la connessione al suo spazio non è riuscita. Le mappe di questo mondo potrebbero avere impostazioni del megafono diverse (modalità Auditorium).",
     mapEditorShortCut: "Si è verificato un errore durante il tentativo di aprire l'editor della mappa.",
     mapEditorNotEnabled: "L'editor della mappa non è abilitato in questo mondo.",
     popupBlocked: {

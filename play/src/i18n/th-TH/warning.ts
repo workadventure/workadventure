@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "กำลังรอการเชื่อมต่อ",
     waitingConnectionSubtitle: "กำลังเชื่อมต่อ",
     megaphoneNeeds: "หากต้องการใช้เมกะโฟน คุณต้องเปิดกล้อง เปิดไมโครโฟน หรือแชร์หน้าจอ",
+    megaphoneUnavailable:
+        "ไม่สามารถใช้เมกะโฟนได้: การเชื่อมต่อกับพื้นที่ของเมกะโฟนล้มเหลว แผนที่ในโลกนี้อาจตั้งค่าเมกะโฟนไม่เหมือนกัน (โหมดหอประชุม)",
     mapEditorShortCut: "เกิดข้อผิดพลาดขณะพยายามเปิดตัวแก้ไขแผนที่",
     mapEditorNotEnabled: "ตัวแก้ไขแผนที่ไม่ได้เปิดใช้งานในโลกนี้",
     popupBlocked: {

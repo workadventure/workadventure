@@ -14,7 +14,11 @@ import { gameManager } from "../Phaser/Game/GameManager";
 import { localUserStore } from "../Connection/LocalUserStore";
 import { soundManager } from "../Phaser/Game/SoundManager";
 import { statusChanger } from "../Components/ActionBar/AvailabilityStatus/statusChanger";
-import { megaphoneSpaceSettingsStore, megaphoneSpaceStore } from "../Stores/MegaphoneStore";
+import {
+    megaphoneSpaceJoinFailedStore,
+    megaphoneSpaceSettingsStore,
+    megaphoneSpaceStore,
+} from "../Stores/MegaphoneStore";
 import type { MegaphoneSpaceSettings } from "../Stores/MegaphoneStore";
 import { resolveUrlPlaceholders } from "../Utils/UrlPlaceholderResolver";
 import { getMegaphoneSpaceFields } from "./MegaphoneSpaceFields";
@@ -66,6 +70,7 @@ export class BroadcastService {
                 const spaceName = newSpaceSettings.spaceName;
                 const audienceVideoFeedbackActivated = newSpaceSettings.audienceVideoFeedbackActivated;
                 this.megaphoneSpaceSettings = newSpaceSettings;
+                megaphoneSpaceJoinFailedStore.set(false);
                 this.joinSpace(
                     spaceName,
                     this.abortSignal,
@@ -78,12 +83,14 @@ export class BroadcastService {
                     })
                     .catch((e) => {
                         console.error(e);
+                        megaphoneSpaceJoinFailedStore.set(true);
                         // Comment this out to avoid spamming Sentry with errors when joining spaces
                         // Sentry.captureException(e);
                     });
             } else {
                 this.megaphoneSpaceSettings = undefined;
                 megaphoneSpaceStore.set(undefined);
+                megaphoneSpaceJoinFailedStore.set(false);
             }
         });
     }

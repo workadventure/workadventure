@@ -17,6 +17,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionSubtitle: "zwjazać",
     megaphoneNeeds:
         "Zo by megafon wužiwał, dyrbiš swoju kameru abo swój mikrofon aktiwować abo swoju wobrazowku dźělić.",
+    megaphoneUnavailable:
+        "Megafon k dispoziciji njeje: zwisk z jeho rumom njeje so poradźił. Karty tutoho swěta maja snano rozdźělne nastajenja megafona (modus Auditorium).",
     mapEditorShortCut: "Při pospyšanju editora kartow wočinić je zmylk wustupił.",
     mapEditorNotEnabled: "Editor kartow njeje na tutym swěće zmóžnjeny.",
     backgroundProcessing: {

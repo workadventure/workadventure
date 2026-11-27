@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "Wachten op verbinding",
     waitingConnectionSubtitle: "Verbinden",
     megaphoneNeeds: "Om de megaphone te gebruiken, moet je je camera of je microfoon inschakelen of je scherm delen.",
+    megaphoneUnavailable:
+        "De megafoon is niet beschikbaar: de verbinding met zijn ruimte is mislukt. De kaarten van deze wereld hebben mogelijk verschillende megafooninstellingen (Auditoriummodus).",
     mapEditorShortCut: "Er is een fout opgetreden bij het openen van de kaarteditor.",
     mapEditorNotEnabled: "De kaarteditor is niet ingeschakeld op deze wereld.",
     backgroundProcessing: {

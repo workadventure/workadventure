@@ -26,6 +26,8 @@ export interface MegaphoneSpaceSettings {
 // A store that contains everything needed to connect to the megaphone space.
 export const megaphoneSpaceSettingsStore = writable<MegaphoneSpaceSettings | undefined>(undefined);
 export const megaphoneSpaceStore = writable<SpaceInterface | undefined>(undefined);
+/** True when joining the megaphone space failed: "Go live" would broadcast to nobody. */
+export const megaphoneSpaceJoinFailedStore = writable<boolean>(false);
 
 /**
  * This store is true if the user is livestreaming, i.e. if the user is a speaker or (if the user has requested the megaphone and is enabling its camera or microphone or screen)

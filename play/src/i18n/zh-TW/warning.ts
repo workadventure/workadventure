@@ -16,6 +16,7 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "等待連線",
     waitingConnectionSubtitle: "連線中",
     megaphoneNeeds: "要使用擴音器，您必須啟用攝影機或麥克風，或分享螢幕。",
+    megaphoneUnavailable: "擴音器無法使用：連線至其空間失敗。此世界的地圖可能使用了不同的擴音器設定（禮堂模式）。",
     mapEditorShortCut: "嘗試開啟地圖編輯器時發生錯誤。",
     mapEditorNotEnabled: "地圖編輯器在此世界中未啟用。",
     backgroundProcessing: {

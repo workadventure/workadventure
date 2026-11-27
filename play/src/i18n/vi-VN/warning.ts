@@ -16,6 +16,8 @@ const warning: DeepPartial<Translation["warning"]> = {
     waitingConnectionTitle: "Đang chờ kết nối",
     waitingConnectionSubtitle: "Đang kết nối",
     megaphoneNeeds: "Để dùng loa phóng thanh, bạn phải bật camera hoặc micrô, hoặc chia sẻ màn hình.",
+    megaphoneUnavailable:
+        "Loa phóng thanh không khả dụng: kết nối tới không gian của nó đã thất bại. Các bản đồ trong thế giới này có thể có cài đặt loa phóng thanh khác nhau (chế độ Hội trường).",
     mapEditorShortCut: "Đã xảy ra lỗi khi mở trình chỉnh sửa bản đồ.",
     mapEditorNotEnabled: "Trình chỉnh sửa bản đồ chưa được bật trên thế giới này.",
     popupBlocked: {
