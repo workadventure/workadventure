@@ -63,6 +63,7 @@
         openSayPopup: $LL.menu.shortcuts.openSayPopup(),
         openThinkPopup: $LL.menu.shortcuts.openThinkPopup(),
         sendEmote: $LL.menu.shortcuts.sendEmote(),
+        wokaEmoteWheel: $LL.menu.shortcuts.wokaEmoteWheel(),
     });
 
     function editable(action: ShortcutAction, hint?: string): ShortcutRow {
@@ -102,6 +103,7 @@
                 title: t.groups.express(),
                 rows: [
                     { label: t.sendEmote(), hint: t.hints.emotes(), combos: [range("1", "6"), range("F1", "F6")] },
+                    { label: t.wokaEmoteWheel(), combos: [single("G")] },
                     editable("rotatePlayer"),
                 ],
             },

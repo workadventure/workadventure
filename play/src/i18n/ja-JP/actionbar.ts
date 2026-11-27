@@ -109,6 +109,10 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
             title: "手を挙げる",
             desc: "発言したいことを知らせます。挙げた手はマップとあなたのビデオに表示され、次が誰の番かみんなにわかります。",
         },
+        wokaEmote: {
+            title: "エモートを再生",
+            desc: "Woka をジャンプ・ダンス・回転させます。G を長押しでホイールを開き、離すと再生します。",
+        },
         audioManager: {
             title: "環境音の音量",
             desc: "ここをクリックしてオーディオ音量を設定します。",
@@ -229,6 +233,35 @@ const actionbar: DeepPartial<Translation["actionbar"]> = {
         errorNotFound: "まだ個人デスクがありません",
         errorMoving: "個人デスクに到達できません",
         errorUnclaiming: "個人デスクを解放できません",
+    },
+    wokaEmote: {
+        button: "エモート",
+        wheelTitle: "エモートホイール",
+        hint: "エモートを選択",
+        all: "すべて",
+        release: "離して再生",
+        favorites: "あなたのWoka",
+        pin: "ピン留め",
+        donePinning: "完了",
+        families: {
+            react: "リアクション",
+            move: "動き",
+            status: "ステータス",
+        },
+        names: {
+            jump: "ジャンプ",
+            spin: "スピン",
+            dance: "ダンス",
+            celebrate: "お祝い",
+            nod: "はい",
+            question: "困惑",
+            laugh: "笑い",
+            moonwalk: "ムーンウォーク",
+            runInPlace: "その場で走る",
+            nope: "いいえ",
+            love: "ハート",
+            afk: "離席中",
+        },
     },
 };
 

@@ -176,3 +176,13 @@ export { default as IconPointer } from "~icons/tabler/pointer";
 export { default as IconArrowForwardUp } from "~icons/tabler/arrow-forward-up";
 
 export { default as IconEyeOff } from "~icons/tabler/eye-off";
+export { default as IconHelp } from "~icons/tabler/help";
+export { default as IconMoodCrazyHappy } from "~icons/tabler/mood-crazy-happy";
+export { default as IconRun } from "~icons/tabler/run";
+export { default as IconArrowBigUpLines } from "~icons/tabler/arrow-big-up-lines";
+export { default as IconRotate360 } from "~icons/tabler/rotate-360";
+export { default as IconConfetti } from "~icons/tabler/confetti";
+export { default as IconMoodX } from "~icons/tabler/mood-x";
+export { default as IconHeart } from "~icons/tabler/heart";
+export { default as IconZzz } from "~icons/tabler/zzz";
+export { default as IconPin } from "~icons/tabler/pin";
