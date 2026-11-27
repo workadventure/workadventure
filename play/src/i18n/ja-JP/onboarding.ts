@@ -54,6 +54,7 @@ export default {
         inMapEditor: "マップエディターで使えます",
         notHere: "ここでは今は使えません",
         remindMe: "リマインド",
+        showTips: "ヒントを自動で表示",
     },
     releaseNotes: {
         title: "WorkAdventure {version} の新機能",

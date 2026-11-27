@@ -5,7 +5,7 @@ import { getPage } from "./utils/auth";
 import { resetWamMaps } from "./utils/map-editor/uploader";
 import { evaluateScript } from "./utils/scripting";
 import { isMobile } from "./utils/isMobile";
-import { map_storage_url } from "./utils/urls";
+import { map_storage_url, maps_test_url } from "./utils/urls";
 import setFrontEnvVars from "./utils/setFrontEnvVars";
 
 test.use({
@@ -16,6 +16,8 @@ const TOUR_ID = "wa.mapEditor.furniture";
 const LOCK_TIP_ID = "wa.tip.lockBubble";
 const TUTORIAL_ID = "wa.tutorial";
 const ANNOUNCEMENT_ID = "wa.announcement.v1.35";
+/** The draft of `maps/tests/e2e-onboarding.json`, the world's onboarding file set by `setWorldOnboarding()`. */
+const WORLD_DRAFT_ID = "e2e-draft";
 /**
  * The built-in items that start by themselves at load. A test marks over the ones it does not test: one still pending
  * would start first and set off the quiet period. A new built-in announcement goes in here.
@@ -24,6 +26,7 @@ const AT_LOAD = [TUTORIAL_ID, ANNOUNCEMENT_ID];
 
 interface OnboardingState {
     firstVisit: string;
+    optedOut?: true;
     items: Record<string, { status: string; at: string }>;
     used: string[];
     requested?: string[];
@@ -82,6 +85,15 @@ async function enableTutorial(page: Page) {
         const response = await route.fetch();
         const json = (await response.json()) as { metadata?: Record<string, unknown> };
         await route.fulfill({ response, json: { ...json, metadata: { ...json.metadata, enableTutorial: true } } });
+    });
+}
+
+/** Gives the world an onboarding file, in the room's details, as `ONBOARDING_URL` or the SaaS admin would. */
+async function setWorldOnboarding(page: Page) {
+    await page.route(/\/map\?/, async (route) => {
+        const response = await route.fetch();
+        const json = (await response.json()) as Record<string, unknown>;
+        await route.fulfill({ response, json: { ...json, onboardingUrl: maps_test_url + "e2e-onboarding.json" } });
     });
 }
 
@@ -279,5 +291,66 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await Map.teleportToPosition(bob, 5 * 32, 5 * 32);
         await expect(popover).toContainText("Lock your conversation", { timeout: 30_000 });
         await expect.poll(async () => (await readOnboardingState(page))?.requested).toBeUndefined();
+    });
+
+    test("A draft of the world's onboarding file never starts, and only admins open it from the Help menu", async ({
+        browser,
+        request,
+    }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), {
+            pageCreatedHook: setWorldOnboarding,
+            keepOnboardingTips: true,
+        });
+        const modal = page.getByTestId("onboarding-modal");
+
+        // An existing user, with nothing pending at load: a published announcement would start now.
+        await reloadWithState(page, { firstVisit: localDateDaysAgo(2), items: overBut(), used: [] });
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(2000);
+        await expect(modal).toBeHidden();
+
+        await Menu.openMenu(page);
+        await page.getByRole("button", { name: "All settings" }).click();
+        await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await page.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`).click();
+        await expect(modal).toContainText("Only admins see drafts");
+        await expect(modal).toContainText("This item comes from the world's onboarding file.");
+        await modal.getByTestId("onboarding-modal-next").click();
+        await expect(modal).toBeHidden();
+
+        // Without the admin tag, the Help menu lists the built-in items only.
+        await using bob = await getPage(browser, "Bob", Map.url("empty"), { pageCreatedHook: setWorldOnboarding });
+        await Menu.openMenu(bob);
+        await bob.getByRole("button", { name: "All settings" }).click();
+        await bob.getByRole("button", { name: "Help & tutorials" }).click();
+        await expect(bob.getByTestId(`onboarding-help-${ANNOUNCEMENT_ID}`)).toBeVisible();
+        await expect(bob.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`)).toBeHidden();
+    });
+
+    test("Tips stopped with Stop showing tips come back from the Help menu", async ({ browser, request }) => {
+        await resetWamMaps(request);
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        const modal = page.getByTestId("onboarding-modal");
+
+        // The announcement is pending, but the user stopped the tips.
+        await reloadWithState(page, {
+            firstVisit: localDateDaysAgo(2),
+            optedOut: true,
+            items: overBut(ANNOUNCEMENT_ID),
+            used: [],
+        });
+        // eslint-disable-next-line playwright/no-wait-for-timeout
+        await page.waitForTimeout(2000);
+        await expect(modal).toBeHidden();
+
+        await Menu.openMenu(page);
+        await page.getByRole("button", { name: "All settings" }).click();
+        await page.getByRole("button", { name: "Help & tutorials" }).click();
+        await expect(page.locator("#onboarding-show-tips")).not.toBeChecked();
+        await page.getByTestId("onboarding-show-tips").click();
+        await expect(page.locator("#onboarding-show-tips")).toBeChecked();
+        await expect.poll(async () => (await readOnboardingState(page))?.optedOut).toBeUndefined();
+        await expect(modal).toContainText("What's new in WorkAdventure 1.35");
     });
 });

@@ -54,6 +54,7 @@ export default {
         inMapEditor: "في محرر الخريطة",
         notHere: "غير متاح هنا حاليًا",
         remindMe: "ذكّرني",
+        showTips: "عرض النصائح تلقائيًا",
     },
     releaseNotes: {
         title: "ما الجديد في WorkAdventure {version}",

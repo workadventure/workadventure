@@ -3,6 +3,7 @@
     import type { CustomButtonActionBarDescriptor } from "../../../Stores/MenuStore";
     import { analyticsClient } from "../../../Administration/AnalyticsClient";
     import { iframeListener } from "../../../Api/IframeListener";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     interface Props {
         button: CustomButtonActionBarDescriptor;
@@ -19,7 +20,9 @@
     }
 </script>
 
+<!-- World onboarding items can point at the buttons map scripts add. -->
 <ActionBarButton
+    {@attach onboarding(`actionBar.custom.${button.id}`)}
     label={button.label}
     tooltipTitle={button.tooltipTitle}
     tooltipDesc={button.tooltipDesc}

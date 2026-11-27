@@ -56,6 +56,8 @@ export default {
         notHere: "Not available here right now",
         // A toggle: the item starts when its target shows up.
         remindMe: "Remind me",
+        // A switch: off once the user clicked "Stop showing tips".
+        showTips: "Show tips automatically",
     },
     releaseNotes: {
         title: "What's new in WorkAdventure {version}",

@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://docs.workadventu.re/docs/schema/onboarding.json",
+  "title": "WorkAdventure onboarding",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "number",
+      "const": 1
+    },
+    "quietPeriodMinutes": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10080,
+      "default": 60,
+      "description": "No item starts by itself within this many minutes of the last one that did. 0 leaves only one item at a time and the `after` delays."
+    },
+    "builtin": {
+      "type": "object",
+      "properties": {
+        "announcements": {
+          "type": "boolean",
+          "description": "false turns off every WorkAdventure announcement (the release notes)."
+        },
+        "disabledTours": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/BuiltinTourId"
+          },
+          "description": "The built-in tours this world turns off. The tutorial has its own switch."
+        }
+      },
+      "additionalProperties": false,
+      "description": "The built-in content this world keeps. Everything is on by default."
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "maxLength": 100,
+            "pattern": "^(?!wa\\.).",
+            "description": "Unique and stable: what each user saw is recorded by id, so a new id shows the item again."
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "tour",
+              "announcement"
+            ],
+            "description": "A tour waits until the user has been in the world for a while. An announcement starts at load, and only the first pending one does."
+          },
+          "title": {
+            "$ref": "#/$defs/OnboardingText",
+            "description": "Its name in the Help menu. Defaults to the first title of its steps."
+          },
+          "published": {
+            "type": "boolean",
+            "description": "Defaults to true. An unpublished item never starts by itself: only users with the admin tag see it, in the Help menu, to preview it."
+          },
+          "audience": {
+            "type": "object",
+            "properties": {
+              "tags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The user has at least one of them."
+              },
+              "excludeTags": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "The user has none of them."
+              },
+              "guests": {
+                "type": "boolean",
+                "description": "true: guests only. false: logged users only."
+              },
+              "touch": {
+                "type": "boolean",
+                "description": "true: touch devices only. false: the others."
+              }
+            },
+            "additionalProperties": false,
+            "description": "Who gets the item. All conditions apply."
+          },
+          "when": {
+            "type": "object",
+            "properties": {
+              "minDaysSinceFirstVisit": {
+                "type": "integer",
+                "minimum": 0,
+                "description": "Day 0 is the user's first visit to the world."
+              },
+              "maxDaysSinceFirstVisit": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "expiresAt": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                ]
+              },
+              "after": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "item": {
+                        "type": "string"
+                      },
+                      "minHours": {
+                        "type": "number",
+                        "minimum": 0
+                      }
+                    },
+                    "required": [
+                      "item",
+                      "minHours"
+                    ],
+                    "additionalProperties": false
+                  }
+                ],
+                "description": "An item that must be over first (done, dismissed, skipped, or one that can never show to this user), and how long ago it ended."
+              },
+              "onAnchor": {
+                "$ref": "#/$defs/OnboardingAnchor",
+                "description": "Starts when this anchor appears instead of at load."
+              }
+            },
+            "additionalProperties": false
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "modal",
+                      "description": "Centered, with Next, or Got it on the last step. A --- line splits its text into pages."
+                    },
+                    "title": {
+                      "$ref": "#/$defs/OnboardingText",
+                      "description": "Text or Markdown, the same for everyone or by locale ({ \"en-US\": \"…\", \"fr-FR\": \"…\" }). A user gets their locale, then their language, then en-US, then the first one."
+                    },
+                    "text": {
+                      "$ref": "#/$defs/OnboardingText"
+                    },
+                    "image": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "An image above the text."
+                    },
+                    "video": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "A video above the text, muted and looping."
+                    },
+                    "skipIfUsed": {
+                      "$ref": "#/$defs/OnboardingAnchor",
+                      "description": "The step never shows to someone who already clicked this anchor."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "const": "popover",
+                      "description": "Attached to `anchor`."
+                    },
+                    "anchor": {
+                      "$ref": "#/$defs/OnboardingAnchor"
+                    },
+                    "side": {
+                      "type": "string",
+                      "enum": [
+                        "top",
+                        "right",
+                        "bottom",
+                        "left"
+                      ]
+                    },
+                    "advance": {
+                      "type": "string",
+                      "enum": [
+                        "next",
+                        "click"
+                      ],
+                      "description": "A click on the anchor always completes the step. \"next\" (the default) also shows a Next button, \"click\" does not."
+                    },
+                    "title": {
+                      "$ref": "#/$defs/OnboardingText",
+                      "description": "Text or Markdown, the same for everyone or by locale ({ \"en-US\": \"…\", \"fr-FR\": \"…\" }). A user gets their locale, then their language, then en-US, then the first one."
+                    },
+                    "text": {
+                      "$ref": "#/$defs/OnboardingText"
+                    },
+                    "image": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "An image above the text."
+                    },
+                    "video": {
+                      "type": "string",
+                      "format": "uri",
+                      "description": "A video above the text, muted and looping."
+                    },
+                    "skipIfUsed": {
+                      "$ref": "#/$defs/OnboardingAnchor",
+                      "description": "The step never shows to someone who already clicked this anchor."
+                    }
+                  },
+                  "required": [
+                    "type",
+                    "anchor",
+                    "text"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            },
+            "minItems": 1
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "steps"
+        ],
+        "additionalProperties": false
+      },
+      "default": [],
+      "description": "The world's own items, in priority order, before the built-in ones."
+    }
+  },
+  "required": [
+    "version"
+  ],
+  "additionalProperties": false,
+  "description": "The onboarding of a WorkAdventure world. It is public: guests read it too, so nothing secret goes in it.",
+  "$defs": {
+    "OnboardingAnchor": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BuiltinOnboardingAnchor"
+        },
+        {
+          "type": "string",
+          "pattern": "^actionBar\\.custom\\..+",
+          "description": "A button that a map script added with WA.ui.actionBar.addButton({ id }): actionBar.custom.<id>."
+        }
+      ],
+      "description": "A UI element the step points at."
+    },
+    "BuiltinOnboardingAnchor": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "actionBar.mapMenu",
+          "description": "Tools menu button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.profileMenu",
+          "description": "Profile menu button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.camera",
+          "description": "Camera button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.microphone",
+          "description": "Microphone button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.screenShare",
+          "description": "Screen sharing button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.chat",
+          "description": "Chat button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.emoji",
+          "description": "Emoji reactions button"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.lockBubble",
+          "description": "Lock conversation button (in a conversation)"
+        },
+        {
+          "type": "string",
+          "const": "actionBar.pictureInPicture",
+          "description": "Picture-in-picture button (in a conversation)"
+        },
+        {
+          "type": "string",
+          "const": "mapMenu.editMap",
+          "description": "Map editor entry (in the Tools menu)"
+        },
+        {
+          "type": "string",
+          "const": "mapEditor.tool.area",
+          "description": "Area tool"
+        },
+        {
+          "type": "string",
+          "const": "mapEditor.tool.entity",
+          "description": "Furniture tool"
+        },
+        {
+          "type": "string",
+          "const": "mapEditor.tool.exploration",
+          "description": "Explore the room tool"
+        },
+        {
+          "type": "string",
+          "const": "mapEditor.entityList",
+          "description": "Object list"
+        },
+        {
+          "type": "string",
+          "const": "tutorial.simulatedUser",
+          "description": "Video of the tutorial's fake user"
+        }
+      ]
+    },
+    "OnboardingAnchorArea": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "actionBar",
+          "description": "Action bar"
+        },
+        {
+          "type": "string",
+          "const": "mapMenu",
+          "description": "Tools menu"
+        },
+        {
+          "type": "string",
+          "const": "mapEditor",
+          "description": "Map editor"
+        },
+        {
+          "type": "string",
+          "const": "tutorial",
+          "description": "Tutorial"
+        }
+      ]
+    },
+    "OnboardingText": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      ],
+      "description": "Text or Markdown, the same for everyone or by locale ({ \"en-US\": \"…\", \"fr-FR\": \"…\" }). A user gets their locale, then their language, then en-US, then the first one."
+    },
+    "BuiltinTourId": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "wa.mapEditor.furniture",
+          "description": "Map editor: placing furniture (for map editors)"
+        },
+        {
+          "type": "string",
+          "const": "wa.tip.lockBubble",
+          "description": "Tip: locking a conversation"
+        },
+        {
+          "type": "string",
+          "const": "wa.tip.screenShare",
+          "description": "Tip: sharing the screen"
+        },
+        {
+          "type": "string",
+          "const": "wa.tip.pictureInPicture",
+          "description": "Tip: picture-in-picture"
+        }
+      ]
+    }
+  }
+}

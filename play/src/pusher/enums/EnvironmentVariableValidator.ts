@@ -342,6 +342,9 @@ export const EnvironmentVariables = z.object({
     ONBOARDING_START_DELAY: PositiveIntAsString.optional()
         .transform((val) => toNumber(val, 30))
         .describe("Seconds a user spends in a world before onboarding tips can start by themselves. Defaults to 30."),
+    ONBOARDING_URL: AbsoluteOrRelativeUrl.optional().describe(
+        "URL of a JSON file of onboarding tips and announcements (format: https://docs.workadventu.re/docs/schema/onboarding.json). Browsers fetch it, so its server must allow CORS. It is public. Its mistakes show in the browser console. Without it, only the built-in tips and announcements show.",
+    ),
     //DEBUG_ERROR_MESSAGES: BoolAsString.optional().transform((val) => toBool(val, false)),
     ENABLE_OPENAPI_ENDPOINT: BoolAsString.optional()
         .transform((val) => toBool(val, false))

@@ -1,0 +1,28 @@
+{
+  "$schema": "../../docs/schema/onboarding.json",
+  "version": 1,
+  "items": [
+    {
+      "id": "e2e-draft",
+      "kind": "announcement",
+      "published": false,
+      "title": {
+        "en-US": "A draft of this world",
+        "fr-FR": "Un brouillon de ce monde"
+      },
+      "steps": [
+        {
+          "type": "modal",
+          "title": {
+            "en-US": "Only admins see drafts",
+            "fr-FR": "Seuls les admins voient les brouillons"
+          },
+          "text": {
+            "en-US": "This item comes from the world's **onboarding file**.",
+            "fr-FR": "Cet élément vient du **fichier d'onboarding** du monde."
+          }
+        }
+      ]
+    }
+  ]
+}

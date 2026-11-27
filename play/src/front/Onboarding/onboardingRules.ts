@@ -63,6 +63,8 @@ export interface OnboardingItem {
     kind: "tour" | "announcement" | "tutorial";
     /** Its name in the Help menu. */
     title: Text;
+    /** false: a draft, which never starts by itself and only shows in the Help menu, to users with the admin tag. */
+    published?: boolean;
     audience?: {
         /** The user has at least one of them. */
         tags?: string[];
@@ -153,6 +155,11 @@ export function inAudience(item: OnboardingItem, ctx: OnboardingContext): boolea
     return audience.allowed === undefined || get(audience.allowed);
 }
 
+/** In the Help menu: the items of the user's audience, and every draft for a world admin, who previews them. */
+export function inHelp(item: OnboardingItem, ctx: OnboardingContext): boolean {
+    return item.published === false ? ctx.tags.includes("admin") : inAudience(item, ctx);
+}
+
 function expired(item: OnboardingItem, now: Date): boolean {
     return item.when?.expiresAt !== undefined && now.getTime() >= Date.parse(item.when.expiresAt);
 }
@@ -163,7 +170,7 @@ function isOver(id: string, items: OnboardingItem[], state: OnboardingState, ctx
         return true;
     }
     const item = items.find((candidate) => candidate.id === id);
-    return item === undefined || !inAudience(item, ctx) || expired(item, ctx.now);
+    return item === undefined || item.published === false || !inAudience(item, ctx) || expired(item, ctx.now);
 }
 
 function afterSatisfied(
@@ -216,6 +223,7 @@ export function decide(
         const when = item.when ?? {};
         if (
             state.items[item.id] ||
+            item.published === false ||
             !inAudience(item, ctx) ||
             expired(item, ctx.now) ||
             days < (when.minDaysSinceFirstVisit ?? 0) ||

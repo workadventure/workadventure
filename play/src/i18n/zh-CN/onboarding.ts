@@ -48,6 +48,7 @@ export default {
         inMapEditor: "在地图编辑器中可用",
         notHere: "此处暂不可用",
         remindMe: "提醒我",
+        showTips: "自动显示提示",
     },
     releaseNotes: {
         title: "WorkAdventure {version} 新功能",

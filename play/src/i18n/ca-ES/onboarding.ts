@@ -54,6 +54,7 @@ export default {
         inMapEditor: "A l'editor de mapes",
         notHere: "No disponible aquí ara mateix",
         remindMe: "Recorda-m'ho",
+        showTips: "Mostra els consells automàticament",
     },
     releaseNotes: {
         title: "Novetats de WorkAdventure {version}",
