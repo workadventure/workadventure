@@ -52,4 +52,24 @@ export default {
             "Você aprendeu o básico de {worldName}! Sinta-se à vontade para explorar, conhecer novas pessoas e se divertir. Você sempre pode acessar a ajuda no menu se precisar.",
         finish: "Começar a explorar!",
     },
+    tips: {
+        label: "Dica",
+        next: "Próximo",
+        gotIt: "Entendi",
+        close: "Fechar",
+        stopShowing: "Parar de mostrar dicas",
+        restartTutorial: "Reiniciar o tutorial",
+    },
+    mapEditorTour: {
+        title: "Posicione móveis com o editor de mapa",
+        openMenu: {
+            title: "Deixe este lugar com a sua cara",
+            text: "Você pode alterar este mapa. Abra o menu **{menu}** para começar.",
+        },
+        openEditor: "Clique em **{editor}**.",
+        placeObject: {
+            title: "Posicione móveis",
+            text: "Escolha um objeto nesta lista e clique no mapa para posicioná-lo.",
+        },
+    },
 } satisfies Translation["onboarding"];

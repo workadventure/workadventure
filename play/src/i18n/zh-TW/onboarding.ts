@@ -46,4 +46,24 @@ export default {
             "您已經學會了 {worldName} 的基礎知識！隨時可以探索、結識新朋友並享受樂趣。如有需要，您隨時可以從選單存取說明。",
         finish: "開始探索！",
     },
+    tips: {
+        label: "提示",
+        next: "下一步",
+        gotIt: "知道了",
+        close: "關閉",
+        stopShowing: "不再顯示提示",
+        restartTutorial: "重新開始教學",
+    },
+    mapEditorTour: {
+        title: "使用地圖編輯器擺放家具",
+        openMenu: {
+            title: "打造你的專屬空間",
+            text: "你可以修改這張地圖。開啟 **{menu}** 選單開始吧。",
+        },
+        openEditor: "點擊 **{editor}**。",
+        placeObject: {
+            title: "擺放家具",
+            text: "從清單中選擇一個物件，然後點擊地圖進行擺放。",
+        },
+    },
 } satisfies Translation["onboarding"];

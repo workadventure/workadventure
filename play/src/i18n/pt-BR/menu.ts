@@ -23,7 +23,6 @@ const menu: BaseTranslation = {
     profile: {
         login: "Entrar",
         logout: "Sair",
-        helpAndTips: "Ajuda e dicas",
     },
     settings: {
         videoBandwidth: {

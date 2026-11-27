@@ -10,6 +10,7 @@
     import { selectedRoomStore } from "../../../Chat/Stores/SelectRoomStore";
     import { chatNotificationStore } from "../../../Stores/ProximityNotificationStore";
     import { matrixUnreadMessagesCountStore } from "../../../Chat/Stores/UnreadMessagesCountStore";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     interface Props {
         last?: boolean;
@@ -50,6 +51,7 @@
 </script>
 
 <ActionBarButton
+    {@attach onboarding("actionBar.chat")}
     onclick={() => {
         toggleChat();
         navChat.switchToChat();

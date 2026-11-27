@@ -52,4 +52,24 @@ export default {
             "You've learned the basics of {worldName}! Feel free to explore, meet new people, and have fun. You can always access help from the menu if you need it.",
         finish: "Start exploring!",
     },
+    tips: {
+        label: "Consell",
+        next: "Següent",
+        gotIt: "Entesos",
+        close: "Tanca",
+        stopShowing: "No mostris més consells",
+        restartTutorial: "Reinicia el tutorial",
+    },
+    mapEditorTour: {
+        title: "Col·loca mobles amb l'editor de mapes",
+        openMenu: {
+            title: "Fes teu aquest lloc",
+            text: "Pots modificar aquest mapa. Obre el menú **{menu}** per començar.",
+        },
+        openEditor: "Fes clic a **{editor}**.",
+        placeObject: {
+            title: "Col·loca mobles",
+            text: "Tria un objecte d'aquesta llista i fes clic al mapa per col·locar-lo.",
+        },
+    },
 } satisfies Translation["onboarding"];

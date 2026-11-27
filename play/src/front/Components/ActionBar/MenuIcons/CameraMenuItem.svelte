@@ -20,6 +20,7 @@
     import { getNavigatorType, isAndroid, NavigatorType } from "../../../WebRtc/DeviceUtils";
     import { getColorHexOfStatus, getStatusLabel } from "../../../Utils/AvailabilityStatus";
     import { canComeBackFrom, heldMediaStore, toggleCamera } from "../../../Stores/HeldMediaStore";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     // Turned off by the user: off (red), even under a status that would hold it. Held by the status: see statusDot.
     const cameraButtonStateStore: Readable<"active" | "disabled" | "normal" | "forbidden"> = derived(
@@ -98,6 +99,7 @@
 </script>
 
 <ActionBarButton
+    {@attach onboarding("actionBar.camera")}
     onclick={cameraClick}
     classList="group/btn-cam"
     disabledHelp={$openedMenuStore !== undefined}

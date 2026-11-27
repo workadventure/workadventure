@@ -17,6 +17,7 @@
     import { setAreaPropertyLockState } from "../../../Stores/AreaPropertyVariablesStore";
     import { showFloatingUi } from "../../../Utils/svelte-floatingui-show";
     import LockableAreaPicker from "../../PopUp/LockableAreaPicker.svelte";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     function lockGroupClick() {
         gameManager.getCurrentGameScene().connection?.emitLockGroup(!$currentPlayerGroupLockStateStore);
@@ -186,6 +187,7 @@
 
 {#if showAreaLock || showGroupLock}
     <ActionBarButton
+        {@attach onboarding("actionBar.lockBubble")}
         onclick={handleClick}
         classList="group/btn-lock"
         tooltipTitle={$LL.actionbar.help.lock.title()}

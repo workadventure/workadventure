@@ -53,4 +53,24 @@ export default {
             "Sie haben die Grundlagen von {worldName} gelernt! Erkunden Sie gerne, treffen Sie neue Leute und haben Sie Spaß. Sie können jederzeit über das Menü auf Hilfe zugreifen, wenn Sie sie benötigen.",
         finish: "Erkunden beginnen!",
     },
+    tips: {
+        label: "Tipp",
+        next: "Weiter",
+        gotIt: "Verstanden",
+        close: "Schließen",
+        stopShowing: "Keine Tipps mehr anzeigen",
+        restartTutorial: "Tutorial neu starten",
+    },
+    mapEditorTour: {
+        title: "Möbel mit dem Karteneditor platzieren",
+        openMenu: {
+            title: "Gestalten Sie diesen Ort",
+            text: "Sie können diese Karte bearbeiten. Öffnen Sie das Menü **{menu}**, um zu beginnen.",
+        },
+        openEditor: "Klicken Sie auf **{editor}**.",
+        placeObject: {
+            title: "Möbel platzieren",
+            text: "Wählen Sie ein Objekt aus dieser Liste und klicken Sie dann auf die Karte, um es zu platzieren.",
+        },
+    },
 } satisfies Translation["onboarding"];

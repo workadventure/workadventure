@@ -50,4 +50,24 @@ export default {
             "{worldName}의 기본 사항을 배웠습니다! 자유롭게 탐험하고, 새로운 사람들을 만나고, 즐기세요. 필요할 때는 메뉴에서 항상 도움말에 액세스할 수 있습니다.",
         finish: "탐험 시작하기!",
     },
+    tips: {
+        label: "팁",
+        next: "다음",
+        gotIt: "확인",
+        close: "닫기",
+        stopShowing: "팁 그만 보기",
+        restartTutorial: "튜토리얼 다시 시작",
+    },
+    mapEditorTour: {
+        title: "맵 편집기로 가구 배치하기",
+        openMenu: {
+            title: "나만의 공간으로 꾸미기",
+            text: "이 맵을 편집할 수 있습니다. **{menu}** 메뉴를 열어 시작하세요.",
+        },
+        openEditor: "**{editor}**을(를) 클릭하세요.",
+        placeObject: {
+            title: "가구 배치하기",
+            text: "이 목록에서 오브젝트를 선택한 다음 맵을 클릭해 배치하세요.",
+        },
+    },
 } satisfies Translation["onboarding"];

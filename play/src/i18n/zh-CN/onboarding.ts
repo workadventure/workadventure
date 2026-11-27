@@ -46,4 +46,24 @@ export default {
             "您已经学习了 {worldName} 的基础知识！随时可以探索、结识新朋友并享受乐趣。如果需要，您随时可以从菜单访问帮助。",
         finish: "开始探索！",
     },
+    tips: {
+        label: "提示",
+        next: "下一步",
+        gotIt: "知道了",
+        close: "关闭",
+        stopShowing: "不再显示提示",
+        restartTutorial: "重新开始教程",
+    },
+    mapEditorTour: {
+        title: "使用地图编辑器摆放家具",
+        openMenu: {
+            title: "打造你的专属空间",
+            text: "你可以修改这张地图。打开 **{menu}** 菜单开始吧。",
+        },
+        openEditor: "点击 **{editor}**。",
+        placeObject: {
+            title: "摆放家具",
+            text: "从列表中选择一个物品，然后点击地图进行摆放。",
+        },
+    },
 } satisfies Translation["onboarding"];

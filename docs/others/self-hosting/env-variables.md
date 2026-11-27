@@ -69,6 +69,7 @@ Environment variables for the Play service (frontend and pusher).
 | `ENABLE_SAY` | No | Whether the users can communicate via comics-style bubbles. Defaults to true. |
 | `ENABLE_ISSUE_REPORT` | No | Whether the feature 'issue report' is enabled or not on this room. Defaults to true. |
 | `ENABLE_TUTORIAL` | No | Whether the onboarding tutorial is enabled or not on this room. Defaults to true. |
+| `ONBOARDING_START_DELAY` | No | Seconds a user spends in a world before onboarding tips can start by themselves. Defaults to 30. |
 | `ENABLE_OPENAPI_ENDPOINT` | No | Enable/disable the OpenAPI documentation endpoint. Defaults to false |
 | `ANALYTICS_FLUSH_INTERVAL_MS` | No | Interval in milliseconds between analytics batch flushes. Renamed from VIDEO_ANALYTICS_FLUSH_INTERVAL_MS: one queue now carries every analytics event, video quality samples included. Defaults to 10000 |
 | `ANALYTICS_TIMEOUT_MS` | No | HTTP timeout in milliseconds for analytics ingestion calls. Renamed from VIDEO_ANALYTICS_TIMEOUT_MS. Defaults to 2000 |

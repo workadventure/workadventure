@@ -18,6 +18,7 @@
     import Input from "../../Input/Input.svelte";
     import ButtonClose from "../../Input/ButtonClose.svelte";
     import Button from "../../UI/Button.svelte";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
     import CustomEntityEditionForm from "./CustomEntityEditionForm/CustomEntityEditionForm.svelte";
     import EntitiesGrid from "./EntitiesGrid.svelte";
     import EntityImage from "./EntityItem/EntityImage.svelte";
@@ -296,7 +297,7 @@
             <!--            />-->
         </div>
     </div>
-    <div class="flex-1 overflow-auto">
+    <div class="flex-1 overflow-auto" {@attach onboarding("mapEditor.entityList")}>
         {#if $selectCategoryStore === undefined && searchTerm === ""}
             <ul class="list-none !p-0 min-w-full">
                 {#each entitiesPrefabsVariantsWithCategories as { category, entitiesPrefabsVariants } (`${category.kind}-${category.tag}`)}

@@ -5,23 +5,15 @@ import Menu from "./utils/menu";
 import { publicTestMapUrl } from "./utils/urls";
 import { getPage } from "./utils/auth";
 import { isMobile } from "./utils/isMobile";
+import setFrontEnvVars from "./utils/setFrontEnvVars";
 
 // Only 2 of the 3 video boxes fit in the cameras container: a 1200x900 window, a cameras container taking 40% of
 // the height (2 boxes per row, 1 row visible) and at most 2 videos per page.
 const twoVisibleVideos = {
     pageCreatedHook: async (page: Page) => {
         await page.setViewportSize({ width: 1200, height: 900 });
-        await page.addInitScript(() => {
-            localStorage.setItem("cameraContainerHeight", "0.4");
-            // window.env is set by an inline script of the page: patch it as soon as it is assigned.
-            Object.defineProperty(window, "env", {
-                configurable: true,
-                set(value: { MAX_DISPLAYED_VIDEOS: number }) {
-                    value.MAX_DISPLAYED_VIDEOS = 2;
-                    Object.defineProperty(window, "env", { value, writable: true, configurable: true });
-                },
-            });
-        });
+        await page.addInitScript(() => localStorage.setItem("cameraContainerHeight", "0.4"));
+        await setFrontEnvVars(page, { MAX_DISPLAYED_VIDEOS: 2 });
     },
 };
 

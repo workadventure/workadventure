@@ -210,6 +210,8 @@ export async function getPage(
         pageCreatedHook?: (page: Page) => void | Promise<void>;
         /** Extra options for the page's context, e.g. a phone viewport with touch for one test. */
         contextOptions?: BrowserContextOptions;
+        /** Leave onboarding tips on screen. By default they are closed as soon as they show. */
+        keepOnboardingTips?: boolean;
     } = {},
 ): Promise<Page> {
     await createUser(name, browser, url, options.contextOptions);
@@ -235,9 +237,29 @@ export async function getPage(
     await dismissNoBrowserSoundInfoToast(page);
     await dismissNoMicrophoneSoundToast(page);
     await skipOnboardingWhenShown(page);
+    if (!options.keepOnboardingTips) {
+        await closeOnboardingTipsWhenShown(page);
+    }
 
     await expect(page.getByTestId("microphone-button")).toBeVisible({ timeout: 120_000 });
     return disposeWithContext(page);
+}
+
+/**
+ * A user's onboarding state outlives the test (it is a persisted player variable), so a tour can show up in any test
+ * from the user's second day on a long-lived stack. Closing it records it as dismissed, and it does not come back.
+ */
+async function closeOnboardingTipsWhenShown(page: Page) {
+    await page.addLocatorHandler(page.getByTestId("onboarding-popover"), async () => {
+        try {
+            await page.getByTestId("onboarding-popover-close").click();
+        } catch (e) {
+            if (e instanceof Error && e.message.includes("Target page, context or browser has been closed")) {
+                return;
+            }
+            throw e;
+        }
+    });
 }
 
 async function skipOnboardingWhenShown(page: Page) {

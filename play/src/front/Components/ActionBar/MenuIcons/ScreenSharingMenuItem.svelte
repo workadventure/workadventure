@@ -8,6 +8,7 @@
     import ScreenShareIcon from "../../Icons/ScreenShareIcon.svelte";
     import ScreenShareOffIcon from "../../Icons/ScreenShareOffIcon.svelte";
     import { isScreenSharingSupported, requestedScreenSharingState } from "../../../Stores/ScreenSharingStore";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
 
     interface Props {
         onclick?: () => void;
@@ -29,6 +30,7 @@
 
 {#if isScreenSharingSupported()}
     <ActionBarButton
+        {@attach onboarding("actionBar.screenShare")}
         onclick={screenSharingClick}
         classList="group/btn-screen-share"
         tooltipTitle={$LL.actionbar.help.share.title()}

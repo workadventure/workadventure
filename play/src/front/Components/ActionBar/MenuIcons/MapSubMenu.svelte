@@ -4,6 +4,7 @@
     import { mapMenuVisibleStore, openedMenuStore } from "../../../Stores/MenuStore";
     import { LL } from "../../../../i18n/i18n-svelte";
     import { createFloatingUiActions } from "../../../Utils/svelte-floatingui";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
     import MapSubMenuContent from "./MapSubMenuContent.svelte";
     import HeaderMenuItem from "./HeaderMenuItem.svelte";
     import { IconChevronDown, IconTools } from "@wa-icons";
@@ -51,7 +52,10 @@
                 openedMenuStore.toggle("mapMenu");
             }}
         >
-            <div class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2">
+            <div
+                class="group bg-contrast/80 backdrop-blur rounded-lg h-16 @sm/actions:h-14 @xl/actions:h-16 p-2"
+                {@attach onboarding("actionBar.mapMenu")}
+            >
                 <div
                     class="flex items-center h-full group-hover:bg-white/10mr group-hover:rounded pl-4 pr-4 gap-2 hover:bg-white/10"
                 >

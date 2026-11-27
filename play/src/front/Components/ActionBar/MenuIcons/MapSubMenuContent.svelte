@@ -24,6 +24,7 @@
     import { megaphoneCanBeUsedStore } from "../../../Stores/MegaphoneStore";
     import ActionBarButton from "../ActionBarButton.svelte";
     import { EditorToolName } from "../../../Phaser/Game/MapEditor/MapEditorModeManager";
+    import { onboarding } from "../../../Onboarding/OnboardingAnchors";
     import AdditionalMenuItems from "./AdditionalMenuItems.svelte";
     import {
         IconMapSearch,
@@ -145,6 +146,7 @@
 
 {#if $mapEditorMenuVisibleStore}
     <ActionBarButton
+        {@attach onboarding("mapMenu.editMap")}
         onclick={toggleMapEditorMode}
         label={$LL.actionbar.mapEditor()}
         state={$mapEditorModeStore && !$mapExplorationModeStore ? "active" : "normal"}

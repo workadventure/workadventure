@@ -24,7 +24,6 @@
         SubMenusInterface,
         userIsConnected,
     } from "../../../Stores/MenuStore";
-    import { onboardingStore } from "../../../Stores/OnboardingStore";
     import { pwaInstallProfileMenuEligibleStore } from "../../../Stores/PwaInstallStore";
     import { selectCharacterSceneVisibleStore } from "../../../Stores/SelectCharacterStore";
     import { selectCompanionSceneVisibleStore } from "../../../Stores/SelectCompanionStore";
@@ -35,7 +34,7 @@
     import Companion from "../../Companion/Companion.svelte";
     import ExternalComponents from "../../ExternalModules/ExternalComponents.svelte";
     import CamSettingsIcon from "../../Icons/CamSettingsIcon.svelte";
-    import { IconAppWindow, IconBug, IconFileDownload, IconHelpCircle, IconLogout } from "../../Icons";
+    import { IconAppWindow, IconBug, IconFileDownload, IconLogout } from "../../Icons";
     import ProfilIcon from "../../Icons/ProfilIcon.svelte";
     import SettingsIcon from "../../Icons/SettingsIcon.svelte";
     import Woka from "../../Woka/WokaFromUserId.svelte";
@@ -255,21 +254,6 @@
                 </div>
             </button>
         {/if}
-
-        <button
-            onclick={() => {
-                onboardingStore.restart();
-                openedMenuStore.close("profileMenu");
-            }}
-            class="group flex p-2 gap-2 items-center hover:bg-white/10 transition-all cursor-pointer font-bold text-sm w-full pointer-events-auto text-start rounded"
-        >
-            <div class="transition-all w-6 h-6 aspect-square text-center flex items-center justify-center">
-                <IconHelpCircle height="20" width="20" class="text-white" />
-            </div>
-            <div class="text-start leading-4 text-white flex items-center">
-                {$LL.menu.profile.helpAndTips()}
-            </div>
-        </button>
 
         {#if ENABLE_OPENID && $userIsConnected}
             <button

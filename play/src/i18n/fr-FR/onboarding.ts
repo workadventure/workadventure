@@ -53,4 +53,24 @@ export default {
             "Vous avez appris les bases de {worldName} ! N'hésitez pas à explorer, rencontrer de nouvelles personnes et vous amuser. Vous pouvez toujours accéder à l'aide depuis le menu si nécessaire.",
         finish: "Commencer à explorer !",
     },
+    tips: {
+        label: "Astuce",
+        next: "Suivant",
+        gotIt: "J'ai compris",
+        close: "Fermer",
+        stopShowing: "Ne plus afficher d'astuces",
+        restartTutorial: "Relancer le tutoriel",
+    },
+    mapEditorTour: {
+        title: "Placer du mobilier avec l'éditeur de carte",
+        openMenu: {
+            title: "Faites de ce lieu le vôtre",
+            text: "Vous pouvez modifier cette carte. Ouvrez le menu **{menu}** pour commencer.",
+        },
+        openEditor: "Cliquez sur **{editor}**.",
+        placeObject: {
+            title: "Placer du mobilier",
+            text: "Choisissez un objet dans cette liste, puis cliquez sur la carte pour le placer.",
+        },
+    },
 } satisfies Translation["onboarding"];

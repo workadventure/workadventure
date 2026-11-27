@@ -52,4 +52,24 @@ export default {
             "{worldName}の基本を学びました！自由に探索し、新しい人と出会い、楽しんでください。必要に応じて、メニューからいつでもヘルプにアクセスできます。",
         finish: "探索を始めましょう！",
     },
+    tips: {
+        label: "ヒント",
+        next: "次へ",
+        gotIt: "わかりました",
+        close: "閉じる",
+        stopShowing: "ヒントを表示しない",
+        restartTutorial: "チュートリアルをやり直す",
+    },
+    mapEditorTour: {
+        title: "マップエディターで家具を配置する",
+        openMenu: {
+            title: "この場所を自分らしく",
+            text: "このマップは編集できます。**{menu}** メニューを開いて始めましょう。",
+        },
+        openEditor: "**{editor}** をクリックしてください。",
+        placeObject: {
+            title: "家具を配置する",
+            text: "このリストからオブジェクトを選び、マップをクリックして配置します。",
+        },
+    },
 } satisfies Translation["onboarding"];
