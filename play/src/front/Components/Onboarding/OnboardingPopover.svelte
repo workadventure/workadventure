@@ -17,7 +17,8 @@
         showNext: boolean;
         onNext: () => void;
         onClose: () => void;
-        onOptOut: () => void;
+        /** Unset for an announcement or the tutorial: only tips offer "Stop showing tips". */
+        onOptOut?: () => void;
     }
 
     let { title, html, image, video, position, total, showNext, onNext, onClose, onOptOut }: Props = $props();
@@ -67,14 +68,16 @@
     <div class="text-sm leading-snug">{@html html}</div>
     <OnboardingMedia {image} {video} />
     <div class="flex items-center gap-2">
-        <button
-            type="button"
-            class="p-0 text-xs text-white/60 underline hover:text-white"
-            data-testid="onboarding-popover-opt-out"
-            onclick={onOptOut}
-        >
-            {$LL.onboarding.tips.stopShowing()}
-        </button>
+        {#if onOptOut}
+            <button
+                type="button"
+                class="p-0 text-xs text-white/60 underline hover:text-white"
+                data-testid="onboarding-popover-opt-out"
+                onclick={onOptOut}
+            >
+                {$LL.onboarding.tips.stopShowing()}
+            </button>
+        {/if}
         <span class="flex-1"></span>
         {#if showNext}
             <Button variant="secondary" size="sm" dataTestId="onboarding-popover-next" onclick={onNext}>

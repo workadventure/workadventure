@@ -7,8 +7,8 @@ import { z } from "zod";
 
 /**
  * The UI elements of WorkAdventure that onboarding items can point at, with the name the admin editor shows. The front
- * sets them with the `onboarding` attachment. World configs name them, so removing or renaming one is a breaking change
- * that goes in the release notes. The id up to its first dot is an `OnboardingAnchorArea`.
+ * sets them with the `onboarding` attachment. World configs name them: while the feature is marked experimental, a
+ * minor release may remove one, and its release notes say so. The id up to its first dot is an `OnboardingAnchorArea`.
  */
 export const BuiltinOnboardingAnchor = z.union([
   z.literal("actionBar.mapMenu").describe("Tools menu button"),
@@ -24,7 +24,11 @@ export const BuiltinOnboardingAnchor = z.union([
   z
     .literal("actionBar.pictureInPicture")
     .describe("Picture-in-picture button (in a conversation)"),
-  z.literal("mapMenu.editMap").describe("Map editor entry (in the Tools menu)"),
+  z
+    .literal("mapMenu.editMap")
+    .describe(
+      "Map editor entry (in the Tools menu), for users who can edit the map",
+    ),
   z.literal("mapEditor.tool.area").describe("Area tool"),
   z.literal("mapEditor.tool.entity").describe("Furniture tool"),
   z.literal("mapEditor.tool.exploration").describe("Explore the room tool"),
@@ -60,14 +64,35 @@ export const OnboardingAnchor = z
   .describe("A UI element the step points at.");
 export type OnboardingAnchor = z.infer<typeof OnboardingAnchor>;
 
+/**
+ * The topics of the built-in items, with their English name. A built-in id is `wa.<group>` or `wa.<group>.<name>`: the
+ * second segment of the id is its group.
+ */
+export const OnboardingTipGroup = z.union([
+  z.literal("tutorial").describe("First visit"),
+  z.literal("announcement").describe("What's new"),
+  z.literal("conversation").describe("Conversations"),
+  z.literal("chat").describe("Chat"),
+  z.literal("presence").describe("Status and expression"),
+  z.literal("mapEditor").describe("Map editor"),
+  z.literal("navigation").describe("Finding people and places"),
+  z.literal("worldAdmin").describe("World admin tools"),
+  z.literal("app").describe("App and settings"),
+]);
+export type OnboardingTipGroup = z.infer<typeof OnboardingTipGroup>;
+
 /** The built-in tours a world can turn off, with the label the admin editor shows. */
 export const BuiltinTourId = z.union([
   z
     .literal("wa.mapEditor.furniture")
     .describe("Map editor: placing furniture (for map editors)"),
-  z.literal("wa.tip.lockBubble").describe("Tip: locking a conversation"),
-  z.literal("wa.tip.screenShare").describe("Tip: sharing the screen"),
-  z.literal("wa.tip.pictureInPicture").describe("Tip: picture-in-picture"),
+  z
+    .literal("wa.conversation.lockBubble")
+    .describe("Tip: locking a conversation"),
+  z.literal("wa.conversation.screenShare").describe("Tip: sharing the screen"),
+  z
+    .literal("wa.conversation.pictureInPicture")
+    .describe("Tip: picture-in-picture"),
 ]);
 export type BuiltinTourId = z.infer<typeof BuiltinTourId>;
 
@@ -88,9 +113,13 @@ const stepContent = () => ({
     .url()
     .optional()
     .describe("A video above the text, muted and looping."),
-  skipIfUsed: OnboardingAnchor.optional().describe(
-    "The step never shows to someone who already clicked this anchor.",
-  ),
+  // An anchor a later release added, or this one removed, leaves the step without skipIfUsed instead of dropping the
+  // item. The JSON Schema export ignores the catch, so editors still flag it.
+  skipIfUsed: OnboardingAnchor.optional()
+    .catch(undefined)
+    .describe(
+      "The step never shows to someone who already clicked this anchor.",
+    ),
 });
 
 export const OnboardingStepData = z.discriminatedUnion("type", [
@@ -202,22 +231,24 @@ export type OnboardingItemData = z.infer<typeof OnboardingItemData>;
 
 export const DEFAULT_QUIET_PERIOD_MINUTES = 60;
 
-const OnboardingBuiltin = z
-  .object({
-    announcements: z
-      .boolean()
-      .optional()
-      .describe(
-        "false turns off every WorkAdventure announcement (the release notes).",
-      ),
-    disabledTours: z
-      .array(BuiltinTourId)
-      .optional()
-      .describe(
-        "The built-in tours this world turns off. The tutorial has its own switch.",
-      ),
-  })
-  .strict();
+// Not strict, as the root below: a field of a later release is dropped, so an older front still reads the file.
+// zod-to-json-schema exports both with `additionalProperties: false` all the same, so editors flag a misspelled field.
+// Items stay strict: a field a later release adds to an item may limit who sees it, and an older front must drop that
+// item rather than show it to more people.
+const OnboardingBuiltin = z.object({
+  announcements: z
+    .boolean()
+    .optional()
+    .describe(
+      "false turns off every WorkAdventure announcement (the release notes).",
+    ),
+  disabledTours: z
+    .array(BuiltinTourId)
+    .optional()
+    .describe(
+      "The built-in tours this world turns off. The tutorial has its own switch.",
+    ),
+});
 
 export const OnboardingData = z
   .object({
@@ -242,19 +273,29 @@ export const OnboardingData = z
         "The world's own items, in priority order, before the built-in ones.",
       ),
   })
-  .strict()
   .describe(
     "The onboarding of a WorkAdventure world. It is public: guests read it too, so nothing secret goes in it.",
   );
 export type OnboardingData = z.infer<typeof OnboardingData>;
 
-/** The root, with the items and the built-in tour ids left to check one by one. */
+/**
+ * The root, with the items and the built-in tour ids left to check one by one. `extend()` keeps the unknown-keys mode,
+ * so it drops unknown keys at the root and in `builtin` too.
+ */
 const OnboardingRoot = OnboardingData.extend({
   builtin: OnboardingBuiltin.extend({
     disabledTours: z.array(z.string()).optional(),
   }).optional(),
   items: z.array(z.unknown()).default([]),
 });
+
+/** The keys of `raw` that parsing dropped. */
+function droppedKeys(raw: unknown, parsed: object | undefined): string[] {
+  if (typeof raw !== "object" || raw === null) {
+    return [];
+  }
+  return Object.keys(raw).filter((key) => !parsed || !(key in parsed));
+}
 
 function describeIssues(error: z.ZodError): string {
   return error.issues
@@ -265,7 +306,8 @@ function describeIssues(error: z.ZodError): string {
 /**
  * Checks each item on its own, so a broken one does not take the others down. `data` holds the valid items, and is
  * undefined when the root itself is wrong. A tour id this release does not know is left out: a tour removed in a
- * later release does not break the worlds that had turned it off.
+ * later release does not break the worlds that had turned it off. So is a field of the root or of `builtin`: a file
+ * written for a later release still works.
  */
 export function parseOnboardingData(json: unknown): {
   data?: OnboardingData;
@@ -275,7 +317,15 @@ export function parseOnboardingData(json: unknown): {
   if (!root.success) {
     return { errors: [describeIssues(root.error)] };
   }
-  const errors: string[] = [];
+  const errors: string[] = [
+    ...droppedKeys(json, root.data).map(
+      (key) => `unknown field "${key}" is ignored`,
+    ),
+    ...droppedKeys(
+      (json as { builtin?: unknown }).builtin,
+      root.data.builtin,
+    ).map((key) => `builtin: unknown field "${key}" is ignored`),
+  ];
   const disabledTours = root.data.builtin?.disabledTours?.filter(
     (id): id is BuiltinTourId => {
       const known = BuiltinTourId.safeParse(id).success;

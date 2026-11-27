@@ -19,7 +19,8 @@
         notNowLabel?: string;
         onNext: () => void;
         onClose: () => void;
-        onOptOut: () => void;
+        /** Unset for an announcement or the tutorial: only tips offer "Stop showing tips". */
+        onOptOut?: () => void;
     }
 
     let { title, pages, image, video, position, total, nextLabel, notNowLabel, onNext, onClose, onOptOut }: Props =
@@ -103,14 +104,16 @@
             {/if}
         </div>
         <div class="flex flex-wrap items-center gap-2 pt-1">
-            <button
-                type="button"
-                class="p-0 text-xs text-white/60 underline hover:text-white"
-                data-testid="onboarding-modal-opt-out"
-                onclick={onOptOut}
-            >
-                {$LL.onboarding.tips.stopShowing()}
-            </button>
+            {#if onOptOut}
+                <button
+                    type="button"
+                    class="p-0 text-xs text-white/60 underline hover:text-white"
+                    data-testid="onboarding-modal-opt-out"
+                    onclick={onOptOut}
+                >
+                    {$LL.onboarding.tips.stopShowing()}
+                </button>
+            {/if}
             <span class="flex-1"></span>
             {#if notNowLabel}
                 <Button appearance="ghost" dataTestId="onboarding-modal-not-now" onclick={onClose}>

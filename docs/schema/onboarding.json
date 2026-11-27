@@ -330,7 +330,7 @@
         {
           "type": "string",
           "const": "mapMenu.editMap",
-          "description": "Map editor entry (in the Tools menu)"
+          "description": "Map editor entry (in the Tools menu), for users who can edit the map"
         },
         {
           "type": "string",
@@ -406,18 +406,67 @@
         },
         {
           "type": "string",
-          "const": "wa.tip.lockBubble",
+          "const": "wa.conversation.lockBubble",
           "description": "Tip: locking a conversation"
         },
         {
           "type": "string",
-          "const": "wa.tip.screenShare",
+          "const": "wa.conversation.screenShare",
           "description": "Tip: sharing the screen"
         },
         {
           "type": "string",
-          "const": "wa.tip.pictureInPicture",
+          "const": "wa.conversation.pictureInPicture",
           "description": "Tip: picture-in-picture"
+        }
+      ]
+    },
+    "OnboardingTipGroup": {
+      "anyOf": [
+        {
+          "type": "string",
+          "const": "tutorial",
+          "description": "First visit"
+        },
+        {
+          "type": "string",
+          "const": "announcement",
+          "description": "What's new"
+        },
+        {
+          "type": "string",
+          "const": "conversation",
+          "description": "Conversations"
+        },
+        {
+          "type": "string",
+          "const": "chat",
+          "description": "Chat"
+        },
+        {
+          "type": "string",
+          "const": "presence",
+          "description": "Status and expression"
+        },
+        {
+          "type": "string",
+          "const": "mapEditor",
+          "description": "Map editor"
+        },
+        {
+          "type": "string",
+          "const": "navigation",
+          "description": "Finding people and places"
+        },
+        {
+          "type": "string",
+          "const": "worldAdmin",
+          "description": "World admin tools"
+        },
+        {
+          "type": "string",
+          "const": "app",
+          "description": "App and settings"
         }
       ]
     }

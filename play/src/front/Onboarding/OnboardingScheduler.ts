@@ -42,6 +42,8 @@ export class OnboardingScheduler {
     private current: { stop: () => void } | undefined;
     private startDelayOver = false;
     private readonly cleanups: (() => void)[] = [];
+    /** Set when the stored state cannot be read: the state of this session, which is never written. */
+    private memoryState: OnboardingState | undefined;
 
     constructor(
         private readonly scene: GameScene,
@@ -50,7 +52,8 @@ export class OnboardingScheduler {
         private readonly quietPeriodMinutes = DEFAULT_QUIET_PERIOD_MINUTES,
     ) {
         // Written at once: the first visit is day 0, whatever happens next.
-        if (OnboardingState.safeParse(this.variables()?.get(STATE_KEY)).success) {
+        const stored = this.variables()?.get(STATE_KEY);
+        if (OnboardingState.safeParse(stored).success) {
             this.writeState(this.readState());
         } else {
             const state = newState(new Date());
@@ -63,6 +66,12 @@ export class OnboardingScheduler {
                         state.items[item.id] = { status: "skipped", at };
                     }
                 }
+            }
+            if (stored !== undefined) {
+                // Most likely written by a newer front, in another tab or before a rollback: overwriting it would
+                // reset the first visit and show every item again. This session works on a fresh state in memory.
+                console.warn("The onboarding state of this world cannot be read: it is left as it is.", stored);
+                this.memoryState = state;
             }
             this.writeState(state);
         }
@@ -116,12 +125,12 @@ export class OnboardingScheduler {
         this.evaluate();
     }
 
-    /** False once the user clicked "Stop showing tips": nothing starts by itself any more. */
+    /** False once the user clicked "Stop showing tips": no tip starts by itself any more. Announcements still do. */
     get showTips(): boolean {
         return !this.readState().optedOut;
     }
 
-    /** From the Help menu, to undo "Stop showing tips", or to do the same. */
+    /** From the Help menu, to undo "Stop showing tips" (tips start by themselves again), or to do the same. */
     setShowTips(show: boolean): void {
         this.updateState((state) => {
             if (show) {
@@ -242,8 +251,13 @@ export class OnboardingScheduler {
 
     /** A fresh copy each time: the variables manager ignores a write of the object it already holds. */
     private readState(): OnboardingState {
-        const parsed = OnboardingState.safeParse(this.variables()?.get(STATE_KEY));
-        const state = parsed.success ? parsed.data : newState(new Date());
+        let state: OnboardingState;
+        if (this.memoryState) {
+            state = structuredClone(this.memoryState);
+        } else {
+            const parsed = OnboardingState.safeParse(this.variables()?.get(STATE_KEY));
+            state = parsed.success ? parsed.data : newState(new Date());
+        }
         // The tutorial done before onboarding items, or a script that turns it off by setting `tutorialDone`.
         if (this.tutorialDone()) {
             for (const item of this.items) {
@@ -256,6 +270,11 @@ export class OnboardingScheduler {
     }
 
     private writeState(state: OnboardingState): void {
+        // Kept here, so the skips `evaluate()` records are seen by its next call, which then returns.
+        if (this.memoryState) {
+            this.memoryState = state;
+            return;
+        }
         const manager = this.scene.getPlayerVariablesManager();
         manager?.setVariableFromApp(STATE_KEY, state, { persist: true, scope: "world" });
         // Map scripts read `tutorialDone`, and the other tutorial (touch or not) is over too.
