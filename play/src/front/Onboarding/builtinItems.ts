@@ -24,7 +24,10 @@ function worldName(): string {
     return get(gameSceneStore)?.room.roomName ?? "WorkAdventure";
 }
 
-/** Built-in content, in priority order. Ids start with "wa." and never change: the state is keyed by them. */
+/**
+ * Built-in content, in priority order. Ids are `wa.<group>` or `wa.<group>.<name>`, `<group>` from `OnboardingTipGroup`
+ * (a test checks it). The state is keyed by id, so a renamed item shows again.
+ */
 export const builtinItems: OnboardingItem[] = [
     {
         id: "wa.tutorial",
@@ -87,7 +90,7 @@ export const builtinItems: OnboardingItem[] = [
         ],
     },
     {
-        id: "wa.tip.lockBubble",
+        id: "wa.conversation.lockBubble",
         kind: "tour",
         title: () => get(LL).onboarding.lockBubble.title(),
         // The lock button only shows in a bubble: the tip starts there, for someone who has not used it yet.
@@ -104,7 +107,7 @@ export const builtinItems: OnboardingItem[] = [
         ],
     },
     {
-        id: "wa.tip.screenShare",
+        id: "wa.conversation.screenShare",
         kind: "tour",
         title: () => get(LL).onboarding.screenSharing.title(),
         when: { minDaysSinceFirstVisit: 1, onAnchor: "actionBar.screenShare" },
@@ -120,7 +123,7 @@ export const builtinItems: OnboardingItem[] = [
         ],
     },
     {
-        id: "wa.tip.pictureInPicture",
+        id: "wa.conversation.pictureInPicture",
         kind: "tour",
         title: () => get(LL).onboarding.pictureInPicture.title(),
         when: { minDaysSinceFirstVisit: 3, onAnchor: "actionBar.pictureInPicture" },

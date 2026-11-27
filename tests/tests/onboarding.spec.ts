@@ -13,7 +13,7 @@ test.use({
 });
 
 const TOUR_ID = "wa.mapEditor.furniture";
-const LOCK_TIP_ID = "wa.tip.lockBubble";
+const LOCK_TIP_ID = "wa.conversation.lockBubble";
 const TUTORIAL_ID = "wa.tutorial";
 const ANNOUNCEMENT_ID = "wa.announcement.v1.35";
 /** The draft of `maps/tests/e2e-onboarding.json`, the world's onboarding file set by `setWorldOnboarding()`. */
@@ -239,7 +239,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         // The map editor tour would start first, on the Tools menu, and the other tips of the bubble could.
         await reloadWithState(page, {
             firstVisit: localDateDaysAgo(1),
-            items: overBut(undefined, [TOUR_ID, "wa.tip.screenShare", "wa.tip.pictureInPicture"]),
+            items: overBut(undefined, [TOUR_ID, "wa.conversation.screenShare", "wa.conversation.pictureInPicture"]),
             used: [],
         });
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
@@ -270,7 +270,12 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         // Over: the tip would never start by itself again.
         await reloadWithState(page, {
             firstVisit: localDateDaysAgo(1),
-            items: overBut(undefined, [TOUR_ID, LOCK_TIP_ID, "wa.tip.screenShare", "wa.tip.pictureInPicture"]),
+            items: overBut(undefined, [
+                TOUR_ID,
+                LOCK_TIP_ID,
+                "wa.conversation.screenShare",
+                "wa.conversation.pictureInPicture",
+            ]),
             used: [],
         });
         await Map.teleportToPosition(page, 5 * 32, 5 * 32);
@@ -328,21 +333,35 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await expect(bob.getByTestId(`onboarding-help-${WORLD_DRAFT_ID}`)).toBeHidden();
     });
 
-    test("Tips stopped with Stop showing tips come back from the Help menu", async ({ browser, request }) => {
+    test("Stop showing tips stops the tips, not the announcements, until the Help menu turns them back on", async ({
+        browser,
+        request,
+    }) => {
         await resetWamMaps(request);
-        await using page = await getPage(browser, "Admin1", Map.url("empty"), { keepOnboardingTips: true });
+        await using page = await getPage(browser, "Admin1", Map.url("empty"), {
+            pageCreatedHook: (newPage) => setFrontEnvVars(newPage, { ONBOARDING_START_DELAY: 0 }),
+            keepOnboardingTips: true,
+        });
         const modal = page.getByTestId("onboarding-modal");
+        const popover = page.getByTestId("onboarding-popover");
 
-        // The announcement is pending, but the user stopped the tips.
+        // The user stopped the tips: the announcement still shows, without the link.
         await reloadWithState(page, {
             firstVisit: localDateDaysAgo(2),
             optedOut: true,
-            items: overBut(ANNOUNCEMENT_ID),
+            items: overBut(ANNOUNCEMENT_ID, [TOUR_ID]),
             used: [],
         });
+        await expect(modal).toContainText("What's new in WorkAdventure 1.35", { timeout: 10_000 });
+        await expect(modal.getByTestId("onboarding-modal-opt-out")).toBeHidden();
+        await page.keyboard.press("Escape");
+        await expect(modal).toBeHidden();
+
+        // The map editor tour is pending, its target on screen, but it does not start by itself.
+        await reloadWithState(page, { firstVisit: localDateDaysAgo(2), optedOut: true, items: overBut(), used: [] });
         // eslint-disable-next-line playwright/no-wait-for-timeout
         await page.waitForTimeout(2000);
-        await expect(modal).toBeHidden();
+        await expect(popover).toBeHidden();
 
         await Menu.openMenu(page);
         await page.getByRole("button", { name: "All settings" }).click();
@@ -351,6 +370,7 @@ test.describe("Onboarding @oidc @nomobile @nowebkit", () => {
         await page.getByTestId("onboarding-show-tips").click();
         await expect(page.locator("#onboarding-show-tips")).toBeChecked();
         await expect.poll(async () => (await readOnboardingState(page))?.optedOut).toBeUndefined();
-        await expect(modal).toContainText("What's new in WorkAdventure 1.35");
+        await page.locator("#closeMenu").click();
+        await expect(popover).toContainText("Open the Tools menu");
     });
 });

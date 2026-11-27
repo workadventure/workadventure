@@ -164,13 +164,27 @@ function expired(item: OnboardingItem, now: Date): boolean {
     return item.when?.expiresAt !== undefined && now.getTime() >= Date.parse(item.when.expiresAt);
 }
 
-/** An item that can never show to this user does not hold back the items that come `after` it. */
+/** The group of an item: the second segment of a built-in id (`wa.<group>.<name>`), "world" for a world item. */
+export function idGroup(id: string): string {
+    return id.startsWith("wa.") ? id.split(".")[1] : "world";
+}
+
+/**
+ * An item that can never show to this user does not hold back the items that come `after` it. Nor does a tour once the
+ * user stopped the tips: it will not start by itself, and the world's announcement after it still shows.
+ */
 function isOver(id: string, items: OnboardingItem[], state: OnboardingState, ctx: OnboardingContext): boolean {
     if (state.items[id]) {
         return true;
     }
     const item = items.find((candidate) => candidate.id === id);
-    return item === undefined || item.published === false || !inAudience(item, ctx) || expired(item, ctx.now);
+    return (
+        item === undefined ||
+        item.published === false ||
+        !inAudience(item, ctx) ||
+        expired(item, ctx.now) ||
+        (state.optedOut === true && item.kind === "tour")
+    );
 }
 
 function afterSatisfied(
@@ -210,9 +224,6 @@ export function decide(
     ctx: OnboardingContext,
 ): { skip: string[]; start?: OnboardingItem } {
     const skip: string[] = [];
-    if (state.optedOut) {
-        return { skip };
-    }
     const quiet =
         state.lastAutoStartAt !== undefined &&
         ctx.now.getTime() - Date.parse(state.lastAutoStartAt) < ctx.quietPeriodMinutes * 60_000;
@@ -223,6 +234,9 @@ export function decide(
         const when = item.when ?? {};
         if (
             state.items[item.id] ||
+            // "Stop showing tips" stops tips only: announcements and the tutorial still start. A tip is passed over
+            // before any check that records a skip, so nothing is recorded for it.
+            (state.optedOut && item.kind === "tour") ||
             item.published === false ||
             !inAudience(item, ctx) ||
             expired(item, ctx.now) ||

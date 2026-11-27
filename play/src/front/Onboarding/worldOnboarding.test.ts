@@ -3,9 +3,11 @@ import {
     BuiltinOnboardingAnchor,
     BuiltinTourId,
     OnboardingAnchorArea,
+    OnboardingTipGroup,
     parseOnboardingData,
 } from "@workadventure/messages";
 import { builtinItems } from "./builtinItems";
+import { idGroup } from "./onboardingRules";
 import type { OnboardingItem } from "./onboardingRules";
 import { mergeItems, pickText } from "./worldOnboarding";
 
@@ -85,12 +87,60 @@ describe("parseOnboardingData", () => {
     it("ignores a built-in tour it does not know, and defaults the quiet period", () => {
         const { data, errors } = parseOnboardingData({
             version: 1,
-            builtin: { disabledTours: ["wa.tip.lockBubble", "wa.removedTour"] },
+            builtin: { disabledTours: ["wa.conversation.lockBubble", "wa.removedTour"] },
         });
-        expect(data?.builtin?.disabledTours).toEqual(["wa.tip.lockBubble"]);
+        expect(data?.builtin?.disabledTours).toEqual(["wa.conversation.lockBubble"]);
         expect(data?.quietPeriodMinutes).toBe(60);
         expect(data?.items).toEqual([]);
         expect(errors).toEqual(['builtin.disabledTours: "wa.removedTour" is not a built-in tour']);
+    });
+
+    it("reads a file written for a later release: ignores its new fields at the top level and in builtin", () => {
+        const { data, errors } = parseOnboardingData({
+            ...example,
+            startWhen: "later",
+            builtin: { ...example.builtin, disabledGroups: ["chat"] },
+        });
+        expect(data?.quietPeriodMinutes).toBe(120);
+        expect(data?.builtin).toEqual(example.builtin);
+        expect(data?.items).toHaveLength(2);
+        expect(errors).toEqual([
+            'unknown field "startWhen" is ignored',
+            'builtin: unknown field "disabledGroups" is ignored',
+        ]);
+    });
+
+    it("drops an item with a field it does not know, anywhere in the item, and keeps the others", () => {
+        const step = { type: "modal", text: "" };
+        const { data, errors } = parseOnboardingData({
+            version: 1,
+            items: [
+                modal("ok"),
+                // Each could narrow who sees the item: an older front must not show it to more people.
+                modal("item", { notBefore: "2027-01-01" }),
+                modal("step", { steps: [{ ...step, layout: "wide" }] }),
+                modal("audience", { audience: { tags: ["admin"], role: "owner" } }),
+                modal("when", { when: { weekdays: [1] } }),
+            ],
+        });
+        expect(data?.items.map((item) => item.id)).toEqual(["ok"]);
+        expect(errors).toHaveLength(4);
+        ["notBefore", "layout", "role", "weekdays"].forEach((field, i) => expect(errors[i]).toContain(field));
+    });
+
+    it("keeps a step whose skipIfUsed names an anchor it does not know, without it", () => {
+        const { data, errors } = parseOnboardingData({
+            version: 1,
+            items: [modal("a", { steps: [{ type: "modal", text: "", skipIfUsed: "actionBar.removed" }] })],
+        });
+        expect(errors).toEqual([]);
+        expect(data?.items[0].steps[0].skipIfUsed).toBeUndefined();
+    });
+
+    it("does not change the object it reads", () => {
+        const json = { version: 1, extra: true, builtin: { extra: true } };
+        parseOnboardingData(json);
+        expect(json).toEqual({ version: 1, extra: true, builtin: { extra: true } });
     });
 
     it("keeps nothing when the root is wrong", () => {
@@ -102,6 +152,15 @@ describe("parseOnboardingData", () => {
     it("lists every built-in tour a world can turn off", () => {
         const tours = builtinItems.filter((item) => item.kind === "tour").map((item) => item.id);
         expect(tours.sort()).toEqual(BuiltinTourId.options.map((option) => option.value).sort());
+    });
+
+    it("names a topic in every built-in id: wa.<group> or wa.<group>.<name>", () => {
+        const groups: string[] = OnboardingTipGroup.options.map((option) => option.value);
+        for (const { id } of builtinItems) {
+            expect(id, id).toMatch(/^wa\.[a-zA-Z]+(\.[a-zA-Z0-9.]+)?$/);
+            expect(groups, id).toContain(idGroup(id));
+        }
+        expect(idGroup("acme-tour")).toBe("world");
     });
 
     it("gives every built-in anchor an area", () => {
@@ -129,14 +188,19 @@ describe("mergeItems", () => {
         { id: "wa.tutorial", kind: "tutorial", title: () => "", steps: [] },
         { id: "wa.announcement.v1", kind: "announcement", title: () => "", steps: [] },
         { id: "wa.mapEditor.furniture", kind: "tour", title: () => "", steps: [] },
-        { id: "wa.tip.lockBubble", kind: "tour", title: () => "", steps: [] },
+        { id: "wa.conversation.lockBubble", kind: "tour", title: () => "", steps: [] },
     ];
     const ids = (items: OnboardingItem[]) => items.map((item) => item.id);
 
     it("puts the world's items first, and keeps the built-in content the world did not turn off", () => {
         const { data } = parseOnboardingData(example);
         const items = mergeItems(builtin, data);
-        expect(ids(items)).toEqual(["acme-place-furniture", "acme-new-auditorium", "wa.tutorial", "wa.tip.lockBubble"]);
+        expect(ids(items)).toEqual([
+            "acme-place-furniture",
+            "acme-new-auditorium",
+            "wa.tutorial",
+            "wa.conversation.lockBubble",
+        ]);
         // Without a title of its own, an item is named after the first title of its steps.
         expect(items[0].title()).toBe("Place furniture");
         expect(items[1].title()).toBe("acme-new-auditorium");

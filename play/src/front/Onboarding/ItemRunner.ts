@@ -13,8 +13,8 @@ export interface ItemRun {
     dismiss: () => void;
     /** The target never appeared. */
     anchorMissing: () => void;
-    /** "Stop showing tips". */
-    optOut: () => void;
+    /** "Stop showing tips". Tips only: an announcement or the tutorial does not offer it. */
+    optOut?: () => void;
     /** Runs however the item ends, for what outlives the step (the tutorial's fake user). */
     onEnd: (cleanup: () => void) => void;
 }
@@ -110,10 +110,13 @@ export function runItem(item: OnboardingItem, hooks: RunHooks): () => void {
                 }
                 finish("interrupted");
             }),
-            optOut: live(() => {
-                hooks.onOptOut();
-                finish("dismissed");
-            }),
+            optOut:
+                item.kind === "tour"
+                    ? live(() => {
+                          hooks.onOptOut();
+                          finish("dismissed");
+                      })
+                    : undefined,
             onEnd: (cleanup) => {
                 if (ended) {
                     cleanup();

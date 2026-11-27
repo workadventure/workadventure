@@ -117,6 +117,25 @@ describe("decide", () => {
         expect(decide([tour("a")], state({ optedOut: true }), ctx()).start).toBeUndefined();
     });
 
+    it("after Stop showing tips, passes over the tips but still starts the announcements", () => {
+        const optedOut = state({ optedOut: true });
+        expect(decide([tour("a"), announcement("wa.announcement.v1")], optedOut, ctx()).start?.id).toBe(
+            "wa.announcement.v1",
+        );
+        expect(decide([tour("a"), announcement("world-news")], optedOut, ctx()).start?.id).toBe("world-news");
+        // A tip that will not start by itself does not hold back the world's announcement after it.
+        const after = { ...announcement("world-news"), when: { after: "a" } };
+        expect(decide([tour("a"), after], optedOut, ctx()).start?.id).toBe("world-news");
+        // Nothing is recorded for a tip, even one about something already used.
+        const used = tour("a", {
+            steps: [{ type: "popover", anchor: "actionBar.chat", skipIfUsed: "actionBar.chat", text: () => "" }],
+        });
+        expect(decide([used], state({ optedOut: true, used: ["actionBar.chat"] }), ctx())).toEqual({
+            skip: [],
+            start: undefined,
+        });
+    });
+
     it("waits for `after`, with its delay", () => {
         const b = tour("b", { when: { after: { item: "a", minHours: 4 } } });
         expect(decide([tour("a", { audience: { tags: ["x"] } }), b], state(), ctx({ tags: ["x"] })).start?.id).toBe(
@@ -258,6 +277,18 @@ describe("runItem", () => {
         expect(ends).toHaveLength(1);
     });
 
+    it("offers Stop showing tips in a tip only", () => {
+        const runs = [
+            run(tour("t")),
+            run(announcement("a")),
+            run({ ...announcement("wa.tutorial"), kind: "tutorial" }),
+        ];
+        expect(started.map((step) => step.run.optOut !== undefined)).toEqual([true, false, false]);
+        for (const { stop } of runs) {
+            stop();
+        }
+    });
+
     it("ignores a late call from a step that is gone", () => {
         const { ends } = run(threeSteps);
         started[0].run.complete();
@@ -294,6 +325,9 @@ describe("OnboardingScheduler", () => {
     });
     afterEach(() => {
         scheduler?.destroy();
+        vi.useRealTimers();
+        vi.restoreAllMocks();
+        visible.clear();
     });
 
     it("gives a new user the tutorial at once, and none of the announcements that exist then", () => {
@@ -400,24 +434,55 @@ describe("OnboardingScheduler", () => {
     });
 
     it("turns tips back on from the Help menu after Stop showing tips", () => {
+        vi.useFakeTimers();
+        visible.add("actionBar.mapMenu");
         const at = new Date().toISOString();
         const onboarding: OnboardingState = {
             firstVisit: "2026-11-24",
             optedOut: true,
-            items: { "wa.tutorial": { status: "done", at } },
+            items: { "wa.tutorial": { status: "done", at }, "wa.news": { status: "done", at } },
             used: [],
         };
-        const { state, scheduler: help } = start({ tutorialDone: true, onboarding });
-        // The announcement is pending, but nothing starts by itself.
+        const { state, scheduler: help } = start({ tutorialDone: true, onboarding }, [...items, tour("tip")]);
+        // The start delay (30 s in tests) is over and the tip's target is on screen, but it does not start by itself.
+        vi.advanceTimersByTime(30_000);
         expect(help.showTips).toBe(false);
         expect(started).toHaveLength(0);
 
         help.setShowTips(true);
         expect(state().optedOut).toBeUndefined();
-        expect(started).toHaveLength(1);
+        expect(started.map((step) => step.anchor)).toEqual(["actionBar.mapMenu"]);
 
         help.setShowTips(false);
         expect(state().optedOut).toBe(true);
+    });
+
+    it("leaves a stored state it cannot read as it is, and works on a fresh one in memory", () => {
+        const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+        const stored = { firstVisit: "a later format" };
+        const setVariableFromApp = vi.fn();
+        const variables = new Map<string, unknown>([["onboarding", stored]]);
+        const scene = {
+            connection: { getAllTags: () => [] },
+            getPlayerVariablesManager: () => ({ variables, setVariableFromApp }),
+        } as unknown as GameScene;
+        // A tutorial that `doneWhen` skips at once: `evaluate()` records it, then calls itself, and must see the skip.
+        scheduler = new OnboardingScheduler(scene, [
+            { ...tutorial, doneWhen: writable(true) },
+            announcement("wa.news"),
+        ]);
+        expect(started).toHaveLength(0);
+        expect(setVariableFromApp).not.toHaveBeenCalled();
+        expect(variables.get("onboarding")).toBe(stored);
+        expect(warn).toHaveBeenCalledOnce();
+    });
+
+    it("still counts tutorialDone as the tutorial done when the stored state cannot be read", () => {
+        vi.spyOn(console, "warn").mockImplementation(() => {});
+        const { map } = start({ tutorialDone: true, onboarding: { firstVisit: "a later format" } });
+        // The tutorial does not start again; the announcement, for an existing user, does.
+        expect(started.map((step) => step.anchor)).toEqual(["modal"]);
+        expect(map.get("onboarding")).toEqual({ firstVisit: "a later format" });
     });
 
     it("writes tutorialDone when the tutorial ends, for map scripts", () => {
