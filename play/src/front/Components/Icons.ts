@@ -176,3 +176,5 @@ export { default as IconPointer } from "~icons/tabler/pointer";
 export { default as IconArrowForwardUp } from "~icons/tabler/arrow-forward-up";
 
 export { default as IconEyeOff } from "~icons/tabler/eye-off";
+export { default as IconPresentation } from "~icons/tabler/presentation";
+export { default as IconLayoutSidebarRight } from "~icons/tabler/layout-sidebar-right";

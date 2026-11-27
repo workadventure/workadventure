@@ -11,6 +11,7 @@ import type {
     LockableAreaPropertyData,
     MatrixRoomPropertyData,
     OpenFilePropertyData,
+    WhiteboardPropertyData,
     OpenWebsitePropertyData,
     PersonalAreaPropertyData,
     PlayAudioPropertyData,
@@ -28,7 +29,7 @@ import type { Member } from "@workadventure/messages";
 import { FilterType } from "@workadventure/messages";
 import { AbortError } from "@workadventure/shared-utils/src/Abort/AbortError";
 import type { SpaceInterface } from "../../../Space/SpaceInterface";
-import { LL } from "../../../../i18n/i18n-svelte";
+import { LL, locale } from "../../../../i18n/i18n-svelte";
 import { analyticsClient } from "../../../Administration/AnalyticsClient";
 import { scriptUtils } from "../../../Api/ScriptUtils";
 import { localUserStore } from "../../../Connection/LocalUserStore";
@@ -65,6 +66,7 @@ import type { CoWebsite } from "../../../WebRtc/CoWebsite/CoWebsite";
 import { getImageCoWebsiteTitle, ImageCoWebsite, isImageCoWebsiteUrl } from "../../../WebRtc/CoWebsite/ImageCoWebsite";
 import { JitsiCoWebsite } from "../../../WebRtc/CoWebsite/JitsiCoWebsite";
 import { SimpleCoWebsite } from "../../../WebRtc/CoWebsite/SimpleCoWebsite";
+import { whiteboardStore } from "../../../Stores/WhiteboardStore";
 import { coWebsites } from "../../../Stores/CoWebsiteStore";
 import {
     ON_ACTION_TRIGGER_BUTTON,
@@ -468,6 +470,10 @@ export class AreasPropertiesListener {
                 );
                 break;
             }
+            case "whiteboard": {
+                this.handleWhiteboardOnEnter(property, areaData);
+                break;
+            }
 
             default: {
                 break;
@@ -587,6 +593,12 @@ export class AreasPropertiesListener {
                 );
                 break;
             }
+            case "whiteboard": {
+                // The board keeps its scene: reopening it only refreshes how it opens.
+                this.handleWhiteboardOnLeave(oldProperty);
+                this.handleWhiteboardOnEnter(newProperty, area);
+                break;
+            }
             case "silent":
             default: {
                 break;
@@ -665,6 +677,10 @@ export class AreasPropertiesListener {
             }
             case "openFile": {
                 this.handleOpenFileOnLeave(property);
+                break;
+            }
+            case "whiteboard": {
+                this.handleWhiteboardOnLeave(property);
                 break;
             }
             default: {
@@ -2090,6 +2106,80 @@ export class AreasPropertiesListener {
                 areaName: areaData.name,
             });
         }
+    }
+
+    private handleWhiteboardOnEnter(property: WhiteboardPropertyData, areaData: AreaData): void {
+        const connection = this.scene.connection;
+        if (!this.scene.applicationManager.whiteboardToolActivated || !connection) {
+            return;
+        }
+
+        // A panel beside the map, which its header puts on stage under the cameras (see WhiteboardStore).
+        const open = () => {
+            whiteboardStore.open({
+                areaId: areaData.id,
+                areaName: areaData.name,
+                propertyId: property.id,
+                title: areaData.name || get(LL).mapEditor.properties.whiteboard.label(),
+                url: new URL(`#whiteboard-${areaData.id}-${property.id}`, this.scene.mapUrlFile),
+                connection,
+                // Excalidraw names English "en" and takes the other WorkAdventure locales as they are.
+                langCode: get(locale).startsWith("en") ? "en" : get(locale),
+                filesUrl: this.whiteboardFilesUrl(areaData.id, property.id),
+                fullMessage: get(LL).mapEditor.properties.whiteboard.full(),
+            });
+        };
+
+        if (localUserStore.getForceCowebsiteTrigger() || property.trigger === ON_ACTION_TRIGGER_BUTTON) {
+            const actionId = "whiteboard-" + uuidv4();
+            this.coWebsitesActionTriggers.set(property.id, actionId);
+            popupStore.addPopup(
+                PopupCowebsite,
+                {
+                    message:
+                        property.triggerMessage ||
+                        (touchScreenManager.detectPrimaryTouchDevice()
+                            ? get(LL).trigger.mobile.cowebsite()
+                            : get(LL).trigger.cowebsite()),
+                    click: () => {
+                        popupStore.removePopup(actionId);
+                        open();
+                    },
+                    userInputManager: this.scene.userInputManager,
+                },
+                actionId,
+            );
+            return;
+        }
+        open();
+    }
+
+    private handleWhiteboardOnLeave(property: WhiteboardPropertyData): void {
+        whiteboardStore.close(property.id);
+        const actionId = this.coWebsitesActionTriggers.get(property.id);
+        if (actionId) {
+            popupStore.removePopup(actionId);
+            this.coWebsitesActionTriggers.delete(property.id);
+        }
+    }
+
+    /**
+     * The board's images folder in the map-storage, laid out like WhiteboardLocation there:
+     * private/whiteboards/<map path without .wam>/<areaId>/<propertyId>/
+     */
+    private whiteboardFilesUrl(areaId: string, propertyId: string): URL | undefined {
+        const mapStorageUrl = this.scene.room.mapStorageUrl;
+        const wamUrl = this.scene.wamUrlFile;
+        if (!mapStorageUrl || !wamUrl) {
+            return undefined;
+        }
+        const base = new URL(mapStorageUrl.toString().replace(/\/?$/, "/"));
+        const wamPath = new URL(wamUrl).pathname;
+        if (!wamPath.startsWith(base.pathname) || !wamPath.endsWith(".wam")) {
+            return undefined;
+        }
+        const mapPath = wamPath.substring(base.pathname.length).replace(/\.wam$/, "");
+        return new URL(`private/whiteboards/${mapPath}/${areaId}/${propertyId}/`, base);
     }
 
     private handleOpenFileOnLeave(property: OpenFilePropertyData): void {

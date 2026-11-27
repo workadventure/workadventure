@@ -55,6 +55,13 @@
     let streamableEntries = $derived($streamablesStore);
     let activeStreamableEntry = $derived(streamableEntries.find((entry) => !entry.isPending));
     let streamable = $derived(activeStreamableEntry?.streamable ?? $streamableStore);
+    // A component (a whiteboard) brings its own header, with its name and its fullscreen button: none of our overlays.
+    let isComponentMedia = $derived(streamable?.media.type === "component");
+    // A component with its own shape (a whiteboard) is smaller than this box: CenteredVideo makes the component
+    // itself the screen blocker, so the map recentres around what is really on screen.
+    let componentBlocks = $derived(
+        streamable?.media.type === "component" && streamable.media.aspectRatio !== undefined,
+    );
 
     // The inCameraContainer is used to know if the VideoMediaBox is part of a series of video or if it is the highlighted video.
     let inCameraContainer: boolean = !!getContext("inCameraContainer");
@@ -382,7 +389,7 @@
 </script>
 
 <div
-    {@attach blocker}
+    {@attach componentBlocks ? undefined : blocker}
     class="group/screenshare relative flex justify-center mx-auto h-full w-full @container/videomediabox z-20 select-none"
 >
     <div
@@ -475,7 +482,7 @@
                         }}
                     >
                         {#snippet children(videoDisplayed: boolean)}
-                            {#if !streamableEntry.isPending && activeUserName}
+                            {#if !streamableEntry.isPending && activeUserName && !isComponentMedia}
                                 <UserName
                                     name={name ?? "unknown"}
                                     picture={pictureStore}

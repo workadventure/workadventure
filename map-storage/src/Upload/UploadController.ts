@@ -765,6 +765,12 @@ export class UploadController {
                 }
 
                 await this.fileSystem.deleteFiles(virtualPath);
+                if (isWamFile) {
+                    // The whiteboards of the map go with it (see WhiteboardLocation).
+                    await this.fileSystem.deleteFiles(
+                        mapPath("/private/whiteboards" + filePath.replace(/\.wam$/, ""), req),
+                    );
+                }
 
                 await this.mapListService.generateCacheFile(req.hostname);
 
@@ -820,6 +826,11 @@ export class UploadController {
                 }
 
                 await this.fileSystem.move(virtualPath, newVirtualPath);
+                // The whiteboards of the maps go with them (see WhiteboardLocation).
+                const boards = whiteboardsDirectory(source, req);
+                if (await this.fileSystem.exist(boards)) {
+                    await this.fileSystem.move(boards, whiteboardsDirectory(destination, req));
+                }
                 await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(200);
             })().catch((e) => {
@@ -862,6 +873,11 @@ export class UploadController {
                 }
 
                 await this.fileSystem.copy(virtualPath, newVirtualPath);
+                // The whiteboards of the maps go with them (see WhiteboardLocation).
+                const boards = whiteboardsDirectory(source, req);
+                if (await this.fileSystem.exist(boards)) {
+                    await this.fileSystem.copy(boards, whiteboardsDirectory(destination, req));
+                }
                 await this.mapListService.generateCacheFile(req.hostname);
                 res.sendStatus(201);
             })().catch((e) => {
@@ -928,4 +944,9 @@ export class UploadController {
             });
         });
     }
+}
+
+/** Where the whiteboards of a map, or of every map of a folder, are stored. */
+function whiteboardsDirectory(mapOrFolder: string, req: Request): string {
+    return mapPath("/private/whiteboards/" + mapOrFolder.replace(/^\/+/, "").replace(/\.wam$/, "") + "/", req);
 }

@@ -246,6 +246,27 @@ const mapEditor: DeepPartial<Translation["mapEditor"]> = {
             revokeAccess: "アクセス権の取消",
             actionButtonLabel: "個人デスクへ移動",
         },
+        whiteboard: {
+            label: "ホワイトボード",
+            description:
+                "エリア内の全員で共有するホワイトボード。他の人のカーソルと一緒に、描いた内容がリアルタイムで表示されます。",
+            disabled: "このワールドではホワイトボードが無効になっています。",
+            loadError: "ホワイトボードを読み込めませんでした。",
+            full: "ホワイトボードがいっぱいです。最後の描画は共有されませんでした。要素や画像を削除してください。",
+            showLarge: "大きく表示",
+            showOnSide: "横に表示",
+            fullscreen: "全画面",
+            exitFullscreen: "全画面を終了",
+            close: "ホワイトボードを閉じる",
+            follow: "{name} をフォロー",
+            rightsHint:
+                "描ける人はエリアの権限プロパティに従います。書き込みタグを持つ人は描け、他の人は閲覧のみです。権限がなければ全員が描けます。",
+            clear: "ホワイトボードを消去",
+            clearConfirm: "もう一度クリックすると全員のボードが消去されます",
+            ephemeral: "一時的なホワイトボード",
+            ephemeralDescription:
+                "保存されません。最後の人が離れてから2分後に空になります。そうでなければ、マップと一緒に保存されます。",
+        },
         excalidraw: {
             label: "エクスカリドローを開く",
             description: "オープンソースの仮想手描き風ホワイトボード。共同作業とエンド・ツー・エンド暗号化に対応。",
