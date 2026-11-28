@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@anatine/zod-openapi": "^2.2.8",
-    "@grpc/grpc-js": "^1.14.4",
+    "@grpc/grpc-js": "^1.14.5",
     "google-protobuf": "^4.0.2",
     "npm-run-all": "^4.1.5",
     "openapi3-ts": "^4.5.0",
